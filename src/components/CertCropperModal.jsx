@@ -1,12 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Crop, ZoomIn, ZoomOut, RotateCw, Check, X } from 'lucide-react';
+import { Crop, ZoomIn, ZoomOut, RotateCw, Check, X, AlertTriangle } from 'lucide-react';
 
-export default function CertCropperModal({ isOpen, onClose, onAcceptCropped, rawImageSrc }) {
+export default function CertCropperModal({ 
+  isOpen, 
+  onClose, 
+  onAcceptCropped, 
+  rawImageSrc,
+  registeredItems = [],
+  selectedRegIdx = '',
+  setSelectedRegIdx
+}) {
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [localRegIdx, setLocalRegIdx] = useState(selectedRegIdx);
+  const [showWarning, setShowWarning] = useState(false);
 
   const canvasRef = useRef(null);
 
@@ -15,8 +25,10 @@ export default function CertCropperModal({ isOpen, onClose, onAcceptCropped, raw
       setZoom(1);
       setRotation(0);
       setOffset({ x: 0, y: 0 });
+      setLocalRegIdx(selectedRegIdx);
+      setShowWarning(!selectedRegIdx);
     }
-  }, [isOpen, rawImageSrc]);
+  }, [isOpen, rawImageSrc, selectedRegIdx]);
 
   useEffect(() => {
     if (isOpen && rawImageSrc && canvasRef.current) {
@@ -67,9 +79,22 @@ export default function CertCropperModal({ isOpen, onClose, onAcceptCropped, raw
     setIsDragging(false);
   };
 
+  const handleSelectChange = (val) => {
+    setLocalRegIdx(val);
+    if (setSelectedRegIdx) setSelectedRegIdx(val);
+    if (val !== '') setShowWarning(false);
+  };
+
   const handleAccept = () => {
+    if (localRegIdx === '' || localRegIdx === undefined || localRegIdx === null) {
+      setShowWarning(true);
+      alert('Primero elige el registro a cuál corresponde este certificado.');
+      return;
+    }
+
     const canvas = canvasRef.current;
     if (!canvas) return;
+    
     // Export proportional A4 crop (width: 800, height: 1131 ~ A4 aspect ratio)
     const exportCanvas = document.createElement('canvas');
     exportCanvas.width = 800;
@@ -80,8 +105,8 @@ export default function CertCropperModal({ isOpen, onClose, onAcceptCropped, raw
     ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
     ctx.drawImage(canvas, 0, 0, exportCanvas.width, exportCanvas.height);
 
-    const croppedDataUrl = exportCanvas.toDataURL('image/jpeg', 0.95);
-    onAcceptCropped(croppedDataUrl);
+    const croppedDataUrl = exportCanvas.toDataURL('image/jpeg', 0.92);
+    onAcceptCropped(croppedDataUrl, localRegIdx);
     onClose();
   };
 
@@ -105,13 +130,36 @@ export default function CertCropperModal({ isOpen, onClose, onAcceptCropped, raw
           </button>
         </div>
 
-        {/* Viewport Canvas (Proportional A4 Aspect Ratio 1:1.414) */}
-        <div className="p-5 flex flex-col items-center">
+        <div className="p-5 flex flex-col items-center space-y-4">
+
+          {/* Record Selector inside Cropper Modal */}
+          <div className="w-full">
+            <label className="block text-xs font-black text-[#FF2E63] mb-1 uppercase tracking-wide flex items-center justify-between">
+              <span>IDENTIFICA TU CERTIFICADO *</span>
+              {showWarning && <span className="text-red-600 text-[11px] font-bold flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" /> Primero elige el registro</span>}
+            </label>
+            <select
+              value={localRegIdx}
+              onChange={(e) => handleSelectChange(e.target.value)}
+              className={`w-full text-xs p-2.5 rounded-xl border-2 bg-white text-[#2B1B2E] font-extrabold outline-none transition shadow-sm ${
+                showWarning ? 'border-red-500 ring-2 ring-red-400/50 bg-red-50/50' : 'border-[#EFE2C9] focus:border-[#FF2E63]'
+              }`}
+            >
+              <option value="">-- Primero elige el registro --</option>
+              {registeredItems.map((item, idx) => (
+                <option key={idx} value={idx}>
+                  [{item.category}] {item.title} ({item.year})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Viewport Canvas (Proportional A4 Aspect Ratio 1:1.414) */}
           <div className="relative border-4 border-[#FF2E63] rounded-xl overflow-hidden shadow-2xl bg-black cursor-grab active:cursor-grabbing">
             <canvas 
               ref={canvasRef}
-              width={270}
-              height={380}
+              width={260}
+              height={366}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
@@ -122,7 +170,7 @@ export default function CertCropperModal({ isOpen, onClose, onAcceptCropped, raw
           </div>
 
           {/* Zoom and Rotation Control Bar */}
-          <div className="w-full mt-4 bg-[#F5EDDA] p-3 rounded-xl space-y-2 border border-[#EFE2C9]">
+          <div className="w-full bg-[#F5EDDA] p-3 rounded-xl space-y-2 border border-[#EFE2C9]">
             <div className="flex items-center gap-3">
               <ZoomOut className="w-4 h-4 text-[#2B1B2E]" />
               <input 

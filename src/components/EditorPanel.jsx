@@ -156,6 +156,33 @@ export default function EditorPanel({
     setIsCameraActive(false);
   };
 
+  // Auto-compress heavy images (e.g. 15MB phone photos) before opening cropper modal
+  const compressRawImageBeforeCropping = (dataUrl, callback) => {
+    const img = new Image();
+    img.onload = () => {
+      const maxDim = 1600;
+      let w = img.width;
+      let h = img.height;
+      if (w > maxDim || h > maxDim) {
+        if (w > h) {
+          h = Math.round((h * maxDim) / w);
+          w = maxDim;
+        } else {
+          w = Math.round((w * maxDim) / h);
+          h = maxDim;
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      const lightweightDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      callback(lightweightDataUrl);
+    };
+    img.src = dataUrl;
+  };
+
   const capturePhoto = () => {
     const video = videoRef.current;
     if (!video) return;
@@ -164,11 +191,13 @@ export default function EditorPanel({
     canvas.height = video.videoHeight || 720;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
     stopCamera();
     setCertMode('upload');
-    setRawCertSrc(dataUrl);
-    setIsCertCropperOpen(true);
+    compressRawImageBeforeCropping(dataUrl, (compressedUrl) => {
+      setRawCertSrc(compressedUrl);
+      setIsCertCropperOpen(true);
+    });
   };
 
   const handleFileUpload = (e) => {
@@ -176,8 +205,10 @@ export default function EditorPanel({
     if (file) {
       const reader = new FileReader();
       reader.onload = (evt) => {
-        setRawCertSrc(evt.target.result);
-        setIsCertCropperOpen(true);
+        compressRawImageBeforeCropping(evt.target.result, (compressedUrl) => {
+          setRawCertSrc(compressedUrl);
+          setIsCertCropperOpen(true);
+        });
       };
       reader.readAsDataURL(file);
     }
@@ -1465,8 +1496,11 @@ export default function EditorPanel({
             <CertCropperModal
               isOpen={isCertCropperOpen}
               onClose={() => { setIsCertCropperOpen(false); setRawCertSrc(''); }}
-              onAcceptCropped={(croppedUrl) => {
-                const selectedItem = registeredItems[parseInt(selectedRegIdx, 10)] || { title: 'CERTIFICADO', institution: '', year: '' };
+              registeredItems={registeredItems}
+              selectedRegIdx={selectedRegIdx}
+              setSelectedRegIdx={setSelectedRegIdx}
+              onAcceptCropped={(croppedUrl, targetRegIdx) => {
+                const selectedItem = registeredItems[parseInt(targetRegIdx, 10)] || { title: 'CERTIFICADO', institution: '', year: '' };
                 const newCert = {
                   id: Date.now().toString(),
                   title: selectedItem.title,
