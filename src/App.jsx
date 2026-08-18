@@ -11,6 +11,8 @@ import CloudStatusModal from './components/CloudStatusModal';
 import { initialCVData, standardExampleCVData } from './data/initialCVData';
 import { saveCV } from './services/cvStorageService';
 
+import html2pdf from 'html2pdf.js';
+
 export default function App() {
   const [cvData, setCvData] = useState(() => {
     if (typeof window !== 'undefined' && window.location.search.includes('clear')) {
@@ -81,22 +83,19 @@ export default function App() {
     localStorage.setItem('cv_premium_data', JSON.stringify(cvData));
   }, [cvData]);
 
-  // Direct 1-Click Native A4 PDF Download Engine with Dynamic Import
+  // Direct 1-Click Native A4 PDF Download Engine (No Print Dialog Window)
   const handlePrint = async () => {
     const element = document.querySelector('.print-wrapper');
     if (!element) {
-      window.print();
+      alert('No se pudo encontrar el documento para exportar.');
       return;
     }
 
     setIsGeneratingPDF(true);
 
     try {
-      const html2pdfModule = await import('html2pdf.js');
-      const html2pdf = html2pdfModule.default || html2pdfModule;
-
-      const surname = (cvData?.personalInfo?.surname || 'BURGOS').trim().replace(/\s+/g, '_');
-      const given = (cvData?.personalInfo?.givenNames || 'Monica').trim().replace(/\s+/g, '_');
+      const surname = (cvData?.personalInfo?.surname || 'DOCENTE').trim().replace(/\s+/g, '_');
+      const given = (cvData?.personalInfo?.givenNames || 'CV').trim().replace(/\s+/g, '_');
       const fileName = `CV_${surname}_${given}_A4.pdf`;
 
       const opt = {
@@ -110,7 +109,7 @@ export default function App() {
       await html2pdf().set(opt).from(element).save();
     } catch (err) {
       console.error('Error generando PDF nativo:', err);
-      window.print();
+      alert('Hubo un inconveniente generando el archivo PDF. Intente nuevamente.');
     } finally {
       setIsGeneratingPDF(false);
     }
