@@ -166,7 +166,7 @@ export default function SignatureModal({ isOpen, onClose, onSaveSignature, curre
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in no-print">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in no-print">
       <div className="bg-[#FFFDF7] rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden border-2 border-[#EFE2C9] text-[#2B1B2E]">
         
         {/* Header */}
