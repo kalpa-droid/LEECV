@@ -59,10 +59,10 @@ export default function App() {
           };
         }
       } catch {
-        return initialCVData;
+        return blankCVTemplate;
       }
     }
-    return initialCVData;
+    return blankCVTemplate;
   });
 
   const [activeTab, setActiveTab] = useState('personales');
@@ -209,6 +209,9 @@ export default function App() {
         onClose={() => setIsSignatureOpen(false)}
         onSaveSignature={handleSaveSignature}
         currentSignature={cvData.signature}
+        defaultSignerName={cvData.personalInfo?.fullName || `${cvData.personalInfo?.surname || ''} ${cvData.personalInfo?.givenNames || ''}`.trim()}
+        defaultSignerRole={cvData.roles?.[0] || cvData.profession?.[0]?.degree || ''}
+        defaultDate={cvData.personalInfo?.cityProvince ? `${cvData.personalInfo.cityProvince.split(',')[0]}, ${cvData.personalInfo.year || new Date().getFullYear()}` : 'Salta, 2025'}
       />
 
       <WizardModal 

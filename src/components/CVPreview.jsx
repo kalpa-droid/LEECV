@@ -944,13 +944,19 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
                     {signature?.dataUrl ? (
                       <img src={signature.dataUrl} alt="Firma Digital" className="h-12 mx-auto object-contain mb-0.5" />
                     ) : (
-                      <div className="h-9 border-b border-dashed border-slate-400 mb-0.5 flex items-center justify-center text-xs text-slate-400">
-                        [Firma del Postulante]
+                      <div className="h-9 border-b border-dashed border-slate-400 mb-0.5 flex items-center justify-center text-[10px] text-slate-400 font-medium italic">
+                        [ Espacio para Firma Digital ]
                       </div>
                     )}
-                    <p className="text-xs font-black text-slate-800">{signature?.signerName || personalInfo.fullName || 'NOMBRE Y APELLIDO'}</p>
-                    <p className="text-[10px] text-slate-500 font-semibold">{signature?.signerRole || (roles?.[0] || 'Profesional')}</p>
-                    <p className="text-[10px] text-slate-400">{signature?.date || `${personalInfo.cityProvince ? personalInfo.cityProvince.split(',')[0] : 'Salta'}, ${personalInfo.year || '2025'}`}</p>
+                    <p className="text-xs font-black text-slate-800">
+                      {signature?.signerName || personalInfo.fullName || `${personalInfo.surname || ''} ${personalInfo.givenNames || ''}`.trim() || ''}
+                    </p>
+                    <p className="text-[10px] text-slate-500 font-semibold">
+                      {signature?.signerRole || roles?.[0] || sortedProfession?.[0]?.degree || ''}
+                    </p>
+                    <p className="text-[10px] text-slate-400">
+                      {signature?.date || (personalInfo.cityProvince ? `${personalInfo.cityProvince.split(',')[0]}, ${personalInfo.year || '2025'}` : '')}
+                    </p>
                   </div>
                 </div>
               )}

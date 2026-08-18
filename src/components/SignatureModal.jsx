@@ -1,13 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { PenTool, Upload, Eraser, RotateCcw, Check, X, Sparkles } from 'lucide-react';
 
-export default function SignatureModal({ isOpen, onClose, onSaveSignature, currentSignature }) {
+export default function SignatureModal({ 
+  isOpen, 
+  onClose, 
+  onSaveSignature, 
+  currentSignature,
+  defaultSignerName = '',
+  defaultSignerRole = '',
+  defaultDate = ''
+}) {
   const [activeTab, setActiveTab] = useState('draw'); // 'draw' | 'upload'
   const [strokeColor, setStrokeColor] = useState('#000000');
   const [strokeWidth, setStrokeWidth] = useState(3);
-  const [signerName, setSignerName] = useState(currentSignature?.signerName || 'MÓNICA DANIELA BURGOS');
-  const [signerRole, setSignerRole] = useState(currentSignature?.signerRole || 'Profesora de Educación Secundaria en Lengua y Literatura');
-  const [date, setDate] = useState(currentSignature?.date || 'Salta, 2025');
+  const [signerName, setSignerName] = useState(currentSignature?.signerName || defaultSignerName);
+  const [signerRole, setSignerRole] = useState(currentSignature?.signerRole || defaultSignerRole);
+  const [date, setDate] = useState(currentSignature?.date || defaultDate);
 
   const [uploadedImageSrc, setUploadedImageSrc] = useState('');
   const [removeBgContrast, setRemoveBgContrast] = useState(true);
@@ -17,12 +25,17 @@ export default function SignatureModal({ isOpen, onClose, onSaveSignature, curre
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    if (isOpen && activeTab === 'draw') {
-      setTimeout(() => {
-        initCanvas();
-      }, 100);
+    if (isOpen) {
+      setSignerName(currentSignature?.signerName || defaultSignerName);
+      setSignerRole(currentSignature?.signerRole || defaultSignerRole);
+      setDate(currentSignature?.date || defaultDate);
+      if (activeTab === 'draw') {
+        setTimeout(() => {
+          initCanvas();
+        }, 100);
+      }
     }
-  }, [isOpen, activeTab]);
+  }, [isOpen, activeTab, currentSignature, defaultSignerName, defaultSignerRole, defaultDate]);
 
   const initCanvas = () => {
     const canvas = canvasRef.current;

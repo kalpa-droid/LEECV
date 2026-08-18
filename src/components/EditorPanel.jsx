@@ -1569,21 +1569,92 @@ export default function EditorPanel({
               Firma Digital del Documento
             </h3>
 
-            <div className="p-4 bg-purple-50  rounded-xl border border-purple-200  space-y-3 text-center">
+            <div className="p-4 bg-white rounded-2xl border-2 border-[#EFE2C9] space-y-3 text-center shadow-sm">
               {cvData.signature?.dataUrl ? (
-                <div className="bg-[#fffdf7] p-3 rounded-lg border border-amber-300">
-                  <img src={cvData.signature.dataUrl} alt="Firma" className="h-16 mx-auto object-contain" />
+                <div className="space-y-2">
+                  <div className="bg-[#FFFDF7] p-3 rounded-xl border border-[#FFC93C]">
+                    <img src={cvData.signature.dataUrl} alt="Firma" className="h-16 mx-auto object-contain" />
+                  </div>
+                  <button
+                    onClick={() => {
+                      setCvData(prev => ({
+                        ...prev,
+                        signature: {
+                          ...prev.signature,
+                          dataUrl: ''
+                        }
+                      }));
+                    }}
+                    className="flex items-center justify-center gap-1 mx-auto px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold rounded-lg transition"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Quitar Imagen de Firma
+                  </button>
                 </div>
               ) : (
-                <p className="text-xs text-[#2B1B2E] font-medium italic">No has registrado una firma aún.</p>
+                <p className="text-xs text-[#2B1B2E] font-bold italic">No has dibujado o subido una imagen de firma aún.</p>
               )}
 
               <button
                 onClick={onOpenSignature}
-                className="w-full flex items-center justify-center gap-2 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl shadow transition"
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#FF2E63] hover:bg-[#E31555] text-white text-xs font-black rounded-xl shadow-md transition"
               >
-                <PenTool className="w-4 h-4" /> Abrir Tablero de Firma (Fondo Cálido)
+                <PenTool className="w-4 h-4" /> Abrir Tablero de Firma (Dibujar / Subir)
               </button>
+            </div>
+
+            <div className="p-4 bg-white rounded-2xl border-2 border-[#EFE2C9] space-y-3 shadow-sm">
+              <h4 className="text-xs font-black text-[#2B1B2E] uppercase">Datos del Pie de Firma</h4>
+              
+              <div>
+                <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">Nombre del Firmante</label>
+                <input 
+                  type="text"
+                  value={cvData.signature?.signerName !== undefined ? cvData.signature.signerName : (cvData.personalInfo?.fullName || '')}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setCvData(prev => ({
+                      ...prev,
+                      signature: { ...prev.signature, signerName: val }
+                    }));
+                  }}
+                  placeholder="Ej: MÓNICA DANIELA BURGOS"
+                  className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">Cargo / Rol</label>
+                <input 
+                  type="text"
+                  value={cvData.signature?.signerRole !== undefined ? cvData.signature.signerRole : (cvData.roles?.[0] || '')}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setCvData(prev => ({
+                      ...prev,
+                      signature: { ...prev.signature, signerRole: val }
+                    }));
+                  }}
+                  placeholder="Ej: Profesora de Educación Secundaria en Lengua y Literatura"
+                  className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">Lugar y Fecha</label>
+                <input 
+                  type="text"
+                  value={cvData.signature?.date !== undefined ? cvData.signature.date : (cvData.personalInfo?.cityProvince ? `${cvData.personalInfo.cityProvince.split(',')[0]}, ${cvData.personalInfo.year || '2025'}` : '')}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setCvData(prev => ({
+                      ...prev,
+                      signature: { ...prev.signature, date: val }
+                    }));
+                  }}
+                  placeholder="Ej: Salta, 2025"
+                  className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+                />
+              </div>
             </div>
           </div>
         )}
