@@ -201,8 +201,11 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
     return () => window.removeEventListener('resize', handleResize);
   }, [autoFitMobile]);
 
+  // Section Visibility Helper
+  const isVis = (key) => cvData?.sectionVisibility?.[key] !== false;
+
   // Chunk certificates: ALWAYS 1 per A4 page
-  const certPages = certificatesScanned.map(cert => [cert]);
+  const certPages = isVis('certificados') ? certificatesScanned.map(cert => [cert]) : [];
 
   // Dynamic Theme Styling
   const dynamicThemeStyle = {
@@ -544,29 +547,31 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
             )}
 
             {/* Datos Personales */}
-            <div id="cv-section-personales" className="section-box-print">
-              {renderSectionHeader(<User className="w-4 h-4" />, "DATOS PERSONALES")}
+            {isVis('personales') && (
+              <div id="cv-section-personales" className="section-box-print">
+                {renderSectionHeader(<User className="w-4 h-4" />, "DATOS PERSONALES")}
 
-              <div className="grid grid-cols-3 gap-y-1.5 text-[11px] font-medium bg-slate-50/90 p-3 rounded-xl border border-slate-200/80">
-                <span className="font-bold text-right uppercase pr-2" style={{ color: theme.accentColor }}>DNI:</span>
-                <span className="col-span-2 text-slate-900 font-extrabold">{personalInfo.dni}</span>
+                <div className="grid grid-cols-3 gap-y-1.5 text-[11px] font-medium bg-slate-50/90 p-3 rounded-xl border border-slate-200/80">
+                  <span className="font-bold text-right uppercase pr-2" style={{ color: theme.accentColor }}>DNI:</span>
+                  <span className="col-span-2 text-slate-900 font-extrabold">{personalInfo.dni}</span>
 
-                <span className="font-bold text-right uppercase pr-2" style={{ color: theme.accentColor }}>CUIT:</span>
-                <span className="col-span-2 text-slate-900 font-extrabold">{personalInfo.cuit}</span>
+                  <span className="font-bold text-right uppercase pr-2" style={{ color: theme.accentColor }}>CUIT:</span>
+                  <span className="col-span-2 text-slate-900 font-extrabold">{personalInfo.cuit}</span>
 
-                <span className="font-bold text-right uppercase pr-2" style={{ color: theme.accentColor }}>FECHA NAC.:</span>
-                <span className="col-span-2 text-slate-900 font-extrabold">{personalInfo.birthDate}</span>
+                  <span className="font-bold text-right uppercase pr-2" style={{ color: theme.accentColor }}>FECHA NAC.:</span>
+                  <span className="col-span-2 text-slate-900 font-extrabold">{personalInfo.birthDate}</span>
 
-                <span className="font-bold text-right uppercase pr-2" style={{ color: theme.accentColor }}>DOMICILIO:</span>
-                <span className="col-span-2 text-slate-900 font-extrabold">{personalInfo.address}</span>
+                  <span className="font-bold text-right uppercase pr-2" style={{ color: theme.accentColor }}>DOMICILIO:</span>
+                  <span className="col-span-2 text-slate-900 font-extrabold">{personalInfo.address}</span>
 
-                <span className="font-bold text-right uppercase pr-2" style={{ color: theme.accentColor }}>CIUDAD:</span>
-                <span className="col-span-2 text-slate-900 font-extrabold">{personalInfo.cityProvince}</span>
+                  <span className="font-bold text-right uppercase pr-2" style={{ color: theme.accentColor }}>CIUDAD:</span>
+                  <span className="col-span-2 text-slate-900 font-extrabold">{personalInfo.cityProvince}</span>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Formación Académica */}
-            {education && education.length > 0 && (
+            {isVis('formacion') && education && education.length > 0 && (
               <div id="cv-section-formacion" className="section-box-print">
                 {renderSectionHeader(<GraduationCap className="w-4 h-4" />, "FORMACIÓN ACADÉMICA")}
 
@@ -592,9 +597,9 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
             )}
 
             {/* Profesión */}
-            {firstPageProfessions && firstPageProfessions.length > 0 && (
+            {isVis('profesion') && firstPageProfessions && firstPageProfessions.length > 0 && (
               <div id="cv-section-profesion" className="section-box-print">
-                {renderSectionHeader(<Briefcase className="w-4 h-4" />, `PROFESIÓN & TITULACIONES (${sortedProfession.length})`)}
+                {renderSectionHeader(<Briefcase className="w-4 h-4" />, `TÍTULOS PROFESIONALES (${sortedProfession.length})`)}
 
                 <div className="grid grid-cols-1 gap-1.5">
                   {firstPageProfessions.map((prof, i) => (
@@ -795,7 +800,7 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
                   </h1>
                 </div>
 
-                {renderSectionHeader(<FileText className="w-4 h-4" />, `EXPERIENCIA LABORAL DOCENTE (${expPageIdx + 1}/${totalExpPages})`)}
+                {renderSectionHeader(<FileText className="w-4 h-4" />, `EXPERIENCIA LABORAL (${expPageIdx + 1}/${totalExpPages})`)}
 
                 <div className="space-y-3">
                   {expGroup.map((exp, idx) => (
@@ -893,7 +898,7 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
                   </h1>
                 </div>
 
-                {renderSectionHeader(<BookOpen className="w-4 h-4" />, `CURSOS Y CAPACITACIONES DOCENTES (${pageIdx + 1}/${totalCoursePages})`)}
+                {renderSectionHeader(<BookOpen className="w-4 h-4" />, `CURSOS Y CAPACITACIONES (${pageIdx + 1}/${totalCoursePages})`)}
 
                 <div className="space-y-3">
                   {pageCoursesGroup.map((c, cIdx) => (
@@ -933,7 +938,7 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
               </div>
 
               {/* Digital Signature Block on Last Course Page */}
-              {isLastPage && (
+              {isLastPage && isVis('firma') && (
                 <div id="cv-section-firma" className="mt-3 pt-2 border-t border-slate-300 flex flex-col items-end section-box-print">
                   <div className="w-56 text-center space-y-0.5">
                     {signature?.dataUrl ? (

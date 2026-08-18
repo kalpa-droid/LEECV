@@ -900,3 +900,65 @@ export const standardExampleCVData = {
 };
 
 export const initialCVData = standardExampleCVData;
+
+export const blankCVTemplate = {
+  id: "cv_blanco",
+  showCoverPage: true,
+  layoutStyle: "executive-sidebar",
+  sectionVisibility: {
+    personales: true,
+    formacion: true,
+    profesion: true,
+    experiencia: true,
+    cursos: true,
+    informatica: true,
+    ecologia: true,
+    certificados: true,
+    firma: true
+  },
+  personalInfo: {
+    fullName: "",
+    surname: "",
+    givenNames: "",
+    dni: "",
+    cuit: "",
+    birthDate: "",
+    address: "",
+    cityProvince: "",
+    phone: "",
+    email: "",
+    facebook: "",
+    profilePhoto: "",
+    quote: "",
+    initials: "CV",
+    year: new Date().getFullYear().toString()
+  },
+  roles: [],
+  education: [],
+  profession: [],
+  experience: [],
+  coursesAndCertificates: [],
+  informatics: [],
+  ecology: {
+    rural: [],
+    environmental: []
+  },
+  certificatesScanned: [],
+  signature: {
+    type: "drawn",
+    dataUrl: "",
+    signerName: "",
+    signerRole: "",
+    dni: "",
+    date: ""
+  },
+  theme: {
+    presetId: "linda-feria",
+    primaryColor: "#FF2E63",
+    secondaryColor: "#2B1B2E",
+    accentColor: "#00A8A0",
+    textColor: "#2B1B2E",
+    bgCorridor: "#FF2E63",
+    fontFamily: "Arial, sans-serif"
+  }
+};

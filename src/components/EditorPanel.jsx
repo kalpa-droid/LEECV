@@ -309,14 +309,43 @@ export default function EditorPanel({
     }));
   };
 
-  return (
-    <div className="w-full h-full bg-[#F5EDDA] text-[#2B1B2E] flex flex-col no-print">
-      {/* Active Section Header */}
-      <div className="px-5 py-3 border-b-2 border-[#EFE2C9] bg-[#2B1B2E] text-white flex items-center justify-between flex-shrink-0 shadow-md">
-        <h2 className="text-xs font-black uppercase tracking-wider text-[#FF2E63] flex items-center gap-2">
-          <Sparkles className="w-4 h-4" /> Formulario: {activeTab.toUpperCase()}
-        </h2>
+  const renderSectionToggle = (sectionKey, sectionTitle) => {
+    const isVisible = cvData?.sectionVisibility?.[sectionKey] !== false;
+
+    return (
+      <div className="flex items-center justify-between p-3 bg-white rounded-2xl border-2 border-[#EFE2C9] mb-4 shadow-sm">
+        <div className="flex flex-col">
+          <span className="text-xs font-black text-[#2B1B2E] uppercase tracking-wide">
+            {sectionTitle}
+          </span>
+          <span className="text-[10px] font-bold text-[#6B5B6E]">
+            {isVisible ? 'Sección ACTIVADA (se muestra en el CV)' : '⚠️ Sección DESACTIVADA (se oculta del CV)'}
+          </span>
+        </div>
+        <button
+          onClick={() => {
+            setCvData(prev => ({
+              ...prev,
+              sectionVisibility: {
+                ...prev.sectionVisibility,
+                [sectionKey]: !isVisible
+              }
+            }));
+          }}
+          className={`px-3 py-1.5 rounded-xl font-black text-xs transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
+            isVisible
+              ? 'bg-[#00A8A0] text-white hover:bg-[#00877F]'
+              : 'bg-[#FF2E63] text-white hover:bg-[#E31555]'
+          }`}
+        >
+          {isVisible ? 'ACTIVADA (SI)' : 'DESACTIVADA (NO)'}
+        </button>
       </div>
+    );
+  };
+
+  return (
+    <div className="h-full flex flex-col bg-[#F5EDDA] text-[#2B1B2E]">
 
       {/* Tab Form Content Body */}
       <div className="flex-1 overflow-y-auto p-5 space-y-6">
@@ -326,6 +355,7 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {activeTab === 'personales' && (
           <div className="space-y-4">
+            {renderSectionToggle('personales', 'Datos Personales & Foto')}
             <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] border-b pb-2 border-[#EFE2C9]">
               Información de Identificación y Contacto
             </h3>
@@ -530,6 +560,7 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {activeTab === 'formacion' && (
           <div className="space-y-4">
+            {renderSectionToggle('formacion', 'Formación Académica')}
             <div className="flex items-center justify-between border-b pb-2 border-[#EFE2C9]">
               <h3 className="text-xs font-extrabold uppercase text-[#FF2E63]">
                 Estudios y Nivel Académico
@@ -663,6 +694,7 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {activeTab === 'profesion' && (
           <div className="space-y-4">
+            {renderSectionToggle('profesion', 'Títulos Profesionales')}
             <div className="flex items-center justify-between border-b pb-2 border-[#EFE2C9]">
               <h3 className="text-xs font-extrabold uppercase text-[#FF2E63]">
                 Títulos de Grado y Especializaciones Profesionales
@@ -775,6 +807,7 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {activeTab === 'experiencia' && (
           <div className="space-y-4">
+            {renderSectionToggle('experiencia', 'Experiencia Laboral')}
             <div className="flex items-center justify-between border-b pb-2 border-[#EFE2C9]">
               <h3 className="text-xs font-extrabold uppercase text-[#FF2E63]">
                 Experiencia Laboral & Desempeño Docente ({cvData.experience?.length || 0})
@@ -913,6 +946,7 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {activeTab === 'cursos' && (
           <div className="space-y-4">
+            {renderSectionToggle('cursos', 'Cursos y Capacitaciones')}
             <div className="flex items-center justify-between border-b pb-2 border-[#EFE2C9]">
               <h3 className="text-xs font-extrabold uppercase text-[#FF2E63]">
                 Historial de Cursos, Talleres y Jornadas ({cvData.coursesAndCertificates.length})
@@ -1071,6 +1105,7 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {activeTab === 'informatica' && (
           <div className="space-y-4">
+            {renderSectionToggle('informatica', 'Informática y TICs')}
             <div className="flex items-center justify-between border-b pb-2 border-[#EFE2C9]">
               <h3 className="text-xs font-extrabold uppercase text-[#FF2E63]">
                 Informática y Alfabetización Digital
@@ -1163,6 +1198,7 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {activeTab === 'ecologia' && (
           <div className="space-y-4">
+            {renderSectionToggle('ecologia', 'Proyectos y Comunidad')}
             <div className="p-3 bg-[#FFF1C2] rounded-xl border-2 border-[#FFC93C] text-xs text-[#2B1B2E] space-y-1 shadow-sm">
               <div className="flex items-center gap-1.5 font-bold text-[#FF2E63]">
                 <Info className="w-4 h-4" /> Proyectos Ecológicos, Sociales & Comunitarios
@@ -1341,6 +1377,7 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {activeTab === 'certificados' && (
           <div className="space-y-4">
+            {renderSectionToggle('certificados', 'Certificados Escaneados')}
             {/* 1. Selector */}
             <div>
               <label className="block text-xs font-black text-[#FF2E63] mb-1.5 uppercase tracking-wide">
@@ -1527,6 +1564,7 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {activeTab === 'firma' && (
           <div className="space-y-4">
+            {renderSectionToggle('firma', 'Firma Digital')}
             <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] border-b pb-2 border-[#EFE2C9]">
               Firma Digital del Documento
             </h3>

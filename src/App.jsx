@@ -8,7 +8,7 @@ import SignatureModal from './components/SignatureModal';
 import WizardModal from './components/WizardModal';
 import SavedCVsModal from './components/SavedCVsModal';
 import CloudStatusModal from './components/CloudStatusModal';
-import { initialCVData, standardExampleCVData } from './data/initialCVData';
+import { initialCVData, standardExampleCVData, blankCVTemplate } from './data/initialCVData';
 import { saveCV } from './services/cvStorageService';
 
 import { exportCVToPDF } from './utils/pdfExporter';
@@ -24,38 +24,36 @@ export default function App() {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed === 'object') {
           return {
-            ...initialCVData,
+            ...blankCVTemplate,
             ...parsed,
             showCoverPage: parsed.showCoverPage !== undefined ? parsed.showCoverPage : true,
             layoutStyle: parsed.layoutStyle || 'executive-sidebar',
             theme: {
-              ...initialCVData.theme,
+              ...blankCVTemplate.theme,
               ...(parsed.theme || {})
             },
-            personalInfo: { 
-              ...initialCVData.personalInfo, 
-              ...(parsed.personalInfo || {}),
-              profilePhoto: (parsed.personalInfo?.profilePhoto && parsed.personalInfo.profilePhoto.trim() !== '') 
-                ? parsed.personalInfo.profilePhoto 
-                : initialCVData.personalInfo.profilePhoto
+            sectionVisibility: {
+              ...blankCVTemplate.sectionVisibility,
+              ...(parsed.sectionVisibility || {})
             },
-            roles: Array.isArray(parsed.roles) ? parsed.roles : initialCVData.roles,
-            education: Array.isArray(parsed.education) ? parsed.education : initialCVData.education,
-            profession: Array.isArray(parsed.profession) ? parsed.profession : initialCVData.profession,
-            experience: (Array.isArray(parsed.experience) && parsed.experience.length > 0) ? parsed.experience : initialCVData.experience,
-            coursesAndCertificates: Array.isArray(parsed.coursesAndCertificates) ? parsed.coursesAndCertificates : initialCVData.coursesAndCertificates,
+            personalInfo: { 
+              ...blankCVTemplate.personalInfo, 
+              ...(parsed.personalInfo || {})
+            },
+            roles: Array.isArray(parsed.roles) ? parsed.roles : [],
+            education: Array.isArray(parsed.education) ? parsed.education : [],
+            profession: Array.isArray(parsed.profession) ? parsed.profession : [],
+            experience: Array.isArray(parsed.experience) ? parsed.experience : [],
+            coursesAndCertificates: Array.isArray(parsed.coursesAndCertificates) ? parsed.coursesAndCertificates : [],
             certificatesScanned: Array.isArray(parsed.certificatesScanned) ? parsed.certificatesScanned : [],
-            informatics: Array.isArray(parsed.informatics) ? parsed.informatics : initialCVData.informatics,
-            ecology: (parsed.ecology && typeof parsed.ecology === 'object') ? { ...initialCVData.ecology, ...parsed.ecology } : initialCVData.ecology,
+            informatics: Array.isArray(parsed.informatics) ? parsed.informatics : [],
+            ecology: (parsed.ecology && typeof parsed.ecology === 'object') ? { ...blankCVTemplate.ecology, ...parsed.ecology } : blankCVTemplate.ecology,
             signature: {
-              ...initialCVData.signature,
-              ...(parsed.signature || {}),
-              dataUrl: (parsed.signature?.dataUrl && parsed.signature.dataUrl.trim() !== '') 
-                ? parsed.signature.dataUrl 
-                : initialCVData.signature.dataUrl
+              ...blankCVTemplate.signature,
+              ...(parsed.signature || {})
             },
             certificateDisplay: {
-              ...initialCVData.certificateDisplay,
+              ...blankCVTemplate.certificateDisplay,
               ...(parsed.certificateDisplay || {})
             }
           };
@@ -124,32 +122,14 @@ export default function App() {
   };
 
   const handleStartNewCVWizard = () => {
-    if (window.confirm('¿Deseas iniciar la creación de un NUEVO CV? Se iniciará una plantilla limpia en el panel lateral.')) {
-      const newCVTemplate = {
-        ...initialCVData,
-        id: `cv_${Date.now()}`,
-        personalInfo: {
-          ...initialCVData.personalInfo,
-          fullName: "",
-          surname: "",
-          givenNames: "",
-          dni: "",
-          cuit: "",
-          birthDate: "",
-          address: "",
-          cityProvince: "",
-          phone: "",
-          email: "",
-          profilePhoto: "",
-          quote: "",
-          initials: "CV",
-          year: new Date().getFullYear().toString()
-        },
-        certificatesScanned: []
+    if (window.confirm('¿Deseas iniciar la creación de un NUEVO CV en blanco? Se limpiarán todos los campos para que ingreses tus propios datos.')) {
+      const newBlankCV = {
+        ...blankCVTemplate,
+        id: `cv_${Date.now()}`
       };
 
-      setCvData(newCVTemplate);
-      localStorage.setItem('cv_premium_data', JSON.stringify(newCVTemplate));
+      setCvData(newBlankCV);
+      localStorage.setItem('cv_premium_data', JSON.stringify(newBlankCV));
       setIsPanelOpen(true);
       setActiveTab('personales');
       setIsWizardOpen(false);
