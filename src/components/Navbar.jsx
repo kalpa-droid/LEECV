@@ -12,46 +12,50 @@ export default function Navbar({
 }) {
   return (
     <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur border-b border-slate-800 text-white shadow-xl no-print">
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between gap-2">
         {/* Brand & Logo */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center font-black text-xl shadow-lg shadow-purple-500/20">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center font-black text-sm sm:text-xl shadow-lg shadow-purple-500/20">
             CV
           </div>
           <div>
-            <h1 className="font-extrabold text-base tracking-wide flex items-center gap-1.5 text-white">
-              CVPREMIUM <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">Editorial A4</span>
+            <h1 className="font-extrabold text-sm sm:text-base tracking-wide text-white">
+              CVPREMIUM
             </h1>
-            <p className="text-xs text-slate-400">Plataforma Profesional de CV</p>
+            <p className="text-[10px] sm:text-xs text-slate-400 hidden sm:block">Plataforma Profesional de CV</p>
           </div>
         </div>
 
-        {/* Global Action Buttons (No duplicated buttons) */}
-        <div className="flex items-center gap-3">
+        {/* Global Action Buttons */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5">
           {/* VER CV DE EJEMPLO */}
           <button
             onClick={onLoadExampleCV}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition"
-            title="Cargar currículum de ejemplo completo de Mónica Burgos (Editable)"
+            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition"
+            title="Cargar currículum de ejemplo"
           >
-            <Eye className="w-4 h-4 text-purple-400" /> Ver CV de Ejemplo
+            <Eye className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
+            <span>Ejemplo</span>
           </button>
 
-          {/* NUEVO CV (ASISTENTE PASO A PASO) */}
+          {/* NUEVO CV */}
           <button
             onClick={onStartNewCVWizard}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-purple-600/90 hover:bg-purple-600 border border-purple-500/40 transition shadow-md shadow-purple-600/20"
-            title="Iniciar asistente para crear un nuevo CV desde cero paso a paso"
+            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-white bg-purple-600/90 hover:bg-purple-600 border border-purple-500/40 transition shadow-md shadow-purple-600/20"
+            title="Iniciar un nuevo CV"
           >
-            <FilePlus className="w-4 h-4 text-pink-300" /> Nuevo CV (Paso a Paso)
+            <FilePlus className="w-3.5 h-3.5 text-pink-300 flex-shrink-0" />
+            <span>Nuevo</span>
           </button>
 
-          {/* IMPRIMIR / PDF A4 */}
+          {/* IMPRIMIR */}
           <button
             onClick={onPrint}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 text-white font-bold text-xs shadow-lg shadow-purple-600/30 transition transform hover:scale-[1.02] active:scale-95"
+            className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 text-white font-extrabold text-xs shadow-lg shadow-purple-600/30 transition transform active:scale-95"
+            title="Imprimir o guardar como PDF"
           >
-            <Printer className="w-4 h-4" /> IMPRIMIR / PDF A4
+            <Printer className="w-3.5 h-3.5 flex-shrink-0" />
+            <span>Imprimir</span>
           </button>
         </div>
       </div>
