@@ -177,7 +177,7 @@ export default function App() {
 
         {/* Right Live Preview Area */}
         <div className="flex-1 h-full overflow-y-auto">
-          <CVPreview cvData={cvData} setCvData={setCvData} />
+          <CVPreview cvData={cvData} setCvData={setCvData} activeTab={activeTab} />
         </div>
       </main>
 

@@ -18,7 +18,7 @@ import {
   Clock
 } from 'lucide-react';
 
-export default function CVPreview({ cvData, setCvData }) {
+export default function CVPreview({ cvData, setCvData, activeTab }) {
   const { 
     personalInfo = {}, 
     roles = [], 
@@ -34,6 +34,31 @@ export default function CVPreview({ cvData, setCvData }) {
     layoutStyle = 'executive-sidebar',
     certificateDisplay = { certsPerPage: 1 }
   } = cvData || {};
+
+  // Auto-scroll to active section when tab changes
+  React.useEffect(() => {
+    if (!activeTab) return;
+    const tabToIdMap = {
+      personales: 'cv-section-personales',
+      formacion: 'cv-section-formacion',
+      profesion: 'cv-section-profesion',
+      experiencia: 'cv-section-experiencia',
+      cursos: 'cv-section-cursos',
+      informatica: 'cv-section-personales',
+      ecologia: 'cv-section-experiencia',
+      certificados: 'cv-section-certificados',
+      firma: 'cv-section-firma',
+      diseno: 'cv-section-personales'
+    };
+
+    const targetId = tabToIdMap[activeTab];
+    if (targetId) {
+      const el = document.getElementById(targetId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [activeTab]);
 
   // Helper to extract 4-digit year and sort items descending (2025 -> 2024 -> 2023...)
   const sortByYearDesc = (items) => {
@@ -410,7 +435,7 @@ export default function CVPreview({ cvData, setCvData }) {
             </p>
 
             {/* Datos Personales */}
-            <div className="section-box-print">
+            <div id="cv-section-personales" className="section-box-print">
               {renderSectionHeader(<User className="w-4 h-4" />, "DATOS PERSONALES")}
 
               <div className="grid grid-cols-3 gap-y-1.5 text-[11px] font-medium bg-slate-50/90 p-3 rounded-xl border border-slate-200/80">
@@ -432,7 +457,7 @@ export default function CVPreview({ cvData, setCvData }) {
             </div>
 
             {/* Formación Académica */}
-            <div className="section-box-print">
+            <div id="cv-section-formacion" className="section-box-print">
               {renderSectionHeader(<GraduationCap className="w-4 h-4" />, "FORMACIÓN ACADÉMICA")}
 
               <div className="space-y-2">
@@ -456,7 +481,7 @@ export default function CVPreview({ cvData, setCvData }) {
             </div>
 
             {/* Profesión */}
-            <div className="section-box-print">
+            <div id="cv-section-profesion" className="section-box-print">
               {renderSectionHeader(<Briefcase className="w-4 h-4" />, `PROFESIÓN & TITULACIONES (${sortedProfession.length})`)}
 
               <div className="grid grid-cols-1 gap-1.5">
@@ -570,7 +595,7 @@ export default function CVPreview({ cvData, setCvData }) {
         const expGroup = sortedExperience.slice(expPageIdx * EXP_PER_PAGE, (expPageIdx + 1) * EXP_PER_PAGE);
 
         return (
-          <div key={`exp-${pageNum}`} className="a4-page-container grid grid-cols-3">
+          <div id={expPageIdx === 0 ? "cv-section-experiencia" : undefined} key={`exp-${pageNum}`} className="a4-page-container grid grid-cols-3">
             {/* Left Sidebar */}
             <div className="col-span-1 flex flex-col relative" style={sidebarBgStyle}>
               <div className="p-5 text-center border-b border-current opacity-90" style={sidebarHeaderBgStyle}>
@@ -701,7 +726,7 @@ export default function CVPreview({ cvData, setCvData }) {
         const pageCoursesGroup = sortedCourses.slice(pageIdx * COURSES_PER_PAGE, (pageIdx + 1) * COURSES_PER_PAGE);
 
         return (
-          <div key={`course-${pageNum}`} className="a4-page-container grid grid-cols-3">
+          <div id={pageIdx === 0 ? "cv-section-cursos" : undefined} key={`course-${pageNum}`} className="a4-page-container grid grid-cols-3">
             {/* Sidebar */}
             <div className="col-span-1 flex flex-col relative" style={sidebarBgStyle}>
               <div className="p-5 text-center border-b border-current opacity-90" style={sidebarHeaderBgStyle}>
@@ -799,7 +824,7 @@ export default function CVPreview({ cvData, setCvData }) {
 
               {/* Digital Signature Block on Last Course Page */}
               {isLastPage && (
-                <div className="mt-3 pt-2 border-t border-slate-300 flex flex-col items-end section-box-print">
+                <div id="cv-section-firma" className="mt-3 pt-2 border-t border-slate-300 flex flex-col items-end section-box-print">
                   <div className="w-56 text-center space-y-0.5">
                     {signature?.dataUrl ? (
                       <img src={signature.dataUrl} alt="Firma Digital" className="h-12 mx-auto object-contain mb-0.5" />
@@ -823,7 +848,7 @@ export default function CVPreview({ cvData, setCvData }) {
       {/* APPENDED CERTIFICATE PAGES */}
       {/* ========================================================================= */}
       {certPages.map((group, pageIdx) => (
-        <div key={pageIdx} className="a4-page-container p-8 flex flex-col items-center justify-between border-8 border-purple-100">
+        <div id={pageIdx === 0 ? "cv-section-certificados" : undefined} key={pageIdx} className="a4-page-container p-8 flex flex-col items-center justify-between border-8 border-purple-100">
           
           {/* Header Controls for Certificates (No Print) */}
           <div className="w-full flex items-center justify-between no-print bg-slate-100 dark:bg-slate-800 p-2 rounded-xl border border-slate-300 dark:border-slate-700 mb-3">
