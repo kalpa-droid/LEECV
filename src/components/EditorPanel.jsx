@@ -234,15 +234,18 @@ export default function EditorPanel({
   const addRole = () => {
     setCvData((prev) => ({
       ...prev,
-      roles: [...prev.roles, "Nuevo Título / Rol Profesional"]
+      roles: [...prev.roles, ""]
     }));
   };
 
   const removeRole = (index) => {
-    setCvData((prev) => ({
-      ...prev,
-      roles: prev.roles.filter((_, i) => i !== index)
-    }));
+    const roleName = cvData?.roles?.[index] || `Rol #${index + 1}`;
+    if (window.confirm(`¿Estás seguro de que deseas eliminar "${roleName}"?`)) {
+      setCvData((prev) => ({
+        ...prev,
+        roles: prev.roles.filter((_, i) => i !== index)
+      }));
+    }
   };
 
   const updateTheme = (field, value) => {
@@ -502,7 +505,7 @@ export default function EditorPanel({
                     ...prev,
                     education: [
                       ...prev.education,
-                      { level: "SECUNDARIO COMPLETO", institution: "Nombre del Colegio", year: "2025", degree: "Bachiller Pedagógico" }
+                      { level: "", institution: "", year: "", degree: "" }
                     ]
                   }));
                 }}
@@ -519,10 +522,13 @@ export default function EditorPanel({
                     <span className="text-xs font-bold text-purple-600">Estudio / Formación #{idx + 1}</span>
                     <button
                       onClick={() => {
-                        setCvData((prev) => ({
-                          ...prev,
-                          education: prev.education.filter((_, i) => i !== idx)
-                        }));
+                        const name = item.degree || item.level || item.institution || `Estudio #${idx + 1}`;
+                        if (window.confirm(`¿Estás seguro de que deseas eliminar "${name}"?`)) {
+                          setCvData((prev) => ({
+                            ...prev,
+                            education: prev.education.filter((_, i) => i !== idx)
+                          }));
+                        }
                       }}
                       className="text-slate-400 hover:text-red-600 transition"
                       title="Eliminar"
@@ -632,7 +638,7 @@ export default function EditorPanel({
                     ...prev,
                     profession: [
                       ...prev.profession,
-                      { institution: "Instituto o Universidad", year: "2025", degree: "Nuevo Título Profesional" }
+                      { institution: "", year: "", degree: "" }
                     ]
                   }));
                 }}
@@ -649,10 +655,13 @@ export default function EditorPanel({
                     <span className="text-xs font-bold text-purple-600">Título Profesional #{idx + 1}</span>
                     <button
                       onClick={() => {
-                        setCvData((prev) => ({
-                          ...prev,
-                          profession: prev.profession.filter((_, i) => i !== idx)
-                        }));
+                        const name = item.degree || item.institution || `Título #${idx + 1}`;
+                        if (window.confirm(`¿Estás seguro de que deseas eliminar "${name}"?`)) {
+                          setCvData((prev) => ({
+                            ...prev,
+                            profession: prev.profession.filter((_, i) => i !== idx)
+                          }));
+                        }
                       }}
                       className="text-slate-400 hover:text-red-600 transition"
                       title="Eliminar"
@@ -741,10 +750,10 @@ export default function EditorPanel({
                     ...prev,
                     experience: [
                       {
-                        institution: "Nombre de la Escuela / Institución",
-                        role: "Puesto / Cargo Desempeñado",
-                        year: "2025",
-                        details: "Descripción del desempeño o tareas realizadas"
+                        institution: "",
+                        role: "",
+                        year: "",
+                        details: ""
                       },
                       ...(prev.experience || [])
                     ]
@@ -763,10 +772,13 @@ export default function EditorPanel({
                     <span className="text-xs font-bold text-purple-600">Experiencia Laboral #{idx + 1}</span>
                     <button
                       onClick={() => {
-                        setCvData((prev) => ({
-                          ...prev,
-                          experience: prev.experience.filter((_, i) => i !== idx)
-                        }));
+                        const name = exp.role || exp.institution || `Experiencia #${idx + 1}`;
+                        if (window.confirm(`¿Estás seguro de que deseas eliminar "${name}"?`)) {
+                          setCvData((prev) => ({
+                            ...prev,
+                            experience: (prev.experience || []).filter((_, i) => i !== idx)
+                          }));
+                        }
                       }}
                       className="text-slate-400 hover:text-red-600 transition"
                       title="Eliminar experiencia"
@@ -876,11 +888,11 @@ export default function EditorPanel({
                     ...prev,
                     coursesAndCertificates: [
                       {
-                        year: "2025",
-                        institution: "Nombre de la Institución Organizadora",
-                        title: "Nuevo Curso o Capacitación Docente",
-                        hours: "40 hs",
-                        details: "Certificado o Resolución N° 000/25"
+                        year: "",
+                        institution: "",
+                        title: "",
+                        hours: "",
+                        details: ""
                       },
                       ...prev.coursesAndCertificates
                     ]
@@ -899,10 +911,13 @@ export default function EditorPanel({
                     <span className="text-xs font-bold text-teal-600">Curso Docente #{idx + 1}</span>
                     <button
                       onClick={() => {
-                        setCvData((prev) => ({
-                          ...prev,
-                          coursesAndCertificates: prev.coursesAndCertificates.filter((_, i) => i !== idx)
-                        }));
+                        const name = c.title || c.institution || `Curso #${idx + 1}`;
+                        if (window.confirm(`¿Estás seguro de que deseas eliminar "${name}"?`)) {
+                          setCvData((prev) => ({
+                            ...prev,
+                            coursesAndCertificates: prev.coursesAndCertificates.filter((_, i) => i !== idx)
+                          }));
+                        }
                       }}
                       className="text-slate-400 hover:text-red-600 transition"
                       title="Eliminar curso"
@@ -1031,7 +1046,7 @@ export default function EditorPanel({
                     ...prev,
                     informatics: [
                       ...prev.informatics,
-                      { institution: "Secretaría o Plataforma Digital", course: "Nuevo Curso de Informática / TICs" }
+                      { institution: "", course: "" }
                     ]
                   }));
                 }}
@@ -1048,10 +1063,13 @@ export default function EditorPanel({
                     <span className="text-xs font-bold text-teal-600">Curso Informático #{idx + 1}</span>
                     <button
                       onClick={() => {
-                        setCvData((prev) => ({
-                          ...prev,
-                          informatics: prev.informatics.filter((_, i) => i !== idx)
-                        }));
+                        const name = item.course || item.institution || `Curso Informático #${idx + 1}`;
+                        if (window.confirm(`¿Estás seguro de que deseas eliminar "${name}"?`)) {
+                          setCvData((prev) => ({
+                            ...prev,
+                            informatics: prev.informatics.filter((_, i) => i !== idx)
+                          }));
+                        }
                       }}
                       className="text-slate-400 hover:text-red-600 transition"
                       title="Eliminar"
@@ -1131,7 +1149,7 @@ export default function EditorPanel({
                         ...prev.ecology,
                         rural: [
                           ...(prev.ecology?.rural || []),
-                          { title: "Nuevo Taller sobre Agricultura / Huerta", institution: "Institución / Ministerio" }
+                          { title: "", institution: "" }
                         ]
                       }
                     }));
@@ -1148,13 +1166,16 @@ export default function EditorPanel({
                     <span className="text-[11px] font-bold text-emerald-600">Proyecto Rural #{idx + 1}</span>
                     <button
                       onClick={() => {
-                        setCvData((prev) => ({
-                          ...prev,
-                          ecology: {
-                            ...prev.ecology,
-                            rural: prev.ecology.rural.filter((_, i) => i !== idx)
-                          }
-                        }));
+                        const name = item.title || item.institution || `Proyecto Rural #${idx + 1}`;
+                        if (window.confirm(`¿Estás seguro de que deseas eliminar "${name}"?`)) {
+                          setCvData((prev) => ({
+                            ...prev,
+                            ecology: {
+                              ...prev.ecology,
+                              rural: prev.ecology.rural.filter((_, i) => i !== idx)
+                            }
+                          }));
+                        }
                       }}
                       className="text-slate-400 hover:text-red-600 transition"
                     >
@@ -1209,7 +1230,7 @@ export default function EditorPanel({
                         ...prev.ecology,
                         environmental: [
                           ...(prev.ecology?.environmental || []),
-                          { title: "Nuevo Proyecto Ambiental / Reciclaje", institution: "Entidad / Red" }
+                          { title: "", institution: "" }
                         ]
                       }
                     }));
@@ -1226,13 +1247,16 @@ export default function EditorPanel({
                     <span className="text-[11px] font-bold text-teal-600">Proyecto Ambiental #{idx + 1}</span>
                     <button
                       onClick={() => {
-                        setCvData((prev) => ({
-                          ...prev,
-                          ecology: {
-                            ...prev.ecology,
-                            environmental: prev.ecology.environmental.filter((_, i) => i !== idx)
-                          }
-                        }));
+                        const name = item.title || item.institution || `Proyecto Ambiental #${idx + 1}`;
+                        if (window.confirm(`¿Estás seguro de que deseas eliminar "${name}"?`)) {
+                          setCvData((prev) => ({
+                            ...prev,
+                            ecology: {
+                              ...prev.ecology,
+                              environmental: prev.ecology.environmental.filter((_, i) => i !== idx)
+                            }
+                          }));
+                        }
                       }}
                       className="text-slate-400 hover:text-red-600 transition"
                     >
@@ -1432,10 +1456,13 @@ export default function EditorPanel({
                       </button>
                       <button
                         onClick={() => {
-                          setCvData(prev => ({
-                            ...prev,
-                            certificatesScanned: prev.certificatesScanned.filter(c => c.id !== cert.id)
-                          }));
+                          const name = cert.title || 'este certificado';
+                          if (window.confirm(`¿Estás seguro de que deseas eliminar el certificado "${name}"?`)) {
+                            setCvData(prev => ({
+                              ...prev,
+                              certificatesScanned: prev.certificatesScanned.filter(c => c.id !== cert.id)
+                            }));
+                          }
                         }}
                         className="p-1 text-slate-400 hover:text-red-600 transition"
                         title="Eliminar"
