@@ -19,10 +19,15 @@ export const checkStorageStatus = () => {
 
 const SAVED_CVS_KEY = 'cv_premium_saved_list';
 
+const getMonthNameEs = (date = new Date()) => {
+  const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+  return months[date.getMonth()];
+};
+
 export const DEFAULT_PRESET_CVS = [
   {
     id: "cv_monica_burgos",
-    title: "CV Mónica Daniela Burgos (Trayectoria Completa)",
+    title: "CV - MÓNICA DANIELA BURGOS - Agosto - 2025",
     candidate_name: "MÓNICA DANIELA BURGOS",
     dni: "29334206",
     updated_at: "2025-01-01T12:00:00.000Z",
@@ -30,9 +35,9 @@ export const DEFAULT_PRESET_CVS = [
   },
   {
     id: "cv_ejemplo_estandar",
-    title: "CV Ejemplo Profesional (Estándar 3 Registros)",
-    candidate_name: "CAMILA VALERIA SOSA",
-    dni: "35.892.104",
+    title: "CV - VALERIA SOLEDAD MEDINA - Agosto - 2025",
+    candidate_name: "VALERIA SOLEDAD MEDINA",
+    dni: "34.591.208",
     updated_at: "2025-01-02T12:00:00.000Z",
     cv_data: standardExampleCVData
   }
@@ -88,10 +93,15 @@ export const saveCV = async (cvData) => {
   const optimizedCV = await optimizeCVImagesToWebP(cvData);
 
   const id = cvData.id || `cv_${Date.now()}`;
+  const candidateName = (optimizedCV.personalInfo?.fullName || 'POSTULANTE').trim().toUpperCase();
+  const monthName = getMonthNameEs();
+  const yearNum = optimizedCV.personalInfo?.year || new Date().getFullYear();
+  const formattedTitle = `CV - ${candidateName} - ${monthName} - ${yearNum}`;
+
   const record = {
     id,
-    title: `CV ${optimizedCV.personalInfo?.fullName || 'Nuevo'}`,
-    candidate_name: optimizedCV.personalInfo?.fullName || 'Sin Nombre',
+    title: formattedTitle,
+    candidate_name: candidateName,
     dni: optimizedCV.personalInfo?.dni || '',
     updated_at: new Date().toISOString(),
     cv_data: { ...optimizedCV, id }

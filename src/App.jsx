@@ -7,7 +7,7 @@ import PhotoCropperModal from './components/PhotoCropperModal';
 import SignatureModal from './components/SignatureModal';
 import WizardModal from './components/WizardModal';
 import SavedCVsModal from './components/SavedCVsModal';
-import { initialCVData } from './data/initialCVData';
+import { initialCVData, standardExampleCVData } from './data/initialCVData';
 import { saveCV } from './services/cvStorageService';
 
 export default function App() {
@@ -115,15 +115,23 @@ export default function App() {
   };
 
   const handleLoadExampleCV = () => {
-    setCvData(initialCVData);
-    localStorage.setItem('cv_premium_data', JSON.stringify(initialCVData));
+    setCvData(standardExampleCVData);
+    localStorage.setItem('cv_premium_data', JSON.stringify(standardExampleCVData));
+  };
+
+  const handleOpenSavedCVs = () => {
+    setIsPanelOpen(true);
+    setActiveTab('guardados');
+    setIsSavedCVsOpen(true);
   };
 
   const handleSaveCV = async () => {
     setIsSaving(true);
     try {
-      await saveCV(cvData);
-      alert(`CV de "${cvData?.personalInfo?.fullName || 'Postulante'}" guardado correctamente con compresión WebP.`);
+      const record = await saveCV(cvData);
+      setIsPanelOpen(true);
+      setActiveTab('guardados');
+      alert(`CV guardado en el panel lateral como:\n"${record.title}"`);
     } catch (err) {
       console.error(err);
       alert('Error al guardar CV');
@@ -223,6 +231,9 @@ export default function App() {
         onPrint={handlePrint}
         onLoadExampleCV={handleLoadExampleCV}
         onStartNewCVWizard={handleStartNewCVWizard}
+        onOpenSavedCVs={handleOpenSavedCVs}
+        onSaveCV={handleSaveCV}
+        isSaving={isSaving}
       />
 
       {/* Secondary Full-Width Sub-Header Navbar Toolbar (Row 2 - Section Tabs) */}

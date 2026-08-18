@@ -1,5 +1,6 @@
 import { monicaProfilePhoto } from "./monicaPhotoBase64";
 import { monicaSignaturePhoto } from "./monicaSignatureBase64";
+import { valeriaProfilePhoto, valeriaSignaturePhoto, valeriaCertificatePhoto } from "./valeriaExampleAssets";
 
 export const monicaBurgosCVData = {
   id: "cv_monica_burgos",
@@ -814,20 +815,20 @@ export const monicaBurgosCVData = {
 export const standardExampleCVData = {
   id: "cv_ejemplo_estandar",
   personalInfo: {
-    fullName: "CAMILA VALERIA SOSA",
-    surname: "SOSA",
-    givenNames: "Camila Valeria",
-    dni: "35.892.104",
-    cuit: "27-35892104-4",
-    birthDate: "15 de Mayo de 1991",
-    address: "Av. Belgrano 1450, Piso 3",
+    fullName: "VALERIA SOLEDAD MEDINA",
+    surname: "MEDINA",
+    givenNames: "Valeria Soledad",
+    dni: "34.591.208",
+    cuit: "27-34591208-4",
+    birthDate: "12 de Agosto de 1989",
+    address: "Av. San Martín 840, 2° B",
     cityProvince: "SALTA, SALTA CP: 4400",
-    phone: "387-154902111",
-    email: "camilav.sosa@educacion.gob.ar",
-    facebook: "facebook.com/camilavsosa",
-    profilePhoto: monicaProfilePhoto,
-    quote: "“Profesional de la educación apasionada por las TICs, la inclusión pedagógica y la mediación de aprendizajes comunitarios”",
-    initials: "C.V.S",
+    phone: "387-154889922",
+    email: "valeria.medina@educacion.gob.ar",
+    facebook: "facebook.com/valeriasoledadmedina",
+    profilePhoto: valeriaProfilePhoto,
+    quote: "“Docente apasionada por la enseñanza pedagógica digital, la mediación lectora y la transformación educativa en entornos diversos”",
+    initials: "V.S.M",
     year: "2025"
   },
   roles: [
@@ -836,8 +837,8 @@ export const standardExampleCVData = {
     "Coordinadora de Proyectos Institucionales"
   ],
   education: [
-    { level: "SECUNDARIO COMPLETO", institution: "Colegio Secundario N° 5095 \"Gral. Belgrano\"", year: "2008", degree: "Bachiller Humanístico" },
-    { level: "NIVEL TERCIARIO SUPERIOR", institution: "Instituto de Educación Superior N° 6001", year: "2013", degree: "Profesorado de Educación Secundaria en Lengua" },
+    { level: "NIVEL SECUNDARIO COMPLETO", institution: "Colegio Secundario N° 5095 \"Gral. Manuel Belgrano\"", year: "2007", degree: "Bachiller Humanístico Pedagógico" },
+    { level: "ESTUDIO TERCIARIO SUPERIOR", institution: "Instituto de Educación Superior N° 6001", year: "2013", degree: "Profesorado de Educación Secundaria en Lengua" },
     { level: "POSTÍTULO UNIVERSITARIO", institution: "Universidad Nacional de Salta", year: "2019", degree: "Diplomatura en Educación Digital y TICs" }
   ],
   profession: [
@@ -869,16 +870,22 @@ export const standardExampleCVData = {
     ]
   },
   certificatesScanned: [
-    { id: "cert_sample_1", title: "Título de Profesorado en Lengua y Literatura", year: "2016", category: "profesion", image: monicaSignaturePhoto }
+    { 
+      id: "cert_valeria_1", 
+      title: "Título de Grado Universitario - Profesorado en Educación", 
+      year: "2023", 
+      category: "profesion", 
+      image: valeriaCertificatePhoto 
+    }
   ],
   showCoverPage: true,
   layoutStyle: "executive-sidebar",
   signature: {
     type: "drawn",
-    dataUrl: monicaSignaturePhoto,
-    signerName: "CAMILA VALERIA SOSA",
+    dataUrl: valeriaSignaturePhoto,
+    signerName: "VALERIA SOLEDAD MEDINA",
     signerRole: "Profesora de Educación Secundaria en Lengua y Literatura",
-    dni: "35892104",
+    dni: "34591208",
     date: "Salta, 2025"
   },
   theme: {
