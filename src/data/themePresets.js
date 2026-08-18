@@ -1,4 +1,90 @@
 export const themePresets = [
+  // 0. LINDA FERIA SALTA (OFICIAL)
+  {
+    id: "linda-feria-rosa",
+    category: "linda-feria",
+    categoryLabel: "Linda Feria Salta (Oficial)",
+    name: "Rosa Feria (Linda Feria Salta)",
+    primaryColor: "#FF2E63",
+    secondaryColor: "#2B1B2E",
+    accentColor: "#FFC93C",
+    textColor: "#2B1B2E",
+    bgCorridor: "#FF2E63",
+    sidebarHeaderBg: "#2B1B2E",
+    imageBorder: "#E31555",
+    fontFamily: "'Inter', sans-serif"
+  },
+  {
+    id: "linda-feria-amarillo",
+    category: "linda-feria",
+    categoryLabel: "Linda Feria Salta (Oficial)",
+    name: "Amarillo Sol (Linda Feria Salta)",
+    primaryColor: "#F0AE00",
+    secondaryColor: "#2B1B2E",
+    accentColor: "#00A8A0",
+    textColor: "#2B1B2E",
+    bgCorridor: "#F0AE00",
+    sidebarHeaderBg: "#2B1B2E",
+    imageBorder: "#D69700",
+    fontFamily: "'Inter', sans-serif"
+  },
+  {
+    id: "linda-feria-turquesa",
+    category: "linda-feria",
+    categoryLabel: "Linda Feria Salta (Oficial)",
+    name: "Turquesa Cardón (Linda Feria Salta)",
+    primaryColor: "#00A8A0",
+    secondaryColor: "#00877F",
+    accentColor: "#FF7A29",
+    textColor: "#2B1B2E",
+    bgCorridor: "#00A8A0",
+    sidebarHeaderBg: "#00877F",
+    imageBorder: "#00877F",
+    fontFamily: "'Inter', sans-serif"
+  },
+  {
+    id: "linda-feria-violeta",
+    category: "linda-feria",
+    categoryLabel: "Linda Feria Salta (Oficial)",
+    name: "Violeta Uva (Linda Feria Salta)",
+    primaryColor: "#8E44FF",
+    secondaryColor: "#7126E0",
+    accentColor: "#FFC93C",
+    textColor: "#2B1B2E",
+    bgCorridor: "#8E44FF",
+    sidebarHeaderBg: "#7126E0",
+    imageBorder: "#7126E0",
+    fontFamily: "'Inter', sans-serif"
+  },
+  {
+    id: "linda-feria-naranja",
+    category: "linda-feria",
+    categoryLabel: "Linda Feria Salta (Oficial)",
+    name: "Naranja Copla (Linda Feria Salta)",
+    primaryColor: "#FF7A29",
+    secondaryColor: "#E85D04",
+    accentColor: "#00A8A0",
+    textColor: "#2B1B2E",
+    bgCorridor: "#FF7A29",
+    sidebarHeaderBg: "#E85D04",
+    imageBorder: "#E85D04",
+    fontFamily: "'Inter', sans-serif"
+  },
+  {
+    id: "linda-feria-celeste",
+    category: "linda-feria",
+    categoryLabel: "Linda Feria Salta (Oficial)",
+    name: "Celeste Cielo (Linda Feria Salta)",
+    primaryColor: "#2C98CE",
+    secondaryColor: "#1e3a8a",
+    accentColor: "#FF2E63",
+    textColor: "#2B1B2E",
+    bgCorridor: "#2C98CE",
+    sidebarHeaderBg: "#1e3a8a",
+    imageBorder: "#4FB6E8",
+    fontFamily: "'Inter', sans-serif"
+  },
+
   // 1. ESPECIAL DOCENTE / MÓNICA (ORIGINAL)
   {
     id: "purple-monica",

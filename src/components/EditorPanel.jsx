@@ -1666,9 +1666,11 @@ export default function EditorPanel({
                 <Sparkles className="w-3.5 h-3.5 text-purple-600" /> Presets Cromáticos por Perfil
               </label>
 
-              {['docentes', 'ejecutivos', 'jovenes'].map((cat) => {
+              {['linda-feria', 'docentes', 'ejecutivos', 'jovenes'].map((cat) => {
                 const categoryPresets = themePresets.filter(p => p.category === cat);
-                const categoryTitle = cat === 'docentes' 
+                const categoryTitle = cat === 'linda-feria'
+                  ? '🎪 Paleta Oficial — Linda Feria Salta'
+                  : cat === 'docentes' 
                   ? '🎓 Maestros, Docentes & Educadores' 
                   : cat === 'ejecutivos' 
                   ? '💼 Ejecutivos & Corporativos' 
