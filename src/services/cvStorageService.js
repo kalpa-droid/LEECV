@@ -10,6 +10,13 @@ export const supabase = (supabaseUrl && supabaseAnonKey)
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
+export const checkStorageStatus = () => {
+  if (supabase) {
+    return { isCloud: true, label: 'Nube Supabase Conectada' };
+  }
+  return { isCloud: false, label: 'Almacenamiento Local (LocalStorage WebP)' };
+};
+
 const SAVED_CVS_KEY = 'cv_premium_saved_list';
 
 export const DEFAULT_PRESET_CVS = [

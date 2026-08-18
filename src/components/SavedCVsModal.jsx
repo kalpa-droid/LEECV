@@ -11,7 +11,7 @@ import {
   Sparkles,
   Download
 } from 'lucide-react';
-import { getSavedCVsList, loadCVById, deleteCVById } from '../services/cvStorageService';
+import { getSavedCVsList, loadCVById, deleteCVById, checkStorageStatus } from '../services/cvStorageService';
 
 export default function SavedCVsModal({ 
   isOpen, 
@@ -20,6 +20,8 @@ export default function SavedCVsModal({
 }) {
   const [savedList, setSavedList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const statusInfo = checkStorageStatus();
 
   const fetchList = async () => {
     setIsLoading(true);
@@ -146,11 +148,18 @@ export default function SavedCVsModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-800 bg-slate-950/60 flex items-center justify-between text-xs text-slate-400">
-          <span className="flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-purple-400" />
-            <span>Compresión WebP activa (Fotos y Firmas al 80%)</span>
-          </span>
+        <div className="p-4 border-t border-slate-800 bg-slate-950/60 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+          <div className="flex items-center gap-2">
+            <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black border flex items-center gap-1.5 ${
+              statusInfo.isCloud 
+                ? 'bg-emerald-950/60 border-emerald-700/60 text-emerald-300' 
+                : 'bg-purple-950/60 border-purple-700/60 text-purple-300'
+            }`}>
+              <Cloud className="w-3.5 h-3.5" /> {statusInfo.label}
+            </span>
+            <span className="text-[10px] text-slate-500 hidden sm:inline">• Compresión WebP Activa (80%)</span>
+          </div>
+
           <button
             onClick={onClose}
             className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl transition"
