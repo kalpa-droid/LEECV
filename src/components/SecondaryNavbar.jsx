@@ -10,6 +10,7 @@ import {
   FileText, 
   PenTool, 
   Palette,
+  FolderOpen,
   PanelLeftOpen,
   PanelLeftClose
 } from 'lucide-react';
@@ -24,6 +25,7 @@ export const editorTabs = [
   { id: 'ecologia', label: 'Proyectos & Comunidad', icon: Leaf },
   { id: 'firma', label: 'Firma', icon: PenTool },
   { id: 'certificados', label: 'Certificados Anexados', icon: Award },
+  { id: 'guardados', label: 'Guardados', icon: FolderOpen },
   { id: 'diseno', label: 'Diseño & Colores', icon: Palette }
 ];
 

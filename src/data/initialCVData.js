@@ -1,7 +1,8 @@
 import { monicaProfilePhoto } from "./monicaPhotoBase64";
 import { monicaSignaturePhoto } from "./monicaSignatureBase64";
 
-export const initialCVData = {
+export const monicaBurgosCVData = {
+  id: "cv_monica_burgos",
   personalInfo: {
     "fullName": "MÓNICA DANIELA BURGOS",
     "surname": "BURGOS",
@@ -791,8 +792,6 @@ export const initialCVData = {
     }
 ],
   certificatesScanned: [],
-  showCoverPage: true,
-  layoutStyle: "executive-sidebar",
   signature: {
     type: "drawn",
     dataUrl: monicaSignaturePhoto,
@@ -811,3 +810,86 @@ export const initialCVData = {
     fontFamily: "Arial, sans-serif"
   }
 };
+
+export const standardExampleCVData = {
+  id: "cv_ejemplo_estandar",
+  personalInfo: {
+    fullName: "CAMILA VALERIA SOSA",
+    surname: "SOSA",
+    givenNames: "Camila Valeria",
+    dni: "35.892.104",
+    cuit: "27-35892104-4",
+    birthDate: "15 de Mayo de 1991",
+    address: "Av. Belgrano 1450, Piso 3",
+    cityProvince: "SALTA, SALTA CP: 4400",
+    phone: "387-154902111",
+    email: "camilav.sosa@educacion.gob.ar",
+    facebook: "facebook.com/camilavsosa",
+    profilePhoto: monicaProfilePhoto,
+    quote: "“Profesional de la educación apasionada por las TICs, la inclusión pedagógica y la mediación de aprendizajes comunitarios”",
+    initials: "C.V.S",
+    year: "2025"
+  },
+  roles: [
+    "Profesora de Educación Secundaria en Lengua y Literatura",
+    "Formadora en Tecnologías Educativas Virtuales",
+    "Coordinadora de Proyectos Institucionales"
+  ],
+  education: [
+    { level: "SECUNDARIO COMPLETO", institution: "Colegio Secundario N° 5095 \"Gral. Belgrano\"", year: "2008", degree: "Bachiller Humanístico" },
+    { level: "NIVEL TERCIARIO SUPERIOR", institution: "Instituto de Educación Superior N° 6001", year: "2013", degree: "Profesorado de Educación Secundaria en Lengua" },
+    { level: "POSTÍTULO UNIVERSITARIO", institution: "Universidad Nacional de Salta", year: "2019", degree: "Diplomatura en Educación Digital y TICs" }
+  ],
+  profession: [
+    { institution: "Instituto de Educación Superior \"Jorge Luis Borges\"", year: "2016", degree: "Profesora de Educación Secundaria en Lengua y Literatura" },
+    { institution: "Ministerio de Educación de la Provincia de Salta", year: "2021", degree: "Formadora Local en Comunidades de Aprendizaje" },
+    { institution: "Secretaría de Innovación Pública de la Nación", year: "2023", degree: "Certificación en Alfabetización y Mediación Digital" }
+  ],
+  experience: [
+    { institution: "Colegio Secundario N° 5095 Gral. Belgrano", role: "Profesora Titular de Lengua y Literatura", year: "2025", details: "Planificación curricular, conducción de grupos de nivel secundario y evaluación continua." },
+    { institution: "Instituto de Educación Superior N° 6001", role: "Docente de Didáctica de la Lengua", year: "2024", details: "Dictado de cátedras terciarias, tutoría de prácticas profesionales y proyectos integrados." },
+    { institution: "Ministerio de Educación de la Provincia", role: "Formadora Local y Capacitadora Pedagógica", year: "2023", details: "Formación docente continua, talleres de mediación lectora y articulación comunitaria." }
+  ],
+  coursesAndCertificates: [
+    { year: "2025", institution: "Ministerio de Educación de Salta", title: "Curso de Actualización Didáctica y Mediación Lectora", hours: "60 hs", details: "Resolución Ministerial Aprobada con Distinción" },
+    { year: "2024", institution: "Universidad Nacional de Salta", title: "Seminario de Educación Inclusiva y Diversidad en el Aula", hours: "45 hs", details: "Acreditación Universitaria Oficial" },
+    { year: "2023", institution: "Plataforma de Aprendizaje Punto Digital", title: "Taller Avanzado de Herramientas Digitales y Gamificación", hours: "40 hs", details: "Certificación Nacional" }
+  ],
+  informatics: [
+    { institution: "Plataforma Nacional Punto Digital", course: "Alfabetización Digital y Entornos Virtuales de Aprendizaje" },
+    { institution: "Secretaría de Innovación Pública", course: "Herramientas Ofimáticas Avanzadas, Procesadores de Texto y Presentaciones" },
+    { institution: "Google for Education", course: "Gestión de Aulas Virtuales Google Classroom y Workspace" }
+  ],
+  ecology: {
+    rural: [
+      { title: "PROYECTO DE ALFABETIZACIÓN EN ESCUELAS RURALES", institution: "Red de Educadores Comunitarios" }
+    ],
+    environmental: [
+      { title: "TALLER DE ECO-SUSTENTABILIDAD Y RECICLAJE ESCOLAR", institution: "Municipalidad de Salta" }
+    ]
+  },
+  certificatesScanned: [
+    { id: "cert_sample_1", title: "Título de Profesorado en Lengua y Literatura", year: "2016", category: "profesion", image: monicaSignaturePhoto }
+  ],
+  showCoverPage: true,
+  layoutStyle: "executive-sidebar",
+  signature: {
+    type: "drawn",
+    dataUrl: monicaSignaturePhoto,
+    signerName: "CAMILA VALERIA SOSA",
+    signerRole: "Profesora de Educación Secundaria en Lengua y Literatura",
+    dni: "35892104",
+    date: "Salta, 2025"
+  },
+  theme: {
+    presetId: "navy-executive",
+    primaryColor: "#1e3a8a",
+    secondaryColor: "#172554",
+    accentColor: "#d97706",
+    textColor: "#0f172a",
+    bgCorridor: "#1e3a8a",
+    fontFamily: "'Outfit', sans-serif"
+  }
+};
+
+export const initialCVData = standardExampleCVData;

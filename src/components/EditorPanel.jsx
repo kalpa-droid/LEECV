@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   User, 
   GraduationCap, 
@@ -21,9 +21,13 @@ import {
   Layout,
   Eye,
   EyeOff,
-  Layers
+  Layers,
+  FolderOpen,
+  Save,
+  Calendar
 } from 'lucide-react';
 import { themePresets, fontOptions } from '../data/themePresets';
+import { getSavedCVsList, loadCVById, deleteCVById, saveCV } from '../services/cvStorageService';
 
 export default function EditorPanel({ 
   cvData, 
@@ -40,6 +44,53 @@ export default function EditorPanel({
   const [isCameraActive, setIsCameraActive] = useState(false);
   const videoRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  // States for Guardados tab
+  const [savedList, setSavedList] = useState([]);
+  const [isSavingFromPanel, setIsSavingFromPanel] = useState(false);
+
+  const refreshSavedList = async () => {
+    try {
+      const list = await getSavedCVsList();
+      setSavedList(list);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'guardados') {
+      refreshSavedList();
+    }
+  }, [activeTab]);
+
+  const handleOpenSavedFromPanel = async (id) => {
+    const data = await loadCVById(id);
+    if (data) {
+      setCvData(data);
+      alert('CV cargado correctamente en el editor y vista previa.');
+    }
+  };
+
+  const handleDeleteSavedFromPanel = async (id, title) => {
+    if (window.confirm(`¿Eliminar "${title}" de tus currículums guardados?`)) {
+      await deleteCVById(id);
+      refreshSavedList();
+    }
+  };
+
+  const handleSaveFromPanel = async () => {
+    setIsSavingFromPanel(true);
+    try {
+      await saveCV(cvData);
+      alert(`CV de "${cvData?.personalInfo?.fullName || 'Postulante'}" guardado correctamente con compresión WebP.`);
+      refreshSavedList();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSavingFromPanel(false);
+    }
+  };
 
   // Extract all registered courses, degrees, education for easy selection
   const registeredItems = [];
@@ -1428,7 +1479,71 @@ export default function EditorPanel({
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 10: DISEÑO Y COLORES */}
+        {/* TAB 10: CVS GUARDADOS */}
+        {/* ========================================================================= */}
+        {activeTab === 'guardados' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b pb-2 border-slate-200 dark:border-slate-800">
+              <h3 className="text-xs font-extrabold uppercase text-purple-700 dark:text-purple-400 flex items-center gap-1.5">
+                <FolderOpen className="w-4 h-4 text-purple-600" /> CVs Guardados en Memoria / Nube
+              </h3>
+
+              <button
+                onClick={handleSaveFromPanel}
+                disabled={isSavingFromPanel}
+                className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>{isSavingFromPanel ? 'Guardando...' : 'Guardar Actual'}</span>
+              </button>
+            </div>
+
+            <div className="space-y-2.5">
+              {savedList.length === 0 ? (
+                <div className="p-6 text-center text-xs text-slate-500 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
+                  No hay currículums guardados aún. Haz clic en "Guardar Actual" para almacenar este borrador en WebP.
+                </div>
+              ) : (
+                savedList.map((item) => (
+                  <div
+                    key={item.id}
+                    className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 hover:border-purple-500 transition flex items-center justify-between gap-2"
+                  >
+                    <div className="space-y-0.5 min-w-0">
+                      <h4 className="text-xs font-black text-slate-900 dark:text-slate-100 truncate">
+                        {item.candidate_name || item.title}
+                      </h4>
+                      <p className="text-[10px] text-slate-500 font-semibold flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-slate-400" />
+                        <span>{item.dni ? `DNI: ${item.dni}` : 'Borrador'}</span>
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <button
+                        onClick={() => handleOpenSavedFromPanel(item.id)}
+                        className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 text-white font-black text-[11px] rounded-lg shadow transition flex items-center gap-1"
+                      >
+                        <FolderOpen className="w-3.5 h-3.5" /> Abrir
+                      </button>
+
+                      <button
+                        onClick={() => handleDeleteSavedFromPanel(item.id, item.candidate_name || item.title)}
+                        className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition"
+                        title="Eliminar"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 11: DISEÑO Y COLORES */}
         {/* ========================================================================= */}
         {activeTab === 'diseno' && (
           <div className="space-y-6">
