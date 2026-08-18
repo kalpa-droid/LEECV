@@ -93,9 +93,13 @@ export const saveCV = async (cvData) => {
   const optimizedCV = await optimizeCVImagesToWebP(cvData);
 
   const id = cvData.id || `cv_${Date.now()}`;
-  const candidateName = (optimizedCV.personalInfo?.fullName || 'POSTULANTE').trim().toUpperCase();
+  const candidateName = (
+    optimizedCV.personalInfo?.fullName || 
+    `${optimizedCV.personalInfo?.surname || ''} ${optimizedCV.personalInfo?.givenNames || ''}`.trim() || 
+    'POSTULANTE'
+  ).trim();
   const monthName = getMonthNameEs();
-  const yearNum = optimizedCV.personalInfo?.year || new Date().getFullYear();
+  const yearNum = new Date().getFullYear();
   const formattedTitle = `CV - ${candidateName} - ${monthName} - ${yearNum}`;
 
   const record = {

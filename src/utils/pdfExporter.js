@@ -1,11 +1,15 @@
 import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
 
+const getMonthNameEs = (date = new Date()) => {
+  const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+  return months[date.getMonth()];
+};
+
 /**
- * Bulletproof Native A4 PDF Generator using html2canvas-pro + jsPDF.
- * html2canvas-pro natively supports Tailwind CSS v4 `oklch()`, `oklab()` and modern CSS color spaces.
- * Renders each .a4-page-container independently to prevent memory overflow
- * and guarantee 100% reliable 1-click PDF download for any CV size (1-10+ pages).
+ * Ultra HD High-Definition Native A4 PDF Generator
+ * Format name: `CV - [Nombre Persona] - [Mes] - [Año].pdf`
+ * Uses 300 DPI high resolution rendering (scale: 3.2) for crystal clear, sharp vector-like text.
  */
 export async function exportCVToPDF(cvData) {
   const pageElements = Array.from(document.querySelectorAll('.a4-page-container'));
@@ -14,9 +18,16 @@ export async function exportCVToPDF(cvData) {
     throw new Error('No se encontraron hojas A4 en la vista previa.');
   }
 
-  const surname = (cvData?.personalInfo?.surname || 'DOCENTE').trim().replace(/\s+/g, '_');
-  const given = (cvData?.personalInfo?.givenNames || 'CV').trim().replace(/\s+/g, '_');
-  const fileName = `CV_${surname}_${given}_A4.pdf`;
+  // Exact Requested Naming Convention: CV - [Nombre] - [Mes] - [Año].pdf
+  const candidateName = (
+    cvData?.personalInfo?.fullName || 
+    `${cvData?.personalInfo?.surname || ''} ${cvData?.personalInfo?.givenNames || ''}`.trim() || 
+    'Postulante'
+  ).trim();
+
+  const monthName = getMonthNameEs();
+  const yearNum = new Date().getFullYear();
+  const fileName = `CV - ${candidateName} - ${monthName} - ${yearNum}.pdf`;
 
   const pdf = new jsPDF({
     orientation: 'portrait',
@@ -31,15 +42,17 @@ export async function exportCVToPDF(cvData) {
   for (let i = 0; i < pageElements.length; i++) {
     const pageEl = pageElements[i];
 
+    // Ultra HD Resolution Pass (scale: 3.2 = ~300 DPI for crystal clear text)
     const canvas = await html2canvas(pageEl, {
-      scale: 2,
+      scale: 3.2,
       useCORS: true,
       allowTaint: true,
       logging: false,
-      backgroundColor: '#ffffff'
+      backgroundColor: '#ffffff',
+      imageTimeout: 0
     });
 
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    const imgData = canvas.toDataURL('image/jpeg', 0.98);
 
     if (i > 0) {
       pdf.addPage('a4', 'portrait');
