@@ -70,20 +70,53 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
     });
   };
 
+  // Dynamic Self-Balancing Pagination Algorithm
+  // Automatically redistributes items to eliminate isolated orphan records (< 2 items)
+  const getBalancedChunks = (items, maxPerPage = 6, minLastPageItems = 2) => {
+    if (!Array.isArray(items) || items.length === 0) return [];
+    
+    const total = items.length;
+    const totalPages = Math.ceil(total / maxPerPage);
+    
+    if (totalPages <= 1) return [items];
+    
+    const remainder = total % maxPerPage;
+    if (remainder > 0 && remainder < minLastPageItems) {
+      const baseCount = Math.floor(total / totalPages);
+      const extraCount = total % totalPages;
+      
+      const chunks = [];
+      let currentIndex = 0;
+      for (let p = 0; p < totalPages; p++) {
+        const chunkSize = baseCount + (p < extraCount ? 1 : 0);
+        chunks.push(items.slice(currentIndex, currentIndex + chunkSize));
+        currentIndex += chunkSize;
+      }
+      return chunks;
+    }
+    
+    const chunks = [];
+    for (let i = 0; i < total; i += maxPerPage) {
+      chunks.push(items.slice(i, i + maxPerPage));
+    }
+    return chunks;
+  };
+
   const sortedCourses = sortByYearDesc(coursesAndCertificates);
   const sortedExperience = sortByYearDesc(experience);
   const sortedProfession = sortByYearDesc(profession);
 
   const FIRST_PAGE_PROF_LIMIT = 4;
-  const EXTRA_PROF_PER_PAGE = 6;
   const firstPageProfessions = sortedProfession.slice(0, FIRST_PAGE_PROF_LIMIT);
   const extraProfessions = sortedProfession.slice(FIRST_PAGE_PROF_LIMIT);
-  const totalExtraProfPages = Math.ceil(extraProfessions.length / EXTRA_PROF_PER_PAGE);
+  const extraProfChunks = getBalancedChunks(extraProfessions, 6, 2);
+  const totalExtraProfPages = extraProfChunks.length;
 
-  const EXP_PER_PAGE = 5;
-  const COURSES_PER_PAGE = 5;
-  const totalExpPages = Math.max(1, Math.ceil(sortedExperience.length / EXP_PER_PAGE));
-  const totalCoursePages = Math.max(1, Math.ceil(sortedCourses.length / COURSES_PER_PAGE));
+  const expChunks = getBalancedChunks(sortedExperience, 6, 2);
+  const totalExpPages = Math.max(1, expChunks.length);
+
+  const courseChunks = getBalancedChunks(sortedCourses, 6, 2);
+  const totalCoursePages = Math.max(1, courseChunks.length);
 
   // Dynamic Sidebar Style based on layoutStyle
   const sidebarBgStyle = layoutStyle === 'minimal-editorial'
@@ -509,11 +542,10 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
       </div>
 
       {/* ========================================================================= */}
-      {/* PAGES TO N: PROFESIÓN & TITULACIONES ADICIONALES (PAGINADAS 6 POR HOJA) */}
+      {/* PAGES TO N: PROFESIÓN & TITULACIONES ADICIONALES (REBALANCEO DINÁMICO A4) */}
       {/* ========================================================================= */}
-      {Array.from({ length: totalExtraProfPages }).map((_, extraPageIdx) => {
+      {extraProfChunks.map((extraProfGroup, extraPageIdx) => {
         const pageNum = startBodyPageNum + 1 + extraPageIdx;
-        const extraProfGroup = extraProfessions.slice(extraPageIdx * EXTRA_PROF_PER_PAGE, (extraPageIdx + 1) * EXTRA_PROF_PER_PAGE);
 
         return (
           <div key={`extra-prof-${pageNum}`} className="a4-page-container grid grid-cols-3">
@@ -588,11 +620,10 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
       })}
 
       {/* ========================================================================= */}
-      {/* PAGES TO N: EXPERIENCIA LABORAL DOCENTE (PAGINADA 6 POR HOJA) */}
+      {/* PAGES TO N: EXPERIENCIA LABORAL DOCENTE (REBALANCEO DINÁMICO A4) */}
       {/* ========================================================================= */}
-      {Array.from({ length: totalExpPages }).map((_, expPageIdx) => {
+      {expChunks.map((expGroup, expPageIdx) => {
         const pageNum = startBodyPageNum + 1 + totalExtraProfPages + expPageIdx;
-        const expGroup = sortedExperience.slice(expPageIdx * EXP_PER_PAGE, (expPageIdx + 1) * EXP_PER_PAGE);
 
         return (
           <div id={expPageIdx === 0 ? "cv-section-experiencia" : undefined} key={`exp-${pageNum}`} className="a4-page-container grid grid-cols-3">
@@ -718,12 +749,11 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
       })}
 
       {/* ========================================================================= */}
-      {/* PAGES TO N: CURSOS Y CAPACITACIONES DOCENTES (PAGINADAS 6 POR HOJA) */}
+      {/* PAGES TO N: CURSOS Y CAPACITACIONES DOCENTES (REBALANCEO DINÁMICO A4) */}
       {/* ========================================================================= */}
-      {Array.from({ length: totalCoursePages }).map((_, pageIdx) => {
+      {courseChunks.map((pageCoursesGroup, pageIdx) => {
         const pageNum = startBodyPageNum + 1 + totalExtraProfPages + totalExpPages + pageIdx;
         const isLastPage = pageIdx === totalCoursePages - 1;
-        const pageCoursesGroup = sortedCourses.slice(pageIdx * COURSES_PER_PAGE, (pageIdx + 1) * COURSES_PER_PAGE);
 
         return (
           <div id={pageIdx === 0 ? "cv-section-cursos" : undefined} key={`course-${pageNum}`} className="a4-page-container grid grid-cols-3">

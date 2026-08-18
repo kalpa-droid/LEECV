@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import html2pdf from 'html2pdf.js';
 import Navbar from './components/Navbar';
 import SecondaryNavbar from './components/SecondaryNavbar';
 import EditorPanel from './components/EditorPanel';
@@ -49,14 +50,41 @@ export default function App() {
   const [isPhotoCropperOpen, setIsPhotoCropperOpen] = useState(false);
   const [isSignatureOpen, setIsSignatureOpen] = useState(false);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   // Autosave to localStorage on state change
   useEffect(() => {
     localStorage.setItem('cv_premium_data', JSON.stringify(cvData));
   }, [cvData]);
 
+  // Direct 1-Click Native A4 PDF Download Engine (No Print Dialog)
   const handlePrint = () => {
-    window.print();
+    const element = document.querySelector('.print-wrapper');
+    if (!element) {
+      window.print();
+      return;
+    }
+
+    setIsGeneratingPDF(true);
+
+    const surname = (cvData?.personalInfo?.surname || 'BURGOS').trim().replace(/\s+/g, '_');
+    const given = (cvData?.personalInfo?.givenNames || 'Monica').trim().replace(/\s+/g, '_');
+    const fileName = `CV_${surname}_${given}_A4.pdf`;
+
+    const opt = {
+      margin:       0,
+      filename:     fileName,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, logging: false, scrollY: 0 },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(element).save().then(() => {
+      setIsGeneratingPDF(false);
+    }).catch(() => {
+      setIsGeneratingPDF(false);
+      window.print();
+    });
   };
 
   const handleLoadExampleCV = () => {
@@ -211,6 +239,17 @@ export default function App() {
         cvData={cvData}
         setCvData={setCvData}
       />
+
+      {/* PDF Generation Toast Indicator */}
+      {isGeneratingPDF && (
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-900/95 backdrop-blur text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3.5 border border-purple-500/50 animate-pulse no-print">
+          <div className="w-6 h-6 border-3 border-purple-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+          <div>
+            <p className="text-xs font-black text-purple-300">Generando PDF A4 Nativo Directo...</p>
+            <p className="text-[10px] text-slate-300">Descargando archivo idéntico a la vista previa sin cuadro de diálogo</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
