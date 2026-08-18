@@ -22,7 +22,9 @@ export default function App() {
           personalInfo: { 
             ...initialCVData.personalInfo, 
             ...parsed.personalInfo,
-            profilePhoto: parsed.personalInfo?.profilePhoto || initialCVData.personalInfo.profilePhoto
+            profilePhoto: (parsed.personalInfo?.profilePhoto && parsed.personalInfo.profilePhoto.trim() !== '') 
+              ? parsed.personalInfo.profilePhoto 
+              : initialCVData.personalInfo.profilePhoto
           },
           experience: (parsed.experience && parsed.experience.length > 0) ? parsed.experience : initialCVData.experience,
           ecology: (parsed.ecology && (parsed.ecology.rural || parsed.ecology.environmental)) ? parsed.ecology : initialCVData.ecology

@@ -13,6 +13,7 @@ export const initialCVData = {
     "phone": "387-155121515",
     "email": "Monicadanielaburgos@yahoo.com.ar",
     "facebook": "facebook.com/danielaburgos",
+    profilePhoto: monicaProfilePhoto,
     "quote": "Mi experiencia personal y profesional me permite desarrollar eficientemente mecanismos de incremento productivo y mejoras educativas",
     "initials": "M.D.B",
     "year": "2025"
