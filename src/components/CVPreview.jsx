@@ -131,8 +131,6 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
     ? { backgroundColor: '#1e293b', color: '#ffffff' }
     : { backgroundColor: theme.secondaryColor || '#888888', color: '#ffffff' };
 
-  const isLightSidebar = layoutStyle === 'minimal-editorial';
-
   // Section Header Renderer
   const renderSectionHeader = (icon, title) => {
     if (layoutStyle === 'modern-corporate') {

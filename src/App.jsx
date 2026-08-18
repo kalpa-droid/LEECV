@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import html2pdf from 'html2pdf.js';
 import Navbar from './components/Navbar';
 import SecondaryNavbar from './components/SecondaryNavbar';
 import EditorPanel from './components/EditorPanel';
@@ -37,7 +36,7 @@ export default function App() {
               : initialCVData.signature.dataUrl
           }
         };
-      } catch (e) {
+      } catch {
         return initialCVData;
       }
     }
@@ -57,8 +56,8 @@ export default function App() {
     localStorage.setItem('cv_premium_data', JSON.stringify(cvData));
   }, [cvData]);
 
-  // Direct 1-Click Native A4 PDF Download Engine (No Print Dialog)
-  const handlePrint = () => {
+  // Direct 1-Click Native A4 PDF Download Engine with Dynamic Import
+  const handlePrint = async () => {
     const element = document.querySelector('.print-wrapper');
     if (!element) {
       window.print();
@@ -67,24 +66,29 @@ export default function App() {
 
     setIsGeneratingPDF(true);
 
-    const surname = (cvData?.personalInfo?.surname || 'BURGOS').trim().replace(/\s+/g, '_');
-    const given = (cvData?.personalInfo?.givenNames || 'Monica').trim().replace(/\s+/g, '_');
-    const fileName = `CV_${surname}_${given}_A4.pdf`;
+    try {
+      const html2pdfModule = await import('html2pdf.js');
+      const html2pdf = html2pdfModule.default || html2pdfModule;
 
-    const opt = {
-      margin:       0,
-      filename:     fileName,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, logging: false, scrollY: 0 },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
+      const surname = (cvData?.personalInfo?.surname || 'BURGOS').trim().replace(/\s+/g, '_');
+      const given = (cvData?.personalInfo?.givenNames || 'Monica').trim().replace(/\s+/g, '_');
+      const fileName = `CV_${surname}_${given}_A4.pdf`;
 
-    html2pdf().set(opt).from(element).save().then(() => {
-      setIsGeneratingPDF(false);
-    }).catch(() => {
-      setIsGeneratingPDF(false);
+      const opt = {
+        margin:       0,
+        filename:     fileName,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false, scrollY: 0 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      await html2pdf().set(opt).from(element).save();
+    } catch (err) {
+      console.error('Error generando PDF nativo:', err);
       window.print();
-    });
+    } finally {
+      setIsGeneratingPDF(false);
+    }
   };
 
   const handleLoadExampleCV = () => {
