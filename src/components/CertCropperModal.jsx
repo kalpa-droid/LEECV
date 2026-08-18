@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Crop, ZoomIn, ZoomOut, RotateCw, Check, X, AlertTriangle } from 'lucide-react';
+import { Crop, ZoomIn, ZoomOut, RotateCw, Check, X, AlertTriangle, Maximize2 } from 'lucide-react';
 
 export default function CertCropperModal({ 
   isOpen, 
@@ -51,10 +51,19 @@ export default function CertCropperModal({
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+      // Account for 90°/270° rotations in base scale calculation
+      const isRotated90 = (rotation / 90) % 2 !== 0;
+      const boundingW = isRotated90 ? img.height : img.width;
+      const boundingH = isRotated90 ? img.width : img.height;
+
+      // Base scale fits the whole image 100% inside viewport at zoom = 1
+      const baseScale = Math.min((canvas.width - 10) / boundingW, (canvas.height - 10) / boundingH);
+      const effectiveScale = baseScale * zoom;
+
       // Translate to center and transform
       ctx.translate(canvas.width / 2 + offset.x, canvas.height / 2 + offset.y);
       ctx.rotate((rotation * Math.PI) / 180);
-      ctx.scale(zoom, zoom);
+      ctx.scale(effectiveScale, effectiveScale);
 
       // Draw image centered
       ctx.drawImage(img, -img.width / 2, -img.height / 2);
@@ -130,7 +139,7 @@ export default function CertCropperModal({
           </button>
         </div>
 
-        <div className="p-5 flex flex-col items-center space-y-4">
+        <div className="p-5 flex flex-col items-center space-y-3">
 
           {/* Record Selector inside Cropper Modal */}
           <div className="w-full">
@@ -175,9 +184,9 @@ export default function CertCropperModal({
               <ZoomOut className="w-4 h-4 text-[#2B1B2E]" />
               <input 
                 type="range"
-                min="0.4"
+                min="0.1"
                 max="3"
-                step="0.05"
+                step="0.02"
                 value={zoom}
                 onChange={(e) => setZoom(parseFloat(e.target.value))}
                 className="w-full accent-[#FF2E63] cursor-pointer"
@@ -192,6 +201,13 @@ export default function CertCropperModal({
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#EFE2C9] text-xs font-black text-[#2B1B2E] hover:bg-[#FFF7E8] transition shadow-sm"
               >
                 <RotateCw className="w-3.5 h-3.5 text-[#FF2E63]" /> Rotar 90°
+              </button>
+
+              <button 
+                onClick={() => { setZoom(1); setRotation(0); setOffset({ x: 0, y: 0 }); }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#EFE2C9] text-xs font-black text-[#2B1B2E] hover:bg-[#FFF7E8] transition shadow-sm"
+              >
+                <Maximize2 className="w-3.5 h-3.5 text-[#00A8A0]" /> Auto-Encajar
               </button>
             </div>
           </div>
