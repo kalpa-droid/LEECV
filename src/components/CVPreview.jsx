@@ -31,6 +31,7 @@ export default function CVPreview({ cvData, setCvData }) {
     certificatesScanned = [], 
     signature = {}, 
     theme = {},
+    layoutStyle = 'executive-sidebar',
     certificateDisplay = { certsPerPage: 1 }
   } = cvData || {};
 
@@ -58,6 +59,48 @@ export default function CVPreview({ cvData, setCvData }) {
   const COURSES_PER_PAGE = 6;
   const totalExpPages = Math.max(1, Math.ceil(sortedExperience.length / EXP_PER_PAGE));
   const totalCoursePages = Math.max(1, Math.ceil(sortedCourses.length / COURSES_PER_PAGE));
+
+  // Dynamic Sidebar Style based on layoutStyle
+  const sidebarBgStyle = layoutStyle === 'minimal-editorial'
+    ? { backgroundColor: '#f8fafc', color: '#1e293b', borderRight: '1px solid #e2e8f0' }
+    : layoutStyle === 'modern-corporate'
+    ? { backgroundColor: '#0f172a', color: '#ffffff' }
+    : { backgroundColor: theme.primaryColor || '#ab5ba1', color: '#ffffff' };
+
+  const sidebarHeaderBgStyle = layoutStyle === 'minimal-editorial'
+    ? { backgroundColor: '#e2e8f0', color: '#0f172a' }
+    : layoutStyle === 'modern-corporate'
+    ? { backgroundColor: '#1e293b', color: '#ffffff' }
+    : { backgroundColor: theme.secondaryColor || '#888888', color: '#ffffff' };
+
+  const isLightSidebar = layoutStyle === 'minimal-editorial';
+
+  // Section Header Renderer
+  const renderSectionHeader = (icon, title) => {
+    if (layoutStyle === 'modern-corporate') {
+      return (
+        <div className="border-b-2 font-black text-xs uppercase py-2 flex items-center gap-2 mb-3 tracking-wide" style={{ borderBottomColor: theme.primaryColor, color: theme.primaryColor }}>
+          {icon}
+          <span>{title}</span>
+        </div>
+      );
+    }
+    if (layoutStyle === 'minimal-editorial') {
+      return (
+        <div className="border-b border-slate-400 font-bold text-xs uppercase tracking-widest py-1.5 flex items-center gap-2 mb-3 text-slate-800" style={{ fontFamily: 'Georgia, serif' }}>
+          {icon}
+          <span>{title}</span>
+        </div>
+      );
+    }
+    // Default executive-sidebar
+    return (
+      <div className="text-white font-black text-xs uppercase px-4 py-2 flex items-center gap-2 -ml-6 pl-6 mb-2.5 shadow-sm rounded-r-lg" style={{ backgroundColor: theme.primaryColor }}>
+        {icon}
+        <span>{title}</span>
+      </div>
+    );
+  };
 
   // Rotate individual certificate (0° -> 90° -> 180° -> 270° -> 0°)
   const handleRotateCert = (certId) => {
@@ -267,8 +310,8 @@ export default function CVPreview({ cvData, setCvData }) {
       {/* ========================================================================= */}
       <div className="a4-page-container grid grid-cols-3">
         {/* Left Sidebar */}
-        <div className="col-span-1 text-white flex flex-col relative" style={{ backgroundColor: theme.primaryColor }}>
-          <div className="p-4 flex justify-center" style={{ backgroundColor: theme.secondaryColor }}>
+        <div className="col-span-1 flex flex-col relative" style={sidebarBgStyle}>
+          <div className="p-4 flex justify-center" style={sidebarHeaderBgStyle}>
             <div 
               className="w-32 h-40 border-4 flex flex-col items-center justify-center text-center p-1 overflow-hidden shadow-md transition-all duration-300 rounded-lg" 
               style={{ 
@@ -287,30 +330,30 @@ export default function CVPreview({ cvData, setCvData }) {
 
           <div className="p-4 space-y-5 flex-1 relative">
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider mb-2.5 border-b border-white/30 pb-1 flex items-center gap-1.5">
+              <h3 className="text-xs font-bold uppercase tracking-wider mb-2.5 border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
                 <Phone className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> CONTACTO & REDES
               </h3>
               <ul className="space-y-2 text-[11px] font-bold leading-tight">
                 <li className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'white', color: theme.accentColor }}>
+                  <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.primaryColor, color: '#ffffff' }}>
                     <Phone className="w-3 h-3" />
                   </span>
                   <span>{personalInfo.phone}</span>
                 </li>
                 <li className="flex items-center gap-2 break-all">
-                  <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'white', color: theme.accentColor }}>
+                  <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.primaryColor, color: '#ffffff' }}>
                     <Mail className="w-3 h-3" />
                   </span>
                   <span>{personalInfo.email}</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'white', color: theme.accentColor }}>
+                  <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.primaryColor, color: '#ffffff' }}>
                     <Globe className="w-3 h-3" />
                   </span>
                   <span>{personalInfo.facebook}</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'white', color: theme.accentColor }}>
+                  <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.primaryColor, color: '#ffffff' }}>
                     <MapPin className="w-3 h-3" />
                   </span>
                   <span>{personalInfo.address}</span>
@@ -319,29 +362,29 @@ export default function CVPreview({ cvData, setCvData }) {
             </div>
 
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider mb-2 border-b border-white/30 pb-1 flex items-center gap-1.5">
+              <h3 className="text-xs font-bold uppercase tracking-wider mb-2 border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
                 <Laptop className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> INFORMÁTICA & TICs
               </h3>
               <div className="text-[10px] space-y-2 font-medium opacity-90">
                 {informatics.map((item, i) => (
-                  <div key={i} className="border-l-2 border-white/40 pl-2">
+                  <div key={i} className="border-l-2 border-current pl-2">
                     <p className="font-bold">{item.institution}</p>
-                    <p className="text-teal-200 font-semibold">{item.course}</p>
+                    <p className="font-semibold" style={{ color: theme.accentColor }}>{item.course}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider mb-2 border-b border-white/30 pb-1 flex items-center gap-1.5">
+              <h3 className="text-xs font-bold uppercase tracking-wider mb-2 border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
                 <Award className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> COMPETENCIAS CLAVE
               </h3>
               <div className="flex flex-wrap gap-1 text-[9px] font-bold">
-                <span className="px-2 py-0.5 bg-white/20 rounded">Pedagogía Dialógica</span>
-                <span className="px-2 py-0.5 bg-white/20 rounded">Comunidades de Aprendizaje</span>
-                <span className="px-2 py-0.5 bg-white/20 rounded">Alfabetización Digital</span>
-                <span className="px-2 py-0.5 bg-white/20 rounded">Educación Inclusiva</span>
-                <span className="px-2 py-0.5 bg-white/20 rounded">Gestión Institucional</span>
+                <span className="px-2 py-0.5 bg-black/10 rounded">Pedagogía Dialógica</span>
+                <span className="px-2 py-0.5 bg-black/10 rounded">Comunidades de Aprendizaje</span>
+                <span className="px-2 py-0.5 bg-black/10 rounded">Alfabetización Digital</span>
+                <span className="px-2 py-0.5 bg-black/10 rounded">Educación Inclusiva</span>
+                <span className="px-2 py-0.5 bg-black/10 rounded">Gestión Institucional</span>
               </div>
             </div>
 
@@ -368,10 +411,7 @@ export default function CVPreview({ cvData, setCvData }) {
 
             {/* Datos Personales */}
             <div className="section-box-print">
-              <div className="text-white font-black text-xs uppercase px-4 py-2 flex items-center gap-2 -ml-6 pl-6 mb-2.5 shadow-sm rounded-r-lg" style={{ backgroundColor: theme.primaryColor }}>
-                <User className="w-4 h-4" />
-                <span>DATOS PERSONALES</span>
-              </div>
+              {renderSectionHeader(<User className="w-4 h-4" />, "DATOS PERSONALES")}
 
               <div className="grid grid-cols-3 gap-y-1.5 text-[11px] font-medium bg-slate-50/90 p-3 rounded-xl border border-slate-200/80">
                 <span className="font-bold text-right uppercase pr-2" style={{ color: theme.accentColor }}>DNI:</span>
@@ -393,10 +433,7 @@ export default function CVPreview({ cvData, setCvData }) {
 
             {/* Formación Académica */}
             <div className="section-box-print">
-              <div className="text-white font-black text-xs uppercase px-4 py-2 flex items-center gap-2 -ml-6 pl-6 mb-2.5 shadow-sm rounded-r-lg" style={{ backgroundColor: theme.primaryColor }}>
-                <GraduationCap className="w-4 h-4" />
-                <span>FORMACIÓN ACADÉMICA</span>
-              </div>
+              {renderSectionHeader(<GraduationCap className="w-4 h-4" />, "FORMACIÓN ACADÉMICA")}
 
               <div className="space-y-2">
                 {education.map((edu, i) => (
@@ -420,10 +457,7 @@ export default function CVPreview({ cvData, setCvData }) {
 
             {/* Profesión */}
             <div className="section-box-print">
-              <div className="text-white font-black text-xs uppercase px-4 py-2 flex items-center gap-2 -ml-6 pl-6 mb-2.5 shadow-sm rounded-r-lg" style={{ backgroundColor: theme.primaryColor }}>
-                <Briefcase className="w-4 h-4" />
-                <span>PROFESIÓN & TITULACIONES ({sortedProfession.length})</span>
-              </div>
+              {renderSectionHeader(<Briefcase className="w-4 h-4" />, `PROFESIÓN & TITULACIONES (${sortedProfession.length})`)}
 
               <div className="grid grid-cols-1 gap-1.5">
                 {firstPageProfessions.map((prof, i) => (
@@ -459,14 +493,14 @@ export default function CVPreview({ cvData, setCvData }) {
         return (
           <div key={`extra-prof-${pageNum}`} className="a4-page-container grid grid-cols-3">
             {/* Left Sidebar */}
-            <div className="col-span-1 text-white flex flex-col relative" style={{ backgroundColor: theme.primaryColor }}>
-              <div className="p-5 text-center border-b border-white/20" style={{ backgroundColor: theme.secondaryColor }}>
+            <div className="col-span-1 flex flex-col relative" style={sidebarBgStyle}>
+              <div className="p-5 text-center border-b border-current opacity-90" style={sidebarHeaderBgStyle}>
                 <span className="text-2xl font-black tracking-widest">{personalInfo.initials}</span>
                 <p className="text-[10px] font-semibold tracking-wider uppercase opacity-80 mt-0.5">Titulaciones & Grados</p>
               </div>
 
               <div className="p-4 space-y-4 flex-1 relative">
-                <h3 className="text-xs font-bold uppercase tracking-wider border-b border-white/30 pb-1 flex items-center gap-1.5">
+                <h3 className="text-xs font-bold uppercase tracking-wider border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
                   <Briefcase className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> FORMACIÓN DE GRADO
                 </h3>
 
@@ -474,13 +508,13 @@ export default function CVPreview({ cvData, setCvData }) {
                   Registros {FIRST_PAGE_PROF_LIMIT + extraPageIdx * EXTRA_PROF_PER_PAGE + 1} a {Math.min(FIRST_PAGE_PROF_LIMIT + (extraPageIdx + 1) * EXTRA_PROF_PER_PAGE, sortedProfession.length)} de {sortedProfession.length} títulos profesionales, posgrados y certificaciones académicas.
                 </p>
 
-                <div className="pt-2 border-t border-white/20">
-                  <h4 className="text-[10px] font-black uppercase text-teal-200 mb-1.5">NIVELES ACREDITADOS:</h4>
+                <div className="pt-2 border-t border-current opacity-80">
+                  <h4 className="text-[10px] font-black uppercase mb-1.5" style={{ color: theme.accentColor }}>NIVELES ACREDITADOS:</h4>
                   <div className="flex flex-wrap gap-1 text-[9px] font-bold">
-                    <span className="px-2 py-0.5 bg-white/20 rounded">Títulos Universitarios</span>
-                    <span className="px-2 py-0.5 bg-white/20 rounded">Profesorado de Grado</span>
-                    <span className="px-2 py-0.5 bg-white/20 rounded">Especialización & Posgrado</span>
-                    <span className="px-2 py-0.5 bg-white/20 rounded">Formación Continua</span>
+                    <span className="px-2 py-0.5 bg-black/10 rounded">Títulos Universitarios</span>
+                    <span className="px-2 py-0.5 bg-black/10 rounded">Profesorado de Grado</span>
+                    <span className="px-2 py-0.5 bg-black/10 rounded">Especialización & Posgrado</span>
+                    <span className="px-2 py-0.5 bg-black/10 rounded">Formación Continua</span>
                   </div>
                 </div>
 
@@ -501,10 +535,7 @@ export default function CVPreview({ cvData, setCvData }) {
                   </h1>
                 </div>
 
-                <div className="text-white font-black text-xs uppercase px-4 py-2 flex items-center gap-2 -ml-6 pl-6 mb-3 shadow-sm rounded-r-lg" style={{ backgroundColor: theme.primaryColor }}>
-                  <Briefcase className="w-4 h-4" />
-                  <span>PROFESIÓN & TITULACIONES ({extraPageIdx + 2}/{totalExtraProfPages + 1})</span>
-                </div>
+                {renderSectionHeader(<Briefcase className="w-4 h-4" />, `PROFESIÓN & TITULACIONES (${extraPageIdx + 2}/${totalExtraProfPages + 1})`)}
 
                 <div className="space-y-2.5">
                   {extraProfGroup.map((prof, i) => (
@@ -541,8 +572,8 @@ export default function CVPreview({ cvData, setCvData }) {
         return (
           <div key={`exp-${pageNum}`} className="a4-page-container grid grid-cols-3">
             {/* Left Sidebar */}
-            <div className="col-span-1 text-white flex flex-col relative" style={{ backgroundColor: theme.primaryColor }}>
-              <div className="p-5 text-center border-b border-white/20" style={{ backgroundColor: theme.secondaryColor }}>
+            <div className="col-span-1 flex flex-col relative" style={sidebarBgStyle}>
+              <div className="p-5 text-center border-b border-current opacity-90" style={sidebarHeaderBgStyle}>
                 <span className="text-2xl font-black tracking-widest">{personalInfo.initials}</span>
                 <p className="text-[10px] font-semibold tracking-wider uppercase opacity-80 mt-0.5">Trayectoria Docente</p>
               </div>
@@ -550,26 +581,26 @@ export default function CVPreview({ cvData, setCvData }) {
               <div className="p-4 space-y-5 flex-1 relative">
                 {expPageIdx === 0 ? (
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider mb-3 border-b border-white/30 pb-1 flex items-center gap-1.5">
+                    <h3 className="text-xs font-bold uppercase tracking-wider mb-3 border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
                       <Leaf className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> PROYECTOS & COMUNIDAD
                     </h3>
 
                     <div className="space-y-3 text-[10px]">
                       <div>
-                        <p className="font-bold text-teal-200 uppercase mb-1">RURAL Y AGRICULTURA:</p>
+                        <p className="font-bold uppercase mb-1" style={{ color: theme.accentColor }}>RURAL Y AGRICULTURA:</p>
                         {(ecology?.rural || []).map((r, rIdx) => (
-                          <div key={rIdx} className="mb-2 border-l-2 border-white/30 pl-2">
-                            <p className="font-bold text-white">{r.title}</p>
+                          <div key={rIdx} className="mb-2 border-l-2 border-current pl-2">
+                            <p className="font-bold">{r.title}</p>
                             <p className="opacity-80 italic">{r.institution}</p>
                           </div>
                         ))}
                       </div>
 
-                      <div className="pt-2 border-t border-white/20">
-                        <p className="font-bold text-teal-200 uppercase mb-1">MEDIO AMBIENTE:</p>
+                      <div className="pt-2 border-t border-current opacity-90">
+                        <p className="font-bold uppercase mb-1" style={{ color: theme.accentColor }}>MEDIO AMBIENTE:</p>
                         {(ecology?.environmental || []).map((env, eIdx) => (
-                          <div key={eIdx} className="mb-2 border-l-2 border-white/30 pl-2">
-                            <p className="font-bold text-white">{env.title}</p>
+                          <div key={eIdx} className="mb-2 border-l-2 border-current pl-2">
+                            <p className="font-bold">{env.title}</p>
                             <p className="opacity-80 italic">{env.institution}</p>
                           </div>
                         ))}
@@ -579,7 +610,7 @@ export default function CVPreview({ cvData, setCvData }) {
                 ) : (
                   <div className="space-y-4">
                     <div>
-                      <h3 className="text-xs font-bold uppercase tracking-wider mb-2 border-b border-white/30 pb-1 flex items-center gap-1.5">
+                      <h3 className="text-xs font-bold uppercase tracking-wider mb-2 border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
                         <Briefcase className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> ÁREAS DE DESEMPEÑO
                       </h3>
                       <p className="text-[10px] leading-relaxed opacity-90 mb-3">
@@ -588,22 +619,22 @@ export default function CVPreview({ cvData, setCvData }) {
                     </div>
 
                     <div>
-                      <h4 className="text-[10px] font-black uppercase text-teal-200 mb-1.5">PILARES PEDAGÓGICOS:</h4>
+                      <h4 className="text-[10px] font-black uppercase mb-1.5" style={{ color: theme.accentColor }}>PILARES PEDAGÓGICOS:</h4>
                       <ul className="text-[10px] space-y-1.5 font-semibold opacity-95">
                         <li className="flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-teal-300"></span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                           <span>Gestión Documental & Archivo</span>
                         </li>
                         <li className="flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-teal-300"></span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                           <span>Mediación Lectora en Lengua</span>
                         </li>
                         <li className="flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-teal-300"></span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                           <span>Tutoría & Retención Rural</span>
                         </li>
                         <li className="flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-teal-300"></span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                           <span>Tertulias Dialógicas Literarias</span>
                         </li>
                       </ul>
@@ -628,10 +659,7 @@ export default function CVPreview({ cvData, setCvData }) {
                   </h1>
                 </div>
 
-                <div className="text-white font-black text-xs uppercase px-4 py-2 flex items-center gap-2 -ml-6 pl-6 mb-3 shadow-sm rounded-r-lg" style={{ backgroundColor: theme.primaryColor }}>
-                  <FileText className="w-4 h-4" />
-                  <span>EXPERIENCIA LABORAL DOCENTE ({expPageIdx + 1}/{totalExpPages})</span>
-                </div>
+                {renderSectionHeader(<FileText className="w-4 h-4" />, `EXPERIENCIA LABORAL DOCENTE (${expPageIdx + 1}/${totalExpPages})`)}
 
                 <div className="space-y-2.5">
                   {expGroup.map((exp, idx) => (
@@ -675,14 +703,14 @@ export default function CVPreview({ cvData, setCvData }) {
         return (
           <div key={`course-${pageNum}`} className="a4-page-container grid grid-cols-3">
             {/* Sidebar */}
-            <div className="col-span-1 text-white flex flex-col relative" style={{ backgroundColor: theme.primaryColor }}>
-              <div className="p-5 text-center border-b border-white/20" style={{ backgroundColor: theme.secondaryColor }}>
+            <div className="col-span-1 flex flex-col relative" style={sidebarBgStyle}>
+              <div className="p-5 text-center border-b border-current opacity-90" style={sidebarHeaderBgStyle}>
                 <span className="text-2xl font-black tracking-widest">{personalInfo.initials}</span>
                 <p className="text-[10px] font-semibold tracking-wider uppercase opacity-80 mt-0.5">Capacitación Continua</p>
               </div>
 
               <div className="p-4 space-y-4 flex-1 relative">
-                <h3 className="text-xs font-bold uppercase tracking-wider border-b border-white/30 pb-1 flex items-center gap-1.5">
+                <h3 className="text-xs font-bold uppercase tracking-wider border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
                   <Award className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> CERTIFICACIONES
                 </h3>
 
@@ -691,7 +719,7 @@ export default function CVPreview({ cvData, setCvData }) {
                     <p className="text-[10px] leading-relaxed opacity-90">
                       Formación pedagógica continua ordenada cronológicamente en instituciones educativas y plataformas de aprendizaje digital.
                     </p>
-                    <div className="px-2.5 py-1.5 bg-white/20 rounded-lg text-[10px] font-extrabold text-white text-center border border-white/30">
+                    <div className="px-2.5 py-1.5 bg-black/10 rounded-lg text-[10px] font-extrabold text-center border border-current opacity-90">
                       Total: {sortedCourses.length} Certificaciones
                     </div>
                   </div>
@@ -702,12 +730,12 @@ export default function CVPreview({ cvData, setCvData }) {
                     </p>
                     
                     <div>
-                      <h4 className="text-[10px] font-black uppercase text-teal-200 mb-1.5">EJES TEMÁTICOS:</h4>
+                      <h4 className="text-[10px] font-black uppercase mb-1.5" style={{ color: theme.accentColor }}>EJES TEMÁTICOS:</h4>
                       <div className="flex flex-wrap gap-1 text-[9px] font-bold">
-                        <span className="px-2 py-0.5 bg-white/20 rounded">Educación Digital</span>
-                        <span className="px-2 py-0.5 bg-white/20 rounded">Didáctica Lengua</span>
-                        <span className="px-2 py-0.5 bg-white/20 rounded">ESI & Género</span>
-                        <span className="px-2 py-0.5 bg-white/20 rounded">Gestión y Mediación</span>
+                        <span className="px-2 py-0.5 bg-black/10 rounded">Educación Digital</span>
+                        <span className="px-2 py-0.5 bg-black/10 rounded">Didáctica Lengua</span>
+                        <span className="px-2 py-0.5 bg-black/10 rounded">ESI & Género</span>
+                        <span className="px-2 py-0.5 bg-black/10 rounded">Gestión y Mediación</span>
                       </div>
                     </div>
                   </div>
@@ -730,10 +758,7 @@ export default function CVPreview({ cvData, setCvData }) {
                   </h1>
                 </div>
 
-                <div className="text-white font-black text-xs uppercase px-4 py-2 flex items-center gap-2 -ml-6 pl-6 mb-3 shadow-sm rounded-r-lg" style={{ backgroundColor: theme.primaryColor }}>
-                  <BookOpen className="w-4 h-4" />
-                  <span>CURSOS Y CAPACITACIONES DOCENTES ({pageIdx + 1}/{totalCoursePages})</span>
-                </div>
+                {renderSectionHeader(<BookOpen className="w-4 h-4" />, `CURSOS Y CAPACITACIONES DOCENTES (${pageIdx + 1}/${totalCoursePages})`)}
 
                 <div className="space-y-2.5">
                   {pageCoursesGroup.map((c, cIdx) => (
