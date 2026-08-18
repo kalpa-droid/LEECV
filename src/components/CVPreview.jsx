@@ -80,8 +80,8 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
   const extraProfessions = sortedProfession.slice(FIRST_PAGE_PROF_LIMIT);
   const totalExtraProfPages = Math.ceil(extraProfessions.length / EXTRA_PROF_PER_PAGE);
 
-  const EXP_PER_PAGE = 6;
-  const COURSES_PER_PAGE = 6;
+  const EXP_PER_PAGE = 5;
+  const COURSES_PER_PAGE = 5;
   const totalExpPages = Math.max(1, Math.ceil(sortedExperience.length / EXP_PER_PAGE));
   const totalCoursePages = Math.max(1, Math.ceil(sortedCourses.length / COURSES_PER_PAGE));
 
@@ -686,9 +686,9 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
 
                 {renderSectionHeader(<FileText className="w-4 h-4" />, `EXPERIENCIA LABORAL DOCENTE (${expPageIdx + 1}/${totalExpPages})`)}
 
-                <div className="space-y-2.5">
+                <div className="space-y-3">
                   {expGroup.map((exp, idx) => (
-                    <div key={idx} className="bg-slate-50/90 border border-slate-200/80 p-3 rounded-xl space-y-1 section-box-print shadow-sm border-l-4" style={{ borderLeftColor: theme.primaryColor }}>
+                    <div key={idx} className="bg-slate-50/90 border border-slate-200/80 p-3.5 rounded-xl space-y-1.5 section-box-print shadow-sm border-l-4" style={{ borderLeftColor: theme.primaryColor }}>
                       <div className="flex items-center justify-between gap-2">
                         <h4 className="text-xs font-black text-slate-900 leading-snug">{exp.role}</h4>
                         <span 
@@ -704,7 +704,7 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
                       </p>
                       
                       {exp.details && (
-                        <p className="text-[10px] text-slate-500 font-medium italic border-t border-slate-200/60 pt-1 mt-1">
+                        <p className="text-[10.5px] text-slate-600 font-medium italic border-t border-slate-200/60 pt-1.5 mt-1.5 leading-relaxed">
                           {exp.details}
                         </p>
                       )}
@@ -785,9 +785,9 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
 
                 {renderSectionHeader(<BookOpen className="w-4 h-4" />, `CURSOS Y CAPACITACIONES DOCENTES (${pageIdx + 1}/${totalCoursePages})`)}
 
-                <div className="space-y-2.5">
+                <div className="space-y-3">
                   {pageCoursesGroup.map((c, cIdx) => (
-                    <div key={cIdx} className="bg-slate-50/90 border border-slate-200/80 p-3 rounded-xl space-y-1 section-box-print shadow-sm border-l-4" style={{ borderLeftColor: theme.accentColor }}>
+                    <div key={cIdx} className="bg-slate-50/90 border border-slate-200/80 p-3.5 rounded-xl space-y-1.5 section-box-print shadow-sm border-l-4" style={{ borderLeftColor: theme.accentColor }}>
                       <div className="flex items-center justify-between gap-2">
                         <span 
                           className="px-2.5 py-0.5 rounded text-[10px] font-black text-white whitespace-nowrap shadow-sm flex-shrink-0 inline-flex items-center gap-1" 
@@ -813,7 +813,7 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
                       </p>
 
                       {c.details && (
-                        <p className="text-[10px] text-slate-500 font-medium italic border-t border-slate-200/60 pt-1 mt-1">
+                        <p className="text-[10.5px] text-slate-600 font-medium italic border-t border-slate-200/60 pt-1.5 mt-1.5 leading-relaxed">
                           {c.details}
                         </p>
                       )}
