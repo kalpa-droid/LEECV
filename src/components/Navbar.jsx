@@ -1,11 +1,11 @@
+import React, { useState, useEffect } from 'react';
 import { 
   Printer, 
   Eye, 
   FilePlus,
   FolderOpen,
   Save,
-  Cloud,
-  CheckCircle2
+  Cloud
 } from 'lucide-react';
 import { checkStorageStatus } from '../services/cvStorageService';
 
@@ -15,9 +15,37 @@ export default function Navbar({
   onStartNewCVWizard,
   onOpenSavedCVs,
   onSaveCV,
+  onOpenCloudModal,
   isSaving
 }) {
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const storageStatus = checkStorageStatus();
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  let cloudColor = 'yellow'; // default local
+  let statusText = 'Guardado Local';
+  if (!isOnline) {
+    cloudColor = 'red';
+    statusText = 'Sin Internet';
+  } else if (storageStatus.isCloud) {
+    cloudColor = 'green';
+    statusText = 'Nube Supabase';
+  }
+
+  const handleCloudIconClick = () => {
+    onSaveCV();
+    if (onOpenCloudModal) onOpenCloudModal();
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur border-b border-slate-800 text-white shadow-xl no-print">
@@ -32,14 +60,24 @@ export default function Navbar({
               <h1 className="font-extrabold text-sm sm:text-base tracking-wide text-white">
                 CVPREMIUM
               </h1>
-              <span className={`px-2 py-0.5 rounded-full text-[9px] font-black border flex items-center gap-1 ${
-                storageStatus.isCloud
-                  ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300'
-                  : 'bg-purple-950/80 border-purple-500/50 text-purple-300'
-              }`}>
-                {storageStatus.isCloud ? <Cloud className="w-2.5 h-2.5 text-emerald-400" /> : <CheckCircle2 className="w-2.5 h-2.5 text-purple-400" />}
-                <span>{storageStatus.isCloud ? 'Supabase Nube' : 'Auto-Guardado Local'}</span>
-              </span>
+              
+              {/* Interactive 3-Color Cloud Icon Button */}
+              <button
+                onClick={handleCloudIconClick}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-black transition transform active:scale-95 cursor-pointer shadow-sm ${
+                  cloudColor === 'green'
+                    ? 'bg-emerald-950/80 border-emerald-500/60 text-emerald-300 hover:bg-emerald-900/90 shadow-emerald-500/20'
+                    : cloudColor === 'yellow'
+                    ? 'bg-amber-950/80 border-amber-500/60 text-amber-300 hover:bg-amber-900/90 shadow-amber-500/20'
+                    : 'bg-red-950/80 border-red-500/60 text-red-300 hover:bg-red-900/90 shadow-red-500/20'
+                }`}
+                title="Haga clic para ver el estado de la nube y guardar cambios"
+              >
+                <Cloud className={`w-3.5 h-3.5 ${
+                  cloudColor === 'green' ? 'text-emerald-400' : cloudColor === 'yellow' ? 'text-amber-400' : 'text-red-500 animate-bounce'
+                }`} />
+                <span className="hidden sm:inline">{statusText}</span>
+              </button>
             </div>
             <p className="text-[10px] sm:text-xs text-slate-400 hidden sm:block">Plataforma Profesional de CV A4</p>
           </div>

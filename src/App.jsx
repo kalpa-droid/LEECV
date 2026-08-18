@@ -7,6 +7,7 @@ import PhotoCropperModal from './components/PhotoCropperModal';
 import SignatureModal from './components/SignatureModal';
 import WizardModal from './components/WizardModal';
 import SavedCVsModal from './components/SavedCVsModal';
+import CloudStatusModal from './components/CloudStatusModal';
 import { initialCVData, standardExampleCVData } from './data/initialCVData';
 import { saveCV } from './services/cvStorageService';
 
@@ -71,6 +72,7 @@ export default function App() {
   const [isSignatureOpen, setIsSignatureOpen] = useState(false);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [isSavedCVsOpen, setIsSavedCVsOpen] = useState(false);
+  const [isCloudModalOpen, setIsCloudModalOpen] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -233,6 +235,7 @@ export default function App() {
         onStartNewCVWizard={handleStartNewCVWizard}
         onOpenSavedCVs={handleOpenSavedCVs}
         onSaveCV={handleSaveCV}
+        onOpenCloudModal={() => setIsCloudModalOpen(true)}
         isSaving={isSaving}
       />
 
@@ -294,6 +297,13 @@ export default function App() {
         isOpen={isSavedCVsOpen}
         onClose={() => setIsSavedCVsOpen(false)}
         onSelectCV={(loadedCV) => setCvData(loadedCV)}
+      />
+
+      <CloudStatusModal
+        isOpen={isCloudModalOpen}
+        onClose={() => setIsCloudModalOpen(false)}
+        onForceSave={handleSaveCV}
+        isSaving={isSaving}
       />
 
       {/* PDF Generation Toast Indicator */}
