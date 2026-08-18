@@ -48,8 +48,8 @@ export default function CVPreview({ cvData, setCvData }) {
   const sortedExperience = sortByYearDesc(experience);
   const sortedProfession = sortByYearDesc(profession);
 
-  const EXP_PER_PAGE = 4;
-  const COURSES_PER_PAGE = 4;
+  const EXP_PER_PAGE = 6;
+  const COURSES_PER_PAGE = 6;
   const totalExpPages = Math.max(1, Math.ceil(sortedExperience.length / EXP_PER_PAGE));
   const totalCoursePages = Math.max(1, Math.ceil(sortedCourses.length / COURSES_PER_PAGE));
 
@@ -274,12 +274,12 @@ export default function CVPreview({ cvData, setCvData }) {
             </div>
           </div>
 
-          <div className="p-4 space-y-6 flex-1 relative">
+          <div className="p-4 space-y-5 flex-1 relative">
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider mb-3 border-b border-white/30 pb-1 flex items-center gap-1.5">
-                <Phone className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> CONTACTO
+              <h3 className="text-xs font-bold uppercase tracking-wider mb-2.5 border-b border-white/30 pb-1 flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> CONTACTO & REDES
               </h3>
-              <ul className="space-y-2.5 text-[11px] font-bold leading-tight">
+              <ul className="space-y-2 text-[11px] font-bold leading-tight">
                 <li className="flex items-center gap-2">
                   <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'white', color: theme.accentColor }}>
                     <Phone className="w-3 h-3" />
@@ -309,15 +309,28 @@ export default function CVPreview({ cvData, setCvData }) {
 
             <div>
               <h3 className="text-xs font-bold uppercase tracking-wider mb-2 border-b border-white/30 pb-1 flex items-center gap-1.5">
-                <Laptop className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> INFORMÁTICA
+                <Laptop className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> INFORMÁTICA & TICs
               </h3>
-              <div className="text-[10px] space-y-2.5 font-medium opacity-90">
-                {informatics.slice(0, 2).map((item, i) => (
+              <div className="text-[10px] space-y-2 font-medium opacity-90">
+                {informatics.map((item, i) => (
                   <div key={i} className="border-l-2 border-white/40 pl-2">
                     <p className="font-bold">{item.institution}</p>
                     <p className="text-teal-200 font-semibold">{item.course}</p>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider mb-2 border-b border-white/30 pb-1 flex items-center gap-1.5">
+                <Award className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> COMPETENCIAS CLAVE
+              </h3>
+              <div className="flex flex-wrap gap-1 text-[9px] font-bold">
+                <span className="px-2 py-0.5 bg-white/20 rounded">Pedagogía Dialógica</span>
+                <span className="px-2 py-0.5 bg-white/20 rounded">Comunidades de Aprendizaje</span>
+                <span className="px-2 py-0.5 bg-white/20 rounded">Alfabetización Digital</span>
+                <span className="px-2 py-0.5 bg-white/20 rounded">Educación Inclusiva</span>
+                <span className="px-2 py-0.5 bg-white/20 rounded">Gestión Institucional</span>
               </div>
             </div>
 
@@ -330,58 +343,58 @@ export default function CVPreview({ cvData, setCvData }) {
         </div>
 
         {/* Right Main Content */}
-        <div className="col-span-2 p-8 flex flex-col justify-between">
-          <div>
-            <div className="mb-4 border-b border-slate-200 pb-3">
-              <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tight">
-                {personalInfo.surname} <span className="block text-2xl font-bold capitalize" style={{ color: theme.primaryColor }}>{personalInfo.givenNames}</span>
+        <div className="col-span-2 p-6 flex flex-col justify-between">
+          <div className="space-y-4">
+            <div className="border-b border-slate-200 pb-2">
+              <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">
+                {personalInfo.surname} <span className="text-xl font-bold capitalize" style={{ color: theme.primaryColor }}>{personalInfo.givenNames}</span>
               </h1>
             </div>
 
-            <p className="text-xs font-bold italic text-slate-600 text-center mb-6 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-200">
+            <p className="text-[11px] font-bold italic text-slate-700 text-center leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-200 border-l-4" style={{ borderLeftColor: theme.primaryColor }}>
               {personalInfo.quote}
             </p>
 
             {/* Datos Personales */}
-            <div className="mb-6 section-box-print">
-              <div className="text-white font-black text-xs uppercase px-4 py-2.5 flex items-center gap-2 -ml-8 pl-8 mb-3 shadow-sm rounded-r-lg" style={{ backgroundColor: theme.primaryColor }}>
+            <div className="section-box-print">
+              <div className="text-white font-black text-xs uppercase px-4 py-2 flex items-center gap-2 -ml-6 pl-6 mb-2.5 shadow-sm rounded-r-lg" style={{ backgroundColor: theme.primaryColor }}>
                 <User className="w-4 h-4" />
                 <span>DATOS PERSONALES</span>
               </div>
 
-              <div className="grid grid-cols-3 gap-y-2.5 text-xs font-medium bg-slate-50/80 p-3.5 rounded-xl border border-slate-200/80">
+              <div className="grid grid-cols-3 gap-y-1.5 text-[11px] font-medium bg-slate-50/90 p-3 rounded-xl border border-slate-200/80">
                 <span className="font-bold text-right uppercase pr-2" style={{ color: theme.accentColor }}>DNI:</span>
-                <span className="col-span-2 text-slate-800 font-bold">{personalInfo.dni}</span>
+                <span className="col-span-2 text-slate-900 font-extrabold">{personalInfo.dni}</span>
 
                 <span className="font-bold text-right uppercase pr-2" style={{ color: theme.accentColor }}>CUIT:</span>
-                <span className="col-span-2 text-slate-800 font-bold">{personalInfo.cuit}</span>
+                <span className="col-span-2 text-slate-900 font-extrabold">{personalInfo.cuit}</span>
 
                 <span className="font-bold text-right uppercase pr-2" style={{ color: theme.accentColor }}>FECHA NAC.:</span>
-                <span className="col-span-2 text-slate-800 font-bold">{personalInfo.birthDate}</span>
+                <span className="col-span-2 text-slate-900 font-extrabold">{personalInfo.birthDate}</span>
 
                 <span className="font-bold text-right uppercase pr-2" style={{ color: theme.accentColor }}>DOMICILIO:</span>
-                <span className="col-span-2 text-slate-800 font-bold">{personalInfo.address}</span>
+                <span className="col-span-2 text-slate-900 font-extrabold">{personalInfo.address}</span>
 
                 <span className="font-bold text-right uppercase pr-2" style={{ color: theme.accentColor }}>CIUDAD:</span>
-                <span className="col-span-2 text-slate-800 font-bold">{personalInfo.cityProvince}</span>
+                <span className="col-span-2 text-slate-900 font-extrabold">{personalInfo.cityProvince}</span>
               </div>
             </div>
 
             {/* Formación Académica */}
-            <div className="mb-6 section-box-print">
-              <div className="text-white font-black text-xs uppercase px-4 py-2.5 flex items-center gap-2 -ml-8 pl-8 mb-3 shadow-sm rounded-r-lg" style={{ backgroundColor: theme.primaryColor }}>
+            <div className="section-box-print">
+              <div className="text-white font-black text-xs uppercase px-4 py-2 flex items-center gap-2 -ml-6 pl-6 mb-2.5 shadow-sm rounded-r-lg" style={{ backgroundColor: theme.primaryColor }}>
                 <GraduationCap className="w-4 h-4" />
                 <span>FORMACIÓN ACADÉMICA</span>
               </div>
 
               <div className="space-y-2">
                 {education.map((edu, i) => (
-                  <div key={i} className="bg-slate-50/80 border border-slate-200/80 p-3.5 rounded-xl space-y-1">
+                  <div key={i} className="bg-slate-50/90 border border-slate-200/80 p-3 rounded-xl space-y-1 border-l-4" style={{ borderLeftColor: theme.accentColor }}>
                     <div className="flex items-center justify-between">
-                      <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black text-white whitespace-nowrap shadow-sm" style={{ backgroundColor: theme.primaryColor }}>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-black text-white whitespace-nowrap shadow-sm" style={{ backgroundColor: theme.primaryColor }}>
                         {edu.level}
                       </span>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-extrabold whitespace-nowrap" style={{ backgroundColor: 'rgba(64,160,142,0.12)', color: theme.accentColor }}>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-black whitespace-nowrap" style={{ backgroundColor: 'rgba(64,160,142,0.12)', color: theme.accentColor }}>
                         AÑO {edu.year}
                       </span>
                     </div>
@@ -396,17 +409,17 @@ export default function CVPreview({ cvData, setCvData }) {
 
             {/* Profesión */}
             <div className="section-box-print">
-              <div className="text-white font-black text-xs uppercase px-4 py-2.5 flex items-center gap-2 -ml-8 pl-8 mb-3 shadow-sm rounded-r-lg" style={{ backgroundColor: theme.primaryColor }}>
+              <div className="text-white font-black text-xs uppercase px-4 py-2 flex items-center gap-2 -ml-6 pl-6 mb-2.5 shadow-sm rounded-r-lg" style={{ backgroundColor: theme.primaryColor }}>
                 <Briefcase className="w-4 h-4" />
-                <span>PROFESIÓN & TITULACIONES</span>
+                <span>PROFESIÓN & TITULACIONES ({sortedProfession.length})</span>
               </div>
 
-              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+              <div className="grid grid-cols-1 gap-1.5">
                 {sortedProfession.map((prof, i) => (
-                  <div key={i} className="bg-slate-50/80 border border-slate-200/80 p-2.5 rounded-xl space-y-0.5">
+                  <div key={i} className="bg-slate-50/90 border border-slate-200/80 p-2.5 rounded-xl space-y-0.5 border-l-4" style={{ borderLeftColor: theme.primaryColor }}>
                     <div className="flex items-center justify-between">
                       <h4 className="text-xs font-black text-slate-900 leading-tight">{prof.degree}</h4>
-                      <span className="px-2 py-0.5 rounded-md text-[9px] font-black text-white whitespace-nowrap shadow-sm flex-shrink-0 ml-2" style={{ backgroundColor: theme.primaryColor }}>
+                      <span className="px-2 py-0.5 rounded text-[9px] font-black text-white whitespace-nowrap ml-2 flex-shrink-0" style={{ backgroundColor: theme.primaryColor }}>
                         AÑO {prof.year}
                       </span>
                     </div>
@@ -420,7 +433,7 @@ export default function CVPreview({ cvData, setCvData }) {
       </div>
 
       {/* ========================================================================= */}
-      {/* PAGES 3 TO N: EXPERIENCIA LABORAL DOCENTE (PAGINADA) */}
+      {/* PAGES 3 TO N: EXPERIENCIA LABORAL DOCENTE (PAGINADA 6 POR HOJA) */}
       {/* ========================================================================= */}
       {Array.from({ length: totalExpPages }).map((_, expPageIdx) => {
         const pageNum = 3 + expPageIdx;
@@ -430,12 +443,12 @@ export default function CVPreview({ cvData, setCvData }) {
           <div key={`exp-${pageNum}`} className="a4-page-container grid grid-cols-3">
             {/* Left Sidebar */}
             <div className="col-span-1 text-white flex flex-col relative" style={{ backgroundColor: theme.primaryColor }}>
-              <div className="p-6 text-center border-b border-white/20" style={{ backgroundColor: theme.secondaryColor }}>
+              <div className="p-5 text-center border-b border-white/20" style={{ backgroundColor: theme.secondaryColor }}>
                 <span className="text-2xl font-black tracking-widest">{personalInfo.initials}</span>
                 <p className="text-[10px] font-semibold tracking-wider uppercase opacity-80 mt-0.5">Trayectoria Docente</p>
               </div>
 
-              <div className="p-4 space-y-6 flex-1 relative">
+              <div className="p-4 space-y-5 flex-1 relative">
                 {expPageIdx === 0 ? (
                   <div>
                     <h3 className="text-xs font-bold uppercase tracking-wider mb-3 border-b border-white/30 pb-1 flex items-center gap-1.5">
@@ -465,13 +478,37 @@ export default function CVPreview({ cvData, setCvData }) {
                     </div>
                   </div>
                 ) : (
-                  <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider mb-3 border-b border-white/30 pb-1 flex items-center gap-1.5">
-                      <Briefcase className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> TRAYECTORIA DOCENTE
-                    </h3>
-                    <p className="text-[10px] leading-relaxed opacity-90">
-                      Registros {expPageIdx * EXP_PER_PAGE + 1} a {Math.min((expPageIdx + 1) * EXP_PER_PAGE, sortedExperience.length)} de {sortedExperience.length} del historial laboral y desempeño docente.
-                    </p>
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-xs font-bold uppercase tracking-wider mb-2 border-b border-white/30 pb-1 flex items-center gap-1.5">
+                        <Briefcase className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> ÁREAS DE DESEMPEÑO
+                      </h3>
+                      <p className="text-[10px] leading-relaxed opacity-90 mb-3">
+                        Registros {expPageIdx * EXP_PER_PAGE + 1} a {Math.min((expPageIdx + 1) * EXP_PER_PAGE, sortedExperience.length)} de {sortedExperience.length} de la trayectoria docente y gestión escolar.
+                      </p>
+                    </div>
+
+                    <div>
+                      <h4 className="text-[10px] font-black uppercase text-teal-200 mb-1.5">PILARES PEDAGÓGICOS:</h4>
+                      <ul className="text-[10px] space-y-1.5 font-semibold opacity-95">
+                        <li className="flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-teal-300"></span>
+                          <span>Gestión Documental & Archivo</span>
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-teal-300"></span>
+                          <span>Mediación Lectora en Lengua</span>
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-teal-300"></span>
+                          <span>Tutoría & Retención Rural</span>
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-teal-300"></span>
+                          <span>Tertulias Dialógicas Literarias</span>
+                        </li>
+                      </ul>
+                    </div>
                   </div>
                 )}
 
@@ -484,26 +521,26 @@ export default function CVPreview({ cvData, setCvData }) {
             </div>
 
             {/* Right Main Content: Experiencia Laboral Docente */}
-            <div className="col-span-2 p-8 flex flex-col justify-between">
-              <div>
-                <div className="mb-4 border-b border-slate-200 pb-3">
+            <div className="col-span-2 p-6 flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="border-b border-slate-200 pb-2">
                   <h1 className="text-xl font-black text-slate-900 uppercase">
                     {personalInfo.surname} <span style={{ color: theme.primaryColor }}>{personalInfo.givenNames}</span>
                   </h1>
                 </div>
 
-                <div className="text-white font-black text-xs uppercase px-4 py-2.5 flex items-center gap-2 -ml-8 pl-8 mb-4 shadow-sm rounded-r-lg" style={{ backgroundColor: theme.primaryColor }}>
+                <div className="text-white font-black text-xs uppercase px-4 py-2 flex items-center gap-2 -ml-6 pl-6 mb-3 shadow-sm rounded-r-lg" style={{ backgroundColor: theme.primaryColor }}>
                   <FileText className="w-4 h-4" />
-                  <span>EXPERIENCIA LABORAL DOCENTE {totalExpPages > 1 ? `(${expPageIdx + 1}/${totalExpPages})` : ''}</span>
+                  <span>EXPERIENCIA LABORAL DOCENTE ({expPageIdx + 1}/{totalExpPages})</span>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {expGroup.map((exp, idx) => (
-                    <div key={idx} className="bg-slate-50/90 border border-slate-200 p-3 rounded-xl space-y-1 section-box-print shadow-sm">
+                    <div key={idx} className="bg-slate-50/90 border border-slate-200/80 p-3 rounded-xl space-y-1 section-box-print shadow-sm border-l-4" style={{ borderLeftColor: theme.primaryColor }}>
                       <div className="flex items-center justify-between gap-2">
                         <h4 className="text-xs font-black text-slate-900 leading-snug">{exp.role}</h4>
                         <span 
-                          className="px-2.5 py-0.5 rounded-md text-[10px] font-black text-white whitespace-nowrap shadow-sm flex-shrink-0 inline-flex items-center gap-1" 
+                          className="px-2.5 py-0.5 rounded text-[10px] font-black text-white whitespace-nowrap shadow-sm flex-shrink-0 inline-flex items-center gap-1" 
                           style={{ backgroundColor: theme.primaryColor }}
                         >
                           <Calendar className="w-3 h-3" /> AÑO {exp.year}
@@ -529,7 +566,7 @@ export default function CVPreview({ cvData, setCvData }) {
       })}
 
       {/* ========================================================================= */}
-      {/* PAGES TO N: CURSOS Y CAPACITACIONES DOCENTES (PAGINADAS) */}
+      {/* PAGES TO N: CURSOS Y CAPACITACIONES DOCENTES (PAGINADAS 6 POR HOJA) */}
       {/* ========================================================================= */}
       {Array.from({ length: totalCoursePages }).map((_, pageIdx) => {
         const pageNum = 3 + totalExpPages + pageIdx;
@@ -540,7 +577,7 @@ export default function CVPreview({ cvData, setCvData }) {
           <div key={`course-${pageNum}`} className="a4-page-container grid grid-cols-3">
             {/* Sidebar */}
             <div className="col-span-1 text-white flex flex-col relative" style={{ backgroundColor: theme.primaryColor }}>
-              <div className="p-6 text-center border-b border-white/20" style={{ backgroundColor: theme.secondaryColor }}>
+              <div className="p-5 text-center border-b border-white/20" style={{ backgroundColor: theme.secondaryColor }}>
                 <span className="text-2xl font-black tracking-widest">{personalInfo.initials}</span>
                 <p className="text-[10px] font-semibold tracking-wider uppercase opacity-80 mt-0.5">Capacitación Continua</p>
               </div>
@@ -551,13 +588,30 @@ export default function CVPreview({ cvData, setCvData }) {
                 </h3>
 
                 {pageIdx === 0 ? (
-                  <p className="text-[10px] leading-relaxed opacity-90">
-                    Formación pedagógica continua ordenada cronológicamente en instituciones educativas y plataformas de aprendizaje digital.
-                  </p>
+                  <div className="space-y-2">
+                    <p className="text-[10px] leading-relaxed opacity-90">
+                      Formación pedagógica continua ordenada cronológicamente en instituciones educativas y plataformas de aprendizaje digital.
+                    </p>
+                    <div className="px-2.5 py-1.5 bg-white/20 rounded-lg text-[10px] font-extrabold text-white text-center border border-white/30">
+                      Total: {sortedCourses.length} Certificaciones
+                    </div>
+                  </div>
                 ) : (
-                  <p className="text-[10px] leading-relaxed opacity-90">
-                    Registros {pageIdx * COURSES_PER_PAGE + 1} a {Math.min((pageIdx + 1) * COURSES_PER_PAGE, sortedCourses.length)} de {sortedCourses.length} certificaciones acreditadas.
-                  </p>
+                  <div className="space-y-3">
+                    <p className="text-[10px] leading-relaxed opacity-90">
+                      Registros {pageIdx * COURSES_PER_PAGE + 1} a {Math.min((pageIdx + 1) * COURSES_PER_PAGE, sortedCourses.length)} de {sortedCourses.length} certificaciones acreditadas.
+                    </p>
+                    
+                    <div>
+                      <h4 className="text-[10px] font-black uppercase text-teal-200 mb-1.5">EJES TEMÁTICOS:</h4>
+                      <div className="flex flex-wrap gap-1 text-[9px] font-bold">
+                        <span className="px-2 py-0.5 bg-white/20 rounded">Educación Digital</span>
+                        <span className="px-2 py-0.5 bg-white/20 rounded">Didáctica Lengua</span>
+                        <span className="px-2 py-0.5 bg-white/20 rounded">ESI & Género</span>
+                        <span className="px-2 py-0.5 bg-white/20 rounded">Gestión y Mediación</span>
+                      </div>
+                    </div>
+                  </div>
                 )}
 
                 {/* Sidebar Footer */}
@@ -569,25 +623,25 @@ export default function CVPreview({ cvData, setCvData }) {
             </div>
 
             {/* Main Content */}
-            <div className="col-span-2 p-8 flex flex-col justify-between">
-              <div>
-                <div className="mb-4 border-b border-slate-200 pb-3">
+            <div className="col-span-2 p-6 flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="border-b border-slate-200 pb-2">
                   <h1 className="text-xl font-black text-slate-900 uppercase">
                     {personalInfo.surname} <span style={{ color: theme.primaryColor }}>{personalInfo.givenNames}</span>
                   </h1>
                 </div>
 
-                <div className="text-white font-black text-xs uppercase px-4 py-2.5 flex items-center gap-2 -ml-8 pl-8 mb-4 shadow-sm rounded-r-lg" style={{ backgroundColor: theme.primaryColor }}>
+                <div className="text-white font-black text-xs uppercase px-4 py-2 flex items-center gap-2 -ml-6 pl-6 mb-3 shadow-sm rounded-r-lg" style={{ backgroundColor: theme.primaryColor }}>
                   <BookOpen className="w-4 h-4" />
                   <span>CURSOS Y CAPACITACIONES DOCENTES ({pageIdx + 1}/{totalCoursePages})</span>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {pageCoursesGroup.map((c, cIdx) => (
-                    <div key={cIdx} className="bg-slate-50/90 border border-slate-200 p-3 rounded-xl space-y-1 section-box-print shadow-sm">
+                    <div key={cIdx} className="bg-slate-50/90 border border-slate-200/80 p-3 rounded-xl space-y-1 section-box-print shadow-sm border-l-4" style={{ borderLeftColor: theme.accentColor }}>
                       <div className="flex items-center justify-between gap-2">
                         <span 
-                          className="px-2.5 py-0.5 rounded-md text-[10px] font-black text-white whitespace-nowrap shadow-sm flex-shrink-0 inline-flex items-center gap-1" 
+                          className="px-2.5 py-0.5 rounded text-[10px] font-black text-white whitespace-nowrap shadow-sm flex-shrink-0 inline-flex items-center gap-1" 
                           style={{ backgroundColor: theme.primaryColor }}
                         >
                           <Calendar className="w-3 h-3" /> AÑO {c.year}
@@ -595,7 +649,7 @@ export default function CVPreview({ cvData, setCvData }) {
                         
                         {c.hours && (
                           <span 
-                            className="px-2.5 py-0.5 rounded-md text-[10px] font-black whitespace-nowrap flex-shrink-0 inline-flex items-center gap-1" 
+                            className="px-2.5 py-0.5 rounded text-[10px] font-black whitespace-nowrap flex-shrink-0 inline-flex items-center gap-1" 
                             style={{ backgroundColor: 'rgba(64,160,142,0.12)', color: theme.accentColor }}
                           >
                             <Clock className="w-3 h-3" /> {c.hours}
@@ -621,12 +675,12 @@ export default function CVPreview({ cvData, setCvData }) {
 
               {/* Digital Signature Block on Last Course Page */}
               {isLastPage && (
-                <div className="mt-4 pt-3 border-t border-slate-300 flex flex-col items-end section-box-print">
-                  <div className="w-56 text-center space-y-1">
+                <div className="mt-3 pt-2 border-t border-slate-300 flex flex-col items-end section-box-print">
+                  <div className="w-56 text-center space-y-0.5">
                     {signature?.dataUrl ? (
-                      <img src={signature.dataUrl} alt="Firma Digital" className="h-14 mx-auto object-contain mb-1" />
+                      <img src={signature.dataUrl} alt="Firma Digital" className="h-12 mx-auto object-contain mb-0.5" />
                     ) : (
-                      <div className="h-10 border-b border-dashed border-slate-400 mb-1 flex items-center justify-center text-xs text-slate-400">
+                      <div className="h-9 border-b border-dashed border-slate-400 mb-0.5 flex items-center justify-center text-xs text-slate-400">
                         [Firma del Postulante]
                       </div>
                     )}

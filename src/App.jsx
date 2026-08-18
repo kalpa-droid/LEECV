@@ -54,36 +54,70 @@ export default function App() {
   };
 
   const handleStartNewCVWizard = () => {
-    const emptyCV = {
+    const newCVTemplate = {
       ...initialCVData,
       personalInfo: {
         fullName: "NOMBRE Y APELLIDO",
         surname: "APELLIDO",
         givenNames: "Nombre",
-        dni: "",
-        cuit: "",
-        birthDate: "",
-        address: "",
-        cityProvince: "",
-        phone: "",
-        email: "",
-        facebook: "",
+        dni: "12.345.678",
+        cuit: "20-12345678-9",
+        birthDate: "01 de Enero de 1990",
+        address: "Calle Ficticia 123",
+        cityProvince: "CIUDAD, PROVINCIA",
+        phone: "+54 9 387 000-0000",
+        email: "correo@ejemplo.com",
+        facebook: "facebook.com/usuario",
         profilePhoto: "",
-        quote: "“Mi perfil profesional y trayectoria educativa”",
+        quote: "“Profesional comprometido con la excelencia pedagógica, el desarrollo humano y la innovación educativa en entornos digitales y comunitarios”",
         initials: "N.A",
         year: "2025"
       },
-      roles: ["Título o Rol Principal 1", "Título o Rol Principal 2"],
-      education: [{ level: "SECUNDARIO COMPLETO", institution: "Institución Educativa", year: "2020", degree: "Título Obtenido" }],
-      profession: [{ institution: "Universidad / Instituto", year: "2024", degree: "Título Profesional" }],
-      experience: [{ institution: "Escuela / Institución", role: "Cargo o Puesto Desempeñado", year: "2025", details: "Tareas principales" }],
-      coursesAndCertificates: [{ year: "2025", institution: "Institución Emisora", title: "Nombre del Curso o Capacitación", hours: "40 hs", details: "Certificado Aprobado" }],
-      informatics: [{ institution: "Plataforma Digital", course: "Nombre del Curso de Informática" }],
+      roles: [
+        "Título / Rol Profesional 1",
+        "Título / Rol Profesional 2",
+        "Especialización / Rol 3"
+      ],
+      education: [
+        { level: "NIVEL SECUNDARIO", institution: "Nombre del Colegio / Instituto", year: "2015", degree: "Título Obtenido" },
+        { level: "ESTUDIO SUPERIOR", institution: "Universidad / Instituto Superior", year: "2020", degree: "Título Profesional de Grado" }
+      ],
+      profession: [
+        { institution: "Instituto de Educación / Universidad", year: "2022", degree: "Título Profesional Principal" },
+        { institution: "Ministerio / Ente Emisor", year: "2023", degree: "Especialización o Posgrado" },
+        { institution: "Plataforma Educativa", year: "2024", degree: "Certificación Profesional Académica" }
+      ],
+      experience: [
+        { institution: "Institución Educativa / Empresa 1", role: "Cargo o Puesto Principal", year: "2025", details: "Planificación didáctica, conducción de equipos y proyectos institucionales." },
+        { institution: "Institución Educativa 2", role: "Docente / Profesional", year: "2024", details: "Desempeño frente a aula, evaluación pedagógica y mediación de aprendizajes." },
+        { institution: "Institución Educativa 3", role: "Tutor / Coordinador", year: "2023", details: "Coordinación de talleres pedagógicos y retención escolar." },
+        { institution: "Institución Educativa 4", role: "Docente Titular", year: "2022", details: "Gestión de proyectos integrados e innovación en el aula." }
+      ],
+      coursesAndCertificates: [
+        { year: "2025", institution: "Ministerio de Educación / Universidad", title: "Curso de Actualización Pedagógica y Educación Digital", hours: "60 hs", details: "Resolución Ministerial Aprobada" },
+        { year: "2024", institution: "Plataforma de Aprendizaje Virtual", title: "Seminario en Herramientas TICs e Inclusión Educativa", hours: "40 hs", details: "Certificado Oficial de Aprobación" },
+        { year: "2024", institution: "Fundación Educativa", title: "Taller sobre Estrategias Didácticas e Interacción Dialógica", hours: "30 hs", details: "Aprobación con Distinción" },
+        { year: "2023", institution: "Instituto Superior de Formación Docente", title: "Jornada de Capacitación en Convivencia Escolar y ESI", hours: "50 hs", details: "Certificación Jurisdiccional" },
+        { year: "2023", institution: "Secretaría de Innovación Pública", title: "Curso de Alfabetización Digital Nivel Avanzado", hours: "45 hs", details: "Certificado Nacional" },
+        { year: "2022", institution: "Asociación Pedagógica", title: "Simposio de Transformación y Gestión Institucional", hours: "35 hs", details: "Acreditación Académica" }
+      ],
+      informatics: [
+        { institution: "Plataforma Nacional Digital", course: "Alfabetización Digital y Manejo de Entornos Virtuales" },
+        { institution: "Secretaría de Innovación", course: "Enseñar y Aprender con Tecnologías de la Información (TICs)" }
+      ],
+      ecology: {
+        rural: [
+          { title: "TALLER DE PROYECTOS COMUNITARIOS RURALES", institution: "Ministerio de Desarrollo Social" }
+        ],
+        environmental: [
+          { title: "PROYECTO DE CUIDADO AMBIENTAL Y ECO-SUSTENTABILIDAD", institution: "Red Comunitaria Regional" }
+        ]
+      },
       certificatesScanned: [],
-      signature: { type: "drawn", dataUrl: "", signerName: "", signerRole: "", date: "2025" }
+      signature: { type: "drawn", dataUrl: "", signerName: "NOMBRE Y APELLIDO", signerRole: "Profesional", date: "2025" }
     };
 
-    setCvData(emptyCV);
+    setCvData(newCVTemplate);
     setIsWizardOpen(true);
   };
 
