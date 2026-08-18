@@ -27,7 +27,14 @@ export default function App() {
               : initialCVData.personalInfo.profilePhoto
           },
           experience: (parsed.experience && parsed.experience.length > 0) ? parsed.experience : initialCVData.experience,
-          ecology: (parsed.ecology && (parsed.ecology.rural || parsed.ecology.environmental)) ? parsed.ecology : initialCVData.ecology
+          ecology: (parsed.ecology && (parsed.ecology.rural || parsed.ecology.environmental)) ? parsed.ecology : initialCVData.ecology,
+          signature: {
+            ...initialCVData.signature,
+            ...parsed.signature,
+            dataUrl: (parsed.signature?.dataUrl && parsed.signature.dataUrl.trim() !== '') 
+              ? parsed.signature.dataUrl 
+              : initialCVData.signature.dataUrl
+          }
         };
       } catch (e) {
         return initialCVData;
