@@ -232,7 +232,7 @@ export default function App() {
       <main className="flex-1 flex overflow-hidden min-h-0">
         {/* Left Editor Sidebar */}
         {isPanelOpen && (
-          <div className="w-full lg:w-96 flex-shrink-0 h-full overflow-hidden border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 no-print animate-fade-in">
+          <div className="w-full lg:w-96 flex-shrink-0 h-full overflow-hidden border-r-2 border-[#EFE2C9] bg-[#FFF7E8] no-print animate-fade-in">
             <EditorPanel 
               cvData={cvData}
               setCvData={setCvData}
