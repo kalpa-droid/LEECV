@@ -34,16 +34,16 @@ class ErrorBoundary extends Component {
               !
             </div>
             <h2 className="text-lg font-black tracking-wide text-purple-300">
-              Restableciendo Vista de CVPREMIUM
+              Restaurando Sesión de CVPREMIUM
             </h2>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Detectamos datos de sesión guardados desactualizados. Haz clic abajo para restaurar los datos de ejemplo de Mónica Burgos.
+              Ocurrió un ajuste de memoria en el navegador. Haz clic abajo para volver al editor limpio.
             </p>
             <button
               onClick={this.handleReset}
               className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-black rounded-xl shadow-lg transition cursor-pointer"
             >
-              Restablecer CV de Ejemplo (Mónica Burgos)
+              Restaurar Editor
             </button>
           </div>
         </div>

@@ -1,11 +1,13 @@
-import React from 'react';
 import { 
   Printer, 
   Eye, 
   FilePlus,
   FolderOpen,
-  Save
+  Save,
+  Cloud,
+  CheckCircle2
 } from 'lucide-react';
+import { checkStorageStatus } from '../services/cvStorageService';
 
 export default function Navbar({ 
   onPrint, 
@@ -15,6 +17,8 @@ export default function Navbar({
   onSaveCV,
   isSaving
 }) {
+  const storageStatus = checkStorageStatus();
+
   return (
     <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur border-b border-slate-800 text-white shadow-xl no-print">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between gap-2">
@@ -24,10 +28,20 @@ export default function Navbar({
             CV
           </div>
           <div>
-            <h1 className="font-extrabold text-sm sm:text-base tracking-wide text-white">
-              CVPREMIUM
-            </h1>
-            <p className="text-[10px] sm:text-xs text-slate-400 hidden sm:block">Plataforma Profesional de CV</p>
+            <div className="flex items-center gap-2">
+              <h1 className="font-extrabold text-sm sm:text-base tracking-wide text-white">
+                CVPREMIUM
+              </h1>
+              <span className={`px-2 py-0.5 rounded-full text-[9px] font-black border flex items-center gap-1 ${
+                storageStatus.isCloud
+                  ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300'
+                  : 'bg-purple-950/80 border-purple-500/50 text-purple-300'
+              }`}>
+                {storageStatus.isCloud ? <Cloud className="w-2.5 h-2.5 text-emerald-400" /> : <CheckCircle2 className="w-2.5 h-2.5 text-purple-400" />}
+                <span>{storageStatus.isCloud ? 'Supabase Nube' : 'Auto-Guardado Local'}</span>
+              </span>
+            </div>
+            <p className="text-[10px] sm:text-xs text-slate-400 hidden sm:block">Plataforma Profesional de CV A4</p>
           </div>
         </div>
 
