@@ -1416,6 +1416,35 @@ export default function EditorPanel({
               <Plus className="w-4 h-4" /> Anexar Foto de Certificado
             </button>
 
+            {/* Control de Distribución en Hojas A4 */}
+            <div className="p-3.5 bg-[#FFFDF7] rounded-xl border-2 border-[#EFE2C9] space-y-2 shadow-sm">
+              <label className="block text-xs font-black text-[#2B1B2E]">
+                📐 Distribución de Certificados por Hoja A4:
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setCvData(prev => ({ ...prev, certsPerPageCount: 1 }))}
+                  className={`py-2 px-3 rounded-xl text-xs font-black transition border-2 flex items-center justify-center gap-1.5 ${
+                    (cvData.certsPerPageCount || 1) === 1
+                      ? 'bg-[#FF2E63] text-white border-[#FF2E63] shadow-md'
+                      : 'bg-white text-[#2B1B2E] border-[#EFE2C9] hover:bg-[#FFF7E8]'
+                  }`}
+                >
+                  1 por Hoja A4
+                </button>
+                <button
+                  onClick={() => setCvData(prev => ({ ...prev, certsPerPageCount: 2 }))}
+                  className={`py-2 px-3 rounded-xl text-xs font-black transition border-2 flex items-center justify-center gap-1.5 ${
+                    (cvData.certsPerPageCount || 1) === 2
+                      ? 'bg-[#FF2E63] text-white border-[#FF2E63] shadow-md'
+                      : 'bg-white text-[#2B1B2E] border-[#EFE2C9] hover:bg-[#FFF7E8]'
+                  }`}
+                >
+                  2 por Hoja A4
+                </button>
+              </div>
+            </div>
+
             {/* List of Attached Certificates */}
             <div className="pt-3 border-t border-[#EFE2C9] space-y-3">
               <span className="text-xs font-bold text-[#2B1B2E]">
@@ -1429,17 +1458,19 @@ export default function EditorPanel({
               ) : (
                 <div className="space-y-2">
                   {cvData.certificatesScanned.map((cert) => (
-                    <div key={cert.id} className="flex items-center gap-3 p-2.5 bg-[#FFFDF7]  rounded-xl border border-slate-200 ">
+                    <div key={cert.id} className="flex items-center gap-3 p-2.5 bg-[#FFFDF7] rounded-xl border border-[#EFE2C9]">
                       <img 
                         src={cert.imageUrl} 
                         alt={cert.title} 
                         style={{ transform: `rotate(${cert.rotation || 0}deg)` }}
-                        className="w-12 h-12 object-cover rounded-lg border flex-shrink-0" 
+                        className="w-12 h-12 object-cover rounded-lg border border-[#EFE2C9] flex-shrink-0" 
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-bold text-[#2B1B2E] truncate">{cert.title}</p>
                         <p className="text-[10px] text-[#2B1B2E] font-medium">{cert.institution} ({cert.year})</p>
                       </div>
+
+                      {/* Rotation control button */}
                       <button
                         onClick={() => {
                           setCvData(prev => ({
@@ -1449,11 +1480,14 @@ export default function EditorPanel({
                             )
                           }));
                         }}
-                        className="p-1 text-[#2B1B2E] font-medium hover:text-[#00A8A0] transition"
-                        title="Girar 90°"
+                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-[#FFF1C2] border border-[#FFC93C] text-[#2B1B2E] font-extrabold text-[11px] hover:bg-[#FFC93C] transition"
+                        title="Girar imagen 90°"
                       >
-                        <RotateCw className="w-4 h-4" />
+                        <RotateCw className="w-3.5 h-3.5 text-[#FF2E63]" />
+                        <span>Girar ({cert.rotation || 0}°)</span>
                       </button>
+
+                      {/* Delete button */}
                       <button
                         onClick={() => {
                           const name = cert.title || 'este certificado';
@@ -1464,7 +1498,7 @@ export default function EditorPanel({
                             }));
                           }
                         }}
-                        className="p-1 text-[#2B1B2E] font-medium hover:text-red-600 transition"
+                        className="p-1.5 text-[#2B1B2E] hover:text-red-600 transition"
                         title="Eliminar"
                       >
                         <Trash2 className="w-4 h-4" />

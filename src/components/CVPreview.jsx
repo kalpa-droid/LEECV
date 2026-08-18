@@ -890,55 +890,15 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
       {certPages.map((group, pageIdx) => (
         <div id={pageIdx === 0 ? "cv-section-certificados" : undefined} key={pageIdx} className="a4-page-container p-8 flex flex-col items-center justify-between border-8 border-purple-100">
           
-          {/* Header Controls for Certificates (No Print) */}
-          <div className="w-full flex items-center justify-between no-print bg-slate-100 dark:bg-slate-800 p-2 rounded-xl border border-slate-300 dark:border-slate-700 mb-3">
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              Distribución de Certificados en A4:
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => toggleCertsPerPage(1)}
-                className={`px-3 py-1 text-xs font-bold rounded-lg border transition ${
-                  certsPerPageCount === 1 
-                    ? 'bg-purple-600 text-white border-purple-600' 
-                    : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-200'
-                }`}
-              >
-                1 por Hoja A4
-              </button>
-              <button
-                onClick={() => toggleCertsPerPage(2)}
-                className={`px-3 py-1 text-xs font-bold rounded-lg border transition ${
-                  certsPerPageCount === 2 
-                    ? 'bg-purple-600 text-white border-purple-600' 
-                    : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-200'
-                }`}
-              >
-                2 por Hoja A4
-              </button>
-            </div>
-          </div>
-
           {/* Certificate Items Container */}
           <div className="flex-1 w-full flex flex-col items-center justify-around gap-4 overflow-hidden">
             {group.map((cert) => {
               const rotAngle = cert.rotation || 0;
               return (
                 <div key={cert.id} className="w-full flex flex-col items-center justify-center flex-1 relative">
-                  {/* Rotation button (No Print) */}
-                  <div className="no-print absolute top-2 right-2 z-20">
-                    <button
-                      onClick={() => handleRotateCert(cert.id)}
-                      className="flex items-center gap-1 px-2.5 py-1 bg-slate-900/80 hover:bg-slate-900 text-white text-xs font-bold rounded-lg backdrop-blur shadow transition"
-                      title="Girar 90° para corregir orientación"
-                    >
-                      <RotateCw className="w-3.5 h-3.5 text-amber-400" /> Girar 90° ({rotAngle}°)
-                    </button>
-                  </div>
-
                   <div className="w-full text-center mb-1">
-                    <h3 className="text-sm font-black uppercase" style={{ color: theme.primaryColor }}>{cert.title}</h3>
-                    <p className="text-[11px] font-bold text-slate-500">{cert.institution} • {cert.year}</p>
+                    <h3 className="text-sm sm:text-base font-black uppercase tracking-wide" style={{ color: theme.primaryColor }}>{cert.title}</h3>
+                    <p className="text-[11px] font-extrabold text-[#2B1B2E]">{cert.institution} • {cert.year}</p>
                   </div>
 
                   <div className="flex-1 w-full flex items-center justify-center overflow-hidden p-2">
@@ -946,7 +906,7 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
                       src={cert.imageUrl} 
                       alt={cert.title} 
                       style={{ transform: `rotate(${rotAngle}deg)` }}
-                      className="max-h-full max-w-full object-contain rounded-lg shadow border border-slate-300 transition-transform duration-300" 
+                      className="max-h-full max-w-full object-contain rounded-lg shadow border border-[#EFE2C9] transition-transform duration-300" 
                     />
                   </div>
                 </div>
@@ -954,8 +914,8 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
             })}
           </div>
 
-          <div className="w-full text-center border-t pt-2 border-slate-200 text-[10px] font-bold text-slate-400">
-            {personalInfo.initials} | ANEXO CERTIFICADOS | CVPREMIUM 2025
+          <div className="w-full text-center border-t pt-2 border-[#EFE2C9] text-[10px] font-bold text-[#2B1B2E]/60">
+            {personalInfo.initials} | ANEXO CERTIFICADOS | LEECV
           </div>
         </div>
       ))}
