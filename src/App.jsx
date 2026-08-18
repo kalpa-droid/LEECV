@@ -6,7 +6,9 @@ import CVPreview from './components/CVPreview';
 import PhotoCropperModal from './components/PhotoCropperModal';
 import SignatureModal from './components/SignatureModal';
 import WizardModal from './components/WizardModal';
+import SavedCVsModal from './components/SavedCVsModal';
 import { initialCVData } from './data/initialCVData';
+import { saveCV } from './services/cvStorageService';
 
 export default function App() {
   const [cvData, setCvData] = useState(() => {
@@ -68,7 +70,9 @@ export default function App() {
   const [isPhotoCropperOpen, setIsPhotoCropperOpen] = useState(false);
   const [isSignatureOpen, setIsSignatureOpen] = useState(false);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [isSavedCVsOpen, setIsSavedCVsOpen] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Autosave to localStorage on state change
   useEffect(() => {
@@ -115,25 +119,37 @@ export default function App() {
     localStorage.setItem('cv_premium_data', JSON.stringify(initialCVData));
   };
 
+  const handleSaveCV = async () => {
+    setIsSaving(true);
+    try {
+      await saveCV(cvData);
+      alert(`CV de "${cvData?.personalInfo?.fullName || 'Postulante'}" guardado correctamente con compresión WebP.`);
+    } catch (err) {
+      console.error(err);
+      alert('Error al guardar CV');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleStartNewCVWizard = () => {
     const newCVTemplate = {
-      ...initialCVData,
+      id: `cv_${Date.now()}`,
       personalInfo: {
-        fullName: "NOMBRE Y APELLIDO",
-        surname: "APELLIDO",
-        givenNames: "Nombre",
-        dni: "12.345.678",
-        cuit: "20-12345678-9",
-        birthDate: "01 de Enero de 1990",
-        address: "Calle Ficticia 123",
-        cityProvince: "CIUDAD, PROVINCIA",
-        phone: "+54 9 387 000-0000",
-        email: "correo@ejemplo.com",
-        facebook: "facebook.com/usuario",
+        fullName: "",
+        surname: "",
+        givenNames: "",
+        dni: "",
+        cuit: "",
+        birthDate: "",
+        address: "",
+        cityProvince: "",
+        phone: "",
+        email: "",
         profilePhoto: "",
-        quote: "“Profesional comprometido con la excelencia pedagógica, el desarrollo humano y la innovación educativa en entornos digitales y comunitarios”",
-        initials: "N.A",
-        year: "2025"
+        quote: "",
+        initials: "CV",
+        year: new Date().getFullYear().toString()
       },
       roles: [
         "Título / Rol Profesional 1",
@@ -261,6 +277,12 @@ export default function App() {
         onOpenSignature={() => setIsSignatureOpen(true)}
         cvData={cvData}
         setCvData={setCvData}
+      />
+
+      <SavedCVsModal
+        isOpen={isSavedCVsOpen}
+        onClose={() => setIsSavedCVsOpen(false)}
+        onSelectCV={(loadedCV) => setCvData(loadedCV)}
       />
 
       {/* PDF Generation Toast Indicator */}

@@ -22,8 +22,8 @@ export const editorTabs = [
   { id: 'cursos', label: 'Cursos', icon: BookOpen },
   { id: 'informatica', label: 'Informática', icon: Laptop },
   { id: 'ecologia', label: 'Proyectos & Comunidad', icon: Leaf },
-  { id: 'certificados', label: 'Certificados', icon: Award },
   { id: 'firma', label: 'Firma', icon: PenTool },
+  { id: 'certificados', label: 'Certificados Anexados', icon: Award },
   { id: 'diseno', label: 'Diseño & Colores', icon: Palette }
 ];
 
