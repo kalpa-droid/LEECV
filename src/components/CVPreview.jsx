@@ -92,6 +92,9 @@ export default function CVPreview({ cvData, setCvData }) {
     fontFamily: theme.fontFamily || 'Arial, sans-serif'
   };
 
+  const showCover = cvData?.showCoverPage !== false;
+  const startBodyPageNum = showCover ? 2 : 1;
+
   return (
     <div 
       className="w-full bg-slate-200 dark:bg-slate-950 p-4 md:p-8 flex flex-col items-center gap-8 print-wrapper"
@@ -170,86 +173,88 @@ export default function CVPreview({ cvData, setCvData }) {
       `}</style>
 
       {/* ========================================================================= */}
-      {/* PAGE 1: PORTADA EDITORIAL DE ALTO IMPACTO */}
+      {/* PAGE 1: PORTADA EDITORIAL DE ALTO IMPACTO (SI ESTÁ ACTIVADA) */}
       {/* ========================================================================= */}
-      <div className="a4-page-container rounded-sm transition-all" style={{ backgroundColor: theme.primaryColor }}>
-        <div className="perspective-corridor-cv">
-          
-          {/* Profile Photo */}
-          <div 
-            className="mt-12 w-44 h-56 border-4 flex flex-col items-center justify-center text-center p-2 shadow-2xl overflow-hidden transition-all duration-300 rounded-2xl"
-            style={{ 
-              borderColor: theme.accentColor || '#40a08e', 
-              backgroundColor: 'rgba(255, 255, 255, 0.25)',
-              boxShadow: `0 0 25px ${theme.accentColor || '#40a08e'}60`
-            }}
-          >
-            {personalInfo.profilePhoto ? (
-              <img src={personalInfo.profilePhoto} alt="Perfil" className="w-full h-full object-cover rounded-xl" />
-            ) : (
-              <div className="flex flex-col items-center text-white">
-                <User className="w-12 h-12 mb-2 stroke-[1.5]" style={{ stroke: theme.accentColor || '#ffffff' }} />
-                <span className="text-[11px] font-bold tracking-wider">[Foto de Perfil]</span>
+      {showCover && (
+        <div className="a4-page-container rounded-sm transition-all" style={{ backgroundColor: theme.primaryColor }}>
+          <div className="perspective-corridor-cv">
+            
+            {/* Profile Photo */}
+            <div 
+              className="mt-12 w-44 h-56 border-4 flex flex-col items-center justify-center text-center p-2 shadow-2xl overflow-hidden transition-all duration-300 rounded-2xl"
+              style={{ 
+                borderColor: theme.accentColor || '#40a08e', 
+                backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                boxShadow: `0 0 25px ${theme.accentColor || '#40a08e'}60`
+              }}
+            >
+              {personalInfo.profilePhoto ? (
+                <img src={personalInfo.profilePhoto} alt="Perfil" className="w-full h-full object-cover rounded-xl" />
+              ) : (
+                <div className="flex flex-col items-center text-white">
+                  <User className="w-12 h-12 mb-2 stroke-[1.5]" style={{ stroke: theme.accentColor || '#ffffff' }} />
+                  <span className="text-[11px] font-bold tracking-wider">[Foto de Perfil]</span>
+                </div>
+              )}
+            </div>
+
+            {/* Header Title */}
+            <div className="mt-5 text-center space-y-1">
+              <span className="px-3 py-1 bg-white/20 backdrop-blur rounded-full text-[10px] font-black uppercase text-white tracking-widest">
+                PORTAFOLIO DOCENTE & PROFESIONAL
+              </span>
+              <h1 
+                className="text-4xl font-black text-white tracking-wider uppercase drop-shadow-md text-center"
+                style={{ fontFamily: 'Impact, Arial, sans-serif' }}
+              >
+                Curriculum Vitae
+              </h1>
+            </div>
+
+            {/* Candidate Name & Featured Roles */}
+            <div className="mt-6 w-5/6 text-center flex flex-col items-center flex-grow">
+              <h2 
+                className="text-2xl font-black italic mb-4 tracking-wide border-b-2 pb-2 border-white/20"
+                style={{ color: theme.primaryColor, fontFamily: 'Georgia, serif' }}
+              >
+                {personalInfo.fullName}
+              </h2>
+
+              {/* Featured Roles Badges */}
+              <div className="flex flex-wrap justify-center gap-1.5 max-w-lg">
+                {roles.map((role, idx) => (
+                  <span 
+                    key={idx}
+                    className="px-3 py-1 bg-slate-800/90 text-white rounded-lg text-[11px] font-extrabold shadow-sm border border-slate-700/60"
+                  >
+                    {role}
+                  </span>
+                ))}
               </div>
-            )}
-          </div>
 
-          {/* Header Title */}
-          <div className="mt-5 text-center space-y-1">
-            <span className="px-3 py-1 bg-white/20 backdrop-blur rounded-full text-[10px] font-black uppercase text-white tracking-widest">
-              PORTAFOLIO DOCENTE & PROFESIONAL
-            </span>
-            <h1 
-              className="text-4xl font-black text-white tracking-wider uppercase drop-shadow-md text-center"
-              style={{ fontFamily: 'Impact, Arial, sans-serif' }}
-            >
-              Curriculum Vitae
-            </h1>
-          </div>
-
-          {/* Candidate Name & Featured Roles */}
-          <div className="mt-6 w-5/6 text-center flex flex-col items-center flex-grow">
-            <h2 
-              className="text-2xl font-black italic mb-4 tracking-wide border-b-2 pb-2 border-white/20"
-              style={{ color: theme.primaryColor, fontFamily: 'Georgia, serif' }}
-            >
-              {personalInfo.fullName}
-            </h2>
-
-            {/* Featured Roles Badges */}
-            <div className="flex flex-wrap justify-center gap-1.5 max-w-lg">
-              {roles.map((role, idx) => (
-                <span 
-                  key={idx}
-                  className="px-3 py-1 bg-slate-800/90 text-white rounded-lg text-[11px] font-extrabold shadow-sm border border-slate-700/60"
-                >
-                  {role}
-                </span>
-              ))}
+              {/* Profile Highlight Statement */}
+              {personalInfo.quote && (
+                <p className="mt-6 text-xs font-bold italic text-slate-700 max-w-md bg-white/40 p-3 rounded-xl backdrop-blur leading-relaxed">
+                  {personalInfo.quote}
+                </p>
+              )}
             </div>
 
-            {/* Profile Highlight Statement */}
-            {personalInfo.quote && (
-              <p className="mt-6 text-xs font-bold italic text-slate-700 max-w-md bg-white/40 p-3 rounded-xl backdrop-blur leading-relaxed">
-                {personalInfo.quote}
-              </p>
-            )}
-          </div>
-
-          {/* Bottom Identification Summary Badge */}
-          <div className="absolute bottom-8 w-5/6 bg-slate-900/90 backdrop-blur text-white px-6 py-3 rounded-2xl flex items-center justify-between text-xs font-bold shadow-2xl border border-slate-800">
-            <div>
-              <p className="text-[10px] text-purple-300 font-extrabold uppercase">DNI: {personalInfo.dni} | CUIT: {personalInfo.cuit}</p>
-              <p className="text-white text-[11px] font-extrabold">{personalInfo.cityProvince}</p>
+            {/* Bottom Identification Summary Badge */}
+            <div className="absolute bottom-8 w-5/6 bg-slate-900/90 backdrop-blur text-white px-6 py-3 rounded-2xl flex items-center justify-between text-xs font-bold shadow-2xl border border-slate-800">
+              <div>
+                <p className="text-[10px] text-purple-300 font-extrabold uppercase">DNI: {personalInfo.dni} | CUIT: {personalInfo.cuit}</p>
+                <p className="text-white text-[11px] font-extrabold">{personalInfo.cityProvince}</p>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] text-purple-300 font-bold block">{personalInfo.initials} | AÑO {personalInfo.year}</span>
+                <span className="text-[11px] text-teal-300 font-extrabold">DOCUMENTO OFICIAL A4</span>
+              </div>
             </div>
-            <div className="text-right">
-              <span className="text-[10px] text-purple-300 font-bold block">{personalInfo.initials} | AÑO {personalInfo.year}</span>
-              <span className="text-[11px] text-teal-300 font-extrabold">DOCUMENTO OFICIAL A4</span>
-            </div>
-          </div>
 
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ========================================================================= */}
       {/* PAGE 2: DATOS PERSONALES, FORMACIÓN Y PROFESIÓN */}
@@ -337,7 +342,7 @@ export default function CVPreview({ cvData, setCvData }) {
             {/* Sidebar Footer */}
             <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between font-bold text-xs">
               <span>{personalInfo.initials}</span>
-              <span className="text-2xl font-black">2</span>
+              <span className="text-2xl font-black">{startBodyPageNum}</span>
             </div>
           </div>
         </div>
@@ -433,10 +438,10 @@ export default function CVPreview({ cvData, setCvData }) {
       </div>
 
       {/* ========================================================================= */}
-      {/* PAGES 3 TO N: EXPERIENCIA LABORAL DOCENTE (PAGINADA 6 POR HOJA) */}
+      {/* PAGES TO N: EXPERIENCIA LABORAL DOCENTE (PAGINADA 6 POR HOJA) */}
       {/* ========================================================================= */}
       {Array.from({ length: totalExpPages }).map((_, expPageIdx) => {
-        const pageNum = 3 + expPageIdx;
+        const pageNum = startBodyPageNum + 1 + expPageIdx;
         const expGroup = sortedExperience.slice(expPageIdx * EXP_PER_PAGE, (expPageIdx + 1) * EXP_PER_PAGE);
 
         return (
@@ -569,7 +574,7 @@ export default function CVPreview({ cvData, setCvData }) {
       {/* PAGES TO N: CURSOS Y CAPACITACIONES DOCENTES (PAGINADAS 6 POR HOJA) */}
       {/* ========================================================================= */}
       {Array.from({ length: totalCoursePages }).map((_, pageIdx) => {
-        const pageNum = 3 + totalExpPages + pageIdx;
+        const pageNum = startBodyPageNum + 1 + totalExpPages + pageIdx;
         const isLastPage = pageIdx === totalCoursePages - 1;
         const pageCoursesGroup = sortedCourses.slice(pageIdx * COURSES_PER_PAGE, (pageIdx + 1) * COURSES_PER_PAGE);
 

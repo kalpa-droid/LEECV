@@ -17,6 +17,8 @@ export default function App() {
         return {
           ...initialCVData,
           ...parsed,
+          showCoverPage: parsed.showCoverPage !== undefined ? parsed.showCoverPage : true,
+          layoutStyle: parsed.layoutStyle || 'executive-sidebar',
           personalInfo: { 
             ...initialCVData.personalInfo, 
             ...parsed.personalInfo,

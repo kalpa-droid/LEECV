@@ -17,7 +17,11 @@ import {
   RotateCw,
   Check,
   Sparkles,
-  Info
+  Info,
+  Layout,
+  Eye,
+  EyeOff,
+  Layers
 } from 'lucide-react';
 import { themePresets, fontOptions } from '../data/themePresets';
 
@@ -1427,53 +1431,152 @@ export default function EditorPanel({
         {/* TAB 10: DISEÑO Y COLORES */}
         {/* ========================================================================= */}
         {activeTab === 'diseno' && (
-          <div className="space-y-5">
-            <h3 className="text-xs font-extrabold uppercase text-purple-700 dark:text-purple-400 border-b pb-2 border-slate-200 dark:border-slate-800">
-              Personalización de Diseño y Colores Globale
+          <div className="space-y-6">
+            <h3 className="text-xs font-extrabold uppercase text-purple-700 dark:text-purple-400 border-b pb-2 border-slate-200 dark:border-slate-800 flex items-center gap-1.5">
+              <Palette className="w-4 h-4 text-purple-600" /> Personalización de Estilo, Plantilla y Colores
             </h3>
 
-            {/* Presets Grid */}
+            {/* Cover Page Toggle */}
+            <div className="bg-purple-50/80 dark:bg-purple-950/30 p-4 rounded-xl border border-purple-200 dark:border-purple-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    {cvData.showCoverPage !== false ? <Eye className="w-4 h-4 text-purple-600" /> : <EyeOff className="w-4 h-4 text-slate-400" />}
+                    Portada de Impacto (Página 1)
+                  </h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {cvData.showCoverPage !== false 
+                      ? 'Activada: El currículum comenzará con una hoja de portada editorial completa.' 
+                      : 'Desactivada: El documento iniciará directamente con los Datos Personales (Página 1).'}
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setCvData(prev => ({ ...prev, showCoverPage: prev.showCoverPage === undefined ? false : !prev.showCoverPage }))}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                    cvData.showCoverPage !== false
+                      ? 'bg-purple-600 text-white hover:bg-purple-700'
+                      : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300'
+                  }`}
+                >
+                  {cvData.showCoverPage !== false ? 'Desactivar Portada' : 'Activar Portada'}
+                </button>
+              </div>
+            </div>
+
+            {/* Template Style Selector */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
-                Presets Cromáticos Predefinidos
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-1.5">
+                <Layout className="w-3.5 h-3.5 text-purple-600" /> Estilo de Plantilla Premium
               </label>
-              <div className="grid grid-cols-2 gap-2.5">
-                {themePresets.map((preset) => {
-                  const isSelected = cvData.theme.presetId === preset.id;
+              
+              <div className="grid grid-cols-1 gap-2">
+                {[
+                  { 
+                    id: 'executive-sidebar', 
+                    title: 'Ejecutivo con Sidebar Lateral', 
+                    desc: 'Diseño clásico de alto nivel con columna izquierda en color primario y cuerpo derecho en 2 columnas.',
+                    badge: 'Recomendado Mónica / Docentes' 
+                  },
+                  { 
+                    id: 'modern-corporate', 
+                    title: 'Corporativo Moderno', 
+                    desc: 'Banner superior amplio de presentación personal y contenido distribuido en 2 columnas equilibradas.',
+                    badge: 'Ideal Empresas & Ejecutivos' 
+                  },
+                  { 
+                    id: 'minimal-editorial', 
+                    title: 'Editorial Minimalista', 
+                    desc: 'Líneas finas de acento, tipografía refinada estilo revista y máxima claridad de lectura.',
+                    badge: 'Ideal Jóvenes & Creativos' 
+                  }
+                ].map((styleOpt) => {
+                  const isSelected = (cvData.layoutStyle || 'executive-sidebar') === styleOpt.id;
                   return (
                     <button
-                      key={preset.id}
-                      onClick={() => applyPreset(preset)}
-                      className={`p-3 rounded-xl border text-left transition flex flex-col justify-between ${
+                      key={styleOpt.id}
+                      onClick={() => setCvData(prev => ({ ...prev, layoutStyle: styleOpt.id }))}
+                      className={`p-3 rounded-xl border text-left transition flex items-start justify-between gap-3 ${
                         isSelected
                           ? 'border-purple-600 bg-purple-50 dark:bg-purple-950/40 ring-2 ring-purple-600/30'
                           : 'border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700'
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{preset.name}</span>
-                        {isSelected && <Check className="w-4 h-4 text-purple-600" />}
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{styleOpt.title}</span>
+                          <span className="text-[9px] px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 font-extrabold">
+                            {styleOpt.badge}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-snug">{styleOpt.desc}</p>
                       </div>
-                      <div className="flex gap-1.5 items-center">
-                        <div className="w-4 h-4 rounded-full border border-black/10" style={{ backgroundColor: preset.primaryColor }} />
-                        <div className="w-4 h-4 rounded-full border border-black/10" style={{ backgroundColor: preset.accentColor }} />
-                        <div className="w-4 h-4 rounded-full border border-black/10" style={{ backgroundColor: preset.secondaryColor }} />
-                      </div>
+                      {isSelected && <Check className="w-4 h-4 text-purple-600 flex-shrink-0 mt-1" />}
                     </button>
                   );
                 })}
               </div>
             </div>
 
+            {/* Presets Grid Categorized */}
+            <div className="space-y-3">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-purple-600" /> Presets Cromáticos por Perfil
+              </label>
+
+              {['docentes', 'ejecutivos', 'jovenes'].map((cat) => {
+                const categoryPresets = themePresets.filter(p => p.category === cat);
+                const categoryTitle = cat === 'docentes' 
+                  ? '🎓 Maestros, Docentes & Educadores' 
+                  : cat === 'ejecutivos' 
+                  ? '💼 Ejecutivos & Corporativos' 
+                  : '⚡ Jóvenes, Estudiantes & Creativos';
+
+                return (
+                  <div key={cat} className="space-y-1.5 pt-1">
+                    <h4 className="text-[11px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">
+                      {categoryTitle}
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {categoryPresets.map((preset) => {
+                        const isSelected = cvData.theme.presetId === preset.id;
+                        return (
+                          <button
+                            key={preset.id}
+                            onClick={() => applyPreset(preset)}
+                            className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between ${
+                              isSelected
+                                ? 'border-purple-600 bg-purple-50 dark:bg-purple-950/40 ring-2 ring-purple-600/30'
+                                : 'border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate pr-1">{preset.name}</span>
+                              {isSelected && <Check className="w-3.5 h-3.5 text-purple-600 flex-shrink-0" />}
+                            </div>
+                            <div className="flex gap-1.5 items-center">
+                              <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.primaryColor }} />
+                              <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.accentColor }} />
+                              <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.secondaryColor }} />
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
             {/* Font Picker */}
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Tipografía Principal del Documento
+                Tipografía Principal del Documento (Google Fonts)
               </label>
               <select
                 value={cvData.theme.fontFamily}
                 onChange={(e) => updateTheme('fontFamily', e.target.value)}
-                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none"
+                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 outline-none font-medium"
               >
                 {fontOptions.map((f) => (
                   <option key={f.id} value={f.value}>{f.name}</option>
@@ -1484,7 +1587,7 @@ export default function EditorPanel({
             {/* Custom Color Pickers */}
             <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                Ajuste Fino de Colores Personalizados (Actualización Global)
+                Ajuste Fino de Colores Personalizados
               </label>
               
               <div className="flex items-center justify-between text-xs">

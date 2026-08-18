@@ -789,6 +789,8 @@ export const initialCVData = {
     }
 ],
   certificatesScanned: [],
+  showCoverPage: true,
+  layoutStyle: "executive-sidebar",
   signature: {
     type: "drawn",
     dataUrl: "",
