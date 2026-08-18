@@ -1416,34 +1416,7 @@ export default function EditorPanel({
               <Plus className="w-4 h-4" /> Anexar Foto de Certificado
             </button>
 
-            {/* Control de Distribución en Hojas A4 */}
-            <div className="p-3.5 bg-[#FFFDF7] rounded-xl border-2 border-[#EFE2C9] space-y-2 shadow-sm">
-              <label className="block text-xs font-black text-[#2B1B2E]">
-                📐 Distribución de Certificados por Hoja A4:
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => setCvData(prev => ({ ...prev, certsPerPageCount: 1 }))}
-                  className={`py-2 px-3 rounded-xl text-xs font-black transition border-2 flex items-center justify-center gap-1.5 ${
-                    (cvData.certsPerPageCount || 1) === 1
-                      ? 'bg-[#FF2E63] text-white border-[#FF2E63] shadow-md'
-                      : 'bg-white text-[#2B1B2E] border-[#EFE2C9] hover:bg-[#FFF7E8]'
-                  }`}
-                >
-                  1 por Hoja A4
-                </button>
-                <button
-                  onClick={() => setCvData(prev => ({ ...prev, certsPerPageCount: 2 }))}
-                  className={`py-2 px-3 rounded-xl text-xs font-black transition border-2 flex items-center justify-center gap-1.5 ${
-                    (cvData.certsPerPageCount || 1) === 2
-                      ? 'bg-[#FF2E63] text-white border-[#FF2E63] shadow-md'
-                      : 'bg-white text-[#2B1B2E] border-[#EFE2C9] hover:bg-[#FFF7E8]'
-                  }`}
-                >
-                  2 por Hoja A4
-                </button>
-              </div>
-            </div>
+
 
             {/* List of Attached Certificates */}
             <div className="pt-3 border-t border-[#EFE2C9] space-y-3">

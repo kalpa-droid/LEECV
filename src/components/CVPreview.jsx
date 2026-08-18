@@ -177,24 +177,8 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
     }));
   };
 
-  // Toggle Certificates Per Page (1 or 2 per A4)
-  const toggleCertsPerPage = (count) => {
-    if (!setCvData) return;
-    setCvData((prev) => ({
-      ...prev,
-      certificateDisplay: {
-        ...prev.certificateDisplay,
-        certsPerPage: count
-      }
-    }));
-  };
-
-  // Chunk certificates into groups of 1 or 2 per A4 page
-  const certsPerPageCount = certificateDisplay?.certsPerPage || 1;
-  const certPages = [];
-  for (let i = 0; i < certificatesScanned.length; i += certsPerPageCount) {
-    certPages.push(certificatesScanned.slice(i, i + certsPerPageCount));
-  }
+  // Chunk certificates: ALWAYS 1 per A4 page
+  const certPages = certificatesScanned.map(cert => [cert]);
 
   // Dynamic Theme Styling
   const dynamicThemeStyle = {
