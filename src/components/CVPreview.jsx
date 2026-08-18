@@ -200,7 +200,7 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
         .perspective-corridor-cv {
           position: absolute;
           inset: 0;
-          background: linear-gradient(to bottom, #d59fcf 0%, #f4e1f1 35%, #ffffff 50%, #ffffff 100%);
+          background: linear-gradient(to bottom, var(--bg-corridor, ${theme.bgCorridor || theme.primaryColor || '#ab5ba1'}) 0%, rgba(255, 255, 255, 0.8) 35%, #ffffff 55%, #ffffff 100%);
           clip-path: polygon(18% 0, 82% 0, 100% 100%, 0% 100%);
           display: flex;
           flex-direction: column;
@@ -833,9 +833,9 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
                         [Firma del Postulante]
                       </div>
                     )}
-                    <p className="text-xs font-black text-slate-800">{signature?.signerName || personalInfo.fullName}</p>
-                    <p className="text-[10px] text-slate-500 font-semibold">{signature?.signerRole || 'Profesora de Educación Secundaria'}</p>
-                    <p className="text-[10px] text-slate-400">{signature?.date || 'Salta, 2025'}</p>
+                    <p className="text-xs font-black text-slate-800">{signature?.signerName || personalInfo.fullName || 'NOMBRE Y APELLIDO'}</p>
+                    <p className="text-[10px] text-slate-500 font-semibold">{signature?.signerRole || (roles?.[0] || 'Profesional')}</p>
+                    <p className="text-[10px] text-slate-400">{signature?.date || `${personalInfo.cityProvince ? personalInfo.cityProvince.split(',')[0] : 'Salta'}, ${personalInfo.year || '2025'}`}</p>
                   </div>
                 </div>
               )}

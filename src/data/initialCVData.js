@@ -1,4 +1,5 @@
 import { monicaProfilePhoto } from "./monicaPhotoBase64";
+import { monicaSignaturePhoto } from "./monicaSignatureBase64";
 
 export const initialCVData = {
   personalInfo: {
@@ -794,7 +795,7 @@ export const initialCVData = {
   layoutStyle: "executive-sidebar",
   signature: {
     type: "drawn",
-    dataUrl: "",
+    dataUrl: monicaSignaturePhoto,
     signerName: "MÓNICA DANIELA BURGOS",
     signerRole: "Profesora de Educación Secundaria en Lengua y Literatura",
     dni: "29334206",
