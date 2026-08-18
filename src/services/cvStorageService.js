@@ -30,16 +30,14 @@ export const DEFAULT_PRESET_CVS = [
     title: "CV - MÓNICA DANIELA BURGOS - Agosto - 2025",
     candidate_name: "MÓNICA DANIELA BURGOS",
     dni: "29334206",
-    updated_at: "2025-01-01T12:00:00.000Z",
-    cv_data: monicaBurgosCVData
+    updated_at: "2025-01-01T12:00:00.000Z"
   },
   {
     id: "cv_ejemplo_estandar",
     title: "CV - VALERIA SOLEDAD MEDINA - Agosto - 2025",
     candidate_name: "VALERIA SOLEDAD MEDINA",
     dni: "34.591.208",
-    updated_at: "2025-01-02T12:00:00.000Z",
-    cv_data: standardExampleCVData
+    updated_at: "2025-01-02T12:00:00.000Z"
   }
 ];
 
@@ -51,10 +49,20 @@ export const getSavedCVsList = async () => {
   try {
     const stored = localStorage.getItem(SAVED_CVS_KEY);
     if (stored) {
-      localList = JSON.parse(stored);
+      const parsed = JSON.parse(stored);
+      // Clean legacy items by stripping heavy cv_data from summary list
+      localList = (Array.isArray(parsed) ? parsed : []).map(item => ({
+        id: item.id,
+        title: item.title,
+        candidate_name: item.candidate_name,
+        dni: item.dni,
+        updated_at: item.updated_at
+      }));
     } else {
       localList = DEFAULT_PRESET_CVS;
-      localStorage.setItem(SAVED_CVS_KEY, JSON.stringify(DEFAULT_PRESET_CVS));
+      try {
+        localStorage.setItem(SAVED_CVS_KEY, JSON.stringify(DEFAULT_PRESET_CVS));
+      } catch {}
     }
   } catch (err) {
     console.error('Error cargando CVs locales:', err);
@@ -102,26 +110,29 @@ export const saveCV = async (cvData) => {
   const yearNum = new Date().getFullYear();
   const formattedTitle = `CV - ${candidateName} - ${monthName} - ${yearNum}`;
 
-  const record = {
+  const summaryRecord = {
     id,
     title: formattedTitle,
     candidate_name: candidateName,
     dni: optimizedCV.personalInfo?.dni || '',
-    updated_at: new Date().toISOString(),
-    cv_data: { ...optimizedCV, id }
+    updated_at: new Date().toISOString()
   };
+
+  const fullCVObject = { ...optimizedCV, id };
 
   // 1. Always save to local list
   try {
     const list = await getSavedCVsList();
     const existingIdx = list.findIndex(item => item.id === id);
     if (existingIdx >= 0) {
-      list[existingIdx] = record;
+      list[existingIdx] = summaryRecord;
     } else {
-      list.unshift(record);
+      list.unshift(summaryRecord);
     }
+    // Save lightweight list without base64 images
     localStorage.setItem(SAVED_CVS_KEY, JSON.stringify(list));
-    localStorage.setItem(`cv_data_${id}`, JSON.stringify(record.cv_data));
+    // Save full CV data under individual key
+    localStorage.setItem(`cv_data_${id}`, JSON.stringify(fullCVObject));
   } catch (err) {
     console.error('Error guardando en almacenamiento local:', err);
   }
@@ -131,11 +142,11 @@ export const saveCV = async (cvData) => {
     try {
       const { error } = await supabase.from('cvs').upsert({
         id,
-        title: record.title,
-        candidate_name: record.candidate_name,
-        dni: record.dni,
-        cv_data: record.cv_data,
-        updated_at: record.updated_at
+        title: summaryRecord.title,
+        candidate_name: summaryRecord.candidate_name,
+        dni: summaryRecord.dni,
+        cv_data: fullCVObject,
+        updated_at: summaryRecord.updated_at
       });
       if (error) console.error('Error guardando en Supabase:', error);
     } catch (err) {
@@ -143,7 +154,7 @@ export const saveCV = async (cvData) => {
     }
   }
 
-  return record;
+  return { ...summaryRecord, cv_data: fullCVObject };
 };
 
 /**
