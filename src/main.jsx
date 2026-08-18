@@ -34,7 +34,7 @@ class ErrorBoundary extends Component {
               !
             </div>
             <h2 className="text-lg font-black tracking-wide text-purple-300">
-              Restaurando Sesión de CVPREMIUM
+              Restaurando Sesión de LEECV
             </h2>
             <p className="text-xs text-slate-400 leading-relaxed">
               Ocurrió un ajuste de memoria en el navegador. Haz clic abajo para volver al editor limpio.
