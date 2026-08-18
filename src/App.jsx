@@ -10,40 +10,51 @@ import { initialCVData } from './data/initialCVData';
 
 export default function App() {
   const [cvData, setCvData] = useState(() => {
-    const saved = localStorage.getItem('cv_premium_data');
+    if (typeof window !== 'undefined' && window.location.search.includes('clear')) {
+      try { localStorage.clear(); } catch {}
+    }
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('cv_premium_data') : null;
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        return {
-          ...initialCVData,
-          ...parsed,
-          showCoverPage: parsed.showCoverPage !== undefined ? parsed.showCoverPage : true,
-          layoutStyle: parsed.layoutStyle || 'executive-sidebar',
-          theme: {
-            ...initialCVData.theme,
-            ...(parsed.theme || {})
-          },
-          personalInfo: { 
-            ...initialCVData.personalInfo, 
-            ...(parsed.personalInfo || {}),
-            profilePhoto: (parsed.personalInfo?.profilePhoto && parsed.personalInfo.profilePhoto.trim() !== '') 
-              ? parsed.personalInfo.profilePhoto 
-              : initialCVData.personalInfo.profilePhoto
-          },
-          experience: (parsed.experience && parsed.experience.length > 0) ? parsed.experience : initialCVData.experience,
-          ecology: (parsed.ecology && (parsed.ecology.rural || parsed.ecology.environmental)) ? parsed.ecology : initialCVData.ecology,
-          signature: {
-            ...initialCVData.signature,
-            ...(parsed.signature || {}),
-            dataUrl: (parsed.signature?.dataUrl && parsed.signature.dataUrl.trim() !== '') 
-              ? parsed.signature.dataUrl 
-              : initialCVData.signature.dataUrl
-          },
-          certificateDisplay: {
-            ...initialCVData.certificateDisplay,
-            ...(parsed.certificateDisplay || {})
-          }
-        };
+        if (parsed && typeof parsed === 'object') {
+          return {
+            ...initialCVData,
+            ...parsed,
+            showCoverPage: parsed.showCoverPage !== undefined ? parsed.showCoverPage : true,
+            layoutStyle: parsed.layoutStyle || 'executive-sidebar',
+            theme: {
+              ...initialCVData.theme,
+              ...(parsed.theme || {})
+            },
+            personalInfo: { 
+              ...initialCVData.personalInfo, 
+              ...(parsed.personalInfo || {}),
+              profilePhoto: (parsed.personalInfo?.profilePhoto && parsed.personalInfo.profilePhoto.trim() !== '') 
+                ? parsed.personalInfo.profilePhoto 
+                : initialCVData.personalInfo.profilePhoto
+            },
+            roles: Array.isArray(parsed.roles) ? parsed.roles : initialCVData.roles,
+            education: Array.isArray(parsed.education) ? parsed.education : initialCVData.education,
+            profession: Array.isArray(parsed.profession) ? parsed.profession : initialCVData.profession,
+            experience: (Array.isArray(parsed.experience) && parsed.experience.length > 0) ? parsed.experience : initialCVData.experience,
+            coursesAndCertificates: Array.isArray(parsed.coursesAndCertificates) ? parsed.coursesAndCertificates : initialCVData.coursesAndCertificates,
+            certificatesScanned: Array.isArray(parsed.certificatesScanned) ? parsed.certificatesScanned : [],
+            informatics: Array.isArray(parsed.informatics) ? parsed.informatics : initialCVData.informatics,
+            ecology: (parsed.ecology && typeof parsed.ecology === 'object') ? { ...initialCVData.ecology, ...parsed.ecology } : initialCVData.ecology,
+            signature: {
+              ...initialCVData.signature,
+              ...(parsed.signature || {}),
+              dataUrl: (parsed.signature?.dataUrl && parsed.signature.dataUrl.trim() !== '') 
+                ? parsed.signature.dataUrl 
+                : initialCVData.signature.dataUrl
+            },
+            certificateDisplay: {
+              ...initialCVData.certificateDisplay,
+              ...(parsed.certificateDisplay || {})
+            }
+          };
+        }
       } catch {
         return initialCVData;
       }

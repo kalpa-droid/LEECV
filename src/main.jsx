@@ -18,8 +18,11 @@ class ErrorBoundary extends Component {
   }
 
   handleReset = () => {
-    localStorage.removeItem('cv_premium_data');
-    window.location.reload();
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch {}
+    window.location.href = window.location.origin + window.location.pathname + '?clear=' + Date.now();
   };
 
   render() {
@@ -38,7 +41,7 @@ class ErrorBoundary extends Component {
             </p>
             <button
               onClick={this.handleReset}
-              className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-black rounded-xl shadow-lg transition"
+              className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-black rounded-xl shadow-lg transition cursor-pointer"
             >
               Restablecer CV de Ejemplo (Mónica Burgos)
             </button>
