@@ -107,15 +107,19 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
   const sortedProfession = sortByYearDesc(profession);
 
   const FIRST_PAGE_PROF_LIMIT = 4;
+  const EXTRA_PROF_PER_PAGE = 6;
+  const EXP_PER_PAGE = 6;
+  const COURSES_PER_PAGE = 6;
+
   const firstPageProfessions = sortedProfession.slice(0, FIRST_PAGE_PROF_LIMIT);
   const extraProfessions = sortedProfession.slice(FIRST_PAGE_PROF_LIMIT);
-  const extraProfChunks = getBalancedChunks(extraProfessions, 6, 2);
+  const extraProfChunks = getBalancedChunks(extraProfessions, EXTRA_PROF_PER_PAGE, 2);
   const totalExtraProfPages = extraProfChunks.length;
 
-  const expChunks = getBalancedChunks(sortedExperience, 6, 2);
+  const expChunks = getBalancedChunks(sortedExperience, EXP_PER_PAGE, 2);
   const totalExpPages = Math.max(1, expChunks.length);
 
-  const courseChunks = getBalancedChunks(sortedCourses, 6, 2);
+  const courseChunks = getBalancedChunks(sortedCourses, COURSES_PER_PAGE, 2);
   const totalCoursePages = Math.max(1, courseChunks.length);
 
   // Dynamic Sidebar Style based on layoutStyle

@@ -61,22 +61,31 @@ export default function Navbar({
                 CVPREMIUM
               </h1>
               
-              {/* Interactive 3-Color Cloud Icon Button */}
+              {/* Interactive 3-Color Cloud Icon Button (Standalone Icon Only) */}
               <button
                 onClick={handleCloudIconClick}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-black transition transform active:scale-95 cursor-pointer shadow-sm ${
+                className={`p-1.5 sm:p-2 rounded-xl border transition transform active:scale-95 cursor-pointer shadow-md flex items-center justify-center ${
                   cloudColor === 'green'
-                    ? 'bg-emerald-950/80 border-emerald-500/60 text-emerald-300 hover:bg-emerald-900/90 shadow-emerald-500/20'
+                    ? 'bg-emerald-950/80 border-emerald-500/60 text-emerald-400 hover:bg-emerald-900/90 shadow-emerald-500/20'
                     : cloudColor === 'yellow'
-                    ? 'bg-amber-950/80 border-amber-500/60 text-amber-300 hover:bg-amber-900/90 shadow-amber-500/20'
-                    : 'bg-red-950/80 border-red-500/60 text-red-300 hover:bg-red-900/90 shadow-red-500/20'
+                    ? 'bg-amber-950/80 border-amber-500/60 text-amber-400 hover:bg-amber-900/90 shadow-amber-500/20'
+                    : 'bg-red-950/80 border-red-500/60 text-red-400 hover:bg-red-900/90 shadow-red-500/20'
                 }`}
-                title="Haga clic para ver el estado de la nube y guardar cambios"
+                title={
+                  cloudColor === 'green'
+                    ? '🟢 Guardado en Nube Supabase (Clic para guardar y ver detalles)'
+                    : cloudColor === 'yellow'
+                    ? '🟡 Guardado Localmente en Memoria (Clic para guardar y ver detalles)'
+                    : '🔴 Sin Conexión a Internet (Clic para guardar y ver detalles)'
+                }
               >
-                <Cloud className={`w-3.5 h-3.5 ${
-                  cloudColor === 'green' ? 'text-emerald-400' : cloudColor === 'yellow' ? 'text-amber-400' : 'text-red-500 animate-bounce'
+                <Cloud className={`w-4 h-4 sm:w-5 sm:h-5 ${
+                  cloudColor === 'green'
+                    ? 'text-emerald-400'
+                    : cloudColor === 'yellow'
+                    ? 'text-amber-400'
+                    : 'text-red-500 animate-pulse'
                 }`} />
-                <span className="hidden sm:inline">{statusText}</span>
               </button>
             </div>
             <p className="text-[10px] sm:text-xs text-slate-400 hidden sm:block">Plataforma Profesional de CV A4</p>
