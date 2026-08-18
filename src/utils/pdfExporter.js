@@ -1,10 +1,13 @@
-import html2canvas from 'html2canvas';
+import { toJpeg } from 'html-to-image';
 import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 /**
- * Bulletproof Page-by-Page Native A4 PDF Generator
- * Renders each .a4-page-container independently to prevent memory overflow
- * and guarantee 100% reliable 1-click PDF download for any CV size (1-10+ pages).
+ * Bulletproof Native Browser PDF Generator
+ * Uses native browser SVG foreignObject rendering via `html-to-image`
+ * to completely eliminate Tailwind v4 "unsupported color function oklch" errors.
+ * 
+ * Includes an automatic fallback to sanitized `html2canvas` for maximum compatibility.
  */
 export async function exportCVToPDF(cvData) {
   const pageElements = Array.from(document.querySelectorAll('.a4-page-container'));
@@ -29,16 +32,44 @@ export async function exportCVToPDF(cvData) {
 
   for (let i = 0; i < pageElements.length; i++) {
     const pageEl = pageElements[i];
+    let imgData = null;
 
-    const canvas = await html2canvas(pageEl, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      logging: false,
-      backgroundColor: '#ffffff'
-    });
+    try {
+      // Primary Native Engine: html-to-image (Uses browser native SVG renderer, 0 oklch parsing errors)
+      imgData = await toJpeg(pageEl, {
+        quality: 0.95,
+        pixelRatio: 2,
+        backgroundColor: '#ffffff',
+        cacheBust: true,
+        filter: (node) => {
+          // Exclude any element marked as no-print if embedded inside page
+          if (node.classList && node.classList.contains('no-print')) {
+            return false;
+          }
+          return true;
+        }
+      });
+    } catch (primaryErr) {
+      console.warn('html-to-image failed, falling back to html2canvas with oklch sanitizer:', primaryErr);
 
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      // Fallback Engine: html2canvas with style sanitization for oklch
+      const canvas = await html2canvas(pageEl, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        onclone: (clonedDoc) => {
+          const styleEls = Array.from(clonedDoc.querySelectorAll('style'));
+          styleEls.forEach(s => {
+            if (s.textContent) {
+              s.textContent = s.textContent.replace(/oklch\([^)]+\)/g, 'rgb(15, 23, 42)');
+            }
+          });
+        }
+      });
+      imgData = canvas.toDataURL('image/jpeg', 0.95);
+    }
 
     if (i > 0) {
       pdf.addPage('a4', 'portrait');
