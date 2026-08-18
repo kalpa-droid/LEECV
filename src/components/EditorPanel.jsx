@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { themePresets, fontOptions } from '../data/themePresets';
 import { getSavedCVsList, loadCVById, deleteCVById, saveCV } from '../services/cvStorageService';
+import CertCropperModal from './CertCropperModal';
 
 export default function EditorPanel({ 
   cvData, 
@@ -40,8 +41,9 @@ export default function EditorPanel({
   // Local states for Certificate Tab inside EditorPanel
   const [certMode, setCertMode] = useState('upload'); // 'upload' | 'camera'
   const [selectedRegIdx, setSelectedRegIdx] = useState('');
-  const [certImagePreview, setCertImagePreview] = useState('');
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [isCertCropperOpen, setIsCertCropperOpen] = useState(false);
+  const [rawCertSrc, setRawCertSrc] = useState('');
   const videoRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -163,9 +165,10 @@ export default function EditorPanel({
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0);
     const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-    setCertImagePreview(dataUrl);
     stopCamera();
     setCertMode('upload');
+    setRawCertSrc(dataUrl);
+    setIsCertCropperOpen(true);
   };
 
   const handleFileUpload = (e) => {
@@ -173,7 +176,8 @@ export default function EditorPanel({
     if (file) {
       const reader = new FileReader();
       reader.onload = (evt) => {
-        setCertImagePreview(evt.target.result);
+        setRawCertSrc(evt.target.result);
+        setIsCertCropperOpen(true);
       };
       reader.readAsDataURL(file);
     }
@@ -1302,33 +1306,19 @@ export default function EditorPanel({
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 8: CERTIFICADOS ESCANEADOS (SISTEMA INTEGRADO SIN VENTANA FLOTANTE) */}
+        {/* TAB 8: CERTIFICADOS ESCANEADOS (NUEVO FLUJO SIMPLIFICADO A4) */}
         {/* ========================================================================= */}
         {activeTab === 'certificados' && (
           <div className="space-y-4">
-            <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] border-b pb-2 border-[#EFE2C9]">
-              Anexar Certificados y Diplomas Escaneados
-            </h3>
-
-            {/* Instruction Alert */}
-            <div className="p-3 bg-purple-50  rounded-xl border border-purple-200  text-xs text-purple-900 space-y-1">
-              <div className="flex items-center gap-1.5 font-bold text-[#FF2E63]">
-                <Info className="w-4 h-4" /> ¿Cómo funciona?
-              </div>
-              <p className="text-[11px] leading-relaxed">
-                Selecciona a cuál de tus <strong>Cursos o Títulos cargados</strong> corresponde la foto, toma una foto con tu cámara o sube un archivo, y haz clic en <strong>"Anexar Foto de Certificado"</strong>.
-              </p>
-            </div>
-
-            {/* Dropdown Selector of Registered Items */}
+            {/* 1. Selector */}
             <div>
-              <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-                1. Seleccionar Registro Correspondiente *
+              <label className="block text-xs font-black text-[#FF2E63] mb-1.5 uppercase tracking-wide">
+                IDENTIFICA TU CERTIFICADO *
               </label>
               <select
                 value={selectedRegIdx}
                 onChange={(e) => setSelectedRegIdx(e.target.value)}
-                className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+                className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-extrabold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition shadow-sm"
               >
                 <option value="">-- Hacer clic para elegir un título o curso --</option>
                 {registeredItems.map((item, idx) => (
@@ -1339,111 +1329,100 @@ export default function EditorPanel({
               </select>
             </div>
 
-            {/* Upload or Camera Toggle Buttons */}
-            <div>
-              <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-                2. Capturar o Seleccionar Imagen del Certificado
-              </label>
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                <button
-                  onClick={() => { stopCamera(); setCertMode('upload'); }}
-                  className={`p-2.5 rounded-xl border flex items-center justify-center gap-1.5 font-bold text-xs transition ${
-                    certMode === 'upload'
-                      ? 'border-[#FF2E63] bg-[#FF2E63] text-white shadow-md'
-                      : 'border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold hover:bg-[#FFFDF7]'
-                  }`}
-                >
-                  <Upload className="w-4 h-4" /> Subir Imagen
-                </button>
-                <button
-                  onClick={startCamera}
-                  className={`p-2.5 rounded-xl border flex items-center justify-center gap-1.5 font-bold text-xs transition ${
-                    certMode === 'camera'
-                      ? 'border-[#FF2E63] bg-[#FF2E63] text-white shadow-md'
-                      : 'border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold hover:bg-[#FFFDF7]'
-                  }`}
-                >
-                  <Camera className="w-4 h-4" /> Usar Cámara
-                </button>
-              </div>
-
-              {/* Camera View */}
-              {certMode === 'camera' && (
-                <div className="relative rounded-xl overflow-hidden bg-black flex flex-col items-center justify-center h-52 mb-3">
-                  <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
-                  <button
-                    onClick={capturePhoto}
-                    className="absolute bottom-3 flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-full shadow-lg transition"
-                  >
-                    <Camera className="w-4 h-4" /> Capturar Foto
-                  </button>
-                </div>
-              )}
-
-              {/* File Upload View & Preview */}
-              {certMode === 'upload' && (
-                <div>
-                  {!certImagePreview ? (
-                    <div 
-                      onClick={() => fileInputRef.current?.click()}
-                      className="w-full h-36 border-2 border-dashed border-purple-300  rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-purple-500 hover:bg-purple-50/50 transition group"
-                    >
-                      <Upload className="w-7 h-7 text-[#00A8A0] mb-1 group-hover:scale-110 transition duration-300" />
-                      <span className="font-bold text-xs text-[#2B1B2E] font-black ">Hacer clic para subir foto del certificado</span>
-                      <span className="text-[10px] text-[#2B1B2E] font-medium">JPG, PNG, WEBP</span>
-                    </div>
-                  ) : (
-                    <div className="relative border-2 border-purple-400 rounded-xl overflow-hidden bg-slate-950 flex items-center justify-center h-40">
-                      <img src={certImagePreview} alt="Certificado cargado" className="max-h-full max-w-full object-contain" />
-                      <button
-                        onClick={() => setCertImagePreview('')}
-                        className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded hover:bg-red-700"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                  <input type="file" ref={fileInputRef} accept="image/*" onChange={handleFileUpload} className="hidden" />
-                </div>
-              )}
+            {/* 2. Action buttons */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => {
+                  if (selectedRegIdx === '') {
+                    alert('Por favor selecciona primero tu certificado en "IDENTIFICA TU CERTIFICADO".');
+                    return;
+                  }
+                  stopCamera();
+                  setCertMode('upload');
+                  fileInputRef.current?.click();
+                }}
+                className={`p-2.5 rounded-xl border-2 flex items-center justify-center gap-1.5 font-black text-xs transition ${
+                  certMode === 'upload'
+                    ? 'border-[#FF2E63] bg-[#FF2E63] text-white shadow-md'
+                    : 'border-[#EFE2C9] bg-white text-[#2B1B2E] hover:bg-[#FFFDF7]'
+                }`}
+              >
+                <Upload className="w-4 h-4" /> Subir Imagen
+              </button>
+              <button
+                onClick={() => {
+                  if (selectedRegIdx === '') {
+                    alert('Por favor selecciona primero tu certificado en "IDENTIFICA TU CERTIFICADO".');
+                    return;
+                  }
+                  startCamera();
+                }}
+                className={`p-2.5 rounded-xl border-2 flex items-center justify-center gap-1.5 font-black text-xs transition ${
+                  certMode === 'camera'
+                    ? 'border-[#FF2E63] bg-[#FF2E63] text-white shadow-md'
+                    : 'border-[#EFE2C9] bg-white text-[#2B1B2E] hover:bg-[#FFFDF7]'
+                }`}
+              >
+                <Camera className="w-4 h-4" /> Usar Cámara
+              </button>
             </div>
 
-            {/* Add Action Button */}
-            <button
-              onClick={handleAddCertificateInline}
-              className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl shadow-md flex items-center justify-center gap-2 transition"
-            >
-              <Plus className="w-4 h-4" /> Anexar Foto de Certificado
-            </button>
+            {/* 3. Camera view or File dropzone with "CLIC AQUÍ" */}
+            {certMode === 'camera' && isCameraActive ? (
+              <div className="relative rounded-xl overflow-hidden bg-black flex flex-col items-center justify-center h-52">
+                <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+                <button
+                  onClick={capturePhoto}
+                  className="absolute bottom-3 flex items-center gap-1.5 px-5 py-2 bg-[#FF2E63] hover:bg-[#E31555] text-white font-black text-xs rounded-full shadow-lg transition"
+                >
+                  <Camera className="w-4 h-4" /> Capturar Foto
+                </button>
+              </div>
+            ) : (
+              <div 
+                onClick={() => {
+                  if (selectedRegIdx === '') {
+                    alert('Por favor selecciona primero tu certificado en "IDENTIFICA TU CERTIFICADO".');
+                    return;
+                  }
+                  fileInputRef.current?.click();
+                }}
+                className="w-full h-28 border-2 border-dashed border-[#00A8A0] bg-white rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-[#CFF3F0]/30 transition group shadow-sm"
+              >
+                <Upload className="w-6 h-6 text-[#00A8A0] mb-1 group-hover:scale-110 transition duration-300" />
+                <span className="font-black text-xs text-[#FF2E63] uppercase tracking-wider">CLIC AQUÍ</span>
+                <span className="text-[10px] text-[#2B1B2E] font-bold">Seleccionar archivo o foto de certificado</span>
+              </div>
+            )}
 
+            <input type="file" ref={fileInputRef} accept="image/*" onChange={handleFileUpload} className="hidden" />
 
-
-            {/* List of Attached Certificates */}
-            <div className="pt-3 border-t border-[#EFE2C9] space-y-3">
-              <span className="text-xs font-bold text-[#2B1B2E]">
-                Certificados Anexados al CV ({cvData.certificatesScanned.length})
+            {/* 4. List of Attached Certificates */}
+            <div className="pt-3 border-t-2 border-[#EFE2C9] space-y-3">
+              <span className="text-xs font-black text-[#2B1B2E] uppercase tracking-wider">
+                ANEXADOS: ({cvData.certificatesScanned.length})
               </span>
 
               {cvData.certificatesScanned.length === 0 ? (
-                <p className="text-xs text-[#2B1B2E] font-medium italic text-center py-4 border border-dashed rounded-xl">
-                  No se han anexado fotos de certificados aún.
+                <p className="text-xs text-[#2B1B2E] font-bold italic text-center py-4 border-2 border-dashed border-[#EFE2C9] rounded-xl bg-white">
+                  No hay certificados anexados aún.
                 </p>
               ) : (
                 <div className="space-y-2">
                   {cvData.certificatesScanned.map((cert) => (
-                    <div key={cert.id} className="flex items-center gap-3 p-2.5 bg-[#FFFDF7] rounded-xl border border-[#EFE2C9]">
+                    <div key={cert.id} className="flex items-center gap-3 p-2.5 bg-white rounded-xl border-2 border-[#EFE2C9] shadow-sm">
                       <img 
                         src={cert.imageUrl} 
                         alt={cert.title} 
                         style={{ transform: `rotate(${cert.rotation || 0}deg)` }}
-                        className="w-12 h-12 object-cover rounded-lg border border-[#EFE2C9] flex-shrink-0" 
+                        className="w-12 h-14 object-cover rounded-lg border border-[#EFE2C9] flex-shrink-0" 
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-[#2B1B2E] truncate">{cert.title}</p>
-                        <p className="text-[10px] text-[#2B1B2E] font-medium">{cert.institution} ({cert.year})</p>
+                        <p className="text-xs font-black text-[#2B1B2E] truncate">{cert.title}</p>
+                        <p className="text-[10px] text-[#2B1B2E] font-bold">{cert.institution} ({cert.year})</p>
                       </div>
 
-                      {/* Rotation control button */}
+                      {/* Rotate button */}
                       <button
                         onClick={() => {
                           setCvData(prev => ({
@@ -1453,7 +1432,7 @@ export default function EditorPanel({
                             )
                           }));
                         }}
-                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-[#FFF1C2] border border-[#FFC93C] text-[#2B1B2E] font-extrabold text-[11px] hover:bg-[#FFC93C] transition"
+                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-[#FFF1C2] border border-[#FFC93C] text-[#2B1B2E] font-black text-[11px] hover:bg-[#FFC93C] transition"
                         title="Girar imagen 90°"
                       >
                         <RotateCw className="w-3.5 h-3.5 text-[#FF2E63]" />
@@ -1481,6 +1460,31 @@ export default function EditorPanel({
                 </div>
               )}
             </div>
+
+            {/* CertCropperModal Panel */}
+            <CertCropperModal
+              isOpen={isCertCropperOpen}
+              onClose={() => { setIsCertCropperOpen(false); setRawCertSrc(''); }}
+              onAcceptCropped={(croppedUrl) => {
+                const selectedItem = registeredItems[parseInt(selectedRegIdx, 10)] || { title: 'CERTIFICADO', institution: '', year: '' };
+                const newCert = {
+                  id: Date.now().toString(),
+                  title: selectedItem.title,
+                  institution: selectedItem.institution,
+                  year: selectedItem.year,
+                  imageUrl: croppedUrl,
+                  rotation: 0
+                };
+                setCvData(prev => ({
+                  ...prev,
+                  certificatesScanned: [...prev.certificatesScanned, newCert]
+                }));
+                setRawCertSrc('');
+                setSelectedRegIdx('');
+                setIsCertCropperOpen(false);
+              }}
+              rawImageSrc={rawCertSrc}
+            />
           </div>
         )}
 
