@@ -1539,7 +1539,7 @@ export default function EditorPanel({
                     </h4>
                     <div className="grid grid-cols-2 gap-2">
                       {categoryPresets.map((preset) => {
-                        const isSelected = cvData.theme.presetId === preset.id;
+                        const isSelected = (cvData?.theme?.presetId || 'purple-monica') === preset.id;
                         return (
                           <button
                             key={preset.id}

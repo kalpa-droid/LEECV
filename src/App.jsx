@@ -19,9 +19,13 @@ export default function App() {
           ...parsed,
           showCoverPage: parsed.showCoverPage !== undefined ? parsed.showCoverPage : true,
           layoutStyle: parsed.layoutStyle || 'executive-sidebar',
+          theme: {
+            ...initialCVData.theme,
+            ...(parsed.theme || {})
+          },
           personalInfo: { 
             ...initialCVData.personalInfo, 
-            ...parsed.personalInfo,
+            ...(parsed.personalInfo || {}),
             profilePhoto: (parsed.personalInfo?.profilePhoto && parsed.personalInfo.profilePhoto.trim() !== '') 
               ? parsed.personalInfo.profilePhoto 
               : initialCVData.personalInfo.profilePhoto
@@ -30,10 +34,14 @@ export default function App() {
           ecology: (parsed.ecology && (parsed.ecology.rural || parsed.ecology.environmental)) ? parsed.ecology : initialCVData.ecology,
           signature: {
             ...initialCVData.signature,
-            ...parsed.signature,
+            ...(parsed.signature || {}),
             dataUrl: (parsed.signature?.dataUrl && parsed.signature.dataUrl.trim() !== '') 
               ? parsed.signature.dataUrl 
               : initialCVData.signature.dataUrl
+          },
+          certificateDisplay: {
+            ...initialCVData.certificateDisplay,
+            ...(parsed.certificateDisplay || {})
           }
         };
       } catch {
