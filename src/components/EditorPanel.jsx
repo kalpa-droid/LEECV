@@ -275,9 +275,9 @@ export default function EditorPanel({
   };
 
   return (
-    <div className="w-full h-full bg-[#FFF7E8] text-[#2B1B2E] flex flex-col no-print">
+    <div className="w-full h-full bg-[#F5EDDA] text-[#2B1B2E] flex flex-col no-print">
       {/* Active Section Header */}
-      <div className="px-5 py-3 border-b-2 border-[#EFE2C9] bg-white flex items-center justify-between flex-shrink-0 shadow-sm">
+      <div className="px-5 py-3 border-b-2 border-[#EFE2C9] bg-[#2B1B2E] text-white flex items-center justify-between flex-shrink-0 shadow-md">
         <h2 className="text-xs font-black uppercase tracking-wider text-[#FF2E63] flex items-center gap-2">
           <Sparkles className="w-4 h-4" /> Formulario: {activeTab.toUpperCase()}
         </h2>
@@ -296,8 +296,8 @@ export default function EditorPanel({
             </h3>
 
             {/* Profile Photo Quick Trigger */}
-            <div className="flex items-center gap-4 bg-purple-50 dark:bg-purple-950/30 p-3.5 rounded-xl border border-purple-200 dark:border-purple-900/50">
-              <div className="w-14 h-18 rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-800 flex items-center justify-center border border-purple-400">
+            <div className="flex items-center gap-4 bg-purple-50  p-3.5 rounded-xl border border-purple-200 ">
+              <div className="w-14 h-18 rounded-lg overflow-hidden bg-[#EFE2C9]  flex items-center justify-center border border-purple-400">
                 {cvData.personalInfo.profilePhoto ? (
                   <img src={cvData.personalInfo.profilePhoto} alt="Perfil" className="w-full h-full object-cover" />
                 ) : (
@@ -306,7 +306,7 @@ export default function EditorPanel({
               </div>
               <div className="flex-1">
                 <p className="text-xs font-bold text-[#2B1B2E]">Foto de Perfil</p>
-                <p className="text-[11px] text-slate-500 mb-2">Se muestra únicamente en la portada y en la hoja 1.</p>
+                <p className="text-[11px] text-[#2B1B2E] font-medium mb-2">Se muestra únicamente en la portada y en la hoja 1.</p>
                 <button
                   onClick={onOpenPhotoCropper}
                   className="flex items-center gap-1 px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg transition"
@@ -477,7 +477,7 @@ export default function EditorPanel({
                       />
                       <button
                         onClick={() => removeRole(idx)}
-                        className="p-2 text-slate-400 hover:text-red-600 transition"
+                        className="p-2 text-[#2B1B2E] font-medium hover:text-red-600 transition"
                         title="Eliminar rol"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -518,7 +518,7 @@ export default function EditorPanel({
             <div className="space-y-4">
               {cvData.education.map((item, idx) => (
                 <div key={idx} className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] shadow-sm space-y-3">
-                  <div className="flex items-center justify-between border-b pb-1 border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center justify-between border-b pb-1 border-slate-200 ">
                     <span className="text-xs font-bold text-[#00A8A0]">Estudio / Formación #{idx + 1}</span>
                     <button
                       onClick={() => {
@@ -530,7 +530,7 @@ export default function EditorPanel({
                           }));
                         }
                       }}
-                      className="text-slate-400 hover:text-red-600 transition"
+                      className="text-[#2B1B2E] font-medium hover:text-red-600 transition"
                       title="Eliminar"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -651,7 +651,7 @@ export default function EditorPanel({
             <div className="space-y-4">
               {cvData.profession.map((item, idx) => (
                 <div key={idx} className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] shadow-sm space-y-3">
-                  <div className="flex items-center justify-between border-b pb-1 border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center justify-between border-b pb-1 border-slate-200 ">
                     <span className="text-xs font-bold text-[#00A8A0]">Título Profesional #{idx + 1}</span>
                     <button
                       onClick={() => {
@@ -663,7 +663,7 @@ export default function EditorPanel({
                           }));
                         }
                       }}
-                      className="text-slate-400 hover:text-red-600 transition"
+                      className="text-[#2B1B2E] font-medium hover:text-red-600 transition"
                       title="Eliminar"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -768,7 +768,7 @@ export default function EditorPanel({
             <div className="space-y-4">
               {(cvData.experience || []).map((exp, idx) => (
                 <div key={idx} className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] shadow-sm space-y-3">
-                  <div className="flex items-center justify-between border-b pb-1 border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center justify-between border-b pb-1 border-slate-200 ">
                     <span className="text-xs font-bold text-[#00A8A0]">Experiencia Laboral #{idx + 1}</span>
                     <button
                       onClick={() => {
@@ -780,7 +780,7 @@ export default function EditorPanel({
                           }));
                         }
                       }}
-                      className="text-slate-400 hover:text-red-600 transition"
+                      className="text-[#2B1B2E] font-medium hover:text-red-600 transition"
                       title="Eliminar experiencia"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -907,7 +907,7 @@ export default function EditorPanel({
             <div className="space-y-4">
               {cvData.coursesAndCertificates.map((c, idx) => (
                 <div key={idx} className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] shadow-sm space-y-3">
-                  <div className="flex items-center justify-between border-b pb-1 border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center justify-between border-b pb-1 border-slate-200 ">
                     <span className="text-xs font-bold text-[#00A8A0]">Curso Docente #{idx + 1}</span>
                     <button
                       onClick={() => {
@@ -919,7 +919,7 @@ export default function EditorPanel({
                           }));
                         }
                       }}
-                      className="text-slate-400 hover:text-red-600 transition"
+                      className="text-[#2B1B2E] font-medium hover:text-red-600 transition"
                       title="Eliminar curso"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -1059,7 +1059,7 @@ export default function EditorPanel({
             <div className="space-y-4">
               {cvData.informatics.map((item, idx) => (
                 <div key={idx} className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] shadow-sm space-y-3">
-                  <div className="flex items-center justify-between border-b pb-1 border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center justify-between border-b pb-1 border-slate-200 ">
                     <span className="text-xs font-bold text-[#00A8A0]">Curso Informático #{idx + 1}</span>
                     <button
                       onClick={() => {
@@ -1071,7 +1071,7 @@ export default function EditorPanel({
                           }));
                         }
                       }}
-                      className="text-slate-400 hover:text-red-600 transition"
+                      className="text-[#2B1B2E] font-medium hover:text-red-600 transition"
                       title="Eliminar"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -1128,11 +1128,11 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {activeTab === 'ecologia' && (
           <div className="space-y-4">
-            <div className="p-3 bg-purple-50 dark:bg-purple-950/30 rounded-xl border border-purple-200 dark:border-purple-900/50 text-xs text-[#2B1B2E] space-y-1">
+            <div className="p-3 bg-[#FFF1C2] rounded-xl border-2 border-[#FFC93C] text-xs text-[#2B1B2E] space-y-1 shadow-sm">
               <div className="flex items-center gap-1.5 font-bold text-[#FF2E63]">
                 <Info className="w-4 h-4" /> Proyectos Ecológicos, Sociales & Comunitarios
               </div>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400">
+              <p className="text-[11px] text-[#2B1B2E] font-bold">
                 Esta sección permite registrar iniciativas comunitarias, talleres sobre medio ambiente, huertas orgánicas, proyectos rurales, voluntariados y acciones sociales de impacto sustentable.
               </p>
             </div>
@@ -1140,7 +1140,7 @@ export default function EditorPanel({
             {/* Proyectos Rurales */}
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between border-b pb-1 border-[#EFE2C9]">
-                <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">Proyectos Rurales / Agricultura</span>
+                <span className="text-xs font-bold text-emerald-700">Proyectos Rurales / Agricultura</span>
                 <button
                   onClick={() => {
                     setCvData((prev) => ({
@@ -1177,7 +1177,7 @@ export default function EditorPanel({
                           }));
                         }
                       }}
-                      className="text-slate-400 hover:text-red-600 transition"
+                      className="text-[#2B1B2E] font-medium hover:text-red-600 transition"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -1221,7 +1221,7 @@ export default function EditorPanel({
             {/* Proyectos Ambientales */}
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between border-b pb-1 border-[#EFE2C9]">
-                <span className="text-xs font-bold text-teal-700 dark:text-teal-400">Proyectos Medio Ambientales</span>
+                <span className="text-xs font-bold text-teal-700">Proyectos Medio Ambientales</span>
                 <button
                   onClick={() => {
                     setCvData((prev) => ({
@@ -1258,7 +1258,7 @@ export default function EditorPanel({
                           }));
                         }
                       }}
-                      className="text-slate-400 hover:text-red-600 transition"
+                      className="text-[#2B1B2E] font-medium hover:text-red-600 transition"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -1311,7 +1311,7 @@ export default function EditorPanel({
             </h3>
 
             {/* Instruction Alert */}
-            <div className="p-3 bg-purple-50 dark:bg-purple-950/40 rounded-xl border border-purple-200 dark:border-purple-900/50 text-xs text-purple-900 dark:text-purple-200 space-y-1">
+            <div className="p-3 bg-purple-50  rounded-xl border border-purple-200  text-xs text-purple-900 space-y-1">
               <div className="flex items-center gap-1.5 font-bold text-[#FF2E63]">
                 <Info className="w-4 h-4" /> ¿Cómo funciona?
               </div>
@@ -1349,8 +1349,8 @@ export default function EditorPanel({
                   onClick={() => { stopCamera(); setCertMode('upload'); }}
                   className={`p-2.5 rounded-xl border flex items-center justify-center gap-1.5 font-bold text-xs transition ${
                     certMode === 'upload'
-                      ? 'border-purple-600 bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300'
-                      : 'border-[#EFE2C9] text-slate-600 dark:text-slate-400'
+                      ? 'border-[#FF2E63] bg-[#FF2E63] text-white shadow-md'
+                      : 'border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold hover:bg-[#FFFDF7]'
                   }`}
                 >
                   <Upload className="w-4 h-4" /> Subir Imagen
@@ -1359,8 +1359,8 @@ export default function EditorPanel({
                   onClick={startCamera}
                   className={`p-2.5 rounded-xl border flex items-center justify-center gap-1.5 font-bold text-xs transition ${
                     certMode === 'camera'
-                      ? 'border-purple-600 bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300'
-                      : 'border-[#EFE2C9] text-slate-600 dark:text-slate-400'
+                      ? 'border-[#FF2E63] bg-[#FF2E63] text-white shadow-md'
+                      : 'border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold hover:bg-[#FFFDF7]'
                   }`}
                 >
                   <Camera className="w-4 h-4" /> Usar Cámara
@@ -1386,11 +1386,11 @@ export default function EditorPanel({
                   {!certImagePreview ? (
                     <div 
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-full h-36 border-2 border-dashed border-purple-300 dark:border-purple-800 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-purple-500 hover:bg-purple-50/50 transition group"
+                      className="w-full h-36 border-2 border-dashed border-purple-300  rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-purple-500 hover:bg-purple-50/50 transition group"
                     >
                       <Upload className="w-7 h-7 text-[#00A8A0] mb-1 group-hover:scale-110 transition duration-300" />
-                      <span className="font-bold text-xs text-slate-700 dark:text-slate-200">Hacer clic para subir foto del certificado</span>
-                      <span className="text-[10px] text-slate-400">JPG, PNG, WEBP</span>
+                      <span className="font-bold text-xs text-[#2B1B2E] font-black ">Hacer clic para subir foto del certificado</span>
+                      <span className="text-[10px] text-[#2B1B2E] font-medium">JPG, PNG, WEBP</span>
                     </div>
                   ) : (
                     <div className="relative border-2 border-purple-400 rounded-xl overflow-hidden bg-slate-950 flex items-center justify-center h-40">
@@ -1423,13 +1423,13 @@ export default function EditorPanel({
               </span>
 
               {cvData.certificatesScanned.length === 0 ? (
-                <p className="text-xs text-slate-400 italic text-center py-4 border border-dashed rounded-xl">
+                <p className="text-xs text-[#2B1B2E] font-medium italic text-center py-4 border border-dashed rounded-xl">
                   No se han anexado fotos de certificados aún.
                 </p>
               ) : (
                 <div className="space-y-2">
                   {cvData.certificatesScanned.map((cert) => (
-                    <div key={cert.id} className="flex items-center gap-3 p-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <div key={cert.id} className="flex items-center gap-3 p-2.5 bg-[#FFFDF7]  rounded-xl border border-slate-200 ">
                       <img 
                         src={cert.imageUrl} 
                         alt={cert.title} 
@@ -1438,7 +1438,7 @@ export default function EditorPanel({
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-bold text-[#2B1B2E] truncate">{cert.title}</p>
-                        <p className="text-[10px] text-slate-500">{cert.institution} ({cert.year})</p>
+                        <p className="text-[10px] text-[#2B1B2E] font-medium">{cert.institution} ({cert.year})</p>
                       </div>
                       <button
                         onClick={() => {
@@ -1449,7 +1449,7 @@ export default function EditorPanel({
                             )
                           }));
                         }}
-                        className="p-1 text-slate-500 hover:text-[#00A8A0] transition"
+                        className="p-1 text-[#2B1B2E] font-medium hover:text-[#00A8A0] transition"
                         title="Girar 90°"
                       >
                         <RotateCw className="w-4 h-4" />
@@ -1464,7 +1464,7 @@ export default function EditorPanel({
                             }));
                           }
                         }}
-                        className="p-1 text-slate-400 hover:text-red-600 transition"
+                        className="p-1 text-[#2B1B2E] font-medium hover:text-red-600 transition"
                         title="Eliminar"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -1486,13 +1486,13 @@ export default function EditorPanel({
               Firma Digital del Documento
             </h3>
 
-            <div className="p-4 bg-purple-50 dark:bg-purple-950/30 rounded-xl border border-purple-200 dark:border-purple-900/50 space-y-3 text-center">
+            <div className="p-4 bg-purple-50  rounded-xl border border-purple-200  space-y-3 text-center">
               {cvData.signature?.dataUrl ? (
                 <div className="bg-[#fffdf7] p-3 rounded-lg border border-amber-300">
                   <img src={cvData.signature.dataUrl} alt="Firma" className="h-16 mx-auto object-contain" />
                 </div>
               ) : (
-                <p className="text-xs text-slate-500 italic">No has registrado una firma aún.</p>
+                <p className="text-xs text-[#2B1B2E] font-medium italic">No has registrado una firma aún.</p>
               )}
 
               <button
@@ -1527,21 +1527,21 @@ export default function EditorPanel({
 
             <div className="space-y-2.5">
               {savedList.length === 0 ? (
-                <div className="p-6 text-center text-xs text-slate-500 border-2 border-dashed border-[#EFE2C9] rounded-xl">
+                <div className="p-6 text-center text-xs text-[#2B1B2E] font-medium border-2 border-dashed border-[#EFE2C9] rounded-xl">
                   No hay currículums guardados aún. Haz clic en "Guardar Actual" para almacenar este borrador en WebP.
                 </div>
               ) : (
                 savedList.map((item) => (
                   <div
                     key={item.id}
-                    className="p-3.5 rounded-xl border border-[#EFE2C9] bg-slate-50/50 dark:bg-slate-900/50 hover:border-purple-500 transition flex items-center justify-between gap-2"
+                    className="p-3.5 rounded-xl border border-[#EFE2C9] bg-[#FFFDF7]/50  hover:border-purple-500 transition flex items-center justify-between gap-2"
                   >
                     <div className="space-y-0.5 min-w-0">
-                      <h4 className="text-xs font-black text-slate-900 dark:text-slate-100 truncate">
+                      <h4 className="text-xs font-black text-[#2B1B2E] font-black  truncate">
                         {item.candidate_name || item.title}
                       </h4>
-                      <p className="text-[10px] text-slate-500 font-semibold flex items-center gap-1">
-                        <Calendar className="w-3 h-3 text-slate-400" />
+                      <p className="text-[10px] text-[#2B1B2E] font-medium font-semibold flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-[#2B1B2E] font-medium" />
                         <span>{item.dni ? `DNI: ${item.dni}` : 'Borrador'}</span>
                       </p>
                     </div>
@@ -1556,7 +1556,7 @@ export default function EditorPanel({
 
                       <button
                         onClick={() => handleDeleteSavedFromPanel(item.id, item.candidate_name || item.title)}
-                        className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition"
+                        className="p-1.5 text-[#2B1B2E] font-medium hover:text-red-500 rounded-lg hover:bg-[#EFE2C9]  transition"
                         title="Eliminar"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -1579,14 +1579,14 @@ export default function EditorPanel({
             </h3>
 
             {/* Cover Page Toggle */}
-            <div className="bg-purple-50/80 dark:bg-purple-950/30 p-4 rounded-xl border border-purple-200 dark:border-purple-800 space-y-2">
+            <div className="bg-purple-50/80  p-4 rounded-xl border border-purple-200  space-y-2">
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="text-xs font-bold text-[#2B1B2E] flex items-center gap-1.5">
-                    {cvData.showCoverPage !== false ? <Eye className="w-4 h-4 text-[#00A8A0]" /> : <EyeOff className="w-4 h-4 text-slate-400" />}
+                    {cvData.showCoverPage !== false ? <Eye className="w-4 h-4 text-[#00A8A0]" /> : <EyeOff className="w-4 h-4 text-[#2B1B2E] font-medium" />}
                     Portada de Impacto (Página 1)
                   </h4>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  <p className="text-[11px] text-[#2B1B2E] font-medium">
                     {cvData.showCoverPage !== false 
                       ? 'Activada: El currículum comenzará con una hoja de portada editorial completa.' 
                       : 'Desactivada: El documento iniciará directamente con los Datos Personales (Página 1).'}
@@ -1598,7 +1598,7 @@ export default function EditorPanel({
                   className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
                     cvData.showCoverPage !== false
                       ? 'bg-purple-600 text-white hover:bg-purple-700'
-                      : 'bg-slate-200 dark:bg-slate-800 text-[#2B1B2E] hover:bg-slate-300'
+                      : 'bg-[#EFE2C9]  text-[#2B1B2E] hover:bg-slate-300'
                   }`}
                 >
                   {cvData.showCoverPage !== false ? 'Desactivar Portada' : 'Activar Portada'}
@@ -1640,18 +1640,18 @@ export default function EditorPanel({
                       onClick={() => setCvData(prev => ({ ...prev, layoutStyle: styleOpt.id }))}
                       className={`p-3 rounded-xl border text-left transition flex items-start justify-between gap-3 ${
                         isSelected
-                          ? 'border-purple-600 bg-purple-50 dark:bg-purple-950/40 ring-2 ring-purple-600/30'
-                          : 'border-[#EFE2C9] hover:border-slate-400 dark:hover:border-slate-700'
+                          ? 'border-[#FF2E63] bg-[#FFD9E3]/30 ring-2 ring-[#FF2E63]/30'
+                          : 'border-[#EFE2C9] bg-white hover:border-[#FF2E63]'
                       }`}
                     >
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{styleOpt.title}</span>
-                          <span className="text-[9px] px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 font-extrabold">
+                          <span className="text-xs font-black text-[#2B1B2E]">{styleOpt.title}</span>
+                          <span className="text-[9px] px-2 py-0.5 rounded bg-purple-100 text-purple-700 font-extrabold">
                             {styleOpt.badge}
                           </span>
                         </div>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-snug">{styleOpt.desc}</p>
+                        <p className="text-[10px] text-[#2B1B2E] font-medium leading-snug">{styleOpt.desc}</p>
                       </div>
                       {isSelected && <Check className="w-4 h-4 text-[#00A8A0] flex-shrink-0 mt-1" />}
                     </button>
@@ -1678,7 +1678,7 @@ export default function EditorPanel({
 
                 return (
                   <div key={cat} className="space-y-1.5 pt-1">
-                    <h4 className="text-[11px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">
+                    <h4 className="text-[11px] font-black uppercase text-[#2B1B2E] font-medium tracking-wider">
                       {categoryTitle}
                     </h4>
                     <div className="grid grid-cols-2 gap-2">
@@ -1690,8 +1690,8 @@ export default function EditorPanel({
                             onClick={() => applyPreset(preset)}
                             className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between ${
                               isSelected
-                                ? 'border-purple-600 bg-purple-50 dark:bg-purple-950/40 ring-2 ring-purple-600/30'
-                                : 'border-[#EFE2C9] hover:border-slate-400 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50'
+                                ? 'border-[#FF2E63] bg-[#FFD9E3]/30 ring-2 ring-[#FF2E63]/30'
+                                : 'border-[#EFE2C9] bg-white hover:border-[#FF2E63]'
                             }`}
                           >
                             <div className="flex items-center justify-between mb-1.5">
@@ -1735,7 +1735,7 @@ export default function EditorPanel({
               </label>
               
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-600 dark:text-slate-400">Color Primario (Lateral/Portada)</span>
+                <span className="text-[#2B1B2E] font-bold">Color Primario (Lateral/Portada)</span>
                 <input 
                   type="color" 
                   value={cvData.theme.primaryColor} 
@@ -1745,7 +1745,7 @@ export default function EditorPanel({
               </div>
 
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-600 dark:text-slate-400">Color Secundario (Encabezados lateral)</span>
+                <span className="text-[#2B1B2E] font-bold">Color Secundario (Encabezados lateral)</span>
                 <input 
                   type="color" 
                   value={cvData.theme.secondaryColor} 
@@ -1755,7 +1755,7 @@ export default function EditorPanel({
               </div>
 
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-600 dark:text-slate-400">Color de Acento (Barras e Iconos SVG)</span>
+                <span className="text-[#2B1B2E] font-bold">Color de Acento (Barras e Iconos SVG)</span>
                 <input 
                   type="color" 
                   value={cvData.theme.accentColor} 
