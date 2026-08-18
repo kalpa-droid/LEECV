@@ -11,7 +11,7 @@ import CloudStatusModal from './components/CloudStatusModal';
 import { initialCVData, standardExampleCVData } from './data/initialCVData';
 import { saveCV } from './services/cvStorageService';
 
-import html2pdf from 'html2pdf.js';
+import { exportCVToPDF } from './utils/pdfExporter';
 
 export default function App() {
   const [cvData, setCvData] = useState(() => {
@@ -83,33 +83,15 @@ export default function App() {
     localStorage.setItem('cv_premium_data', JSON.stringify(cvData));
   }, [cvData]);
 
-  // Direct 1-Click Native A4 PDF Download Engine (No Print Dialog Window)
+  // Direct 1-Click Bulletproof Page-by-Page A4 PDF Generator
   const handlePrint = async () => {
-    const element = document.querySelector('.print-wrapper');
-    if (!element) {
-      alert('No se pudo encontrar el documento para exportar.');
-      return;
-    }
-
     setIsGeneratingPDF(true);
 
     try {
-      const surname = (cvData?.personalInfo?.surname || 'DOCENTE').trim().replace(/\s+/g, '_');
-      const given = (cvData?.personalInfo?.givenNames || 'CV').trim().replace(/\s+/g, '_');
-      const fileName = `CV_${surname}_${given}_A4.pdf`;
-
-      const opt = {
-        margin:       0,
-        filename:     fileName,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, logging: false, scrollY: 0 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-
-      await html2pdf().set(opt).from(element).save();
+      await exportCVToPDF(cvData);
     } catch (err) {
       console.error('Error generando PDF nativo:', err);
-      alert('Hubo un inconveniente generando el archivo PDF. Intente nuevamente.');
+      alert('Hubo un inconveniente generando el archivo PDF: ' + (err.message || 'Intente nuevamente'));
     } finally {
       setIsGeneratingPDF(false);
     }
