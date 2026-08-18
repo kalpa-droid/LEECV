@@ -208,7 +208,7 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-slate-100 dark:bg-slate-950 font-sans antialiased text-slate-900 dark:text-slate-100 overflow-hidden">
+    <div className="h-screen w-screen flex flex-col bg-[#FFF7E8] text-[#2B1B2E] font-sans antialiased overflow-hidden">
       {/* Top Header Navbar (Row 1 - Global Actions) */}
       <Navbar 
         onPrint={handlePrint}

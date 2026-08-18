@@ -48,20 +48,26 @@ export default function Navbar({
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur border-b border-slate-800 text-white shadow-xl no-print">
+    <header className="sticky top-0 z-40 bg-[#2B1B2E] border-b border-[#EFE2C9]/30 text-white shadow-xl no-print">
+      {/* Festive Bunting Accent Strip */}
+      <div className="h-1 w-full bg-gradient-to-r from-[#FF2E63] via-[#FFC93C] via-[#00A8A0] via-[#8E44FF] to-[#FF7A29]" />
+      
       <div className="max-w-7xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between gap-2">
         {/* Brand & Logo */}
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center font-black text-sm sm:text-xl shadow-lg shadow-purple-500/20">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#FF2E63] flex items-center justify-center font-black text-sm sm:text-xl shadow-lg shadow-[#FF2E63]/30 text-white border border-[#FFD9E3]/20">
             CV
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-extrabold text-sm sm:text-base tracking-wide text-white">
-                CVPREMIUM
+              <h1 className="font-extrabold text-sm sm:text-base tracking-wide text-white flex items-center gap-1.5">
+                <span>CVPREMIUM</span>
+                <span className="text-[9px] bg-[#FFC93C] text-[#2B1B2E] font-black px-1.5 py-0.5 rounded uppercase tracking-wider hidden sm:inline-block">
+                  SALTA
+                </span>
               </h1>
               
-              {/* Interactive 3-Color Cloud Icon Button (Standalone Icon Only) */}
+              {/* Interactive 3-Color Cloud Icon Button */}
               <button
                 onClick={handleCloudIconClick}
                 className={`p-1.5 sm:p-2 rounded-xl border transition transform active:scale-95 cursor-pointer shadow-md flex items-center justify-center ${
@@ -88,7 +94,7 @@ export default function Navbar({
                 }`} />
               </button>
             </div>
-            <p className="text-[10px] sm:text-xs text-slate-400 hidden sm:block">Plataforma Profesional de CV A4</p>
+            <p className="text-[10px] sm:text-xs text-[#EFE2C9]/80 hidden sm:block">Plataforma Profesional de CV A4 — Linda Feria Salta</p>
           </div>
         </div>
 
@@ -97,30 +103,30 @@ export default function Navbar({
           {/* VER CV DE EJEMPLO */}
           <button
             onClick={onLoadExampleCV}
-            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition"
+            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-[#FFE0C7] bg-[#FF7A29]/20 hover:bg-[#FF7A29]/30 border border-[#FF7A29]/40 transition"
             title="Cargar currículum de ejemplo"
           >
-            <Eye className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
+            <Eye className="w-3.5 h-3.5 text-[#FF7A29] flex-shrink-0" />
             <span>Ejemplo</span>
           </button>
 
           {/* NUEVO CV */}
           <button
             onClick={onStartNewCVWizard}
-            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-white bg-purple-600/90 hover:bg-purple-600 border border-purple-500/40 transition shadow-md shadow-purple-600/20"
+            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-white bg-[#FF2E63] hover:bg-[#E31555] border border-[#FFD9E3]/30 transition shadow-md shadow-[#FF2E63]/20"
             title="Iniciar un nuevo CV"
           >
-            <FilePlus className="w-3.5 h-3.5 text-pink-300 flex-shrink-0" />
+            <FilePlus className="w-3.5 h-3.5 text-[#FFD9E3] flex-shrink-0" />
             <span>Nuevo</span>
           </button>
 
           {/* ABRIR CVS GUARDADOS */}
           <button
             onClick={onOpenSavedCVs}
-            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-emerald-300 bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-700/60 transition"
+            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-[#CFF3F0] bg-[#00A8A0] hover:bg-[#00877F] border border-[#00A8A0]/40 transition shadow-md shadow-[#00A8A0]/20"
             title="Abrir lista de CVs guardados"
           >
-            <FolderOpen className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+            <FolderOpen className="w-3.5 h-3.5 text-white flex-shrink-0" />
             <span>Abrir</span>
           </button>
 
@@ -128,20 +134,20 @@ export default function Navbar({
           <button
             onClick={onSaveCV}
             disabled={isSaving}
-            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-purple-200 bg-purple-950/80 hover:bg-purple-900 border border-purple-700/60 transition disabled:opacity-50"
+            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-[#E9DBFF] bg-[#8E44FF] hover:bg-[#7126E0] border border-[#8E44FF]/40 transition disabled:opacity-50 shadow-md shadow-[#8E44FF]/20"
             title="Guardar CV optimizado en WebP"
           >
-            <Save className="w-3.5 h-3.5 text-purple-300 flex-shrink-0" />
+            <Save className="w-3.5 h-3.5 text-white flex-shrink-0" />
             <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
           </button>
 
-          {/* IMPRIMIR */}
+          {/* IMPRIMIR / DESCARGAR PDF */}
           <button
             onClick={onPrint}
-            className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 text-white font-extrabold text-xs shadow-lg shadow-purple-600/30 transition transform active:scale-95 ml-1"
-            title="Descargar PDF A4 1:1"
+            className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-[#FFC93C] hover:bg-[#F0AE00] text-[#2B1B2E] font-black text-xs shadow-lg shadow-[#FFC93C]/30 transition transform active:scale-95 ml-1 border border-[#F0AE00]"
+            title="Descargar PDF A4 Ultra HD"
           >
-            <Printer className="w-3.5 h-3.5 flex-shrink-0" />
+            <Printer className="w-3.5 h-3.5 flex-shrink-0 text-[#2B1B2E]" />
             <span>Imprimir</span>
           </button>
         </div>
