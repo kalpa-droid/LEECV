@@ -9,7 +9,7 @@ export const initialCVData = {
     "cuit": "27-29334206-2",
     "birthDate": "4 de febrero de 1982",
     "address": "Manzana 751A Casa 11, Ciudad Valdivia",
-    "cityProvince": "SALTA, SALTA СР: 4.400",
+    "cityProvince": "SALTA, SALTA CP: 4400",
     "phone": "387-155121515",
     "email": "Monicadanielaburgos@yahoo.com.ar",
     "facebook": "facebook.com/danielaburgos",

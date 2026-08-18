@@ -40,7 +40,7 @@ export default function WizardModal({
     { id: 'ecologia', title: '7. Proyectos Comunitarios', icon: Leaf },
     { id: 'certificados', title: '8. Certificados Escaneados', icon: Award },
     { id: 'firma', title: '9. Firma Digital', icon: PenTool },
-    { id: 'diseno', title: '10. Diseño & Colores Globale', icon: Palette }
+    { id: 'diseno', title: '10. Diseño & Colores Globales', icon: Palette }
   ];
 
   const totalSteps = wizardSteps.length;
