@@ -8,11 +8,19 @@ import SignatureModal from './components/SignatureModal';
 import WizardModal from './components/WizardModal';
 import SavedCVsModal from './components/SavedCVsModal';
 import CloudStatusModal from './components/CloudStatusModal';
+import PricingModal from './components/PricingModal';
+import { getCurrentProfile } from './services/authService';
 import { initialCVData, standardExampleCVData, blankCVTemplate } from './data/initialCVData';
 import { exportCVToPDF } from './utils/pdfExporter';
 import { exportCVToJson, importCVFromJsonFile } from './utils/jsonImporterExporter';
 
 export default function App() {
+  const [currentProfile, setCurrentProfile] = useState(null);
+  const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
+
+  useEffect(() => {
+    getCurrentProfile().then(p => setCurrentProfile(p)).catch(() => {});
+  }, []);
   const [cvData, setCvData] = useState(() => {
     if (typeof window !== 'undefined' && window.location.search.includes('clear')) {
       try { localStorage.clear(); } catch {}
@@ -228,7 +236,7 @@ export default function App() {
         onStartNewCVWizard={handleStartNewCVWizard}
         onOpenSavedCVs={handleOpenSavedCVs}
         onSaveCV={handleSaveCV}
-        onOpenCloudModal={() => setIsCloudModalOpen(true)}
+        onOpenCloudModal={() => setIsPricingModalOpen(true)}
         onExportJson={() => setIsDownloadModalOpen(true)}
         onImportJson={handleImportJsonFile}
         isSaving={isSaving}
@@ -303,6 +311,12 @@ export default function App() {
         onClose={() => setIsCloudModalOpen(false)}
         onForceSave={handleSaveCV}
         isSaving={isSaving}
+      />
+
+      <PricingModal
+        isOpen={isPricingModalOpen}
+        onClose={() => setIsPricingModalOpen(false)}
+        currentProfile={currentProfile}
       />
 
       {/* Modal de Pago / Exportación de PDF ($1 USD) */}
