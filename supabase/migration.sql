@@ -1,5 +1,5 @@
 -- ============================================================
--- LEECV — Migración Completa: Cuentas, Planes, RLS y Candidatos
+-- LEECV — Migración Completa: Cuentas, Planes, RLS, Candidatos, Créditos y Downgrade
 -- Ejecutar en: Supabase Dashboard > SQL Editor
 -- ============================================================
 
@@ -153,7 +153,7 @@ create policy "agencia borra sus candidatos"
   on public.candidate_profiles for delete
   using (auth.uid() = owner_id);
 
--- 8. Trigger de Defensa en Base de Datos: rechaza crear candidatos si el plan no es Pro o Enterprise
+-- 8. Trigger de Defensa en BD para Candidatos (Requiere plan Pro o Enterprise)
 create or replace function public.enforce_candidate_plan()
 returns trigger as $$
 declare
@@ -171,3 +171,47 @@ drop trigger if exists trg_enforce_candidate_plan on public.candidate_profiles;
 create trigger trg_enforce_candidate_plan
   before insert on public.candidate_profiles
   for each row execute procedure public.enforce_candidate_plan();
+
+-- 9. Ledger de Créditos de Exportación PDF (Nivel 1 - Pago por PDF)
+create table if not exists public.pdf_export_credits (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  credits integer not null default 0,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.pdf_export_credits enable row level security;
+
+drop policy if exists "usuario ve sus créditos" on public.pdf_export_credits;
+create policy "usuario ve sus créditos"
+  on public.pdf_export_credits for select
+  using (auth.uid() = user_id or public.is_admin(auth.uid()));
+
+-- Función atómica para consumir créditos sin condiciones de carrera
+create or replace function public.consume_pdf_credit(p_user_id uuid)
+returns boolean as $$
+declare
+  remaining integer;
+begin
+  update public.pdf_export_credits
+    set credits = credits - 1, updated_at = now()
+    where user_id = p_user_id and credits > 0
+    returning credits into remaining;
+
+  return remaining is not null;
+end;
+$$ language plpgsql security definer;
+
+-- 10. Downgrade automático cuando vence el plan (pg_cron a las 06:00 UTC)
+create or replace function public.downgrade_expired_plans()
+returns void as $$
+begin
+  update public.profiles
+    set plan = 'free', premium_activo = false
+    where plan in ('pro', 'enterprise')
+      and plan_vence is not null
+      and plan_vence < now();
+end;
+$$ language plpgsql security definer;
+
+-- Para activar cron automático diario:
+-- select cron.schedule('downgrade-expired-plans-diario', '0 6 * * *', $$ select public.downgrade_expired_plans(); $$);

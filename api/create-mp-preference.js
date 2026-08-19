@@ -1,11 +1,27 @@
 // api/create-mp-preference.js
-// Vercel Serverless Function. Requiere la env var MP_ACCESS_TOKEN (Production Access Token de tu cuenta Mercado Pago).
+// Vercel Serverless Function. Requiere la env var MP_ACCESS_TOKEN.
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { userId, email } = req.body || {};
+  const { userId, email, plan = 'single_pdf' } = req.body || {};
   if (!userId || !email) return res.status(400).json({ error: 'Falta userId o email' });
+
+  // Precios determinados en el SERVIDOR (nunca confiar en precios mandados desde el cliente)
+  const PLAN_PRICES_ARS = {
+    single_pdf: Number(process.env.MP_PRECIO_PDF_ARS || 1200),      // $1 USD equiv
+    pro: Number(process.env.MP_PRECIO_PRO_ARS || 22800),           // $19 USD equiv
+    enterprise: Number(process.env.MP_PRECIO_ENTERPRISE_ARS || 34800) // $29 USD equiv
+  };
+
+  const PLAN_TITLES = {
+    single_pdf: 'LEECV - 1 Crédito de Exportación PDF A4',
+    pro: 'LEECV Pro - Suscripción Agencia Mensual',
+    enterprise: 'LEECV Enterprise - Suscripción Agencia Cloud Mensual'
+  };
+
+  const price = PLAN_PRICES_ARS[plan] || PLAN_PRICES_ARS.single_pdf;
+  const title = PLAN_TITLES[plan] || PLAN_TITLES.single_pdf;
 
   try {
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
@@ -17,14 +33,14 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         items: [
           {
-            title: 'LEECV Premium - Suscripción mensual',
+            title,
             quantity: 1,
-            unit_price: Number(process.env.MP_PRECIO_ARS || 4999),
+            unit_price: price,
             currency_id: 'ARS',
           },
         ],
         payer: { email },
-        external_reference: userId, // así el webhook sabe a qué usuario activarle premium
+        external_reference: JSON.stringify({ userId, plan }),
         back_urls: {
           success: `${process.env.SITE_URL}/?pago=exitoso`,
           failure: `${process.env.SITE_URL}/?pago=fallido`,
