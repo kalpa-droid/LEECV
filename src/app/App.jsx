@@ -79,7 +79,7 @@ function AppContent() {
 
   const handleExportPDFClick = () => {
     if (cvData.id === 'cv_ejemplo_estandar') {
-      alert('📌 Estás viendo el CV de muestra de Valeria Medina. Para comenzar a crear tu propio currículum con tus datos y poder exportarlo, por favor presiona el botón "NUEVO" en la barra superior.');
+      alert('Para crear presiona, el botón, "Nuevo"');
       return;
     }
     setIsPdfCheckoutOpen(true);
@@ -87,7 +87,7 @@ function AppContent() {
 
   const handleSaveCVClick = async () => {
     if (cvData.id === 'cv_ejemplo_estandar') {
-      alert('📌 Estás viendo el CV de muestra de Valeria Medina. Para comenzar a crear tu propio currículum con tus datos y poder guardarlo, por favor presiona el botón "NUEVO" en la barra superior.');
+      alert('Para crear presiona, el botón, "Nuevo"');
       return;
     }
 

@@ -361,7 +361,7 @@ export default function EditorPanel({
                   VISTA DE MUESTRA DE EJEMPLO (SÓLO LECTURA)
                 </h4>
                 <p className="text-[11px] font-bold text-[#4A3B4E] leading-relaxed">
-                  Este currículum de Valeria Medina es un modelo de demostración y <strong>no se puede modificar directamente</strong>. Para comenzar a cargar tus propios datos académicos y profesionales, haz clic en el botón <strong>"NUEVO"</strong> en la barra superior.
+                  Para crear presiona, el botón, "Nuevo"
                 </p>
               </div>
             </div>

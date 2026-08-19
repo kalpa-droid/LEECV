@@ -18,6 +18,8 @@ export default function Navbar({
   onOpenSavedCVs,
   onSaveCV,
   onOpenCloudModal,
+  onOpenPricing,
+  onNewCV,
   onExportJson,
   onImportJson,
   isSaving
@@ -92,10 +94,10 @@ export default function Navbar({
 
         {/* Global Action Buttons */}
         <div className="flex items-center gap-1.5 sm:gap-2 shadow-sm">
-          {/* ENTRAR (LOGIN / ACCESO DE USUARIOS) */}
+          {/* ENTRAR (LOGIN / ACCESO DE USUARIOS / SUSCRIPCION) */}
           <button
-            onClick={onOpenCloudModal}
-            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-[#FFE0C7] bg-[#FF7A29]/20 hover:bg-[#FF7A29]/30 border border-[#FF7A29]/40 transition"
+            onClick={onOpenPricing || onOpenCloudModal}
+            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-[#FFE0C7] bg-[#FF7A29]/20 hover:bg-[#FF7A29]/30 border border-[#FF7A29]/40 transition cursor-pointer"
             title="Ingresar a tu cuenta de usuario o suscripción Premium"
           >
             <LogIn className="w-3.5 h-3.5 text-[#FF7A29] flex-shrink-0" />
@@ -104,8 +106,8 @@ export default function Navbar({
 
           {/* NUEVO CV */}
           <button
-            onClick={onStartNewCVWizard}
-            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-white bg-[#FF2E63] hover:bg-[#E31555] border border-[#FFD9E3]/30 transition shadow-md shadow-[#FF2E63]/20"
+            onClick={onNewCV || onStartNewCVWizard}
+            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-white bg-[#FF2E63] hover:bg-[#E31555] border border-[#FFD9E3]/30 transition shadow-md shadow-[#FF2E63]/20 cursor-pointer"
             title="Iniciar un nuevo CV"
           >
             <FilePlus className="w-3.5 h-3.5 text-[#FFD9E3] flex-shrink-0" />
