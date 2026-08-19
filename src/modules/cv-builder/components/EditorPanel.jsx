@@ -1707,13 +1707,14 @@ export default function EditorPanel({
               </select>
             </div>
 
-            {/* Dynamic Section Column Assigner */}
+            {/* Dynamic Section Column Assigner & Reordering */}
             <div className="space-y-3 pt-3 border-t border-[#EFE2C9]">
-              <label className="block text-xs font-bold text-[#FF2E63] uppercase tracking-wide">
-                Ubicación Dinámica de Secciones (Secundaria vs Primaria vs Ambas)
+              <label className="block text-xs font-bold text-[#FF2E63] uppercase tracking-wide flex items-center justify-between">
+                <span>Ubicación y Ordenamiento Dinámico</span>
+                <span className="text-[10px] text-purple-700 bg-purple-100 px-2 py-0.5 rounded font-black">Secundaria vs Primaria</span>
               </label>
               <p className="text-[11px] font-bold text-[#6B5B6E] leading-snug">
-                Elige en qué columna deseas mostrar cada sección de tu currículum:
+                Elige la columna de cada sección y usa las flechas ⬆ ⬇ para subir o bajar su posición en pantalla:
               </p>
 
               <div className="space-y-2">
@@ -1740,50 +1741,152 @@ export default function EditorPanel({
                     else currentVal = 'primaria';
                   }
 
+                  const defaultSecundaria = ["personales", "informatica", "ecologia"];
+                  const defaultPrimaria = ["personales", "formacion", "profesion", "experiencia", "cursos", "ecologia"];
+
+                  const secOrder = cvData.layout?.sectionOrders?.secundaria || defaultSecundaria;
+                  const primOrder = cvData.layout?.sectionOrders?.primaria || defaultPrimaria;
+
                   const setColumn = (targetVal) => {
-                    setCvData(prev => ({
-                      ...prev,
-                      layout: {
-                        ...prev.layout,
-                        columnAssignments: {
-                          ...(prev.layout?.columnAssignments || {}),
-                          [sec.id]: targetVal
-                        }
+                    setCvData(prev => {
+                      const newAssignments = {
+                        ...(prev.layout?.columnAssignments || {}),
+                        [sec.id]: targetVal
+                      };
+
+                      // Ensure section is in orders
+                      let newSecOrder = [...(prev.layout?.sectionOrders?.secundaria || defaultSecundaria)];
+                      let newPrimOrder = [...(prev.layout?.sectionOrders?.primaria || defaultPrimaria)];
+
+                      if (targetVal === 'secundaria' || targetVal === 'ambas') {
+                        if (!newSecOrder.includes(sec.id)) newSecOrder.push(sec.id);
                       }
-                    }));
+                      if (targetVal === 'primaria' || targetVal === 'ambas') {
+                        if (!newPrimOrder.includes(sec.id)) newPrimOrder.push(sec.id);
+                      }
+
+                      return {
+                        ...prev,
+                        layout: {
+                          ...prev.layout,
+                          columnAssignments: newAssignments,
+                          sectionOrders: {
+                            secundaria: newSecOrder,
+                            primaria: newPrimOrder
+                          }
+                        }
+                      };
+                    });
+                  };
+
+                  const moveSection = (colName, direction) => {
+                    setCvData(prev => {
+                      const curOrders = prev.layout?.sectionOrders?.[colName] || (
+                        colName === 'secundaria' ? defaultSecundaria : defaultPrimaria
+                      );
+
+                      const idx = curOrders.indexOf(sec.id);
+                      if (idx === -1) return prev;
+                      const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+                      if (targetIdx < 0 || targetIdx >= curOrders.length) return prev;
+
+                      const newOrder = [...curOrders];
+                      const [moved] = newOrder.splice(idx, 1);
+                      newOrder.splice(targetIdx, 0, moved);
+
+                      return {
+                        ...prev,
+                        layout: {
+                          ...prev.layout,
+                          sectionOrders: {
+                            ...(prev.layout?.sectionOrders || {}),
+                            [colName]: newOrder
+                          }
+                        }
+                      };
+                    });
                   };
 
                   return (
-                    <div key={sec.id} className="flex items-center justify-between p-2 bg-white rounded-xl border border-[#EFE2C9] text-xs">
-                      <span className="font-extrabold text-[#2B1B2E]">{sec.label}</span>
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => setColumn('secundaria')}
-                          className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
-                            currentVal === 'secundaria' ? 'bg-[#FF2E63] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                          }`}
-                          title="Ubicar en columna izquierda (fina)"
-                        >
-                          Secundaria
-                        </button>
-                        <button
-                          onClick={() => setColumn('primaria')}
-                          className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
-                            currentVal === 'primaria' ? 'bg-[#00A8A0] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                          }`}
-                          title="Ubicar en columna derecha (principal)"
-                        >
-                          Primaria
-                        </button>
-                        <button
-                          onClick={() => setColumn('ambas')}
-                          className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
-                            currentVal === 'ambas' ? 'bg-[#8E44FF] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                          }`}
-                          title="Mostrar la sección en ambas columnas"
-                        >
-                          Ambas
-                        </button>
+                    <div key={sec.id} className="p-2 bg-white rounded-xl border border-[#EFE2C9] text-xs space-y-1.5 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="font-extrabold text-[#2B1B2E]">{sec.label}</span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => setColumn('secundaria')}
+                            className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
+                              currentVal === 'secundaria' ? 'bg-[#FF2E63] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            }`}
+                            title="Ubicar en columna izquierda (secundaria / fina)"
+                          >
+                            Secundaria
+                          </button>
+                          <button
+                            onClick={() => setColumn('primaria')}
+                            className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
+                              currentVal === 'primaria' ? 'bg-[#00A8A0] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            }`}
+                            title="Ubicar en columna derecha (primaria / principal)"
+                          >
+                            Primaria
+                          </button>
+                          <button
+                            onClick={() => setColumn('ambas')}
+                            className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
+                              currentVal === 'ambas' ? 'bg-[#8E44FF] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            }`}
+                            title="Mostrar la sección en ambas columnas"
+                          >
+                            Ambas
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Reordering Controls per active column */}
+                      <div className="flex items-center justify-end gap-3 text-[10px] text-slate-500 pt-1 border-t border-slate-100">
+                        {(currentVal === 'secundaria' || currentVal === 'ambas') && (
+                          <div className="flex items-center gap-1 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-200">
+                            <span className="font-bold text-rose-700">Orden Sec:</span>
+                            <button
+                              onClick={() => moveSection('secundaria', 'up')}
+                              disabled={secOrder.indexOf(sec.id) <= 0}
+                              className="px-1 py-0.5 hover:bg-rose-200 rounded font-black disabled:opacity-30 cursor-pointer"
+                              title="Subir en columna Secundaria"
+                            >
+                              ⬆
+                            </button>
+                            <button
+                              onClick={() => moveSection('secundaria', 'down')}
+                              disabled={secOrder.indexOf(sec.id) === -1 || secOrder.indexOf(sec.id) >= secOrder.length - 1}
+                              className="px-1 py-0.5 hover:bg-rose-200 rounded font-black disabled:opacity-30 cursor-pointer"
+                              title="Bajar en columna Secundaria"
+                            >
+                              ⬇
+                            </button>
+                          </div>
+                        )}
+
+                        {(currentVal === 'primaria' || currentVal === 'ambas') && (
+                          <div className="flex items-center gap-1 bg-teal-50 px-2 py-0.5 rounded-lg border border-teal-200">
+                            <span className="font-bold text-teal-700">Orden Prim:</span>
+                            <button
+                              onClick={() => moveSection('primaria', 'up')}
+                              disabled={primOrder.indexOf(sec.id) <= 0}
+                              className="px-1 py-0.5 hover:bg-teal-200 rounded font-black disabled:opacity-30 cursor-pointer"
+                              title="Subir en columna Primaria"
+                            >
+                              ⬆
+                            </button>
+                            <button
+                              onClick={() => moveSection('primaria', 'down')}
+                              disabled={primOrder.indexOf(sec.id) === -1 || primOrder.indexOf(sec.id) >= primOrder.length - 1}
+                              className="px-1 py-0.5 hover:bg-teal-200 rounded font-black disabled:opacity-30 cursor-pointer"
+                              title="Bajar en columna Primaria"
+                            >
+                              ⬇
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );

@@ -230,6 +230,150 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
     return (col === 'primaria' || col === 'ambas') && isVis(secKey);
   };
 
+  const renderDynamicSection = (secId, location) => {
+    if (location === 'secundaria' && !showInSecundaria(secId)) return null;
+    if (location === 'primaria' && !showInPrimaria(secId)) return null;
+
+    switch (secId) {
+      case 'personales':
+        return (
+          <div key={`sec-${location}-personales`} id={location === 'primaria' ? "cv-section-personales" : "cv-section-personales-side"} className="section-box-print space-y-1.5 mb-3">
+            {renderSectionHeader(<User className="w-4 h-4" />, "DATOS PERSONALES")}
+            <div className={`grid ${location === 'secundaria' ? 'grid-cols-1 gap-1 text-[10px]' : 'grid-cols-3 gap-y-1.5 text-[11px]'} font-medium bg-slate-50/90 p-3 rounded-xl border border-slate-200/80`}>
+              <div className="flex justify-between border-b border-slate-200/60 pb-0.5">
+                <span className="font-bold uppercase pr-1" style={{ color: theme.accentColor }}>DNI:</span>
+                <span className="text-slate-900 font-extrabold">{personalInfo.dni}</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-200/60 pb-0.5">
+                <span className="font-bold uppercase pr-1" style={{ color: theme.accentColor }}>CUIT:</span>
+                <span className="text-slate-900 font-extrabold">{personalInfo.cuit}</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-200/60 pb-0.5">
+                <span className="font-bold uppercase pr-1" style={{ color: theme.accentColor }}>FECHA NAC.:</span>
+                <span className="text-slate-900 font-extrabold">{personalInfo.birthDate}</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-200/60 pb-0.5">
+                <span className="font-bold uppercase pr-1" style={{ color: theme.accentColor }}>DOMICILIO:</span>
+                <span className="text-slate-900 font-extrabold">{personalInfo.address}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-bold uppercase pr-1" style={{ color: theme.accentColor }}>CIUDAD:</span>
+                <span className="text-slate-900 font-extrabold">{personalInfo.cityProvince}</span>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'formacion':
+        if (!education || education.length === 0) return null;
+        return (
+          <div key={`sec-${location}-formacion`} id="cv-section-formacion" className="section-box-print space-y-1.5 mb-3">
+            {renderSectionHeader(<GraduationCap className="w-4 h-4" />, "FORMACIÓN ACADÉMICA")}
+            <div className="space-y-2">
+              {education.map((edu, i) => (
+                <div key={i} className="bg-slate-50/90 border border-slate-200/80 p-2.5 rounded-xl space-y-1 border-l-4" style={{ borderLeftColor: theme.accentColor }}>
+                  <div className="flex items-center justify-between">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-black text-white whitespace-nowrap shadow-sm" style={{ backgroundColor: theme.primaryColor }}>
+                      {edu.level}
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-black whitespace-nowrap" style={{ backgroundColor: 'rgba(64,160,142,0.12)', color: theme.accentColor }}>
+                      AÑO {edu.year}
+                    </span>
+                  </div>
+                  <h4 className="text-xs font-black text-slate-900 mt-1">{edu.degree}</h4>
+                  <p className="text-[11px] font-bold text-slate-600 flex items-center gap-1">
+                    <Building2 className="w-3 h-3 text-slate-400" /> {edu.institution}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'profesion':
+        if (!firstPageProfessions || firstPageProfessions.length === 0) return null;
+        return (
+          <div key={`sec-${location}-profesion`} id="cv-section-profesion" className="section-box-print space-y-1.5 mb-3">
+            {renderSectionHeader(<Briefcase className="w-4 h-4" />, `TÍTULOS PROFESIONALES (${sortedProfession.length})`)}
+            <div className="grid grid-cols-1 gap-1.5">
+              {firstPageProfessions.map((prof, i) => (
+                <div key={i} className="bg-slate-50/90 border border-slate-200/80 p-2.5 rounded-xl space-y-0.5 border-l-4" style={{ borderLeftColor: theme.primaryColor }}>
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-black text-slate-900 leading-tight">{prof.degree}</h4>
+                    <span className="px-2 py-0.5 rounded text-[9px] font-black text-white whitespace-nowrap ml-2 flex-shrink-0" style={{ backgroundColor: theme.primaryColor }}>
+                      AÑO {prof.year}
+                    </span>
+                  </div>
+                  <p className="text-[10px] font-bold" style={{ color: theme.accentColor }}>{prof.institution}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'cursos':
+        if (!courses || courses.length === 0) return null;
+        return (
+          <div key={`sec-${location}-cursos`} id="cv-section-cursos" className="section-box-print space-y-1.5 mb-3">
+            {renderSectionHeader(<BookOpen className="w-4 h-4" />, "CURSOS & CAPACITACIONES")}
+            <div className="space-y-1.5 text-[10px]">
+              {courses.map((item, i) => (
+                <div key={i} className="p-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-slate-900">{item.name}</p>
+                    <p className="text-slate-500 text-[9px] font-semibold">{item.institution}</p>
+                  </div>
+                  <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-extrabold text-[9px]">
+                    {item.hours} HS
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'informatica':
+        if (!informatics || informatics.length === 0) return null;
+        return (
+          <div key={`sec-${location}-informatica`} id="cv-section-informatica" className="section-box-print mb-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider mb-2 border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
+              <Laptop className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> INFORMÁTICA & TICs
+            </h3>
+            <div className="text-[10px] space-y-2 font-medium opacity-90">
+              {informatics.map((item, i) => (
+                <div key={i} className="border-l-2 border-current pl-2">
+                  <p className="font-bold">{item.institution}</p>
+                  <p className="font-semibold" style={{ color: theme.accentColor }}>{item.course}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'ecologia':
+        return (
+          <div key={`sec-${location}-ecologia`} id="cv-section-ecologia" className="section-box-print mb-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider mb-3 border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
+              <Leaf className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> PROYECTOS & COMUNIDAD
+            </h3>
+            <div className="space-y-3 text-[10px]">
+              <div className="border-l-2 border-current pl-2">
+                <p className="font-bold">Salón del Libro Infantil Salteño</p>
+                <p className="opacity-80">Fundación Salteña Ciencias y Arte (2007)</p>
+              </div>
+              <div className="border-l-2 border-current pl-2">
+                <p className="font-bold">Ecoproyecto "Residuos Tecnológicos"</p>
+                <p className="opacity-80">Concientización y Reciclaje Escolar (2018)</p>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   // Chunk certificates: ALWAYS 1 per A4 page
   const certPages = isVis('certificados') ? certificatesScanned.map(cert => [cert]) : [];
 
@@ -520,20 +664,9 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
               </ul>
             </div>
 
-            {informatics && informatics.length > 0 && showInSecundaria('informatica') && (
-              <div id="cv-section-informatica">
-                <h3 className="text-xs font-bold uppercase tracking-wider mb-2 border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
-                  <Laptop className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> INFORMÁTICA & TICs
-                </h3>
-                <div className="text-[10px] space-y-2 font-medium opacity-90">
-                  {informatics.map((item, i) => (
-                    <div key={i} className="border-l-2 border-current pl-2">
-                      <p className="font-bold">{item.institution}</p>
-                      <p className="font-semibold" style={{ color: theme.accentColor }}>{item.course}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            {/* Dynamic Left Column (Secundaria) Section Rendering */}
+            {(cvData.layout?.sectionOrders?.secundaria || ["personales", "informatica", "ecologia"]).map(secId => 
+              renderDynamicSection(secId, 'secundaria')
             )}
 
             <div>
@@ -572,54 +705,9 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
               </p>
             )}
 
-            {/* Datos Personales */}
-            {isVis('personales') && (
-              <div id="cv-section-personales" className="section-box-print">
-                {renderSectionHeader(<User className="w-4 h-4" />, "DATOS PERSONALES")}
-
-                <div className="grid grid-cols-3 gap-y-1.5 text-[11px] font-medium bg-slate-50/90 p-3 rounded-xl border border-slate-200/80">
-                  <span className="font-bold text-right uppercase pr-2" style={{ color: theme.accentColor }}>DNI:</span>
-                  <span className="col-span-2 text-slate-900 font-extrabold">{personalInfo.dni}</span>
-
-                  <span className="font-bold text-right uppercase pr-2" style={{ color: theme.accentColor }}>CUIT:</span>
-                  <span className="col-span-2 text-slate-900 font-extrabold">{personalInfo.cuit}</span>
-
-                  <span className="font-bold text-right uppercase pr-2" style={{ color: theme.accentColor }}>FECHA NAC.:</span>
-                  <span className="col-span-2 text-slate-900 font-extrabold">{personalInfo.birthDate}</span>
-
-                  <span className="font-bold text-right uppercase pr-2" style={{ color: theme.accentColor }}>DOMICILIO:</span>
-                  <span className="col-span-2 text-slate-900 font-extrabold">{personalInfo.address}</span>
-
-                  <span className="font-bold text-right uppercase pr-2" style={{ color: theme.accentColor }}>CIUDAD:</span>
-                  <span className="col-span-2 text-slate-900 font-extrabold">{personalInfo.cityProvince}</span>
-                </div>
-              </div>
-            )}
-
-            {/* Formación Académica */}
-            {isVis('formacion') && education && education.length > 0 && (
-              <div id="cv-section-formacion" className="section-box-print">
-                {renderSectionHeader(<GraduationCap className="w-4 h-4" />, "FORMACIÓN ACADÉMICA")}
-
-                <div className="space-y-2">
-                  {education.map((edu, i) => (
-                    <div key={i} className="bg-slate-50/90 border border-slate-200/80 p-3 rounded-xl space-y-1 border-l-4" style={{ borderLeftColor: theme.accentColor }}>
-                      <div className="flex items-center justify-between">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-black text-white whitespace-nowrap shadow-sm" style={{ backgroundColor: theme.primaryColor }}>
-                          {edu.level}
-                        </span>
-                        <span className="px-2 py-0.5 rounded text-[10px] font-black whitespace-nowrap" style={{ backgroundColor: 'rgba(64,160,142,0.12)', color: theme.accentColor }}>
-                          AÑO {edu.year}
-                        </span>
-                      </div>
-                      <h4 className="text-xs font-black text-slate-900 mt-1">{edu.degree}</h4>
-                      <p className="text-[11px] font-bold text-slate-600 flex items-center gap-1">
-                        <Building2 className="w-3 h-3 text-slate-400" /> {edu.institution}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            {/* Dynamic Right Column (Primaria) Section Rendering */}
+            {(cvData.layout?.sectionOrders?.primaria || ["personales", "formacion", "profesion", "experiencia", "cursos", "ecologia"]).map(secId => 
+              renderDynamicSection(secId, 'primaria')
             )}
 
             {/* Profesión */}
