@@ -11,6 +11,7 @@ import {
   PenTool, 
   Palette,
   Layout,
+  Columns3,
   PanelLeftOpen,
   PanelLeftClose
 } from 'lucide-react';
@@ -26,6 +27,7 @@ export const editorTabs = [
   { id: 'firma', label: 'Firma', icon: PenTool },
   { id: 'certificados', label: 'Certificados Anexados', icon: Award },
   { id: 'diseno', label: 'Diseño & Portada', icon: Layout },
+  { id: 'paneles', label: 'Paneles & Columnas', icon: Columns3 },
   { id: 'color', label: 'Color & Tipografía', icon: Palette }
 ];
 

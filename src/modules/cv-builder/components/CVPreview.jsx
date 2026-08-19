@@ -235,6 +235,57 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
     if (location === 'primaria' && !showInPrimaria(secId)) return null;
 
     switch (secId) {
+      case 'contacto':
+        return (
+          <div key={`sec-${location}-contacto`} id="cv-section-contacto" className="section-box-print mb-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider mb-2.5 border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
+              <Phone className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> CONTACTO & REDES
+            </h3>
+            <ul className="space-y-2 text-[11px] font-bold leading-tight">
+              <li className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.primaryColor, color: '#ffffff' }}>
+                  <Phone className="w-3 h-3" />
+                </span>
+                <span>{personalInfo.phone}</span>
+              </li>
+              <li className="flex items-center gap-2 break-all">
+                <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.primaryColor, color: '#ffffff' }}>
+                  <Mail className="w-3 h-3" />
+                </span>
+                <span>{personalInfo.email}</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.primaryColor, color: '#ffffff' }}>
+                  <Globe className="w-3 h-3" />
+                </span>
+                <span>{personalInfo.facebook}</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.primaryColor, color: '#ffffff' }}>
+                  <MapPin className="w-3 h-3" />
+                </span>
+                <span>{personalInfo.address}</span>
+              </li>
+            </ul>
+          </div>
+        );
+
+      case 'competencias':
+        return (
+          <div key={`sec-${location}-competencias`} id="cv-section-competencias" className="section-box-print mb-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider mb-2 border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
+              <Award className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> COMPETENCIAS CLAVE
+            </h3>
+            <div className="flex flex-wrap gap-1 text-[9px] font-bold">
+              <span className="px-2 py-0.5 bg-black/10 rounded">Pedagogía Dialógica</span>
+              <span className="px-2 py-0.5 bg-black/10 rounded">Comunidades de Aprendizaje</span>
+              <span className="px-2 py-0.5 bg-black/10 rounded">Alfabetización Digital</span>
+              <span className="px-2 py-0.5 bg-black/10 rounded">Educación Inclusiva</span>
+              <span className="px-2 py-0.5 bg-black/10 rounded">Gestión Institucional</span>
+            </div>
+          </div>
+        );
+
       case 'personales':
         return (
           <div key={`sec-${location}-personales`} id={location === 'primaria' ? "cv-section-personales" : "cv-section-personales-side"} className="section-box-print space-y-1.5 mb-3">
@@ -528,16 +579,34 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
       {/* PAGE 1: PORTADA EDITORIAL DE ALTO IMPACTO (SI ESTÁ ACTIVADA) */}
       {/* ========================================================================= */}
       {showCover && (
-        <div className="a4-page-container rounded-sm transition-all" style={{ backgroundColor: theme.primaryColor }}>
+        <div 
+          className={`a4-page-container rounded-sm transition-all relative overflow-hidden ${
+            (cvData.coverPreset || 'monica-classic') === 'modern-corporate'
+              ? 'bg-slate-900 text-white'
+              : (cvData.coverPreset || 'monica-classic') === 'minimal-editorial'
+              ? 'bg-white text-slate-900 border-8 border-slate-900'
+              : (cvData.coverPreset || 'monica-classic') === 'creative-cardon'
+              ? 'bg-emerald-950 text-white'
+              : 'bg-[#ab5ba1]'
+          }`}
+          style={{ backgroundColor: (cvData.coverPreset === 'monica-classic' || !cvData.coverPreset) ? theme.primaryColor : undefined }}
+        >
           <div className="perspective-corridor-cv">
             
-            {/* Profile Photo */}
+            {/* Profile Photo with Preset Decorative Borders */}
             <div 
-              className="mt-12 w-44 h-56 border-4 flex flex-col items-center justify-center text-center p-2 shadow-2xl overflow-hidden transition-all duration-300 rounded-2xl"
+              className={`mt-10 w-44 h-56 flex flex-col items-center justify-center text-center p-2 shadow-2xl overflow-hidden transition-all duration-300 ${
+                (cvData.coverPreset || 'monica-classic') === 'modern-corporate'
+                  ? 'rounded-none border-4 border-amber-400 shadow-amber-400/20'
+                  : (cvData.coverPreset || 'monica-classic') === 'minimal-editorial'
+                  ? 'rounded-full w-48 h-48 border-2 border-slate-900 shadow-none'
+                  : (cvData.coverPreset || 'monica-classic') === 'creative-cardon'
+                  ? 'rounded-3xl border-4 border-teal-400 ring-4 ring-teal-400/30'
+                  : 'rounded-2xl border-4'
+              }`}
               style={{ 
-                borderColor: theme.accentColor || '#40a08e', 
+                borderColor: (cvData.coverPreset === 'monica-classic' || !cvData.coverPreset) ? (theme.accentColor || '#40a08e') : undefined, 
                 backgroundColor: 'rgba(255, 255, 255, 0.25)',
-                boxShadow: `0 0 25px ${theme.accentColor || '#40a08e'}60`
               }}
             >
               {personalInfo.profilePhoto ? (
@@ -550,14 +619,14 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
               )}
             </div>
 
-            {/* Header Title */}
+            {/* Header Title with Preset Styles */}
             <div className="mt-5 text-center space-y-1">
-              <span className="px-3 py-1 bg-white/20 backdrop-blur rounded-full text-[10px] font-black uppercase text-white tracking-widest">
+              <span className="px-3 py-1 bg-white/20 backdrop-blur rounded-full text-[10px] font-black uppercase tracking-widest">
                 PORTAFOLIO DOCENTE & PROFESIONAL
               </span>
               <h1 
-                className="text-4xl font-black text-white tracking-wider uppercase drop-shadow-md text-center"
-                style={{ fontFamily: 'Impact, Arial, sans-serif' }}
+                className="text-4xl font-black tracking-wider uppercase drop-shadow-md text-center"
+                style={{ fontFamily: (cvData.coverPreset === 'minimal-editorial') ? 'Georgia, serif' : 'Impact, Arial, sans-serif' }}
               >
                 Curriculum Vitae
               </h1>
@@ -566,8 +635,8 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
             {/* Candidate Name & Featured Roles */}
             <div className="mt-6 w-5/6 text-center flex flex-col items-center flex-grow">
               <h2 
-                className="text-2xl font-black italic mb-4 tracking-wide border-b-2 pb-2 border-white/20"
-                style={{ color: theme.primaryColor, fontFamily: 'Georgia, serif' }}
+                className="text-2xl font-black italic mb-4 tracking-wide border-b-2 pb-2 border-current"
+                style={{ color: (cvData.coverPreset === 'minimal-editorial') ? '#0f172a' : '#ffffff', fontFamily: 'Georgia, serif' }}
               >
                 {personalInfo.fullName}
               </h2>
@@ -587,7 +656,15 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
                   return defaultRoles.map((role, idx) => (
                     <span 
                       key={idx}
-                      className="px-3 py-1 bg-slate-800/90 text-white rounded-lg text-[11px] font-extrabold shadow-sm border border-slate-700/60"
+                      className={`px-3 py-1 text-[11px] font-extrabold shadow-sm border ${
+                        (cvData.coverPreset || 'monica-classic') === 'modern-corporate'
+                          ? 'bg-amber-400 text-slate-950 rounded-none border-amber-300'
+                          : (cvData.coverPreset || 'monica-classic') === 'minimal-editorial'
+                          ? 'bg-slate-100 text-slate-900 rounded-md border-slate-300'
+                          : (cvData.coverPreset || 'monica-classic') === 'creative-cardon'
+                          ? 'bg-teal-500 text-slate-950 rounded-xl border-teal-300'
+                          : 'bg-slate-800/90 text-white rounded-lg border-slate-700/60'
+                      }`}
                     >
                       {role}
                     </span>
@@ -597,7 +674,7 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
 
               {/* Profile Highlight Statement */}
               {personalInfo.quote && (
-                <p className="mt-6 text-xs font-bold italic text-slate-700 max-w-md bg-white/40 p-3 rounded-xl backdrop-blur leading-relaxed">
+                <p className="mt-6 text-xs font-bold italic text-slate-800 max-w-md bg-white/60 p-3 rounded-xl backdrop-blur leading-relaxed shadow-sm">
                   {personalInfo.quote}
                 </p>
               )}

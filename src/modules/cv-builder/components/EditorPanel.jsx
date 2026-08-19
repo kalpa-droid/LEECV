@@ -1692,6 +1692,89 @@ export default function EditorPanel({
                 </select>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 12: PANELES Y COLUMNAS */}
+        {/* ========================================================================= */}
+        {activeTab === 'paneles' && (
+          <div className="space-y-6">
+            <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] border-b pb-2 border-[#EFE2C9] flex items-center gap-1.5">
+              <Columns3 className="w-4 h-4 text-[#00A8A0]" /> Gestión Dinámica de Paneles & Columnas
+            </h3>
+
+            {/* Panel Presets (1-Click Layout Distribution) */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-[#2B1B2E] flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#00A8A0]" /> Presets de Distribución de Paneles (1-Clic)
+              </label>
+              
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  {
+                    id: 'docente-tradicional',
+                    name: '🎓 Docente Tradicional',
+                    desc: 'Contacto, TICs y Competencias a la Izquierda; Formación, Profesión y Experiencia a la Derecha.',
+                    sec: ["contacto", "informatica", "competencias", "ecologia"],
+                    prim: ["personales", "formacion", "profesion", "experiencia", "cursos"]
+                  },
+                  {
+                    id: 'ejecutivo-corporativo',
+                    name: '💼 Ejecutivo Corporativo',
+                    desc: 'Contacto y Datos Personales a la Izquierda; Trayectoria y Títulos en la Columna Principal.',
+                    sec: ["contacto", "personales", "competencias"],
+                    prim: ["profesion", "experiencia", "formacion", "cursos", "ecologia"]
+                  },
+                  {
+                    id: 'creativo-tics',
+                    name: '⚡ Creativo & TICs',
+                    desc: 'Informática, Cursos y Competencias a la Izquierda; Proyectos y Formación a la Derecha.',
+                    sec: ["contacto", "informatica", "cursos", "competencias"],
+                    prim: ["personales", "profesion", "experiencia", "ecologia", "formacion"]
+                  },
+                  {
+                    id: 'columna-unica',
+                    name: '📜 Columna Única Continua',
+                    desc: 'Todas las secciones fluyen continuamente en la Columna Principal de lectura.',
+                    sec: [],
+                    prim: ["personales", "contacto", "formacion", "profesion", "experiencia", "cursos", "informatica", "ecologia", "competencias"]
+                  }
+                ].map((preset) => (
+                  <button
+                    key={preset.id}
+                    onClick={() => {
+                      setCvData(prev => {
+                        const newAssigns = {};
+                        preset.sec.forEach(s => { newAssigns[s] = 'secundaria'; });
+                        preset.prim.forEach(s => { 
+                          if (newAssigns[s] === 'secundaria') newAssigns[s] = 'ambas';
+                          else newAssigns[s] = 'primaria';
+                        });
+
+                        return {
+                          ...prev,
+                          layout: {
+                            ...prev.layout,
+                            columnAssignments: newAssigns,
+                            sectionOrders: {
+                              secundaria: preset.sec,
+                              primaria: preset.prim
+                            }
+                          }
+                        };
+                      });
+                    }}
+                    className="p-2.5 rounded-xl border border-[#EFE2C9] bg-white hover:border-[#FF2E63] text-left transition flex flex-col justify-between cursor-pointer"
+                  >
+                    <div>
+                      <span className="text-[11px] font-bold text-[#2B1B2E] block">{preset.name}</span>
+                      <p className="text-[9px] text-[#6B5B6E] font-medium leading-snug mt-0.5">{preset.desc}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {/* Dynamic Section Column Assigner & Reordering */}
             <div className="space-y-3 pt-3 border-t border-[#EFE2C9]">
@@ -1705,12 +1788,14 @@ export default function EditorPanel({
 
               <div className="space-y-2">
                 {[
+                  { id: 'contacto', label: 'Contacto & Redes' },
                   { id: 'personales', label: 'Datos Personales' },
                   { id: 'formacion', label: 'Formación Académica' },
                   { id: 'profesion', label: 'Títulos Profesionales' },
                   { id: 'experiencia', label: 'Experiencia Laboral' },
                   { id: 'cursos', label: 'Cursos & Capacitaciones' },
                   { id: 'informatica', label: 'Informática & TICs' },
+                  { id: 'competencias', label: 'Competencias Clave' },
                   { id: 'ecologia', label: 'Proyectos & Comunidad' }
                 ].map((sec) => {
                   const assignments = cvData.layout?.columnAssignments || {};
@@ -1718,7 +1803,7 @@ export default function EditorPanel({
                   if (typeof assignments[sec.id] === 'string') {
                     currentVal = assignments[sec.id];
                   } else {
-                    const leftList = assignments.left || ["personales", "formacion", "cursos", "informatica"];
+                    const leftList = assignments.left || ["contacto", "personales", "formacion", "cursos", "informatica", "competencias"];
                     const rightList = assignments.right || ["profesion", "experiencia", "ecologia", "certificados", "firma"];
                     const inLeft = leftList.includes(sec.id);
                     const inRight = rightList.includes(sec.id);
@@ -1727,7 +1812,7 @@ export default function EditorPanel({
                     else currentVal = 'primaria';
                   }
 
-                  const defaultSecundaria = ["personales", "informatica", "ecologia"];
+                  const defaultSecundaria = ["contacto", "personales", "informatica", "competencias", "ecologia"];
                   const defaultPrimaria = ["personales", "formacion", "profesion", "experiencia", "cursos", "ecologia"];
 
                   const secOrder = cvData.layout?.sectionOrders?.secundaria || defaultSecundaria;
@@ -1882,13 +1967,29 @@ export default function EditorPanel({
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 12: COLOR Y TIPOGRAFÍA */}
+        {/* TAB 13: COLOR Y TIPOGRAFÍA */}
         {/* ========================================================================= */}
         {activeTab === 'color' && (
           <div className="space-y-6">
             <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] border-b pb-2 border-[#EFE2C9] flex items-center gap-1.5">
               <Palette className="w-4 h-4 text-[#00A8A0]" /> Presets Cromáticos, Google Fonts & Colores
             </h3>
+
+            {/* Font Picker TOP */}
+            <div className="bg-purple-50 p-3 rounded-xl border border-purple-200 space-y-1">
+              <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
+                Tipografía Principal del Documento (Google Fonts)
+              </label>
+              <select
+                value={cvData.theme.fontFamily}
+                onChange={(e) => updateTheme('fontFamily', e.target.value)}
+                className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+              >
+                {fontOptions.map((f) => (
+                  <option key={f.id} value={f.value}>{f.name}</option>
+                ))}
+              </select>
+            </div>
 
             {/* Presets Grid Categorized */}
             <div className="space-y-3">
@@ -1940,22 +2041,6 @@ export default function EditorPanel({
                   </div>
                 );
               })}
-            </div>
-
-            {/* Font Picker */}
-            <div>
-              <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-                Tipografía Principal del Documento (Google Fonts)
-              </label>
-              <select
-                value={cvData.theme.fontFamily}
-                onChange={(e) => updateTheme('fontFamily', e.target.value)}
-                className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-              >
-                {fontOptions.map((f) => (
-                  <option key={f.id} value={f.value}>{f.name}</option>
-                ))}
-              </select>
             </div>
 
             {/* Custom Color Pickers */}
