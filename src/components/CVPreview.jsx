@@ -937,6 +937,25 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
                 </div>
               </div>
 
+              {/* Custom User-Defined Dynamic Sections */}
+              {cvData?.customSections && Array.isArray(cvData.customSections) && cvData.customSections.map((sec, idx) => (
+                <div key={sec.id || idx} className="space-y-2 pt-2 border-t border-slate-200">
+                  {renderSectionHeader(<Award className="w-4 h-4" />, (sec.title || 'SECCIÓN PERSONALIZADA').toUpperCase())}
+                  <div className="space-y-1.5">
+                    {Array.isArray(sec.records) && sec.records.map((rec, rIdx) => (
+                      <div key={rIdx} className="bg-slate-50 border border-slate-200 p-2.5 rounded-lg text-xs font-medium space-y-0.5">
+                        {Object.entries(rec).map(([k, v]) => (
+                          <div key={k} className="flex items-center justify-between">
+                            <span className="font-bold text-slate-700 capitalize">{k}:</span>
+                            <span className="text-slate-900">{v}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
               {/* Digital Signature Block on Last Course Page */}
               {isLastPage && isVis('firma') && (
                 <div id="cv-section-firma" className="mt-3 pt-2 border-t border-slate-300 flex flex-col items-end section-box-print">

@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { optimizeCVImagesToWebP } from '../utils/imageCompressor';
 import { standardExampleCVData } from '../data/initialCVData';
+import { idbStorage } from './storageIndexedDB';
 
 // Optional Supabase Client initialization
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -12,9 +13,9 @@ export const supabase = (supabaseUrl && supabaseAnonKey)
 
 export const checkStorageStatus = () => {
   if (supabase) {
-    return { isCloud: true, label: 'Nube Supabase Conectada' };
+    return { isCloud: true, label: 'Nube Supabase Conectada (3 Estados Activos)' };
   }
-  return { isCloud: false, label: 'Almacenamiento Local (LocalStorage WebP)' };
+  return { isCloud: false, label: 'Almacenamiento Local (IndexedDB Activo)' };
 };
 
 const SAVED_CVS_KEY = 'cv_premium_saved_list';
@@ -35,7 +36,7 @@ export const DEFAULT_PRESET_CVS = [
 ];
 
 /**
- * Get all saved CVs from LocalStorage and Cloud (if Supabase configured)
+ * Get all saved CVs from LocalStorage / IndexedDB / Cloud
  */
 export const getSavedCVsList = async () => {
   let localList = [];
@@ -43,31 +44,19 @@ export const getSavedCVsList = async () => {
     const stored = localStorage.getItem(SAVED_CVS_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      // Clean legacy items by stripping heavy cv_data from summary list
-      localList = (Array.isArray(parsed) ? parsed : []).map(item => ({
+      // Exclude sample preset from saved modal list as requested
+      localList = (Array.isArray(parsed) ? parsed : []).filter(item => item.id !== 'cv_ejemplo_estandar').map(item => ({
         id: item.id,
         title: item.title,
         candidate_name: item.candidate_name,
         dni: item.dni,
         updated_at: item.updated_at
       }));
-    } else {
-      localList = DEFAULT_PRESET_CVS;
-      try {
-        localStorage.setItem(SAVED_CVS_KEY, JSON.stringify(DEFAULT_PRESET_CVS));
-      } catch {}
     }
   } catch (err) {
     console.error('Error cargando CVs locales:', err);
-    localList = DEFAULT_PRESET_CVS;
+    localList = [];
   }
-
-  // Ensure default presets are always available in the list
-  DEFAULT_PRESET_CVS.forEach(preset => {
-    if (!localList.some(item => item.id === preset.id)) {
-      localList.push(preset);
-    }
-  });
 
   if (supabase) {
     try {
@@ -77,10 +66,10 @@ export const getSavedCVsList = async () => {
         .order('updated_at', { ascending: false });
 
       if (!error && Array.isArray(data) && data.length > 0) {
-        return data;
+        return data.filter(item => item.id !== 'cv_ejemplo_estandar');
       }
     } catch (err) {
-      console.warn('Supabase no disponible, usando almacenamiento local:', err);
+      console.warn('Supabase no disponible, usando almacenamiento IndexedDB local:', err);
     }
   }
 
@@ -88,84 +77,105 @@ export const getSavedCVsList = async () => {
 };
 
 /**
- * Save a CV to storage (with automatic WebP image compression)
+ * Save a CV to storage (IndexedDB + LocalStorage Summary + Cloud Sync)
  */
 export const saveCV = async (cvData) => {
-  const optimizedCV = await optimizeCVImagesToWebP(cvData);
-
-  const id = cvData.id || `cv_${Date.now()}`;
-  const candidateName = (
-    optimizedCV.personalInfo?.fullName || 
-    `${optimizedCV.personalInfo?.surname || ''} ${optimizedCV.personalInfo?.givenNames || ''}`.trim() || 
-    'POSTULANTE'
-  ).trim();
-  const monthName = getMonthNameEs();
-  const yearNum = new Date().getFullYear();
-  const formattedTitle = `CV - ${candidateName} - ${monthName} - ${yearNum}`;
-
-  const summaryRecord = {
-    id,
-    title: formattedTitle,
-    candidate_name: candidateName,
-    dni: optimizedCV.personalInfo?.dni || '',
-    updated_at: new Date().toISOString()
-  };
-
-  const fullCVObject = { ...optimizedCV, id };
-
-  // 1. Always save to local list & active draft key
   try {
-    const list = await getSavedCVsList();
-    const existingIdx = list.findIndex(item => item.id === id);
-    if (existingIdx >= 0) {
-      list[existingIdx] = summaryRecord;
-    } else {
-      list.unshift(summaryRecord);
-    }
-    // Save lightweight list without base64 images
-    localStorage.setItem(SAVED_CVS_KEY, JSON.stringify(list));
-    // Save full CV data under individual key and active draft key
-    localStorage.setItem(`cv_data_${id}`, JSON.stringify(fullCVObject));
-    localStorage.setItem('cv_premium_data', JSON.stringify(fullCVObject));
-  } catch (err) {
-    console.warn('Advertencia de espacio en almacenamiento local:', err);
+    const optimizedCV = await optimizeCVImagesToWebP(cvData);
+
+    const id = cvData.id || `cv_${Date.now()}`;
+    const candidateName = (
+      optimizedCV.personalInfo?.fullName || 
+      `${optimizedCV.personalInfo?.surname || ''} ${optimizedCV.personalInfo?.givenNames || ''}`.trim() || 
+      'POSTULANTE'
+    ).trim();
+    const monthName = getMonthNameEs();
+    const yearNum = new Date().getFullYear();
+    const formattedTitle = `CV - ${candidateName} - ${monthName} - ${yearNum}`;
+    const nowIso = new Date().toISOString();
+
+    const summaryRecord = {
+      id,
+      title: formattedTitle,
+      candidate_name: candidateName,
+      dni: optimizedCV.personalInfo?.dni || '',
+      updated_at: nowIso
+    };
+
+    const fullCVObject = { ...optimizedCV, id, updated_at: nowIso };
+
+    // 1. Primary Save to IndexedDB (Unlimited Capacity) & Local Active Key
+    await idbStorage.setItem(`cv_data_${id}`, fullCVObject);
+    await idbStorage.setItem('cv_premium_data', fullCVObject);
+
+    // 2. Save lightweight summary list to LocalStorage
     try {
-      localStorage.setItem(`cv_data_${id}`, JSON.stringify(fullCVObject));
+      const list = await getSavedCVsList();
+      const existingIdx = list.findIndex(item => item.id === id);
+      if (existingIdx >= 0) {
+        list[existingIdx] = summaryRecord;
+      } else {
+        list.unshift(summaryRecord);
+      }
+      localStorage.setItem(SAVED_CVS_KEY, JSON.stringify(list));
       localStorage.setItem('cv_premium_data', JSON.stringify(fullCVObject));
-    } catch {}
-  }
-
-  // 2. Try saving to Supabase if configured
-  if (supabase) {
-    try {
-      const { error } = await supabase.from('cvs').upsert({
-        id,
-        title: summaryRecord.title,
-        candidate_name: summaryRecord.candidate_name,
-        dni: summaryRecord.dni,
-        cv_data: fullCVObject,
-        updated_at: summaryRecord.updated_at
-      });
-      if (error) console.error('Error guardando en Supabase:', error);
-    } catch (err) {
-      console.warn('Error conectando a Supabase:', err);
+    } catch (lerr) {
+      console.warn('Advertencia summary list LocalStorage:', lerr);
     }
-  }
 
-  return { 
-    success: true, 
-    record: summaryRecord, 
-    title: summaryRecord.title, 
-    cv_data: fullCVObject 
-  };
+    let syncState = 'local'; // 'local' | 'synced' | 'pending'
+
+    // 3. Sync to Supabase in parallel if online
+    if (supabase) {
+      try {
+        const { error } = await supabase.from('cvs').upsert({
+          id,
+          title: summaryRecord.title,
+          candidate_name: summaryRecord.candidate_name,
+          dni: summaryRecord.dni,
+          cv_data: fullCVObject,
+          updated_at: summaryRecord.updated_at
+        });
+        if (!error) {
+          syncState = 'synced';
+        } else {
+          console.error('Error guardando en Supabase:', error);
+          syncState = 'pending';
+        }
+      } catch (err) {
+        console.warn('Error conectando a Supabase:', err);
+        syncState = 'pending';
+      }
+    }
+
+    return { 
+      success: true, 
+      syncState,
+      record: summaryRecord, 
+      title: summaryRecord.title, 
+      cv_data: fullCVObject 
+    };
+  } catch (err) {
+    console.error('Error crítico al guardar CV:', err);
+    return { success: false, error: err };
+  }
 };
 
 /**
- * Load a single CV by ID
+ * Load a single CV by ID (IndexedDB -> Supabase -> LocalStorage)
  */
 export const loadCVById = async (id) => {
   if (id === 'cv_ejemplo_estandar') return standardExampleCVData;
 
+  // 1. Check IndexedDB
+  try {
+    const idbData = await idbStorage.getItem(`cv_data_${id}`);
+    if (idbData) return idbData;
+  } catch (err) {
+    console.warn('idbStorage fetch error:', err);
+  }
+
+  // 2. Check Supabase
   if (supabase) {
     try {
       const { data, error } = await supabase
@@ -177,23 +187,15 @@ export const loadCVById = async (id) => {
         return data.cv_data;
       }
     } catch (err) {
-      console.warn('Supabase fetch error, fallback local:', err);
+      console.warn('Supabase fetch error:', err);
     }
   }
 
+  // 3. Fallback LocalStorage
   try {
     const stored = localStorage.getItem(`cv_data_${id}`);
     if (stored) return JSON.parse(stored);
-
-    const listStored = localStorage.getItem(SAVED_CVS_KEY);
-    if (listStored) {
-      const list = JSON.parse(listStored);
-      const item = list.find(c => c.id === id);
-      if (item?.cv_data) return item.cv_data;
-    }
-  } catch (err) {
-    console.error('Error leyendo CV local:', err);
-  }
+  } catch {}
 
   return null;
 };
@@ -203,6 +205,7 @@ export const loadCVById = async (id) => {
  */
 export const deleteCVById = async (id) => {
   try {
+    await idbStorage.removeItem(`cv_data_${id}`);
     const listStored = localStorage.getItem(SAVED_CVS_KEY);
     if (listStored) {
       const list = JSON.parse(listStored).filter(c => c.id !== id);

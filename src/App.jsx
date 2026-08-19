@@ -9,9 +9,8 @@ import WizardModal from './components/WizardModal';
 import SavedCVsModal from './components/SavedCVsModal';
 import CloudStatusModal from './components/CloudStatusModal';
 import { initialCVData, standardExampleCVData, blankCVTemplate } from './data/initialCVData';
-import { saveCV } from './services/cvStorageService';
-
 import { exportCVToPDF } from './utils/pdfExporter';
+import { exportCVToJson, importCVFromJsonFile } from './utils/jsonImporterExporter';
 
 export default function App() {
   const [cvData, setCvData] = useState(() => {
@@ -176,6 +175,24 @@ export default function App() {
     }));
   };
 
+  const handleExportJson = () => {
+    exportCVToJson(cvData);
+  };
+
+  const handleImportJsonFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const importedData = await importCVFromJsonFile(file);
+      if (importedData && typeof importedData === 'object') {
+        setCvData(importedData);
+        alert('✅ Currículum cargado con éxito desde archivo JSON (Schema v2).');
+      }
+    } catch (err) {
+      alert('❌ Error al importar JSON: ' + err.message);
+    }
+  };
+
   return (
     <div className="h-screen w-screen flex flex-col bg-[#FFF7E8] text-[#2B1B2E] font-sans antialiased overflow-hidden">
       {/* Top Header Navbar (Row 1 - Global Actions) */}
@@ -186,6 +203,8 @@ export default function App() {
         onOpenSavedCVs={handleOpenSavedCVs}
         onSaveCV={handleSaveCV}
         onOpenCloudModal={() => setIsCloudModalOpen(true)}
+        onExportJson={handleExportJson}
+        onImportJson={handleImportJsonFile}
         isSaving={isSaving}
       />
 

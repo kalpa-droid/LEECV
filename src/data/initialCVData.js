@@ -87,16 +87,15 @@ export const standardExampleCVData = {
       image: sampleCertImage3 
     }
   ],
-  showCoverPage: true,
-  layoutStyle: "executive-sidebar",
-  signature: {
-    type: "drawn",
-    dataUrl: valeriaSignaturePhoto,
-    signerName: "VALERIA SOLEDAD MEDINA",
-    signerRole: "Profesora de Educación Secundaria en Lengua y Literatura",
-    dni: "34591208",
-    date: "Salta, 2025"
+  layout: {
+    layoutStyle: "executive-sidebar",
+    showCoverPage: true,
+    columns: {
+      left: ["personales", "formacion", "cursos"],
+      right: ["profesion", "experiencia", "informatica", "ecologia", "certificados", "firma"]
+    }
   },
+  customSections: [],
   theme: {
     presetId: "navy-executive",
     primaryColor: "#1e3a8a",
@@ -114,6 +113,15 @@ export const blankCVTemplate = {
   id: "cv_blanco",
   showCoverPage: true,
   layoutStyle: "executive-sidebar",
+  layout: {
+    layoutStyle: "executive-sidebar",
+    showCoverPage: true,
+    columns: {
+      left: ["personales", "formacion", "cursos"],
+      right: ["profesion", "experiencia", "informatica", "ecologia", "certificados", "firma"]
+    }
+  },
+  customSections: [],
   sectionVisibility: {
     personales: true,
     formacion: true,
