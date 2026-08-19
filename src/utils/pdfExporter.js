@@ -39,17 +39,53 @@ export async function exportCVToPDF(cvData) {
   const pdfWidth = 210;
   const pdfHeight = 297;
 
+  // Preload all image assets across all A4 pages to ensure complete rendering
+  const allImages = Array.from(document.querySelectorAll('.a4-page-container img'));
+  await Promise.all(
+    allImages.map(img => {
+      if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+      return new Promise(resolve => {
+        img.onload = resolve;
+        img.onerror = resolve;
+      });
+    })
+  );
+
   for (let i = 0; i < pageElements.length; i++) {
     const pageEl = pageElements[i];
 
-    // Ultra HD Resolution Pass (scale: 3.2 = ~300 DPI for crystal clear text)
+    // Ultra HD Resolution Pass (scale 3 = ~300 DPI for sharp vector-like text & sharp photos)
     const canvas = await html2canvas(pageEl, {
-      scale: 3.2,
+      scale: 3,
       useCORS: true,
       allowTaint: true,
       logging: false,
       backgroundColor: '#ffffff',
-      imageTimeout: 0
+      imageTimeout: 15000,
+      windowWidth: 1200,
+      onclone: (clonedDoc) => {
+        // Reset scale/transform on cloned document so html2canvas captures exact A4 dimensions
+        const wrapper = clonedDoc.querySelector('.print-wrapper');
+        if (wrapper) {
+          wrapper.style.transform = 'none';
+          wrapper.style.marginBottom = '0';
+          wrapper.style.padding = '0';
+        }
+        const clonedPages = clonedDoc.querySelectorAll('.a4-page-container');
+        clonedPages.forEach(p => {
+          p.style.transform = 'none';
+          p.style.boxShadow = 'none';
+          p.style.width = '794px'; // 210mm at 96 DPI
+          p.style.minHeight = '1123px'; // 297mm at 96 DPI
+          p.style.height = '1123px';
+        });
+
+        const imgs = clonedDoc.querySelectorAll('img');
+        imgs.forEach(img => {
+          img.style.maxHeight = '100%';
+          img.style.maxWidth = '100%';
+        });
+      }
     });
 
     const imgData = canvas.toDataURL('image/jpeg', 0.98);

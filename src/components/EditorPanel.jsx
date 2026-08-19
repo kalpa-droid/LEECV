@@ -350,6 +350,23 @@ export default function EditorPanel({
       {/* Tab Form Content Body */}
       <div className="flex-1 overflow-y-auto p-5 space-y-6">
 
+        {/* Banner de Muestra (Solo Lectura) */}
+        {cvData?.id === 'cv_ejemplo_estandar' && (
+          <div className="p-3 bg-[#FFF1C2] border-2 border-[#FFC93C] rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-2 shadow-md">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">👁️</span>
+              <div>
+                <h4 className="text-xs font-black text-[#2B1B2E] uppercase tracking-wide">
+                  VISTA DE MUESTRA (SÓLO LECTURA)
+                </h4>
+                <p className="text-[11px] font-bold text-[#6B5B6E]">
+                  Este currículum de Valeria Medina es una muestra visual de referencia. Al escribir se creará automáticamente tu borrador.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ========================================================================= */}
         {/* TAB 1: DATOS PERSONALES */}
         {/* ========================================================================= */}
