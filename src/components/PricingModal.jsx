@@ -71,11 +71,11 @@ export default function PricingModal({ isOpen, onClose, currentProfile }) {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-teal-400 flex-shrink-0" />
-                  <span>Descarga de Respaldo .JSON Gratis</span>
+                  <span>Respaldo .JSON gratis en PC o en tu Google Drive</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-teal-400 flex-shrink-0" />
-                  <span>Guardado Local en IndexedDB</span>
+                  <span>Guardado Local en IndexedDB del navegador</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-teal-400 flex-shrink-0" />
