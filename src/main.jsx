@@ -17,7 +17,11 @@ class ErrorBoundary extends Component {
     console.error('CRITICAL APP ERROR:', error, errorInfo);
   }
 
-  handleReset = () => {
+  handleSoftRetry = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
+  handleHardReset = () => {
     try {
       localStorage.clear();
       sessionStorage.clear();
@@ -34,17 +38,30 @@ class ErrorBoundary extends Component {
               !
             </div>
             <h2 className="text-lg font-black tracking-wide text-purple-300">
-              Restaurando Sesión de LEECV
+              Aviso de Sesión de LEECV
             </h2>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Ocurrió un ajuste de memoria en el navegador. Haz clic abajo para volver al editor limpio.
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Ocurrió un inconveniente temporal en la renderización del editor:
             </p>
-            <button
-              onClick={this.handleReset}
-              className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs font-black rounded-xl shadow-lg transition cursor-pointer"
-            >
-              Restaurar Editor
-            </button>
+            {this.state.error?.message && (
+              <div className="p-3 bg-red-950/60 border border-red-500/40 rounded-xl text-red-300 text-[11px] font-mono break-all text-left">
+                {this.state.error.message}
+              </div>
+            )}
+            <div className="space-y-2 pt-2">
+              <button
+                onClick={this.handleSoftRetry}
+                className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black rounded-xl shadow-lg transition cursor-pointer"
+              >
+                Reintentar Cargar el Editor (Conservar Datos)
+              </button>
+              <button
+                onClick={this.handleHardReset}
+                className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition cursor-pointer"
+              >
+                Restaurar Editor Limpio
+              </button>
+            </div>
           </div>
         </div>
       );

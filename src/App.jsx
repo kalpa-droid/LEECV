@@ -47,6 +47,11 @@ export default function App() {
             certificatesScanned: Array.isArray(parsed.certificatesScanned) ? parsed.certificatesScanned : [],
             informatics: Array.isArray(parsed.informatics) ? parsed.informatics : [],
             ecology: (parsed.ecology && typeof parsed.ecology === 'object') ? { ...standardExampleCVData.ecology, ...parsed.ecology } : standardExampleCVData.ecology,
+            layout: {
+              ...standardExampleCVData.layout,
+              ...(parsed.layout || {})
+            },
+            customSections: Array.isArray(parsed.customSections) ? parsed.customSections : [],
             signature: {
               ...standardExampleCVData.signature,
               ...(parsed.signature || {})
