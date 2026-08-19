@@ -67,9 +67,12 @@ export async function exportCVToPDF(cvData) {
       logging: false,
       backgroundColor: '#ffffff',
       imageTimeout: 15000,
-      windowWidth: 1200,
+      windowWidth: 794,
       onclone: (clonedDoc) => {
-        // Reset scale/transform on cloned document so html2canvas captures exact A4 dimensions
+        // Enforce font-smoothing and exact font metrics to prevent letter overlaps
+        clonedDoc.body.style.fontSmoothing = 'antialiased';
+        clonedDoc.body.style.webkitFontSmoothing = 'antialiased';
+
         const wrapper = clonedDoc.querySelector('.print-wrapper');
         if (wrapper) {
           wrapper.style.transform = 'none';

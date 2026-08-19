@@ -108,23 +108,37 @@ function AppContent() {
   };
 
   const handleNewCV = () => {
+    if (cvData.id === 'cv_ejemplo_estandar') {
+      resetToBlankCV();
+      setActiveTab('personales');
+      return;
+    }
+
     if (window.confirm('¿Deseas iniciar un nuevo currículum en blanco? Se conservará tu borrador actual en guardados.')) {
       resetToBlankCV();
       setActiveTab('personales');
     }
   };
 
-  const handleImportJsonFile = (e) => {
-    const file = e.target.files[0];
+  const handleImportJsonFile = async (e) => {
+    const file = e.target?.files?.[0];
     if (file) {
-      importCVFromJsonFile(file, (importedData) => {
+      try {
+        const importedData = await importCVFromJsonFile(file);
         if (importedData) {
+          // Automatic exit from sample mode if imported CV contains example ID
+          if (importedData.id === 'cv_ejemplo_estandar') {
+            importedData.id = `cv_${Date.now()}`;
+          }
           setCvData(importedData);
           alert('¡Currículum cargado exitosamente desde tu archivo .JSON!');
         } else {
           alert('El archivo seleccionado no tiene un formato válido de LEECV.');
         }
-      });
+      } catch (err) {
+        console.error('Error importando JSON:', err);
+        alert(err.message || 'Error al procesar el archivo .JSON seleccionado.');
+      }
     }
   };
 
@@ -134,7 +148,7 @@ function AppContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#2B1B2E] text-white flex flex-col font-sans overflow-x-hidden selection:bg-[#FF2E63] selection:text-white">
+    <div className="h-screen bg-[#2B1B2E] text-white flex flex-col font-sans overflow-hidden selection:bg-[#FF2E63] selection:text-white">
       {/* Primary Top Navbar */}
       <Navbar 
         onPrint={handleExportPDFClick} 
@@ -161,10 +175,10 @@ function AppContent() {
       />
 
       {/* Main Workspace split into Editor Form (Left) and A4 Live Preview (Right) */}
-      <main className="flex-1 flex overflow-hidden relative">
+      <main className="flex-1 flex overflow-hidden relative min-h-0">
         {/* Sliding Editor Panel Drawer */}
         <div 
-          className={`transition-all duration-300 ease-in-out border-r border-[#6B5B6E]/30 bg-[#F5EDDA] z-10 flex flex-col ${
+          className={`transition-all duration-300 ease-in-out border-r border-[#6B5B6E]/30 bg-[#F5EDDA] z-10 flex flex-col h-full overflow-y-auto ${
             isPanelOpen ? 'w-full md:w-[480px] lg:w-[540px] opacity-100' : 'w-0 opacity-0 overflow-hidden'
           }`}
         >
@@ -178,8 +192,8 @@ function AppContent() {
           />
         </div>
 
-        {/* Live A4 CV Preview Area */}
-        <div className="flex-1 bg-[#2B1B2E] overflow-y-auto p-4 md:p-8 flex justify-center items-start">
+        {/* Live A4 CV Preview Area (Independent scroll container) */}
+        <div className="flex-1 bg-[#2B1B2E] h-full overflow-y-auto p-4 md:p-8 flex justify-center items-start">
           <CVPreview cvData={cvData} />
         </div>
       </main>

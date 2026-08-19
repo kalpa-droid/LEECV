@@ -1648,7 +1648,7 @@ export default function EditorPanel({
               {['linda-feria', 'docentes', 'ejecutivos', 'jovenes'].map((cat) => {
                 const categoryPresets = themePresets.filter(p => p.category === cat);
                 const categoryTitle = cat === 'linda-feria'
-                  ? '🎪 Paleta Oficial — Linda Feria Salta'
+                  ? '🎪 Feria'
                   : cat === 'docentes' 
                   ? '🎓 Maestros, Docentes & Educadores' 
                   : cat === 'ejecutivos' 
@@ -1705,6 +1705,81 @@ export default function EditorPanel({
                   <option key={f.id} value={f.value}>{f.name}</option>
                 ))}
               </select>
+            </div>
+
+            {/* Dynamic Section Column Assigner */}
+            <div className="space-y-3 pt-3 border-t border-[#EFE2C9]">
+              <label className="block text-xs font-bold text-[#FF2E63] uppercase tracking-wide">
+                Ubicación Dinámica de Secciones (Fina vs Principal)
+              </label>
+              <p className="text-[11px] font-bold text-[#6B5B6E] leading-snug">
+                Elige en qué columna deseas mostrar cada sección de tu currículum:
+              </p>
+
+              <div className="space-y-2">
+                {[
+                  { id: 'personales', label: 'Datos Personales' },
+                  { id: 'formacion', label: 'Formación Académica' },
+                  { id: 'profesion', label: 'Títulos Profesionales' },
+                  { id: 'experiencia', label: 'Experiencia Laboral' },
+                  { id: 'cursos', label: 'Cursos & Capacitaciones' },
+                  { id: 'informatica', label: 'Informática & TICs' },
+                  { id: 'ecologia', label: 'Proyectos & Comunidad' }
+                ].map((sec) => {
+                  const leftList = cvData.layout?.columnAssignments?.left || ["personales", "formacion", "cursos"];
+                  const isLeft = leftList.includes(sec.id);
+
+                  const toggleColumn = (targetCol) => {
+                    setCvData(prev => {
+                      const curLeft = prev.layout?.columnAssignments?.left || ["personales", "formacion", "cursos"];
+                      const curRight = prev.layout?.columnAssignments?.right || ["profesion", "experiencia", "informatica", "ecologia", "certificados", "firma"];
+                      
+                      let newLeft = [...curLeft];
+                      let newRight = [...curRight];
+
+                      if (targetCol === 'left') {
+                        if (!newLeft.includes(sec.id)) newLeft.push(sec.id);
+                        newRight = newRight.filter(i => i !== sec.id);
+                      } else {
+                        if (!newRight.includes(sec.id)) newRight.push(sec.id);
+                        newLeft = newLeft.filter(i => i !== sec.id);
+                      }
+
+                      return {
+                        ...prev,
+                        layout: {
+                          ...prev.layout,
+                          columnAssignments: { left: newLeft, right: newRight }
+                        }
+                      };
+                    });
+                  };
+
+                  return (
+                    <div key={sec.id} className="flex items-center justify-between p-2 bg-white rounded-xl border border-[#EFE2C9] text-xs">
+                      <span className="font-extrabold text-[#2B1B2E]">{sec.label}</span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => toggleColumn('left')}
+                          className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
+                            isLeft ? 'bg-[#FF2E63] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          }`}
+                        >
+                          Col. Fina (Izq)
+                        </button>
+                        <button
+                          onClick={() => toggleColumn('right')}
+                          className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
+                            !isLeft ? 'bg-[#00A8A0] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          }`}
+                        >
+                          Col. Principal (Der)
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Custom Color Pickers */}

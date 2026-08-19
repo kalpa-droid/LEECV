@@ -1,10 +1,10 @@
 export const themePresets = [
-  // 0. LINDA FERIA SALTA (OFICIAL)
+  // 0. FERIA
   {
     id: "linda-feria-rosa",
     category: "linda-feria",
-    categoryLabel: "Linda Feria Salta (Oficial)",
-    name: "Rosa Feria (Linda Feria Salta)",
+    categoryLabel: "Feria",
+    name: "Rosa Feria",
     primaryColor: "#FF2E63",
     secondaryColor: "#2B1B2E",
     accentColor: "#FFC93C",
@@ -17,8 +17,8 @@ export const themePresets = [
   {
     id: "linda-feria-amarillo",
     category: "linda-feria",
-    categoryLabel: "Linda Feria Salta (Oficial)",
-    name: "Amarillo Sol (Linda Feria Salta)",
+    categoryLabel: "Feria",
+    name: "Amarillo Sol",
     primaryColor: "#F0AE00",
     secondaryColor: "#2B1B2E",
     accentColor: "#00A8A0",
@@ -31,8 +31,8 @@ export const themePresets = [
   {
     id: "linda-feria-turquesa",
     category: "linda-feria",
-    categoryLabel: "Linda Feria Salta (Oficial)",
-    name: "Turquesa Cardón (Linda Feria Salta)",
+    categoryLabel: "Feria",
+    name: "Turquesa Cardón",
     primaryColor: "#00A8A0",
     secondaryColor: "#00877F",
     accentColor: "#FF7A29",
@@ -45,8 +45,8 @@ export const themePresets = [
   {
     id: "linda-feria-violeta",
     category: "linda-feria",
-    categoryLabel: "Linda Feria Salta (Oficial)",
-    name: "Violeta Uva (Linda Feria Salta)",
+    categoryLabel: "Feria",
+    name: "Violeta Uva",
     primaryColor: "#8E44FF",
     secondaryColor: "#7126E0",
     accentColor: "#FFC93C",
@@ -59,8 +59,8 @@ export const themePresets = [
   {
     id: "linda-feria-naranja",
     category: "linda-feria",
-    categoryLabel: "Linda Feria Salta (Oficial)",
-    name: "Naranja Copla (Linda Feria Salta)",
+    categoryLabel: "Feria",
+    name: "Naranja Copla",
     primaryColor: "#FF7A29",
     secondaryColor: "#E85D04",
     accentColor: "#00A8A0",
@@ -73,8 +73,8 @@ export const themePresets = [
   {
     id: "linda-feria-celeste",
     category: "linda-feria",
-    categoryLabel: "Linda Feria Salta (Oficial)",
-    name: "Celeste Cielo (Linda Feria Salta)",
+    categoryLabel: "Feria",
+    name: "Celeste Cielo",
     primaryColor: "#2C98CE",
     secondaryColor: "#1e3a8a",
     accentColor: "#FF2E63",

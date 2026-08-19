@@ -83,17 +83,39 @@ export default function PersonalInfoSection({ onOpenPhotoCropper, registeredItem
         </div>
       </div>
 
-      <div>
-        <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-          Nombre Completo (Portada)
-        </label>
-        <input 
-          type="text"
-          value={cvData.personalInfo?.fullName || ''}
-          onChange={(e) => updatePersonalInfo('fullName', e.target.value)}
-          placeholder="Ej: MÓNICA DANIELA BURGOS"
-          className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-        />
+      {/* Título Honorífico / Abreviaturas y Nombre Completo Automático */}
+      <div className="grid grid-cols-3 gap-3">
+        <div>
+          <label className="block text-xs font-bold text-[#FF2E63] mb-1">
+            Abreviaturas / Título
+          </label>
+          <input 
+            type="text"
+            value={cvData.personalInfo?.titlePrefix || ''}
+            onChange={(e) => {
+              const prefix = e.target.value;
+              const given = cvData.personalInfo?.givenNames || '';
+              const sur = cvData.personalInfo?.surname || '';
+              const computed = `${prefix ? prefix + ' ' : ''}${given} ${sur}`.trim();
+              updatePersonalInfo('titlePrefix', prefix);
+              updatePersonalInfo('fullName', computed);
+            }}
+            placeholder="Ej: Lic. / Prof. / Dr. / MP"
+            className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+          />
+        </div>
+        <div className="col-span-2">
+          <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
+            Nombre Completo (Deducido Automáticamente)
+          </label>
+          <input 
+            type="text"
+            value={cvData.personalInfo?.fullName || ''}
+            onChange={(e) => updatePersonalInfo('fullName', e.target.value)}
+            placeholder="Ej: Lic. MÓNICA DANIELA BURGOS"
+            className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+          />
+        </div>
       </div>
 
       <div>
@@ -117,7 +139,14 @@ export default function PersonalInfoSection({ onOpenPhotoCropper, registeredItem
           <input 
             type="text"
             value={cvData.personalInfo?.surname || ''}
-            onChange={(e) => updatePersonalInfo('surname', e.target.value)}
+            onChange={(e) => {
+              const sur = e.target.value;
+              const prefix = cvData.personalInfo?.titlePrefix || '';
+              const given = cvData.personalInfo?.givenNames || '';
+              const computed = `${prefix ? prefix + ' ' : ''}${given} ${sur}`.trim();
+              updatePersonalInfo('surname', sur);
+              updatePersonalInfo('fullName', computed);
+            }}
             placeholder="Ej: BURGOS"
             className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
           />
@@ -129,7 +158,14 @@ export default function PersonalInfoSection({ onOpenPhotoCropper, registeredItem
           <input 
             type="text"
             value={cvData.personalInfo?.givenNames || ''}
-            onChange={(e) => updatePersonalInfo('givenNames', e.target.value)}
+            onChange={(e) => {
+              const given = e.target.value;
+              const prefix = cvData.personalInfo?.titlePrefix || '';
+              const sur = cvData.personalInfo?.surname || '';
+              const computed = `${prefix ? prefix + ' ' : ''}${given} ${sur}`.trim();
+              updatePersonalInfo('givenNames', given);
+              updatePersonalInfo('fullName', computed);
+            }}
             placeholder="Ej: Mónica Daniela"
             className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
           />
