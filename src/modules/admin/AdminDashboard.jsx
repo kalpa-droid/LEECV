@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { getCurrentProfile, logout } from '../../services/authService';
-import { listUsers, setPremium, getBasicStats } from '../../services/adminService';
+import { getCurrentProfile, logout } from '../auth/authService';
+import { listUsers, setPremium, getBasicStats } from './adminService';
 import AdminLogin from './AdminLogin';
 import { Users, Crown, LogOut, RefreshCw, CreditCard, HardDrive, ShieldCheck, CheckCircle2, MessageSquare, AlertCircle, Sparkles } from 'lucide-react';
 

@@ -26,7 +26,7 @@ import {
   Save,
   Calendar
 } from 'lucide-react';
-import { themePresets, fontOptions } from '../data/themePresets';
+import { themePresets, fontOptions } from '../../../data/themePresets';
 import { getSavedCVsList, loadCVById, deleteCVById, saveCV } from '../services/cvStorageService';
 import CertCropperModal from './CertCropperModal';
 

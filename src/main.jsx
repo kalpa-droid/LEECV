@@ -1,8 +1,9 @@
-import React, { StrictMode, Component } from 'react'
+import React, { StrictMode, Component, lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import App from './App.jsx'
-import AdminDashboard from './components/admin/AdminDashboard.jsx'
+
+const App = lazy(() => import('./App.jsx'));
+const AdminDashboard = lazy(() => import('./modules/admin/AdminDashboard.jsx'));
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -77,7 +78,13 @@ const RootComponent = isAdminRoute ? AdminDashboard : App;
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>
-      <RootComponent />
+      <Suspense fallback={
+        <div className="min-h-screen bg-[#2B1B2E] text-white flex items-center justify-center font-bold">
+          Cargando LEECV...
+        </div>
+      }>
+        <RootComponent />
+      </Suspense>
     </ErrorBoundary>
   </StrictMode>,
 )

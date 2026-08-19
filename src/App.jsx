@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from './components/Navbar';
-import SecondaryNavbar from './components/SecondaryNavbar';
-import EditorPanel from './components/EditorPanel';
-import CVPreview from './components/CVPreview';
-import PhotoCropperModal from './components/PhotoCropperModal';
-import SignatureModal from './components/SignatureModal';
-import WizardModal from './components/WizardModal';
-import SavedCVsModal from './components/SavedCVsModal';
-import CloudStatusModal from './components/CloudStatusModal';
-import PricingModal from './components/PricingModal';
-import { getCurrentProfile } from './services/authService';
+import Navbar from './modules/cv-builder/components/Navbar';
+import SecondaryNavbar from './modules/cv-builder/components/SecondaryNavbar';
+import EditorPanel from './modules/cv-builder/components/EditorPanel';
+import CVPreview from './modules/cv-builder/components/CVPreview';
+import PhotoCropperModal from './modules/cv-builder/components/PhotoCropperModal';
+import SignatureModal from './modules/cv-builder/components/SignatureModal';
+import WizardModal from './modules/cv-builder/components/WizardModal';
+import SavedCVsModal from './modules/cv-builder/components/SavedCVsModal';
+import CloudStatusModal from './modules/cv-builder/components/CloudStatusModal';
+import PricingModal from './modules/payments/PricingModal';
+import { getCurrentProfile } from './modules/auth/authService';
 import { initialCVData, standardExampleCVData, blankCVTemplate } from './data/initialCVData';
 import { exportCVToPDF } from './utils/pdfExporter';
 import { exportCVToJson, importCVFromJsonFile } from './utils/jsonImporterExporter';
+import { saveCV } from './modules/cv-builder/services/cvStorageService';
 
 export default function App() {
   const [currentProfile, setCurrentProfile] = useState(null);

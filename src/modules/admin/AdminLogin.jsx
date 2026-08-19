@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { login } from '../../services/authService';
+import { login } from '../auth/authService';
 import { Lock } from 'lucide-react';
 
 export default function AdminLogin({ onLogin }) {

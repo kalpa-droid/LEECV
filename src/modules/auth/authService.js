@@ -1,4 +1,4 @@
-import { supabase } from './cvStorageService'; // reusa el cliente que ya tenés inicializado
+import { supabase } from '../../lib/supabaseClient';
 
 /**
  * Inicia sesión con email y contraseña.

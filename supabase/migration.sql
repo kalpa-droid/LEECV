@@ -14,7 +14,18 @@ create table if not exists public.profiles (
   created_at timestamptz not null default now()
 );
 
--- 2. Cuando alguien se registra en Supabase Auth, se le crea el perfil solo
+-- 2. Función helper Security Definer para evitar recursión infinita en RLS
+create or replace function public.is_admin(user_id uuid)
+returns boolean as $$
+begin
+  return exists (
+    select 1 from public.profiles
+    where id = user_id and role = 'admin'
+  );
+end;
+$$ language plpgsql security definer;
+
+-- 3. Trigger para creación automática de perfiles
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
@@ -29,30 +40,20 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
--- 3. Seguridad a nivel de fila (RLS)
+-- 4. Seguridad a nivel de fila (RLS) anti-recursiva
 alter table public.profiles enable row level security;
 
--- Cada usuario puede ver y editar SOLO su propia fila
+drop policy if exists "usuario lee su propio perfil" on public.profiles;
 create policy "usuario lee su propio perfil"
   on public.profiles for select
-  using (auth.uid() = id);
+  using (auth.uid() = id or public.is_admin(auth.uid()));
 
+drop policy if exists "usuario actualiza su propio perfil" on public.profiles;
 create policy "usuario actualiza su propio perfil"
   on public.profiles for update
-  using (auth.uid() = id);
-
--- Los admin pueden leer y editar TODOS los perfiles
-create policy "admin lee todos los perfiles"
-  on public.profiles for select
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
-
-create policy "admin actualiza todos los perfiles"
-  on public.profiles for update
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+  using (auth.uid() = id or public.is_admin(auth.uid()));
 
 -- ============================================================
 -- IMPORTANTE: convertir tu propio usuario en admin
--- Después de registrarte una vez en la web con admin@leecv.app,
--- corré esto (una sola vez) reemplazando el email si hace falta:
--- ============================================================
 -- update public.profiles set role = 'admin' where email = 'admin@leecv.app';
+-- ============================================================
