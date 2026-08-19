@@ -2,14 +2,27 @@ import { supabase } from '../../shared/core/lib/supabaseClient';
 
 /**
  * Inicia sesión con email y contraseña.
- * (El alta de usuarios se hace con supabase.auth.signUp en tu formulario de registro,
- *  o directamente desde el Dashboard de Supabase para arrancar).
  */
 export async function login(email, password) {
   if (!supabase) throw new Error('Supabase no está configurado (faltan VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY)');
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
   return data.user;
+}
+
+/**
+ * Inicia sesión / registro con Google OAuth.
+ */
+export async function signInWithGoogle() {
+  if (!supabase) throw new Error('Supabase no está configurado');
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined
+    }
+  });
+  if (error) throw error;
+  return data;
 }
 
 export async function logout() {
@@ -33,7 +46,7 @@ export async function logout() {
   } catch {}
 }
 
-/** Devuelve el usuario logueado (o null) junto a su fila de la tabla profiles (rol, premium, etc). */
+/** Devuelve el usuario logueado (o null) junto a su fila de la tabla profiles (rol, plan, etc). */
 export async function getCurrentProfile() {
   if (!supabase) return null;
   const { data: { user } } = await supabase.auth.getUser();

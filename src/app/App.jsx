@@ -277,6 +277,9 @@ function AppContent() {
             isOpen={isPdfCheckoutOpen}
             onClose={() => setIsPdfCheckoutOpen(false)}
             onConfirm={triggerPdfGeneration}
+            currentProfile={currentProfile}
+            onOpenPricing={() => setIsPricingModalOpen(true)}
+            onExportJson={() => exportCVToJson(cvData)}
           />
         )}
 
