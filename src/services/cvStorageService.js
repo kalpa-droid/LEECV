@@ -152,7 +152,12 @@ export const saveCV = async (cvData) => {
     }
   }
 
-  return { ...summaryRecord, cv_data: fullCVObject };
+  return { 
+    success: true, 
+    record: summaryRecord, 
+    title: summaryRecord.title, 
+    cv_data: fullCVObject 
+  };
 };
 
 /**

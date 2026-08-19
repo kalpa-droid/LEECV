@@ -39,6 +39,11 @@ export async function exportCVToPDF(cvData) {
   const pdfWidth = 210;
   const pdfHeight = 297;
 
+  // Wait for Google Fonts to be fully loaded before capturing DOM
+  if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
+    try { await document.fonts.ready; } catch {}
+  }
+
   // Preload all image assets across all A4 pages to ensure complete rendering
   const allImages = Array.from(document.querySelectorAll('.a4-page-container img'));
   await Promise.all(

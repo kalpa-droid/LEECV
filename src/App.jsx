@@ -122,13 +122,17 @@ export default function App() {
   const handleSaveCV = async () => {
     setIsSaving(true);
     try {
-      const record = await saveCV(cvData);
-      if (record?.cv_data) {
-        setCvData(record.cv_data);
+      const res = await saveCV(cvData);
+      if (res?.success) {
+        if (res.cv_data) {
+          setCvData(res.cv_data);
+        }
+        setIsPanelOpen(true);
+        setActiveTab('guardados');
+        alert(`✅ CV guardado correctamente como:\n"${res.title || 'Tu CV'}"`);
+      } else {
+        alert('⚠️ El borrador no se pudo almacenar en la memoria del navegador, pero tus datos permanecen en pantalla.');
       }
-      setIsPanelOpen(true);
-      setActiveTab('guardados');
-      alert(`✅ CV guardado correctamente como:\n"${record.title}"`);
     } catch (err) {
       console.error(err);
       alert('Inconveniente al guardar CV. Tus datos ingresados se mantienen intactos en la pantalla.');
