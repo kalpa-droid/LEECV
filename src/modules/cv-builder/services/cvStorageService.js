@@ -1,5 +1,5 @@
-import { supabase, checkStorageStatus } from '../../../lib/supabaseClient';
-import { optimizeCVImagesToWebP } from '../../../utils/imageCompressor';
+import { supabase, checkStorageStatus } from '../../../shared/core/lib/supabaseClient';
+import { optimizeCVImagesToWebP } from '../../../shared/core/utils/imageCompressor';
 import { standardExampleCVData } from '../../../data/initialCVData';
 import { idbStorage } from './storageIndexedDB';
 

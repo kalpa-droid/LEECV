@@ -9,7 +9,7 @@ import {
   Download,
   Upload
 } from 'lucide-react';
-import { checkStorageStatus } from '../../../lib/supabaseClient';
+import { checkStorageStatus } from '../../../shared/core/lib/supabaseClient';
 
 export default function Navbar({ 
   onPrint, 

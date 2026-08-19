@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '../../shared/core/lib/supabaseClient';
 
 /** Lista todos los usuarios (requiere que quien llama sea role='admin', lo filtra la policy de RLS). */
 export async function listUsers() {

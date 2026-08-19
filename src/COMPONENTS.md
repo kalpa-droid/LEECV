@@ -1,17 +1,28 @@
 # 📘 Guía Viva de Arquitectura y Componentes - LEECV
 
-Este documento sirve como registro vivo de la estructura de componentes, flujo de estado y dependencias de la plataforma **LEECV**.
+Este documento sirve como registro vivo de la estructura de componentes, regla de aislamiento estricto (Strict Module Isolation) y dependencias de la plataforma **LEECV**.
 
 ---
 
-## 🏛️ Tabla de Componentes Principales
+## 🛡️ Regla de Oro: Strict Module Isolation
+
+> **REGLA ESTRUCTURAL**:  
+> **Un módulo NUNCA importa directamente de otro módulo.**  
+> Los módulos (`cv-builder`, `admin`, `auth`, `payments`, `pdf-designer`) solo pueden importar de `src/shared/core/` o de su propia carpeta interna.
+
+---
+
+## 🏛️ App Shell (`src/app/`) y Núcleo Compartido (`src/shared/core/`)
 
 | Componente | Ubicación | Qué hace | Consume de | Lo usan | Última Modificación |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `main.jsx` | `src/main.jsx` | Punto de entrada, ErrorBoundary y React.lazy de rutas | `React.lazy` | `index.html` | 2026-08-19 |
-| `App.jsx` | `src/App.jsx` | Shell principal de la aplicación / Enrutador de modales | `CVContext` | `main.jsx` | 2026-08-19 |
+| `main.jsx` | `src/app/main.jsx` | Punto de entrada, ErrorBoundary y React.lazy de rutas | `React.lazy` | `index.html` | 2026-08-19 |
+| `App.jsx` | `src/app/App.jsx` | Shell principal de la aplicación / Enrutador de modales | `CVContext` | `main.jsx` | 2026-08-19 |
 | `CVContext.jsx` | `src/context/CVContext.jsx` | Proveedor centralizado de estado de CV con acciones puras | `cvStorageService` | `App.jsx`, `EditorPanel`, `CVPreview` | 2026-08-19 |
-| `supabaseClient.js` | `src/lib/supabaseClient.js` | Cliente único inicializado de Supabase Auth/DB | `@supabase/supabase-js` | `authService`, `adminService`, `cvStorageService` | 2026-08-19 |
+| `pdfExporter.js` | `src/shared/core/pdf-engine/pdfExporter.js` | Motor genérico e independiente de exportación A4 PDF | `html2canvas-pro`, `jspdf` | `App.jsx`, `pdf-designer` (Futuro) | 2026-08-19 |
+| `supabaseClient.js` | `src/shared/core/lib/supabaseClient.js` | Cliente único inicializado de Supabase Auth/DB | `@supabase/supabase-js` | `authService`, `adminService`, `cvStorageService` | 2026-08-19 |
+| `jsonImporterExporter.js` | `src/shared/core/utils/jsonImporterExporter.js` | Importador y exportador de archivos .JSON de respaldo | Browser File API | `App.jsx`, `JsonDownloadModal` | 2026-08-19 |
+| `imageCompressor.js` | `src/shared/core/utils/imageCompressor.js` | Compresor de imágenes a WebP ultraliviano | Canvas HTML5 | `cvStorageService` | 2026-08-19 |
 
 ---
 
@@ -20,6 +31,7 @@ Este documento sirve como registro vivo de la estructura de componentes, flujo d
 | Componente | Ubicación | Qué hace | Consume de | Lo usan | Última Modificación |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `EditorPanel.jsx` | `src/modules/cv-builder/components/EditorPanel.jsx` | Panel lateral del formulario de edición del CV | `CVContext` | `App.jsx` | 2026-08-19 |
+| `PersonalInfoSection.jsx` | `src/modules/cv-builder/components/editor/PersonalInfoSection.jsx` | Formulario de datos personales y foto de perfil | `CVContext` | `EditorPanel` | 2026-08-19 |
 | `CVPreview.jsx` | `src/modules/cv-builder/components/CVPreview.jsx` | Vista previa en vivo en formato A4 nativo | `CVContext` | `App.jsx` | 2026-08-19 |
 | `Navbar.jsx` | `src/modules/cv-builder/components/Navbar.jsx` | Barra superior principal de acciones y exportación | `CVContext` | `App.jsx` | 2026-08-19 |
 | `SecondaryNavbar.jsx` | `src/modules/cv-builder/components/SecondaryNavbar.jsx` | Barra de pestañas por categoría de formulario | Props (`activeTab`) | `App.jsx` | 2026-08-19 |

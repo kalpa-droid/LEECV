@@ -1,9 +1,9 @@
 import React, { StrictMode, Component, lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
-import './index.css'
+import '../index.css'
 
 const App = lazy(() => import('./App.jsx'));
-const AdminDashboard = lazy(() => import('./modules/admin/AdminDashboard.jsx'));
+const AdminDashboard = lazy(() => import('../modules/admin/AdminDashboard.jsx'));
 
 class ErrorBoundary extends Component {
   constructor(props) {

@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '../../shared/core/lib/supabaseClient';
 
 /**
  * Inicia sesión con email y contraseña.

@@ -1,5 +1,5 @@
 import React from 'react';
-import { exportCVToJson } from '../../../../utils/jsonImporterExporter';
+import { exportCVToJson } from '../../../../shared/core/utils/jsonImporterExporter';
 
 export default function JsonDownloadModal({ isOpen, onClose, cvData }) {
   if (!isOpen) return null;

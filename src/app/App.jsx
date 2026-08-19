@@ -1,27 +1,27 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import Navbar from './modules/cv-builder/components/Navbar';
-import SecondaryNavbar from './modules/cv-builder/components/SecondaryNavbar';
-import EditorPanel from './modules/cv-builder/components/EditorPanel';
-import CVPreview from './modules/cv-builder/components/CVPreview';
+import Navbar from '../modules/cv-builder/components/Navbar';
+import SecondaryNavbar from '../modules/cv-builder/components/SecondaryNavbar';
+import EditorPanel from '../modules/cv-builder/components/EditorPanel';
+import CVPreview from '../modules/cv-builder/components/CVPreview';
 
-import { getCurrentProfile } from './modules/auth/authService';
-import { initialCVData, standardExampleCVData, blankCVTemplate } from './data/initialCVData';
-import { exportCVToPDF } from './utils/pdfExporter';
-import { exportCVToJson, importCVFromJsonFile } from './utils/jsonImporterExporter';
-import { saveCV } from './modules/cv-builder/services/cvStorageService';
+import { getCurrentProfile } from '../modules/auth/authService';
+import { initialCVData, standardExampleCVData, blankCVTemplate } from '../data/initialCVData';
+import { exportCVToPDF } from '../shared/core/pdf-engine/pdfExporter';
+import { exportCVToJson, importCVFromJsonFile } from '../shared/core/utils/jsonImporterExporter';
+import { saveCV } from '../modules/cv-builder/services/cvStorageService';
 
 // Lazy-loaded Modals for Code-Splitting
-const PhotoCropperModal = lazy(() => import('./modules/cv-builder/components/PhotoCropperModal'));
-const SignatureModal = lazy(() => import('./modules/cv-builder/components/SignatureModal'));
-const WizardModal = lazy(() => import('./modules/cv-builder/components/WizardModal'));
-const SavedCVsModal = lazy(() => import('./modules/cv-builder/components/SavedCVsModal'));
-const CloudStatusModal = lazy(() => import('./modules/cv-builder/components/CloudStatusModal'));
-const PricingModal = lazy(() => import('./modules/payments/PricingModal'));
-const PdfCheckoutModal = lazy(() => import('./modules/cv-builder/components/modals/PdfCheckoutModal'));
-const JsonDownloadModal = lazy(() => import('./modules/cv-builder/components/modals/JsonDownloadModal'));
-const PdfProgressModal = lazy(() => import('./modules/cv-builder/components/modals/PdfProgressModal'));
+const PhotoCropperModal = lazy(() => import('../modules/cv-builder/components/PhotoCropperModal'));
+const SignatureModal = lazy(() => import('../modules/cv-builder/components/SignatureModal'));
+const WizardModal = lazy(() => import('../modules/cv-builder/components/WizardModal'));
+const SavedCVsModal = lazy(() => import('../modules/cv-builder/components/SavedCVsModal'));
+const CloudStatusModal = lazy(() => import('../modules/cv-builder/components/CloudStatusModal'));
+const PricingModal = lazy(() => import('../modules/payments/PricingModal'));
+const PdfCheckoutModal = lazy(() => import('../modules/cv-builder/components/modals/PdfCheckoutModal'));
+const JsonDownloadModal = lazy(() => import('../modules/cv-builder/components/modals/JsonDownloadModal'));
+const PdfProgressModal = lazy(() => import('../modules/cv-builder/components/modals/PdfProgressModal'));
 
-import { CVProvider, useCVContext } from './context/CVContext';
+import { CVProvider, useCVContext } from '../context/CVContext';
 
 function AppContent() {
   const { cvData, setCvData, resetToBlankCV, loadCVData, saveCV } = useCVContext();
