@@ -133,26 +133,26 @@ export default function Navbar({
             <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
           </button>
 
-          {/* EXPORTAR JSON v2 */}
+          {/* DESCARGAR ARCHIVO DE RESPALDO */}
           {onExportJson && (
             <button
               onClick={onExportJson}
-              className="flex items-center gap-1 px-2.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-white bg-slate-700 hover:bg-slate-800 border border-slate-600 transition shadow-sm"
-              title="Exportar archivo JSON portátil (v2)"
+              className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-white bg-slate-700 hover:bg-slate-800 border border-slate-600 transition shadow-sm"
+              title="Descargar copia de respaldo en tu equipo para abrirlo luego desde el botón Abrir"
             >
               <Download className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-              <span className="hidden md:inline">JSON</span>
+              <span>Descargar</span>
             </button>
           )}
 
-          {/* IMPRIMIR / DESCARGAR PDF */}
+          {/* EXPORTAR PDF */}
           <button
             onClick={onPrint}
             className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-[#FFC93C] hover:bg-[#F0AE00] text-[#2B1B2E] font-black text-xs shadow-lg shadow-[#FFC93C]/30 transition transform active:scale-95 ml-1 border border-[#F0AE00]"
-            title="Descargar PDF A4 Ultra HD"
+            title="Generar y descargar documento PDF listo para imprimir o enviar"
           >
             <Printer className="w-3.5 h-3.5 flex-shrink-0 text-[#2B1B2E]" />
-            <span>Imprimir</span>
+            <span>Exportar PDF</span>
           </button>
         </div>
       </div>

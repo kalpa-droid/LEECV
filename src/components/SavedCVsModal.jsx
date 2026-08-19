@@ -16,7 +16,8 @@ import { getSavedCVsList, loadCVById, deleteCVById, checkStorageStatus } from '.
 export default function SavedCVsModal({ 
   isOpen, 
   onClose, 
-  onSelectCV 
+  onSelectCV,
+  onImportJson 
 }) {
   const [savedList, setSavedList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,8 +69,8 @@ export default function SavedCVsModal({
               <FolderOpen className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-black text-white">Currículums Guardados</h3>
-              <p className="text-xs text-slate-400">Abre y administra tus CVs almacenados en la app o en la nube</p>
+              <h3 className="text-base font-black text-white">Mis Currículums Guardados</h3>
+              <p className="text-xs text-slate-400">Selecciona un archivo guardado o carga una copia de respaldo (.json)</p>
             </div>
           </div>
 
@@ -79,6 +80,28 @@ export default function SavedCVsModal({
           >
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* Action Header: Cargar archivo de respaldo */}
+        <div className="p-4 bg-purple-950/40 border-b border-purple-900/40 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-xs font-semibold text-purple-200">
+            <Download className="w-4 h-4 text-purple-400 flex-shrink-0" />
+            <span>¿Tienes una copia de respaldo guardada en tu computadora o celular?</span>
+          </div>
+          <label className="px-3.5 py-2 bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-xs rounded-xl shadow-lg cursor-pointer transition flex items-center gap-1.5 whitespace-nowrap">
+            <span>📥 Cargar Archivo (.json)</span>
+            <input 
+              type="file" 
+              accept=".json" 
+              className="hidden" 
+              onChange={async (e) => {
+                if (onImportJson) {
+                  await onImportJson(e);
+                  onClose();
+                }
+              }} 
+            />
+          </label>
         </div>
 
         {/* Body List */}

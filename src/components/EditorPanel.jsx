@@ -352,15 +352,15 @@ export default function EditorPanel({
 
         {/* Banner de Muestra (Solo Lectura) */}
         {cvData?.id === 'cv_ejemplo_estandar' && (
-          <div className="p-3 bg-[#FFF1C2] border-2 border-[#FFC93C] rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-2 shadow-md">
-            <div className="flex items-center gap-2">
-              <span className="text-xl">👁️</span>
+          <div className="p-3.5 bg-[#FFF1C2] border-2 border-[#FFC93C] rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-2 shadow-md">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl flex-shrink-0">📌</span>
               <div>
                 <h4 className="text-xs font-black text-[#2B1B2E] uppercase tracking-wide">
-                  VISTA DE MUESTRA (SÓLO LECTURA)
+                  VISTA DE MUESTRA DE EJEMPLO (SÓLO LECTURA)
                 </h4>
-                <p className="text-[11px] font-bold text-[#6B5B6E]">
-                  Este currículum de Valeria Medina es una muestra visual de referencia. Al escribir se creará automáticamente tu borrador.
+                <p className="text-[11px] font-bold text-[#4A3B4E] leading-relaxed">
+                  Este currículum de Valeria Medina es un modelo de demostración y <strong>no se puede modificar directamente</strong>. Para comenzar a cargar tus propios datos académicos y profesionales, haz clic en el botón <strong>"NUEVO"</strong> en la barra superior.
                 </p>
               </div>
             </div>

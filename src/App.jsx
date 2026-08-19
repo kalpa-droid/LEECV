@@ -77,17 +77,8 @@ export default function App() {
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [isSavedCVsOpen, setIsSavedCVsOpen] = useState(false);
   const [isCloudModalOpen, setIsCloudModalOpen] = useState(false);
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-
-  // Autosave to localStorage on state change
-  useEffect(() => {
-    try {
-      localStorage.setItem('cv_premium_data', JSON.stringify(cvData));
-    } catch (err) {
-      console.warn('Aviso: Memoria del navegador llena para el borrador activo:', err);
-    }
-  }, [cvData]);
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState(0);
 
   // Direct 1-Click Bulletproof Page-by-Page A4 PDF Generator
   const handlePrint = async () => {
@@ -95,14 +86,26 @@ export default function App() {
       try { await saveCV(cvData); } catch (e) { console.warn('Auto-save before print warning:', e); }
     }
     setIsGeneratingPDF(true);
+    setPdfProgress(20);
+
+    const interval = setInterval(() => {
+      setPdfProgress((prev) => (prev < 90 ? prev + 15 : prev));
+    }, 400);
 
     try {
       await exportCVToPDF(cvData);
+      setPdfProgress(100);
+      setTimeout(() => {
+        setIsGeneratingPDF(false);
+        setPdfProgress(0);
+      }, 800);
     } catch (err) {
       console.error('Error generando PDF nativo:', err);
       alert('Hubo un inconveniente generando el archivo PDF: ' + (err.message || 'Intente nuevamente'));
-    } finally {
       setIsGeneratingPDF(false);
+      setPdfProgress(0);
+    } finally {
+      clearInterval(interval);
     }
   };
 
@@ -133,9 +136,9 @@ export default function App() {
         }
         setIsPanelOpen(true);
         setActiveTab('guardados');
-        alert(`✅ CV guardado correctamente como:\n"${res.title || 'Tu CV'}"`);
+        alert(`✅ Tu currículum ha sido guardado correctamente.\n\nQuedó almacenado de forma segura en la memoria de la aplicación y sincronizado si tienes conexión a internet.`);
       } else {
-        alert('⚠️ El borrador no se pudo almacenar en la memoria del navegador, pero tus datos permanecen en pantalla.');
+        alert('⚠️ Tu borrador no se pudo almacenar en la memoria del navegador, pero tus datos permanecen intactos en pantalla.');
       }
     } catch (err) {
       console.error(err);
@@ -180,8 +183,9 @@ export default function App() {
     }));
   };
 
-  const handleExportJson = () => {
+  const handleConfirmDownloadJson = () => {
     exportCVToJson(cvData);
+    setIsDownloadModalOpen(false);
   };
 
   const handleImportJsonFile = async (e) => {
@@ -191,10 +195,10 @@ export default function App() {
       const importedData = await importCVFromJsonFile(file);
       if (importedData && typeof importedData === 'object') {
         setCvData(importedData);
-        alert('✅ Currículum cargado con éxito desde archivo JSON (Schema v2).');
+        alert('✅ Tu currículum se ha cargado con éxito desde el archivo de respaldo.');
       }
     } catch (err) {
-      alert('❌ Error al importar JSON: ' + err.message);
+      alert('❌ Error al leer el archivo de respaldo: ' + err.message);
     }
   };
 
@@ -208,7 +212,7 @@ export default function App() {
         onOpenSavedCVs={handleOpenSavedCVs}
         onSaveCV={handleSaveCV}
         onOpenCloudModal={() => setIsCloudModalOpen(true)}
-        onExportJson={handleExportJson}
+        onExportJson={() => setIsDownloadModalOpen(true)}
         onImportJson={handleImportJsonFile}
         isSaving={isSaving}
       />
@@ -274,6 +278,7 @@ export default function App() {
         isOpen={isSavedCVsOpen}
         onClose={() => setIsSavedCVsOpen(false)}
         onSelectCV={(loadedCV) => setCvData(loadedCV)}
+        onImportJson={handleImportJsonFile}
       />
 
       <CloudStatusModal
@@ -283,13 +288,73 @@ export default function App() {
         isSaving={isSaving}
       />
 
-      {/* PDF Generation Toast Indicator */}
+      {/* Modal Explicativo para Descargar Respaldo JSON */}
+      {isDownloadModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in no-print">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 text-white space-y-4 shadow-2xl">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center text-2xl">
+              📥
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-white">Descargar Archivo de Respaldo</h3>
+              <p className="text-xs text-slate-300 leading-relaxed mt-2">
+                Se guardará en tu dispositivo un archivo de copia de respaldo de tu currículum (formato <code>.json</code>).
+              </p>
+              <p className="text-xs text-slate-400 leading-relaxed mt-2 p-3 bg-slate-950/60 rounded-xl border border-slate-800">
+                💡 <strong>¿Cómo usarlo después?</strong> Si usas otra computadora o celular, simplemente presiona el botón <strong>"Abrir"</strong> en el menú superior y elige <strong>"Cargar Archivo (.json)"</strong> para continuar donde quedaste.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                onClick={() => setIsDownloadModalOpen(false)}
+                className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-extrabold text-xs rounded-xl transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmDownloadJson}
+                className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-lg transition"
+              >
+                Confirmar y Descargar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Unificada Ventana Emergente de Progreso para Exportar PDF */}
       {isGeneratingPDF && (
-        <div className="fixed bottom-6 right-6 z-50 bg-slate-900/95 backdrop-blur text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3.5 border border-purple-500/50 animate-pulse no-print">
-          <div className="w-6 h-6 border-3 border-purple-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
-          <div>
-            <p className="text-xs font-black text-purple-300">Generando PDF A4 Nativo Directo...</p>
-            <p className="text-[10px] text-slate-300">Descargando archivo idéntico a la vista previa sin cuadro de diálogo</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in no-print">
+          <div className="bg-slate-900 border border-purple-500/40 rounded-3xl max-w-md w-full p-6 text-white space-y-5 shadow-2xl text-center">
+            <div className="w-14 h-14 rounded-full bg-purple-600/20 border border-purple-500/50 text-purple-300 flex items-center justify-center mx-auto text-2xl animate-pulse">
+              📄
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-lg font-black text-purple-200">Generando tu Documento PDF</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Estamos armando tus páginas A4 con todas tus fotos, títulos y certificados en alta resolución. Por favor espera un instante...
+              </p>
+            </div>
+
+            {/* Barra de Progreso Elegante */}
+            <div className="space-y-1.5">
+              <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-700">
+                <div 
+                  className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-amber-400 rounded-full transition-all duration-300"
+                  style={{ width: `${pdfProgress}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-[11px] font-extrabold text-purple-300">
+                <span>Procesando archivo...</span>
+                <span>{pdfProgress}%</span>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-slate-400 bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+              💡 El documento PDF se descargará automáticamente en tu carpeta de descargas cuando finalice la barra.
+            </p>
           </div>
         </div>
       )}
