@@ -48,8 +48,8 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
       profesion: 'cv-section-profesion',
       experiencia: 'cv-section-experiencia',
       cursos: 'cv-section-cursos',
-      informatica: 'cv-section-personales',
-      ecologia: 'cv-section-experiencia',
+      informatica: 'cv-section-informatica',
+      ecologia: 'cv-section-ecologia',
       certificados: 'cv-section-certificados',
       firma: 'cv-section-firma',
       diseno: 'cv-section-personales'
@@ -201,8 +201,34 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
     return () => window.removeEventListener('resize', handleResize);
   }, [autoFitMobile]);
 
-  // Section Visibility Helper
+  // Section Visibility & Column Assignment Helpers
   const isVis = (key) => cvData?.sectionVisibility?.[key] !== false;
+
+  const getSectionColumn = (sectionKey) => {
+    const directSetting = cvData?.layout?.columnAssignments?.[sectionKey];
+    if (typeof directSetting === 'string') {
+      return directSetting;
+    }
+    const leftList = cvData?.layout?.columnAssignments?.left || ["personales", "formacion", "cursos", "informatica"];
+    const rightList = cvData?.layout?.columnAssignments?.right || ["profesion", "experiencia", "ecologia", "certificados", "firma"];
+
+    const inLeft = leftList.includes(sectionKey);
+    const inRight = rightList.includes(sectionKey);
+
+    if (inLeft && inRight) return 'ambas';
+    if (inLeft) return 'secundaria';
+    return 'primaria';
+  };
+
+  const showInSecundaria = (secKey) => {
+    const col = getSectionColumn(secKey);
+    return (col === 'secundaria' || col === 'ambas') && isVis(secKey);
+  };
+
+  const showInPrimaria = (secKey) => {
+    const col = getSectionColumn(secKey);
+    return (col === 'primaria' || col === 'ambas') && isVis(secKey);
+  };
 
   // Chunk certificates: ALWAYS 1 per A4 page
   const certPages = isVis('certificados') ? certificatesScanned.map(cert => [cert]) : [];
@@ -494,8 +520,8 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
               </ul>
             </div>
 
-            {informatics && informatics.length > 0 && (
-              <div>
+            {informatics && informatics.length > 0 && showInSecundaria('informatica') && (
+              <div id="cv-section-informatica">
                 <h3 className="text-xs font-bold uppercase tracking-wider mb-2 border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
                   <Laptop className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> INFORMÁTICA & TICs
                 </h3>
@@ -720,8 +746,8 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
               </div>
 
               <div className="p-4 space-y-5 flex-1 relative">
-                {expPageIdx === 0 ? (
-                  <div>
+                {expPageIdx === 0 && showInSecundaria('ecologia') ? (
+                  <div id="cv-section-ecologia">
                     <h3 className="text-xs font-bold uppercase tracking-wider mb-3 border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
                       <Leaf className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> PROYECTOS & COMUNIDAD
                     </h3>

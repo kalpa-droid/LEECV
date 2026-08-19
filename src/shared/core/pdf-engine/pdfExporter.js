@@ -7,9 +7,39 @@ const getMonthNameEs = (date = new Date()) => {
 };
 
 /**
- * Ultra HD High-Definition Native A4 PDF Generator
- * Format name: `CV - [Nombre Persona] - [Mes] - [Año].pdf`
- * Uses 300 DPI high resolution rendering (scale: 3.2) for crystal clear, sharp vector-like text.
+ * Extracts visible text nodes with exact relative mm coordinates for ATS overlays
+ */
+function extractTextNodesForATS(containerElement) {
+  if (!containerElement) return [];
+  const textNodes = [];
+  const containerRect = containerElement.getBoundingClientRect();
+  if (!containerRect || containerRect.width === 0) return [];
+
+  const walker = document.createTreeWalker(containerElement, NodeFilter.SHOW_TEXT, null, false);
+  let node;
+  while ((node = walker.nextNode())) {
+    const text = node.textContent?.trim();
+    if (text && text.length > 0) {
+      const parent = node.parentElement;
+      if (parent && parent.offsetParent !== null) {
+        const rect = parent.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          const x = ((rect.left - containerRect.left) / containerRect.width) * 210;
+          const y = ((rect.top - containerRect.top) / containerRect.height) * 297 + 3; // +3mm baseline alignment
+          const computedFont = window.getComputedStyle(parent).fontSize;
+          const fontSizePt = Math.max(6, Math.min(24, (parseFloat(computedFont) || 12) * 0.75));
+          textNodes.push({ text, x, y, fontSize: fontSizePt });
+        }
+      }
+    }
+  }
+  return textNodes;
+}
+
+/**
+ * Ultra HD Hybrid Native A4 PDF Generator
+ * Combines 300 DPI High-Res visual rendering with an invisible vector text layer.
+ * Result: 100% Visual Fidelity + 100% Selectable, Searchable & ATS-Compatible Text.
  */
 export async function exportCVToPDF(cvData) {
   const pageElements = Array.from(document.querySelectorAll('.a4-page-container'));
@@ -18,7 +48,6 @@ export async function exportCVToPDF(cvData) {
     throw new Error('No se encontraron hojas A4 en la vista previa.');
   }
 
-  // Exact Requested Naming Convention: CV - [Nombre] - [Mes] - [Año].pdf
   const candidateName = (
     cvData?.personalInfo?.fullName || 
     `${cvData?.personalInfo?.surname || ''} ${cvData?.personalInfo?.givenNames || ''}`.trim() || 
@@ -39,12 +68,10 @@ export async function exportCVToPDF(cvData) {
   const pdfWidth = 210;
   const pdfHeight = 297;
 
-  // Wait for Google Fonts to be fully loaded before capturing DOM
   if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
     try { await document.fonts.ready; } catch {}
   }
 
-  // Preload all image assets across all A4 pages to ensure complete rendering
   const allImages = Array.from(document.querySelectorAll('.a4-page-container img'));
   await Promise.all(
     allImages.map(img => {
@@ -59,7 +86,10 @@ export async function exportCVToPDF(cvData) {
   for (let i = 0; i < pageElements.length; i++) {
     const pageEl = pageElements[i];
 
-    // Ultra HD Resolution Pass (scale 3 = ~300 DPI for sharp vector-like text & sharp photos)
+    // Extract text nodes before canvas capture for exact ATS coordinates
+    const atsTextNodes = extractTextNodesForATS(pageEl);
+
+    // Ultra HD 300 DPI Visual Capture
     const canvas = await html2canvas(pageEl, {
       scale: 3,
       useCORS: true,
@@ -69,7 +99,6 @@ export async function exportCVToPDF(cvData) {
       imageTimeout: 15000,
       windowWidth: 794,
       onclone: (clonedDoc) => {
-        // Enforce font-smoothing and exact font metrics to prevent letter overlaps
         clonedDoc.body.style.fontSmoothing = 'antialiased';
         clonedDoc.body.style.webkitFontSmoothing = 'antialiased';
 
@@ -83,8 +112,8 @@ export async function exportCVToPDF(cvData) {
         clonedPages.forEach(p => {
           p.style.transform = 'none';
           p.style.boxShadow = 'none';
-          p.style.width = '794px'; // 210mm at 96 DPI
-          p.style.minHeight = '1123px'; // 297mm at 96 DPI
+          p.style.width = '794px';
+          p.style.minHeight = '1123px';
           p.style.height = '1123px';
         });
 
@@ -103,7 +132,19 @@ export async function exportCVToPDF(cvData) {
     }
 
     pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+
+    // Superpose ATS Invisible Vector Text Overlay
+    try {
+      atsTextNodes.forEach(({ text, x, y, fontSize }) => {
+        pdf.setFontSize(fontSize);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text(text, x, y, { renderingMode: 'invisible' });
+      });
+    } catch (err) {
+      console.warn('Aviso: Capa ATS parcial en página ' + (i + 1), err);
+    }
   }
 
   pdf.save(fileName);
+  return true;
 }

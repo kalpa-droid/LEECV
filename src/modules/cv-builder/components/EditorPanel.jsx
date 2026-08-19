@@ -1710,7 +1710,7 @@ export default function EditorPanel({
             {/* Dynamic Section Column Assigner */}
             <div className="space-y-3 pt-3 border-t border-[#EFE2C9]">
               <label className="block text-xs font-bold text-[#FF2E63] uppercase tracking-wide">
-                Ubicación Dinámica de Secciones (Fina vs Principal)
+                Ubicación Dinámica de Secciones (Secundaria vs Primaria vs Ambas)
               </label>
               <p className="text-[11px] font-bold text-[#6B5B6E] leading-snug">
                 Elige en qué columna deseas mostrar cada sección de tu currículum:
@@ -1726,33 +1726,31 @@ export default function EditorPanel({
                   { id: 'informatica', label: 'Informática & TICs' },
                   { id: 'ecologia', label: 'Proyectos & Comunidad' }
                 ].map((sec) => {
-                  const leftList = cvData.layout?.columnAssignments?.left || ["personales", "formacion", "cursos"];
-                  const isLeft = leftList.includes(sec.id);
+                  const assignments = cvData.layout?.columnAssignments || {};
+                  let currentVal = 'primaria';
+                  if (typeof assignments[sec.id] === 'string') {
+                    currentVal = assignments[sec.id];
+                  } else {
+                    const leftList = assignments.left || ["personales", "formacion", "cursos", "informatica"];
+                    const rightList = assignments.right || ["profesion", "experiencia", "ecologia", "certificados", "firma"];
+                    const inLeft = leftList.includes(sec.id);
+                    const inRight = rightList.includes(sec.id);
+                    if (inLeft && inRight) currentVal = 'ambas';
+                    else if (inLeft) currentVal = 'secundaria';
+                    else currentVal = 'primaria';
+                  }
 
-                  const toggleColumn = (targetCol) => {
-                    setCvData(prev => {
-                      const curLeft = prev.layout?.columnAssignments?.left || ["personales", "formacion", "cursos"];
-                      const curRight = prev.layout?.columnAssignments?.right || ["profesion", "experiencia", "informatica", "ecologia", "certificados", "firma"];
-                      
-                      let newLeft = [...curLeft];
-                      let newRight = [...curRight];
-
-                      if (targetCol === 'left') {
-                        if (!newLeft.includes(sec.id)) newLeft.push(sec.id);
-                        newRight = newRight.filter(i => i !== sec.id);
-                      } else {
-                        if (!newRight.includes(sec.id)) newRight.push(sec.id);
-                        newLeft = newLeft.filter(i => i !== sec.id);
-                      }
-
-                      return {
-                        ...prev,
-                        layout: {
-                          ...prev.layout,
-                          columnAssignments: { left: newLeft, right: newRight }
+                  const setColumn = (targetVal) => {
+                    setCvData(prev => ({
+                      ...prev,
+                      layout: {
+                        ...prev.layout,
+                        columnAssignments: {
+                          ...(prev.layout?.columnAssignments || {}),
+                          [sec.id]: targetVal
                         }
-                      };
-                    });
+                      }
+                    }));
                   };
 
                   return (
@@ -1760,20 +1758,31 @@ export default function EditorPanel({
                       <span className="font-extrabold text-[#2B1B2E]">{sec.label}</span>
                       <div className="flex items-center gap-1">
                         <button
-                          onClick={() => toggleColumn('left')}
+                          onClick={() => setColumn('secundaria')}
                           className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
-                            isLeft ? 'bg-[#FF2E63] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            currentVal === 'secundaria' ? 'bg-[#FF2E63] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                           }`}
+                          title="Ubicar en columna izquierda (fina)"
                         >
-                          Col. Fina (Izq)
+                          Secundaria
                         </button>
                         <button
-                          onClick={() => toggleColumn('right')}
+                          onClick={() => setColumn('primaria')}
                           className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
-                            !isLeft ? 'bg-[#00A8A0] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            currentVal === 'primaria' ? 'bg-[#00A8A0] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                           }`}
+                          title="Ubicar en columna derecha (principal)"
                         >
-                          Col. Principal (Der)
+                          Primaria
+                        </button>
+                        <button
+                          onClick={() => setColumn('ambas')}
+                          className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
+                            currentVal === 'ambas' ? 'bg-[#8E44FF] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          }`}
+                          title="Mostrar la sección en ambas columnas"
+                        >
+                          Ambas
                         </button>
                       </div>
                     </div>
