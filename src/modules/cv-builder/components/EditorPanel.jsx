@@ -19,6 +19,7 @@ import {
   Sparkles,
   Info,
   Layout,
+  Columns3,
   Eye,
   EyeOff,
   Layers,
@@ -1877,10 +1878,25 @@ export default function EditorPanel({
                     });
                   };
 
+                  const secPos = secOrder.indexOf(sec.id) + 1;
+                  const primPos = primOrder.indexOf(sec.id) + 1;
+
                   return (
                     <div key={sec.id} className="p-2 bg-white rounded-xl border border-[#EFE2C9] text-xs space-y-1.5 shadow-sm">
                       <div className="flex items-center justify-between">
-                        <span className="font-extrabold text-[#2B1B2E]">{sec.label}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-extrabold text-[#2B1B2E]">{sec.label}</span>
+                          {secPos > 0 && (currentVal === 'secundaria' || currentVal === 'ambas') && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-rose-100 text-rose-800 font-black">
+                              Sec #{secPos}
+                            </span>
+                          )}
+                          {primPos > 0 && (currentVal === 'primaria' || currentVal === 'ambas') && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-teal-100 text-teal-800 font-black">
+                              Prim #{primPos}
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => setColumn('secundaria')}

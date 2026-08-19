@@ -26,41 +26,58 @@ export const DEFAULT_PRESET_CVS = [
  * Get all saved CVs from LocalStorage / IndexedDB / Cloud
  */
 export const getSavedCVsList = async () => {
-  let localList = [];
+  const map = new Map();
+
+  // 1. Read Local Storage summary list
   try {
     const stored = localStorage.getItem(SAVED_CVS_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      // Exclude sample preset from saved modal list as requested
-      localList = (Array.isArray(parsed) ? parsed : []).filter(item => item.id !== 'cv_ejemplo_estandar').map(item => ({
-        id: item.id,
-        title: item.title,
-        candidate_name: item.candidate_name,
-        dni: item.dni,
-        updated_at: item.updated_at
-      }));
+      if (Array.isArray(parsed)) {
+        parsed.forEach(item => {
+          if (item && item.id && item.id !== 'cv_ejemplo_estandar') {
+            map.set(item.id, {
+              id: item.id,
+              title: item.title,
+              candidate_name: item.candidate_name,
+              dni: item.dni,
+              updated_at: item.updated_at
+            });
+          }
+        });
+      }
     }
   } catch (err) {
-    console.error('Error cargando CVs locales:', err);
-    localList = [];
+    console.error('Error leyendo LocalStorage:', err);
   }
 
+  // 2. Read Cloud Supabase CVs if available
   if (supabase) {
     try {
-      const { data, error } = await supabase
-        .from('cvs')
-        .select('id, title, candidate_name, dni, updated_at')
-        .order('updated_at', { ascending: false });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data, error } = await supabase
+          .from('cvs')
+          .select('id, title, candidate_name, dni, updated_at')
+          .eq('user_id', user.id)
+          .order('updated_at', { ascending: false });
 
-      if (!error && Array.isArray(data) && data.length > 0) {
-        return data.filter(item => item.id !== 'cv_ejemplo_estandar');
+        if (!error && Array.isArray(data)) {
+          data.forEach(item => {
+            if (item && item.id && item.id !== 'cv_ejemplo_estandar') {
+              map.set(item.id, item);
+            }
+          });
+        }
       }
     } catch (err) {
-      console.warn('Supabase no disponible, usando almacenamiento IndexedDB local:', err);
+      console.warn('Advertencia leyendo Supabase CVs:', err);
     }
   }
 
-  return localList;
+  const result = Array.from(map.values());
+  result.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+  return result;
 };
 
 /**
