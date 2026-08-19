@@ -1728,23 +1728,25 @@ export default function EditorPanel({
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 10: CVS GUARDADOS */}
+        {/* TAB 10: CVS GUARDADOS / ABRIR */}
         {/* ========================================================================= */}
         {activeTab === 'guardados' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b pb-2 border-[#EFE2C9]">
               <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] flex items-center gap-1.5">
-                <FolderOpen className="w-4 h-4 text-[#00A8A0]" /> CVs Guardados en Memoria / Nube
+                <FolderOpen className="w-4 h-4 text-[#00A8A0]" /> Abrir Mis Currículums Guardados
               </h3>
 
-              <button
-                onClick={handleSaveFromPanel}
-                disabled={isSavingFromPanel}
-                className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1"
-              >
-                <Save className="w-3.5 h-3.5" />
-                <span>{isSavingFromPanel ? 'Guardando...' : 'Guardar Actual'}</span>
-              </button>
+              {cvData?.id !== 'cv_ejemplo_estandar' && (
+                <button
+                  onClick={handleSaveFromPanel}
+                  disabled={isSavingFromPanel}
+                  className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>{isSavingFromPanel ? 'Guardando...' : 'Guardar Actual'}</span>
+                </button>
+              )}
             </div>
 
             <div className="space-y-2.5">

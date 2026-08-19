@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
 import { 
   Printer, 
-  Eye, 
+  LogIn, 
   FilePlus,
   FolderOpen,
   Save,
@@ -92,14 +91,14 @@ export default function Navbar({
 
         {/* Global Action Buttons */}
         <div className="flex items-center gap-1.5 sm:gap-2 shadow-sm">
-          {/* VER CV DE EJEMPLO */}
+          {/* ENTRAR (LOGIN / ACCESO DE USUARIOS) */}
           <button
-            onClick={onLoadExampleCV}
+            onClick={onOpenCloudModal}
             className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-[#FFE0C7] bg-[#FF7A29]/20 hover:bg-[#FF7A29]/30 border border-[#FF7A29]/40 transition"
-            title="Cargar currículum de ejemplo"
+            title="Ingresar a tu cuenta de usuario o suscripción Premium"
           >
-            <Eye className="w-3.5 h-3.5 text-[#FF7A29] flex-shrink-0" />
-            <span>Ejemplo</span>
+            <LogIn className="w-3.5 h-3.5 text-[#FF7A29] flex-shrink-0" />
+            <span>Entrar</span>
           </button>
 
           {/* NUEVO CV */}
