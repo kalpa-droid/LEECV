@@ -13,8 +13,24 @@ export async function login(email, password) {
 }
 
 export async function logout() {
-  if (!supabase) return;
-  await supabase.auth.signOut();
+  if (supabase) {
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn('SignOut error:', err);
+    }
+  }
+  // Limpieza total de tokens JWT y sesiones de autenticación
+  try {
+    if (typeof window !== 'undefined') {
+      sessionStorage.clear();
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('sb-') || key.includes('auth-token') || key.includes('supabase.auth')) {
+          localStorage.removeItem(key);
+        }
+      });
+    }
+  } catch {}
 }
 
 /** Devuelve el usuario logueado (o null) junto a su fila de la tabla profiles (rol, premium, etc). */
