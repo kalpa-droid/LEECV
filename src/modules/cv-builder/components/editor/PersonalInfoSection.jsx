@@ -83,39 +83,25 @@ export default function PersonalInfoSection({ onOpenPhotoCropper, registeredItem
         </div>
       </div>
 
-      {/* Título Honorífico / Abreviaturas y Nombre Completo Automático */}
-      <div className="grid grid-cols-3 gap-3">
-        <div>
-          <label className="block text-xs font-bold text-[#FF2E63] mb-1">
-            Abreviaturas / Título
-          </label>
-          <input 
-            type="text"
-            value={cvData.personalInfo?.titlePrefix || ''}
-            onChange={(e) => {
-              const prefix = e.target.value;
-              const given = cvData.personalInfo?.givenNames || '';
-              const sur = cvData.personalInfo?.surname || '';
-              const computed = `${prefix ? prefix + ' ' : ''}${given} ${sur}`.trim();
-              updatePersonalInfo('titlePrefix', prefix);
-              updatePersonalInfo('fullName', computed);
-            }}
-            placeholder="Ej: Lic. / Prof. / Dr. / MP"
-            className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-          />
-        </div>
-        <div className="col-span-2">
-          <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-            Nombre Completo (Deducido Automáticamente)
-          </label>
-          <input 
-            type="text"
-            value={cvData.personalInfo?.fullName || ''}
-            onChange={(e) => updatePersonalInfo('fullName', e.target.value)}
-            placeholder="Ej: Lic. MÓNICA DANIELA BURGOS"
-            className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-          />
-        </div>
+      {/* Abreviaturas / Título Honorífico */}
+      <div>
+        <label className="block text-xs font-bold text-[#FF2E63] mb-1">
+          Abreviaturas / Título (ej: Lic. / Prof. / Dr. / MP)
+        </label>
+        <input 
+          type="text"
+          value={cvData.personalInfo?.titlePrefix || ''}
+          onChange={(e) => {
+            const prefix = e.target.value;
+            const given = cvData.personalInfo?.givenNames || '';
+            const sur = cvData.personalInfo?.surname || '';
+            const computed = `${prefix ? prefix + ' ' : ''}${given} ${sur}`.trim();
+            updatePersonalInfo('titlePrefix', prefix);
+            updatePersonalInfo('fullName', computed);
+          }}
+          placeholder="Ej: Lic. / Prof. / Dr. / Ing. / MP 1402"
+          className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+        />
       </div>
 
       <div>
