@@ -243,6 +243,7 @@ function AppContent() {
               setCvData(selectedCV);
               setIsSavedCVsOpen(false);
             }}
+            onImportJson={handleImportJsonFile}
           />
         )}
 
