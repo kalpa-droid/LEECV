@@ -1549,16 +1549,16 @@ export default function EditorPanel({
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 11: DISEÑO Y COLORES */}
+        {/* TAB 11: DISEÑO Y PORTADA */}
         {/* ========================================================================= */}
         {activeTab === 'diseno' && (
           <div className="space-y-6">
             <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] border-b pb-2 border-[#EFE2C9] flex items-center gap-1.5">
-              <Palette className="w-4 h-4 text-[#00A8A0]" /> Personalización de Estilo, Plantilla y Colores
+              <Layout className="w-4 h-4 text-[#00A8A0]" /> Estructura de Diseño, Portada y Secciones
             </h3>
 
             {/* Cover Page Toggle */}
-            <div className="bg-purple-50/80  p-4 rounded-xl border border-purple-200  space-y-2">
+            <div className="bg-purple-50/80 p-4 rounded-xl border border-purple-200 space-y-2">
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="text-xs font-bold text-[#2B1B2E] flex items-center gap-1.5">
@@ -1574,10 +1574,10 @@ export default function EditorPanel({
 
                 <button
                   onClick={() => setCvData(prev => ({ ...prev, showCoverPage: prev.showCoverPage === undefined ? false : !prev.showCoverPage }))}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer ${
                     cvData.showCoverPage !== false
                       ? 'bg-purple-600 text-white hover:bg-purple-700'
-                      : 'bg-[#EFE2C9]  text-[#2B1B2E] hover:bg-slate-300'
+                      : 'bg-[#EFE2C9] text-[#2B1B2E] hover:bg-slate-300'
                   }`}
                 >
                   {cvData.showCoverPage !== false ? 'Desactivar Portada' : 'Activar Portada'}
@@ -1585,39 +1585,45 @@ export default function EditorPanel({
               </div>
             </div>
 
-            {/* Template Style Selector */}
-            <div>
-              <label className="block text-xs font-bold text-[#2B1B2E] mb-2 flex items-center gap-1.5">
-                <Layout className="w-3.5 h-3.5 text-[#00A8A0]" /> Estilo de Plantilla Premium
+            {/* Cover Layout Preset Selector */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-[#2B1B2E] flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#00A8A0]" /> Estilo & Adornos de Portada
               </label>
               
               <div className="grid grid-cols-1 gap-2">
                 {[
                   { 
-                    id: 'executive-sidebar', 
-                    title: 'Ejecutivo con Sidebar Lateral', 
-                    desc: 'Diseño clásico de alto nivel con columna izquierda en color primario y cuerpo derecho en 2 columnas.',
-                    badge: 'Recomendado Mónica / Docentes' 
+                    id: 'monica-classic', 
+                    title: 'Portada Clásica Mónica', 
+                    desc: 'Fotografía central destacada con marco dorado, título principal y adornos de firma oficial.',
+                    badge: 'Docentes & Educadores' 
                   },
                   { 
                     id: 'modern-corporate', 
-                    title: 'Corporativo Moderno', 
-                    desc: 'Banner superior amplio de presentación personal y contenido distribuido en 2 columnas equilibradas.',
-                    badge: 'Ideal Empresas & Ejecutivos' 
+                    title: 'Portada Corporativa con Banner', 
+                    desc: 'Banner superior amplio con bloques cromáticos de presentación y badges de titulación.',
+                    badge: 'Empresas & Ejecutivos' 
                   },
                   { 
                     id: 'minimal-editorial', 
-                    title: 'Editorial Minimalista', 
-                    desc: 'Líneas finas de acento, tipografía refinada estilo revista y máxima claridad de lectura.',
-                    badge: 'Ideal Jóvenes & Creativos' 
+                    title: 'Portada Editorial Minimalista', 
+                    desc: 'Líneas finas de acento estilo revista de prestigio con tipografía destacada limpia.',
+                    badge: 'Jóvenes & Creativos' 
+                  },
+                  { 
+                    id: 'creative-cardon', 
+                    title: 'Portada Creativa Cardón', 
+                    desc: 'Doble marco decorativo turquesa con íconos de competencias y resguardo de datos.',
+                    badge: 'Linda Feria Salta' 
                   }
                 ].map((styleOpt) => {
-                  const isSelected = (cvData.layoutStyle || 'executive-sidebar') === styleOpt.id;
+                  const isSelected = (cvData.coverPreset || 'monica-classic') === styleOpt.id;
                   return (
                     <button
                       key={styleOpt.id}
-                      onClick={() => setCvData(prev => ({ ...prev, layoutStyle: styleOpt.id }))}
-                      className={`p-3 rounded-xl border text-left transition flex items-start justify-between gap-3 ${
+                      onClick={() => setCvData(prev => ({ ...prev, coverPreset: styleOpt.id, layoutStyle: styleOpt.id }))}
+                      className={`p-3 rounded-xl border text-left transition flex items-start justify-between gap-3 cursor-pointer ${
                         isSelected
                           ? 'border-[#FF2E63] bg-[#FFD9E3]/30 ring-2 ring-[#FF2E63]/30'
                           : 'border-[#EFE2C9] bg-white hover:border-[#FF2E63]'
@@ -1639,72 +1645,52 @@ export default function EditorPanel({
               </div>
             </div>
 
-            {/* Presets Grid Categorized */}
-            <div className="space-y-3">
-              <label className="block text-xs font-bold text-[#2B1B2E] flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#00A8A0]" /> Presets Cromáticos por Perfil
+            {/* Selection of Featured Records for Cover Page */}
+            <div className="space-y-3 pt-3 border-t border-[#EFE2C9]">
+              <label className="block text-xs font-bold text-[#FF2E63] uppercase tracking-wide">
+                Registros Destacados en Portada
               </label>
+              <p className="text-[11px] font-bold text-[#6B5B6E] leading-snug">
+                Elige qué títulos introducidos aparecerán destacados en los badges de la portada:
+              </p>
 
-              {['linda-feria', 'docentes', 'ejecutivos', 'jovenes'].map((cat) => {
-                const categoryPresets = themePresets.filter(p => p.category === cat);
-                const categoryTitle = cat === 'linda-feria'
-                  ? '🎪 Feria'
-                  : cat === 'docentes' 
-                  ? '🎓 Maestros, Docentes & Educadores' 
-                  : cat === 'ejecutivos' 
-                  ? '💼 Ejecutivos & Corporativos' 
-                  : '⚡ Jóvenes, Estudiantes & Creativos';
+              {/* Select Featured Academic Title */}
+              <div>
+                <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
+                  Título Académico Destacado en Portada:
+                </label>
+                <select
+                  value={cvData.coverFeaturedEducationId || ''}
+                  onChange={(e) => setCvData(prev => ({ ...prev, coverFeaturedEducationId: e.target.value }))}
+                  className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none focus:border-[#FF2E63] transition"
+                >
+                  <option value="">-- Usar primer título cargado automáticamente --</option>
+                  {(cvData.education || []).map((edu, idx) => (
+                    <option key={idx} value={edu.id || idx}>
+                      {edu.degree} ({edu.institution})
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                return (
-                  <div key={cat} className="space-y-1.5 pt-1">
-                    <h4 className="text-[11px] font-black uppercase text-[#2B1B2E] font-medium tracking-wider">
-                      {categoryTitle}
-                    </h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      {categoryPresets.map((preset) => {
-                        const isSelected = (cvData?.theme?.presetId || 'purple-monica') === preset.id;
-                        return (
-                          <button
-                            key={preset.id}
-                            onClick={() => applyPreset(preset)}
-                            className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between ${
-                              isSelected
-                                ? 'border-[#FF2E63] bg-[#FFD9E3]/30 ring-2 ring-[#FF2E63]/30'
-                                : 'border-[#EFE2C9] bg-white hover:border-[#FF2E63]'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between mb-1.5">
-                              <span className="text-[11px] font-bold text-[#2B1B2E] truncate pr-1">{preset.name}</span>
-                              {isSelected && <Check className="w-3.5 h-3.5 text-[#00A8A0] flex-shrink-0" />}
-                            </div>
-                            <div className="flex gap-1.5 items-center">
-                              <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.primaryColor }} />
-                              <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.accentColor }} />
-                              <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.secondaryColor }} />
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Font Picker */}
-            <div>
-              <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-                Tipografía Principal del Documento (Google Fonts)
-              </label>
-              <select
-                value={cvData.theme.fontFamily}
-                onChange={(e) => updateTheme('fontFamily', e.target.value)}
-                className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-              >
-                {fontOptions.map((f) => (
-                  <option key={f.id} value={f.value}>{f.name}</option>
-                ))}
-              </select>
+              {/* Select Featured Professional Title */}
+              <div>
+                <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
+                  Título / Cargo Profesional Destacado en Portada:
+                </label>
+                <select
+                  value={cvData.coverFeaturedProfessionId || ''}
+                  onChange={(e) => setCvData(prev => ({ ...prev, coverFeaturedProfessionId: e.target.value }))}
+                  className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none focus:border-[#FF2E63] transition"
+                >
+                  <option value="">-- Usar primer título profesional automáticamente --</option>
+                  {(cvData.professions || []).map((prof, idx) => (
+                    <option key={idx} value={prof.id || idx}>
+                      {prof.degree} ({prof.institution})
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Dynamic Section Column Assigner & Reordering */}
@@ -1754,7 +1740,6 @@ export default function EditorPanel({
                         [sec.id]: targetVal
                       };
 
-                      // Ensure section is in orders
                       let newSecOrder = [...(prev.layout?.sectionOrders?.secundaria || defaultSecundaria)];
                       let newPrimOrder = [...(prev.layout?.sectionOrders?.primaria || defaultPrimaria)];
 
@@ -1842,7 +1827,7 @@ export default function EditorPanel({
                         </div>
                       </div>
 
-                      {/* Reordering Controls per active column */}
+                      {/* Reordering Controls */}
                       <div className="flex items-center justify-end gap-3 text-[10px] text-slate-500 pt-1 border-t border-slate-100">
                         {(currentVal === 'secundaria' || currentVal === 'ambas') && (
                           <div className="flex items-center gap-1 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-200">
@@ -1892,6 +1877,85 @@ export default function EditorPanel({
                   );
                 })}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 12: COLOR Y TIPOGRAFÍA */}
+        {/* ========================================================================= */}
+        {activeTab === 'color' && (
+          <div className="space-y-6">
+            <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] border-b pb-2 border-[#EFE2C9] flex items-center gap-1.5">
+              <Palette className="w-4 h-4 text-[#00A8A0]" /> Presets Cromáticos, Google Fonts & Colores
+            </h3>
+
+            {/* Presets Grid Categorized */}
+            <div className="space-y-3">
+              <label className="block text-xs font-bold text-[#2B1B2E] flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#00A8A0]" /> Presets Cromáticos por Perfil
+              </label>
+
+              {['linda-feria', 'docentes', 'ejecutivos', 'jovenes'].map((cat) => {
+                const categoryPresets = themePresets.filter(p => p.category === cat);
+                const categoryTitle = cat === 'linda-feria'
+                  ? '🎪 Feria'
+                  : cat === 'docentes' 
+                  ? '🎓 Maestros, Docentes & Educadores' 
+                  : cat === 'ejecutivos' 
+                  ? '💼 Ejecutivos & Corporativos' 
+                  : '⚡ Jóvenes, Estudiantes & Creativos';
+
+                return (
+                  <div key={cat} className="space-y-1.5 pt-1">
+                    <h4 className="text-[11px] font-black uppercase text-[#2B1B2E] font-medium tracking-wider">
+                      {categoryTitle}
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {categoryPresets.map((preset) => {
+                        const isSelected = (cvData?.theme?.presetId || 'purple-monica') === preset.id;
+                        return (
+                          <button
+                            key={preset.id}
+                            onClick={() => applyPreset(preset)}
+                            className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between cursor-pointer ${
+                              isSelected
+                                ? 'border-[#FF2E63] bg-[#FFD9E3]/30 ring-2 ring-[#FF2E63]/30'
+                                : 'border-[#EFE2C9] bg-white hover:border-[#FF2E63]'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="text-[11px] font-bold text-[#2B1B2E] truncate pr-1">{preset.name}</span>
+                              {isSelected && <Check className="w-3.5 h-3.5 text-[#00A8A0] flex-shrink-0" />}
+                            </div>
+                            <div className="flex gap-1.5 items-center">
+                              <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.primaryColor }} />
+                              <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.accentColor }} />
+                              <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.secondaryColor }} />
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Font Picker */}
+            <div>
+              <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
+                Tipografía Principal del Documento (Google Fonts)
+              </label>
+              <select
+                value={cvData.theme.fontFamily}
+                onChange={(e) => updateTheme('fontFamily', e.target.value)}
+                className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+              >
+                {fontOptions.map((f) => (
+                  <option key={f.id} value={f.value}>{f.name}</option>
+                ))}
+              </select>
             </div>
 
             {/* Custom Color Pickers */}

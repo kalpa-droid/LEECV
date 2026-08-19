@@ -10,7 +10,7 @@ import {
   FileText, 
   PenTool, 
   Palette,
-  FolderOpen,
+  Layout,
   PanelLeftOpen,
   PanelLeftClose
 } from 'lucide-react';
@@ -25,7 +25,8 @@ export const editorTabs = [
   { id: 'ecologia', label: 'Proyectos & Comunidad', icon: Leaf },
   { id: 'firma', label: 'Firma', icon: PenTool },
   { id: 'certificados', label: 'Certificados Anexados', icon: Award },
-  { id: 'diseno', label: 'Diseño & Colores', icon: Palette }
+  { id: 'diseno', label: 'Diseño & Portada', icon: Layout },
+  { id: 'color', label: 'Color & Tipografía', icon: Palette }
 ];
 
 export default function SecondaryNavbar({ 
@@ -61,7 +62,7 @@ export default function SecondaryNavbar({
 
       <div className="h-4 w-px bg-[#EFE2C9]/20 hidden sm:block" />
 
-      {/* 10 Section Tabs Row */}
+      {/* Section Tabs Row */}
       <div className="flex flex-wrap items-center gap-1 flex-1">
         {editorTabs.map((tab) => {
           const Icon = tab.icon;

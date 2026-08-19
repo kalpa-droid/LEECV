@@ -574,14 +574,25 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
 
               {/* Featured Roles Badges */}
               <div className="flex flex-wrap justify-center gap-1.5 max-w-lg">
-                {roles.map((role, idx) => (
-                  <span 
-                    key={idx}
-                    className="px-3 py-1 bg-slate-800/90 text-white rounded-lg text-[11px] font-extrabold shadow-sm border border-slate-700/60"
-                  >
-                    {role}
-                  </span>
-                ))}
+                {(() => {
+                  const featEdu = (cvData.education || []).find((e, idx) => String(e.id || idx) === String(cvData.coverFeaturedEducationId));
+                  const featProf = (cvData.professions || []).find((p, idx) => String(p.id || idx) === String(cvData.coverFeaturedProfessionId));
+
+                  const featuredBadges = [];
+                  if (featEdu) featuredBadges.push(featEdu.degree);
+                  if (featProf) featuredBadges.push(featProf.degree);
+
+                  const defaultRoles = featuredBadges.length > 0 ? featuredBadges : roles;
+
+                  return defaultRoles.map((role, idx) => (
+                    <span 
+                      key={idx}
+                      className="px-3 py-1 bg-slate-800/90 text-white rounded-lg text-[11px] font-extrabold shadow-sm border border-slate-700/60"
+                    >
+                      {role}
+                    </span>
+                  ));
+                })()}
               </div>
 
               {/* Profile Highlight Statement */}
