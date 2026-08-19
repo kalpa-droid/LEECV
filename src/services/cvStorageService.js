@@ -120,7 +120,7 @@ export const saveCV = async (cvData) => {
 
   const fullCVObject = { ...optimizedCV, id };
 
-  // 1. Always save to local list
+  // 1. Always save to local list & active draft key
   try {
     const list = await getSavedCVsList();
     const existingIdx = list.findIndex(item => item.id === id);
@@ -131,10 +131,15 @@ export const saveCV = async (cvData) => {
     }
     // Save lightweight list without base64 images
     localStorage.setItem(SAVED_CVS_KEY, JSON.stringify(list));
-    // Save full CV data under individual key
+    // Save full CV data under individual key and active draft key
     localStorage.setItem(`cv_data_${id}`, JSON.stringify(fullCVObject));
+    localStorage.setItem('cv_premium_data', JSON.stringify(fullCVObject));
   } catch (err) {
-    console.error('Error guardando en almacenamiento local:', err);
+    console.warn('Advertencia de espacio en almacenamiento local:', err);
+    try {
+      localStorage.setItem(`cv_data_${id}`, JSON.stringify(fullCVObject));
+      localStorage.setItem('cv_premium_data', JSON.stringify(fullCVObject));
+    } catch {}
   }
 
   // 2. Try saving to Supabase if configured

@@ -44,30 +44,36 @@ export const compressToWebP = (imageSrc, maxWidth = 1000, quality = 0.8) => {
 export const optimizeCVImagesToWebP = async (cvData) => {
   if (!cvData) return cvData;
 
-  const copy = JSON.parse(JSON.stringify(cvData));
+  try {
+    const copy = JSON.parse(JSON.stringify(cvData));
 
-  // 1. Optimize Profile Photo
-  if (copy.personalInfo?.profilePhoto) {
-    copy.personalInfo.profilePhoto = await compressToWebP(copy.personalInfo.profilePhoto, 600, 0.8);
+    // 1. Optimize Profile Photo
+    if (copy.personalInfo?.profilePhoto) {
+      copy.personalInfo.profilePhoto = await compressToWebP(copy.personalInfo.profilePhoto, 500, 0.75);
+    }
+
+    // 2. Optimize Signature
+    if (copy.signature?.dataUrl) {
+      copy.signature.dataUrl = await compressToWebP(copy.signature.dataUrl, 600, 0.8);
+    }
+
+    // 3. Optimize Scanned Certificate Photos
+    if (Array.isArray(copy.certificatesScanned)) {
+      copy.certificatesScanned = await Promise.all(
+        copy.certificatesScanned.map(async (cert) => {
+          const rawSrc = cert.imageUrl || cert.image;
+          if (rawSrc) {
+            const webpImage = await compressToWebP(rawSrc, 900, 0.7);
+            return { ...cert, imageUrl: webpImage, image: webpImage };
+          }
+          return cert;
+        })
+      );
+    }
+
+    return copy;
+  } catch (err) {
+    console.error('Error optimizando imágenes del CV:', err);
+    return cvData;
   }
-
-  // 2. Optimize Signature
-  if (copy.signature?.dataUrl) {
-    copy.signature.dataUrl = await compressToWebP(copy.signature.dataUrl, 800, 0.85);
-  }
-
-  // 3. Optimize Scanned Certificate Photos
-  if (Array.isArray(copy.certificatesScanned)) {
-    copy.certificatesScanned = await Promise.all(
-      copy.certificatesScanned.map(async (cert) => {
-        if (cert.image) {
-          const webpImage = await compressToWebP(cert.image, 1000, 0.75);
-          return { ...cert, image: webpImage };
-        }
-        return cert;
-      })
-    );
-  }
-
-  return copy;
 };

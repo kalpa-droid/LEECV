@@ -78,7 +78,11 @@ export default function App() {
 
   // Autosave to localStorage on state change
   useEffect(() => {
-    localStorage.setItem('cv_premium_data', JSON.stringify(cvData));
+    try {
+      localStorage.setItem('cv_premium_data', JSON.stringify(cvData));
+    } catch (err) {
+      console.warn('Aviso: Memoria del navegador llena para el borrador activo:', err);
+    }
   }, [cvData]);
 
   // Direct 1-Click Bulletproof Page-by-Page A4 PDF Generator
@@ -97,7 +101,7 @@ export default function App() {
 
   const handleLoadExampleCV = () => {
     setCvData(standardExampleCVData);
-    localStorage.setItem('cv_premium_data', JSON.stringify(standardExampleCVData));
+    try { localStorage.setItem('cv_premium_data', JSON.stringify(standardExampleCVData)); } catch {}
   };
 
   const handleOpenSavedCVs = () => {
@@ -110,12 +114,15 @@ export default function App() {
     setIsSaving(true);
     try {
       const record = await saveCV(cvData);
+      if (record?.cv_data) {
+        setCvData(record.cv_data);
+      }
       setIsPanelOpen(true);
       setActiveTab('guardados');
-      alert(`CV guardado en el panel lateral como:\n"${record.title}"`);
+      alert(`✅ CV guardado correctamente como:\n"${record.title}"`);
     } catch (err) {
       console.error(err);
-      alert('Error al guardar CV');
+      alert('Inconveniente al guardar CV. Tus datos ingresados se mantienen intactos en la pantalla.');
     } finally {
       setIsSaving(false);
     }
