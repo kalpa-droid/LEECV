@@ -8,7 +8,7 @@ Este documento sirve como registro vivo de la estructura de componentes, regla d
 
 > **REGLA ESTRUCTURAL**:  
 > **Un módulo NUNCA importa directamente de otro módulo.**  
-> Los módulos (`cv-builder`, `agency`, `admin`, `auth`, `payments`, `pdf-designer`) solo pueden importar de `src/shared/core/` o de su propia carpeta interna.
+> Los módulos (`cv-builder`, `agency`, `pdf-designer`, `admin`, `auth`, `payments`) solo pueden importar de `src/shared/core/` o de su propia carpeta interna.
 
 ---
 
@@ -23,6 +23,14 @@ Este documento sirve como registro vivo de la estructura de componentes, regla d
 | `backupProvider.js` | `src/shared/core/storage/backupProvider.js` | Proveedor unificado de almacenamiento (Drive vs Cloud) | `googleDriveBackend`, `leecvCloudBackend` | `cvStorageService` | 2026-08-19 |
 | `pdfExporter.js` | `src/shared/core/pdf-engine/pdfExporter.js` | Motor genérico e independiente de exportación A4 PDF | `html2canvas-pro`, `jspdf` | `App.jsx`, `pdf-designer` | 2026-08-19 |
 | `supabaseClient.js` | `src/shared/core/lib/supabaseClient.js` | Cliente único inicializado de Supabase Auth/DB | `@supabase/supabase-js` | `authService`, `adminService`, `cvStorageService` | 2026-08-19 |
+
+---
+
+## 🎨 Módulo `src/modules/pdf-designer/` (Diseñador Libre A4)
+
+| Componente | Ubicación | Qué hace | Consume de | Lo usan | Última Modificación |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `DesignerCanvas.jsx` | `src/modules/pdf-designer/components/DesignerCanvas.jsx` | Lienzo interactivo para diseñar documentos A4 libres | `pdfExporter` (shared) | `App.jsx` | 2026-08-19 |
 
 ---
 
