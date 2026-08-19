@@ -58,16 +58,24 @@ export default function Navbar({
   };
 
   const handleDownloadClick = () => {
+    if (onSaveCV) onSaveCV();
     if (onOpenDownloadJson) onOpenDownloadJson();
     else if (onExportJson) onExportJson();
   };
 
   const handleNewClick = () => {
+    if (onSaveCV) onSaveCV();
     if (onNewCV) onNewCV();
     else if (onStartNewCVWizard) onStartNewCVWizard();
   };
 
+  const handleOpenSavedClick = () => {
+    if (onSaveCV) onSaveCV();
+    if (onOpenSavedCVs) onOpenSavedCVs();
+  };
+
   const handlePricingClick = () => {
+    if (onSaveCV) onSaveCV();
     if (onOpenPricing) onOpenPricing();
     else if (onOpenCloudStatus) onOpenCloudStatus();
     else if (onOpenCloudModal) onOpenCloudModal();
@@ -136,7 +144,7 @@ export default function Navbar({
 
           {/* ABRIR CVS GUARDADOS */}
           <button
-            onClick={onOpenSavedCVs}
+            onClick={handleOpenSavedClick}
             className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-[#CFF3F0] bg-[#00A8A0] hover:bg-[#00877F] border border-[#00A8A0]/40 transition shadow-md shadow-[#00A8A0]/20 cursor-pointer"
             title="Abrir lista de CVs guardados"
           >

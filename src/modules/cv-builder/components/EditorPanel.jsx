@@ -1745,6 +1745,12 @@ export default function EditorPanel({
                   <button
                     key={preset.id}
                     onClick={() => {
+                      const confirmed = window.confirm(
+                        `¿Deseas aplicar el preset '${preset.name}'?\n\n` +
+                        `Advertencia: Esta acción restablecerá tus configuraciones personalizadas de maquetación y columnas al estado maestro del preset.`
+                      );
+                      if (!confirmed) return;
+
                       setCvData(prev => {
                         const newAssigns = {};
                         preset.sec.forEach(s => { newAssigns[s] = 'secundaria'; });
