@@ -112,22 +112,26 @@ export const saveCV = async (cvData) => {
 
     let syncState = 'local'; // 'local' | 'synced' | 'pending'
 
-    // 3. Sync to Supabase in parallel if online
+    // 3. Sync to Supabase in parallel if online and user is logged in
     if (supabase) {
       try {
-        const { error } = await supabase.from('cvs').upsert({
-          id,
-          title: summaryRecord.title,
-          candidate_name: summaryRecord.candidate_name,
-          dni: summaryRecord.dni,
-          cv_data: fullCVObject,
-          updated_at: summaryRecord.updated_at
-        });
-        if (!error) {
-          syncState = 'synced';
-        } else {
-          console.error('Error guardando en Supabase:', error);
-          syncState = 'pending';
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { error } = await supabase.from('cvs').upsert({
+            id,
+            user_id: user.id,
+            title: summaryRecord.title,
+            candidate_name: summaryRecord.candidate_name,
+            dni: summaryRecord.dni,
+            cv_data: fullCVObject,
+            updated_at: summaryRecord.updated_at
+          });
+          if (!error) {
+            syncState = 'synced';
+          } else {
+            console.error('Error guardando en Supabase:', error);
+            syncState = 'pending';
+          }
         }
       } catch (err) {
         console.warn('Error conectando a Supabase:', err);
