@@ -14,7 +14,7 @@ import { saveCV } from './services/cvStorageService';
 import { exportCVToPDF } from './utils/pdfExporter';
 
 export default function App() {
-  const [cvData, rawSetCvData] = useState(() => {
+  const [cvData, setCvData] = useState(() => {
     if (typeof window !== 'undefined' && window.location.search.includes('clear')) {
       try { localStorage.clear(); } catch {}
     }
@@ -64,20 +64,6 @@ export default function App() {
     }
     return standardExampleCVData;
   });
-
-  // Custom setCvData wrapper: automatically clone master example to a personal draft when edited
-  const setCvData = (updater) => {
-    rawSetCvData((prev) => {
-      const next = typeof updater === 'function' ? updater(prev) : updater;
-      if (prev?.id === 'cv_ejemplo_estandar' && next && next.id === 'cv_ejemplo_estandar') {
-        return {
-          ...next,
-          id: `cv_${Date.now()}`
-        };
-      }
-      return next;
-    });
-  };
 
   const [activeTab, setActiveTab] = useState('personales');
   const [isPanelOpen, setIsPanelOpen] = useState(true);

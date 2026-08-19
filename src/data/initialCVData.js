@@ -1,4 +1,5 @@
-import { valeriaProfilePhoto, valeriaSignaturePhoto, valeriaCertificatePhoto } from "./valeriaExampleAssets";
+import { valeriaProfilePhoto, valeriaSignaturePhoto } from "./valeriaExampleAssets";
+import { sampleCertImage1, sampleCertImage2, sampleCertImage3 } from "./exampleCertificates";
 
 export const standardExampleCVData = {
   id: "cv_ejemplo_estandar",
@@ -60,10 +61,30 @@ export const standardExampleCVData = {
   certificatesScanned: [
     { 
       id: "cert_valeria_1", 
-      title: "Título de Grado Universitario - Profesorado en Educación", 
+      title: "Título de Grado Universitario - Profesorado en Educación Secundaria", 
+      year: "2013", 
+      category: "profesion",
+      institution: "Instituto de Educación Superior N° 6001",
+      imageUrl: sampleCertImage1,
+      image: sampleCertImage1 
+    },
+    { 
+      id: "cert_valeria_2", 
+      title: "Diplomatura Universitaria en Educación Digital y TICs", 
+      year: "2019", 
+      category: "profesion",
+      institution: "Universidad Nacional de Salta",
+      imageUrl: sampleCertImage2,
+      image: sampleCertImage2 
+    },
+    { 
+      id: "cert_valeria_3", 
+      title: "Certificación Nacional en Alfabetización y Mediación Digital", 
       year: "2023", 
-      category: "profesion", 
-      image: valeriaCertificatePhoto 
+      category: "cursos",
+      institution: "Secretaría de Innovación Pública - Punto Digital",
+      imageUrl: sampleCertImage3,
+      image: sampleCertImage3 
     }
   ],
   showCoverPage: true,
