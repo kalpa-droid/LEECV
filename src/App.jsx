@@ -79,6 +79,8 @@ export default function App() {
   const [isCloudModalOpen, setIsCloudModalOpen] = useState(false);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [pdfProgress, setPdfProgress] = useState(0);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Direct 1-Click Bulletproof Page-by-Page A4 PDF Generator
   const handlePrint = async () => {
