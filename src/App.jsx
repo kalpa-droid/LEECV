@@ -21,69 +21,16 @@ const PdfCheckoutModal = lazy(() => import('./modules/cv-builder/components/moda
 const JsonDownloadModal = lazy(() => import('./modules/cv-builder/components/modals/JsonDownloadModal'));
 const PdfProgressModal = lazy(() => import('./modules/cv-builder/components/modals/PdfProgressModal'));
 
-export default function App() {
+import { CVProvider, useCVContext } from './context/CVContext';
+
+function AppContent() {
+  const { cvData, setCvData, resetToBlankCV, loadCVData, saveCV } = useCVContext();
   const [currentProfile, setCurrentProfile] = useState(null);
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
 
   useEffect(() => {
     getCurrentProfile().then(p => setCurrentProfile(p)).catch(() => {});
   }, []);
-
-  const [cvData, setCvData] = useState(() => {
-    if (typeof window !== 'undefined' && window.location.search.includes('clear')) {
-      try { localStorage.clear(); } catch {}
-    }
-    const saved = typeof window !== 'undefined' ? localStorage.getItem('cv_premium_data') : null;
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed && typeof parsed === 'object') {
-          return {
-            ...standardExampleCVData,
-            ...parsed,
-            showCoverPage: parsed.showCoverPage !== undefined ? parsed.showCoverPage : true,
-            layoutStyle: parsed.layoutStyle || 'executive-sidebar',
-            theme: {
-              ...standardExampleCVData.theme,
-              ...(parsed.theme || {})
-            },
-            sectionVisibility: {
-              ...standardExampleCVData.sectionVisibility,
-              ...(parsed.sectionVisibility || {})
-            },
-            personalInfo: { 
-              ...standardExampleCVData.personalInfo, 
-              ...(parsed.personalInfo || {})
-            },
-            roles: Array.isArray(parsed.roles) ? parsed.roles : [],
-            education: Array.isArray(parsed.education) ? parsed.education : [],
-            profession: Array.isArray(parsed.profession) ? parsed.profession : [],
-            experience: Array.isArray(parsed.experience) ? parsed.experience : [],
-            coursesAndCertificates: Array.isArray(parsed.coursesAndCertificates) ? parsed.coursesAndCertificates : [],
-            certificatesScanned: Array.isArray(parsed.certificatesScanned) ? parsed.certificatesScanned : [],
-            informatics: Array.isArray(parsed.informatics) ? parsed.informatics : [],
-            ecology: (parsed.ecology && typeof parsed.ecology === 'object') ? { ...standardExampleCVData.ecology, ...parsed.ecology } : standardExampleCVData.ecology,
-            layout: {
-              ...standardExampleCVData.layout,
-              ...(parsed.layout || {})
-            },
-            customSections: Array.isArray(parsed.customSections) ? parsed.customSections : [],
-            signature: {
-              ...standardExampleCVData.signature,
-              ...(parsed.signature || {})
-            },
-            certificateDisplay: {
-              ...standardExampleCVData.certificateDisplay,
-              ...(parsed.certificateDisplay || {})
-            }
-          };
-        }
-      } catch {
-        return standardExampleCVData;
-      }
-    }
-    return standardExampleCVData;
-  });
 
   const [activeTab, setActiveTab] = useState('personales');
   const [isPanelOpen, setIsPanelOpen] = useState(true);
@@ -162,7 +109,7 @@ export default function App() {
 
   const handleNewCV = () => {
     if (window.confirm('¿Deseas iniciar un nuevo currículum en blanco? Se conservará tu borrador actual en guardados.')) {
-      setCvData(blankCVTemplate);
+      resetToBlankCV();
       setActiveTab('personales');
     }
   };
@@ -335,5 +282,13 @@ export default function App() {
         )}
       </Suspense>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <CVProvider>
+      <AppContent />
+    </CVProvider>
   );
 }
