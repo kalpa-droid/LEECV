@@ -24,20 +24,20 @@ export default function App() {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed === 'object') {
           return {
-            ...blankCVTemplate,
+            ...standardExampleCVData,
             ...parsed,
             showCoverPage: parsed.showCoverPage !== undefined ? parsed.showCoverPage : true,
             layoutStyle: parsed.layoutStyle || 'executive-sidebar',
             theme: {
-              ...blankCVTemplate.theme,
+              ...standardExampleCVData.theme,
               ...(parsed.theme || {})
             },
             sectionVisibility: {
-              ...blankCVTemplate.sectionVisibility,
+              ...standardExampleCVData.sectionVisibility,
               ...(parsed.sectionVisibility || {})
             },
             personalInfo: { 
-              ...blankCVTemplate.personalInfo, 
+              ...standardExampleCVData.personalInfo, 
               ...(parsed.personalInfo || {})
             },
             roles: Array.isArray(parsed.roles) ? parsed.roles : [],
@@ -47,22 +47,22 @@ export default function App() {
             coursesAndCertificates: Array.isArray(parsed.coursesAndCertificates) ? parsed.coursesAndCertificates : [],
             certificatesScanned: Array.isArray(parsed.certificatesScanned) ? parsed.certificatesScanned : [],
             informatics: Array.isArray(parsed.informatics) ? parsed.informatics : [],
-            ecology: (parsed.ecology && typeof parsed.ecology === 'object') ? { ...blankCVTemplate.ecology, ...parsed.ecology } : blankCVTemplate.ecology,
+            ecology: (parsed.ecology && typeof parsed.ecology === 'object') ? { ...standardExampleCVData.ecology, ...parsed.ecology } : standardExampleCVData.ecology,
             signature: {
-              ...blankCVTemplate.signature,
+              ...standardExampleCVData.signature,
               ...(parsed.signature || {})
             },
             certificateDisplay: {
-              ...blankCVTemplate.certificateDisplay,
+              ...standardExampleCVData.certificateDisplay,
               ...(parsed.certificateDisplay || {})
             }
           };
         }
       } catch {
-        return blankCVTemplate;
+        return standardExampleCVData;
       }
     }
-    return blankCVTemplate;
+    return standardExampleCVData;
   });
 
   const [activeTab, setActiveTab] = useState('personales');
@@ -87,6 +87,9 @@ export default function App() {
 
   // Direct 1-Click Bulletproof Page-by-Page A4 PDF Generator
   const handlePrint = async () => {
+    if (cvData) {
+      try { await saveCV(cvData); } catch (e) { console.warn('Auto-save before print warning:', e); }
+    }
     setIsGeneratingPDF(true);
 
     try {
@@ -99,12 +102,18 @@ export default function App() {
     }
   };
 
-  const handleLoadExampleCV = () => {
+  const handleLoadExampleCV = async () => {
+    if (cvData && cvData.id !== standardExampleCVData.id) {
+      try { await saveCV(cvData); } catch (e) { console.warn('Auto-save before example load warning:', e); }
+    }
     setCvData(standardExampleCVData);
     try { localStorage.setItem('cv_premium_data', JSON.stringify(standardExampleCVData)); } catch {}
   };
 
-  const handleOpenSavedCVs = () => {
+  const handleOpenSavedCVs = async () => {
+    if (cvData) {
+      try { await saveCV(cvData); } catch (e) { console.warn('Auto-save before opening saved CVs warning:', e); }
+    }
     setIsPanelOpen(true);
     setActiveTab('guardados');
     setIsSavedCVsOpen(true);
@@ -128,15 +137,18 @@ export default function App() {
     }
   };
 
-  const handleStartNewCVWizard = () => {
-    if (window.confirm('¿Deseas iniciar la creación de un NUEVO CV en blanco? Se limpiarán todos los campos para que ingreses tus propios datos.')) {
+  const handleStartNewCVWizard = async () => {
+    if (window.confirm('¿Deseas iniciar la creación de un NUEVO CV en blanco? Tu borrador actual se guardará automáticamente.')) {
+      if (cvData) {
+        try { await saveCV(cvData); } catch (e) { console.warn('Auto-save before new CV warning:', e); }
+      }
       const newBlankCV = {
         ...blankCVTemplate,
         id: `cv_${Date.now()}`
       };
 
       setCvData(newBlankCV);
-      localStorage.setItem('cv_premium_data', JSON.stringify(newBlankCV));
+      try { localStorage.setItem('cv_premium_data', JSON.stringify(newBlankCV)); } catch {}
       setIsPanelOpen(true);
       setActiveTab('personales');
       setIsWizardOpen(false);

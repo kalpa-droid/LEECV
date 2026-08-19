@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { optimizeCVImagesToWebP } from '../utils/imageCompressor';
-import { monicaBurgosCVData, standardExampleCVData } from '../data/initialCVData';
+import { standardExampleCVData } from '../data/initialCVData';
 
 // Optional Supabase Client initialization
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -25,13 +25,6 @@ const getMonthNameEs = (date = new Date()) => {
 };
 
 export const DEFAULT_PRESET_CVS = [
-  {
-    id: "cv_monica_burgos",
-    title: "CV - MÓNICA DANIELA BURGOS - Agosto - 2025",
-    candidate_name: "MÓNICA DANIELA BURGOS",
-    dni: "29334206",
-    updated_at: "2025-01-01T12:00:00.000Z"
-  },
   {
     id: "cv_ejemplo_estandar",
     title: "CV - VALERIA SOLEDAD MEDINA - Agosto - 2025",
@@ -166,7 +159,6 @@ export const saveCV = async (cvData) => {
  * Load a single CV by ID
  */
 export const loadCVById = async (id) => {
-  if (id === 'cv_monica_burgos') return monicaBurgosCVData;
   if (id === 'cv_ejemplo_estandar') return standardExampleCVData;
 
   if (supabase) {
