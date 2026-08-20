@@ -20,6 +20,9 @@ create table if not exists public.profiles (
 create or replace function public.is_admin(user_id uuid)
 returns boolean as $$
 begin
+  if user_id is null then
+    return false;
+  end if;
   return exists (
     select 1 from public.profiles
     where id = user_id and role = 'admin'
@@ -117,101 +120,108 @@ create policy "usuario borra sus propios CVs"
   on public.cvs for delete
   using (auth.uid() = user_id);
 
--- 7. Tabla `candidate_profiles` (Metadatos de Candidatos para Agencias Pro / Enterprise)
-create table if not exists public.candidate_profiles (
-  cv_id text primary key references public.cvs(id) on delete cascade,
+-- 7. Organizaciones Enterprise
+create table if not exists public.organizations (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
   owner_id uuid not null references auth.users(id) on delete cascade,
-  status text not null default 'postulante'
-    check (status in ('postulante', 'en_proceso', 'contratado', 'descartado')),
-  source text,
-  notes text,
-  updated_at timestamptz not null default now()
+  max_members integer not null default 10,
+  storage_limit_mb integer not null default 50000,
+  created_at timestamptz not null default now()
 );
 
-create index if not exists idx_candidate_profiles_owner on public.candidate_profiles(owner_id);
+alter table public.organizations enable row level security;
 
-alter table public.candidate_profiles enable row level security;
+drop policy if exists "dueño y miembros ven organizacion" on public.organizations;
+create policy "dueño y miembros ven organizacion"
+  on public.organizations for select
+  using (
+    auth.uid() = owner_id 
+    or public.is_admin(auth.uid())
+    or exists (
+      select 1 from public.org_members
+      where org_id = public.organizations.id
+        and user_id = auth.uid()
+        and status = 'active'
+    )
+  );
 
-drop policy if exists "agencia ve sus candidatos" on public.candidate_profiles;
-create policy "agencia ve sus candidatos"
-  on public.candidate_profiles for select
+drop policy if exists "dueño actualiza su organizacion" on public.organizations;
+create policy "dueño actualiza su organizacion"
+  on public.organizations for update
   using (auth.uid() = owner_id or public.is_admin(auth.uid()));
 
-drop policy if exists "agencia crea sus candidatos" on public.candidate_profiles;
-create policy "agencia crea sus candidatos"
-  on public.candidate_profiles for insert
-  with check (auth.uid() = owner_id);
+-- 8. Integrantes de Organización
+create table if not exists public.org_members (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.organizations(id) on delete cascade,
+  user_id uuid references auth.users(id) on delete cascade,
+  invited_email text not null,
+  role text not null default 'editor' check (role in ('owner', 'admin', 'editor')),
+  status text not null default 'pending' check (status in ('pending', 'active', 'rejected')),
+  invitation_token text not null default gen_random_uuid()::text,
+  created_at timestamptz not null default now(),
+  joined_at timestamptz
+);
 
-drop policy if exists "agencia actualiza sus candidatos" on public.candidate_profiles;
-create policy "agencia actualiza sus candidatos"
-  on public.candidate_profiles for update
-  using (auth.uid() = owner_id)
-  with check (auth.uid() = owner_id);
+alter table public.org_members enable row level security;
 
-drop policy if exists "agencia borra sus candidatos" on public.candidate_profiles;
-create policy "agencia borra sus candidatos"
-  on public.candidate_profiles for delete
-  using (auth.uid() = owner_id);
+drop policy if exists "miembros ven lista de miembros" on public.org_members;
+create policy "miembros ven lista de miembros"
+  on public.org_members for select
+  using (
+    auth.uid() = user_id 
+    or public.is_admin(auth.uid())
+    or exists (
+      select 1 from public.organizations o
+      where o.id = public.org_members.org_id and o.owner_id = auth.uid()
+    )
+  );
 
--- 8. Trigger de Defensa en BD para Candidatos (Requiere plan Pro o Enterprise)
-create or replace function public.enforce_candidate_plan()
-returns trigger as $$
-declare
-  user_plan text;
-begin
-  select plan into user_plan from public.profiles where id = new.owner_id;
-  if user_plan not in ('pro', 'enterprise') then
-    raise exception 'La gestión de candidatos requiere plan Pro o Enterprise';
-  end if;
-  return new;
-end;
-$$ language plpgsql security definer;
-
-drop trigger if exists trg_enforce_candidate_plan on public.candidate_profiles;
-create trigger trg_enforce_candidate_plan
-  before insert on public.candidate_profiles
-  for each row execute procedure public.enforce_candidate_plan();
-
--- 9. Ledger de Créditos de Exportación PDF (Nivel 1 - Pago por PDF)
-create table if not exists public.pdf_export_credits (
-  user_id uuid primary key references auth.users(id) on delete cascade,
-  credits integer not null default 0,
+-- 9. Candidatos Enterprise (org_candidates)
+create table if not exists public.org_candidates (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  org_id uuid references public.organizations(id) on delete cascade,
+  full_name text not null,
+  title text,
+  vacant text,
+  status text not null default 'Borrador',
+  cv_data jsonb,
+  created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
-alter table public.pdf_export_credits enable row level security;
+alter table public.org_candidates enable row level security;
 
-drop policy if exists "usuario ve sus créditos" on public.pdf_export_credits;
-create policy "usuario ve sus créditos"
-  on public.pdf_export_credits for select
-  using (auth.uid() = user_id or public.is_admin(auth.uid()));
+drop policy if exists "usuario u organizacion ve sus candidatos" on public.org_candidates;
+create policy "usuario u organizacion ve sus candidatos"
+  on public.org_candidates for select
+  using (
+    auth.uid() = owner_id
+    or public.is_admin(auth.uid())
+    or (
+      org_id is not null and exists (
+        select 1 from public.org_members
+        where org_id = public.org_candidates.org_id
+          and user_id = auth.uid()
+          and status = 'active'
+      )
+    )
+  );
 
--- Función atómica para consumir créditos sin condiciones de carrera
-create or replace function public.consume_pdf_credit(p_user_id uuid)
-returns boolean as $$
-declare
-  remaining integer;
-begin
-  update public.pdf_export_credits
-    set credits = credits - 1, updated_at = now()
-    where user_id = p_user_id and credits > 0
-    returning credits into remaining;
+-- 10. Tabla segura de Refresh Tokens de Google Drive
+create table if not exists public.google_drive_tokens (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  refresh_token text not null,
+  scope text not null default 'https://www.googleapis.com/auth/drive.file',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
 
-  return remaining is not null;
-end;
-$$ language plpgsql security definer;
+alter table public.google_drive_tokens enable row level security;
 
--- 10. Downgrade automático cuando vence el plan (pg_cron a las 06:00 UTC)
-create or replace function public.downgrade_expired_plans()
-returns void as $$
-begin
-  update public.profiles
-    set plan = 'free', premium_activo = false
-    where plan in ('pro', 'enterprise')
-      and plan_vence is not null
-      and plan_vence < now();
-end;
-$$ language plpgsql security definer;
-
--- Para activar cron automático diario:
--- select cron.schedule('downgrade-expired-plans-diario', '0 6 * * *', $$ select public.downgrade_expired_plans(); $$);
+-- Columnas de estado en profiles
+alter table public.profiles add column if not exists drive_connected boolean not null default false;
+alter table public.profiles add column if not exists drive_quota_percent integer;
+alter table public.profiles add column if not exists drive_last_checked_at timestamptz;
