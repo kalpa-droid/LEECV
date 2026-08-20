@@ -14,12 +14,28 @@ const getMonthNameEs = (date = new Date()) => {
   return months[date.getMonth()];
 };
 
+export const DEFAULT_PRESET_CVS: DocumentRecord[] = [
+  {
+    id: "cv_ejemplo_estandar",
+    doc_type_id: "cv",
+    title: "CV de Ejemplo - VALERIA SOLEDAD MEDINA",
+    candidate_name: "VALERIA SOLEDAD MEDINA",
+    dni: "34.591.208",
+    updated_at: "2025-01-02T12:00:00.000Z"
+  }
+];
+
 /**
  * Get all saved documents of a given type from LocalStorage / IndexedDB / Cloud
  */
 export const getSavedDocumentsList = async (docTypeId: string = 'cv'): Promise<DocumentRecord[]> => {
   const map = new Map<string, DocumentRecord>();
   const storageKey = getStorageKeyForType(docTypeId);
+
+  // Add default preset example if document type is CV
+  if (docTypeId === 'cv') {
+    DEFAULT_PRESET_CVS.forEach(item => map.set(item.id, item));
+  }
 
   // 1. Read Local Storage summary list
   try {
@@ -28,7 +44,7 @@ export const getSavedDocumentsList = async (docTypeId: string = 'cv'): Promise<D
       const parsed = JSON.parse(stored);
       if (Array.isArray(parsed)) {
         parsed.forEach((item: DocumentRecord) => {
-          if (item && item.id && item.id !== 'cv_ejemplo_estandar') {
+          if (item && item.id) {
             map.set(item.id, {
               id: item.id,
               doc_type_id: item.doc_type_id || docTypeId,
@@ -58,7 +74,7 @@ export const getSavedDocumentsList = async (docTypeId: string = 'cv'): Promise<D
 
         if (!error && Array.isArray(data)) {
           data.forEach((item: any) => {
-            if (item && item.id && item.id !== 'cv_ejemplo_estandar') {
+            if (item && item.id) {
               map.set(item.id, {
                 ...item,
                 doc_type_id: docTypeId

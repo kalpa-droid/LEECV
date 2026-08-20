@@ -159,7 +159,15 @@ export function CVProvider({ children }: { children: ReactNode }) {
   };
 
   const resetToBlankCV = () => {
-    setCvData(blankCVTemplate as CVData);
+    const blank = sanitizeCvData(blankCVTemplate);
+    setCvData(blank);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('cv_premium_data', JSON.stringify(blank));
+      } catch (e) {
+        console.warn('Error guardando plantilla en blanco:', e);
+      }
+    }
   };
 
   const loadCVData = (newCVData: CVData) => {
