@@ -107,16 +107,22 @@ function AppContent() {
     }
   };
 
-  const handleNewCV = () => {
+  const handleNewCV = async () => {
     if (cvData.id === 'cv_ejemplo_estandar') {
       resetToBlankCV();
       setActiveTab('personales');
       return;
     }
 
-    if (window.confirm('¿Deseas iniciar un nuevo currículum en blanco? Se conservará tu borrador actual en guardados.')) {
+    if (window.confirm('¿Deseas iniciar un nuevo currículum en blanco? Se guardará un borrador automático de tu currículum actual en "Abrir".')) {
+      try {
+        await saveCV(cvData);
+      } catch (err) {
+        console.warn('Error auto-guardando borrador al crear nuevo CV:', err);
+      }
       resetToBlankCV();
       setActiveTab('personales');
+      alert('📌 Tu borrador anterior ha sido resguardado con éxito en la sección "Abrir". Ahora estás editando un currículum en blanco.');
     }
   };
 

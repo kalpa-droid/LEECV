@@ -363,25 +363,30 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
         );
 
       case 'cursos':
-        if (!courses || courses.length === 0) return null;
-        return (
-          <div key={`sec-${location}-cursos`} id="cv-section-cursos" className="section-box-print space-y-1.5 mb-3">
-            {renderSectionHeader(<BookOpen className="w-4 h-4" />, "CURSOS & CAPACITACIONES")}
-            <div className="space-y-1.5 text-[10px]">
-              {courses.map((item, i) => (
-                <div key={i} className="p-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-                  <div>
-                    <p className="font-bold text-slate-900">{item.name}</p>
-                    <p className="text-slate-500 text-[9px] font-semibold">{item.institution}</p>
+        {
+          const listCourses = sortedCourses && sortedCourses.length > 0 ? sortedCourses : (coursesAndCertificates || []);
+          if (!listCourses || listCourses.length === 0) return null;
+          return (
+            <div key={`sec-${location}-cursos`} id="cv-section-cursos" className="section-box-print space-y-1.5 mb-3">
+              {renderSectionHeader(<BookOpen className="w-4 h-4" />, "CURSOS & CAPACITACIONES")}
+              <div className="space-y-1.5 text-[10px]">
+                {listCourses.map((item, i) => (
+                  <div key={i} className="p-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-slate-900">{item.title || item.name || item.course}</p>
+                      <p className="text-slate-500 text-[9px] font-semibold">{item.institution}</p>
+                    </div>
+                    {item.hours && (
+                      <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-extrabold text-[9px]">
+                        {item.hours}
+                      </span>
+                    )}
                   </div>
-                  <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-extrabold text-[9px]">
-                    {item.hours} HS
-                  </span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        );
+          );
+        }
 
       case 'informatica':
         if (!informatics || informatics.length === 0) return null;

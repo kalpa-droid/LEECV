@@ -90,9 +90,24 @@ export const standardExampleCVData = {
   layout: {
     layoutStyle: "executive-sidebar",
     showCoverPage: true,
+    columnAssignments: {
+      contacto: "secundaria",
+      personales: "secundaria",
+      formacion: "primaria",
+      profesion: "primaria",
+      experiencia: "primaria",
+      cursos: "primaria",
+      informatica: "secundaria",
+      competencias: "secundaria",
+      ecologia: "primaria"
+    },
+    sectionOrders: {
+      secundaria: ["contacto", "personales", "informatica", "competencias"],
+      primaria: ["personales", "formacion", "profesion", "experiencia", "cursos", "ecologia"]
+    },
     columns: {
-      left: ["personales", "formacion", "cursos"],
-      right: ["profesion", "experiencia", "informatica", "ecologia", "certificados", "firma"]
+      left: ["contacto", "personales", "informatica", "competencias"],
+      right: ["formacion", "profesion", "experiencia", "cursos", "ecologia"]
     }
   },
   customSections: [],
@@ -113,6 +128,25 @@ export const blankCVTemplate = {
   id: "cv_blanco",
   showCoverPage: true,
   layoutStyle: "executive-sidebar",
+  layout: {
+    layoutStyle: "executive-sidebar",
+    showCoverPage: true,
+    columnAssignments: {
+      contacto: "secundaria",
+      personales: "secundaria",
+      formacion: "primaria",
+      profesion: "primaria",
+      experiencia: "primaria",
+      cursos: "primaria",
+      informatica: "secundaria",
+      competencias: "secundaria",
+      ecologia: "primaria"
+    },
+    sectionOrders: {
+      secundaria: ["contacto", "personales", "informatica", "competencias"],
+      primaria: ["personales", "formacion", "profesion", "experiencia", "cursos", "ecologia"]
+    }
+  },
   layout: {
     layoutStyle: "executive-sidebar",
     showCoverPage: true,
