@@ -18,10 +18,14 @@ export async function login(email: string, password: string) {
  */
 export async function signInWithGoogle() {
   if (!supabase) throw new Error('Supabase no está configurado');
+  const redirectUrl = typeof window !== 'undefined' && window.location.origin
+    ? window.location.origin
+    : 'https://leecv.vercel.app';
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined,
+      redirectTo: redirectUrl,
       scopes: 'https://www.googleapis.com/auth/drive.file',
       queryParams: {
         access_type: 'offline',
