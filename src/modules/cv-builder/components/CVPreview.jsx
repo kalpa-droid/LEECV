@@ -22,6 +22,11 @@ import {
   Maximize2
 } from 'lucide-react';
 
+import { PAGE_SIZES, calculateItemsPerPage } from '../../../shared/core/pdf-engine/pageSizes';
+import { CoverPageSection } from './preview/CoverPageSection';
+import { ExtraPage } from './preview/ExtraPage';
+import { ScannedCertificatesPages } from './preview/ScannedCertificatesPages';
+
 export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.85 }) {
   const { 
     personalInfo = {}, 
@@ -38,6 +43,9 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
     layoutStyle = 'executive-sidebar',
     certificateDisplay = { certsPerPage: 1 }
   } = cvData || {};
+
+  const paperSizeId = cvData?.layout?.paperSize || 'a4';
+  const currentPaper = PAGE_SIZES[paperSizeId] || PAGE_SIZES.a4;
 
   // Auto-scroll to active section when tab changes
   React.useEffect(() => {
@@ -110,10 +118,11 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
   const sortedExperience = sortByYearDesc(experience);
   const sortedProfession = sortByYearDesc(profession);
 
-  const FIRST_PAGE_PROF_LIMIT = 4;
-  const EXTRA_PROF_PER_PAGE = 6;
-  const EXP_PER_PAGE = 6;
-  const COURSES_PER_PAGE = 6;
+  // Dynamic pagination math calculated from current paper size height!
+  const FIRST_PAGE_PROF_LIMIT = calculateItemsPerPage(paperSizeId, 45, 110);
+  const EXTRA_PROF_PER_PAGE = calculateItemsPerPage(paperSizeId, 38, 55);
+  const EXP_PER_PAGE = calculateItemsPerPage(paperSizeId, 42, 55);
+  const COURSES_PER_PAGE = calculateItemsPerPage(paperSizeId, 38, 55);
 
   const firstPageProfessions = sortedProfession.slice(0, FIRST_PAGE_PROF_LIMIT);
   const extraProfessions = sortedProfession.slice(FIRST_PAGE_PROF_LIMIT);
@@ -1175,38 +1184,11 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
       {/* ========================================================================= */}
       {/* APPENDED CERTIFICATE PAGES */}
       {/* ========================================================================= */}
-      {certPages.map((group, pageIdx) => (
-        <div id={pageIdx === 0 ? "cv-section-certificados" : undefined} key={pageIdx} className="a4-page-container p-8 flex flex-col items-center justify-between border-8 border-purple-100">
-          
-          {/* Certificate Items Container */}
-          <div className="flex-1 w-full flex flex-col items-center justify-around gap-4 overflow-hidden">
-            {group.map((cert) => {
-              const rotAngle = cert.rotation || 0;
-              return (
-                <div key={cert.id} className="w-full flex flex-col items-center justify-center flex-1 relative">
-                  <div className="w-full text-center mb-1">
-                    <h3 className="text-sm sm:text-base font-black uppercase tracking-wide" style={{ color: theme.primaryColor }}>{cert.title}</h3>
-                    <p className="text-[11px] font-extrabold text-[#2B1B2E]">{cert.institution} • {cert.year}</p>
-                  </div>
-
-                  <div className="flex-1 w-full flex items-center justify-center overflow-hidden p-2">
-                    <img 
-                      src={cert.imageUrl} 
-                      alt={cert.title} 
-                      style={{ transform: `rotate(${rotAngle}deg)` }}
-                      className="max-h-full max-w-full object-contain rounded-lg shadow border border-[#EFE2C9] transition-transform duration-300" 
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="w-full text-center border-t pt-2 border-[#EFE2C9] text-[10px] font-bold text-[#2B1B2E]/60">
-            {personalInfo.initials} | ANEXO CERTIFICADOS | LEECV
-          </div>
+      {certificatesScanned && certificatesScanned.length > 0 && (
+        <div id="cv-section-certificados">
+          <ScannedCertificatesPages certificates={certificatesScanned} theme={theme} />
         </div>
-      ))}
+      )}
       </div>
 
     </div>

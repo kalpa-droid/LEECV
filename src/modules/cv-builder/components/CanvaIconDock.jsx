@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { 
   User, 
   GraduationCap, 
@@ -13,8 +13,7 @@ import {
   Layout,
   Columns3,
   X,
-  Eye,
-  EyeOff
+  Menu
 } from 'lucide-react';
 
 export const styleTabs = [
@@ -41,6 +40,8 @@ export default function CanvaIconDock({
   isPanelOpen, 
   setIsPanelOpen 
 }) {
+  const mobileNavRef = useRef(null);
+
   const handleTabClick = (tabId) => {
     if (activeTab === tabId && isPanelOpen) {
       setIsPanelOpen(false);
@@ -50,21 +51,28 @@ export default function CanvaIconDock({
     }
   };
 
+  // Converts vertical mouse wheel scroll into smooth horizontal scrolling for mobile tab bar
+  const handleWheelScroll = (e) => {
+    if (mobileNavRef.current) {
+      mobileNavRef.current.scrollLeft += e.deltaY;
+    }
+  };
+
   return (
     <>
       {/* Desktop & Tablet Vertical Left Dock (Width: 68px) */}
       <aside className="hidden md:flex flex-col items-center py-3 bg-[#1C121E] border-r border-[#6B5B6E]/30 text-white z-30 select-none w-16 shrink-0 h-full overflow-y-auto no-scrollbar">
-        {/* Toggle Drawer Button */}
+        {/* Toggle Drawer Button (☰ ↔ ✕) */}
         <button
           onClick={() => setIsPanelOpen(!isPanelOpen)}
-          className={`p-2.5 rounded-2xl mb-3 transition transform active:scale-95 ${
+          className={`p-2.5 rounded-2xl mb-3 transition transform active:scale-95 cursor-pointer ${
             isPanelOpen
               ? 'bg-[#FF2E63] text-white shadow-lg shadow-[#FF2E63]/30'
-              : 'bg-[#2B1B2E] text-slate-400 hover:text-white hover:bg-[#3D2740]'
+              : 'bg-[#2B1B2E] text-slate-300 hover:text-white hover:bg-[#3D2740]'
           }`}
           title={isPanelOpen ? 'Cerrar Panel Editor' : 'Abrir Panel Editor'}
         >
-          {isPanelOpen ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+          {isPanelOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
 
         <div className="w-8 h-px bg-white/10 mb-3" />
@@ -78,7 +86,7 @@ export default function CanvaIconDock({
               <button
                 key={tab.id}
                 onClick={() => handleTabClick(tab.id)}
-                className={`w-12 h-12 rounded-2xl flex flex-col items-center justify-center transition group relative ${
+                className={`w-12 h-12 rounded-2xl flex flex-col items-center justify-center transition group relative cursor-pointer ${
                   isActive
                     ? 'bg-[#FF2E63] text-white shadow-lg shadow-[#FF2E63]/30 scale-105'
                     : 'text-slate-400 hover:text-white hover:bg-[#2B1B2E]'
@@ -108,7 +116,7 @@ export default function CanvaIconDock({
               <button
                 key={tab.id}
                 onClick={() => handleTabClick(tab.id)}
-                className={`w-12 h-11 rounded-2xl flex flex-col items-center justify-center transition group relative ${
+                className={`w-12 h-11 rounded-2xl flex flex-col items-center justify-center transition group relative cursor-pointer ${
                   isActive
                     ? 'bg-[#00A8A0] text-white shadow-lg shadow-[#00A8A0]/30 scale-105'
                     : 'text-slate-400 hover:text-white hover:bg-[#2B1B2E]'
@@ -128,64 +136,66 @@ export default function CanvaIconDock({
         </div>
       </aside>
 
-      {/* Mobile Bottom Dock Bar (< 768px) */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#1C121E]/95 backdrop-blur-md border-t border-[#6B5B6E]/40 px-2 py-1.5 flex items-center justify-between overflow-x-auto no-scrollbar shadow-2xl">
-        <div className="flex items-center gap-1.5 min-w-max mx-auto">
-          {/* Main Toggle */}
-          <button
-            onClick={() => setIsPanelOpen(!isPanelOpen)}
-            className={`p-2 rounded-xl transition flex items-center gap-1 ${
-              isPanelOpen
-                ? 'bg-[#FF2E63] text-white shadow-md'
-                : 'bg-[#2B1B2E] text-amber-400 border border-amber-400/30'
-            }`}
-          >
-            {isPanelOpen ? <X className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            <span className="text-[10px] font-black">{isPanelOpen ? 'Cerrar' : 'Ver Form'}</span>
-          </button>
+      {/* Mobile Bottom Dock Bar (< 768px) with Mouse Wheel Translation */}
+      <nav 
+        ref={mobileNavRef}
+        onWheel={handleWheelScroll}
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#1C121E]/95 backdrop-blur-md border-t border-[#6B5B6E]/40 px-2 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar shadow-2xl select-none"
+      >
+        {/* Main Universal Toggle Button (☰ ↔ ✕) */}
+        <button
+          onClick={() => setIsPanelOpen(!isPanelOpen)}
+          className={`p-2.5 rounded-xl transition flex items-center justify-center shrink-0 cursor-pointer ${
+            isPanelOpen
+              ? 'bg-[#FF2E63] text-white shadow-md'
+              : 'bg-[#2B1B2E] text-amber-400 border border-amber-400/30'
+          }`}
+          title={isPanelOpen ? 'Cerrar Panel' : 'Abrir Panel'}
+        >
+          {isPanelOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+        </button>
 
-          <div className="w-px h-6 bg-white/20" />
+        <div className="w-px h-6 bg-white/20 shrink-0" />
 
-          {styleTabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id && isPanelOpen;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleTabClick(tab.id)}
-                className={`px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-[11px] font-black transition ${
-                  isActive
-                    ? 'bg-[#FF2E63] text-white shadow-md'
-                    : 'bg-[#2B1B2E] text-[#EFE2C9]/80'
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5 text-[#FFC93C]" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
+        {styleTabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id && isPanelOpen;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => handleTabClick(tab.id)}
+              className={`px-3 py-1.5 rounded-xl flex items-center gap-1 text-[11px] font-black shrink-0 transition cursor-pointer ${
+                isActive
+                  ? 'bg-[#FF2E63] text-white shadow-md'
+                  : 'bg-[#2B1B2E] text-[#EFE2C9]/80 hover:bg-[#3D2740]'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5 text-[#FFC93C]" />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
 
-          <div className="w-px h-6 bg-white/20" />
+        <div className="w-px h-6 bg-white/20 shrink-0" />
 
-          {contentTabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id && isPanelOpen;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleTabClick(tab.id)}
-                className={`px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-[11px] font-black transition ${
-                  isActive
-                    ? 'bg-[#00A8A0] text-white shadow-md'
-                    : 'bg-[#2B1B2E] text-[#EFE2C9]/80'
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5 text-[#FFC93C]" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        {contentTabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id && isPanelOpen;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => handleTabClick(tab.id)}
+              className={`px-3 py-1.5 rounded-xl flex items-center gap-1 text-[11px] font-black shrink-0 transition cursor-pointer ${
+                isActive
+                  ? 'bg-[#00A8A0] text-white shadow-md'
+                  : 'bg-[#2B1B2E] text-[#EFE2C9]/80 hover:bg-[#3D2740]'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5 text-[#FFC93C]" />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
       </nav>
     </>
   );
