@@ -311,11 +311,11 @@ export default function EditorPanel({
     }));
   };
 
-  const renderSectionToggle = (sectionKey, sectionTitle) => {
+  const renderSectionToggle = (sectionKey, sectionTitle, onAddAction = null, addLabel = null) => {
     const isVisible = cvData?.sectionVisibility?.[sectionKey] !== false;
 
     return (
-      <div className={`flex items-center justify-between p-2.5 rounded-xl border mb-3 transition ${
+      <div className={`flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl border mb-3 transition ${
         isVisible 
           ? 'bg-white border-[#EFE2C9] text-[#2B1B2E] shadow-sm' 
           : 'bg-slate-200 border-slate-300 text-slate-500 opacity-75'
@@ -323,25 +323,39 @@ export default function EditorPanel({
         <span className="text-xs font-black uppercase tracking-wide">
           {sectionTitle}
         </span>
-        <button
-          type="button"
-          onClick={() => {
-            setCvData(prev => ({
-              ...prev,
-              sectionVisibility: {
-                ...prev.sectionVisibility,
-                [sectionKey]: !isVisible
-              }
-            }));
-          }}
-          className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
-            isVisible
-              ? 'bg-[#00A8A0] text-white hover:bg-[#00877F]'
-              : 'bg-slate-400 text-white hover:bg-slate-500'
-          }`}
-        >
-          <span>{isVisible ? 'ACTIVADA' : 'DESACTIVADA'}</span>
-        </button>
+
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => {
+              setCvData(prev => ({
+                ...prev,
+                sectionVisibility: {
+                  ...prev.sectionVisibility,
+                  [sectionKey]: !isVisible
+                }
+              }));
+            }}
+            className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
+              isVisible
+                ? 'bg-[#00A8A0] text-white hover:bg-[#00877F]'
+                : 'bg-slate-400 text-white hover:bg-slate-500'
+            }`}
+          >
+            <span>{isVisible ? 'ACTIVADA' : 'DESACTIVADA'}</span>
+          </button>
+
+          {isVisible && onAddAction && addLabel && (
+            <button
+              type="button"
+              onClick={onAddAction}
+              className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-[#FF2E63] hover:bg-[#E31555] text-white shadow-sm transition cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{addLabel}</span>
+            </button>
+          )}
+        </div>
       </div>
     );
   };
@@ -384,28 +398,21 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {activeTab === 'formacion' && (
           <div className="space-y-4">
-            {renderSectionToggle('formacion', 'Formación Académica')}
-            <div className="flex items-center justify-between border-b pb-2 border-[#EFE2C9]">
-              <h3 className="text-xs font-extrabold uppercase text-[#FF2E63]">
-                Estudios y Nivel Académico
-              </h3>
-              <button
-                onClick={() => {
-                  setCvData((prev) => ({
-                    ...prev,
-                    education: [
-                      ...prev.education,
-                      { level: "", institution: "", year: "", degree: "" }
-                    ]
-                  }));
-                }}
-                className="flex items-center gap-1 text-xs text-[#00A8A0] font-bold hover:underline"
-              >
-                <Plus className="w-3.5 h-3.5" /> Agregar Formación
-              </button>
-            </div>
+            {renderSectionToggle(
+              'formacion', 
+              'Formación Académica',
+              () => setCvData((prev) => ({
+                ...prev,
+                education: [
+                  ...prev.education,
+                  { level: "", institution: "", year: "", degree: "" }
+                ]
+              })),
+              'Agregar Formación'
+            )}
 
-            <div className="space-y-4">
+            {cvData?.sectionVisibility?.formacion !== false && (
+              <div className="space-y-4">
               {cvData.education.map((item, idx) => (
                 <div key={idx} className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] shadow-sm space-y-3">
                   <div className="flex items-center justify-between border-b pb-1 border-slate-200 ">
@@ -510,6 +517,7 @@ export default function EditorPanel({
                 </div>
               ))}
             </div>
+            )}
           </div>
         )}
 
@@ -518,28 +526,21 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {activeTab === 'profesion' && (
           <div className="space-y-4">
-            {renderSectionToggle('profesion', 'Títulos Profesionales')}
-            <div className="flex items-center justify-between border-b pb-2 border-[#EFE2C9]">
-              <h3 className="text-xs font-extrabold uppercase text-[#FF2E63]">
-                Títulos de Grado y Especializaciones Profesionales
-              </h3>
-              <button
-                onClick={() => {
-                  setCvData((prev) => ({
-                    ...prev,
-                    profession: [
-                      ...prev.profession,
-                      { institution: "", year: "", degree: "" }
-                    ]
-                  }));
-                }}
-                className="flex items-center gap-1 text-xs text-[#00A8A0] font-bold hover:underline"
-              >
-                <Plus className="w-3.5 h-3.5" /> Agregar Título
-              </button>
-            </div>
+            {renderSectionToggle(
+              'profesion', 
+              'Títulos Profesionales',
+              () => setCvData((prev) => ({
+                ...prev,
+                profession: [
+                  ...prev.profession,
+                  { institution: "", year: "", degree: "" }
+                ]
+              })),
+              'Agregar Título'
+            )}
 
-            <div className="space-y-4">
+            {cvData?.sectionVisibility?.profesion !== false && (
+              <div className="space-y-4">
               {cvData.profession.map((item, idx) => (
                 <div key={idx} className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] shadow-sm space-y-3">
                   <div className="flex items-center justify-between border-b pb-1 border-slate-200 ">
@@ -623,6 +624,7 @@ export default function EditorPanel({
                 </div>
               ))}
             </div>
+            )}
           </div>
         )}
 
@@ -631,33 +633,26 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {activeTab === 'experiencia' && (
           <div className="space-y-4">
-            {renderSectionToggle('experiencia', 'Experiencia Laboral')}
-            <div className="flex items-center justify-between border-b pb-2 border-[#EFE2C9]">
-              <h3 className="text-xs font-extrabold uppercase text-[#FF2E63]">
-                Experiencia Laboral & Desempeño Docente ({cvData.experience?.length || 0})
-              </h3>
-              <button
-                onClick={() => {
-                  setCvData((prev) => ({
-                    ...prev,
-                    experience: [
-                      {
-                        institution: "",
-                        role: "",
-                        year: "",
-                        details: ""
-                      },
-                      ...(prev.experience || [])
-                    ]
-                  }));
-                }}
-                className="flex items-center gap-1 text-xs text-[#00A8A0] font-bold hover:underline"
-              >
-                <Plus className="w-3.5 h-3.5" /> Agregar Experiencia
-              </button>
-            </div>
+            {renderSectionToggle(
+              'experiencia', 
+              'Experiencia Laboral',
+              () => setCvData((prev) => ({
+                ...prev,
+                experience: [
+                  {
+                    institution: "",
+                    role: "",
+                    year: "",
+                    details: ""
+                  },
+                  ...(prev.experience || [])
+                ]
+              })),
+              'Agregar Experiencia'
+            )}
 
-            <div className="space-y-4">
+            {cvData?.sectionVisibility?.experiencia !== false && (
+              <div className="space-y-4">
               {(cvData.experience || []).map((exp, idx) => (
                 <div key={idx} className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] shadow-sm space-y-3">
                   <div className="flex items-center justify-between border-b pb-1 border-slate-200 ">
@@ -762,6 +757,7 @@ export default function EditorPanel({
                 </div>
               ))}
             </div>
+            )}
           </div>
         )}
 
@@ -770,34 +766,27 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {activeTab === 'cursos' && (
           <div className="space-y-4">
-            {renderSectionToggle('cursos', 'Cursos y Capacitaciones')}
-            <div className="flex items-center justify-between border-b pb-2 border-[#EFE2C9]">
-              <h3 className="text-xs font-extrabold uppercase text-[#FF2E63]">
-                Historial de Cursos, Talleres y Jornadas ({cvData.coursesAndCertificates.length})
-              </h3>
-              <button
-                onClick={() => {
-                  setCvData((prev) => ({
-                    ...prev,
-                    coursesAndCertificates: [
-                      {
-                        year: "",
-                        institution: "",
-                        title: "",
-                        hours: "",
-                        details: ""
-                      },
-                      ...prev.coursesAndCertificates
-                    ]
-                  }));
-                }}
-                className="flex items-center gap-1 text-xs text-[#00A8A0] font-bold hover:underline"
-              >
-                <Plus className="w-3.5 h-3.5" /> Agregar Curso
-              </button>
-            </div>
+            {renderSectionToggle(
+              'cursos', 
+              'Cursos y Capacitaciones',
+              () => setCvData((prev) => ({
+                ...prev,
+                coursesAndCertificates: [
+                  {
+                    year: "",
+                    institution: "",
+                    title: "",
+                    hours: "",
+                    details: ""
+                  },
+                  ...prev.coursesAndCertificates
+                ]
+              })),
+              'Agregar Curso'
+            )}
 
-            <div className="space-y-4">
+            {cvData?.sectionVisibility?.cursos !== false && (
+              <div className="space-y-4">
               {cvData.coursesAndCertificates.map((c, idx) => (
                 <div key={idx} className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] shadow-sm space-y-3">
                   <div className="flex items-center justify-between border-b pb-1 border-slate-200 ">
@@ -921,6 +910,7 @@ export default function EditorPanel({
                 </div>
               ))}
             </div>
+            )}
           </div>
         )}
 
@@ -929,28 +919,21 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {activeTab === 'informatica' && (
           <div className="space-y-4">
-            {renderSectionToggle('informatica', 'Informática y TICs')}
-            <div className="flex items-center justify-between border-b pb-2 border-[#EFE2C9]">
-              <h3 className="text-xs font-extrabold uppercase text-[#FF2E63]">
-                Informática y Alfabetización Digital
-              </h3>
-              <button
-                onClick={() => {
-                  setCvData((prev) => ({
-                    ...prev,
-                    informatics: [
-                      ...prev.informatics,
-                      { institution: "", course: "" }
-                    ]
-                  }));
-                }}
-                className="flex items-center gap-1 text-xs text-[#00A8A0] font-bold hover:underline"
-              >
-                <Plus className="w-3.5 h-3.5" /> Agregar Informática
-              </button>
-            </div>
+            {renderSectionToggle(
+              'informatica', 
+              'Informática y TICs',
+              () => setCvData((prev) => ({
+                ...prev,
+                informatics: [
+                  ...prev.informatics,
+                  { institution: "", course: "" }
+                ]
+              })),
+              'Agregar Informática'
+            )}
 
-            <div className="space-y-4">
+            {cvData?.sectionVisibility?.informatica !== false && (
+              <div className="space-y-4">
               {cvData.informatics.map((item, idx) => (
                 <div key={idx} className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] shadow-sm space-y-3">
                   <div className="flex items-center justify-between border-b pb-1 border-slate-200 ">
@@ -1014,6 +997,7 @@ export default function EditorPanel({
                 </div>
               ))}
             </div>
+            )}
           </div>
         )}
 
@@ -1023,6 +1007,9 @@ export default function EditorPanel({
         {activeTab === 'ecologia' && (
           <div className="space-y-4">
             {renderSectionToggle('ecologia', 'Proyectos y Comunidad')}
+
+            {cvData?.sectionVisibility?.ecologia !== false && (
+              <>
             <div className="p-3 bg-[#FFF1C2] rounded-xl border-2 border-[#FFC93C] text-xs text-[#2B1B2E] space-y-1 shadow-sm">
               <div className="flex items-center gap-1.5 font-bold text-[#FF2E63]">
                 <Info className="w-4 h-4" /> Proyectos Ecológicos, Sociales & Comunitarios
@@ -1193,6 +1180,8 @@ export default function EditorPanel({
                 </div>
               ))}
             </div>
+              </>
+            )}
           </div>
         )}
 
@@ -1202,6 +1191,9 @@ export default function EditorPanel({
         {activeTab === 'certificados' && (
           <div className="space-y-4">
             {renderSectionToggle('certificados', 'Certificados Escaneados')}
+
+            {cvData?.sectionVisibility?.certificados !== false && (
+              <>
             {/* 1. Selector */}
             <div>
               <label className="block text-xs font-black text-[#FF2E63] mb-1.5 uppercase tracking-wide">
@@ -1380,6 +1372,8 @@ export default function EditorPanel({
               }}
               rawImageSrc={rawCertSrc}
             />
+              </>
+            )}
           </div>
         )}
 
@@ -1389,9 +1383,9 @@ export default function EditorPanel({
         {activeTab === 'firma' && (
           <div className="space-y-4">
             {renderSectionToggle('firma', 'Firma Digital')}
-            <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] border-b pb-2 border-[#EFE2C9]">
-              Firma Digital del Documento
-            </h3>
+
+            {cvData?.sectionVisibility?.firma !== false && (
+              <>
 
             <div className="p-4 bg-white rounded-2xl border-2 border-[#EFE2C9] space-y-3 text-center shadow-sm">
               {cvData.signature?.dataUrl ? (
@@ -1480,6 +1474,8 @@ export default function EditorPanel({
                 />
               </div>
             </div>
+              </>
+            )}
           </div>
         )}
 
