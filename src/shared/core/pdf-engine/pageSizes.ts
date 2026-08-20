@@ -93,13 +93,6 @@ export function getDynamicHeightChunks(
     chunks.push(currentChunk);
   }
 
-  // Self-balancing: avoid single orphan item on last page if possible
-  if (chunks.length > 1 && chunks[chunks.length - 1].length < minLastPageItems && chunks[chunks.length - 2].length > 1) {
-    const prevChunk = chunks[chunks.length - 2];
-    const movedItem = prevChunk.pop();
-    chunks[chunks.length - 1].unshift(movedItem);
-  }
-
   return chunks;
 }
 

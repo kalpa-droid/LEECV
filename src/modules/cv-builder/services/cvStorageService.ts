@@ -18,6 +18,13 @@ export {
 
 export const DEFAULT_PRESET_CVS = [
   {
+    id: "cv_daniela_burgos_2026",
+    title: "CV Borrador - MÓNICA DANIELA BURGOS - Agosto - 2026",
+    candidate_name: "MÓNICA DANIELA BURGOS",
+    dni: "33.456.789",
+    updated_at: "2026-08-20T12:00:00.000Z"
+  },
+  {
     id: "cv_ejemplo_estandar",
     title: "CV - VALERIA SOLEDAD MEDINA - Agosto - 2025",
     candidate_name: "VALERIA SOLEDAD MEDINA",

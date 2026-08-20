@@ -1,6 +1,6 @@
 import { supabase, checkStorageStatus } from '../lib/supabaseClient';
 import { optimizeCVImagesToWebP } from '../utils/imageCompressor';
-import { standardExampleCVData } from '../../../data/initialCVData';
+import { standardExampleCVData, danielaExampleCVData } from '../../../data/initialCVData';
 import { idbStorage } from '../../../modules/cv-builder/services/storageIndexedDB';
 import { SaveDocumentResult, DocumentRecord } from '../../../types/document';
 import { getDocumentTypeConfig } from '../capabilities/capabilityRegistry';
@@ -15,6 +15,14 @@ const getMonthNameEs = (date = new Date()) => {
 };
 
 export const DEFAULT_PRESET_CVS: DocumentRecord[] = [
+  {
+    id: "cv_daniela_burgos_2026",
+    doc_type_id: "cv",
+    title: "CV Borrador - MÓNICA DANIELA BURGOS (2026)",
+    candidate_name: "MÓNICA DANIELA BURGOS",
+    dni: "33.456.789",
+    updated_at: "2026-08-20T12:00:00.000Z"
+  },
   {
     id: "cv_ejemplo_estandar",
     doc_type_id: "cv",
@@ -194,6 +202,7 @@ export const saveDocument = async (docData: any, docTypeId: string = 'cv'): Prom
  * Load a single document by ID
  */
 export const loadDocumentById = async (id: string, docTypeId: string = 'cv'): Promise<any> => {
+  if (id === 'cv_daniela_burgos_2026' && docTypeId === 'cv') return danielaExampleCVData;
   if (id === 'cv_ejemplo_estandar' && docTypeId === 'cv') return standardExampleCVData;
 
   // 1. Check IndexedDB

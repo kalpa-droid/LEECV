@@ -26,7 +26,10 @@ const CVContext = createContext<CVContextType | null>(null);
 export function CVProvider({ children }: { children: ReactNode }) {
   const [cvData, setCvDataState] = useState<CVData>(() => {
     if (typeof window !== 'undefined' && window.location.search.includes('clear')) {
-      try { localStorage.clear(); } catch {}
+      try { 
+        localStorage.clear(); 
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } catch {}
     }
     const saved = typeof window !== 'undefined' ? localStorage.getItem('cv_premium_data') : null;
     if (saved) {

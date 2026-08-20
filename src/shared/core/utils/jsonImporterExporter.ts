@@ -1,4 +1,5 @@
 import { CVData } from '../../../types/cv';
+import { sanitizeCvData } from './cvDataSchema';
 
 export function exportCVToJson(cvData: CVData | null | undefined): void {
   if (!cvData) return;
@@ -40,15 +41,24 @@ export function importCVFromJsonFile(file: File): Promise<CVData> {
       try {
         const text = e.target?.result as string;
         const parsed = JSON.parse(text);
-        if (parsed?.schemaVersion === 2 && parsed?.cvData) {
-          resolve(parsed.cvData as CVData);
-        } else if (parsed && typeof parsed === 'object') {
-          resolve((parsed.cvData || parsed) as CVData);
+
+        let targetData: any = null;
+        if (parsed && typeof parsed === 'object') {
+          if (parsed.cvData && typeof parsed.cvData === 'object') {
+            targetData = parsed.cvData;
+          } else {
+            targetData = parsed;
+          }
+        }
+
+        if (targetData && typeof targetData === 'object') {
+          const sanitized = sanitizeCvData(targetData);
+          resolve(sanitized as CVData);
         } else {
           reject(new Error('El archivo no contiene un formato de CV válido.'));
         }
       } catch (err: any) {
-        reject(new Error('Error al leer el archivo JSON: ' + (err?.message || err)));
+        reject(new Error('Error al procesar el archivo JSON: ' + (err?.message || err)));
       }
     };
     reader.onerror = () => reject(new Error('No se pudo leer el archivo.'));

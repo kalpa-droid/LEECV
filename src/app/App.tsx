@@ -15,6 +15,7 @@ const PhotoCropperModal = lazy(() => import('../modules/cv-builder/components/Ph
 const SignatureModal = lazy(() => import('../modules/cv-builder/components/SignatureModal'));
 const WizardModal = lazy(() => import('../modules/cv-builder/components/WizardModal'));
 const SavedCVsModal = lazy(() => import('../modules/cv-builder/components/SavedCVsModal'));
+const SaveModal = lazy(() => import('../modules/cv-builder/components/SaveModal'));
 const CloudStatusModal = lazy(() => import('../modules/cv-builder/components/CloudStatusModal'));
 const PricingModal = lazy(() => import('../modules/payments/PricingModal'));
 const PdfCheckoutModal = lazy(() => import('../modules/cv-builder/components/modals/PdfCheckoutModal'));
@@ -77,6 +78,7 @@ function AppContent() {
   const [isSignatureOpen, setIsSignatureOpen] = useState(false);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [isSavedCVsOpen, setIsSavedCVsOpen] = useState(false);
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isCloudModalOpen, setIsCloudModalOpen] = useState(false);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [pdfProgress, setPdfProgress] = useState(0);
@@ -196,13 +198,10 @@ function AppContent() {
         onPrint={handleExportPDFClick} 
         onStartNewCVWizard={() => setIsWizardOpen(true)}
         onOpenSavedCVs={() => setIsSavedCVsOpen(true)}
-        onOpenCloudStatus={() => setIsCloudModalOpen(true)}
+        onOpenSaveModal={() => setIsSaveModalOpen(true)}
         onOpenPricing={() => setIsPricingModalOpen(true)}
-        onOpenDownloadJson={() => setIsDownloadModalOpen(true)}
         onNewCV={handleNewCV}
         onSaveCV={handleSaveCVClick}
-        onImportJson={handleImportJsonFile}
-        onExportJson={() => exportCVToJson(cvData)}
         isSaving={isSaving}
       />
 
@@ -333,6 +332,17 @@ function AppContent() {
               setIsSavedCVsOpen(false);
             }}
             onImportJson={handleImportJsonFile}
+            onOpenCloudStatus={() => setIsCloudModalOpen(true)}
+          />
+        )}
+
+        {isSaveModalOpen && (
+          <SaveModal
+            isOpen={isSaveModalOpen}
+            onClose={() => setIsSaveModalOpen(false)}
+            onSaveStorage={handleSaveCVClick}
+            onExportJson={() => exportCVToJson(cvData)}
+            isSaving={isSaving}
           />
         )}
 
