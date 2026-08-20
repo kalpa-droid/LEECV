@@ -23,6 +23,7 @@ const JsonDownloadModal = lazy(() => import('../modules/cv-builder/components/mo
 const PdfProgressModal = lazy(() => import('../modules/cv-builder/components/modals/PdfProgressModal'));
 
 import { CVProvider, useCVContext } from '../context/CVContext';
+import { ToastProvider } from '../shared/core/ui/Toast';
 
 function AppContent() {
   const { cvData, setCvData, resetToBlankCV, loadCVData, saveCV } = useCVContext();
@@ -374,8 +375,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <CVProvider>
-      <AppContent />
-    </CVProvider>
+    <ToastProvider>
+      <CVProvider>
+        <AppContent />
+      </CVProvider>
+    </ToastProvider>
   );
 }

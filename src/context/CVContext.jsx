@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { standardExampleCVData, blankCVTemplate } from '../data/initialCVData';
 import { saveCV as saveCVStorage } from '../modules/cv-builder/services/cvStorageService';
 
+import { sanitizeCvData } from '../shared/core/utils/cvDataSchema';
+
 const CVContext = createContext(null);
 
 export function CVProvider({ children }) {
@@ -14,51 +16,16 @@ export function CVProvider({ children }) {
       try {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed === 'object') {
-          return {
+          return sanitizeCvData({
             ...standardExampleCVData,
-            ...parsed,
-            showCoverPage: parsed.showCoverPage !== undefined ? parsed.showCoverPage : true,
-            layoutStyle: parsed.layoutStyle || 'executive-sidebar',
-            theme: {
-              ...standardExampleCVData.theme,
-              ...(parsed.theme || {})
-            },
-            sectionVisibility: {
-              ...standardExampleCVData.sectionVisibility,
-              ...(parsed.sectionVisibility || {})
-            },
-            personalInfo: { 
-              ...standardExampleCVData.personalInfo, 
-              ...(parsed.personalInfo || {})
-            },
-            roles: Array.isArray(parsed.roles) ? parsed.roles : [],
-            education: Array.isArray(parsed.education) ? parsed.education : [],
-            profession: Array.isArray(parsed.profession) ? parsed.profession : [],
-            experience: Array.isArray(parsed.experience) ? parsed.experience : [],
-            coursesAndCertificates: Array.isArray(parsed.coursesAndCertificates) ? parsed.coursesAndCertificates : [],
-            certificatesScanned: Array.isArray(parsed.certificatesScanned) ? parsed.certificatesScanned : [],
-            informatics: Array.isArray(parsed.informatics) ? parsed.informatics : [],
-            ecology: (parsed.ecology && typeof parsed.ecology === 'object') ? { ...standardExampleCVData.ecology, ...parsed.ecology } : standardExampleCVData.ecology,
-            layout: {
-              ...standardExampleCVData.layout,
-              ...(parsed.layout || {})
-            },
-            customSections: Array.isArray(parsed.customSections) ? parsed.customSections : [],
-            signature: {
-              ...standardExampleCVData.signature,
-              ...(parsed.signature || {})
-            },
-            certificateDisplay: {
-              ...standardExampleCVData.certificateDisplay,
-              ...(parsed.certificateDisplay || {})
-            }
-          };
+            ...parsed
+          });
         }
       } catch {
-        return standardExampleCVData;
+        return sanitizeCvData(standardExampleCVData);
       }
     }
-    return standardExampleCVData;
+    return sanitizeCvData(standardExampleCVData);
   });
 
   const [isSaving, setIsSaving] = useState(false);

@@ -1,0 +1,94 @@
+/**
+ * cvDataSchema.js
+ * Guarantee shape, default arrays, and required objects for cvData.
+ * Prevents runtime null/undefined crashes across all components.
+ */
+
+export function sanitizeCvData(rawCvData = {}) {
+  const data = typeof rawCvData === 'object' && rawCvData !== null ? rawCvData : {};
+
+  return {
+    id: data.id || `cv_${Date.now()}`,
+    title: data.title || 'Mi Currículum Vitae',
+    updatedAt: data.updatedAt || new Date().toISOString(),
+    showCoverPage: data.showCoverPage !== false,
+    coverPreset: data.coverPreset || 'monica-classic',
+    coverFeaturedEducationId: data.coverFeaturedEducationId ?? null,
+    coverFeaturedProfessionId: data.coverFeaturedProfessionId ?? null,
+
+    personalInfo: {
+      fullName: data.personalInfo?.fullName || '',
+      surname: data.personalInfo?.surname || '',
+      givenNames: data.personalInfo?.givenNames || '',
+      dni: data.personalInfo?.dni || '',
+      cuit: data.personalInfo?.cuit || '',
+      birthDate: data.personalInfo?.birthDate || '',
+      phone: data.personalInfo?.phone || '',
+      email: data.personalInfo?.email || '',
+      address: data.personalInfo?.address || '',
+      cityProvince: data.personalInfo?.cityProvince || '',
+      facebook: data.personalInfo?.facebook || '',
+      initials: data.personalInfo?.initials || 'MDB',
+      year: data.personalInfo?.year || '2026',
+      quote: data.personalInfo?.quote || '',
+      profilePhoto: data.personalInfo?.profilePhoto || ''
+    },
+
+    roles: Array.isArray(data.roles) ? data.roles : [],
+    education: Array.isArray(data.education) ? data.education : [],
+    profession: Array.isArray(data.profession) ? data.profession : (Array.isArray(data.professions) ? data.professions : []),
+    experience: Array.isArray(data.experience) ? data.experience : [],
+    coursesAndCertificates: Array.isArray(data.coursesAndCertificates) ? data.coursesAndCertificates : [],
+    informatics: Array.isArray(data.informatics) ? data.informatics : [],
+    certificatesScanned: Array.isArray(data.certificatesScanned) ? data.certificatesScanned : [],
+
+    ecology: {
+      rural: Array.isArray(data.ecology?.rural) ? data.ecology.rural : [],
+      environmental: Array.isArray(data.ecology?.environmental) ? data.ecology.environmental : [],
+      community: Array.isArray(data.ecology?.community) ? data.ecology.community : [],
+      workshops: Array.isArray(data.ecology?.workshops) ? data.ecology.workshops : [],
+      initiatives: Array.isArray(data.ecology?.initiatives) ? data.ecology.initiatives : []
+    },
+
+    signature: {
+      dataUrl: data.signature?.dataUrl || '',
+      signerName: data.signature?.signerName || '',
+      signerRole: data.signature?.signerRole || '',
+      date: data.signature?.date || ''
+    },
+
+    sectionVisibility: {
+      personales: data.sectionVisibility?.personales !== false,
+      formacion: data.sectionVisibility?.formacion !== false,
+      profesion: data.sectionVisibility?.profesion !== false,
+      experiencia: data.sectionVisibility?.experiencia !== false,
+      cursos: data.sectionVisibility?.cursos !== false,
+      informatica: data.sectionVisibility?.informatica !== false,
+      ecologia: data.sectionVisibility?.ecologia !== false,
+      certificados: data.sectionVisibility?.certificados !== false,
+      firma: data.sectionVisibility?.firma !== false
+    },
+
+    layout: {
+      columnAssignments: data.layout?.columnAssignments || {
+        personales: 'secundaria',
+        formacion: 'primaria',
+        profesion: 'primaria',
+        experiencia: 'primaria',
+        cursos: 'primaria',
+        informatica: 'secundaria',
+        ecologia: 'secundaria',
+        certificados: 'primaria',
+        firma: 'primaria'
+      },
+      sectionOrders: {
+        secundaria: Array.isArray(data.layout?.sectionOrders?.secundaria)
+          ? [...new Set(data.layout.sectionOrders.secundaria)]
+          : ['personales', 'informatica', 'ecologia'],
+        primaria: Array.isArray(data.layout?.sectionOrders?.primaria)
+          ? [...new Set(data.layout.sectionOrders.primaria)]
+          : ['personales', 'formacion', 'profesion', 'experiencia', 'cursos', 'ecologia']
+      }
+    }
+  };
+}
