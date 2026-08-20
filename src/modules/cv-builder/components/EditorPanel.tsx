@@ -1659,7 +1659,7 @@ export default function EditorPanel({
                 Tipografía Principal del Documento (Google Fonts)
               </label>
               <select
-                value={cvData.theme.fontFamily}
+                value={cvData?.theme?.fontFamily || "'Outfit', sans-serif"}
                 onChange={(e) => updateTheme('fontFamily', e.target.value)}
                 className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
               >
@@ -1731,7 +1731,7 @@ export default function EditorPanel({
                 <span className="text-[#2B1B2E] font-bold">Color Primario (Lateral/Portada)</span>
                 <input 
                   type="color" 
-                  value={cvData.theme.primaryColor} 
+                  value={cvData?.theme?.primaryColor || '#1e3a8a'} 
                   onChange={(e) => updateTheme('primaryColor', e.target.value)}
                   className="w-7 h-7 rounded cursor-pointer border-0"
                 />
@@ -1741,7 +1741,7 @@ export default function EditorPanel({
                 <span className="text-[#2B1B2E] font-bold">Color Secundario (Encabezados lateral)</span>
                 <input 
                   type="color" 
-                  value={cvData.theme.secondaryColor} 
+                  value={cvData?.theme?.secondaryColor || '#172554'} 
                   onChange={(e) => updateTheme('secondaryColor', e.target.value)}
                   className="w-7 h-7 rounded cursor-pointer border-0"
                 />
@@ -1751,7 +1751,7 @@ export default function EditorPanel({
                 <span className="text-[#2B1B2E] font-bold">Color de Acento (Barras e Iconos SVG)</span>
                 <input 
                   type="color" 
-                  value={cvData.theme.accentColor} 
+                  value={cvData?.theme?.accentColor || '#d97706'} 
                   onChange={(e) => updateTheme('accentColor', e.target.value)}
                   className="w-7 h-7 rounded cursor-pointer border-0"
                 />

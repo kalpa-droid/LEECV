@@ -85,6 +85,17 @@ export interface CVLayout {
   [key: string]: any;
 }
 
+export interface ThemeConfig {
+  presetId?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  accentColor?: string;
+  textColor?: string;
+  bgCorridor?: string;
+  fontFamily?: string;
+  [key: string]: any;
+}
+
 export interface CVData {
   id?: string;
   title?: string;
@@ -97,6 +108,7 @@ export interface CVData {
   roles?: string[];
   layout?: CVLayout;
   layoutStyle?: string;
+  theme?: ThemeConfig;
   updatedAt?: string;
   [key: string]: any;
 }
