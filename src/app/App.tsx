@@ -38,9 +38,13 @@ function AppContent() {
     getCurrentProfile().then(p => setCurrentProfile(p)).catch(() => {});
 
     if (supabase) {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        capturarConexionDriveSiCorresponde(session);
-      });
+      supabase.auth.getSession()
+        .then(({ data: { session } }) => {
+          capturarConexionDriveSiCorresponde(session);
+        })
+        .catch(err => {
+          console.warn('Error al obtener sesión de Supabase:', err);
+        });
     }
   }, []);
 
