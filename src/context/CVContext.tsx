@@ -33,16 +33,13 @@ export function CVProvider({ children }: { children: ReactNode }) {
       try {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed === 'object') {
-          return sanitizeCvData({
-            ...standardExampleCVData,
-            ...parsed
-          });
+          return sanitizeCvData(parsed);
         }
       } catch {
-        return sanitizeCvData(standardExampleCVData);
+        return sanitizeCvData(blankCVTemplate);
       }
     }
-    return sanitizeCvData(standardExampleCVData);
+    return sanitizeCvData(blankCVTemplate);
   });
 
   const [isSaving, setIsSaving] = useState(false);

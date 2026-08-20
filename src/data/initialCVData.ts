@@ -119,8 +119,6 @@ export const standardExampleCVData = {
   }
 };
 
-export const initialCVData = standardExampleCVData;
-
 export const blankCVTemplate = {
   id: "cv_blanco",
   showCoverPage: true,
@@ -203,3 +201,5 @@ export const blankCVTemplate = {
     fontFamily: "Arial, sans-serif"
   }
 };
+
+export const initialCVData = blankCVTemplate;
