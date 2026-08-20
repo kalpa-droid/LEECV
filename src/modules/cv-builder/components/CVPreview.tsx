@@ -102,8 +102,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
     return { secId, items: [], itemType: 'exp' as const };
   }).filter(b => b.items.length > 0);
 
-  const hasQuote = Boolean(personalInfo?.quote && personalInfo.quote.trim().length > 0);
-  const packedPages = packPrimarySectionsIntoPages(primaryBlocks, paperSizeId, hasQuote ? 95 : 45, 45);
+  const packedPages = packPrimarySectionsIntoPages(primaryBlocks, paperSizeId, 45, 45);
 
   const secondarySections = [...new Set(cvData?.layout?.sectionOrders?.secundaria || ["contacto", "competencias", "personales", "informatica"])] as string[];
   const sidebarPageChunks = getSidebarPageChunks(secondarySections, cvData, paperSizeId, 115);
@@ -273,7 +272,12 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
 
       case 'personales':
         return (
-          <div key={`sec-${location}-personales`} id={location === 'primaria' ? "cv-section-personales" : "cv-section-personales-side"} className="section-box-print space-y-1.5 mb-3">
+          <div key={`sec-${location}-personales`} id={location === 'primaria' ? "cv-section-personales" : "cv-section-personales-side"} className="section-box-print space-y-2 mb-3">
+            {personalInfo.quote && (
+              <p className="text-[11px] font-bold italic text-slate-700 leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-200 border-l-4" style={{ borderLeftColor: theme.primaryColor }}>
+                {personalInfo.quote}
+              </p>
+            )}
             {renderSectionHeader(<User className="w-4 h-4" />, "DATOS PERSONALES")}
             <div className={`grid ${location === 'secundaria' ? 'grid-cols-1 gap-1 text-[10px]' : 'grid-cols-3 gap-y-1.5 text-[11px]'} font-medium bg-slate-50/90 p-3 rounded-xl border border-slate-200/80`}>
               <div className="flex justify-between border-b border-slate-200/60 pb-0.5">
@@ -643,12 +647,6 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
                 {personalInfo.surname} <span className="text-xl font-bold capitalize" style={{ color: theme.primaryColor }}>{personalInfo.givenNames}</span>
               </h1>
             </div>
-
-            {personalInfo.quote && (
-              <p className="text-[11px] font-bold italic text-slate-700 text-center leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-200 border-l-4" style={{ borderLeftColor: theme.primaryColor }}>
-                {personalInfo.quote}
-              </p>
-            )}
 
             {/* Dynamic Right Column (Primaria) Section Rendering */}
             {(packedPages[0]?.blocks || []).map((block) => 
