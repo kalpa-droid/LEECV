@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { iniciarPagoMercadoPago } from '../../../payments/paymentService';
 import { signInWithGoogle } from '../../../auth/authService';
+import { supabase } from '../../../../shared/core/lib/supabaseClient';
 import { CreditCard, Sparkles, Download, LogIn, Check, AlertCircle } from 'lucide-react';
 
 export default function PdfCheckoutModal({ 
@@ -10,7 +11,7 @@ export default function PdfCheckoutModal({
   currentProfile,
   onOpenPricing,
   onExportJson
-}) {
+}: any) {
   const [email, setEmail] = useState(currentProfile?.email || '');
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -45,7 +46,7 @@ export default function PdfCheckoutModal({
     setErrorMsg('');
     try {
       await iniciarPagoMercadoPago('pro');
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || 'No se pudo abrir el checkout de Mercado Pago.');
       setIsProcessing(false);
@@ -61,9 +62,15 @@ export default function PdfCheckoutModal({
     if (currentProfile?.id) {
       setIsProcessing(true);
       try {
+        const sessionRes = await supabase?.auth.getSession();
+        const token = sessionRes?.data?.session?.access_token;
+
         const res = await fetch('/api/consume-pdf-credit', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
           body: JSON.stringify({ userId: currentProfile.id })
         });
         const data = await res.json();

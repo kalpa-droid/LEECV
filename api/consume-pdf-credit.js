@@ -8,12 +8,17 @@ const supabaseAdmin = createClient(
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { userId } = req.body || {};
-  if (!userId) return res.status(400).json({ error: 'Falta userId' });
-
   try {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+    if (authError || !user) {
+      return res.status(401).json({ error: 'No autenticado o token de sesión inválido' });
+    }
+
     const { data: allowed, error } = await supabaseAdmin.rpc('consume_pdf_credit', {
-      p_user_id: userId
+      p_user_id: user.id
     });
 
     if (error) throw error;
