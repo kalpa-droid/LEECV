@@ -51,8 +51,9 @@ export async function setUserPlan(userId, plan = 'pro', vence = null) {
   await logAdminAction('set_user_plan', userId, { plan, expirationDate });
 }
 
-export async function setPremium(userId, activo, vence = null) {
-  return await setUserPlan(userId, activo ? 'pro' : 'free', vence);
+export async function setPremium(userId, activo, vence = null, plan = 'pro') {
+  const targetPlan = activo ? (plan === 'free' ? 'pro' : plan) : 'free';
+  return await setUserPlan(userId, targetPlan, vence);
 }
 
 /** Registra acciones administrativas en auditoría */
