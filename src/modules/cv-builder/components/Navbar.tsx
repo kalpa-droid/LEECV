@@ -17,8 +17,21 @@ export default function Navbar({
   onOpenPricing,
   onNewCV,
   onOpenDownloadJson,
+  onImportJson,
   onExportJson,
   isSaving
+}: {
+  onPrint?: any;
+  onStartNewCVWizard?: any;
+  onOpenSavedCVs?: any;
+  onSaveCV?: any;
+  onOpenCloudStatus?: any;
+  onOpenPricing?: any;
+  onNewCV?: any;
+  onOpenDownloadJson?: any;
+  onImportJson?: any;
+  onExportJson?: any;
+  isSaving?: boolean;
 }) {
   const [isSaveMenuOpen, setIsSaveMenuOpen] = useState(false);
   const saveMenuRef = useRef(null);

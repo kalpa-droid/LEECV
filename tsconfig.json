@@ -15,13 +15,15 @@
     "jsx": "react-jsx",
     "types": ["vite/client"],
 
-    /* Migration Options */
-    "allowJs": true,
+    /* 100% Total TypeScript (No .js allowed) */
+    "allowJs": false,
     "checkJs": false,
     "incremental": true,
 
-    /* Linting */
+    /* Pragmatic React Typescript options */
     "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true

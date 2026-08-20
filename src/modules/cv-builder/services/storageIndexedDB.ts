@@ -1,13 +1,8 @@
-/**
- * Ultra-Fast Native IndexedDB Key-Value Storage Service
- * Provides unlimited, non-blocking binary & JSON storage for LEECV drafts and image assets
- */
-
 const DB_NAME = 'LEECV_IndexedDB';
 const DB_VERSION = 1;
 const STORE_NAME = 'cv_drafts';
 
-function openDB() {
+function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     if (typeof window === 'undefined' || !window.indexedDB) {
       reject(new Error('IndexedDB no está soportado en este navegador.'));
@@ -16,25 +11,25 @@ function openDB() {
 
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
+    request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
+      const db = (event.target as IDBOpenDBRequest).result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.createObjectStore(STORE_NAME);
       }
     };
 
-    request.onsuccess = (event) => {
-      resolve(event.target.result);
+    request.onsuccess = (event: Event) => {
+      resolve((event.target as IDBOpenDBRequest).result);
     };
 
-    request.onerror = (event) => {
-      reject(event.target.error);
+    request.onerror = (event: Event) => {
+      reject((event.target as IDBOpenDBRequest).error);
     };
   });
 }
 
 export const idbStorage = {
-  async getItem(key) {
+  async getItem(key: string): Promise<any> {
     try {
       const db = await openDB();
       return new Promise((resolve, reject) => {
@@ -55,7 +50,7 @@ export const idbStorage = {
     }
   },
 
-  async setItem(key, value) {
+  async setItem(key: string, value: any): Promise<boolean> {
     try {
       const db = await openDB();
       return new Promise((resolve, reject) => {
@@ -77,14 +72,14 @@ export const idbStorage = {
     }
   },
 
-  async removeItem(key) {
+  async removeItem(key: string): Promise<void> {
     try {
       const db = await openDB();
       return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE_NAME, 'readwrite');
         const store = tx.objectStore(STORE_NAME);
         const req = store.delete(key);
-        req.onsuccess = () => resolve(true);
+        req.onsuccess = () => resolve();
         req.onerror = () => reject(req.error);
       });
     } catch (err) {

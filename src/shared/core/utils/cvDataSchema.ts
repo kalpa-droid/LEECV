@@ -1,11 +1,5 @@
-/**
- * cvDataSchema.js
- * Guarantee shape, default arrays, and required objects for cvData.
- * Prevents runtime null/undefined crashes across all components.
- */
-
-export function sanitizeCvData(rawCvData = {}) {
-  const data = typeof rawCvData === 'object' && rawCvData !== null ? rawCvData : {};
+export function sanitizeCvData(rawCvData: any = {}) {
+  const data: any = typeof rawCvData === 'object' && rawCvData !== null ? rawCvData : {};
 
   return {
     id: data.id || `cv_${Date.now()}`,

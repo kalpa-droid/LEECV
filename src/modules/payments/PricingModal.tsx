@@ -10,16 +10,16 @@ export default function PricingModal({ isOpen, onClose, currentProfile }) {
 
   if (!isOpen) return null;
 
-  async function handleSelectPlan(planId, gateway) {
+  async function handleSelectPlan(planId: 'pro' | 'enterprise', gateway: 'mercadopago' | 'lemonsqueezy') {
     setLoadingGateway(gateway);
     try {
       if (gateway === 'mercadopago') {
-        await iniciarPagoMercadoPago(currentProfile?.id || 'guest', currentProfile?.email || 'usuario@leecv.app');
+        await iniciarPagoMercadoPago(planId);
       } else {
-        iniciarPagoLemonSqueezy(currentProfile?.id || 'guest', currentProfile?.email || 'usuario@leecv.app');
+        await iniciarPagoLemonSqueezy(planId);
       }
-    } catch (err) {
-      showError('Inconveniente al conectar con la pasarela de pagos: ' + err.message);
+    } catch (err: any) {
+      showError('Inconveniente al conectar con la pasarela de pagos: ' + (err?.message || err));
     } finally {
       setLoadingGateway(null);
     }

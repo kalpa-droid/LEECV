@@ -5,11 +5,10 @@ import EditorPanel from '../modules/cv-builder/components/EditorPanel';
 import CVPreview from '../modules/cv-builder/components/CVPreview';
 import { ZoomIn, ZoomOut, Smartphone } from 'lucide-react';
 
-import { getCurrentProfile } from '../modules/auth/authService';
-import { initialCVData, standardExampleCVData, blankCVTemplate } from '../data/initialCVData';
+import { getCurrentProfile, capturarConexionDriveSiCorresponde } from '../modules/auth/authService';
+import { supabase } from '../shared/core/lib/supabaseClient';
 import { exportCVToPDF } from '../shared/core/pdf-engine/pdfExporter';
 import { exportCVToJson, importCVFromJsonFile } from '../shared/core/utils/jsonImporterExporter';
-import { saveCV } from '../modules/cv-builder/services/cvStorageService';
 
 // Lazy-loaded Modals for Code-Splitting
 const PhotoCropperModal = lazy(() => import('../modules/cv-builder/components/PhotoCropperModal'));
@@ -25,13 +24,13 @@ const PrivacyModal = lazy(() => import('../modules/cv-builder/components/Privacy
 
 import { CVProvider, useCVContext } from '../context/CVContext';
 import { ToastProvider, useToast } from '../shared/core/ui/Toast';
-import { useConfirm } from '../shared/core/ui/ConfirmDialog';
+import { useConfirm, ConfirmProvider } from '../shared/core/ui/ConfirmDialog';
 
 function AppContent() {
-  const { cvData, setCvData, resetToBlankCV, loadCVData, saveCV } = useCVContext();
-  const { showSuccess, showError, showWarning, showInfo } = useToast();
+  const { cvData, setCvData, resetToBlankCV, saveCV } = useCVContext();
+  const { showSuccess, showError, showInfo } = useToast();
   const { confirm } = useConfirm();
-  const [currentProfile, setCurrentProfile] = useState(null);
+  const [currentProfile, setCurrentProfile] = useState<any>(null);
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
 
@@ -55,8 +54,8 @@ function AppContent() {
     if (typeof window !== 'undefined') {
       const isMobile = window.innerWidth < 768;
       const sidebarWidth = isMobile ? 0 : (isPanelOpen ? 500 : 0);
-      const availableWidth = window.innerWidth - sidebarWidth - 48; // padding margin
-      const a4WidthPx = 794; // 210mm in px at 96 DPI
+      const availableWidth = window.innerWidth - sidebarWidth - 48;
+      const a4WidthPx = 794;
       
       const calculatedScale = Math.min(Math.max(availableWidth / a4WidthPx, 0.45), 1.1);
       setZoomLevel(Number(calculatedScale.toFixed(2)));
@@ -83,7 +82,6 @@ function AppContent() {
 
   const [isPdfCheckoutOpen, setIsPdfCheckoutOpen] = useState(false);
 
-  // Direct 1-Click Bulletproof Page-by-Page A4 PDF Generator
   const handleStartPDFGeneration = async () => {
     setIsPdfCheckoutOpen(false);
     setIsGeneratingPDF(true);
@@ -109,8 +107,10 @@ function AppContent() {
     }
   };
 
+  const triggerPdfGeneration = handleStartPDFGeneration;
+
   const handleExportPDFClick = () => {
-    if (cvData.id === 'cv_ejemplo_estandar') {
+    if (cvData?.id === 'cv_ejemplo_estandar') {
       showInfo('Para comenzar a crear tu propio currículum, presiona el botón "+ Nuevo"');
       return;
     }
@@ -118,15 +118,15 @@ function AppContent() {
   };
 
   const handleSaveCVClick = async () => {
-    if (cvData.id === 'cv_ejemplo_estandar') {
+    if (cvData?.id === 'cv_ejemplo_estandar') {
       showInfo('Para comenzar a crear tu propio currículum, presiona el botón "+ Nuevo"');
       return;
     }
 
     setIsSaving(true);
     try {
-      const res = await saveCV(cvData);
-      if (res.success) {
+      const res = await saveCV();
+      if (res?.success) {
         showSuccess(`¡CV guardado con éxito! 📌 Título: "${res.title}"`);
       } else {
         showError('Hubo un inconveniente al guardar. Tus datos ingresados se mantienen intactos.');
@@ -140,7 +140,7 @@ function AppContent() {
   };
 
   const handleNewCV = async () => {
-    if (cvData.id === 'cv_ejemplo_estandar') {
+    if (cvData?.id === 'cv_ejemplo_estandar') {
       resetToBlankCV();
       setActiveTab('personales');
       return;
@@ -152,7 +152,7 @@ function AppContent() {
       confirmText: 'Sí, crear nuevo',
       onConfirm: async () => {
         try {
-          await saveCV(cvData);
+          await saveCV();
         } catch (err) {
           console.warn('Error auto-guardando borrador al crear nuevo CV:', err);
         }
@@ -163,13 +163,12 @@ function AppContent() {
     });
   };
 
-  const handleImportJsonFile = async (e) => {
+  const handleImportJsonFile = async (e: any) => {
     const file = e.target?.files?.[0];
     if (file) {
       try {
         const importedData = await importCVFromJsonFile(file);
         if (importedData) {
-          // Automatic exit from sample mode if imported CV contains example ID
           if (importedData.id === 'cv_ejemplo_estandar') {
             importedData.id = `cv_${Date.now()}`;
           }
@@ -178,28 +177,20 @@ function AppContent() {
         } else {
           showError('El archivo seleccionado no tiene un formato válido de LEECV.');
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error importando JSON:', err);
-        showError(err.message || 'Error al procesar el archivo .JSON seleccionado.');
+        showError(err?.message || 'Error al procesar el archivo .JSON seleccionado.');
       }
     }
-  };
-
-  const handleConfirmDownloadJson = () => {
-    exportCVToJson(cvData);
-    setIsDownloadModalOpen(false);
   };
 
   const [mobileTabState, setMobileTabState] = useState('editor');
 
   return (
     <div className="h-screen bg-[#2B1B2E] text-white flex flex-col font-sans overflow-hidden selection:bg-[#FF2E63] selection:text-white relative">
-      {/* Primary Top Navbar */}
       <Navbar 
         onPrint={handleExportPDFClick} 
-        onOpenPhotoCropper={() => setIsPhotoCropperOpen(true)}
-        onOpenSignature={() => setIsSignatureOpen(true)}
-        onOpenWizard={() => setIsWizardOpen(true)}
+        onStartNewCVWizard={() => setIsWizardOpen(true)}
         onOpenSavedCVs={() => setIsSavedCVsOpen(true)}
         onOpenCloudStatus={() => setIsCloudModalOpen(true)}
         onOpenPricing={() => setIsPricingModalOpen(true)}
@@ -207,13 +198,11 @@ function AppContent() {
         onNewCV={handleNewCV}
         onSaveCV={handleSaveCVClick}
         onImportJson={handleImportJsonFile}
+        onExportJson={() => exportCVToJson(cvData)}
         isSaving={isSaving}
-        cvData={cvData}
       />
 
-      {/* Canva-Style Main Workspace */}
       <main className="flex-1 flex overflow-hidden relative min-h-0">
-        {/* Left Canva Icon Tool Dock */}
         <CanvaIconDock 
           activeTab={activeTab} 
           setActiveTab={(tab) => {
@@ -225,7 +214,6 @@ function AppContent() {
           setIsPanelOpen={setIsPanelOpen}
         />
 
-        {/* Sliding Editor Panel Flyout Drawer */}
         <div 
           className={`transition-all duration-300 ease-in-out border-r border-[#6B5B6E]/30 bg-[#F5EDDA] z-20 flex flex-col h-full overflow-y-auto ${
             isPanelOpen 
@@ -240,16 +228,15 @@ function AppContent() {
             setActiveTab={setActiveTab}
             onOpenPhotoCropper={() => setIsPhotoCropperOpen(true)}
             onOpenSignature={() => setIsSignatureOpen(true)}
+            onOpenSavedCVs={() => setIsSavedCVsOpen(true)}
           />
         </div>
 
-        {/* Live A4 CV Preview Canvas Area (Direct paper background) */}
         <div className={`flex-1 bg-[#1F1322] h-full overflow-y-auto p-2 sm:p-4 justify-center items-start relative ${
           mobileTabState === 'editor' && isPanelOpen ? 'hidden md:flex' : 'flex'
         }`}>
-          <CVPreview cvData={cvData} activeTab={activeTab} zoomLevel={zoomLevel} />
+          <CVPreview cvData={cvData} setCvData={setCvData} activeTab={activeTab} zoomLevel={zoomLevel} />
 
-          {/* Sleek Floating Zoom & Auto-Fit Cluster Pill */}
           <div className="fixed bottom-16 md:bottom-5 right-5 z-30 bg-[#2B1B2E]/90 backdrop-blur-md text-white p-1 rounded-2xl border border-white/20 shadow-2xl flex items-center gap-1 text-xs font-black">
             <button
               onClick={() => setZoomLevel(prev => Math.max(0.3, parseFloat((prev - 0.1).toFixed(2))))}
@@ -283,7 +270,6 @@ function AppContent() {
         </div>
       </main>
 
-      {/* Lazy Loaded Modals wrapped in Suspense */}
       <Suspense fallback={null}>
         {isPricingModalOpen && (
           <PricingModal 
@@ -297,8 +283,8 @@ function AppContent() {
           <PhotoCropperModal 
             isOpen={isPhotoCropperOpen}
             onClose={() => setIsPhotoCropperOpen(false)}
-            currentPhoto={cvData.personalInfo.profilePhoto}
-            onSave={(croppedUrl) => {
+            currentPhoto={cvData?.personalInfo?.profilePhoto || ''}
+            onSavePhoto={(croppedUrl: string) => {
               setCvData(prev => ({
                 ...prev,
                 personalInfo: { ...prev.personalInfo, profilePhoto: croppedUrl }
@@ -312,8 +298,8 @@ function AppContent() {
           <SignatureModal 
             isOpen={isSignatureOpen}
             onClose={() => setIsSignatureOpen(false)}
-            signature={cvData.signature}
-            onSave={(sigData) => {
+            currentSignature={cvData?.signature}
+            onSaveSignature={(sigData: any) => {
               setCvData(prev => ({
                 ...prev,
                 signature: sigData
@@ -327,10 +313,10 @@ function AppContent() {
           <WizardModal 
             isOpen={isWizardOpen}
             onClose={() => setIsWizardOpen(false)}
-            onComplete={(wizardData) => {
-              setCvData(prev => ({ ...prev, ...wizardData }));
-              setIsWizardOpen(false);
-            }}
+            onOpenPhotoCropper={() => setIsPhotoCropperOpen(true)}
+            onOpenSignature={() => setIsSignatureOpen(true)}
+            cvData={cvData}
+            setCvData={setCvData}
           />
         )}
 
@@ -338,7 +324,7 @@ function AppContent() {
           <SavedCVsModal 
             isOpen={isSavedCVsOpen}
             onClose={() => setIsSavedCVsOpen(false)}
-            onSelectCV={(selectedCV) => {
+            onSelectCV={(selectedCV: any) => {
               setCvData(selectedCV);
               setIsSavedCVsOpen(false);
             }}
@@ -350,10 +336,8 @@ function AppContent() {
           <CloudStatusModal 
             isOpen={isCloudModalOpen}
             onClose={() => setIsCloudModalOpen(false)}
-            onUpgrade={() => {
-              setIsCloudModalOpen(false);
-              setIsPricingModalOpen(true);
-            }}
+            onForceSave={handleSaveCVClick}
+            isSaving={isSaving}
           />
         )}
 
@@ -392,7 +376,6 @@ function AppContent() {
         )}
       </Suspense>
 
-      {/* Footer Legal Link */}
       <footer className="bg-[#1C121E] text-slate-400 border-t border-[#EFE2C9]/10 py-3 px-6 text-center text-xs no-print flex items-center justify-between">
         <span className="text-[11px] font-bold text-slate-500">© 2026 LEECV — Diseñado para Profesionales y Agencias</span>
         <button
@@ -405,8 +388,6 @@ function AppContent() {
     </div>
   );
 }
-
-import { ConfirmProvider } from '../shared/core/ui/ConfirmDialog';
 
 export default function App() {
   return (

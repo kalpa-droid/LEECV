@@ -1,6 +1,6 @@
 import React from 'react';
 
-export function ScannedCertificatesPages({ certificates = [], theme = {} }) {
+export function ScannedCertificatesPages({ certificates = [], theme = {} }: { certificates?: any[]; theme?: any }) {
   if (!Array.isArray(certificates) || certificates.length === 0) return null;
 
   const fontFamily = theme.fontFamily || 'Inter, sans-serif';

@@ -1146,7 +1146,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
                         {Object.entries(rec).map(([k, v]) => (
                           <div key={k} className="flex items-center justify-between">
                             <span className="font-bold text-slate-700 capitalize">{k}:</span>
-                            <span className="text-slate-900">{v}</span>
+                            <span className="text-slate-900">{String(v)}</span>
                           </div>
                         ))}
                       </div>

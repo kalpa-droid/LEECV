@@ -122,10 +122,15 @@ export default function SignatureModal({
 
       const reader = new FileReader();
       reader.onload = (event) => {
-        setUploadedImageSrc(event.target.result);
+        setUploadedImageSrc(event.target?.result as string);
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const getProcessedUploadedSignature = () => {
+    if (!uploadedImageSrc) return '';
+    return removeBgContrast ? processToTransparentPng(uploadedImageSrc) : uploadedImageSrc;
   };
 
   // Process canvas or uploaded signature to transparent PNG

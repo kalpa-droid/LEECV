@@ -1,21 +1,30 @@
-import React, { StrictMode, Component, lazy, Suspense } from 'react'
-import { createRoot } from 'react-dom/client'
-import '../index.css'
+import React, { StrictMode, Component, lazy, Suspense, ReactNode } from 'react';
+import { createRoot } from 'react-dom/client';
+import '../index.css';
 
-const App = lazy(() => import('./App.jsx'));
-const AdminDashboard = lazy(() => import('../modules/admin/AdminDashboard.jsx'));
+const App = lazy(() => import('./App'));
+const AdminDashboard = lazy(() => import('../modules/admin/AdminDashboard'));
 
-class ErrorBoundary extends Component {
-  constructor(props) {
+interface ErrorBoundaryProps {
+  children?: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error | null;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     console.error('CRITICAL APP ERROR:', error, errorInfo);
   }
 
@@ -75,16 +84,19 @@ class ErrorBoundary extends Component {
 const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
 const RootComponent = isAdminRoute ? AdminDashboard : App;
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <ErrorBoundary>
-      <Suspense fallback={
-        <div className="min-h-screen bg-[#2B1B2E] text-white flex items-center justify-center font-bold">
-          Cargando LEECV...
-        </div>
-      }>
-        <RootComponent />
-      </Suspense>
-    </ErrorBoundary>
-  </StrictMode>,
-)
+const rootElement = document.getElementById('root');
+if (rootElement) {
+  createRoot(rootElement).render(
+    <StrictMode>
+      <ErrorBoundary>
+        <Suspense fallback={
+          <div className="min-h-screen bg-[#2B1B2E] text-white flex items-center justify-center font-bold">
+            Cargando LEECV...
+          </div>
+        }>
+          <RootComponent />
+        </Suspense>
+      </ErrorBoundary>
+    </StrictMode>,
+  );
+}

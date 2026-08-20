@@ -24,11 +24,11 @@ export default function AdminDashboard() {
   const { showSuccess, showError } = useToast();
   const { confirm } = useConfirm();
   const [profile, setProfile] = useState(undefined);
-  const [users, setUsers] = useState([]);
-  const [stats, setStats] = useState({ totalUsers: 0, premiumUsers: 0 });
+  const [users, setUsers] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>({ totalUsers: 0, proUsers: 0, enterpriseUsers: 0, activeSubscriptions: 0 });
   const [loadingData, setLoadingData] = useState(false);
-  const [claims, setClaims] = useState([]);
-  const [notifications, setNotifications] = useState([]);
+  const [claims, setClaims] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
@@ -37,15 +37,15 @@ export default function AdminDashboard() {
   async function loadEverything() {
     setLoadingData(true);
     try {
-      const [{ users: userList, totalCount: total }, s, claimList, notifList] = await Promise.all([
-        listUsers(searchQuery, page, pageSize),
+      const [userList, s, claimList, notifList] = await Promise.all([
+        listUsers(searchQuery),
         getBasicStats(),
         listPendingClaims(),
-        listAdminNotifications({ limit: 20 })
+        listAdminNotifications()
       ]);
-      setUsers(userList);
-      setTotalCount(total);
-      setStats(s);
+      setUsers(userList || []);
+      setTotalCount(userList?.length || 0);
+      setStats(s || { totalUsers: 0, proUsers: 0, enterpriseUsers: 0, activeSubscriptions: 0 });
       setClaims(claimList || []);
       setNotifications(notifList || []);
     } catch (err) {
@@ -98,7 +98,7 @@ export default function AdminDashboard() {
         }
       });
     } else {
-      await setUserPlan(user.id, targetPlan);
+      await setUserPlan(user.id, targetPlan as any);
       showSuccess(`Plan ${targetPlan.toUpperCase()} (30 días) asignado a ${user.email}`);
       loadEverything();
     }
@@ -184,7 +184,7 @@ export default function AdminDashboard() {
               <Crown className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-2xl font-black text-[#2B1B2E]">{stats.premiumUsers}</p>
+              <p className="text-2xl font-black text-[#2B1B2E]">{stats.proUsers || stats.activeSubscriptions || 0}</p>
               <p className="text-xs text-[#2B1B2E]/60 font-bold">Licencias Premium Activas</p>
             </div>
           </div>

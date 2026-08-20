@@ -129,6 +129,7 @@ export default function WizardModal({
             }}
             onOpenPhotoCropper={onOpenPhotoCropper}
             onOpenSignature={onOpenSignature}
+            onOpenSavedCVs={() => {}}
           />
         </div>
 

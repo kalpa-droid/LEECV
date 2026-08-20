@@ -1,11 +1,19 @@
-/**
- * validateFile.js
- * Validates uploaded image files for type and size constraints.
- */
+export interface ValidateFileOptions {
+  maxSizeBytes?: number;
+  allowedTypes?: string[];
+}
 
-export function validateImageFile(file, options = {}) {
+export interface ValidateFileResult {
+  valid: boolean;
+  error?: string;
+}
+
+export function validateImageFile(
+  file: File | Blob | null | undefined, 
+  options: ValidateFileOptions = {}
+): ValidateFileResult {
   const {
-    maxSizeBytes = 12 * 1024 * 1024, // 12MB limit
+    maxSizeBytes = 12 * 1024 * 1024,
     allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/jpg']
   } = options;
 
@@ -13,8 +21,7 @@ export function validateImageFile(file, options = {}) {
     return { valid: false, error: 'No se seleccionó ningún archivo.' };
   }
 
-  // Type validation
-  const fileType = file.type?.toLowerCase();
+  const fileType = (file as File).type?.toLowerCase() || '';
   const isTypeValid = allowedTypes.some(type => fileType.includes(type.replace('image/', '')) || fileType === type);
 
   if (fileType && !isTypeValid) {
@@ -24,7 +31,6 @@ export function validateImageFile(file, options = {}) {
     };
   }
 
-  // Size validation
   if (file.size > maxSizeBytes) {
     const sizeMb = (maxSizeBytes / (1024 * 1024)).toFixed(0);
     return {

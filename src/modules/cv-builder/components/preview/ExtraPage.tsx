@@ -6,7 +6,7 @@ export function ExtraPage({
   pageNum,
   totalPages,
   paperSize = 'a4',
-  theme = {},
+  theme = {} as any,
   children
 }) {
   const paper = PAGE_SIZES[paperSize] || PAGE_SIZES.a4;

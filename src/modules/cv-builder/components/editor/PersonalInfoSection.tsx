@@ -120,7 +120,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper, registeredItem
           Frase de Presentación / Perfil Profesional (Aparece en Encabezado)
         </label>
         <textarea 
-          rows="3"
+          rows={3}
           value={cvData.personalInfo?.quote || ''}
           onChange={(e) => updatePersonalInfo('quote', e.target.value)}
           placeholder="Ej: Mi experiencia personal y profesional me permite desarrollar eficientemente..."

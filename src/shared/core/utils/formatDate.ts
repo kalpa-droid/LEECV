@@ -1,9 +1,12 @@
-/**
- * formatDate.js
- * Centralized date formatting for CVs, timestamps, and admin tables.
- */
+export interface FormatDateOptions {
+  includeTime?: boolean;
+  locale?: string;
+}
 
-export function formatDate(dateStringOrTimestamp, options = {}) {
+export function formatDate(
+  dateStringOrTimestamp: string | number | Date | null | undefined, 
+  options: FormatDateOptions = {}
+): string {
   if (!dateStringOrTimestamp) return 'Fecha no especificada';
 
   const {

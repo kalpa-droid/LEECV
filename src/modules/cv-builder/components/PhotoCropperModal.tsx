@@ -67,6 +67,24 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
     setIsDragging(false);
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const val = validateImageFile(file);
+      if (!val.valid) {
+        showError(val.error || 'Archivo no válido');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        if (evt.target?.result) {
+          setImageSrc(evt.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleCropAndSave = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;

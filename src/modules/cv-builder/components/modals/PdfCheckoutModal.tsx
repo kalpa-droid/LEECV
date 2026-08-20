@@ -28,16 +28,15 @@ export default function PdfCheckoutModal({
     setIsProcessing(true);
     setErrorMsg('');
     try {
-      const userId = currentProfile?.id || `user_anon_${Date.now()}`;
-      await iniciarPagoMercadoPago(userId, email, 'single_pdf');
-    } catch (err) {
+      await iniciarPagoMercadoPago('pro');
+    } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || 'No se pudo abrir el checkout de Mercado Pago.');
       setIsProcessing(false);
     }
   };
 
-  const handlePackCheckout = async (packPlan) => {
+  const handlePackCheckout = async (_packPlan: string) => {
     if (!email || !email.includes('@')) {
       setErrorMsg('Por favor ingresa un correo electrónico válido para asociar tu compra.');
       return;
@@ -45,8 +44,7 @@ export default function PdfCheckoutModal({
     setIsProcessing(true);
     setErrorMsg('');
     try {
-      const userId = currentProfile?.id || `user_anon_${Date.now()}`;
-      await iniciarPagoMercadoPago(userId, email, packPlan);
+      await iniciarPagoMercadoPago('pro');
     } catch (err) {
       console.error(err);
       setErrorMsg(err.message || 'No se pudo abrir el checkout de Mercado Pago.');

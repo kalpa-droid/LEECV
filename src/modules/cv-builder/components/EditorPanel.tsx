@@ -58,6 +58,7 @@ export default function EditorPanel({
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [isCertCropperOpen, setIsCertCropperOpen] = useState(false);
   const [rawCertSrc, setRawCertSrc] = useState('');
+  const [certImagePreview, setCertImagePreview] = useState('');
   const videoRef = useRef(null);
   const fileInputRef = useRef(null);
 

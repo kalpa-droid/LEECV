@@ -1,12 +1,24 @@
 export interface PersonalInfo {
   fullName?: string;
+  surname?: string;
+  givenNames?: string;
   title?: string;
+  titlePrefix?: string;
   email?: string;
   phone?: string;
   location?: string;
   dni?: string;
+  cuit?: string;
+  birthDate?: string;
+  address?: string;
+  cityProvince?: string;
+  facebook?: string;
+  initials?: string;
+  year?: string;
+  quote?: string;
   website?: string;
   photoUrl?: string;
+  profilePhoto?: string;
   signatureUrl?: string;
   summary?: string;
 }
@@ -49,7 +61,7 @@ export interface LanguageItem {
 }
 
 export interface SkillGroup {
-  id: string;
+  id?: string;
   category?: string;
   skills: string[];
 }
@@ -57,6 +69,7 @@ export interface SkillGroup {
 export interface ColumnAssignments {
   secundaria?: string[];
   primaria?: string[];
+  [key: string]: any;
 }
 
 export interface CVLayout {
@@ -69,6 +82,7 @@ export interface CVLayout {
   spacing?: string;
   sectionOrder?: string[];
   columnAssignments?: ColumnAssignments;
+  [key: string]: any;
 }
 
 export interface CVData {
@@ -84,4 +98,5 @@ export interface CVData {
   layout?: CVLayout;
   layoutStyle?: string;
   updatedAt?: string;
+  [key: string]: any;
 }
