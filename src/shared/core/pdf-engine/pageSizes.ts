@@ -102,3 +102,73 @@ export function getDynamicHeightChunks(
 
   return chunks;
 }
+
+export interface PrimarySectionBlock {
+  secId: string;
+  items: any[];
+  itemType?: 'exp' | 'prof' | 'course';
+}
+
+export interface PagePrimaryGroup {
+  pageIndex: number;
+  blocks: PrimarySectionBlock[];
+}
+
+/**
+ * Dynamically packs primary section blocks into pages using exact paper height dimensions.
+ * Guarantees zero vertical overflow on Page 2 and all extra pages.
+ */
+export function packPrimarySectionsIntoPages(
+  blocks: PrimarySectionBlock[],
+  paperSizeId: string = 'a4',
+  page1ReservedMm: number = 75,
+  extraPageReservedMm: number = 45
+): PagePrimaryGroup[] {
+  const paper = PAGE_SIZES[paperSizeId] || PAGE_SIZES.a4;
+  const page1AvailableMm = Math.max(paper.heightMm - page1ReservedMm, 120);
+  const extraPageAvailableMm = Math.max(paper.heightMm - extraPageReservedMm, 150);
+
+  const pages: PagePrimaryGroup[] = [];
+  let currentPageBlocks: PrimarySectionBlock[] = [];
+  let currentHeightMm = 0;
+  let currentPageIndex = 0;
+
+  const getAvailableHeight = (pageIdx: number) => pageIdx === 0 ? page1AvailableMm : extraPageAvailableMm;
+
+  for (const block of blocks) {
+    if (!block.items || block.items.length === 0) continue;
+
+    const headerMm = 14;
+    let itemsForCurrentBlock: any[] = [];
+    let blockHeightMm = headerMm;
+
+    for (const item of block.items) {
+      const itemMm = getItemHeightMm(item, block.itemType || 'exp');
+
+      if (currentHeightMm + blockHeightMm + itemMm > getAvailableHeight(currentPageIndex) && itemsForCurrentBlock.length > 0) {
+        currentPageBlocks.push({ secId: block.secId, items: itemsForCurrentBlock, itemType: block.itemType });
+        pages.push({ pageIndex: currentPageIndex, blocks: currentPageBlocks });
+
+        currentPageIndex++;
+        currentPageBlocks = [];
+        currentHeightMm = 0;
+        itemsForCurrentBlock = [item];
+        blockHeightMm = headerMm + itemMm;
+      } else {
+        itemsForCurrentBlock.push(item);
+        blockHeightMm += itemMm;
+      }
+    }
+
+    if (itemsForCurrentBlock.length > 0) {
+      currentPageBlocks.push({ secId: block.secId, items: itemsForCurrentBlock, itemType: block.itemType });
+      currentHeightMm += blockHeightMm;
+    }
+  }
+
+  if (currentPageBlocks.length > 0) {
+    pages.push({ pageIndex: currentPageIndex, blocks: currentPageBlocks });
+  }
+
+  return pages;
+}

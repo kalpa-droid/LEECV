@@ -17,7 +17,7 @@ import {
   Clock
 } from 'lucide-react';
 
-import { PAGE_SIZES, calculateItemsPerPage, getDynamicHeightChunks } from '../../../shared/core/pdf-engine/pageSizes';
+import { PAGE_SIZES, calculateItemsPerPage, getDynamicHeightChunks, packPrimarySectionsIntoPages, PrimarySectionBlock } from '../../../shared/core/pdf-engine/pageSizes';
 import { getColumnVariant } from '../../../shared/core/pdf-engine/columnVariants';
 import { getSidebarPageChunks } from '../../../shared/core/pdf-engine/sidebarPagination';
 import { CoverPageSection } from './preview/CoverPageSection';
@@ -83,19 +83,26 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
   const sortedExperience = sortByYearDesc(experience);
   const sortedProfession = sortByYearDesc(profession);
 
-  // Dynamic pagination math calculated from real paper size height (A4, Carta, Oficio, Legal) & text length
-  const FIRST_PAGE_PROF_LIMIT = calculateItemsPerPage(paperSizeId, 45, 110);
-  const firstPageProfessions = sortedProfession.slice(0, FIRST_PAGE_PROF_LIMIT);
-  const extraProfessions = sortedProfession.slice(FIRST_PAGE_PROF_LIMIT);
+  // Dynamic primary section blocks calculation for zero-overflow pagination across paper sizes
+  const primaryOrder = [...new Set(cvData?.layout?.sectionOrders?.primaria || ["personales", "formacion", "profesion", "experiencia", "cursos", "ecologia"])] as string[];
 
-  const extraProfChunks = getDynamicHeightChunks(extraProfessions, paperSizeId, 'prof', 65, 2);
-  const totalExtraProfPages = extraProfChunks.length;
+  const primaryBlocks: PrimarySectionBlock[] = primaryOrder.map(secId => {
+    if (secId === 'formacion') return { secId: 'formacion', items: education, itemType: 'exp' as const };
+    if (secId === 'profesion') return { secId: 'profesion', items: sortedProfession, itemType: 'prof' as const };
+    if (secId === 'experiencia') return { secId: 'experiencia', items: sortedExperience, itemType: 'exp' as const };
+    if (secId === 'cursos') return { secId: 'cursos', items: sortedCourses, itemType: 'course' as const };
+    if (secId === 'personales') return { secId: 'personales', items: [personalInfo], itemType: 'exp' as const };
+    if (secId === 'ecologia') {
+      const ruralItems = ecology?.rural || [];
+      const envItems = ecology?.environmental || [];
+      const communityItems = ecology?.community || [];
+      const allEcology = [...ruralItems, ...envItems, ...communityItems];
+      return { secId: 'ecologia', items: allEcology, itemType: 'course' as const };
+    }
+    return { secId, items: [], itemType: 'exp' as const };
+  }).filter(b => b.items.length > 0);
 
-  const expChunks = getDynamicHeightChunks(sortedExperience, paperSizeId, 'exp', 75, 2);
-  const totalExpPages = Math.max(1, expChunks.length);
-
-  const courseChunks = getDynamicHeightChunks(sortedCourses, paperSizeId, 'course', 75, 2);
-  const totalCoursePages = Math.max(1, courseChunks.length);
+  const packedPages = packPrimarySectionsIntoPages(primaryBlocks, paperSizeId, 85, 50);
 
   const secondarySections = [...new Set(cvData?.layout?.sectionOrders?.secundaria || ["personales", "informatica", "ecologia"])] as string[];
   const sidebarPageChunks = getSidebarPageChunks(secondarySections, cvData, paperSizeId, 70);
@@ -189,7 +196,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
     return (col === 'primaria' || col === 'ambas') && isVis(secKey);
   };
 
-  const renderDynamicSection = (secId: string, location: 'primaria' | 'secundaria' | 'ambas') => {
+  const renderDynamicSection = (secId: string, location: 'primaria' | 'secundaria' | 'ambas' = 'primaria', overrideItems?: any[]) => {
     if (location === 'secundaria' && !showInSecundaria(secId)) return null;
     if (location === 'primaria' && !showInPrimaria(secId)) return null;
 
@@ -277,55 +284,61 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
         );
 
       case 'formacion':
-        if (!education || education.length === 0) return null;
-        return (
-          <div key={`sec-${location}-formacion`} id="cv-section-formacion" className={`section-box-print ${variant.containerClass} mb-3`}>
-            {renderSectionHeader(<GraduationCap className="w-4 h-4" />, "FORMACIÓN ACADÉMICA")}
-            <div className={variant.gridClass}>
-              {education.map((edu, i) => (
-                <div key={i} className={`${variant.itemPaddingClass} border-l-4`} style={{ borderLeftColor: theme.accentColor }}>
-                  <div className="flex items-center justify-between">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-black text-white whitespace-nowrap shadow-sm" style={{ backgroundColor: theme.primaryColor }}>
-                      {edu.level}
-                    </span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-black whitespace-nowrap" style={{ backgroundColor: 'rgba(64,160,142,0.12)', color: theme.accentColor }}>
-                      AÑO {edu.year}
-                    </span>
+        {
+          const listEdu = overrideItems || education;
+          if (!listEdu || listEdu.length === 0) return null;
+          return (
+            <div key={`sec-${location}-formacion`} id="cv-section-formacion" className={`section-box-print ${variant.containerClass} mb-3`}>
+              {renderSectionHeader(<GraduationCap className="w-4 h-4" />, "FORMACIÓN ACADÉMICA")}
+              <div className={variant.gridClass}>
+                {listEdu.map((edu: any, i: number) => (
+                  <div key={i} className={`${variant.itemPaddingClass} border-l-4`} style={{ borderLeftColor: theme.accentColor }}>
+                    <div className="flex items-center justify-between">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-black text-white whitespace-nowrap shadow-sm" style={{ backgroundColor: theme.primaryColor }}>
+                        {edu.level}
+                      </span>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-black whitespace-nowrap" style={{ backgroundColor: 'rgba(64,160,142,0.12)', color: theme.accentColor }}>
+                        AÑO {edu.year}
+                      </span>
+                    </div>
+                    <h4 className="text-xs font-black text-slate-900 mt-1">{edu.degree}</h4>
+                    <p className="text-[11px] font-bold text-slate-600 flex items-center gap-1">
+                      <Building2 className="w-3 h-3 text-slate-400" /> {edu.institution}
+                    </p>
                   </div>
-                  <h4 className="text-xs font-black text-slate-900 mt-1">{edu.degree}</h4>
-                  <p className="text-[11px] font-bold text-slate-600 flex items-center gap-1">
-                    <Building2 className="w-3 h-3 text-slate-400" /> {edu.institution}
-                  </p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        );
+          );
+        }
 
       case 'profesion':
-        if (!firstPageProfessions || firstPageProfessions.length === 0) return null;
-        return (
-          <div key={`sec-${location}-profesion`} id="cv-section-profesion" className={`section-box-print ${variant.containerClass} mb-3`}>
-            {renderSectionHeader(<Briefcase className="w-4 h-4" />, `TÍTULOS PROFESIONALES (${sortedProfession.length})`)}
-            <div className={variant.gridClass}>
-              {firstPageProfessions.map((prof, i) => (
-                <div key={i} className={`${variant.itemPaddingClass} border-l-4`} style={{ borderLeftColor: theme.primaryColor }}>
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-black text-slate-900 leading-tight">{prof.degree}</h4>
-                    <span className="px-2 py-0.5 rounded text-[9px] font-black text-white whitespace-nowrap ml-2 flex-shrink-0" style={{ backgroundColor: theme.primaryColor }}>
-                      AÑO {prof.year}
-                    </span>
+        {
+          const listProf = overrideItems || sortedProfession;
+          if (!listProf || listProf.length === 0) return null;
+          return (
+            <div key={`sec-${location}-profesion`} id="cv-section-profesion" className={`section-box-print ${variant.containerClass} mb-3`}>
+              {renderSectionHeader(<Briefcase className="w-4 h-4" />, `TÍTULOS PROFESIONALES (${sortedProfession.length})`)}
+              <div className={variant.gridClass}>
+                {listProf.map((prof: any, i: number) => (
+                  <div key={i} className={`${variant.itemPaddingClass} border-l-4`} style={{ borderLeftColor: theme.primaryColor }}>
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-black text-slate-900 leading-tight">{prof.degree}</h4>
+                      <span className="px-2 py-0.5 rounded text-[9px] font-black text-white whitespace-nowrap ml-2 flex-shrink-0" style={{ backgroundColor: theme.primaryColor }}>
+                        AÑO {prof.year}
+                      </span>
+                    </div>
+                    <p className="text-[10px] font-bold" style={{ color: theme.accentColor }}>{prof.institution}</p>
                   </div>
-                  <p className="text-[10px] font-bold" style={{ color: theme.accentColor }}>{prof.institution}</p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        );
+          );
+        }
 
       case 'cursos':
         {
-          const listCourses = courseChunks[0] || [];
+          const listCourses = overrideItems || sortedCourses;
           if (!listCourses || listCourses.length === 0) return null;
           return (
             <div key={`sec-${location}-cursos`} id="cv-section-cursos" className={`section-box-print ${variant.containerClass} mb-3`}>
@@ -369,7 +382,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
 
       case 'experiencia':
         {
-          const listExp = expChunks[0] || [];
+          const listExp = overrideItems || sortedExperience;
           if (!listExp || listExp.length === 0) return null;
           return (
             <div key={`sec-${location}-experiencia`} id="cv-section-experiencia" className={`section-box-print ${variant.containerClass} mb-3`}>
@@ -468,7 +481,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
 
   const showCover = (cvData?.showCoverPage ?? cvData?.layout?.showCoverPage) !== false;
   const startBodyPageNum = showCover ? 2 : 1;
-  const totalPagesCalculated = (showCover ? 1 : 0) + 1 + (extraProfChunks?.length || 0) + (expChunks?.length > 1 ? expChunks.length - 1 : 0) + (courseChunks?.length > 1 ? courseChunks.length - 1 : 0) + certPages.length;
+  const totalPagesCalculated = (showCover ? 1 : 0) + packedPages.length + (extraSidebarChunks?.length || 0) + certPages.length;
   const totalHojasLabel = totalPagesCalculated === 1 ? '1 HOJA' : `${totalPagesCalculated} HOJAS`;
 
   return (
@@ -666,384 +679,66 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
             )}
 
             {/* Dynamic Right Column (Primaria) Section Rendering */}
-            {([...new Set(cvData?.layout?.sectionOrders?.primaria || ["personales", "formacion", "profesion", "experiencia", "cursos", "ecologia"])] as string[]).map((secId: string) => 
-              renderDynamicSection(secId, 'primaria')
+            {(packedPages[0]?.blocks || []).map((block) => 
+              renderDynamicSection(block.secId, 'primaria', block.items)
             )}
           </div>
         </div>
       </div>
 
       {/* ========================================================================= */}
-      {/* PAGES TO N: PROFESIÓN & TITULACIONES ADICIONALES (REBALANCEO DINÁMICO A4) */}
+      {/* PAGES TO N: DYNAMIC MULTI-PAGE FLOW (REBALANCEO DINÁMICO A4) */}
       {/* ========================================================================= */}
-      {extraProfChunks.map((extraProfGroup, extraPageIdx) => {
-        const pageNum = startBodyPageNum + 1 + extraPageIdx;
+      {packedPages.slice(1).map((pageGroup, extraIdx) => {
+        const pageNum = startBodyPageNum + 1 + extraIdx;
+        const isLastPage = extraIdx === packedPages.length - 2;
 
         return (
-          <div key={`extra-prof-${pageNum}`} className="a4-page-container grid grid-cols-3">
+          <div key={`extra-page-${pageNum}`} className="a4-page-container grid grid-cols-3">
             {/* Left Sidebar */}
             <div className="col-span-1 flex flex-col relative" style={sidebarBgStyle}>
               <div className="p-5 text-center border-b border-current opacity-90" style={sidebarHeaderBgStyle}>
                 <span className="text-2xl font-black tracking-widest">{personalInfo.initials}</span>
-                <p className="text-[10px] font-semibold tracking-wider uppercase opacity-80 mt-0.5">Titulaciones & Grados</p>
+                <p className="text-[10px] font-semibold tracking-wider uppercase opacity-80 mt-0.5">Anexo Documental</p>
               </div>
 
               <div className="p-4 space-y-4 flex-1 relative">
-                <h3 className="text-xs font-bold uppercase tracking-wider border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
-                  <Briefcase className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> FORMACIÓN DE GRADO
-                </h3>
-
-                {(() => {
-                  const profStartIdx = FIRST_PAGE_PROF_LIMIT + extraProfChunks.slice(0, extraPageIdx).reduce((acc, c) => acc + c.length, 0) + 1;
-                  const profEndIdx = profStartIdx + extraProfGroup.length - 1;
-                  return (
-                    <p className="text-[10px] leading-relaxed opacity-90">
-                      Registros {profStartIdx} a {profEndIdx} de {sortedProfession.length} títulos profesionales, posgrados y certificaciones académicas.
-                    </p>
-                  );
-                })()}
+                <p className="text-[10px] leading-relaxed opacity-90">
+                  Continuación del Currículum Vitae. Hoja {pageNum} de {startBodyPageNum + packedPages.length + (certificatesScanned.length > 0 ? certificatesScanned.length : 0) - 1}.
+                </p>
 
                 <div className="pt-2 border-t border-current opacity-80">
-                  <h4 className="text-[10px] font-black uppercase mb-1.5" style={{ color: theme.accentColor }}>NIVELES ACREDITADOS:</h4>
+                  <h4 className="text-[10px] font-black uppercase mb-1.5" style={{ color: theme.accentColor }}>SECCIONES EN ESTA HOJA:</h4>
                   <div className="flex flex-wrap gap-1 text-[9px] font-bold">
-                    <span className="px-2 py-0.5 bg-black/10 rounded">Títulos Universitarios</span>
-                    <span className="px-2 py-0.5 bg-black/10 rounded">Profesorado de Grado</span>
-                    <span className="px-2 py-0.5 bg-black/10 rounded">Especialización & Posgrado</span>
-                    <span className="px-2 py-0.5 bg-black/10 rounded">Formación Continua</span>
-                  </div>
-                </div>
-
-                {/* Sidebar Footer */}
-                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between font-bold text-xs">
-                  <span>{personalInfo.initials}</span>
-                  <span className="text-2xl font-black">{pageNum}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Main Content */}
-            <div className="col-span-2 p-6 flex flex-col justify-between">
-              <div className="space-y-3">
-                <div className="border-b border-slate-200 pb-2">
-                  <h1 className="text-xl font-black text-slate-900 uppercase">
-                    {personalInfo.surname} <span style={{ color: theme.primaryColor }}>{personalInfo.givenNames}</span>
-                  </h1>
-                </div>
-
-                {renderSectionHeader(<Briefcase className="w-4 h-4" />, `PROFESIÓN & TITULACIONES (${extraPageIdx + 2}/${totalExtraProfPages + 1})`)}
-
-                <div className="space-y-2.5">
-                  {extraProfGroup.map((prof, i) => (
-                    <div key={i} className="bg-slate-50/90 border border-slate-200/80 p-3 rounded-xl space-y-1 section-box-print shadow-sm border-l-4" style={{ borderLeftColor: theme.primaryColor }}>
-                      <div className="flex items-center justify-between gap-2">
-                        <h4 className="text-xs font-black text-slate-900 leading-snug">{prof.degree}</h4>
-                        <span 
-                          className="px-2.5 py-0.5 rounded text-[10px] font-black text-white whitespace-nowrap shadow-sm flex-shrink-0 inline-flex items-center gap-1" 
-                          style={{ backgroundColor: theme.primaryColor }}
-                        >
-                          <Calendar className="w-3 h-3" /> AÑO {prof.year}
-                        </span>
-                      </div>
-
-                      <p className="text-[11px] font-bold flex items-center gap-1" style={{ color: theme.accentColor }}>
-                        <Building2 className="w-3.5 h-3.5 flex-shrink-0" /> {prof.institution}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-
-      {/* ========================================================================= */}
-      {/* PAGES TO N: EXPERIENCIA LABORAL DOCENTE (REBALANCEO DINÁMICO A4) */}
-      {/* ========================================================================= */}
-      {expChunks.slice(1).map((expGroup, expPageIdx) => {
-        const pageNum = startBodyPageNum + 1 + totalExtraProfPages + expPageIdx;
-
-        return (
-          <div id={expPageIdx === 0 ? "cv-section-experiencia" : undefined} key={`exp-${pageNum}`} className="a4-page-container grid grid-cols-3">
-            {/* Left Sidebar */}
-            <div className="col-span-1 flex flex-col relative" style={sidebarBgStyle}>
-              <div className="p-5 text-center border-b border-current opacity-90" style={sidebarHeaderBgStyle}>
-                <span className="text-2xl font-black tracking-widest">{personalInfo.initials}</span>
-                <p className="text-[10px] font-semibold tracking-wider uppercase opacity-80 mt-0.5">Trayectoria Docente</p>
-              </div>
-
-              <div className="p-4 space-y-5 flex-1 relative">
-                {expPageIdx === 0 && showInSecundaria('ecologia') ? (
-                  <div id="cv-section-ecologia">
-                    <h3 className="text-xs font-bold uppercase tracking-wider mb-3 border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
-                      <Leaf className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> PROYECTOS & COMUNIDAD
-                    </h3>
-
-                    <div className="space-y-3 text-[10px]">
-                      <div>
-                        <p className="font-bold uppercase mb-1" style={{ color: theme.accentColor }}>RURAL Y AGRICULTURA:</p>
-                        {(ecology?.rural || []).map((r, rIdx) => (
-                          <div key={rIdx} className="mb-2 border-l-2 border-current pl-2">
-                            <p className="font-bold">{r.title}</p>
-                            <p className="opacity-80 italic">{r.institution}</p>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="pt-2 border-t border-current opacity-90">
-                        <p className="font-bold uppercase mb-1" style={{ color: theme.accentColor }}>MEDIO AMBIENTE:</p>
-                        {(ecology?.environmental || []).map((env, eIdx) => (
-                          <div key={eIdx} className="mb-2 border-l-2 border-current pl-2">
-                            <p className="font-bold">{env.title}</p>
-                            <p className="opacity-80 italic">{env.institution}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-xs font-bold uppercase tracking-wider mb-2 border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
-                        <Briefcase className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> ÁREAS DE DESEMPEÑO
-                      </h3>
-                      {(() => {
-                        const expStartIdx = expChunks.slice(0, expPageIdx).reduce((acc, c) => acc + c.length, 0) + 1;
-                        const expEndIdx = expStartIdx + expGroup.length - 1;
-                        return (
-                          <p className="text-[10px] leading-relaxed opacity-90 mb-3">
-                            Registros {expStartIdx} a {expEndIdx} de {sortedExperience.length} de la trayectoria docente y gestión escolar.
-                          </p>
-                        );
-                      })()}
-                    </div>
-
-                    <div>
-                      <h4 className="text-[10px] font-black uppercase mb-1.5" style={{ color: theme.accentColor }}>PILARES PEDAGÓGICOS:</h4>
-                      <ul className="text-[10px] space-y-1.5 font-semibold opacity-95">
-                        <li className="flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                          <span>Gestión Documental & Archivo</span>
-                        </li>
-                        <li className="flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                          <span>Mediación Lectora en Lengua</span>
-                        </li>
-                        <li className="flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                          <span>Tutoría & Retención Rural</span>
-                        </li>
-                        <li className="flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                          <span>Tertulias Dialógicas Literarias</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                )}
-
-                {/* Sidebar Footer */}
-                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between font-bold text-xs">
-                  <span>{personalInfo.initials}</span>
-                  <span className="text-2xl font-black">{pageNum}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Main Content: Experiencia Laboral Docente */}
-            <div className="col-span-2 p-6 flex flex-col justify-between">
-              <div className="space-y-3">
-                <div className="border-b border-slate-200 pb-2">
-                  <h1 className="text-xl font-black text-slate-900 uppercase">
-                    {personalInfo.surname} <span style={{ color: theme.primaryColor }}>{personalInfo.givenNames}</span>
-                  </h1>
-                </div>
-
-                {renderSectionHeader(<FileText className="w-4 h-4" />, `EXPERIENCIA LABORAL (${expPageIdx + 1}/${totalExpPages})`)}
-
-                <div className="space-y-3">
-                  {expGroup.map((exp, idx) => (
-                    <div key={idx} className="bg-slate-50/90 border border-slate-200/80 p-3.5 rounded-xl space-y-1.5 section-box-print shadow-sm border-l-4" style={{ borderLeftColor: theme.primaryColor }}>
-                      <div className="flex items-center justify-between gap-2">
-                        <h4 className="text-xs font-black text-slate-900 leading-snug">{exp.role}</h4>
-                        <span 
-                          className="px-2.5 py-0.5 rounded text-[10px] font-black text-white whitespace-nowrap shadow-sm flex-shrink-0 inline-flex items-center gap-1" 
-                          style={{ backgroundColor: theme.primaryColor }}
-                        >
-                          <Calendar className="w-3 h-3" /> AÑO {exp.year}
-                        </span>
-                      </div>
-
-                      <p className="text-[11px] font-bold flex items-center gap-1" style={{ color: theme.accentColor }}>
-                        <Building2 className="w-3.5 h-3.5 flex-shrink-0" /> {exp.institution}
-                      </p>
-                      
-                      {exp.details && (
-                        <p className="text-[10.5px] text-slate-600 font-medium italic border-t border-slate-200/60 pt-1.5 mt-1.5 leading-relaxed">
-                          {exp.details}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-
-      {/* ========================================================================= */}
-      {/* PAGES TO N: CURSOS Y CAPACITACIONES DOCENTES (REBALANCEO DINÁMICO A4) */}
-      {/* ========================================================================= */}
-      {courseChunks.slice(1).map((pageCoursesGroup, pageIdx) => {
-        const pageNum = startBodyPageNum + 1 + totalExtraProfPages + totalExpPages + pageIdx;
-        const isLastPage = pageIdx === totalCoursePages - 1;
-
-        return (
-          <div id={pageIdx === 0 ? "cv-section-cursos" : undefined} key={`course-${pageNum}`} className="a4-page-container grid grid-cols-3">
-            {/* Sidebar */}
-            <div className="col-span-1 flex flex-col relative" style={sidebarBgStyle}>
-              <div className="p-5 text-center border-b border-current opacity-90" style={sidebarHeaderBgStyle}>
-                <span className="text-2xl font-black tracking-widest">{personalInfo.initials}</span>
-                <p className="text-[10px] font-semibold tracking-wider uppercase opacity-80 mt-0.5">Capacitación Continua</p>
-              </div>
-
-              <div className="p-4 space-y-4 flex-1 relative">
-                <h3 className="text-xs font-bold uppercase tracking-wider border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
-                  <Award className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> CERTIFICACIONES
-                </h3>
-
-                {pageIdx === 0 ? (
-                  <div className="space-y-2">
-                    <p className="text-[10px] leading-relaxed opacity-90">
-                      Formación pedagógica continua ordenada cronológicamente en instituciones educativas y plataformas de aprendizaje digital.
-                    </p>
-                    <div className="px-2.5 py-1.5 bg-black/10 rounded-lg text-[10px] font-extrabold text-center border border-current opacity-90">
-                      Total: {sortedCourses.length} Certificaciones
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {(() => {
-                      const courseStartIdx = courseChunks.slice(0, pageIdx).reduce((acc, c) => acc + c.length, 0) + 1;
-                      const courseEndIdx = courseStartIdx + pageCoursesGroup.length - 1;
-                      return (
-                        <p className="text-[10px] leading-relaxed opacity-90">
-                          Registros {courseStartIdx} a {courseEndIdx} de {sortedCourses.length} certificaciones acreditadas.
-                        </p>
-                      );
-                    })()}
-                    
-                    <div>
-                      <h4 className="text-[10px] font-black uppercase mb-1.5" style={{ color: theme.accentColor }}>EJES TEMÁTICOS:</h4>
-                      <div className="flex flex-wrap gap-1 text-[9px] font-bold">
-                        <span className="px-2 py-0.5 bg-black/10 rounded">Educación Digital</span>
-                        <span className="px-2 py-0.5 bg-black/10 rounded">Didáctica Lengua</span>
-                        <span className="px-2 py-0.5 bg-black/10 rounded">ESI & Género</span>
-                        <span className="px-2 py-0.5 bg-black/10 rounded">Gestión y Mediación</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Sidebar Footer */}
-                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between font-bold text-xs">
-                  <span>{personalInfo.initials}</span>
-                  <span className="text-2xl font-black">{pageNum}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Main Content */}
-            <div className="col-span-2 p-6 flex flex-col justify-between">
-              <div className="space-y-3">
-                <div className="border-b border-slate-200 pb-2">
-                  <h1 className="text-xl font-black text-slate-900 uppercase">
-                    {personalInfo.surname} <span style={{ color: theme.primaryColor }}>{personalInfo.givenNames}</span>
-                  </h1>
-                </div>
-
-                {renderSectionHeader(<BookOpen className="w-4 h-4" />, `CURSOS Y CAPACITACIONES (${pageIdx + 1}/${totalCoursePages})`)}
-
-                <div className="space-y-3">
-                  {pageCoursesGroup.map((c, cIdx) => (
-                    <div key={cIdx} className="bg-slate-50/90 border border-slate-200/80 p-3.5 rounded-xl space-y-1.5 section-box-print shadow-sm border-l-4" style={{ borderLeftColor: theme.accentColor }}>
-                      <div className="flex items-center justify-between gap-2">
-                        <span 
-                          className="px-2.5 py-0.5 rounded text-[10px] font-black text-white whitespace-nowrap shadow-sm flex-shrink-0 inline-flex items-center gap-1" 
-                          style={{ backgroundColor: theme.primaryColor }}
-                        >
-                          <Calendar className="w-3 h-3" /> AÑO {c.year}
-                        </span>
-                        
-                        {c.hours && (
-                          <span 
-                            className="px-2.5 py-0.5 rounded text-[10px] font-black whitespace-nowrap flex-shrink-0 inline-flex items-center gap-1" 
-                            style={{ backgroundColor: 'rgba(64,160,142,0.12)', color: theme.accentColor }}
-                          >
-                            <Clock className="w-3 h-3" /> {c.hours}
-                          </span>
-                        )}
-                      </div>
-
-                      <h4 className="text-xs font-black text-slate-900 leading-snug">{c.title}</h4>
-
-                      <p className="text-[11px] font-bold flex items-center gap-1" style={{ color: theme.accentColor }}>
-                        <Building2 className="w-3.5 h-3.5 flex-shrink-0" /> {c.institution}
-                      </p>
-
-                      {c.details && (
-                        <p className="text-[10.5px] text-slate-600 font-medium italic border-t border-slate-200/60 pt-1.5 mt-1.5 leading-relaxed">
-                          {c.details}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Custom User-Defined Dynamic Sections */}
-              {cvData?.customSections && Array.isArray(cvData.customSections) && cvData.customSections.map((sec, idx) => (
-                <div key={sec.id || idx} className="space-y-2 pt-2 border-t border-slate-200">
-                  {renderSectionHeader(<Award className="w-4 h-4" />, (sec.title || 'SECCIÓN PERSONALIZADA').toUpperCase())}
-                  <div className="space-y-1.5">
-                    {Array.isArray(sec.records) && sec.records.map((rec, rIdx) => (
-                      <div key={rIdx} className="bg-slate-50 border border-slate-200 p-2.5 rounded-lg text-xs font-medium space-y-0.5">
-                        {Object.entries(rec).map(([k, v]) => (
-                          <div key={k} className="flex items-center justify-between">
-                            <span className="font-bold text-slate-700 capitalize">{k}:</span>
-                            <span className="text-slate-900">{String(v)}</span>
-                          </div>
-                        ))}
-                      </div>
+                    {pageGroup.blocks.map((b, i) => (
+                      <span key={i} className="px-2 py-0.5 bg-black/10 rounded capitalize">{b.secId}</span>
                     ))}
                   </div>
                 </div>
-              ))}
 
-              {/* Digital Signature Block on Last Course Page */}
-              {isLastPage && isVis('firma') && (
-                <div id="cv-section-firma" className="mt-3 pt-2 border-t border-slate-300 flex flex-col items-end section-box-print">
-                  <div className="w-56 text-center space-y-0.5">
-                    {signature?.dataUrl ? (
-                      <img src={signature.dataUrl} alt="Firma Digital" className="h-12 mx-auto object-contain mb-0.5" />
-                    ) : (
-                      <div className="h-9 border-b border-dashed border-slate-400 mb-0.5 flex items-center justify-center text-[10px] text-slate-400 font-medium italic">
-                        [ Espacio para Firma Digital ]
-                      </div>
-                    )}
-                    <p className="text-xs font-black text-slate-800">
-                      {signature?.signerName || personalInfo.fullName || `${personalInfo.surname || ''} ${personalInfo.givenNames || ''}`.trim() || ''}
-                    </p>
-                    <p className="text-[10px] text-slate-500 font-semibold">
-                      {signature?.signerRole || roles?.[0] || sortedProfession?.[0]?.degree || ''}
-                    </p>
-                    <p className="text-[10px] text-slate-400">
-                      {signature?.date || (personalInfo.cityProvince ? `${personalInfo.cityProvince.split(',')[0]}, ${personalInfo.year || '2025'}` : '')}
-                    </p>
-                  </div>
+                {/* Sidebar Footer */}
+                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between font-bold text-xs">
+                  <span>{personalInfo.initials}</span>
+                  <span className="text-2xl font-black">{pageNum}</span>
                 </div>
-              )}
+              </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="col-span-2 p-6 flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="border-b border-slate-200 pb-2">
+                  <h1 className="text-xl font-black text-slate-900 uppercase">
+                    {personalInfo.surname} <span style={{ color: theme.primaryColor }}>{personalInfo.givenNames}</span>
+                  </h1>
+                </div>
+
+                {pageGroup.blocks.map(block => renderDynamicSection(block.secId, 'primaria', block.items))}
+
+                {isLastPage && cvData?.layout?.columnAssignments?.firma !== 'secundaria' && isVis('firma') && (
+                  renderDynamicSection('firma', 'primaria')
+                )}
+              </div>
             </div>
           </div>
         );
@@ -1053,7 +748,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
       {/* SIDEBAR OVERFLOW PAGES (SI LA COLUMNA SECUNDARIA EXCEDE 1 PÁGINA) */}
       {/* ========================================================================= */}
       {extraSidebarChunks.map((sidebarGroup: string[], sidebarPageIdx: number) => {
-        const pageNum = startBodyPageNum + 1 + totalExtraProfPages + totalExpPages + totalCoursePages + sidebarPageIdx;
+        const pageNum = startBodyPageNum + packedPages.length + sidebarPageIdx;
 
         return (
           <ExtraPage
