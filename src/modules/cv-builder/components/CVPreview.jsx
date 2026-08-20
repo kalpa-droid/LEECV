@@ -388,21 +388,88 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
           </div>
         );
 
+      case 'experiencia':
+        {
+          const listExp = sortedExperience || [];
+          if (!listExp || listExp.length === 0) return null;
+          return (
+            <div key={`sec-${location}-experiencia`} id="cv-section-experiencia" className="section-box-print space-y-1.5 mb-3">
+              {renderSectionHeader(<Briefcase className="w-4 h-4" />, "EXPERIENCIA LABORAL")}
+              <div className="space-y-2">
+                {listExp.map((exp, i) => (
+                  <div key={i} className="bg-slate-50/90 border border-slate-200/80 p-2.5 rounded-xl space-y-1 border-l-4" style={{ borderLeftColor: theme.primaryColor }}>
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-black text-slate-900">{exp.role}</h4>
+                      {exp.year && (
+                        <span className="px-2 py-0.5 rounded text-[9px] font-black text-white whitespace-nowrap" style={{ backgroundColor: theme.primaryColor }}>
+                          {exp.year}
+                        </span>
+                      )}
+                    </div>
+                    {exp.institution && (
+                      <p className="text-[11px] font-bold text-slate-600 flex items-center gap-1">
+                        <Building2 className="w-3 h-3 text-slate-400" /> {exp.institution}
+                      </p>
+                    )}
+                    {exp.details && (
+                      <p className="text-[10px] text-slate-500 font-medium leading-snug">{exp.details}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }
+
       case 'ecologia':
+        {
+          const ruralItems = ecology?.rural || [];
+          const envItems = ecology?.environmental || [];
+          const communityItems = ecology?.community || [];
+          const workshopItems = ecology?.workshops || [];
+          const initItems = ecology?.initiatives || [];
+          const otherItems = Array.isArray(ecology) ? ecology : [];
+          const allEcology = [...ruralItems, ...envItems, ...communityItems, ...workshopItems, ...initItems, ...otherItems];
+
+          if (allEcology.length === 0) return null;
+
+          return (
+            <div key={`sec-${location}-ecologia`} id="cv-section-ecologia" className="section-box-print mb-3 space-y-1.5">
+              {renderSectionHeader(<Leaf className="w-4 h-4" />, "PROYECTOS & COMUNIDAD")}
+              <div className="space-y-1.5 text-[10px]">
+                {allEcology.map((proj, i) => (
+                  <div key={i} className="bg-slate-50 border border-slate-200 p-2 rounded-xl border-l-2" style={{ borderLeftColor: theme.accentColor }}>
+                    <p className="font-bold text-slate-900">{proj.title || proj.name || proj.course}</p>
+                    {proj.institution && (
+                      <p className="text-slate-500 text-[9px] font-semibold">{proj.institution}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }
+
+      case 'firma':
         return (
-          <div key={`sec-${location}-ecologia`} id="cv-section-ecologia" className="section-box-print mb-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider mb-3 border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
-              <Leaf className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> PROYECTOS & COMUNIDAD
-            </h3>
-            <div className="space-y-3 text-[10px]">
-              <div className="border-l-2 border-current pl-2">
-                <p className="font-bold">Salón del Libro Infantil Salteño</p>
-                <p className="opacity-80">Fundación Salteña Ciencias y Arte (2007)</p>
-              </div>
-              <div className="border-l-2 border-current pl-2">
-                <p className="font-bold">Ecoproyecto "Residuos Tecnológicos"</p>
-                <p className="opacity-80">Concientización y Reciclaje Escolar (2018)</p>
-              </div>
+          <div key={`sec-${location}-firma`} id="cv-section-firma" className="mt-3 pt-2 border-t border-slate-300 flex flex-col items-end section-box-print">
+            <div className="w-56 text-center space-y-0.5">
+              {signature?.dataUrl ? (
+                <img src={signature.dataUrl} alt="Firma Digital" className="h-12 mx-auto object-contain mb-0.5" />
+              ) : (
+                <div className="h-9 border-b border-dashed border-slate-400 mb-0.5 flex items-center justify-center text-[10px] text-slate-400 font-medium italic">
+                  [ Espacio para Firma Digital ]
+                </div>
+              )}
+              <p className="text-xs font-black text-slate-800">
+                {signature?.signerName || personalInfo.fullName || `${personalInfo.surname || ''} ${personalInfo.givenNames || ''}`.trim() || ''}
+              </p>
+              <p className="text-[10px] text-slate-500 font-semibold">
+                {signature?.signerRole || roles?.[0] || sortedProfession?.[0]?.degree || ''}
+              </p>
+              <p className="text-[10px] text-slate-400">
+                {signature?.date || (personalInfo.cityProvince ? `${personalInfo.cityProvince.split(',')[0]}, ${personalInfo.year || '2025'}` : '')}
+              </p>
             </div>
           </div>
         );
@@ -422,6 +489,8 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
 
   const showCover = cvData?.showCoverPage !== false;
   const startBodyPageNum = showCover ? 2 : 1;
+  const totalPagesCalculated = (showCover ? 1 : 0) + 1 + (extraProfChunks?.length || 0) + (expChunks?.length > 1 ? expChunks.length - 1 : 0) + (courseChunks?.length > 1 ? courseChunks.length - 1 : 0) + certPages.length;
+  const totalHojasLabel = totalPagesCalculated === 1 ? '1 HOJA' : `${totalPagesCalculated} HOJAS`;
 
   return (
     <div 
@@ -559,11 +628,11 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
                   ? 'bg-[#FF2E63] text-white border border-[#FFC93C]'
                   : 'bg-white/20'
               }`}>
-                PORTAFOLIO DOCENTE & PROFESIONAL
+                PORTAFOLIO PROFESIONAL
               </span>
               <h1 
                 className="text-4xl font-black tracking-wider uppercase drop-shadow-md text-center"
-                style={{ fontFamily: (cvData.coverPreset === 'minimal-editorial') ? 'Georgia, serif' : 'Impact, Arial, sans-serif' }}
+                style={{ fontFamily: theme.fontFamily || 'inherit' }}
               >
                 Curriculum Vitae
               </h1>
@@ -575,7 +644,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
                 className="text-2xl font-black italic mb-4 tracking-wide border-b-2 pb-2 border-current"
                 style={{ 
                   color: (cvData.coverPreset === 'minimal-editorial') ? '#0f172a' : (cvData.coverPreset === 'creative-cardon') ? '#FFC93C' : '#ffffff', 
-                  fontFamily: 'Georgia, serif' 
+                  fontFamily: theme.fontFamily || 'Georgia, serif' 
                 }}
               >
                 {personalInfo.fullName}
@@ -632,7 +701,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
               </div>
               <div className="text-right">
                 <span className="text-[10px] text-purple-300 font-bold block">{personalInfo.initials} | AÑO {personalInfo.year}</span>
-                <span className="text-[11px] text-teal-300 font-extrabold">DOCUMENTO OFICIAL A4</span>
+                <span className="text-[11px] text-teal-300 font-extrabold">DOCUMENTO OFICIAL - {totalHojasLabel}</span>
               </div>
             </div>
 
@@ -697,7 +766,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
             </div>
 
             {/* Dynamic Left Column (Secundaria) Section Rendering */}
-            {(cvData.layout?.sectionOrders?.secundaria || ["personales", "informatica", "ecologia"]).map(secId => 
+            {[...new Set(cvData.layout?.sectionOrders?.secundaria || ["personales", "informatica", "ecologia"])].map(secId => 
               renderDynamicSection(secId, 'secundaria')
             )}
 
@@ -738,35 +807,8 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
             )}
 
             {/* Dynamic Right Column (Primaria) Section Rendering */}
-            {(cvData.layout?.sectionOrders?.primaria || ["personales", "formacion", "profesion", "experiencia", "cursos", "ecologia"]).map(secId => 
+            {[...new Set(cvData.layout?.sectionOrders?.primaria || ["personales", "formacion", "profesion", "experiencia", "cursos", "ecologia"])].map(secId => 
               renderDynamicSection(secId, 'primaria')
-            )}
-
-            {/* Profesión */}
-            {isVis('profesion') && firstPageProfessions && firstPageProfessions.length > 0 && (
-              <div id="cv-section-profesion" className="section-box-print">
-                {renderSectionHeader(<Briefcase className="w-4 h-4" />, `TÍTULOS PROFESIONALES (${sortedProfession.length})`)}
-
-                <div className="grid grid-cols-1 gap-1.5">
-                  {firstPageProfessions.map((prof, i) => (
-                    <div key={i} className="bg-slate-50/90 border border-slate-200/80 p-2.5 rounded-xl space-y-0.5 border-l-4" style={{ borderLeftColor: theme.primaryColor }}>
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-black text-slate-900 leading-tight">{prof.degree}</h4>
-                        <span className="px-2 py-0.5 rounded text-[9px] font-black text-white whitespace-nowrap ml-2 flex-shrink-0" style={{ backgroundColor: theme.primaryColor }}>
-                          AÑO {prof.year}
-                        </span>
-                      </div>
-                      <p className="text-[10px] font-bold" style={{ color: theme.accentColor }}>{prof.institution}</p>
-                    </div>
-                  ))}
-                </div>
-
-                {extraProfessions.length > 0 && (
-                  <p className="text-[10px] font-bold text-slate-500 italic mt-2 text-center bg-slate-100 p-1.5 rounded-lg border border-slate-200">
-                    (Ver {extraProfessions.length} titulaciones adicionales en la página {startBodyPageNum + 1})
-                  </p>
-                )}
-              </div>
             )}
           </div>
         </div>

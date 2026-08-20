@@ -1825,10 +1825,14 @@ export default function EditorPanel({
                       let newSecOrder = [...(prev.layout?.sectionOrders?.secundaria || defaultSecundaria)];
                       let newPrimOrder = [...(prev.layout?.sectionOrders?.primaria || defaultPrimaria)];
 
-                      if (targetVal === 'secundaria' || targetVal === 'ambas') {
+                      if (targetVal === 'secundaria') {
                         if (!newSecOrder.includes(sec.id)) newSecOrder.push(sec.id);
-                      }
-                      if (targetVal === 'primaria' || targetVal === 'ambas') {
+                        newPrimOrder = newPrimOrder.filter(id => id !== sec.id);
+                      } else if (targetVal === 'primaria') {
+                        if (!newPrimOrder.includes(sec.id)) newPrimOrder.push(sec.id);
+                        newSecOrder = newSecOrder.filter(id => id !== sec.id);
+                      } else if (targetVal === 'ambas') {
+                        if (!newSecOrder.includes(sec.id)) newSecOrder.push(sec.id);
                         if (!newPrimOrder.includes(sec.id)) newPrimOrder.push(sec.id);
                       }
 
