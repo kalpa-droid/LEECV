@@ -22,13 +22,13 @@ import {
   Maximize2
 } from 'lucide-react';
 
-import { PAGE_SIZES, calculateItemsPerPage } from '../../../shared/core/pdf-engine/pageSizes';
+import { PAGE_SIZES, calculateItemsPerPage, getDynamicHeightChunks } from '../../../shared/core/pdf-engine/pageSizes';
 import { getColumnVariant } from '../../../shared/core/pdf-engine/columnVariants';
 import { CoverPageSection } from './preview/CoverPageSection';
 import { ExtraPage } from './preview/ExtraPage';
 import { ScannedCertificatesPages } from './preview/ScannedCertificatesPages';
 
-export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.85 }) {
+export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.85 }: { cvData?: any; setCvData?: any; activeTab?: string; zoomLevel?: number }) {
   const { 
     personalInfo = {}, 
     roles = [], 
@@ -52,7 +52,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
   // Auto-scroll to active section when tab changes
   React.useEffect(() => {
     if (!activeTab) return;
-    const tabToIdMap = {
+    const tabToIdMap: Record<string, string> = {
       personales: 'cv-section-personales',
       formacion: 'cv-section-formacion',
       profesion: 'cv-section-profesion',
@@ -75,7 +75,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
   }, [activeTab]);
 
   // Helper to extract 4-digit year and sort items descending (2025 -> 2024 -> 2023...)
-  const sortByYearDesc = (items) => {
+  const sortByYearDesc = (items: any[]) => {
     if (!Array.isArray(items)) return [];
     return [...items].sort((a, b) => {
       const yearA = parseInt((a.year || '').toString().match(/\d{4}/)?.[0] || '0', 10);
@@ -84,57 +84,22 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
     });
   };
 
-  // Dynamic Self-Balancing Pagination Algorithm
-  // Automatically redistributes items to eliminate isolated orphan records (< 2 items)
-  const getBalancedChunks = (items, maxPerPage = 6, minLastPageItems = 2) => {
-    if (!Array.isArray(items) || items.length === 0) return [];
-    
-    const total = items.length;
-    const totalPages = Math.ceil(total / maxPerPage);
-    
-    if (totalPages <= 1) return [items];
-    
-    const remainder = total % maxPerPage;
-    if (remainder > 0 && remainder < minLastPageItems) {
-      const baseCount = Math.floor(total / totalPages);
-      const extraCount = total % totalPages;
-      
-      const chunks = [];
-      let currentIndex = 0;
-      for (let p = 0; p < totalPages; p++) {
-        const chunkSize = baseCount + (p < extraCount ? 1 : 0);
-        chunks.push(items.slice(currentIndex, currentIndex + chunkSize));
-        currentIndex += chunkSize;
-      }
-      return chunks;
-    }
-    
-    const chunks = [];
-    for (let i = 0; i < total; i += maxPerPage) {
-      chunks.push(items.slice(i, i + maxPerPage));
-    }
-    return chunks;
-  };
-
   const sortedCourses = sortByYearDesc(coursesAndCertificates);
   const sortedExperience = sortByYearDesc(experience);
   const sortedProfession = sortByYearDesc(profession);
 
-  // Dynamic pagination math calculated from current paper size height!
+  // Dynamic pagination math calculated from real paper size height (A4, Carta, Oficio, Legal) & text length
   const FIRST_PAGE_PROF_LIMIT = calculateItemsPerPage(paperSizeId, 45, 110);
-  const EXTRA_PROF_PER_PAGE = calculateItemsPerPage(paperSizeId, 38, 55);
-  const EXP_PER_PAGE = calculateItemsPerPage(paperSizeId, 42, 55);
-  const COURSES_PER_PAGE = calculateItemsPerPage(paperSizeId, 38, 55);
-
   const firstPageProfessions = sortedProfession.slice(0, FIRST_PAGE_PROF_LIMIT);
   const extraProfessions = sortedProfession.slice(FIRST_PAGE_PROF_LIMIT);
-  const extraProfChunks = getBalancedChunks(extraProfessions, EXTRA_PROF_PER_PAGE, 2);
+
+  const extraProfChunks = getDynamicHeightChunks(extraProfessions, paperSizeId, 'prof', 65, 2);
   const totalExtraProfPages = extraProfChunks.length;
 
-  const expChunks = getBalancedChunks(sortedExperience, EXP_PER_PAGE, 2);
+  const expChunks = getDynamicHeightChunks(sortedExperience, paperSizeId, 'exp', 75, 2);
   const totalExpPages = Math.max(1, expChunks.length);
 
-  const courseChunks = getBalancedChunks(sortedCourses, COURSES_PER_PAGE, 2);
+  const courseChunks = getDynamicHeightChunks(sortedCourses, paperSizeId, 'course', 75, 2);
   const totalCoursePages = Math.max(1, courseChunks.length);
 
   // Dynamic Sidebar Style based on layoutStyle
@@ -845,9 +810,15 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
                   <Briefcase className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> FORMACIÓN DE GRADO
                 </h3>
 
-                <p className="text-[10px] leading-relaxed opacity-90">
-                  Registros {FIRST_PAGE_PROF_LIMIT + extraPageIdx * EXTRA_PROF_PER_PAGE + 1} a {Math.min(FIRST_PAGE_PROF_LIMIT + (extraPageIdx + 1) * EXTRA_PROF_PER_PAGE, sortedProfession.length)} de {sortedProfession.length} títulos profesionales, posgrados y certificaciones académicas.
-                </p>
+                {(() => {
+                  const profStartIdx = FIRST_PAGE_PROF_LIMIT + extraProfChunks.slice(0, extraPageIdx).reduce((acc, c) => acc + c.length, 0) + 1;
+                  const profEndIdx = profStartIdx + extraProfGroup.length - 1;
+                  return (
+                    <p className="text-[10px] leading-relaxed opacity-90">
+                      Registros {profStartIdx} a {profEndIdx} de {sortedProfession.length} títulos profesionales, posgrados y certificaciones académicas.
+                    </p>
+                  );
+                })()}
 
                 <div className="pt-2 border-t border-current opacity-80">
                   <h4 className="text-[10px] font-black uppercase mb-1.5" style={{ color: theme.accentColor }}>NIVELES ACREDITADOS:</h4>
@@ -953,9 +924,15 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
                       <h3 className="text-xs font-bold uppercase tracking-wider mb-2 border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
                         <Briefcase className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> ÁREAS DE DESEMPEÑO
                       </h3>
-                      <p className="text-[10px] leading-relaxed opacity-90 mb-3">
-                        Registros {expPageIdx * EXP_PER_PAGE + 1} a {Math.min((expPageIdx + 1) * EXP_PER_PAGE, sortedExperience.length)} de {sortedExperience.length} de la trayectoria docente y gestión escolar.
-                      </p>
+                      {(() => {
+                        const expStartIdx = expChunks.slice(0, expPageIdx).reduce((acc, c) => acc + c.length, 0) + 1;
+                        const expEndIdx = expStartIdx + expGroup.length - 1;
+                        return (
+                          <p className="text-[10px] leading-relaxed opacity-90 mb-3">
+                            Registros {expStartIdx} a {expEndIdx} de {sortedExperience.length} de la trayectoria docente y gestión escolar.
+                          </p>
+                        );
+                      })()}
                     </div>
 
                     <div>
@@ -1064,9 +1041,15 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <p className="text-[10px] leading-relaxed opacity-90">
-                      Registros {pageIdx * COURSES_PER_PAGE + 1} a {Math.min((pageIdx + 1) * COURSES_PER_PAGE, sortedCourses.length)} de {sortedCourses.length} certificaciones acreditadas.
-                    </p>
+                    {(() => {
+                      const courseStartIdx = courseChunks.slice(0, pageIdx).reduce((acc, c) => acc + c.length, 0) + 1;
+                      const courseEndIdx = courseStartIdx + pageCoursesGroup.length - 1;
+                      return (
+                        <p className="text-[10px] leading-relaxed opacity-90">
+                          Registros {courseStartIdx} a {courseEndIdx} de {sortedCourses.length} certificaciones acreditadas.
+                        </p>
+                      );
+                    })()}
                     
                     <div>
                       <h4 className="text-[10px] font-black uppercase mb-1.5" style={{ color: theme.accentColor }}>EJES TEMÁTICOS:</h4>
