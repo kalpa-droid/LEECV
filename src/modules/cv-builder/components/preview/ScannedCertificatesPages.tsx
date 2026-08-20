@@ -1,31 +1,35 @@
 import React from 'react';
 import { RotateCw } from 'lucide-react';
+import { PAGE_SIZES } from '../../../../shared/core/pdf-engine/pageSizes';
 
 export interface ScannedCertificatesPagesProps {
   certificates?: any[];
   theme?: any;
+  paperSizeId?: string;
   onRotateCert?: (id: string) => void;
 }
 
 export function ScannedCertificatesPages({
   certificates = [],
   theme = {},
+  paperSizeId = 'a4',
   onRotateCert
 }: ScannedCertificatesPagesProps) {
   if (!Array.isArray(certificates) || certificates.length === 0) return null;
 
   const fontFamily = theme.fontFamily || 'Inter, sans-serif';
   const primaryColor = theme.primaryColor || '#00A8A0';
+  const paper = PAGE_SIZES[paperSizeId] || PAGE_SIZES.a4;
 
   return (
     <>
       {certificates.map((cert, index) => (
         <div
           key={cert.id || index}
-          className="cv-page cv-cert-page relative bg-white flex flex-col justify-between p-8 border border-slate-200 shadow-2xl mb-8 overflow-hidden"
+          className="a4-page-container relative bg-white flex flex-col justify-between p-8 border border-slate-200 shadow-2xl mb-8 overflow-hidden"
           style={{
-            width: '794px',
-            height: '1123px',
+            width: `${paper.widthMm}mm`,
+            height: `${paper.heightMm}mm`,
             fontFamily
           }}
         >

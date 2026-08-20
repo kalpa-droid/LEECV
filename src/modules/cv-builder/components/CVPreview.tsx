@@ -765,7 +765,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
       {/* ========================================================================= */}
       {certificatesScanned && certificatesScanned.length > 0 && (
         <div id="cv-section-certificados">
-          <ScannedCertificatesPages certificates={certificatesScanned} theme={theme} onRotateCert={handleRotateCert} />
+          <ScannedCertificatesPages certificates={certificatesScanned} theme={theme} paperSizeId={paperSizeId} onRotateCert={handleRotateCert} />
         </div>
       )}
       </div>
