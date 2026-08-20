@@ -1,11 +1,26 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+let rawUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const rawKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-export const supabase = (supabaseUrl && supabaseAnonKey)
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+if (rawUrl && !rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')) {
+  if (rawUrl.includes('.')) {
+    rawUrl = `https://${rawUrl}`;
+  } else {
+    rawUrl = `https://${rawUrl}.supabase.co`;
+  }
+}
+
+let client = null;
+if (rawUrl && rawKey) {
+  try {
+    client = createClient(rawUrl, rawKey);
+  } catch (err) {
+    console.warn('No se pudo inicializar el cliente de Supabase:', err);
+  }
+}
+
+export const supabase = client;
 
 export const checkStorageStatus = () => {
   if (supabase) {
