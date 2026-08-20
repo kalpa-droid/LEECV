@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 
 import { PAGE_SIZES, calculateItemsPerPage } from '../../../shared/core/pdf-engine/pageSizes';
+import { getColumnVariant } from '../../../shared/core/pdf-engine/columnVariants';
 import { CoverPageSection } from './preview/CoverPageSection';
 import { ExtraPage } from './preview/ExtraPage';
 import { ScannedCertificatesPages } from './preview/ScannedCertificatesPages';
@@ -224,6 +225,8 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
   const renderDynamicSection = (secId, location) => {
     if (location === 'secundaria' && !showInSecundaria(secId)) return null;
     if (location === 'primaria' && !showInPrimaria(secId)) return null;
+
+    const v = getColumnVariant(location);
 
     switch (secId) {
       case 'contacto':

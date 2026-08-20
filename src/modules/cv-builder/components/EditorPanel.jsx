@@ -28,6 +28,8 @@ import {
   Calendar
 } from 'lucide-react';
 import { themePresets, fontOptions } from '../../../data/themePresets';
+import { panelPresets } from '../../../data/panelPresets';
+import { PAGE_SIZES } from '../../../shared/core/pdf-engine/pageSizes';
 import { getSavedCVsList, loadCVById, deleteCVById, saveCV } from '../services/cvStorageService';
 import CertCropperModal from './CertCropperModal';
 import PersonalInfoSection from './editor/PersonalInfoSection';
@@ -1197,8 +1199,38 @@ export default function EditorPanel({
         {activeTab === 'diseno' && (
           <div className="space-y-6">
             <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] border-b pb-2 border-[#EFE2C9] flex items-center gap-1.5">
-              <Layout className="w-4 h-4 text-[#00A8A0]" /> Estructura de Diseño, Portada y Secciones
+              <Layout className="w-4 h-4 text-[#00A8A0]" /> Estructura de Diseño, Papel y Portada
             </h3>
+
+            {/* Paper Size Selector */}
+            <div className="p-4 bg-white rounded-2xl border-2 border-[#EFE2C9] space-y-2 shadow-sm">
+              <label className="block text-xs font-black text-[#2B1B2E] uppercase tracking-wide flex items-center gap-1.5">
+                <span>Tamaño de Hoja / Formato de Papel</span>
+              </label>
+              <select
+                value={cvData.layout?.paperSize || 'a4'}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setCvData(prev => ({
+                    ...prev,
+                    layout: {
+                      ...prev.layout,
+                      paperSize: val
+                    }
+                  }));
+                }}
+                className="w-full text-xs p-2.5 rounded-xl border-2 border-[#00A8A0] bg-white text-[#2B1B2E] font-black outline-none focus:ring-2 focus:ring-[#CFF3F0] cursor-pointer"
+              >
+                {Object.values(PAGE_SIZES).map((size) => (
+                  <option key={size.id} value={size.id}>
+                    📄 {size.label}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[10.5px] text-[#6B5B6E] font-medium leading-relaxed">
+                El motor de paginado recalcula automáticamente los límites de ítems por hoja según la altura física del formato seleccionado.
+              </p>
+            </div>
 
             {/* Cover Page Toggle */}
             <div className={`flex items-center justify-between p-2.5 rounded-xl border transition ${
@@ -1348,36 +1380,7 @@ export default function EditorPanel({
               </label>
               
               <div className="grid grid-cols-2 gap-2">
-                {[
-                  {
-                    id: 'docente-tradicional',
-                    name: '🎓 Docente Tradicional',
-                    desc: 'Contacto, TICs y Competencias a la Izquierda; Formación, Profesión y Experiencia a la Derecha.',
-                    sec: ["contacto", "informatica", "competencias", "ecologia"],
-                    prim: ["personales", "formacion", "profesion", "experiencia", "cursos"]
-                  },
-                  {
-                    id: 'ejecutivo-corporativo',
-                    name: '💼 Ejecutivo Corporativo',
-                    desc: 'Contacto y Datos Personales a la Izquierda; Trayectoria y Títulos en la Columna Principal.',
-                    sec: ["contacto", "personales", "competencias"],
-                    prim: ["profesion", "experiencia", "formacion", "cursos", "ecologia"]
-                  },
-                  {
-                    id: 'creativo-tics',
-                    name: '⚡ Creativo & TICs',
-                    desc: 'Informática, Cursos y Competencias a la Izquierda; Proyectos y Formación a la Derecha.',
-                    sec: ["contacto", "informatica", "cursos", "competencias"],
-                    prim: ["personales", "profesion", "experiencia", "ecologia", "formacion"]
-                  },
-                  {
-                    id: 'columna-unica',
-                    name: '📜 Columna Única Continua',
-                    desc: 'Todas las secciones fluyen continuamente en la Columna Principal de lectura.',
-                    sec: [],
-                    prim: ["personales", "contacto", "formacion", "profesion", "experiencia", "cursos", "informatica", "ecologia", "competencias"]
-                  }
-                ].map((preset) => (
+                {panelPresets.map((preset) => (
                   <button
                     key={preset.id}
                     onClick={() => {
@@ -1389,10 +1392,11 @@ export default function EditorPanel({
                         onConfirm: () => {
                           setCvData(prev => {
                             const newAssigns = {};
-                            preset.sec.forEach(s => { newAssigns[s] = 'secundaria'; });
-                            preset.prim.forEach(s => { 
+                            (preset.secondarySections || []).forEach(s => { newAssigns[s] = 'secundaria'; });
+                            (preset.bothSections || []).forEach(s => { newAssigns[s] = 'ambas'; });
+                            (preset.primarySections || []).forEach(s => { 
                               if (newAssigns[s] === 'secundaria') newAssigns[s] = 'ambas';
-                              else newAssigns[s] = 'primaria';
+                              else if (!newAssigns[s]) newAssigns[s] = 'primaria';
                             });
 
                             return {
@@ -1401,8 +1405,8 @@ export default function EditorPanel({
                                 ...prev.layout,
                                 columnAssignments: newAssigns,
                                 sectionOrders: {
-                                  secundaria: preset.sec,
-                                  primaria: preset.prim
+                                  secundaria: preset.secondarySections || [],
+                                  primaria: preset.primarySections || []
                                 }
                               }
                             };
@@ -1415,7 +1419,7 @@ export default function EditorPanel({
                   >
                     <div>
                       <span className="text-[11px] font-bold text-[#2B1B2E] block">{preset.name}</span>
-                      <p className="text-[9px] text-[#6B5B6E] font-medium leading-snug mt-0.5">{preset.desc}</p>
+                      <p className="text-[9px] text-[#6B5B6E] font-medium leading-snug mt-0.5">{preset.description}</p>
                     </div>
                   </button>
                 ))}
