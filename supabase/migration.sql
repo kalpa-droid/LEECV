@@ -1,9 +1,8 @@
 -- ============================================================
--- LEECV — Migración Completa: Cuentas, Planes, RLS, Candidatos, Créditos y Downgrade
--- Ejecutar en: Supabase Dashboard > SQL Editor
+-- LEECV — Migración Master Consolidada (Sin Dependencias de Orden)
 -- ============================================================
 
--- 1. Tabla de perfiles (1 fila por usuario de Supabase Auth)
+-- 1. CREACIÓN DE TABLAS (Primero se crean todas las tablas para evitar errores de relación)
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text not null,
@@ -12,11 +11,72 @@ create table if not exists public.profiles (
   plan_vence timestamptz,
   premium_activo boolean not null default false,
   premium_vence timestamptz,
-  metodo_pago text,               -- 'mercadopago' | 'lemonsqueezy' | 'manual'
+  metodo_pago text,
+  drive_connected boolean not null default false,
+  drive_quota_percent integer,
+  drive_last_checked_at timestamptz,
   created_at timestamptz not null default now()
 );
 
--- 2. Función helper Security Definer para evitar recursión infinita en RLS
+alter table public.profiles add column if not exists drive_connected boolean not null default false;
+alter table public.profiles add column if not exists drive_quota_percent integer;
+alter table public.profiles add column if not exists drive_last_checked_at timestamptz;
+
+create table if not exists public.cvs (
+  id text primary key,
+  user_id uuid references auth.users(id) on delete cascade,
+  title text not null,
+  candidate_name text,
+  dni text,
+  cv_data jsonb not null,
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_cvs_user_id on public.cvs(user_id);
+
+create table if not exists public.organizations (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  max_members integer not null default 10,
+  storage_limit_mb integer not null default 50000,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.org_members (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.organizations(id) on delete cascade,
+  user_id uuid references auth.users(id) on delete cascade,
+  invited_email text not null,
+  role text not null default 'editor' check (role in ('owner', 'admin', 'editor')),
+  status text not null default 'pending' check (status in ('pending', 'active', 'rejected')),
+  invitation_token text not null default gen_random_uuid()::text,
+  created_at timestamptz not null default now(),
+  joined_at timestamptz
+);
+
+create table if not exists public.org_candidates (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  org_id uuid references public.organizations(id) on delete cascade,
+  full_name text not null,
+  title text,
+  vacant text,
+  status text not null default 'Borrador',
+  cv_data jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.google_drive_tokens (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  refresh_token text not null,
+  scope text not null default 'https://www.googleapis.com/auth/drive.file',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- 2. FUNCIONES Y TRIGGERS
 create or replace function public.is_admin(user_id uuid)
 returns boolean as $$
 begin
@@ -30,7 +90,6 @@ begin
 end;
 $$ language plpgsql security definer;
 
--- 3. Trigger para creación automática de perfiles al registrarse
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
@@ -45,7 +104,6 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
--- 4. Protección de Columnas Privilegiadas (Bloquea autopromoción de rol/plan por usuarios no-admin)
 create or replace function public.protect_privileged_columns()
 returns trigger as $$
 begin
@@ -71,9 +129,8 @@ create trigger trg_protect_privileged_columns
   before update on public.profiles
   for each row execute procedure public.protect_privileged_columns();
 
--- 5. Seguridad a nivel de fila (RLS) en `profiles`
+-- 3. HABILITACIÓN DE RLS Y POLÍTICAS DE SEGURIDAD
 alter table public.profiles enable row level security;
-
 drop policy if exists "usuario lee su propio perfil" on public.profiles;
 create policy "usuario lee su propio perfil"
   on public.profiles for select
@@ -84,21 +141,7 @@ create policy "usuario actualiza su propio perfil"
   on public.profiles for update
   using (auth.uid() = id or public.is_admin(auth.uid()));
 
--- 6. Tabla `cvs` con asignación de dueño `user_id` y RLS estricto
-create table if not exists public.cvs (
-  id text primary key,
-  user_id uuid references auth.users(id) on delete cascade,
-  title text not null,
-  candidate_name text,
-  dni text,
-  cv_data jsonb not null,
-  updated_at timestamptz not null default now()
-);
-
-create index if not exists idx_cvs_user_id on public.cvs(user_id);
-
 alter table public.cvs enable row level security;
-
 drop policy if exists "usuario ve sus propios CVs" on public.cvs;
 create policy "usuario ve sus propios CVs"
   on public.cvs for select
@@ -120,18 +163,7 @@ create policy "usuario borra sus propios CVs"
   on public.cvs for delete
   using (auth.uid() = user_id);
 
--- 7. Organizaciones Enterprise
-create table if not exists public.organizations (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  owner_id uuid not null references auth.users(id) on delete cascade,
-  max_members integer not null default 10,
-  storage_limit_mb integer not null default 50000,
-  created_at timestamptz not null default now()
-);
-
 alter table public.organizations enable row level security;
-
 drop policy if exists "dueño y miembros ven organizacion" on public.organizations;
 create policy "dueño y miembros ven organizacion"
   on public.organizations for select
@@ -151,21 +183,7 @@ create policy "dueño actualiza su organizacion"
   on public.organizations for update
   using (auth.uid() = owner_id or public.is_admin(auth.uid()));
 
--- 8. Integrantes de Organización
-create table if not exists public.org_members (
-  id uuid primary key default gen_random_uuid(),
-  org_id uuid not null references public.organizations(id) on delete cascade,
-  user_id uuid references auth.users(id) on delete cascade,
-  invited_email text not null,
-  role text not null default 'editor' check (role in ('owner', 'admin', 'editor')),
-  status text not null default 'pending' check (status in ('pending', 'active', 'rejected')),
-  invitation_token text not null default gen_random_uuid()::text,
-  created_at timestamptz not null default now(),
-  joined_at timestamptz
-);
-
 alter table public.org_members enable row level security;
-
 drop policy if exists "miembros ven lista de miembros" on public.org_members;
 create policy "miembros ven lista de miembros"
   on public.org_members for select
@@ -178,22 +196,7 @@ create policy "miembros ven lista de miembros"
     )
   );
 
--- 9. Candidatos Enterprise (org_candidates)
-create table if not exists public.org_candidates (
-  id uuid primary key default gen_random_uuid(),
-  owner_id uuid not null references auth.users(id) on delete cascade,
-  org_id uuid references public.organizations(id) on delete cascade,
-  full_name text not null,
-  title text,
-  vacant text,
-  status text not null default 'Borrador',
-  cv_data jsonb,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
 alter table public.org_candidates enable row level security;
-
 drop policy if exists "usuario u organizacion ve sus candidatos" on public.org_candidates;
 create policy "usuario u organizacion ve sus candidatos"
   on public.org_candidates for select
@@ -210,18 +213,4 @@ create policy "usuario u organizacion ve sus candidatos"
     )
   );
 
--- 10. Tabla segura de Refresh Tokens de Google Drive
-create table if not exists public.google_drive_tokens (
-  user_id uuid primary key references auth.users(id) on delete cascade,
-  refresh_token text not null,
-  scope text not null default 'https://www.googleapis.com/auth/drive.file',
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
 alter table public.google_drive_tokens enable row level security;
-
--- Columnas de estado en profiles
-alter table public.profiles add column if not exists drive_connected boolean not null default false;
-alter table public.profiles add column if not exists drive_quota_percent integer;
-alter table public.profiles add column if not exists drive_last_checked_at timestamptz;
