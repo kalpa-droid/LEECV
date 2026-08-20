@@ -173,8 +173,10 @@ function AppContent() {
     setIsDownloadModalOpen(false);
   };
 
+  const [mobileTabState, setMobileTabState] = useState('editor');
+
   return (
-    <div className="h-screen bg-[#2B1B2E] text-white flex flex-col font-sans overflow-hidden selection:bg-[#FF2E63] selection:text-white">
+    <div className="h-screen bg-[#2B1B2E] text-white flex flex-col font-sans overflow-hidden selection:bg-[#FF2E63] selection:text-white relative">
       {/* Primary Top Navbar */}
       <Navbar 
         onPrint={handleExportPDFClick} 
@@ -195,7 +197,11 @@ function AppContent() {
       {/* Secondary Category Navbar */}
       <SecondaryNavbar 
         activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
+        setActiveTab={(tab) => {
+          setActiveTab(tab);
+          setMobileTabState('editor');
+          setIsPanelOpen(true);
+        }} 
         isPanelOpen={isPanelOpen}
         setIsPanelOpen={setIsPanelOpen}
         zoomLevel={zoomLevel}
@@ -208,8 +214,10 @@ function AppContent() {
         {/* Sliding Editor Panel Drawer */}
         <div 
           className={`transition-all duration-300 ease-in-out border-r border-[#6B5B6E]/30 bg-[#F5EDDA] z-10 flex flex-col h-full overflow-y-auto ${
-            isPanelOpen ? 'w-full md:w-[480px] lg:w-[540px] opacity-100' : 'w-0 opacity-0 overflow-hidden'
-          }`}
+            isPanelOpen 
+              ? 'w-full md:w-[480px] lg:w-[540px] opacity-100' 
+              : 'w-0 opacity-0 overflow-hidden hidden md:block'
+          } ${mobileTabState === 'preview' ? 'hidden md:flex' : 'flex'}`}
         >
           <EditorPanel 
             cvData={cvData} 
@@ -222,10 +230,37 @@ function AppContent() {
         </div>
 
         {/* Live A4 CV Preview Area (Direct paper background) */}
-        <div className="flex-1 bg-[#1F1322] h-full overflow-y-auto p-2 sm:p-4 flex justify-center items-start">
+        <div className={`flex-1 bg-[#1F1322] h-full overflow-y-auto p-2 sm:p-4 justify-center items-start ${
+          mobileTabState === 'editor' && isPanelOpen ? 'hidden md:flex' : 'flex'
+        }`}>
           <CVPreview cvData={cvData} activeTab={activeTab} zoomLevel={zoomLevel} />
         </div>
       </main>
+
+      {/* Floating Bottom Switcher Bar (Mobile Screens Only) */}
+      <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 z-40 bg-[#2B1B2E]/95 backdrop-blur-md text-white border border-[#EFE2C9]/30 rounded-2xl shadow-2xl p-1 flex items-center gap-1 font-black text-xs">
+        <button
+          onClick={() => { setMobileTabState('editor'); setIsPanelOpen(true); }}
+          className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer ${
+            mobileTabState === 'editor' && isPanelOpen
+              ? 'bg-[#FF2E63] text-white shadow-md shadow-[#FF2E63]/30'
+              : 'bg-[#3D2740] text-[#EFE2C9]/80'
+          }`}
+        >
+          <span>📝 Editar Formulario</span>
+        </button>
+
+        <button
+          onClick={() => { setMobileTabState('preview'); setIsPanelOpen(false); triggerAutoFit(); }}
+          className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer ${
+            mobileTabState === 'preview' || !isPanelOpen
+              ? 'bg-[#00A8A0] text-white shadow-md shadow-[#00A8A0]/30'
+              : 'bg-[#3D2740] text-[#EFE2C9]/80'
+          }`}
+        >
+          <span>📄 Ver Hoja A4</span>
+        </button>
+      </div>
 
       {/* Lazy Loaded Modals wrapped in Suspense */}
       <Suspense fallback={null}>

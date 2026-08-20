@@ -120,8 +120,8 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* Global Action Buttons */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shadow-sm">
+        {/* Global Action Buttons (Scrollable horizontally on mobile) */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shadow-sm overflow-x-auto no-scrollbar max-w-full py-1">
           {/* ENTRAR (LOGIN / ACCESO DE USUARIOS / SUSCRIPCION) */}
           <button
             onClick={handlePricingClick}
