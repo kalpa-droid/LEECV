@@ -185,7 +185,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
     return rebuilt;
   }, [initialPacked, overflowCorrections]);
 
-  // Step 3: After render, check each page for overflow using native scrollHeight > clientHeight
+  // Step 3: After render, check each page for overflow using native innerContent.offsetHeight > mainCol.clientHeight
   useLayoutEffect(() => {
     const corrections: Record<number, number> = {};
     let needsCorrection = false;
@@ -199,10 +199,12 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
       const mainCol = ref.querySelector('[data-page-content]') as HTMLElement;
       if (!mainCol) continue;
 
-      const isOverflowing = mainCol.scrollHeight > mainCol.clientHeight + 2; // 2px tolerance
+      const innerContent = mainCol.firstElementChild as HTMLElement;
+      const contentHeight = innerContent ? innerContent.offsetHeight : mainCol.scrollHeight;
+      const containerHeight = mainCol.clientHeight;
+
+      const isOverflowing = containerHeight > 0 && contentHeight > (containerHeight - 12);
       if (isOverflowing) {
-        // Count how many items to remove (start with 1, the overflow detection 
-        // will run again on next render if still overflowing)
         const existingCorrection = overflowCorrections[pageIdx] || 0;
         corrections[pageIdx] = existingCorrection + 1;
         needsCorrection = true;
@@ -212,7 +214,6 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
     if (needsCorrection) {
       setOverflowCorrections(prev => {
         const next = { ...prev, ...corrections };
-        // Safety: prevent infinite loops by capping corrections
         const totalCorrections = Object.values(next).reduce((s, v) => s + v, 0);
         if (totalCorrections > allFlatItems.length) return prev;
         return next;
@@ -756,7 +757,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
         </div>
 
         {/* Right Main Content */}
-        <div className="col-span-2 p-6 flex flex-col" data-page-content style={{ overflow: 'hidden' }}>
+        <div className="col-span-2 p-6 flex flex-col h-full max-h-full" data-page-content style={{ height: '100%', maxHeight: '100%', overflow: 'hidden', boxSizing: 'border-box' }}>
           <div className="space-y-4">
             <div className="border-b border-slate-200 pb-2">
               <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">
@@ -815,7 +816,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
             </div>
 
             {/* Main Content */}
-            <div className="col-span-2 p-6 flex flex-col" data-page-content style={{ overflow: 'hidden' }}>
+            <div className="col-span-2 p-6 flex flex-col h-full max-h-full" data-page-content style={{ height: '100%', maxHeight: '100%', overflow: 'hidden', boxSizing: 'border-box' }}>
               <div className="space-y-3">
                 <div className="border-b border-slate-200 pb-2">
                   <h1 className="text-xl font-black text-slate-900 uppercase">
