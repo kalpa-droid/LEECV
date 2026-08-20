@@ -1,37 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import { getCurrentProfile, logout } from '../auth/authService';
-import { listUsers, setPremium, getBasicStats } from './adminService';
+import { listUsers, setPremium, getBasicStats, listPendingClaims, approveClaimInDb } from './adminService';
 import AdminLogin from './AdminLogin';
-import { Users, Crown, LogOut, RefreshCw, CreditCard, HardDrive, ShieldCheck, CheckCircle2, MessageSquare, AlertCircle, Sparkles } from 'lucide-react';
+import { Users, Crown, LogOut, RefreshCw, CreditCard, HardDrive, ShieldCheck, CheckCircle2, MessageSquare, AlertCircle, Sparkles, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { useToast } from '../../shared/core/ui/Toast';
+import { useConfirm } from '../../shared/core/ui/ConfirmDialog';
 
 export default function AdminDashboard() {
-  const { showSuccess } = useToast();
+  const { showSuccess, showError } = useToast();
+  const { confirm } = useConfirm();
   const [profile, setProfile] = useState(undefined);
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState({ totalUsers: 0, premiumUsers: 0 });
   const [loadingData, setLoadingData] = useState(false);
-  const [claims, setClaims] = useState([
-    {
-      id: 'claim-1',
-      email: 'agencia.salta@ejemplo.com',
-      method: 'Transferencia CBU',
-      amount: '$19.000 ARS',
-      date: 'Hace 10 min',
-      proofId: 'COMP-8827419',
-      status: 'pendiente',
-    }
-  ]);
+  const [claims, setClaims] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 50;
 
   async function loadEverything() {
     setLoadingData(true);
     try {
-      const [u, s] = await Promise.all([listUsers(), getBasicStats()]);
-      setUsers(u);
+      const [{ users: userList, totalCount: total }, s, claimList] = await Promise.all([
+        listUsers(searchQuery, page, pageSize),
+        getBasicStats(),
+        listPendingClaims()
+      ]);
+      setUsers(userList);
+      setTotalCount(total);
       setStats(s);
+      setClaims(claimList);
     } catch (err) {
       console.error(err);
+      showError('Inconveniente al cargar datos del servidor.');
     } finally {
       setLoadingData(false);
     }
@@ -43,7 +46,7 @@ export default function AdminDashboard() {
     if (p?.role === 'admin') loadEverything();
   }
 
-  useEffect(() => { checkSession(); }, []);
+  useEffect(() => { checkSession(); }, [page, searchQuery]);
 
   if (profile === undefined) return null;
   if (!profile) return <AdminLogin onLogin={checkSession} />;
@@ -55,19 +58,31 @@ export default function AdminDashboard() {
     );
   }
 
-  async function togglePremium(user, origin = 'manual') {
-    await setPremium(user.id, !user.premium_activo);
-    loadEverything();
+  async function togglePremium(user) {
+    if (user.premium_activo) {
+      confirm({
+        title: `¿Desactivar licencia de ${user.email}?`,
+        message: 'Esta acción removerá el acceso a las funciones Pro de este usuario.',
+        confirmText: 'Desactivar Licencia',
+        variant: 'danger',
+        onConfirm: async () => {
+          await setPremium(user.id, false);
+          showSuccess(`Licencia desactivada para ${user.email}`);
+          loadEverything();
+        }
+      });
+    } else {
+      await setPremium(user.id, true);
+      showSuccess(`Licencia activa (30 días) asignada a ${user.email}`);
+      loadEverything();
+    }
   }
 
-  function approveClaim(claimId, email) {
-    setClaims(prev => prev.filter(c => c.id !== claimId));
-    const targetUser = users.find(u => u.email === email);
-    if (targetUser) {
-      togglePremium(targetUser, 'transferencia_aprobada');
-    } else {
-      showSuccess(`Reclamo aprobado para ${email}. Licencia activada.`);
-    }
+  async function handleApproveClaim(claim) {
+    const targetUser = users.find(u => u.email === claim.email);
+    await approveClaimInDb(claim.id, targetUser?.id || claim.user_id, claim.email);
+    showSuccess(`✅ Reclamo aprobado para ${claim.email}. Licencia activada.`);
+    loadEverything();
   }
 
   return (
@@ -135,7 +150,7 @@ export default function AdminDashboard() {
                 <h2 className="font-extrabold text-sm text-amber-950">📩 Reclamos de Activación y Comprobantes Pendientes</h2>
               </div>
               <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 text-xs font-black">
-                {claims.length} Pendiente
+                {claims.length} Pendiente{claims.length > 1 ? 's' : ''}
               </span>
             </div>
 
@@ -145,12 +160,12 @@ export default function AdminDashboard() {
                   <div className="space-y-0.5">
                     <p className="font-black text-[#2B1B2E]">{claim.email}</p>
                     <p className="text-[11px] text-slate-600">
-                      Método: <strong>{claim.method}</strong> ({claim.amount}) — Comprobante: <code>{claim.proofId}</code>
+                      Método: <strong>{claim.method}</strong> ({claim.amount}) — Comprobante: <code>{claim.proof_id || claim.proofId || 'N/A'}</code>
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => approveClaim(claim.id, claim.email)}
+                      onClick={() => handleApproveClaim(claim)}
                       className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl transition shadow-sm cursor-pointer"
                     >
                       ✅ Aprobar y Activar Licencia
@@ -201,16 +216,28 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Tabla de Usuarios y Licencias */}
+        {/* Tabla de Usuarios y Licencias con Búsqueda y Paginación */}
         <div className="bg-white rounded-2xl shadow-sm border border-[#EFE2C9] overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#EFE2C9]">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-b border-[#EFE2C9]">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-[#FF2E63]" />
               <h2 className="font-extrabold text-sm text-[#2B1B2E]">Gestión de Licencias y Origen de Pago</h2>
             </div>
-            <button onClick={loadEverything} className="text-[#00A8A0] p-2 hover:bg-slate-100 rounded-xl transition cursor-pointer">
-              <RefreshCw className={`w-4 h-4 ${loadingData ? 'animate-spin' : ''}`} />
-            </button>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="relative flex-1 sm:w-64">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar por email..."
+                  value={searchQuery}
+                  onChange={(e) => { setSearchQuery(e.target.value); setPage(0); }}
+                  className="w-full text-xs pl-9 pr-3 py-2 border border-slate-300 rounded-xl font-medium outline-none focus:border-[#00A8A0]"
+                />
+              </div>
+              <button onClick={loadEverything} className="text-[#00A8A0] p-2 hover:bg-slate-100 rounded-xl transition cursor-pointer">
+                <RefreshCw className={`w-4 h-4 ${loadingData ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
           </div>
 
           <table className="w-full text-xs">
@@ -227,7 +254,9 @@ export default function AdminDashboard() {
               {users.map((u) => (
                 <tr key={u.id} className="hover:bg-[#F7F3E9]/40 transition">
                   <td className="px-5 py-3 font-bold">{u.email}</td>
-                  <td className="px-5 py-3 font-medium text-[#2B1B2E]/70">{new Date(u.created_at).toLocaleDateString('es-AR')}</td>
+                  <td className="px-5 py-3 font-medium text-[#2B1B2E]/70">
+                    {u.created_at ? new Date(u.created_at).toLocaleDateString('es-AR') : '-'}
+                  </td>
                   <td className="px-5 py-3 font-medium">
                     {u.metodo_pago === 'mercadopago' ? (
                       <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-800 border border-emerald-500/30 font-bold text-[10px]">
@@ -259,13 +288,37 @@ export default function AdminDashboard() {
                           : 'bg-[#00A8A0]/10 text-[#00A8A0] hover:bg-[#00A8A0]/20 border border-[#00A8A0]/30'
                       }`}
                     >
-                      {u.premium_activo ? 'Desactivar Licencia' : 'Activar Premium'}
+                      {u.premium_activo ? 'Desactivar Licencia' : 'Activar Premium (30d)'}
                     </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+
+          {/* Pagination Controls */}
+          <div className="px-5 py-3 bg-[#F7F3E9]/50 border-t border-[#EFE2C9] flex items-center justify-between text-xs text-slate-600">
+            <span>
+              Mostrando {users.length > 0 ? page * pageSize + 1 : 0} a {Math.min((page + 1) * pageSize, totalCount)} de {totalCount} usuarios
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                disabled={page === 0}
+                onClick={() => setPage(p => Math.max(0, p - 1))}
+                className="p-1.5 rounded-lg border border-slate-300 disabled:opacity-40 hover:bg-slate-100 transition"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="font-bold">Página {page + 1}</span>
+              <button
+                disabled={(page + 1) * pageSize >= totalCount}
+                onClick={() => setPage(p => p + 1)}
+                className="p-1.5 rounded-lg border border-slate-300 disabled:opacity-40 hover:bg-slate-100 transition"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         </div>
 
       </main>
