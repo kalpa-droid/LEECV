@@ -10,18 +10,18 @@ import { supabase } from '../shared/core/lib/supabaseClient';
 import { exportCVToPDF } from '../shared/core/pdf-engine/pdfExporter';
 import { exportCVToJson, importCVFromJsonFile } from '../shared/core/utils/jsonImporterExporter';
 
-// Lazy-loaded Modals for Code-Splitting
-const PhotoCropperModal = lazy(() => import('../modules/cv-builder/components/PhotoCropperModal'));
-const SignatureModal = lazy(() => import('../modules/cv-builder/components/SignatureModal'));
-const WizardModal = lazy(() => import('../modules/cv-builder/components/WizardModal'));
-const SavedCVsModal = lazy(() => import('../modules/cv-builder/components/SavedCVsModal'));
-const SaveModal = lazy(() => import('../modules/cv-builder/components/SaveModal'));
-const CloudStatusModal = lazy(() => import('../modules/cv-builder/components/CloudStatusModal'));
-const PricingModal = lazy(() => import('../modules/payments/PricingModal'));
-const PdfCheckoutModal = lazy(() => import('../modules/cv-builder/components/modals/PdfCheckoutModal'));
-const JsonDownloadModal = lazy(() => import('../modules/cv-builder/components/modals/JsonDownloadModal'));
-const PdfProgressModal = lazy(() => import('../modules/cv-builder/components/modals/PdfProgressModal'));
-const PrivacyModal = lazy(() => import('../modules/cv-builder/components/PrivacyModal'));
+// Direct Modals Imports (Prevents dynamic chunk fetch errors on updates)
+import PhotoCropperModal from '../modules/cv-builder/components/PhotoCropperModal';
+import SignatureModal from '../modules/cv-builder/components/SignatureModal';
+import WizardModal from '../modules/cv-builder/components/WizardModal';
+import SavedCVsModal from '../modules/cv-builder/components/SavedCVsModal';
+import SaveModal from '../modules/cv-builder/components/SaveModal';
+import CloudStatusModal from '../modules/cv-builder/components/CloudStatusModal';
+import PricingModal from '../modules/payments/PricingModal';
+import PdfCheckoutModal from '../modules/cv-builder/components/modals/PdfCheckoutModal';
+import JsonDownloadModal from '../modules/cv-builder/components/modals/JsonDownloadModal';
+import PdfProgressModal from '../modules/cv-builder/components/modals/PdfProgressModal';
+import PrivacyModal from '../modules/cv-builder/components/PrivacyModal';
 
 import { CVProvider, useCVContext } from '../context/CVContext';
 import { ToastProvider, useToast } from '../shared/core/ui/Toast';
