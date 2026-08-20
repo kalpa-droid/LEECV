@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Crop, ZoomIn, ZoomOut, RotateCw, Check, X, AlertTriangle, Maximize2 } from 'lucide-react';
 import { useToast } from '../../../shared/core/ui/Toast';
 
@@ -22,23 +22,7 @@ export default function CertCropperModal({
 
   const canvasRef = useRef(null);
 
-  useEffect(() => {
-    if (isOpen && rawImageSrc) {
-      setZoom(1);
-      setRotation(0);
-      setOffset({ x: 0, y: 0 });
-      setLocalRegIdx(selectedRegIdx);
-      setIsSelectionWarningVisible(!selectedRegIdx);
-    }
-  }, [isOpen, rawImageSrc, selectedRegIdx]);
-
-  useEffect(() => {
-    if (isOpen && rawImageSrc && canvasRef.current) {
-      drawCanvas();
-    }
-  }, [isOpen, rawImageSrc, zoom, rotation, offset]);
-
-  const drawCanvas = () => {
+  const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas || !rawImageSrc) return;
     const ctx = canvas.getContext('2d');
@@ -71,7 +55,23 @@ export default function CertCropperModal({
       ctx.drawImage(img, -img.width / 2, -img.height / 2);
       ctx.restore();
     };
-  };
+  }, [rawImageSrc, zoom, rotation, offset]);
+
+  useEffect(() => {
+    if (isOpen && rawImageSrc) {
+      setZoom(1);
+      setRotation(0);
+      setOffset({ x: 0, y: 0 });
+      setLocalRegIdx(selectedRegIdx);
+      setIsSelectionWarningVisible(!selectedRegIdx);
+    }
+  }, [isOpen, rawImageSrc, selectedRegIdx]);
+
+  useEffect(() => {
+    if (isOpen && rawImageSrc && canvasRef.current) {
+      drawCanvas();
+    }
+  }, [isOpen, rawImageSrc, drawCanvas]);
 
   const handleMouseDown = (e) => {
     setIsDragging(true);

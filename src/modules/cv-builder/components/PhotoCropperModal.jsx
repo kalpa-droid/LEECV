@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Camera, ZoomIn, ZoomOut, RotateCw, Check, X, Upload } from 'lucide-react';
 
 import { validateImageFile } from '../../../shared/core/utils/validateFile';
@@ -16,39 +16,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  useEffect(() => {
-    if (currentPhoto) {
-      setImageSrc(currentPhoto);
-    }
-  }, [currentPhoto]);
-
-  useEffect(() => {
-    if (imageSrc && canvasRef.current) {
-      drawCanvas();
-    }
-  }, [imageSrc, zoom, rotation, offset]);
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const validation = validateImageFile(file);
-      if (!validation.valid) {
-        showError(validation.error);
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setImageSrc(event.target.result);
-        setZoom(1);
-        setRotation(0);
-        setOffset({ x: 0, y: 0 });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const drawCanvas = () => {
+  const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas || !imageSrc) return;
     const ctx = canvas.getContext('2d');
@@ -68,7 +36,19 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
       ctx.drawImage(img, -img.width / 2, -img.height / 2);
       ctx.restore();
     };
-  };
+  }, [imageSrc, zoom, rotation, offset]);
+
+  useEffect(() => {
+    if (currentPhoto) {
+      setImageSrc(currentPhoto);
+    }
+  }, [currentPhoto]);
+
+  useEffect(() => {
+    if (imageSrc && canvasRef.current) {
+      drawCanvas();
+    }
+  }, [imageSrc, drawCanvas]);
 
   const handleMouseDown = (e) => {
     setIsDragging(true);

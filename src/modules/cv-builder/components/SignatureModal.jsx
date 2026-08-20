@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { PenTool, Upload, Eraser, RotateCcw, Check, X, Sparkles } from 'lucide-react';
 import { validateImageFile } from '../../../shared/core/utils/validateFile';
 import { useToast } from '../../../shared/core/ui/Toast';
@@ -27,20 +27,7 @@ export default function SignatureModal({
   const isDrawing = useRef(false);
   const fileInputRef = useRef(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      setSignerName(currentSignature?.signerName || defaultSignerName);
-      setSignerRole(currentSignature?.signerRole || defaultSignerRole);
-      setDate(currentSignature?.date || defaultDate);
-      if (activeTab === 'draw') {
-        setTimeout(() => {
-          initCanvas();
-        }, 100);
-      }
-    }
-  }, [isOpen, activeTab, currentSignature, defaultSignerName, defaultSignerRole, defaultDate]);
-
-  const initCanvas = () => {
+  const initCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -63,7 +50,20 @@ export default function SignatureModal({
         ctx.drawImage(img, 0, 0);
       };
     }
-  };
+  }, [strokeColor, strokeWidth, currentSignature, activeTab]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setSignerName(currentSignature?.signerName || defaultSignerName);
+      setSignerRole(currentSignature?.signerRole || defaultSignerRole);
+      setDate(currentSignature?.date || defaultDate);
+      if (activeTab === 'draw') {
+        setTimeout(() => {
+          initCanvas();
+        }, 100);
+      }
+    }
+  }, [isOpen, activeTab, currentSignature, defaultSignerName, defaultSignerRole, defaultDate, initCanvas]);
 
   const getCoordinates = (e) => {
     const canvas = canvasRef.current;
