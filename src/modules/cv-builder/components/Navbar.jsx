@@ -120,22 +120,22 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* Global Action Buttons (Scrollable horizontally on mobile) */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shadow-sm overflow-x-auto no-scrollbar max-w-full py-1">
+        {/* Global Action Buttons */}
+        <div className="flex items-center gap-1 sm:gap-2 shadow-sm flex-wrap sm:flex-nowrap">
           {/* ENTRAR (LOGIN / ACCESO DE USUARIOS / SUSCRIPCION) */}
           <button
             onClick={handlePricingClick}
-            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-[#FFE0C7] bg-[#FF7A29]/20 hover:bg-[#FF7A29]/30 border border-[#FF7A29]/40 transition cursor-pointer"
+            className="flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-xl text-xs font-extrabold text-[#FFE0C7] bg-[#FF7A29]/20 hover:bg-[#FF7A29]/30 border border-[#FF7A29]/40 transition cursor-pointer"
             title="Ingresar a tu cuenta de usuario o suscripción Premium"
           >
             <LogIn className="w-3.5 h-3.5 text-[#FF7A29] flex-shrink-0" />
-            <span>Entrar</span>
+            <span className="hidden sm:inline">Entrar</span>
           </button>
 
           {/* NUEVO CV */}
           <button
             onClick={handleNewClick}
-            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-white bg-[#FF2E63] hover:bg-[#E31555] border border-[#FFD9E3]/30 transition shadow-md shadow-[#FF2E63]/20 cursor-pointer"
+            className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-extrabold text-white bg-[#FF2E63] hover:bg-[#E31555] border border-[#FFD9E3]/30 transition shadow-md shadow-[#FF2E63]/20 cursor-pointer"
             title="Iniciar un nuevo CV"
           >
             <FilePlus className="w-3.5 h-3.5 text-[#FFD9E3] flex-shrink-0" />
@@ -145,7 +145,7 @@ export default function Navbar({
           {/* ABRIR CVS GUARDADOS */}
           <button
             onClick={handleOpenSavedClick}
-            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-[#CFF3F0] bg-[#00A8A0] hover:bg-[#00877F] border border-[#00A8A0]/40 transition shadow-md shadow-[#00A8A0]/20 cursor-pointer"
+            className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-extrabold text-[#CFF3F0] bg-[#00A8A0] hover:bg-[#00877F] border border-[#00A8A0]/40 transition shadow-md shadow-[#00A8A0]/20 cursor-pointer"
             title="Abrir lista de CVs guardados"
           >
             <FolderOpen className="w-3.5 h-3.5 text-white flex-shrink-0" />
@@ -156,18 +156,18 @@ export default function Navbar({
           <button
             onClick={onSaveCV}
             disabled={isSaving}
-            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-[#E9DBFF] bg-[#8E44FF] hover:bg-[#7126E0] border border-[#8E44FF]/40 transition disabled:opacity-50 shadow-md shadow-[#8E44FF]/20 cursor-pointer"
+            className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-extrabold text-[#E9DBFF] bg-[#8E44FF] hover:bg-[#7126E0] border border-[#8E44FF]/40 transition disabled:opacity-50 shadow-md shadow-[#8E44FF]/20 cursor-pointer"
             title="Guardar CV optimizado en IndexedDB"
           >
             <Save className="w-3.5 h-3.5 text-white flex-shrink-0" />
-            <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
+            <span>{isSaving ? '...' : 'Guardar'}</span>
           </button>
 
           {/* DESCARGAR ARCHIVO DE RESPALDO JSON */}
           <button
             onClick={handleDownloadClick}
-            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-white bg-slate-700 hover:bg-slate-800 border border-slate-600 transition shadow-sm cursor-pointer"
-            title="Descargar copia de respaldo en tu equipo para abrirlo luego desde el botón Abrir"
+            className="hidden lg:flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-extrabold text-white bg-slate-700 hover:bg-slate-800 border border-slate-600 transition shadow-sm cursor-pointer"
+            title="Descargar copia de respaldo en tu equipo"
           >
             <Download className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
             <span>Descargar</span>
@@ -185,8 +185,8 @@ export default function Navbar({
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs font-extrabold text-white bg-slate-800 hover:bg-slate-700 border border-slate-600 transition shadow-sm cursor-pointer"
-                title="Cargar un archivo .JSON de respaldo desde tu computadora"
+                className="hidden xl:flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-extrabold text-white bg-slate-800 hover:bg-slate-700 border border-slate-600 transition shadow-sm cursor-pointer"
+                title="Cargar un archivo .JSON de respaldo"
               >
                 <Upload className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
                 <span>Cargar .JSON</span>
@@ -197,7 +197,7 @@ export default function Navbar({
           {/* EXPORTAR PDF */}
           <button
             onClick={onPrint}
-            className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-[#FFC93C] hover:bg-[#F0AE00] text-[#2B1B2E] font-black text-xs shadow-lg shadow-[#FFC93C]/30 transition transform active:scale-95 ml-1 border border-[#F0AE00] cursor-pointer"
+            className="flex items-center gap-1 px-3 sm:px-4 py-1.5 rounded-xl bg-[#FFC93C] hover:bg-[#F0AE00] text-[#2B1B2E] font-black text-xs shadow-lg shadow-[#FFC93C]/30 transition transform active:scale-95 border border-[#F0AE00] cursor-pointer"
             title="Generar y descargar documento PDF listo para imprimir o enviar"
           >
             <Printer className="w-3.5 h-3.5 flex-shrink-0 text-[#2B1B2E]" />

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import Navbar from '../modules/cv-builder/components/Navbar';
-import SecondaryNavbar from '../modules/cv-builder/components/SecondaryNavbar';
+import CanvaIconDock from '../modules/cv-builder/components/CanvaIconDock';
 import EditorPanel from '../modules/cv-builder/components/EditorPanel';
 import CVPreview from '../modules/cv-builder/components/CVPreview';
+import { ZoomIn, ZoomOut, Smartphone } from 'lucide-react';
 
 import { getCurrentProfile } from '../modules/auth/authService';
 import { initialCVData, standardExampleCVData, blankCVTemplate } from '../data/initialCVData';
@@ -194,28 +195,25 @@ function AppContent() {
         cvData={cvData}
       />
 
-      {/* Secondary Category Navbar */}
-      <SecondaryNavbar 
-        activeTab={activeTab} 
-        setActiveTab={(tab) => {
-          setActiveTab(tab);
-          setMobileTabState('editor');
-          setIsPanelOpen(true);
-        }} 
-        isPanelOpen={isPanelOpen}
-        setIsPanelOpen={setIsPanelOpen}
-        zoomLevel={zoomLevel}
-        setZoomLevel={setZoomLevel}
-        onTriggerAutoFit={triggerAutoFit}
-      />
-
-      {/* Main Workspace split into Editor Form (Left) and A4 Live Preview (Right) */}
+      {/* Canva-Style Main Workspace */}
       <main className="flex-1 flex overflow-hidden relative min-h-0">
-        {/* Sliding Editor Panel Drawer */}
+        {/* Left Canva Icon Tool Dock */}
+        <CanvaIconDock 
+          activeTab={activeTab} 
+          setActiveTab={(tab) => {
+            setActiveTab(tab);
+            setMobileTabState('editor');
+            setIsPanelOpen(true);
+          }} 
+          isPanelOpen={isPanelOpen}
+          setIsPanelOpen={setIsPanelOpen}
+        />
+
+        {/* Sliding Editor Panel Flyout Drawer */}
         <div 
-          className={`transition-all duration-300 ease-in-out border-r border-[#6B5B6E]/30 bg-[#F5EDDA] z-10 flex flex-col h-full overflow-y-auto ${
+          className={`transition-all duration-300 ease-in-out border-r border-[#6B5B6E]/30 bg-[#F5EDDA] z-20 flex flex-col h-full overflow-y-auto ${
             isPanelOpen 
-              ? 'w-full md:w-[480px] lg:w-[540px] opacity-100' 
+              ? 'w-full md:w-[460px] lg:w-[500px] opacity-100 shadow-2xl' 
               : 'w-0 opacity-0 overflow-hidden hidden md:block'
           } ${mobileTabState === 'preview' ? 'hidden md:flex' : 'flex'}`}
         >
@@ -229,11 +227,43 @@ function AppContent() {
           />
         </div>
 
-        {/* Live A4 CV Preview Area (Direct paper background) */}
-        <div className={`flex-1 bg-[#1F1322] h-full overflow-y-auto p-2 sm:p-4 justify-center items-start ${
+        {/* Live A4 CV Preview Canvas Area (Direct paper background) */}
+        <div className={`flex-1 bg-[#1F1322] h-full overflow-y-auto p-2 sm:p-4 justify-center items-start relative ${
           mobileTabState === 'editor' && isPanelOpen ? 'hidden md:flex' : 'flex'
         }`}>
           <CVPreview cvData={cvData} activeTab={activeTab} zoomLevel={zoomLevel} />
+
+          {/* Sleek Floating Zoom & Auto-Fit Cluster Pill */}
+          <div className="fixed bottom-16 md:bottom-5 right-5 z-30 bg-[#2B1B2E]/90 backdrop-blur-md text-white p-1 rounded-2xl border border-white/20 shadow-2xl flex items-center gap-1 text-xs font-black">
+            <button
+              onClick={() => setZoomLevel(prev => Math.max(0.3, parseFloat((prev - 0.1).toFixed(2))))}
+              className="p-1.5 rounded-xl hover:bg-[#FF2E63] text-white transition cursor-pointer"
+              title="Alejar (-10%)"
+            >
+              <ZoomOut className="w-3.5 h-3.5" />
+            </button>
+
+            <span className="px-2 text-[#FFC93C] text-xs min-w-10 text-center font-black">
+              {Math.round(zoomLevel * 100)}%
+            </span>
+
+            <button
+              onClick={() => setZoomLevel(prev => Math.min(2.0, parseFloat((prev + 0.1).toFixed(2))))}
+              className="p-1.5 rounded-xl hover:bg-[#FF2E63] text-white transition cursor-pointer"
+              title="Acercar (+10%)"
+            >
+              <ZoomIn className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              onClick={triggerAutoFit}
+              className="px-2.5 py-1 rounded-xl bg-[#00A8A0] hover:bg-[#00877F] text-white text-[11px] font-black transition flex items-center gap-1 shadow-sm cursor-pointer ml-1"
+              title="Auto-encajar el diseño A4 al tamaño de pantalla"
+            >
+              <Smartphone className="w-3.5 h-3.5" />
+              <span>Encajar</span>
+            </button>
+          </div>
         </div>
       </main>
 
