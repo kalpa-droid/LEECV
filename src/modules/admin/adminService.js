@@ -55,19 +55,6 @@ export async function setPremium(userId, activo, vence = null) {
   return await setUserPlan(userId, activo ? 'pro' : 'free', vence);
 }
 
-/** Oboge lista de reclamos de pago pendientes desde Supabase */
-export async function listPendingClaims() {
-  const res = await safeSupabaseCall(async () => {
-    return await supabase
-      .from('payment_claims')
-      .select('*')
-      .eq('status', 'pendiente')
-      .order('created_at', { ascending: false });
-  }, []);
-
-  return res.data || [];
-}
-
 /** Aprueba reclamo de pago y activa licencia */
 export async function approveClaimInDb(claimId, targetUserId, email) {
   const { data: { user } } = await supabase.auth.getUser();

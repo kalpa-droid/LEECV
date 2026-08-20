@@ -1,8 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { getCurrentProfile, logout } from '../auth/authService';
-import { listUsers, setPremium, getBasicStats, listPendingClaims, approveClaimInDb } from './adminService';
+import { 
+  listUsers, 
+  setPremium, 
+  getBasicStats, 
+  listPendingClaims, 
+  approveClaimInDb, 
+  reviewManualClaim,
+  listAdminNotifications, 
+  markNotificationRead 
+} from './adminService';
 import AdminLogin from './AdminLogin';
-import { Users, Crown, LogOut, RefreshCw, CreditCard, HardDrive, ShieldCheck, CheckCircle2, MessageSquare, AlertCircle, Sparkles, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { 
+  Users, Crown, LogOut, RefreshCw, CreditCard, HardDrive, 
+  ShieldCheck, CheckCircle2, MessageSquare, AlertCircle, Sparkles, 
+  Search, ChevronLeft, ChevronRight, Bell, Check, X 
+} from 'lucide-react';
 
 import { useToast } from '../../shared/core/ui/Toast';
 import { useConfirm } from '../../shared/core/ui/ConfirmDialog';
@@ -15,6 +28,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({ totalUsers: 0, premiumUsers: 0 });
   const [loadingData, setLoadingData] = useState(false);
   const [claims, setClaims] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
@@ -23,15 +37,17 @@ export default function AdminDashboard() {
   async function loadEverything() {
     setLoadingData(true);
     try {
-      const [{ users: userList, totalCount: total }, s, claimList] = await Promise.all([
+      const [{ users: userList, totalCount: total }, s, claimList, notifList] = await Promise.all([
         listUsers(searchQuery, page, pageSize),
         getBasicStats(),
-        listPendingClaims()
+        listPendingClaims(),
+        listAdminNotifications({ limit: 20 })
       ]);
       setUsers(userList);
       setTotalCount(total);
       setStats(s);
-      setClaims(claimList);
+      setClaims(claimList || []);
+      setNotifications(notifList || []);
     } catch (err) {
       console.error(err);
       showError('Inconveniente al cargar datos del servidor.');
@@ -78,12 +94,33 @@ export default function AdminDashboard() {
     }
   }
 
-  async function handleApproveClaim(claim) {
-    const targetUser = users.find(u => u.email === claim.email);
-    await approveClaimInDb(claim.id, targetUser?.id || claim.user_id, claim.email);
-    showSuccess(`✅ Reclamo aprobado para ${claim.email}. Licencia activada.`);
-    loadEverything();
+  async function handleReviewClaim(claim, approve) {
+    try {
+      if (claim.id && !claim.id.startsWith('claim-')) {
+        await reviewManualClaim(claim.id, approve);
+      } else {
+        const targetUser = users.find(u => u.email === claim.email);
+        if (approve) {
+          await approveClaimInDb(claim.id, targetUser?.id || claim.user_id, claim.email);
+        }
+      }
+      showSuccess(approve ? `✅ Reclamo aprobado para ${claim.email}. Licencia activada.` : `❌ Reclamo rechazado para ${claim.email}.`);
+      loadEverything();
+    } catch (err) {
+      showError(err.message || 'Error al procesar comprobante');
+    }
   }
+
+  async function handleMarkNotifRead(id) {
+    try {
+      await markNotificationRead(id);
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  const unreadNotifCount = notifications.filter(n => !n.read).length;
 
   return (
     <div className="min-h-screen bg-[#F7F3E9] text-[#2B1B2E] font-sans">
@@ -95,7 +132,7 @@ export default function AdminDashboard() {
           </div>
           <div>
             <h1 className="font-black text-base sm:text-lg tracking-wide">🛠️ Panel de Administración Suprema — LEECV</h1>
-            <p className="text-[10px] text-[#FFE0C7]/70">Control de Licencias, Pagos Automáticos, Bot WhatsApp & Reclamos</p>
+            <p className="text-[10px] text-[#FFE0C7]/70">Control de Licencias, Pagos Automáticos, Webhooks & Reclamos</p>
           </div>
         </div>
         <button
@@ -141,6 +178,48 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Notificaciones de Administración */}
+        {notifications.length > 0 && (
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-[#EFE2C9] space-y-3">
+            <div className="flex items-center justify-between border-b border-[#EFE2C9] pb-3">
+              <div className="flex items-center gap-2">
+                <Bell className="w-5 h-5 text-[#FF2E63]" />
+                <h2 className="font-extrabold text-sm text-[#2B1B2E]">🔔 Eventos & Notificaciones de Pagos / Sistema</h2>
+              </div>
+              {unreadNotifCount > 0 && (
+                <span className="px-2.5 py-0.5 rounded-full bg-[#FF2E63] text-white text-xs font-black">
+                  {unreadNotifCount} nueva{unreadNotifCount > 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
+
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+              {notifications.map((notif) => (
+                <div 
+                  key={notif.id} 
+                  className={`p-3 rounded-xl border flex items-center justify-between gap-3 text-xs transition ${
+                    notif.read ? 'bg-slate-50 border-slate-200 text-slate-500' : 'bg-amber-50/60 border-amber-200 text-slate-800 font-medium'
+                  }`}
+                >
+                  <div className="space-y-0.5">
+                    <p className="font-bold text-slate-900">{notif.title || notif.type}</p>
+                    <p className="text-[11px] text-slate-600">{notif.detail}</p>
+                  </div>
+                  {!notif.read && (
+                    <button 
+                      onClick={() => handleMarkNotifRead(notif.id)}
+                      className="p-1 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition cursor-pointer"
+                      title="Marcar como leída"
+                    >
+                      <Check className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Panel de Reclamos y Soporte Pendiente */}
         {claims.length > 0 && (
           <div className="bg-amber-500/10 border-2 border-amber-500/40 rounded-2xl p-5 shadow-sm space-y-3">
@@ -165,10 +244,16 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => handleApproveClaim(claim)}
+                      onClick={() => handleReviewClaim(claim, true)}
                       className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl transition shadow-sm cursor-pointer"
                     >
-                      ✅ Aprobar y Activar Licencia
+                      ✅ Aprobar y Activar
+                    </button>
+                    <button
+                      onClick={() => handleReviewClaim(claim, false)}
+                      className="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white font-extrabold rounded-xl transition shadow-sm cursor-pointer"
+                    >
+                      ❌ Rechazar
                     </button>
                   </div>
                 </div>
@@ -182,10 +267,10 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between border-b border-[#EFE2C9] pb-3">
             <div className="flex items-center gap-2">
               <CreditCard className="w-5 h-5 text-[#00A8A0]" />
-              <h2 className="font-extrabold text-sm text-[#2B1B2E]">Pasarelas & Bot OCR de Transferencias</h2>
+              <h2 className="font-extrabold text-sm text-[#2B1B2E]">Pasarelas & Webhooks de Cobro Unificado</h2>
             </div>
             <span className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5" /> Bot OCR WhatsApp / Telegram Activo
+              <Sparkles className="w-3.5 h-3.5" /> Core applyPayment.js Activo
             </span>
           </div>
           
@@ -198,20 +283,20 @@ export default function AdminDashboard() {
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             </div>
 
+            <div className="p-3.5 rounded-xl border border-blue-500/30 bg-blue-500/5 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-black text-blue-900">PayPal (USD)</p>
+                <p className="text-[10px] text-blue-700 font-bold">Firma Webhook Verificada</p>
+              </div>
+              <CheckCircle2 className="w-4 h-4 text-blue-600" />
+            </div>
+
             <div className="p-3.5 rounded-xl border border-purple-500/30 bg-purple-500/5 flex items-center justify-between">
               <div>
                 <p className="text-xs font-black text-purple-900">Lemon Squeezy (USD)</p>
-                <p className="text-[10px] text-purple-700 font-bold">Suscripciones Globales con Tarjeta</p>
+                <p className="text-[10px] text-purple-700 font-bold">Suscripciones Globales</p>
               </div>
               <CheckCircle2 className="w-4 h-4 text-purple-600" />
-            </div>
-
-            <div className="p-3.5 rounded-xl border border-blue-500/30 bg-blue-500/5 flex items-center justify-between">
-              <div>
-                <p className="text-xs font-black text-blue-900">Bot WhatsApp / Telegram OCR</p>
-                <p className="text-[10px] text-blue-700 font-bold">Lectura Automática de Comprobantes CBU</p>
-              </div>
-              <MessageSquare className="w-4 h-4 text-blue-600" />
             </div>
           </div>
         </div>
@@ -262,12 +347,16 @@ export default function AdminDashboard() {
                       <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-800 border border-emerald-500/30 font-bold text-[10px]">
                         🌐 Mercado Pago Automático
                       </span>
+                    ) : u.metodo_pago === 'paypal' ? (
+                      <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-800 border border-blue-500/30 font-bold text-[10px]">
+                        💳 PayPal Automático
+                      </span>
                     ) : u.metodo_pago === 'lemonsqueezy' ? (
                       <span className="px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-800 border border-purple-500/30 font-bold text-[10px]">
                         🌎 Lemon Squeezy USD
                       </span>
                     ) : u.metodo_pago === 'manual' ? (
-                      <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-800 border border-blue-500/30 font-bold text-[10px]">
+                      <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-800 border border-amber-500/30 font-bold text-[10px]">
                         🏦 Transferencia / Manual
                       </span>
                     ) : (
@@ -276,7 +365,7 @@ export default function AdminDashboard() {
                   </td>
                   <td className="px-5 py-3">
                     {u.premium_activo
-                      ? <span className="inline-flex items-center gap-1 text-[#00A8A0] font-black bg-[#00A8A0]/10 px-2.5 py-1 rounded-full text-[11px]">👑 Activa (Agencia Pro)</span>
+                      ? <span className="inline-flex items-center gap-1 text-[#00A8A0] font-black bg-[#00A8A0]/10 px-2.5 py-1 rounded-full text-[11px]">👑 Activa ({u.plan?.toUpperCase() || 'PRO'})</span>
                       : <span className="text-[#2B1B2E]/40 font-bold">Gratuito / Estándar</span>}
                   </td>
                   <td className="px-5 py-3 text-right">
