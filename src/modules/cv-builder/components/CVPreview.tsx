@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useLayoutEffect, useRef } from 'react';
 import { 
   User, 
   GraduationCap, 
@@ -102,7 +102,34 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
     return { secId, items: [], itemType: 'exp' as const };
   }).filter(b => b.items.length > 0);
 
-  const packedPages = packPrimarySectionsIntoPages(primaryBlocks, paperSizeId, 55);
+  const [measuredHeights, setMeasuredHeights] = useState<Record<string, number>>({});
+  const measureContainerRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (!measureContainerRef.current) return;
+    const map: Record<string, number> = {};
+    const nodes = measureContainerRef.current.querySelectorAll('[data-measure-key]');
+    nodes.forEach(node => {
+      const key = node.getAttribute('data-measure-key');
+      if (key) {
+        const rect = node.getBoundingClientRect();
+        // Convert CSS pixels to mm using 96DPI standard: 1px = 25.4 / 96 mm = 0.264583 mm
+        const heightMm = rect.height * 0.264583;
+        if (heightMm > 0) {
+          map[key] = heightMm;
+        }
+      }
+    });
+
+    if (Object.keys(map).length > 0) {
+      setMeasuredHeights(prev => {
+        const isDifferent = Object.keys(map).some(k => Math.abs((prev[k] || 0) - map[k]) > 0.5);
+        return isDifferent ? map : prev;
+      });
+    }
+  }, [cvData, paperSizeId]);
+
+  const packedPages = packPrimarySectionsIntoPages(primaryBlocks, paperSizeId, 55, measuredHeights);
 
   const secondarySections = [...new Set(cvData?.layout?.sectionOrders?.secundaria || ["contacto", "competencias", "personales", "informatica"])] as string[];
   const sidebarPageChunks = getSidebarPageChunks(secondarySections, cvData, paperSizeId, 115);
@@ -728,6 +755,23 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
       )}
       </div>
 
+      {/* ========================================================================= */}
+      {/* NATIVE BROWSER DOM MEASUREMENT STAGE (Zero-Guesswork Native Layout Engine) */}
+      {/* ========================================================================= */}
+      <div ref={measureContainerRef} aria-hidden="true" className="opacity-0 pointer-events-none fixed top-[-9999px] left-[-9999px] w-[500px]">
+        {primaryBlocks.map(block => (
+          <div key={`measure-block-${block.secId}`}>
+            <div data-measure-key={`header_${block.secId}`}>
+              {renderSectionHeader(<Briefcase className="w-4 h-4" />, block.secId.toUpperCase())}
+            </div>
+            {block.items.map((item: any, i: number) => (
+              <div key={`measure-${block.secId}-${i}`} data-measure-key={`${block.secId}_${i}`}>
+                {renderDynamicSection(block.secId, 'primaria', [item])}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

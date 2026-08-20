@@ -120,14 +120,17 @@ export interface PagePrimaryGroup {
   blocks: PrimarySectionBlock[];
 }
 
+export type MeasuredHeightMap = Record<string, number>;
+
 /**
  * Dynamically packs primary section blocks into pages using exact paper height dimensions.
- * Guarantees zero vertical overflow on Page 2 and all extra pages.
+ * Accepts optional native DOM measured heights in mm from the browser layout engine.
  */
 export function packPrimarySectionsIntoPages(
   blocks: PrimarySectionBlock[],
   paperSizeId: string = 'a4',
-  reservedHeaderFooterMm: number = 55
+  reservedHeaderFooterMm: number = 55,
+  measuredHeights?: MeasuredHeightMap
 ): PagePrimaryGroup[] {
   const paper = PAGE_SIZES[paperSizeId] || PAGE_SIZES.a4;
   const availableHeightMm = Math.max(paper.heightMm - reservedHeaderFooterMm, 180);
@@ -137,19 +140,18 @@ export function packPrimarySectionsIntoPages(
   let currentHeightMm = 0;
   let currentPageIndex = 0;
 
-  const getAvailableHeight = (_pageIdx: number) => availableHeightMm;
-
   for (const block of blocks) {
     if (!block.items || block.items.length === 0) continue;
 
-    const headerMm = 10;
+    const headerMm = measuredHeights?.[`header_${block.secId}`] || 10;
     let itemsForBlockOnThisPage: any[] = [];
     let isHeaderOnThisPage = false;
     const totalBlockItems = block.items.length;
 
     for (let i = 0; i < block.items.length; i++) {
       const item = block.items[i];
-      const itemMm = getItemHeightMm(item, block.itemType || 'exp');
+      const key = `${block.secId}_${i}`;
+      const itemMm = measuredHeights?.[key] || getItemHeightMm(item, block.itemType || 'exp');
       const headerCost = isHeaderOnThisPage ? 0 : headerMm;
       const totalItemCost = headerCost + itemMm;
 
@@ -160,13 +162,14 @@ export function packPrimarySectionsIntoPages(
       let needsNextItemCheck = false;
       if (isFirstItemOfSection && totalBlockItems > 1 && (i + 1 < block.items.length)) {
         const nextItem = block.items[i + 1];
-        const nextItemMm = getItemHeightMm(nextItem, block.itemType || 'exp');
-        if (currentHeightMm + totalItemCost + nextItemMm > getAvailableHeight(currentPageIndex)) {
+        const nextKey = `${block.secId}_${i + 1}`;
+        const nextItemMm = measuredHeights?.[nextKey] || getItemHeightMm(nextItem, block.itemType || 'exp');
+        if (currentHeightMm + totalItemCost + nextItemMm > availableHeightMm) {
           needsNextItemCheck = true;
         }
       }
 
-      if ((currentHeightMm + totalItemCost > getAvailableHeight(currentPageIndex) || needsNextItemCheck) && (currentPageBlocks.length > 0 || itemsForBlockOnThisPage.length > 0)) {
+      if ((currentHeightMm + totalItemCost > availableHeightMm || needsNextItemCheck) && (currentPageBlocks.length > 0 || itemsForBlockOnThisPage.length > 0)) {
         if (itemsForBlockOnThisPage.length > 0) {
           currentPageBlocks.push({ secId: block.secId, items: itemsForBlockOnThisPage, itemType: block.itemType });
         }
