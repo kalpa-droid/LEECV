@@ -1559,31 +1559,25 @@ export default function EditorPanel({
             </h3>
 
             {/* Cover Page Toggle */}
-            <div className="bg-purple-50/80 p-4 rounded-xl border border-purple-200 space-y-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-xs font-bold text-[#2B1B2E] flex items-center gap-1.5">
-                    {cvData.showCoverPage !== false ? <Eye className="w-4 h-4 text-[#00A8A0]" /> : <EyeOff className="w-4 h-4 text-[#2B1B2E] font-medium" />}
-                    Portada de Impacto (Página 1)
-                  </h4>
-                  <p className="text-[11px] text-[#2B1B2E] font-medium">
-                    {cvData.showCoverPage !== false 
-                      ? 'Activada: El currículum comenzará con una hoja de portada editorial completa.' 
-                      : 'Desactivada: El documento iniciará directamente con los Datos Personales (Página 1).'}
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => setCvData(prev => ({ ...prev, showCoverPage: prev.showCoverPage === undefined ? false : !prev.showCoverPage }))}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer ${
-                    cvData.showCoverPage !== false
-                      ? 'bg-purple-600 text-white hover:bg-purple-700'
-                      : 'bg-[#EFE2C9] text-[#2B1B2E] hover:bg-slate-300'
-                  }`}
-                >
-                  {cvData.showCoverPage !== false ? 'Desactivar Portada' : 'Activar Portada'}
-                </button>
-              </div>
+            <div className={`flex items-center justify-between p-2.5 rounded-xl border transition ${
+              cvData.showCoverPage !== false 
+                ? 'bg-white border-[#EFE2C9] text-[#2B1B2E] shadow-sm' 
+                : 'bg-slate-200 border-slate-300 text-slate-500 opacity-75'
+            }`}>
+              <span className="text-xs font-black uppercase tracking-wide">
+                Portada de Impacto (Página 1)
+              </span>
+              <button
+                type="button"
+                onClick={() => setCvData(prev => ({ ...prev, showCoverPage: prev.showCoverPage === undefined ? false : !prev.showCoverPage }))}
+                className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
+                  cvData.showCoverPage !== false
+                    ? 'bg-[#00A8A0] text-white hover:bg-[#00877F]'
+                    : 'bg-slate-400 text-white hover:bg-slate-500'
+                }`}
+              >
+                <span>{cvData.showCoverPage !== false ? 'ACTIVADA' : 'DESACTIVADA'}</span>
+              </button>
             </div>
 
             {/* Cover Layout Preset Selector */}
