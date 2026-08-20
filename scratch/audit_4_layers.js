@@ -5,37 +5,37 @@ const PAGE_SIZES = {
 };
 
 function getItemHeightMm(item, itemType = 'exp') {
-  if (!item) return 20;
+  if (!item) return 10;
 
   const detailsLength = (item.details || item.description || '').length;
   const titleLength = (item.role || item.degree || item.title || item.name || item.course || '').length;
   const instLength = (item.institution || item.company || '').length;
 
   if (itemType === 'course') {
-    let courseMm = 12;
-    if (titleLength > 45) courseMm += 5;
-    if (instLength > 45) courseMm += 5;
+    let courseMm = 8;
+    if (titleLength > 60) courseMm += 3;
+    if (instLength > 60) courseMm += 3;
     return courseMm;
   }
 
   if (itemType === 'prof') {
-    let profMm = 22;
+    let profMm = 12;
     if (detailsLength > 0) {
-      const lines = Math.ceil(detailsLength / 65);
-      profMm += lines * 4.5 + 4;
+      const lines = Math.ceil(detailsLength / 90);
+      profMm += lines * 3.5 + 2;
     }
-    if (titleLength > 40) profMm += 6;
-    if (instLength > 40) profMm += 6;
+    if (titleLength > 60) profMm += 3;
+    if (instLength > 60) profMm += 3;
     return profMm;
   }
 
-  let expMm = 24;
+  let expMm = 14;
   if (detailsLength > 0) {
-    const lines = Math.ceil(detailsLength / 65);
-    expMm += lines * 4.5 + 4;
+    const lines = Math.ceil(detailsLength / 90);
+    expMm += lines * 3.5 + 2;
   }
-  if (titleLength > 40) expMm += 6;
-  if (instLength > 40) expMm += 6;
+  if (titleLength > 60) expMm += 3;
+  if (instLength > 60) expMm += 3;
   return expMm;
 }
 
@@ -112,7 +112,7 @@ const json = JSON.parse(rawData);
 const cvData = json.cvData;
 
 console.log("=========================================");
-console.log(" AUDITORÍA CON SALTOS MULTILÍNEA Y MULTITEXTO REALES");
+console.log(" AUDITORÍA CON CALIBRACIÓN EXACTA DE ALTURA REAL CSS DOM");
 console.log("=========================================");
 
 const availableHeightMm = 297 - 45; // 252mm
