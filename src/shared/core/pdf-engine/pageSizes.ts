@@ -38,42 +38,43 @@ export function calculateItemsPerPage(paperSizeId: string = 'a4', itemHeightMm: 
 }
 
 /**
- * Conservative height estimate used ONLY as initial guess.
- * The browser's native overflow detection corrects any errors.
+ * Optimistic height estimate used as initial OVER-PACKING pass.
+ * The browser's native overflow detection (scrollHeight > clientHeight)
+ * trims excess items down to exact 100% capacity per page.
  */
 export function getItemHeightMm(item: any, itemType: 'exp' | 'prof' | 'course' = 'exp'): number {
-  if (!item) return 18;
+  if (!item) return 10;
 
   const detailsLength = (item.details || item.description || '').length;
   const titleLength = (item.role || item.degree || item.title || item.name || item.course || '').length;
   const instLength = (item.institution || item.company || '').length;
 
   if (itemType === 'course') {
-    let h = 11;
-    if (titleLength > 45) h += 4;
-    if (instLength > 45) h += 4;
+    let h = 7;
+    if (titleLength > 55) h += 2.5;
+    if (instLength > 55) h += 2.5;
     return h;
   }
 
   if (itemType === 'prof') {
-    let h = 18;
+    let h = 11;
     if (detailsLength > 0) {
-      const lines = Math.ceil(detailsLength / 70);
-      h += lines * 4.5 + 3;
+      const lines = Math.ceil(detailsLength / 90);
+      h += lines * 3 + 1.5;
     }
-    if (titleLength > 45) h += 5;
-    if (instLength > 45) h += 5;
+    if (titleLength > 55) h += 3;
+    if (instLength > 55) h += 3;
     return h;
   }
 
   // exp
-  let h = 22;
+  let h = 13;
   if (detailsLength > 0) {
-    const lines = Math.ceil(detailsLength / 70);
-    h += lines * 4.5 + 3;
+    const lines = Math.ceil(detailsLength / 90);
+    h += lines * 3 + 1.5;
   }
-  if (titleLength > 45) h += 5;
-  if (instLength > 45) h += 5;
+  if (titleLength > 55) h += 3;
+  if (instLength > 55) h += 3;
   return h;
 }
 
@@ -129,15 +130,15 @@ export interface PagePrimaryGroup {
 }
 
 /**
- * INITIAL packing of primary section blocks into pages.
- * Uses conservative height estimates. The browser's native overflow
- * detection in CVPreview.tsx will correct any over-packing by moving
- * excess items to the next page.
+ * INITIAL over-packing pass of primary section blocks into pages.
+ * Uses optimistic height estimates so pages start full/over-packed.
+ * The browser's native overflow detection in CVPreview.tsx will trim
+ * excess items from overflowing pages until they fit 100% full.
  */
 export function packPrimarySectionsIntoPages(
   blocks: PrimarySectionBlock[],
   paperSizeId: string = 'a4',
-  reservedHeaderFooterMm: number = 60
+  reservedHeaderFooterMm: number = 35
 ): PagePrimaryGroup[] {
   const paper = PAGE_SIZES[paperSizeId] || PAGE_SIZES.a4;
   const availableHeightMm = Math.max(paper.heightMm - reservedHeaderFooterMm, 180);

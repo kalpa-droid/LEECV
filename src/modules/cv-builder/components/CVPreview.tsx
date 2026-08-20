@@ -105,8 +105,8 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
   // ============================================================
   // PAGED.JS-INSPIRED NATIVE OVERFLOW DETECTION PAGINATION
   // ============================================================
-  // Step 1: Initial generous packing estimate (may over-pack)
-  const initialPacked = packPrimarySectionsIntoPages(primaryBlocks, paperSizeId, 60);
+  // Step 1: Initial optimistic over-packing pass (forces over-filling so DOM overflow detector trims down)
+  const initialPacked = packPrimarySectionsIntoPages(primaryBlocks, paperSizeId, 40);
 
   // Step 2: Native browser overflow correction state
   // overflowCorrections stores how many items to REMOVE from the
