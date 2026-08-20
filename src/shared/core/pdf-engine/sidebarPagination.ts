@@ -62,7 +62,7 @@ export function getSidebarPageChunks(
   sectionIds: string[],
   cvData: any,
   paperSizeId: string = 'a4',
-  reservedHeaderFooterMm: number = 70
+  reservedHeaderFooterMm: number = 115
 ): string[][] {
   if (!Array.isArray(sectionIds) || sectionIds.length === 0) return [];
 

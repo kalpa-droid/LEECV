@@ -105,7 +105,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
   const packedPages = packPrimarySectionsIntoPages(primaryBlocks, paperSizeId, 85, 50);
 
   const secondarySections = [...new Set(cvData?.layout?.sectionOrders?.secundaria || ["contacto", "competencias", "personales", "informatica"])] as string[];
-  const sidebarPageChunks = getSidebarPageChunks(secondarySections, cvData, paperSizeId, 70);
+  const sidebarPageChunks = getSidebarPageChunks(secondarySections, cvData, paperSizeId, 115);
   const firstPageSidebarSections = sidebarPageChunks[0] || secondarySections;
   const extraSidebarChunks = sidebarPageChunks.slice(1);
   const totalSidebarPages = sidebarPageChunks.length;
@@ -678,14 +678,18 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
                   Continuación del Currículum Vitae. Hoja {pageNum} de {startBodyPageNum + packedPages.length + (certificatesScanned.length > 0 ? certificatesScanned.length : 0) - 1}.
                 </p>
 
-                <div className="pt-2 border-t border-current opacity-80">
-                  <h4 className="text-[10px] font-black uppercase mb-1.5" style={{ color: theme.accentColor }}>SECCIONES EN ESTA HOJA:</h4>
-                  <div className="flex flex-wrap gap-1 text-[9px] font-bold">
-                    {pageGroup.blocks.map((b, i) => (
-                      <span key={i} className="px-2 py-0.5 bg-black/10 rounded capitalize">{b.secId}</span>
-                    ))}
+                {extraSidebarChunks[extraIdx] && extraSidebarChunks[extraIdx].length > 0 ? (
+                  extraSidebarChunks[extraIdx].map((secId: string) => renderDynamicSection(secId, 'secundaria'))
+                ) : (
+                  <div className="pt-2 border-t border-current opacity-80">
+                    <h4 className="text-[10px] font-black uppercase mb-1.5" style={{ color: theme.accentColor }}>SECCIONES EN ESTA HOJA:</h4>
+                    <div className="flex flex-wrap gap-1 text-[9px] font-bold">
+                      {pageGroup.blocks.map((b, i) => (
+                        <span key={i} className="px-2 py-0.5 bg-black/10 rounded capitalize">{b.secId}</span>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Sidebar Footer */}
                 <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between font-bold text-xs">
