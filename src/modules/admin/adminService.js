@@ -55,28 +55,6 @@ export async function setPremium(userId, activo, vence = null) {
   return await setUserPlan(userId, activo ? 'pro' : 'free', vence);
 }
 
-/** Aprueba reclamo de pago y activa licencia */
-export async function approveClaimInDb(claimId, targetUserId, email) {
-  const { data: { user } } = await supabase.auth.getUser();
-
-  const { error: claimErr } = await supabase
-    .from('payment_claims')
-    .update({
-      status: 'aprobado',
-      reviewed_by: user?.id || null,
-      reviewed_at: new Date().toISOString()
-    })
-    .eq('id', claimId);
-
-  if (claimErr) console.warn('Warning updating claim status:', claimErr);
-
-  if (targetUserId) {
-    await setPremium(targetUserId, true);
-  }
-
-  await logAdminAction('approve_payment_claim', targetUserId, { claimId, email });
-}
-
 /** Registra acciones administrativas en auditoría */
 export async function logAdminAction(actionType, targetUserId = null, details = {}) {
   try {

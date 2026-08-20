@@ -5,7 +5,6 @@ import {
   setPremium, 
   getBasicStats, 
   listPendingClaims, 
-  approveClaimInDb, 
   reviewManualClaim,
   listAdminNotifications, 
   markNotificationRead 
@@ -64,6 +63,16 @@ export default function AdminDashboard() {
 
   useEffect(() => { checkSession(); }, [page, searchQuery]);
 
+  // Live Auto-Refresh Interval (every 45s)
+  useEffect(() => {
+    if (profile?.role === 'admin') {
+      const timer = setInterval(() => {
+        loadEverything();
+      }, 45000);
+      return () => clearInterval(timer);
+    }
+  }, [profile]);
+
   if (profile === undefined) return null;
   if (!profile) return <AdminLogin onLogin={checkSession} />;
   if (profile.role !== 'admin') {
@@ -95,19 +104,31 @@ export default function AdminDashboard() {
   }
 
   async function handleReviewClaim(claim, approve) {
-    try {
-      if (claim.id && !claim.id.startsWith('claim-')) {
-        await reviewManualClaim(claim.id, approve);
-      } else {
-        const targetUser = users.find(u => u.email === claim.email);
-        if (approve) {
-          await approveClaimInDb(claim.id, targetUser?.id || claim.user_id, claim.email);
+    if (!approve) {
+      confirm({
+        title: `¿Rechazar comprobante de ${claim.email}?`,
+        message: 'El comprobante será marcado como rechazado y no se activará el plan.',
+        confirmText: 'Rechazar Comprobante',
+        variant: 'danger',
+        onConfirm: async () => {
+          try {
+            await reviewManualClaim(claim.id, false);
+            showSuccess(`❌ Reclamo rechazado para ${claim.email}.`);
+            loadEverything();
+          } catch (err) {
+            showError(err.message || 'Error al rechazar comprobante');
+          }
         }
-      }
-      showSuccess(approve ? `✅ Reclamo aprobado para ${claim.email}. Licencia activada.` : `❌ Reclamo rechazado para ${claim.email}.`);
+      });
+      return;
+    }
+
+    try {
+      await reviewManualClaim(claim.id, true);
+      showSuccess(`✅ Reclamo aprobado para ${claim.email}. Licencia activada.`);
       loadEverything();
     } catch (err) {
-      showError(err.message || 'Error al procesar comprobante');
+      showError(err.message || 'Error al aprobar comprobante');
     }
   }
 
@@ -178,12 +199,19 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Notificaciones de Administración */}
+        {/* Notificaciones de Administración con Badge visual de campana */}
         {notifications.length > 0 && (
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-[#EFE2C9] space-y-3">
             <div className="flex items-center justify-between border-b border-[#EFE2C9] pb-3">
               <div className="flex items-center gap-2">
-                <Bell className="w-5 h-5 text-[#FF2E63]" />
+                <div className="relative">
+                  <Bell className="w-5 h-5 text-[#FF2E63]" />
+                  {unreadNotifCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#FF2E63] text-white font-black text-[9px] rounded-full flex items-center justify-center animate-pulse">
+                      {unreadNotifCount}
+                    </span>
+                  )}
+                </div>
                 <h2 className="font-extrabold text-sm text-[#2B1B2E]">🔔 Eventos & Notificaciones de Pagos / Sistema</h2>
               </div>
               {unreadNotifCount > 0 && (

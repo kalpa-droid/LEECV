@@ -13,7 +13,7 @@
  * @param {string} [payment.email]
  * @param {'single_pdf'|'credits_pack_5'|'credits_pack_10'|'pro'|'enterprise'} payment.plan
  * @param {string} payment.metodoPago - 'mercadopago' | 'paypal' | 'lemonsqueezy' | 'manual'
- * @param {string} [payment.externalId] - id de la transacción en la pasarela, para el registro de auditoría
+ * @param {string} [payment.externalId] - id de la transacción en la pasarela, para la idempotencia
  * @param {number} [payment.amount]
  * @param {string} [payment.currency]
  */
@@ -22,6 +22,21 @@ export async function applyPayment(supabaseAdmin, payment) {
 
   if (!userId && !email) {
     throw new Error('applyPayment requiere userId o email para identificar al usuario');
+  }
+
+  // Check idempotency if externalId is provided
+  if (externalId && metodoPago) {
+    const { data: alreadyProcessed } = await supabaseAdmin
+      .from('processed_payments')
+      .select('id')
+      .eq('provider', metodoPago)
+      .eq('external_id', externalId)
+      .single();
+
+    if (alreadyProcessed) {
+      console.log(`[applyPayment] Transacción duplicada omitida (${metodoPago}: ${externalId})`);
+      return { type: 'already_processed', message: 'Payment already recorded' };
+    }
   }
 
   const CREDIT_PACKS = {
@@ -40,9 +55,17 @@ export async function applyPayment(supabaseAdmin, payment) {
     throw new Error(`Plan desconocido en applyPayment: ${plan}`);
   }
 
+  // Record payment in processed_payments for idempotency
+  if (externalId && metodoPago) {
+    await supabaseAdmin.from('processed_payments').insert({
+      provider: metodoPago,
+      external_id: externalId,
+      user_id: userId || null,
+      plan
+    }).catch(err => console.warn('Could not record idempotency log:', err));
+  }
+
   // Registro único de auditoría + fuente para el panel de admin ("avisos de pago").
-  // Mismo destino sea Mercado Pago, PayPal o carga manual — así el admin ve
-  // TODOS los pagos en un solo lugar sin importar el origen.
   await supabaseAdmin.from('admin_notifications').insert({
     type: 'payment_received',
     title: `Pago recibido (${metodoPago})`,
