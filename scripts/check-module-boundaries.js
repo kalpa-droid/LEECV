@@ -23,7 +23,7 @@ function checkDir(dir, currentModule) {
 
     if (stat.isDirectory()) {
       checkDir(fullPath, currentModule);
-    } else if (file.endsWith('.js') || file.endsWith('.jsx')) {
+    } else if (/\.(js|jsx|ts|tsx)$/.test(file)) {
       const content = fs.readFileSync(fullPath, 'utf8');
       const importMatches = content.match(/from\s+['"]([^'"]+)['"]/g) || [];
 
