@@ -102,7 +102,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
     return { secId, items: [], itemType: 'exp' as const };
   }).filter(b => b.items.length > 0);
 
-  const packedPages = packPrimarySectionsIntoPages(primaryBlocks, paperSizeId, 45, 45);
+  const packedPages = packPrimarySectionsIntoPages(primaryBlocks, paperSizeId, 55);
 
   const secondarySections = [...new Set(cvData?.layout?.sectionOrders?.secundaria || ["contacto", "competencias", "personales", "informatica"])] as string[];
   const sidebarPageChunks = getSidebarPageChunks(secondarySections, cvData, paperSizeId, 115);

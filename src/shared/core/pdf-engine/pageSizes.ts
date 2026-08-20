@@ -31,41 +31,41 @@ export function calculateItemsPerPage(paperSizeId: string = 'a4', itemHeightMm: 
 }
 
 /**
- * Calculates estimated height in mm for an item based on real CSS rendering metrics.
+ * Calculates estimated height in mm for an item based on real CSS rendering metrics with footer safety margin.
  */
 export function getItemHeightMm(item: any, itemType: 'exp' | 'prof' | 'course' = 'exp'): number {
-  if (!item) return 10;
+  if (!item) return 14;
 
   const detailsLength = (item.details || item.description || '').length;
   const titleLength = (item.role || item.degree || item.title || item.name || item.course || '').length;
   const instLength = (item.institution || item.company || '').length;
 
   if (itemType === 'course') {
-    let courseMm = 8;
-    if (titleLength > 60) courseMm += 3;
-    if (instLength > 60) courseMm += 3;
+    let courseMm = 9;
+    if (titleLength > 55) courseMm += 3;
+    if (instLength > 55) courseMm += 3;
     return courseMm;
   }
 
   if (itemType === 'prof') {
-    let profMm = 12;
+    let profMm = 16;
     if (detailsLength > 0) {
-      const lines = Math.ceil(detailsLength / 90);
-      profMm += lines * 3.5 + 2;
+      const lines = Math.ceil(detailsLength / 80);
+      profMm += lines * 4 + 2;
     }
-    if (titleLength > 60) profMm += 3;
-    if (instLength > 60) profMm += 3;
+    if (titleLength > 50) profMm += 3.5;
+    if (instLength > 50) profMm += 3.5;
     return profMm;
   }
 
-  // Default 'exp' item
-  let expMm = 14;
+  // Default 'exp' item (25mm average base for footer safety)
+  let expMm = 21;
   if (detailsLength > 0) {
-    const lines = Math.ceil(detailsLength / 90);
-    expMm += lines * 3.5 + 2;
+    const lines = Math.ceil(detailsLength / 80);
+    expMm += lines * 4 + 2;
   }
-  if (titleLength > 60) expMm += 3;
-  if (instLength > 60) expMm += 3;
+  if (titleLength > 50) expMm += 3.5;
+  if (instLength > 50) expMm += 3.5;
   return expMm;
 }
 
@@ -127,19 +127,17 @@ export interface PagePrimaryGroup {
 export function packPrimarySectionsIntoPages(
   blocks: PrimarySectionBlock[],
   paperSizeId: string = 'a4',
-  page1ReservedMm: number = 100,
-  extraPageReservedMm: number = 45
+  reservedHeaderFooterMm: number = 55
 ): PagePrimaryGroup[] {
   const paper = PAGE_SIZES[paperSizeId] || PAGE_SIZES.a4;
-  const page1AvailableMm = Math.max(paper.heightMm - page1ReservedMm, 140);
-  const extraPageAvailableMm = Math.max(paper.heightMm - extraPageReservedMm, 200);
+  const availableHeightMm = Math.max(paper.heightMm - reservedHeaderFooterMm, 180);
 
   const pages: PagePrimaryGroup[] = [];
   let currentPageBlocks: PrimarySectionBlock[] = [];
   let currentHeightMm = 0;
   let currentPageIndex = 0;
 
-  const getAvailableHeight = (pageIdx: number) => pageIdx === 0 ? page1AvailableMm : extraPageAvailableMm;
+  const getAvailableHeight = (_pageIdx: number) => availableHeightMm;
 
   for (const block of blocks) {
     if (!block.items || block.items.length === 0) continue;
