@@ -521,7 +521,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
               : (cvData.coverPreset || 'monica-classic') === 'minimal-editorial'
               ? 'bg-white text-slate-900 border-8 border-slate-900'
               : (cvData.coverPreset || 'monica-classic') === 'creative-cardon'
-              ? 'bg-emerald-950 text-white'
+              ? 'bg-gradient-to-br from-[#00A8A0] via-[#005f5a] to-[#2B1B2E] text-white border-4 border-[#FFC93C]'
               : 'bg-[#ab5ba1]'
           }`}
           style={{ backgroundColor: (cvData.coverPreset === 'monica-classic' || !cvData.coverPreset) ? theme.primaryColor : undefined }}
@@ -536,7 +536,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
                   : (cvData.coverPreset || 'monica-classic') === 'minimal-editorial'
                   ? 'rounded-full w-48 h-48 border-2 border-slate-900 shadow-none'
                   : (cvData.coverPreset || 'monica-classic') === 'creative-cardon'
-                  ? 'rounded-3xl border-4 border-teal-400 ring-4 ring-teal-400/30'
+                  ? 'rounded-3xl border-4 border-[#FFC93C] ring-4 ring-[#FF2E63] shadow-2xl'
                   : 'rounded-2xl border-4'
               }`}
               style={{ 
@@ -556,7 +556,11 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
 
             {/* Header Title with Preset Styles */}
             <div className="mt-5 text-center space-y-1">
-              <span className="px-3 py-1 bg-white/20 backdrop-blur rounded-full text-[10px] font-black uppercase tracking-widest">
+              <span className={`px-3 py-1 backdrop-blur rounded-full text-[10px] font-black uppercase tracking-widest ${
+                (cvData.coverPreset || 'monica-classic') === 'creative-cardon'
+                  ? 'bg-[#FF2E63] text-white border border-[#FFC93C]'
+                  : 'bg-white/20'
+              }`}>
                 PORTAFOLIO DOCENTE & PROFESIONAL
               </span>
               <h1 
@@ -571,7 +575,10 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
             <div className="mt-6 w-5/6 text-center flex flex-col items-center flex-grow">
               <h2 
                 className="text-2xl font-black italic mb-4 tracking-wide border-b-2 pb-2 border-current"
-                style={{ color: (cvData.coverPreset === 'minimal-editorial') ? '#0f172a' : '#ffffff', fontFamily: 'Georgia, serif' }}
+                style={{ 
+                  color: (cvData.coverPreset === 'minimal-editorial') ? '#0f172a' : (cvData.coverPreset === 'creative-cardon') ? '#FFC93C' : '#ffffff', 
+                  fontFamily: 'Georgia, serif' 
+                }}
               >
                 {personalInfo.fullName}
               </h2>
@@ -597,7 +604,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
                           : (cvData.coverPreset || 'monica-classic') === 'minimal-editorial'
                           ? 'bg-slate-100 text-slate-900 rounded-md border-slate-300'
                           : (cvData.coverPreset || 'monica-classic') === 'creative-cardon'
-                          ? 'bg-teal-500 text-slate-950 rounded-xl border-teal-300'
+                          ? 'bg-[#FF2E63] text-white rounded-xl border-[#FFC93C] shadow-md font-black'
                           : 'bg-slate-800/90 text-white rounded-lg border-slate-700/60'
                       }`}
                     >
@@ -616,7 +623,11 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
             </div>
 
             {/* Bottom Identification Summary Badge */}
-            <div className="absolute bottom-8 w-5/6 bg-slate-900/90 backdrop-blur text-white px-6 py-3 rounded-2xl flex items-center justify-between text-xs font-bold shadow-2xl border border-slate-800">
+            <div className={`absolute bottom-8 w-5/6 backdrop-blur text-white px-6 py-3 rounded-2xl flex items-center justify-between text-xs font-bold shadow-2xl border ${
+              (cvData.coverPreset || 'monica-classic') === 'creative-cardon'
+                ? 'bg-[#FF2E63]/90 border-[#FFC93C]'
+                : 'bg-slate-900/90 border-slate-800'
+            }`}>
               <div>
                 <p className="text-[10px] text-purple-300 font-extrabold uppercase">DNI: {personalInfo.dni} | CUIT: {personalInfo.cuit}</p>
                 <p className="text-white text-[11px] font-extrabold">{personalInfo.cityProvince}</p>
