@@ -114,12 +114,12 @@ export interface PagePrimaryGroup {
 export function packPrimarySectionsIntoPages(
   blocks: PrimarySectionBlock[],
   paperSizeId: string = 'a4',
-  page1ReservedMm: number = 85,
-  extraPageReservedMm: number = 50
+  page1ReservedMm: number = 60,
+  extraPageReservedMm: number = 40
 ): PagePrimaryGroup[] {
   const paper = PAGE_SIZES[paperSizeId] || PAGE_SIZES.a4;
-  const page1AvailableMm = Math.max(paper.heightMm - page1ReservedMm, 120);
-  const extraPageAvailableMm = Math.max(paper.heightMm - extraPageReservedMm, 150);
+  const page1AvailableMm = Math.max(paper.heightMm - page1ReservedMm, 150);
+  const extraPageAvailableMm = Math.max(paper.heightMm - extraPageReservedMm, 180);
 
   const pages: PagePrimaryGroup[] = [];
   let currentPageBlocks: PrimarySectionBlock[] = [];
@@ -134,13 +134,28 @@ export function packPrimarySectionsIntoPages(
     const headerMm = 14;
     let itemsForBlockOnThisPage: any[] = [];
     let isHeaderOnThisPage = false;
+    const totalBlockItems = block.items.length;
 
-    for (const item of block.items) {
+    for (let i = 0; i < block.items.length; i++) {
+      const item = block.items[i];
       const itemMm = getItemHeightMm(item, block.itemType || 'exp');
       const headerCost = isHeaderOnThisPage ? 0 : headerMm;
       const totalItemCost = headerCost + itemMm;
 
-      if (currentHeightMm + totalItemCost > getAvailableHeight(currentPageIndex) && (currentPageBlocks.length > 0 || itemsForBlockOnThisPage.length > 0)) {
+      // Check if this is the FIRST item of a section on this page
+      const isFirstItemOfSection = !isHeaderOnThisPage;
+
+      // Prevent leaving a single isolated item at bottom when starting a multi-item section
+      let needsNextItemCheck = false;
+      if (isFirstItemOfSection && totalBlockItems > 1 && (i + 1 < block.items.length)) {
+        const nextItem = block.items[i + 1];
+        const nextItemMm = getItemHeightMm(nextItem, block.itemType || 'exp');
+        if (currentHeightMm + totalItemCost + nextItemMm > getAvailableHeight(currentPageIndex)) {
+          needsNextItemCheck = true;
+        }
+      }
+
+      if ((currentHeightMm + totalItemCost > getAvailableHeight(currentPageIndex) || needsNextItemCheck) && (currentPageBlocks.length > 0 || itemsForBlockOnThisPage.length > 0)) {
         if (itemsForBlockOnThisPage.length > 0) {
           currentPageBlocks.push({ secId: block.secId, items: itemsForBlockOnThisPage, itemType: block.itemType });
         }
