@@ -153,6 +153,25 @@ export default function Navbar({
                   </div>
                 </button>
 
+                {onImportJson && (
+                  <label className="w-full text-left px-3 py-2 rounded-xl bg-purple-950/60 hover:bg-purple-900/80 text-purple-200 flex items-center gap-2 transition cursor-pointer">
+                    <FolderOpen className="w-4 h-4 text-purple-400" />
+                    <div>
+                      <p className="font-extrabold text-white">Cargar Copia (.JSON)</p>
+                      <p className="text-[10px] text-purple-300">Restaurar borrador respaldado</p>
+                    </div>
+                    <input
+                      type="file"
+                      accept=".json"
+                      className="hidden"
+                      onChange={async (e) => {
+                        setIsSaveMenuOpen(false);
+                        await onImportJson(e);
+                      }}
+                    />
+                  </label>
+                )}
+
                 {onOpenCloudStatus && (
                   <button
                     onClick={() => {

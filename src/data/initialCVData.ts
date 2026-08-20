@@ -1,4 +1,4 @@
-import { valeriaProfilePhoto, valeriaSignaturePhoto } from "./valeriaExampleAssets";
+import { valeriaProfilePhoto } from "./valeriaExampleAssets";
 import { sampleCertImage1, sampleCertImage2, sampleCertImage3 } from "./exampleCertificates";
 
 export const standardExampleCVData = {

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Layout, Type, Image, Sparkles, Download, ArrowLeft } from 'lucide-react';
-import { exportCVToPDF } from '../../../shared/core/pdf-engine/pdfExporter';
 
 export default function DesignerCanvas({ onBack }) {
   const [elements, setElements] = useState([

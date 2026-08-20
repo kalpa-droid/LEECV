@@ -4,7 +4,7 @@ import { iniciarPagoMercadoPago, iniciarPagoLemonSqueezy } from './paymentServic
 
 import { useToast } from '../../shared/core/ui/Toast';
 
-export default function PricingModal({ isOpen, onClose, currentProfile }) {
+export default function PricingModal({ isOpen, onClose, currentProfile: _currentProfile }: any) {
   const { showError } = useToast();
   const [loadingGateway, setLoadingGateway] = useState(null);
 

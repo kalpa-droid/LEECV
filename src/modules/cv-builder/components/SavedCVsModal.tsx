@@ -2,10 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   FolderOpen, 
   Trash2, 
-  Check, 
   X, 
   Calendar, 
-  User, 
   FileText,
   Cloud,
   Sparkles,

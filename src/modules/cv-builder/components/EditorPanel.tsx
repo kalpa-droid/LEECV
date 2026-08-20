@@ -1,13 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  User, 
-  GraduationCap, 
-  Briefcase, 
-  FileText, 
-  BookOpen, 
-  Laptop, 
-  Leaf, 
-  Award, 
   PenTool, 
   Palette,
   Plus,
@@ -20,9 +12,6 @@ import {
   Info,
   Layout,
   Columns3,
-  Eye,
-  EyeOff,
-  Layers,
   FolderOpen,
   Save,
   Calendar
@@ -38,17 +27,14 @@ import { useToast } from '../../../shared/core/ui/Toast';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { RepeatableSection } from '../../../shared/core/ui/RepeatableSection';
 import { Field } from '../../../shared/core/ui/Field';
-import { Button } from '../../../shared/core/ui/Button';
 
 export default function EditorPanel({ 
   cvData, 
   setCvData, 
   activeTab,
-  setActiveTab,
   onOpenPhotoCropper, 
-  onOpenSignature,
-  onOpenSavedCVs
-}) {
+  onOpenSignature
+}: any) {
   const { showSuccess, showError, showWarning } = useToast();
   const { confirm } = useConfirm(); 
 
@@ -58,7 +44,6 @@ export default function EditorPanel({
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [isCertCropperOpen, setIsCertCropperOpen] = useState(false);
   const [rawCertSrc, setRawCertSrc] = useState('');
-  const [certImagePreview, setCertImagePreview] = useState('');
   const videoRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -236,38 +221,7 @@ export default function EditorPanel({
     }
   };
 
-  const handleAddCertificateInline = () => {
-    if (!certImagePreview) {
-      showWarning('Por favor toma una foto o selecciona una imagen de certificado.');
-      return;
-    }
-    if (selectedRegIdx === '') {
-      showWarning('Por favor selecciona a qué título o curso cargado corresponde esta foto.');
-      return;
-    }
 
-    const selectedItem = registeredItems[parseInt(selectedRegIdx, 10)];
-    if (!selectedItem) return;
-
-    const newCert = {
-      id: Date.now().toString(),
-      title: selectedItem.title,
-      institution: selectedItem.institution,
-      year: selectedItem.year,
-      imageUrl: certImagePreview,
-      rotation: 0
-    };
-
-    setCvData(prev => ({
-      ...prev,
-      certificatesScanned: [...prev.certificatesScanned, newCert]
-    }));
-
-    // Reset inline inputs
-    setCertImagePreview('');
-    setSelectedRegIdx('');
-    stopCamera();
-  };
 
 
 

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
-import { standardExampleCVData, blankCVTemplate } from '../data/initialCVData';
+import { blankCVTemplate } from '../data/initialCVData';
 import { saveCV as saveCVStorage } from '../modules/cv-builder/services/cvStorageService';
 import { sanitizeCvData } from '../shared/core/utils/cvDataSchema';
 import { CVData } from '../types/cv';

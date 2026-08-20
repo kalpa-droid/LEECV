@@ -36,8 +36,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
     coursesAndCertificates = [], 
     certificatesScanned = [], 
     signature = {}, 
-    theme = {},
-    certificateDisplay = { certsPerPage: 1 }
+    theme = {}
   } = cvData || {};
 
   const layoutStyle = cvData?.layout?.layoutStyle || cvData?.layoutStyle || 'executive-sidebar';

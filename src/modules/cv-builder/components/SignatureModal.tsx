@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { PenTool, Upload, Eraser, RotateCcw, Check, X, Sparkles } from 'lucide-react';
+import { PenTool, Upload, RotateCcw, Check, X, Sparkles } from 'lucide-react';
 import { validateImageFile } from '../../../shared/core/utils/validateFile';
 import { useToast } from '../../../shared/core/ui/Toast';
 
