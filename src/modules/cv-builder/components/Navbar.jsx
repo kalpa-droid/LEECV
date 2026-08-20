@@ -1,63 +1,42 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Printer, 
-  LogIn, 
   FilePlus,
   FolderOpen,
   Save,
-  Cloud,
   Download,
-  Upload
+  User,
+  ChevronDown
 } from 'lucide-react';
 import { checkStorageStatus } from '../../../shared/core/lib/supabaseClient';
 
 export default function Navbar({ 
   onPrint, 
-  onLoadExampleCV, 
   onStartNewCVWizard,
   onOpenSavedCVs,
   onSaveCV,
-  onOpenCloudModal,
   onOpenCloudStatus,
   onOpenPricing,
   onNewCV,
   onOpenDownloadJson,
   onExportJson,
-  onImportJson,
   isSaving
 }) {
-  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
-  const storageStatus = checkStorageStatus();
-  const fileInputRef = useRef(null);
+  const [isSaveMenuOpen, setIsSaveMenuOpen] = useState(false);
+  const saveMenuRef = useRef(null);
 
+  // Close dropdown on outside click
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+    const handleClickOutside = (e) => {
+      if (saveMenuRef.current && !saveMenuRef.current.contains(e.target)) {
+        setIsSaveMenuOpen(false);
+      }
     };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  let cloudColor = 'green';
-  let statusTitle = '🟢 Sincronizado en la Nube Supabase';
-  if (!isOnline) {
-    cloudColor = 'red';
-    statusTitle = '🔴 Sin Conexión a Internet (Modo Offline IndexedDB)';
-  } else if (!storageStatus.isCloud) {
-    cloudColor = 'yellow';
-    statusTitle = '🟡 Guardado Localmente en IndexedDB';
-  }
-
-  const handleCloudIconClick = () => {
-    if (onSaveCV) onSaveCV();
-    if (onOpenCloudStatus) onOpenCloudStatus();
-    else if (onOpenCloudModal) onOpenCloudModal();
-  };
-
   const handleDownloadClick = () => {
+    setIsSaveMenuOpen(false);
     if (onSaveCV) onSaveCV();
     if (onOpenDownloadJson) onOpenDownloadJson();
     else if (onExportJson) onExportJson();
@@ -77,133 +56,114 @@ export default function Navbar({
   const handlePricingClick = () => {
     if (onSaveCV) onSaveCV();
     if (onOpenPricing) onOpenPricing();
-    else if (onOpenCloudStatus) onOpenCloudStatus();
-    else if (onOpenCloudModal) onOpenCloudModal();
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-[#2B1B2E] border-b border-[#EFE2C9]/30 text-white shadow-xl no-print">
+    <header className="sticky top-0 z-40 bg-[#2B1B2E] border-b border-[#EFE2C9]/30 text-white shadow-xl no-print select-none">
       {/* Festive Bunting Accent Strip */}
       <div className="h-1 w-full bg-gradient-to-r from-[#FF2E63] via-[#FFC93C] via-[#00A8A0] via-[#8E44FF] to-[#FF7A29]" />
       
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between gap-2">
-        {/* Brand & Logo */}
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#FF2E63] flex items-center justify-center font-black text-xs sm:text-base shadow-lg shadow-[#FF2E63]/30 text-white border border-[#FFD9E3]/20">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 h-12 sm:h-14 flex items-center justify-between gap-1.5">
+        
+        {/* Left: Brand & Logo */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FF2E63] flex items-center justify-center font-black text-xs shadow-md text-white border border-[#FFD9E3]/20">
             LEE
           </div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-black text-base sm:text-lg tracking-wider text-white">
-              LEECV
-            </h1>
-            
-            {/* Interactive 3-State Cloud Indicator */}
-            <button
-              onClick={handleCloudIconClick}
-              className={`p-1.5 sm:p-2 rounded-xl border transition transform active:scale-95 cursor-pointer shadow-md flex items-center justify-center ${
-                cloudColor === 'green'
-                  ? 'bg-emerald-950/80 border-emerald-500/60 text-emerald-400 hover:bg-emerald-900/90 shadow-emerald-500/20'
-                  : cloudColor === 'yellow'
-                  ? 'bg-amber-950/80 border-amber-500/60 text-amber-400 hover:bg-amber-900/90 shadow-amber-500/20'
-                  : 'bg-red-950/80 border-red-500/60 text-red-400 hover:bg-red-900/90 shadow-red-500/20'
-              }`}
-              title={statusTitle}
-            >
-              <Cloud className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                cloudColor === 'green'
-                  ? 'text-emerald-400'
-                  : cloudColor === 'yellow'
-                  ? 'text-amber-400'
-                  : 'text-red-500 animate-pulse'
-              }`} />
-            </button>
-          </div>
+          <h1 className="font-black text-sm sm:text-base tracking-wider text-white">
+            LEECV
+          </h1>
         </div>
 
-        {/* Global Action Buttons */}
-        <div className="flex items-center gap-1 sm:gap-2 shadow-sm flex-wrap sm:flex-nowrap">
-          {/* ENTRAR (LOGIN / ACCESO DE USUARIOS / SUSCRIPCION) */}
-          <button
-            onClick={handlePricingClick}
-            className="flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-xl text-xs font-extrabold text-[#FFE0C7] bg-[#FF7A29]/20 hover:bg-[#FF7A29]/30 border border-[#FF7A29]/40 transition cursor-pointer"
-            title="Ingresar a tu cuenta de usuario o suscripción Premium"
-          >
-            <LogIn className="w-3.5 h-3.5 text-[#FF7A29] flex-shrink-0" />
-            <span className="hidden sm:inline">Entrar</span>
-          </button>
-
-          {/* NUEVO CV */}
+        {/* Middle: 4 Essential Single-Line Action Buttons */}
+        <div className="flex items-center gap-1 sm:gap-2">
+          {/* 1. NUEVO */}
           <button
             onClick={handleNewClick}
-            className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-extrabold text-white bg-[#FF2E63] hover:bg-[#E31555] border border-[#FFD9E3]/30 transition shadow-md shadow-[#FF2E63]/20 cursor-pointer"
+            className="flex items-center gap-1 px-2 sm:px-3 py-1 rounded-xl text-xs font-black text-white bg-[#FF2E63] hover:bg-[#E31555] border border-[#FFD9E3]/30 transition shadow-md shadow-[#FF2E63]/20 cursor-pointer whitespace-nowrap"
             title="Iniciar un nuevo CV"
           >
             <FilePlus className="w-3.5 h-3.5 text-[#FFD9E3] flex-shrink-0" />
             <span>Nuevo</span>
           </button>
 
-          {/* ABRIR CVS GUARDADOS */}
+          {/* 2. ABRIR (Abre ventana con historial de CVs y botón Cargar JSON) */}
           <button
             onClick={handleOpenSavedClick}
-            className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-extrabold text-[#CFF3F0] bg-[#00A8A0] hover:bg-[#00877F] border border-[#00A8A0]/40 transition shadow-md shadow-[#00A8A0]/20 cursor-pointer"
-            title="Abrir lista de CVs guardados"
+            className="flex items-center gap-1 px-2 sm:px-3 py-1 rounded-xl text-xs font-black text-[#CFF3F0] bg-[#00A8A0] hover:bg-[#00877F] border border-[#00A8A0]/40 transition shadow-md shadow-[#00A8A0]/20 cursor-pointer whitespace-nowrap"
+            title="Abrir CVs guardados o cargar un archivo .JSON de respaldo"
           >
             <FolderOpen className="w-3.5 h-3.5 text-white flex-shrink-0" />
             <span>Abrir</span>
           </button>
 
-          {/* GUARDAR CV */}
-          <button
-            onClick={onSaveCV}
-            disabled={isSaving}
-            className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-extrabold text-[#E9DBFF] bg-[#8E44FF] hover:bg-[#7126E0] border border-[#8E44FF]/40 transition disabled:opacity-50 shadow-md shadow-[#8E44FF]/20 cursor-pointer"
-            title="Guardar CV optimizado en IndexedDB"
-          >
-            <Save className="w-3.5 h-3.5 text-white flex-shrink-0" />
-            <span>{isSaving ? '...' : 'Guardar'}</span>
-          </button>
+          {/* 3. GUARDAR (Boton con Dropdown para Guardar Nube/Local o Descargar JSON) */}
+          <div className="relative" ref={saveMenuRef}>
+            <button
+              onClick={() => {
+                if (onSaveCV) onSaveCV();
+                setIsSaveMenuOpen(!isSaveMenuOpen);
+              }}
+              disabled={isSaving}
+              className="flex items-center gap-1 px-2 sm:px-3 py-1 rounded-xl text-xs font-black text-[#E9DBFF] bg-[#8E44FF] hover:bg-[#7126E0] border border-[#8E44FF]/40 transition disabled:opacity-50 shadow-md shadow-[#8E44FF]/20 cursor-pointer whitespace-nowrap"
+              title="Guardar CV y ver opciones de exportación JSON"
+            >
+              <Save className="w-3.5 h-3.5 text-white flex-shrink-0" />
+              <span>{isSaving ? '...' : 'Guardar'}</span>
+              <ChevronDown className="w-3 h-3 text-[#E9DBFF]/80" />
+            </button>
 
-          {/* DESCARGAR ARCHIVO DE RESPALDO JSON */}
-          <button
-            onClick={handleDownloadClick}
-            className="hidden lg:flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-extrabold text-white bg-slate-700 hover:bg-slate-800 border border-slate-600 transition shadow-sm cursor-pointer"
-            title="Descargar copia de respaldo en tu equipo"
-          >
-            <Download className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-            <span>Descargar</span>
-          </button>
+            {/* Save Options Dropdown */}
+            {isSaveMenuOpen && (
+              <div className="absolute right-0 mt-1 w-56 bg-[#1C121E] border border-white/20 rounded-2xl shadow-2xl z-50 p-1.5 space-y-1 text-xs font-bold animate-fade-in">
+                <button
+                  onClick={() => {
+                    if (onSaveCV) onSaveCV();
+                    setIsSaveMenuOpen(false);
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-xl bg-purple-950/60 hover:bg-purple-900/80 text-purple-200 flex items-center gap-2 transition"
+                >
+                  <Save className="w-4 h-4 text-purple-400" />
+                  <div>
+                    <p className="font-extrabold text-white">Guardar en Nube / Local</p>
+                    <p className="text-[10px] text-purple-300">Almacenamiento directo seguro</p>
+                  </div>
+                </button>
 
-          {/* CARGAR ARCHIVO .JSON */}
-          {onImportJson && (
-            <>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={onImportJson} 
-                accept=".json" 
-                className="hidden" 
-              />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="hidden xl:flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-extrabold text-white bg-slate-800 hover:bg-slate-700 border border-slate-600 transition shadow-sm cursor-pointer"
-                title="Cargar un archivo .JSON de respaldo"
-              >
-                <Upload className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
-                <span>Cargar .JSON</span>
-              </button>
-            </>
-          )}
+                <button
+                  onClick={handleDownloadClick}
+                  className="w-full text-left px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 flex items-center gap-2 transition"
+                >
+                  <Download className="w-4 h-4 text-amber-400" />
+                  <div>
+                    <p className="font-extrabold text-white">Descargar Copia (.JSON)</p>
+                    <p className="text-[10px] text-slate-400">Respaldo portátil en tu equipo</p>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
 
-          {/* EXPORTAR PDF */}
+          {/* 4. PDF (Exportar PDF con icono de Descargar en Amarillo Sol) */}
           <button
             onClick={onPrint}
-            className="flex items-center gap-1 px-3 sm:px-4 py-1.5 rounded-xl bg-[#FFC93C] hover:bg-[#F0AE00] text-[#2B1B2E] font-black text-xs shadow-lg shadow-[#FFC93C]/30 transition transform active:scale-95 border border-[#F0AE00] cursor-pointer"
-            title="Generar y descargar documento PDF listo para imprimir o enviar"
+            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1 rounded-xl bg-[#FFC93C] hover:bg-[#F0AE00] text-[#2B1B2E] font-black text-xs shadow-lg shadow-[#FFC93C]/30 transition transform active:scale-95 border border-[#F0AE00] cursor-pointer whitespace-nowrap"
+            title="Descargar documento PDF listo para imprimir o enviar"
           >
-            <Printer className="w-3.5 h-3.5 flex-shrink-0 text-[#2B1B2E]" />
-            <span>Exportar PDF</span>
+            <Download className="w-3.5 h-3.5 flex-shrink-0 text-[#2B1B2E]" />
+            <span>PDF</span>
           </button>
         </div>
+
+        {/* Right: User Avatar Circle (Acceso a Cuenta / Suscripción) */}
+        <button
+          onClick={handlePricingClick}
+          className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#FF7A29] to-[#FFC93C] text-[#2B1B2E] flex items-center justify-center font-black text-xs shadow-md border-2 border-white/40 hover:scale-105 transition cursor-pointer flex-shrink-0"
+          title="Mi Cuenta de Usuario / Suscripción Premium"
+        >
+          <User className="w-4 h-4 stroke-[2.5]" />
+        </button>
+
       </div>
     </header>
   );

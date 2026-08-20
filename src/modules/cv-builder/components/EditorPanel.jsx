@@ -315,16 +315,16 @@ export default function EditorPanel({
     const isVisible = cvData?.sectionVisibility?.[sectionKey] !== false;
 
     return (
-      <div className="flex items-center justify-between p-3 bg-white rounded-2xl border-2 border-[#EFE2C9] mb-4 shadow-sm">
-        <div className="flex flex-col">
-          <span className="text-xs font-black text-[#2B1B2E] uppercase tracking-wide">
-            {sectionTitle}
-          </span>
-          <span className="text-[10px] font-bold text-[#6B5B6E]">
-            {isVisible ? 'Sección ACTIVADA (se muestra en el CV)' : '⚠️ Sección DESACTIVADA (se oculta del CV)'}
-          </span>
-        </div>
+      <div className={`flex items-center justify-between p-2.5 rounded-xl border mb-3 transition ${
+        isVisible 
+          ? 'bg-white border-[#EFE2C9] text-[#2B1B2E] shadow-sm' 
+          : 'bg-slate-200 border-slate-300 text-slate-500 opacity-75'
+      }`}>
+        <span className="text-xs font-black uppercase tracking-wide">
+          {sectionTitle}
+        </span>
         <button
+          type="button"
           onClick={() => {
             setCvData(prev => ({
               ...prev,
@@ -334,13 +334,13 @@ export default function EditorPanel({
               }
             }));
           }}
-          className={`px-3 py-1.5 rounded-xl font-black text-xs transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
+          className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
             isVisible
               ? 'bg-[#00A8A0] text-white hover:bg-[#00877F]'
-              : 'bg-[#FF2E63] text-white hover:bg-[#E31555]'
+              : 'bg-slate-400 text-white hover:bg-slate-500'
           }`}
         >
-          {isVisible ? 'ACTIVADA (SI)' : 'DESACTIVADA (NO)'}
+          <span>{isVisible ? 'ACTIVADA' : 'DESACTIVADA'}</span>
         </button>
       </div>
     );

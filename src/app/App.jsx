@@ -267,31 +267,6 @@ function AppContent() {
         </div>
       </main>
 
-      {/* Floating Bottom Switcher Bar (Mobile Screens Only) */}
-      <div className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 z-40 bg-[#2B1B2E]/95 backdrop-blur-md text-white border border-[#EFE2C9]/30 rounded-2xl shadow-2xl p-1 flex items-center gap-1 font-black text-xs">
-        <button
-          onClick={() => { setMobileTabState('editor'); setIsPanelOpen(true); }}
-          className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer ${
-            mobileTabState === 'editor' && isPanelOpen
-              ? 'bg-[#FF2E63] text-white shadow-md shadow-[#FF2E63]/30'
-              : 'bg-[#3D2740] text-[#EFE2C9]/80'
-          }`}
-        >
-          <span>📝 Editar Formulario</span>
-        </button>
-
-        <button
-          onClick={() => { setMobileTabState('preview'); setIsPanelOpen(false); triggerAutoFit(); }}
-          className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer ${
-            mobileTabState === 'preview' || !isPanelOpen
-              ? 'bg-[#00A8A0] text-white shadow-md shadow-[#00A8A0]/30'
-              : 'bg-[#3D2740] text-[#EFE2C9]/80'
-          }`}
-        >
-          <span>📄 Ver Hoja A4</span>
-        </button>
-      </div>
-
       {/* Lazy Loaded Modals wrapped in Suspense */}
       <Suspense fallback={null}>
         {isPricingModalOpen && (

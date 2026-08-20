@@ -36,31 +36,33 @@ export default function PersonalInfoSection({ onOpenPhotoCropper, registeredItem
 
   return (
     <div className="space-y-4">
-      {/* Section Toggle */}
-      <div className="flex items-center justify-between p-3 bg-white rounded-2xl border-2 border-[#EFE2C9] mb-4 shadow-sm">
-        <div className="flex flex-col">
-          <span className="text-xs font-black text-[#2B1B2E] uppercase tracking-wide">
-            Datos Personales & Foto
-          </span>
-          <span className="text-[10px] font-bold text-[#6B5B6E]">
-            {isVisible ? 'Sección ACTIVADA (se muestra en el CV)' : '⚠️ Sección DESACTIVADA (se oculta del CV)'}
-          </span>
-        </div>
+      {/* Compact Section Header Toggle */}
+      <div className={`flex items-center justify-between p-2.5 rounded-xl border transition ${
+        isVisible 
+          ? 'bg-white border-[#EFE2C9] text-[#2B1B2E] shadow-sm' 
+          : 'bg-slate-200 border-slate-300 text-slate-500 opacity-75'
+      }`}>
+        <span className="text-xs font-black uppercase tracking-wide">
+          Datos Personales & Foto
+        </span>
         <button
+          type="button"
           onClick={() => toggleSectionVisibility('personales')}
-          className={`px-3 py-1.5 rounded-xl font-black text-xs transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
+          className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
             isVisible
               ? 'bg-[#00A8A0] text-white hover:bg-[#00877F]'
-              : 'bg-[#FF2E63] text-white hover:bg-[#E31555]'
+              : 'bg-slate-400 text-white hover:bg-slate-500'
           }`}
         >
-          {isVisible ? 'ACTIVADA (SI)' : 'DESACTIVADA (NO)'}
+          <span>{isVisible ? 'ACTIVADA' : 'DESACTIVADA'}</span>
         </button>
       </div>
 
-      <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] border-b pb-2 border-[#EFE2C9]">
-        Información de Identificación y Contacto
-      </h3>
+      {isVisible && (
+        <>
+          <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] border-b pb-2 border-[#EFE2C9]">
+            Información de Identificación y Contacto
+          </h3>
 
       {/* Profile Photo Quick Trigger */}
       <div className="flex items-center gap-4 bg-purple-50 p-3.5 rounded-xl border border-purple-200">
@@ -327,6 +329,8 @@ export default function PersonalInfoSection({ onOpenPhotoCropper, registeredItem
           )}
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

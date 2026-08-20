@@ -1,13 +1,35 @@
 @import "tailwindcss";
 
 @layer utilities {
-  /* Scrollbar styling */
-  .scrollbar-none::-webkit-scrollbar {
+  /* Hide scrollbar */
+  .scrollbar-none::-webkit-scrollbar,
+  .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
-  .scrollbar-none {
+  .scrollbar-none,
+  .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  /* Sleek Theme-Integrated Scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #1C121E;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #4A3B4E;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #FF2E63;
+  }
+  * {
+    scrollbar-color: #4A3B4E #1C121E;
+    scrollbar-width: thin;
   }
 }
 
