@@ -2,6 +2,13 @@
  * pageSizes.ts
  * Single source of truth for document paper dimensions and dynamic pagination math.
  * Supports A4, Carta, Legal, and Oficio.
+ *
+ * ARCHITECTURE (Paged.js-inspired):
+ *   - This file provides a GENEROUS initial packing estimate only.
+ *   - The REAL pagination is done in CVPreview.tsx via native browser
+ *     overflow detection (scrollHeight > clientHeight), which removes
+ *     items from overflowing pages until they fit, exactly like Paged.js.
+ *   - This eliminates ALL manual font/line-height guesswork.
  */
 
 export interface PaperSize {
@@ -31,42 +38,43 @@ export function calculateItemsPerPage(paperSizeId: string = 'a4', itemHeightMm: 
 }
 
 /**
- * Calculates estimated height in mm for an item based on real CSS rendering metrics with footer safety margin.
+ * Conservative height estimate used ONLY as initial guess.
+ * The browser's native overflow detection corrects any errors.
  */
 export function getItemHeightMm(item: any, itemType: 'exp' | 'prof' | 'course' = 'exp'): number {
-  if (!item) return 14;
+  if (!item) return 18;
 
   const detailsLength = (item.details || item.description || '').length;
   const titleLength = (item.role || item.degree || item.title || item.name || item.course || '').length;
   const instLength = (item.institution || item.company || '').length;
 
   if (itemType === 'course') {
-    let courseMm = 9;
-    if (titleLength > 55) courseMm += 3;
-    if (instLength > 55) courseMm += 3;
-    return courseMm;
+    let h = 11;
+    if (titleLength > 45) h += 4;
+    if (instLength > 45) h += 4;
+    return h;
   }
 
   if (itemType === 'prof') {
-    let profMm = 16;
+    let h = 18;
     if (detailsLength > 0) {
-      const lines = Math.ceil(detailsLength / 80);
-      profMm += lines * 4 + 2;
+      const lines = Math.ceil(detailsLength / 70);
+      h += lines * 4.5 + 3;
     }
-    if (titleLength > 50) profMm += 3.5;
-    if (instLength > 50) profMm += 3.5;
-    return profMm;
+    if (titleLength > 45) h += 5;
+    if (instLength > 45) h += 5;
+    return h;
   }
 
-  // Default 'exp' item (25mm average base for footer safety)
-  let expMm = 21;
+  // exp
+  let h = 22;
   if (detailsLength > 0) {
-    const lines = Math.ceil(detailsLength / 80);
-    expMm += lines * 4 + 2;
+    const lines = Math.ceil(detailsLength / 70);
+    h += lines * 4.5 + 3;
   }
-  if (titleLength > 50) expMm += 3.5;
-  if (instLength > 50) expMm += 3.5;
-  return expMm;
+  if (titleLength > 45) h += 5;
+  if (instLength > 45) h += 5;
+  return h;
 }
 
 /**
@@ -78,7 +86,7 @@ export function getDynamicHeightChunks(
   paperSizeId: string = 'a4', 
   itemType: 'exp' | 'prof' | 'course' = 'exp',
   reservedHeaderFooterMm: number = 75,
-  minLastPageItems: number = 1
+  _minLastPageItems: number = 1
 ): any[][] {
   if (!Array.isArray(items) || items.length === 0) return [];
 
@@ -120,17 +128,16 @@ export interface PagePrimaryGroup {
   blocks: PrimarySectionBlock[];
 }
 
-export type MeasuredHeightMap = Record<string, number>;
-
 /**
- * Dynamically packs primary section blocks into pages using exact paper height dimensions.
- * Accepts optional native DOM measured heights in mm from the browser layout engine.
+ * INITIAL packing of primary section blocks into pages.
+ * Uses conservative height estimates. The browser's native overflow
+ * detection in CVPreview.tsx will correct any over-packing by moving
+ * excess items to the next page.
  */
 export function packPrimarySectionsIntoPages(
   blocks: PrimarySectionBlock[],
   paperSizeId: string = 'a4',
-  reservedHeaderFooterMm: number = 55,
-  measuredHeights?: MeasuredHeightMap
+  reservedHeaderFooterMm: number = 60
 ): PagePrimaryGroup[] {
   const paper = PAGE_SIZES[paperSizeId] || PAGE_SIZES.a4;
   const availableHeightMm = Math.max(paper.heightMm - reservedHeaderFooterMm, 180);
@@ -143,33 +150,17 @@ export function packPrimarySectionsIntoPages(
   for (const block of blocks) {
     if (!block.items || block.items.length === 0) continue;
 
-    const headerMm = measuredHeights?.[`header_${block.secId}`] || 10;
+    const headerMm = 12;
     let itemsForBlockOnThisPage: any[] = [];
     let isHeaderOnThisPage = false;
-    const totalBlockItems = block.items.length;
 
     for (let i = 0; i < block.items.length; i++) {
       const item = block.items[i];
-      const key = `${block.secId}_${i}`;
-      const itemMm = measuredHeights?.[key] || getItemHeightMm(item, block.itemType || 'exp');
+      const itemMm = getItemHeightMm(item, block.itemType || 'exp');
       const headerCost = isHeaderOnThisPage ? 0 : headerMm;
       const totalItemCost = headerCost + itemMm;
 
-      // Check if this is the FIRST item of a section on this page
-      const isFirstItemOfSection = !isHeaderOnThisPage;
-
-      // Prevent leaving a single isolated item at bottom when starting a multi-item section
-      let needsNextItemCheck = false;
-      if (isFirstItemOfSection && totalBlockItems > 1 && (i + 1 < block.items.length)) {
-        const nextItem = block.items[i + 1];
-        const nextKey = `${block.secId}_${i + 1}`;
-        const nextItemMm = measuredHeights?.[nextKey] || getItemHeightMm(nextItem, block.itemType || 'exp');
-        if (currentHeightMm + totalItemCost + nextItemMm > availableHeightMm) {
-          needsNextItemCheck = true;
-        }
-      }
-
-      if ((currentHeightMm + totalItemCost > availableHeightMm || needsNextItemCheck) && (currentPageBlocks.length > 0 || itemsForBlockOnThisPage.length > 0)) {
+      if (currentHeightMm + totalItemCost > availableHeightMm && (currentPageBlocks.length > 0 || itemsForBlockOnThisPage.length > 0)) {
         if (itemsForBlockOnThisPage.length > 0) {
           currentPageBlocks.push({ secId: block.secId, items: itemsForBlockOnThisPage, itemType: block.itemType });
         }

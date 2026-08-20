@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect, useRef } from 'react';
+import React, { useState, useLayoutEffect, useRef, useMemo } from 'react';
 import { 
   User, 
   GraduationCap, 
@@ -17,7 +17,7 @@ import {
   Clock
 } from 'lucide-react';
 
-import { PAGE_SIZES, calculateItemsPerPage, getDynamicHeightChunks, packPrimarySectionsIntoPages, PrimarySectionBlock } from '../../../shared/core/pdf-engine/pageSizes';
+import { PAGE_SIZES, calculateItemsPerPage, getDynamicHeightChunks, packPrimarySectionsIntoPages, PrimarySectionBlock, PagePrimaryGroup } from '../../../shared/core/pdf-engine/pageSizes';
 import { getColumnVariant } from '../../../shared/core/pdf-engine/columnVariants';
 import { getSidebarPageChunks } from '../../../shared/core/pdf-engine/sidebarPagination';
 import { CoverPageSection } from './preview/CoverPageSection';
@@ -102,34 +102,123 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
     return { secId, items: [], itemType: 'exp' as const };
   }).filter(b => b.items.length > 0);
 
-  const [measuredHeights, setMeasuredHeights] = useState<Record<string, number>>({});
-  const measureContainerRef = useRef<HTMLDivElement>(null);
+  // ============================================================
+  // PAGED.JS-INSPIRED NATIVE OVERFLOW DETECTION PAGINATION
+  // ============================================================
+  // Step 1: Initial generous packing estimate (may over-pack)
+  const initialPacked = packPrimarySectionsIntoPages(primaryBlocks, paperSizeId, 60);
 
-  useLayoutEffect(() => {
-    if (!measureContainerRef.current) return;
-    const map: Record<string, number> = {};
-    const nodes = measureContainerRef.current.querySelectorAll('[data-measure-key]');
-    nodes.forEach(node => {
-      const key = node.getAttribute('data-measure-key');
-      if (key) {
-        const rect = node.getBoundingClientRect();
-        // Convert CSS pixels to mm using 96DPI standard: 1px = 25.4 / 96 mm = 0.264583 mm
-        const heightMm = rect.height * 0.264583;
-        if (heightMm > 0) {
-          map[key] = heightMm;
-        }
-      }
+  // Step 2: Native browser overflow correction state
+  // overflowCorrections stores how many items to REMOVE from the
+  // end of each page's content to prevent overflow.
+  const [overflowCorrections, setOverflowCorrections] = useState<Record<number, number>>({});
+  const pageRefs = useRef<Record<number, HTMLDivElement | null>>({});
+
+  // Flatten all items from all blocks for redistribution
+  const allFlatItems: { secId: string; item: any; itemType?: 'exp' | 'prof' | 'course' }[] = [];
+  for (const block of primaryBlocks) {
+    for (const item of block.items) {
+      allFlatItems.push({ secId: block.secId, item, itemType: block.itemType });
+    }
+  }
+
+  // Apply corrections: rebuild pages from initial packing + corrections
+  const packedPages = React.useMemo(() => {
+    if (Object.keys(overflowCorrections).length === 0) return initialPacked;
+
+    // Rebuild flat assignment from initial packing
+    const flatAssignment: { secId: string; item: any; itemType?: string; pageIdx: number }[] = [];
+    initialPacked.forEach((page, pageIdx) => {
+      page.blocks.forEach(block => {
+        block.items.forEach(item => {
+          flatAssignment.push({ secId: block.secId, item, itemType: block.itemType, pageIdx });
+        });
+      });
     });
 
-    if (Object.keys(map).length > 0) {
-      setMeasuredHeights(prev => {
-        const isDifferent = Object.keys(map).some(k => Math.abs((prev[k] || 0) - map[k]) > 0.5);
-        return isDifferent ? map : prev;
+    // Apply corrections: move overflow items to next page
+    for (const [pageIdxStr, removeCount] of Object.entries(overflowCorrections)) {
+      const pageIdx = parseInt(pageIdxStr);
+      if (removeCount <= 0) continue;
+      const pageItems = flatAssignment.filter(a => a.pageIdx === pageIdx);
+      const toMove = pageItems.slice(-removeCount);
+      for (const m of toMove) {
+        const idx = flatAssignment.indexOf(m);
+        if (idx >= 0) flatAssignment[idx].pageIdx = pageIdx + 1;
+      }
+      // Cascade: push down all subsequent pages
+      for (let p = pageIdx + 1; p < initialPacked.length + 5; p++) {
+        const pItems = flatAssignment.filter(a => a.pageIdx === p);
+        // No overflow check here - the next render cycle will handle it
+      }
+    }
+
+    // Rebuild pages from flat assignment
+    const maxPage = Math.max(...flatAssignment.map(a => a.pageIdx), 0);
+    const rebuilt: PagePrimaryGroup[] = [];
+    for (let p = 0; p <= maxPage; p++) {
+      const pageItems = flatAssignment.filter(a => a.pageIdx === p);
+      if (pageItems.length === 0) continue;
+
+      const blocks: PrimarySectionBlock[] = [];
+      let currentSecId = '';
+      let currentItems: any[] = [];
+      let currentItemType: any = 'exp';
+
+      for (const pi of pageItems) {
+        if (pi.secId !== currentSecId) {
+          if (currentItems.length > 0) {
+            blocks.push({ secId: currentSecId, items: currentItems, itemType: currentItemType });
+          }
+          currentSecId = pi.secId;
+          currentItems = [pi.item];
+          currentItemType = pi.itemType;
+        } else {
+          currentItems.push(pi.item);
+        }
+      }
+      if (currentItems.length > 0) {
+        blocks.push({ secId: currentSecId, items: currentItems, itemType: currentItemType });
+      }
+      rebuilt.push({ pageIndex: p, blocks });
+    }
+    return rebuilt;
+  }, [initialPacked, overflowCorrections]);
+
+  // Step 3: After render, check each page for overflow using native scrollHeight > clientHeight
+  useLayoutEffect(() => {
+    const corrections: Record<number, number> = {};
+    let needsCorrection = false;
+
+    // Check page 2 (first body page at index 0) and all extra pages
+    for (const [pageIdxStr, ref] of Object.entries(pageRefs.current)) {
+      if (!ref) continue;
+      const pageIdx = parseInt(pageIdxStr);
+
+      // Find the main content column (col-span-2)
+      const mainCol = ref.querySelector('[data-page-content]') as HTMLElement;
+      if (!mainCol) continue;
+
+      const isOverflowing = mainCol.scrollHeight > mainCol.clientHeight + 2; // 2px tolerance
+      if (isOverflowing) {
+        // Count how many items to remove (start with 1, the overflow detection 
+        // will run again on next render if still overflowing)
+        const existingCorrection = overflowCorrections[pageIdx] || 0;
+        corrections[pageIdx] = existingCorrection + 1;
+        needsCorrection = true;
+      }
+    }
+
+    if (needsCorrection) {
+      setOverflowCorrections(prev => {
+        const next = { ...prev, ...corrections };
+        // Safety: prevent infinite loops by capping corrections
+        const totalCorrections = Object.values(next).reduce((s, v) => s + v, 0);
+        if (totalCorrections > allFlatItems.length) return prev;
+        return next;
       });
     }
-  }, [cvData, paperSizeId]);
-
-  const packedPages = packPrimarySectionsIntoPages(primaryBlocks, paperSizeId, 55, measuredHeights);
+  }, [packedPages, cvData, paperSizeId]);
 
   const secondarySections = [...new Set(cvData?.layout?.sectionOrders?.secundaria || ["contacto", "competencias", "personales", "informatica"])] as string[];
   const sidebarPageChunks = getSidebarPageChunks(secondarySections, cvData, paperSizeId, 115);
@@ -632,7 +721,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
       {/* ========================================================================= */}
       {/* PAGE 2: DATOS PERSONALES, FORMACIÓN Y PROFESIÓN */}
       {/* ========================================================================= */}
-      <div className="a4-page-container grid grid-cols-3">
+      <div ref={el => { pageRefs.current[0] = el; }} className="a4-page-container grid grid-cols-3">
         {/* Left Sidebar */}
         <div className="col-span-1 flex flex-col relative" style={sidebarBgStyle}>
           <div className="p-4 flex justify-center" style={sidebarHeaderBgStyle}>
@@ -667,7 +756,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
         </div>
 
         {/* Right Main Content */}
-        <div className="col-span-2 p-6 flex flex-col justify-between">
+        <div className="col-span-2 p-6 flex flex-col" data-page-content style={{ overflow: 'hidden' }}>
           <div className="space-y-4">
             <div className="border-b border-slate-200 pb-2">
               <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">
@@ -691,7 +780,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
         const isLastPage = extraIdx === packedPages.length - 2;
 
         return (
-          <div key={`extra-page-${pageNum}`} className="a4-page-container grid grid-cols-3">
+          <div key={`extra-page-${pageNum}`} ref={el => { pageRefs.current[extraIdx + 1] = el; }} className="a4-page-container grid grid-cols-3">
             {/* Left Sidebar */}
             <div className="col-span-1 flex flex-col relative" style={sidebarBgStyle}>
               <div className="p-5 text-center border-b border-current opacity-90" style={sidebarHeaderBgStyle}>
@@ -726,7 +815,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
             </div>
 
             {/* Main Content */}
-            <div className="col-span-2 p-6 flex flex-col justify-between">
+            <div className="col-span-2 p-6 flex flex-col" data-page-content style={{ overflow: 'hidden' }}>
               <div className="space-y-3">
                 <div className="border-b border-slate-200 pb-2">
                   <h1 className="text-xl font-black text-slate-900 uppercase">
@@ -755,23 +844,8 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
       )}
       </div>
 
-      {/* ========================================================================= */}
-      {/* NATIVE BROWSER DOM MEASUREMENT STAGE (Zero-Guesswork Native Layout Engine) */}
-      {/* ========================================================================= */}
-      <div ref={measureContainerRef} aria-hidden="true" className="opacity-0 pointer-events-none fixed top-[-9999px] left-[-9999px] w-[500px]">
-        {primaryBlocks.map(block => (
-          <div key={`measure-block-${block.secId}`}>
-            <div data-measure-key={`header_${block.secId}`}>
-              {renderSectionHeader(<Briefcase className="w-4 h-4" />, block.secId.toUpperCase())}
-            </div>
-            {block.items.map((item: any, i: number) => (
-              <div key={`measure-${block.secId}-${i}`} data-measure-key={`${block.secId}_${i}`}>
-                {renderDynamicSection(block.secId, 'primaria', [item])}
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
+      {/* Overflow detection uses refs on page containers above - no separate measurement stage needed */}
+
     </div>
   );
 }
