@@ -104,7 +104,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
 
   const packedPages = packPrimarySectionsIntoPages(primaryBlocks, paperSizeId, 85, 50);
 
-  const secondarySections = [...new Set(cvData?.layout?.sectionOrders?.secundaria || ["personales", "informatica", "ecologia"])] as string[];
+  const secondarySections = [...new Set(cvData?.layout?.sectionOrders?.secundaria || ["contacto", "competencias", "personales", "informatica"])] as string[];
   const sidebarPageChunks = getSidebarPageChunks(secondarySections, cvData, paperSizeId, 70);
   const firstPageSidebarSections = sidebarPageChunks[0] || secondarySections;
   const extraSidebarChunks = sidebarPageChunks.slice(1);
@@ -210,49 +210,65 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
               <Phone className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> CONTACTO & REDES
             </h3>
             <ul className="space-y-2 text-[11px] font-bold leading-tight">
-              <li className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.primaryColor, color: '#ffffff' }}>
-                  <Phone className="w-3 h-3" />
-                </span>
-                <span>{personalInfo.phone}</span>
-              </li>
-              <li className="flex items-center gap-2 break-all">
-                <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.primaryColor, color: '#ffffff' }}>
-                  <Mail className="w-3 h-3" />
-                </span>
-                <span>{personalInfo.email}</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.primaryColor, color: '#ffffff' }}>
-                  <Globe className="w-3 h-3" />
-                </span>
-                <span>{personalInfo.facebook}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.primaryColor, color: '#ffffff' }}>
-                  <MapPin className="w-3 h-3" />
-                </span>
-                <span>{personalInfo.address}</span>
-              </li>
+              {personalInfo.phone && (
+                <li className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.primaryColor, color: '#ffffff' }}>
+                    <Phone className="w-3 h-3" />
+                  </span>
+                  <span>{personalInfo.phone}</span>
+                </li>
+              )}
+              {personalInfo.email && (
+                <li className="flex items-center gap-2 break-all">
+                  <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.primaryColor, color: '#ffffff' }}>
+                    <Mail className="w-3 h-3" />
+                  </span>
+                  <span>{personalInfo.email}</span>
+                </li>
+              )}
+              {personalInfo.facebook && (
+                <li className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.primaryColor, color: '#ffffff' }}>
+                    <Globe className="w-3 h-3" />
+                  </span>
+                  <span>{personalInfo.facebook}</span>
+                </li>
+              )}
+              {personalInfo.address && (
+                <li className="flex items-start gap-2">
+                  <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.primaryColor, color: '#ffffff' }}>
+                    <MapPin className="w-3 h-3" />
+                  </span>
+                  <span>{personalInfo.address}</span>
+                </li>
+              )}
             </ul>
           </div>
         );
 
       case 'competencias':
-        return (
-          <div key={`sec-${location}-competencias`} id="cv-section-competencias" className="section-box-print mb-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider mb-2 border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
-              <Award className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> COMPETENCIAS CLAVE
-            </h3>
-            <div className="flex flex-wrap gap-1 text-[9px] font-bold">
-              <span className="px-2 py-0.5 bg-black/10 rounded">Pedagogía Dialógica</span>
-              <span className="px-2 py-0.5 bg-black/10 rounded">Comunidades de Aprendizaje</span>
-              <span className="px-2 py-0.5 bg-black/10 rounded">Alfabetización Digital</span>
-              <span className="px-2 py-0.5 bg-black/10 rounded">Educación Inclusiva</span>
-              <span className="px-2 py-0.5 bg-black/10 rounded">Gestión Institucional</span>
+        {
+          const skillsList = Array.isArray(cvData?.skills) && cvData.skills.length > 0
+            ? cvData.skills
+            : Array.isArray(cvData?.competencias) && cvData.competencias.length > 0
+            ? cvData.competencias
+            : ["Pedagogía Dialógica", "Comunidades de Aprendizaje", "Alfabetización Digital", "Educación Inclusiva", "Gestión Institucional"];
+
+          return (
+            <div key={`sec-${location}-competencias`} id="cv-section-competencias" className="section-box-print mb-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider mb-2 border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
+                <Award className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> COMPETENCIAS CLAVE
+              </h3>
+              <div className="flex flex-wrap gap-1 text-[9px] font-bold">
+                {skillsList.map((skill: any, sIdx: number) => (
+                  <span key={sIdx} className="px-2 py-0.5 bg-black/10 rounded">
+                    {typeof skill === 'string' ? skill : skill.name || skill.title || String(skill)}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
-        );
+          );
+        }
 
       case 'personales':
         return (
@@ -604,56 +620,11 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
             </div>
           </div>
 
-          <div className="p-4 space-y-5 flex-1 relative">
-            <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider mb-2.5 border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
-                <Phone className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> CONTACTO & REDES
-              </h3>
-              <ul className="space-y-2 text-[11px] font-bold leading-tight">
-                <li className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.primaryColor, color: '#ffffff' }}>
-                    <Phone className="w-3 h-3" />
-                  </span>
-                  <span>{personalInfo.phone}</span>
-                </li>
-                <li className="flex items-center gap-2 break-all">
-                  <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.primaryColor, color: '#ffffff' }}>
-                    <Mail className="w-3 h-3" />
-                  </span>
-                  <span>{personalInfo.email}</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.primaryColor, color: '#ffffff' }}>
-                    <Globe className="w-3 h-3" />
-                  </span>
-                  <span>{personalInfo.facebook}</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: theme.primaryColor, color: '#ffffff' }}>
-                    <MapPin className="w-3 h-3" />
-                  </span>
-                  <span>{personalInfo.address}</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Dynamic Left Column (Secundaria) Section Rendering */}
+          <div className="p-4 space-y-4 flex-1 relative">
+            {/* Dynamic Left Column (Secundaria) Section Rendering - Zero Duplication */}
             {firstPageSidebarSections.map((secId: string) => 
               renderDynamicSection(secId, 'secundaria')
             )}
-
-            <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider mb-2 border-b border-current pb-1 flex items-center gap-1.5 opacity-90">
-                <Award className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> COMPETENCIAS CLAVE
-              </h3>
-              <div className="flex flex-wrap gap-1 text-[9px] font-bold">
-                <span className="px-2 py-0.5 bg-black/10 rounded">Pedagogía Dialógica</span>
-                <span className="px-2 py-0.5 bg-black/10 rounded">Comunidades de Aprendizaje</span>
-                <span className="px-2 py-0.5 bg-black/10 rounded">Alfabetización Digital</span>
-                <span className="px-2 py-0.5 bg-black/10 rounded">Educación Inclusiva</span>
-                <span className="px-2 py-0.5 bg-black/10 rounded">Gestión Institucional</span>
-              </div>
-            </div>
 
             {/* Sidebar Footer */}
             <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between font-bold text-xs">
