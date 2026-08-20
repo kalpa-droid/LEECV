@@ -121,8 +121,8 @@ export interface PagePrimaryGroup {
 export function packPrimarySectionsIntoPages(
   blocks: PrimarySectionBlock[],
   paperSizeId: string = 'a4',
-  page1ReservedMm: number = 75,
-  extraPageReservedMm: number = 45
+  page1ReservedMm: number = 85,
+  extraPageReservedMm: number = 50
 ): PagePrimaryGroup[] {
   const paper = PAGE_SIZES[paperSizeId] || PAGE_SIZES.a4;
   const page1AvailableMm = Math.max(paper.heightMm - page1ReservedMm, 120);
@@ -139,30 +139,38 @@ export function packPrimarySectionsIntoPages(
     if (!block.items || block.items.length === 0) continue;
 
     const headerMm = 14;
-    let itemsForCurrentBlock: any[] = [];
-    let blockHeightMm = headerMm;
+    let itemsForBlockOnThisPage: any[] = [];
+    let isHeaderOnThisPage = false;
 
     for (const item of block.items) {
       const itemMm = getItemHeightMm(item, block.itemType || 'exp');
+      const headerCost = isHeaderOnThisPage ? 0 : headerMm;
+      const totalItemCost = headerCost + itemMm;
 
-      if (currentHeightMm + blockHeightMm + itemMm > getAvailableHeight(currentPageIndex) && itemsForCurrentBlock.length > 0) {
-        currentPageBlocks.push({ secId: block.secId, items: itemsForCurrentBlock, itemType: block.itemType });
+      if (currentHeightMm + totalItemCost > getAvailableHeight(currentPageIndex) && (currentPageBlocks.length > 0 || itemsForBlockOnThisPage.length > 0)) {
+        if (itemsForBlockOnThisPage.length > 0) {
+          currentPageBlocks.push({ secId: block.secId, items: itemsForBlockOnThisPage, itemType: block.itemType });
+        }
         pages.push({ pageIndex: currentPageIndex, blocks: currentPageBlocks });
 
         currentPageIndex++;
         currentPageBlocks = [];
         currentHeightMm = 0;
-        itemsForCurrentBlock = [item];
-        blockHeightMm = headerMm + itemMm;
+        itemsForBlockOnThisPage = [item];
+        isHeaderOnThisPage = true;
+        currentHeightMm = headerMm + itemMm;
       } else {
-        itemsForCurrentBlock.push(item);
-        blockHeightMm += itemMm;
+        itemsForBlockOnThisPage.push(item);
+        if (!isHeaderOnThisPage) {
+          isHeaderOnThisPage = true;
+          currentHeightMm += headerMm;
+        }
+        currentHeightMm += itemMm;
       }
     }
 
-    if (itemsForCurrentBlock.length > 0) {
-      currentPageBlocks.push({ secId: block.secId, items: itemsForCurrentBlock, itemType: block.itemType });
-      currentHeightMm += blockHeightMm;
+    if (itemsForBlockOnThisPage.length > 0) {
+      currentPageBlocks.push({ secId: block.secId, items: itemsForBlockOnThisPage, itemType: block.itemType });
     }
   }
 

@@ -1,4 +1,4 @@
-import { PAGE_SIZES, getItemHeightMm } from './pageSizes';
+import { PAGE_SIZES, getItemHeightMm } from './pageSizes.ts';
 
 /**
  * Estimates the height in mm of a sidebar section based on its items and title header.

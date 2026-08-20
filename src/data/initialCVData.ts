@@ -1,5 +1,5 @@
-import { valeriaProfilePhoto } from "./valeriaExampleAssets";
-import { sampleCertImage1, sampleCertImage2, sampleCertImage3 } from "./exampleCertificates";
+import { valeriaProfilePhoto } from "./valeriaExampleAssets.ts";
+import { sampleCertImage1, sampleCertImage2, sampleCertImage3 } from "./exampleCertificates.ts";
 
 export const standardExampleCVData = {
   id: "cv_ejemplo_estandar",
