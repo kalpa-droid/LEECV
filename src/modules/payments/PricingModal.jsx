@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { Check, Crown, Zap, Shield, Sparkles, X, Cloud, Smartphone } from 'lucide-react';
 import { iniciarPagoMercadoPago, iniciarPagoLemonSqueezy } from './paymentService';
 
+import { useToast } from '../../shared/core/ui/Toast';
+
 export default function PricingModal({ isOpen, onClose, currentProfile }) {
+  const { showError } = useToast();
   const [loadingGateway, setLoadingGateway] = useState(null);
 
   if (!isOpen) return null;
@@ -16,7 +19,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile }) {
         iniciarPagoLemonSqueezy(currentProfile?.id || 'guest', currentProfile?.email || 'usuario@leecv.app');
       }
     } catch (err) {
-      alert('Inconveniente al conectar con la pasarela de pagos: ' + err.message);
+      showError('Inconveniente al conectar con la pasarela de pagos: ' + err.message);
     } finally {
       setLoadingGateway(null);
     }

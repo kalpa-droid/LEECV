@@ -1,7 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Camera, ZoomIn, ZoomOut, RotateCw, Check, X, Upload } from 'lucide-react';
 
+import { validateImageFile } from '../../../shared/core/utils/validateFile';
+import { useToast } from '../../../shared/core/ui/Toast';
+
 export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, currentPhoto }) {
+  const { showError } = useToast();
   const [imageSrc, setImageSrc] = useState(currentPhoto || '');
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
@@ -27,6 +31,12 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      const validation = validateImageFile(file);
+      if (!validation.valid) {
+        showError(validation.error);
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (event) => {
         setImageSrc(event.target.result);

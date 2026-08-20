@@ -23,10 +23,13 @@ const JsonDownloadModal = lazy(() => import('../modules/cv-builder/components/mo
 const PdfProgressModal = lazy(() => import('../modules/cv-builder/components/modals/PdfProgressModal'));
 
 import { CVProvider, useCVContext } from '../context/CVContext';
-import { ToastProvider } from '../shared/core/ui/Toast';
+import { ToastProvider, useToast } from '../shared/core/ui/Toast';
+import { useConfirm } from '../shared/core/ui/ConfirmDialog';
 
 function AppContent() {
   const { cvData, setCvData, resetToBlankCV, loadCVData, saveCV } = useCVContext();
+  const { showSuccess, showError, showWarning, showInfo } = useToast();
+  const { confirm } = useConfirm();
   const [currentProfile, setCurrentProfile] = useState(null);
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
 
@@ -44,17 +47,19 @@ function AppContent() {
     if (typeof window !== 'undefined') {
       const isMobile = window.innerWidth < 768;
       const sidebarWidth = isMobile ? 0 : (isPanelOpen ? 500 : 0);
-      const availableWidth = window.innerWidth - sidebarWidth - 24;
-      const a4WidthPx = 794; // 210mm A4 width at 96dpi
-      const calculatedScale = Math.min(1, availableWidth / a4WidthPx);
-      setZoomLevel(parseFloat(Math.max(0.35, calculatedScale).toFixed(2)));
+      const availableWidth = window.innerWidth - sidebarWidth - 48; // padding margin
+      const a4WidthPx = 794; // 210mm in px at 96 DPI
+      
+      const calculatedScale = Math.min(Math.max(availableWidth / a4WidthPx, 0.45), 1.1);
+      setZoomLevel(Number(calculatedScale.toFixed(2)));
     }
   };
 
   useEffect(() => {
     triggerAutoFit();
-    window.addEventListener('resize', triggerAutoFit);
-    return () => window.removeEventListener('resize', triggerAutoFit);
+    const handleResize = () => triggerAutoFit();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [isPanelOpen]);
 
   const [isPhotoCropperOpen, setIsPhotoCropperOpen] = useState(false);
@@ -71,17 +76,14 @@ function AppContent() {
   const [isPdfCheckoutOpen, setIsPdfCheckoutOpen] = useState(false);
 
   // Direct 1-Click Bulletproof Page-by-Page A4 PDF Generator
-  const triggerPdfGeneration = async () => {
+  const handleStartPDFGeneration = async () => {
     setIsPdfCheckoutOpen(false);
     setIsGeneratingPDF(true);
+    setPdfProgress(10);
     setIsPdfComplete(false);
-    setPdfProgress(20);
 
     try {
       setPdfProgress(40);
-      exportCVToJson(cvData);
-
-      setPdfProgress(60);
       const success = await exportCVToPDF(cvData);
       
       setPdfProgress(100);
@@ -89,19 +91,19 @@ function AppContent() {
         setIsGeneratingPDF(false);
         setIsPdfComplete(true);
       } else {
-        alert('Hubo un inconveniente al generar el PDF. Por favor verifica las imágenes o intenta nuevamente.');
+        showError('Hubo un inconveniente al generar el PDF. Por favor verifica las imágenes o intenta nuevamente.');
         setIsGeneratingPDF(false);
       }
     } catch (err) {
       console.error('Error generando PDF:', err);
-      alert('Error inesperado al exportar PDF. Tus datos se mantienen a salvo en pantalla.');
+      showError('Error inesperado al exportar PDF. Tus datos se mantienen a salvo en pantalla.');
       setIsGeneratingPDF(false);
     }
   };
 
   const handleExportPDFClick = () => {
     if (cvData.id === 'cv_ejemplo_estandar') {
-      alert('Para crear presiona, el botón, "Nuevo"');
+      showInfo('Para comenzar a crear tu propio currículum, presiona el botón "+ Nuevo"');
       return;
     }
     setIsPdfCheckoutOpen(true);
@@ -109,7 +111,7 @@ function AppContent() {
 
   const handleSaveCVClick = async () => {
     if (cvData.id === 'cv_ejemplo_estandar') {
-      alert('Para crear presiona, el botón, "Nuevo"');
+      showInfo('Para comenzar a crear tu propio currículum, presiona el botón "+ Nuevo"');
       return;
     }
 
@@ -117,13 +119,13 @@ function AppContent() {
     try {
       const res = await saveCV(cvData);
       if (res.success) {
-        alert(`✅ ¡CV guardado con éxito!\n\n📌 Título: "${res.title}"\n💾 Guardado en tu almacenamiento local e IndexedDB.`);
+        showSuccess(`¡CV guardado con éxito! 📌 Título: "${res.title}"`);
       } else {
-        alert('Hubo un inconveniente al guardar. Tus datos ingresados se mantienen intactos en pantalla.');
+        showError('Hubo un inconveniente al guardar. Tus datos ingresados se mantienen intactos.');
       }
     } catch (err) {
       console.error(err);
-      alert('Inconveniente al guardar CV. Tus datos ingresados se mantienen intactos en la pantalla.');
+      showError('Inconveniente al guardar CV. Tus datos ingresados se mantienen intactos.');
     } finally {
       setIsSaving(false);
     }
@@ -136,16 +138,21 @@ function AppContent() {
       return;
     }
 
-    if (window.confirm('¿Deseas iniciar un nuevo currículum en blanco? Se guardará un borrador automático de tu currículum actual en "Abrir".')) {
-      try {
-        await saveCV(cvData);
-      } catch (err) {
-        console.warn('Error auto-guardando borrador al crear nuevo CV:', err);
+    confirm({
+      title: '¿Iniciar nuevo currículum?',
+      message: '¿Deseas iniciar un nuevo currículum en blanco? Se guardará un borrador automático de tu currículum actual.',
+      confirmText: 'Sí, crear nuevo',
+      onConfirm: async () => {
+        try {
+          await saveCV(cvData);
+        } catch (err) {
+          console.warn('Error auto-guardando borrador al crear nuevo CV:', err);
+        }
+        resetToBlankCV();
+        setActiveTab('personales');
+        showSuccess('Tu borrador anterior ha sido resguardado con éxito. Ahora estás editando un currículum en blanco.');
       }
-      resetToBlankCV();
-      setActiveTab('personales');
-      alert('📌 Tu borrador anterior ha sido resguardado con éxito en la sección "Abrir". Ahora estás editando un currículum en blanco.');
-    }
+    });
   };
 
   const handleImportJsonFile = async (e) => {
@@ -159,13 +166,13 @@ function AppContent() {
             importedData.id = `cv_${Date.now()}`;
           }
           setCvData(importedData);
-          alert('¡Currículum cargado exitosamente desde tu archivo .JSON!');
+          showSuccess('¡Currículum cargado exitosamente desde tu archivo .JSON!');
         } else {
-          alert('El archivo seleccionado no tiene un formato válido de LEECV.');
+          showError('El archivo seleccionado no tiene un formato válido de LEECV.');
         }
       } catch (err) {
         console.error('Error importando JSON:', err);
-        alert(err.message || 'Error al procesar el archivo .JSON seleccionado.');
+        showError(err.message || 'Error al procesar el archivo .JSON seleccionado.');
       }
     }
   };

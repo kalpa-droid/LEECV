@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { PenTool, Upload, Eraser, RotateCcw, Check, X, Sparkles } from 'lucide-react';
+import { validateImageFile } from '../../../shared/core/utils/validateFile';
+import { useToast } from '../../../shared/core/ui/Toast';
 
 export default function SignatureModal({ 
   isOpen, 
@@ -10,6 +12,7 @@ export default function SignatureModal({
   defaultSignerRole = '',
   defaultDate = ''
 }) {
+  const { showError } = useToast();
   const [activeTab, setActiveTab] = useState('draw'); // 'draw' | 'upload'
   const [strokeColor, setStrokeColor] = useState('#000000');
   const [strokeWidth, setStrokeWidth] = useState(3);
@@ -111,6 +114,12 @@ export default function SignatureModal({
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      const validation = validateImageFile(file);
+      if (!validation.valid) {
+        showError(validation.error);
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (event) => {
         setUploadedImageSrc(event.target.result);

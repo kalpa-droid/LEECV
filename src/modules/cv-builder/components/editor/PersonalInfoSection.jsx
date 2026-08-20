@@ -1,9 +1,13 @@
 import React from 'react';
 import { User, Camera, Plus, Trash2 } from 'lucide-react';
 import { useCVContext } from '../../../../context/CVContext';
+import { useConfirm } from '../../../../shared/core/ui/ConfirmDialog';
+import { useToast } from '../../../../shared/core/ui/Toast';
 
-export default function PersonalInfoSection({ onOpenPhotoCropper, registeredItems }) {
+export default function PersonalInfoSection({ onOpenPhotoCropper, registeredItems = [] }) {
   const { cvData, setCvData, updatePersonalInfo, toggleSectionVisibility } = useCVContext();
+  const { confirm } = useConfirm();
+  const { showWarning } = useToast();
 
   if (!cvData) return null;
 
@@ -11,7 +15,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper, registeredItem
 
   const updateRoles = (index, value) => {
     setCvData((prev) => {
-      const newRoles = [...prev.roles];
+      const newRoles = [...(prev.roles || [])];
       newRoles[index] = value;
       return { ...prev, roles: newRoles };
     });
@@ -26,12 +30,17 @@ export default function PersonalInfoSection({ onOpenPhotoCropper, registeredItem
 
   const removeRole = (index) => {
     const roleName = cvData.roles?.[index] || `Rol #${index + 1}`;
-    if (window.confirm(`¿Estás seguro de que deseas eliminar "${roleName}"?`)) {
-      setCvData((prev) => ({
-        ...prev,
-        roles: prev.roles.filter((_, i) => i !== index)
-      }));
-    }
+    confirm({
+      title: '¿Eliminar título / rol?',
+      message: `¿Estás seguro de que deseas eliminar "${roleName}"?`,
+      confirmText: 'Eliminar',
+      onConfirm: () => {
+        setCvData((prev) => ({
+          ...prev,
+          roles: (prev.roles || []).filter((_, i) => i !== index)
+        }));
+      }
+    });
   };
 
   return (
@@ -271,7 +280,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper, registeredItem
                       roles: [...(prev.roles || []), selectedVal]
                     }));
                   } else {
-                    alert('Este título ya está agregado a la lista de la portada.');
+                    showWarning('Este título ya está agregado a la lista de la portada.');
                   }
                   e.target.value = '';
                 }

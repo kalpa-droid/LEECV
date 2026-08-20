@@ -4,7 +4,10 @@ import { listUsers, setPremium, getBasicStats } from './adminService';
 import AdminLogin from './AdminLogin';
 import { Users, Crown, LogOut, RefreshCw, CreditCard, HardDrive, ShieldCheck, CheckCircle2, MessageSquare, AlertCircle, Sparkles } from 'lucide-react';
 
+import { useToast } from '../../shared/core/ui/Toast';
+
 export default function AdminDashboard() {
+  const { showSuccess } = useToast();
   const [profile, setProfile] = useState(undefined);
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState({ totalUsers: 0, premiumUsers: 0 });
@@ -63,7 +66,7 @@ export default function AdminDashboard() {
     if (targetUser) {
       togglePremium(targetUser, 'transferencia_aprobada');
     } else {
-      alert(`✅ Reclamo aprobado para ${email}. Licencia activada.`);
+      showSuccess(`Reclamo aprobado para ${email}. Licencia activada.`);
     }
   }
 

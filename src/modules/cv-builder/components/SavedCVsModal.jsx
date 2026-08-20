@@ -13,12 +13,15 @@ import {
 } from 'lucide-react';
 import { getSavedCVsList, loadCVById, deleteCVById, checkStorageStatus } from '../services/cvStorageService';
 
+import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
+
 export default function SavedCVsModal({ 
   isOpen, 
   onClose, 
   onSelectCV,
   onImportJson 
 }) {
+  const { confirm } = useConfirm();
   const [savedList, setSavedList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -51,10 +54,15 @@ export default function SavedCVsModal({
   };
 
   const handleDelete = async (id, title) => {
-    if (window.confirm(`¿Estás seguro de eliminar "${title}"?`)) {
-      await deleteCVById(id);
-      fetchList();
-    }
+    confirm({
+      title: '¿Eliminar currículum guardado?',
+      message: `¿Estás seguro de que deseas eliminar "${title}" de tus archivos guardados?`,
+      confirmText: 'Eliminar',
+      onConfirm: async () => {
+        await deleteCVById(id);
+        fetchList();
+      }
+    });
   };
 
   if (!isOpen) return null;

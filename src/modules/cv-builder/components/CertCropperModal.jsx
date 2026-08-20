@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Crop, ZoomIn, ZoomOut, RotateCw, Check, X, AlertTriangle, Maximize2 } from 'lucide-react';
+import { useToast } from '../../../shared/core/ui/Toast';
 
 export default function CertCropperModal({ 
   isOpen, 
@@ -10,13 +11,14 @@ export default function CertCropperModal({
   selectedRegIdx = '',
   setSelectedRegIdx
 }) {
+  const { showWarning: toastWarning } = useToast();
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [localRegIdx, setLocalRegIdx] = useState(selectedRegIdx);
-  const [showWarning, setShowWarning] = useState(false);
+  const [isSelectionWarningVisible, setIsSelectionWarningVisible] = useState(false);
 
   const canvasRef = useRef(null);
 
@@ -26,7 +28,7 @@ export default function CertCropperModal({
       setRotation(0);
       setOffset({ x: 0, y: 0 });
       setLocalRegIdx(selectedRegIdx);
-      setShowWarning(!selectedRegIdx);
+      setIsSelectionWarningVisible(!selectedRegIdx);
     }
   }, [isOpen, rawImageSrc, selectedRegIdx]);
 
@@ -91,13 +93,13 @@ export default function CertCropperModal({
   const handleSelectChange = (val) => {
     setLocalRegIdx(val);
     if (setSelectedRegIdx) setSelectedRegIdx(val);
-    if (val !== '') setShowWarning(false);
+    if (val !== '') setIsSelectionWarningVisible(false);
   };
 
   const handleAccept = () => {
     if (localRegIdx === '' || localRegIdx === undefined || localRegIdx === null) {
-      setShowWarning(true);
-      alert('Primero elige el registro a cuál corresponde este certificado.');
+      setIsSelectionWarningVisible(true);
+      toastWarning('Primero elige el registro al cual corresponde este certificado.');
       return;
     }
 
@@ -145,13 +147,13 @@ export default function CertCropperModal({
           <div className="w-full">
             <label className="block text-xs font-black text-[#FF2E63] mb-1 uppercase tracking-wide flex items-center justify-between">
               <span>IDENTIFICA TU CERTIFICADO *</span>
-              {showWarning && <span className="text-red-600 text-[11px] font-bold flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" /> Primero elige el registro</span>}
+              {isSelectionWarningVisible && <span className="text-red-600 text-[11px] font-bold flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" /> Primero elige el registro</span>}
             </label>
             <select
               value={localRegIdx}
               onChange={(e) => handleSelectChange(e.target.value)}
               className={`w-full text-xs p-2.5 rounded-xl border-2 bg-white text-[#2B1B2E] font-extrabold outline-none transition shadow-sm ${
-                showWarning ? 'border-red-500 ring-2 ring-red-400/50 bg-red-50/50' : 'border-[#EFE2C9] focus:border-[#FF2E63]'
+                isSelectionWarningVisible ? 'border-red-500 ring-2 ring-red-400/50 bg-red-50/50' : 'border-[#EFE2C9] focus:border-[#FF2E63]'
               }`}
             >
               <option value="">-- Primero elige el registro --</option>
