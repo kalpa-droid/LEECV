@@ -41,9 +41,10 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
     certificatesScanned = [], 
     signature = {}, 
     theme = {},
-    layoutStyle = 'executive-sidebar',
     certificateDisplay = { certsPerPage: 1 }
   } = cvData || {};
+
+  const layoutStyle = cvData?.layout?.layoutStyle || cvData?.layoutStyle || 'executive-sidebar';
 
   const paperSizeId = cvData?.layout?.paperSize || 'a4';
   const currentPaper = PAGE_SIZES[paperSizeId] || PAGE_SIZES.a4;

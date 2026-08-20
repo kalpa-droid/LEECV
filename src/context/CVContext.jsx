@@ -1,13 +1,12 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { standardExampleCVData, blankCVTemplate } from '../data/initialCVData';
 import { saveCV as saveCVStorage } from '../modules/cv-builder/services/cvStorageService';
-
 import { sanitizeCvData } from '../shared/core/utils/cvDataSchema';
 
 const CVContext = createContext(null);
 
 export function CVProvider({ children }) {
-  const [cvData, setCvData] = useState(() => {
+  const [cvData, setCvDataState] = useState(() => {
     if (typeof window !== 'undefined' && window.location.search.includes('clear')) {
       try { localStorage.clear(); } catch {}
     }
@@ -29,6 +28,75 @@ export function CVProvider({ children }) {
   });
 
   const [isSaving, setIsSaving] = useState(false);
+
+  // Undo / Redo History Stack (up to 30 snapshots)
+  const historyRef = useRef([cvData]);
+  const historyIndexRef = useRef(0);
+  const [, setHistoryState] = useState(0); // Trigger re-render for UI buttons
+
+  const setCvData = useCallback((action) => {
+    setCvDataState((prev) => {
+      const nextData = typeof action === 'function' ? action(prev) : action;
+      if (!nextData) return prev;
+
+      // Append to history if data changed
+      const currentHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
+      if (JSON.stringify(currentHistory[currentHistory.length - 1]) !== JSON.stringify(nextData)) {
+        currentHistory.push(nextData);
+        if (currentHistory.length > 30) currentHistory.shift();
+        historyRef.current = currentHistory;
+        historyIndexRef.current = currentHistory.length - 1;
+        setHistoryState(n => n + 1);
+      }
+
+      return nextData;
+    });
+  }, []);
+
+  const undo = useCallback(() => {
+    if (historyIndexRef.current > 0) {
+      historyIndexRef.current -= 1;
+      const targetState = historyRef.current[historyIndexRef.current];
+      setCvDataState(targetState);
+      setHistoryState(n => n + 1);
+    }
+  }, []);
+
+  const redo = useCallback(() => {
+    if (historyIndexRef.current < historyRef.current.length - 1) {
+      historyIndexRef.current += 1;
+      const targetState = historyRef.current[historyIndexRef.current];
+      setCvDataState(targetState);
+      setHistoryState(n => n + 1);
+    }
+  }, []);
+
+  const canUndo = historyIndexRef.current > 0;
+  const canRedo = historyIndexRef.current < historyRef.current.length - 1;
+
+  // Keyboard shortcuts (Ctrl+Z for undo, Ctrl+Y or Ctrl+Shift+Z for redo)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const modifier = isMac ? e.metaKey : e.ctrlKey;
+
+      if (modifier && e.key.toLowerCase() === 'z') {
+        if (e.shiftKey) {
+          e.preventDefault();
+          redo();
+        } else {
+          e.preventDefault();
+          undo();
+        }
+      } else if (modifier && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        redo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
 
   // Pure Action Dispatchers
   const updatePersonalInfo = (field, value) => {
@@ -103,20 +171,28 @@ export function CVProvider({ children }) {
     }
   };
 
-  const value = {
-    cvData,
-    setCvData,
-    isSaving,
-    updatePersonalInfo,
-    updateTheme,
-    applyThemePreset,
-    toggleSectionVisibility,
-    resetToBlankCV,
-    loadCVData,
-    saveCV
-  };
-
-  return <CVContext.Provider value={value}>{children}</CVContext.Provider>;
+  return (
+    <CVContext.Provider
+      value={{
+        cvData,
+        setCvData,
+        updatePersonalInfo,
+        updateTheme,
+        applyThemePreset,
+        toggleSectionVisibility,
+        resetToBlankCV,
+        loadCVData,
+        saveCV,
+        isSaving,
+        undo,
+        redo,
+        canUndo,
+        canRedo
+      }}
+    >
+      {children}
+    </CVContext.Provider>
+  );
 }
 
 export function useCVContext() {

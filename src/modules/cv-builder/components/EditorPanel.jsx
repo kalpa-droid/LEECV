@@ -1291,7 +1291,15 @@ export default function EditorPanel({
                   return (
                     <button
                       key={styleOpt.id}
-                      onClick={() => setCvData(prev => ({ ...prev, coverPreset: styleOpt.id, layoutStyle: styleOpt.id }))}
+                      onClick={() => setCvData(prev => ({ 
+                        ...prev, 
+                        coverPreset: styleOpt.id, 
+                        layoutStyle: styleOpt.id,
+                        layout: {
+                          ...(prev.layout || {}),
+                          layoutStyle: styleOpt.id
+                        }
+                      }))}
                       className={`p-3 rounded-xl border text-left transition flex items-start justify-between gap-3 cursor-pointer ${
                         isSelected
                           ? 'border-[#FF2E63] bg-[#FFD9E3]/30 ring-2 ring-[#FF2E63]/30'
