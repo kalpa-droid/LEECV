@@ -31,29 +31,42 @@ export function calculateItemsPerPage(paperSizeId: string = 'a4', itemHeightMm: 
 }
 
 /**
- * Calculates estimated height in mm for an item based on text length and content fields.
+ * Calculates estimated height in mm for an item based on real CSS rendering metrics.
  */
 export function getItemHeightMm(item: any, itemType: 'exp' | 'prof' | 'course' = 'exp'): number {
-  if (!item) return 20;
+  if (!item) return 12;
 
   const detailsLength = (item.details || item.description || '').length;
-  const titleLength = (item.role || item.degree || item.title || item.name || '').length;
+  const titleLength = (item.role || item.degree || item.title || item.name || item.course || '').length;
   const instLength = (item.institution || item.company || '').length;
 
-  let baseMm = itemType === 'exp' ? 24 : itemType === 'prof' ? 20 : 22;
+  if (itemType === 'course') {
+    let courseMm = 8;
+    if (titleLength > 55) courseMm += 3;
+    if (instLength > 55) courseMm += 3;
+    return courseMm;
+  }
 
+  if (itemType === 'prof') {
+    let profMm = 10;
+    if (detailsLength > 0) {
+      const lines = Math.ceil(detailsLength / 85);
+      profMm += lines * 3.5 + 2;
+    }
+    if (titleLength > 55) profMm += 3;
+    if (instLength > 55) profMm += 3;
+    return profMm;
+  }
+
+  // Default 'exp' item
+  let expMm = 12;
   if (detailsLength > 0) {
-    const lines = Math.ceil(detailsLength / 55);
-    baseMm += lines * 5 + 6;
+    const lines = Math.ceil(detailsLength / 85);
+    expMm += lines * 3.5 + 2;
   }
-  if (titleLength > 45) {
-    baseMm += 5;
-  }
-  if (instLength > 45) {
-    baseMm += 5;
-  }
-
-  return baseMm;
+  if (titleLength > 55) expMm += 3;
+  if (instLength > 55) expMm += 3;
+  return expMm;
 }
 
 /**
@@ -127,7 +140,7 @@ export function packPrimarySectionsIntoPages(
   for (const block of blocks) {
     if (!block.items || block.items.length === 0) continue;
 
-    const headerMm = 14;
+    const headerMm = 10;
     let itemsForBlockOnThisPage: any[] = [];
     let isHeaderOnThisPage = false;
     const totalBlockItems = block.items.length;
