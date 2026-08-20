@@ -373,12 +373,16 @@ function AppContent() {
   );
 }
 
+import { ConfirmProvider } from '../shared/core/ui/ConfirmDialog';
+
 export default function App() {
   return (
     <ToastProvider>
-      <CVProvider>
-        <AppContent />
-      </CVProvider>
+      <ConfirmProvider>
+        <CVProvider>
+          <AppContent />
+        </CVProvider>
+      </ConfirmProvider>
     </ToastProvider>
   );
 }
