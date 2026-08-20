@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { 
   User, 
   GraduationCap, 
@@ -12,14 +12,9 @@ import {
   Mail, 
   MapPin, 
   Globe,
-  RotateCw,
   Calendar,
   Building2,
-  Clock,
-  ZoomIn,
-  ZoomOut,
-  Smartphone,
-  Maximize2
+  Clock
 } from 'lucide-react';
 
 import { PAGE_SIZES, calculateItemsPerPage, getDynamicHeightChunks } from '../../../shared/core/pdf-engine/pageSizes';
