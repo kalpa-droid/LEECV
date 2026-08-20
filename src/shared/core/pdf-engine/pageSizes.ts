@@ -127,15 +127,19 @@ export interface PagePrimaryGroup {
 export function packPrimarySectionsIntoPages(
   blocks: PrimarySectionBlock[],
   paperSizeId: string = 'a4',
-  reservedHeaderFooterMm: number = 45
+  page1ReservedMm: number = 100,
+  extraPageReservedMm: number = 45
 ): PagePrimaryGroup[] {
   const paper = PAGE_SIZES[paperSizeId] || PAGE_SIZES.a4;
-  const availableHeightMm = Math.max(paper.heightMm - reservedHeaderFooterMm, 180);
+  const page1AvailableMm = Math.max(paper.heightMm - page1ReservedMm, 140);
+  const extraPageAvailableMm = Math.max(paper.heightMm - extraPageReservedMm, 200);
 
   const pages: PagePrimaryGroup[] = [];
   let currentPageBlocks: PrimarySectionBlock[] = [];
   let currentHeightMm = 0;
   let currentPageIndex = 0;
+
+  const getAvailableHeight = (pageIdx: number) => pageIdx === 0 ? page1AvailableMm : extraPageAvailableMm;
 
   for (const block of blocks) {
     if (!block.items || block.items.length === 0) continue;
@@ -159,12 +163,12 @@ export function packPrimarySectionsIntoPages(
       if (isFirstItemOfSection && totalBlockItems > 1 && (i + 1 < block.items.length)) {
         const nextItem = block.items[i + 1];
         const nextItemMm = getItemHeightMm(nextItem, block.itemType || 'exp');
-        if (currentHeightMm + totalItemCost + nextItemMm > availableHeightMm) {
+        if (currentHeightMm + totalItemCost + nextItemMm > getAvailableHeight(currentPageIndex)) {
           needsNextItemCheck = true;
         }
       }
 
-      if ((currentHeightMm + totalItemCost > availableHeightMm || needsNextItemCheck) && (currentPageBlocks.length > 0 || itemsForBlockOnThisPage.length > 0)) {
+      if ((currentHeightMm + totalItemCost > getAvailableHeight(currentPageIndex) || needsNextItemCheck) && (currentPageBlocks.length > 0 || itemsForBlockOnThisPage.length > 0)) {
         if (itemsForBlockOnThisPage.length > 0) {
           currentPageBlocks.push({ secId: block.secId, items: itemsForBlockOnThisPage, itemType: block.itemType });
         }
