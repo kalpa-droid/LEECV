@@ -37,6 +37,23 @@ export default function PdfCheckoutModal({
     }
   };
 
+  const handlePackCheckout = async (packPlan) => {
+    if (!email || !email.includes('@')) {
+      setErrorMsg('Por favor ingresa un correo electrónico válido para asociar tu compra.');
+      return;
+    }
+    setIsProcessing(true);
+    setErrorMsg('');
+    try {
+      const userId = currentProfile?.id || `user_anon_${Date.now()}`;
+      await iniciarPagoMercadoPago(userId, email, packPlan);
+    } catch (err) {
+      console.error(err);
+      setErrorMsg(err.message || 'No se pudo abrir el checkout de Mercado Pago.');
+      setIsProcessing(false);
+    }
+  };
+
   const handleConfirmExport = async () => {
     if (isProOrEnterprise) {
       onConfirm();
@@ -142,14 +159,32 @@ export default function PdfCheckoutModal({
             <div className="flex items-center gap-2.5">
               <CreditCard className="w-5 h-5 text-slate-950" />
               <div className="text-left">
-                <p className="leading-tight">Pagar 1 Exportación PDF A4 ($1 USD)</p>
+                <p className="leading-tight">Pagar 1 Exportación PDF A4 ($1.50 USD)</p>
                 <p className="text-[10px] opacity-80 font-bold">Mercado Pago, Tarjeta de Crédito / Débito, Transferencia</p>
               </div>
             </div>
             <span className="px-2.5 py-1 bg-slate-950 text-amber-400 rounded-lg text-[10px] font-black">
-              ~$1,200 ARS
+              ~$1,800 ARS
             </span>
           </button>
+
+          {/* Packs de créditos: mejor margen que el pago suelto */}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => handlePackCheckout('credits_pack_5')}
+              disabled={isProcessing}
+              className="p-2.5 bg-slate-800 hover:bg-slate-700 border border-amber-500/30 text-amber-200 font-extrabold text-[11px] rounded-xl transition cursor-pointer text-center"
+            >
+              Pack 5 créditos — $5 USD
+            </button>
+            <button
+              onClick={() => handlePackCheckout('credits_pack_10')}
+              disabled={isProcessing}
+              className="p-2.5 bg-slate-800 hover:bg-slate-700 border border-amber-500/30 text-amber-200 font-extrabold text-[11px] rounded-xl transition cursor-pointer text-center"
+            >
+              Pack 10 créditos — $8 USD
+            </button>
+          </div>
 
           {/* Option B: Upgrade to Pro ($19/mo) */}
           <button

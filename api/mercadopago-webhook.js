@@ -1,5 +1,6 @@
 // api/mercadopago-webhook.js
 import { createClient } from '@supabase/supabase-js';
+import { applyPayment } from './_lib/applyPayment.js';
 
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL,
@@ -30,36 +31,14 @@ export default async function handler(req, res) {
         }
       } catch {}
 
-      if (plan === 'single_pdf') {
-        // Otorgar 1 crédito de exportación PDF A4
-        const { data: existing } = await supabaseAdmin
-          .from('pdf_export_credits')
-          .select('credits')
-          .eq('user_id', userId)
-          .single();
-
-        const newCredits = (existing?.credits || 0) + 1;
-        await supabaseAdmin
-          .from('pdf_export_credits')
-          .upsert({ user_id: userId, credits: newCredits, updated_at: new Date().toISOString() });
-      } else {
-        // Activar suscripción Pro o Enterprise por 30 días
-        const vence = new Date();
-        vence.setMonth(vence.getMonth() + 1);
-
-        const { error } = await supabaseAdmin
-          .from('profiles')
-          .update({ 
-            plan: plan, 
-            plan_vence: vence.toISOString(), 
-            premium_activo: true, 
-            premium_vence: vence.toISOString(), 
-            metodo_pago: 'mercadopago' 
-          })
-          .eq('id', userId);
-
-        if (error) console.error('Error activando plan en webhook MP:', error);
-      }
+      await applyPayment(supabaseAdmin, {
+        userId,
+        plan,
+        metodoPago: 'mercadopago',
+        externalId: payment.id,
+        amount: payment.transaction_amount,
+        currency: payment.currency_id,
+      });
     }
 
     return res.status(200).end();

@@ -122,3 +122,73 @@ export async function getBasicStats() {
 
   return { totalUsers: totalUsers ?? 0, premiumUsers: proUsers ?? 0 };
 }
+
+/** Bandeja de avisos del panel: pagos automáticos, comprobantes pendientes, vencimientos. */
+export async function listAdminNotifications({ onlyUnread = false, limit = 30 } = {}) {
+  let query = supabase
+    .from('admin_notifications')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (onlyUnread) query = query.eq('read', false);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data;
+}
+
+export async function markNotificationRead(id) {
+  const { error } = await supabase.from('admin_notifications').update({ read: true }).eq('id', id);
+  if (error) throw error;
+}
+
+/** Comprobantes manuales pendientes (transferencia, Payoneer, etc.) esperando revisión. */
+export async function listPendingClaims() {
+  const { data, error } = await supabase
+    .from('payment_claims')
+    .select('*')
+    .eq('status', 'pendiente')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+/** Aprueba o rechaza un comprobante manual — llama al endpoint que usa el núcleo applyPayment. */
+export async function reviewManualClaim(claimId, approve) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const res = await fetch('/api/approve-manual-claim', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session?.access_token}`,
+    },
+    body: JSON.stringify({ claimId, approve }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Error revisando comprobante');
+  return data;
+}
+
+/**
+ * Oferta de retención — pensada para Enterprise (donde perder al usuario
+ * te cuesta el storage que le diste), NO para Premium Agencia (que guarda
+ * en su propio Drive y no te genera costo de infraestructura al irse).
+ */
+export async function sendRetentionOffer(userId, { discountPercent = 50, validDays = 7, planAtOffer = 'enterprise' } = {}) {
+  const validUntil = new Date();
+  validUntil.setDate(validUntil.getDate() + validDays);
+
+  const { error } = await supabase.from('retention_offers').insert({
+    user_id: userId,
+    plan_at_offer: planAtOffer,
+    discount_percent: discountPercent,
+    valid_until: validUntil.toISOString(),
+  });
+  if (error) throw error;
+
+  await supabase.from('admin_notifications').insert({
+    type: 'retention_offer_sent',
+    title: 'Oferta de retención enviada',
+    detail: `${discountPercent}% off por ${validDays} días, plan ${planAtOffer}`,
+    user_id: userId,
+  });
+}

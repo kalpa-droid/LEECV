@@ -1,6 +1,7 @@
 // api/lemonsqueezy-webhook.js
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import { applyPayment } from './_lib/applyPayment.js';
 
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL,
@@ -38,35 +39,17 @@ export default async function handler(req, res) {
     (eventName === 'order_created' || eventName === 'subscription_payment_success') &&
     (userId || email)
   ) {
-    if (plan === 'single_pdf') {
-      if (userId) {
-        const { data: existing } = await supabaseAdmin
-          .from('pdf_export_credits')
-          .select('credits')
-          .eq('user_id', userId)
-          .single();
-
-        const newCredits = (existing?.credits || 0) + 1;
-        await supabaseAdmin
-          .from('pdf_export_credits')
-          .upsert({ user_id: userId, credits: newCredits, updated_at: new Date().toISOString() });
-      }
-    } else {
-      const vence = new Date();
-      vence.setMonth(vence.getMonth() + 1);
-
-      const query = supabaseAdmin
-        .from('profiles')
-        .update({ 
-          plan: plan, 
-          plan_vence: vence.toISOString(), 
-          premium_activo: true, 
-          premium_vence: vence.toISOString(), 
-          metodo_pago: 'lemonsqueezy' 
-        });
-
-      const { error } = userId ? await query.eq('id', userId) : await query.eq('email', email);
-      if (error) console.error('Error activando plan (Lemon Squeezy):', error);
+    try {
+      await applyPayment(supabaseAdmin, {
+        userId,
+        email,
+        plan,
+        metodoPago: 'lemonsqueezy',
+        externalId: event.data?.id,
+        amount: event.data?.attributes?.total_formatted,
+      });
+    } catch (err) {
+      console.error('Error activando plan (Lemon Squeezy):', err);
     }
   }
 
