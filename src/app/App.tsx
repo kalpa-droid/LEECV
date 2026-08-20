@@ -342,6 +342,7 @@ function AppContent() {
             onClose={() => setIsSaveModalOpen(false)}
             onSaveStorage={handleSaveCVClick}
             onExportJson={() => exportCVToJson(cvData)}
+            onOpenCloudStatus={() => setIsCloudModalOpen(true)}
             isSaving={isSaving}
           />
         )}
