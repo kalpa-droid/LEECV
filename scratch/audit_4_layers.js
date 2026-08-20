@@ -5,37 +5,37 @@ const PAGE_SIZES = {
 };
 
 function getItemHeightMm(item, itemType = 'exp') {
-  if (!item) return 12;
+  if (!item) return 16;
 
   const detailsLength = (item.details || item.description || '').length;
   const titleLength = (item.role || item.degree || item.title || item.name || item.course || '').length;
   const instLength = (item.institution || item.company || '').length;
 
   if (itemType === 'course') {
-    let courseMm = 8;
-    if (titleLength > 55) courseMm += 3;
-    if (instLength > 55) courseMm += 3;
+    let courseMm = 10;
+    if (titleLength > 50) courseMm += 3;
+    if (instLength > 50) courseMm += 3;
     return courseMm;
   }
 
   if (itemType === 'prof') {
-    let profMm = 10;
+    let profMm = 16;
     if (detailsLength > 0) {
-      const lines = Math.ceil(detailsLength / 85);
-      profMm += lines * 3.5 + 2;
+      const lines = Math.ceil(detailsLength / 75);
+      profMm += lines * 4 + 2;
     }
-    if (titleLength > 55) profMm += 3;
-    if (instLength > 55) profMm += 3;
+    if (titleLength > 50) profMm += 4;
+    if (instLength > 50) profMm += 4;
     return profMm;
   }
 
-  let expMm = 12;
+  let expMm = 18;
   if (detailsLength > 0) {
-    const lines = Math.ceil(detailsLength / 85);
-    expMm += lines * 3.5 + 2;
+    const lines = Math.ceil(detailsLength / 75);
+    expMm += lines * 4 + 2;
   }
-  if (titleLength > 55) expMm += 3;
-  if (instLength > 55) expMm += 3;
+  if (titleLength > 50) expMm += 4;
+  if (instLength > 50) expMm += 4;
   return expMm;
 }
 
@@ -112,25 +112,11 @@ const json = JSON.parse(rawData);
 const cvData = json.cvData;
 
 console.log("=========================================");
-console.log(" AUDITORÍA COMPLETA DE 4 CAPAS: CV DANIELA BURGOS");
+console.log(" AUDITORÍA CON MÉTRICAS REALES DE TARJETAS CSS");
 console.log("=========================================");
 
-// CAPA 1: Tamaño de Hoja
-console.log("\n--- CAPA 1: TAMAÑO DE HOJA ---");
-console.log("paperSize:", cvData.layout.paperSize || 'a4', "(Alto: 297mm)");
-
-// CAPA 2: Objetos Fijos por Hoja (Uniforme desde Hoja 2)
-console.log("\n--- CAPA 2: OBJETOS FIJOS (RESERVA DE ESPACIO UNIFORME) ---");
-console.log("Reserva Columna Ancha (Encabezado Nombre 25mm + Margen 20mm) = 45mm");
-console.log("Reserva Columna Fina (Foto/Iniciales 55mm + Pie 20mm) = 75mm");
-
-// CAPA 3: Espacio Disponible Único y Constante por Hoja
-console.log("\n--- CAPA 3: ESPACIO DISPONIBLE CONSTANTE ---");
 const availableHeightMm = 297 - 45; // 252mm
-console.log("Espacio Libre Útil Columna Ancha (Hoja 2, 3, 4...) =", availableHeightMm, "mm");
 
-// CAPA 4: Registros y Bloques Primarios
-console.log("\n--- CAPA 4: REGISTROS EN COLUMNA ANCHA ---");
 const education = cvData.education || [];
 const profession = cvData.profession || [];
 const experience = cvData.experience || [];
@@ -138,7 +124,6 @@ const courses = cvData.coursesAndCertificates || [];
 const personalInfo = cvData.personalInfo || {};
 
 const primaryOrder = cvData.layout.sectionOrders.primaria;
-console.log("Orden de Secciones Primarias en JSON:", primaryOrder);
 
 const primaryBlocks = primaryOrder.map(secId => {
   if (secId === 'formacion') return { secId: 'formacion', items: education, itemType: 'exp' };
@@ -150,10 +135,6 @@ const primaryBlocks = primaryOrder.map(secId => {
 }).filter(b => b.items.length > 0);
 
 const pages = packPrimarySectionsIntoPages(primaryBlocks, 'a4', 45);
-
-console.log("\n=========================================");
-console.log(" RESULTADO DEL EMPAQUETADO UNIFORME POR HOJA");
-console.log("=========================================");
 
 pages.forEach((p, idx) => {
   console.log(`\n--- HOJA DE CUERPO ${idx + 1} (Hoja Física ${idx + 2}) ---`);
