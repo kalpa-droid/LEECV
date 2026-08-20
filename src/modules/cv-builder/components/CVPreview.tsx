@@ -720,51 +720,6 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
       })}
 
       {/* ========================================================================= */}
-      {/* SIDEBAR OVERFLOW PAGES (SI LA COLUMNA SECUNDARIA EXCEDE 1 PÁGINA) */}
-      {/* ========================================================================= */}
-      {extraSidebarChunks.map((sidebarGroup: string[], sidebarPageIdx: number) => {
-        const pageNum = startBodyPageNum + packedPages.length + sidebarPageIdx;
-
-        return (
-          <ExtraPage
-            key={`sidebar-extra-${pageNum}`}
-            pageNum={pageNum}
-            totalPages={totalPagesCalculated + extraSidebarChunks.length}
-            paperSize={paperSizeId}
-            theme={theme}
-            sidebarContent={
-              <div className="flex flex-col relative h-full w-full" style={sidebarBgStyle}>
-                <div className="p-5 text-center border-b border-current opacity-90" style={sidebarHeaderBgStyle}>
-                  <span className="text-2xl font-black tracking-widest">{personalInfo.initials}</span>
-                  <p className="text-[10px] font-semibold tracking-wider uppercase opacity-80 mt-0.5">Información Adicional</p>
-                </div>
-
-                <div className="p-4 space-y-4 flex-1 relative">
-                  {sidebarGroup.map((secId: string) => renderDynamicSection(secId, 'secundaria'))}
-
-                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between font-bold text-xs">
-                    <span>{personalInfo.initials}</span>
-                    <span className="text-2xl font-black">{pageNum}</span>
-                  </div>
-                </div>
-              </div>
-            }
-          >
-            <div className="space-y-4">
-              <div className="border-b border-slate-200 pb-2">
-                <h1 className="text-xl font-black text-slate-900 uppercase">
-                  {personalInfo.surname} <span style={{ color: theme.primaryColor }}>{personalInfo.givenNames}</span>
-                </h1>
-              </div>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                Continuación de Secciones Complementarias ({sidebarPageIdx + 2}/{totalSidebarPages})
-              </p>
-            </div>
-          </ExtraPage>
-        );
-      })}
-
-      {/* ========================================================================= */}
       {/* APPENDED CERTIFICATE PAGES */}
       {/* ========================================================================= */}
       {certificatesScanned && certificatesScanned.length > 0 && (
