@@ -24,6 +24,10 @@ export default async function handler(req, res) {
 
   const rawBody = await getRawBody(req);
 
+  const signature = req.headers['x-signature'];
+  const hmac = crypto.createHmac('sha256', process.env.LEMONSQUEEZY_WEBHOOK_SECRET);
+  const digest = hmac.update(rawBody).digest('hex');
+
   const sigBuffer = Buffer.from(signature || '', 'hex');
   const digestBuffer = Buffer.from(digest, 'hex');
   if (sigBuffer.length !== digestBuffer.length || !crypto.timingSafeEqual(sigBuffer, digestBuffer)) {
