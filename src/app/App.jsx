@@ -21,6 +21,7 @@ const PricingModal = lazy(() => import('../modules/payments/PricingModal'));
 const PdfCheckoutModal = lazy(() => import('../modules/cv-builder/components/modals/PdfCheckoutModal'));
 const JsonDownloadModal = lazy(() => import('../modules/cv-builder/components/modals/JsonDownloadModal'));
 const PdfProgressModal = lazy(() => import('../modules/cv-builder/components/modals/PdfProgressModal'));
+const PrivacyModal = lazy(() => import('../modules/cv-builder/components/PrivacyModal'));
 
 import { CVProvider, useCVContext } from '../context/CVContext';
 import { ToastProvider, useToast } from '../shared/core/ui/Toast';
@@ -32,6 +33,7 @@ function AppContent() {
   const { confirm } = useConfirm();
   const [currentProfile, setCurrentProfile] = useState(null);
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
 
   useEffect(() => {
     getCurrentProfile().then(p => setCurrentProfile(p)).catch(() => {});
@@ -381,7 +383,25 @@ function AppContent() {
             onClose={() => setIsPdfComplete(false)}
           />
         )}
+
+        {isPrivacyModalOpen && (
+          <PrivacyModal
+            isOpen={isPrivacyModalOpen}
+            onClose={() => setIsPrivacyModalOpen(false)}
+          />
+        )}
       </Suspense>
+
+      {/* Footer Legal Link */}
+      <footer className="bg-[#1C121E] text-slate-400 border-t border-[#EFE2C9]/10 py-3 px-6 text-center text-xs no-print flex items-center justify-between">
+        <span className="text-[11px] font-bold text-slate-500">© 2026 LEECV — Diseñado para Profesionales y Agencias</span>
+        <button
+          onClick={() => setIsPrivacyModalOpen(true)}
+          className="text-purple-300 hover:text-white font-extrabold text-[11px] transition cursor-pointer underline underline-offset-2"
+        >
+          🔒 Política de Privacidad & Términos de Servicio
+        </button>
+      </footer>
     </div>
   );
 }

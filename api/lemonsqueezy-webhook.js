@@ -24,10 +24,11 @@ export default async function handler(req, res) {
 
   const rawBody = await getRawBody(req);
 
-  const signature = req.headers['x-signature'];
-  const hmac = crypto.createHmac('sha256', process.env.LEMONSQUEEZY_WEBHOOK_SECRET);
-  const digest = hmac.update(rawBody).digest('hex');
-  if (signature !== digest) return res.status(401).json({ error: 'Firma inválida' });
+  const sigBuffer = Buffer.from(signature || '', 'hex');
+  const digestBuffer = Buffer.from(digest, 'hex');
+  if (sigBuffer.length !== digestBuffer.length || !crypto.timingSafeEqual(sigBuffer, digestBuffer)) {
+    return res.status(401).json({ error: 'Firma inválida' });
+  }
 
   const event = JSON.parse(rawBody);
   const eventName = event.meta?.event_name;

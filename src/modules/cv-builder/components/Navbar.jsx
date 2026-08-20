@@ -140,6 +140,22 @@ export default function Navbar({
                     <p className="text-[10px] text-slate-400">Respaldo portátil en tu equipo</p>
                   </div>
                 </button>
+
+                {onOpenCloudStatus && (
+                  <button
+                    onClick={() => {
+                      setIsSaveMenuOpen(false);
+                      onOpenCloudStatus();
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl bg-teal-950/60 hover:bg-teal-900/80 text-teal-200 flex items-center gap-2 transition"
+                  >
+                    <Save className="w-4 h-4 text-teal-400" />
+                    <div>
+                      <p className="font-extrabold text-white">Google Drive / Nube</p>
+                      <p className="text-[10px] text-teal-300">Estado de respaldo y cuota</p>
+                    </div>
+                  </button>
+                )}
               </div>
             )}
           </div>

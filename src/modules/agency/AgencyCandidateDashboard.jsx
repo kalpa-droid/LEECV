@@ -1,18 +1,43 @@
-import React, { useState } from 'react';
-import { Users, Search, Filter, FileText, Download, MessageSquare, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users, Search, Filter, FileText, Download, MessageSquare, ArrowLeft, Building, UserPlus, Sparkles } from 'lucide-react';
+import { listCandidates, getOrganization } from './services/organizationService';
+import EnterpriseOrgModal from './components/EnterpriseOrgModal';
 
 export default function AgencyCandidateDashboard({ onBackToEditor }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedVacant, setSelectedVacant] = useState('all');
+  const [candidates, setCandidates] = useState([]);
+  const [org, setOrg] = useState(null);
+  const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const candidates = [
-    { id: '1', name: 'Valeria Medina', title: 'Prof. Lengua & Literatura', vacant: 'Docencia Secundaria', status: 'Preseleccionado', updated: 'Hace 2 horas' },
-    { id: '2', name: 'Mónica Burgos', title: 'Bachiller Pedagógico', vacant: 'Preceptora', status: 'En Entrevista', updated: 'Hace 1 día' },
+  const fallbackCandidates = [
+    { id: '1', full_name: 'Valeria Medina', title: 'Prof. Lengua & Literatura', vacant: 'Docencia Secundaria', status: 'Preseleccionado', updated_at: 'Hace 2 horas' },
+    { id: '2', full_name: 'Mónica Burgos', title: 'Bachiller Pedagógico', vacant: 'Preceptora', status: 'En Entrevista', updated_at: 'Hace 1 día' },
   ];
 
-  const filteredCandidates = candidates.filter(c => 
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    c.title.toLowerCase().includes(searchTerm.toLowerCase())
+  async function loadData() {
+    setLoading(true);
+    try {
+      const o = await getOrganization();
+      setOrg(o);
+      const list = await listCandidates(o?.id || null);
+      setCandidates(list.length > 0 ? list : fallbackCandidates);
+    } catch (err) {
+      console.error(err);
+      setCandidates(fallbackCandidates);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { loadData(); }, []);
+
+  const displayCandidates = candidates.length > 0 ? candidates : fallbackCandidates;
+
+  const filteredCandidates = displayCandidates.filter(c => 
+    (c.full_name || c.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (c.title || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -20,7 +45,7 @@ export default function AgencyCandidateDashboard({ onBackToEditor }) {
       <div className="max-w-6xl mx-auto space-y-6">
         
         {/* Top Bar */}
-        <div className="flex items-center justify-between border-b border-purple-500/30 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-purple-500/30 pb-4 gap-4">
           <div className="flex items-center gap-3">
             <button 
               onClick={onBackToEditor}
@@ -32,9 +57,16 @@ export default function AgencyCandidateDashboard({ onBackToEditor }) {
               <Users className="w-6 h-6 text-purple-400" /> Panel de Gestión de Candidatos (Agencia)
             </h1>
           </div>
-          <span className="px-3 py-1 bg-purple-900/60 border border-purple-500/50 text-purple-300 text-xs font-extrabold rounded-xl">
-            Suscripción Agencia Pro
-          </span>
+          
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsOrgModalOpen(true)}
+              className="px-3.5 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-extrabold rounded-xl transition flex items-center gap-2 shadow-lg cursor-pointer"
+            >
+              <Building className="w-4 h-4 text-purple-200" /> 
+              {org ? org.name : 'Gestión de Equipo / Organización'}
+            </button>
+          </div>
         </div>
 
         {/* Filter Controls */}
@@ -80,7 +112,7 @@ export default function AgencyCandidateDashboard({ onBackToEditor }) {
               {filteredCandidates.map(candidat => (
                 <tr key={candidat.id} className="hover:bg-slate-800/40 transition">
                   <td className="p-4 font-bold text-white flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-amber-400" /> {candidat.name}
+                    <FileText className="w-4 h-4 text-amber-400" /> {candidat.full_name || candidat.name}
                   </td>
                   <td className="p-4">{candidat.title}</td>
                   <td className="p-4"><span className="px-2.5 py-1 rounded-lg bg-slate-800 text-purple-300 font-medium">{candidat.vacant}</span></td>
@@ -101,6 +133,11 @@ export default function AgencyCandidateDashboard({ onBackToEditor }) {
           </table>
         </div>
       </div>
+
+      <EnterpriseOrgModal
+        isOpen={isOrgModalOpen}
+        onClose={() => setIsOrgModalOpen(false)}
+      />
     </div>
   );
 }
