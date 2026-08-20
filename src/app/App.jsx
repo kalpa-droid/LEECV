@@ -51,7 +51,7 @@ function AppContent() {
   // Zoom and Responsive A4 Auto-Fit state
   const [zoomLevel, setZoomLevel] = useState(0.85);
 
-  const triggerAutoFit = () => {
+  const triggerAutoFit = React.useCallback(() => {
     if (typeof window !== 'undefined') {
       const isMobile = window.innerWidth < 768;
       const sidebarWidth = isMobile ? 0 : (isPanelOpen ? 500 : 0);
@@ -61,14 +61,14 @@ function AppContent() {
       const calculatedScale = Math.min(Math.max(availableWidth / a4WidthPx, 0.45), 1.1);
       setZoomLevel(Number(calculatedScale.toFixed(2)));
     }
-  };
+  }, [isPanelOpen]);
 
   useEffect(() => {
     triggerAutoFit();
     const handleResize = () => triggerAutoFit();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [isPanelOpen]);
+  }, [triggerAutoFit]);
 
   const [isPhotoCropperOpen, setIsPhotoCropperOpen] = useState(false);
   const [isSignatureOpen, setIsSignatureOpen] = useState(false);

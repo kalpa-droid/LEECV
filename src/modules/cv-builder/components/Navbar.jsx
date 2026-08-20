@@ -7,7 +7,6 @@ import {
   User,
   ChevronDown
 } from 'lucide-react';
-import { checkStorageStatus } from '../../../shared/core/lib/supabaseClient';
 
 export default function Navbar({ 
   onPrint, 

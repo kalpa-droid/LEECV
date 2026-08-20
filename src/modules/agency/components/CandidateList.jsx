@@ -8,16 +8,16 @@ export default function CandidateList({ onSelectCandidate }) {
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
 
-  const loadCandidates = async () => {
+  const loadCandidates = React.useCallback(async () => {
     setLoading(true);
     const data = await listAgencyCandidates();
     setCandidates(data);
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     loadCandidates();
-  }, []);
+  }, [loadCandidates]);
 
   const filtered = candidates.filter(c => 
     filterStatus === 'all' || c.status === filterStatus

@@ -119,11 +119,6 @@ export async function saveCandidate(candidateData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Usuario no autenticado');
 
-/** Guarda o actualiza un candidato */
-export async function saveCandidate(candidateData) {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Usuario no autenticado');
-
   const payload = {
     ...candidateData,
     owner_id: user.id,

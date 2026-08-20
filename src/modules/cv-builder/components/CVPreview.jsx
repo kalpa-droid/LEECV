@@ -227,8 +227,6 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
     if (location === 'secundaria' && !showInSecundaria(secId)) return null;
     if (location === 'primaria' && !showInPrimaria(secId)) return null;
 
-    const v = getColumnVariant(location);
-
     switch (secId) {
       case 'contacto':
         return (
