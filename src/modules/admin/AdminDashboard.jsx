@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getCurrentProfile, logout } from '../auth/authService';
 import { 
   listUsers, 
+  setUserPlan,
   setPremium, 
   getBasicStats, 
   listPendingClaims, 
@@ -83,22 +84,22 @@ export default function AdminDashboard() {
     );
   }
 
-  async function togglePremium(user) {
-    if (user.premium_activo) {
+  async function togglePremium(user, targetPlan = 'pro') {
+    if (targetPlan === 'free' || user.premium_activo && targetPlan === 'free') {
       confirm({
         title: `¿Desactivar licencia de ${user.email}?`,
-        message: 'Esta acción removerá el acceso a las funciones Pro de este usuario.',
+        message: 'Esta acción removerá el acceso a las funciones Pro/Enterprise de este usuario.',
         confirmText: 'Desactivar Licencia',
         variant: 'danger',
         onConfirm: async () => {
-          await setPremium(user.id, false);
+          await setUserPlan(user.id, 'free');
           showSuccess(`Licencia desactivada para ${user.email}`);
           loadEverything();
         }
       });
     } else {
-      await setPremium(user.id, true);
-      showSuccess(`Licencia activa (30 días) asignada a ${user.email}`);
+      await setUserPlan(user.id, targetPlan);
+      showSuccess(`Plan ${targetPlan.toUpperCase()} (30 días) asignado a ${user.email}`);
       loadEverything();
     }
   }
@@ -397,16 +398,29 @@ export default function AdminDashboard() {
                       : <span className="text-[#2B1B2E]/40 font-bold">Gratuito / Estándar</span>}
                   </td>
                   <td className="px-5 py-3 text-right">
-                    <button
-                      onClick={() => togglePremium(u)}
-                      className={`text-xs font-extrabold px-3 py-1.5 rounded-xl transition shadow-sm cursor-pointer ${
-                        u.premium_activo
-                          ? 'bg-[#FF2E63]/10 text-[#FF2E63] hover:bg-[#FF2E63]/20 border border-[#FF2E63]/30'
-                          : 'bg-[#00A8A0]/10 text-[#00A8A0] hover:bg-[#00A8A0]/20 border border-[#00A8A0]/30'
-                      }`}
-                    >
-                      {u.premium_activo ? 'Desactivar Licencia' : 'Activar Premium (30d)'}
-                    </button>
+                    {u.premium_activo ? (
+                      <button
+                        onClick={() => togglePremium(u, 'free')}
+                        className="text-xs font-extrabold px-3 py-1.5 rounded-xl transition shadow-sm cursor-pointer bg-[#FF2E63]/10 text-[#FF2E63] hover:bg-[#FF2E63]/20 border border-[#FF2E63]/30"
+                      >
+                        Desactivar Licencia
+                      </button>
+                    ) : (
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => togglePremium(u, 'pro')}
+                          className="text-xs font-extrabold px-2.5 py-1.5 rounded-xl transition shadow-sm cursor-pointer bg-[#00A8A0]/10 text-[#00A8A0] hover:bg-[#00A8A0]/20 border border-[#00A8A0]/30"
+                        >
+                          + Pro
+                        </button>
+                        <button
+                          onClick={() => togglePremium(u, 'enterprise')}
+                          className="text-xs font-extrabold px-2.5 py-1.5 rounded-xl transition shadow-sm cursor-pointer bg-purple-500/10 text-purple-700 hover:bg-purple-500/20 border border-purple-500/30"
+                        >
+                          + Enterprise
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
