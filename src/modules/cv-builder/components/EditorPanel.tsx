@@ -269,46 +269,7 @@ export default function EditorPanel({
     stopCamera();
   };
 
-  // Helper updates for personal info
-  const updatePersonalInfo = (field, value) => {
-    setCvData((prev) => ({
-      ...prev,
-      personalInfo: {
-        ...prev.personalInfo,
-        [field]: value
-      }
-    }));
-  };
 
-  const updateRoles = (index, value) => {
-    setCvData((prev) => {
-      const newRoles = [...prev.roles];
-      newRoles[index] = value;
-      return { ...prev, roles: newRoles };
-    });
-  };
-
-  const addRole = () => {
-    setCvData((prev) => ({
-      ...prev,
-      roles: [...prev.roles, ""]
-    }));
-  };
-
-  const removeRole = (index) => {
-    const roleName = cvData?.roles?.[index] || `Rol #${index + 1}`;
-    confirm({
-      title: '¿Eliminar rol?',
-      message: `¿Estás seguro de que deseas eliminar "${roleName}"?`,
-      confirmText: 'Eliminar',
-      onConfirm: () => {
-        setCvData((prev) => ({
-          ...prev,
-          roles: (prev.roles || []).filter((_, i) => i !== index)
-        }));
-      }
-    });
-  };
 
   const updateTheme = (field, value) => {
     setCvData((prev) => ({

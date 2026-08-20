@@ -1,6 +1,17 @@
 import React from 'react';
+import { RotateCw } from 'lucide-react';
 
-export function ScannedCertificatesPages({ certificates = [], theme = {} }: { certificates?: any[]; theme?: any }) {
+export interface ScannedCertificatesPagesProps {
+  certificates?: any[];
+  theme?: any;
+  onRotateCert?: (id: string) => void;
+}
+
+export function ScannedCertificatesPages({
+  certificates = [],
+  theme = {},
+  onRotateCert
+}: ScannedCertificatesPagesProps) {
   if (!Array.isArray(certificates) || certificates.length === 0) return null;
 
   const fontFamily = theme.fontFamily || 'Inter, sans-serif';
@@ -26,7 +37,20 @@ export function ScannedCertificatesPages({ certificates = [], theme = {} }: { ce
                 ANEXO DE CERTIFICACIÓN COMPROBATORIA #{index + 1}
               </span>
             </div>
-            <span className="text-[10px] font-bold text-slate-400">DOCUMENTO OFICIAL A4</span>
+
+            <div className="flex items-center gap-2">
+              {onRotateCert && cert.id && (
+                <button
+                  onClick={() => onRotateCert(cert.id)}
+                  className="no-print px-2.5 py-1 rounded-lg bg-slate-900 text-white hover:bg-[#FF2E63] transition text-[11px] font-black flex items-center gap-1 shadow cursor-pointer"
+                  title="Girar certificado 90°"
+                >
+                  <RotateCw className="w-3.5 h-3.5" />
+                  <span>Girar 90°</span>
+                </button>
+              )}
+              <span className="text-[10px] font-bold text-slate-400">DOCUMENTO OFICIAL A4</span>
+            </div>
           </div>
 
           {/* Certificate Image Frame */}
