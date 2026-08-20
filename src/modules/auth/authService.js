@@ -11,18 +11,50 @@ export async function login(email, password) {
 }
 
 /**
- * Inicia sesión / registro con Google OAuth.
+ * Inicia sesión / registro con Google OAuth. Pide también permiso de Drive
+ * (solo archivos que la propia app crea, no todo el Drive) con acceso offline,
+ * porque sin access_type=offline + prompt=consent Google nunca entrega un
+ * refresh_token y no podríamos volver a subir archivos pasada una hora.
  */
 export async function signInWithGoogle() {
   if (!supabase) throw new Error('Supabase no está configurado');
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined
-    }
+      redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined,
+      scopes: 'https://www.googleapis.com/auth/drive.file',
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      },
+    },
   });
   if (error) throw error;
   return data;
+}
+
+/**
+ * Se llama después del redirect de login. Google solo manda provider_refresh_token
+ * la primera vez que el usuario da consentimiento — si ya está conectado, esto
+ * no hace nada (evita pisar un token válido con "nada" en logins posteriores).
+ */
+export async function capturarConexionDriveSiCorresponde(session) {
+  if (!session?.provider_refresh_token) return false;
+
+  try {
+    await fetch('/api/drive/connect', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ refreshToken: session.provider_refresh_token }),
+    });
+    return true;
+  } catch (err) {
+    console.warn('No se pudo guardar la conexión con Drive:', err);
+    return false;
+  }
 }
 
 export async function logout() {

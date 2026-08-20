@@ -1,0 +1,987 @@
+diff --git a/README-IMPLEMENTACION.md b/README-IMPLEMENTACION.md
+index 7735728..16272ad 100644
+--- a/README-IMPLEMENTACION.md
++++ b/README-IMPLEMENTACION.md
+@@ -27,6 +27,17 @@ npm install crypto-js
+ | `SITE_URL` | `https://tu-dominio.vercel.app` |
+ | `LEMONSQUEEZY_WEBHOOK_SECRET` | Lemon Squeezy → Settings → Webhooks (al crear el webhook) |
+ | `VITE_LEMONSQUEEZY_CHECKOUT_URL` | Lemon Squeezy → Products → tu producto → Share |
++| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google Cloud Console → APIs & Services → Credentials (el mismo OAuth client que ya usa Supabase para "Iniciar sesión con Google") |
++
++## 3.1. Habilitar el scope de Drive en Google Cloud Console
++Antes de que la conexión a Drive funcione en producción:
++1. Google Cloud Console → APIs & Services → **Library** → activar "Google Drive API".
++2. APIs & Services → **OAuth consent screen** → agregar el scope `.../auth/drive.file`
++   (es un scope "sensible" según Google, no "restringido" — el proceso de verificación
++   es más liviano que pedir todo el Drive, pero igual hay que pasarlo si tenés más de
++   ~100 usuarios probando en modo testing).
++3. Mientras la app esté en modo "Testing" en Google, agregá manualmente los emails de
++   quienes prueben la conexión en **Test users**, o van a ver un error de Google al loguearse.
+ 
+ ## 4. Habilitar login de usuarios
+ En Supabase → Authentication → Providers, dejá activo "Email". Para crear tu primer usuario admin:
+diff --git a/api/_lib/applyPayment.js b/api/_lib/applyPayment.js
+index 269a36c..dd0066c 100644
+--- a/api/_lib/applyPayment.js
++++ b/api/_lib/applyPayment.js
+@@ -107,8 +107,30 @@ async function activateSubscription(supabaseAdmin, { userId, email, plan, metodo
+   };
+ 
+   const query = supabaseAdmin.from('profiles').update(patch);
+-  const { error } = userId ? await query.eq('id', userId) : await query.eq('email', email);
++  const { data: updated, error } = userId
++    ? await query.eq('id', userId).select('id').single()
++    : await query.eq('email', email).select('id').single();
+   if (error) throw error;
+ 
++  // Enterprise necesita una organización para poder invitar miembros. Se crea
++  // acá una sola vez (no en el frontend) para que quede ligado al pago real,
++  // no a que el usuario abra el panel.
++  if (plan === 'enterprise' && updated?.id) {
++    const { data: existingOrg } = await supabaseAdmin
++      .from('organizations')
++      .select('id')
++      .eq('owner_id', updated.id)
++      .single();
++
++    if (!existingOrg) {
++      await supabaseAdmin.from('organizations').insert({
++        name: email ? `Organización de ${email}` : 'Mi organización',
++        owner_id: updated.id,
++        max_members: 25,     // incluido por defecto en Enterprise
++        storage_limit_mb: 51200, // 50 GB — exclusivo de Enterprise, el resto usa su propio Drive
++      });
++    }
++  }
++
+   return { type: 'subscription', plan, vence: vence.toISOString() };
+ }
+diff --git a/api/drive/connect.js b/api/drive/connect.js
+new file mode 100644
+index 0000000..a8a391a
+--- /dev/null
++++ b/api/drive/connect.js
+@@ -0,0 +1,46 @@
++// api/drive/connect.js
++//
++// Se llama UNA vez, justo después de que el usuario inicia sesión con Google
++// y Supabase devuelve session.provider_refresh_token (solo aparece la primera
++// vez, o cuando se fuerza el consentimiento de nuevo — ver authService.js).
++// Guarda ese refresh token del lado del servidor; el cliente nunca lo vuelve a ver.
++
++import { createClient } from '@supabase/supabase-js';
++
++const supabaseAdmin = createClient(
++  process.env.SUPABASE_URL,
++  process.env.SUPABASE_SERVICE_ROLE_KEY
++);
++
++export default async function handler(req, res) {
++  if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
++
++  try {
++    const authHeader = req.headers.authorization || '';
++    const token = authHeader.replace('Bearer ', '');
++    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
++    if (authError || !user) return res.status(401).json({ error: 'No autenticado' });
++
++    const { refreshToken } = req.body || {};
++    if (!refreshToken) return res.status(400).json({ error: 'Falta refreshToken' });
++
++    const { error: tokenError } = await supabaseAdmin
++      .from('google_drive_tokens')
++      .upsert({
++        user_id: user.id,
++        refresh_token: refreshToken,
++        updated_at: new Date().toISOString(),
++      });
++    if (tokenError) throw tokenError;
++
++    await supabaseAdmin
++      .from('profiles')
++      .update({ drive_connected: true })
++      .eq('id', user.id);
++
++    return res.status(200).json({ success: true });
++  } catch (err) {
++    console.error('Error conectando Google Drive:', err);
++    return res.status(500).json({ error: 'No se pudo guardar la conexión con Drive' });
++  }
++}
+diff --git a/api/drive/disconnect.js b/api/drive/disconnect.js
+new file mode 100644
+index 0000000..1f567a3
+--- /dev/null
++++ b/api/drive/disconnect.js
+@@ -0,0 +1,58 @@
++// api/drive/disconnect.js
++//
++// Revoca el token en Google (buena práctica, no solo lo borramos localmente)
++// y limpia el estado. Lo puede llamar el propio usuario, o un admin pasando
++// targetUserId (ej. desde el panel, si alguien pide desconectar su cuenta).
++
++import { createClient } from '@supabase/supabase-js';
++
++const supabaseAdmin = createClient(
++  process.env.SUPABASE_URL,
++  process.env.SUPABASE_SERVICE_ROLE_KEY
++);
++
++export default async function handler(req, res) {
++  if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
++
++  try {
++    const authHeader = req.headers.authorization || '';
++    const token = authHeader.replace('Bearer ', '');
++    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
++    if (authError || !user) return res.status(401).json({ error: 'No autenticado' });
++
++    let targetUserId = user.id;
++    const { targetUserId: requestedTarget } = req.body || {};
++
++    if (requestedTarget && requestedTarget !== user.id) {
++      const { data: adminProfile } = await supabaseAdmin
++        .from('profiles').select('role').eq('id', user.id).single();
++      if (adminProfile?.role !== 'admin') {
++        return res.status(403).json({ error: 'Solo un administrador puede desconectar la cuenta de otro usuario' });
++      }
++      targetUserId = requestedTarget;
++    }
++
++    const { data: tokenRow } = await supabaseAdmin
++      .from('google_drive_tokens')
++      .select('refresh_token')
++      .eq('user_id', targetUserId)
++      .single();
++
++    if (tokenRow?.refresh_token) {
++      // Best-effort: revocar del lado de Google. Si falla, igual limpiamos nuestro lado.
++      await fetch(`https://oauth2.googleapis.com/revoke?token=${tokenRow.refresh_token}`, { method: 'POST' })
++        .catch(err => console.warn('No se pudo revocar el token en Google:', err));
++    }
++
++    await supabaseAdmin.from('google_drive_tokens').delete().eq('user_id', targetUserId);
++    await supabaseAdmin.from('profiles').update({
++      drive_connected: false,
++      drive_quota_percent: null,
++    }).eq('id', targetUserId);
++
++    return res.status(200).json({ success: true });
++  } catch (err) {
++    console.error('Error desconectando Drive:', err);
++    return res.status(500).json({ error: 'No se pudo desconectar Drive' });
++  }
++}
+diff --git a/api/drive/get-access-token.js b/api/drive/get-access-token.js
+new file mode 100644
+index 0000000..063d9c9
+--- /dev/null
++++ b/api/drive/get-access-token.js
+@@ -0,0 +1,63 @@
++// api/drive/get-access-token.js
++//
++// El cliente NUNCA guarda un access token de Drive por más de lo que dura
++// la operación actual (subir un archivo, chequear cuota). Cada vez que lo
++// necesita, pide uno acá — este endpoint es el único lugar que conoce el
++// GOOGLE_CLIENT_SECRET, así que es el único que puede canjear el refresh
++// token guardado por uno nuevo.
++
++import { createClient } from '@supabase/supabase-js';
++
++const supabaseAdmin = createClient(
++  process.env.SUPABASE_URL,
++  process.env.SUPABASE_SERVICE_ROLE_KEY
++);
++
++export default async function handler(req, res) {
++  if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
++
++  try {
++    const authHeader = req.headers.authorization || '';
++    const token = authHeader.replace('Bearer ', '');
++    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
++    if (authError || !user) return res.status(401).json({ error: 'No autenticado' });
++
++    const { data: tokenRow, error: tokenError } = await supabaseAdmin
++      .from('google_drive_tokens')
++      .select('refresh_token')
++      .eq('user_id', user.id)
++      .single();
++
++    if (tokenError || !tokenRow) {
++      return res.status(404).json({ error: 'not_connected', message: 'El usuario no conectó Google Drive' });
++    }
++
++    const response = await fetch('https://oauth2.googleapis.com/token', {
++      method: 'POST',
++      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
++      body: new URLSearchParams({
++        client_id: process.env.GOOGLE_CLIENT_ID,
++        client_secret: process.env.GOOGLE_CLIENT_SECRET,
++        refresh_token: tokenRow.refresh_token,
++        grant_type: 'refresh_token',
++      }),
++    });
++
++    const data = await response.json();
++
++    if (!response.ok) {
++      // El token pudo haber sido revocado desde la cuenta de Google del usuario.
++      if (data.error === 'invalid_grant') {
++        await supabaseAdmin.from('profiles').update({ drive_connected: false }).eq('id', user.id);
++        await supabaseAdmin.from('google_drive_tokens').delete().eq('user_id', user.id);
++        return res.status(409).json({ error: 'revoked', message: 'La conexión con Drive fue revocada, hay que reconectar' });
++      }
++      throw new Error(JSON.stringify(data));
++    }
++
++    return res.status(200).json({ accessToken: data.access_token, expiresIn: data.expires_in });
++  } catch (err) {
++    console.error('Error refrescando token de Drive:', err);
++    return res.status(500).json({ error: 'No se pudo obtener un token de Drive' });
++  }
++}
+diff --git a/fix-candidate-management.sql b/fix-candidate-management.sql
+deleted file mode 100644
+index f18ec35..0000000
+--- a/fix-candidate-management.sql
++++ /dev/null
+@@ -1,62 +0,0 @@
+--- ============================================================
+--- LEECV — Parche 3: gestión de candidatos (Nivel 2 Agencia Pro / Nivel 3 Enterprise)
+--- Ejecutar en: Supabase Dashboard > SQL Editor
+--- (después de los parches 1 y 2)
+--- ============================================================
+-
+--- No duplica el CV: solo agrega la metadata que le importa a la agencia,
+--- referenciando el CV que ya vive en `cvs` (creado por cv-builder).
+-create table if not exists public.candidate_profiles (
+-  cv_id text primary key references public.cvs(id) on delete cascade,
+-  owner_id uuid not null references auth.users(id) on delete cascade,
+-  status text not null default 'postulante'
+-    check (status in ('postulante', 'en_proceso', 'contratado', 'descartado')),
+-  source text,        -- de dónde salió el candidato: LinkedIn, referido, etc.
+-  notes text,
+-  updated_at timestamptz not null default now()
+-);
+-
+-create index if not exists idx_candidate_profiles_owner on public.candidate_profiles(owner_id);
+-
+-alter table public.candidate_profiles enable row level security;
+-
+-drop policy if exists "agencia ve sus candidatos" on public.candidate_profiles;
+-create policy "agencia ve sus candidatos"
+-  on public.candidate_profiles for select
+-  using (auth.uid() = owner_id or public.is_admin(auth.uid()));
+-
+-drop policy if exists "agencia crea sus candidatos" on public.candidate_profiles;
+-create policy "agencia crea sus candidatos"
+-  on public.candidate_profiles for insert
+-  with check (auth.uid() = owner_id);
+-
+-drop policy if exists "agencia actualiza sus candidatos" on public.candidate_profiles;
+-create policy "agencia actualiza sus candidatos"
+-  on public.candidate_profiles for update
+-  using (auth.uid() = owner_id)
+-  with check (auth.uid() = owner_id);
+-
+-drop policy if exists "agencia borra sus candidatos" on public.candidate_profiles;
+-create policy "agencia borra sus candidatos"
+-  on public.candidate_profiles for delete
+-  using (auth.uid() = owner_id);
+-
+--- Defensa en profundidad: aunque alguien se salte el paywall del frontend,
+--- la base de datos igual rechaza crear candidatos si el plan no es Pro/Enterprise.
+-create or replace function public.enforce_candidate_plan()
+-returns trigger as $$
+-declare
+-  user_plan text;
+-begin
+-  select plan into user_plan from public.profiles where id = new.owner_id;
+-  if user_plan not in ('pro', 'enterprise') then
+-    raise exception 'La gestión de candidatos requiere plan Pro o Enterprise';
+-  end if;
+-  return new;
+-end;
+-$$ language plpgsql security definer;
+-
+-drop trigger if exists trg_enforce_candidate_plan on public.candidate_profiles;
+-create trigger trg_enforce_candidate_plan
+-  before insert on public.candidate_profiles
+-  for each row execute procedure public.enforce_candidate_plan();
+diff --git a/fix-pdf-credits-and-downgrade.sql b/fix-pdf-credits-and-downgrade.sql
+deleted file mode 100644
+index 2f74e25..0000000
+--- a/fix-pdf-credits-and-downgrade.sql
++++ /dev/null
+@@ -1,57 +0,0 @@
+--- ============================================================
+--- LEECV — Parche 4: créditos de exportación PDF + downgrade automático
+--- Ejecutar en: Supabase Dashboard > SQL Editor
+--- ============================================================
+-
+--- 1. Ledger de créditos de exportación (Nivel 1, pago por PDF).
+---    Nunca se descuenta desde el frontend directamente — solo vía
+---    la función RPC de abajo, para evitar condiciones de carrera
+---    (dos pestañas exportando "al mismo tiempo" con el mismo crédito).
+-create table if not exists public.pdf_export_credits (
+-  user_id uuid primary key references auth.users(id) on delete cascade,
+-  credits integer not null default 0,
+-  updated_at timestamptz not null default now()
+-);
+-
+-alter table public.pdf_export_credits enable row level security;
+-
+-drop policy if exists "usuario ve sus créditos" on public.pdf_export_credits;
+-create policy "usuario ve sus créditos"
+-  on public.pdf_export_credits for select
+-  using (auth.uid() = user_id or public.is_admin(auth.uid()));
+--- Nota: no hay policy de insert/update para usuarios normales a propósito.
+--- Los créditos solo los toca el webhook de pago (con service role) y esta función:
+-
+-create or replace function public.consume_pdf_credit(p_user_id uuid)
+-returns boolean as $$
+-declare
+-  remaining integer;
+-begin
+-  update public.pdf_export_credits
+-    set credits = credits - 1, updated_at = now()
+-    where user_id = p_user_id and credits > 0
+-    returning credits into remaining;
+-
+-  return remaining is not null;
+-end;
+-$$ language plpgsql security definer;
+-
+--- 2. Downgrade automático cuando vence el plan.
+---    Requiere activar la extensión pg_cron una vez:
+---    Supabase Dashboard > Database > Extensions > pg_cron
+-create or replace function public.downgrade_expired_plans()
+-returns void as $$
+-begin
+-  update public.profiles
+-    set plan = 'free'
+-    where plan in ('pro', 'enterprise')
+-      and plan_vence is not null
+-      and plan_vence < now();
+-end;
+-$$ language plpgsql security definer;
+-
+-select cron.schedule(
+-  'downgrade-expired-plans-diario',
+-  '0 6 * * *',  -- todos los días 06:00 UTC
+-  $$ select public.downgrade_expired_plans(); $$
+-);
+diff --git a/fix-plan-tiers-and-cvs-ownership.sql b/fix-plan-tiers-and-cvs-ownership.sql
+deleted file mode 100644
+index fe29e06..0000000
+--- a/fix-plan-tiers-and-cvs-ownership.sql
++++ /dev/null
+@@ -1,53 +0,0 @@
+--- ============================================================
+--- LEECV — Parche 2: modelo de 3 niveles + dueño de CVs + RLS en 'cvs'
+--- Ejecutar en: Supabase Dashboard > SQL Editor
+--- (después de migration.sql y de fix-profiles-privilege-escalation.sql)
+--- ============================================================
+-
+--- 1. Reemplazar el booleano premium_activo por un nivel real,
+---    porque ahora hay 3 planes con distintas features, no solo on/off.
+-alter table public.profiles
+-  add column if not exists plan text not null default 'free'
+-  check (plan in ('free', 'pro', 'enterprise'));
+-
+-alter table public.profiles
+-  add column if not exists plan_vence timestamptz;
+-
+--- (metodo_pago y premium_activo se mantienen por compatibilidad;
+---  el código de admin/cv-builder se migra a leer `plan` en el próximo paso)
+-
+--- 2. La tabla `cvs` existe en tu código pero NO tiene RLS ni dueño —
+---    hoy cualquiera con la anon key puede leer/escribir CVs de otros usuarios.
+---    Esto es más urgente que la reorganización de carpetas.
+-
+-alter table public.cvs
+-  add column if not exists user_id uuid references auth.users(id) on delete cascade;
+-
+-create index if not exists idx_cvs_user_id on public.cvs(user_id);
+-
+-alter table public.cvs enable row level security;
+-
+-drop policy if exists "usuario ve sus propios CVs" on public.cvs;
+-create policy "usuario ve sus propios CVs"
+-  on public.cvs for select
+-  using (auth.uid() = user_id or public.is_admin(auth.uid()));
+-
+-drop policy if exists "usuario inserta sus propios CVs" on public.cvs;
+-create policy "usuario inserta sus propios CVs"
+-  on public.cvs for insert
+-  with check (auth.uid() = user_id);
+-
+-drop policy if exists "usuario actualiza sus propios CVs" on public.cvs;
+-create policy "usuario actualiza sus propios CVs"
+-  on public.cvs for update
+-  using (auth.uid() = user_id)
+-  with check (auth.uid() = user_id);
+-
+-drop policy if exists "usuario borra sus propios CVs" on public.cvs;
+-create policy "usuario borra sus propios CVs"
+-  on public.cvs for delete
+-  using (auth.uid() = user_id);
+-
+--- Nota: los CVs de usuarios anónimos (Nivel 1 sin registrarse) NUNCA
+--- llegan a esta tabla — se quedan en IndexedDB local. Solo se sincronizan
+--- acá cuando el usuario se registra con Google y user_id queda asignado.
+diff --git a/fix-profiles-privilege-escalation.sql b/fix-profiles-privilege-escalation.sql
+deleted file mode 100644
+index a3e8a20..0000000
+--- a/fix-profiles-privilege-escalation.sql
++++ /dev/null
+@@ -1,30 +0,0 @@
+--- ============================================================
+--- LEECV — Parche: impedir que un usuario se auto-otorgue
+--- role='admin' o premium_activo=true editando su propia fila.
+--- Ejecutar en: Supabase Dashboard > SQL Editor (después de migration.sql)
+--- ============================================================
+-
+-create or replace function public.protect_privileged_columns()
+-returns trigger as $$
+-begin
+-  -- Si quien ejecuta la actualización es admin, se permite cualquier cambio.
+-  if public.is_admin(auth.uid()) then
+-    return new;
+-  end if;
+-
+-  -- Si NO es admin, estas columnas deben quedar exactamente igual que antes.
+-  if new.role is distinct from old.role
+-     or new.premium_activo is distinct from old.premium_activo
+-     or new.premium_vence is distinct from old.premium_vence
+-     or new.metodo_pago is distinct from old.metodo_pago then
+-    raise exception 'No autorizado para modificar campos de rol o estado premium';
+-  end if;
+-
+-  return new;
+-end;
+-$$ language plpgsql security definer;
+-
+-drop trigger if exists trg_protect_privileged_columns on public.profiles;
+-create trigger trg_protect_privileged_columns
+-  before update on public.profiles
+-  for each row execute procedure public.protect_privileged_columns();
+diff --git a/src/app/App.jsx b/src/app/App.jsx
+index 41bdf96..45dd28a 100644
+--- a/src/app/App.jsx
++++ b/src/app/App.jsx
+@@ -5,7 +5,8 @@ import EditorPanel from '../modules/cv-builder/components/EditorPanel';
+ import CVPreview from '../modules/cv-builder/components/CVPreview';
+ import { ZoomIn, ZoomOut, Smartphone } from 'lucide-react';
+ 
+-import { getCurrentProfile } from '../modules/auth/authService';
++import { getCurrentProfile, capturarConexionDriveSiCorresponde } from '../modules/auth/authService';
++import { supabase } from '../shared/core/lib/supabaseClient';
+ import { initialCVData, standardExampleCVData, blankCVTemplate } from '../data/initialCVData';
+ import { exportCVToPDF } from '../shared/core/pdf-engine/pdfExporter';
+ import { exportCVToJson, importCVFromJsonFile } from '../shared/core/utils/jsonImporterExporter';
+@@ -35,6 +36,15 @@ function AppContent() {
+ 
+   useEffect(() => {
+     getCurrentProfile().then(p => setCurrentProfile(p)).catch(() => {});
++
++    // Solo la PRIMERA vez que Google entrega el refresh_token (login con
++    // consentimiento) queda algo que capturar acá — en logins normales
++    // provider_refresh_token viene undefined y esto no hace nada.
++    if (supabase) {
++      supabase.auth.getSession().then(({ data: { session } }) => {
++        capturarConexionDriveSiCorresponde(session);
++      });
++    }
+   }, []);
+ 
+   const [activeTab, setActiveTab] = useState('personales');
+diff --git a/src/modules/admin/adminService.js b/src/modules/admin/adminService.js
+index 49a051c..7f1c651 100644
+--- a/src/modules/admin/adminService.js
++++ b/src/modules/admin/adminService.js
+@@ -56,7 +56,46 @@ export async function setPremium(userId, activo, vence = null, plan = 'pro') {
+   return await setUserPlan(userId, targetPlan, vence);
+ }
+ 
+-/** Registra acciones administrativas en auditoría */
++/**
++ * Panel admin — estado de almacenamiento:
++ * - Drive: quién conectó su cuenta y a qué % de cuota está (Pro y Free).
++ * - LEECV Cloud: cuánto ocupa cada organización de sus 50GB (Enterprise).
++ */
++export async function listDriveConnections() {
++  const { data, error } = await supabase
++    .from('profiles')
++    .select('id, email, plan, drive_connected, drive_quota_percent, drive_last_checked_at')
++    .eq('drive_connected', true)
++    .order('drive_quota_percent', { ascending: false });
++  if (error) throw error;
++  return data || [];
++}
++
++/** Fuerza la desconexión de Drive de un usuario (ej. a pedido suyo, o cuenta dada de baja) */
++export async function disconnectUserDrive(userId) {
++  const { data: { session } } = await supabase.auth.getSession();
++  const res = await fetch('/api/drive/disconnect', {
++    method: 'POST',
++    headers: {
++      'Content-Type': 'application/json',
++      Authorization: `Bearer ${session?.access_token}`,
++    },
++    body: JSON.stringify({ targetUserId: userId }),
++  });
++  const data = await res.json();
++  if (!res.ok) throw new Error(data.error || 'No se pudo desconectar Drive');
++  await logAdminAction('disconnect_user_drive', userId);
++  return data;
++}
++
++export async function listOrganizationsStorage() {
++  const { data, error } = await supabase
++    .from('organizations')
++    .select('id, name, owner_id, max_members, storage_limit_mb, created_at')
++    .order('created_at', { ascending: false });
++  if (error) throw error;
++  return data || [];
++}
+ export async function logAdminAction(actionType, targetUserId = null, details = {}) {
+   try {
+     const { data: { user } } = await supabase.auth.getUser();
+diff --git a/src/modules/agency/services/organizationService.js b/src/modules/agency/services/organizationService.js
+index 5cdfc57..27754ef 100644
+--- a/src/modules/agency/services/organizationService.js
++++ b/src/modules/agency/services/organizationService.js
+@@ -48,8 +48,26 @@ export async function createOrganization(name) {
+   return data;
+ }
+ 
+-/** Invita un miembro por email a la organización */
++/** Invita un miembro por email a la organización, respetando el cupo (max_members) del plan */
+ export async function inviteMember(orgId, email, role = 'editor') {
++  const { data: org, error: orgError } = await supabase
++    .from('organizations')
++    .select('max_members')
++    .eq('id', orgId)
++    .single();
++  if (orgError) throw orgError;
++
++  const { count, error: countError } = await supabase
++    .from('org_members')
++    .select('*', { count: 'exact', head: true })
++    .eq('org_id', orgId)
++    .in('status', ['pending', 'active']);
++  if (countError) throw countError;
++
++  if ((count ?? 0) >= org.max_members) {
++    throw new Error(`Llegaste al límite de ${org.max_members} miembros de tu plan Enterprise`);
++  }
++
+   const { data, error } = await supabase
+     .from('org_members')
+     .insert({
+@@ -83,7 +101,7 @@ export async function listCandidates(orgId = null) {
+   const { data: { user } } = await supabase.auth.getUser();
+   if (!user) return [];
+ 
+-  let query = supabase.from('candidate_profiles').select('*');
++  let query = supabase.from('org_candidates').select('*');
+ 
+   if (orgId) {
+     query = query.eq('org_id', orgId);
+@@ -108,7 +126,7 @@ export async function saveCandidate(candidateData) {
+   };
+ 
+   const { data, error } = await supabase
+-    .from('candidate_profiles')
++    .from('org_candidates')
+     .upsert(payload)
+     .select()
+     .single();
+diff --git a/src/modules/auth/authService.js b/src/modules/auth/authService.js
+index f55db87..16accef 100644
+--- a/src/modules/auth/authService.js
++++ b/src/modules/auth/authService.js
+@@ -11,20 +11,52 @@ export async function login(email, password) {
+ }
+ 
+ /**
+- * Inicia sesión / registro con Google OAuth.
++ * Inicia sesión / registro con Google OAuth. Pide también permiso de Drive
++ * (solo archivos que la propia app crea, no todo el Drive) con acceso offline,
++ * porque sin access_type=offline + prompt=consent Google nunca entrega un
++ * refresh_token y no podríamos volver a subir archivos pasada una hora.
+  */
+ export async function signInWithGoogle() {
+   if (!supabase) throw new Error('Supabase no está configurado');
+   const { data, error } = await supabase.auth.signInWithOAuth({
+     provider: 'google',
+     options: {
+-      redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined
+-    }
++      redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined,
++      scopes: 'https://www.googleapis.com/auth/drive.file',
++      queryParams: {
++        access_type: 'offline',
++        prompt: 'consent',
++      },
++    },
+   });
+   if (error) throw error;
+   return data;
+ }
+ 
++/**
++ * Se llama después del redirect de login. Google solo manda provider_refresh_token
++ * la primera vez que el usuario da consentimiento — si ya está conectado, esto
++ * no hace nada (evita pisar un token válido con "nada" en logins posteriores).
++ */
++export async function capturarConexionDriveSiCorresponde(session) {
++  if (!session?.provider_refresh_token) return false;
++
++  try {
++    await fetch('/api/drive/connect', {
++      method: 'POST',
++      headers: {
++        'Content-Type': 'application/json',
++        Authorization: `Bearer ${session.access_token}`,
++      },
++      body: JSON.stringify({ refreshToken: session.provider_refresh_token }),
++    });
++    return true;
++  } catch (err) {
++    console.warn('No se pudo guardar la conexión con Drive:', err);
++    return false;
++  }
++}
++
+ export async function logout() {
+   if (supabase) {
+     try {
+diff --git a/src/shared/core/storage/backupProvider.js b/src/shared/core/storage/backupProvider.js
+index 66c0df1..41d1d43 100644
+--- a/src/shared/core/storage/backupProvider.js
++++ b/src/shared/core/storage/backupProvider.js
+@@ -3,11 +3,13 @@ import { uploadToLEECVCloud } from './leecvCloudBackend';
+ 
+ /**
+  * Proveedor unificado de almacenamiento de respaldos y anexos.
+- * Alterna dinámicamente entre Google Drive (Pro) y LEECV Cloud (Enterprise).
++ * Enterprise (y SOLO Enterprise) usa los 50GB propios de LEECV Cloud.
++ * Todo el resto de los planes pagos guarda en el Google Drive del propio
++ * usuario — no ocupa espacio nuestro.
+  */
+-export async function uploadBackupAttachment(fileBlob, fileName, userPlan = 'pro') {
+-  if (userPlan === 'enterprise') {
+-    return await uploadToLEECVCloud(fileBlob, fileName);
++export async function uploadBackupAttachment(fileBlob, fileName, { userPlan = 'pro', orgId } = {}) {
++  if (userPlan === 'enterprise' && orgId) {
++    return await uploadToLEECVCloud(fileBlob, `${orgId}/${fileName}`);
+   }
+   return await uploadToGoogleDrive(fileBlob, fileName);
+ }
+diff --git a/src/shared/core/storage/googleDriveBackend.js b/src/shared/core/storage/googleDriveBackend.js
+index a7ea8f6..c7f8606 100644
+--- a/src/shared/core/storage/googleDriveBackend.js
++++ b/src/shared/core/storage/googleDriveBackend.js
+@@ -1,16 +1,109 @@
++import { supabase } from '../lib/supabaseClient';
++
+ /**
+- * Backend de almacenamiento en Google Drive del Usuario (Nivel 2 - Pro)
++ * Backend real de almacenamiento en Google Drive del usuario (Nivel 1/2, Pro).
++ * Enterprise NO pasa por acá — usa leecvCloudBackend.js con sus 50GB propios.
+  */
+-export async function uploadToGoogleDrive(fileData, fileName) {
++
++async function pedirAccessTokenFresco() {
++  if (!supabase) throw new Error('Supabase no inicializado');
++  const { data: { session } } = await supabase.auth.getSession();
++  if (!session) throw new Error('No hay sesión activa');
++
++  const res = await fetch('/api/drive/get-access-token', {
++    method: 'POST',
++    headers: {
++      'Content-Type': 'application/json',
++      Authorization: `Bearer ${session.access_token}`,
++    },
++  });
++  const data = await res.json();
++  if (!res.ok) throw new Error(data.message || data.error || 'No se pudo obtener acceso a Drive');
++  return data.accessToken;
++}
++
++let carpetaLeecvIdCache = null;
++
++/** Busca (o crea la primera vez) la carpeta "LEECV" dentro del Drive del usuario */
++async function obtenerCarpetaLeecv(accessToken) {
++  if (carpetaLeecvIdCache) return carpetaLeecvIdCache;
++
++  const query = encodeURIComponent("name = 'LEECV' and mimeType = 'application/vnd.google-apps.folder' and trashed = false");
++  const buscar = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)`, {
++    headers: { Authorization: `Bearer ${accessToken}` },
++  });
++  const encontrados = await buscar.json();
++
++  if (encontrados.files?.length) {
++    carpetaLeecvIdCache = encontrados.files[0].id;
++    return carpetaLeecvIdCache;
++  }
++
++  const crear = await fetch('https://www.googleapis.com/drive/v3/files', {
++    method: 'POST',
++    headers: {
++      Authorization: `Bearer ${accessToken}`,
++      'Content-Type': 'application/json',
++    },
++    body: JSON.stringify({ name: 'LEECV', mimeType: 'application/vnd.google-apps.folder' }),
++  });
++  const carpeta = await crear.json();
++  carpetaLeecvIdCache = carpeta.id;
++  return carpetaLeecvIdCache;
++}
++
++/** Sube un archivo real al Drive del usuario, dentro de la carpeta LEECV */
++export async function uploadToGoogleDrive(fileBlob, fileName) {
+   try {
+-    console.log(`[GoogleDriveBackend] Simulando subida de "${fileName}" a Google Drive del usuario...`);
+-    return { success: true, provider: 'google_drive', path: `LEECV_Drive/${fileName}` };
++    const accessToken = await pedirAccessTokenFresco();
++    const folderId = await obtenerCarpetaLeecv(accessToken);
++
++    const metadata = { name: fileName, parents: [folderId] };
++    const form = new FormData();
++    form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
++    form.append('file', fileBlob);
++
++    const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink', {
++      method: 'POST',
++      headers: { Authorization: `Bearer ${accessToken}` },
++      body: form,
++    });
++    const data = await res.json();
++    if (!res.ok) throw new Error(data.error?.message || 'Error subiendo a Drive');
++
++    return { success: true, provider: 'google_drive', fileId: data.id, webViewLink: data.webViewLink };
+   } catch (err) {
+     console.error('Error subiendo a Google Drive:', err);
+-    return { success: false, error: err };
++    return { success: false, error: err.message || String(err) };
+   }
+ }
+ 
++/** Consulta la cuota real de Drive del usuario y actualiza profiles para que el admin la vea */
+ export async function getGoogleDriveQuota() {
+-  return { usedBytes: 0, totalBytes: 15 * 1024 * 1024 * 1024, percentUsed: 0 };
++  try {
++    const accessToken = await pedirAccessTokenFresco();
++    const res = await fetch('https://www.googleapis.com/drive/v3/about?fields=storageQuota', {
++      headers: { Authorization: `Bearer ${accessToken}` },
++    });
++    const data = await res.json();
++    const quota = data.storageQuota || {};
++    const limit = Number(quota.limit || 16106127360);
++    const usage = Number(quota.usage || 0);
++    const percentUsed = limit > 0 ? Math.round((usage / limit) * 100) : 0;
++
++    if (supabase) {
++      const { data: { session } } = await supabase.auth.getSession();
++      if (session?.user?.id) {
++        await supabase.from('profiles').update({
++          drive_quota_percent: percentUsed,
++          drive_last_checked_at: new Date().toISOString(),
++        }).eq('id', session.user.id);
++      }
++    }
++
++    return { usedBytes: usage, totalBytes: limit, percentUsed };
++  } catch (err) {
++    console.warn('No se pudo consultar la cuota de Drive:', err);
++    return { usedBytes: 0, totalBytes: 0, percentUsed: 0, error: err.message };
++  }
+ }
+diff --git a/src/shared/core/storage/leecvCloudBackend.js b/src/shared/core/storage/leecvCloudBackend.js
+index 4745baa..f333e0b 100644
+--- a/src/shared/core/storage/leecvCloudBackend.js
++++ b/src/shared/core/storage/leecvCloudBackend.js
+@@ -21,6 +21,26 @@ export async function uploadToLEECVCloud(fileBlob, filePath) {
+   }
+ }
+ 
+-export async function getLEECVCloudUsage() {
+-  return { usedGB: 0.5, totalGB: 50, percentUsed: 1 };
++/** Suma el tamaño real de los archivos que la organización tiene en el bucket */
++export async function getLEECVCloudUsage(orgId) {
++  if (!supabase || !orgId) {
++    return { usedGB: 0, totalGB: 50, percentUsed: 0 };
++  }
++
++  try {
++    const { data: files, error } = await supabase.storage
++      .from('certificates')
++      .list(orgId, { limit: 1000 });
++    if (error) throw error;
++
++    const totalBytes = (files || []).reduce((sum, f) => sum + (f.metadata?.size || 0), 0);
++    const usedGB = totalBytes / (1024 ** 3);
++    const totalGB = 50; // cupo fijo del plan Enterprise
++    const percentUsed = Math.round((usedGB / totalGB) * 100);
++
++    return { usedGB: Number(usedGB.toFixed(2)), totalGB, percentUsed };
++  } catch (err) {
++    console.warn('No se pudo calcular el uso de LEECV Cloud:', err);
++    return { usedGB: 0, totalGB: 50, percentUsed: 0, error: err.message };
++  }
+ }
+diff --git a/supabase/migrations/20260824_enterprise_organizations.sql b/supabase/migrations/20260824_enterprise_organizations.sql
+index ec5bfb4..be5726d 100644
+--- a/supabase/migrations/20260824_enterprise_organizations.sql
++++ b/supabase/migrations/20260824_enterprise_organizations.sql
+@@ -2,18 +2,39 @@
+ -- LEECV — Multi-User Enterprise Organizations & Shared Candidates
+ -- ============================================================
+ 
+--- 1. Organizations table
++-- 1. Organizations table (solo plan Enterprise: 25 usuarios incluidos por defecto)
+ create table if not exists public.organizations (
+   id uuid primary key default gen_random_uuid(),
+   name text not null,
+   owner_id uuid not null references auth.users(id) on delete cascade,
+-  max_members integer not null default 10,
+-  storage_limit_mb integer not null default 50000,
++  max_members integer not null default 25,
++  storage_limit_mb integer not null default 51200, -- 50 GB, exclusivo de Enterprise
+   created_at timestamptz not null default now()
+ );
+ 
+ alter table public.organizations enable row level security;
+ 
++-- Defensa en profundidad: multi-usuario es SOLO para Enterprise. Pro y Free
++-- no pueden crear una organización aunque alguien llame a createOrganization()
++-- directo desde el cliente saltándose la UI.
++create or replace function public.enforce_organization_plan()
++returns trigger as $$
++declare
++  owner_plan text;
++begin
++  select plan into owner_plan from public.profiles where id = new.owner_id;
++  if owner_plan is distinct from 'enterprise' then
++    raise exception 'Las organizaciones multi-usuario requieren plan Enterprise';
++  end if;
++  return new;
++end;
++$$ language plpgsql security definer;
++
++drop trigger if exists trg_enforce_organization_plan on public.organizations;
++create trigger trg_enforce_organization_plan
++  before insert on public.organizations
++  for each row execute procedure public.enforce_organization_plan();
++
+ drop policy if exists "dueño y miembros ven organizacion" on public.organizations;
+ create policy "dueño y miembros ven organizacion"
+   on public.organizations for select
+@@ -82,8 +103,14 @@ create policy "dueño administra miembros"
+     )
+   );
+ 
+--- 3. Candidate Profiles (linked to owner_id or org_id)
+-create table if not exists public.candidate_profiles (
++-- 3. Org Candidates (candidatos propios de una organización Enterprise —
++--    NO confundir con `candidate_profiles`, que ya existe desde migration.sql
++--    con otro esquema (cv_id como PK) para el caso de uso de Nivel 2/Agencia Pro.
++--    Usar el mismo nombre para ambos generaba un choque de esquemas: la segunda
++--    creación quedaba como no-op por el `if not exists` y organizationService.js
++--    fallaba en producción al pedir columnas (org_id, full_name, cv_data) que
++--    nunca se llegaban a crear.
++create table if not exists public.org_candidates (
+   id uuid primary key default gen_random_uuid(),
+   owner_id uuid not null references auth.users(id) on delete cascade,
+   org_id uuid references public.organizations(id) on delete cascade,
+@@ -96,39 +123,39 @@ create table if not exists public.candidate_profiles (
+   updated_at timestamptz not null default now()
+ );
+ 
+-alter table public.candidate_profiles enable row level security;
++alter table public.org_candidates enable row level security;
+ 
+-drop policy if exists "usuario u organizacion ve sus candidatos" on public.candidate_profiles;
++drop policy if exists "usuario u organizacion ve sus candidatos" on public.org_candidates;
+ create policy "usuario u organizacion ve sus candidatos"
+-  on public.candidate_profiles for select
++  on public.org_candidates for select
+   using (
+     auth.uid() = owner_id
+     or public.is_admin(auth.uid())
+     or (
+       org_id is not null and exists (
+         select 1 from public.org_members
+-        where org_id = public.candidate_profiles.org_id
++        where org_id = public.org_candidates.org_id
+           and user_id = auth.uid()
+           and status = 'active'
+       )
+     )
+   );
+ 
+-drop policy if exists "usuario u organizacion crea candidatos" on public.candidate_profiles;
++drop policy if exists "usuario u organizacion crea candidatos" on public.org_candidates;
+ create policy "usuario u organizacion crea candidatos"
+-  on public.candidate_profiles for insert
++  on public.org_candidates for insert
+   with check (auth.uid() = owner_id);
+ 
+-drop policy if exists "usuario u organizacion actualiza candidatos" on public.candidate_profiles;
++drop policy if exists "usuario u organizacion actualiza candidatos" on public.org_candidates;
+ create policy "usuario u organizacion actualiza candidatos"
+-  on public.candidate_profiles for update
++  on public.org_candidates for update
+   using (
+     auth.uid() = owner_id
+     or public.is_admin(auth.uid())
+     or (
+       org_id is not null and exists (
+         select 1 from public.org_members
+-        where org_id = public.candidate_profiles.org_id
++        where org_id = public.org_candidates.org_id
+           and user_id = auth.uid()
+           and status = 'active'
+       )
+diff --git a/supabase/migrations/20260825_google_drive_connection.sql b/supabase/migrations/20260825_google_drive_connection.sql
+new file mode 100644
+index 0000000..a155294
+--- /dev/null
++++ b/supabase/migrations/20260825_google_drive_connection.sql
+@@ -0,0 +1,32 @@
++-- ============================================================
++-- LEECV — Conexión real a Google Drive del usuario (Nivel 1/2, Pro)
++-- Enterprise NO usa esto: tiene sus 50GB propios en LEECV Cloud.
++-- ============================================================
++
++-- 1. Refresh token de Drive — candado: solo el service role lo toca.
++--    No lleva policies a propósito: con RLS activado y cero policies,
++--    ni siquiera el dueño de la fila puede leerlo desde el cliente.
++create table if not exists public.google_drive_tokens (
++  user_id uuid primary key references auth.users(id) on delete cascade,
++  refresh_token text not null,
++  scope text not null default 'https://www.googleapis.com/auth/drive.file',
++  created_at timestamptz not null default now(),
++  updated_at timestamptz not null default now()
++);
++
++alter table public.google_drive_tokens enable row level security;
++
++-- 2. Estado visible (sin el token) — esto sí lo puede leer el dueño y el admin,
++--    y es lo que alimenta tanto el aviso de cuota del usuario como el panel admin.
++alter table public.profiles
++  add column if not exists drive_connected boolean not null default false;
++
++alter table public.profiles
++  add column if not exists drive_quota_percent integer;
++
++alter table public.profiles
++  add column if not exists drive_last_checked_at timestamptz;
++
++-- Nota: estas 3 columnas quedan fuera de protect_privileged_columns a propósito
++-- (no son de rol/plan/pago) — el propio usuario las puede actualizar al chequear
++-- su cuota, sin pasar por un endpoint de servidor para eso.

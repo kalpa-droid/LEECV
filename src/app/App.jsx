@@ -35,6 +35,12 @@ function AppContent() {
 
   useEffect(() => {
     getCurrentProfile().then(p => setCurrentProfile(p)).catch(() => {});
+
+    if (supabase) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        capturarConexionDriveSiCorresponde(session);
+      });
+    }
   }, []);
 
   const [activeTab, setActiveTab] = useState('personales');

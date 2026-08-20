@@ -158,3 +158,44 @@ export async function sendRetentionOffer(userId, { discountPercent = 50, validDa
     user_id: userId,
   });
 }
+
+/**
+ * Panel admin — estado de almacenamiento:
+ * - Drive: quién conectó su cuenta y a qué % de cuota está (Pro y Free).
+ * - LEECV Cloud: cuánto ocupa cada organización de sus 50GB (Enterprise).
+ */
+export async function listDriveConnections() {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, email, plan, drive_connected, drive_quota_percent, drive_last_checked_at')
+    .eq('drive_connected', true)
+    .order('drive_quota_percent', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+/** Fuerza la desconexión de Drive de un usuario */
+export async function disconnectUserDrive(userId) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const res = await fetch('/api/drive/disconnect', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session?.access_token}`,
+    },
+    body: JSON.stringify({ targetUserId: userId }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'No se pudo desconectar Drive');
+  await logAdminAction('disconnect_user_drive', userId);
+  return data;
+}
+
+export async function listOrganizationsStorage() {
+  const { data, error } = await supabase
+    .from('organizations')
+    .select('id, name, owner_id, max_members, storage_limit_mb, created_at')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
