@@ -31,41 +31,41 @@ export function calculateItemsPerPage(paperSizeId: string = 'a4', itemHeightMm: 
 }
 
 /**
- * Calculates estimated height in mm for an item based on real CSS card metrics (padding, gap, line-height).
+ * Calculates estimated height in mm for an item based on real CSS card metrics and text wrapping.
  */
 export function getItemHeightMm(item: any, itemType: 'exp' | 'prof' | 'course' = 'exp'): number {
-  if (!item) return 16;
+  if (!item) return 20;
 
   const detailsLength = (item.details || item.description || '').length;
   const titleLength = (item.role || item.degree || item.title || item.name || item.course || '').length;
   const instLength = (item.institution || item.company || '').length;
 
   if (itemType === 'course') {
-    let courseMm = 10;
-    if (titleLength > 50) courseMm += 3;
-    if (instLength > 50) courseMm += 3;
+    let courseMm = 12;
+    if (titleLength > 45) courseMm += 5;
+    if (instLength > 45) courseMm += 5;
     return courseMm;
   }
 
   if (itemType === 'prof') {
-    let profMm = 16;
+    let profMm = 22;
     if (detailsLength > 0) {
-      const lines = Math.ceil(detailsLength / 75);
-      profMm += lines * 4 + 2;
+      const lines = Math.ceil(detailsLength / 65);
+      profMm += lines * 4.5 + 4;
     }
-    if (titleLength > 50) profMm += 4;
-    if (instLength > 50) profMm += 4;
+    if (titleLength > 40) profMm += 6;
+    if (instLength > 40) profMm += 6;
     return profMm;
   }
 
   // Default 'exp' item
-  let expMm = 18;
+  let expMm = 24;
   if (detailsLength > 0) {
-    const lines = Math.ceil(detailsLength / 75);
-    expMm += lines * 4 + 2;
+    const lines = Math.ceil(detailsLength / 65);
+    expMm += lines * 4.5 + 4;
   }
-  if (titleLength > 50) expMm += 4;
-  if (instLength > 50) expMm += 4;
+  if (titleLength > 40) expMm += 6;
+  if (instLength > 40) expMm += 6;
   return expMm;
 }
 
