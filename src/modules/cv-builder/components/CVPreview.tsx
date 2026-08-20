@@ -326,13 +326,13 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
 
       case 'cursos':
         {
-          const listCourses = sortedCourses && sortedCourses.length > 0 ? sortedCourses : (coursesAndCertificates || []);
+          const listCourses = courseChunks[0] || [];
           if (!listCourses || listCourses.length === 0) return null;
           return (
             <div key={`sec-${location}-cursos`} id="cv-section-cursos" className={`section-box-print ${variant.containerClass} mb-3`}>
               {renderSectionHeader(<BookOpen className="w-4 h-4" />, "CURSOS & CAPACITACIONES")}
               <div className={variant.gridClass}>
-                {listCourses.map((item, i) => (
+                {listCourses.map((item: any, i: number) => (
                   <div key={i} className="p-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
                     <div>
                       <p className="font-bold text-slate-900">{item.title || item.name || item.course}</p>
@@ -358,7 +358,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
               <Laptop className="w-3.5 h-3.5" style={{ color: theme.accentColor }} /> INFORMÁTICA & TICs
             </h3>
             <div className={variant.gridClass}>
-              {informatics.map((item, i) => (
+              {informatics.map((item: any, i: number) => (
                 <div key={i} className="border-l-2 border-current pl-2">
                   <p className="font-bold">{item.institution}</p>
                   <p className="font-semibold" style={{ color: theme.accentColor }}>{item.course}</p>
@@ -370,13 +370,13 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
 
       case 'experiencia':
         {
-          const listExp = sortedExperience || [];
+          const listExp = expChunks[0] || [];
           if (!listExp || listExp.length === 0) return null;
           return (
             <div key={`sec-${location}-experiencia`} id="cv-section-experiencia" className={`section-box-print ${variant.containerClass} mb-3`}>
               {renderSectionHeader(<Briefcase className="w-4 h-4" />, "EXPERIENCIA LABORAL")}
               <div className={variant.gridClass}>
-                {listExp.map((exp, i) => (
+                {listExp.map((exp: any, i: number) => (
                   <div key={i} className={`${variant.itemPaddingClass} border-l-4`} style={{ borderLeftColor: theme.primaryColor }}>
                     <div className="flex items-center justify-between">
                       <h4 className="text-xs font-black text-slate-900">{exp.role}</h4>
@@ -761,7 +761,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
       {/* ========================================================================= */}
       {/* PAGES TO N: EXPERIENCIA LABORAL DOCENTE (REBALANCEO DINÁMICO A4) */}
       {/* ========================================================================= */}
-      {expChunks.map((expGroup, expPageIdx) => {
+      {expChunks.slice(1).map((expGroup, expPageIdx) => {
         const pageNum = startBodyPageNum + 1 + totalExtraProfPages + expPageIdx;
 
         return (
@@ -896,7 +896,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
       {/* ========================================================================= */}
       {/* PAGES TO N: CURSOS Y CAPACITACIONES DOCENTES (REBALANCEO DINÁMICO A4) */}
       {/* ========================================================================= */}
-      {courseChunks.map((pageCoursesGroup, pageIdx) => {
+      {courseChunks.slice(1).map((pageCoursesGroup, pageIdx) => {
         const pageNum = startBodyPageNum + 1 + totalExtraProfPages + totalExpPages + pageIdx;
         const isLastPage = pageIdx === totalCoursePages - 1;
 
