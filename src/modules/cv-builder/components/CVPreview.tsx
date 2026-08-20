@@ -23,6 +23,9 @@ import { getSidebarPageChunks } from '../../../shared/core/pdf-engine/sidebarPag
 import { CoverPageSection } from './preview/CoverPageSection';
 import { ExtraPage } from './preview/ExtraPage';
 import { ScannedCertificatesPages } from './preview/ScannedCertificatesPages';
+import { PDFViewer } from '@react-pdf/renderer';
+import { CvPdfDocument } from './pdf/CvPdfDocument';
+import { Sparkles, Eye, FileCheck } from 'lucide-react';
 
 export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.85 }: { cvData?: any; setCvData?: any; activeTab?: string; zoomLevel?: number }) {
   const { 
@@ -622,14 +625,50 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
   const totalPagesCalculated = (showCover ? 1 : 0) + packedPages.length + (extraSidebarChunks?.length || 0) + certPages.length;
   const totalHojasLabel = totalPagesCalculated === 1 ? '1 HOJA' : `${totalPagesCalculated} HOJAS`;
 
+  const [previewMode, setPreviewMode] = useState<'vector' | 'html'>('vector');
+
   return (
     <div 
       className="w-full min-h-full flex flex-col items-center print-wrapper relative"
       style={dynamicThemeStyle}
     >
-      {/* Pages Container with Responsive Scaling */}
+      {/* Mode Selector Header Bar */}
+      <div className="w-full max-w-4xl flex items-center justify-between bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl border border-slate-800 my-4 no-print">
+        <div className="flex items-center gap-2.5">
+          <Sparkles className="w-5 h-5 text-emerald-400 animate-pulse" />
+          <div>
+            <span className="text-xs font-black uppercase tracking-wider block text-emerald-400">Motor Vectorial Nativo (@react-pdf/renderer)</span>
+            <span className="text-[10px] text-slate-400 font-medium">Maquetación C++ Yoga Flexbox con corte de página 100% perfecto</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 bg-slate-950 p-1 rounded-xl border border-slate-800">
+          <button
+            onClick={() => setPreviewMode('vector')}
+            className={`px-3 py-1.5 text-xs font-black rounded-lg transition-all flex items-center gap-1.5 ${previewMode === 'vector' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+          >
+            <FileCheck className="w-3.5 h-3.5" /> PDF Vectorial
+          </button>
+          <button
+            onClick={() => setPreviewMode('html')}
+            className={`px-3 py-1.5 text-xs font-black rounded-lg transition-all flex items-center gap-1.5 ${previewMode === 'html' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+          >
+            <Eye className="w-3.5 h-3.5" /> Vista HTML Web
+          </button>
+        </div>
+      </div>
+
+      {previewMode === 'vector' ? (
+        <div className="w-full max-w-5xl h-[1200px] bg-slate-900 p-2.5 rounded-3xl shadow-2xl border border-slate-800 my-2 no-print">
+          <PDFViewer style={{ width: '100%', height: '100%', borderRadius: '18px', border: 'none' }}>
+            <CvPdfDocument cvData={cvData} />
+          </PDFViewer>
+        </div>
+      ) : null}
+
+      {/* Pages Container with Responsive Scaling (HTML Fallback View) */}
       <div 
-        className="w-full flex flex-col items-center gap-6 transition-transform duration-300 origin-top"
+        className={`w-full flex flex-col items-center gap-6 transition-transform duration-300 origin-top ${previewMode === 'vector' ? 'hidden' : ''}`}
         style={{ 
           transform: `scale(${zoomLevel})`,
           marginBottom: zoomLevel < 1 ? `-${(1 - zoomLevel) * 65}%` : '0'
