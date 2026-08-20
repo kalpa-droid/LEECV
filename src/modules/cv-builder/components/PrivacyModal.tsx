@@ -1,14 +1,19 @@
 import React, { useState } from 'react';
-import { Shield, FileText, Lock, X, Check, Eye, Database, Server } from 'lucide-react';
+import { Shield, FileText, Lock, X, Database, Server } from 'lucide-react';
 
-export default function PrivacyModal({ isOpen, onClose }) {
-  const [activeTab, setActiveTab] = useState('privacy'); // 'privacy' | 'terms'
+interface PrivacyModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
+  const [activeTab, setActiveTab] = useState<'privacy' | 'terms'>('privacy');
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-[#2B1B2E] border border-purple-500/30 text-white rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden font-sans">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn font-sans">
+      <div className="bg-[#2B1B2E] border border-purple-500/30 text-white rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
         
         {/* Header */}
         <div className="px-6 py-4 border-b border-purple-500/20 flex items-center justify-between bg-slate-900/60">

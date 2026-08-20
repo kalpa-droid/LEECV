@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Building, Users, UserPlus, Trash2, Mail, Shield, Check, X, HardDrive, Key, RefreshCw, AlertCircle } from 'lucide-react';
+import React, { useEffect, useState, FormEvent } from 'react';
+import { Building, Users, UserPlus, Trash2, Mail, Check, X, HardDrive, Key, AlertCircle } from 'lucide-react';
 import { 
   getOrganization, 
   listOrgMembers, 
@@ -9,20 +9,24 @@ import {
 } from '../services/organizationService';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
+import { Organization, OrgMember, OrgRole } from '../../../types/organization';
 
-export default function EnterpriseOrgModal({ isOpen, onClose, userProfile }) {
+interface EnterpriseOrgModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgModalProps) {
   const { showSuccess, showError } = useToast();
   const { confirm } = useConfirm();
-  const [org, setOrg] = useState(null);
-  const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [org, setOrg] = useState<Organization | null>(null);
+  const [members, setMembers] = useState<OrgMember[]>([]);
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState('editor');
+  const [inviteRole, setInviteRole] = useState<OrgRole>('editor');
   const [invitationTokenInput, setInvitationTokenInput] = useState('');
-  const [activeTab, setActiveTab] = useState('team'); // 'team' | 'invite' | 'accept'
+  const [activeTab, setActiveTab] = useState<'team' | 'invite' | 'accept'>('team');
 
   async function loadOrgData() {
-    setLoading(true);
     try {
       const o = await getOrganization();
       setOrg(o);
@@ -30,10 +34,8 @@ export default function EnterpriseOrgModal({ isOpen, onClose, userProfile }) {
         const m = await listOrgMembers(o.id);
         setMembers(m);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -43,7 +45,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose, userProfile }) {
 
   if (!isOpen) return null;
 
-  async function handleSendInvite(e) {
+  async function handleSendInvite(e: FormEvent) {
     e.preventDefault();
     if (!inviteEmail || !org?.id) return;
 
@@ -52,12 +54,12 @@ export default function EnterpriseOrgModal({ isOpen, onClose, userProfile }) {
       showSuccess(`✅ Invitación enviada a ${inviteEmail}`);
       setInviteEmail('');
       loadOrgData();
-    } catch (err) {
+    } catch (err: any) {
       showError(err.message || 'Error al enviar invitación');
     }
   }
 
-  async function handleRemoveMember(member) {
+  async function handleRemoveMember(member: OrgMember) {
     confirm({
       title: `¿Remover a ${member.invited_email}?`,
       message: 'Esta persona perderá el acceso a la organización y los candidatos compartidos.',
@@ -68,14 +70,14 @@ export default function EnterpriseOrgModal({ isOpen, onClose, userProfile }) {
           await removeMember(member.id);
           showSuccess(`Integrante desvinculado.`);
           loadOrgData();
-        } catch (err) {
+        } catch (err: any) {
           showError(err.message || 'Error desvinculando integrante');
         }
       }
     });
   }
 
-  async function handleAcceptToken(e) {
+  async function handleAcceptToken(e: FormEvent) {
     e.preventDefault();
     if (!invitationTokenInput) return;
 
@@ -84,7 +86,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose, userProfile }) {
       showSuccess('🎉 ¡Te has unido a la organización con éxito!');
       setInvitationTokenInput('');
       loadOrgData();
-    } catch (err) {
+    } catch (err: any) {
       showError(err.message || 'Token de invitación no válido');
     }
   }
@@ -254,7 +256,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose, userProfile }) {
                 <label className="text-xs font-bold text-slate-300">Rol en el Equipo</label>
                 <select
                   value={inviteRole}
-                  onChange={(e) => setInviteRole(e.target.value)}
+                  onChange={(e) => setInviteRole(e.target.value as OrgRole)}
                   className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-purple-500 transition cursor-pointer"
                 >
                   <option value="editor">Editor (Puede crear y editar candidatos)</option>

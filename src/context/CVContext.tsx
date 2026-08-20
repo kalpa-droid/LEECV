@@ -1,12 +1,30 @@
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
 import { standardExampleCVData, blankCVTemplate } from '../data/initialCVData';
 import { saveCV as saveCVStorage } from '../modules/cv-builder/services/cvStorageService';
 import { sanitizeCvData } from '../shared/core/utils/cvDataSchema';
+import { CVData } from '../types/cv';
 
-const CVContext = createContext(null);
+interface CVContextType {
+  cvData: CVData;
+  setCvData: (action: CVData | ((prev: CVData) => CVData)) => void;
+  updatePersonalInfo: (field: string, value: any) => void;
+  updateTheme: (field: string, value: any) => void;
+  applyThemePreset: (preset: any) => void;
+  toggleSectionVisibility: (sectionKey: string) => void;
+  resetToBlankCV: () => void;
+  loadCVData: (newCVData: CVData) => void;
+  saveCV: () => Promise<any>;
+  isSaving: boolean;
+  undo: () => void;
+  redo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+}
 
-export function CVProvider({ children }) {
-  const [cvData, setCvDataState] = useState(() => {
+const CVContext = createContext<CVContextType | null>(null);
+
+export function CVProvider({ children }: { children: ReactNode }) {
+  const [cvData, setCvDataState] = useState<CVData>(() => {
     if (typeof window !== 'undefined' && window.location.search.includes('clear')) {
       try { localStorage.clear(); } catch {}
     }
@@ -30,11 +48,11 @@ export function CVProvider({ children }) {
   const [isSaving, setIsSaving] = useState(false);
 
   // Undo / Redo History Stack (up to 30 snapshots)
-  const historyRef = useRef([cvData]);
+  const historyRef = useRef<CVData[]>([cvData]);
   const historyIndexRef = useRef(0);
   const [, setHistoryState] = useState(0); // Trigger re-render for UI buttons
 
-  const setCvData = useCallback((action) => {
+  const setCvData = useCallback((action: CVData | ((prev: CVData) => CVData)) => {
     setCvDataState((prev) => {
       const nextData = typeof action === 'function' ? action(prev) : action;
       if (!nextData) return prev;
@@ -53,11 +71,25 @@ export function CVProvider({ children }) {
     });
   }, []);
 
+  // Save to localStorage automatically on every change (Debounced 500ms)
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (typeof window !== 'undefined' && cvData) {
+        try {
+          localStorage.setItem('cv_premium_data', JSON.stringify(cvData));
+        } catch (e) {
+          console.warn('Error guardando respaldo local:', e);
+        }
+      }
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [cvData]);
+
   const undo = useCallback(() => {
     if (historyIndexRef.current > 0) {
       historyIndexRef.current -= 1;
-      const targetState = historyRef.current[historyIndexRef.current];
-      setCvDataState(targetState);
+      const prev = historyRef.current[historyIndexRef.current];
+      setCvDataState(prev);
       setHistoryState(n => n + 1);
     }
   }, []);
@@ -65,8 +97,8 @@ export function CVProvider({ children }) {
   const redo = useCallback(() => {
     if (historyIndexRef.current < historyRef.current.length - 1) {
       historyIndexRef.current += 1;
-      const targetState = historyRef.current[historyIndexRef.current];
-      setCvDataState(targetState);
+      const next = historyRef.current[historyIndexRef.current];
+      setCvDataState(next);
       setHistoryState(n => n + 1);
     }
   }, []);
@@ -74,33 +106,8 @@ export function CVProvider({ children }) {
   const canUndo = historyIndexRef.current > 0;
   const canRedo = historyIndexRef.current < historyRef.current.length - 1;
 
-  // Keyboard shortcuts (Ctrl+Z for undo, Ctrl+Y or Ctrl+Shift+Z for redo)
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-      const modifier = isMac ? e.metaKey : e.ctrlKey;
-
-      if (modifier && e.key.toLowerCase() === 'z') {
-        if (e.shiftKey) {
-          e.preventDefault();
-          redo();
-        } else {
-          e.preventDefault();
-          undo();
-        }
-      } else if (modifier && e.key.toLowerCase() === 'y') {
-        e.preventDefault();
-        redo();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [undo, redo]);
-
-  // Pure Action Dispatchers
-  const updatePersonalInfo = (field, value) => {
-    setCvData(prev => ({
+  const updatePersonalInfo = (field: string, value: any) => {
+    setCvData((prev) => ({
       ...prev,
       personalInfo: {
         ...prev.personalInfo,
@@ -109,50 +116,53 @@ export function CVProvider({ children }) {
     }));
   };
 
-  const updateTheme = (field, value) => {
-    setCvData(prev => ({
+  const updateTheme = (field: string, value: any) => {
+    setCvData((prev) => ({
       ...prev,
-      theme: {
-        ...prev.theme,
+      layout: {
+        ...prev.layout,
         [field]: value
       }
     }));
   };
 
-  const applyThemePreset = (preset) => {
-    setCvData(prev => ({
+  const applyThemePreset = (preset: any) => {
+    setCvData((prev) => ({
       ...prev,
-      theme: {
-        ...prev.theme,
-        presetId: preset.id,
-        primaryColor: preset.primaryColor,
-        secondaryColor: preset.secondaryColor,
-        accentColor: preset.accentColor,
-        textColor: preset.textColor,
-        bgCorridor: preset.bgCorridor,
-        fontFamily: preset.fontFamily
+      layout: {
+        ...prev.layout,
+        ...preset
       }
     }));
   };
 
-  const toggleSectionVisibility = (sectionKey) => {
-    setCvData(prev => {
-      const isVisible = prev.sectionVisibility?.[sectionKey] !== false;
+  const toggleSectionVisibility = (sectionKey: string) => {
+    setCvData((prev) => {
+      const order = prev?.layout?.sectionOrder || [];
+      const isCurrentlyVisible = order.includes(sectionKey);
+      
+      let nextOrder: string[];
+      if (isCurrentlyVisible) {
+        nextOrder = order.filter((k: string) => k !== sectionKey);
+      } else {
+        nextOrder = [...order, sectionKey];
+      }
+
       return {
         ...prev,
-        sectionVisibility: {
-          ...prev.sectionVisibility,
-          [sectionKey]: !isVisible
+        layout: {
+          ...prev.layout,
+          sectionOrder: nextOrder
         }
       };
     });
   };
 
   const resetToBlankCV = () => {
-    setCvData(blankCVTemplate);
+    setCvData(blankCVTemplate as CVData);
   };
 
-  const loadCVData = (newCVData) => {
+  const loadCVData = (newCVData: CVData) => {
     if (newCVData && typeof newCVData === 'object') {
       setCvData(newCVData);
     }

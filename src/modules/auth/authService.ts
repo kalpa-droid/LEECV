@@ -1,9 +1,11 @@
 import { supabase } from '../../shared/core/lib/supabaseClient';
+import { UserProfile } from '../../types/user';
+import { Session } from '@supabase/supabase-js';
 
 /**
  * Inicia sesión con email y contraseña.
  */
-export async function login(email, password) {
+export async function login(email: string, password: string) {
   if (!supabase) throw new Error('Supabase no está configurado (faltan VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY)');
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
@@ -12,9 +14,7 @@ export async function login(email, password) {
 
 /**
  * Inicia sesión / registro con Google OAuth. Pide también permiso de Drive
- * (solo archivos que la propia app crea, no todo el Drive) con acceso offline,
- * porque sin access_type=offline + prompt=consent Google nunca entrega un
- * refresh_token y no podríamos volver a subir archivos pasada una hora.
+ * (solo archivos que la propia app crea, no todo el Drive) con acceso offline.
  */
 export async function signInWithGoogle() {
   if (!supabase) throw new Error('Supabase no está configurado');
@@ -35,10 +35,9 @@ export async function signInWithGoogle() {
 
 /**
  * Se llama después del redirect de login. Google solo manda provider_refresh_token
- * la primera vez que el usuario da consentimiento — si ya está conectado, esto
- * no hace nada (evita pisar un token válido con "nada" en logins posteriores).
+ * la primera vez que el usuario da consentimiento.
  */
-export async function capturarConexionDriveSiCorresponde(session) {
+export async function capturarConexionDriveSiCorresponde(session: Session | null): Promise<boolean> {
   if (!session?.provider_refresh_token) return false;
 
   try {
@@ -57,7 +56,7 @@ export async function capturarConexionDriveSiCorresponde(session) {
   }
 }
 
-export async function logout() {
+export async function logout(): Promise<void> {
   if (supabase) {
     try {
       await supabase.auth.signOut();
@@ -78,8 +77,8 @@ export async function logout() {
   } catch {}
 }
 
-/** Devuelve el usuario logueado (o null) junto a su fila de la tabla profiles (rol, plan, etc). */
-export async function getCurrentProfile() {
+/** Devuelve el usuario logueado (o null) junto a su fila de la tabla profiles. */
+export async function getCurrentProfile(): Promise<UserProfile | null> {
   if (!supabase) return null;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
@@ -94,10 +93,10 @@ export async function getCurrentProfile() {
     console.error('Error leyendo perfil:', error);
     return null;
   }
-  return profile;
+  return profile as UserProfile;
 }
 
-export function onAuthStateChange(callback) {
+export function onAuthStateChange(callback: (user: any) => void) {
   if (!supabase) return { data: { subscription: { unsubscribe() {} } } };
   return supabase.auth.onAuthStateChange((_event, session) => callback(session?.user ?? null));
 }

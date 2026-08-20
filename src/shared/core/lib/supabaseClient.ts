@@ -1,7 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-let rawUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const rawKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+let rawUrl: string = import.meta.env.VITE_SUPABASE_URL || '';
+const rawKey: string = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 if (rawUrl && !rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')) {
   if (rawUrl.includes('.')) {
@@ -11,7 +11,7 @@ if (rawUrl && !rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')) {
   }
 }
 
-let client = null;
+let client: SupabaseClient | null = null;
 if (rawUrl && rawKey) {
   try {
     client = createClient(rawUrl, rawKey);
@@ -22,7 +22,12 @@ if (rawUrl && rawKey) {
 
 export const supabase = client;
 
-export const checkStorageStatus = () => {
+export interface StorageStatus {
+  isCloud: boolean;
+  label: string;
+}
+
+export const checkStorageStatus = (): StorageStatus => {
   if (supabase) {
     return { isCloud: true, label: 'Nube Supabase Conectada' };
   }
