@@ -528,9 +528,9 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
         }
 
         .a4-page-container {
-          width: 210mm;
-          min-height: 297mm;
-          height: 297mm;
+          width: ${currentPaper.widthMm}mm;
+          min-height: ${currentPaper.heightMm}mm;
+          height: ${currentPaper.heightMm}mm;
           background: white;
           position: relative;
           overflow: hidden;
@@ -552,7 +552,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
 
         @media print {
           @page {
-            size: A4 portrait;
+            size: ${currentPaper.widthMm}mm ${currentPaper.heightMm}mm;
             margin: 0 !important;
           }
 
@@ -574,8 +574,8 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
           .a4-page-container {
             box-shadow: none !important;
             margin: 0 !important;
-            width: 210mm !important;
-            height: 297mm !important;
+            width: ${currentPaper.widthMm}mm !important;
+            height: ${currentPaper.heightMm}mm !important;
             page-break-after: always !important;
             break-after: page !important;
             -webkit-print-color-adjust: exact !important;
