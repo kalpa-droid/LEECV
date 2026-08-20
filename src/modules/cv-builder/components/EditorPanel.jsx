@@ -32,14 +32,24 @@ import { getSavedCVsList, loadCVById, deleteCVById, saveCV } from '../services/c
 import CertCropperModal from './CertCropperModal';
 import PersonalInfoSection from './editor/PersonalInfoSection';
 
+import { useToast } from '../../../shared/core/ui/Toast';
+import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
+import { RepeatableSection } from '../../../shared/core/ui/RepeatableSection';
+import { Field } from '../../../shared/core/ui/Field';
+import { Button } from '../../../shared/core/ui/Button';
+
 export default function EditorPanel({ 
   cvData, 
   setCvData, 
   activeTab,
   setActiveTab,
   onOpenPhotoCropper, 
-  onOpenSignature 
+  onOpenSignature,
+  onOpenSavedCVs
 }) {
+  const { showSuccess, showError, showWarning } = useToast();
+  const { confirm } = useConfirm(); 
+
   // Local states for Certificate Tab inside EditorPanel
   const [certMode, setCertMode] = useState('upload'); // 'upload' | 'camera'
   const [selectedRegIdx, setSelectedRegIdx] = useState('');
@@ -72,25 +82,32 @@ export default function EditorPanel({
     const data = await loadCVById(id);
     if (data) {
       setCvData(data);
-      alert('CV cargado correctamente en el editor y vista previa.');
+      showSuccess('CV cargado correctamente en el editor y vista previa.');
     }
   };
 
   const handleDeleteSavedFromPanel = async (id, title) => {
-    if (window.confirm(`¿Eliminar "${title}" de tus currículums guardados?`)) {
-      await deleteCVById(id);
-      refreshSavedList();
-    }
+    confirm({
+      title: '¿Eliminar CV guardado?',
+      message: `¿Estás seguro de que deseas eliminar "${title}" de tus currículums guardados?`,
+      confirmText: 'Eliminar',
+      onConfirm: async () => {
+        await deleteCVById(id);
+        refreshSavedList();
+        showSuccess('CV eliminado correctamente.');
+      }
+    });
   };
 
   const handleSaveFromPanel = async () => {
     setIsSavingFromPanel(true);
     try {
       await saveCV(cvData);
-      alert(`CV de "${cvData?.personalInfo?.fullName || 'Postulante'}" guardado correctamente con compresión WebP.`);
+      showSuccess(`CV de "${cvData?.personalInfo?.fullName || 'Postulante'}" guardado correctamente.`);
       refreshSavedList();
     } catch (err) {
       console.error(err);
+      showError('Error al guardar el currículum.');
     } finally {
       setIsSavingFromPanel(false);
     }
@@ -143,7 +160,7 @@ export default function EditorPanel({
         videoRef.current.srcObject = stream;
       }
     } catch (err) {
-      alert('No se pudo acceder a la cámara. Por favor verifica los permisos o sube una imagen.');
+      showError('No se pudo acceder a la cámara. Por favor verifica los permisos o sube una imagen.');
       setCertMode('upload');
       setIsCameraActive(false);
     }
@@ -218,11 +235,11 @@ export default function EditorPanel({
 
   const handleAddCertificateInline = () => {
     if (!certImagePreview) {
-      alert('Por favor toma una foto o selecciona una imagen de certificado.');
+      showWarning('Por favor toma una foto o selecciona una imagen de certificado.');
       return;
     }
     if (selectedRegIdx === '') {
-      alert('Por favor selecciona a qué título o curso cargado corresponde esta foto.');
+      showWarning('Por favor selecciona a qué título o curso cargado corresponde esta foto.');
       return;
     }
 
@@ -277,12 +294,17 @@ export default function EditorPanel({
 
   const removeRole = (index) => {
     const roleName = cvData?.roles?.[index] || `Rol #${index + 1}`;
-    if (window.confirm(`¿Estás seguro de que deseas eliminar "${roleName}"?`)) {
-      setCvData((prev) => ({
-        ...prev,
-        roles: prev.roles.filter((_, i) => i !== index)
-      }));
-    }
+    confirm({
+      title: '¿Eliminar rol?',
+      message: `¿Estás seguro de que deseas eliminar "${roleName}"?`,
+      confirmText: 'Eliminar',
+      onConfirm: () => {
+        setCvData((prev) => ({
+          ...prev,
+          roles: (prev.roles || []).filter((_, i) => i !== index)
+        }));
+      }
+    });
   };
 
   const updateTheme = (field, value) => {
@@ -397,608 +419,216 @@ export default function EditorPanel({
         {/* TAB 2: FORMACIÓN ACADÉMICA */}
         {/* ========================================================================= */}
         {activeTab === 'formacion' && (
-          <div className="space-y-4">
-            {renderSectionToggle(
-              'formacion', 
-              'Formación Académica',
-              () => setCvData((prev) => ({
-                ...prev,
-                education: [
-                  ...prev.education,
-                  { level: "", institution: "", year: "", degree: "" }
-                ]
-              })),
-              'Agregar Formación'
-            )}
-
-            {cvData?.sectionVisibility?.formacion !== false && (
-              <div className="space-y-4">
-              {cvData.education.map((item, idx) => (
-                <div key={idx} className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] shadow-sm space-y-3">
-                  <div className="flex items-center justify-between border-b pb-1 border-slate-200 ">
-                    <span className="text-xs font-bold text-[#00A8A0]">Estudio / Formación #{idx + 1}</span>
-                    <button
-                      onClick={() => {
-                        const name = item.degree || item.level || item.institution || `Estudio #${idx + 1}`;
-                        if (window.confirm(`¿Estás seguro de que deseas eliminar "${name}"?`)) {
-                          setCvData((prev) => ({
-                            ...prev,
-                            education: prev.education.filter((_, i) => i !== idx)
-                          }));
-                        }
-                      }}
-                      className="text-[#2B1B2E] font-medium hover:text-red-600 transition"
-                      title="Eliminar"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">
-                      Nivel Alcanzado (Ej: SECUNDARIO COMPLETO)
-                    </label>
-                    <input 
-                      type="text"
-                      value={item.level}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setCvData((prev) => {
-                          const updated = [...prev.education];
-                          updated[idx].level = val;
-                          return { ...prev, education: updated };
-                        });
-                      }}
-                      placeholder="Ej: SECUNDARIO COMPLETO"
-                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">
-                      Nombre de la Institución Educativa / Colegio
-                    </label>
-                    <input 
-                      type="text"
-                      value={item.institution}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setCvData((prev) => {
-                          const updated = [...prev.education];
-                          updated[idx].institution = val;
-                          return { ...prev, education: updated };
-                        });
-                      }}
-                      placeholder="Ej: Colegio Secundario N° 5095 General Manuel Belgrano"
-                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">
-                        Año de Egresado
-                      </label>
-                      <input 
-                        type="text"
-                        value={item.year}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setCvData((prev) => {
-                            const updated = [...prev.education];
-                            updated[idx].year = val;
-                            return { ...prev, education: updated };
-                          });
-                        }}
-                        placeholder="Ej: 2000"
-                        className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">
-                        Título Obtenido
-                      </label>
-                      <input 
-                        type="text"
-                        value={item.degree}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setCvData((prev) => {
-                            const updated = [...prev.education];
-                            updated[idx].degree = val;
-                            return { ...prev, education: updated };
-                          });
-                        }}
-                        placeholder="Ej: Bachiller Pedagógico"
-                        className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-                      />
-                    </div>
-                  </div>
+          <RepeatableSection
+            sectionKey="formacion"
+            sectionTitle="Formación Académica"
+            addLabel="Agregar Formación"
+            cvData={cvData}
+            setCvData={setCvData}
+            fieldName="education"
+            emptyItem={{ level: '', institution: '', year: '', degree: '' }}
+            itemTitlePrefix="Estudio / Formación"
+            renderItem={(item, idx, updateField) => (
+              <>
+                <Field
+                  label="Nivel Alcanzado (Ej: SECUNDARIO COMPLETO)"
+                  value={item.level || ''}
+                  onChange={(e) => updateField('level', e.target.value)}
+                  placeholder="Ej: SECUNDARIO COMPLETO"
+                />
+                <Field
+                  label="Nombre de la Institución Educativa / Colegio"
+                  value={item.institution || ''}
+                  onChange={(e) => updateField('institution', e.target.value)}
+                  placeholder="Ej: Colegio Secundario N° 5095 General Manuel Belgrano"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <Field
+                    label="Año de Egresado"
+                    value={item.year || ''}
+                    onChange={(e) => updateField('year', e.target.value)}
+                    placeholder="Ej: 2000"
+                  />
+                  <Field
+                    label="Título Obtenido"
+                    value={item.degree || ''}
+                    onChange={(e) => updateField('degree', e.target.value)}
+                    placeholder="Ej: Bachiller Pedagógico"
+                  />
                 </div>
-              ))}
-            </div>
+              </>
             )}
-          </div>
+          />
         )}
 
         {/* ========================================================================= */}
         {/* TAB 3: TÍTULOS PROFESIONALES */}
         {/* ========================================================================= */}
         {activeTab === 'profesion' && (
-          <div className="space-y-4">
-            {renderSectionToggle(
-              'profesion', 
-              'Títulos Profesionales',
-              () => setCvData((prev) => ({
-                ...prev,
-                profession: [
-                  ...prev.profession,
-                  { institution: "", year: "", degree: "" }
-                ]
-              })),
-              'Agregar Título'
+          <RepeatableSection
+            sectionKey="profesion"
+            sectionTitle="Títulos Profesionales"
+            addLabel="Agregar Título"
+            cvData={cvData}
+            setCvData={setCvData}
+            fieldName="profession"
+            emptyItem={{ institution: '', year: '', degree: '' }}
+            itemTitlePrefix="Título Profesional"
+            renderItem={(item, idx, updateField) => (
+              <>
+                <Field
+                  label="Nombre del Título Obtenido / Carrera"
+                  value={item.degree || ''}
+                  onChange={(e) => updateField('degree', e.target.value)}
+                  placeholder="Ej: Profesora de Educación Secundaria en Lengua y Literatura"
+                />
+                <Field
+                  label="Institución Educativa, Universidad o Ministerio Emisor"
+                  value={item.institution || ''}
+                  onChange={(e) => updateField('institution', e.target.value)}
+                  placeholder="Ej: Instituto de Educación Superior Jorge Luis Borges"
+                />
+                <Field
+                  label="Año de Emisión / Titulación"
+                  value={item.year || ''}
+                  onChange={(e) => updateField('year', e.target.value)}
+                  placeholder="Ej: 2016"
+                />
+              </>
             )}
-
-            {cvData?.sectionVisibility?.profesion !== false && (
-              <div className="space-y-4">
-              {cvData.profession.map((item, idx) => (
-                <div key={idx} className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] shadow-sm space-y-3">
-                  <div className="flex items-center justify-between border-b pb-1 border-slate-200 ">
-                    <span className="text-xs font-bold text-[#00A8A0]">Título Profesional #{idx + 1}</span>
-                    <button
-                      onClick={() => {
-                        const name = item.degree || item.institution || `Título #${idx + 1}`;
-                        if (window.confirm(`¿Estás seguro de que deseas eliminar "${name}"?`)) {
-                          setCvData((prev) => ({
-                            ...prev,
-                            profession: prev.profession.filter((_, i) => i !== idx)
-                          }));
-                        }
-                      }}
-                      className="text-[#2B1B2E] font-medium hover:text-red-600 transition"
-                      title="Eliminar"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">
-                      Nombre del Título Obtenido / Carrera
-                    </label>
-                    <input 
-                      type="text"
-                      value={item.degree}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setCvData((prev) => {
-                          const updated = [...prev.profession];
-                          updated[idx].degree = val;
-                          return { ...prev, profession: updated };
-                        });
-                      }}
-                      placeholder="Ej: Profesora de Educación Secundaria en Lengua y Literatura"
-                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">
-                      Institución Educativa, Universidad o Ministerio Emisor
-                    </label>
-                    <input 
-                      type="text"
-                      value={item.institution}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setCvData((prev) => {
-                          const updated = [...prev.profession];
-                          updated[idx].institution = val;
-                          return { ...prev, profession: updated };
-                        });
-                      }}
-                      placeholder="Ej: Instituto de Educación Superior Jorge Luis Borges"
-                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">
-                      Año de Emisión / Titulación
-                    </label>
-                    <input 
-                      type="text"
-                      value={item.year}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setCvData((prev) => {
-                          const updated = [...prev.profession];
-                          updated[idx].year = val;
-                          return { ...prev, profession: updated };
-                        });
-                      }}
-                      placeholder="Ej: 2016"
-                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-            )}
-          </div>
+          />
         )}
 
         {/* ========================================================================= */}
         {/* TAB 4: EXPERIENCIA LABORAL */}
         {/* ========================================================================= */}
         {activeTab === 'experiencia' && (
-          <div className="space-y-4">
-            {renderSectionToggle(
-              'experiencia', 
-              'Experiencia Laboral',
-              () => setCvData((prev) => ({
-                ...prev,
-                experience: [
-                  {
-                    institution: "",
-                    role: "",
-                    year: "",
-                    details: ""
-                  },
-                  ...(prev.experience || [])
-                ]
-              })),
-              'Agregar Experiencia'
-            )}
-
-            {cvData?.sectionVisibility?.experiencia !== false && (
-              <div className="space-y-4">
-              {(cvData.experience || []).map((exp, idx) => (
-                <div key={idx} className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] shadow-sm space-y-3">
-                  <div className="flex items-center justify-between border-b pb-1 border-slate-200 ">
-                    <span className="text-xs font-bold text-[#00A8A0]">Experiencia Laboral #{idx + 1}</span>
-                    <button
-                      onClick={() => {
-                        const name = exp.role || exp.institution || `Experiencia #${idx + 1}`;
-                        if (window.confirm(`¿Estás seguro de que deseas eliminar "${name}"?`)) {
-                          setCvData((prev) => ({
-                            ...prev,
-                            experience: (prev.experience || []).filter((_, i) => i !== idx)
-                          }));
-                        }
-                      }}
-                      className="text-[#2B1B2E] font-medium hover:text-red-600 transition"
-                      title="Eliminar experiencia"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">
-                      Puesto / Cargo Desempeñado
-                    </label>
-                    <input 
-                      type="text"
-                      value={exp.role}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setCvData((prev) => {
-                          const updated = [...prev.experience];
-                          updated[idx].role = val;
-                          return { ...prev, experience: updated };
-                        });
-                      }}
-                      placeholder="Ej: Profesora de Lengua y Literatura en Pluricurso Rural"
-                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+          <RepeatableSection
+            sectionKey="experiencia"
+            sectionTitle="Experiencia Laboral"
+            addLabel="Agregar Experiencia"
+            cvData={cvData}
+            setCvData={setCvData}
+            fieldName="experience"
+            emptyItem={{ institution: '', role: '', year: '', details: '' }}
+            itemTitlePrefix="Experiencia Laboral"
+            renderItem={(item, idx, updateField) => (
+              <>
+                <Field
+                  label="Puesto / Cargo Desempeñado"
+                  value={item.role || ''}
+                  onChange={(e) => updateField('role', e.target.value)}
+                  placeholder="Ej: Profesora de Lengua y Literatura en Pluricurso Rural"
+                />
+                <Field
+                  label="Escuela / Institución o Empresa"
+                  value={item.institution || ''}
+                  onChange={(e) => updateField('institution', e.target.value)}
+                  placeholder="Ej: Colegio Secundario N° 5170"
+                />
+                <div className="grid grid-cols-3 gap-2">
+                  <Field
+                    label="Año / Periodo"
+                    value={item.year || ''}
+                    onChange={(e) => updateField('year', e.target.value)}
+                    placeholder="Ej: 2025"
+                  />
+                  <div className="col-span-2">
+                    <Field
+                      label="Detalles / Tareas"
+                      value={item.details || ''}
+                      onChange={(e) => updateField('details', e.target.value)}
+                      placeholder="Ej: Coordinación y acompañamiento tutorial"
                     />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">
-                      Escuela / Institución o Empresa
-                    </label>
-                    <input 
-                      type="text"
-                      value={exp.institution}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setCvData((prev) => {
-                          const updated = [...prev.experience];
-                          updated[idx].institution = val;
-                          return { ...prev, experience: updated };
-                        });
-                      }}
-                      placeholder="Ej: Colegio Secundario N° 5170"
-                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <label className="block text-[10px] font-bold text-[#2B1B2E] mb-1">
-                        Año / Periodo
-                      </label>
-                      <input 
-                        type="text"
-                        value={exp.year}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setCvData((prev) => {
-                            const updated = [...prev.experience];
-                            updated[idx].year = val;
-                            return { ...prev, experience: updated };
-                          });
-                        }}
-                        placeholder="Ej: 2025"
-                        className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-                      />
-                    </div>
-                    <div className="col-span-2">
-                      <label className="block text-[10px] font-bold text-[#2B1B2E] mb-1">
-                        Detalles / Tareas
-                      </label>
-                      <input 
-                        type="text"
-                        value={exp.details}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setCvData((prev) => {
-                            const updated = [...prev.experience];
-                            updated[idx].details = val;
-                            return { ...prev, experience: updated };
-                          });
-                        }}
-                        placeholder="Ej: Coordinación y acompañamiento tutorial"
-                        className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-                      />
-                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              </>
             )}
-          </div>
+          />
         )}
 
         {/* ========================================================================= */}
         {/* TAB 5: CURSOS & CAPACITACIONES */}
         {/* ========================================================================= */}
         {activeTab === 'cursos' && (
-          <div className="space-y-4">
-            {renderSectionToggle(
-              'cursos', 
-              'Cursos y Capacitaciones',
-              () => setCvData((prev) => ({
-                ...prev,
-                coursesAndCertificates: [
-                  {
-                    year: "",
-                    institution: "",
-                    title: "",
-                    hours: "",
-                    details: ""
-                  },
-                  ...prev.coursesAndCertificates
-                ]
-              })),
-              'Agregar Curso'
-            )}
-
-            {cvData?.sectionVisibility?.cursos !== false && (
-              <div className="space-y-4">
-              {cvData.coursesAndCertificates.map((c, idx) => (
-                <div key={idx} className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] shadow-sm space-y-3">
-                  <div className="flex items-center justify-between border-b pb-1 border-slate-200 ">
-                    <span className="text-xs font-bold text-[#00A8A0]">Curso Docente #{idx + 1}</span>
-                    <button
-                      onClick={() => {
-                        const name = c.title || c.institution || `Curso #${idx + 1}`;
-                        if (window.confirm(`¿Estás seguro de que deseas eliminar "${name}"?`)) {
-                          setCvData((prev) => ({
-                            ...prev,
-                            coursesAndCertificates: prev.coursesAndCertificates.filter((_, i) => i !== idx)
-                          }));
-                        }
-                      }}
-                      className="text-[#2B1B2E] font-medium hover:text-red-600 transition"
-                      title="Eliminar curso"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">
-                      Nombre Completo del Curso, Taller o Simposio
-                    </label>
-                    <input 
-                      type="text"
-                      value={c.title}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setCvData((prev) => {
-                          const updated = [...prev.coursesAndCertificates];
-                          updated[idx].title = val;
-                          return { ...prev, coursesAndCertificates: updated };
-                        });
-                      }}
-                      placeholder="Ej: Seminario Taller de Actualización Pedagógica en Lengua"
-                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">
-                      Institución Organizadora / Ministerio
-                    </label>
-                    <input 
-                      type="text"
-                      value={c.institution}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setCvData((prev) => {
-                          const updated = [...prev.coursesAndCertificates];
-                          updated[idx].institution = val;
-                          return { ...prev, coursesAndCertificates: updated };
-                        });
-                      }}
-                      placeholder="Ej: Ministerio de Educación, Cultura, Ciencia y Tecnología"
-                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <label className="block text-[10px] font-bold text-[#2B1B2E] mb-1">
-                        Año
-                      </label>
-                      <input 
-                        type="text"
-                        value={c.year}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setCvData((prev) => {
-                            const updated = [...prev.coursesAndCertificates];
-                            updated[idx].year = val;
-                            return { ...prev, coursesAndCertificates: updated };
-                          });
-                        }}
-                        placeholder="Ej: 2023"
-                        className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-[#2B1B2E] mb-1">
-                        Carga Horaria
-                      </label>
-                      <input 
-                        type="text"
-                        value={c.hours}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setCvData((prev) => {
-                            const updated = [...prev.coursesAndCertificates];
-                            updated[idx].hours = val;
-                            return { ...prev, coursesAndCertificates: updated };
-                          });
-                        }}
-                        placeholder="Ej: 60 hs"
-                        className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-[#2B1B2E] mb-1">
-                        Resolución / N°
-                      </label>
-                      <input 
-                        type="text"
-                        value={c.details}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setCvData((prev) => {
-                            const updated = [...prev.coursesAndCertificates];
-                            updated[idx].details = val;
-                            return { ...prev, coursesAndCertificates: updated };
-                          });
-                        }}
-                        placeholder="Ej: Res. N° 124/23"
-                        className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-                      />
-                    </div>
-                  </div>
+          <RepeatableSection
+            sectionKey="cursos"
+            sectionTitle="Cursos y Capacitaciones"
+            addLabel="Agregar Curso"
+            cvData={cvData}
+            setCvData={setCvData}
+            fieldName="coursesAndCertificates"
+            emptyItem={{ year: '', institution: '', title: '', hours: '', details: '' }}
+            itemTitlePrefix="Curso / Capacitación"
+            renderItem={(item, idx, updateField) => (
+              <>
+                <Field
+                  label="Nombre Completo del Curso, Taller o Simposio"
+                  value={item.title || ''}
+                  onChange={(e) => updateField('title', e.target.value)}
+                  placeholder="Ej: Seminario Taller de Actualización Pedagógica en Lengua"
+                />
+                <Field
+                  label="Institución Organizadora / Ministerio"
+                  value={item.institution || ''}
+                  onChange={(e) => updateField('institution', e.target.value)}
+                  placeholder="Ej: Ministerio de Educación, Cultura, Ciencia y Tecnología"
+                />
+                <div className="grid grid-cols-3 gap-2">
+                  <Field
+                    label="Año"
+                    value={item.year || ''}
+                    onChange={(e) => updateField('year', e.target.value)}
+                    placeholder="Ej: 2023"
+                  />
+                  <Field
+                    label="Carga Horaria"
+                    value={item.hours || ''}
+                    onChange={(e) => updateField('hours', e.target.value)}
+                    placeholder="Ej: 60 hs"
+                  />
+                  <Field
+                    label="Resolución / N°"
+                    value={item.details || ''}
+                    onChange={(e) => updateField('details', e.target.value)}
+                    placeholder="Ej: Res. N° 124/23"
+                  />
                 </div>
-              ))}
-            </div>
+              </>
             )}
-          </div>
+          />
         )}
 
         {/* ========================================================================= */}
         {/* TAB 6: INFORMÁTICA */}
         {/* ========================================================================= */}
         {activeTab === 'informatica' && (
-          <div className="space-y-4">
-            {renderSectionToggle(
-              'informatica', 
-              'Informática y TICs',
-              () => setCvData((prev) => ({
-                ...prev,
-                informatics: [
-                  ...prev.informatics,
-                  { institution: "", course: "" }
-                ]
-              })),
-              'Agregar Informática'
+          <RepeatableSection
+            sectionKey="informatica"
+            sectionTitle="Informática y TICs"
+            addLabel="Agregar Informática"
+            cvData={cvData}
+            setCvData={setCvData}
+            fieldName="informatics"
+            emptyItem={{ institution: '', course: '' }}
+            itemTitlePrefix="Curso Informático"
+            renderItem={(item, idx, updateField) => (
+              <>
+                <Field
+                  label="Nombre del Curso de Informática o TICs"
+                  value={item.course || ''}
+                  onChange={(e) => updateField('course', e.target.value)}
+                  placeholder="Ej: ABC DIGITAL - APRENDER A USAR INTERNET"
+                />
+                <Field
+                  label="Institución o Plataforma Emisora"
+                  value={item.institution || ''}
+                  onChange={(e) => updateField('institution', e.target.value)}
+                  placeholder="Ej: Secretaría de Innovación Pública - Punto Digital"
+                />
+              </>
             )}
-
-            {cvData?.sectionVisibility?.informatica !== false && (
-              <div className="space-y-4">
-              {cvData.informatics.map((item, idx) => (
-                <div key={idx} className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] shadow-sm space-y-3">
-                  <div className="flex items-center justify-between border-b pb-1 border-slate-200 ">
-                    <span className="text-xs font-bold text-[#00A8A0]">Curso Informático #{idx + 1}</span>
-                    <button
-                      onClick={() => {
-                        const name = item.course || item.institution || `Curso Informático #${idx + 1}`;
-                        if (window.confirm(`¿Estás seguro de que deseas eliminar "${name}"?`)) {
-                          setCvData((prev) => ({
-                            ...prev,
-                            informatics: prev.informatics.filter((_, i) => i !== idx)
-                          }));
-                        }
-                      }}
-                      className="text-[#2B1B2E] font-medium hover:text-red-600 transition"
-                      title="Eliminar"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">
-                      Nombre del Curso de Informática o TICs
-                    </label>
-                    <input 
-                      type="text"
-                      value={item.course}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setCvData((prev) => {
-                          const updated = [...prev.informatics];
-                          updated[idx].course = val;
-                          return { ...prev, informatics: updated };
-                        });
-                      }}
-                      placeholder="Ej: ABC DIGITAL - APRENDER A USAR INTERNET"
-                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">
-                      Institución o Plataforma Emisora
-                    </label>
-                    <input 
-                      type="text"
-                      value={item.institution}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setCvData((prev) => {
-                          const updated = [...prev.informatics];
-                          updated[idx].institution = val;
-                          return { ...prev, informatics: updated };
-                        });
-                      }}
-                      placeholder="Ej: Secretaría de Innovación Pública - Punto Digital"
-                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-            )}
-          </div>
+          />
         )}
 
         {/* ========================================================================= */}
@@ -1049,15 +679,20 @@ export default function EditorPanel({
                     <button
                       onClick={() => {
                         const name = item.title || item.institution || `Proyecto Rural #${idx + 1}`;
-                        if (window.confirm(`¿Estás seguro de que deseas eliminar "${name}"?`)) {
-                          setCvData((prev) => ({
-                            ...prev,
-                            ecology: {
-                              ...prev.ecology,
-                              rural: prev.ecology.rural.filter((_, i) => i !== idx)
-                            }
-                          }));
-                        }
+                        confirm({
+                          title: '¿Eliminar proyecto rural?',
+                          message: `¿Estás seguro de que deseas eliminar "${name}"?`,
+                          confirmText: 'Eliminar',
+                          onConfirm: () => {
+                            setCvData((prev) => ({
+                              ...prev,
+                              ecology: {
+                                ...prev.ecology,
+                                rural: (prev.ecology?.rural || []).filter((_, i) => i !== idx)
+                              }
+                            }));
+                          }
+                        });
                       }}
                       className="text-[#2B1B2E] font-medium hover:text-red-600 transition"
                     >
@@ -1130,15 +765,20 @@ export default function EditorPanel({
                     <button
                       onClick={() => {
                         const name = item.title || item.institution || `Proyecto Ambiental #${idx + 1}`;
-                        if (window.confirm(`¿Estás seguro de que deseas eliminar "${name}"?`)) {
-                          setCvData((prev) => ({
-                            ...prev,
-                            ecology: {
-                              ...prev.ecology,
-                              environmental: prev.ecology.environmental.filter((_, i) => i !== idx)
-                            }
-                          }));
-                        }
+                        confirm({
+                          title: '¿Eliminar proyecto ambiental?',
+                          message: `¿Estás seguro de que deseas eliminar "${name}"?`,
+                          confirmText: 'Eliminar',
+                          onConfirm: () => {
+                            setCvData((prev) => ({
+                              ...prev,
+                              ecology: {
+                                ...prev.ecology,
+                                environmental: (prev.ecology?.environmental || []).filter((_, i) => i !== idx)
+                              }
+                            }));
+                          }
+                        });
                       }}
                       className="text-[#2B1B2E] font-medium hover:text-red-600 transition"
                     >
@@ -1218,7 +858,7 @@ export default function EditorPanel({
               <button
                 onClick={() => {
                   if (selectedRegIdx === '') {
-                    alert('Por favor selecciona primero tu certificado en "IDENTIFICA TU CERTIFICADO".');
+                    showWarning('Por favor selecciona primero tu certificado en "IDENTIFICA TU CERTIFICADO".');
                     return;
                   }
                   stopCamera();
@@ -1236,7 +876,7 @@ export default function EditorPanel({
               <button
                 onClick={() => {
                   if (selectedRegIdx === '') {
-                    alert('Por favor selecciona primero tu certificado en "IDENTIFICA TU CERTIFICADO".');
+                    showWarning('Por favor selecciona primero tu certificado en "IDENTIFICA TU CERTIFICADO".');
                     return;
                   }
                   startCamera();
@@ -1266,7 +906,7 @@ export default function EditorPanel({
               <div 
                 onClick={() => {
                   if (selectedRegIdx === '') {
-                    alert('Por favor selecciona primero tu certificado en "IDENTIFICA TU CERTIFICADO".');
+                    showWarning('Por favor selecciona primero tu certificado en "IDENTIFICA TU CERTIFICADO".');
                     return;
                   }
                   fileInputRef.current?.click();
@@ -1327,12 +967,18 @@ export default function EditorPanel({
                       <button
                         onClick={() => {
                           const name = cert.title || 'este certificado';
-                          if (window.confirm(`¿Estás seguro de que deseas eliminar el certificado "${name}"?`)) {
-                            setCvData(prev => ({
-                              ...prev,
-                              certificatesScanned: prev.certificatesScanned.filter(c => c.id !== cert.id)
-                            }));
-                          }
+                          confirm({
+                            title: '¿Eliminar certificado?',
+                            message: `¿Estás seguro de que deseas eliminar el certificado "${name}"?`,
+                            confirmText: 'Eliminar',
+                            onConfirm: () => {
+                              setCvData(prev => ({
+                                ...prev,
+                                certificatesScanned: (prev.certificatesScanned || []).filter(c => c.id !== cert.id)
+                              }));
+                              showSuccess('Certificado eliminado.');
+                            }
+                          });
                         }}
                         className="p-1.5 text-[#2B1B2E] hover:text-red-600 transition"
                         title="Eliminar"
@@ -1735,31 +1381,34 @@ export default function EditorPanel({
                   <button
                     key={preset.id}
                     onClick={() => {
-                      const confirmed = window.confirm(
-                        `¿Deseas aplicar el preset '${preset.name}'?\n\n` +
-                        `Advertencia: Esta acción restablecerá tus configuraciones personalizadas de maquetación y columnas al estado maestro del preset.`
-                      );
-                      if (!confirmed) return;
+                      confirm({
+                        title: `¿Aplicar preset '${preset.name}'?`,
+                        message: 'Esta acción restablecerá tus configuraciones personalizadas de maquetación y columnas al estado maestro del preset.',
+                        confirmText: 'Aplicar Preset',
+                        variant: 'secondary',
+                        onConfirm: () => {
+                          setCvData(prev => {
+                            const newAssigns = {};
+                            preset.sec.forEach(s => { newAssigns[s] = 'secundaria'; });
+                            preset.prim.forEach(s => { 
+                              if (newAssigns[s] === 'secundaria') newAssigns[s] = 'ambas';
+                              else newAssigns[s] = 'primaria';
+                            });
 
-                      setCvData(prev => {
-                        const newAssigns = {};
-                        preset.sec.forEach(s => { newAssigns[s] = 'secundaria'; });
-                        preset.prim.forEach(s => { 
-                          if (newAssigns[s] === 'secundaria') newAssigns[s] = 'ambas';
-                          else newAssigns[s] = 'primaria';
-                        });
-
-                        return {
-                          ...prev,
-                          layout: {
-                            ...prev.layout,
-                            columnAssignments: newAssigns,
-                            sectionOrders: {
-                              secundaria: preset.sec,
-                              primaria: preset.prim
-                            }
-                          }
-                        };
+                            return {
+                              ...prev,
+                              layout: {
+                                ...prev.layout,
+                                columnAssignments: newAssigns,
+                                sectionOrders: {
+                                  secundaria: preset.sec,
+                                  primaria: preset.prim
+                                }
+                              }
+                            };
+                          });
+                          showSuccess(`Preset '${preset.name}' aplicado correctamente.`);
+                        }
                       });
                     }}
                     className="p-2.5 rounded-xl border border-[#EFE2C9] bg-white hover:border-[#FF2E63] text-left transition flex flex-col justify-between cursor-pointer"
