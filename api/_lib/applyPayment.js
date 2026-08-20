@@ -107,8 +107,28 @@ async function activateSubscription(supabaseAdmin, { userId, email, plan, metodo
   };
 
   const query = supabaseAdmin.from('profiles').update(patch);
-  const { error } = userId ? await query.eq('id', userId) : await query.eq('email', email);
+  const { data: updated, error } = userId
+    ? await query.eq('id', userId).select('id').single()
+    : await query.eq('email', email).select('id').single();
   if (error) throw error;
+
+  // Enterprise necesita una organización para poder invitar miembros. Se crea
+  // acá una sola vez (no en el frontend) para que quede ligado al pago real,
+  // no a que el usuario abra el panel.
+  if (plan === 'enterprise' && updated?.id) {
+    const { data: existingOrg } = await supabaseAdmin
+      .from('organizations')
+      .select('id')
+      .eq('owner_id', updated.id)
+      .single();
+
+    if (!existingOrg) {
+      await supabaseAdmin.from('organizations').insert({
+        name: email ? `Organización de ${email}` : 'Mi organización',
+        owner_id: updated.id,
+      });
+    }
+  }
 
   return { type: 'subscription', plan, vence: vence.toISOString() };
 }

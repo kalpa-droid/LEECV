@@ -48,8 +48,26 @@ export async function createOrganization(name) {
   return data;
 }
 
-/** Invita un miembro por email a la organización */
+/** Invita un miembro por email a la organización, respetando el cupo (max_members) del plan */
 export async function inviteMember(orgId, email, role = 'editor') {
+  const { data: org, error: orgError } = await supabase
+    .from('organizations')
+    .select('max_members')
+    .eq('id', orgId)
+    .single();
+  if (orgError) throw orgError;
+
+  const { count, error: countError } = await supabase
+    .from('org_members')
+    .select('*', { count: 'exact', head: true })
+    .eq('org_id', orgId)
+    .in('status', ['pending', 'active']);
+  if (countError) throw countError;
+
+  if ((count ?? 0) >= org.max_members) {
+    throw new Error(`Llegaste al límite de ${org.max_members} miembros de tu plan Enterprise`);
+  }
+
   const { data, error } = await supabase
     .from('org_members')
     .insert({
@@ -83,7 +101,7 @@ export async function listCandidates(orgId = null) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
 
-  let query = supabase.from('candidate_profiles').select('*');
+  let query = supabase.from('org_candidates').select('*');
 
   if (orgId) {
     query = query.eq('org_id', orgId);
@@ -101,6 +119,11 @@ export async function saveCandidate(candidateData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Usuario no autenticado');
 
+/** Guarda o actualiza un candidato */
+export async function saveCandidate(candidateData) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Usuario no autenticado');
+
   const payload = {
     ...candidateData,
     owner_id: user.id,
@@ -108,7 +131,7 @@ export async function saveCandidate(candidateData) {
   };
 
   const { data, error } = await supabase
-    .from('candidate_profiles')
+    .from('org_candidates')
     .upsert(payload)
     .select()
     .single();
@@ -116,3 +139,42 @@ export async function saveCandidate(candidateData) {
   if (error) throw error;
   return data;
 }
+
+/** Acepta una invitación a una organización por token */
+export async function acceptInvitation(invitationToken) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Debes iniciar sesión para aceptar la invitación');
+
+  const { data: member, error: findError } = await supabase
+    .from('org_members')
+    .select('*')
+    .eq('invitation_token', invitationToken)
+    .single();
+
+  if (findError || !member) throw new Error('Invitación no válida o expirada');
+
+  const { data, error } = await supabase
+    .from('org_members')
+    .update({
+      user_id: user.id,
+      status: 'active',
+      joined_at: new Date().toISOString()
+    })
+    .eq('id', member.id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/** Remueve un miembro de la organización */
+export async function removeMember(memberId) {
+  const { error } = await supabase
+    .from('org_members')
+    .delete()
+    .eq('id', memberId);
+
+  if (error) throw error;
+}
+

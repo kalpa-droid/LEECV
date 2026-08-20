@@ -82,8 +82,14 @@ create policy "dueño administra miembros"
     )
   );
 
--- 3. Candidate Profiles (linked to owner_id or org_id)
-create table if not exists public.candidate_profiles (
+-- 3. Org Candidates (candidatos propios de una organización Enterprise —
+--    NO confundir con `candidate_profiles`, que ya existe desde migration.sql
+--    con otro esquema (cv_id como PK) para el caso de uso de Nivel 2/Agencia Pro.
+--    Usar el mismo nombre para ambos generaba un choque de esquemas: la segunda
+--    creación quedaba como no-op por el `if not exists` y organizationService.js
+--    fallaba en producción al pedir columnas (org_id, full_name, cv_data) que
+--    nunca se llegaban a crear.
+create table if not exists public.org_candidates (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references auth.users(id) on delete cascade,
   org_id uuid references public.organizations(id) on delete cascade,
@@ -96,39 +102,39 @@ create table if not exists public.candidate_profiles (
   updated_at timestamptz not null default now()
 );
 
-alter table public.candidate_profiles enable row level security;
+alter table public.org_candidates enable row level security;
 
-drop policy if exists "usuario u organizacion ve sus candidatos" on public.candidate_profiles;
+drop policy if exists "usuario u organizacion ve sus candidatos" on public.org_candidates;
 create policy "usuario u organizacion ve sus candidatos"
-  on public.candidate_profiles for select
+  on public.org_candidates for select
   using (
     auth.uid() = owner_id
     or public.is_admin(auth.uid())
     or (
       org_id is not null and exists (
         select 1 from public.org_members
-        where org_id = public.candidate_profiles.org_id
+        where org_id = public.org_candidates.org_id
           and user_id = auth.uid()
           and status = 'active'
       )
     )
   );
 
-drop policy if exists "usuario u organizacion crea candidatos" on public.candidate_profiles;
+drop policy if exists "usuario u organizacion crea candidatos" on public.org_candidates;
 create policy "usuario u organizacion crea candidatos"
-  on public.candidate_profiles for insert
+  on public.org_candidates for insert
   with check (auth.uid() = owner_id);
 
-drop policy if exists "usuario u organizacion actualiza candidatos" on public.candidate_profiles;
+drop policy if exists "usuario u organizacion actualiza candidatos" on public.org_candidates;
 create policy "usuario u organizacion actualiza candidatos"
-  on public.candidate_profiles for update
+  on public.org_candidates for update
   using (
     auth.uid() = owner_id
     or public.is_admin(auth.uid())
     or (
       org_id is not null and exists (
         select 1 from public.org_members
-        where org_id = public.candidate_profiles.org_id
+        where org_id = public.org_candidates.org_id
           and user_id = auth.uid()
           and status = 'active'
       )
