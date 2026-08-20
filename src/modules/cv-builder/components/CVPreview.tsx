@@ -24,6 +24,7 @@ import {
 
 import { PAGE_SIZES, calculateItemsPerPage, getDynamicHeightChunks } from '../../../shared/core/pdf-engine/pageSizes';
 import { getColumnVariant } from '../../../shared/core/pdf-engine/columnVariants';
+import { getSidebarPageChunks } from '../../../shared/core/pdf-engine/sidebarPagination';
 import { CoverPageSection } from './preview/CoverPageSection';
 import { ExtraPage } from './preview/ExtraPage';
 import { ScannedCertificatesPages } from './preview/ScannedCertificatesPages';
@@ -101,6 +102,12 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
 
   const courseChunks = getDynamicHeightChunks(sortedCourses, paperSizeId, 'course', 75, 2);
   const totalCoursePages = Math.max(1, courseChunks.length);
+
+  const secondarySections = [...new Set(cvData?.layout?.sectionOrders?.secundaria || ["personales", "informatica", "ecologia"])] as string[];
+  const sidebarPageChunks = getSidebarPageChunks(secondarySections, cvData, paperSizeId, 70);
+  const firstPageSidebarSections = sidebarPageChunks[0] || secondarySections;
+  const extraSidebarChunks = sidebarPageChunks.slice(1);
+  const totalSidebarPages = sidebarPageChunks.length;
 
   // Dynamic Sidebar Style based on layoutStyle
   const sidebarBgStyle = layoutStyle === 'minimal-editorial'
@@ -188,9 +195,11 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
     return (col === 'primaria' || col === 'ambas') && isVis(secKey);
   };
 
-  const renderDynamicSection = (secId, location) => {
+  const renderDynamicSection = (secId: string, location: 'primaria' | 'secundaria' | 'ambas') => {
     if (location === 'secundaria' && !showInSecundaria(secId)) return null;
     if (location === 'primaria' && !showInPrimaria(secId)) return null;
+
+    const variant = getColumnVariant(location === 'ambas' ? 'both' : location === 'secundaria' ? 'secondary' : 'primary');
 
     switch (secId) {
       case 'contacto':
@@ -742,7 +751,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
             </div>
 
             {/* Dynamic Left Column (Secundaria) Section Rendering */}
-            {[...new Set(cvData.layout?.sectionOrders?.secundaria || ["personales", "informatica", "ecologia"])].map(secId => 
+            {firstPageSidebarSections.map((secId: string) => 
               renderDynamicSection(secId, 'secundaria')
             )}
 
@@ -783,7 +792,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
             )}
 
             {/* Dynamic Right Column (Primaria) Section Rendering */}
-            {[...new Set(cvData.layout?.sectionOrders?.primaria || ["personales", "formacion", "profesion", "experiencia", "cursos", "ecologia"])].map(secId => 
+            {([...new Set(cvData?.layout?.sectionOrders?.primaria || ["personales", "formacion", "profesion", "experiencia", "cursos", "ecologia"])] as string[]).map((secId: string) => 
               renderDynamicSection(secId, 'primaria')
             )}
           </div>
@@ -1163,6 +1172,51 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
               )}
             </div>
           </div>
+        );
+      })}
+
+      {/* ========================================================================= */}
+      {/* SIDEBAR OVERFLOW PAGES (SI LA COLUMNA SECUNDARIA EXCEDE 1 PÁGINA) */}
+      {/* ========================================================================= */}
+      {extraSidebarChunks.map((sidebarGroup: string[], sidebarPageIdx: number) => {
+        const pageNum = startBodyPageNum + 1 + totalExtraProfPages + totalExpPages + totalCoursePages + sidebarPageIdx;
+
+        return (
+          <ExtraPage
+            key={`sidebar-extra-${pageNum}`}
+            pageNum={pageNum}
+            totalPages={totalPagesCalculated + extraSidebarChunks.length}
+            paperSize={paperSizeId}
+            theme={theme}
+            sidebarContent={
+              <div className="flex flex-col relative h-full w-full" style={sidebarBgStyle}>
+                <div className="p-5 text-center border-b border-current opacity-90" style={sidebarHeaderBgStyle}>
+                  <span className="text-2xl font-black tracking-widest">{personalInfo.initials}</span>
+                  <p className="text-[10px] font-semibold tracking-wider uppercase opacity-80 mt-0.5">Información Adicional</p>
+                </div>
+
+                <div className="p-4 space-y-4 flex-1 relative">
+                  {sidebarGroup.map((secId: string) => renderDynamicSection(secId, 'secundaria'))}
+
+                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between font-bold text-xs">
+                    <span>{personalInfo.initials}</span>
+                    <span className="text-2xl font-black">{pageNum}</span>
+                  </div>
+                </div>
+              </div>
+            }
+          >
+            <div className="space-y-4">
+              <div className="border-b border-slate-200 pb-2">
+                <h1 className="text-xl font-black text-slate-900 uppercase">
+                  {personalInfo.surname} <span style={{ color: theme.primaryColor }}>{personalInfo.givenNames}</span>
+                </h1>
+              </div>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Continuación de Secciones Complementarias ({sidebarPageIdx + 2}/{totalSidebarPages})
+              </p>
+            </div>
+          </ExtraPage>
         );
       })}
 
