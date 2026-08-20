@@ -425,11 +425,9 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
 
   return (
     <div 
-      className="w-full bg-[#F5EDDA] min-h-full p-2 sm:p-6 flex flex-col items-center print-wrapper relative overflow-x-auto"
+      className="w-full min-h-full flex flex-col items-center print-wrapper relative"
       style={dynamicThemeStyle}
     >
-      {/* Pages Container with Responsive Scaling */}
-
       {/* Pages Container with Responsive Scaling */}
       <div 
         className="w-full flex flex-col items-center gap-6 transition-transform duration-300 origin-top"

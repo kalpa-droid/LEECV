@@ -40,13 +40,12 @@ function AppContent() {
 
   const triggerAutoFit = () => {
     if (typeof window !== 'undefined') {
-      if (window.innerWidth < 768) {
-        const availableWidth = window.innerWidth - 32;
-        const calculatedScale = Math.min(1, availableWidth / 794);
-        setZoomLevel(parseFloat(calculatedScale.toFixed(2)));
-      } else {
-        setZoomLevel(0.85); // Comfortable A4 default on desktop
-      }
+      const isMobile = window.innerWidth < 768;
+      const sidebarWidth = isMobile ? 0 : (isPanelOpen ? 500 : 0);
+      const availableWidth = window.innerWidth - sidebarWidth - 24;
+      const a4WidthPx = 794; // 210mm A4 width at 96dpi
+      const calculatedScale = Math.min(1, availableWidth / a4WidthPx);
+      setZoomLevel(parseFloat(Math.max(0.35, calculatedScale).toFixed(2)));
     }
   };
 
@@ -54,7 +53,7 @@ function AppContent() {
     triggerAutoFit();
     window.addEventListener('resize', triggerAutoFit);
     return () => window.removeEventListener('resize', triggerAutoFit);
-  }, []);
+  }, [isPanelOpen]);
 
   const [isPhotoCropperOpen, setIsPhotoCropperOpen] = useState(false);
   const [isSignatureOpen, setIsSignatureOpen] = useState(false);
@@ -222,8 +221,8 @@ function AppContent() {
           />
         </div>
 
-        {/* Live A4 CV Preview Area (Independent scroll container) */}
-        <div className="flex-1 bg-[#2B1B2E] h-full overflow-y-auto p-4 md:p-8 flex justify-center items-start">
+        {/* Live A4 CV Preview Area (Direct paper background) */}
+        <div className="flex-1 bg-[#1F1322] h-full overflow-y-auto p-2 sm:p-4 flex justify-center items-start">
           <CVPreview cvData={cvData} activeTab={activeTab} zoomLevel={zoomLevel} />
         </div>
       </main>
