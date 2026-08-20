@@ -22,7 +22,7 @@ import {
   Maximize2
 } from 'lucide-react';
 
-export default function CVPreview({ cvData, setCvData, activeTab }) {
+export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.85 }) {
   const { 
     personalInfo = {}, 
     roles = [], 
@@ -181,25 +181,7 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
     }));
   };
 
-  // Interactive Zoom & Mobile Auto-Responsive Scale State
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [autoFitMobile, setAutoFitMobile] = useState(true);
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 768 && autoFitMobile) {
-        const availableWidth = window.innerWidth - 32;
-        const a4WidthPx = 794; // 210mm in px at 96dpi
-        const calculatedScale = Math.min(1, availableWidth / a4WidthPx);
-        setZoomLevel(parseFloat(calculatedScale.toFixed(2)));
-      } else if (window.innerWidth >= 768 && autoFitMobile && zoomLevel < 1) {
-        setZoomLevel(1);
-      }
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [autoFitMobile]);
 
   // Section Visibility & Column Assignment Helpers
   const isVis = (key) => cvData?.sectionVisibility?.[key] !== false;
@@ -446,59 +428,7 @@ export default function CVPreview({ cvData, setCvData, activeTab }) {
       className="w-full bg-[#F5EDDA] min-h-full p-2 sm:p-6 flex flex-col items-center print-wrapper relative overflow-x-auto"
       style={dynamicThemeStyle}
     >
-      {/* Floating Interactive Zoom Toolbar (No Print) */}
-      <div className="no-print sticky top-3 z-30 flex items-center justify-center gap-1.5 bg-[#2B1B2E] text-white p-2 rounded-2xl border-2 border-[#EFE2C9] shadow-2xl mb-4 text-xs font-black">
-        <span className="text-[#FFC93C] hidden sm:inline px-1">Zoom A4:</span>
-        
-        <button
-          onClick={() => { setAutoFitMobile(false); setZoomLevel(prev => Math.max(0.3, parseFloat((prev - 0.1).toFixed(2)))); }}
-          className="p-1.5 rounded-xl bg-[#3D2740] hover:bg-[#FF2E63] text-white transition flex items-center justify-center shadow-sm"
-          title="Alejar (-10%)"
-        >
-          <ZoomOut className="w-4 h-4" />
-        </button>
-
-        <span className="px-2 font-black text-white min-w-12 text-center text-xs">
-          {Math.round(zoomLevel * 100)}%
-        </span>
-
-        <button
-          onClick={() => { setAutoFitMobile(false); setZoomLevel(prev => Math.min(2.0, parseFloat((prev + 0.1).toFixed(2)))); }}
-          className="p-1.5 rounded-xl bg-[#3D2740] hover:bg-[#FF2E63] text-white transition flex items-center justify-center shadow-sm"
-          title="Acercar (+10%)"
-        >
-          <ZoomIn className="w-4 h-4" />
-        </button>
-
-        <button
-          onClick={() => {
-            if (window.innerWidth < 768) {
-              const availableWidth = window.innerWidth - 32;
-              const calculatedScale = Math.min(1, availableWidth / 794);
-              setZoomLevel(parseFloat(calculatedScale.toFixed(2)));
-              setAutoFitMobile(true);
-            } else {
-              setZoomLevel(1);
-              setAutoFitMobile(false);
-            }
-          }}
-          className="px-2.5 py-1.5 rounded-xl bg-[#00A8A0] hover:bg-[#00877F] text-white font-black transition flex items-center gap-1 shadow-sm text-xs"
-          title="Auto-encajar a la pantalla del celular"
-        >
-          <Smartphone className="w-3.5 h-3.5" />
-          <span>Encajar Celular</span>
-        </button>
-
-        {zoomLevel !== 1 && (
-          <button
-            onClick={() => { setZoomLevel(1); setAutoFitMobile(false); }}
-            className="px-2 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-black text-[11px] transition hidden sm:inline-block"
-            title="Restablecer a 100%"
-          >
-            100%
-          </button>
-        )}
-      </div>
+      {/* Pages Container with Responsive Scaling */}
 
       {/* Pages Container with Responsive Scaling */}
       <div 

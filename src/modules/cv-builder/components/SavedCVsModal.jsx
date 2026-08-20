@@ -83,7 +83,7 @@ export default function SavedCVsModal({
         </div>
 
         {/* Action Header: Cargar archivo de respaldo */}
-        <div className="p-4 bg-purple-950/40 border-b border-purple-900/40 flex items-center justify-between gap-3">
+        <div className="p-4 bg-purple-950/40 border-b border-purple-900/40 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-xs font-semibold text-purple-200">
             <Download className="w-4 h-4 text-purple-400 flex-shrink-0" />
             <span>¿Tienes una copia de respaldo guardada en tu computadora o celular?</span>
@@ -102,6 +102,16 @@ export default function SavedCVsModal({
               }} 
             />
           </label>
+        </div>
+
+        {/* Explanation Banner: Borrador vs CV Oficial */}
+        <div className="px-5 py-2.5 bg-slate-950 border-b border-slate-800 text-[11px] text-slate-300 leading-snug flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0" />
+          <span>
+            <strong>¿Cuándo es Borrador y cuándo es CV Oficial?</strong> Un currículum es 
+            <span className="text-amber-400 font-bold"> 🟠 Borrador (En Edición)</span> mientras estás cargando o modificando tus datos. Cambia automáticamente a 
+            <span className="text-emerald-400 font-bold"> 🟢 CV Oficial</span> cuando generas y exportas tu documento PDF final.
+          </span>
         </div>
 
         {/* Body List */}
@@ -129,17 +139,32 @@ export default function SavedCVsModal({
                   })
                 : 'Reciente';
 
+              const isOfficial = item.is_official || item.isOfficial || item.pdf_exported;
+
               return (
                 <div
                   key={item.id}
                   className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 hover:border-purple-500/50 transition flex items-center justify-between gap-4 group"
                 >
                   <div className="space-y-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="text-sm font-black text-slate-100 truncate">{item.candidate_name || item.title}</span>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-900/40 text-purple-300 border border-purple-700/50">
-                        {item.dni ? `DNI: ${item.dni}` : 'Borrador'}
-                      </span>
+                      
+                      {isOfficial ? (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-950 text-emerald-400 border border-emerald-700/60 flex items-center gap-1">
+                          🟢 CV Oficial
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-black bg-amber-950/80 text-amber-300 border border-amber-700/60 flex items-center gap-1">
+                          🟠 Borrador
+                        </span>
+                      )}
+
+                      {item.dni && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">
+                          DNI: {item.dni}
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-slate-400 flex items-center gap-1.5">
                       <Calendar className="w-3.5 h-3.5 text-slate-500" />

@@ -35,6 +35,27 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState('personales');
   const [isPanelOpen, setIsPanelOpen] = useState(true);
 
+  // Zoom and Responsive A4 Auto-Fit state
+  const [zoomLevel, setZoomLevel] = useState(0.85);
+
+  const triggerAutoFit = () => {
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth < 768) {
+        const availableWidth = window.innerWidth - 32;
+        const calculatedScale = Math.min(1, availableWidth / 794);
+        setZoomLevel(parseFloat(calculatedScale.toFixed(2)));
+      } else {
+        setZoomLevel(0.85); // Comfortable A4 default on desktop
+      }
+    }
+  };
+
+  useEffect(() => {
+    triggerAutoFit();
+    window.addEventListener('resize', triggerAutoFit);
+    return () => window.removeEventListener('resize', triggerAutoFit);
+  }, []);
+
   const [isPhotoCropperOpen, setIsPhotoCropperOpen] = useState(false);
   const [isSignatureOpen, setIsSignatureOpen] = useState(false);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
@@ -178,6 +199,9 @@ function AppContent() {
         setActiveTab={setActiveTab} 
         isPanelOpen={isPanelOpen}
         setIsPanelOpen={setIsPanelOpen}
+        zoomLevel={zoomLevel}
+        setZoomLevel={setZoomLevel}
+        onTriggerAutoFit={triggerAutoFit}
       />
 
       {/* Main Workspace split into Editor Form (Left) and A4 Live Preview (Right) */}
@@ -200,7 +224,7 @@ function AppContent() {
 
         {/* Live A4 CV Preview Area (Independent scroll container) */}
         <div className="flex-1 bg-[#2B1B2E] h-full overflow-y-auto p-4 md:p-8 flex justify-center items-start">
-          <CVPreview cvData={cvData} />
+          <CVPreview cvData={cvData} activeTab={activeTab} zoomLevel={zoomLevel} />
         </div>
       </main>
 

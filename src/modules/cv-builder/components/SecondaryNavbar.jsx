@@ -13,7 +13,10 @@ import {
   Layout,
   Columns3,
   PanelLeftOpen,
-  PanelLeftClose
+  PanelLeftClose,
+  ZoomIn,
+  ZoomOut,
+  Smartphone
 } from 'lucide-react';
 
 export const mainStyleTabs = [
@@ -38,12 +41,15 @@ export default function SecondaryNavbar({
   activeTab, 
   setActiveTab, 
   isPanelOpen, 
-  setIsPanelOpen 
+  setIsPanelOpen,
+  zoomLevel = 0.85,
+  setZoomLevel,
+  onTriggerAutoFit
 }) {
   return (
     <nav className="w-full bg-[#2B1B2E] border-b border-[#EFE2C9]/20 text-white shadow-md z-30 no-print px-3 py-2 flex flex-col gap-2">
       
-      {/* Row 1: Style & Layout Controls + Sidebar Toggle */}
+      {/* Row 1: Style & Layout Controls + Sidebar Toggle + Integrated Zoom Controls */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-1.5">
         <div className="flex items-center gap-2">
           {/* Toggle Sidebar Panel Button */}
@@ -74,29 +80,65 @@ export default function SecondaryNavbar({
           </span>
         </div>
 
-        {/* Style & Layout Tabs */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {mainStyleTabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id && isPanelOpen;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id);
-                  if (!isPanelOpen) setIsPanelOpen(true);
-                }}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black transition ${
-                  isActive
-                    ? 'bg-[#FF2E63] text-white shadow-md shadow-[#FF2E63]/40 ring-2 ring-white/30'
-                    : 'bg-[#3D2740] text-[#EFE2C9] hover:text-white hover:bg-[#4E3252]'
-                }`}
-              >
-                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-[#FFC93C]'}`} />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
+        {/* Style & Layout Tabs + Integrated Zoom Toolbar */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1 flex-wrap">
+            {mainStyleTabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id && isPanelOpen;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    if (!isPanelOpen) setIsPanelOpen(true);
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black transition ${
+                    isActive
+                      ? 'bg-[#FF2E63] text-white shadow-md shadow-[#FF2E63]/40 ring-2 ring-white/30'
+                      : 'bg-[#3D2740] text-[#EFE2C9] hover:text-white hover:bg-[#4E3252]'
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-[#FFC93C]'}`} />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="h-4 w-px bg-white/20 hidden md:block" />
+
+          {/* Integrated Zoom & Auto-Fit Controls (- Zoom + Encajar) */}
+          <div className="flex items-center gap-1 bg-[#3D2740] p-1 rounded-xl border border-white/10 text-xs font-black">
+            <button
+              onClick={() => setZoomLevel && setZoomLevel(prev => Math.max(0.3, parseFloat((prev - 0.1).toFixed(2))))}
+              className="p-1 rounded-lg hover:bg-[#FF2E63] text-white transition cursor-pointer"
+              title="Alejar (-10%)"
+            >
+              <ZoomOut className="w-3.5 h-3.5" />
+            </button>
+
+            <span className="px-1 text-[#FFC93C] text-[11px] min-w-10 text-center font-black">
+              {Math.round(zoomLevel * 100)}%
+            </span>
+
+            <button
+              onClick={() => setZoomLevel && setZoomLevel(prev => Math.min(2.0, parseFloat((prev + 0.1).toFixed(2))))}
+              className="p-1 rounded-lg hover:bg-[#FF2E63] text-white transition cursor-pointer"
+              title="Acercar (+10%)"
+            >
+              <ZoomIn className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              onClick={onTriggerAutoFit}
+              className="px-2 py-0.5 rounded-lg bg-[#00A8A0] hover:bg-[#00877F] text-white text-[10px] font-black transition flex items-center gap-1 shadow-sm cursor-pointer ml-0.5"
+              title="Auto-encajar el diseño A4 al tamaño de pantalla"
+            >
+              <Smartphone className="w-3 h-3" />
+              <span>Encajar</span>
+            </button>
+          </div>
         </div>
       </div>
 
