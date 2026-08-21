@@ -1,6 +1,6 @@
 import React from 'react';
 import { User } from 'lucide-react';
-import { PAGE_SIZES, PaperSize } from '../../../../shared/core/pdf-engine/pageSizes';
+import { PAGE_SIZES, PageSize } from '../../../../shared/core/pdf-engine/pageSizes';
 
 export interface CoverPageSectionProps {
   cvData: any;
@@ -17,7 +17,7 @@ export function CoverPageSection({
 }: CoverPageSectionProps) {
   const personalInfo = cvData?.personalInfo || {};
   const roles = cvData?.roles || [];
-  const currentPaper: PaperSize = (PAGE_SIZES as any)[paperSizeId] || PAGE_SIZES.a4;
+  const currentPaper: PageSize = (PAGE_SIZES as any)[paperSizeId] || PAGE_SIZES.a4;
   const coverPreset = cvData?.coverPreset || 'monica-classic';
 
   const primaryColor = theme?.primaryColor || '#ab5ba1';
