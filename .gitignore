@@ -25,3 +25,7 @@ client_secret_*.json
 *.njsproj
 *.sln
 *.sw?
+
+# Temporary work directories and archives
+scratch/
+*.zip

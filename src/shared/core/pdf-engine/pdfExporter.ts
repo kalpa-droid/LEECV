@@ -1,6 +1,8 @@
 import React from 'react';
 import { pdf } from '@react-pdf/renderer';
-import { CvPdfDocument } from '../../../modules/cv-builder/components/pdf/CvPdfDocument';
+import { TemplateRenderer } from './renderer/TemplateRenderer';
+import { cvClasicoPreset } from './layers/presets/presets/cv-clasico';
+import { cvDataToContentSections } from './layers/records/cvDataAdapter';
 
 const getMonthNameEs = (date = new Date()) => {
   const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
@@ -8,7 +10,7 @@ const getMonthNameEs = (date = new Date()) => {
 };
 
 /**
- * Native Vector PDF Generator powered by @react-pdf/renderer
+ * Native Vector PDF Generator powered by 8-Layer TemplateRenderer + @react-pdf/renderer
  * (Yoga Flexbox C++ Layout Engine + TextKit font metrics)
  */
 export async function exportCVToPDF(cvData: any): Promise<boolean> {
@@ -22,8 +24,15 @@ export async function exportCVToPDF(cvData: any): Promise<boolean> {
   const yearNum = new Date().getFullYear();
   const fileName = `CV - ${candidateName} - ${monthName} - ${yearNum}.pdf`;
 
+  const sections = cvDataToContentSections(cvData);
+  const docElement = React.createElement(TemplateRenderer, {
+    preset: cvClasicoPreset,
+    sections,
+    personalInfo: cvData?.personalInfo || {},
+    certificatesScanned: cvData?.certificatesScanned || []
+  });
+
   // Generate vector PDF blob natively without screen capture
-  const docElement = React.createElement(CvPdfDocument, { cvData });
   const blob = await pdf(docElement as any).toBlob();
 
   // Create download link
