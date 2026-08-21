@@ -7,7 +7,7 @@ import { ZoomIn, ZoomOut, Smartphone } from 'lucide-react';
 
 import { getCurrentProfile, capturarConexionDriveSiCorresponde } from '../modules/auth/authService';
 import { supabase } from '../shared/core/lib/supabaseClient';
-import { exportCVToPDF } from '../shared/core/pdf-engine/pdfExporter';
+import { exportDocumentToPDF } from '../shared/core/pdf-engine/pdfExporter';
 import { exportCVToJson, importCVFromJsonFile } from '../shared/core/utils/jsonImporterExporter';
 
 // Direct Modals Imports (Prevents dynamic chunk fetch errors on updates)
@@ -96,7 +96,7 @@ function AppContent() {
 
     try {
       setPdfProgress(40);
-      const success = await exportCVToPDF(cvData);
+      const success = await exportDocumentToPDF(cvData, cvData?.activePresetId || 'cv-clasico');
       
       setPdfProgress(100);
       if (success) {

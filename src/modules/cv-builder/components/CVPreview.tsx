@@ -28,6 +28,13 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
     fontFamily: theme.fontFamily || 'Arial, sans-serif'
   };
 
+  const handleSelectPreset = (presetId: string) => {
+    setActivePresetId(presetId);
+    if (setCvData) {
+      setCvData((prev: any) => ({ ...prev, activePresetId: presetId }));
+    }
+  };
+
   return (
     <div 
       className="w-full min-h-full flex flex-col items-center print-wrapper relative"
@@ -36,7 +43,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
       {/* Top Preset Selector Bar */}
       <TemplateMenu
         activePresetId={activePresetId}
-        onSelectPreset={setActivePresetId}
+        onSelectPreset={handleSelectPreset}
         cvData={cvData}
       />
 
