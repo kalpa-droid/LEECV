@@ -20,6 +20,9 @@ export interface ImpositionSpec {
 export const IMPOSITION_PRESETS: Record<string, ImpositionSpec> = {
   // 5mm es el margen no imprimible típico de una impresora de oficina A4/A3.
   impresora_oficina: { sheetMarginMm: 5, gutterMm: 4 },
+  // Solo válido si la impresora del usuario admite impresión "borderless" real
+  // (la mayoría de las hogareñas NO) — la UI debe advertir esto explícitamente.
+  sin_margen_borderless: { sheetMarginMm: 0, gutterMm: 4 },
 };
 
 export interface PlacedCard {

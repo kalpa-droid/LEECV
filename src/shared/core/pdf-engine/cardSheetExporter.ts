@@ -74,14 +74,51 @@ function SheetPage({ preset, sheetPageSize, imposition, sections, sectors, fixed
  * ya reflejada en espejo según preset.print.duplexMode para que al imprimir
  * a doble faz frente y dorso queden alineados.
  */
-export async function exportBusinessCardSheetToPDF(card: BusinessCardData, preset: Preset, sheetPageSizeIdOverride?: string): Promise<boolean> {
+export interface CardExportOptions {
+  /** Tamaño de hoja física donde se auto-repite (ej. 'a4', 'a3', 'a5') */
+  sheetPageSizeIdOverride?: string;
+  /** id de un tamaño de tarjeta ya registrado en PAGE_SIZES, o 'tarjeta_personalizada' */
+  trimSizeOverride?: PageSize;
+  /** 'impresora_oficina' (con margen) | 'sin_margen_borderless' */
+  impositionPresetIdOverride?: string;
+}
+
+/**
+ * Solo el cálculo (capas 6+7), sin renderizar el PDF — para mostrar en vivo
+ * "entran X tarjetas por hoja" mientras el usuario elige tamaño/hoja/margen,
+ * sin pagar el costo de generar el PDF completo en cada cambio de selector.
+ */
+export function calculateCardsPerSheetPreview(
+  trimPage: PageSize,
+  sheetPageSize: PageSize,
+  bleedPresetId: string,
+  impositionPresetId: string
+): { totalPerSheet: number; cols: number; rows: number; warning?: string } {
+  const bleedSpec = BLEED_PRESETS[bleedPresetId] || BLEED_PRESETS.ninguno;
+  const impositionSpec = IMPOSITION_PRESETS[impositionPresetId] || IMPOSITION_PRESETS.impresora_oficina;
+  const bleedBox = resolveBleedBox({ trimWidthMm: trimPage.widthMm, trimHeightMm: trimPage.heightMm }, bleedSpec);
+  const imposition = resolveImposition(sheetPageSize, bleedBox, impositionSpec);
+
+  return {
+    totalPerSheet: imposition.totalPerSheet,
+    cols: imposition.cols,
+    rows: imposition.rows,
+    warning: imposition.totalPerSheet === 0 ? 'La tarjeta no entra en esta hoja con estos márgenes.' : undefined,
+  };
+}
+
+export async function exportBusinessCardSheetToPDF(
+  card: BusinessCardData,
+  preset: Preset,
+  options: CardExportOptions = {}
+): Promise<boolean> {
   if (!preset.print) throw new Error('Este preset no tiene configuración de impresión (preset.print)');
   if (!preset.back) throw new Error('Este preset no tiene dorso definido (preset.back)');
 
-  const trimPage = getPageSize(preset.pageSizeId);
-  const sheetPageSize = getPageSize(sheetPageSizeIdOverride || preset.print.defaultSheetPageSizeId);
+  const trimPage = options.trimSizeOverride || getPageSize(preset.pageSizeId);
+  const sheetPageSize = getPageSize(options.sheetPageSizeIdOverride || preset.print.defaultSheetPageSizeId);
   const bleedSpec = BLEED_PRESETS[preset.print.bleedPresetId] || BLEED_PRESETS.ninguno;
-  const impositionSpec = IMPOSITION_PRESETS[preset.print.impositionPresetId] || IMPOSITION_PRESETS.impresora_oficina;
+  const impositionSpec = IMPOSITION_PRESETS[options.impositionPresetIdOverride || preset.print.impositionPresetId] || IMPOSITION_PRESETS.impresora_oficina;
   const cardMarginPreset = MARGIN_PRESETS[preset.marginPresetId] || MARGIN_PRESETS.tarjeta_ajustada;
 
   const bleedBox = resolveBleedBox({ trimWidthMm: trimPage.widthMm, trimHeightMm: trimPage.heightMm }, bleedSpec);
