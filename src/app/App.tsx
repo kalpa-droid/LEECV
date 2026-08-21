@@ -34,8 +34,18 @@ function AppContent() {
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
 
+  const [isPublicView, setIsPublicView] = useState(false);
+
   useEffect(() => {
     getCurrentProfile().then(p => setCurrentProfile(p)).catch(() => {});
+
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const publicId = params.get('publicCv') || params.get('share');
+      if (publicId) {
+        setIsPublicView(true);
+      }
+    }
 
     if (supabase) {
       supabase.auth.getSession()
@@ -84,6 +94,7 @@ function AppContent() {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isPdfComplete, setIsPdfComplete] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [mobileTabState, setMobileTabState] = useState('editor');
 
   const [isPdfCheckoutOpen, setIsPdfCheckoutOpen] = useState(false);
 
@@ -190,7 +201,46 @@ function AppContent() {
     }
   };
 
-  const [mobileTabState, setMobileTabState] = useState('editor');
+  if (isPublicView) {
+    return (
+      <div className="h-screen bg-[#1F1322] text-white flex flex-col font-sans overflow-hidden">
+        {/* Public Header */}
+        <header className="bg-[#2B1B2E] border-b border-purple-500/30 px-4 py-3 flex items-center justify-between z-30 shadow-lg">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">📄</span>
+            <div>
+              <h1 className="text-sm font-black text-white">
+                Currículum Vitae — {cvData?.personalInfo?.fullName || 'Postulante'}
+              </h1>
+              <p className="text-[10px] text-purple-300 font-bold">
+                Verificado por LEECV • Perfil Público de Solo Lectura
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              window.location.href = window.location.pathname;
+            }}
+            className="px-3.5 py-1.5 bg-[#FF2E63] hover:bg-[#E31555] text-white text-xs font-black rounded-xl transition cursor-pointer shadow-md"
+          >
+            ✏️ Crear mi propio CV
+          </button>
+        </header>
+
+        {/* Public Full-Screen Viewer */}
+        <main className="flex-1 bg-[#1F1322] overflow-y-auto p-4 flex justify-center items-start">
+          <Suspense fallback={
+            <div className="w-full h-[600px] flex flex-col items-center justify-center p-8 text-slate-400">
+              <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4" />
+              <span className="text-xs font-bold uppercase tracking-wider text-purple-300">Cargando Perfil Público…</span>
+            </div>
+          }>
+            <CVPreview cvData={cvData} activeTab="personales" zoomLevel={zoomLevel} />
+          </Suspense>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen bg-[#2B1B2E] text-white flex flex-col font-sans overflow-hidden selection:bg-[#FF2E63] selection:text-white relative">

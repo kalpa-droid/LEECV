@@ -1,4 +1,5 @@
 import QRCode from 'qrcode';
+import { resolveThemeRoles } from '../colors/colorSystem';
 
 export interface VCardData {
   surname?: string;
@@ -9,6 +10,8 @@ export interface VCardData {
   email?: string;
   cityProvince?: string;
   website?: string;
+  publicProfileUrl?: string;
+  mode?: 'vcard' | 'public_link';
 }
 
 /**
@@ -39,17 +42,23 @@ export function generateVCardString(card: VCardData): string {
 }
 
 /**
- * Genera una imagen Data URL PNG del código QR de vCard en el cliente.
+ * Genera una imagen Data URL PNG del código QR (vCard o URL pública)
+ * utilizando los colores de contraste óptimo garantizados por la Capa 9.
  */
-export async function generateVCardQRCodeDataUrl(card: VCardData): Promise<string> {
-  const vcardText = generateVCardString(card);
+export async function generateVCardQRCodeDataUrl(card: VCardData, theme?: any): Promise<string> {
+  const contentToEncode = (card.mode === 'public_link' && card.publicProfileUrl)
+    ? card.publicProfileUrl
+    : generateVCardString(card);
+
+  const roles = resolveThemeRoles(theme || {});
+
   try {
-    return await QRCode.toDataURL(vcardText, {
+    return await QRCode.toDataURL(contentToEncode, {
       margin: 1,
       width: 256,
       color: {
-        dark: '#1a1a2e',
-        light: '#ffffff'
+        dark: roles.qrColors.dark,
+        light: roles.qrColors.light
       }
     });
   } catch (err) {

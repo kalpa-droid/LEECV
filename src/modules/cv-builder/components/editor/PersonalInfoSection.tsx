@@ -262,6 +262,27 @@ export default function PersonalInfoSection({ onOpenPhotoCropper, registeredItem
         />
       </div>
 
+      {/* QR Code Mode Selector */}
+      <div className="p-3 bg-purple-50 rounded-2xl border-2 border-purple-200 space-y-2 shadow-sm">
+        <label className="block text-xs font-black text-purple-900 uppercase tracking-wide flex items-center justify-between">
+          <span>Configuración del Código QR</span>
+          <span className="text-[10px] bg-purple-200 text-purple-800 px-2 py-0.5 rounded-full font-bold">Smart QR</span>
+        </label>
+        <select
+          value={cvData.qrMode || 'vcard'}
+          onChange={(e) => setCvData(prev => ({ ...prev, qrMode: e.target.value }))}
+          className="w-full text-xs p-2.5 rounded-xl border-2 border-purple-300 bg-white text-[#2B1B2E] font-bold outline-none focus:ring-2 focus:ring-purple-200 cursor-pointer"
+        >
+          <option value="vcard">📱 vCard: Guardar contacto en agenda del celular</option>
+          <option value="public_link">🌐 Perfil Web: Abrir mi CV público en línea</option>
+        </select>
+        <p className="text-[10.5px] text-purple-700 font-medium leading-relaxed">
+          {cvData.qrMode === 'public_link'
+            ? 'Al escanear el QR desde un celular, abrirá tu página web de CV público sin descargas.'
+            : 'Al escanear el QR desde un celular, agregará tu contacto directamente a la agenda.'}
+        </p>
+      </div>
+
       {/* Roles List */}
       <div className="pt-3 border-t border-[#EFE2C9]/80 space-y-3">
         <div>

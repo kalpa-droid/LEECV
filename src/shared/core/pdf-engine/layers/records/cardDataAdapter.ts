@@ -12,19 +12,25 @@ export interface BusinessCardData {
   tagline?: string;
   /** Nombre de marca/empresa mostrado en el dorso (si no se pone, usa fullName) */
   brandName?: string;
-  /** QR Data URL generado con vCard */
+  /** QR Data URL generado con vCard o Link Web Público */
   qrDataUrl?: string;
+  /** Modo del QR: 'vcard' (agenda) o 'public_link' (link web) */
+  qrMode?: 'vcard' | 'public_link';
 }
 
 /**
  * Traduce cvData directamente a BusinessCardData (Cero doble tipeo)
- * y genera automáticamente el QR vCard.
+ * y genera automáticamente el QR (vCard o URL Pública) con la Capa 9 de colores.
  */
 export async function buildCardDataFromCV(cvData: any): Promise<BusinessCardData> {
   const personalInfo = cvData?.personalInfo || {};
   const role = cvData?.roles?.[0] || cvData?.profession?.[0]?.degree || 'Profesional';
   const fullName = `${personalInfo.surname || ''} ${personalInfo.givenNames || ''}`.trim() || 'Juan Pérez';
   
+  const qrMode = cvData?.qrMode || 'vcard';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://leecv.vercel.app';
+  const publicProfileUrl = `${origin}/?publicCv=${cvData?.id || 'cv_ejemplo_estandar'}`;
+
   const qrDataUrl = await generateVCardQRCodeDataUrl({
     surname: personalInfo.surname,
     givenNames: personalInfo.givenNames,
@@ -33,8 +39,10 @@ export async function buildCardDataFromCV(cvData: any): Promise<BusinessCardData
     phone: personalInfo.phone,
     email: personalInfo.email,
     cityProvince: personalInfo.cityProvince,
-    website: personalInfo.facebook || personalInfo.website
-  });
+    website: personalInfo.facebook || personalInfo.website,
+    mode: qrMode,
+    publicProfileUrl
+  }, cvData?.theme);
 
   return {
     fullName,
@@ -44,7 +52,8 @@ export async function buildCardDataFromCV(cvData: any): Promise<BusinessCardData
     website: personalInfo.cityProvince || '',
     brandName: personalInfo.surname ? `${personalInfo.surname} Studio` : 'Marca Personal',
     tagline: personalInfo.quote || 'Servicios Profesionales de Alta Calidad',
-    qrDataUrl
+    qrDataUrl,
+    qrMode
   };
 }
 
@@ -96,11 +105,15 @@ export function cardDataToBackSections(card: BusinessCardData): ContentSection[]
   ];
 
   if (card.qrDataUrl) {
+    const caption = card.qrMode === 'public_link' 
+      ? 'Escanear para ver Perfil Web' 
+      : 'Escanear para guardar contacto';
+
     records.push({
       id: 'rec-card-qr',
       kind: 'qr',
       targetSectorRole: 'main',
-      fields: { dataUrl: card.qrDataUrl, caption: 'Escanear para guardar contacto' }
+      fields: { dataUrl: card.qrDataUrl, caption }
     });
   }
 
