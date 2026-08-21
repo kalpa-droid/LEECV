@@ -88,8 +88,9 @@ export function VectorDocViewer({ document }: VectorDocViewerProps) {
         if (!cancelled && renderTokenRef.current === myToken) setLoading(false);
       } catch (err) {
         console.error('Error renderizando el PDF vectorial:', err);
+        const detail = err instanceof Error ? err.message : String(err);
         if (!cancelled && renderTokenRef.current === myToken) {
-          setError('No se pudo generar la vista previa. Probá de nuevo.');
+          setError(detail);
           setLoading(false);
         }
       }
@@ -107,8 +108,9 @@ export function VectorDocViewer({ document }: VectorDocViewerProps) {
         </div>
       )}
       {error && (
-        <div style={{ padding: 32, textAlign: 'center', color: '#f87171', fontSize: 13, fontWeight: 700 }}>
-          {error}
+        <div style={{ padding: 24, textAlign: 'center', color: '#f87171', fontSize: 12, fontWeight: 600 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 6 }}>No se pudo generar la vista previa</div>
+          <div style={{ opacity: 0.85, fontFamily: 'monospace', wordBreak: 'break-word' }}>{error}</div>
         </div>
       )}
       <div ref={containerRef} style={{ width: '100%' }} />
