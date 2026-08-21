@@ -1,7 +1,7 @@
 import React from 'react';
 import { Document, Page, View, Text, Image, StyleSheet } from '@react-pdf/renderer';
 import { Preset } from '../layers/presets/presetSchema';
-import { getPageSize } from '../layers/page/pageSizes';
+import { getPageSize, PageSize } from '../layers/page/pageSizes';
 import { MARGIN_PRESETS, resolveMargins } from '../layers/margins/marginPresets';
 import { resolveSectors } from '../layers/sectors/resolveSectors';
 import { placeFixedObjects } from '../layers/fixedObjects/placeFixedObjects';
@@ -51,8 +51,12 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
 }) => {
   // En modo embedded el "lienzo" es el objeto (ej. la tarjeta), no una hoja
   // física — nunca se consulta getPageSize() para ese caso.
-  const pageDef = embedded && canvasWidthMm && canvasHeightMm
+  const pageDef: PageSize = embedded && canvasWidthMm && canvasHeightMm
     ? {
+        id: 'embedded',
+        name: 'Embedded Canvas',
+        label: 'Embedded Canvas',
+        category: 'tarjeta',
         widthMm: canvasWidthMm,
         heightMm: canvasHeightMm,
         widthPt: canvasWidthMm * MM_TO_PT_LOCAL,

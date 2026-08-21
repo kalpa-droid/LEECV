@@ -34,7 +34,7 @@ export function useCoreDocumentActions(): CoreDocumentActions {
     // Guardar y Abrir son GRATIS para todos los planes (incluido anónimo,
     // local) — es la exportación la que está sujeta a plan, según el
     // modelo de negocio ya definido. No hay gate acá adentro.
-    save: (documentTypeId, data) => saveDocument(documentTypeId, data),
+    save: (documentTypeId, data) => saveDocument(data, documentTypeId),
     open: (documentId) => loadDocument(documentId),
 
     // Exportar SÍ está sujeto al plan — mismo gate para cualquier tipo de

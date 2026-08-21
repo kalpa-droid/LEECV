@@ -26,6 +26,16 @@ export interface Capability<TData = unknown> {
   ConfigPanel: React.ComponentType<{ data: TData; onChange: (next: TData) => void }>;
 }
 
+const DummyPanel: React.ComponentType<{ data: any; onChange: (next: any) => void }> = () => null;
+
+const ThemeColorPanel = DummyPanel;
+const TypographyPanel = DummyPanel;
+const PaperSizePanel = DummyPanel;
+const SectionOrderPanel = DummyPanel;
+const QrCodePanel = DummyPanel;
+const LogoUploadPanel = DummyPanel;
+const CertificatesPanel = DummyPanel;
+
 // El núcleo de capacidades vive en UN SOLO lugar. Se importa, nunca se copia.
 export const CAPABILITY_REGISTRY: Record<CapabilityId, Capability<any>> = {
   theme_color: {

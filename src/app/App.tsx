@@ -17,6 +17,7 @@ import WizardModal from '../modules/cv-builder/components/WizardModal';
 import SavedCVsModal from '../modules/cv-builder/components/SavedCVsModal';
 import SaveModal from '../modules/cv-builder/components/SaveModal';
 import CloudStatusModal from '../modules/cv-builder/components/CloudStatusModal';
+import { CardExportModal } from '../modules/cv-builder/components/modals/CardExportModal';
 import PricingModal from '../modules/payments/PricingModal';
 import PdfCheckoutModal from '../modules/cv-builder/components/modals/PdfCheckoutModal';
 import JsonDownloadModal from '../modules/cv-builder/components/modals/JsonDownloadModal';
@@ -108,15 +109,14 @@ function AppContent() {
   const [mobileTabState, setMobileTabState] = useState('editor');
 
   const [isPdfCheckoutOpen, setIsPdfCheckoutOpen] = useState(false);
+  const [isCardExportOpen, setIsCardExportOpen] = useState(false);
 
   const handleStartPDFGeneration = async () => {
-    setIsPdfCheckoutOpen(false);
     setIsGeneratingPDF(true);
-    setPdfProgress(10);
     setIsPdfComplete(false);
+    setPdfProgress(15);
 
     try {
-      setPdfProgress(40);
       const { exportDocumentToPDF } = await import('../shared/core/pdf-engine/pdfExporter');
       const success = await exportDocumentToPDF(cvData, cvData?.activePresetId || 'cv-clasico');
       
@@ -142,6 +142,12 @@ function AppContent() {
       showInfo('Para comenzar a crear tu propio currículum, presiona el botón "+ Nuevo"');
       return;
     }
+
+    if (cvData?.activePresetId === 'tarjeta-personal') {
+      setIsCardExportOpen(true);
+      return;
+    }
+
     setIsPdfCheckoutOpen(true);
   };
 
@@ -396,6 +402,15 @@ function AppContent() {
             currentProfile={currentProfile}
             onOpenPricing={() => setIsPricingModalOpen(true)}
             onExportJson={() => exportCVToJson(cvData)}
+          />
+        )}
+
+        {isCardExportOpen && (
+          <CardExportModal
+            isOpen={isCardExportOpen}
+            onClose={() => setIsCardExportOpen(false)}
+            cvData={cvData}
+            presetId={cvData?.activePresetId || 'tarjeta-personal'}
           />
         )}
 
