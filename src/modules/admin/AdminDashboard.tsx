@@ -19,11 +19,14 @@ import {
 
 import { useToast } from '../../shared/core/ui/Toast';
 import { useConfirm } from '../../shared/core/ui/ConfirmDialog';
+import { TemplateManagementTab } from './components/TemplateManagementTab';
+import { Layout as LayoutIcon } from 'lucide-react';
 
 export default function AdminDashboard() {
   const { showSuccess, showError } = useToast();
   const { confirm } = useConfirm();
   const [profile, setProfile] = useState(undefined);
+  const [adminTab, setAdminTab] = useState<'users' | 'templates'>('users');
   const [users, setUsers] = useState<any[]>([]);
   const [stats, setStats] = useState<any>({ totalUsers: 0, proUsers: 0, enterpriseUsers: 0, activeSubscriptions: 0 });
   const [loadingData, setLoadingData] = useState(false);
@@ -199,6 +202,34 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Navigation Sub-Tabs */}
+        <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-[#EFE2C9] shadow-sm">
+          <button
+            onClick={() => setAdminTab('users')}
+            className={`px-4 py-2 text-xs font-black rounded-xl transition flex items-center gap-2 cursor-pointer ${
+              adminTab === 'users' ? 'bg-[#2B1B2E] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            <span>Usuarios & Licencias</span>
+          </button>
+
+          <button
+            onClick={() => setAdminTab('templates')}
+            className={`px-4 py-2 text-xs font-black rounded-xl transition flex items-center gap-2 cursor-pointer ${
+              adminTab === 'templates' ? 'bg-[#2B1B2E] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <LayoutIcon className="w-4 h-4 text-[#FF2E63]" />
+            <span>Gestión de Plantillas y Presets (Capa 5)</span>
+          </button>
+        </div>
+
+        {adminTab === 'templates' ? (
+          <TemplateManagementTab />
+        ) : (
+          <div className="space-y-6">
 
         {/* Notificaciones de Administración con Badge visual de campana */}
         {notifications.length > 0 && (
@@ -451,6 +482,8 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+        </div>
+        )}
 
       </main>
     </div>
