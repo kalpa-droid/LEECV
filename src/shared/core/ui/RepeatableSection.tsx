@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Copy } from 'lucide-react';
 import { useConfirm } from './ConfirmDialog';
 
 /**
@@ -38,6 +38,27 @@ export function RepeatableSection({
       ...prev,
       [fieldName]: [...(Array.isArray(prev[fieldName]) ? prev[fieldName] : []), { ...emptyItem }]
     }));
+  };
+
+  const handleDuplicateItem = (idx) => {
+    setCvData(prev => {
+      const currentList = Array.isArray(prev[fieldName]) ? prev[fieldName] : [];
+      const itemToCopy = currentList[idx];
+      if (!itemToCopy) return prev;
+
+      const duplicatedItem = {
+        ...JSON.parse(JSON.stringify(itemToCopy)),
+        id: `rec_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`
+      };
+
+      const updatedList = [...currentList];
+      updatedList.splice(idx + 1, 0, duplicatedItem);
+
+      return {
+        ...prev,
+        [fieldName]: updatedList
+      };
+    });
   };
 
   const handleDeleteItem = (idx) => {
@@ -112,14 +133,25 @@ export function RepeatableSection({
                 <span className="text-xs font-bold text-[#00A8A0]">
                   {itemTitlePrefix} #{idx + 1}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => handleDeleteItem(idx)}
-                  className="p-1 text-[#2B1B2E] font-medium hover:text-red-600 transition cursor-pointer"
-                  title="Eliminar registro"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => handleDuplicateItem(idx)}
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 hover:bg-purple-100 text-[11px] font-bold transition cursor-pointer"
+                    title="Duplicar este registro para crear una copia editable"
+                  >
+                    <Copy className="w-3 h-3" />
+                    <span>Duplicar</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteItem(idx)}
+                    className="p-1 text-[#2B1B2E] font-medium hover:text-red-600 transition cursor-pointer"
+                    title="Eliminar registro"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
 
               {renderItem(item, idx, (field, value) => handleUpdateItemField(idx, field, value))}
