@@ -117,7 +117,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper, registeredItem
 
       <div>
         <label className="block text-xs font-bold text-[#FF2E63] mb-1">
-          Frase de Presentación / Perfil Profesional (Aparece en Encabezado)
+          Frase de Presentación / Perfil Profesional (Aparece en Encabezado y Portada)
         </label>
         <textarea 
           rows={3}
@@ -125,6 +125,20 @@ export default function PersonalInfoSection({ onOpenPhotoCropper, registeredItem
           onChange={(e) => updatePersonalInfo('quote', e.target.value)}
           placeholder="Ej: Mi experiencia personal y profesional me permite desarrollar eficientemente..."
           className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+        />
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-[#FF2E63] mb-1">
+          Iniciales de Sello / Monograma de Portada (ej: MB)
+        </label>
+        <input 
+          type="text"
+          maxLength={4}
+          value={cvData.personalInfo?.initials || ''}
+          onChange={(e) => updatePersonalInfo('initials', e.target.value.toUpperCase())}
+          placeholder="Ej: MB"
+          className="w-28 text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-black uppercase outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
         />
       </div>
 

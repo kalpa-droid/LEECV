@@ -1110,12 +1110,12 @@ export default function EditorPanel({
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 11: DISEÑO Y PORTADA */}
+        {/* TAB 11: DISEÑO & FORMATO PAPEL */}
         {/* ========================================================================= */}
         {activeTab === 'diseno' && (
           <div className="space-y-6">
             <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] border-b pb-2 border-[#EFE2C9] flex items-center gap-1.5">
-              <Layout className="w-4 h-4 text-[#00A8A0]" /> Estructura de Diseño, Papel y Portada
+              <Layout className="w-4 h-4 text-[#00A8A0]" /> Estructura de Diseño y Formato de Papel
             </h3>
 
             {/* Paper Size Selector */}
@@ -1147,6 +1147,17 @@ export default function EditorPanel({
                 El motor de paginado recalcula automáticamente los límites de ítems por hoja según la altura física del formato seleccionado.
               </p>
             </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 11.5: CONFIGURACIÓN DE PORTADA */}
+        {/* ========================================================================= */}
+        {activeTab === 'portada' && (
+          <div className="space-y-6">
+            <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] border-b pb-2 border-[#EFE2C9] flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-[#00A8A0]" /> Configuración y Adornos de Portada
+            </h3>
 
             {/* Cover Page Toggle */}
             <div className={`flex items-center justify-between p-2.5 rounded-xl border transition ${
@@ -1255,7 +1266,7 @@ export default function EditorPanel({
                 <select
                   value={cvData.coverFeaturedEducationId || ''}
                   onChange={(e) => setCvData(prev => ({ ...prev, coverFeaturedEducationId: e.target.value }))}
-                  className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none focus:border-[#FF2E63] transition"
+                  className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none focus:border-[#FF2E63] transition cursor-pointer"
                 >
                   <option value="">-- Usar primer título cargado automáticamente --</option>
                   {(cvData.education || []).map((edu, idx) => (
@@ -1274,7 +1285,7 @@ export default function EditorPanel({
                 <select
                   value={cvData.coverFeaturedProfessionId || ''}
                   onChange={(e) => setCvData(prev => ({ ...prev, coverFeaturedProfessionId: e.target.value }))}
-                  className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none focus:border-[#FF2E63] transition"
+                  className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none focus:border-[#FF2E63] transition cursor-pointer"
                 >
                   <option value="">-- Usar primer título profesional automáticamente --</option>
                   {(cvData.professions || []).map((prof, idx) => (
