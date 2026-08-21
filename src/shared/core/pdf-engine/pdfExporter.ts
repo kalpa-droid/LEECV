@@ -31,7 +31,13 @@ export async function exportCVToPDF(cvData: any, presetInput?: Preset): Promise<
     preset,
     sections,
     personalInfo: cvData?.personalInfo || {},
-    certificatesScanned: cvData?.certificatesScanned || []
+    certificatesScanned: cvData?.certificatesScanned || [],
+    showCoverPage: cvData?.showCoverPage !== false,
+    coverFeaturedEducationId: cvData?.coverFeaturedEducationId,
+    coverFeaturedProfessionId: cvData?.coverFeaturedProfessionId,
+    roles: cvData?.roles || [],
+    education: cvData?.education || [],
+    professions: cvData?.professions || []
   });
 
   // Generate vector PDF blob natively without screen capture

@@ -13,13 +13,25 @@ interface TemplateRendererProps {
   sections: ContentSection[];
   personalInfo?: any;
   certificatesScanned?: any[];
+  showCoverPage?: boolean;
+  coverFeaturedEducationId?: string;
+  coverFeaturedProfessionId?: string;
+  roles?: string[];
+  education?: any[];
+  professions?: any[];
 }
 
 export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   preset,
   sections,
   personalInfo = {},
-  certificatesScanned = []
+  certificatesScanned = [],
+  showCoverPage = false,
+  coverFeaturedEducationId,
+  coverFeaturedProfessionId,
+  roles = [],
+  education = [],
+  professions = []
 }) => {
   const pageDef = getPageSize(preset.pageSizeId);
   const marginDef = MARGIN_PRESETS[preset.marginPresetId] || MARGIN_PRESETS.documento_estandar;
@@ -257,8 +269,146 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       maxHeight: '80%',
       objectFit: 'contain',
       borderRadius: 4
+    },
+    coverPage: {
+      flexDirection: 'column',
+      backgroundColor: preset.palette.primary,
+      color: '#ffffff',
+      padding: 32,
+      alignItems: 'center',
+      justifyContent: 'space-between'
+    },
+    coverHeaderBlock: {
+      alignItems: 'center',
+      marginTop: 20
+    },
+    coverPhoto: {
+      width: 130,
+      height: 165,
+      borderRadius: 12,
+      borderWidth: 3,
+      borderColor: preset.palette.accent,
+      marginBottom: 14,
+      objectFit: 'cover'
+    },
+    coverPhotoPlaceholder: {
+      width: 130,
+      height: 165,
+      borderRadius: 12,
+      borderWidth: 3,
+      borderColor: preset.palette.accent,
+      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 14
+    },
+    coverBadgeContainer: {
+      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 10,
+      marginBottom: 8
+    },
+    coverBadgeText: {
+      fontSize: 9,
+      fontFamily: 'Helvetica-Bold',
+      letterSpacing: 1.5,
+      color: '#ffffff'
+    },
+    coverTitle: {
+      fontSize: 26,
+      fontFamily: 'Helvetica-Bold',
+      color: '#ffffff',
+      marginBottom: 10,
+      textTransform: 'uppercase',
+      letterSpacing: 1
+    },
+    coverName: {
+      fontSize: 20,
+      fontFamily: 'Helvetica-Bold',
+      color: preset.palette.accent,
+      marginBottom: 12,
+      textAlign: 'center'
+    },
+    coverRolesRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      gap: 6,
+      marginBottom: 14,
+      maxWidth: 400
+    },
+    coverRoleBadge: {
+      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: 'rgba(255, 255, 255, 0.3)'
+    },
+    coverRoleText: {
+      fontSize: 9,
+      fontFamily: 'Helvetica-Bold',
+      color: '#ffffff'
+    },
+    coverQuoteBox: {
+      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+      padding: 10,
+      borderRadius: 8,
+      maxWidth: 400,
+      marginTop: 8
+    },
+    coverQuoteText: {
+      fontSize: 9,
+      fontStyle: 'italic',
+      color: '#ffffff',
+      textAlign: 'center',
+      lineHeight: 1.4
+    },
+    coverFooterBar: {
+      width: '100%',
+      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: 10,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: 'rgba(255, 255, 255, 0.2)'
+    },
+    coverFooterSub: {
+      fontSize: 8,
+      fontFamily: 'Helvetica-Bold',
+      color: '#e2e8f0'
+    },
+    coverFooterMain: {
+      fontSize: 10,
+      fontFamily: 'Helvetica-Bold',
+      color: '#ffffff'
+    },
+    coverFooterBadge: {
+      fontSize: 8,
+      fontFamily: 'Helvetica-Bold',
+      color: preset.palette.accent
     }
   });
+
+  const featuredBadges: string[] = [];
+  if (education && coverFeaturedEducationId) {
+    const found = education.find((e: any, idx: number) => String(e.id || idx) === String(coverFeaturedEducationId));
+    if (found?.degree) featuredBadges.push(found.degree);
+  }
+  if (professions && coverFeaturedProfessionId) {
+    const found = professions.find((p: any, idx: number) => String(p.id || idx) === String(coverFeaturedProfessionId));
+    if (found?.degree) featuredBadges.push(found.degree);
+  }
+  if (featuredBadges.length === 0 && Array.isArray(roles) && roles.length > 0) {
+    roles.forEach(r => { if (r) featuredBadges.push(r); });
+  }
+  if (featuredBadges.length === 0 && personalInfo?.titlePrefix) {
+    featuredBadges.push(personalInfo.titlePrefix);
+  }
 
   const renderRecord = (rec: ContentRecord) => {
     const f = rec.fields;
@@ -359,6 +509,58 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
 
   return (
     <Document title={preset.name}>
+      {/* LAYER 0-4: COVER PAGE (PAGE 1) */}
+      {showCoverPage && (
+        <Page size={pdfPaperSize} style={styles.coverPage}>
+          <View style={styles.coverHeaderBlock}>
+            {personalInfo?.profilePhoto ? (
+              <Image src={personalInfo.profilePhoto} style={styles.coverPhoto} />
+            ) : (
+              <View style={styles.coverPhotoPlaceholder}>
+                <Text style={{ fontSize: 32, color: '#ffffff' }}>👤</Text>
+              </View>
+            )}
+
+            <View style={styles.coverBadgeContainer}>
+              <Text style={styles.coverBadgeText}>PORTAFOLIO PROFESIONAL</Text>
+            </View>
+
+            <Text style={styles.coverTitle}>CURRICULUM VITAE</Text>
+            <Text style={styles.coverName}>
+              {personalInfo.fullName || `${personalInfo.surname || ''} ${personalInfo.givenNames || ''}`.trim() || 'Postulante'}
+            </Text>
+
+            {featuredBadges.length > 0 && (
+              <View style={styles.coverRolesRow}>
+                {featuredBadges.map((badge, idx) => (
+                  <View key={idx} style={styles.coverRoleBadge}>
+                    <Text style={styles.coverRoleText}>{badge}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {personalInfo.quote && (
+              <View style={styles.coverQuoteBox}>
+                <Text style={styles.coverQuoteText}>"{personalInfo.quote}"</Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.coverFooterBar}>
+            <View>
+              <Text style={styles.coverFooterSub}>DNI: {personalInfo.dni || '---'} | CUIT: {personalInfo.cuit || '---'}</Text>
+              <Text style={styles.coverFooterMain}>{personalInfo.cityProvince || 'Salta, Argentina'}</Text>
+            </View>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={styles.coverFooterSub}>{personalInfo.initials || 'LEECV'} | AÑO {new Date().getFullYear()}</Text>
+              <Text style={styles.coverFooterBadge}>DOCUMENTO OFICIAL</Text>
+            </View>
+          </View>
+        </Page>
+      )}
+
+      {/* LAYER 0-4: MAIN CV CONTENT PAGES */}
       <Page size={pdfPaperSize} style={styles.page}>
         <View style={styles.pageBody}>
           {sectorsWithFlow.map((sFlow) => {

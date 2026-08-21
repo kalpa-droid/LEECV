@@ -52,6 +52,12 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
               sections={sections}
               personalInfo={cvData?.personalInfo || {}}
               certificatesScanned={cvData?.certificatesScanned || []}
+              showCoverPage={cvData?.showCoverPage !== false}
+              coverFeaturedEducationId={cvData?.coverFeaturedEducationId}
+              coverFeaturedProfessionId={cvData?.coverFeaturedProfessionId}
+              roles={cvData?.roles || []}
+              education={cvData?.education || []}
+              professions={cvData?.professions || []}
             />
           )
         } />
