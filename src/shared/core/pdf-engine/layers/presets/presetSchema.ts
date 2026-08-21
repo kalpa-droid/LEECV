@@ -43,4 +43,25 @@ export interface Preset {
   sectionOrder: { sectorRole: string; sectionIds: string[] }[];
   palette: ColorPalette;
   typography: TypographyScale;
+
+  /**
+   * DORSO (doble faz) — opcional. Si un preset lo declara, es "de dos caras":
+   * el frente usa `sectors`/`fixedObjects`/`sectionOrder` de arriba, el dorso
+   * usa estos. Comparten pageSizeId/marginPresetId/palette/typography — un
+   * dorso no es un documento distinto, es la otra cara del mismo objeto físico.
+   */
+  back?: {
+    sectors: SectorDefinition[];
+    fixedObjects: FixedObjectDefinition[];
+    sectionOrder: { sectorRole: string; sectionIds: string[] }[];
+  };
+
+  /** Solo aplica a pageCategory:'tarjeta' — cómo se imprime en una hoja física */
+  print?: {
+    bleedPresetId: string;
+    impositionPresetId: string;
+    /** Hoja física por defecto donde se auto-repite (el usuario puede cambiarla en la UI) */
+    defaultSheetPageSizeId: string;
+    duplexMode: 'eje_largo' | 'eje_corto';
+  };
 }

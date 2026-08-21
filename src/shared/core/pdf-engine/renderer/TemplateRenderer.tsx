@@ -35,16 +35,20 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       fontFamily: preset.typography.fontFamily,
       fontSize: preset.typography.body,
       color: preset.palette.text,
-      paddingTop: 28,
-      paddingBottom: 28
+      // CAPA 1 real: el margen sale de resolveMargins(preset.marginPresetId), no de un
+      // 28pt fijo. Con eso, "tarjeta_ajustada" (3mm) no le come el espacio útil a una
+      // tarjeta de 51mm de alto, y "documento_amplio" sí respeta sus 16mm reales.
+      paddingTop: usable.margins.topPt,
+      paddingBottom: usable.margins.bottomPt,
+      paddingLeft: usable.margins.leftPt,
+      paddingRight: usable.margins.rightPt
     },
     pageBody: {
       flexDirection: 'row',
       flex: 1
     },
-    // Left Sidebar Styling
+    // Left Sidebar Styling (el ancho real lo define el sector — ver sectorStyle abajo)
     leftColumn: {
-      width: '32%',
       backgroundColor: preset.palette.primary,
       color: preset.palette.textOnPrimary,
       paddingHorizontal: 16,
@@ -97,9 +101,8 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     sidebarItemBold: {
       fontFamily: 'Helvetica-Bold'
     },
-    // Right Content Column Styling
+    // Right Content Column Styling (el ancho real lo define el sector — ver sectorStyle abajo)
     rightColumn: {
-      width: '68%',
       paddingHorizontal: 24,
       backgroundColor: '#ffffff'
     },
@@ -342,12 +345,16 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
           {sectorsWithFlow.map((sFlow) => {
             const isSidebar = sFlow.sector.role === 'sidebar';
             const sectorStyle = isSidebar ? styles.leftColumn : styles.rightColumn;
+            // CAPA 2 real: el ancho de cada columna sale de resolveSectors (widthPercent del
+            // preset), no de un 32%/68% fijo. Así un preset nuevo puede declarar cualquier
+            // proporción de columnas sin tener que tocar este archivo.
+            const widthStyle = { width: sFlow.sector.box.widthPt };
 
             const sectorSectionIds = preset.sectionOrder.find(s => s.sectorRole === sFlow.sector.role)?.sectionIds || [];
             const sectorSections = sections.filter(sec => sectorSectionIds.includes(sec.id));
 
             return (
-              <View key={sFlow.sector.id} style={sectorStyle}>
+              <View key={sFlow.sector.id} style={[sectorStyle, widthStyle]}>
                 {/* Render Sidebar Header & Profile Photo */}
                 {isSidebar && (
                   <View style={styles.sidebarHeader}>

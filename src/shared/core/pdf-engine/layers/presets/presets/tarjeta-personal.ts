@@ -4,8 +4,13 @@ export const tarjetaPersonalPreset: Preset = {
   id: 'tarjeta-personal',
   name: 'Tarjeta Personal',
   pageCategory: 'tarjeta',
+  // pageSizeId = tamaño de CORTE final (lo que el cliente recibe después de la guillotina).
+  // El sangrado (capa 6) agranda esto hacia afuera solo para imprimir, sin que el usuario
+  // tenga que pensar en milímetros de más.
   pageSizeId: 'tarjeta_estandar',
   marginPresetId: 'tarjeta_ajustada',
+
+  // ===== FRENTE =====
   sectors: [
     { id: 'unico', role: 'main', widthPercent: 100, order: 0 },
   ],
@@ -15,6 +20,20 @@ export const tarjetaPersonalPreset: Preset = {
   sectionOrder: [
     { sectorRole: 'main', sectionIds: ['nombre-y-cargo', 'contacto'] },
   ],
+
+  // ===== DORSO =====
+  // Mismo sector único, pero con su propio contenido — logo/marca + eslogan corto.
+  // Comparte paleta y tipografía con el frente: es la otra cara del mismo objeto.
+  back: {
+    sectors: [
+      { id: 'unico', role: 'main', widthPercent: 100, order: 0 },
+    ],
+    fixedObjects: [],
+    sectionOrder: [
+      { sectorRole: 'main', sectionIds: ['marca-y-eslogan'] },
+    ],
+  },
+
   palette: {
     primary: '#1a1a2e',
     secondary: '#666666',
@@ -25,5 +44,16 @@ export const tarjetaPersonalPreset: Preset = {
   typography: {
     title: 13, sectionHeading: 7, itemTitle: 8, body: 7.5, caption: 6.5,
     fontFamily: 'Helvetica',
+  },
+
+  // ===== IMPRESIÓN (capas 6/7/8) =====
+  print: {
+    bleedPresetId: 'estandar_tarjeta',
+    impositionPresetId: 'impresora_oficina',
+    defaultSheetPageSizeId: 'a4',
+    // La mayoría de las impresoras de oficina voltean por el eje largo por defecto.
+    // Si al usuario le sale desalineado, cambia esto a 'eje_corto' en la UI y listo
+    // — ninguna otra parte del motor cambia.
+    duplexMode: 'eje_largo',
   },
 };

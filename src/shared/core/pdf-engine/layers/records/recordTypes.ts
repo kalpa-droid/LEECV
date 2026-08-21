@@ -16,7 +16,7 @@ export interface TextRun {
 export interface ContentRecord {
   id: string;
   /** Qué tipo de dato es — el preset lo usa para elegir cómo dibujarlo */
-  kind: 'experience' | 'education' | 'course' | 'contact-item' | 'skill' | 'freeform';
+  kind: 'experience' | 'education' | 'course' | 'contact-item' | 'skill' | 'freeform' | 'card-heading';
   fields: Record<string, string | TextRun[]>;
   /** A qué sector va este registro (ej: 'sidebar' o 'main') — lo define el preset, no el dato en sí */
   targetSectorRole: 'sidebar' | 'main' | 'banner' | 'footer';
