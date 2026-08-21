@@ -82,7 +82,7 @@ export function VectorDocViewer({ document }: VectorDocViewerProps) {
           if (!ctx) continue;
 
           container.appendChild(canvas);
-          await page.render({ canvasContext: ctx, viewport, canvas }).promise;
+          await page.render({ canvasContext: ctx, viewport }).promise;
         }
 
         if (!cancelled && renderTokenRef.current === myToken) setLoading(false);
