@@ -19,7 +19,20 @@ interface TemplateRendererProps {
   roles?: string[];
   education?: any[];
   professions?: any[];
+  /**
+   * Modo embebido: devuelve solo el contenido (sin Document/Page propios,
+   * sin portada, sin páginas de certificados) para insertarlo dentro de un
+   * slot de otra hoja ya armada — el caso de una tarjeta dentro de un A4.
+   */
+  embedded?: boolean;
+  /** En modo embedded, el tamaño real viene del OBJETO (ej. la tarjeta en
+   * mm), no de una hoja física — por eso se pasa explícito acá en vez de
+   * resolverse de preset.pageSizeId. */
+  canvasWidthMm?: number;
+  canvasHeightMm?: number;
 }
+
+const MM_TO_PT_LOCAL = 2.8346;
 
 export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   preset,
@@ -31,9 +44,21 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   coverFeaturedProfessionId,
   roles = [],
   education = [],
-  professions = []
+  professions = [],
+  embedded = false,
+  canvasWidthMm,
+  canvasHeightMm
 }) => {
-  const pageDef = getPageSize(preset.pageSizeId);
+  // En modo embedded el "lienzo" es el objeto (ej. la tarjeta), no una hoja
+  // física — nunca se consulta getPageSize() para ese caso.
+  const pageDef = embedded && canvasWidthMm && canvasHeightMm
+    ? {
+        widthMm: canvasWidthMm,
+        heightMm: canvasHeightMm,
+        widthPt: canvasWidthMm * MM_TO_PT_LOCAL,
+        heightPt: canvasHeightMm * MM_TO_PT_LOCAL,
+      }
+    : getPageSize(preset.pageSizeId);
   const marginDef = MARGIN_PRESETS[preset.marginPresetId] || MARGIN_PRESETS.documento_estandar;
   const usable = resolveMargins(pageDef, marginDef);
   const resolvedSectors = resolveSectors(usable, preset.sectors);
@@ -507,6 +532,63 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     return null;
   };
 
+  const documentBody = (
+    <View style={embedded ? [styles.pageBody, { width: pageDef.widthPt, height: pageDef.heightPt }] : styles.pageBody}>
+      {sectorsWithFlow.map((sFlow) => {
+        const isSidebar = sFlow.sector.role === 'sidebar';
+        const sectorStyle = isSidebar ? styles.leftColumn : styles.rightColumn;
+        const widthStyle = { width: sFlow.sector.box.widthPt };
+
+        const sectorSectionIds = preset.sectionOrder.find(s => s.sectorRole === sFlow.sector.role)?.sectionIds || [];
+        const sectorSections = sections.filter(sec => sectorSectionIds.includes(sec.id));
+
+        return (
+          <View key={sFlow.sector.id} style={[sectorStyle, widthStyle]}>
+            {isSidebar && (
+              <View style={styles.sidebarHeader}>
+                {personalInfo?.profilePhoto ? (
+                  <Image src={personalInfo.profilePhoto} style={styles.profilePhoto} />
+                ) : (
+                  <View style={styles.profilePhotoPlaceholder}>
+                    <Text style={{ fontSize: 24, color: '#ffffff' }}>👤</Text>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {!isSidebar && (
+              <Text style={styles.headerName}>
+                {personalInfo.surname || ''} <Text style={styles.headerNameHighlight}>{personalInfo.givenNames || ''}</Text>
+              </Text>
+            )}
+
+            {sectorSections.map((sec) => (
+              <View key={sec.id}>
+                {sec.titleText && (
+                  isSidebar ? (
+                    <Text style={styles.sidebarSectionTitle}>{sec.titleText}</Text>
+                  ) : (
+                    <View style={styles.sectionTitleContainer}>
+                      <Text style={styles.sectionTitleText}>{sec.titleText}</Text>
+                    </View>
+                  )
+                )}
+                {sec.records.map(rec => renderRecord(rec))}
+              </View>
+            ))}
+          </View>
+        );
+      })}
+    </View>
+  );
+
+  // MODO EMBEBIDO: se devuelve solo el contenido, sin Document/Page propios,
+  // sin portada ni páginas de certificados — pensado para ir DENTRO de un
+  // slot de otra hoja ya armada (ej. una tarjeta dentro de un A4 con varias).
+  if (embedded) {
+    return documentBody;
+  }
+
   return (
     <Document title={preset.name}>
       {/* LAYER 0-4: COVER PAGE (PAGE 1) */}
@@ -562,59 +644,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
 
       {/* LAYER 0-4: MAIN CV CONTENT PAGES */}
       <Page size={pdfPaperSize} style={styles.page}>
-        <View style={styles.pageBody}>
-          {sectorsWithFlow.map((sFlow) => {
-            const isSidebar = sFlow.sector.role === 'sidebar';
-            const sectorStyle = isSidebar ? styles.leftColumn : styles.rightColumn;
-            // CAPA 2 real: el ancho de cada columna sale de resolveSectors (widthPercent del
-            // preset), no de un 32%/68% fijo. Así un preset nuevo puede declarar cualquier
-            // proporción de columnas sin tener que tocar este archivo.
-            const widthStyle = { width: sFlow.sector.box.widthPt };
-
-            const sectorSectionIds = preset.sectionOrder.find(s => s.sectorRole === sFlow.sector.role)?.sectionIds || [];
-            const sectorSections = sections.filter(sec => sectorSectionIds.includes(sec.id));
-
-            return (
-              <View key={sFlow.sector.id} style={[sectorStyle, widthStyle]}>
-                {/* Render Sidebar Header & Profile Photo */}
-                {isSidebar && (
-                  <View style={styles.sidebarHeader}>
-                    {personalInfo?.profilePhoto ? (
-                      <Image src={personalInfo.profilePhoto} style={styles.profilePhoto} />
-                    ) : (
-                      <View style={styles.profilePhotoPlaceholder}>
-                        <Text style={{ fontSize: 24, color: '#ffffff' }}>👤</Text>
-                      </View>
-                    )}
-                  </View>
-                )}
-
-                {/* Render Candidate Header Name on Right Main Column */}
-                {!isSidebar && (
-                  <Text style={styles.headerName}>
-                    {personalInfo.surname || ''} <Text style={styles.headerNameHighlight}>{personalInfo.givenNames || ''}</Text>
-                  </Text>
-                )}
-
-                {/* Render Dynamic Content Sections */}
-                {sectorSections.map((sec) => (
-                  <View key={sec.id}>
-                    {sec.titleText && (
-                      isSidebar ? (
-                        <Text style={styles.sidebarSectionTitle}>{sec.titleText}</Text>
-                      ) : (
-                        <View style={styles.sectionTitleContainer}>
-                          <Text style={styles.sectionTitleText}>{sec.titleText}</Text>
-                        </View>
-                      )
-                    )}
-                    {sec.records.map(rec => renderRecord(rec))}
-                  </View>
-                ))}
-              </View>
-            );
-          })}
-        </View>
+        {documentBody}
       </Page>
 
       {/* LAYER 4: SCANNED CERTIFICATE PAGES */}
