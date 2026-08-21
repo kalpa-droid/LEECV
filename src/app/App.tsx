@@ -2,12 +2,11 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import Navbar from '../modules/cv-builder/components/Navbar';
 import CanvaIconDock from '../modules/cv-builder/components/CanvaIconDock';
 import EditorPanel from '../modules/cv-builder/components/EditorPanel';
-import CVPreview from '../modules/cv-builder/components/CVPreview';
+const CVPreview = lazy(() => import('../modules/cv-builder/components/CVPreview'));
 import { ZoomIn, ZoomOut, Smartphone } from 'lucide-react';
 
 import { getCurrentProfile, capturarConexionDriveSiCorresponde } from '../modules/auth/authService';
 import { supabase } from '../shared/core/lib/supabaseClient';
-import { exportDocumentToPDF } from '../shared/core/pdf-engine/pdfExporter';
 import { exportCVToJson, importCVFromJsonFile } from '../shared/core/utils/jsonImporterExporter';
 
 // Direct Modals Imports (Prevents dynamic chunk fetch errors on updates)
@@ -96,6 +95,7 @@ function AppContent() {
 
     try {
       setPdfProgress(40);
+      const { exportDocumentToPDF } = await import('../shared/core/pdf-engine/pdfExporter');
       const success = await exportDocumentToPDF(cvData, cvData?.activePresetId || 'cv-clasico');
       
       setPdfProgress(100);
@@ -238,7 +238,14 @@ function AppContent() {
         <div className={`flex-1 bg-[#1F1322] h-full overflow-y-auto p-2 sm:p-4 justify-center items-start relative ${
           mobileTabState === 'editor' && isPanelOpen ? 'hidden md:flex' : 'flex'
         }`}>
-          <CVPreview cvData={cvData} setCvData={setCvData} activeTab={activeTab} zoomLevel={zoomLevel} />
+          <Suspense fallback={
+            <div className="w-full h-[600px] flex flex-col items-center justify-center p-8 text-slate-400">
+              <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4" />
+              <span className="text-xs font-bold uppercase tracking-wider text-purple-300">Cargando Visor Vectorial de Alta Resolución…</span>
+            </div>
+          }>
+            <CVPreview cvData={cvData} setCvData={setCvData} activeTab={activeTab} zoomLevel={zoomLevel} />
+          </Suspense>
 
           <div className="fixed bottom-16 md:bottom-5 right-5 z-30 bg-[#2B1B2E]/90 backdrop-blur-md text-white p-1 rounded-2xl border border-white/20 shadow-2xl flex items-center gap-1 text-xs font-black">
             <button
