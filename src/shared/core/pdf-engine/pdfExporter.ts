@@ -50,6 +50,8 @@ export async function exportCVToPDF(cvData: any, presetInput?: Preset): Promise<
   return true;
 }
 
+import { buildCardDataFromCV } from './layers/records/cardDataAdapter';
+
 /**
  * Universal PDF exporter connecting all document types (CVs, Business Card Sheets, etc.)
  */
@@ -57,16 +59,7 @@ export async function exportDocumentToPDF(cvData: any, presetId: string = 'cv-cl
   const preset = getPreset(presetId);
 
   if (preset.pageCategory === 'tarjeta') {
-    const personalInfo = cvData?.personalInfo || {};
-    const cardData = {
-      fullName: `${personalInfo.surname || ''} ${personalInfo.givenNames || ''}`.trim() || 'Juan Pérez',
-      role: cvData?.roles?.[0] || cvData?.profession?.[0]?.degree || 'Profesional',
-      phone: personalInfo.phone || '',
-      email: personalInfo.email || '',
-      website: personalInfo.cityProvince || '',
-      brandName: personalInfo.surname ? `${personalInfo.surname} Studio` : 'Marca Personal',
-      tagline: personalInfo.quote || 'Servicios Profesionales de Alta Calidad'
-    };
+    const cardData = await buildCardDataFromCV(cvData);
     return exportBusinessCardSheetToPDF(cardData, preset);
   }
 

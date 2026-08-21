@@ -1,28 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TemplateRenderer } from '../../../shared/core/pdf-engine/renderer/TemplateRenderer';
 import { CardSheetDocument } from '../../../shared/core/pdf-engine/renderer/CardSheetDocument';
 import { getPreset } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { cvDataToContentSections } from '../../../shared/core/pdf-engine/layers/records/cvDataAdapter';
+import { buildCardDataFromCV, BusinessCardData } from '../../../shared/core/pdf-engine/layers/records/cardDataAdapter';
 import { VectorDocViewer } from '../../../shared/core/pdf-engine/VectorDocViewer';
 import { TemplateMenu } from '../../template-editor/components/TemplateMenu';
 
 export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.85 }: { cvData?: any; setCvData?: any; activeTab?: string; zoomLevel?: number }) {
   const [activePresetId, setActivePresetId] = useState<string>('cv-clasico');
+  const [cardData, setCardData] = useState<BusinessCardData | null>(null);
   const { theme = {} } = cvData || {};
 
   const activePreset = getPreset(activePresetId);
   const sections = cvDataToContentSections(cvData);
 
-  const personalInfo = cvData?.personalInfo || {};
-  const cardData = {
-    fullName: `${personalInfo.surname || ''} ${personalInfo.givenNames || ''}`.trim() || 'Juan Pérez',
-    role: cvData?.roles?.[0] || cvData?.profession?.[0]?.degree || 'Profesional',
-    phone: personalInfo.phone || '',
-    email: personalInfo.email || '',
-    website: personalInfo.cityProvince || '',
-    brandName: personalInfo.surname ? `${personalInfo.surname} Studio` : 'Marca Personal',
-    tagline: personalInfo.quote || 'Servicios Profesionales de Alta Calidad'
-  };
+  useEffect(() => {
+    buildCardDataFromCV(cvData).then(setCardData);
+  }, [cvData]);
 
   const dynamicThemeStyle = {
     fontFamily: theme.fontFamily || 'Arial, sans-serif'

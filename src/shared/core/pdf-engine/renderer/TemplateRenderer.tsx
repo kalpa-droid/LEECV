@@ -319,6 +319,25 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       );
     }
 
+    if (rec.kind === 'social-link') {
+      return (
+        <Text key={rec.id} style={styles.sidebarItemText}>
+          {String(f.icon || '🔗')} {String(f.label || f.url || '')}
+        </Text>
+      );
+    }
+
+    if (rec.kind === 'qr') {
+      return (
+        <View key={rec.id} wrap={false} style={{ alignItems: 'center', marginVertical: 8 }}>
+          {f.dataUrl || f.url ? (
+            <Image src={String(f.dataUrl || f.url)} style={{ width: 64, height: 64, borderRadius: 4 }} />
+          ) : null}
+          {f.caption && <Text style={styles.sidebarItemText}>{String(f.caption)}</Text>}
+        </View>
+      );
+    }
+
     if (rec.kind === 'freeform') {
       return (
         <View key={rec.id} wrap={false} style={styles.signatureContainer}>

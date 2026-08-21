@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text } from '@react-pdf/renderer';
+import { View, Text, Image } from '@react-pdf/renderer';
 import { Preset } from '../layers/presets/presetSchema';
 import { SectorDefinition, resolveSectors } from '../layers/sectors/resolveSectors';
 import { FixedObjectDefinition, placeFixedObjects } from '../layers/fixedObjects/placeFixedObjects';
@@ -63,6 +63,24 @@ export function CardFace({ preset, sectors, fixedObjects, sectionOrder, sections
               {f.value}
             </Text>
           ))}
+        </View>
+      );
+    }
+
+    if (rec.kind === 'social-link') {
+      return (
+        <Text key={rec.id} style={{ fontSize: preset.typography.caption, color: preset.palette.secondary, marginTop: 1 }}>
+          {String(f.label || f.url || '')}
+        </Text>
+      );
+    }
+
+    if (rec.kind === 'qr') {
+      return (
+        <View key={rec.id} style={{ alignItems: 'center', marginTop: 4 }}>
+          {f.dataUrl || f.url ? (
+            <Image src={String(f.dataUrl || f.url)} style={{ width: 44, height: 44 }} />
+          ) : null}
         </View>
       );
     }
