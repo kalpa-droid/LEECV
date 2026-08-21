@@ -1,25 +1,53 @@
 import React, { useEffect, useState } from 'react';
-import { Cloud, X, RefreshCw, HardDrive, ShieldCheck, LogIn } from 'lucide-react';
+import { Cloud, X, RefreshCw, HardDrive, ShieldCheck, LogIn, Globe } from 'lucide-react';
 import { checkStorageStatus } from '../services/cvStorageService';
 import { checkGoogleDriveQuota } from '../services/googleDriveQuotaService';
 import { getCurrentProfile, signInWithGoogle } from '../../auth/authService';
+import { publishCV } from '../../../shared/core/storage/publishService';
+import { useToast } from '../../../shared/core/ui/Toast';
 
 export interface CloudStatusModalProps {
   isOpen: boolean;
   onClose: () => void;
   onForceSave: () => void;
   isSaving: boolean;
+  cvData?: any;
 }
 
 export default function CloudStatusModal({
   isOpen,
   onClose,
   onForceSave,
-  isSaving
+  isSaving,
+  cvData
 }: CloudStatusModalProps) {
+  const { showSuccess, showError, showInfo } = useToast();
   const [profile, setProfile] = useState<any>(null);
   const [driveQuota, setDriveQuota] = useState<any>(null);
   const [loadingDrive, setLoadingDrive] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+
+  const handlePublish = async () => {
+    if (!cvData) return;
+    try {
+      setIsPublishing(true);
+      const res = await publishCV(cvData);
+      if (res.success && res.publicUrl) {
+        showSuccess(`¡CV publicado en la web! 🌐 ${res.publicUrl}`);
+        if (typeof window !== 'undefined') {
+          window.open(res.publicUrl, '_blank');
+        }
+      } else if (res.needsPayment) {
+        showInfo('La activación del link público en la web requiere el desbloqueo único de $1 USD.');
+      } else {
+        showError(res.error || res.message || 'No se pudo publicar el CV.');
+      }
+    } catch (err: any) {
+      showError(err?.message || 'Error al publicar el CV.');
+    } finally {
+      setIsPublishing(false);
+    }
+  };
 
   useEffect(() => {
     if (!isOpen) return;
@@ -225,22 +253,33 @@ export default function CloudStatusModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 border-t border-slate-800 bg-slate-950/60 flex items-center justify-between">
-          <button
-            onClick={() => {
-              onForceSave();
-              onClose();
-            }}
-            disabled={isSaving}
-            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs rounded-xl shadow-lg transition flex items-center gap-1.5 cursor-pointer"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isSaving ? 'animate-spin' : ''}`} />
-            <span>{isSaving ? 'Guardando...' : 'Forzar Sincronización'}</span>
-          </button>
+        <div className="p-4 border-t border-slate-800 bg-slate-950/60 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePublish}
+              disabled={isPublishing}
+              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <Globe className={`w-3.5 h-3.5 ${isPublishing ? 'animate-spin' : ''}`} />
+              <span>{isPublishing ? 'Publicando...' : 'Publicar CV Web'}</span>
+            </button>
+
+            <button
+              onClick={() => {
+                onForceSave();
+                onClose();
+              }}
+              disabled={isSaving}
+              className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs rounded-xl shadow-lg transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSaving ? 'animate-spin' : ''}`} />
+              <span>{isSaving ? 'Guardando...' : 'Sincronizar'}</span>
+            </button>
+          </div>
 
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition cursor-pointer"
+            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition cursor-pointer"
           >
             Cerrar
           </button>
