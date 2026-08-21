@@ -5,6 +5,7 @@ import { SectorDefinition, resolveSectors } from '../layers/sectors/resolveSecto
 import { FixedObjectDefinition, placeFixedObjects } from '../layers/fixedObjects/placeFixedObjects';
 import { UsableArea } from '../layers/margins/marginPresets';
 import { ContentSection, ContentRecord } from '../layers/records/recordTypes';
+import { getPresentContactFields } from '../layers/records/sharedFields';
 
 interface CardFaceProps {
   preset: Preset;
@@ -50,9 +51,18 @@ export function CardFace({ preset, sectors, fixedObjects, sectionOrder, sections
     if (rec.kind === 'contact-item') {
       return (
         <View key={rec.id} style={{ marginTop: 6 }}>
-          {f.phone ? <Text style={{ fontSize: preset.typography.caption, color: preset.palette.secondary, marginBottom: 1 }}>{String(f.phone)}</Text> : null}
-          {f.email ? <Text style={{ fontSize: preset.typography.caption, color: preset.palette.secondary, marginBottom: 1 }}>{String(f.email)}</Text> : null}
-          {f.address ? <Text style={{ fontSize: preset.typography.caption, color: preset.palette.secondary }}>{String(f.address)}</Text> : null}
+          {getPresentContactFields(rec, 'card').map((f, i, arr) => (
+            <Text
+              key={f.key}
+              style={{
+                fontSize: preset.typography.caption,
+                color: preset.palette.secondary,
+                marginBottom: i === arr.length - 1 ? 0 : 1
+              }}
+            >
+              {f.value}
+            </Text>
+          ))}
         </View>
       );
     }

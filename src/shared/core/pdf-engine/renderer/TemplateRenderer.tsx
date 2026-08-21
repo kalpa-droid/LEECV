@@ -6,6 +6,7 @@ import { MARGIN_PRESETS, resolveMargins } from '../layers/margins/marginPresets'
 import { resolveSectors } from '../layers/sectors/resolveSectors';
 import { placeFixedObjects } from '../layers/fixedObjects/placeFixedObjects';
 import { ContentSection, ContentRecord } from '../layers/records/recordTypes';
+import { getPresentContactFields } from '../layers/records/sharedFields';
 
 interface TemplateRendererProps {
   preset: Preset;
@@ -265,13 +266,12 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     if (rec.kind === 'contact-item') {
       return (
         <View key={rec.id} wrap={false}>
-          {f.phone && <Text style={styles.sidebarItemText}>📞 {String(f.phone)}</Text>}
-          {f.email && <Text style={styles.sidebarItemText}>✉️ {String(f.email)}</Text>}
-          {f.address && <Text style={styles.sidebarItemText}>📍 {String(f.address)}</Text>}
-          {f.cityProvince && <Text style={styles.sidebarItemText}>🏙️ {String(f.cityProvince)}</Text>}
-          {f.dni && <Text style={styles.sidebarItemText}>DNI: <Text style={styles.sidebarItemBold}>{String(f.dni)}</Text></Text>}
-          {f.cuit && <Text style={styles.sidebarItemText}>CUIT: <Text style={styles.sidebarItemBold}>{String(f.cuit)}</Text></Text>}
-          {f.birthDate && <Text style={styles.sidebarItemText}>Nac.: <Text style={styles.sidebarItemBold}>{String(f.birthDate)}</Text></Text>}
+          {getPresentContactFields(rec, 'document').map((f) => (
+            <Text key={f.key} style={styles.sidebarItemText}>
+              {f.cvLabel}{' '}
+              {f.cardOmit ? <Text style={styles.sidebarItemBold}>{f.value}</Text> : f.value}
+            </Text>
+          ))}
         </View>
       );
     }
