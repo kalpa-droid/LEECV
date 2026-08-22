@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from '@react-pdf/renderer';
 import { CARD_DESIGNS, CardDesign } from './cardDesignSchema';
-import { ResolvedThemeRoles, getContrastRatio, getContrastTextColor } from '../colors/colorSystem';
+import { ResolvedThemeRoles, translatePaletteForSurface } from '../colors/colorSystem';
 import { TypographyScale } from '../presets/presetSchema';
 
 interface CardObjectRendererProps {
@@ -42,10 +42,6 @@ export function CardObjectRenderer({
 
   const borderColor = getRoleColor(design.borderColorRole);
   const backgroundColor = getRoleColor(design.backgroundColorRole);
-  let titleColor = getRoleColor(design.titleColorRole);
-  let badgeColor = getRoleColor(design.badgeColorRole);
-  let subtitleColor = rolesColor.secondary;
-  let descColor = rolesColor.text;
 
   // Systemic Contrast Protection: Resolve real background behind the card
   // If the card background is transparent, the real background is the container sector's color.
@@ -53,20 +49,12 @@ export function CardObjectRenderer({
     ? backgroundColor
     : (sectorRole === 'sidebar' ? rolesColor.primary : rolesColor.background);
 
-  if (effectiveBgColor) {
-    if (getContrastRatio(effectiveBgColor, titleColor) < 3.5) {
-      titleColor = getContrastTextColor(effectiveBgColor);
-    }
-    if (getContrastRatio(effectiveBgColor, badgeColor) < 3.5) {
-      badgeColor = getContrastTextColor(effectiveBgColor);
-    }
-    if (getContrastRatio(effectiveBgColor, subtitleColor) < 3.5) {
-      subtitleColor = getContrastTextColor(effectiveBgColor);
-    }
-    if (getContrastRatio(effectiveBgColor, descColor) < 3.5) {
-      descColor = getContrastTextColor(effectiveBgColor);
-    }
-  }
+  const surfacePalette = translatePaletteForSurface(rolesColor, effectiveBgColor);
+
+  let titleColor = design.titleColorRole === 'accent' ? rolesColor.accent : surfacePalette.title;
+  let badgeColor = design.badgeColorRole === 'accent' ? rolesColor.accent : surfacePalette.title;
+  let subtitleColor = surfacePalette.subtitle;
+  let descColor = surfacePalette.bodyText;
 
   const fontSizeTitle = design.titleSizeToken === 'title' 
     ? typography.title 

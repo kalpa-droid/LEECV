@@ -61,6 +61,9 @@ export interface Preset {
   /** Mapa de qué diseño de Card usa cada tipo de registro (ej: education -> 'accent-card', experience -> 'primary-card') */
   recordCardDesigns?: Record<string, string>;
 
+  /** Diseño de Card que usan las franjas de título de sección (ej: 'primary-card', 'accent-card') */
+  sectionBannerDesign?: string;
+
   /** Estilo o arquetipo de portada (monica-classic, modern-corporate, minimal-editorial, creative-cardon) */
   coverStyle?: 'monica-classic' | 'modern-corporate' | 'minimal-editorial' | 'creative-cardon';
 

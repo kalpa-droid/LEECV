@@ -228,3 +228,78 @@ export function resolveThemeRoles(theme: any = {}): ResolvedThemeRoles {
     }
   };
 }
+
+export interface SurfacePalette {
+  surfaceBg: string;
+  isDark: boolean;
+  title: string;
+  subtitle: string;
+  bodyText: string;
+  accent: string;
+  border: string;
+}
+
+/**
+ * CAPA 5 & 9 — MATRIZ ALGORÍTMICA DE TRADUCCIÓN CROMÁTICA PARA SUPERFICIES
+ * Dado el conjunto de roles resueltos (rolesColor) y el color de superficie real (surfaceBgHex),
+ * calcula matemáticamente una paleta traducida armónica en HSL con contraste WCAG 2.1 AA.
+ */
+export function translatePaletteForSurface(
+  rolesColor: ResolvedThemeRoles,
+  surfaceBgHex: string = '#ffffff'
+): SurfacePalette {
+  const isDark = getRelativeLuminance(surfaceBgHex) < 0.45;
+
+  if (!isDark) {
+    // Superficie Clara: usa la jerarquía estándar del preset/tema
+    return {
+      surfaceBg: surfaceBgHex,
+      isDark: false,
+      title: rolesColor.primary,
+      subtitle: rolesColor.secondary,
+      bodyText: rolesColor.text,
+      accent: rolesColor.accent,
+      border: rolesColor.border,
+    };
+  }
+
+  // Superficie Oscura / Color: calcula tonos traducidos armónicos en HSL (sin blanco crudo plano)
+  const [bgH, bgS] = hexToHSL(surfaceBgHex);
+  const [accH, accS] = hexToHSL(rolesColor.accent || '#FF2E63');
+
+  // Título armónico sobre superficie oscura (pastel luminoso del acento o del secundario)
+  let titleOnDark = hslToHex(accH, Math.max(0.3, accS), 0.90);
+  if (getContrastRatio(surfaceBgHex, titleOnDark) < 4.5) {
+    titleOnDark = '#F8FAFC'; // Tinte neutro cálido
+  }
+
+  // Subtítulo armónico sobre superficie oscura
+  let subtitleOnDark = hslToHex(bgH, Math.max(0.15, bgS * 0.5), 0.82);
+  if (getContrastRatio(surfaceBgHex, subtitleOnDark) < 3.5) {
+    subtitleOnDark = '#E2E8F0';
+  }
+
+  // Cuerpo de texto sobre superficie oscura
+  let bodyOnDark = '#CBD5E1';
+  if (getContrastRatio(surfaceBgHex, bodyOnDark) < 3.5) {
+    bodyOnDark = '#F1F5F9';
+  }
+
+  // Color de acento recalibrado para resaltar sobre fondo oscuro
+  let accentOnDark = hslToHex(accH, Math.max(0.6, accS), 0.75);
+  if (getContrastRatio(surfaceBgHex, accentOnDark) < 3.5) {
+    accentOnDark = rolesColor.accent;
+  }
+
+  const borderOnDark = 'rgba(255, 255, 255, 0.25)';
+
+  return {
+    surfaceBg: surfaceBgHex,
+    isDark: true,
+    title: titleOnDark,
+    subtitle: subtitleOnDark,
+    bodyText: bodyOnDark,
+    accent: accentOnDark,
+    border: borderOnDark,
+  };
+}

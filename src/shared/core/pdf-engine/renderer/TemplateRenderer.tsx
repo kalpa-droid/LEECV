@@ -9,6 +9,7 @@ import { ContentSection, ContentRecord } from '../layers/records/recordTypes';
 import { getPresentContactFields } from '../layers/records/sharedFields';
 import { resolveThemeRoles } from '../layers/colors/colorSystem';
 import { CardObjectRenderer } from '../layers/cards/CardObjectRenderer';
+import { SectionBannerCard } from '../layers/cards/SectionBannerCard';
 
 export interface TemplateRendererProps {
   preset: Preset;
@@ -95,10 +96,10 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       fontFamily: preset.typography.fontFamily,
       fontSize: preset.typography.body,
       color: rolesColor.text,
-      paddingTop: usable.margins.topPt,
-      paddingBottom: usable.margins.bottomPt,
-      paddingLeft: usable.margins.leftPt,
-      paddingRight: usable.margins.rightPt
+      paddingTop: 0,
+      paddingBottom: 0,
+      paddingLeft: 0,
+      paddingRight: 0
     },
     pageBody: {
       flexDirection: 'row',
@@ -107,7 +108,10 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     leftColumn: {
       backgroundColor: rolesColor.primary,
       color: rolesColor.textOnPrimary,
-      paddingHorizontal: 16,
+      paddingTop: usable.margins.topPt,
+      paddingBottom: usable.margins.bottomPt,
+      paddingLeft: usable.margins.leftPt,
+      paddingRight: 16,
       flexDirection: 'column'
     },
     sidebarHeader: {
@@ -159,8 +163,11 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     },
     // Right Content Column Styling (el ancho real lo define el sector — ver sectorStyle abajo)
     rightColumn: {
-      paddingHorizontal: 24,
-      backgroundColor: '#ffffff'
+      paddingTop: usable.margins.topPt,
+      paddingBottom: usable.margins.bottomPt,
+      paddingLeft: 24,
+      paddingRight: usable.margins.rightPt,
+      backgroundColor: rolesColor.background
     },
     headerName: {
       fontSize: preset.typography.title,
@@ -614,13 +621,13 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
             {sectorSections.map((sec) => (
               <View key={sec.id}>
                 {sec.titleText && (
-                  isSidebar ? (
-                    <Text style={styles.sidebarSectionTitle}>{sec.titleText}</Text>
-                  ) : (
-                    <View style={styles.sectionTitleContainer}>
-                      <Text style={styles.sectionTitleText}>{sec.titleText}</Text>
-                    </View>
-                  )
+                  <SectionBannerCard
+                    titleText={sec.titleText}
+                    designId={isSidebar ? undefined : (customRecordCardDesigns?.education || preset.recordCardDesigns?.education)}
+                    rolesColor={rolesColor}
+                    typography={preset.typography}
+                    isSidebar={isSidebar}
+                  />
                 )}
                 {sec.records.map(rec => renderRecord(rec, isSidebar))}
               </View>
