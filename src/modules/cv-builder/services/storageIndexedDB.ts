@@ -87,5 +87,24 @@ export const idbStorage = {
         localStorage.removeItem(key);
       } catch {}
     }
+  },
+
+  async keys(): Promise<string[]> {
+    try {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const req = store.getAllKeys();
+        req.onsuccess = () => resolve((req.result as string[]) || []);
+        req.onerror = () => reject(req.error);
+      });
+    } catch (err) {
+      try {
+        return Object.keys(localStorage);
+      } catch {
+        return [];
+      }
+    }
   }
 };

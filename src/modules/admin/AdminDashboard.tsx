@@ -20,13 +20,14 @@ import {
 import { useToast } from '../../shared/core/ui/Toast';
 import { useConfirm } from '../../shared/core/ui/ConfirmDialog';
 import { TemplateManagementTab } from './components/TemplateManagementTab';
+import { StorageDriveTab } from './components/StorageDriveTab';
 import { Layout as LayoutIcon } from 'lucide-react';
 
 export default function AdminDashboard() {
   const { showSuccess, showError } = useToast();
   const { confirm } = useConfirm();
   const [profile, setProfile] = useState(undefined);
-  const [adminTab, setAdminTab] = useState<'users' | 'templates'>('users');
+  const [adminTab, setAdminTab] = useState<'users' | 'templates' | 'storage'>('users');
   const [users, setUsers] = useState<any[]>([]);
   const [stats, setStats] = useState<any>({ totalUsers: 0, proUsers: 0, enterpriseUsers: 0, activeSubscriptions: 0 });
   const [loadingData, setLoadingData] = useState(false);
@@ -224,10 +225,22 @@ export default function AdminDashboard() {
             <LayoutIcon className="w-4 h-4 text-[#FF2E63]" />
             <span>Gestión de Plantillas y Presets (Capa 5)</span>
           </button>
+
+          <button
+            onClick={() => setAdminTab('storage')}
+            className={`px-4 py-2 text-xs font-black rounded-xl transition flex items-center gap-2 cursor-pointer ${
+              adminTab === 'storage' ? 'bg-[#2B1B2E] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <HardDrive className="w-4 h-4 text-purple-400" />
+            <span>Almacenamiento, Servidores & Drive</span>
+          </button>
         </div>
 
         {adminTab === 'templates' ? (
           <TemplateManagementTab />
+        ) : adminTab === 'storage' ? (
+          <StorageDriveTab />
         ) : (
           <div className="space-y-6">
 

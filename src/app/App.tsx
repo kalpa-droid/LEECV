@@ -7,8 +7,10 @@ import { ZoomIn, ZoomOut, Smartphone } from 'lucide-react';
 
 import { getCurrentProfile, capturarConexionDriveSiCorresponde } from '../modules/auth/authService';
 import { supabase } from '../shared/core/lib/supabaseClient';
-import { PublicCVView } from '../modules/cv-builder/components/PublicCVView';
 import { exportCVToJson, importCVFromJsonFile } from '../shared/core/utils/jsonImporterExporter';
+
+const PublicCVView = lazy(() => import('../modules/cv-builder/components/PublicCVView').then(m => ({ default: m.PublicCVView })));
+const CardExportModal = lazy(() => import('../modules/cv-builder/components/modals/CardExportModal').then(m => ({ default: m.CardExportModal })));
 
 // Direct Modals Imports (Prevents dynamic chunk fetch errors on updates)
 import PhotoCropperModal from '../modules/cv-builder/components/PhotoCropperModal';
@@ -17,7 +19,6 @@ import WizardModal from '../modules/cv-builder/components/WizardModal';
 import SavedCVsModal from '../modules/cv-builder/components/SavedCVsModal';
 import SaveModal from '../modules/cv-builder/components/SaveModal';
 import CloudStatusModal from '../modules/cv-builder/components/CloudStatusModal';
-import { CardExportModal } from '../modules/cv-builder/components/modals/CardExportModal';
 import PricingModal from '../modules/payments/PricingModal';
 import PdfCheckoutModal from '../modules/cv-builder/components/modals/PdfCheckoutModal';
 import JsonDownloadModal from '../modules/cv-builder/components/modals/JsonDownloadModal';
@@ -219,7 +220,16 @@ function AppContent() {
   };
 
   if (isPublicView) {
-    return <PublicCVView slugInput={publicSlug} />;
+    return (
+      <Suspense fallback={
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center text-rose-400 font-bold text-xs">
+          <div className="w-8 h-8 border-4 border-rose-500 border-t-transparent rounded-full animate-spin mr-3" />
+          <span>Cargando Perfil Público…</span>
+        </div>
+      }>
+        <PublicCVView slugInput={publicSlug} />
+      </Suspense>
+    );
   }
 
   return (
@@ -406,12 +416,14 @@ function AppContent() {
         )}
 
         {isCardExportOpen && (
-          <CardExportModal
-            isOpen={isCardExportOpen}
-            onClose={() => setIsCardExportOpen(false)}
-            cvData={cvData}
-            presetId={cvData?.activePresetId || 'tarjeta-personal'}
-          />
+          <Suspense fallback={null}>
+            <CardExportModal
+              isOpen={isCardExportOpen}
+              onClose={() => setIsCardExportOpen(false)}
+              cvData={cvData}
+              presetId={cvData?.activePresetId || 'tarjeta-personal'}
+            />
+          </Suspense>
         )}
 
         {isDownloadModalOpen && (
