@@ -11,6 +11,7 @@
 
 import { SectorDefinition } from '../sectors/resolveSectors';
 import { FixedObjectDefinition } from '../fixedObjects/placeFixedObjects';
+import { PageTextObjectDefinition } from '../pageText/pageTextObjects';
 
 export interface ColorPalette {
   primary: string;
@@ -57,6 +58,9 @@ export interface Preset {
 
   /** Leyenda explícita de roles por diseño (ej: 'Fondo columna lateral' -> 'primary', 'Título de sección' -> 'accent') */
   roleLegend?: Record<string, string>;
+
+  /** Opcional: objetos de texto anclados a la hoja física (número de página, etc.) — nunca a un sector */
+  pageTextObjects?: PageTextObjectDefinition[];
 
   /** Mapa de qué diseño de Card usa cada tipo de registro (ej: education -> 'accent-card', experience -> 'primary-card') */
   recordCardDesigns?: Record<string, string>;

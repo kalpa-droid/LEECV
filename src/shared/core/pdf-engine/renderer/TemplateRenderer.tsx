@@ -8,6 +8,7 @@ import { placeFixedObjects } from '../layers/fixedObjects/placeFixedObjects';
 import { ContentSection, ContentRecord } from '../layers/records/recordTypes';
 import { getPresentContactFields } from '../layers/records/sharedFields';
 import { resolveThemeRoles, getTypographyColorBinding } from '../layers/colors/colorSystem';
+import { resolvePageTextObjects } from '../layers/pageText/pageTextObjects';
 import { CardObjectRenderer } from '../layers/cards/CardObjectRenderer';
 import { SectionBannerCard } from '../layers/cards/SectionBannerCard';
 
@@ -731,6 +732,14 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       {/* LAYER 0-4: MAIN CV CONTENT PAGES */}
       <Page size={pdfPaperSize} style={styles.page}>
         {documentBody}
+        {/* CAPA "TEXTO DE HOJA": ancla a la hoja física, no a ningún sector —
+            por eso se dibuja acá, fuera de documentBody, con posición absoluta
+            relativa a la <Page> completa. */}
+        {preset.pageTextObjects && resolvePageTextObjects(
+          preset.pageTextObjects, pageDef.widthPt, pageDef.heightPt, 1, 1
+        ).map(pt => (
+          <Text key={pt.id} style={pt.style as any}>{pt.text}</Text>
+        ))}
       </Page>
 
       {/* LAYER 4: SCANNED CERTIFICATE PAGES */}
