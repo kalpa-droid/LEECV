@@ -226,18 +226,19 @@ export default function EditorPanel({
 
 
 
-  const updateTheme = (field, value) => {
-    setCvData((prev) => ({
+  const updateTheme = (field: string, value: any) => {
+    setCvData((prev: any) => ({
       ...prev,
       theme: {
         ...prev.theme,
-        [field]: value
+        [field]: value,
+        ...(field === 'bgColor' || field === 'bgCorridor' ? { bgColor: value, bgCorridor: value } : {})
       }
     }));
   };
 
-  const applyPreset = (preset) => {
-    setCvData((prev) => ({
+  const applyPreset = (preset: any) => {
+    setCvData((prev: any) => ({
       ...prev,
       theme: {
         ...prev.theme,
@@ -247,6 +248,7 @@ export default function EditorPanel({
         accentColor: preset.accentColor,
         textColor: preset.textColor,
         bgCorridor: preset.bgCorridor,
+        bgColor: preset.bgCorridor || preset.bgColor || '#ffffff',
         fontFamily: preset.fontFamily
       }
     }));

@@ -196,7 +196,7 @@ export function resolveThemeRoles(theme: any = {}): ResolvedThemeRoles {
   const primary = theme.primaryColor || theme.primary || '#00A8A0';
   const secondary = theme.secondaryColor || theme.secondary || '#64748b';
   const accent = theme.accentColor || theme.accent || '#FF2E63';
-  const background = theme.bgColor || theme.background || '#ffffff';
+  const background = theme.bgColor || theme.bgCorridor || theme.background || '#ffffff';
 
   const textOnPrimary = getContrastTextColor(primary);
   const textOnSecondary = getContrastTextColor(secondary);

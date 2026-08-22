@@ -60,12 +60,11 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   customRecordCardDesigns
 }) => {
   const rolesColor = resolveThemeRoles({
-    primaryColor: preset.palette.primary,
-    secondaryColor: preset.palette.secondary,
-    accentColor: preset.palette.accent,
-    bgColor: '#ffffff',
-    textColor: preset.palette.text,
-    ...(customTheme || {})
+    primaryColor: customTheme?.primaryColor || customTheme?.primary || preset.palette.primary,
+    secondaryColor: customTheme?.secondaryColor || customTheme?.secondary || preset.palette.secondary,
+    accentColor: customTheme?.accentColor || customTheme?.accent || preset.palette.accent,
+    bgColor: customTheme?.bgColor || customTheme?.bgCorridor || customTheme?.background || '#ffffff',
+    textColor: customTheme?.textColor || customTheme?.text || preset.palette.text,
   });
 
   // En modo embedded el "lienzo" es el objeto (ej. la tarjeta), no una hoja
