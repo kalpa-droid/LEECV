@@ -30,8 +30,8 @@ export interface UsableArea {
 }
 
 export const MARGIN_PRESETS: Record<string, MarginPreset> = {
-  documento_estandar: { id: 'documento_estandar', name: 'Documento estándar', top: 10, bottom: 10, left: 0, right: 0 },
-  documento_amplio: { id: 'documento_amplio', name: 'Documento con aire', top: 16, bottom: 16, left: 8, right: 8 },
+  documento_estandar: { id: 'documento_estandar', name: 'Documento estándar', top: 12, bottom: 12, left: 12, right: 12 },
+  documento_amplio: { id: 'documento_amplio', name: 'Documento con aire', top: 18, bottom: 18, left: 16, right: 16 },
   tarjeta_ajustada: { id: 'tarjeta_ajustada', name: 'Tarjeta al borde', top: 3, bottom: 3, left: 3, right: 3 },
 };
 

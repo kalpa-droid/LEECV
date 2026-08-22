@@ -57,31 +57,34 @@ export function SectionBannerCard({
   }
 
   // Encabezado de Sección en Columna Principal (Main): Franja contenedora de objeto
-  const bannerBgColor = design.backgroundColorRole === 'primary' 
-    ? rolesColor.primary 
-    : design.backgroundColorRole === 'accent'
-      ? rolesColor.accent
-      : rolesColor.primary;
+  const bannerBgColor = (design.backgroundColorRole && design.backgroundColorRole !== 'transparent')
+    ? (rolesColor[design.backgroundColorRole as keyof ResolvedThemeRoles] as string || rolesColor.primary)
+    : 'transparent';
 
-  const bannerTextPalette = translatePaletteForSurface(rolesColor, bannerBgColor);
+  const isTransparentBanner = bannerBgColor === 'transparent';
+  const bannerTextPalette = isTransparentBanner
+    ? surfacePalette
+    : translatePaletteForSurface(rolesColor, bannerBgColor);
 
   const styles = StyleSheet.create({
     bannerContainer: {
       backgroundColor: bannerBgColor,
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      borderRadius: design.borderRadiusPt || 4,
-      marginTop: 14,
+      paddingHorizontal: isTransparentBanner ? 0 : 10,
+      paddingVertical: isTransparentBanner ? 4 : 5,
+      borderRadius: isTransparentBanner ? 0 : (design.borderRadiusPt || 4),
+      marginTop: 16,
       marginBottom: 8,
-      borderLeftWidth: design.borderWidthPt ? Math.max(2, design.borderWidthPt) : 0,
-      borderLeftColor: rolesColor[design.borderColorRole] || rolesColor.accent,
+      borderBottomWidth: isTransparentBanner ? 1.5 : 0,
+      borderBottomColor: rolesColor.primary,
+      borderLeftWidth: (!isTransparentBanner && design.borderWidthPt) ? Math.max(2, design.borderWidthPt) : 0,
+      borderLeftColor: rolesColor[design.borderColorRole as keyof ResolvedThemeRoles] as string || rolesColor.accent,
     },
     bannerText: {
       fontSize: typography.sectionHeading,
       fontFamily: 'Helvetica-Bold',
       textTransform: 'uppercase',
       letterSpacing: 0.5,
-      color: bannerTextPalette.title,
+      color: isTransparentBanner ? rolesColor.primary : bannerTextPalette.title,
     },
   });
 

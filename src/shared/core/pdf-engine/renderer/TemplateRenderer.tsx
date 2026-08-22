@@ -108,9 +108,9 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     leftColumn: {
       backgroundColor: rolesColor.primary,
       color: rolesColor.textOnPrimary,
-      paddingTop: usable.margins.topPt,
-      paddingBottom: usable.margins.bottomPt,
-      paddingLeft: usable.margins.leftPt,
+      paddingTop: Math.max(24, usable.margins.topPt),
+      paddingBottom: Math.max(24, usable.margins.bottomPt),
+      paddingLeft: Math.max(20, usable.margins.leftPt),
       paddingRight: 16,
       flexDirection: 'column'
     },
@@ -163,10 +163,10 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     },
     // Right Content Column Styling (el ancho real lo define el sector — ver sectorStyle abajo)
     rightColumn: {
-      paddingTop: usable.margins.topPt,
-      paddingBottom: usable.margins.bottomPt,
+      paddingTop: Math.max(24, usable.margins.topPt),
+      paddingBottom: Math.max(24, usable.margins.bottomPt),
       paddingLeft: 24,
-      paddingRight: usable.margins.rightPt,
+      paddingRight: Math.max(24, usable.margins.rightPt),
       backgroundColor: rolesColor.background
     },
     headerName: {
