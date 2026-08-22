@@ -8,7 +8,6 @@ import { placeFixedObjects } from '../layers/fixedObjects/placeFixedObjects';
 import { ContentSection, ContentRecord } from '../layers/records/recordTypes';
 import { getPresentContactFields } from '../layers/records/sharedFields';
 import { resolveThemeRoles } from '../layers/colors/colorSystem';
-import { CardObjectRenderer } from '../layers/cards/CardObjectRenderer';
 
 export interface TemplateRendererProps {
   preset: Preset;
@@ -97,13 +96,28 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     },
     pageBody: {
       flexDirection: 'row',
-      flex: 1
+      flex: 1,
+      position: 'relative'
     },
     leftColumn: {
-      backgroundColor: rolesColor.primary,
+      backgroundColor: 'transparent',
       color: rolesColor.textOnPrimary,
       paddingHorizontal: 16,
       flexDirection: 'column'
+    },
+    /**
+     * CAPA DE FONDO CON SANGRADO — el color del sidebar no puede vivir en
+     * leftColumn porque leftColumn está adentro del margen de la Page. Esta
+     * capa se posiciona aparte, detrás del contenido, y se estira hacia
+     * afuera del margen (offsets negativos) para llegar al borde físico real
+     * de la hoja en todas las páginas generadas — no solo la primera.
+     */
+    sidebarBleedBackground: {
+      position: 'absolute',
+      top: -usable.margins.topPt,
+      bottom: -usable.margins.bottomPt,
+      left: -usable.margins.leftPt,
+      backgroundColor: rolesColor.primary
     },
     sidebarHeader: {
       alignItems: 'center',
@@ -471,48 +485,39 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     }
 
     if (rec.kind === 'education') {
-      const designId = preset.recordCardDesigns?.education || 'accent-card';
       return (
-        <CardObjectRenderer
-          key={rec.id}
-          designId={designId}
-          title={String(f.degree || '')}
-          subtitle={String(f.institution || '')}
-          dateOrBadge={f.year ? `AÑO ${String(f.year)}` : undefined}
-          rolesColor={rolesColor}
-          typography={preset.typography}
-        />
+        <View key={rec.id} wrap={false} style={[styles.cardBox, styles.cardBoxAccent]}>
+          <View style={styles.cardHeaderRow}>
+            <Text style={styles.cardTitle}>{String(f.degree || '')}</Text>
+            {f.year && <Text style={styles.cardYearBadge}>AÑO {String(f.year)}</Text>}
+          </View>
+          <Text style={styles.cardInstitution}>{String(f.institution || '')}</Text>
+        </View>
       );
     }
 
     if (rec.kind === 'experience') {
-      const designId = preset.recordCardDesigns?.experience || 'primary-card';
       return (
-        <CardObjectRenderer
-          key={rec.id}
-          designId={designId}
-          title={String(f.role || '')}
-          subtitle={String(f.institution || '')}
-          dateOrBadge={f.year ? String(f.year) : undefined}
-          description={f.details ? String(f.details) : undefined}
-          rolesColor={rolesColor}
-          typography={preset.typography}
-        />
+        <View key={rec.id} wrap={false} style={styles.cardBox}>
+          <View style={styles.cardHeaderRow}>
+            <Text style={styles.cardTitle}>{String(f.role || '')}</Text>
+            {f.year && <Text style={styles.cardYearBadge}>{String(f.year)}</Text>}
+          </View>
+          {f.institution && <Text style={styles.cardInstitution}>{String(f.institution)}</Text>}
+          {f.details && <Text style={styles.cardDetails}>{String(f.details)}</Text>}
+        </View>
       );
     }
 
     if (rec.kind === 'course') {
-      const designId = preset.recordCardDesigns?.course || 'neutral-card';
       return (
-        <CardObjectRenderer
-          key={rec.id}
-          designId={designId}
-          title={String(f.title || f.name || '')}
-          subtitle={String(f.institution || '')}
-          dateOrBadge={f.hours ? String(f.hours) : undefined}
-          rolesColor={rolesColor}
-          typography={preset.typography}
-        />
+        <View key={rec.id} wrap={false} style={styles.courseBox}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.courseTitle}>{String(f.title || f.name || '')}</Text>
+            <Text style={styles.courseInstitution}>{String(f.institution || '')}</Text>
+          </View>
+          {f.hours && <Text style={styles.courseHours}>{String(f.hours)}</Text>}
+        </View>
       );
     }
 
@@ -554,8 +559,15 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     return null;
   };
 
+  const sidebarFlow = sectorsWithFlow.find((s) => s.sector.role === 'sidebar');
+
   const documentBody = (
     <View style={embedded ? [styles.pageBody, { width: pageDef.widthPt, height: pageDef.heightPt }] : styles.pageBody}>
+      {sidebarFlow && !embedded && (
+        <View style={[styles.sidebarBleedBackground, {
+          width: sidebarFlow.sector.box.widthPt + usable.margins.leftPt
+        }]} fixed />
+      )}
       {sectorsWithFlow.map((sFlow) => {
         const isSidebar = sFlow.sector.role === 'sidebar';
         const sectorStyle = isSidebar ? styles.leftColumn : styles.rightColumn;

@@ -47,6 +47,12 @@ export interface Preset {
   /** Leyenda explícita de roles por diseño (ej: 'Fondo columna lateral' -> 'primary', 'Título de sección' -> 'accent') */
   roleLegend?: Record<string, string>;
 
+  /** Mapa de qué diseño de Card usa cada tipo de registro (ej: education -> 'accent-card', experience -> 'primary-card') */
+  recordCardDesigns?: Record<string, string>;
+
+  /** Estilo o arquetipo de portada (monica-classic, modern-corporate, minimal-editorial, creative-cardon) */
+  coverStyle?: 'monica-classic' | 'modern-corporate' | 'minimal-editorial' | 'creative-cardon';
+
   /**
    * DORSO (doble faz) — opcional. Si un preset lo declara, es "de dos caras":
    * el frente usa `sectors`/`fixedObjects`/`sectionOrder` de arriba, el dorso
@@ -66,5 +72,7 @@ export interface Preset {
     /** Hoja física por defecto donde se auto-repite (el usuario puede cambiarla en la UI) */
     defaultSheetPageSizeId: string;
     duplexMode: 'eje_largo' | 'eje_corto';
+    /** Opción para encender o apagar sangrado y marcas de corte al imprimir tarjetas */
+    showCropMarksAndBleed?: boolean;
   };
 }

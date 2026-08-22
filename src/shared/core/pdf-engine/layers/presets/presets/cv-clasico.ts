@@ -28,6 +28,12 @@ export const cvClasicoPreset: Preset = {
     title: 18, sectionHeading: 10, itemTitle: 10.5, body: 9.5, caption: 9,
     fontFamily: 'Helvetica',
   },
+  coverStyle: 'monica-classic',
+  recordCardDesigns: {
+    education: 'accent-card',
+    experience: 'primary-card',
+    course: 'neutral-card',
+  },
   roleLegend: {
     'Fondo de columna lateral / Sidebar': 'primary (#ab5ba1)',
     'Títulos de sección principal': 'accent (#40a08e)',

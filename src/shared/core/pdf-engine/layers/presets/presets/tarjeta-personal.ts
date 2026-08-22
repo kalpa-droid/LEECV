@@ -59,9 +59,7 @@ export const tarjetaPersonalPreset: Preset = {
     bleedPresetId: 'estandar_tarjeta',
     impositionPresetId: 'impresora_oficina',
     defaultSheetPageSizeId: 'a4',
-    // La mayoría de las impresoras de oficina voltean por el eje largo por defecto.
-    // Si al usuario le sale desalineado, cambia esto a 'eje_corto' en la UI y listo
-    // — ninguna otra parte del motor cambia.
     duplexMode: 'eje_largo',
+    showCropMarksAndBleed: true,
   },
 };

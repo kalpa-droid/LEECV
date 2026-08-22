@@ -22,7 +22,10 @@ export function CardSheetDocument({ card, preset }: CardSheetDocumentProps) {
 
   const trimPage = getPageSize(preset.pageSizeId);
   const sheetPageSize = getPageSize(preset.print.defaultSheetPageSizeId);
-  const bleedSpec = BLEED_PRESETS[preset.print.bleedPresetId] || BLEED_PRESETS.ninguno;
+  const showMarksAndBleed = preset.print.showCropMarksAndBleed !== false;
+  const bleedSpec = showMarksAndBleed
+    ? (BLEED_PRESETS[preset.print.bleedPresetId] || BLEED_PRESETS.ninguno)
+    : BLEED_PRESETS.ninguno;
   const impositionSpec = IMPOSITION_PRESETS[preset.print.impositionPresetId] || IMPOSITION_PRESETS.impresora_oficina;
   const cardMarginPreset = MARGIN_PRESETS[preset.marginPresetId] || MARGIN_PRESETS.tarjeta_ajustada;
 
@@ -73,7 +76,7 @@ export function CardSheetDocument({ card, preset }: CardSheetDocumentProps) {
       ))}
 
       {/* Marcas de corte */}
-      {imposition.cropMarks.map((mark, i) => (
+      {showMarksAndBleed && imposition.cropMarks.map((mark, i) => (
         <View
           key={`mark-${i}`}
           style={{
