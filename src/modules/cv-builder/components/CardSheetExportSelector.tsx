@@ -183,7 +183,7 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
         className="w-full p-3 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-extrabold text-sm rounded-xl flex items-center justify-center gap-2 transition"
       >
         <Download className="w-4 h-4" />
-        {isExporting ? 'Generando PDF...' : 'Descargar hoja de tarjetas (frente + dorso)'}
+        {isExporting ? 'Generando PDF...' : 'Exportar hoja de tarjetas (frente + dorso)'}
       </button>
     </div>
   );

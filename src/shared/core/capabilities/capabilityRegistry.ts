@@ -148,7 +148,7 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
       'json_backup'
     ],
     defaultPaperSize: 'a4',
-    defaultCoverPreset: 'monica-classic'
+    defaultActivePresetId: 'cv-clasico'
   },
   business_card: {
     id: 'business_card',

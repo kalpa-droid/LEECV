@@ -17,7 +17,7 @@ export interface DocumentTypeConfig {
   iconName: string;
   capabilities: string[]; // Capability IDs used by this document type
   defaultPaperSize?: string;
-  defaultCoverPreset?: string;
+  defaultActivePresetId?: string;
 }
 
 export interface DocumentRecord {

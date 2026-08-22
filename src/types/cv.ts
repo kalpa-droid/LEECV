@@ -73,7 +73,6 @@ export interface ColumnAssignments {
 }
 
 export interface CVLayout {
-  layoutStyle?: string; // legado, no lo lee el motor de render — ver activePresetId en CVData
   paperSize?: 'a4' | 'letter';
   columnRatio?: string;
   primaryColor?: string;

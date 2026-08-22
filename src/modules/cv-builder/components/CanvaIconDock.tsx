@@ -14,13 +14,15 @@ import {
   Columns3,
   BookMarked,
   X,
-  Menu
+  Menu,
+  Users
 } from 'lucide-react';
 
 export const styleTabs = [
   { id: 'diseno', label: 'Diseño', icon: Layout },
   { id: 'paneles', label: 'Paneles', icon: Columns3 },
-  { id: 'color', label: 'Color', icon: Palette }
+  { id: 'color', label: 'Color', icon: Palette },
+  { id: 'candidatos', label: 'Candidatos', icon: Users }
 ];
 
 export const contentTabs = [

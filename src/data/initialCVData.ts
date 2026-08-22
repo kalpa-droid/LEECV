@@ -87,9 +87,9 @@ export const standardExampleCVData = {
       image: sampleCertImage3 
     }
   ],
+  activePresetId: "cv-clasico",
   layout: {
     paperSize: "a4",
-    layoutStyle: "executive-sidebar",
     showCoverPage: true,
     columnAssignments: {
       contacto: "secundaria",
@@ -121,11 +121,10 @@ export const standardExampleCVData = {
 
 export const blankCVTemplate = {
   id: "cv_blanco",
+  activePresetId: "cv-clasico",
   showCoverPage: true,
-  layoutStyle: "executive-sidebar",
   layout: {
     paperSize: "a4",
-    layoutStyle: "executive-sidebar",
     showCoverPage: true,
     columnAssignments: {
       contacto: "secundaria",
@@ -385,9 +384,9 @@ export const danielaExampleCVData = {
     dni: "33.456.789",
     date: "2026-08-20"
   },
+  activePresetId: "cv-clasico",
   layout: {
     paperSize: "a4",
-    layoutStyle: "executive-sidebar",
     showCoverPage: true,
     columnAssignments: {
       contacto: "secundaria",

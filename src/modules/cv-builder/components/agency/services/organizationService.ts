@@ -1,6 +1,6 @@
-import { supabase } from '../../../shared/core/lib/supabaseClient';
-import { safeSupabaseCall } from '../../../shared/core/utils/safeSupabaseCall';
-import { Organization, OrgMember, OrgCandidate, OrgRole } from '../../../types/organization';
+import { supabase } from '../../../../../shared/core/lib/supabaseClient';
+import { safeSupabaseCall } from '../../../../../shared/core/utils/safeSupabaseCall';
+import { Organization, OrgMember, OrgCandidate, OrgRole } from '../../../../../types/organization';
 
 /** Obtiene la organización asociada al usuario actual */
 export async function getOrganization(): Promise<Organization | null> {

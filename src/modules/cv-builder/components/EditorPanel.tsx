@@ -27,6 +27,7 @@ import { useToast } from '../../../shared/core/ui/Toast';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { RepeatableSection } from '../../../shared/core/ui/RepeatableSection';
 import { Field } from '../../../shared/core/ui/Field';
+import AgencyCandidateDashboard from './agency/AgencyCandidateDashboard';
 
 export default function EditorPanel({ 
   cvData, 
@@ -1669,6 +1670,12 @@ export default function EditorPanel({
                 />
               </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'candidatos' && (
+          <div className="space-y-4">
+            <AgencyCandidateDashboard onBackToEditor={() => {}} />
           </div>
         )}
 

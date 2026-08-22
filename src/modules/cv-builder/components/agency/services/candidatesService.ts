@@ -1,4 +1,4 @@
-import { supabase } from '../../../shared/core/lib/supabaseClient';
+import { supabase } from '../../../../../shared/core/lib/supabaseClient';
 
 export async function listAgencyCandidates() {
   if (!supabase) return [];

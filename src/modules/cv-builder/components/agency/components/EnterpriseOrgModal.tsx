@@ -7,9 +7,9 @@ import {
   removeMember, 
   acceptInvitation 
 } from '../services/organizationService';
-import { useToast } from '../../../shared/core/ui/Toast';
-import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
-import { Organization, OrgMember, OrgRole } from '../../../types/organization';
+import { useToast } from '../../../../../shared/core/ui/Toast';
+import { useConfirm } from '../../../../../shared/core/ui/ConfirmDialog';
+import { Organization, OrgMember, OrgRole } from '../../../../../types/organization';
 
 interface EnterpriseOrgModalProps {
   isOpen: boolean;
