@@ -28,6 +28,17 @@ export interface TypographyScale {
   body: number;
   caption: number;
   fontFamily: string;
+  lineHeightBody?: number;
+  lineHeightHeading?: number;
+  cover?: {
+    badge: number;
+    title: number;
+    name: number;
+    role: number;
+    quote: number;
+    footerMain: number;
+    footerSub: number;
+  };
 }
 
 export interface Preset {

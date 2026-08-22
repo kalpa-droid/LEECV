@@ -30,6 +30,17 @@ export const modernCorporatePreset: Preset = {
   typography: {
     title: 19, sectionHeading: 10.5, itemTitle: 10.5, body: 9.5, caption: 9,
     fontFamily: 'Helvetica',
+    lineHeightBody: 1.3,
+    lineHeightHeading: 1.2,
+    cover: {
+      badge: 9.5,
+      title: 28,
+      name: 21,
+      role: 9.5,
+      quote: 11,
+      footerMain: 10.5,
+      footerSub: 9
+    }
   },
   coverStyle: 'modern-corporate',
   recordCardDesigns: {

@@ -29,6 +29,17 @@ export const minimalEditorialPreset: Preset = {
   typography: {
     title: 20, sectionHeading: 9.5, itemTitle: 10, body: 9, caption: 8.5,
     fontFamily: 'Times-Roman',
+    lineHeightBody: 1.35,
+    lineHeightHeading: 1.25,
+    cover: {
+      badge: 8.5,
+      title: 27,
+      name: 20,
+      role: 9,
+      quote: 10,
+      footerMain: 9.5,
+      footerSub: 8.5
+    }
   },
   coverStyle: 'minimal-editorial',
   recordCardDesigns: {

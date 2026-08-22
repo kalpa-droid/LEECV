@@ -27,6 +27,17 @@ export const cvClasicoPreset: Preset = {
   typography: {
     title: 18, sectionHeading: 10, itemTitle: 10.5, body: 9.5, caption: 9,
     fontFamily: 'Helvetica',
+    lineHeightBody: 1.3,
+    lineHeightHeading: 1.2,
+    cover: {
+      badge: 9,
+      title: 26,
+      name: 20,
+      role: 9,
+      quote: 10.5,
+      footerMain: 10,
+      footerSub: 8.5
+    }
   },
   coverStyle: 'monica-classic',
   recordCardDesigns: {

@@ -297,7 +297,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       justifyContent: 'center'
     },
     certTitle: {
-      fontSize: 14,
+      fontSize: preset.typography.cover?.title ? Math.round(preset.typography.cover.title * 0.55) : 14,
       fontFamily: 'Helvetica-Bold',
       color: '#0f172a',
       marginBottom: 12
@@ -348,13 +348,13 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       marginBottom: 8
     },
     coverBadgeText: {
-      fontSize: 9,
+      fontSize: preset.typography.cover?.badge || preset.typography.caption,
       fontFamily: 'Helvetica-Bold',
       letterSpacing: 1.5,
       color: '#ffffff'
     },
     coverTitle: {
-      fontSize: 26,
+      fontSize: preset.typography.cover?.title || preset.typography.title,
       fontFamily: 'Helvetica-Bold',
       color: '#ffffff',
       marginBottom: 10,
@@ -362,7 +362,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       letterSpacing: 1
     },
     coverName: {
-      fontSize: 20,
+      fontSize: preset.typography.cover?.name || preset.typography.title,
       fontFamily: 'Helvetica-Bold',
       color: preset.palette.accent,
       marginBottom: 12,
@@ -385,7 +385,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       borderColor: 'rgba(255, 255, 255, 0.3)'
     },
     coverRoleText: {
-      fontSize: 9,
+      fontSize: preset.typography.cover?.role || preset.typography.caption,
       fontFamily: 'Helvetica-Bold',
       color: '#ffffff'
     },
@@ -397,11 +397,11 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       marginTop: 8
     },
     coverQuoteText: {
-      fontSize: 9,
+      fontSize: preset.typography.cover?.quote || preset.typography.body,
       fontStyle: 'italic',
       color: '#ffffff',
       textAlign: 'center',
-      lineHeight: 1.4
+      lineHeight: preset.typography.lineHeightBody || 1.3
     },
     coverFooterBar: {
       width: '100%',
@@ -416,17 +416,17 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       borderColor: 'rgba(255, 255, 255, 0.2)'
     },
     coverFooterSub: {
-      fontSize: 8,
+      fontSize: preset.typography.cover?.footerSub || preset.typography.caption,
       fontFamily: 'Helvetica-Bold',
       color: '#e2e8f0'
     },
     coverFooterMain: {
-      fontSize: 10,
+      fontSize: preset.typography.cover?.footerMain || preset.typography.body,
       fontFamily: 'Helvetica-Bold',
       color: '#ffffff'
     },
     coverFooterBadge: {
-      fontSize: 8,
+      fontSize: preset.typography.cover?.footerSub || preset.typography.caption,
       fontFamily: 'Helvetica-Bold',
       color: preset.palette.accent
     }

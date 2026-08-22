@@ -44,6 +44,8 @@ export const tarjetaPersonalPreset: Preset = {
   typography: {
     title: 13, sectionHeading: 7, itemTitle: 8, body: 7.5, caption: 6.5,
     fontFamily: 'Helvetica',
+    lineHeightBody: 1.2,
+    lineHeightHeading: 1.15,
   },
   roleLegend: {
     'Fondo principal frente': 'background (#ffffff)',
