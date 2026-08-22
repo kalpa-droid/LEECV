@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Preset } from '../../../shared/core/pdf-engine/layers/presets/presetSchema';
 import { PRESET_LIST } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { fetchPresetsFromSupabase, savePresetToSupabase, deletePresetFromSupabase } from '../../../shared/core/pdf-engine/layers/presets/presetStorageService';
-import { Palette, Code2, Save, Plus, Trash2, Layout, Sparkles, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { Palette, Code2, Save, Plus, Trash2, Layout, Sparkles, RefreshCw, CheckCircle2, Wand2, Info } from 'lucide-react';
+import { generateHarmonyPalette, HarmonyScheme } from '../../../shared/core/pdf-engine/layers/colors/colorSystem';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 
@@ -15,6 +16,23 @@ export function TemplateManagementTab() {
   const [jsonText, setJsonText] = useState<string>(JSON.stringify(PRESET_LIST[0], null, 2));
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [harmonyScheme, setHarmonyScheme] = useState<HarmonyScheme>('complementario');
+
+  const handleGenerateHarmony = () => {
+    const palette = generateHarmonyPalette(selectedPreset.palette.primary || '#00A8A0', harmonyScheme);
+    const updated = {
+      ...selectedPreset,
+      palette: {
+        ...selectedPreset.palette,
+        secondary: palette.secondary,
+        accent: palette.accent,
+        text: palette.text,
+      }
+    };
+    setSelectedPreset(updated);
+    setJsonText(JSON.stringify(updated, null, 2));
+    showSuccess(`¡Armonía ${harmonyScheme.toUpperCase()} generada con éxito!`);
+  };
 
   async function loadPresets() {
     setLoading(true);
@@ -265,6 +283,35 @@ export function TemplateManagementTab() {
                 </select>
               </div>
 
+              {/* Motor de Armonía de Color */}
+              <div className="p-3 bg-purple-50 rounded-xl border border-purple-200 space-y-2">
+                <label className="block text-[11px] font-black text-purple-900 flex items-center gap-1.5">
+                  <Wand2 className="w-3.5 h-3.5 text-purple-600" />
+                  <span>Generador de Armonía Cromática (WCAG 2.1)</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={harmonyScheme}
+                    onChange={(e) => setHarmonyScheme(e.target.value as HarmonyScheme)}
+                    className="flex-1 p-2 rounded-lg border border-purple-300 bg-white font-bold text-purple-950 text-xs outline-none"
+                  >
+                    <option value="complementario">☯️ Complementario (Contraste Máximo)</option>
+                    <option value="analogo">🎨 Análogo (Transición Suave)</option>
+                    <option value="triadico">📐 Triádico (Vibrante Equilibrado)</option>
+                    <option value="monocromo">🌓 Monocromo (Variaciones de Matiz)</option>
+                  </select>
+
+                  <button
+                    type="button"
+                    onClick={handleGenerateHarmony}
+                    className="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white font-extrabold rounded-lg transition text-xs flex items-center gap-1 cursor-pointer"
+                  >
+                    <Wand2 className="w-3.5 h-3.5" />
+                    <span>Generar</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Color Swatches Controls */}
               <div className="space-y-3 pt-2">
                 <label className="block text-[11px] font-black text-slate-800 uppercase">Paleta de Colores:</label>
@@ -343,6 +390,24 @@ export function TemplateManagementTab() {
                   </div>
                 </div>
               </div>
+
+              {/* Leyenda de Roles del Diseñador */}
+              {selectedPreset.roleLegend && Object.keys(selectedPreset.roleLegend).length > 0 && (
+                <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-amber-900 font-extrabold text-[11px]">
+                    <Info className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Leyenda de Roles de este Diseño</span>
+                  </div>
+                  <div className="space-y-1 text-[10.5px]">
+                    {Object.entries(selectedPreset.roleLegend).map(([elem, role]) => (
+                      <div key={elem} className="flex items-center justify-between text-slate-700 font-medium">
+                        <span>{elem}:</span>
+                        <span className="font-mono text-purple-800 font-bold">{role}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Right Column: Escala Tipográfica */}

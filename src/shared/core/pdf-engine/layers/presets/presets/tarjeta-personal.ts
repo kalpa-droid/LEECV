@@ -45,6 +45,14 @@ export const tarjetaPersonalPreset: Preset = {
     title: 13, sectionHeading: 7, itemTitle: 8, body: 7.5, caption: 6.5,
     fontFamily: 'Helvetica',
   },
+  roleLegend: {
+    'Fondo principal frente': 'background (#ffffff)',
+    'Línea decorativa inferior': 'accent (#e94560)',
+    'Nombre y títulos principales': 'primary (#1a1a2e)',
+    'Teléfono, Email y Redes': 'secondary (#666666)',
+    'Fondo completo del dorso': 'primary (#1a1a2e)',
+    'Texto / Marca del dorso': 'textOnPrimary (#ffffff)',
+  },
 
   // ===== IMPRESIÓN (capas 6/7/8) =====
   print: {

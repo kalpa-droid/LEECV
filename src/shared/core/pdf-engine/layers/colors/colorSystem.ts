@@ -1,9 +1,8 @@
 /**
- * CAPA 9 — SISTEMA DE COLOR Y CONTRASTE AUTOMÁTICO (WCAG 2.1 AA)
+ * CAPA 9 — SISTEMA DE COLOR, ARMONÍA Y CONTRASTE AUTOMÁTICO (WCAG 2.1 AA)
  * 
- * Calcula científicamente la luminancia sRGB de los colores para determinar
- * automáticamente si el texto sobre cualquier fondo (primario, secundario o neutro)
- * debe ser claro (#ffffff) u oscuro (#0f172a) garantizando una relación de contraste >= 4.5:1.
+ * Calcula científicamente la luminancia sRGB y armonías cromáticas HSL para determinar
+ * automáticamente si los colores de fondo, texto, secundario y acento cumplen WCAG 2.1 AA (>= 4.5:1).
  */
 
 /** Convierte hex #RRGGBB o #RGB a valores sRGB [0-1] */
@@ -19,6 +18,66 @@ function hexToRGB(hex: string): [number, number, number] {
   const b = parseInt(cleanHex.substring(4, 6), 16) / 255;
 
   return [r, g, b];
+}
+
+/** Convierte sRGB [0-1] a hex #RRGGBB */
+function rgbToHex(r: number, g: number, b: number): string {
+  const toHex = (n: number) => {
+    const hex = Math.round(Math.min(255, Math.max(0, n * 255))).toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  };
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+/** Convierte hex a HSL [0-360, 0-1, 0-1] */
+export function hexToHSL(hex: string): [number, number, number] {
+  const [r, g, b] = hexToRGB(hex);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
+
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h /= 6;
+  }
+
+  return [Math.round(h * 360), Number(s.toFixed(2)), Number(l.toFixed(2))];
+}
+
+/** Convierte HSL [0-360, 0-1, 0-1] a hex */
+export function hslToHex(h: number, s: number, l: number): string {
+  const hNorm = ((h % 360) + 360) % 360 / 360;
+  let r: number, g: number, b: number;
+
+  if (s === 0) {
+    r = g = b = l;
+  } else {
+    const hue2rgb = (p: number, q: number, t: number) => {
+      let tNorm = t;
+      if (tNorm < 0) tNorm += 1;
+      if (tNorm > 1) tNorm -= 1;
+      if (tNorm < 1 / 6) return p + (q - p) * 6 * tNorm;
+      if (tNorm < 1 / 2) return q;
+      if (tNorm < 2 / 3) return p + (q - p) * (2 / 3 - tNorm) * 6;
+      return p;
+    };
+
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, hNorm + 1 / 3);
+    g = hue2rgb(p, q, hNorm);
+    b = hue2rgb(p, q, hNorm - 1 / 3);
+  }
+
+  return rgbToHex(r, g, b);
 }
 
 /** Calcula la luminancia relativa según la fórmula ITU-R BT.709 / WCAG 2.1 */
@@ -52,6 +111,66 @@ export function getContrastTextColor(bgHex: string): string {
   return contrastWithWhite >= contrastWithDark ? '#ffffff' : '#0f172a';
 }
 
+export type HarmonyScheme = 'complementario' | 'analogo' | 'triadico' | 'monocromo';
+
+export interface HarmonyPalette {
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  text: string;
+}
+
+/**
+ * MOTOR DE ARMONÍA CROMÁTICA
+ * Dado un color primario base y un esquema de armonía ('complementario', 'analogo', 'triadico', 'monocromo'),
+ * calcula científicamente los colores secundario y acento rotando el matiz (Hue) en HSL y validando contraste WCAG.
+ */
+export function generateHarmonyPalette(
+  colorBase: string,
+  scheme: HarmonyScheme = 'complementario',
+  backgroundInput: string = '#ffffff'
+): HarmonyPalette {
+  const [h, s, l] = hexToHSL(colorBase);
+  let secH = h;
+  let accH = h;
+  let secL = l;
+  let accL = l;
+
+  switch (scheme) {
+    case 'complementario':
+      secH = (h + 180) % 360;
+      accH = (h + 30) % 360;
+      break;
+    case 'analogo':
+      secH = (h + 30) % 360;
+      accH = (h - 30 + 360) % 360;
+      break;
+    case 'triadico':
+      secH = (h + 120) % 360;
+      accH = (h + 240) % 360;
+      break;
+    case 'monocromo':
+      secL = Math.max(0.15, l * 0.65);
+      accL = Math.min(0.85, l * 1.35);
+      break;
+  }
+
+  const primary = colorBase;
+  const secondary = hslToHex(secH, Math.max(0.2, s), secL);
+  const accent = hslToHex(accH, Math.max(0.3, s), accL);
+  const background = backgroundInput;
+  const text = getContrastTextColor(background);
+
+  return {
+    primary,
+    secondary,
+    accent,
+    background,
+    text
+  };
+}
+
 export interface ResolvedThemeRoles {
   primary: string;
   secondary: string;
@@ -74,25 +193,22 @@ export interface ResolvedThemeRoles {
  * calcula texto claro automáticamente.
  */
 export function resolveThemeRoles(theme: any = {}): ResolvedThemeRoles {
-  const primary = theme.primaryColor || '#00A8A0';
-  const secondary = theme.secondaryColor || '#64748b';
-  const accent = theme.accentColor || '#FF2E63';
-  const background = theme.bgColor || '#ffffff';
+  const primary = theme.primaryColor || theme.primary || '#00A8A0';
+  const secondary = theme.secondaryColor || theme.secondary || '#64748b';
+  const accent = theme.accentColor || theme.accent || '#FF2E63';
+  const background = theme.bgColor || theme.background || '#ffffff';
 
   const textOnPrimary = getContrastTextColor(primary);
   const textOnSecondary = getContrastTextColor(secondary);
   const textOnAccent = getContrastTextColor(accent);
 
-  // Si theme.textColor fue especificado manualmente y cumple WCAG 4.5:1, se usa.
-  // De lo contrario, se calcula dinámicamente el color con mayor legibilidad.
-  let text = theme.textColor || getContrastTextColor(background);
+  let text = theme.textColor || theme.text || getContrastTextColor(background);
   if (getContrastRatio(background, text) < 3.5) {
     text = getContrastTextColor(background);
   }
 
   const border = getRelativeLuminance(background) > 0.5 ? '#e2e8f0' : 'rgba(255,255,255,0.2)';
 
-  // El QR requiere un alto contraste (módulo oscuro vs fondo claro)
   const qrDark = getRelativeLuminance(primary) < 0.4 ? primary : '#1a1a2e';
   const qrLight = '#ffffff';
 

@@ -44,6 +44,9 @@ export interface Preset {
   palette: ColorPalette;
   typography: TypographyScale;
 
+  /** Leyenda explícita de roles por diseño (ej: 'Fondo columna lateral' -> 'primary', 'Título de sección' -> 'accent') */
+  roleLegend?: Record<string, string>;
+
   /**
    * DORSO (doble faz) — opcional. Si un preset lo declara, es "de dos caras":
    * el frente usa `sectors`/`fixedObjects`/`sectionOrder` de arriba, el dorso

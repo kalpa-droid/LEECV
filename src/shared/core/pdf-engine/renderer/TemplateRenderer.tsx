@@ -7,8 +7,9 @@ import { resolveSectors } from '../layers/sectors/resolveSectors';
 import { placeFixedObjects } from '../layers/fixedObjects/placeFixedObjects';
 import { ContentSection, ContentRecord } from '../layers/records/recordTypes';
 import { getPresentContactFields } from '../layers/records/sharedFields';
+import { resolveThemeRoles } from '../layers/colors/colorSystem';
 
-interface TemplateRendererProps {
+export interface TemplateRendererProps {
   preset: Preset;
   sections: ContentSection[];
   personalInfo?: any;
@@ -16,9 +17,10 @@ interface TemplateRendererProps {
   showCoverPage?: boolean;
   coverFeaturedEducationId?: string;
   coverFeaturedProfessionId?: string;
-  roles?: string[];
+  roles?: any[];
   education?: any[];
   professions?: any[];
+  customTheme?: any;
   /**
    * Modo embebido: devuelve solo el contenido (sin Document/Page propios,
    * sin portada, sin páginas de certificados) para insertarlo dentro de un
@@ -47,8 +49,18 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   professions = [],
   embedded = false,
   canvasWidthMm,
-  canvasHeightMm
+  canvasHeightMm,
+  customTheme
 }) => {
+  const rolesColor = resolveThemeRoles({
+    primaryColor: preset.palette.primary,
+    secondaryColor: preset.palette.secondary,
+    accentColor: preset.palette.accent,
+    bgColor: '#ffffff',
+    textColor: preset.palette.text,
+    ...(customTheme || {})
+  });
+
   // En modo embedded el "lienzo" es el objeto (ej. la tarjeta), no una hoja
   // física — nunca se consulta getPageSize() para ese caso.
   const pageDef: PageSize = embedded && canvasWidthMm && canvasHeightMm
@@ -73,13 +85,10 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   const styles = StyleSheet.create({
     page: {
       flexDirection: 'column',
-      backgroundColor: '#ffffff',
+      backgroundColor: rolesColor.background,
       fontFamily: preset.typography.fontFamily,
       fontSize: preset.typography.body,
-      color: preset.palette.text,
-      // CAPA 1 real: el margen sale de resolveMargins(preset.marginPresetId), no de un
-      // 28pt fijo. Con eso, "tarjeta_ajustada" (3mm) no le come el espacio útil a una
-      // tarjeta de 51mm de alto, y "documento_amplio" sí respeta sus 16mm reales.
+      color: rolesColor.text,
       paddingTop: usable.margins.topPt,
       paddingBottom: usable.margins.bottomPt,
       paddingLeft: usable.margins.leftPt,
@@ -89,10 +98,9 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       flexDirection: 'row',
       flex: 1
     },
-    // Left Sidebar Styling (el ancho real lo define el sector — ver sectorStyle abajo)
     leftColumn: {
-      backgroundColor: preset.palette.primary,
-      color: preset.palette.textOnPrimary,
+      backgroundColor: rolesColor.primary,
+      color: rolesColor.textOnPrimary,
       paddingHorizontal: 16,
       flexDirection: 'column'
     },

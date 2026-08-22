@@ -58,6 +58,7 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
               roles={cvData?.roles || []}
               education={cvData?.education || []}
               professions={cvData?.professions || []}
+              customTheme={cvData?.theme}
             />
           )
         } />
