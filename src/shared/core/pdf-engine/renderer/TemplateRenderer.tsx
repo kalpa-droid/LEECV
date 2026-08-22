@@ -61,10 +61,10 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   customRecordCardDesigns
 }) => {
   const rolesColor = resolveThemeRoles({
-    primaryColor: customTheme?.primaryColor || customTheme?.primary || preset.palette.primary,
+    primaryColor: customTheme?.primaryColor || customTheme?.primary || customTheme?.bgCorridor || preset.palette.primary,
     secondaryColor: customTheme?.secondaryColor || customTheme?.secondary || preset.palette.secondary,
     accentColor: customTheme?.accentColor || customTheme?.accent || preset.palette.accent,
-    bgColor: customTheme?.bgColor || customTheme?.bgCorridor || customTheme?.background || '#ffffff',
+    bgColor: customTheme?.bgColor || customTheme?.background || '#ffffff',
     textColor: customTheme?.textColor || customTheme?.text || preset.palette.text,
   });
 
