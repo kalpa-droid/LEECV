@@ -132,7 +132,6 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       color: rolesColor.textOnPrimary,
       paddingLeft: usable.margins.leftPt || 14,
       paddingRight: 14,
-      paddingTop: usable.margins.topPt || 14,
       paddingBottom: usable.margins.bottomPt || 14,
       flex: 1
     },
@@ -140,7 +139,6 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       color: rolesColor.text,
       paddingLeft: 20,
       paddingRight: usable.margins.rightPt || 14,
-      paddingTop: usable.margins.topPt || 14,
       paddingBottom: usable.margins.bottomPt || 14,
       flex: 1
     },
@@ -626,7 +624,9 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
         return (
           <View key={sFlow.sector.id} style={[surfaceStyle, widthStyle]}>
             <View style={contentStyle}>
-            {isSidebar && (
+              {/* SPACER FIJO DE MARGEN SUPERIOR PARA EVITAR EL BUG DE PAGINACIÓN DE REACT-PDF (#430/#733) */}
+              <View fixed style={{ height: usable.margins.topPt || 14 }} />
+              {isSidebar && (
               <View style={styles.sidebarHeader}>
                 {personalInfo?.profilePhoto ? (
                   <Image src={personalInfo.profilePhoto} style={styles.profilePhoto} />
