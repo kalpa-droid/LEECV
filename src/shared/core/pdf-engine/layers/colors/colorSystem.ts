@@ -303,3 +303,35 @@ export function translatePaletteForSurface(
     border: borderOnDark,
   };
 }
+
+export interface TypographyColorBinding {
+  title: string;          // Nivel 1 (Nombre / Título Documento)
+  sectionHeading: string; // Nivel 2 (Encabezado de Sección)
+  itemTitle: string;      // Nivel 3 (Título de Puesto / Carrera)
+  caption: string;        // Nivel 5 (Año / Institución / Badges)
+  body: string;           // Nivel 4 (Descripción / Texto de Cuerpo)
+  accentRule: string;     // Color de Acento (Dorado / Resaltador)
+  border: string;         // Línea de separador / borde
+}
+
+/**
+ * CAPA 5 & 8 — VINCULACIÓN TIPOGRAFÍA ↔ ROLES CROMÁTICOS DE SUPERFICIE
+ * Vincula cada nivel de la escala tipográfica (title, sectionHeading, itemTitle, body, caption)
+ * con los roles cromáticos resueltos para la superficie actual.
+ */
+export function getTypographyColorBinding(
+  rolesColor: ResolvedThemeRoles,
+  surfaceBgHex: string = '#ffffff'
+): TypographyColorBinding {
+  const surface = translatePaletteForSurface(rolesColor, surfaceBgHex);
+
+  return {
+    title: surface.isDark ? surface.accent : surface.title,
+    sectionHeading: surface.title,
+    itemTitle: surface.isDark ? surface.subtitle : surface.title,
+    caption: surface.isDark ? surface.subtitle : surface.subtitle,
+    body: surface.bodyText,
+    accentRule: surface.accent,
+    border: surface.border,
+  };
+}

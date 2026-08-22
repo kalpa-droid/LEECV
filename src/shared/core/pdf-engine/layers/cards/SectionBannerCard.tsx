@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from '@react-pdf/renderer';
 import { CARD_DESIGNS, CardDesign } from './cardDesignSchema';
-import { ResolvedThemeRoles, translatePaletteForSurface } from '../colors/colorSystem';
+import { ResolvedThemeRoles, getTypographyColorBinding } from '../colors/colorSystem';
 import { TypographyScale } from '../presets/presetSchema';
 
 interface SectionBannerCardProps {
@@ -17,7 +17,7 @@ interface SectionBannerCardProps {
  * CAPA 6 — OBJETOS BANNER DE SECCIÓN (SectionBannerCard)
  * Renderiza los encabezados de sección ("FORMACIÓN ACADÉMICA", "DATOS PERSONALES")
  * como objetos de primera clase en el motor de diseño, resolviendo su paleta mediante
- * la Matriz de Traducción Cromática HSL (superficies claras u oscuras).
+ * la Matriz de Traducción Cromática HSL (superficies claras u oscuras) y la Vincuación Tipográfica.
  */
 export function SectionBannerCard({
   titleText,
@@ -30,7 +30,7 @@ export function SectionBannerCard({
   const design: CardDesign = CARD_DESIGNS[designId] || CARD_DESIGNS['primary-card'];
 
   const containerBgHex = surfaceBgColor || (isSidebar ? rolesColor.primary : rolesColor.background);
-  const surfacePalette = translatePaletteForSurface(rolesColor, containerBgHex);
+  const typographyBinding = getTypographyColorBinding(rolesColor, containerBgHex);
 
   if (isSidebar) {
     // Encabezado de Sección en Sidebar: Franja integrada minimalista
@@ -44,8 +44,8 @@ export function SectionBannerCard({
         marginBottom: 6,
         paddingBottom: 4,
         borderBottomWidth: 1,
-        borderBottomColor: surfacePalette.border,
-        color: surfacePalette.title,
+        borderBottomColor: typographyBinding.border,
+        color: typographyBinding.sectionHeading,
       },
     });
 
@@ -62,9 +62,6 @@ export function SectionBannerCard({
     : 'transparent';
 
   const isTransparentBanner = bannerBgColor === 'transparent';
-  const bannerTextPalette = isTransparentBanner
-    ? surfacePalette
-    : translatePaletteForSurface(rolesColor, bannerBgColor);
 
   const styles = StyleSheet.create({
     bannerContainer: {
@@ -75,7 +72,7 @@ export function SectionBannerCard({
       marginTop: 16,
       marginBottom: 8,
       borderBottomWidth: isTransparentBanner ? 1.5 : 0,
-      borderBottomColor: rolesColor.primary,
+      borderBottomColor: rolesColor.accent || rolesColor.primary,
       borderLeftWidth: (!isTransparentBanner && design.borderWidthPt) ? Math.max(2, design.borderWidthPt) : 0,
       borderLeftColor: rolesColor[design.borderColorRole as keyof ResolvedThemeRoles] as string || rolesColor.accent,
     },
@@ -84,7 +81,7 @@ export function SectionBannerCard({
       fontFamily: 'Helvetica-Bold',
       textTransform: 'uppercase',
       letterSpacing: 0.5,
-      color: isTransparentBanner ? rolesColor.primary : bannerTextPalette.title,
+      color: typographyBinding.sectionHeading,
     },
   });
 

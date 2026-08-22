@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from '@react-pdf/renderer';
 import { CARD_DESIGNS, CardDesign } from './cardDesignSchema';
-import { ResolvedThemeRoles, translatePaletteForSurface } from '../colors/colorSystem';
+import { ResolvedThemeRoles, getTypographyColorBinding } from '../colors/colorSystem';
 import { TypographyScale } from '../presets/presetSchema';
 
 interface CardObjectRendererProps {
@@ -49,12 +49,12 @@ export function CardObjectRenderer({
     ? backgroundColor
     : (sectorRole === 'sidebar' ? rolesColor.primary : rolesColor.background);
 
-  const surfacePalette = translatePaletteForSurface(rolesColor, effectiveBgColor);
+  const typographyBinding = getTypographyColorBinding(rolesColor, effectiveBgColor);
 
-  let titleColor = design.titleColorRole === 'accent' ? rolesColor.accent : surfacePalette.title;
-  let badgeColor = design.badgeColorRole === 'accent' ? rolesColor.accent : surfacePalette.title;
-  let subtitleColor = surfacePalette.subtitle;
-  let descColor = surfacePalette.bodyText;
+  let titleColor = design.titleColorRole === 'accent' ? rolesColor.accent : typographyBinding.itemTitle;
+  let badgeColor = design.badgeColorRole === 'accent' ? rolesColor.accent : typographyBinding.caption;
+  let subtitleColor = typographyBinding.caption;
+  let descColor = typographyBinding.body;
 
   const fontSizeTitle = design.titleSizeToken === 'title' 
     ? typography.title 

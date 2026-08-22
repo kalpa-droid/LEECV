@@ -96,10 +96,10 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       fontFamily: preset.typography.fontFamily,
       fontSize: preset.typography.body,
       color: rolesColor.text,
-      paddingTop: 0,
-      paddingBottom: 0,
-      paddingLeft: 0,
-      paddingRight: 0
+      paddingTop: usable.margins.topPt || 34,
+      paddingBottom: usable.margins.bottomPt || 34,
+      paddingLeft: usable.margins.leftPt || 34,
+      paddingRight: usable.margins.rightPt || 34
     },
     pageBody: {
       flexDirection: 'row',
@@ -108,10 +108,8 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     leftColumn: {
       backgroundColor: rolesColor.primary,
       color: rolesColor.textOnPrimary,
-      paddingTop: Math.max(24, usable.margins.topPt),
-      paddingBottom: Math.max(24, usable.margins.bottomPt),
-      paddingLeft: Math.max(20, usable.margins.leftPt),
-      paddingRight: 16,
+      padding: 14,
+      borderRadius: 6,
       flexDirection: 'column'
     },
     sidebarHeader: {
@@ -163,10 +161,9 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     },
     // Right Content Column Styling (el ancho real lo define el sector — ver sectorStyle abajo)
     rightColumn: {
-      paddingTop: Math.max(24, usable.margins.topPt),
-      paddingBottom: Math.max(24, usable.margins.bottomPt),
-      paddingLeft: 24,
-      paddingRight: Math.max(24, usable.margins.rightPt),
+      paddingLeft: 20,
+      paddingRight: 8,
+      paddingTop: 4,
       backgroundColor: rolesColor.background
     },
     headerName: {
