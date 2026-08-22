@@ -1,17 +1,12 @@
-// api/drive/disconnect.js
-//
-// Revoca el token en Google (buena práctica, no solo lo borramos localmente)
-// y limpia el estado. Lo puede llamar el propio usuario, o un admin pasando
-// targetUserId (ej. desde el panel, si alguien pide desconectar su cuenta).
-
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
-export default async function handler(req, res) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
 
   try {
@@ -39,7 +34,6 @@ export default async function handler(req, res) {
       .single();
 
     if (tokenRow?.refresh_token) {
-      // Best-effort: revocar del lado de Google. Si falla, igual limpiamos nuestro lado.
       await fetch(`https://oauth2.googleapis.com/revoke?token=${tokenRow.refresh_token}`, { method: 'POST' })
         .catch(err => console.warn('No se pudo revocar el token en Google:', err));
     }
@@ -51,7 +45,7 @@ export default async function handler(req, res) {
     }).eq('id', targetUserId);
 
     return res.status(200).json({ success: true });
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error desconectando Drive:', err);
     return res.status(500).json({ error: 'No se pudo desconectar Drive' });
   }

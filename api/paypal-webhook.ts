@@ -1,21 +1,17 @@
-// api/paypal-webhook.js
-//
-// PayPal manda el evento y hay que verificarlo contra su API antes de
-// confiar en él (a diferencia del hmac de Lemon Squeezy, PayPal usa un
-// endpoint de verificación de firma propio).
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { applyPayment } from './_lib/applyPayment.js';
 
 const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
 const PAYPAL_API = process.env.PAYPAL_ENV === 'sandbox'
   ? 'https://api-m.sandbox.paypal.com'
   : 'https://api-m.paypal.com';
 
-async function getPaypalAccessToken() {
+async function getPaypalAccessToken(): Promise<string> {
   const auth = Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`).toString('base64');
   const res = await fetch(`${PAYPAL_API}/v1/oauth2/token`, {
     method: 'POST',
@@ -25,11 +21,11 @@ async function getPaypalAccessToken() {
     },
     body: 'grant_type=client_credentials',
   });
-  const data = await res.json();
+  const data: any = await res.json();
   return data.access_token;
 }
 
-async function verifyWebhookSignature(req, accessToken) {
+async function verifyWebhookSignature(req: VercelRequest, accessToken: string): Promise<boolean> {
   const body = {
     auth_algo: req.headers['paypal-auth-algo'],
     cert_url: req.headers['paypal-cert-url'],
@@ -48,11 +44,11 @@ async function verifyWebhookSignature(req, accessToken) {
     },
     body: JSON.stringify(body),
   });
-  const data = await res.json();
+  const data: any = await res.json();
   return data.verification_status === 'SUCCESS';
 }
 
-export default async function handler(req, res) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(200).end();
 
   try {
@@ -66,19 +62,18 @@ export default async function handler(req, res) {
     const event = req.body;
     const eventType = event.event_type;
 
-    // PAYMENT.CAPTURE.COMPLETED cubre tanto el pago único (créditos)
-    // como la primera cuota de una suscripción.
     if (eventType === 'PAYMENT.CAPTURE.COMPLETED' || eventType === 'BILLING.SUBSCRIPTION.PAYMENT.COMPLETED') {
       const resource = event.resource || {};
       const customId = resource.custom_id || resource.subscriber?.custom_id || '';
 
-      let userId, plan = 'pro';
+      let userId: string = customId;
+      let plan: any = 'pro';
       try {
         const parsed = JSON.parse(customId);
         userId = parsed.userId;
         plan = parsed.plan || 'pro';
       } catch {
-        userId = customId; // fallback: custom_id era directamente el userId
+        userId = customId;
       }
 
       if (userId) {
@@ -94,7 +89,7 @@ export default async function handler(req, res) {
     }
 
     return res.status(200).end();
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error en webhook PayPal:', err);
     return res.status(500).end();
   }

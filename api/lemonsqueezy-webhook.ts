@@ -1,16 +1,16 @@
-// api/lemonsqueezy-webhook.js
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import { applyPayment } from './_lib/applyPayment.js';
 
 const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
 export const config = { api: { bodyParser: false } };
 
-function getRawBody(req) {
+function getRawBody(req: VercelRequest): Promise<string> {
   return new Promise((resolve, reject) => {
     let data = '';
     req.on('data', (chunk) => (data += chunk));
@@ -19,13 +19,13 @@ function getRawBody(req) {
   });
 }
 
-export default async function handler(req, res) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).end();
 
   const rawBody = await getRawBody(req);
 
-  const signature = req.headers['x-signature'];
-  const hmac = crypto.createHmac('sha256', process.env.LEMONSQUEEZY_WEBHOOK_SECRET);
+  const signature = req.headers['x-signature'] as string | undefined;
+  const hmac = crypto.createHmac('sha256', process.env.LEMONSQUEEZY_WEBHOOK_SECRET || '');
   const digest = hmac.update(rawBody).digest('hex');
 
   const sigBuffer = Buffer.from(signature || '', 'hex');
@@ -50,10 +50,10 @@ export default async function handler(req, res) {
         email,
         plan,
         metodoPago: 'lemonsqueezy',
-        externalId: event.data?.id,
-        amount: event.data?.attributes?.total_formatted,
+        externalId: String(event.data?.id),
+        amount: event.data?.attributes?.total,
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error activando plan (Lemon Squeezy):', err);
     }
   }

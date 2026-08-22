@@ -1,20 +1,18 @@
-// api/create-mp-preference.js
-// Vercel Serverless Function. Requiere la env var MP_ACCESS_TOKEN.
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-export default async function handler(req, res) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { userId, email, plan = 'single_pdf' } = req.body || {};
   if (!userId || !email) return res.status(400).json({ error: 'Falta userId o email' });
 
-  // Precios determinados en el SERVIDOR (nunca confiar en precios mandados desde el cliente)
-  const PLAN_PRICES_ARS = {
-    single_pdf: Number(process.env.MP_PRECIO_PDF_ARS || 1200),      // $1 USD equiv
-    pro: Number(process.env.MP_PRECIO_PRO_ARS || 22800),           // $19 USD equiv
-    enterprise: Number(process.env.MP_PRECIO_ENTERPRISE_ARS || 34800) // $29 USD equiv
+  const PLAN_PRICES_ARS: Record<string, number> = {
+    single_pdf: Number(process.env.MP_PRECIO_PDF_ARS || 1200),
+    pro: Number(process.env.MP_PRECIO_PRO_ARS || 22800),
+    enterprise: Number(process.env.MP_PRECIO_ENTERPRISE_ARS || 34800)
   };
 
-  const PLAN_TITLES = {
+  const PLAN_TITLES: Record<string, string> = {
     single_pdf: 'LEECV - 1 Crédito de Exportación PDF A4',
     pro: 'LEECV Pro - Suscripción Agencia Mensual',
     enterprise: 'LEECV Enterprise - Suscripción Agencia Cloud Mensual'
@@ -51,11 +49,11 @@ export default async function handler(req, res) {
       }),
     });
 
-    const data = await response.json();
+    const data: any = await response.json();
     if (!response.ok) throw new Error(JSON.stringify(data));
 
     return res.status(200).json({ checkoutUrl: data.init_point });
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error creando preferencia MP:', err);
     return res.status(500).json({ error: 'No se pudo crear la preferencia de pago' });
   }

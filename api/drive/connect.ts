@@ -1,18 +1,12 @@
-// api/drive/connect.js
-//
-// Se llama UNA vez, justo después de que el usuario inicia sesión con Google
-// y Supabase devuelve session.provider_refresh_token (solo aparece la primera
-// vez, o cuando se fuerza el consentimiento de nuevo — ver authService.js).
-// Guarda ese refresh token del lado del servidor; el cliente nunca lo vuelve a ver.
-
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
-export default async function handler(req, res) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
 
   try {
@@ -39,7 +33,7 @@ export default async function handler(req, res) {
       .eq('id', user.id);
 
     return res.status(200).json({ success: true });
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error conectando Google Drive:', err);
     return res.status(500).json({ error: 'No se pudo guardar la conexión con Drive' });
   }

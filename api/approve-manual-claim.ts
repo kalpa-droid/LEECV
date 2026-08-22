@@ -1,19 +1,13 @@
-// api/approve-manual-claim.js
-//
-// Para medios SIN webhook automático (Payoneer, transferencia bancaria,
-// comprobante leído por el bot de WhatsApp/Telegram). El admin aprueba
-// desde el panel, y esto llama al MISMO núcleo applyPayment que usan los
-// webhooks automáticos — así "aprobar manual" y "pago automático" activan
-// el plan exactamente igual, sin lógica separada que se pueda desincronizar.
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { applyPayment } from './_lib/applyPayment.js';
 
 const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
-export default async function handler(req, res) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
 
   try {
@@ -47,7 +41,7 @@ export default async function handler(req, res) {
         userId: claim.user_id,
         email: claim.user_email,
         plan: claim.plan,
-        metodoPago: claim.method === 'payoneer' ? 'payoneer' : 'manual',
+        metodoPago: claim.method === 'payoneer' ? 'manual' : 'manual',
         externalId: claim.id,
         amount: claim.amount,
         currency: claim.currency,
@@ -64,7 +58,7 @@ export default async function handler(req, res) {
       .eq('id', claimId);
 
     return res.status(200).json({ success: true });
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error aprobando comprobante manual:', err);
     return res.status(500).json({ error: 'Error interno' });
   }

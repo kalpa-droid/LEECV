@@ -1,23 +1,16 @@
-// api/_lib/applyPayment.js
-//
-// NÚCLEO ÚNICO de activación de pagos. Todos los webhooks (Mercado Pago,
-// PayPal, comprobante manual/OCR) llaman a esta misma función en vez de
-// repetir la lógica de "sumar crédito" / "activar plan" cada uno por su
-// lado. Si mañana cambia una regla de negocio (ej. duración de la
-// suscripción, cuántos créditos da un pack), se cambia acá una sola vez.
+import type { SupabaseClient } from '@supabase/supabase-js';
 
-/**
- * @param {import('@supabase/supabase-js').SupabaseClient} supabaseAdmin
- * @param {object} payment
- * @param {string} payment.userId
- * @param {string} [payment.email]
- * @param {'single_pdf'|'credits_pack_5'|'credits_pack_10'|'pro'|'enterprise'} payment.plan
- * @param {string} payment.metodoPago - 'mercadopago' | 'paypal' | 'lemonsqueezy' | 'manual'
- * @param {string} [payment.externalId] - id de la transacción en la pasarela, para la idempotencia
- * @param {number} [payment.amount]
- * @param {string} [payment.currency]
- */
-export async function applyPayment(supabaseAdmin, payment) {
+export interface PaymentDetails {
+  userId?: string | null;
+  email?: string | null;
+  plan: 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' | 'pro' | 'enterprise';
+  metodoPago: 'mercadopago' | 'paypal' | 'lemonsqueezy' | 'manual';
+  externalId?: string | null;
+  amount?: number | null;
+  currency?: string | null;
+}
+
+export async function applyPayment(supabaseAdmin: SupabaseClient, payment: PaymentDetails) {
   const { userId, email, plan, metodoPago, externalId, amount, currency } = payment;
 
   if (!userId && !email) {
@@ -39,7 +32,7 @@ export async function applyPayment(supabaseAdmin, payment) {
     }
   }
 
-  const CREDIT_PACKS = {
+  const CREDIT_PACKS: Record<string, number> = {
     single_pdf: 1,
     credits_pack_5: 5,
     credits_pack_10: 10,
@@ -48,21 +41,25 @@ export async function applyPayment(supabaseAdmin, payment) {
   let result;
 
   if (CREDIT_PACKS[plan]) {
-    result = await grantCredits(supabaseAdmin, userId, CREDIT_PACKS[plan]);
+    result = await grantCredits(supabaseAdmin, userId || '', CREDIT_PACKS[plan]);
   } else if (plan === 'pro' || plan === 'enterprise') {
-    result = await activateSubscription(supabaseAdmin, { userId, email, plan, metodoPago });
+    result = await activateSubscription(supabaseAdmin, { userId: userId || undefined, email: email || undefined, plan, metodoPago });
   } else {
     throw new Error(`Plan desconocido en applyPayment: ${plan}`);
   }
 
   // Record payment in processed_payments for idempotency
   if (externalId && metodoPago) {
-    await supabaseAdmin.from('processed_payments').insert({
-      provider: metodoPago,
-      external_id: externalId,
-      user_id: userId || null,
-      plan
-    }).catch(err => console.warn('Could not record idempotency log:', err));
+    try {
+      await supabaseAdmin.from('processed_payments').insert({
+        provider: metodoPago,
+        external_id: externalId,
+        user_id: userId || null,
+        plan
+      });
+    } catch (err: any) {
+      console.warn('Could not record idempotency log:', err);
+    }
   }
 
   // Registro único de auditoría + fuente para el panel de admin ("avisos de pago").
@@ -78,7 +75,7 @@ export async function applyPayment(supabaseAdmin, payment) {
   return result;
 }
 
-async function grantCredits(supabaseAdmin, userId, amount) {
+async function grantCredits(supabaseAdmin: SupabaseClient, userId: string, amount: number) {
   const { data: existing } = await supabaseAdmin
     .from('pdf_export_credits')
     .select('credits')
@@ -94,7 +91,10 @@ async function grantCredits(supabaseAdmin, userId, amount) {
   return { type: 'credits', credits: newCredits };
 }
 
-async function activateSubscription(supabaseAdmin, { userId, email, plan, metodoPago }) {
+async function activateSubscription(
+  supabaseAdmin: SupabaseClient, 
+  { userId, email, plan, metodoPago }: { userId?: string; email?: string; plan: string; metodoPago: string }
+) {
   const vence = new Date();
   vence.setMonth(vence.getMonth() + 1);
 
@@ -112,9 +112,6 @@ async function activateSubscription(supabaseAdmin, { userId, email, plan, metodo
     : await query.eq('email', email).select('id').single();
   if (error) throw error;
 
-  // Enterprise necesita una organización para poder invitar miembros. Se crea
-  // acá una sola vez (no en el frontend) para que quede ligado al pago real,
-  // no a que el usuario abra el panel.
   if (plan === 'enterprise' && updated?.id) {
     const { data: existingOrg } = await supabaseAdmin
       .from('organizations')
