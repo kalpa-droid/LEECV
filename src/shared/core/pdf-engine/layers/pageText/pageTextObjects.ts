@@ -33,39 +33,25 @@ export interface ResolvedPageTextPosition {
   };
 }
 
-export function resolvePageTextObjects(
-  defs: PageTextObjectDefinition[],
-  pageWidthPt: number,
-  pageHeightPt: number,
-  currentPage: number,
-  totalPages: number
-): ResolvedPageTextPosition[] {
-  return defs.map((def) => {
-    const text = def.template
-      .replace('{page}', String(currentPage))
-      .replace('{totalPages}', String(totalPages));
+export function buildPageTextTemplate(template: string, pageNumber: number, totalPages: number): string {
+  return template.replace('{page}', String(pageNumber)).replace('{totalPages}', String(totalPages));
+}
 
-    const edgeStyle: Record<string, number> = {};
-    if (def.anchor.startsWith('bottom')) edgeStyle.bottom = def.edgeOffsetPt;
-    if (def.anchor.startsWith('top')) edgeStyle.top = def.edgeOffsetPt;
-    if (def.anchor.endsWith('right')) edgeStyle.right = def.edgeOffsetPt;
-    if (def.anchor.endsWith('left')) edgeStyle.left = def.edgeOffsetPt;
-    if (def.anchor.endsWith('center')) {
-      edgeStyle.left = 0;
-      edgeStyle.right = 0;
-      // el consumidor debe aplicar textAlign:'center' cuando left+right están seteados
-    }
-
-    return {
-      id: def.id,
-      text,
-      style: {
-        position: 'absolute',
-        fontSize: def.fontSizePt,
-        color: def.color || '#94a3b8',
-        ...edgeStyle,
-        ...(def.anchor.endsWith('center') ? { textAlign: 'center' } : {}),
-      },
-    };
-  });
+export function resolvePageTextStyle(def: PageTextObjectDefinition) {
+  const edgeStyle: Record<string, number | string> = {};
+  if (def.anchor.startsWith('bottom')) edgeStyle.bottom = def.edgeOffsetPt;
+  if (def.anchor.startsWith('top')) edgeStyle.top = def.edgeOffsetPt;
+  if (def.anchor.endsWith('right')) edgeStyle.right = def.edgeOffsetPt;
+  if (def.anchor.endsWith('left')) edgeStyle.left = def.edgeOffsetPt;
+  if (def.anchor.endsWith('center')) {
+    edgeStyle.left = 0;
+    edgeStyle.right = 0;
+    edgeStyle.textAlign = 'center';
+  }
+  return {
+    position: 'absolute' as const,
+    fontSize: def.fontSizePt,
+    color: def.color || '#94a3b8',
+    ...edgeStyle,
+  };
 }
