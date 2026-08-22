@@ -90,8 +90,8 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       }
     : getPageSize(preset.pageSizeId);
   const marginDef = MARGIN_PRESETS[preset.marginPresetId] || MARGIN_PRESETS.documento_estandar;
-  const usable = resolveMargins(pageDef, marginDef);
-  const resolvedSectors = resolveSectors(usable, preset.sectors);
+  const usable = resolveMargins(pageDef, marginDef); // Capa 3: solo para saber CUÁNTO margen aplicar al contenido
+  const resolvedSectors = resolveSectors({ widthPt: pageDef.widthPt, heightPt: pageDef.heightPt }, preset.sectors); // Capa 2: geometría sobre la hoja FÍSICA completa, sin margen
   const sectorsWithFlow = placeFixedObjects(resolvedSectors, preset.fixedObjects);
 
   const pdfPaperSize = preset.pageSizeId === 'carta' ? 'LETTER' : preset.pageSizeId === 'legal' ? 'LEGAL' : 'A4';
@@ -112,15 +112,36 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       flexDirection: 'row',
       flex: 1
     },
-    leftColumn: {
+    // CAPA "SUPERFICIE" — solo pintan. Nunca tienen padding, nunca saben de
+    // márgenes. Su único trabajo es rellenar exactamente la caja del sector
+    // (ver sector.box, Capa 2), llegue o no al borde físico.
+    leftColumnSurface: {
       backgroundColor: rolesColor.primary,
+      flexDirection: 'column'
+    },
+    rightColumnSurface: {
+      flex: 1,
+      backgroundColor: rolesColor.background,
+      flexDirection: 'column'
+    },
+    // CAPA "CONTENIDO" — solo manejan margen/padding. Nunca tienen
+    // backgroundColor, por eso un cambio de margen JAMÁS puede volver a
+    // cortar el color: son dos nodos distintos del árbol, no el mismo.
+    leftColumnContent: {
       color: rolesColor.textOnPrimary,
       paddingLeft: usable.margins.leftPt || 14,
       paddingRight: 14,
       paddingTop: usable.margins.topPt || 14,
       paddingBottom: usable.margins.bottomPt || 14,
-      borderRadius: 0,
-      flexDirection: 'column'
+      flex: 1
+    },
+    rightColumnContent: {
+      color: rolesColor.text,
+      paddingLeft: 20,
+      paddingRight: usable.margins.rightPt || 14,
+      paddingTop: usable.margins.topPt || 14,
+      paddingBottom: usable.margins.bottomPt || 14,
+      flex: 1
     },
     sidebarHeader: {
       alignItems: 'center',
@@ -169,15 +190,6 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     },
     sidebarItemBold: {
       fontFamily: 'Helvetica-Bold'
-    },
-    // Right Content Column Styling (el ancho real lo define el sector — ver sectorStyle abajo)
-    rightColumn: {
-      flex: 1,
-      paddingLeft: 20,
-      paddingRight: usable.margins.rightPt || 14,
-      paddingTop: usable.margins.topPt || 14,
-      paddingBottom: usable.margins.bottomPt || 14,
-      backgroundColor: rolesColor.background
     },
     headerName: {
       fontSize: preset.typography.title,
@@ -600,20 +612,19 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     <View style={embedded ? [styles.pageBody, { width: pageDef.widthPt, height: pageDef.heightPt }] : styles.pageBody}>
       {sectorsWithFlow.map((sFlow) => {
         const isSidebar = sFlow.sector.role === 'sidebar';
-        const sectorStyle = isSidebar ? styles.leftColumn : styles.rightColumn;
-        // El sidebar mide su ancho de sector + el margen izquierdo que ahora
-        // bleedea (ver leftColumn arriba) — la columna de contenido usa
-        // flex:1 y absorbe el resto del ancho físico de la hoja, así nunca
-        // queda un hueco sin cubrir por haber sacado el padding de `page`.
-        const widthStyle = isSidebar
-          ? { width: sFlow.sector.box.widthPt + (usable.margins.leftPt || 0) }
-          : {};
+        const surfaceStyle = isSidebar ? styles.leftColumnSurface : styles.rightColumnSurface;
+        const contentStyle = isSidebar ? styles.leftColumnContent : styles.rightColumnContent;
+        // Solo el sidebar tiene ancho fijo (su caja de sector, en pt, contra
+        // la hoja física completa — Capa 2 ya corregida). La columna de
+        // contenido usa flex:1 y ocupa lo que sobre, así nunca hay huecos.
+        const widthStyle = isSidebar ? { width: sFlow.sector.box.widthPt } : {};
 
         const sectorSectionIds = preset.sectionOrder.find(s => s.sectorRole === sFlow.sector.role)?.sectionIds || [];
         const sectorSections = sections.filter(sec => sectorSectionIds.includes(sec.id));
 
         return (
-          <View key={sFlow.sector.id} style={[sectorStyle, widthStyle]}>
+          <View key={sFlow.sector.id} style={[surfaceStyle, widthStyle]}>
+            <View style={contentStyle}>
             {isSidebar && (
               <View style={styles.sidebarHeader}>
                 {personalInfo?.profilePhoto ? (
@@ -648,6 +659,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                 {sec.records.map(rec => renderRecord(rec, isSidebar))}
               </View>
             ))}
+            </View>
           </View>
         );
       })}
