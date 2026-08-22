@@ -49,6 +49,12 @@ export function CardObjectRenderer({
       ? typography.sectionHeading 
       : typography.itemTitle;
 
+  const fontSizeBadge = design.badgeSizeToken === 'itemTitle'
+    ? typography.itemTitle
+    : design.badgeSizeToken === 'body'
+      ? typography.body
+      : typography.caption;
+
   const styles = StyleSheet.create({
     cardContainer: {
       padding: 8,
@@ -74,7 +80,7 @@ export function CardObjectRenderer({
       marginRight: 6,
     },
     badgeText: {
-      fontSize: typography.caption,
+      fontSize: fontSizeBadge,
       fontFamily: typography.fontFamily,
       color: badgeColor,
       fontWeight: 'bold',

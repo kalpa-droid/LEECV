@@ -468,6 +468,55 @@ export function TemplateManagementTab() {
                   />
                 </div>
               </div>
+
+              {/* Diseño de Contenedores de Registro */}
+              <div className="space-y-3 pt-3 border-t border-slate-200">
+                <h4 className="font-extrabold text-slate-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                  <Layout className="w-4 h-4 text-purple-600" />
+                  <span>Diseño de Registros (Contenedores)</span>
+                </h4>
+
+                <div className="space-y-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-600 mb-1">Contenedor Formación Académica</label>
+                    <select
+                      value={selectedPreset.recordCardDesigns?.education || 'accent-card'}
+                      onChange={(e) => handleUpdateField('recordCardDesigns.education', e.target.value)}
+                      className="w-full p-2 rounded-lg border border-slate-300 bg-white font-bold text-slate-900"
+                    >
+                      <option value="accent-card">🎨 Borde Acento (Accent Card)</option>
+                      <option value="primary-card">🔷 Borde Primario (Primary Card)</option>
+                      <option value="neutral-card">⚪ Borde Neutro (Neutral Card)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-600 mb-1">Contenedor Experiencia Laboral</label>
+                    <select
+                      value={selectedPreset.recordCardDesigns?.experience || 'primary-card'}
+                      onChange={(e) => handleUpdateField('recordCardDesigns.experience', e.target.value)}
+                      className="w-full p-2 rounded-lg border border-slate-300 bg-white font-bold text-slate-900"
+                    >
+                      <option value="primary-card">🔷 Borde Primario (Primary Card)</option>
+                      <option value="accent-card">🎨 Borde Acento (Accent Card)</option>
+                      <option value="neutral-card">⚪ Borde Neutro (Neutral Card)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-600 mb-1">Contenedor Cursos y Capacitaciones</label>
+                    <select
+                      value={selectedPreset.recordCardDesigns?.course || 'neutral-card'}
+                      onChange={(e) => handleUpdateField('recordCardDesigns.course', e.target.value)}
+                      className="w-full p-2 rounded-lg border border-slate-300 bg-white font-bold text-slate-900"
+                    >
+                      <option value="neutral-card">⚪ Borde Neutro (Neutral Card)</option>
+                      <option value="accent-card">🎨 Borde Acento (Accent Card)</option>
+                      <option value="primary-card">🔷 Borde Primario (Primary Card)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}

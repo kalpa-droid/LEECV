@@ -1235,6 +1235,66 @@ export default function EditorPanel({
                 </div>
               </div>
 
+              {/* Estilo de Contenedores de Registro */}
+              <div className="space-y-3 pt-3 border-t border-[#EFE2C9]">
+                <label className="block text-xs font-bold text-[#2B1B2E] flex items-center gap-1.5">
+                  <Layout className="w-3.5 h-3.5 text-[#00A8A0]" /> Estilo de Contenedores de Registro
+                </label>
+                <p className="text-[10px] text-[#6B5B6E] font-medium leading-snug">
+                  Personaliza los bordes y acentos visuales de cada categoría de registro de tu documento:
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-[#2B1B2E] mb-1">Formación</label>
+                    <select
+                      value={cvData.recordCardDesigns?.education || 'accent-card'}
+                      onChange={(e) => setCvData(prev => ({
+                        ...prev,
+                        recordCardDesigns: { ...prev.recordCardDesigns, education: e.target.value }
+                      }))}
+                      className="w-full text-xs p-2 rounded-xl border border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none cursor-pointer"
+                    >
+                      <option value="accent-card">🎨 Borde Acento</option>
+                      <option value="primary-card">🔷 Borde Primario</option>
+                      <option value="neutral-card">⚪ Borde Neutro</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-[#2B1B2E] mb-1">Experiencia</label>
+                    <select
+                      value={cvData.recordCardDesigns?.experience || 'primary-card'}
+                      onChange={(e) => setCvData(prev => ({
+                        ...prev,
+                        recordCardDesigns: { ...prev.recordCardDesigns, experience: e.target.value }
+                      }))}
+                      className="w-full text-xs p-2 rounded-xl border border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none cursor-pointer"
+                    >
+                      <option value="primary-card">🔷 Borde Primario</option>
+                      <option value="accent-card">🎨 Borde Acento</option>
+                      <option value="neutral-card">⚪ Borde Neutro</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-[#2B1B2E] mb-1">Cursos</label>
+                    <select
+                      value={cvData.recordCardDesigns?.course || 'neutral-card'}
+                      onChange={(e) => setCvData(prev => ({
+                        ...prev,
+                        recordCardDesigns: { ...prev.recordCardDesigns, course: e.target.value }
+                      }))}
+                      className="w-full text-xs p-2 rounded-xl border border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none cursor-pointer"
+                    >
+                      <option value="neutral-card">⚪ Borde Neutro</option>
+                      <option value="accent-card">🎨 Borde Acento</option>
+                      <option value="primary-card">🔷 Borde Primario</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
               {/* Selection of Featured Records for Cover Page */}
               <div className="space-y-3 pt-3 border-t border-[#EFE2C9]">
                 <label className="block text-xs font-bold text-[#FF2E63] uppercase tracking-wide">

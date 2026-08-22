@@ -8,6 +8,7 @@ export interface CardDesign {
   titleColorRole: 'primary' | 'secondary' | 'accent' | 'text' | 'textOnPrimary';
   badgeColorRole: 'accent' | 'secondary' | 'primary' | 'transparent';
   titleSizeToken?: 'title' | 'itemTitle' | 'sectionHeading';
+  badgeSizeToken?: 'caption' | 'body' | 'itemTitle';
 }
 
 export const CARD_DESIGNS: Record<string, CardDesign> = {
@@ -21,6 +22,7 @@ export const CARD_DESIGNS: Record<string, CardDesign> = {
     titleColorRole: 'primary',
     badgeColorRole: 'accent',
     titleSizeToken: 'itemTitle',
+    badgeSizeToken: 'caption',
   },
   'primary-card': {
     id: 'primary-card',
@@ -32,6 +34,7 @@ export const CARD_DESIGNS: Record<string, CardDesign> = {
     titleColorRole: 'primary',
     badgeColorRole: 'primary',
     titleSizeToken: 'itemTitle',
+    badgeSizeToken: 'caption',
   },
   'neutral-card': {
     id: 'neutral-card',
@@ -43,6 +46,7 @@ export const CARD_DESIGNS: Record<string, CardDesign> = {
     titleColorRole: 'primary',
     badgeColorRole: 'secondary',
     titleSizeToken: 'itemTitle',
+    badgeSizeToken: 'caption',
   },
   'tarjeta-clasica': {
     id: 'tarjeta-clasica',
@@ -54,5 +58,6 @@ export const CARD_DESIGNS: Record<string, CardDesign> = {
     titleColorRole: 'primary',
     badgeColorRole: 'accent',
     titleSizeToken: 'title',
+    badgeSizeToken: 'caption',
   }
 };

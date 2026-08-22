@@ -22,6 +22,11 @@ export interface TemplateRendererProps {
   education?: any[];
   professions?: any[];
   customTheme?: any;
+  customRecordCardDesigns?: {
+    education?: string;
+    experience?: string;
+    course?: string;
+  };
   /**
    * Modo embebido: devuelve solo el contenido (sin Document/Page propios,
    * sin portada, sin páginas de certificados) para insertarlo dentro de un
@@ -51,7 +56,8 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   embedded = false,
   canvasWidthMm,
   canvasHeightMm,
-  customTheme
+  customTheme,
+  customRecordCardDesigns
 }) => {
   const rolesColor = resolveThemeRoles({
     primaryColor: preset.palette.primary,
@@ -471,7 +477,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     }
 
     if (rec.kind === 'education') {
-      const designId = preset.recordCardDesigns?.education || 'accent-card';
+      const designId = customRecordCardDesigns?.education || preset.recordCardDesigns?.education || 'accent-card';
       return (
         <CardObjectRenderer
           key={rec.id}
@@ -486,7 +492,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     }
 
     if (rec.kind === 'experience') {
-      const designId = preset.recordCardDesigns?.experience || 'primary-card';
+      const designId = customRecordCardDesigns?.experience || preset.recordCardDesigns?.experience || 'primary-card';
       return (
         <CardObjectRenderer
           key={rec.id}
@@ -502,7 +508,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     }
 
     if (rec.kind === 'course') {
-      const designId = preset.recordCardDesigns?.course || 'neutral-card';
+      const designId = customRecordCardDesigns?.course || preset.recordCardDesigns?.course || 'neutral-card';
       return (
         <CardObjectRenderer
           key={rec.id}
