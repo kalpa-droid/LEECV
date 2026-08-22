@@ -1110,9 +1110,9 @@ export default function EditorPanel({
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 11: DISEÑO & FORMATO PAPEL */}
+        {/* TAB 11: DISEÑO & FORMATO PAPEL & ADORNOS DE PORTADA */}
         {/* ========================================================================= */}
-        {activeTab === 'diseno' && (
+        {(activeTab === 'diseno' || activeTab === 'portada') && (
           <div className="space-y-6">
             <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] border-b pb-2 border-[#EFE2C9] flex items-center gap-1.5">
               <Layout className="w-4 h-4 text-[#00A8A0]" /> Estructura de Diseño y Formato de Papel
@@ -1147,153 +1147,151 @@ export default function EditorPanel({
                 El motor de paginado recalcula automáticamente los límites de ítems por hoja según la altura física del formato seleccionado.
               </p>
             </div>
-          </div>
-        )}
 
-        {/* ========================================================================= */}
-        {/* TAB 11.5: CONFIGURACIÓN DE PORTADA */}
-        {/* ========================================================================= */}
-        {activeTab === 'portada' && (
-          <div className="space-y-6">
-            <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] border-b pb-2 border-[#EFE2C9] flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-[#00A8A0]" /> Configuración y Adornos de Portada
-            </h3>
+            {/* ========================================================================= */}
+            {/* CONFIGURACIÓN Y ADORNOS DE PORTADA */}
+            {/* ========================================================================= */}
+            <div className="pt-4 border-t border-[#EFE2C9] space-y-6">
+              <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-[#00A8A0]" /> Configuración y Adornos de Portada
+              </h3>
 
-            {/* Cover Page Toggle */}
-            <div className={`flex items-center justify-between p-2.5 rounded-xl border transition ${
-              cvData.showCoverPage !== false 
-                ? 'bg-white border-[#EFE2C9] text-[#2B1B2E] shadow-sm' 
-                : 'bg-slate-200 border-slate-300 text-slate-500 opacity-75'
-            }`}>
-              <span className="text-xs font-black uppercase tracking-wide">
-                Portada de Impacto (Página 1)
-              </span>
-              <button
-                type="button"
-                onClick={() => setCvData(prev => ({ ...prev, showCoverPage: prev.showCoverPage === undefined ? false : !prev.showCoverPage }))}
-                className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
-                  cvData.showCoverPage !== false
-                    ? 'bg-[#00A8A0] text-white hover:bg-[#00877F]'
-                    : 'bg-slate-400 text-white hover:bg-slate-500'
-                }`}
-              >
-                <span>{cvData.showCoverPage !== false ? 'ACTIVADA' : 'DESACTIVADA'}</span>
-              </button>
-            </div>
+              {/* Cover Page Toggle */}
+              <div className={`flex items-center justify-between p-2.5 rounded-xl border transition ${
+                cvData.showCoverPage !== false 
+                  ? 'bg-white border-[#EFE2C9] text-[#2B1B2E] shadow-sm' 
+                  : 'bg-slate-200 border-slate-300 text-slate-500 opacity-75'
+              }`}>
+                <span className="text-xs font-black uppercase tracking-wide">
+                  Portada de Impacto (Página 1)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCvData(prev => ({ ...prev, showCoverPage: prev.showCoverPage === undefined ? false : !prev.showCoverPage }))}
+                  className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
+                    cvData.showCoverPage !== false
+                      ? 'bg-[#00A8A0] text-white hover:bg-[#00877F]'
+                      : 'bg-slate-400 text-white hover:bg-slate-500'
+                  }`}
+                >
+                  <span>{cvData.showCoverPage !== false ? 'ACTIVADA' : 'DESACTIVADA'}</span>
+                </button>
+              </div>
 
-            {/* Cover Layout Preset Selector */}
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-[#2B1B2E] flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#00A8A0]" /> Estilo & Adornos de Portada
-              </label>
-              
-              <div className="grid grid-cols-1 gap-2">
-                {[
-                  { 
-                    id: 'monica-classic', 
-                    title: 'Portada Clásica Mónica', 
-                    desc: 'Fotografía central destacada con marco dorado, título principal y adornos de firma oficial.',
-                    badge: 'Docentes & Educadores' 
-                  },
-                  { 
-                    id: 'modern-corporate', 
-                    title: 'Portada Corporativa con Banner', 
-                    desc: 'Banner superior amplio con bloques cromáticos de presentación y badges de titulación.',
-                    badge: 'Empresas & Ejecutivos' 
-                  },
-                  { 
-                    id: 'minimal-editorial', 
-                    title: 'Portada Editorial Minimalista', 
-                    desc: 'Líneas finas de acento estilo revista de prestigio con tipografía destacada limpia.',
-                    badge: 'Jóvenes & Creativos' 
-                  },
-                  { 
-                    id: 'creative-cardon', 
-                    title: 'Portada Creativa Cardón', 
-                    desc: 'Doble marco decorativo turquesa con íconos de competencias y resguardo de datos.',
-                    badge: 'Linda Feria Salta' 
-                  }
-                ].map((styleOpt) => {
-                  const isSelected = (cvData.coverPreset || 'monica-classic') === styleOpt.id;
-                  return (
-                    <button
-                      key={styleOpt.id}
-                      onClick={() => setCvData(prev => ({ 
-                        ...prev, 
-                        coverPreset: styleOpt.id, 
-                        layoutStyle: styleOpt.id,
-                        layout: {
-                          ...(prev.layout || {}),
-                          layoutStyle: styleOpt.id
-                        }
-                      }))}
-                      className={`p-3 rounded-xl border text-left transition flex items-start justify-between gap-3 cursor-pointer ${
-                        isSelected
-                          ? 'border-[#FF2E63] bg-[#FFD9E3]/30 ring-2 ring-[#FF2E63]/30'
-                          : 'border-[#EFE2C9] bg-white hover:border-[#FF2E63]'
-                      }`}
-                    >
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-black text-[#2B1B2E]">{styleOpt.title}</span>
-                          <span className="text-[9px] px-2 py-0.5 rounded bg-purple-100 text-purple-700 font-extrabold">
-                            {styleOpt.badge}
-                          </span>
+              {/* Cover Layout Preset Selector */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-[#2B1B2E] flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-[#00A8A0]" /> Estilo & Adornos de Portada
+                </label>
+                
+                <div className="grid grid-cols-1 gap-2">
+                  {[
+                    { 
+                      id: 'monica-classic', 
+                      title: 'Portada Clásica Mónica', 
+                      desc: 'Fotografía central destacada con marco dorado, título principal y adornos de firma oficial.',
+                      badge: 'Docentes & Educadores' 
+                    },
+                    { 
+                      id: 'modern-corporate', 
+                      title: 'Portada Corporativa con Banner', 
+                      desc: 'Banner superior amplio con bloques cromáticos de presentación y badges de titulación.',
+                      badge: 'Empresas & Ejecutivos' 
+                    },
+                    { 
+                      id: 'minimal-editorial', 
+                      title: 'Portada Editorial Minimalista', 
+                      desc: 'Líneas finas de acento estilo revista de prestigio con tipografía destacada limpia.',
+                      badge: 'Jóvenes & Creativos' 
+                    },
+                    { 
+                      id: 'creative-cardon', 
+                      title: 'Portada Creativa Cardón', 
+                      desc: 'Doble marco decorativo turquesa con íconos de competencias y resguardo de datos.',
+                      badge: 'Linda Feria Salta' 
+                    }
+                  ].map((styleOpt) => {
+                    const isSelected = (cvData.coverPreset || 'monica-classic') === styleOpt.id;
+                    return (
+                      <button
+                        key={styleOpt.id}
+                        onClick={() => setCvData(prev => ({ 
+                          ...prev, 
+                          coverPreset: styleOpt.id, 
+                          layoutStyle: styleOpt.id,
+                          layout: {
+                            ...(prev.layout || {}),
+                            layoutStyle: styleOpt.id
+                          }
+                        }))}
+                        className={`p-3 rounded-xl border text-left transition flex items-start justify-between gap-3 cursor-pointer ${
+                          isSelected
+                            ? 'border-[#FF2E63] bg-[#FFD9E3]/30 ring-2 ring-[#FF2E63]/30'
+                            : 'border-[#EFE2C9] bg-white hover:border-[#FF2E63]'
+                        }`}
+                      >
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-black text-[#2B1B2E]">{styleOpt.title}</span>
+                            <span className="text-[9px] px-2 py-0.5 rounded bg-purple-100 text-purple-700 font-extrabold">
+                              {styleOpt.badge}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-[#2B1B2E] font-medium leading-snug">{styleOpt.desc}</p>
                         </div>
-                        <p className="text-[10px] text-[#2B1B2E] font-medium leading-snug">{styleOpt.desc}</p>
-                      </div>
-                      {isSelected && <Check className="w-4 h-4 text-[#00A8A0] flex-shrink-0 mt-1" />}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Selection of Featured Records for Cover Page */}
-            <div className="space-y-3 pt-3 border-t border-[#EFE2C9]">
-              <label className="block text-xs font-bold text-[#FF2E63] uppercase tracking-wide">
-                Registros Destacados en Portada
-              </label>
-              <p className="text-[11px] font-bold text-[#6B5B6E] leading-snug">
-                Elige qué títulos introducidos aparecerán destacados en los badges de la portada:
-              </p>
-
-              {/* Select Featured Academic Title */}
-              <div>
-                <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-                  Título Académico Destacado en Portada:
-                </label>
-                <select
-                  value={cvData.coverFeaturedEducationId || ''}
-                  onChange={(e) => setCvData(prev => ({ ...prev, coverFeaturedEducationId: e.target.value }))}
-                  className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none focus:border-[#FF2E63] transition cursor-pointer"
-                >
-                  <option value="">-- Usar primer título cargado automáticamente --</option>
-                  {(cvData.education || []).map((edu, idx) => (
-                    <option key={idx} value={edu.id || idx}>
-                      {edu.degree} ({edu.institution})
-                    </option>
-                  ))}
-                </select>
+                        {isSelected && <Check className="w-4 h-4 text-[#00A8A0] flex-shrink-0 mt-1" />}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
-              {/* Select Featured Professional Title */}
-              <div>
-                <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-                  Título / Cargo Profesional Destacado en Portada:
+              {/* Selection of Featured Records for Cover Page */}
+              <div className="space-y-3 pt-3 border-t border-[#EFE2C9]">
+                <label className="block text-xs font-bold text-[#FF2E63] uppercase tracking-wide">
+                  Registros Destacados en Portada
                 </label>
-                <select
-                  value={cvData.coverFeaturedProfessionId || ''}
-                  onChange={(e) => setCvData(prev => ({ ...prev, coverFeaturedProfessionId: e.target.value }))}
-                  className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none focus:border-[#FF2E63] transition cursor-pointer"
-                >
-                  <option value="">-- Usar primer título profesional automáticamente --</option>
-                  {(cvData.professions || []).map((prof, idx) => (
-                    <option key={idx} value={prof.id || idx}>
-                      {prof.degree} ({prof.institution})
-                    </option>
-                  ))}
-                </select>
+                <p className="text-[11px] font-bold text-[#6B5B6E] leading-snug">
+                  Elige qué títulos introducidos aparecerán destacados en los badges de la portada:
+                </p>
+
+                {/* Select Featured Academic Title */}
+                <div>
+                  <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
+                    Título Académico Destacado en Portada:
+                  </label>
+                  <select
+                    value={cvData.coverFeaturedEducationId || ''}
+                    onChange={(e) => setCvData(prev => ({ ...prev, coverFeaturedEducationId: e.target.value }))}
+                    className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none focus:border-[#FF2E63] transition cursor-pointer"
+                  >
+                    <option value="">-- Usar primer título cargado automáticamente --</option>
+                    {(cvData.education || []).map((edu, idx) => (
+                      <option key={idx} value={edu.id || idx}>
+                        {edu.degree} ({edu.institution})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Select Featured Professional Title */}
+                <div>
+                  <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
+                    Título / Cargo Profesional Destacado en Portada:
+                  </label>
+                  <select
+                    value={cvData.coverFeaturedProfessionId || ''}
+                    onChange={(e) => setCvData(prev => ({ ...prev, coverFeaturedProfessionId: e.target.value }))}
+                    className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none focus:border-[#FF2E63] transition cursor-pointer"
+                  >
+                    <option value="">-- Usar primer título profesional automáticamente --</option>
+                    {(cvData.professions || []).map((prof, idx) => (
+                      <option key={idx} value={prof.id || idx}>
+                        {prof.degree} ({prof.institution})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
           </div>

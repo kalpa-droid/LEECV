@@ -19,7 +19,6 @@ import {
 
 export const styleTabs = [
   { id: 'diseno', label: 'Diseño', icon: Layout },
-  { id: 'portada', label: 'Portada', icon: BookMarked },
   { id: 'paneles', label: 'Paneles', icon: Columns3 },
   { id: 'color', label: 'Color', icon: Palette }
 ];
