@@ -7,7 +7,7 @@ import { resolveSectors } from '../layers/sectors/resolveSectors';
 import { placeFixedObjects } from '../layers/fixedObjects/placeFixedObjects';
 import { ContentSection, ContentRecord } from '../layers/records/recordTypes';
 import { getPresentContactFields } from '../layers/records/sharedFields';
-import { resolveThemeRoles } from '../layers/colors/colorSystem';
+import { resolveThemeRoles, getTypographyColorBinding } from '../layers/colors/colorSystem';
 import { CardObjectRenderer } from '../layers/cards/CardObjectRenderer';
 import { SectionBannerCard } from '../layers/cards/SectionBannerCard';
 
@@ -68,6 +68,13 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     textColor: customTheme?.textColor || customTheme?.text || preset.palette.text,
   });
 
+  // CAPA 5&8 conectada de verdad: cada superficie (sidebar de color vs.
+  // columna principal blanca) tiene su propia jerarquía título/subtítulo/
+  // cuerpo calculada — antes esta matriz existía pero nunca se llamaba
+  // desde el render, por eso todo salía en un solo color.
+  const sidebarType = getTypographyColorBinding(rolesColor, rolesColor.primary);
+  const mainType = getTypographyColorBinding(rolesColor, rolesColor.background);
+
   // En modo embedded el "lienzo" es el objeto (ej. la tarjeta), no una hoja
   // física — nunca se consulta getPageSize() para ese caso.
   const pageDef: PageSize = embedded && canvasWidthMm && canvasHeightMm
@@ -95,11 +102,11 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       backgroundColor: rolesColor.background,
       fontFamily: preset.typography.fontFamily,
       fontSize: preset.typography.body,
-      color: rolesColor.text,
-      paddingTop: usable.margins.topPt || 34,
-      paddingBottom: usable.margins.bottomPt || 34,
-      paddingLeft: usable.margins.leftPt || 34,
-      paddingRight: usable.margins.rightPt || 34
+      color: rolesColor.text
+      // SIN padding acá: el sidebar (leftColumn) es un objeto que debe llegar
+      // a los bordes físicos de la hoja (izquierda, arriba, abajo). El margen
+      // de LECTURA se aplica adentro de cada columna, no a nivel página —
+      // así el color de fondo nunca queda "cortado" por el margen general.
     },
     pageBody: {
       flexDirection: 'row',
@@ -108,8 +115,11 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     leftColumn: {
       backgroundColor: rolesColor.primary,
       color: rolesColor.textOnPrimary,
-      padding: 14,
-      borderRadius: 6,
+      paddingLeft: usable.margins.leftPt || 14,
+      paddingRight: 14,
+      paddingTop: usable.margins.topPt || 14,
+      paddingBottom: usable.margins.bottomPt || 14,
+      borderRadius: 0,
       flexDirection: 'column'
     },
     sidebarHeader: {
@@ -148,36 +158,39 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       marginBottom: 6,
       paddingBottom: 3,
       borderBottomWidth: 1,
-      borderBottomColor: 'rgba(255, 255, 255, 0.3)',
-      color: '#ffffff'
+      borderBottomColor: sidebarType.border,
+      color: sidebarType.sectionHeading
     },
     sidebarItemText: {
       fontSize: preset.typography.caption,
       marginBottom: 3,
-      lineHeight: 1.3
+      lineHeight: 1.3,
+      color: sidebarType.body
     },
     sidebarItemBold: {
       fontFamily: 'Helvetica-Bold'
     },
     // Right Content Column Styling (el ancho real lo define el sector — ver sectorStyle abajo)
     rightColumn: {
+      flex: 1,
       paddingLeft: 20,
-      paddingRight: 8,
-      paddingTop: 4,
+      paddingRight: usable.margins.rightPt || 14,
+      paddingTop: usable.margins.topPt || 14,
+      paddingBottom: usable.margins.bottomPt || 14,
       backgroundColor: rolesColor.background
     },
     headerName: {
       fontSize: preset.typography.title,
       fontFamily: 'Helvetica-Bold',
       textTransform: 'uppercase',
-      color: '#0f172a',
+      color: mainType.title,
       marginBottom: 4,
       paddingBottom: 6,
       borderBottomWidth: 1,
-      borderBottomColor: '#e2e8f0'
+      borderBottomColor: mainType.border
     },
     headerNameHighlight: {
-      color: rolesColor.primary
+      color: mainType.accentRule
     },
     sectionTitleContainer: {
       backgroundColor: rolesColor.primary,
@@ -216,7 +229,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     cardTitle: {
       fontSize: preset.typography.itemTitle,
       fontFamily: 'Helvetica-Bold',
-      color: '#0f172a',
+      color: mainType.itemTitle,
       flex: 1
     },
     cardYearBadge: {
@@ -588,7 +601,13 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       {sectorsWithFlow.map((sFlow) => {
         const isSidebar = sFlow.sector.role === 'sidebar';
         const sectorStyle = isSidebar ? styles.leftColumn : styles.rightColumn;
-        const widthStyle = { width: sFlow.sector.box.widthPt };
+        // El sidebar mide su ancho de sector + el margen izquierdo que ahora
+        // bleedea (ver leftColumn arriba) — la columna de contenido usa
+        // flex:1 y absorbe el resto del ancho físico de la hoja, así nunca
+        // queda un hueco sin cubrir por haber sacado el padding de `page`.
+        const widthStyle = isSidebar
+          ? { width: sFlow.sector.box.widthPt + (usable.margins.leftPt || 0) }
+          : {};
 
         const sectorSectionIds = preset.sectionOrder.find(s => s.sectorRole === sFlow.sector.role)?.sectionIds || [];
         const sectorSections = sections.filter(sec => sectorSectionIds.includes(sec.id));
