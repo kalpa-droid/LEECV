@@ -8,7 +8,9 @@ import { VectorDocViewer } from '../../../shared/core/pdf-engine/VectorDocViewer
 import { TemplateMenu } from '../../template-editor/components/TemplateMenu';
 
 export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.85 }: { cvData?: any; setCvData?: any; activeTab?: string; zoomLevel?: number }) {
-  const [activePresetId, setActivePresetId] = useState<string>('cv-clasico');
+  // activePresetId vive en cvData — es la ÚNICA fuente de verdad de "qué plantilla está
+  // elegida" (antes había 3 campos distintos para esto y ninguno se leía de verdad acá).
+  const activePresetId = cvData?.activePresetId || 'cv-clasico';
   const [cardData, setCardData] = useState<BusinessCardData | null>(null);
   const { theme = {} } = cvData || {};
 
@@ -24,7 +26,6 @@ export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.
   };
 
   const handleSelectPreset = (presetId: string) => {
-    setActivePresetId(presetId);
     if (setCvData) {
       setCvData((prev: any) => ({ ...prev, activePresetId: presetId }));
     }

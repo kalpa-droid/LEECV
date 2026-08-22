@@ -87,12 +87,12 @@ export function TemplateMenu({ activePresetId, onSelectPreset, cvData }: Templat
           {activePreset.pageCategory === 'tarjeta' ? (
             <>
               <Printer className="w-4 h-4" />
-              <span>{isExporting ? 'Generando Pliego A4...' : 'Descargar Pliego Imprenta (2 Págs + Dúplex)'}</span>
+              <span>{isExporting ? 'Generando Pliego A4...' : 'Exportar Pliego Imprenta (2 Págs + Dúplex)'}</span>
             </>
           ) : (
             <>
               <Download className="w-4 h-4" />
-              <span>{isExporting ? 'Generando PDF...' : 'Descargar PDF Vectorial'}</span>
+              <span>{isExporting ? 'Generando PDF...' : 'Exportar Documento (PDF)'}</span>
             </>
           )}
         </button>

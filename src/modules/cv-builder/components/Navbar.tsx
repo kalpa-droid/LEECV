@@ -107,7 +107,7 @@ export default function Navbar({
           <button
             onClick={onPrint}
             className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-[#FFC93C] hover:bg-[#F0AE00] text-[#2B1B2E] font-black text-xs shadow-lg shadow-[#FFC93C]/30 transition active:scale-95 border border-[#F0AE00] cursor-pointer whitespace-nowrap"
-            title="Descargar documento PDF final listo para enviar"
+            title="Exportar documento PDF final listo para enviar"
           >
             <Download className="w-3.5 h-3.5 flex-shrink-0 text-[#2B1B2E]" />
             <span>PDF</span>

@@ -73,7 +73,7 @@ export interface ColumnAssignments {
 }
 
 export interface CVLayout {
-  layoutStyle?: string;
+  layoutStyle?: string; // legado, no lo lee el motor de render — ver activePresetId en CVData
   paperSize?: 'a4' | 'letter';
   columnRatio?: string;
   primaryColor?: string;
@@ -107,7 +107,13 @@ export interface CVData {
   skillGroups?: SkillGroup[];
   roles?: string[];
   layout?: CVLayout;
-  layoutStyle?: string;
+  /**
+   * Único campo real que decide qué Preset visual se usa para renderizar el
+   * documento (ver src/shared/core/pdf-engine/layers/presets/presetRegistry.ts).
+   * Antes existían 3 nombres para este mismo concepto (coverPreset, layoutStyle
+   * acá y layout.layoutStyle) y ninguno se conectaba de verdad al render.
+   */
+  activePresetId?: string;
   theme?: ThemeConfig;
   updatedAt?: string;
   [key: string]: any;

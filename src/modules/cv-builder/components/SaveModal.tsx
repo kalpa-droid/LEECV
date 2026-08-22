@@ -33,7 +33,7 @@ export default function SaveModal({
               <Save className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-black text-white">Guardar Currículum</h3>
+              <h3 className="text-base font-black text-white">Guardar Documento</h3>
               <p className="text-xs text-slate-400">Guarda tus datos en tu equipo o sincroniza con la nube</p>
             </div>
           </div>

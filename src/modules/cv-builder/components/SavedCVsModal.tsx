@@ -86,7 +86,7 @@ export default function SavedCVsModal({
               <FolderOpen className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-black text-white">Abrir Currículum Vitae</h3>
+              <h3 className="text-base font-black text-white">Abrir Documento</h3>
               <p className="text-xs text-slate-400">Selecciona un borrador guardado o importa una copia externa</p>
             </div>
           </div>
@@ -221,7 +221,7 @@ export default function SavedCVsModal({
                     <button
                       onClick={() => handleDelete(item.id, item.candidate_name || item.title)}
                       className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-950/40 rounded-xl transition border border-transparent hover:border-red-900/50 cursor-pointer"
-                      title="Eliminar este CV"
+                      title="Eliminar este documento"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

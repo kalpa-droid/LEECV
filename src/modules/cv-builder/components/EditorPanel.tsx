@@ -1050,7 +1050,7 @@ export default function EditorPanel({
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b pb-2 border-[#EFE2C9]">
               <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] flex items-center gap-1.5">
-                <FolderOpen className="w-4 h-4 text-[#00A8A0]" /> Abrir Mis Currículums Guardados
+                <FolderOpen className="w-4 h-4 text-[#00A8A0]" /> Abrir Mis Documentos Guardados
               </h3>
 
               {cvData?.id !== 'cv_ejemplo_estandar' && (
@@ -1178,52 +1178,40 @@ export default function EditorPanel({
                 </button>
               </div>
 
-              {/* Cover Layout Preset Selector */}
+              {/* Selector de Plantilla — usa el mismo registro real que el motor de exportación (PRESET_LIST).
+                  Antes esto escribía en 3 campos distintos (coverPreset / layoutStyle / layout.layoutStyle)
+                  y ninguno cambiaba el PDF final. Ahora escribe un solo campo real: activePresetId. */}
               <div className="space-y-2">
                 <label className="block text-xs font-bold text-[#2B1B2E] flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-[#00A8A0]" /> Estilo & Adornos de Portada
+                  <Sparkles className="w-3.5 h-3.5 text-[#00A8A0]" /> Plantilla del Documento
                 </label>
-                
+
                 <div className="grid grid-cols-1 gap-2">
                   {[
-                    { 
-                      id: 'monica-classic', 
-                      title: 'Portada Clásica Mónica', 
-                      desc: 'Fotografía central destacada con marco dorado, título principal y adornos de firma oficial.',
-                      badge: 'Docentes & Educadores' 
+                    {
+                      id: 'cv-clasico',
+                      title: 'CV Clásico',
+                      desc: 'Columna lateral con foto y datos de contacto, cuerpo principal con formación y experiencia.',
+                      badge: 'Uso General'
                     },
-                    { 
-                      id: 'modern-corporate', 
-                      title: 'Portada Corporativa con Banner', 
-                      desc: 'Banner superior amplio con bloques cromáticos de presentación y badges de titulación.',
-                      badge: 'Empresas & Ejecutivos' 
+                    {
+                      id: 'modern-corporate',
+                      title: 'Corporativo Moderno',
+                      desc: 'Sidebar más ancha en azul marino con acentos dorados, tipografía firme.',
+                      badge: 'Empresas & Ejecutivos'
                     },
-                    { 
-                      id: 'minimal-editorial', 
-                      title: 'Portada Editorial Minimalista', 
-                      desc: 'Líneas finas de acento estilo revista de prestigio con tipografía destacada limpia.',
-                      badge: 'Jóvenes & Creativos' 
-                    },
-                    { 
-                      id: 'creative-cardon', 
-                      title: 'Portada Creativa Cardón', 
-                      desc: 'Doble marco decorativo turquesa con íconos de competencias y resguardo de datos.',
-                      badge: 'Linda Feria Salta' 
+                    {
+                      id: 'minimal-editorial',
+                      title: 'Editorial Minimalista',
+                      desc: 'Sidebar angosta en tono claro, tipografía serif protagonista, acentos terracota.',
+                      badge: 'Jóvenes & Creativos'
                     }
                   ].map((styleOpt) => {
-                    const isSelected = (cvData.coverPreset || 'monica-classic') === styleOpt.id;
+                    const isSelected = (cvData.activePresetId || 'cv-clasico') === styleOpt.id;
                     return (
                       <button
                         key={styleOpt.id}
-                        onClick={() => setCvData(prev => ({ 
-                          ...prev, 
-                          coverPreset: styleOpt.id, 
-                          layoutStyle: styleOpt.id,
-                          layout: {
-                            ...(prev.layout || {}),
-                            layoutStyle: styleOpt.id
-                          }
-                        }))}
+                        onClick={() => setCvData(prev => ({ ...prev, activePresetId: styleOpt.id }))}
                         className={`p-3 rounded-xl border text-left transition flex items-start justify-between gap-3 cursor-pointer ${
                           isSelected
                             ? 'border-[#FF2E63] bg-[#FFD9E3]/30 ring-2 ring-[#FF2E63]/30'

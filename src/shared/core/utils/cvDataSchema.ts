@@ -6,7 +6,11 @@ export function sanitizeCvData(rawCvData: any = {}) {
     title: data.title || 'Mi Currículum Vitae',
     updatedAt: data.updatedAt || new Date().toISOString(),
     showCoverPage: data.showCoverPage !== false,
-    coverPreset: data.coverPreset || 'monica-classic',
+    // Nombre canónico único para "qué plantilla/preset visual está eligiendo el usuario".
+    // Antes existían 3 nombres para esto (coverPreset / layoutStyle / layout.layoutStyle)
+    // y ninguno se conectaba de verdad al motor de render — activePresetId es el único
+    // que el motor realmente lee (ver presetRegistry.ts / CVPreview.tsx).
+    activePresetId: data.activePresetId || 'cv-clasico',
     coverFeaturedEducationId: data.coverFeaturedEducationId ?? null,
     coverFeaturedProfessionId: data.coverFeaturedProfessionId ?? null,
 
