@@ -12,6 +12,7 @@ interface CardObjectRendererProps {
   description?: string;
   rolesColor: ResolvedThemeRoles;
   typography: TypographyScale;
+  sectorRole?: 'sidebar' | 'main';
 }
 
 export function CardObjectRenderer({
@@ -22,6 +23,7 @@ export function CardObjectRenderer({
   description,
   rolesColor,
   typography,
+  sectorRole = 'main',
 }: CardObjectRendererProps) {
   const design: CardDesign = CARD_DESIGNS[designId] || CARD_DESIGNS['primary-card'];
 
@@ -42,14 +44,27 @@ export function CardObjectRenderer({
   const backgroundColor = getRoleColor(design.backgroundColorRole);
   let titleColor = getRoleColor(design.titleColorRole);
   let badgeColor = getRoleColor(design.badgeColorRole);
+  let subtitleColor = rolesColor.secondary;
+  let descColor = rolesColor.text;
 
-  // Automatic Contrast Protection: Ensure text is never invisible over background
-  if (backgroundColor && backgroundColor !== 'transparent') {
-    if (getContrastRatio(backgroundColor, titleColor) < 3.5) {
-      titleColor = getContrastTextColor(backgroundColor);
+  // Systemic Contrast Protection: Resolve real background behind the card
+  // If the card background is transparent, the real background is the container sector's color.
+  const effectiveBgColor = (backgroundColor && backgroundColor !== 'transparent')
+    ? backgroundColor
+    : (sectorRole === 'sidebar' ? rolesColor.primary : rolesColor.background);
+
+  if (effectiveBgColor) {
+    if (getContrastRatio(effectiveBgColor, titleColor) < 3.5) {
+      titleColor = getContrastTextColor(effectiveBgColor);
     }
-    if (getContrastRatio(backgroundColor, badgeColor) < 3.5) {
-      badgeColor = getContrastTextColor(backgroundColor);
+    if (getContrastRatio(effectiveBgColor, badgeColor) < 3.5) {
+      badgeColor = getContrastTextColor(effectiveBgColor);
+    }
+    if (getContrastRatio(effectiveBgColor, subtitleColor) < 3.5) {
+      subtitleColor = getContrastTextColor(effectiveBgColor);
+    }
+    if (getContrastRatio(effectiveBgColor, descColor) < 3.5) {
+      descColor = getContrastTextColor(effectiveBgColor);
     }
   }
 
@@ -98,19 +113,19 @@ export function CardObjectRenderer({
     subtitleText: {
       fontSize: typography.body,
       fontFamily: typography.fontFamily,
-      color: rolesColor.secondary,
+      color: subtitleColor,
       marginBottom: 3,
     },
     descText: {
       fontSize: typography.body,
       fontFamily: typography.fontFamily,
-      color: rolesColor.text,
+      color: descColor,
       lineHeight: 1.3,
     },
   });
 
   return (
-    <View style={styles.cardContainer}>
+    <View style={styles.cardContainer} wrap={false}>
       <View style={styles.headerRow}>
         <Text style={styles.titleText}>{title}</Text>
         {dateOrBadge ? <Text style={styles.badgeText}>{dateOrBadge}</Text> : null}

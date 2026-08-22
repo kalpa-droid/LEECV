@@ -175,7 +175,11 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
         fields: {
           title: c.title || c.name || c.course || '',
           institution: c.institution || '',
-          hours: c.hours ? `${c.hours} hs` : ''
+          hours: (() => {
+            const raw = String(c.hours || '').trim();
+            if (!raw) return '';
+            return /hs/i.test(raw) ? raw : `${raw} hs`;
+          })()
         }
       }))
     });

@@ -453,7 +453,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     featuredBadges.push(personalInfo.titlePrefix);
   }
 
-  const renderRecord = (rec: ContentRecord) => {
+  const renderRecord = (rec: ContentRecord, isSidebarSector: boolean = false) => {
     const f = rec.fields;
 
     if (rec.kind === 'contact-item') {
@@ -477,15 +477,19 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
 
     if (rec.kind === 'education') {
       const designId = customRecordCardDesigns?.education || preset.recordCardDesigns?.education || 'accent-card';
+      const yearBadge = f.year
+        ? (/año/i.test(String(f.year)) ? String(f.year) : `AÑO ${String(f.year)}`)
+        : undefined;
       return (
         <CardObjectRenderer
           key={rec.id}
           designId={designId}
           title={String(f.degree || '')}
           subtitle={String(f.institution || '')}
-          dateOrBadge={f.year ? `AÑO ${String(f.year)}` : undefined}
+          dateOrBadge={yearBadge}
           rolesColor={rolesColor}
           typography={preset.typography}
+          sectorRole={isSidebarSector ? 'sidebar' : 'main'}
         />
       );
     }
@@ -502,11 +506,26 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
           description={f.details ? String(f.details) : undefined}
           rolesColor={rolesColor}
           typography={preset.typography}
+          sectorRole={isSidebarSector ? 'sidebar' : 'main'}
         />
       );
     }
 
     if (rec.kind === 'course') {
+      if (isSidebarSector || rec.targetSectorRole === 'sidebar') {
+        return (
+          <View key={rec.id} style={{ marginBottom: 6 }} wrap={false}>
+            <Text style={[styles.sidebarItemText, styles.sidebarItemBold]}>
+              {String(f.title || f.name || '')}
+            </Text>
+            {f.institution ? (
+              <Text style={[styles.sidebarItemText, { color: 'rgba(255, 255, 255, 0.85)' }]}>
+                {String(f.institution)}
+              </Text>
+            ) : null}
+          </View>
+        );
+      }
       const designId = customRecordCardDesigns?.course || preset.recordCardDesigns?.course || 'neutral-card';
       return (
         <CardObjectRenderer
@@ -517,6 +536,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
           dateOrBadge={f.hours ? String(f.hours) : undefined}
           rolesColor={rolesColor}
           typography={preset.typography}
+          sectorRole="main"
         />
       );
     }
@@ -602,7 +622,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                     </View>
                   )
                 )}
-                {sec.records.map(rec => renderRecord(rec))}
+                {sec.records.map(rec => renderRecord(rec, isSidebar))}
               </View>
             ))}
           </View>
@@ -628,7 +648,9 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
               <Image src={personalInfo.profilePhoto} style={styles.coverPhoto} />
             ) : (
               <View style={styles.coverPhotoPlaceholder}>
-                <Text style={{ fontSize: 32, color: '#ffffff' }}>👤</Text>
+                <Text style={{ fontSize: 24, fontFamily: 'Helvetica-Bold', color: '#ffffff' }}>
+                  {personalInfo?.initials || 'CV'}
+                </Text>
               </View>
             )}
 
