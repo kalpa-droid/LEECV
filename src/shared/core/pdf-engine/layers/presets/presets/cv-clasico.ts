@@ -41,9 +41,9 @@ export const cvClasicoPreset: Preset = {
   },
   coverStyle: 'monica-classic',
   recordCardDesigns: {
-    education: 'accent-card',
+    education: 'primary-card',
     experience: 'primary-card',
-    course: 'neutral-card',
+    course: 'primary-card',
   },
   roleLegend: {
     'Fondo de columna lateral / Sidebar': 'primary (#ab5ba1)',

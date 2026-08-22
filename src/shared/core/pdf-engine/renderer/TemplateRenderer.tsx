@@ -122,7 +122,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       height: 110,
       borderRadius: 6,
       borderWidth: 2,
-      borderColor: preset.palette.accent,
+      borderColor: rolesColor.accent,
       objectFit: 'cover',
       marginBottom: 8
     },
@@ -131,7 +131,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       height: 110,
       borderRadius: 6,
       borderWidth: 2,
-      borderColor: preset.palette.accent,
+      borderColor: rolesColor.accent,
       backgroundColor: 'rgba(255, 255, 255, 0.2)',
       alignItems: 'center',
       justifyContent: 'center',
@@ -173,11 +173,11 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       borderBottomColor: '#e2e8f0'
     },
     headerNameHighlight: {
-      color: preset.palette.primary
+      color: rolesColor.primary
     },
     sectionTitleContainer: {
-      backgroundColor: preset.palette.primary,
-      color: preset.palette.textOnPrimary,
+      backgroundColor: rolesColor.primary,
+      color: rolesColor.textOnPrimary,
       paddingHorizontal: 8,
       paddingVertical: 5,
       borderRadius: 4,
@@ -195,13 +195,13 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       borderWidth: 1,
       borderColor: '#e2e8f0',
       borderLeftWidth: 4,
-      borderLeftColor: preset.palette.primary,
+      borderLeftColor: rolesColor.primary,
       borderRadius: 6,
       padding: 10,
       marginBottom: 8
     },
     cardBoxAccent: {
-      borderLeftColor: preset.palette.accent
+      borderLeftColor: rolesColor.accent
     },
     cardHeaderRow: {
       flexDirection: 'row',
@@ -216,7 +216,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       flex: 1
     },
     cardYearBadge: {
-      backgroundColor: preset.palette.primary,
+      backgroundColor: rolesColor.primary,
       color: '#ffffff',
       fontSize: preset.typography.caption,
       fontFamily: 'Helvetica-Bold',
@@ -315,7 +315,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     },
     coverPage: {
       flexDirection: 'column',
-      backgroundColor: preset.palette.primary,
+      backgroundColor: rolesColor.primary,
       color: '#ffffff',
       padding: 32,
       alignItems: 'center',
@@ -330,7 +330,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       height: 165,
       borderRadius: 12,
       borderWidth: 3,
-      borderColor: preset.palette.accent,
+      borderColor: rolesColor.accent,
       marginBottom: 14,
       objectFit: 'cover'
     },
@@ -339,7 +339,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       height: 165,
       borderRadius: 12,
       borderWidth: 3,
-      borderColor: preset.palette.accent,
+      borderColor: rolesColor.accent,
       backgroundColor: 'rgba(255, 255, 255, 0.2)',
       alignItems: 'center',
       justifyContent: 'center',
@@ -369,7 +369,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     coverName: {
       fontSize: preset.typography.cover?.name || preset.typography.title,
       fontFamily: 'Helvetica-Bold',
-      color: preset.palette.accent,
+      color: rolesColor.accent,
       marginBottom: 12,
       textAlign: 'center'
     },
@@ -433,7 +433,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     coverFooterBadge: {
       fontSize: preset.typography.cover?.footerSub || preset.typography.caption,
       fontFamily: 'Helvetica-Bold',
-      color: preset.palette.accent
+      color: rolesColor.accent
     }
   });
 
