@@ -578,7 +578,9 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                   <Image src={personalInfo.profilePhoto} style={styles.profilePhoto} />
                 ) : (
                   <View style={styles.profilePhotoPlaceholder}>
-                    <Text style={{ fontSize: 24, color: '#ffffff' }}>👤</Text>
+                    <Text style={{ fontSize: 20, fontFamily: 'Helvetica-Bold', color: '#ffffff' }}>
+                      {personalInfo?.initials || 'CV'}
+                    </Text>
                   </View>
                 )}
               </View>

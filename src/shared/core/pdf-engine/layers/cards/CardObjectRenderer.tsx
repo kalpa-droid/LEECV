@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from '@react-pdf/renderer';
 import { CARD_DESIGNS, CardDesign } from './cardDesignSchema';
-import { ResolvedThemeRoles } from '../colors/colorSystem';
+import { ResolvedThemeRoles, getContrastRatio, getContrastTextColor } from '../colors/colorSystem';
 import { TypographyScale } from '../presets/presetSchema';
 
 interface CardObjectRendererProps {
@@ -40,8 +40,18 @@ export function CardObjectRenderer({
 
   const borderColor = getRoleColor(design.borderColorRole);
   const backgroundColor = getRoleColor(design.backgroundColorRole);
-  const titleColor = getRoleColor(design.titleColorRole);
-  const badgeColor = getRoleColor(design.badgeColorRole);
+  let titleColor = getRoleColor(design.titleColorRole);
+  let badgeColor = getRoleColor(design.badgeColorRole);
+
+  // Automatic Contrast Protection: Ensure text is never invisible over background
+  if (backgroundColor && backgroundColor !== 'transparent') {
+    if (getContrastRatio(backgroundColor, titleColor) < 3.5) {
+      titleColor = getContrastTextColor(backgroundColor);
+    }
+    if (getContrastRatio(backgroundColor, badgeColor) < 3.5) {
+      badgeColor = getContrastTextColor(backgroundColor);
+    }
+  }
 
   const fontSizeTitle = design.titleSizeToken === 'title' 
     ? typography.title 

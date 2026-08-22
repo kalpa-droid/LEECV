@@ -24,10 +24,10 @@ export interface ContactField {
 }
 
 export const CONTACT_FIELDS: ContactField[] = [
-  { key: 'phone', cvLabel: '📞' },
-  { key: 'email', cvLabel: '✉️' },
-  { key: 'address', cvLabel: '📍' },
-  { key: 'cityProvince', cvLabel: '🏙️', cardOmit: true },
+  { key: 'phone', cvLabel: 'Tel:' },
+  { key: 'email', cvLabel: 'Email:' },
+  { key: 'address', cvLabel: 'Dom:' },
+  { key: 'cityProvince', cvLabel: 'Ubic.:', cardOmit: true },
   { key: 'dni', cvLabel: 'DNI:', cardOmit: true },
   { key: 'cuit', cvLabel: 'CUIT:', cardOmit: true },
   { key: 'birthDate', cvLabel: 'Nac.:', cardOmit: true },
