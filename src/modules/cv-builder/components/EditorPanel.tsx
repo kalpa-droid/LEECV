@@ -1091,17 +1091,13 @@ export default function EditorPanel({
         })()}
 
         {/* ========================================================================= */}
-        {/* TAB: NUEVA SECCIÓN PERSONALIZADA (CATÁLOGO PREDISEÑADO + CREADOR A MEDIDA) */}
+        {/* TAB: NUEVA SECCIÓN PERSONALIZADA (SECCIONES PREDISEÑADAS + SECCIÓN A MEDIDA) */}
         {/* ========================================================================= */}
         {activeTab === 'nueva_seccion' && (
           <div className="space-y-6">
-            <PanelSection icon={<Plus className="w-4 h-4 text-[#00A8A0]" />} title="Catálogo & Creador (+ Sección)">
-              
-              {/* 1. CATÁLOGO DE SECCIONES PREDISEÑADAS CON 1 CLIC */}
+            {/* 1. SECCIONES PREDISEÑADAS CON 1 CLIC */}
+            <PanelSection icon={<Sparkles className="w-4 h-4 text-[#00A8A0]" />} title="Secciones Prediseñadas">
               <div className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] space-y-3 shadow-sm">
-                <h4 className="text-xs font-black text-[#2B1B2E] uppercase flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-[#00A8A0]" /> Catálogo de Secciones Prediseñadas
-                </h4>
                 <p className="text-[11px] text-[#6B5B6E] font-medium leading-relaxed">
                   Haz clic en cualquiera de estas secciones para agregarla instantáneamente a tu currículum con sus campos listos para completar:
                 </p>
@@ -1229,12 +1225,11 @@ export default function EditorPanel({
                   })}
                 </div>
               </div>
+            </PanelSection>
 
-              {/* 2. CREADOR DE SECCIÓN A MEDIDA */}
+            {/* 2. CREADOR DE SECCIÓN A MEDIDA */}
+            <PanelSection icon={<Plus className="w-4 h-4 text-[#FF2E63]" />} title="Sección a Medida">
               <div className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] space-y-4 shadow-sm">
-                <h4 className="text-xs font-black text-[#2B1B2E] uppercase flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-[#FF2E63]" /> Crear Sección Personalizada a Medida
-                </h4>
 
                 <div>
                   <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
