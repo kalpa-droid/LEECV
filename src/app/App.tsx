@@ -219,18 +219,20 @@ function AppContent() {
 
   return (
     <div className="h-screen bg-[#2B1B2E] text-white flex flex-col font-sans overflow-hidden selection:bg-[#FF2E63] selection:text-white relative">
-      <Navbar 
-        onPrint={handleExportPDFClick} 
-        onStartNewCVWizard={() => setIsWizardOpen(true)}
-        onOpenSavedCVs={() => setIsSavedCVsOpen(true)}
-        onOpenSaveModal={() => setIsSaveModalOpen(true)}
-        onOpenPricing={() => setIsPricingModalOpen(true)}
-        onNewCV={handleNewCV}
-        onSaveCV={handleSaveCVClick}
-        isSaving={isSaving}
-      />
+      <div className="md:pl-16">
+        <Navbar 
+          onPrint={handleExportPDFClick} 
+          onStartNewCVWizard={() => setIsWizardOpen(true)}
+          onOpenSavedCVs={() => setIsSavedCVsOpen(true)}
+          onOpenSaveModal={() => setIsSaveModalOpen(true)}
+          onOpenPricing={() => setIsPricingModalOpen(true)}
+          onNewCV={handleNewCV}
+          onSaveCV={handleSaveCVClick}
+          isSaving={isSaving}
+        />
+      </div>
 
-      <main className="flex-1 flex overflow-hidden relative min-h-0">
+      <main className="flex-1 flex overflow-hidden relative min-h-0 md:pl-16">
         <CanvaIconDock 
           cvData={cvData}
           setCvData={setCvData}
@@ -437,7 +439,7 @@ function AppContent() {
         )}
       </Suspense>
 
-      <footer className="bg-[#1C121E] text-slate-400 border-t border-[#EFE2C9]/10 py-3 px-6 text-center text-xs no-print flex items-center justify-between">
+      <footer className="bg-[#1C121E] text-slate-400 border-t border-[#EFE2C9]/10 py-3 px-6 md:pl-20 text-center text-xs no-print flex items-center justify-between">
         <span className="text-[11px] font-bold text-slate-500">© 2026 LEECV — Diseñado para Profesionales y Agencias</span>
         <button
           onClick={() => setIsPrivacyModalOpen(true)}

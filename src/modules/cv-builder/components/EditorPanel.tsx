@@ -32,6 +32,7 @@ import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { RepeatableSection } from '../../../shared/core/ui/RepeatableSection';
 import { RecordFormSection } from '../../../shared/core/ui/RecordFormSection';
 import { Field } from '../../../shared/core/ui/Field';
+import { uiThemePresets } from '../../../shared/core/uiDesignSystem';
 import AgencyCandidateDashboard from './agency/AgencyCandidateDashboard';
 
 export default function EditorPanel({ 
@@ -1438,6 +1439,45 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {activeTab === 'diseno' && (
           <div className="space-y-6">
+            {/* Tema de Interfaz Web (Modo Nocturno, Cálido, Océano) */}
+            <PanelSection icon={<Palette className="w-4 h-4 text-[#FF2E63]" />} title="Tema de Interfaz (Apariencia del Editor)">
+              <div className="p-3 bg-white rounded-xl border border-[#EFE2C9] space-y-2">
+                <label className="block text-xs font-bold text-[#2B1B2E]">
+                  Selecciona el Modo de Color para la Interfaz y Paneles
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {Object.values(uiThemePresets).map((theme) => {
+                    const isSelected = (cvData?.uiTheme || 'default') === theme.id;
+                    return (
+                      <button
+                        key={theme.id}
+                        type="button"
+                        onClick={() => {
+                          setCvData((prev: any) => ({
+                            ...prev,
+                            uiTheme: theme.id
+                          }));
+                          showSuccess(`Tema de interfaz cambiado a: ${theme.name}`);
+                        }}
+                        className={`p-2.5 rounded-xl border text-left flex flex-col justify-between transition cursor-pointer ${
+                          isSelected
+                            ? 'border-2 border-[#00A8A0] bg-[#E0F5F3] font-bold text-[#00655F]'
+                            : 'border-[#EFE2C9] bg-white hover:border-[#FF2E63] text-[#2B1B2E]'
+                        }`}
+                      >
+                        <span className="text-[11px] font-bold block">{theme.name}</span>
+                        <div className="flex items-center gap-1 mt-2">
+                          <span className="w-3.5 h-3.5 rounded-full border border-black/20" style={{ backgroundColor: theme.bgPanel }} title="Fondo Panel" />
+                          <span className="w-3.5 h-3.5 rounded-full border border-black/20" style={{ backgroundColor: theme.bgCard }} title="Fondo Tarjetas" />
+                          <span className="w-3.5 h-3.5 rounded-full border border-black/20" style={{ backgroundColor: theme.textPrimary }} title="Texto Principal" />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </PanelSection>
+
             {/* Formato de Papel */}
             <PanelSection icon={<Layout className="w-4 h-4" />} title="Formato de página">
               <div className="p-3 bg-white rounded-xl border border-[#EFE2C9]">

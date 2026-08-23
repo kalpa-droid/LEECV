@@ -63,8 +63,8 @@ export default function CanvaIconDock({
 
   return (
     <>
-      {/* Desktop & Tablet Vertical Left Dock (Width: 68px) */}
-      <aside className="hidden md:flex flex-col items-center py-3 bg-[#1C121E] border-r border-[#6B5B6E]/30 text-white z-30 select-none w-16 shrink-0 h-full overflow-y-auto no-scrollbar relative">
+      {/* Desktop & Tablet Vertical Left Dock (Width: 64px) — Por encima de Barra Superior y Footer */}
+      <aside className="hidden md:flex flex-col items-center py-3 bg-[#1C121E] border-r border-[#6B5B6E]/30 text-white z-[100] select-none w-16 shrink-0 fixed top-0 bottom-0 left-0 h-screen overflow-y-auto no-scrollbar shadow-2xl">
         {/* Toggle Drawer Button (Menú para esconder/abrir panel) */}
         <button
           type="button"
