@@ -657,7 +657,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
 
             {sectorSections.map((sec) => (
               <View key={sec.id}>
-                {sec.titleText && (
+                {sec.titleText && sec.id !== 'firma' && (
                   <SectionBannerCard
                     titleText={sec.titleText}
                     designId={isSidebar ? undefined : (customRecordCardDesigns?.education || preset.recordCardDesigns?.education)}

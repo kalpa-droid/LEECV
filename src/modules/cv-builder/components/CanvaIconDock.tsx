@@ -9,20 +9,17 @@ import {
   Leaf, 
   FileText, 
   PenTool, 
-  Palette,
   Layout,
   Columns3,
-  BookMarked,
+  Sparkles,
   X,
-  Menu,
-  Users
+  Menu
 } from 'lucide-react';
 
 export const styleTabs = [
   { id: 'diseno', label: 'Diseño', icon: Layout },
-  { id: 'paneles', label: 'Paneles', icon: Columns3 },
-  { id: 'color', label: 'Color', icon: Palette },
-  { id: 'candidatos', label: 'Candidatos', icon: Users }
+  { id: 'portada', label: 'Portada', icon: Sparkles },
+  { id: 'paneles', label: 'Columnas', icon: Columns3 }
 ];
 
 export const contentTabs = [

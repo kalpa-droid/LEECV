@@ -14,15 +14,17 @@ import {
   Columns3,
   FolderOpen,
   Save,
-  Calendar
+  Calendar,
+  FileText
 } from 'lucide-react';
 import { themePresets, fontOptions } from '../../../data/themePresets';
 import { panelPresets } from '../../../data/panelPresets';
-import { getColumnAssignableSections } from '../../../shared/core/sectionRegistry';
+import { getColumnAssignableSections, getRecordListSections } from '../../../shared/core/sectionRegistry';
 import { PAGE_SIZES } from '../../../shared/core/pdf-engine/pageSizes';
 import { getSavedCVsList, loadCVById, deleteCVById, saveCV } from '../services/cvStorageService';
 import CertCropperModal from './CertCropperModal';
 import PersonalInfoSection from './editor/PersonalInfoSection';
+import { PanelSection } from './editor/PanelSection';
 
 import { useToast } from '../../../shared/core/ui/Toast';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
@@ -340,6 +342,9 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {/* TAB 2: FORMACIÓN ACADÉMICA */}
         {/* ========================================================================= */}
+        {/* ========================================================================= */}
+        {/* TAB 2: FORMACIÓN ACADÉMICA */}
+        {/* ========================================================================= */}
         {activeTab === 'formacion' && (
           <RepeatableSection
             sectionKey="formacion"
@@ -348,6 +353,7 @@ export default function EditorPanel({
             cvData={cvData}
             setCvData={setCvData}
             fieldName="education"
+            designKey="education"
             emptyItem={{ level: '', institution: '', year: '', degree: '' }}
             itemTitlePrefix="Estudio / Formación"
             renderItem={(item, idx, updateField) => (
@@ -394,6 +400,7 @@ export default function EditorPanel({
             cvData={cvData}
             setCvData={setCvData}
             fieldName="profession"
+            designKey="profession"
             emptyItem={{ institution: '', year: '', degree: '' }}
             itemTitlePrefix="Título Profesional"
             renderItem={(item, idx, updateField) => (
@@ -432,6 +439,7 @@ export default function EditorPanel({
             cvData={cvData}
             setCvData={setCvData}
             fieldName="experience"
+            designKey="experience"
             emptyItem={{ institution: '', role: '', year: '', details: '' }}
             itemTitlePrefix="Experiencia Laboral"
             renderItem={(item, idx, updateField) => (
@@ -480,6 +488,7 @@ export default function EditorPanel({
             cvData={cvData}
             setCvData={setCvData}
             fieldName="coursesAndCertificates"
+            designKey="course"
             emptyItem={{ year: '', institution: '', title: '', hours: '', details: '' }}
             itemTitlePrefix="Curso / Capacitación"
             renderItem={(item, idx, updateField) => (
@@ -1114,64 +1123,216 @@ export default function EditorPanel({
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 11: DISEÑO & FORMATO PAPEL & ADORNOS DE PORTADA */}
+        {/* TAB 11: DISEÑO & FORMATO PAPEL & ADORNOS DE PORTADA */}        {/* ========================================================================= */}
+        {/* TAB: DISEÑO */}
         {/* ========================================================================= */}
-        {(activeTab === 'diseno' || activeTab === 'portada') && (
+        {activeTab === 'diseno' && (
           <div className="space-y-6">
-            <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] border-b pb-2 border-[#EFE2C9] flex items-center gap-1.5">
-              <Layout className="w-4 h-4 text-[#00A8A0]" /> Estructura de Diseño y Formato de Papel
-            </h3>
+            {/* Formato de Papel */}
+            <PanelSection icon={<Layout className="w-4 h-4" />} title="Formato de página">
+              <div className="p-3 bg-white rounded-xl border border-[#EFE2C9]">
+                <label className="block text-xs font-bold text-[#2B1B2E] mb-1.5">
+                  Tamaño de Hoja / Formato de Papel
+                </label>
+                <select
+                  value={cvData.layout?.paperSize || 'a4'}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setCvData((prev: any) => ({
+                      ...prev,
+                      layout: {
+                        ...prev.layout,
+                        paperSize: val
+                      }
+                    }));
+                  }}
+                  className="w-full text-xs p-2.5 rounded-xl border border-[#00A8A0] bg-white text-[#2B1B2E] font-bold outline-none cursor-pointer"
+                >
+                  {Object.values(PAGE_SIZES).map((size) => (
+                    <option key={size.id} value={size.id}>
+                      📄 {size.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </PanelSection>
 
-            {/* Paper Size Selector */}
-            <div className="p-4 bg-white rounded-2xl border-2 border-[#EFE2C9] space-y-2 shadow-sm">
-              <label className="block text-xs font-black text-[#2B1B2E] uppercase tracking-wide flex items-center gap-1.5">
-                <span>Tamaño de Hoja / Formato de Papel</span>
-              </label>
-              <select
-                value={cvData.layout?.paperSize || 'a4'}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setCvData(prev => ({
-                    ...prev,
-                    layout: {
-                      ...prev.layout,
-                      paperSize: val
-                    }
-                  }));
-                }}
-                className="w-full text-xs p-2.5 rounded-xl border-2 border-[#00A8A0] bg-white text-[#2B1B2E] font-black outline-none focus:ring-2 focus:ring-[#CFF3F0] cursor-pointer"
-              >
-                {Object.values(PAGE_SIZES).map((size) => (
-                  <option key={size.id} value={size.id}>
-                    📄 {size.label}
-                  </option>
-                ))}
-              </select>
-              <p className="text-[10.5px] text-[#6B5B6E] font-medium leading-relaxed">
-                El motor de paginado recalcula automáticamente los límites de ítems por hoja según la altura física del formato seleccionado.
-              </p>
-            </div>
+            {/* Tipografía Principal */}
+            <PanelSection icon={<FileText className="w-4 h-4" />} title="Tipografía">
+              <div className="p-3 bg-white rounded-xl border border-[#EFE2C9]">
+                <label className="block text-xs font-bold text-[#2B1B2E] mb-1.5">
+                  Fuente Principal del Documento (Google Fonts)
+                </label>
+                <select
+                  value={cvData?.theme?.fontFamily || "'Outfit', sans-serif"}
+                  onChange={(e) => updateTheme('fontFamily', e.target.value)}
+                  className="w-full text-xs p-2.5 rounded-xl border border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none cursor-pointer"
+                >
+                  {fontOptions.map((f) => (
+                    <option key={f.id} value={f.value}>{f.name}</option>
+                  ))}
+                </select>
+              </div>
+            </PanelSection>
 
-            {/* ========================================================================= */}
-            {/* CONFIGURACIÓN Y ADORNOS DE PORTADA */}
-            {/* ========================================================================= */}
-            <div className="pt-4 border-t border-[#EFE2C9] space-y-6">
-              <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-[#00A8A0]" /> Configuración y Adornos de Portada
-              </h3>
+            {/* Plantilla del Documento */}
+            <PanelSection icon={<Sparkles className="w-4 h-4" />} title="Plantilla">
+              <div className="grid grid-cols-1 gap-2">
+                {[
+                  {
+                    id: 'cv-clasico',
+                    title: 'CV Clásico',
+                    desc: 'Columna lateral con foto y datos de contacto, cuerpo principal con formación y experiencia.',
+                    badge: 'Uso General'
+                  },
+                  {
+                    id: 'modern-corporate',
+                    title: 'Corporativo Moderno',
+                    desc: 'Sidebar más ancha en azul marino con acentos dorados, tipografía firme.',
+                    badge: 'Empresas & Ejecutivos'
+                  },
+                  {
+                    id: 'minimal-editorial',
+                    title: 'Editorial Minimalista',
+                    desc: 'Sidebar angosta en tono claro, tipografía serif protagonista, acentos terracota.',
+                    badge: 'Jóvenes & Creativos'
+                  }
+                ].map((styleOpt) => {
+                  const isSelected = (cvData.activePresetId || 'cv-clasico') === styleOpt.id;
+                  return (
+                    <button
+                      key={styleOpt.id}
+                      onClick={() => setCvData((prev: any) => ({ ...prev, activePresetId: styleOpt.id }))}
+                      className={`p-3 rounded-xl border text-left transition flex items-start justify-between gap-3 cursor-pointer ${
+                        isSelected
+                          ? 'border-[#FF2E63] bg-[#FFD9E3]/30 ring-2 ring-[#FF2E63]/30'
+                          : 'border-[#EFE2C9] bg-white hover:border-[#FF2E63]'
+                      }`}
+                    >
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-black text-[#2B1B2E]">{styleOpt.title}</span>
+                          <span className="text-[9px] px-2 py-0.5 rounded bg-purple-100 text-purple-700 font-extrabold">
+                            {styleOpt.badge}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-[#2B1B2E] font-medium leading-snug">{styleOpt.desc}</p>
+                      </div>
+                      {isSelected && <Check className="w-4 h-4 text-[#00A8A0] flex-shrink-0 mt-1" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </PanelSection>
 
+            {/* Presets Cromáticos (Absorbidos de pestaña Color) */}
+            <PanelSection icon={<Palette className="w-4 h-4" />} title="Paletas de color"
+              manualAdjustment={
+                <div className="space-y-3 pt-2">
+                  <label className="block text-xs font-bold text-[#2B1B2E]">
+                    Ajuste Fino de Colores Personalizados
+                  </label>
+                  
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-[#2B1B2E] font-bold">Color Primario (Lateral/Portada)</span>
+                    <input 
+                      type="color" 
+                      value={cvData?.theme?.primaryColor || '#1e3a8a'} 
+                      onChange={(e) => updateTheme('primaryColor', e.target.value)}
+                      className="w-7 h-7 rounded cursor-pointer border-0"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-[#2B1B2E] font-bold">Color Secundario (Encabezados lateral)</span>
+                    <input 
+                      type="color" 
+                      value={cvData?.theme?.secondaryColor || '#172554'} 
+                      onChange={(e) => updateTheme('secondaryColor', e.target.value)}
+                      className="w-7 h-7 rounded cursor-pointer border-0"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-[#2B1B2E] font-bold">Color de Acento (Barras e Iconos)</span>
+                    <input 
+                      type="color" 
+                      value={cvData?.theme?.accentColor || '#d97706'} 
+                      onChange={(e) => updateTheme('accentColor', e.target.value)}
+                      className="w-7 h-7 rounded cursor-pointer border-0"
+                    />
+                  </div>
+                </div>
+              }
+            >
+              <div className="space-y-3">
+                {['linda-feria', 'docentes', 'ejecutivos', 'jovenes'].map((cat) => {
+                  const categoryPresets = themePresets.filter(p => p.category === cat);
+                  const categoryTitle = cat === 'linda-feria'
+                    ? '🎪 Feria'
+                    : cat === 'docentes' 
+                    ? '🎓 Maestros & Docentes' 
+                    : cat === 'ejecutivos' 
+                    ? '💼 Ejecutivos & Corporativos' 
+                    : '⚡ Jóvenes & Creativos';
+
+                  return (
+                    <div key={cat} className="space-y-1.5 pt-1">
+                      <h4 className="text-[11px] font-black uppercase text-[#2B1B2E] font-medium tracking-wider">
+                        {categoryTitle}
+                      </h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        {categoryPresets.map((preset) => {
+                          const isSelected = (cvData?.theme?.presetId || 'purple-monica') === preset.id;
+                          return (
+                            <button
+                              key={preset.id}
+                              onClick={() => applyPreset(preset)}
+                              className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between cursor-pointer ${
+                                isSelected
+                                  ? 'border-[#FF2E63] bg-[#FFD9E3]/30 ring-2 ring-[#FF2E63]/30'
+                                  : 'border-[#EFE2C9] bg-white hover:border-[#FF2E63]'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-1.5">
+                                <span className="text-[11px] font-bold text-[#2B1B2E] truncate pr-1">{preset.name}</span>
+                                {isSelected && <Check className="w-3.5 h-3.5 text-[#00A8A0] flex-shrink-0" />}
+                              </div>
+                              <div className="flex gap-1.5 items-center">
+                                <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.primaryColor }} />
+                                <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.accentColor }} />
+                                <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.secondaryColor }} />
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </PanelSection>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB: PORTADA (NUEVA PESTAÑA DEDICADA) */}
+        {/* ========================================================================= */}
+        {activeTab === 'portada' && (
+          <div className="space-y-6">
+            <PanelSection icon={<Sparkles className="w-4 h-4" />} title="Portada">
               {/* Cover Page Toggle */}
-              <div className={`flex items-center justify-between p-2.5 rounded-xl border transition ${
+              <div className={`flex items-center justify-between p-3 rounded-xl border transition ${
                 cvData.showCoverPage !== false 
                   ? 'bg-white border-[#EFE2C9] text-[#2B1B2E] shadow-sm' 
                   : 'bg-slate-200 border-slate-300 text-slate-500 opacity-75'
               }`}>
-                <span className="text-xs font-black uppercase tracking-wide">
+                <span className="text-xs font-bold uppercase tracking-wide">
                   Portada de Impacto (Página 1)
                 </span>
                 <button
                   type="button"
-                  onClick={() => setCvData(prev => ({ ...prev, showCoverPage: prev.showCoverPage === undefined ? false : !prev.showCoverPage }))}
+                  onClick={() => setCvData((prev: any) => ({ ...prev, showCoverPage: prev.showCoverPage === undefined ? false : !prev.showCoverPage }))}
                   className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
                     cvData.showCoverPage !== false
                       ? 'bg-[#00A8A0] text-white hover:bg-[#00877F]'
@@ -1182,188 +1343,305 @@ export default function EditorPanel({
                 </button>
               </div>
 
-              {/* Selector de Plantilla — usa el mismo registro real que el motor de exportación (PRESET_LIST).
-                  Antes esto escribía en 3 campos distintos (coverPreset / layoutStyle / layout.layoutStyle)
-                  y ninguno cambiaba el PDF final. Ahora escribe un solo campo real: activePresetId. */}
-              <div className="space-y-2">
-                <label className="block text-xs font-bold text-[#2B1B2E] flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-[#00A8A0]" /> Plantilla del Documento
+              {/* Sello / Monograma */}
+              <div className="p-3 bg-white rounded-xl border border-[#EFE2C9] space-y-1.5">
+                <label className="block text-xs font-bold text-[#2B1B2E]">
+                  Iniciales de Sello / Monograma (ej: MB)
                 </label>
-
-                <div className="grid grid-cols-1 gap-2">
-                  {[
-                    {
-                      id: 'cv-clasico',
-                      title: 'CV Clásico',
-                      desc: 'Columna lateral con foto y datos de contacto, cuerpo principal con formación y experiencia.',
-                      badge: 'Uso General'
-                    },
-                    {
-                      id: 'modern-corporate',
-                      title: 'Corporativo Moderno',
-                      desc: 'Sidebar más ancha en azul marino con acentos dorados, tipografía firme.',
-                      badge: 'Empresas & Ejecutivos'
-                    },
-                    {
-                      id: 'minimal-editorial',
-                      title: 'Editorial Minimalista',
-                      desc: 'Sidebar angosta en tono claro, tipografía serif protagonista, acentos terracota.',
-                      badge: 'Jóvenes & Creativos'
-                    }
-                  ].map((styleOpt) => {
-                    const isSelected = (cvData.activePresetId || 'cv-clasico') === styleOpt.id;
-                    return (
-                      <button
-                        key={styleOpt.id}
-                        onClick={() => setCvData(prev => ({ ...prev, activePresetId: styleOpt.id }))}
-                        className={`p-3 rounded-xl border text-left transition flex items-start justify-between gap-3 cursor-pointer ${
-                          isSelected
-                            ? 'border-[#FF2E63] bg-[#FFD9E3]/30 ring-2 ring-[#FF2E63]/30'
-                            : 'border-[#EFE2C9] bg-white hover:border-[#FF2E63]'
-                        }`}
-                      >
-                        <div className="space-y-0.5">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-black text-[#2B1B2E]">{styleOpt.title}</span>
-                            <span className="text-[9px] px-2 py-0.5 rounded bg-purple-100 text-purple-700 font-extrabold">
-                              {styleOpt.badge}
-                            </span>
-                          </div>
-                          <p className="text-[10px] text-[#2B1B2E] font-medium leading-snug">{styleOpt.desc}</p>
-                        </div>
-                        {isSelected && <Check className="w-4 h-4 text-[#00A8A0] flex-shrink-0 mt-1" />}
-                      </button>
-                    );
-                  })}
-                </div>
+                <input 
+                  type="text"
+                  maxLength={4}
+                  value={cvData.personalInfo?.initials || ''}
+                  onChange={(e) => {
+                    const val = e.target.value.toUpperCase();
+                    setCvData((prev: any) => ({
+                      ...prev,
+                      personalInfo: { ...prev.personalInfo, initials: val }
+                    }));
+                  }}
+                  placeholder="Ej: MB"
+                  className="w-28 text-xs p-2.5 rounded-xl border border-[#EFE2C9] bg-white text-[#2B1B2E] font-black uppercase outline-none focus:border-[#FF2E63] transition"
+                />
               </div>
 
-              {/* Estilo de Contenedores de Registro */}
-              <div className="space-y-3 pt-3 border-t border-[#EFE2C9]">
-                <label className="block text-xs font-bold text-[#2B1B2E] flex items-center gap-1.5">
-                  <Layout className="w-3.5 h-3.5 text-[#00A8A0]" /> Estilo de Contenedores de Registro
-                </label>
-                <p className="text-[10px] text-[#6B5B6E] font-medium leading-snug">
-                  Personaliza los bordes y acentos visuales de cada categoría de registro de tu documento:
-                </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  <div>
-                    <label className="block text-[10px] font-bold text-[#2B1B2E] mb-1">Formación</label>
-                    <select
-                      value={cvData.recordCardDesigns?.education || 'accent-card'}
-                      onChange={(e) => setCvData(prev => ({
-                        ...prev,
-                        recordCardDesigns: { ...prev.recordCardDesigns, education: e.target.value }
-                      }))}
-                      className="w-full text-xs p-2 rounded-xl border border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none cursor-pointer"
-                    >
-                      <option value="accent-card">🎨 Borde Acento</option>
-                      <option value="primary-card">🔷 Borde Primario</option>
-                      <option value="neutral-card">⚪ Borde Neutro</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-[#2B1B2E] mb-1">Experiencia</label>
-                    <select
-                      value={cvData.recordCardDesigns?.experience || 'primary-card'}
-                      onChange={(e) => setCvData(prev => ({
-                        ...prev,
-                        recordCardDesigns: { ...prev.recordCardDesigns, experience: e.target.value }
-                      }))}
-                      className="w-full text-xs p-2 rounded-xl border border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none cursor-pointer"
-                    >
-                      <option value="primary-card">🔷 Borde Primario</option>
-                      <option value="accent-card">🎨 Borde Acento</option>
-                      <option value="neutral-card">⚪ Borde Neutro</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-[#2B1B2E] mb-1">Cursos</label>
-                    <select
-                      value={cvData.recordCardDesigns?.course || 'neutral-card'}
-                      onChange={(e) => setCvData(prev => ({
-                        ...prev,
-                        recordCardDesigns: { ...prev.recordCardDesigns, course: e.target.value }
-                      }))}
-                      className="w-full text-xs p-2 rounded-xl border border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none cursor-pointer"
-                    >
-                      <option value="neutral-card">⚪ Borde Neutro</option>
-                      <option value="accent-card">🎨 Borde Acento</option>
-                      <option value="primary-card">🔷 Borde Primario</option>
-                    </select>
-                  </div>
+              {/* Registros Destacados en Portada (Solo Títulos, con botón Agregar/Eliminar) */}
+              <div className="p-3 bg-white rounded-xl border border-[#EFE2C9] space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-[#2B1B2E]">
+                    Registros Destacados en Portada ({cvData.roles?.length || 0})
+                  </label>
                 </div>
-              </div>
-
-              {/* Selection of Featured Records for Cover Page */}
-              <div className="space-y-3 pt-3 border-t border-[#EFE2C9]">
-                <label className="block text-xs font-bold text-[#FF2E63] uppercase tracking-wide">
-                  Registros Destacados en Portada
-                </label>
-                <p className="text-[11px] font-bold text-[#6B5B6E] leading-snug">
-                  Elige qué títulos introducidos aparecerán destacados en los badges de la portada:
-                </p>
-
-                {/* Select Featured Academic Title */}
-                <div>
-                  <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-                    Título Académico Destacado en Portada:
+                
+                {/* Selector Desplegable para Agregar Registro Ingresado (Muestra SOLO el título) */}
+                <div className="space-y-1.5">
+                  <label className="block text-[11px] font-medium text-[#6B5B6E]">
+                    Seleccionar título de registros cargados:
                   </label>
                   <select
-                    value={cvData.coverFeaturedEducationId || ''}
-                    onChange={(e) => setCvData(prev => ({ ...prev, coverFeaturedEducationId: e.target.value }))}
-                    className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none focus:border-[#FF2E63] transition cursor-pointer"
+                    onChange={(e) => {
+                      const selectedTitle = e.target.value;
+                      if (selectedTitle) {
+                        if (!cvData.roles?.includes(selectedTitle)) {
+                          setCvData((prev: any) => ({
+                            ...prev,
+                            roles: [...(prev.roles || []), selectedTitle]
+                          }));
+                        } else {
+                          showWarning('Este título ya está agregado a la portada.');
+                        }
+                        e.target.value = '';
+                      }
+                    }}
+                    defaultValue=""
+                    className="w-full text-xs p-2.5 rounded-xl border border-[#00A8A0] bg-white text-[#2B1B2E] font-bold outline-none cursor-pointer"
                   >
-                    <option value="">-- Usar primer título cargado automáticamente --</option>
-                    {(cvData.education || []).map((edu, idx) => (
-                      <option key={idx} value={edu.id || idx}>
-                        {edu.degree} ({edu.institution})
+                    <option value="" disabled>-- Seleccionar título para destacar --</option>
+                    {[
+                      ...(cvData.education || []).map((e: any) => e.degree).filter(Boolean),
+                      ...(cvData.professions || []).map((p: any) => p.degree).filter(Boolean),
+                      ...(cvData.experience || []).map((x: any) => x.role).filter(Boolean),
+                      ...(cvData.courses || []).map((c: any) => c.title || c.course).filter(Boolean)
+                    ].map((titleStr: string, idx: number) => (
+                      <option key={idx} value={titleStr}>
+                        {titleStr}
                       </option>
                     ))}
                   </select>
                 </div>
 
-                {/* Select Featured Professional Title */}
-                <div>
-                  <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-                    Título / Cargo Profesional Destacado en Portada:
-                  </label>
-                  <select
-                    value={cvData.coverFeaturedProfessionId || ''}
-                    onChange={(e) => setCvData(prev => ({ ...prev, coverFeaturedProfessionId: e.target.value }))}
-                    className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none focus:border-[#FF2E63] transition cursor-pointer"
-                  >
-                    <option value="">-- Usar primer título profesional automáticamente --</option>
-                    {(cvData.professions || []).map((prof, idx) => (
-                      <option key={idx} value={prof.id || idx}>
-                        {prof.degree} ({prof.institution})
-                      </option>
-                    ))}
-                  </select>
+                {/* Lista de Registros Destacados con Botón de Eliminar */}
+                <div className="space-y-1.5 pt-2">
+                  {(!cvData.roles || cvData.roles.length === 0) ? (
+                    <p className="text-xs text-[#6B5B6E] italic text-center py-2 border border-dashed border-[#EFE2C9] rounded-xl">
+                      No hay registros destacados en la portada aún.
+                    </p>
+                  ) : (
+                    cvData.roles.map((role: string, idx: number) => (
+                      <div key={idx} className="flex items-center justify-between p-2 bg-[#FAF7F0] rounded-lg border border-[#EFE2C9] text-xs">
+                        <span className="font-bold text-[#2B1B2E]">{role}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCvData((prev: any) => ({
+                              ...prev,
+                              roles: (prev.roles || []).filter((_: any, i: number) => i !== idx)
+                            }));
+                          }}
+                          className="p-1 text-red-600 hover:bg-red-50 rounded transition cursor-pointer"
+                          title="Eliminar de portada"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
-            </div>
+            </PanelSection>
           </div>
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 12: PANELES Y COLUMNAS */}
+        {/* TAB: COLUMNAS (PANELES) */}
         {/* ========================================================================= */}
         {activeTab === 'paneles' && (
           <div className="space-y-6">
-            <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] border-b pb-2 border-[#EFE2C9] flex items-center gap-1.5">
-              <Columns3 className="w-4 h-4 text-[#00A8A0]" /> Gestión Dinámica de Paneles & Columnas
-            </h3>
+            <PanelSection 
+              icon={<Columns3 className="w-4 h-4" />} 
+              title="Columnas"
+              manualAdjustment={
+                <div className="space-y-3 pt-2">
+                  <label className="block text-xs font-bold text-[#2B1B2E] flex items-center justify-between">
+                    <span>Ubicación y Ordenamiento de Secciones</span>
+                  </label>
+                  <div className="space-y-2">
+                    {getColumnAssignableSections().map((sec) => {
+                      const assignments = cvData.layout?.columnAssignments || {};
+                      let currentVal = 'primaria';
+                      if (typeof assignments[sec.id] === 'string') {
+                        currentVal = assignments[sec.id];
+                      } else {
+                        const leftList = assignments.left || ["contacto", "personales", "frase", "formacion", "cursos", "informatica", "competencias"];
+                        const rightList = assignments.right || ["profesion", "experiencia", "ecologia", "certificados", "firma"];
+                        const inLeft = leftList.includes(sec.id);
+                        const inRight = rightList.includes(sec.id);
+                        if (inLeft && inRight) currentVal = 'ambas';
+                        else if (inLeft) currentVal = 'secundaria';
+                        else currentVal = 'primaria';
+                      }
 
-            {/* Panel Presets (1-Click Layout Distribution) */}
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-[#2B1B2E] flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#00A8A0]" /> Presets de Distribución de Paneles (1-Clic)
-              </label>
-              
+                      const defaultSecundaria = ["contacto", "personales", "frase", "informatica", "competencias", "ecologia"];
+                      const defaultPrimaria = ["personales", "formacion", "profesion", "experiencia", "cursos", "ecologia"];
+
+                      const secOrder = cvData.layout?.sectionOrders?.secundaria || defaultSecundaria;
+                      const primOrder = cvData.layout?.sectionOrders?.primaria || defaultPrimaria;
+
+                      const setColumn = (targetVal: string) => {
+                        setCvData((prev: any) => {
+                          const newAssignments = {
+                            ...(prev.layout?.columnAssignments || {}),
+                            [sec.id]: targetVal
+                          };
+
+                          let newSecOrder = [...(prev.layout?.sectionOrders?.secundaria || defaultSecundaria)];
+                          let newPrimOrder = [...(prev.layout?.sectionOrders?.primaria || defaultPrimaria)];
+
+                          if (targetVal === 'secundaria') {
+                            if (!newSecOrder.includes(sec.id)) newSecOrder.push(sec.id);
+                            newPrimOrder = newPrimOrder.filter(id => id !== sec.id);
+                          } else if (targetVal === 'primaria') {
+                            if (!newPrimOrder.includes(sec.id)) newPrimOrder.push(sec.id);
+                            newSecOrder = newSecOrder.filter(id => id !== sec.id);
+                          } else if (targetVal === 'ambas') {
+                            if (!newSecOrder.includes(sec.id)) newSecOrder.push(sec.id);
+                            if (!newPrimOrder.includes(sec.id)) newPrimOrder.push(sec.id);
+                          }
+
+                          return {
+                            ...prev,
+                            layout: {
+                              ...prev.layout,
+                              columnAssignments: newAssignments,
+                              sectionOrders: {
+                                secundaria: newSecOrder,
+                                primaria: newPrimOrder
+                              }
+                            }
+                          };
+                        });
+                      };
+
+                      const moveSection = (colName: string, direction: string) => {
+                        setCvData((prev: any) => {
+                          const curOrders = prev.layout?.sectionOrders?.[colName] || (
+                            colName === 'secundaria' ? defaultSecundaria : defaultPrimaria
+                          );
+
+                          const idx = curOrders.indexOf(sec.id);
+                          if (idx === -1) return prev;
+                          const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+                          if (targetIdx < 0 || targetIdx >= curOrders.length) return prev;
+
+                          const newOrder = [...curOrders];
+                          const [moved] = newOrder.splice(idx, 1);
+                          newOrder.splice(targetIdx, 0, moved);
+
+                          return {
+                            ...prev,
+                            layout: {
+                              ...prev.layout,
+                              sectionOrders: {
+                                ...(prev.layout?.sectionOrders || {}),
+                                [colName]: newOrder
+                              }
+                            }
+                          };
+                        });
+                      };
+
+                      const secPos = secOrder.indexOf(sec.id) + 1;
+                      const primPos = primOrder.indexOf(sec.id) + 1;
+
+                      return (
+                        <div key={sec.id} className="p-2 bg-white rounded-xl border border-[#EFE2C9] text-xs space-y-1.5 shadow-sm">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-extrabold text-[#2B1B2E]">{sec.label}</span>
+                              {secPos > 0 && (currentVal === 'secundaria' || currentVal === 'ambas') && (
+                                <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-rose-100 text-rose-800 font-black">
+                                  Sec #{secPos}
+                                </span>
+                              )}
+                              {primPos > 0 && (currentVal === 'primaria' || currentVal === 'ambas') && (
+                                <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-teal-100 text-teal-800 font-black">
+                                  Prim #{primPos}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => setColumn('secundaria')}
+                                className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
+                                  currentVal === 'secundaria' ? 'bg-[#FF2E63] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                              >
+                                Secundaria
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setColumn('primaria')}
+                                className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
+                                  currentVal === 'primaria' ? 'bg-[#00A8A0] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                              >
+                                Primaria
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setColumn('ambas')}
+                                className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
+                                  currentVal === 'ambas' ? 'bg-[#8E44FF] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                              >
+                                Ambas
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-end gap-3 text-[10px] text-slate-500 pt-1 border-t border-slate-100">
+                            {(currentVal === 'secundaria' || currentVal === 'ambas') && (
+                              <div className="flex items-center gap-1 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-200">
+                                <span className="font-bold text-rose-700">Sec:</span>
+                                <button
+                                  type="button"
+                                  onClick={() => moveSection('secundaria', 'up')}
+                                  disabled={secOrder.indexOf(sec.id) <= 0}
+                                  className="px-1 py-0.5 hover:bg-rose-200 rounded font-black disabled:opacity-30 cursor-pointer"
+                                >
+                                  ⬆
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => moveSection('secundaria', 'down')}
+                                  disabled={secOrder.indexOf(sec.id) === -1 || secOrder.indexOf(sec.id) >= secOrder.length - 1}
+                                  className="px-1 py-0.5 hover:bg-rose-200 rounded font-black disabled:opacity-30 cursor-pointer"
+                                >
+                                  ⬇
+                                </button>
+                              </div>
+                            )}
+
+                            {(currentVal === 'primaria' || currentVal === 'ambas') && (
+                              <div className="flex items-center gap-1 bg-teal-50 px-2 py-0.5 rounded-lg border border-teal-200">
+                                <span className="font-bold text-teal-700">Prim:</span>
+                                <button
+                                  type="button"
+                                  onClick={() => moveSection('primaria', 'up')}
+                                  disabled={primOrder.indexOf(sec.id) <= 0}
+                                  className="px-1 py-0.5 hover:bg-teal-200 rounded font-black disabled:opacity-30 cursor-pointer"
+                                >
+                                  ⬆
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => moveSection('primaria', 'down')}
+                                  disabled={primOrder.indexOf(sec.id) === -1 || primOrder.indexOf(sec.id) >= primOrder.length - 1}
+                                  className="px-1 py-0.5 hover:bg-teal-200 rounded font-black disabled:opacity-30 cursor-pointer"
+                                >
+                                  ⬇
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              }
+            >
+              {/* Presets de Distribución de Columnas (1-Clic) */}
               <div className="grid grid-cols-2 gap-2">
                 {panelPresets.map((preset) => (
                   <button
@@ -1371,12 +1649,12 @@ export default function EditorPanel({
                     onClick={() => {
                       confirm({
                         title: `¿Aplicar preset '${preset.name}'?`,
-                        message: 'Esta acción restablecerá tus configuraciones personalizadas de maquetación y columnas al estado maestro del preset.',
+                        message: 'Esta acción restablecerá la distribución de columnas al estándar del preset.',
                         confirmText: 'Aplicar Preset',
                         variant: 'secondary',
                         onConfirm: () => {
-                          setCvData(prev => {
-                            const newAssigns = {};
+                          setCvData((prev: any) => {
+                            const newAssigns: any = {};
                             (preset.secondarySections || []).forEach(s => { newAssigns[s] = 'secundaria'; });
                             (preset.bothSections || []).forEach(s => { newAssigns[s] = 'ambas'; });
                             (preset.primarySections || []).forEach(s => { 
@@ -1396,7 +1674,7 @@ export default function EditorPanel({
                               }
                             };
                           });
-                          showSuccess(`Preset '${preset.name}' aplicado correctamente.`);
+                          showSuccess(`Preset '${preset.name}' aplicado.`);
                         }
                       });
                     }}
@@ -1409,326 +1687,7 @@ export default function EditorPanel({
                   </button>
                 ))}
               </div>
-            </div>
-
-            {/* Dynamic Section Column Assigner & Reordering */}
-            <div className="space-y-3 pt-3 border-t border-[#EFE2C9]">
-              <label className="block text-xs font-bold text-[#FF2E63] uppercase tracking-wide flex items-center justify-between">
-                <span>Ubicación y Ordenamiento Dinámico</span>
-                <span className="text-[10px] text-purple-700 bg-purple-100 px-2 py-0.5 rounded font-black">Secundaria vs Primaria</span>
-              </label>
-              <p className="text-[11px] font-bold text-[#6B5B6E] leading-snug">
-                Elige la columna de cada sección y usa las flechas ⬆ ⬇ para subir o bajar su posición en pantalla:
-              </p>
-
-              <div className="space-y-2">
-                {getColumnAssignableSections().map((sec) => {
-                  const assignments = cvData.layout?.columnAssignments || {};
-                  let currentVal = 'primaria';
-                  if (typeof assignments[sec.id] === 'string') {
-                    currentVal = assignments[sec.id];
-                  } else {
-                    const leftList = assignments.left || ["contacto", "personales", "formacion", "cursos", "informatica", "competencias"];
-                    const rightList = assignments.right || ["profesion", "experiencia", "ecologia", "certificados", "firma"];
-                    const inLeft = leftList.includes(sec.id);
-                    const inRight = rightList.includes(sec.id);
-                    if (inLeft && inRight) currentVal = 'ambas';
-                    else if (inLeft) currentVal = 'secundaria';
-                    else currentVal = 'primaria';
-                  }
-
-                  const defaultSecundaria = ["contacto", "personales", "informatica", "competencias", "ecologia"];
-                  const defaultPrimaria = ["personales", "formacion", "profesion", "experiencia", "cursos", "ecologia"];
-
-                  const secOrder = cvData.layout?.sectionOrders?.secundaria || defaultSecundaria;
-                  const primOrder = cvData.layout?.sectionOrders?.primaria || defaultPrimaria;
-
-                  const setColumn = (targetVal) => {
-                    setCvData(prev => {
-                      const newAssignments = {
-                        ...(prev.layout?.columnAssignments || {}),
-                        [sec.id]: targetVal
-                      };
-
-                      let newSecOrder = [...(prev.layout?.sectionOrders?.secundaria || defaultSecundaria)];
-                      let newPrimOrder = [...(prev.layout?.sectionOrders?.primaria || defaultPrimaria)];
-
-                      if (targetVal === 'secundaria') {
-                        if (!newSecOrder.includes(sec.id)) newSecOrder.push(sec.id);
-                        newPrimOrder = newPrimOrder.filter(id => id !== sec.id);
-                      } else if (targetVal === 'primaria') {
-                        if (!newPrimOrder.includes(sec.id)) newPrimOrder.push(sec.id);
-                        newSecOrder = newSecOrder.filter(id => id !== sec.id);
-                      } else if (targetVal === 'ambas') {
-                        if (!newSecOrder.includes(sec.id)) newSecOrder.push(sec.id);
-                        if (!newPrimOrder.includes(sec.id)) newPrimOrder.push(sec.id);
-                      }
-
-                      return {
-                        ...prev,
-                        layout: {
-                          ...prev.layout,
-                          columnAssignments: newAssignments,
-                          sectionOrders: {
-                            secundaria: newSecOrder,
-                            primaria: newPrimOrder
-                          }
-                        }
-                      };
-                    });
-                  };
-
-                  const moveSection = (colName, direction) => {
-                    setCvData(prev => {
-                      const curOrders = prev.layout?.sectionOrders?.[colName] || (
-                        colName === 'secundaria' ? defaultSecundaria : defaultPrimaria
-                      );
-
-                      const idx = curOrders.indexOf(sec.id);
-                      if (idx === -1) return prev;
-                      const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
-                      if (targetIdx < 0 || targetIdx >= curOrders.length) return prev;
-
-                      const newOrder = [...curOrders];
-                      const [moved] = newOrder.splice(idx, 1);
-                      newOrder.splice(targetIdx, 0, moved);
-
-                      return {
-                        ...prev,
-                        layout: {
-                          ...prev.layout,
-                          sectionOrders: {
-                            ...(prev.layout?.sectionOrders || {}),
-                            [colName]: newOrder
-                          }
-                        }
-                      };
-                    });
-                  };
-
-                  const secPos = secOrder.indexOf(sec.id) + 1;
-                  const primPos = primOrder.indexOf(sec.id) + 1;
-
-                  return (
-                    <div key={sec.id} className="p-2 bg-white rounded-xl border border-[#EFE2C9] text-xs space-y-1.5 shadow-sm">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-extrabold text-[#2B1B2E]">{sec.label}</span>
-                          {secPos > 0 && (currentVal === 'secundaria' || currentVal === 'ambas') && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-rose-100 text-rose-800 font-black">
-                              Sec #{secPos}
-                            </span>
-                          )}
-                          {primPos > 0 && (currentVal === 'primaria' || currentVal === 'ambas') && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-teal-100 text-teal-800 font-black">
-                              Prim #{primPos}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => setColumn('secundaria')}
-                            className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
-                              currentVal === 'secundaria' ? 'bg-[#FF2E63] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            }`}
-                            title="Ubicar en columna izquierda (secundaria / fina)"
-                          >
-                            Secundaria
-                          </button>
-                          <button
-                            onClick={() => setColumn('primaria')}
-                            className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
-                              currentVal === 'primaria' ? 'bg-[#00A8A0] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            }`}
-                            title="Ubicar en columna derecha (primaria / principal)"
-                          >
-                            Primaria
-                          </button>
-                          <button
-                            onClick={() => setColumn('ambas')}
-                            className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
-                              currentVal === 'ambas' ? 'bg-[#8E44FF] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            }`}
-                            title="Mostrar la sección en ambas columnas"
-                          >
-                            Ambas
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Reordering Controls */}
-                      <div className="flex items-center justify-end gap-3 text-[10px] text-slate-500 pt-1 border-t border-slate-100">
-                        {(currentVal === 'secundaria' || currentVal === 'ambas') && (
-                          <div className="flex items-center gap-1 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-200">
-                            <span className="font-bold text-rose-700">Orden Sec:</span>
-                            <button
-                              onClick={() => moveSection('secundaria', 'up')}
-                              disabled={secOrder.indexOf(sec.id) <= 0}
-                              className="px-1 py-0.5 hover:bg-rose-200 rounded font-black disabled:opacity-30 cursor-pointer"
-                              title="Subir en columna Secundaria"
-                            >
-                              ⬆
-                            </button>
-                            <button
-                              onClick={() => moveSection('secundaria', 'down')}
-                              disabled={secOrder.indexOf(sec.id) === -1 || secOrder.indexOf(sec.id) >= secOrder.length - 1}
-                              className="px-1 py-0.5 hover:bg-rose-200 rounded font-black disabled:opacity-30 cursor-pointer"
-                              title="Bajar en columna Secundaria"
-                            >
-                              ⬇
-                            </button>
-                          </div>
-                        )}
-
-                        {(currentVal === 'primaria' || currentVal === 'ambas') && (
-                          <div className="flex items-center gap-1 bg-teal-50 px-2 py-0.5 rounded-lg border border-teal-200">
-                            <span className="font-bold text-teal-700">Orden Prim:</span>
-                            <button
-                              onClick={() => moveSection('primaria', 'up')}
-                              disabled={primOrder.indexOf(sec.id) <= 0}
-                              className="px-1 py-0.5 hover:bg-teal-200 rounded font-black disabled:opacity-30 cursor-pointer"
-                              title="Subir en columna Primaria"
-                            >
-                              ⬆
-                            </button>
-                            <button
-                              onClick={() => moveSection('primaria', 'down')}
-                              disabled={primOrder.indexOf(sec.id) === -1 || primOrder.indexOf(sec.id) >= primOrder.length - 1}
-                              className="px-1 py-0.5 hover:bg-teal-200 rounded font-black disabled:opacity-30 cursor-pointer"
-                              title="Bajar en columna Primaria"
-                            >
-                              ⬇
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================================= */}
-        {/* TAB 13: COLOR Y TIPOGRAFÍA */}
-        {/* ========================================================================= */}
-        {activeTab === 'color' && (
-          <div className="space-y-6">
-            <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] border-b pb-2 border-[#EFE2C9] flex items-center gap-1.5">
-              <Palette className="w-4 h-4 text-[#00A8A0]" /> Presets Cromáticos, Google Fonts & Colores
-            </h3>
-
-            {/* Font Picker TOP */}
-            <div className="bg-purple-50 p-3 rounded-xl border border-purple-200 space-y-1">
-              <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-                Tipografía Principal del Documento (Google Fonts)
-              </label>
-              <select
-                value={cvData?.theme?.fontFamily || "'Outfit', sans-serif"}
-                onChange={(e) => updateTheme('fontFamily', e.target.value)}
-                className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-              >
-                {fontOptions.map((f) => (
-                  <option key={f.id} value={f.value}>{f.name}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Presets Grid Categorized */}
-            <div className="space-y-3">
-              <label className="block text-xs font-bold text-[#2B1B2E] flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#00A8A0]" /> Presets Cromáticos por Perfil
-              </label>
-
-              {['linda-feria', 'docentes', 'ejecutivos', 'jovenes'].map((cat) => {
-                const categoryPresets = themePresets.filter(p => p.category === cat);
-                const categoryTitle = cat === 'linda-feria'
-                  ? '🎪 Feria'
-                  : cat === 'docentes' 
-                  ? '🎓 Maestros, Docentes & Educadores' 
-                  : cat === 'ejecutivos' 
-                  ? '💼 Ejecutivos & Corporativos' 
-                  : '⚡ Jóvenes, Estudiantes & Creativos';
-
-                return (
-                  <div key={cat} className="space-y-1.5 pt-1">
-                    <h4 className="text-[11px] font-black uppercase text-[#2B1B2E] font-medium tracking-wider">
-                      {categoryTitle}
-                    </h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      {categoryPresets.map((preset) => {
-                        const isSelected = (cvData?.theme?.presetId || 'purple-monica') === preset.id;
-                        return (
-                          <button
-                            key={preset.id}
-                            onClick={() => applyPreset(preset)}
-                            className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between cursor-pointer ${
-                              isSelected
-                                ? 'border-[#FF2E63] bg-[#FFD9E3]/30 ring-2 ring-[#FF2E63]/30'
-                                : 'border-[#EFE2C9] bg-white hover:border-[#FF2E63]'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between mb-1.5">
-                              <span className="text-[11px] font-bold text-[#2B1B2E] truncate pr-1">{preset.name}</span>
-                              {isSelected && <Check className="w-3.5 h-3.5 text-[#00A8A0] flex-shrink-0" />}
-                            </div>
-                            <div className="flex gap-1.5 items-center">
-                              <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.primaryColor }} />
-                              <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.accentColor }} />
-                              <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.secondaryColor }} />
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Custom Color Pickers */}
-            <div className="space-y-3 pt-2 border-t border-[#EFE2C9]">
-              <label className="block text-xs font-bold text-[#2B1B2E]">
-                Ajuste Fino de Colores Personalizados
-              </label>
-              
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-[#2B1B2E] font-bold">Color Primario (Lateral/Portada)</span>
-                <input 
-                  type="color" 
-                  value={cvData?.theme?.primaryColor || '#1e3a8a'} 
-                  onChange={(e) => updateTheme('primaryColor', e.target.value)}
-                  className="w-7 h-7 rounded cursor-pointer border-0"
-                />
-              </div>
-
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-[#2B1B2E] font-bold">Color Secundario (Encabezados lateral)</span>
-                <input 
-                  type="color" 
-                  value={cvData?.theme?.secondaryColor || '#172554'} 
-                  onChange={(e) => updateTheme('secondaryColor', e.target.value)}
-                  className="w-7 h-7 rounded cursor-pointer border-0"
-                />
-              </div>
-
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-[#2B1B2E] font-bold">Color de Acento (Barras e Iconos SVG)</span>
-                <input 
-                  type="color" 
-                  value={cvData?.theme?.accentColor || '#d97706'} 
-                  onChange={(e) => updateTheme('accentColor', e.target.value)}
-                  className="w-7 h-7 rounded cursor-pointer border-0"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'candidatos' && (
-          <div className="space-y-4">
-            <AgencyCandidateDashboard onBackToEditor={() => {}} />
+            </PanelSection>
           </div>
         )}
 

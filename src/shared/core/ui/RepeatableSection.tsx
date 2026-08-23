@@ -17,8 +17,9 @@ export function RepeatableSection({
   emptyItem = {},
   itemTitlePrefix = 'Registro',
   getItemName = (item, idx) => item.title || item.degree || item.role || item.course || item.level || item.institution || `Ítem #${idx + 1}`,
+  designKey = undefined,
   renderItem
-}) {
+}: any) {
   const { confirm } = useConfirm();
   const isVisible = cvData?.sectionVisibility?.[sectionKey] !== false;
   const items = Array.isArray(cvData?.[fieldName]) ? cvData[fieldName] : [];
@@ -123,6 +124,24 @@ export function RepeatableSection({
           )}
         </div>
       </div>
+
+      {isVisible && designKey && (
+        <div className="p-2.5 bg-white rounded-xl border border-[#EFE2C9] mb-3 flex items-center justify-between text-xs">
+          <span className="font-bold text-[#2B1B2E]">Estilo de Contenedores ({sectionTitle})</span>
+          <select
+            value={cvData.recordCardDesigns?.[designKey] || 'accent-card'}
+            onChange={(e) => setCvData(prev => ({
+              ...prev,
+              recordCardDesigns: { ...(prev.recordCardDesigns || {}), [designKey]: e.target.value }
+            }))}
+            className="text-xs p-1.5 rounded-lg border border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none cursor-pointer"
+          >
+            <option value="accent-card">🎨 Borde Acento</option>
+            <option value="primary-card">🔷 Borde Primario</option>
+            <option value="neutral-card">⚪ Borde Neutro</option>
+          </select>
+        </div>
+      )}
 
       {/* Item List Rendering */}
       {isVisible && (

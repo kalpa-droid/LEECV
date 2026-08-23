@@ -15,7 +15,7 @@ export const cvClasicoPreset: Preset = {
   ],
   sectionOrder: [
     { sectorRole: 'sidebar', sectionIds: ['contacto', 'datos-personales', 'frase', 'competencias', 'informatica'] },
-    { sectorRole: 'main', sectionIds: ['formacion', 'experiencia', 'cursos'] },
+    { sectorRole: 'main', sectionIds: ['formacion', 'experiencia', 'cursos', 'firma'] },
   ],
   palette: {
     primary: '#ab5ba1',
