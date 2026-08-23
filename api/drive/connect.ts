@@ -1,16 +1,24 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabaseAdmin } from '../_lib/supabaseAdmin.js';
 import { requireAuth } from '../_lib/authMiddleware.js';
+import { errorResponse, successResponse } from '../_lib/apiResponse.js';
+import { requireRateLimit } from '../_lib/rateLimiter.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
+  if (req.method !== 'POST') return errorResponse(res, 405, 'Método no permitido');
 
   const auth = await requireAuth(req, res);
   if (!auth) return;
 
+  const rateOk = await requireRateLimit(req, res, `user:${auth.user.id}:drive-connect`, {
+    maxRequests: 15,
+    windowSeconds: 60
+  });
+  if (!rateOk) return;
+
   try {
     const { refreshToken } = req.body || {};
-    if (!refreshToken) return res.status(400).json({ error: 'Falta refreshToken' });
+    if (!refreshToken) return errorResponse(res, 400, 'Falta refreshToken');
 
     const { error: tokenError } = await supabaseAdmin
       .from('google_drive_tokens')
@@ -26,9 +34,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .update({ drive_connected: true })
       .eq('id', auth.user.id);
 
-    return res.status(200).json({ success: true });
+    return successResponse(res, { success: true });
   } catch (err: any) {
     console.error('Error conectando Google Drive:', err);
-    return res.status(500).json({ error: 'No se pudo guardar la conexión con Drive' });
+    return errorResponse(res, 500, 'No se pudo guardar la conexión con Drive');
   }
 }

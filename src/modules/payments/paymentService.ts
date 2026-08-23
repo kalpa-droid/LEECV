@@ -5,15 +5,18 @@ import { PaymentClaim, PaymentGateway } from '../../types/payments';
  * Registra o solicita un pago con Mercado Pago, Lemon Squeezy o comprobante manual.
  */
 export async function iniciarPagoMercadoPago(plan: 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' | 'pro' | 'enterprise' = 'pro') {
-  const { data: { user } } = await supabase?.auth.getUser() || { data: { user: null } };
-  if (!user?.email) {
+  const { data: { session } } = await supabase?.auth.getSession() || { data: { session: null } };
+  if (!session?.user?.email) {
     throw new Error('Necesitás iniciar sesión con tu correo para pagar con Mercado Pago');
   }
 
   const res = await fetch('/api/create-mp-preference', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId: user.id, email: user.email, plan }),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify({ plan }),
   });
   const data = await res.json();
   if (!res.ok || !data.checkoutUrl) {

@@ -2,24 +2,32 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabaseAdmin } from './_lib/supabaseAdmin.js';
 import { requireAdmin } from './_lib/authMiddleware.js';
 import { applyPayment } from './_lib/applyPayment.js';
+import { errorResponse, successResponse } from './_lib/apiResponse.js';
+import { requireRateLimit } from './_lib/rateLimiter.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
+  if (req.method !== 'POST') return errorResponse(res, 405, 'Método no permitido');
 
   const auth = await requireAdmin(req, res);
   if (!auth) return;
 
+  const rateOk = await requireRateLimit(req, res, `admin:${auth.user.id}:approve-claim`, {
+    maxRequests: 20,
+    windowSeconds: 60
+  });
+  if (!rateOk) return;
+
   try {
     const { claimId, approve } = req.body || {};
-    if (!claimId) return res.status(400).json({ error: 'Falta claimId' });
+    if (!claimId) return errorResponse(res, 400, 'Falta claimId');
 
     const { data: claim, error: claimError } = await supabaseAdmin
       .from('payment_claims')
       .select('*')
       .eq('id', claimId)
       .single();
-    if (claimError || !claim) return res.status(404).json({ error: 'Comprobante no encontrado' });
-    if (claim.status !== 'pendiente') return res.status(400).json({ error: 'Este comprobante ya fue revisado' });
+    if (claimError || !claim) return errorResponse(res, 404, 'Comprobante no encontrado');
+    if (claim.status !== 'pendiente') return errorResponse(res, 400, 'Este comprobante ya fue revisado');
 
     if (approve) {
       await applyPayment(supabaseAdmin, {
@@ -42,9 +50,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       })
       .eq('id', claimId);
 
-    return res.status(200).json({ success: true });
+    return successResponse(res, { success: true });
   } catch (err: any) {
     console.error('Error aprobando comprobante manual:', err);
-    return res.status(500).json({ error: 'Error interno' });
+    return errorResponse(res, 500, 'Error interno');
   }
 }

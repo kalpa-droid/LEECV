@@ -1,10 +1,25 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { requireAuth } from './_lib/authMiddleware.js';
+import { errorResponse, successResponse } from './_lib/apiResponse.js';
+import { requireRateLimit } from './_lib/rateLimiter.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'POST') return errorResponse(res, 405, 'Method not allowed');
 
-  const { userId, email, plan = 'single_pdf' } = req.body || {};
-  if (!userId || !email) return res.status(400).json({ error: 'Falta userId o email' });
+  const auth = await requireAuth(req, res);
+  if (!auth) return;
+
+  const rateOk = await requireRateLimit(req, res, `user:${auth.user.id}:mp-preference`, {
+    maxRequests: 10,
+    windowSeconds: 60
+  });
+  if (!rateOk) return;
+
+  // userId y email salen del token verificado, nunca del body — antes
+  // cualquiera podía pasar el userId de otra persona acá.
+  const userId = auth.user.id;
+  const email = auth.user.email || '';
+  const { plan = 'single_pdf' } = req.body || {};
 
   const PLAN_PRICES_ARS: Record<string, number> = {
     single_pdf: Number(process.env.MP_PRECIO_PDF_ARS || 1200),
@@ -52,9 +67,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const data: any = await response.json();
     if (!response.ok) throw new Error(JSON.stringify(data));
 
-    return res.status(200).json({ checkoutUrl: data.init_point });
+    return successResponse(res, { checkoutUrl: data.init_point });
   } catch (err: any) {
     console.error('Error creando preferencia MP:', err);
-    return res.status(500).json({ error: 'No se pudo crear la preferencia de pago' });
+    return errorResponse(res, 500, 'No se pudo crear la preferencia de pago');
   }
 }

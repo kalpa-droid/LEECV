@@ -1,12 +1,20 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabaseAdmin } from '../_lib/supabaseAdmin.js';
 import { requireAuth, isAdmin } from '../_lib/authMiddleware.js';
+import { errorResponse, successResponse } from '../_lib/apiResponse.js';
+import { requireRateLimit } from '../_lib/rateLimiter.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
+  if (req.method !== 'POST') return errorResponse(res, 405, 'Método no permitido');
 
   const auth = await requireAuth(req, res);
   if (!auth) return;
+
+  const rateOk = await requireRateLimit(req, res, `user:${auth.user.id}:drive-disconnect`, {
+    maxRequests: 15,
+    windowSeconds: 60
+  });
+  if (!rateOk) return;
 
   try {
     let targetUserId = auth.user.id;
@@ -15,7 +23,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (requestedTarget && requestedTarget !== auth.user.id) {
       const requesterIsAdmin = await isAdmin(auth.user.id);
       if (!requesterIsAdmin) {
-        return res.status(403).json({ error: 'Solo un administrador puede desconectar la cuenta de otro usuario' });
+        return errorResponse(res, 403, 'Solo un administrador puede desconectar la cuenta de otro usuario');
       }
       targetUserId = requestedTarget;
     }
@@ -37,9 +45,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       drive_quota_percent: null,
     }).eq('id', targetUserId);
 
-    return res.status(200).json({ success: true });
+    return successResponse(res, { success: true });
   } catch (err: any) {
     console.error('Error desconectando Drive:', err);
-    return res.status(500).json({ error: 'No se pudo desconectar Drive' });
+    return errorResponse(res, 500, 'No se pudo desconectar Drive');
   }
 }

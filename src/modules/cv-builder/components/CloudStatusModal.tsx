@@ -6,6 +6,7 @@ import { getCurrentProfile, signInWithGoogle } from '../../auth/authService';
 import { publishCV } from '../../../shared/core/storage/publishService';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { Modal } from '../../../shared/core/ui/Modal';
+import { supabase } from '../../../shared/core/lib/supabaseClient';
 
 export interface CloudStatusModalProps {
   isOpen: boolean;
@@ -63,7 +64,14 @@ export default function CloudStatusModal({
         if (userProf?.drive_connected) {
           setLoadingDrive(true);
           try {
-            const res = await fetch('/api/drive/get-access-token', { method: 'POST' });
+            const { data: { session } } = await supabase?.auth.getSession() || { data: { session: null } };
+            const res = await fetch('/api/drive/get-access-token', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session?.access_token || ''}`,
+              },
+            });
             if (res.ok) {
               const { accessToken } = await res.json();
               const quota = await checkGoogleDriveQuota(accessToken);
