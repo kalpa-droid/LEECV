@@ -4,9 +4,24 @@ import { PaymentClaim, PaymentGateway } from '../../types/payments';
 /**
  * Registra o solicita un pago con Mercado Pago, Lemon Squeezy o comprobante manual.
  */
-export async function iniciarPagoMercadoPago(plan: 'pro' | 'enterprise' = 'pro') {
+export async function iniciarPagoMercadoPago(plan: 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' | 'pro' | 'enterprise' = 'pro') {
+  const { data: { user } } = await supabase?.auth.getUser() || { data: { user: null } };
+  if (!user?.email) {
+    throw new Error('Necesitás iniciar sesión con tu correo para pagar con Mercado Pago');
+  }
+
+  const res = await fetch('/api/create-mp-preference', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId: user.id, email: user.email, plan }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.checkoutUrl) {
+    throw new Error(data.error || 'No se pudo iniciar el pago con Mercado Pago');
+  }
+
   if (typeof window !== 'undefined') {
-    alert(`Iniciando pago Mercado Pago para plan: ${plan}`);
+    window.location.href = data.checkoutUrl;
   }
 }
 

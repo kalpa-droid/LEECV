@@ -30,7 +30,7 @@ export default function PdfCheckoutModal({
     setIsProcessing(true);
     setErrorMsg('');
     try {
-      await iniciarPagoMercadoPago('pro');
+      await iniciarPagoMercadoPago('single_pdf');
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || 'No se pudo abrir el checkout de Mercado Pago.');
@@ -38,7 +38,7 @@ export default function PdfCheckoutModal({
     }
   };
 
-  const handlePackCheckout = async (_packPlan: string) => {
+  const handlePackCheckout = async (packPlan: 'credits_pack_5' | 'credits_pack_10') => {
     if (!email || !isValidEmail(email)) {
       setErrorMsg('Por favor ingresa un correo electrónico válido para asociar tu compra.');
       return;
@@ -46,7 +46,7 @@ export default function PdfCheckoutModal({
     setIsProcessing(true);
     setErrorMsg('');
     try {
-      await iniciarPagoMercadoPago('pro');
+      await iniciarPagoMercadoPago(packPlan);
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || 'No se pudo abrir el checkout de Mercado Pago.');
