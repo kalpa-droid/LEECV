@@ -136,7 +136,7 @@ export default function CertCropperModal({
           </button>
           <button
             onClick={handleAccept}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[${colorSystem.accent.base}] hover:bg-[#E31555] text-white font-black text-xs shadow-lg transition cursor-pointer`}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[var(--color-accent-base)] hover:bg-[#E31555] text-white font-black text-xs shadow-lg transition cursor-pointer`}
           >
             <Check className="w-4 h-4" /> ACEPTAR
           </button>
@@ -146,7 +146,7 @@ export default function CertCropperModal({
       <div className="flex flex-col items-center space-y-3">
         {/* Record Selector inside Cropper Modal */}
         <div className="w-full">
-          <label className={`block text-xs font-black text-[${colorSystem.accent.base}] mb-1 uppercase tracking-wide flex items-center justify-between`}>
+          <label className={`block text-xs font-black text-[var(--color-accent-base)] mb-1 uppercase tracking-wide flex items-center justify-between`}>
             <span>IDENTIFICA TU CERTIFICADO *</span>
             {isSelectionWarningVisible && <span className="text-red-500 text-[11px] font-bold flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" /> Primero elige el registro</span>}
           </label>

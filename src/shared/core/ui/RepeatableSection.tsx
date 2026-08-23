@@ -105,7 +105,7 @@ export function RepeatableSection({
             onClick={handleToggleVisibility}
             className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
               isVisible
-                ? 'bg-[${colorSystem.secondary.base}] text-white hover:bg-[${colorSystem.secondary.hover}]'
+                ? 'bg-[var(--color-secondary-base)] text-white hover:bg-[var(--color-secondary-hover)]'
                 : 'bg-slate-400 text-white hover:bg-slate-500'
             }`}
           >
@@ -116,7 +116,7 @@ export function RepeatableSection({
             <button
               type="button"
               onClick={handleAddItem}
-              className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-[${colorSystem.accent.base}] hover:bg-[#E31555] text-white shadow-sm transition cursor-pointer"
+              className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-[var(--color-accent-base)] hover:bg-[#E31555] text-white shadow-sm transition cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>{addLabel}</span>
@@ -149,7 +149,7 @@ export function RepeatableSection({
           {items.map((item, idx) => (
             <div key={idx} className="p-3.5 ui-bg-card ui-border ui-text-primary rounded-2xl border-2 shadow-sm space-y-3">
               <div className="flex items-center justify-between border-b pb-1 border-slate-200">
-                <span className="text-xs font-bold text-[${colorSystem.secondary.base}]">
+                <span className="text-xs font-bold text-[var(--color-secondary-base)]">
                   {itemTitlePrefix} #{idx + 1}
                 </span>
                 <div className="flex items-center gap-1">
@@ -165,7 +165,7 @@ export function RepeatableSection({
                   <button
                     type="button"
                     onClick={() => handleDeleteItem(idx)}
-                    className="p-1 text-[${colorSystem.neutral.textPrimary}] font-medium hover:text-red-600 transition cursor-pointer"
+                    className="p-1 text-[var(--color-neutral-text-primary)] font-medium hover:text-red-600 transition cursor-pointer"
                     title="Eliminar registro"
                   >
                     <Trash2 className="w-3.5 h-3.5" />

@@ -214,7 +214,7 @@ export default function SignatureModal({
           <button
             type="button"
             onClick={handleSave}
-            className={`flex items-center gap-2 px-5 py-2 rounded-xl bg-[${colorSystem.accent.base}] hover:bg-[#E31555] text-white font-black text-xs shadow-md transition cursor-pointer`}
+            className={`flex items-center gap-2 px-5 py-2 rounded-xl bg-[var(--color-accent-base)] hover:bg-[#E31555] text-white font-black text-xs shadow-md transition cursor-pointer`}
           >
             <Check className="w-4 h-4" /> Aplicar Firma al CV
           </button>
@@ -251,7 +251,7 @@ export default function SignatureModal({
         {activeTab === 'draw' ? (
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className={`text-xs font-black text-[${colorSystem.accent.base}] uppercase`}>Dibuje su firma en el recuadro</span>
+              <span className={`text-xs font-black text-[var(--color-accent-base)] uppercase`}>Dibuje su firma en el recuadro</span>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-black text-slate-300">Color:</span>
                 <input 
@@ -300,9 +300,9 @@ export default function SignatureModal({
             {!uploadedImageSrc ? (
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className={`w-full h-44 border-2 border-dashed border-[${colorSystem.secondary.base}] bg-slate-950/60 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition group`}
+                className={`w-full h-44 border-2 border-dashed border-[var(--color-secondary-base)] bg-slate-950/60 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition group`}
               >
-                <Upload className={`w-8 h-8 text-[${colorSystem.secondary.base}] mb-2 group-hover:scale-110 transition duration-300`} />
+                <Upload className={`w-8 h-8 text-[var(--color-secondary-base)] mb-2 group-hover:scale-110 transition duration-300`} />
                 <span className="font-black text-xs text-white">Subir imagen de la firma (JPG, PNG, WEBP)</span>
               </div>
             ) : (
@@ -327,7 +327,7 @@ export default function SignatureModal({
                   <button 
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className={`text-[${colorSystem.secondary.base}] font-black hover:underline cursor-pointer`}
+                    className={`text-[var(--color-secondary-base)] font-black hover:underline cursor-pointer`}
                   >
                     Cambiar foto
                   </button>

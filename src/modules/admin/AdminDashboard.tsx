@@ -82,7 +82,7 @@ export default function AdminDashboard() {
   if (!profile) return <AdminLogin onLogin={checkSession} />;
   if (profile.role !== 'admin') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[${colorSystem.neutral.textPrimary}] text-white font-sans">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-neutral-text-primary)] text-white font-sans">
         <p className="font-bold">Tu cuenta no tiene permisos de administrador supremo.</p>
       </div>
     );
@@ -149,11 +149,11 @@ export default function AdminDashboard() {
   const unreadNotifCount = notifications.filter(n => !n.read).length;
 
   return (
-    <div className="min-h-screen bg-[#F7F3E9] text-[${colorSystem.neutral.textPrimary}] font-sans">
+    <div className="min-h-screen bg-[#F7F3E9] text-[var(--color-neutral-text-primary)] font-sans">
       {/* Encabezado */}
-      <header className="bg-[${colorSystem.neutral.textPrimary}] text-white px-6 py-4 flex items-center justify-between shadow-lg border-b border-[${colorSystem.neutral.border}]/20">
+      <header className="bg-[var(--color-neutral-text-primary)] text-white px-6 py-4 flex items-center justify-between shadow-lg border-b border-[var(--color-neutral-border)]/20">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[${colorSystem.accent.base}] flex items-center justify-center font-black text-xs">
+          <div className="w-9 h-9 rounded-xl bg-[var(--color-accent-base)] flex items-center justify-center font-black text-xs">
             LEE
           </div>
           <div>
@@ -163,7 +163,7 @@ export default function AdminDashboard() {
         </div>
         <button
           onClick={async () => { await logout(); setProfile(null); }}
-          className="flex items-center gap-1.5 text-xs font-extrabold bg-[${colorSystem.accent.base}] px-3.5 py-2 rounded-xl hover:bg-[#E31555] transition shadow-md cursor-pointer"
+          className="flex items-center gap-1.5 text-xs font-extrabold bg-[var(--color-accent-base)] px-3.5 py-2 rounded-xl hover:bg-[#E31555] transition shadow-md cursor-pointer"
         >
           <LogOut className="w-3.5 h-3.5" /> Salir
         </button>
@@ -173,43 +173,43 @@ export default function AdminDashboard() {
         
         {/* Métricas Rápidas */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-[${colorSystem.neutral.border}] flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-[${colorSystem.secondary.base}]/10 border border-[${colorSystem.secondary.base}]/30 text-[${colorSystem.secondary.base}] flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-[var(--color-neutral-border)] flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-[var(--color-secondary-base)]/10 border border-[var(--color-secondary-base)]/30 text-[var(--color-secondary-base)] flex items-center justify-center">
               <Users className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-2xl font-black text-[${colorSystem.neutral.textPrimary}]">{stats.totalUsers}</p>
-              <p className="text-xs text-[${colorSystem.neutral.textPrimary}]/60 font-bold">Usuarios Registrados</p>
+              <p className="text-2xl font-black text-[var(--color-neutral-text-primary)]">{stats.totalUsers}</p>
+              <p className="text-xs text-[var(--color-neutral-text-primary)]/60 font-bold">Usuarios Registrados</p>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-[${colorSystem.neutral.border}] flex items-center gap-4">
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-[var(--color-neutral-border)] flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 flex items-center justify-center">
               <Crown className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-2xl font-black text-[${colorSystem.neutral.textPrimary}]">{stats.proUsers || stats.activeSubscriptions || 0}</p>
-              <p className="text-xs text-[${colorSystem.neutral.textPrimary}]/60 font-bold">Licencias Premium Activas</p>
+              <p className="text-2xl font-black text-[var(--color-neutral-text-primary)]">{stats.proUsers || stats.activeSubscriptions || 0}</p>
+              <p className="text-xs text-[var(--color-neutral-text-primary)]/60 font-bold">Licencias Premium Activas</p>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-[${colorSystem.neutral.border}] flex items-center gap-4">
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-[var(--color-neutral-border)] flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-600 flex items-center justify-center">
               <HardDrive className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-2xl font-black text-[${colorSystem.neutral.textPrimary}]">500 MB</p>
-              <p className="text-xs text-[${colorSystem.neutral.textPrimary}]/60 font-bold">Capacidad Base DB Supabase</p>
+              <p className="text-2xl font-black text-[var(--color-neutral-text-primary)]">500 MB</p>
+              <p className="text-xs text-[var(--color-neutral-text-primary)]/60 font-bold">Capacidad Base DB Supabase</p>
             </div>
           </div>
         </div>
 
         {/* Navigation Sub-Tabs */}
-        <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-[${colorSystem.neutral.border}] shadow-sm">
+        <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-[var(--color-neutral-border)] shadow-sm">
           <button
             onClick={() => setAdminTab('users')}
             className={`px-4 py-2 text-xs font-black rounded-xl transition flex items-center gap-2 cursor-pointer ${
-              adminTab === 'users' ? 'bg-[${colorSystem.neutral.textPrimary}] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+              adminTab === 'users' ? 'bg-[var(--color-neutral-text-primary)] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
             <Users className="w-4 h-4" />
@@ -219,17 +219,17 @@ export default function AdminDashboard() {
           <button
             onClick={() => setAdminTab('templates')}
             className={`px-4 py-2 text-xs font-black rounded-xl transition flex items-center gap-2 cursor-pointer ${
-              adminTab === 'templates' ? 'bg-[${colorSystem.neutral.textPrimary}] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+              adminTab === 'templates' ? 'bg-[var(--color-neutral-text-primary)] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
-            <LayoutIcon className="w-4 h-4 text-[${colorSystem.accent.base}]" />
+            <LayoutIcon className="w-4 h-4 text-[var(--color-accent-base)]" />
             <span>Gestión de Plantillas y Presets (Capa 5)</span>
           </button>
 
           <button
             onClick={() => setAdminTab('storage')}
             className={`px-4 py-2 text-xs font-black rounded-xl transition flex items-center gap-2 cursor-pointer ${
-              adminTab === 'storage' ? 'bg-[${colorSystem.neutral.textPrimary}] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+              adminTab === 'storage' ? 'bg-[var(--color-neutral-text-primary)] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
             <HardDrive className="w-4 h-4 text-purple-400" />
@@ -246,21 +246,21 @@ export default function AdminDashboard() {
 
         {/* Notificaciones de Administración con Badge visual de campana */}
         {notifications.length > 0 && (
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-[${colorSystem.neutral.border}] space-y-3">
-            <div className="flex items-center justify-between border-b border-[${colorSystem.neutral.border}] pb-3">
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-[var(--color-neutral-border)] space-y-3">
+            <div className="flex items-center justify-between border-b border-[var(--color-neutral-border)] pb-3">
               <div className="flex items-center gap-2">
                 <div className="relative">
-                  <Bell className="w-5 h-5 text-[${colorSystem.accent.base}]" />
+                  <Bell className="w-5 h-5 text-[var(--color-accent-base)]" />
                   {unreadNotifCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[${colorSystem.accent.base}] text-white font-black text-[9px] rounded-full flex items-center justify-center animate-pulse">
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[var(--color-accent-base)] text-white font-black text-[9px] rounded-full flex items-center justify-center animate-pulse">
                       {unreadNotifCount}
                     </span>
                   )}
                 </div>
-                <h2 className="font-extrabold text-sm text-[${colorSystem.neutral.textPrimary}]">🔔 Eventos & Notificaciones de Pagos / Sistema</h2>
+                <h2 className="font-extrabold text-sm text-[var(--color-neutral-text-primary)]">🔔 Eventos & Notificaciones de Pagos / Sistema</h2>
               </div>
               {unreadNotifCount > 0 && (
-                <span className="px-2.5 py-0.5 rounded-full bg-[${colorSystem.accent.base}] text-white text-xs font-black">
+                <span className="px-2.5 py-0.5 rounded-full bg-[var(--color-accent-base)] text-white text-xs font-black">
                   {unreadNotifCount} nueva{unreadNotifCount > 1 ? 's' : ''}
                 </span>
               )}
@@ -310,7 +310,7 @@ export default function AdminDashboard() {
               {claims.map((claim) => (
                 <div key={claim.id} className="bg-white rounded-xl p-3.5 border border-amber-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
                   <div className="space-y-0.5">
-                    <p className="font-black text-[${colorSystem.neutral.textPrimary}]">{claim.email}</p>
+                    <p className="font-black text-[var(--color-neutral-text-primary)]">{claim.email}</p>
                     <p className="text-[11px] text-slate-600">
                       Método: <strong>{claim.method}</strong> ({claim.amount}) — Comprobante: <code>{claim.proof_id || claim.proofId || 'N/A'}</code>
                     </p>
@@ -336,11 +336,11 @@ export default function AdminDashboard() {
         )}
 
         {/* Estado de Integraciones de Cobro Automático */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-[${colorSystem.neutral.border}] space-y-3">
-          <div className="flex items-center justify-between border-b border-[${colorSystem.neutral.border}] pb-3">
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-[var(--color-neutral-border)] space-y-3">
+          <div className="flex items-center justify-between border-b border-[var(--color-neutral-border)] pb-3">
             <div className="flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-[${colorSystem.secondary.base}]" />
-              <h2 className="font-extrabold text-sm text-[${colorSystem.neutral.textPrimary}]">Pasarelas & Webhooks de Cobro Unificado</h2>
+              <CreditCard className="w-5 h-5 text-[var(--color-secondary-base)]" />
+              <h2 className="font-extrabold text-sm text-[var(--color-neutral-text-primary)]">Pasarelas & Webhooks de Cobro Unificado</h2>
             </div>
             <span className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5" /> Core applyPayment.js Activo
@@ -375,11 +375,11 @@ export default function AdminDashboard() {
         </div>
 
         {/* Tabla de Usuarios y Licencias con Búsqueda y Paginación */}
-        <div className="bg-white rounded-2xl shadow-sm border border-[${colorSystem.neutral.border}] overflow-hidden">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-b border-[${colorSystem.neutral.border}]">
+        <div className="bg-white rounded-2xl shadow-sm border border-[var(--color-neutral-border)] overflow-hidden">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-b border-[var(--color-neutral-border)]">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-[${colorSystem.accent.base}]" />
-              <h2 className="font-extrabold text-sm text-[${colorSystem.neutral.textPrimary}]">Gestión de Licencias y Origen de Pago</h2>
+              <ShieldCheck className="w-5 h-5 text-[var(--color-accent-base)]" />
+              <h2 className="font-extrabold text-sm text-[var(--color-neutral-text-primary)]">Gestión de Licencias y Origen de Pago</h2>
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <div className="relative flex-1 sm:w-64">
@@ -389,17 +389,17 @@ export default function AdminDashboard() {
                   placeholder="Buscar por email..."
                   value={searchQuery}
                   onChange={(e) => { setSearchQuery(e.target.value); setPage(0); }}
-                  className="w-full text-xs pl-9 pr-3 py-2 border border-slate-300 rounded-xl font-medium outline-none focus:border-[${colorSystem.secondary.base}]"
+                  className="w-full text-xs pl-9 pr-3 py-2 border border-slate-300 rounded-xl font-medium outline-none focus:border-[var(--color-secondary-base)]"
                 />
               </div>
-              <button onClick={loadEverything} className="text-[${colorSystem.secondary.base}] p-2 hover:bg-slate-100 rounded-xl transition cursor-pointer">
+              <button onClick={loadEverything} className="text-[var(--color-secondary-base)] p-2 hover:bg-slate-100 rounded-xl transition cursor-pointer">
                 <RefreshCw className={`w-4 h-4 ${loadingData ? 'animate-spin' : ''}`} />
               </button>
             </div>
           </div>
 
           <table className="w-full text-xs">
-            <thead className="bg-[#F7F3E9] text-[${colorSystem.neutral.textPrimary}]/70 text-left font-extrabold">
+            <thead className="bg-[#F7F3E9] text-[var(--color-neutral-text-primary)]/70 text-left font-extrabold">
               <tr>
                 <th className="px-5 py-3">Email de Usuario</th>
                 <th className="px-5 py-3">Alta</th>
@@ -408,11 +408,11 @@ export default function AdminDashboard() {
                 <th className="px-5 py-3 text-right">Acción Manual</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[${colorSystem.neutral.border}]/60">
+            <tbody className="divide-y divide-[var(--color-neutral-border)]/60">
               {users.map((u) => (
                 <tr key={u.id} className="hover:bg-[#F7F3E9]/40 transition">
                   <td className="px-5 py-3 font-bold">{u.email}</td>
-                  <td className="px-5 py-3 font-medium text-[${colorSystem.neutral.textPrimary}]/70">
+                  <td className="px-5 py-3 font-medium text-[var(--color-neutral-text-primary)]/70">
                     {u.created_at ? new Date(u.created_at).toLocaleDateString('es-AR') : '-'}
                   </td>
                   <td className="px-5 py-3 font-medium">
@@ -433,19 +433,19 @@ export default function AdminDashboard() {
                         🏦 Transferencia / Manual
                       </span>
                     ) : (
-                      <span className="text-[${colorSystem.neutral.textPrimary}]/40 font-bold">Gratuito</span>
+                      <span className="text-[var(--color-neutral-text-primary)]/40 font-bold">Gratuito</span>
                     )}
                   </td>
                   <td className="px-5 py-3">
                     {u.premium_activo
-                      ? <span className="inline-flex items-center gap-1 text-[${colorSystem.secondary.base}] font-black bg-[${colorSystem.secondary.base}]/10 px-2.5 py-1 rounded-full text-[11px]">👑 Activa ({u.plan?.toUpperCase() || 'PRO'})</span>
-                      : <span className="text-[${colorSystem.neutral.textPrimary}]/40 font-bold">Gratuito / Estándar</span>}
+                      ? <span className="inline-flex items-center gap-1 text-[var(--color-secondary-base)] font-black bg-[var(--color-secondary-base)]/10 px-2.5 py-1 rounded-full text-[11px]">👑 Activa ({u.plan?.toUpperCase() || 'PRO'})</span>
+                      : <span className="text-[var(--color-neutral-text-primary)]/40 font-bold">Gratuito / Estándar</span>}
                   </td>
                   <td className="px-5 py-3 text-right">
                     {u.premium_activo ? (
                       <button
                         onClick={() => togglePremium(u, 'free')}
-                        className="text-xs font-extrabold px-3 py-1.5 rounded-xl transition shadow-sm cursor-pointer bg-[${colorSystem.accent.base}]/10 text-[${colorSystem.accent.base}] hover:bg-[${colorSystem.accent.base}]/20 border border-[${colorSystem.accent.base}]/30"
+                        className="text-xs font-extrabold px-3 py-1.5 rounded-xl transition shadow-sm cursor-pointer bg-[var(--color-accent-base)]/10 text-[var(--color-accent-base)] hover:bg-[var(--color-accent-base)]/20 border border-[var(--color-accent-base)]/30"
                       >
                         Desactivar Licencia
                       </button>
@@ -453,7 +453,7 @@ export default function AdminDashboard() {
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => togglePremium(u, 'pro')}
-                          className="text-xs font-extrabold px-2.5 py-1.5 rounded-xl transition shadow-sm cursor-pointer bg-[${colorSystem.secondary.base}]/10 text-[${colorSystem.secondary.base}] hover:bg-[${colorSystem.secondary.base}]/20 border border-[${colorSystem.secondary.base}]/30"
+                          className="text-xs font-extrabold px-2.5 py-1.5 rounded-xl transition shadow-sm cursor-pointer bg-[var(--color-secondary-base)]/10 text-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-base)]/20 border border-[var(--color-secondary-base)]/30"
                         >
                           + Pro
                         </button>
@@ -472,7 +472,7 @@ export default function AdminDashboard() {
           </table>
 
           {/* Pagination Controls */}
-          <div className="px-5 py-3 bg-[#F7F3E9]/50 border-t border-[${colorSystem.neutral.border}] flex items-center justify-between text-xs text-slate-600">
+          <div className="px-5 py-3 bg-[#F7F3E9]/50 border-t border-[var(--color-neutral-border)] flex items-center justify-between text-xs text-slate-600">
             <span>
               Mostrando {users.length > 0 ? page * pageSize + 1 : 0} a {Math.min((page + 1) * pageSize, totalCount)} de {totalCount} usuarios
             </span>

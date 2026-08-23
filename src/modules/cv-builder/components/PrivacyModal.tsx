@@ -23,7 +23,7 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
           <span className="text-[10px] text-slate-400">Última actualización: Agosto 2026 — LEECV Inc.</span>
           <button
             onClick={onClose}
-            className={`px-4 py-1.5 bg-[${colorSystem.accent.base}] hover:bg-[#E31555] text-white font-extrabold text-xs rounded-xl transition cursor-pointer`}
+            className={`px-4 py-1.5 bg-[var(--color-accent-base)] hover:bg-[#E31555] text-white font-extrabold text-xs rounded-xl transition cursor-pointer`}
           >
             Entendido
           </button>

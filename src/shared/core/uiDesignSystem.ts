@@ -79,10 +79,10 @@ export const typeScale = {
  */
 export const button = {
   base: 'rounded-[10px] font-medium text-[13px] px-4 py-2.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed',
-  primary: `bg-[${colorSystem.accent.base}] text-white hover:bg-[${colorSystem.accent.hover}] active:scale-[0.98]`,
-  secondary: `bg-white border border-[${colorSystem.neutral.border}] text-[${colorSystem.neutral.textPrimary}] hover:border-[${colorSystem.neutral.borderStrong}] active:scale-[0.98]`,
-  ghost: `bg-transparent text-[${colorSystem.neutral.textSecondary}] hover:text-[${colorSystem.neutral.textPrimary}]`,
-  danger: `bg-[${colorSystem.status.danger.muted}] border border-[${colorSystem.status.danger.base}]/30 text-[${colorSystem.status.danger.text}] hover:bg-[${colorSystem.status.danger.muted}]`,
+  primary: `bg-[var(--color-accent-base)] text-white hover:bg-[var(--color-accent-hover)] active:scale-[0.98]`,
+  secondary: `bg-white border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] hover:border-[var(--color-neutral-border-strong)] active:scale-[0.98]`,
+  ghost: `bg-transparent text-[var(--color-neutral-text-secondary)] hover:text-[var(--color-neutral-text-primary)]`,
+  danger: `bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/30 text-[var(--color-status-danger-text)] hover:bg-[var(--color-status-danger-muted)]`,
 } as const;
 
 /**
@@ -91,8 +91,8 @@ export const button = {
  */
 export const selectableCard = {
   base: 'rounded-[10px] p-3 text-left transition-all cursor-pointer border',
-  selected: `border-2 border-[${colorSystem.accent.base}] bg-[${colorSystem.accent.muted}]`,
-  unselected: `border-[${colorSystem.neutral.border}] bg-white hover:border-[${colorSystem.neutral.borderStrong}]`,
+  selected: `border-2 border-[var(--color-accent-base)] bg-[var(--color-accent-muted)]`,
+  unselected: `border-[var(--color-neutral-border)] bg-white hover:border-[var(--color-neutral-border-strong)]`,
 } as const;
 
 /**
@@ -100,8 +100,8 @@ export const selectableCard = {
  * en todos así el usuario aprende una sola convención.
  */
 export const input = {
-  base: `w-full rounded-[10px] border border-[${colorSystem.neutral.border}] px-3 py-2.5 text-[13px] text-[${colorSystem.neutral.textPrimary}] bg-white outline-none transition-colors placeholder:text-[${colorSystem.neutral.textMuted}]`,
-  focus: `focus:border-[${colorSystem.accent.base}] focus:ring-2 focus:ring-[${colorSystem.accent.muted}]`,
+  base: `w-full rounded-[10px] border border-[var(--color-neutral-border)] px-3 py-2.5 text-[13px] text-[var(--color-neutral-text-primary)] bg-white outline-none transition-colors placeholder:text-[var(--color-neutral-text-muted)]`,
+  focus: `focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[var(--color-accent-muted)]`,
 } as const;
 
 /**
@@ -110,11 +110,11 @@ export const input = {
  */
 export const badge = {
   base: 'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium',
-  accent: `bg-[${colorSystem.accent.muted}] text-[${colorSystem.accent.text}]`,
-  success: `bg-[${colorSystem.status.success.muted}] text-[${colorSystem.status.success.text}]`,
-  warning: `bg-[${colorSystem.status.warning.muted}] text-[${colorSystem.status.warning.text}]`,
-  danger: `bg-[${colorSystem.status.danger.muted}] text-[${colorSystem.status.danger.text}]`,
-  neutral: `bg-[${colorSystem.neutral.surfaceMuted}] text-[${colorSystem.neutral.textSecondary}]`,
+  accent: `bg-[var(--color-accent-muted)] text-[var(--color-accent-text)]`,
+  success: `bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)]`,
+  warning: `bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)]`,
+  danger: `bg-[var(--color-status-danger-muted)] text-[var(--color-status-danger-text)]`,
+  neutral: `bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-secondary)]`,
 } as const;
 
 /**
@@ -123,8 +123,8 @@ export const badge = {
  */
 export const tab = {
   base: 'px-3 py-2 text-[12px] font-medium rounded-[8px] transition-colors cursor-pointer',
-  active: `bg-[${colorSystem.accent.muted}] text-[${colorSystem.accent.text}]`,
-  inactive: `text-[${colorSystem.neutral.textSecondary}] hover:bg-[${colorSystem.neutral.surfaceMuted}]`,
+  active: `bg-[var(--color-accent-muted)] text-[var(--color-accent-text)]`,
+  inactive: `text-[var(--color-neutral-text-secondary)] hover:bg-[var(--color-neutral-surface-muted)]`,
 } as const;
 
 /** Radios de esquina — 3 tamaños estandarizados */

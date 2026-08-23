@@ -96,7 +96,7 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
         </p>
         <button
           onClick={() => { window.location.href = '/'; }}
-          className="px-5 py-2.5 bg-[${colorSystem.accent.base}] hover:bg-[#E31555] text-white font-black text-xs rounded-xl shadow-lg transition"
+          className="px-5 py-2.5 bg-[var(--color-accent-base)] hover:bg-[#E31555] text-white font-black text-xs rounded-xl shadow-lg transition"
         >
           🏠 Ir a la Página Principal de LEECV
         </button>
@@ -107,7 +107,7 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
   return (
     <div className="h-screen bg-[#1F1322] text-white flex flex-col font-sans overflow-hidden">
       {/* Public Header Bar */}
-      <header className="bg-[${colorSystem.neutral.textPrimary}] border-b border-purple-500/30 px-4 py-3 flex items-center justify-between z-30 shadow-lg shrink-0">
+      <header className="bg-[var(--color-neutral-text-primary)] border-b border-purple-500/30 px-4 py-3 flex items-center justify-between z-30 shadow-lg shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-xl">📄</span>
           <div>
@@ -123,7 +123,7 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
 
         <button
           onClick={() => { window.location.href = '/'; }}
-          className="px-3.5 py-1.5 bg-[${colorSystem.accent.base}] hover:bg-[#E31555] text-white text-xs font-black rounded-xl transition cursor-pointer shadow-md"
+          className="px-3.5 py-1.5 bg-[var(--color-accent-base)] hover:bg-[#E31555] text-white text-xs font-black rounded-xl transition cursor-pointer shadow-md"
         >
           ✏️ Crear mi propio CV
         </button>

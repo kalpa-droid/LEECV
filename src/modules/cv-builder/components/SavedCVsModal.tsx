@@ -104,7 +104,7 @@ export default function SavedCVsModal({
         {/* Action Header: 2 Options Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className="p-3 rounded-2xl bg-teal-950/40 hover:bg-teal-900/60 border border-teal-800/40 hover:border-teal-500/60 transition cursor-pointer flex items-center gap-3 group">
-            <div className={`p-2 rounded-xl bg-[${colorSystem.secondary.base}]/20 text-[${colorSystem.secondary.base}] group-hover:scale-110 transition flex-shrink-0`}>
+            <div className={`p-2 rounded-xl bg-[var(--color-secondary-base)]/20 text-[var(--color-secondary-base)] group-hover:scale-110 transition flex-shrink-0`}>
               <Download className="w-4 h-4" />
             </div>
             <div className="min-w-0 flex-1">

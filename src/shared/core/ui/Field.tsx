@@ -24,7 +24,7 @@ export function Field({
   maxLength,
   ...props
 }: FieldProps) {
-  const baseInputStyle = `w-full rounded-[10px] border px-3 py-2 text-[12px] ui-bg-card ui-text-primary ui-border outline-none transition-all placeholder:text-[${colorSystem.neutral.textMuted}] shadow-sm focus:border-[${colorSystem.accent.base}] focus:ring-2 focus:ring-[${colorSystem.accent.muted}]`;
+  const baseInputStyle = `w-full rounded-[10px] border px-3 py-2 text-[12px] ui-bg-card ui-text-primary ui-border outline-none transition-all placeholder:text-[var(--color-neutral-text-muted)] shadow-sm focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[var(--color-accent-muted)]`;
 
   const effectiveMaxLength = maxLength ?? (Component === 'textarea' ? 2000 : 250);
 

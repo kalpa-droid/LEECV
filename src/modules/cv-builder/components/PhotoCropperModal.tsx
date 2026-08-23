@@ -124,9 +124,9 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
         {!imageSrc ? (
           <div 
             onClick={() => fileInputRef.current?.click()}
-            className={`w-full h-64 border-2 border-dashed border-[${colorSystem.neutral.borderStrong}] rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[${colorSystem.secondary.base}] hover:bg-teal-50/50 transition group`}
+            className={`w-full h-64 border-2 border-dashed border-[var(--color-neutral-border-strong)] rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[var(--color-secondary-base)] hover:bg-teal-50/50 transition group`}
           >
-            <div className={`w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center text-[${colorSystem.secondary.base}] group-hover:scale-110 transition duration-300 mb-3`}>
+            <div className={`w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center text-[var(--color-secondary-base)] group-hover:scale-110 transition duration-300 mb-3`}>
               <Upload className="w-8 h-8" />
             </div>
             <span className="font-semibold text-slate-700 text-xs">Haz clic para subir una foto</span>
@@ -135,7 +135,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
         ) : (
           <div className="w-full flex flex-col items-center">
             {/* Canvas viewport container */}
-            <div className={`relative border-4 border-[${colorSystem.secondary.base}] rounded-xl overflow-hidden shadow-lg bg-slate-950 cursor-grab active:cursor-grabbing`}>
+            <div className={`relative border-4 border-[var(--color-secondary-base)] rounded-xl overflow-hidden shadow-lg bg-slate-950 cursor-grab active:cursor-grabbing`}>
               <canvas 
                 ref={canvasRef}
                 width={280}
@@ -150,7 +150,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
             </div>
 
             {/* Controls bar */}
-            <div className={`w-full mt-5 bg-slate-50 p-4 rounded-xl space-y-3 border border-[${colorSystem.neutral.border}]`}>
+            <div className={`w-full mt-5 bg-slate-50 p-4 rounded-xl space-y-3 border border-[var(--color-neutral-border)]`}>
               <div className="flex items-center gap-3">
                 <ZoomOut className="w-4 h-4 text-slate-500" />
                 <input 
@@ -160,7 +160,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
                   step="0.05"
                   value={zoom}
                   onChange={(e) => setZoom(parseFloat(e.target.value))}
-                  className={`w-full accent-[${colorSystem.secondary.base}] cursor-pointer`}
+                  className={`w-full accent-[var(--color-secondary-base)] cursor-pointer`}
                 />
                 <ZoomIn className="w-4 h-4 text-slate-500" />
                 <span className="text-xs font-semibold w-10 text-right">{Math.round(zoom * 100)}%</span>
@@ -178,7 +178,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
                 <button 
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className={`text-xs text-[${colorSystem.secondary.base}] font-semibold hover:underline cursor-pointer`}
+                  className={`text-xs text-[var(--color-secondary-base)] font-semibold hover:underline cursor-pointer`}
                 >
                   Cambiar foto
                 </button>

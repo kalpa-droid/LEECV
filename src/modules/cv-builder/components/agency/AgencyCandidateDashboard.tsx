@@ -41,7 +41,7 @@ export default function AgencyCandidateDashboard({ onBackToEditor }) {
   );
 
   return (
-    <div className="min-h-screen bg-[${colorSystem.neutral.textPrimary}] text-white p-6 md:p-10 font-sans">
+    <div className="min-h-screen bg-[var(--color-neutral-text-primary)] text-white p-6 md:p-10 font-sans">
       <div className="max-w-6xl mx-auto space-y-6">
         
         {/* Top Bar */}

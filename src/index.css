@@ -49,6 +49,47 @@
   --ui-preview-bg: #1F1322;
 }
 
+/* ============================================================ */
+/* TOKENS DE colorSystem (src/shared/core/uiDesignSystem.ts), EXPUESTOS
+   COMO VARIABLES CSS REALES.
+   Motivo: Tailwind genera las clases `bg-[...]` mirando el TEXTO FUENTE
+   en build-time, no lo que el JS arma en runtime. Un string como
+   `bg-[${colorSystem.accent.base}]` nunca genera CSS real porque el
+   valor no existe como texto literal en el archivo — Tailwind no lo ve.
+   `bg-[var(--color-accent-base)]` sí es texto literal, así que SÍ
+   genera una regla real; el valor final lo resuelve el navegador vía
+   la variable. No cambiar estos valores acá sin cambiarlos también en
+   uiDesignSystem.ts — son la misma fuente de verdad en dos formatos. */
+:root {
+  --color-accent-base: #FF2E63;
+  --color-accent-hover: #E0184C;
+  --color-accent-muted: #FFE8ED;
+  --color-accent-text: #B3123F;
+
+  --color-secondary-base: #00A8A0;
+  --color-secondary-hover: #008780;
+  --color-secondary-muted: #E0F5F3;
+  --color-secondary-text: #00655F;
+
+  --color-neutral-text-primary: #2B1B2E;
+  --color-neutral-text-secondary: #6B5B6E;
+  --color-neutral-text-muted: #9B8B9E;
+  --color-neutral-border: #EFE2C9;
+  --color-neutral-border-strong: #D9C9A0;
+  --color-neutral-surface: #FFFFFF;
+  --color-neutral-surface-muted: #FAF7F0;
+
+  --color-status-success-base: #1D9E75;
+  --color-status-success-muted: #E1F5EE;
+  --color-status-success-text: #0F6E56;
+  --color-status-warning-base: #BA7517;
+  --color-status-warning-muted: #FAEEDA;
+  --color-status-warning-text: #854F0B;
+  --color-status-danger-base: #D14D4D;
+  --color-status-danger-muted: #FCEBEB;
+  --color-status-danger-text: #A32D2D;
+}
+
 [data-ui-theme="dark"] {
   --ui-bg-root: #090D16;
   --ui-bg-panel: #0F172A;

@@ -89,11 +89,11 @@ export function StorageDriveTab() {
   };
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-[${colorSystem.neutral.border}] space-y-6">
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-[var(--color-neutral-border)] space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[${colorSystem.neutral.border}] pb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[var(--color-neutral-border)] pb-4">
         <div>
-          <h2 className="text-base font-black text-[${colorSystem.neutral.textPrimary}] flex items-center gap-2">
+          <h2 className="text-base font-black text-[var(--color-neutral-text-primary)] flex items-center gap-2">
             <HardDrive className="w-5 h-5 text-purple-600" />
             <span>Almacenamiento, Servidores & Google Drive</span>
           </h2>
@@ -165,7 +165,7 @@ export function StorageDriveTab() {
       </div>
 
       {/* Diagnostic & Maintenance Tools */}
-      <div className="space-y-3 border-t border-[${colorSystem.neutral.border}] pt-4">
+      <div className="space-y-3 border-t border-[var(--color-neutral-border)] pt-4">
         <h3 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider">
           Herramientas de Mantenimiento y Prueba de Almacenamiento:
         </h3>
@@ -180,7 +180,7 @@ export function StorageDriveTab() {
               <div className="font-extrabold text-xs text-teal-900">Prueba de Lectura/Escritura</div>
               <div className="text-[11px] text-teal-700">Verifica la velocidad y respuesta del almacenamiento local</div>
             </div>
-            <ShieldCheck className="w-5 h-5 text-[${colorSystem.secondary.base}] flex-shrink-0" />
+            <ShieldCheck className="w-5 h-5 text-[var(--color-secondary-base)] flex-shrink-0" />
           </button>
 
           <button

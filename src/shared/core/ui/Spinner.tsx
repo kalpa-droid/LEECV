@@ -15,9 +15,9 @@ export function Spinner({ size = 'md', className = '', label = null }) {
   return (
     <div className={`flex items-center justify-center gap-2 ${className}`}>
       <div
-        className={`${sizeMap[size] || sizeMap.md} border-[${colorSystem.accent.base}] border-t-transparent rounded-full animate-spin flex-shrink-0`}
+        className={`${sizeMap[size] || sizeMap.md} border-[var(--color-accent-base)] border-t-transparent rounded-full animate-spin flex-shrink-0`}
       />
-      {label && <span className="text-xs font-bold text-[${colorSystem.neutral.textPrimary}]">{label}</span>}
+      {label && <span className="text-xs font-bold text-[var(--color-neutral-text-primary)]">{label}</span>}
     </div>
   );
 }

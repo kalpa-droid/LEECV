@@ -26,13 +26,13 @@ export function Button({
   const baseStyles = 'font-black rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95';
 
   const variantStyles: Record<string, string> = {
-    primary: 'bg-[${colorSystem.secondary.base}] text-white hover:bg-[${colorSystem.secondary.hover}] border border-[${colorSystem.secondary.hover}]',
-    secondary: 'bg-[${colorSystem.accent.base}] text-white hover:bg-[#E31555] border border-[#E31555]',
-    accent: 'bg-[#FFC93C] text-[${colorSystem.neutral.textPrimary}] hover:bg-[#F0AE00] border border-[#F0AE00]',
-    dark: 'bg-[${colorSystem.neutral.textPrimary}] text-white hover:bg-[#1C121E]',
+    primary: 'bg-[var(--color-secondary-base)] text-white hover:bg-[var(--color-secondary-hover)] border border-[var(--color-secondary-hover)]',
+    secondary: 'bg-[var(--color-accent-base)] text-white hover:bg-[#E31555] border border-[#E31555]',
+    accent: 'bg-[#FFC93C] text-[var(--color-neutral-text-primary)] hover:bg-[#F0AE00] border border-[#F0AE00]',
+    dark: 'bg-[var(--color-neutral-text-primary)] text-white hover:bg-[#1C121E]',
     danger: 'bg-red-600 text-white hover:bg-red-700 border border-red-700',
-    outline: 'border-2 border-[${colorSystem.neutral.border}] bg-white text-[${colorSystem.neutral.textPrimary}] hover:bg-[#FFFDF7]',
-    ghost: 'bg-transparent text-[${colorSystem.neutral.textPrimary}] hover:bg-slate-100 shadow-none'
+    outline: 'border-2 border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] hover:bg-[#FFFDF7]',
+    ghost: 'bg-transparent text-[var(--color-neutral-text-primary)] hover:bg-slate-100 shadow-none'
   };
 
   const sizeStyles: Record<string, string> = {
