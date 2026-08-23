@@ -520,16 +520,17 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
 
     if (rec.kind === 'education') {
       const designId = customRecordCardDesigns?.education || preset.recordCardDesigns?.education || 'accent-card';
-      const yearBadge = f.year
-        ? (/año/i.test(String(f.year)) ? String(f.year) : `AÑO ${String(f.year)}`)
-        : undefined;
+      const layout = buildStructuredRecordLayout(f);
+
       return (
         <CardObjectRenderer
           key={rec.id}
           designId={designId}
-          title={String(f.degree || '')}
-          subtitle={String(f.institution || '')}
-          dateOrBadge={yearBadge}
+          title={layout.header || String(f.degree || '')}
+          subtitle={layout.subheader || String(f.institution || '')}
+          badges={layout.badges}
+          extras={layout.extras}
+          description={layout.block || undefined}
           rolesColor={rolesColor}
           typography={preset.typography}
           sectorRole={isSidebarSector ? 'sidebar' : 'main'}
@@ -539,14 +540,17 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
 
     if (rec.kind === 'experience') {
       const designId = customRecordCardDesigns?.experience || preset.recordCardDesigns?.experience || 'primary-card';
+      const layout = buildStructuredRecordLayout(f);
+
       return (
         <CardObjectRenderer
           key={rec.id}
           designId={designId}
-          title={String(f.role || '')}
-          subtitle={String(f.institution || '')}
-          dateOrBadge={f.year ? String(f.year) : undefined}
-          description={f.details ? String(f.details) : undefined}
+          title={layout.header || String(f.role || '')}
+          subtitle={layout.subheader || String(f.institution || '')}
+          badges={layout.badges}
+          extras={layout.extras}
+          description={layout.block || (f.details ? String(f.details) : undefined)}
           rolesColor={rolesColor}
           typography={preset.typography}
           sectorRole={isSidebarSector ? 'sidebar' : 'main'}
@@ -555,15 +559,17 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     }
 
     if (rec.kind === 'course') {
+      const layout = buildStructuredRecordLayout(f);
+
       if (isSidebarSector || rec.targetSectorRole === 'sidebar') {
         return (
           <View key={rec.id} style={{ marginBottom: 6 }} wrap={false}>
             <Text style={[styles.sidebarItemText, styles.sidebarItemBold]}>
-              {String(f.title || f.name || '')}
+              {layout.header || String(f.title || f.name || '')}
             </Text>
-            {f.institution ? (
+            {layout.subheader ? (
               <Text style={[styles.sidebarItemText, { color: 'rgba(255, 255, 255, 0.85)' }]}>
-                {String(f.institution)}
+                {layout.subheader}
               </Text>
             ) : null}
           </View>
@@ -574,9 +580,11 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
         <CardObjectRenderer
           key={rec.id}
           designId={designId}
-          title={String(f.title || f.name || '')}
-          subtitle={String(f.institution || '')}
-          dateOrBadge={f.hours ? String(f.hours) : undefined}
+          title={layout.header || String(f.title || f.name || '')}
+          subtitle={layout.subheader || String(f.institution || '')}
+          badges={layout.badges}
+          extras={layout.extras}
+          description={layout.block || undefined}
           rolesColor={rolesColor}
           typography={preset.typography}
           sectorRole="main"

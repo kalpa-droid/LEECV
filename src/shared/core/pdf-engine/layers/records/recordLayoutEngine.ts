@@ -49,6 +49,26 @@ export function buildStructuredRecordLayout(
     ? allowedFields
     : Object.keys(FIELD_CATALOG);
 
+  // Normalización de claves alternativas (ej: degree -> tituloOGrado, role -> cargo, etc.)
+  const normalizedRecord: Record<string, any> = {};
+  for (const [key, rawVal] of Object.entries(record)) {
+    if (rawVal === undefined || rawVal === null) continue;
+    const strVal = String(rawVal).trim();
+    if (!strVal) continue;
+
+    let canonicalKey = key;
+    if (key === 'degree' || key === 'title' || key === 'name' || key === 'course') canonicalKey = 'tituloOGrado';
+    else if (key === 'role') canonicalKey = 'cargo';
+    else if (key === 'institution' || key === 'company') canonicalKey = 'institucion';
+    else if (key === 'year') canonicalKey = 'periodo';
+    else if (key === 'hours') canonicalKey = 'cargaHoraria';
+    else if (key === 'details' || key === 'description') canonicalKey = 'descripcion';
+
+    if (!normalizedRecord[canonicalKey]) {
+      normalizedRecord[canonicalKey] = strVal;
+    }
+  }
+
   let header: string | null = null;
   let subheader: string | null = null;
   const badges: RecordBadgeItem[] = [];
@@ -56,8 +76,15 @@ export function buildStructuredRecordLayout(
   let block: string | null = null;
   let hasData = false;
 
-  for (const fieldId of fieldKeys) {
-    const rawVal = record[fieldId];
+  // Procesamos tanto los campos universales como cualquier campo personalizado
+  const allKeysToProcess = Array.from(new Set([
+    ...(allowedFields && allowedFields.length > 0 ? allowedFields : []),
+    ...Object.keys(FIELD_CATALOG),
+    ...Object.keys(normalizedRecord)
+  ]));
+
+  for (const fieldId of allKeysToProcess) {
+    const rawVal = normalizedRecord[fieldId];
     if (rawVal === undefined || rawVal === null) continue;
     const val = String(rawVal).trim();
     if (!val) continue;
@@ -66,7 +93,6 @@ export function buildStructuredRecordLayout(
     const def: FieldDefinition | undefined = FIELD_CATALOG[fieldId];
 
     if (!def) {
-      // Fallback genérico para campos no catalogados explicitamente
       if (!header) header = val;
       else extras.push({ id: fieldId, label: fieldId, value: val, type: 'text' });
       continue;
@@ -76,10 +102,10 @@ export function buildStructuredRecordLayout(
       case 'title':
         if (!header) {
           header = val;
+        } else if (!subheader) {
+          subheader = val;
         } else {
-          // Si ya hay header, lo pasamos a subheader o extra
-          if (!subheader) subheader = val;
-          else extras.push({ id: fieldId, label: def.label, value: val, type: def.type });
+          extras.push({ id: fieldId, label: def.label, value: val, type: def.type });
         }
         break;
 
