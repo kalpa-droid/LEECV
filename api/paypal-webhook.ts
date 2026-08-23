@@ -1,11 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from './_lib/supabaseAdmin.js';
 import { applyPayment } from './_lib/applyPayment.js';
-
-const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-);
 
 const PAYPAL_API = process.env.PAYPAL_ENV === 'sandbox'
   ? 'https://api-m.sandbox.paypal.com'
