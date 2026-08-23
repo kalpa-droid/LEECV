@@ -146,6 +146,23 @@ export const tab = {
 /** Radios de esquina — 3 tamaños estandarizados */
 export const radius = { control: '10px', card: '12px', modal: '16px' } as const;
 
+/** Escala formal de espaciado */
+export const spacing = {
+  xs: '4px',
+  sm: '8px',
+  md: '12px',
+  lg: '16px',
+  xl: '24px',
+  xxl: '32px',
+} as const;
+
+/** Escala formal de sombras */
+export const shadow = {
+  card: '0 1px 3px rgba(43,27,46,0.08)',
+  elevated: '0 4px 12px rgba(43,27,46,0.12)',
+  floating: '0 8px 24px rgba(43,27,46,0.16)',
+} as const;
+
 // ============================================================
 // 4. CAPAS AVANZADAS DEL MOTOR: ANIMACIÓN, ELEVACIÓN, Z-INDEX Y ACCESIBILIDAD
 // ============================================================

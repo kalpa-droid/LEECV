@@ -1,6 +1,6 @@
 /**
  * check-module-boundaries.js
- * Verifica fronteras de módulos (src/modules/) y gobernanza de UI/colores (src/modules/ y src/shared/).
+ * Verifica fronteras de módulos (src/modules/) y gobernanza de UI/colores/diálogos/léxico (src/modules/ y src/shared/).
  * Bloquea el build (exit 1) si existen violaciones de arquitectura.
  */
 
@@ -34,6 +34,18 @@ const EXEMPT_UI_GOVERNANCE = [
   'CardSheetDocument.tsx'
 ];
 
+// Archivos exentos de la regla de confirm/alert nativo (sus propias definiciones de núcleo)
+const EXEMPT_NATIVE_DIALOGS = [
+  'ConfirmDialog.tsx',
+  'Toast.tsx'
+];
+
+// Términos prohibidos para el chequeo de léxico de interfaz
+const FORBIDDEN_LEXICON = [
+  { term: 'Sintonía fina', canonical: 'Ajuste manual' },
+  { term: 'Personalizado avanzado', canonical: 'Ajuste manual' },
+];
+
 function checkFile(fullPath, currentModule = null) {
   const file = path.basename(fullPath);
   const content = fs.readFileSync(fullPath, 'utf8');
@@ -54,8 +66,8 @@ function checkFile(fullPath, currentModule = null) {
   }
 
   // 2. Gobernanza de UI/Colores (aplica a /modules/ y /shared/)
-  const isExempt = EXEMPT_UI_GOVERNANCE.some(ex => file.endsWith(ex));
-  if (!isExempt) {
+  const isExemptColors = EXEMPT_UI_GOVERNANCE.some(ex => file.endsWith(ex));
+  if (!isExemptColors) {
     // Detecta patrones de interpolación JS rota en Tailwind como bg-[${...}]
     const brokenInterpolations = content.match(/\b(bg|text|border|ring)-\[\$\{[^}]+\}\]/g);
     if (brokenInterpolations) {
@@ -76,6 +88,31 @@ function checkFile(fullPath, currentModule = null) {
       console.error(`🎨 UI Governance Error: [${file}] usa hex arbitrario en className: '${tailwindArbitraryHexMatches.join(', ')}'. Usar variables CSS var(--color-*) o tokens del sistema.`);
       uiGovernanceWarnings++;
     }
+  }
+
+  // 3. Gobernanza de Diálogos Nativos (bloquea window.confirm y alert sueltos)
+  const isExemptDialogs = EXEMPT_NATIVE_DIALOGS.some(ex => file.endsWith(ex));
+  if (!isExemptDialogs) {
+    if (/\bwindow\.confirm\s*\(/.test(content)) {
+      console.error(`🚨 UI Governance Error: [${file}] usa 'window.confirm()' nativo. Usar el hook useConfirm().`);
+      uiGovernanceWarnings++;
+    }
+    if (/\balert\s*\(/.test(content)) {
+      console.error(`🚨 UI Governance Error: [${file}] usa 'alert()' nativo. Usar las funciones showInfo/showError del sistema Toast.`);
+      uiGovernanceWarnings++;
+    }
+  }
+
+  // 4. Gobernanza Léxica de Texto de Interfaz (revisa cadenas visibles en JSX y props textuales)
+  if (file.endsWith('.tsx') || file.endsWith('.jsx')) {
+    FORBIDDEN_LEXICON.forEach(({ term, canonical }) => {
+      // Revisa sólo texto en JSX entre > e < o dentro de props de texto como title="", label="", placeholder=""
+      const jsxTextRegex = new RegExp(`>([^<]*\\b${term}\\b[^<]*)<|\\b(title|label|placeholder)=["'][^"']*\\b${term}\\b[^"']*["']`, 'gi');
+      if (jsxTextRegex.test(content)) {
+        console.error(`💬 Lexical Governance Error: [${file}] contiene el término prohibido '${term}'. Usar '${canonical}' según uiTextGlossary.ts.`);
+        uiGovernanceWarnings++;
+      }
+    });
   }
 }
 
@@ -109,4 +146,3 @@ if (violationsCount === 0 && uiGovernanceWarnings === 0) {
   console.error(`❌ Check completed with errors: ${violationsCount} boundary violations, ${uiGovernanceWarnings} UI governance errors.`);
   process.exit(1);
 }
-
