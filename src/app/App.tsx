@@ -247,6 +247,8 @@ function AppContent() {
 
       <main className="flex-1 flex overflow-hidden relative min-h-0">
         <CanvaIconDock 
+          cvData={cvData}
+          setCvData={setCvData}
           activeTab={activeTab} 
           setActiveTab={(tab) => {
             setActiveTab(tab);

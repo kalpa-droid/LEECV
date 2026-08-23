@@ -30,6 +30,7 @@ import { PanelSection } from './editor/PanelSection';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { RepeatableSection } from '../../../shared/core/ui/RepeatableSection';
+import { RecordFormSection } from '../../../shared/core/ui/RecordFormSection';
 import { Field } from '../../../shared/core/ui/Field';
 import AgencyCandidateDashboard from './agency/AgencyCandidateDashboard';
 
@@ -37,6 +38,7 @@ export default function EditorPanel({
   cvData, 
   setCvData, 
   activeTab,
+  setActiveTab,
   onOpenPhotoCropper, 
   onOpenSignature
 }: any) {
@@ -351,46 +353,16 @@ export default function EditorPanel({
         {/* TAB 2: FORMACIÓN ACADÉMICA */}
         {/* ========================================================================= */}
         {activeTab === 'formacion' && (
-          <RepeatableSection
+          <RecordFormSection
             sectionKey="formacion"
             sectionTitle="Formación Académica"
+            kindKey="education"
             addLabel="Agregar Formación"
             cvData={cvData}
             setCvData={setCvData}
             fieldName="education"
-            designKey="education"
-            emptyItem={{ level: '', institution: '', year: '', degree: '' }}
             itemTitlePrefix="Estudio / Formación"
-            renderItem={(item, idx, updateField) => (
-              <>
-                <Field
-                  label="Nivel Alcanzado (Ej: SECUNDARIO COMPLETO)"
-                  value={item.level || ''}
-                  onChange={(e) => updateField('level', e.target.value)}
-                  placeholder="Ej: SECUNDARIO COMPLETO"
-                />
-                <Field
-                  label="Nombre de la Institución Educativa / Colegio"
-                  value={item.institution || ''}
-                  onChange={(e) => updateField('institution', e.target.value)}
-                  placeholder="Ej: Colegio Secundario N° 5095 General Manuel Belgrano"
-                />
-                <div className="grid grid-cols-2 gap-2">
-                  <Field
-                    label="Año de Egresado"
-                    value={item.year || ''}
-                    onChange={(e) => updateField('year', e.target.value)}
-                    placeholder="Ej: 2000"
-                  />
-                  <Field
-                    label="Título Obtenido"
-                    value={item.degree || ''}
-                    onChange={(e) => updateField('degree', e.target.value)}
-                    placeholder="Ej: Bachiller Pedagógico"
-                  />
-                </div>
-              </>
-            )}
+            helpText="Formación Académica refiere al nivel educativo alcanzado (Secundario, Terciario, Universitario, Posgrado)."
           />
         )}
 
@@ -398,38 +370,16 @@ export default function EditorPanel({
         {/* TAB 3: TÍTULOS PROFESIONALES */}
         {/* ========================================================================= */}
         {activeTab === 'profesion' && (
-          <RepeatableSection
+          <RecordFormSection
             sectionKey="profesion"
             sectionTitle="Títulos Profesionales"
+            kindKey="profession"
             addLabel="Agregar Título"
             cvData={cvData}
             setCvData={setCvData}
             fieldName="profession"
-            designKey="profession"
-            emptyItem={{ institution: '', year: '', degree: '' }}
             itemTitlePrefix="Título Profesional"
-            renderItem={(item, idx, updateField) => (
-              <>
-                <Field
-                  label="Nombre del Título Obtenido / Carrera"
-                  value={item.degree || ''}
-                  onChange={(e) => updateField('degree', e.target.value)}
-                  placeholder="Ej: Profesora de Educación Secundaria en Lengua y Literatura"
-                />
-                <Field
-                  label="Institución Educativa, Universidad o Ministerio Emisor"
-                  value={item.institution || ''}
-                  onChange={(e) => updateField('institution', e.target.value)}
-                  placeholder="Ej: Instituto de Educación Superior Jorge Luis Borges"
-                />
-                <Field
-                  label="Año de Emisión / Titulación"
-                  value={item.year || ''}
-                  onChange={(e) => updateField('year', e.target.value)}
-                  placeholder="Ej: 2016"
-                />
-              </>
-            )}
+            helpText="Títulos Profesionales incluye carreras o títulos habilitantes para ejercer. Puedes añadir el campo opcional Resolución N° / Disposición legal que avala tu titulación."
           />
         )}
 
@@ -437,48 +387,16 @@ export default function EditorPanel({
         {/* TAB 4: EXPERIENCIA LABORAL */}
         {/* ========================================================================= */}
         {activeTab === 'experiencia' && (
-          <RepeatableSection
+          <RecordFormSection
             sectionKey="experiencia"
             sectionTitle="Experiencia Laboral"
+            kindKey="experience"
             addLabel="Agregar Experiencia"
             cvData={cvData}
             setCvData={setCvData}
             fieldName="experience"
-            designKey="experience"
-            emptyItem={{ institution: '', role: '', year: '', details: '' }}
             itemTitlePrefix="Experiencia Laboral"
-            renderItem={(item, idx, updateField) => (
-              <>
-                <Field
-                  label="Puesto / Cargo Desempeñado"
-                  value={item.role || ''}
-                  onChange={(e) => updateField('role', e.target.value)}
-                  placeholder="Ej: Profesora de Lengua y Literatura en Pluricurso Rural"
-                />
-                <Field
-                  label="Escuela / Institución o Empresa"
-                  value={item.institution || ''}
-                  onChange={(e) => updateField('institution', e.target.value)}
-                  placeholder="Ej: Colegio Secundario N° 5170"
-                />
-                <div className="grid grid-cols-3 gap-2">
-                  <Field
-                    label="Año / Periodo"
-                    value={item.year || ''}
-                    onChange={(e) => updateField('year', e.target.value)}
-                    placeholder="Ej: 2025"
-                  />
-                  <div className="col-span-2">
-                    <Field
-                      label="Detalles / Tareas"
-                      value={item.details || ''}
-                      onChange={(e) => updateField('details', e.target.value)}
-                      placeholder="Ej: Coordinación y acompañamiento tutorial"
-                    />
-                  </div>
-                </div>
-              </>
-            )}
+            helpText="Experiencia Laboral detalla puestos desempeñados, instituciones o empresas y tareas clave realizadas."
           />
         )}
 
@@ -486,52 +404,16 @@ export default function EditorPanel({
         {/* TAB 5: CURSOS & CAPACITACIONES */}
         {/* ========================================================================= */}
         {activeTab === 'cursos' && (
-          <RepeatableSection
+          <RecordFormSection
             sectionKey="cursos"
             sectionTitle="Cursos y Capacitaciones"
+            kindKey="course"
             addLabel="Agregar Curso"
             cvData={cvData}
             setCvData={setCvData}
             fieldName="coursesAndCertificates"
-            designKey="course"
-            emptyItem={{ year: '', institution: '', title: '', hours: '', details: '' }}
             itemTitlePrefix="Curso / Capacitación"
-            renderItem={(item, idx, updateField) => (
-              <>
-                <Field
-                  label="Nombre Completo del Curso, Taller o Simposio"
-                  value={item.title || ''}
-                  onChange={(e) => updateField('title', e.target.value)}
-                  placeholder="Ej: Seminario Taller de Actualización Pedagógica en Lengua"
-                />
-                <Field
-                  label="Institución Organizadora / Ministerio"
-                  value={item.institution || ''}
-                  onChange={(e) => updateField('institution', e.target.value)}
-                  placeholder="Ej: Ministerio de Educación, Cultura, Ciencia y Tecnología"
-                />
-                <div className="grid grid-cols-3 gap-2">
-                  <Field
-                    label="Año"
-                    value={item.year || ''}
-                    onChange={(e) => updateField('year', e.target.value)}
-                    placeholder="Ej: 2023"
-                  />
-                  <Field
-                    label="Carga Horaria"
-                    value={item.hours || ''}
-                    onChange={(e) => updateField('hours', e.target.value)}
-                    placeholder="Ej: 60 hs"
-                  />
-                  <Field
-                    label="Resolución / N°"
-                    value={item.details || ''}
-                    onChange={(e) => updateField('details', e.target.value)}
-                    placeholder="Ej: Res. N° 124/23"
-                  />
-                </div>
-              </>
-            )}
+            helpText="Cursos y Capacitaciones incluye talleres, simposios, diplomaturas y certificaciones de formación continua."
           />
         )}
 
@@ -1080,6 +962,130 @@ export default function EditorPanel({
             )}
           </div>
         )}
+
+        {/* ========================================================================= */}
+        {/* VISTA 1 A 1 DE SECCIÓN PERSONALIZADA SELECCIONADA DESDE EL DOCK */}
+        {/* ========================================================================= */}
+        {activeTab.startsWith('custom_') && (() => {
+          const csIdx = (cvData.customSections || []).findIndex((s: any) => s.id === activeTab);
+          const cs = cvData.customSections?.[csIdx];
+          if (!cs) return null;
+
+          return (
+            <div className="space-y-4">
+              <div className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] space-y-3">
+                <div className="flex items-center justify-between border-b pb-2 border-[#EFE2C9]">
+                  <h3 className="text-xs font-black uppercase text-[#FF2E63] flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-[#00A8A0]" /> {cs.titleText}
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      confirm({
+                        title: `¿Eliminar sección '${cs.titleText}'?`,
+                        message: 'Se eliminarán esta sección y todos sus registros.',
+                        confirmText: 'Eliminar Sección',
+                        onConfirm: () => {
+                          setCvData((prev: any) => ({
+                            ...prev,
+                            customSections: (prev.customSections || []).filter((s: any) => s.id !== cs.id)
+                          }));
+                          if (typeof setActiveTab === 'function') {
+                            setActiveTab('personales');
+                          }
+                          showSuccess(`Sección '${cs.titleText}' eliminada.`);
+                        }
+                      });
+                    }}
+                    className="flex items-center gap-1 text-xs font-bold text-red-600 hover:text-red-800 transition cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Eliminar Sección
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {(cs.records || []).map((rec: any, rIdx: number) => (
+                    <div key={rIdx} className="p-3 bg-slate-50 rounded-xl border border-[#EFE2C9] space-y-2">
+                      <div className="flex items-center justify-between border-b pb-1">
+                        <span className="text-[11px] font-bold text-[#00A8A0]">Registro #{rIdx + 1}</span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCvData((prev: any) => {
+                                const updatedCustom = [...(prev.customSections || [])];
+                                const currentRecs = [...(updatedCustom[csIdx].records || [])];
+                                currentRecs.splice(rIdx + 1, 0, { ...currentRecs[rIdx] });
+                                updatedCustom[csIdx] = { ...updatedCustom[csIdx], records: currentRecs };
+                                return { ...prev, customSections: updatedCustom };
+                              });
+                            }}
+                            className="px-2 py-0.5 rounded bg-purple-50 text-purple-700 text-[10px] font-bold cursor-pointer"
+                          >
+                            Duplicar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCvData((prev: any) => {
+                                const updatedCustom = [...(prev.customSections || [])];
+                                const currentRecs = (updatedCustom[csIdx].records || []).filter((_: any, i: number) => i !== rIdx);
+                                updatedCustom[csIdx] = { ...updatedCustom[csIdx], records: currentRecs };
+                                return { ...prev, customSections: updatedCustom };
+                              });
+                            }}
+                            className="p-1 text-red-600 font-bold cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {(cs.fields || ['tituloOGrado', 'institucion']).map((fieldId: string) => {
+                        const fieldDef = FIELD_CATALOG[fieldId];
+                        if (!fieldDef) return null;
+                        return (
+                          <Field
+                            key={fieldId}
+                            label={fieldDef.label}
+                            value={rec[fieldId] || ''}
+                            onChange={(e: any) => {
+                              const val = e.target.value;
+                              setCvData((prev: any) => {
+                                const updatedCustom = [...(prev.customSections || [])];
+                                const currentRecs = [...(updatedCustom[csIdx].records || [])];
+                                currentRecs[rIdx] = { ...currentRecs[rIdx], [fieldId]: val };
+                                updatedCustom[csIdx] = { ...updatedCustom[csIdx], records: currentRecs };
+                                return { ...prev, customSections: updatedCustom };
+                              });
+                            }}
+                            placeholder={fieldDef.placeholder}
+                            isTextArea={fieldDef.type === 'textarea'}
+                          />
+                        );
+                      })}
+                    </div>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCvData((prev: any) => {
+                        const updatedCustom = [...(prev.customSections || [])];
+                        const currentRecs = [...(updatedCustom[csIdx].records || []), {}];
+                        updatedCustom[csIdx] = { ...updatedCustom[csIdx], records: currentRecs };
+                        return { ...prev, customSections: updatedCustom };
+                      });
+                    }}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-black bg-[#FF2E63] text-white shadow transition cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Agregar Registro a {cs.titleText}
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ========================================================================= */}
         {/* TAB: NUEVA SECCIÓN PERSONALIZADA */}

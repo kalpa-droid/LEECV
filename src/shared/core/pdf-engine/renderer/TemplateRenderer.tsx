@@ -697,6 +697,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                 {sec.titleText && sec.id !== 'firma' && (
                   <SectionBannerCard
                     titleText={sec.titleText}
+                    iconId={sec.id}
                     designId={isSidebar ? undefined : (customRecordCardDesigns?.education || preset.recordCardDesigns?.education)}
                     rolesColor={rolesColor}
                     typography={preset.typography}
