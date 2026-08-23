@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabaseClient';
 import { uploadToGoogleDrive } from './googleDriveBackend';
 import { apiClient } from '../utils/apiClient';
 import { isProOrEnterprise } from '../entitlements/useEntitlements';
+import { navigation } from '../utils/navigation';
 
 export interface PublishResult {
   success: boolean;
@@ -143,7 +144,7 @@ export async function publishCV(cvData: any): Promise<PublishResult> {
     console.error('Error registrando puntero de publicación:', dbErr);
   }
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://leecv.vercel.app';
+  const origin = navigation.getOrigin();
   const publicUrl = `${origin}/c/${slug}`;
 
   return {

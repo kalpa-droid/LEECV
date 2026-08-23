@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabaseClient';
 import { dal } from './dataAccessLayer';
 import { apiClient } from '../utils/apiClient';
+import { navigation } from '../utils/navigation';
 
 /**
  * Backend real de almacenamiento en Google Drive del usuario (Nivel 1/2, Pro).
@@ -111,7 +112,7 @@ export async function publicarCVEnDrive(cvData: any, slug: string): Promise<{ su
       }
     }
 
-    const publicUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/c/${slug}`;
+    const publicUrl = `${navigation.getOrigin()}/c/${slug}`;
     return {
       success: true,
       slug,

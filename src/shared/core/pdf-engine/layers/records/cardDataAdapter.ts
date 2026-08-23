@@ -1,6 +1,7 @@
 import { ContentSection, ContentRecord } from './recordTypes';
 import { generateVCardQRCodeDataUrl } from './vcardGenerator';
 import { getPreset } from '../presets/presetRegistry';
+import { navigation } from '../../../utils/navigation';
 
 export interface BusinessCardData {
   fullName: string;
@@ -29,7 +30,7 @@ export async function buildCardDataFromCV(cvData: any): Promise<BusinessCardData
   const fullName = `${personalInfo.surname || ''} ${personalInfo.givenNames || ''}`.trim() || 'Juan Pérez';
   
   const qrMode = cvData?.qrMode || 'vcard';
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://leecv.vercel.app';
+  const origin = navigation.getOrigin();
   const publicProfileUrl = `${origin}/?publicCv=${cvData?.id || 'cv_ejemplo_estandar'}`;
   const activePreset = getPreset(cvData?.activePresetId || 'purple-monica');
 

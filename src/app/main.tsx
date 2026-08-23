@@ -2,11 +2,12 @@ import React, { StrictMode, lazy, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import '../index.css';
 import { ErrorBoundary } from '../shared/core/ui/ErrorBoundary';
+import { navigation } from '../shared/core/utils/navigation';
 
 const App = lazy(() => import('./App'));
 const AdminDashboard = lazy(() => import('../modules/admin/AdminDashboard'));
 
-const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+const isAdminRoute = navigation.getPathname().startsWith('/admin');
 const RootComponent = isAdminRoute ? AdminDashboard : App;
 
 const rootElement = document.getElementById('root');

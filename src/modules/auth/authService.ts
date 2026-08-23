@@ -1,4 +1,5 @@
 import { supabase } from '../../shared/core/lib/supabaseClient';
+import { navigation } from '../../shared/core/utils/navigation';
 import { apiClient } from '../../shared/core/utils/apiClient';
 import { UserProfile } from '../../types/user';
 import { Session } from '@supabase/supabase-js';
@@ -19,9 +20,7 @@ export async function login(email: string, password: string) {
  */
 export async function signInWithGoogle() {
   if (!supabase) throw new Error('Supabase no está configurado');
-  const redirectUrl = typeof window !== 'undefined' && window.location.origin
-    ? window.location.origin
-    : 'https://leecv.vercel.app';
+  const redirectUrl = navigation.getOrigin();
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',

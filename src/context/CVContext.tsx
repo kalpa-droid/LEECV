@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 import { blankCVTemplate } from '../data/initialCVData';
 import { saveCV as saveCVStorage } from '../modules/cv-builder/services/cvStorageService';
 import { sanitizeCvData } from '../shared/core/utils/cvDataSchema';
+import { navigation } from '../shared/core/utils/navigation';
 import { CVData } from '../types/cv';
 
 interface CVContextType {
@@ -25,10 +26,10 @@ const CVContext = createContext<CVContextType | null>(null);
 
 export function CVProvider({ children }: { children: ReactNode }) {
   const [cvData, setCvDataState] = useState<CVData>(() => {
-    if (typeof window !== 'undefined' && window.location.search.includes('clear')) {
+    if (navigation.getQueryParam('clear') !== null) {
       try { 
         localStorage.clear(); 
-        window.history.replaceState({}, document.title, window.location.pathname);
+        navigation.cleanQueryParams();
       } catch {}
     }
     const saved = typeof window !== 'undefined' ? localStorage.getItem('cv_premium_data') : null;

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, Suspense, lazy } from 'react';
-import { supabase } from '../../../shared/core/lib/supabaseClient';
+import { dal } from '../../../shared/core/storage/dataAccessLayer';
+import { navigation } from '../../../shared/core/utils/navigation';
 import { Spinner } from '../../../shared/core/ui/Spinner';
 import { apiClient } from '../../../shared/core/utils/apiClient';
 
@@ -20,9 +21,11 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
         setLoading(true);
         let slug = slugInput;
 
-        if (!slug && typeof window !== 'undefined') {
-          const params = new URLSearchParams(window.location.search);
-          slug = params.get('c') || params.get('publicCv') || params.get('share') || window.location.pathname.replace('/c/', '').replace('/cv/', '');
+        if (!slug) {
+          slug = navigation.getQueryParam('c') || 
+                 navigation.getQueryParam('publicCv') || 
+                 navigation.getQueryParam('share') || 
+                 navigation.getPathname().replace('/c/', '').replace('/cv/', '');
         }
 
         if (!slug) {
@@ -31,14 +34,10 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
           return;
         }
 
-        // 1. Buscar el drive_file_id en Supabase mediante el slug o ID público
-        const { data: record, error: dbErr } = await supabase
-          .from('published_cvs')
-          .select('drive_file_id')
-          .or(`slug.eq.${slug},id.eq.${slug}`)
-          .single();
+        // 1. Buscar el drive_file_id en Supabase mediante el slug o ID público (vía DAL)
+        const record = await dal.publishedCvs.getBySlugOrId(slug);
 
-        if (dbErr || !record?.drive_file_id) {
+        if (!record?.drive_file_id) {
           setError('El currículum solicitado no existe o no está publicado en la web.');
           setLoading(false);
           return;
@@ -88,7 +87,7 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
           {error || 'No fue posible cargar la versión pública de este currículum.'}
         </p>
         <button
-          onClick={() => { window.location.href = '/'; }}
+          onClick={() => { navigation.goTo('/'); }}
           className="px-5 py-2.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white font-black text-xs rounded-xl shadow-lg transition"
         >
           🏠 Ir a la Página Principal de LEECV
@@ -115,7 +114,7 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
         </div>
 
         <button
-          onClick={() => { window.location.href = '/'; }}
+          onClick={() => { navigation.goTo('/'); }}
           className="px-3.5 py-1.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white text-xs font-black rounded-xl transition cursor-pointer shadow-md"
         >
           ✏️ Crear mi propio CV

@@ -1,5 +1,6 @@
 import React, { Component, ReactNode } from 'react';
 import { colorSystem, button, typeScale } from '../uiDesignSystem';
+import { navigation } from '../utils/navigation';
 
 interface ErrorBoundaryProps {
   children?: ReactNode;
@@ -42,7 +43,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       localStorage.clear();
       sessionStorage.clear();
     } catch {}
-    window.location.href = window.location.origin + window.location.pathname + '?clear=' + Date.now();
+    navigation.goTo(`${navigation.getOrigin()}${navigation.getPathname()}?clear=${Date.now()}`);
   };
 
   render() {
