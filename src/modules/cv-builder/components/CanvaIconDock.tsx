@@ -13,7 +13,8 @@ import {
   Columns3,
   Sparkles,
   X,
-  Menu
+  Menu,
+  Plus
 } from 'lucide-react';
 
 export const styleTabs = [
@@ -31,7 +32,8 @@ export const contentTabs = [
   { id: 'informatica', label: 'Informática', icon: Laptop },
   { id: 'ecologia', label: 'Proyectos', icon: Leaf },
   { id: 'firma', label: 'Firma', icon: PenTool },
-  { id: 'certificados', label: 'Certificados', icon: Award }
+  { id: 'certificados', label: 'Certificados', icon: Award },
+  { id: 'nueva_seccion', label: '➕ Nueva', icon: Plus }
 ];
 
 export default function CanvaIconDock({ 

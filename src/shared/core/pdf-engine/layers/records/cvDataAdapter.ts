@@ -202,6 +202,27 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
     });
   }
 
+  // Secciones Personalizadas Dinámicas (customSections)
+  if (Array.isArray(cvData.customSections)) {
+    cvData.customSections.forEach((cs: any) => {
+      if (Array.isArray(cs.records) && cs.records.length > 0) {
+        sections.push({
+          id: cs.id,
+          titleText: (cs.titleText || 'NUEVA SECCIÓN').toUpperCase(),
+          records: cs.records.map((r: any, idx: number) => ({
+            id: `rec-${cs.id}-${idx}`,
+            kind: 'custom',
+            targetSectorRole: 'main',
+            fields: {
+              ...r,
+              _fields: cs.fields || ['tituloOGrado', 'institucion']
+            }
+          }))
+        });
+      }
+    });
+  }
+
   // Firma Digital (Main)
   const titlePrefix = personalInfo?.titlePrefix ? `${personalInfo.titlePrefix} ` : '';
   const autoSignerName = `${titlePrefix}${personalInfo?.givenNames || ''} ${personalInfo?.surname || ''}`.trim() || personalInfo?.fullName || '';

@@ -44,14 +44,27 @@ export const SECTION_CATALOG: SectionCatalogEntry[] = [
   { id: 'firma', label: 'Firma Digital', tabId: 'firma', dataType: 'single_text', assignableToColumns: false },
 ];
 
-export function getSection(id: string): SectionCatalogEntry | undefined {
-  return SECTION_CATALOG.find(s => s.id === id);
+export function getFullSectionCatalog(customSections: any[] = []): SectionCatalogEntry[] {
+  const customEntries: SectionCatalogEntry[] = (customSections || []).map((cs: any) => ({
+    id: cs.id,
+    label: cs.titleText || 'Nueva Sección',
+    tabId: 'custom',
+    dataType: 'record_list',
+    coverDisplayFields: cs.fields || ['tituloOGrado'],
+    assignableToColumns: true
+  }));
+
+  return [...SECTION_CATALOG, ...customEntries];
 }
 
-export function getColumnAssignableSections(): SectionCatalogEntry[] {
-  return SECTION_CATALOG.filter(s => s.assignableToColumns);
+export function getSection(id: string, customSections: any[] = []): SectionCatalogEntry | undefined {
+  return getFullSectionCatalog(customSections).find(s => s.id === id);
 }
 
-export function getRecordListSections(): SectionCatalogEntry[] {
-  return SECTION_CATALOG.filter(s => s.dataType === 'record_list');
+export function getColumnAssignableSections(customSections: any[] = []): SectionCatalogEntry[] {
+  return getFullSectionCatalog(customSections).filter(s => s.assignableToColumns);
+}
+
+export function getRecordListSections(customSections: any[] = []): SectionCatalogEntry[] {
+  return getFullSectionCatalog(customSections).filter(s => s.dataType === 'record_list');
 }

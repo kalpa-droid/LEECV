@@ -38,6 +38,14 @@ export function sanitizeCvData(rawCvData: any = {}) {
     coursesAndCertificates: Array.isArray(data.coursesAndCertificates) ? data.coursesAndCertificates : [],
     informatics: Array.isArray(data.informatics) ? data.informatics : [],
     certificatesScanned: Array.isArray(data.certificatesScanned) ? data.certificatesScanned : [],
+    customSections: Array.isArray(data.customSections)
+      ? data.customSections.map((cs: any) => ({
+          id: cs.id || `custom_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+          titleText: cs.titleText || 'NUEVA SECCIÓN',
+          fields: Array.isArray(cs.fields) ? cs.fields : ['tituloOGrado', 'institucion'],
+          records: Array.isArray(cs.records) ? cs.records : []
+        }))
+      : [],
 
     ecology: {
       rural: Array.isArray(data.ecology?.rural) ? data.ecology.rural : [],
