@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { themePresets, fontOptions } from '../../../data/themePresets';
 import { panelPresets } from '../../../data/panelPresets';
+import { getColumnAssignableSections } from '../../../shared/core/sectionRegistry';
 import { PAGE_SIZES } from '../../../shared/core/pdf-engine/pageSizes';
 import { getSavedCVsList, loadCVById, deleteCVById, saveCV } from '../services/cvStorageService';
 import CertCropperModal from './CertCropperModal';
@@ -1421,17 +1422,7 @@ export default function EditorPanel({
               </p>
 
               <div className="space-y-2">
-                {[
-                  { id: 'contacto', label: 'Contacto & Redes' },
-                  { id: 'personales', label: 'Datos Personales' },
-                  { id: 'formacion', label: 'Formación Académica' },
-                  { id: 'profesion', label: 'Títulos Profesionales' },
-                  { id: 'experiencia', label: 'Experiencia Laboral' },
-                  { id: 'cursos', label: 'Cursos & Capacitaciones' },
-                  { id: 'informatica', label: 'Informática & TICs' },
-                  { id: 'competencias', label: 'Competencias Clave' },
-                  { id: 'ecologia', label: 'Proyectos & Comunidad' }
-                ].map((sec) => {
+                {getColumnAssignableSections().map((sec) => {
                   const assignments = cvData.layout?.columnAssignments || {};
                   let currentVal = 'primaria';
                   if (typeof assignments[sec.id] === 'string') {
