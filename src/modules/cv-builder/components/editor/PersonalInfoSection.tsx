@@ -1,63 +1,32 @@
 import React from 'react';
-import { User, Camera, Plus, Trash2 } from 'lucide-react';
+import { User, Camera, QrCode } from 'lucide-react';
 import { useCVContext } from '../../../../context/CVContext';
-import { useConfirm } from '../../../../shared/core/ui/ConfirmDialog';
-import { useToast } from '../../../../shared/core/ui/Toast';
+import { Field } from '../../../../shared/core/ui/Field';
+import { PanelSection } from './PanelSection';
+import { colorSystem, typeScale, button } from '../../../../shared/core/uiDesignSystem';
 
-export default function PersonalInfoSection({ onOpenPhotoCropper, registeredItems = [] }) {
+export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhotoCropper: () => void; registeredItems?: any[] }) {
   const { cvData, setCvData, updatePersonalInfo, toggleSectionVisibility } = useCVContext();
-  const { confirm } = useConfirm();
-  const { showWarning } = useToast();
 
   if (!cvData) return null;
 
   const isVisible = cvData.sectionVisibility?.personales !== false;
 
-  const updateRoles = (index, value) => {
-    setCvData((prev) => {
-      const newRoles = [...(prev.roles || [])];
-      newRoles[index] = value;
-      return { ...prev, roles: newRoles };
-    });
-  };
-
-  const addRole = () => {
-    setCvData((prev) => ({
-      ...prev,
-      roles: [...(prev.roles || []), ""]
-    }));
-  };
-
-  const removeRole = (index) => {
-    const roleName = cvData.roles?.[index] || `Rol #${index + 1}`;
-    confirm({
-      title: '¿Eliminar título / rol?',
-      message: `¿Estás seguro de que deseas eliminar "${roleName}"?`,
-      confirmText: 'Eliminar',
-      onConfirm: () => {
-        setCvData((prev) => ({
-          ...prev,
-          roles: (prev.roles || []).filter((_, i) => i !== index)
-        }));
-      }
-    });
-  };
-
   return (
     <div className="space-y-4">
-      {/* Compact Section Header Toggle */}
-      <div className={`flex items-center justify-between p-2.5 rounded-xl border transition ${
+      {/* Header con Toggle */}
+      <div className={`flex items-center justify-between p-2.5 rounded-[12px] border transition ${
         isVisible 
           ? 'bg-white border-[#EFE2C9] text-[#2B1B2E] shadow-sm' 
           : 'bg-slate-200 border-slate-300 text-slate-500 opacity-75'
       }`}>
-        <span className="text-xs font-black uppercase tracking-wide">
+        <span className={`${typeScale.sectionTitle} uppercase tracking-wide`} style={{ color: colorSystem.neutral.textPrimary }}>
           Datos Personales & Foto
         </span>
         <button
           type="button"
           onClick={() => toggleSectionVisibility('personales')}
-          className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
+          className={`px-3 py-1 rounded-full text-[11px] font-medium transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
             isVisible
               ? 'bg-[#00A8A0] text-white hover:bg-[#00877F]'
               : 'bg-slate-400 text-white hover:bg-slate-500'
@@ -68,277 +37,223 @@ export default function PersonalInfoSection({ onOpenPhotoCropper, registeredItem
       </div>
 
       {isVisible && (
-        <>
-          <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] border-b pb-2 border-[#EFE2C9]">
-            Información de Identificación y Contacto
-          </h3>
+        <div className="space-y-4">
+          <PanelSection icon={<User className="w-4 h-4 text-[#00A8A0]" />} title="Información de Contacto">
+            <div className="space-y-3 pt-1">
+              {/* Tarjeta Foto de Perfil */}
+              <div
+                className="flex items-center gap-4 p-3.5 rounded-[12px] border"
+                style={{
+                  backgroundColor: colorSystem.secondary.muted,
+                  borderColor: colorSystem.neutral.border
+                }}
+              >
+                <div className="w-14 h-18 rounded-[8px] overflow-hidden bg-white flex items-center justify-center border border-[#D9C9A0] shadow-sm">
+                  {cvData.personalInfo?.profilePhoto ? (
+                    <img src={cvData.personalInfo.profilePhoto} alt="Perfil" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-6 h-6" style={{ color: colorSystem.secondary.text }} />
+                  )}
+                </div>
+                <div className="flex-1 space-y-1">
+                  <p className={typeScale.fieldLabel} style={{ color: colorSystem.neutral.textPrimary }}>
+                    Foto de Perfil
+                  </p>
+                  <p className={typeScale.helper} style={{ color: colorSystem.neutral.textSecondary }}>
+                    Se muestra en la portada y en el encabezado principal del CV.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={onOpenPhotoCropper}
+                    className={`${button.secondary} flex items-center gap-1.5 text-[11px] py-1.5 px-3 mt-1`}
+                  >
+                    <Camera className="w-3.5 h-3.5" /> Cortar / Cambiar Foto
+                  </button>
+                </div>
+              </div>
 
-      {/* Profile Photo Quick Trigger */}
-      <div className="flex items-center gap-4 bg-purple-50 p-3.5 rounded-xl border border-purple-200">
-        <div className="w-14 h-18 rounded-lg overflow-hidden bg-[#EFE2C9] flex items-center justify-center border border-purple-400">
-          {cvData.personalInfo?.profilePhoto ? (
-            <img src={cvData.personalInfo.profilePhoto} alt="Perfil" className="w-full h-full object-cover" />
-          ) : (
-            <User className="w-6 h-6 text-purple-400" />
-          )}
+              {/* Abreviaturas / Título Honorífico */}
+              <Field
+                id="titlePrefix"
+                label="Abreviaturas / Título Honorífico (ej: Lic. / Prof. / Dr. / MP)"
+                value={cvData.personalInfo?.titlePrefix || ''}
+                onChange={(e: any) => {
+                  const prefix = e.target.value;
+                  const given = cvData.personalInfo?.givenNames || '';
+                  const sur = cvData.personalInfo?.surname || '';
+                  const computed = `${prefix ? prefix + ' ' : ''}${given} ${sur}`.trim();
+                  updatePersonalInfo('titlePrefix', prefix);
+                  updatePersonalInfo('fullName', computed);
+                }}
+                placeholder="Ej: Lic. / Prof. / Dr. / Ing. / MP 1402"
+              />
+
+              {/* Frase de Presentación */}
+              <Field
+                id="quote"
+                as="textarea"
+                rows={3}
+                label="Frase de Presentación / Perfil Profesional"
+                value={cvData.personalInfo?.quote || ''}
+                onChange={(e: any) => updatePersonalInfo('quote', e.target.value)}
+                placeholder="Ej: Mi experiencia personal y profesional me permite desarrollar eficientemente..."
+              />
+
+              <div className="grid grid-cols-2 gap-3">
+                <Field
+                  id="surname"
+                  label="Apellidos"
+                  value={cvData.personalInfo?.surname || ''}
+                  onChange={(e: any) => {
+                    const sur = e.target.value;
+                    const prefix = cvData.personalInfo?.titlePrefix || '';
+                    const given = cvData.personalInfo?.givenNames || '';
+                    const computed = `${prefix ? prefix + ' ' : ''}${given} ${sur}`.trim();
+                    updatePersonalInfo('surname', sur);
+                    updatePersonalInfo('fullName', computed);
+                  }}
+                  placeholder="Ej: BURGOS"
+                />
+                <Field
+                  id="givenNames"
+                  label="Nombres Completos"
+                  value={cvData.personalInfo?.givenNames || ''}
+                  onChange={(e: any) => {
+                    const given = e.target.value;
+                    const prefix = cvData.personalInfo?.titlePrefix || '';
+                    const sur = cvData.personalInfo?.surname || '';
+                    const computed = `${prefix ? prefix + ' ' : ''}${given} ${sur}`.trim();
+                    updatePersonalInfo('givenNames', given);
+                    updatePersonalInfo('fullName', computed);
+                  }}
+                  placeholder="Ej: Mónica Daniela"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Field
+                  id="dni"
+                  label="DNI"
+                  value={cvData.personalInfo?.dni || ''}
+                  onChange={(e: any) => updatePersonalInfo('dni', e.target.value)}
+                  placeholder="Ej: 29334206"
+                />
+                <Field
+                  id="cuit"
+                  label="CUIT / CUIL"
+                  value={cvData.personalInfo?.cuit || ''}
+                  onChange={(e: any) => updatePersonalInfo('cuit', e.target.value)}
+                  placeholder="Ej: 27-29334206-2"
+                />
+              </div>
+
+              <Field
+                id="birthDate"
+                label="Fecha de Nacimiento"
+                value={cvData.personalInfo?.birthDate || ''}
+                onChange={(e: any) => updatePersonalInfo('birthDate', e.target.value)}
+                placeholder="Ej: 4 de febrero de 1982"
+              />
+
+              <Field
+                id="address"
+                label="Domicilio y Barrio"
+                value={cvData.personalInfo?.address || ''}
+                onChange={(e: any) => updatePersonalInfo('address', e.target.value)}
+                placeholder="Ej: Manzana 751A Casa 11 - Ciudad Valdivia"
+              />
+
+              <Field
+                id="phone"
+                label="Teléfono Celular / WhatsApp"
+                value={cvData.personalInfo?.phone || ''}
+                onChange={(e: any) => updatePersonalInfo('phone', e.target.value)}
+                placeholder="Ej: 387-155121515"
+              />
+
+              <Field
+                id="email"
+                label="Correo Electrónico"
+                value={cvData.personalInfo?.email || ''}
+                onChange={(e: any) => updatePersonalInfo('email', e.target.value)}
+                placeholder="Ej: Monicadanielaburgos@yahoo.com.ar"
+              />
+
+              <Field
+                id="website"
+                label="Sitio Web Personal / Portafolio"
+                value={cvData.personalInfo?.website || ''}
+                onChange={(e: any) => updatePersonalInfo('website', e.target.value)}
+                placeholder="Ej: https://mi-portafolio.com"
+              />
+
+              <div className="grid grid-cols-2 gap-3">
+                <Field
+                  id="nacionalidad"
+                  label="Nacionalidad"
+                  value={cvData.personalInfo?.nacionalidad || ''}
+                  onChange={(e: any) => updatePersonalInfo('nacionalidad', e.target.value)}
+                  placeholder="Ej: Argentina"
+                />
+                <Field
+                  id="estadoCivil"
+                  label="Estado Civil"
+                  value={cvData.personalInfo?.estadoCivil || ''}
+                  onChange={(e: any) => updatePersonalInfo('estadoCivil', e.target.value)}
+                  placeholder="Ej: Soltero/a, Casado/a"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Field
+                  id="disponibilidad"
+                  label="Disponibilidad (Viaje / Horarios)"
+                  value={cvData.personalInfo?.disponibilidad || ''}
+                  onChange={(e: any) => updatePersonalInfo('disponibilidad', e.target.value)}
+                  placeholder="Ej: Inmediata / Relocalización"
+                />
+                <Field
+                  id="licenciaConducir"
+                  label="Licencia de Conducir"
+                  value={cvData.personalInfo?.licenciaConducir || ''}
+                  onChange={(e: any) => updatePersonalInfo('licenciaConducir', e.target.value)}
+                  placeholder="Ej: Clase B1 (Autos particulares)"
+                />
+              </div>
+
+              {/* Configuración del Código QR Smart */}
+              <div
+                className="p-3.5 rounded-[12px] border space-y-2"
+                style={{
+                  backgroundColor: colorSystem.secondary.muted,
+                  borderColor: colorSystem.neutral.border
+                }}
+              >
+                <label className={`${typeScale.fieldLabel} flex items-center justify-between`} style={{ color: colorSystem.neutral.textPrimary }}>
+                  <span className="flex items-center gap-1.5">
+                    <QrCode className="w-3.5 h-3.5" style={{ color: colorSystem.secondary.base }} /> Configuración del Código QR
+                  </span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-white border border-[#D9C9A0]" style={{ color: colorSystem.secondary.text }}>
+                    Smart QR
+                  </span>
+                </label>
+                <select
+                  value={cvData.qrMode || 'vcard'}
+                  onChange={(e) => setCvData((prev: any) => ({ ...prev, qrMode: e.target.value }))}
+                  className={`w-full rounded-[10px] border px-3 py-2 text-[12px] text-[${colorSystem.neutral.textPrimary}] bg-white outline-none cursor-pointer border-[${colorSystem.neutral.border}]`}
+                >
+                  <option value="vcard">📱 vCard: Guardar contacto en agenda del celular</option>
+                  <option value="public_link">🌐 Perfil Web: Abrir mi CV público en línea</option>
+                </select>
+                <p className={typeScale.helper} style={{ color: colorSystem.neutral.textSecondary }}>
+                  {cvData.qrMode === 'public_link'
+                    ? 'Al escanear el QR desde un celular, abrirá tu página web de CV público sin descargas.'
+                    : 'Al escanear el QR desde un celular, agregará tu contacto directamente a la agenda.'}
+                </p>
+              </div>
+            </div>
+          </PanelSection>
         </div>
-        <div className="flex-1">
-          <p className="text-xs font-bold text-[#2B1B2E]">Foto de Perfil</p>
-          <p className="text-[11px] text-[#2B1B2E] font-medium mb-2">Se muestra únicamente en la portada y en la hoja 1.</p>
-          <button
-            onClick={onOpenPhotoCropper}
-            className="flex items-center gap-1 px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg transition cursor-pointer"
-          >
-            <Camera className="w-3 h-3" /> Cortar / Cambiar Foto
-          </button>
-        </div>
-      </div>
-
-      {/* Abreviaturas / Título Honorífico */}
-      <div>
-        <label className="block text-xs font-bold text-[#FF2E63] mb-1">
-          Abreviaturas / Título (ej: Lic. / Prof. / Dr. / MP)
-        </label>
-        <input 
-          type="text"
-          value={cvData.personalInfo?.titlePrefix || ''}
-          onChange={(e) => {
-            const prefix = e.target.value;
-            const given = cvData.personalInfo?.givenNames || '';
-            const sur = cvData.personalInfo?.surname || '';
-            const computed = `${prefix ? prefix + ' ' : ''}${given} ${sur}`.trim();
-            updatePersonalInfo('titlePrefix', prefix);
-            updatePersonalInfo('fullName', computed);
-          }}
-          placeholder="Ej: Lic. / Prof. / Dr. / Ing. / MP 1402"
-          className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-        />
-      </div>
-
-      <div>
-        <label className="block text-xs font-bold text-[#FF2E63] mb-1">
-          Frase de Presentación / Perfil Profesional (Aparece en Encabezado y Portada)
-        </label>
-        <textarea 
-          rows={3}
-          value={cvData.personalInfo?.quote || ''}
-          onChange={(e) => updatePersonalInfo('quote', e.target.value)}
-          placeholder="Ej: Mi experiencia personal y profesional me permite desarrollar eficientemente..."
-          className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-        />
-      </div>
-
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-            Apellidos (Encabezado)
-          </label>
-          <input 
-            type="text"
-            value={cvData.personalInfo?.surname || ''}
-            onChange={(e) => {
-              const sur = e.target.value;
-              const prefix = cvData.personalInfo?.titlePrefix || '';
-              const given = cvData.personalInfo?.givenNames || '';
-              const computed = `${prefix ? prefix + ' ' : ''}${given} ${sur}`.trim();
-              updatePersonalInfo('surname', sur);
-              updatePersonalInfo('fullName', computed);
-            }}
-            placeholder="Ej: BURGOS"
-            className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-            Nombres Completos
-          </label>
-          <input 
-            type="text"
-            value={cvData.personalInfo?.givenNames || ''}
-            onChange={(e) => {
-              const given = e.target.value;
-              const prefix = cvData.personalInfo?.titlePrefix || '';
-              const sur = cvData.personalInfo?.surname || '';
-              const computed = `${prefix ? prefix + ' ' : ''}${given} ${sur}`.trim();
-              updatePersonalInfo('givenNames', given);
-              updatePersonalInfo('fullName', computed);
-            }}
-            placeholder="Ej: Mónica Daniela"
-            className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-            DNI
-          </label>
-          <input 
-            type="text"
-            value={cvData.personalInfo?.dni || ''}
-            onChange={(e) => updatePersonalInfo('dni', e.target.value)}
-            placeholder="Ej: 29334206"
-            className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-            CUIT / CUIL
-          </label>
-          <input 
-            type="text"
-            value={cvData.personalInfo?.cuit || ''}
-            onChange={(e) => updatePersonalInfo('cuit', e.target.value)}
-            placeholder="Ej: 27-29334206-2"
-            className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-          Fecha de Nacimiento
-        </label>
-        <input 
-          type="text"
-          value={cvData.personalInfo?.birthDate || ''}
-          onChange={(e) => updatePersonalInfo('birthDate', e.target.value)}
-          placeholder="Ej: 4 de febrero de 1982"
-          className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-        />
-      </div>
-
-      <div>
-        <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-          Domicilio y Barrio
-        </label>
-        <input 
-          type="text"
-          value={cvData.personalInfo?.address || ''}
-          onChange={(e) => updatePersonalInfo('address', e.target.value)}
-          placeholder="Ej: Manzana 751A Casa 11 - Ciudad Valdivia"
-          className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-        />
-      </div>
-
-      <div>
-        <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-          Teléfono Celular / WhatsApp
-        </label>
-        <input 
-          type="text"
-          value={cvData.personalInfo?.phone || ''}
-          onChange={(e) => updatePersonalInfo('phone', e.target.value)}
-          placeholder="Ej: 387-155121515"
-          className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-        />
-      </div>
-
-      <div>
-        <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-          Correo Electrónico
-        </label>
-        <input 
-          type="text"
-          value={cvData.personalInfo?.email || ''}
-          onChange={(e) => updatePersonalInfo('email', e.target.value)}
-          placeholder="Ej: Monicadanielaburgos@yahoo.com.ar"
-          className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-        />
-      </div>
-
-      <div>
-        <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-          Sitio Web Personal / Portafolio / Linktree
-        </label>
-        <input 
-          type="text"
-          value={cvData.personalInfo?.website || ''}
-          onChange={(e) => updatePersonalInfo('website', e.target.value)}
-          placeholder="Ej: https://mi-portafolio.com"
-          className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-            Nacionalidad
-          </label>
-          <input 
-            type="text"
-            value={cvData.personalInfo?.nacionalidad || ''}
-            onChange={(e) => updatePersonalInfo('nacionalidad', e.target.value)}
-            placeholder="Ej: Argentina"
-            className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-            Estado Civil
-          </label>
-          <input 
-            type="text"
-            value={cvData.personalInfo?.estadoCivil || ''}
-            onChange={(e) => updatePersonalInfo('estadoCivil', e.target.value)}
-            placeholder="Ej: Soltero/a, Casado/a"
-            className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-            Disponibilidad (Viaje / Horarios)
-          </label>
-          <input 
-            type="text"
-            value={cvData.personalInfo?.disponibilidad || ''}
-            onChange={(e) => updatePersonalInfo('disponibilidad', e.target.value)}
-            placeholder="Ej: Inmediata / Relocalización"
-            className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-            Licencia de Conducir
-          </label>
-          <input 
-            type="text"
-            value={cvData.personalInfo?.licenciaConducir || ''}
-            onChange={(e) => updatePersonalInfo('licenciaConducir', e.target.value)}
-            placeholder="Ej: Clase B1 (Autos particulares)"
-            className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-          />
-        </div>
-      </div>
-
-      {/* QR Code Mode Selector */}
-      <div className="p-3 bg-purple-50 rounded-2xl border-2 border-purple-200 space-y-2 shadow-sm">
-        <label className="block text-xs font-black text-purple-900 uppercase tracking-wide flex items-center justify-between">
-          <span>Configuración del Código QR</span>
-          <span className="text-[10px] bg-purple-200 text-purple-800 px-2 py-0.5 rounded-full font-bold">Smart QR</span>
-        </label>
-        <select
-          value={cvData.qrMode || 'vcard'}
-          onChange={(e) => setCvData(prev => ({ ...prev, qrMode: e.target.value }))}
-          className="w-full text-xs p-2.5 rounded-xl border-2 border-purple-300 bg-white text-[#2B1B2E] font-bold outline-none focus:ring-2 focus:ring-purple-200 cursor-pointer"
-        >
-          <option value="vcard">📱 vCard: Guardar contacto en agenda del celular</option>
-          <option value="public_link">🌐 Perfil Web: Abrir mi CV público en línea</option>
-        </select>
-        <p className="text-[10.5px] text-purple-700 font-medium leading-relaxed">
-          {cvData.qrMode === 'public_link'
-            ? 'Al escanear el QR desde un celular, abrirá tu página web de CV público sin descargas.'
-            : 'Al escanear el QR desde un celular, agregará tu contacto directamente a la agenda.'}
-        </p>
-      </div>
-
-      {/* Fin de Datos Personales */}
-        </>
       )}
     </div>
   );

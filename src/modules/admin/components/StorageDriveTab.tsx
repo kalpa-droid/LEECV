@@ -172,17 +172,19 @@ export function StorageDriveTab() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
+            type="button"
             onClick={handleTestWrite}
-            className="p-3 bg-purple-50 hover:bg-purple-100/80 border border-purple-200 rounded-xl text-left transition flex items-center justify-between cursor-pointer"
+            className="p-3 bg-teal-50 hover:bg-teal-100/80 border border-teal-200 rounded-xl text-left transition flex items-center justify-between cursor-pointer"
           >
             <div>
-              <div className="font-extrabold text-xs text-purple-900">Prueba de Lectura/Escritura</div>
-              <div className="text-[11px] text-purple-700">Verifica la velocidad y respuesta del almacenamiento local</div>
+              <div className="font-extrabold text-xs text-teal-900">Prueba de Lectura/Escritura</div>
+              <div className="text-[11px] text-teal-700">Verifica la velocidad y respuesta del almacenamiento local</div>
             </div>
-            <ShieldCheck className="w-5 h-5 text-purple-600 flex-shrink-0" />
+            <ShieldCheck className="w-5 h-5 text-[#00A8A0] flex-shrink-0" />
           </button>
 
           <button
+            type="button"
             onClick={handleClearLocalCache}
             className="p-3 bg-rose-50 hover:bg-rose-100/80 border border-rose-200 rounded-xl text-left transition flex items-center justify-between cursor-pointer"
           >

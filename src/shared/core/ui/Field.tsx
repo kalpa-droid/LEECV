@@ -1,4 +1,5 @@
 import React, { ElementType, ReactNode } from 'react';
+import { colorSystem, typeScale } from '../uiDesignSystem';
 
 export interface FieldProps {
   label?: ReactNode;
@@ -23,14 +24,18 @@ export function Field({
   maxLength,
   ...props
 }: FieldProps) {
-  const baseInputStyle = 'w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition shadow-sm';
+  const baseInputStyle = `w-full rounded-[10px] border px-3 py-2 text-[12px] text-[${colorSystem.neutral.textPrimary}] bg-white outline-none transition-all placeholder:text-[${colorSystem.neutral.textMuted}] shadow-sm focus:border-[${colorSystem.accent.base}] focus:ring-2 focus:ring-[${colorSystem.accent.muted}]`;
 
   const effectiveMaxLength = maxLength ?? (Component === 'textarea' ? 2000 : 250);
 
   return (
     <div className={`space-y-1 ${containerClassName}`}>
       {label && (
-        <label htmlFor={id} className="block text-[11px] font-bold text-[#2B1B2E]">
+        <label
+          htmlFor={id}
+          className={`${typeScale.fieldLabel} block`}
+          style={{ color: colorSystem.neutral.textPrimary }}
+        >
           {label}
         </label>
       )}
@@ -38,12 +43,21 @@ export function Field({
       <Component
         id={id}
         maxLength={effectiveMaxLength}
-        className={`${baseInputStyle} ${error ? 'border-red-500 focus:ring-red-200' : ''} ${className}`}
+        style={{ borderColor: error ? colorSystem.status.danger.base : colorSystem.neutral.border }}
+        className={`${baseInputStyle} ${className}`}
         {...props}
       />
 
-      {error && <p className="text-[10px] text-red-600 font-bold">{error}</p>}
-      {helperText && !error && <p className="text-[10px] text-slate-500 font-medium">{helperText}</p>}
+      {error && (
+        <p className={`${typeScale.micro} font-bold`} style={{ color: colorSystem.status.danger.text }}>
+          {error}
+        </p>
+      )}
+      {helperText && !error && (
+        <p className={`${typeScale.helper}`} style={{ color: colorSystem.neutral.textSecondary }}>
+          {helperText}
+        </p>
+      )}
     </div>
   );
 }

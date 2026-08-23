@@ -102,13 +102,13 @@ export default function SavedCVsModal({
         {/* Action Header: 2 Options Bar (Cargar JSON y Google Drive) */}
         <div className="p-4 bg-slate-950/80 border-b border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* Button 1: Cargar Archivo .JSON */}
-          <label className="p-3 rounded-2xl bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/40 hover:border-purple-500/60 transition cursor-pointer flex items-center gap-3 group">
-            <div className="p-2 rounded-xl bg-purple-600/20 text-purple-300 group-hover:scale-110 transition flex-shrink-0">
+          <label className="p-3 rounded-2xl bg-teal-950/40 hover:bg-teal-900/60 border border-teal-800/40 hover:border-teal-500/60 transition cursor-pointer flex items-center gap-3 group">
+            <div className="p-2 rounded-xl bg-[#00A8A0]/20 text-[#00A8A0] group-hover:scale-110 transition flex-shrink-0">
               <Download className="w-4 h-4" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-black text-xs text-white">Cargar Copia (.JSON)</p>
-              <p className="text-[10px] text-purple-300 truncate">Restaurar respaldo local</p>
+              <p className="text-[10px] text-teal-300 truncate">Restaurar respaldo local</p>
             </div>
             <input 
               type="file" 
@@ -125,20 +125,21 @@ export default function SavedCVsModal({
 
           {/* Button 2: Google Drive / Nube */}
           <button
+            type="button"
             onClick={() => {
               if (onOpenCloudStatus) {
                 onClose();
                 onOpenCloudStatus();
               }
             }}
-            className="p-3 rounded-2xl bg-blue-950/40 hover:bg-blue-900/60 border border-blue-800/40 hover:border-blue-500/60 transition cursor-pointer flex items-center gap-3 text-left group"
+            className="p-3 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-700/60 transition cursor-pointer flex items-center gap-3 text-left group"
           >
-            <div className="p-2 rounded-xl bg-blue-600/20 text-blue-300 group-hover:scale-110 transition flex-shrink-0">
-              <HardDrive className="w-4 h-4" />
+            <div className="p-2 rounded-xl bg-slate-800 text-teal-400 group-hover:scale-110 transition flex-shrink-0">
+              <Cloud className="w-4 h-4" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-black text-xs text-white">Google Drive / Nube</p>
-              <p className="text-[10px] text-blue-300 truncate">Sincronización y estado</p>
+              <p className="text-[10px] text-slate-400 truncate">Estado de sincronización</p>
             </div>
           </button>
         </div>
