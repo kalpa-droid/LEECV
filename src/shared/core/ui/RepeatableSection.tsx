@@ -2,10 +2,34 @@ import React from 'react';
 import { Plus, Trash2, Copy } from 'lucide-react';
 import { useConfirm } from './ConfirmDialog';
 
+const getNestedValue = (obj: any, path: string) => {
+  if (!path) return undefined;
+  const parts = path.split('.');
+  let curr = obj;
+  for (const p of parts) {
+    if (!curr) return undefined;
+    curr = curr[p];
+  }
+  return curr;
+};
+
+const setNestedValue = (obj: any, path: string, newValue: any): any => {
+  const parts = path.split('.');
+  if (parts.length === 1) {
+    return { ...(obj || {}), [parts[0]]: newValue };
+  }
+  const [head, ...tail] = parts;
+  return {
+    ...(obj || {}),
+    [head]: setNestedValue(obj?.[head] || {}, tail.join('.'), newValue)
+  };
+};
+
 /**
- * RepeatableSection.jsx
- * Generic configurable section component for EditorPanel.jsx.
+ * RepeatableSection.tsx
+ * Generic configurable section component for EditorPanel.tsx.
  * Reduces 1000+ lines of duplicated section code across array fields.
+ * Supports dot-notation pathing for nested fields (e.g., 'ecology.rural').
  */
 export function RepeatableSection({
   sectionKey,
@@ -16,16 +40,17 @@ export function RepeatableSection({
   fieldName,
   emptyItem = {},
   itemTitlePrefix = 'Registro',
-  getItemName = (item, idx) => item.title || item.degree || item.role || item.course || item.level || item.institution || `Ítem #${idx + 1}`,
+  getItemName = (item: any, idx: number) => item?.title || item?.degree || item?.role || item?.course || item?.level || item?.institution || `Ítem #${idx + 1}`,
   designKey = undefined,
   renderItem
 }: any) {
   const { confirm } = useConfirm();
   const isVisible = cvData?.sectionVisibility?.[sectionKey] !== false;
-  const items = Array.isArray(cvData?.[fieldName]) ? cvData[fieldName] : [];
+  const rawItems = getNestedValue(cvData, fieldName);
+  const items = Array.isArray(rawItems) ? rawItems : [];
 
   const handleToggleVisibility = () => {
-    setCvData(prev => ({
+    setCvData((prev: any) => ({
       ...prev,
       sectionVisibility: {
         ...prev.sectionVisibility,
@@ -35,15 +60,15 @@ export function RepeatableSection({
   };
 
   const handleAddItem = () => {
-    setCvData(prev => ({
-      ...prev,
-      [fieldName]: [...(Array.isArray(prev[fieldName]) ? prev[fieldName] : []), { ...emptyItem }]
-    }));
+    setCvData((prev: any) => {
+      const currentList = Array.isArray(getNestedValue(prev, fieldName)) ? getNestedValue(prev, fieldName) : [];
+      return setNestedValue(prev, fieldName, [...currentList, { ...emptyItem }]);
+    });
   };
 
-  const handleDuplicateItem = (idx) => {
-    setCvData(prev => {
-      const currentList = Array.isArray(prev[fieldName]) ? prev[fieldName] : [];
+  const handleDuplicateItem = (idx: number) => {
+    setCvData((prev: any) => {
+      const currentList = Array.isArray(getNestedValue(prev, fieldName)) ? getNestedValue(prev, fieldName) : [];
       const itemToCopy = currentList[idx];
       if (!itemToCopy) return prev;
 
@@ -55,35 +80,32 @@ export function RepeatableSection({
       const updatedList = [...currentList];
       updatedList.splice(idx + 1, 0, duplicatedItem);
 
-      return {
-        ...prev,
-        [fieldName]: updatedList
-      };
+      return setNestedValue(prev, fieldName, updatedList);
     });
   };
 
-  const handleDeleteItem = (idx) => {
+  const handleDeleteItem = (idx: number) => {
     const itemName = getItemName(items[idx], idx);
     confirm({
       title: `¿Eliminar ${itemTitlePrefix}?`,
       message: `¿Estás seguro de que deseas eliminar "${itemName}"? Esta acción no se puede deshacer.`,
       confirmText: 'Eliminar',
       onConfirm: () => {
-        setCvData(prev => ({
-          ...prev,
-          [fieldName]: (Array.isArray(prev[fieldName]) ? prev[fieldName] : []).filter((_, i) => i !== idx)
-        }));
+        setCvData((prev: any) => {
+          const currentList = Array.isArray(getNestedValue(prev, fieldName)) ? getNestedValue(prev, fieldName) : [];
+          return setNestedValue(prev, fieldName, currentList.filter((_: any, i: number) => i !== idx));
+        });
       }
     });
   };
 
-  const handleUpdateItemField = (idx, field, value) => {
-    setCvData(prev => {
-      const updated = [...(Array.isArray(prev[fieldName]) ? prev[fieldName] : [])];
-      if (updated[idx]) {
-        updated[idx] = { ...updated[idx], [field]: value };
+  const handleUpdateItemField = (idx: number, field: string, value: any) => {
+    setCvData((prev: any) => {
+      const currentList = [...(Array.isArray(getNestedValue(prev, fieldName)) ? getNestedValue(prev, fieldName) : [])];
+      if (currentList[idx]) {
+        currentList[idx] = { ...currentList[idx], [field]: value };
       }
-      return { ...prev, [fieldName]: updated };
+      return setNestedValue(prev, fieldName, currentList);
     });
   };
 
@@ -130,7 +152,7 @@ export function RepeatableSection({
           <span className="font-bold">Estilo de Contenedores ({sectionTitle})</span>
           <select
             value={cvData.recordCardDesigns?.[designKey] || 'accent-card'}
-            onChange={(e) => setCvData(prev => ({
+            onChange={(e) => setCvData((prev: any) => ({
               ...prev,
               recordCardDesigns: { ...(prev.recordCardDesigns || {}), [designKey]: e.target.value }
             }))}
@@ -146,7 +168,7 @@ export function RepeatableSection({
       {/* Item List Rendering */}
       {isVisible && (
         <div className="space-y-4">
-          {items.map((item, idx) => (
+          {items.map((item: any, idx: number) => (
             <div key={idx} className="p-3.5 ui-bg-card ui-border ui-text-primary rounded-2xl border-2 shadow-sm space-y-3">
               <div className="flex items-center justify-between border-b pb-1 border-slate-200">
                 <span className="text-xs font-bold text-[var(--color-secondary-base)]">
@@ -173,7 +195,7 @@ export function RepeatableSection({
                 </div>
               </div>
 
-              {renderItem(item, idx, (field, value) => handleUpdateItemField(idx, field, value))}
+              {renderItem(item, idx, (field: string, value: any) => handleUpdateItemField(idx, field, value))}
             </div>
           ))}
         </div>

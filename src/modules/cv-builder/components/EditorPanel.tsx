@@ -437,10 +437,6 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {activeTab === 'ecologia' && (
           <div className="space-y-4">
-            {renderSectionToggle('ecologia', 'Proyectos y Comunidad')}
-
-            {cvData?.sectionVisibility?.ecologia !== false && (
-              <>
             <div className="p-3 bg-[var(--color-accent-amber-muted)] rounded-xl border-2 border-[var(--color-accent-amber)] text-xs text-[var(--color-neutral-text-primary)] space-y-1 shadow-sm">
               <div className="flex items-center gap-1.5 font-bold text-[var(--color-accent-base)]">
                 <Info className="w-4 h-4" /> Proyectos Ecológicos, Sociales & Comunitarios
@@ -450,175 +446,59 @@ export default function EditorPanel({
               </p>
             </div>
 
-            {/* Proyectos Rurales */}
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center justify-between border-b pb-1 border-[var(--color-neutral-border)]">
-                <span className="text-xs font-bold text-emerald-700">Proyectos Rurales / Agricultura</span>
-                <button
-                  onClick={() => {
-                    setCvData((prev) => ({
-                      ...prev,
-                      ecology: {
-                        ...prev.ecology,
-                        rural: [
-                          ...(prev.ecology?.rural || []),
-                          { title: "", institution: "" }
-                        ]
-                      }
-                    }));
-                  }}
-                  className="flex items-center gap-1 text-xs text-emerald-600 font-bold hover:underline"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Agregar Rural
-                </button>
-              </div>
+            <RepeatableSection
+              sectionKey="ecologia"
+              sectionTitle="Proyectos Rurales / Agricultura"
+              addLabel="Agregar Rural"
+              cvData={cvData}
+              setCvData={setCvData}
+              fieldName="ecology.rural"
+              emptyItem={{ title: '', institution: '' }}
+              itemTitlePrefix="Proyecto Rural"
+              renderItem={(item: any, _idx: number, updateField: any) => (
+                <>
+                  <Field 
+                    label="Título del Taller / Proyecto Rural"
+                    type="text"
+                    value={item.title || ''}
+                    onChange={(e: any) => updateField('title', e.target.value)}
+                  />
+                  <Field 
+                    label="Institución Organizadora"
+                    type="text"
+                    value={item.institution || ''}
+                    onChange={(e: any) => updateField('institution', e.target.value)}
+                  />
+                </>
+              )}
+            />
 
-              {(cvData.ecology?.rural || []).map((item, idx) => (
-                <div key={idx} className="p-3.5 bg-white rounded-2xl border-2 border-[var(--color-neutral-border)] shadow-sm space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-emerald-600">Proyecto Rural #{idx + 1}</span>
-                    <button
-                      onClick={() => {
-                        const name = item.title || item.institution || `Proyecto Rural #${idx + 1}`;
-                        confirm({
-                          title: '¿Eliminar proyecto rural?',
-                          message: `¿Estás seguro de que deseas eliminar "${name}"?`,
-                          confirmText: 'Eliminar',
-                          onConfirm: () => {
-                            setCvData((prev) => ({
-                              ...prev,
-                              ecology: {
-                                ...prev.ecology,
-                                rural: (prev.ecology?.rural || []).filter((_, i) => i !== idx)
-                              }
-                            }));
-                          }
-                        });
-                      }}
-                      className="text-[var(--color-neutral-text-primary)] font-medium hover:text-red-600 transition"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  <div>
-                    <Field 
-                      label="Título del Taller / Proyecto Rural"
-                      type="text"
-                      value={item.title}
-                      onChange={(e: any) => {
-                        const val = e.target.value;
-                        setCvData((prev: any) => {
-                          const updated = [...prev.ecology.rural];
-                          updated[idx].title = val;
-                          return { ...prev, ecology: { ...prev.ecology, rural: updated } };
-                        });
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <Field 
-                      label="Institución Organizadora"
-                      type="text"
-                      value={item.institution}
-                      onChange={(e: any) => {
-                        const val = e.target.value;
-                        setCvData((prev: any) => {
-                          const updated = [...prev.ecology.rural];
-                          updated[idx].institution = val;
-                          return { ...prev, ecology: { ...prev.ecology, rural: updated } };
-                        });
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Proyectos Ambientales */}
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center justify-between border-b pb-1 border-[var(--color-neutral-border)]">
-                <span className="text-xs font-bold text-teal-700">Proyectos Medio Ambientales</span>
-                <button
-                  onClick={() => {
-                    setCvData((prev) => ({
-                      ...prev,
-                      ecology: {
-                        ...prev.ecology,
-                        environmental: [
-                          ...(prev.ecology?.environmental || []),
-                          { title: "", institution: "" }
-                        ]
-                      }
-                    }));
-                  }}
-                  className="flex items-center gap-1 text-xs text-[var(--color-secondary-base)] font-bold hover:underline"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Agregar Ambiental
-                </button>
-              </div>
-
-              {(cvData.ecology?.environmental || []).map((item, idx) => (
-                <div key={idx} className="p-3.5 bg-white rounded-2xl border-2 border-[var(--color-neutral-border)] shadow-sm space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-[var(--color-secondary-base)]">Proyecto Ambiental #{idx + 1}</span>
-                    <button
-                      onClick={() => {
-                        const name = item.title || item.institution || `Proyecto Ambiental #${idx + 1}`;
-                        confirm({
-                          title: '¿Eliminar proyecto ambiental?',
-                          message: `¿Estás seguro de que deseas eliminar "${name}"?`,
-                          confirmText: 'Eliminar',
-                          onConfirm: () => {
-                            setCvData((prev) => ({
-                              ...prev,
-                              ecology: {
-                                ...prev.ecology,
-                                environmental: (prev.ecology?.environmental || []).filter((_, i) => i !== idx)
-                              }
-                            }));
-                          }
-                        });
-                      }}
-                      className="text-[var(--color-neutral-text-primary)] font-medium hover:text-red-600 transition"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  <div>
-                    <Field 
-                      label="Nombre del Proyecto Ambiental"
-                      type="text"
-                      value={item.title}
-                      onChange={(e: any) => {
-                        const val = e.target.value;
-                        setCvData((prev: any) => {
-                          const updated = [...prev.ecology.environmental];
-                          updated[idx].title = val;
-                          return { ...prev, ecology: { ...prev.ecology, environmental: updated } };
-                        });
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <Field 
-                      label="Entidad o Red Organizadora"
-                      type="text"
-                      value={item.institution}
-                      onChange={(e: any) => {
-                        const val = e.target.value;
-                        setCvData((prev: any) => {
-                          const updated = [...prev.ecology.environmental];
-                          updated[idx].institution = val;
-                          return { ...prev, ecology: { ...prev.ecology, environmental: updated } };
-                        });
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-              </>
-            )}
+            <RepeatableSection
+              sectionKey="ecologia"
+              sectionTitle="Proyectos Medio Ambientales"
+              addLabel="Agregar Ambiental"
+              cvData={cvData}
+              setCvData={setCvData}
+              fieldName="ecology.environmental"
+              emptyItem={{ title: '', institution: '' }}
+              itemTitlePrefix="Proyecto Ambiental"
+              renderItem={(item: any, _idx: number, updateField: any) => (
+                <>
+                  <Field 
+                    label="Nombre del Proyecto Ambiental"
+                    type="text"
+                    value={item.title || ''}
+                    onChange={(e: any) => updateField('title', e.target.value)}
+                  />
+                  <Field 
+                    label="Entidad o Red Organizadora"
+                    type="text"
+                    value={item.institution || ''}
+                    onChange={(e: any) => updateField('institution', e.target.value)}
+                  />
+                </>
+              )}
+            />
           </div>
         )}
 
