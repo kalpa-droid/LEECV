@@ -41,6 +41,15 @@ export const colorSystem = {
     warning: { base: '#BA7517', muted: '#FAEEDA', text: '#854F0B' },
     danger: { base: '#D14D4D', muted: '#FCEBEB', text: '#A32D2D' },
   },
+  // Superficie oscura para estados críticos (ErrorBoundary) — la única
+  // superficie intencionalmente oscura de toda la web, para diferenciarse
+  // claramente del resto de los paneles (claros) cuando algo salió mal.
+  criticalSurface: {
+    bg: '#2B1B2E',
+    card: '#3A2A3D',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#D9CADC',
+  },
 } as const;
 
 // ============================================================
