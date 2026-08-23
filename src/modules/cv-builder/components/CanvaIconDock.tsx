@@ -65,7 +65,7 @@ export default function CanvaIconDock({
     <>
       {/* Desktop & Tablet Vertical Left Dock (Width: 68px) */}
       <aside className="hidden md:flex flex-col items-center py-3 bg-[#1C121E] border-r border-[#6B5B6E]/30 text-white z-30 select-none w-16 shrink-0 h-full overflow-y-auto no-scrollbar relative">
-        {/* Toggle Drawer Button (☰ ↔ ✕) */}
+        {/* Toggle Drawer Button (Menú para esconder/abrir panel) */}
         <button
           type="button"
           onClick={() => setIsPanelOpen(!isPanelOpen)}
@@ -76,7 +76,7 @@ export default function CanvaIconDock({
           }`}
           title={isPanelOpen ? 'Cerrar Panel Editor' : 'Abrir Panel Editor'}
         >
-          {isPanelOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          <Menu className="w-5 h-5" />
         </button>
 
         <div className="w-8 h-px bg-white/10 mb-3" />
@@ -140,7 +140,35 @@ export default function CanvaIconDock({
             );
           })()}
 
-          {/* 2. Secciones Prioritarias Fijas */}
+          {/* 2. Secciones Personalizadas Incorporadas (Se ubican justo debajo de Sección +) */}
+          {customSections.map((cs: any) => {
+            const isActive = activeTab === cs.id && isPanelOpen;
+            const iconId = cs.iconId || 'custom';
+            return (
+              <button
+                key={cs.id}
+                type="button"
+                onClick={() => handleTabClick(cs.id)}
+                className={`w-12 h-11 rounded-2xl flex flex-col items-center justify-center transition group relative cursor-pointer ${
+                  isActive
+                    ? 'bg-[#00A8A0] text-white shadow-lg shadow-[#00A8A0]/30 scale-105'
+                    : 'bg-[#2B1B2E] text-teal-300 border border-teal-500/30 hover:bg-[#3D2740]'
+                }`}
+                title={cs.titleText}
+              >
+                <DomSectionIcon iconId={iconId} className="w-4 h-4" color={isActive ? '#ffffff' : '#00A8A0'} />
+                <span className="text-[9px] font-extrabold tracking-tighter mt-0.5 leading-none truncate max-w-[44px]">
+                  {cs.titleText?.substring(0, 6) || 'Personal'}
+                </span>
+
+                <span className="absolute left-14 bg-[#2B1B2E] text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-white/10">
+                  {cs.titleText}
+                </span>
+              </button>
+            );
+          })}
+
+          {/* 3. Secciones Prioritarias Fijas */}
           {fixedPrioritySections.map((sec) => {
             const isActive = activeTab === sec.id && isPanelOpen;
             return (
@@ -160,34 +188,6 @@ export default function CanvaIconDock({
 
                 <span className="absolute left-14 bg-[#2B1B2E] text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-white/10">
                   {sec.label}
-                </span>
-              </button>
-            );
-          })}
-
-          {/* 3. Secciones Personalizadas o Prediseñadas Activas (Navegación 1 a 1 directa) */}
-          {customSections.map((cs: any) => {
-            const isActive = activeTab === cs.id && isPanelOpen;
-            const iconId = cs.iconId || 'custom';
-            return (
-              <button
-                key={cs.id}
-                type="button"
-                onClick={() => handleTabClick(cs.id)}
-                className={`w-12 h-11 rounded-2xl flex flex-col items-center justify-center transition group relative cursor-pointer ${
-                  isActive
-                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30 scale-105'
-                    : 'text-purple-300 hover:text-white hover:bg-[#2B1B2E]'
-                }`}
-                title={cs.titleText}
-              >
-                <DomSectionIcon iconId={iconId} className="w-4 h-4" color={isActive ? '#ffffff' : '#A855F7'} />
-                <span className="text-[9px] font-extrabold tracking-tighter mt-0.5 leading-none truncate max-w-[44px]">
-                  {cs.titleText?.substring(0, 6) || 'Personal'}
-                </span>
-
-                <span className="absolute left-14 bg-[#2B1B2E] text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-white/10">
-                  {cs.titleText}
                 </span>
               </button>
             );

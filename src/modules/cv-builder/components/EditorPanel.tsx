@@ -1223,13 +1223,34 @@ export default function EditorPanel({
                       </button>
                     );
                   })}
+
+                  {/* 10ª Tarjeta para completar el par del grid (5 filas perfectas) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      document.getElementById('custom-section-creator-form')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="p-2.5 rounded-xl border-2 border-dashed border-[#FF2E63]/40 bg-pink-50/50 hover:bg-pink-100 text-left flex flex-col justify-between transition cursor-pointer"
+                  >
+                    <div className="space-y-1">
+                      <span className="text-xs font-black text-[#FF2E63] flex items-center gap-1">
+                        <Plus className="w-3.5 h-3.5" /> Sección a Medida
+                      </span>
+                      <p className="text-[10px] text-[#6B5B6E] font-medium leading-tight">
+                        Crear sección personalizada seleccionando campos a medida.
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-black mt-2 self-end px-2 py-0.5 rounded bg-[#FF2E63] text-white">
+                      ↓ Ir a Creador
+                    </span>
+                  </button>
                 </div>
               </div>
             </PanelSection>
 
             {/* 2. CREADOR DE SECCIÓN A MEDIDA */}
             <PanelSection icon={<Plus className="w-4 h-4 text-[#FF2E63]" />} title="Sección a Medida">
-              <div className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] space-y-4 shadow-sm">
+              <div id="custom-section-creator-form" className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] space-y-4 shadow-sm">
 
                 <div>
                   <label className="block text-xs font-bold text-[#2B1B2E] mb-1">

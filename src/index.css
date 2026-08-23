@@ -18,17 +18,18 @@
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #1C121E;
+    background: #FAF7F0;
+    border-radius: 8px;
   }
   ::-webkit-scrollbar-thumb {
-    background: #4A3B4E;
-    border-radius: 9999px;
+    background: #00A8A0;
+    border-radius: 8px;
   }
   ::-webkit-scrollbar-thumb:hover {
     background: #FF2E63;
   }
   * {
-    scrollbar-color: #4A3B4E #1C121E;
+    scrollbar-color: #00A8A0 #FAF7F0;
     scrollbar-width: thin;
   }
 }

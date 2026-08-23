@@ -171,10 +171,35 @@ export const zIndex = {
 } as const;
 
 /**
- * SISTEMA DE ACCESIBILIDAD Y FOCO NAVEGABLE POR TECLADO
+ * MATRIZ DE TEMAS DE LA INTERFAZ (UI Theme Matrix - Nocturno, Cálido, Océano)
  */
-export const a11ySystem = {
-  focusRing: `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[${colorSystem.secondary.base}] focus-visible:ring-offset-2`,
-  srOnly: 'sr-only',
+export const uiThemePresets = {
+  default: {
+    id: 'default',
+    name: 'Editorial Warm (Cálido)',
+    bgPanel: '#FAF7F0',
+    bgCard: '#FFFFFF',
+    textPrimary: '#2B1B2E',
+    textSecondary: '#6B5B6E',
+    border: '#EFE2C9',
+  },
+  dark: {
+    id: 'dark',
+    name: 'Cyber Dark (Modo Nocturno)',
+    bgPanel: '#0F172A',
+    bgCard: '#1E293B',
+    textPrimary: '#F8FAFC',
+    textSecondary: '#94A3B8',
+    border: '#334155',
+  },
+  teal_ocean: {
+    id: 'teal_ocean',
+    name: 'Midnight Ocean (Océano Teal)',
+    bgPanel: '#0D1F2D',
+    bgCard: '#1D3557',
+    textPrimary: '#F1FAEE',
+    textSecondary: '#A8DADC',
+    border: '#457B9D',
+  },
 } as const;
 
