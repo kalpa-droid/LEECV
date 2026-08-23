@@ -31,6 +31,8 @@ import { ToastProvider, useToast } from '../shared/core/ui/Toast';
 import { useConfirm, ConfirmProvider } from '../shared/core/ui/ConfirmDialog';
 import { getActiveUiTheme } from '../shared/core/uiDesignSystem';
 
+import { syncPresetsFromStorage } from '../shared/core/pdf-engine/layers/presets/presetRegistry';
+
 function AppContent() {
   const { cvData, setCvData, resetToBlankCV, saveCV } = useCVContext();
   const { showSuccess, showError, showInfo } = useToast();
@@ -45,6 +47,7 @@ function AppContent() {
   const activeUiTheme = getActiveUiTheme(cvData?.uiTheme);
 
   useEffect(() => {
+    syncPresetsFromStorage().catch(err => console.warn('Error sincronizando presets iniciales:', err));
     getCurrentProfile().then(p => setCurrentProfile(p)).catch(() => {});
 
     if (typeof window !== 'undefined') {
