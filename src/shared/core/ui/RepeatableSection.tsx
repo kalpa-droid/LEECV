@@ -16,9 +16,21 @@ const getNestedValue = (obj: any, path: string) => {
 const setNestedValue = (obj: any, path: string, newValue: any): any => {
   const parts = path.split('.');
   if (parts.length === 1) {
+    if (Array.isArray(obj)) {
+      const idx = parseInt(parts[0], 10);
+      const copy = [...obj];
+      copy[idx] = newValue;
+      return copy;
+    }
     return { ...(obj || {}), [parts[0]]: newValue };
   }
   const [head, ...tail] = parts;
+  if (Array.isArray(obj)) {
+    const idx = parseInt(head, 10);
+    const copy = [...obj];
+    copy[idx] = setNestedValue(copy[idx] || {}, tail.join('.'), newValue);
+    return copy;
+  }
   return {
     ...(obj || {}),
     [head]: setNestedValue(obj?.[head] || {}, tail.join('.'), newValue)
@@ -29,7 +41,7 @@ const setNestedValue = (obj: any, path: string, newValue: any): any => {
  * RepeatableSection.tsx
  * Generic configurable section component for EditorPanel.tsx.
  * Reduces 1000+ lines of duplicated section code across array fields.
- * Supports dot-notation pathing for nested fields (e.g., 'ecology.rural').
+ * Supports dot-notation pathing for nested fields (e.g., 'ecology.rural', 'customSections.0.records').
  */
 export function RepeatableSection({
   sectionKey,
@@ -42,6 +54,7 @@ export function RepeatableSection({
   itemTitlePrefix = 'Registro',
   getItemName = (item: any, idx: number) => item?.title || item?.degree || item?.role || item?.course || item?.level || item?.institution || `Ítem #${idx + 1}`,
   designKey = undefined,
+  onDeleteSection = undefined,
   renderItem
 }: any) {
   const { confirm } = useConfirm();
@@ -142,6 +155,18 @@ export function RepeatableSection({
             >
               <Plus className="w-3.5 h-3.5" />
               <span>{addLabel}</span>
+            </button>
+          )}
+
+          {onDeleteSection && (
+            <button
+              type="button"
+              onClick={onDeleteSection}
+              className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-red-100 text-red-700 hover:bg-red-200 shadow-sm transition cursor-pointer"
+              title="Eliminar esta sección personalizada"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Eliminar Sección</span>
             </button>
           )}
         </div>
