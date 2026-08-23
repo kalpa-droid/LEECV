@@ -1,4 +1,5 @@
 import { ContentSection, ContentRecord } from './recordTypes';
+import { getSectionLabel } from '../../../sectionRegistry';
 
 const sortByYearDesc = (items: any[]) => {
   if (!Array.isArray(items)) return [];
@@ -36,7 +37,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   // Contacto & Redes (Sidebar)
   sections.push({
     id: 'contacto',
-    titleText: 'CONTACTO & REDES',
+    titleText: getSectionLabel('contacto'),
     records: [
       {
         id: 'rec-contact',
@@ -56,7 +57,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   // Datos Personales (Sidebar)
   sections.push({
     id: 'datos-personales',
-    titleText: 'DATOS PERSONALES',
+    titleText: getSectionLabel('datos-personales'),
     records: [
       {
         id: 'rec-personal-details',
@@ -71,9 +72,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
     ]
   });
 
-  // Frase / Lema Personal — sección INDEPENDIENTE, no un campo atrapado
-  // adentro de "Datos Personales". Así el sistema de columnas dinámicas
-  // (Paneles) la puede mover sola, igual que cualquier otro registro.
+  // Frase / Lema Personal
   if (personalInfo.quote) {
     sections.push({
       id: 'frase',
@@ -96,7 +95,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
 
   sections.push({
     id: 'competencias',
-    titleText: 'COMPETENCIAS CLAVE',
+    titleText: getSectionLabel('competencias'),
     records: skillList.map((sk: any, idx: number) => ({
       id: `rec-skill-${idx}`,
       kind: 'skill',
@@ -111,7 +110,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   if (Array.isArray(informatics) && informatics.length > 0) {
     sections.push({
       id: 'informatica',
-      titleText: 'INFORMÁTICA & TICs',
+      titleText: getSectionLabel('informatica'),
       records: informatics.map((inf: any, idx: number) => ({
         id: `rec-inf-${idx}`,
         kind: 'course',
@@ -128,7 +127,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   if (Array.isArray(education) && education.length > 0) {
     sections.push({
       id: 'formacion',
-      titleText: 'FORMACIÓN ACADÉMICA',
+      titleText: getSectionLabel('formacion'),
       records: education.map((edu: any, idx: number) => ({
         id: `rec-edu-${idx}`,
         kind: 'education',
@@ -147,7 +146,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   if (Array.isArray(sortedProfession) && sortedProfession.length > 0) {
     sections.push({
       id: 'profesion',
-      titleText: `TÍTULOS PROFESIONALES (${sortedProfession.length})`,
+      titleText: `${getSectionLabel('profesion')} (${sortedProfession.length})`,
       records: sortedProfession.map((prof: any, idx: number) => ({
         id: `rec-prof-${idx}`,
         kind: 'education',
@@ -165,7 +164,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   if (Array.isArray(sortedExperience) && sortedExperience.length > 0) {
     sections.push({
       id: 'experiencia',
-      titleText: 'EXPERIENCIA LABORAL',
+      titleText: getSectionLabel('experiencia'),
       records: sortedExperience.map((exp: any, idx: number) => ({
         id: `rec-exp-${idx}`,
         kind: 'experience',
@@ -184,7 +183,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   if (Array.isArray(sortedCourses) && sortedCourses.length > 0) {
     sections.push({
       id: 'cursos',
-      titleText: 'CURSOS & CAPACITACIONES',
+      titleText: getSectionLabel('cursos'),
       records: sortedCourses.map((c: any, idx: number) => ({
         id: `rec-course-${idx}`,
         kind: 'course',
@@ -201,6 +200,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
       }))
     });
   }
+
 
   // Secciones Personalizadas Dinámicas (customSections)
   if (Array.isArray(cvData.customSections)) {

@@ -93,6 +93,9 @@ export interface ThemeConfig {
   secondaryColor?: string;
   accentColor?: string;
   textColor?: string;
+  /** Color de fondo principal (canónico) */
+  bgColor?: string;
+  /** Alias heredado para compatibilidad con documentos antiguos */
   bgCorridor?: string;
   fontFamily?: string;
   [key: string]: any;

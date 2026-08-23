@@ -170,18 +170,6 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       justifyContent: 'center',
       marginBottom: 8
     },
-    sidebarSectionTitle: {
-      fontSize: preset.typography.sectionHeading,
-      fontFamily: 'Helvetica-Bold',
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-      marginTop: 12,
-      marginBottom: 6,
-      paddingBottom: 3,
-      borderBottomWidth: 1,
-      borderBottomColor: sidebarType.border,
-      color: sidebarType.sectionHeading
-    },
     sidebarItemText: {
       fontSize: preset.typography.caption,
       marginBottom: 3,
@@ -203,95 +191,6 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     },
     headerNameHighlight: {
       color: mainType.accentRule
-    },
-    sectionTitleContainer: {
-      backgroundColor: rolesColor.primary,
-      color: rolesColor.textOnPrimary,
-      paddingHorizontal: 8,
-      paddingVertical: 5,
-      borderRadius: 4,
-      marginTop: 14,
-      marginBottom: 8
-    },
-    sectionTitleText: {
-      fontSize: preset.typography.sectionHeading,
-      fontFamily: 'Helvetica-Bold',
-      textTransform: 'uppercase',
-      letterSpacing: 0.5
-    },
-    cardBox: {
-      backgroundColor: '#f8fafc',
-      borderWidth: 1,
-      borderColor: '#e2e8f0',
-      borderLeftWidth: 4,
-      borderLeftColor: rolesColor.primary,
-      borderRadius: 6,
-      padding: 10,
-      marginBottom: 8
-    },
-    cardBoxAccent: {
-      borderLeftColor: rolesColor.accent
-    },
-    cardHeaderRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 3
-    },
-    cardTitle: {
-      fontSize: preset.typography.itemTitle,
-      fontFamily: 'Helvetica-Bold',
-      color: mainType.itemTitle,
-      flex: 1
-    },
-    cardYearBadge: {
-      backgroundColor: rolesColor.primary,
-      color: '#ffffff',
-      fontSize: preset.typography.caption,
-      fontFamily: 'Helvetica-Bold',
-      paddingHorizontal: 5,
-      paddingVertical: 2,
-      borderRadius: 3
-    },
-    cardInstitution: {
-      fontSize: preset.typography.body,
-      fontFamily: 'Helvetica-Bold',
-      color: '#475569',
-      marginBottom: 3
-    },
-    cardDetails: {
-      fontSize: preset.typography.caption,
-      color: '#334155',
-      lineHeight: 1.4
-    },
-    courseBox: {
-      backgroundColor: '#f8fafc',
-      borderWidth: 1,
-      borderColor: '#e2e8f0',
-      borderRadius: 5,
-      padding: 7,
-      marginBottom: 6,
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center'
-    },
-    courseTitle: {
-      fontSize: preset.typography.itemTitle,
-      fontFamily: 'Helvetica-Bold',
-      color: '#0f172a'
-    },
-    courseInstitution: {
-      fontSize: preset.typography.caption,
-      color: '#64748b'
-    },
-    courseHours: {
-      backgroundColor: '#e2e8f0',
-      color: '#334155',
-      fontSize: preset.typography.caption,
-      fontFamily: 'Helvetica-Bold',
-      paddingHorizontal: 4,
-      paddingVertical: 2,
-      borderRadius: 3
     },
     signatureContainer: {
       marginTop: 20,

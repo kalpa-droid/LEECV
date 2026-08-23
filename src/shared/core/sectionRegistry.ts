@@ -13,6 +13,7 @@
  */
 
 export type SectionDataType = 'single_text' | 'record_list';
+export type SectorRole = 'sidebar' | 'main';
 
 export interface SectionCatalogEntry {
   id: string;
@@ -20,6 +21,7 @@ export interface SectionCatalogEntry {
   /** A qué pestaña de carga de datos pertenece este registro */
   tabId: string;
   dataType: SectionDataType;
+  defaultSectorRole: SectorRole;
   /**
    * Campo(s) que se muestran cuando esta sección se usa como "destacado en
    * portada" — ahí normalmente solo interesa el título, no año/institución.
@@ -30,18 +32,18 @@ export interface SectionCatalogEntry {
 }
 
 export const SECTION_CATALOG: SectionCatalogEntry[] = [
-  { id: 'contacto', label: 'Contacto & Redes', tabId: 'personales', dataType: 'single_text', assignableToColumns: true },
-  { id: 'personales', label: 'Datos Personales', tabId: 'personales', dataType: 'single_text', assignableToColumns: true },
-  { id: 'frase', label: 'Frase / Lema Personal', tabId: 'personales', dataType: 'single_text', coverDisplayFields: ['quote'], assignableToColumns: true },
-  { id: 'competencias', label: 'Competencias Clave', tabId: 'personales', dataType: 'record_list', assignableToColumns: true },
-  { id: 'formacion', label: 'Formación Académica', tabId: 'formacion', dataType: 'record_list', coverDisplayFields: ['degree'], assignableToColumns: true },
-  { id: 'profesion', label: 'Títulos Profesionales', tabId: 'profesion', dataType: 'record_list', coverDisplayFields: ['title'], assignableToColumns: true },
-  { id: 'experiencia', label: 'Experiencia Laboral', tabId: 'experiencia', dataType: 'record_list', coverDisplayFields: ['role'], assignableToColumns: true },
-  { id: 'cursos', label: 'Cursos & Capacitaciones', tabId: 'cursos', dataType: 'record_list', coverDisplayFields: ['title'], assignableToColumns: true },
-  { id: 'informatica', label: 'Informática & TICs', tabId: 'informatica', dataType: 'record_list', coverDisplayFields: ['title'], assignableToColumns: true },
-  { id: 'ecologia', label: 'Compromiso Ecológico', tabId: 'ecologia', dataType: 'record_list', assignableToColumns: true },
-  { id: 'certificados', label: 'Certificados Escaneados', tabId: 'certificados', dataType: 'record_list', assignableToColumns: false },
-  { id: 'firma', label: 'Firma Digital', tabId: 'firma', dataType: 'single_text', assignableToColumns: false },
+  { id: 'contacto', label: 'Contacto & Redes', tabId: 'personales', dataType: 'single_text', defaultSectorRole: 'sidebar', assignableToColumns: true },
+  { id: 'datos-personales', label: 'Datos Personales', tabId: 'personales', dataType: 'single_text', defaultSectorRole: 'sidebar', assignableToColumns: true },
+  { id: 'frase', label: 'Frase / Lema Personal', tabId: 'personales', dataType: 'single_text', defaultSectorRole: 'sidebar', coverDisplayFields: ['quote'], assignableToColumns: true },
+  { id: 'competencias', label: 'Competencias Clave', tabId: 'personales', dataType: 'record_list', defaultSectorRole: 'sidebar', assignableToColumns: true },
+  { id: 'informatica', label: 'Informática & TICs', tabId: 'informatica', dataType: 'record_list', defaultSectorRole: 'sidebar', coverDisplayFields: ['title'], assignableToColumns: true },
+  { id: 'formacion', label: 'Formación Académica', tabId: 'formacion', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['degree'], assignableToColumns: true },
+  { id: 'profesion', label: 'Títulos Profesionales', tabId: 'profesion', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['title'], assignableToColumns: true },
+  { id: 'experiencia', label: 'Experiencia Laboral', tabId: 'experiencia', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['role'], assignableToColumns: true },
+  { id: 'cursos', label: 'Cursos & Capacitaciones', tabId: 'cursos', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['title'], assignableToColumns: true },
+  { id: 'ecologia', label: 'Compromiso Ecológico', tabId: 'ecologia', dataType: 'record_list', defaultSectorRole: 'main', assignableToColumns: true },
+  { id: 'certificados', label: 'Certificados Escaneados', tabId: 'certificados', dataType: 'record_list', defaultSectorRole: 'main', assignableToColumns: false },
+  { id: 'firma', label: 'Firma Digital', tabId: 'firma', dataType: 'single_text', defaultSectorRole: 'main', assignableToColumns: false },
 ];
 
 export function getFullSectionCatalog(customSections: any[] = []): SectionCatalogEntry[] {
@@ -50,6 +52,7 @@ export function getFullSectionCatalog(customSections: any[] = []): SectionCatalo
     label: cs.titleText || 'Nueva Sección',
     tabId: 'custom',
     dataType: 'record_list',
+    defaultSectorRole: 'main',
     coverDisplayFields: cs.fields || ['tituloOGrado'],
     assignableToColumns: true
   }));
@@ -61,6 +64,11 @@ export function getSection(id: string, customSections: any[] = []): SectionCatal
   return getFullSectionCatalog(customSections).find(s => s.id === id);
 }
 
+export function getSectionLabel(id: string, customSections: any[] = []): string {
+  const entry = getSection(id, customSections);
+  return entry ? entry.label.toUpperCase() : id.toUpperCase();
+}
+
 export function getColumnAssignableSections(customSections: any[] = []): SectionCatalogEntry[] {
   return getFullSectionCatalog(customSections).filter(s => s.assignableToColumns);
 }
@@ -68,3 +76,4 @@ export function getColumnAssignableSections(customSections: any[] = []): Section
 export function getRecordListSections(customSections: any[] = []): SectionCatalogEntry[] {
   return getFullSectionCatalog(customSections).filter(s => s.dataType === 'record_list');
 }
+

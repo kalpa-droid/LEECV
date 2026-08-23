@@ -1,7 +1,7 @@
 /**
  * check-module-boundaries.js
- * Verifies that src/modules/ subfolders do not cross-import each other directly.
- * Core shared logic must live in src/shared/ or src/context/.
+ * Verifica fronteras de módulos (src/modules/) y gobernanza de UI/colores (src/modules/ y src/shared/).
+ * Bloquea el build (exit 1) si existen violaciones de arquitectura.
  */
 
 import fs from 'fs';
@@ -10,21 +10,70 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const modulesDir = path.resolve(__dirname, '../src/modules');
+const srcDir = path.resolve(__dirname, '../src');
+const modulesDir = path.join(srcDir, 'modules');
+const sharedDir = path.join(srcDir, 'shared');
 
 let violationsCount = 0;
 let uiGovernanceWarnings = 0;
 
-// Lista de archivos exceptuados (motor de color del PDF en /pdf-engine/ o definidores de tokens)
+// Lista de archivos exceptuados para la regla de gobernanza de colores/tokens
 const EXEMPT_UI_GOVERNANCE = [
   'uiDesignSystem.ts',
   'colorSystem.ts',
   'fieldCatalog.ts',
   'presetRegistry.ts',
-  'themePresets.ts'
+  'themePresets.ts',
+  'index.css',
+  'initialCVData.ts',
+  'cvDataSchema.ts',
+  'capabilityRegistry.ts',
+  'vcardGenerator.ts',
+  'TemplateRenderer.tsx',
+  'cardFaceRenderer.tsx',
+  'CardSheetDocument.tsx'
 ];
 
-function checkDir(dir, currentModule) {
+function checkFile(fullPath, currentModule = null) {
+  const file = path.basename(fullPath);
+  const content = fs.readFileSync(fullPath, 'utf8');
+
+  // 1. Verificación de Fronteras de Módulos (solo aplica si está dentro de /modules/)
+  if (currentModule) {
+    const importMatches = content.match(/from\s+['"]([^'"]+)['"]/g) || [];
+    for (const match of importMatches) {
+      const importPath = match.replace(/from\s+['"]/, '').replace(/['"]$/, '');
+      if (importPath.includes('/modules/')) {
+        const targetModule = importPath.split('/modules/')[1]?.split('/')[0];
+        if (targetModule && targetModule !== currentModule) {
+          console.error(`❌ Boundary Violation: [${currentModule}] imports [${targetModule}] in ${path.relative(process.cwd(), fullPath)}`);
+          violationsCount++;
+        }
+      }
+    }
+  }
+
+  // 2. Gobernanza de UI/Colores (aplica a /modules/ y /shared/)
+  const isExempt = EXEMPT_UI_GOVERNANCE.some(ex => file.endsWith(ex));
+  if (!isExempt) {
+    // Detecta patrones de interpolación JS rota en Tailwind como bg-[${...}]
+    const brokenInterpolations = content.match(/\b(bg|text|border|ring)-\[\$\{[^}]+\}\]/g);
+    if (brokenInterpolations) {
+      console.error(`❌ UI Governance Error: [${file}] usa interpolación JS rota en Tailwind '${brokenInterpolations.join(', ')}'. Usar var(--color-*) o clase literal.`);
+      uiGovernanceWarnings++;
+    }
+
+    // Detecta estilos inline duros con hex
+    const hardcodedHexStyleMatches = content.match(/style=\{\{\s*(color|backgroundColor|borderColor):\s*['"]#[0-9a-fA-F]{3,8}['"]/gi);
+    if (hardcodedHexStyleMatches) {
+      console.warn(`🎨 UI Governance Warning: [${file}] tiene colores inline duros. Usar colorSystem/uiDesignSystem de /shared/core/uiDesignSystem.`);
+      uiGovernanceWarnings++;
+    }
+  }
+}
+
+function scanDir(dir, currentModule = null) {
+  if (!fs.existsSync(dir)) return;
   const files = fs.readdirSync(dir);
 
   for (const file of files) {
@@ -32,48 +81,25 @@ function checkDir(dir, currentModule) {
     const stat = fs.statSync(fullPath);
 
     if (stat.isDirectory()) {
-      checkDir(fullPath, currentModule);
+      const isSubModule = dir === modulesDir ? file : currentModule;
+      scanDir(fullPath, isSubModule);
     } else if (/\.(js|jsx|ts|tsx)$/.test(file)) {
-      const content = fs.readFileSync(fullPath, 'utf8');
-
-      // 1. Verificación de Fronteras de Módulos
-      const importMatches = content.match(/from\s+['"]([^'"]+)['"]/g) || [];
-      for (const match of importMatches) {
-        const importPath = match.replace(/from\s+['"]/, '').replace(/['"]$/, '');
-        if (importPath.includes('/modules/')) {
-          const targetModule = importPath.split('/modules/')[1]?.split('/')[0];
-          if (targetModule && targetModule !== currentModule) {
-            console.warn(`⚠️ Boundary Warning: [${currentModule}] imports [${targetModule}] in ${path.relative(process.cwd(), fullPath)}`);
-            violationsCount++;
-          }
-        }
-      }
-
-      // 2. Gobernanza de Arquitectura de Motor UI (Detecta colores o estilos duros a mano)
-      if (!EXEMPT_UI_GOVERNANCE.some(ex => file.endsWith(ex))) {
-        // Detecta patrones como style={{ color: '#HEX' }} o background '#HEX' escrito a mano
-        const hardcodedHexStyleMatches = content.match(/style=\{\{\s*(color|backgroundColor|borderColor):\s*['"]#(FF2E63|00A8A0|2B1B2E|EFE2C9)['"]/gi);
-        if (hardcodedHexStyleMatches) {
-          console.warn(`🎨 UI Governance Warning: [${file}] tiene colores inline duros. Usar colorSystem/uiDesignSystem de /shared/core/uiDesignSystem.`);
-          uiGovernanceWarnings++;
-        }
-      }
+      checkFile(fullPath, currentModule);
     }
   }
 }
 
-if (fs.existsSync(modulesDir)) {
-  const modules = fs.readdirSync(modulesDir);
-  for (const mod of modules) {
-    const modPath = path.join(modulesDir, mod);
-    if (fs.statSync(modPath).isDirectory()) {
-      checkDir(modPath, mod);
-    }
-  }
-}
+console.log('🔍 Iniciando verificación de Gobernanza de Módulos y UI...');
+
+// Escanear /modules/ y /shared/
+scanDir(modulesDir);
+scanDir(sharedDir);
 
 if (violationsCount === 0 && uiGovernanceWarnings === 0) {
   console.log('✅ Governance & Module boundary check passed: 0 violations found!');
+  process.exit(0);
 } else {
-  console.log(`ℹ️ Check completed: ${violationsCount} boundary warnings, ${uiGovernanceWarnings} UI governance warnings.`);
+  console.error(`❌ Check completed with errors: ${violationsCount} boundary violations, ${uiGovernanceWarnings} UI governance errors.`);
+  process.exit(1);
 }
+
