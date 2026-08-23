@@ -8,6 +8,7 @@ import { ZoomIn, ZoomOut, Smartphone, FileText, CreditCard, Palette, Sun, Moon }
 import { getCurrentProfile, capturarConexionDriveSiCorresponde } from '../modules/auth/authService';
 import { supabase } from '../shared/core/lib/supabaseClient';
 import { exportCVToJson, importCVFromJsonFile } from '../shared/core/utils/jsonImporterExporter';
+import { colorSystem } from '../shared/core/uiDesignSystem';
 
 const PublicCVView = lazy(() => import('../modules/cv-builder/components/PublicCVView').then(m => ({ default: m.PublicCVView })));
 const CardExportModal = lazy(() => import('../modules/cv-builder/components/modals/CardExportModal').then(m => ({ default: m.CardExportModal })));
@@ -247,7 +248,7 @@ function AppContent() {
   }
 
   return (
-    <div className="h-screen bg-[#2B1B2E] text-white flex flex-col font-sans overflow-hidden selection:bg-[#FF2E63] selection:text-white relative">
+    <div className="h-screen bg-[${colorSystem.neutral.textPrimary}] text-white flex flex-col font-sans overflow-hidden selection:bg-[${colorSystem.accent.base}] selection:text-white relative">
       <div className="md:pl-16">
         <Navbar 
           onPrint={handleExportPDFClick} 
@@ -277,7 +278,7 @@ function AppContent() {
 
         <div 
           style={{ backgroundColor: activeUiTheme.bgPanel, color: activeUiTheme.textPrimary }}
-          className={`transition-all duration-300 ease-in-out border-r border-[#6B5B6E]/30 z-20 flex flex-col h-full overflow-y-auto ${
+          className={`transition-all duration-300 ease-in-out border-r border-[${colorSystem.neutral.textSecondary}]/30 z-20 flex flex-col h-full overflow-y-auto ${
             isPanelOpen 
               ? 'w-full md:w-[460px] lg:w-[500px] opacity-100 shadow-2xl' 
               : 'w-0 opacity-0 overflow-hidden hidden md:block'
@@ -439,13 +440,13 @@ function AppContent() {
       </Suspense>
 
       {/* Barra de Estado Inferior Reorganizada (Zoom, Modo CV/Tarjeta y Switcher de Tema) */}
-      <footer className="hidden md:flex bg-[#1C121E] text-slate-300 border-t border-[#EFE2C9]/10 py-2 px-4 md:pl-20 items-center justify-between no-print z-30 shadow-2xl select-none text-xs">
+      <footer className="hidden md:flex bg-[#1C121E] text-slate-300 border-t border-[${colorSystem.neutral.border}]/10 py-2 px-4 md:pl-20 items-center justify-between no-print z-30 shadow-2xl select-none text-xs">
         {/* Izquierda: Alternador CV vs Tarjeta Personal */}
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={toggleDocumentPresetMode}
-            className="px-3 py-1 rounded-xl bg-[#2B1B2E] border border-purple-500/40 hover:border-[#FF2E63] text-purple-200 hover:text-white font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95"
+            className="px-3 py-1 rounded-xl bg-[${colorSystem.neutral.textPrimary}] border border-purple-500/40 hover:border-[${colorSystem.accent.base}] text-purple-200 hover:text-white font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95"
             title="Alternar entre modo Currículum Vitae A4 y Tarjeta Personal"
           >
             {cvData?.activePresetId === 'tarjeta-personal' ? (
@@ -455,7 +456,7 @@ function AppContent() {
               </>
             ) : (
               <>
-                <FileText className="w-3.5 h-3.5 text-[#00A8A0]" />
+                <FileText className="w-3.5 h-3.5 text-[${colorSystem.secondary.base}]" />
                 <span>Vista: Currículum Vitae 📄</span>
               </>
             )}
@@ -470,10 +471,10 @@ function AppContent() {
         </div>
 
         {/* Centro: Controles de Zoom del Visor */}
-        <div className="flex items-center gap-1 bg-[#2B1B2E] px-2 py-1 rounded-xl border border-white/10 shadow-inner">
+        <div className="flex items-center gap-1 bg-[${colorSystem.neutral.textPrimary}] px-2 py-1 rounded-xl border border-white/10 shadow-inner">
           <button
             onClick={() => setZoomLevel(prev => Math.max(0.3, parseFloat((prev - 0.1).toFixed(2))))}
-            className="p-1 rounded-lg hover:bg-[#FF2E63] text-white transition cursor-pointer"
+            className="p-1 rounded-lg hover:bg-[${colorSystem.accent.base}] text-white transition cursor-pointer"
             title="Alejar (-10%)"
           >
             <ZoomOut className="w-3.5 h-3.5" />
@@ -485,7 +486,7 @@ function AppContent() {
 
           <button
             onClick={() => setZoomLevel(prev => Math.min(2.0, parseFloat((prev + 0.1).toFixed(2))))}
-            className="p-1 rounded-lg hover:bg-[#FF2E63] text-white transition cursor-pointer"
+            className="p-1 rounded-lg hover:bg-[${colorSystem.accent.base}] text-white transition cursor-pointer"
             title="Acercar (+10%)"
           >
             <ZoomIn className="w-3.5 h-3.5" />
@@ -493,7 +494,7 @@ function AppContent() {
 
           <button
             onClick={triggerAutoFit}
-            className="px-2 py-0.5 rounded-lg bg-[#00A8A0] hover:bg-[#00877F] text-white text-[10px] font-black transition flex items-center gap-1 shadow-sm cursor-pointer ml-1"
+            className="px-2 py-0.5 rounded-lg bg-[${colorSystem.secondary.base}] hover:bg-[${colorSystem.secondary.hover}] text-white text-[10px] font-black transition flex items-center gap-1 shadow-sm cursor-pointer ml-1"
             title="Auto-encajar el diseño al tamaño de pantalla"
           >
             <Smartphone className="w-3 h-3" />
@@ -506,11 +507,11 @@ function AppContent() {
           <button
             type="button"
             onClick={cycleUITheme}
-            className="px-3 py-1 rounded-xl bg-[#2B1B2E] border border-amber-400/40 hover:border-amber-400 text-amber-300 hover:text-amber-200 font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95"
+            className="px-3 py-1 rounded-xl bg-[${colorSystem.neutral.textPrimary}] border border-amber-400/40 hover:border-amber-400 text-amber-300 hover:text-amber-200 font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95"
             title="Tocar para cambiar el color de fondo de la interfaz (Cálido, Nocturno, Océano)"
           >
             <span>Tema</span>
-            <Palette className="w-3.5 h-3.5 text-[#FF2E63]" />
+            <Palette className="w-3.5 h-3.5 text-[${colorSystem.accent.base}]" />
           </button>
 
           <span className="text-[10px] font-bold text-slate-500">© 2026 LEECV</span>

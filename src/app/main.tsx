@@ -90,7 +90,7 @@ if (rootElement) {
     <StrictMode>
       <ErrorBoundary>
         <Suspense fallback={
-          <div className="min-h-screen bg-[#2B1B2E] text-white flex items-center justify-center font-bold">
+          <div className="min-h-screen bg-[${colorSystem.neutral.textPrimary}] text-white flex items-center justify-center font-bold">
             Cargando LEECV...
           </div>
         }>

@@ -270,7 +270,7 @@ export default function EditorPanel({
     return (
       <div className={`flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl border mb-3 transition ${
         isVisible 
-          ? 'bg-white border-[#EFE2C9] text-[#2B1B2E] shadow-sm' 
+          ? 'bg-white border-[${colorSystem.neutral.border}] text-[${colorSystem.neutral.textPrimary}] shadow-sm' 
           : 'bg-slate-200 border-slate-300 text-slate-500 opacity-75'
       }`}>
         <span className="text-xs font-black uppercase tracking-wide">
@@ -291,7 +291,7 @@ export default function EditorPanel({
             }}
             className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
               isVisible
-                ? 'bg-[#00A8A0] text-white hover:bg-[#00877F]'
+                ? 'bg-[${colorSystem.secondary.base}] text-white hover:bg-[${colorSystem.secondary.hover}]'
                 : 'bg-slate-400 text-white hover:bg-slate-500'
             }`}
           >
@@ -302,7 +302,7 @@ export default function EditorPanel({
             <button
               type="button"
               onClick={onAddAction}
-              className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-[#FF2E63] hover:bg-[#E31555] text-white shadow-sm transition cursor-pointer"
+              className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-[${colorSystem.accent.base}] hover:bg-[#E31555] text-white shadow-sm transition cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>{addLabel}</span>
@@ -314,7 +314,7 @@ export default function EditorPanel({
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#F5EDDA] text-[#2B1B2E]">
+    <div className="h-full flex flex-col bg-[${colorSystem.neutral.surfaceMuted}] text-[${colorSystem.neutral.textPrimary}]">
 
       {/* Tab Form Content Body */}
       <div className="flex-1 overflow-y-auto p-5 space-y-6">
@@ -441,18 +441,18 @@ export default function EditorPanel({
 
             {cvData?.sectionVisibility?.ecologia !== false && (
               <>
-            <div className="p-3 bg-[#FFF1C2] rounded-xl border-2 border-[#FFC93C] text-xs text-[#2B1B2E] space-y-1 shadow-sm">
-              <div className="flex items-center gap-1.5 font-bold text-[#FF2E63]">
+            <div className="p-3 bg-[#FFF1C2] rounded-xl border-2 border-[#FFC93C] text-xs text-[${colorSystem.neutral.textPrimary}] space-y-1 shadow-sm">
+              <div className="flex items-center gap-1.5 font-bold text-[${colorSystem.accent.base}]">
                 <Info className="w-4 h-4" /> Proyectos Ecológicos, Sociales & Comunitarios
               </div>
-              <p className="text-[11px] text-[#2B1B2E] font-bold">
+              <p className="text-[11px] text-[${colorSystem.neutral.textPrimary}] font-bold">
                 Esta sección permite registrar iniciativas comunitarias, talleres sobre medio ambiente, huertas orgánicas, proyectos rurales, voluntariados y acciones sociales de impacto sustentable.
               </p>
             </div>
 
             {/* Proyectos Rurales */}
             <div className="space-y-3 pt-2">
-              <div className="flex items-center justify-between border-b pb-1 border-[#EFE2C9]">
+              <div className="flex items-center justify-between border-b pb-1 border-[${colorSystem.neutral.border}]">
                 <span className="text-xs font-bold text-emerald-700">Proyectos Rurales / Agricultura</span>
                 <button
                   onClick={() => {
@@ -474,7 +474,7 @@ export default function EditorPanel({
               </div>
 
               {(cvData.ecology?.rural || []).map((item, idx) => (
-                <div key={idx} className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] shadow-sm space-y-2">
+                <div key={idx} className="p-3.5 bg-white rounded-2xl border-2 border-[${colorSystem.neutral.border}] shadow-sm space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-emerald-600">Proyecto Rural #{idx + 1}</span>
                     <button
@@ -495,13 +495,13 @@ export default function EditorPanel({
                           }
                         });
                       }}
-                      className="text-[#2B1B2E] font-medium hover:text-red-600 transition"
+                      className="text-[${colorSystem.neutral.textPrimary}] font-medium hover:text-red-600 transition"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-[#2B1B2E] mb-0.5">Título del Taller / Proyecto Rural</label>
+                    <label className="block text-[10px] font-bold text-[${colorSystem.neutral.textPrimary}] mb-0.5">Título del Taller / Proyecto Rural</label>
                     <input 
                       type="text"
                       value={item.title}
@@ -513,11 +513,11 @@ export default function EditorPanel({
                           return { ...prev, ecology: { ...prev.ecology, rural: updated } };
                         });
                       }}
-                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[${colorSystem.neutral.border}] bg-white text-[${colorSystem.neutral.textPrimary}] placeholder-[${colorSystem.neutral.textSecondary}]/50 font-bold outline-none focus:border-[${colorSystem.accent.base}] focus:ring-2 focus:ring-[#FFD9E3] transition"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-[#2B1B2E] mb-0.5">Institución Organizadora</label>
+                    <label className="block text-[10px] font-bold text-[${colorSystem.neutral.textPrimary}] mb-0.5">Institución Organizadora</label>
                     <input 
                       type="text"
                       value={item.institution}
@@ -529,7 +529,7 @@ export default function EditorPanel({
                           return { ...prev, ecology: { ...prev.ecology, rural: updated } };
                         });
                       }}
-                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[${colorSystem.neutral.border}] bg-white text-[${colorSystem.neutral.textPrimary}] placeholder-[${colorSystem.neutral.textSecondary}]/50 font-bold outline-none focus:border-[${colorSystem.accent.base}] focus:ring-2 focus:ring-[#FFD9E3] transition"
                     />
                   </div>
                 </div>
@@ -538,7 +538,7 @@ export default function EditorPanel({
 
             {/* Proyectos Ambientales */}
             <div className="space-y-3 pt-2">
-              <div className="flex items-center justify-between border-b pb-1 border-[#EFE2C9]">
+              <div className="flex items-center justify-between border-b pb-1 border-[${colorSystem.neutral.border}]">
                 <span className="text-xs font-bold text-teal-700">Proyectos Medio Ambientales</span>
                 <button
                   onClick={() => {
@@ -553,16 +553,16 @@ export default function EditorPanel({
                       }
                     }));
                   }}
-                  className="flex items-center gap-1 text-xs text-[#00A8A0] font-bold hover:underline"
+                  className="flex items-center gap-1 text-xs text-[${colorSystem.secondary.base}] font-bold hover:underline"
                 >
                   <Plus className="w-3.5 h-3.5" /> Agregar Ambiental
                 </button>
               </div>
 
               {(cvData.ecology?.environmental || []).map((item, idx) => (
-                <div key={idx} className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] shadow-sm space-y-2">
+                <div key={idx} className="p-3.5 bg-white rounded-2xl border-2 border-[${colorSystem.neutral.border}] shadow-sm space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-[#00A8A0]">Proyecto Ambiental #{idx + 1}</span>
+                    <span className="text-[11px] font-bold text-[${colorSystem.secondary.base}]">Proyecto Ambiental #{idx + 1}</span>
                     <button
                       onClick={() => {
                         const name = item.title || item.institution || `Proyecto Ambiental #${idx + 1}`;
@@ -581,13 +581,13 @@ export default function EditorPanel({
                           }
                         });
                       }}
-                      className="text-[#2B1B2E] font-medium hover:text-red-600 transition"
+                      className="text-[${colorSystem.neutral.textPrimary}] font-medium hover:text-red-600 transition"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-[#2B1B2E] mb-0.5">Nombre del Proyecto Ambiental</label>
+                    <label className="block text-[10px] font-bold text-[${colorSystem.neutral.textPrimary}] mb-0.5">Nombre del Proyecto Ambiental</label>
                     <input 
                       type="text"
                       value={item.title}
@@ -599,11 +599,11 @@ export default function EditorPanel({
                           return { ...prev, ecology: { ...prev.ecology, environmental: updated } };
                         });
                       }}
-                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[${colorSystem.neutral.border}] bg-white text-[${colorSystem.neutral.textPrimary}] placeholder-[${colorSystem.neutral.textSecondary}]/50 font-bold outline-none focus:border-[${colorSystem.accent.base}] focus:ring-2 focus:ring-[#FFD9E3] transition"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-[#2B1B2E] mb-0.5">Entidad o Red Organizadora</label>
+                    <label className="block text-[10px] font-bold text-[${colorSystem.neutral.textPrimary}] mb-0.5">Entidad o Red Organizadora</label>
                     <input 
                       type="text"
                       value={item.institution}
@@ -615,7 +615,7 @@ export default function EditorPanel({
                           return { ...prev, ecology: { ...prev.ecology, environmental: updated } };
                         });
                       }}
-                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[${colorSystem.neutral.border}] bg-white text-[${colorSystem.neutral.textPrimary}] placeholder-[${colorSystem.neutral.textSecondary}]/50 font-bold outline-none focus:border-[${colorSystem.accent.base}] focus:ring-2 focus:ring-[#FFD9E3] transition"
                     />
                   </div>
                 </div>
@@ -637,13 +637,13 @@ export default function EditorPanel({
               <>
             {/* 1. Selector */}
             <div>
-              <label className="block text-xs font-black text-[#FF2E63] mb-1.5 uppercase tracking-wide">
+              <label className="block text-xs font-black text-[${colorSystem.accent.base}] mb-1.5 uppercase tracking-wide">
                 IDENTIFICA TU CERTIFICADO *
               </label>
               <select
                 value={selectedRegIdx}
                 onChange={(e) => setSelectedRegIdx(e.target.value)}
-                className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-extrabold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition shadow-sm"
+                className="w-full text-xs p-2.5 rounded-xl border-2 border-[${colorSystem.neutral.border}] bg-white text-[${colorSystem.neutral.textPrimary}] font-extrabold outline-none focus:border-[${colorSystem.accent.base}] focus:ring-2 focus:ring-[#FFD9E3] transition shadow-sm"
               >
                 <option value="">-- Hacer clic para elegir un título o curso --</option>
                 {registeredItems.map((item, idx) => (
@@ -668,8 +668,8 @@ export default function EditorPanel({
                 }}
                 className={`p-2.5 rounded-xl border-2 flex items-center justify-center gap-1.5 font-black text-xs transition ${
                   certMode === 'upload'
-                    ? 'border-[#FF2E63] bg-[#FF2E63] text-white shadow-md'
-                    : 'border-[#EFE2C9] bg-white text-[#2B1B2E] hover:bg-[#FFFDF7]'
+                    ? 'border-[${colorSystem.accent.base}] bg-[${colorSystem.accent.base}] text-white shadow-md'
+                    : 'border-[${colorSystem.neutral.border}] bg-white text-[${colorSystem.neutral.textPrimary}] hover:bg-[#FFFDF7]'
                 }`}
               >
                 <Upload className="w-4 h-4" /> Subir Imagen
@@ -684,8 +684,8 @@ export default function EditorPanel({
                 }}
                 className={`p-2.5 rounded-xl border-2 flex items-center justify-center gap-1.5 font-black text-xs transition ${
                   certMode === 'camera'
-                    ? 'border-[#FF2E63] bg-[#FF2E63] text-white shadow-md'
-                    : 'border-[#EFE2C9] bg-white text-[#2B1B2E] hover:bg-[#FFFDF7]'
+                    ? 'border-[${colorSystem.accent.base}] bg-[${colorSystem.accent.base}] text-white shadow-md'
+                    : 'border-[${colorSystem.neutral.border}] bg-white text-[${colorSystem.neutral.textPrimary}] hover:bg-[#FFFDF7]'
                 }`}
               >
                 <Camera className="w-4 h-4" /> Usar Cámara
@@ -698,7 +698,7 @@ export default function EditorPanel({
                 <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
                 <button
                   onClick={capturePhoto}
-                  className="absolute bottom-3 flex items-center gap-1.5 px-5 py-2 bg-[#FF2E63] hover:bg-[#E31555] text-white font-black text-xs rounded-full shadow-lg transition"
+                  className="absolute bottom-3 flex items-center gap-1.5 px-5 py-2 bg-[${colorSystem.accent.base}] hover:bg-[#E31555] text-white font-black text-xs rounded-full shadow-lg transition"
                 >
                   <Camera className="w-4 h-4" /> Capturar Foto
                 </button>
@@ -712,39 +712,39 @@ export default function EditorPanel({
                   }
                   fileInputRef.current?.click();
                 }}
-                className="w-full h-28 border-2 border-dashed border-[#00A8A0] bg-white rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-[#CFF3F0]/30 transition group shadow-sm"
+                className="w-full h-28 border-2 border-dashed border-[${colorSystem.secondary.base}] bg-white rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-[${colorSystem.secondary.muted}]/30 transition group shadow-sm"
               >
-                <Upload className="w-6 h-6 text-[#00A8A0] mb-1 group-hover:scale-110 transition duration-300" />
-                <span className="font-black text-xs text-[#FF2E63] uppercase tracking-wider">CLIC AQUÍ</span>
-                <span className="text-[10px] text-[#2B1B2E] font-bold">Seleccionar archivo o foto de certificado</span>
+                <Upload className="w-6 h-6 text-[${colorSystem.secondary.base}] mb-1 group-hover:scale-110 transition duration-300" />
+                <span className="font-black text-xs text-[${colorSystem.accent.base}] uppercase tracking-wider">CLIC AQUÍ</span>
+                <span className="text-[10px] text-[${colorSystem.neutral.textPrimary}] font-bold">Seleccionar archivo o foto de certificado</span>
               </div>
             )}
 
             <input type="file" ref={fileInputRef} accept="image/*" onChange={handleFileUpload} className="hidden" />
 
             {/* 4. List of Attached Certificates */}
-            <div className="pt-3 border-t-2 border-[#EFE2C9] space-y-3">
-              <span className="text-xs font-black text-[#2B1B2E] uppercase tracking-wider">
+            <div className="pt-3 border-t-2 border-[${colorSystem.neutral.border}] space-y-3">
+              <span className="text-xs font-black text-[${colorSystem.neutral.textPrimary}] uppercase tracking-wider">
                 ANEXADOS: ({cvData.certificatesScanned.length})
               </span>
 
               {cvData.certificatesScanned.length === 0 ? (
-                <p className="text-xs text-[#2B1B2E] font-bold italic text-center py-4 border-2 border-dashed border-[#EFE2C9] rounded-xl bg-white">
+                <p className="text-xs text-[${colorSystem.neutral.textPrimary}] font-bold italic text-center py-4 border-2 border-dashed border-[${colorSystem.neutral.border}] rounded-xl bg-white">
                   No hay certificados anexados aún.
                 </p>
               ) : (
                 <div className="space-y-2">
                   {cvData.certificatesScanned.map((cert) => (
-                    <div key={cert.id} className="flex items-center gap-3 p-2.5 bg-white rounded-xl border-2 border-[#EFE2C9] shadow-sm">
+                    <div key={cert.id} className="flex items-center gap-3 p-2.5 bg-white rounded-xl border-2 border-[${colorSystem.neutral.border}] shadow-sm">
                       <img 
                         src={cert.imageUrl} 
                         alt={cert.title} 
                         style={{ transform: `rotate(${cert.rotation || 0}deg)` }}
-                        className="w-12 h-14 object-cover rounded-lg border border-[#EFE2C9] flex-shrink-0" 
+                        className="w-12 h-14 object-cover rounded-lg border border-[${colorSystem.neutral.border}] flex-shrink-0" 
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-black text-[#2B1B2E] truncate">{cert.title}</p>
-                        <p className="text-[10px] text-[#2B1B2E] font-bold">{cert.institution} ({cert.year})</p>
+                        <p className="text-xs font-black text-[${colorSystem.neutral.textPrimary}] truncate">{cert.title}</p>
+                        <p className="text-[10px] text-[${colorSystem.neutral.textPrimary}] font-bold">{cert.institution} ({cert.year})</p>
                       </div>
 
                       {/* Rotate button */}
@@ -757,10 +757,10 @@ export default function EditorPanel({
                             )
                           }));
                         }}
-                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-[#FFF1C2] border border-[#FFC93C] text-[#2B1B2E] font-black text-[11px] hover:bg-[#FFC93C] transition"
+                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-[#FFF1C2] border border-[#FFC93C] text-[${colorSystem.neutral.textPrimary}] font-black text-[11px] hover:bg-[#FFC93C] transition"
                         title="Girar imagen 90°"
                       >
-                        <RotateCw className="w-3.5 h-3.5 text-[#FF2E63]" />
+                        <RotateCw className="w-3.5 h-3.5 text-[${colorSystem.accent.base}]" />
                         <span>Girar ({cert.rotation || 0}°)</span>
                       </button>
 
@@ -781,7 +781,7 @@ export default function EditorPanel({
                             }
                           });
                         }}
-                        className="p-1.5 text-[#2B1B2E] hover:text-red-600 transition"
+                        className="p-1.5 text-[${colorSystem.neutral.textPrimary}] hover:text-red-600 transition"
                         title="Eliminar"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -834,7 +834,7 @@ export default function EditorPanel({
             {cvData?.sectionVisibility?.firma !== false && (
               <>
 
-            <div className="p-4 bg-white rounded-2xl border-2 border-[#EFE2C9] space-y-3 text-center shadow-sm">
+            <div className="p-4 bg-white rounded-2xl border-2 border-[${colorSystem.neutral.border}] space-y-3 text-center shadow-sm">
               {cvData.signature?.dataUrl ? (
                 <div className="space-y-2">
                   <div className="bg-[#FFFDF7] p-3 rounded-xl border border-[#FFC93C]">
@@ -856,27 +856,27 @@ export default function EditorPanel({
                   </button>
                 </div>
               ) : (
-                <p className="text-xs text-[#2B1B2E] font-bold italic">No has dibujado o subido una imagen de firma aún.</p>
+                <p className="text-xs text-[${colorSystem.neutral.textPrimary}] font-bold italic">No has dibujado o subido una imagen de firma aún.</p>
               )}
 
               <button
                 onClick={onOpenSignature}
-                className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#FF2E63] hover:bg-[#E31555] text-white text-xs font-black rounded-xl shadow-md transition"
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-[${colorSystem.accent.base}] hover:bg-[#E31555] text-white text-xs font-black rounded-xl shadow-md transition"
               >
                 <PenTool className="w-4 h-4" /> Abrir Tablero de Firma (Dibujar / Subir)
               </button>
             </div>
 
-            <div className="p-4 bg-white rounded-2xl border-2 border-[#EFE2C9] space-y-3 shadow-sm">
-              <h4 className="text-xs font-black text-[#2B1B2E] uppercase">Datos del Pie de Firma</h4>
+            <div className="p-4 bg-white rounded-2xl border-2 border-[${colorSystem.neutral.border}] space-y-3 shadow-sm">
+              <h4 className="text-xs font-black text-[${colorSystem.neutral.textPrimary}] uppercase">Datos del Pie de Firma</h4>
               
               {/* 1. Nombre Automático (Abreviaturas / Título + Nombres + Apellidos) */}
               <div>
-                <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1 flex items-center justify-between">
+                <label className="block text-[11px] font-bold text-[${colorSystem.neutral.textPrimary}] mb-1 flex items-center justify-between">
                   <span>Nombre del Firmante</span>
                   <span className="text-[9px] px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 font-extrabold">Automático</span>
                 </label>
-                <div className="w-full text-xs p-2.5 rounded-xl border border-[#EFE2C9] bg-slate-50 text-[#2B1B2E] font-extrabold shadow-inner">
+                <div className="w-full text-xs p-2.5 rounded-xl border border-[${colorSystem.neutral.border}] bg-slate-50 text-[${colorSystem.neutral.textPrimary}] font-extrabold shadow-inner">
                   {`${cvData.personalInfo?.titlePrefix ? cvData.personalInfo.titlePrefix + ' ' : ''}${cvData.personalInfo?.givenNames || ''} ${cvData.personalInfo?.surname || ''}`.trim() || cvData.personalInfo?.fullName || 'Postulante'}
                 </div>
               </div>
@@ -893,7 +893,7 @@ export default function EditorPanel({
 
                 return (
                   <div>
-                    <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">
+                    <label className="block text-[11px] font-bold text-[${colorSystem.neutral.textPrimary}] mb-1">
                       Título Profesional (Registros de Profesión)
                     </label>
                     {titleList.length > 0 ? (
@@ -906,7 +906,7 @@ export default function EditorPanel({
                             signature: { ...(prev.signature || {}), signerRole: val }
                           }));
                         }}
-                        className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] cursor-pointer transition"
+                        className="w-full text-xs p-2.5 rounded-xl border-2 border-[${colorSystem.neutral.border}] bg-white text-[${colorSystem.neutral.textPrimary}] font-bold outline-none focus:border-[${colorSystem.accent.base}] focus:ring-2 focus:ring-[#FFD9E3] cursor-pointer transition"
                       >
                         {titleList.map((t, idx) => (
                           <option key={idx} value={t}>{t}</option>
@@ -923,7 +923,7 @@ export default function EditorPanel({
 
               {/* 3. Selector de Fecha con Calendario */}
               <div>
-                <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1 flex items-center justify-between">
+                <label className="block text-[11px] font-bold text-[${colorSystem.neutral.textPrimary}] mb-1 flex items-center justify-between">
                   <span>Fecha de Firma</span>
                   <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 font-extrabold">Calendario</span>
                 </label>
@@ -937,13 +937,13 @@ export default function EditorPanel({
                       signature: { ...(prev.signature || {}), date: val }
                     }));
                   }}
-                  className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] cursor-pointer transition"
+                  className="w-full text-xs p-2.5 rounded-xl border-2 border-[${colorSystem.neutral.border}] bg-white text-[${colorSystem.neutral.textPrimary}] font-bold outline-none focus:border-[${colorSystem.accent.base}] focus:ring-2 focus:ring-[#FFD9E3] cursor-pointer transition"
                 />
               </div>
 
               {/* 4. Lugar / Ciudad de Emisión de la Firma */}
               <div>
-                <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">
+                <label className="block text-[11px] font-bold text-[${colorSystem.neutral.textPrimary}] mb-1">
                   Lugar / Ciudad de Emisión de la Firma
                 </label>
                 <input 
@@ -957,7 +957,7 @@ export default function EditorPanel({
                     }));
                   }}
                   placeholder="Ej: Salta, Argentina"
-                  className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+                  className="w-full text-xs p-2.5 rounded-xl border-2 border-[${colorSystem.neutral.border}] bg-white text-[${colorSystem.neutral.textPrimary}] font-bold outline-none focus:border-[${colorSystem.accent.base}] focus:ring-2 focus:ring-[#FFD9E3] transition"
                 />
               </div>
             </div>
@@ -976,10 +976,10 @@ export default function EditorPanel({
 
           return (
             <div className="space-y-4">
-              <div className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] space-y-3">
-                <div className="flex items-center justify-between border-b pb-2 border-[#EFE2C9]">
-                  <h3 className="text-xs font-black uppercase text-[#FF2E63] flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-[#00A8A0]" /> {cs.titleText}
+              <div className="p-3.5 bg-white rounded-2xl border-2 border-[${colorSystem.neutral.border}] space-y-3">
+                <div className="flex items-center justify-between border-b pb-2 border-[${colorSystem.neutral.border}]">
+                  <h3 className="text-xs font-black uppercase text-[${colorSystem.accent.base}] flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-[${colorSystem.secondary.base}]" /> {cs.titleText}
                   </h3>
                   <button
                     type="button"
@@ -1008,9 +1008,9 @@ export default function EditorPanel({
 
                 <div className="space-y-3">
                   {(cs.records || []).map((rec: any, rIdx: number) => (
-                    <div key={rIdx} className="p-3 bg-slate-50 rounded-xl border border-[#EFE2C9] space-y-2">
+                    <div key={rIdx} className="p-3 bg-slate-50 rounded-xl border border-[${colorSystem.neutral.border}] space-y-2">
                       <div className="flex items-center justify-between border-b pb-1">
-                        <span className="text-[11px] font-bold text-[#00A8A0]">Registro #{rIdx + 1}</span>
+                        <span className="text-[11px] font-bold text-[${colorSystem.secondary.base}]">Registro #{rIdx + 1}</span>
                         <div className="flex items-center gap-1">
                           <button
                             type="button"
@@ -1080,7 +1080,7 @@ export default function EditorPanel({
                         return { ...prev, customSections: updatedCustom };
                       });
                     }}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-black bg-[#FF2E63] text-white shadow transition cursor-pointer"
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-black bg-[${colorSystem.accent.base}] text-white shadow transition cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" /> Agregar Registro a {cs.titleText}
                   </button>
@@ -1096,9 +1096,9 @@ export default function EditorPanel({
         {activeTab === 'nueva_seccion' && (
           <div className="space-y-6">
             {/* 1. SECCIONES PREDISEÑADAS CON 1 CLIC */}
-            <PanelSection icon={<Sparkles className="w-4 h-4 text-[#00A8A0]" />} title="Secciones Prediseñadas">
-              <div className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] space-y-3 shadow-sm">
-                <p className="text-[11px] text-[#6B5B6E] font-medium leading-relaxed">
+            <PanelSection icon={<Sparkles className="w-4 h-4 text-[${colorSystem.secondary.base}]" />} title="Secciones Prediseñadas">
+              <div className="p-3.5 bg-white rounded-2xl border-2 border-[${colorSystem.neutral.border}] space-y-3 shadow-sm">
+                <p className="text-[11px] text-[${colorSystem.neutral.textSecondary}] font-medium leading-relaxed">
                   Haz clic en cualquiera de estas secciones para agregarla instantáneamente a tu currículum con sus campos listos para completar:
                 </p>
 
@@ -1208,15 +1208,15 @@ export default function EditorPanel({
                         className={`p-2.5 rounded-xl border text-left flex flex-col justify-between transition cursor-pointer ${
                           isAlreadyAdded
                             ? 'bg-teal-50 border-teal-300 text-teal-900'
-                            : 'bg-slate-50 border-slate-200 hover:border-[#FF2E63] hover:bg-white'
+                            : 'bg-slate-50 border-slate-200 hover:border-[${colorSystem.accent.base}] hover:bg-white'
                         }`}
                       >
                         <div className="space-y-1">
-                          <span className="text-xs font-black text-[#2B1B2E] block">{presetSec.titleText}</span>
-                          <p className="text-[10px] text-[#6B5B6E] font-medium leading-tight">{presetSec.desc}</p>
+                          <span className="text-xs font-black text-[${colorSystem.neutral.textPrimary}] block">{presetSec.titleText}</span>
+                          <p className="text-[10px] text-[${colorSystem.neutral.textSecondary}] font-medium leading-tight">{presetSec.desc}</p>
                         </div>
                         <span className={`text-[10px] font-black mt-2 self-end px-2 py-0.5 rounded ${
-                          isAlreadyAdded ? 'bg-teal-200 text-teal-900' : 'bg-[#FF2E63] text-white'
+                          isAlreadyAdded ? 'bg-teal-200 text-teal-900' : 'bg-[${colorSystem.accent.base}] text-white'
                         }`}>
                           {isAlreadyAdded ? '✓ Activa (Editar)' : '+ Incorporar'}
                         </span>
@@ -1230,17 +1230,17 @@ export default function EditorPanel({
                     onClick={() => {
                       document.getElementById('custom-section-creator-form')?.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className="p-2.5 rounded-xl border-2 border-dashed border-[#FF2E63]/40 bg-pink-50/50 hover:bg-pink-100 text-left flex flex-col justify-between transition cursor-pointer"
+                    className="p-2.5 rounded-xl border-2 border-dashed border-[${colorSystem.accent.base}]/40 bg-pink-50/50 hover:bg-pink-100 text-left flex flex-col justify-between transition cursor-pointer"
                   >
                     <div className="space-y-1">
-                      <span className="text-xs font-black text-[#FF2E63] flex items-center gap-1">
+                      <span className="text-xs font-black text-[${colorSystem.accent.base}] flex items-center gap-1">
                         <Plus className="w-3.5 h-3.5" /> Sección a Medida
                       </span>
-                      <p className="text-[10px] text-[#6B5B6E] font-medium leading-tight">
+                      <p className="text-[10px] text-[${colorSystem.neutral.textSecondary}] font-medium leading-tight">
                         Crear sección personalizada seleccionando campos a medida.
                       </p>
                     </div>
-                    <span className="text-[10px] font-black mt-2 self-end px-2 py-0.5 rounded bg-[#FF2E63] text-white">
+                    <span className="text-[10px] font-black mt-2 self-end px-2 py-0.5 rounded bg-[${colorSystem.accent.base}] text-white">
                       ↓ Ir a Creador
                     </span>
                   </button>
@@ -1249,11 +1249,11 @@ export default function EditorPanel({
             </PanelSection>
 
             {/* 2. CREADOR DE SECCIÓN A MEDIDA */}
-            <PanelSection icon={<Plus className="w-4 h-4 text-[#FF2E63]" />} title="Sección a Medida">
-              <div id="custom-section-creator-form" className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] space-y-4 shadow-sm">
+            <PanelSection icon={<Plus className="w-4 h-4 text-[${colorSystem.accent.base}]" />} title="Sección a Medida">
+              <div id="custom-section-creator-form" className="p-3.5 bg-white rounded-2xl border-2 border-[${colorSystem.neutral.border}] space-y-4 shadow-sm">
 
                 <div>
-                  <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
+                  <label className="block text-xs font-bold text-[${colorSystem.neutral.textPrimary}] mb-1">
                     Nombre de la Sección Nueva
                   </label>
                   <input
@@ -1261,19 +1261,19 @@ export default function EditorPanel({
                     value={newSectionTitle}
                     onChange={(e) => setNewSectionTitle(e.target.value)}
                     placeholder="Ej: DOCENCIA UNIVERSITARIA, OBRAS DE ARTE"
-                    className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none focus:border-[#FF2E63] transition"
+                    className="w-full text-xs p-2.5 rounded-xl border-2 border-[${colorSystem.neutral.border}] bg-white text-[${colorSystem.neutral.textPrimary}] font-bold outline-none focus:border-[${colorSystem.accent.base}] transition"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-[#2B1B2E] mb-1.5">
+                  <label className="block text-xs font-bold text-[${colorSystem.neutral.textPrimary}] mb-1.5">
                     Seleccionar qué campos tendrá cada registro de esta sección:
                   </label>
                   <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200">
                     {Object.values(FIELD_CATALOG).map((f) => {
                       const isChecked = selectedFields.includes(f.id);
                       return (
-                        <label key={f.id} className="flex items-center gap-2 text-[11px] font-bold text-[#2B1B2E] cursor-pointer hover:text-[#FF2E63]">
+                        <label key={f.id} className="flex items-center gap-2 text-[11px] font-bold text-[${colorSystem.neutral.textPrimary}] cursor-pointer hover:text-[${colorSystem.accent.base}]">
                           <input
                             type="checkbox"
                             checked={isChecked}
@@ -1288,7 +1288,7 @@ export default function EditorPanel({
                                 setSelectedFields(prev => [...prev, f.id]);
                               }
                             }}
-                            className="rounded border-slate-300 text-[#FF2E63] focus:ring-[#FF2E63]"
+                            className="rounded border-slate-300 text-[${colorSystem.accent.base}] focus:ring-[${colorSystem.accent.base}]"
                           />
                           <span>{f.label}</span>
                         </label>
@@ -1333,7 +1333,7 @@ export default function EditorPanel({
                     showSuccess(`Sección '${newSection.titleText}' creada exitosamente.`);
                     if (typeof setActiveTab === 'function') setActiveTab(newId);
                   }}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#00A8A0] hover:bg-[#00877F] text-white text-xs font-black rounded-xl shadow-md transition cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-[${colorSystem.secondary.base}] hover:bg-[${colorSystem.secondary.hover}] text-white text-xs font-black rounded-xl shadow-md transition cursor-pointer"
                 >
                   <Plus className="w-4 h-4" /> Crear e Integrar Sección al CV
                 </button>
@@ -1342,13 +1342,13 @@ export default function EditorPanel({
               {/* Secciones Personalizadas Creadas */}
               {(cvData.customSections || []).length > 0 && (
                 <div className="space-y-4 pt-2">
-                  <h4 className="text-xs font-black text-[#2B1B2E] uppercase border-b pb-1 border-[#EFE2C9]">
+                  <h4 className="text-xs font-black text-[${colorSystem.neutral.textPrimary}] uppercase border-b pb-1 border-[${colorSystem.neutral.border}]">
                     Tus Secciones Personalizadas ({cvData.customSections.length})
                   </h4>
 
                   {cvData.customSections.map((cs: any) => (
-                    <div key={cs.id} className="p-3 bg-slate-50 rounded-2xl border-2 border-[#EFE2C9] flex items-center justify-between">
-                      <span className="text-xs font-black text-[#FF2E63] uppercase">
+                    <div key={cs.id} className="p-3 bg-slate-50 rounded-2xl border-2 border-[${colorSystem.neutral.border}] flex items-center justify-between">
+                      <span className="text-xs font-black text-[${colorSystem.accent.base}] uppercase">
                         {cs.titleText}
                       </span>
                       <button
@@ -1373,9 +1373,9 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {activeTab === 'guardados' && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between border-b pb-2 border-[#EFE2C9]">
-              <h3 className="text-xs font-extrabold uppercase text-[#FF2E63] flex items-center gap-1.5">
-                <FolderOpen className="w-4 h-4 text-[#00A8A0]" /> Abrir Mis Documentos Guardados
+            <div className="flex items-center justify-between border-b pb-2 border-[${colorSystem.neutral.border}]">
+              <h3 className="text-xs font-extrabold uppercase text-[${colorSystem.accent.base}] flex items-center gap-1.5">
+                <FolderOpen className="w-4 h-4 text-[${colorSystem.secondary.base}]" /> Abrir Mis Documentos Guardados
               </h3>
 
               <button
@@ -1390,21 +1390,21 @@ export default function EditorPanel({
 
             <div className="space-y-2.5">
               {savedList.length === 0 ? (
-                <div className="p-6 text-center text-xs text-[#2B1B2E] font-medium border-2 border-dashed border-[#EFE2C9] rounded-xl">
+                <div className="p-6 text-center text-xs text-[${colorSystem.neutral.textPrimary}] font-medium border-2 border-dashed border-[${colorSystem.neutral.border}] rounded-xl">
                   No hay currículums guardados aún. Haz clic en "Guardar Actual" para almacenar este borrador en WebP.
                 </div>
               ) : (
                 savedList.map((item) => (
                   <div
                     key={item.id}
-                    className="p-3.5 rounded-xl border border-[#EFE2C9] bg-[#FFFDF7]/50  hover:border-purple-500 transition flex items-center justify-between gap-2"
+                    className="p-3.5 rounded-xl border border-[${colorSystem.neutral.border}] bg-[#FFFDF7]/50  hover:border-purple-500 transition flex items-center justify-between gap-2"
                   >
                     <div className="space-y-0.5 min-w-0">
-                      <h4 className="text-xs font-black text-[#2B1B2E] font-black  truncate">
+                      <h4 className="text-xs font-black text-[${colorSystem.neutral.textPrimary}] font-black  truncate">
                         {item.candidate_name || item.title}
                       </h4>
-                      <p className="text-[10px] text-[#2B1B2E] font-medium font-semibold flex items-center gap-1">
-                        <Calendar className="w-3 h-3 text-[#2B1B2E] font-medium" />
+                      <p className="text-[10px] text-[${colorSystem.neutral.textPrimary}] font-medium font-semibold flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-[${colorSystem.neutral.textPrimary}] font-medium" />
                         <span>{item.dni ? `DNI: ${item.dni}` : 'Borrador'}</span>
                       </p>
                     </div>
@@ -1419,7 +1419,7 @@ export default function EditorPanel({
 
                       <button
                         onClick={() => handleDeleteSavedFromPanel(item.id, item.candidate_name || item.title)}
-                        className="p-1.5 text-[#2B1B2E] font-medium hover:text-red-500 rounded-lg hover:bg-[#EFE2C9]  transition"
+                        className="p-1.5 text-[${colorSystem.neutral.textPrimary}] font-medium hover:text-red-500 rounded-lg hover:bg-[${colorSystem.neutral.border}]  transition"
                         title="Eliminar"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -1441,8 +1441,8 @@ export default function EditorPanel({
 
             {/* Formato de Papel */}
             <PanelSection icon={<Layout className="w-4 h-4" />} title="Formato de página">
-              <div className="p-3 bg-white rounded-xl border border-[#EFE2C9]">
-                <label className="block text-xs font-bold text-[#2B1B2E] mb-1.5">
+              <div className="p-3 bg-white rounded-xl border border-[${colorSystem.neutral.border}]">
+                <label className="block text-xs font-bold text-[${colorSystem.neutral.textPrimary}] mb-1.5">
                   Tamaño de Hoja / Formato de Papel
                 </label>
                 <select
@@ -1457,7 +1457,7 @@ export default function EditorPanel({
                       }
                     }));
                   }}
-                  className="w-full text-xs p-2.5 rounded-xl border border-[#00A8A0] bg-white text-[#2B1B2E] font-bold outline-none cursor-pointer"
+                  className="w-full text-xs p-2.5 rounded-xl border border-[${colorSystem.secondary.base}] bg-white text-[${colorSystem.neutral.textPrimary}] font-bold outline-none cursor-pointer"
                 >
                   {Object.values(PAGE_SIZES).map((size) => (
                     <option key={size.id} value={size.id}>
@@ -1470,14 +1470,14 @@ export default function EditorPanel({
 
             {/* Tipografía Principal */}
             <PanelSection icon={<FileText className="w-4 h-4" />} title="Tipografía">
-              <div className="p-3 bg-white rounded-xl border border-[#EFE2C9]">
-                <label className="block text-xs font-bold text-[#2B1B2E] mb-1.5">
+              <div className="p-3 bg-white rounded-xl border border-[${colorSystem.neutral.border}]">
+                <label className="block text-xs font-bold text-[${colorSystem.neutral.textPrimary}] mb-1.5">
                   Fuente Principal del Documento (Google Fonts)
                 </label>
                 <select
                   value={cvData?.theme?.fontFamily || "'Outfit', sans-serif"}
                   onChange={(e) => updateTheme('fontFamily', e.target.value)}
-                  className="w-full text-xs p-2.5 rounded-xl border border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none cursor-pointer"
+                  className="w-full text-xs p-2.5 rounded-xl border border-[${colorSystem.neutral.border}] bg-white text-[${colorSystem.neutral.textPrimary}] font-bold outline-none cursor-pointer"
                 >
                   {fontOptions.map((f) => (
                     <option key={f.id} value={f.value}>{f.name}</option>
@@ -1516,20 +1516,20 @@ export default function EditorPanel({
                       onClick={() => setCvData((prev: any) => ({ ...prev, activePresetId: styleOpt.id }))}
                       className={`p-3 rounded-xl border text-left transition flex items-start justify-between gap-3 cursor-pointer ${
                         isSelected
-                          ? 'border-[#FF2E63] bg-[#FFD9E3]/30 ring-2 ring-[#FF2E63]/30'
-                          : 'border-[#EFE2C9] bg-white hover:border-[#FF2E63]'
+                          ? 'border-[${colorSystem.accent.base}] bg-[#FFD9E3]/30 ring-2 ring-[${colorSystem.accent.base}]/30'
+                          : 'border-[${colorSystem.neutral.border}] bg-white hover:border-[${colorSystem.accent.base}]'
                       }`}
                     >
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-black text-[#2B1B2E]">{styleOpt.title}</span>
+                          <span className="text-xs font-black text-[${colorSystem.neutral.textPrimary}]">{styleOpt.title}</span>
                           <span className="text-[9px] px-2 py-0.5 rounded bg-purple-100 text-purple-700 font-extrabold">
                             {styleOpt.badge}
                           </span>
                         </div>
-                        <p className="text-[10px] text-[#2B1B2E] font-medium leading-snug">{styleOpt.desc}</p>
+                        <p className="text-[10px] text-[${colorSystem.neutral.textPrimary}] font-medium leading-snug">{styleOpt.desc}</p>
                       </div>
-                      {isSelected && <Check className="w-4 h-4 text-[#00A8A0] flex-shrink-0 mt-1" />}
+                      {isSelected && <Check className="w-4 h-4 text-[${colorSystem.secondary.base}] flex-shrink-0 mt-1" />}
                     </button>
                   );
                 })}
@@ -1540,12 +1540,12 @@ export default function EditorPanel({
             <PanelSection icon={<Palette className="w-4 h-4" />} title="Paletas de color"
               manualAdjustment={
                 <div className="space-y-3 pt-2">
-                  <label className="block text-xs font-bold text-[#2B1B2E]">
+                  <label className="block text-xs font-bold text-[${colorSystem.neutral.textPrimary}]">
                     Ajuste Fino de Colores Personalizados
                   </label>
                   
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-[#2B1B2E] font-bold">Color Primario (Lateral/Portada)</span>
+                    <span className="text-[${colorSystem.neutral.textPrimary}] font-bold">Color Primario (Lateral/Portada)</span>
                     <input 
                       type="color" 
                       value={cvData?.theme?.primaryColor || '#1e3a8a'} 
@@ -1555,7 +1555,7 @@ export default function EditorPanel({
                   </div>
 
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-[#2B1B2E] font-bold">Color Secundario (Encabezados lateral)</span>
+                    <span className="text-[${colorSystem.neutral.textPrimary}] font-bold">Color Secundario (Encabezados lateral)</span>
                     <input 
                       type="color" 
                       value={cvData?.theme?.secondaryColor || '#172554'} 
@@ -1565,7 +1565,7 @@ export default function EditorPanel({
                   </div>
 
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-[#2B1B2E] font-bold">Color de Acento (Barras e Iconos)</span>
+                    <span className="text-[${colorSystem.neutral.textPrimary}] font-bold">Color de Acento (Barras e Iconos)</span>
                     <input 
                       type="color" 
                       value={cvData?.theme?.accentColor || '#d97706'} 
@@ -1589,7 +1589,7 @@ export default function EditorPanel({
 
                   return (
                     <div key={cat} className="space-y-1.5 pt-1">
-                      <h4 className="text-[11px] font-black uppercase text-[#2B1B2E] font-medium tracking-wider">
+                      <h4 className="text-[11px] font-black uppercase text-[${colorSystem.neutral.textPrimary}] font-medium tracking-wider">
                         {categoryTitle}
                       </h4>
                       <div className="grid grid-cols-2 gap-2">
@@ -1601,13 +1601,13 @@ export default function EditorPanel({
                               onClick={() => applyPreset(preset)}
                               className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between cursor-pointer ${
                                 isSelected
-                                  ? 'border-[#FF2E63] bg-[#FFD9E3]/30 ring-2 ring-[#FF2E63]/30'
-                                  : 'border-[#EFE2C9] bg-white hover:border-[#FF2E63]'
+                                  ? 'border-[${colorSystem.accent.base}] bg-[#FFD9E3]/30 ring-2 ring-[${colorSystem.accent.base}]/30'
+                                  : 'border-[${colorSystem.neutral.border}] bg-white hover:border-[${colorSystem.accent.base}]'
                               }`}
                             >
                               <div className="flex items-center justify-between mb-1.5">
-                                <span className="text-[11px] font-bold text-[#2B1B2E] truncate pr-1">{preset.name}</span>
-                                {isSelected && <Check className="w-3.5 h-3.5 text-[#00A8A0] flex-shrink-0" />}
+                                <span className="text-[11px] font-bold text-[${colorSystem.neutral.textPrimary}] truncate pr-1">{preset.name}</span>
+                                {isSelected && <Check className="w-3.5 h-3.5 text-[${colorSystem.secondary.base}] flex-shrink-0" />}
                               </div>
                               <div className="flex gap-1.5 items-center">
                                 <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.primaryColor }} />
@@ -1635,7 +1635,7 @@ export default function EditorPanel({
               {/* Cover Page Toggle */}
               <div className={`flex items-center justify-between p-3 rounded-xl border transition ${
                 cvData.showCoverPage !== false 
-                  ? 'bg-white border-[#EFE2C9] text-[#2B1B2E] shadow-sm' 
+                  ? 'bg-white border-[${colorSystem.neutral.border}] text-[${colorSystem.neutral.textPrimary}] shadow-sm' 
                   : 'bg-slate-200 border-slate-300 text-slate-500 opacity-75'
               }`}>
                 <span className="text-xs font-bold uppercase tracking-wide">
@@ -1646,7 +1646,7 @@ export default function EditorPanel({
                   onClick={() => setCvData((prev: any) => ({ ...prev, showCoverPage: prev.showCoverPage === undefined ? false : !prev.showCoverPage }))}
                   className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
                     cvData.showCoverPage !== false
-                      ? 'bg-[#00A8A0] text-white hover:bg-[#00877F]'
+                      ? 'bg-[${colorSystem.secondary.base}] text-white hover:bg-[${colorSystem.secondary.hover}]'
                       : 'bg-slate-400 text-white hover:bg-slate-500'
                   }`}
                 >
@@ -1656,16 +1656,16 @@ export default function EditorPanel({
 
 
               {/* Registros Destacados en Portada (Solo Títulos, con botón Agregar/Eliminar) */}
-              <div className="p-3 bg-white rounded-xl border border-[#EFE2C9] space-y-3">
+              <div className="p-3 bg-white rounded-xl border border-[${colorSystem.neutral.border}] space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold text-[#2B1B2E]">
+                  <label className="block text-xs font-bold text-[${colorSystem.neutral.textPrimary}]">
                     Registros Destacados en Portada ({cvData.roles?.length || 0})
                   </label>
                 </div>
                 
                 {/* Selector Desplegable para Agregar Registro Ingresado (Muestra SOLO el título) */}
                 <div className="space-y-1.5">
-                  <label className="block text-[11px] font-medium text-[#6B5B6E]">
+                  <label className="block text-[11px] font-medium text-[${colorSystem.neutral.textSecondary}]">
                     Seleccionar título de registros cargados:
                   </label>
                   <select
@@ -1684,7 +1684,7 @@ export default function EditorPanel({
                       }
                     }}
                     defaultValue=""
-                    className="w-full text-xs p-2.5 rounded-xl border border-[#00A8A0] bg-white text-[#2B1B2E] font-bold outline-none cursor-pointer"
+                    className="w-full text-xs p-2.5 rounded-xl border border-[${colorSystem.secondary.base}] bg-white text-[${colorSystem.neutral.textPrimary}] font-bold outline-none cursor-pointer"
                   >
                     <option value="" disabled>-- Seleccionar título para destacar --</option>
                     {[
@@ -1704,13 +1704,13 @@ export default function EditorPanel({
                 {/* Lista de Registros Destacados con Botón de Eliminar */}
                 <div className="space-y-1.5 pt-2">
                   {(!cvData.roles || cvData.roles.length === 0) ? (
-                    <p className="text-xs text-[#6B5B6E] italic text-center py-2 border border-dashed border-[#EFE2C9] rounded-xl">
+                    <p className="text-xs text-[${colorSystem.neutral.textSecondary}] italic text-center py-2 border border-dashed border-[${colorSystem.neutral.border}] rounded-xl">
                       No hay registros destacados en la portada aún.
                     </p>
                   ) : (
                     cvData.roles.map((role: string, idx: number) => (
-                      <div key={idx} className="flex items-center justify-between p-2 bg-[#FAF7F0] rounded-lg border border-[#EFE2C9] text-xs">
-                        <span className="font-bold text-[#2B1B2E]">{role}</span>
+                      <div key={idx} className="flex items-center justify-between p-2 bg-[${colorSystem.neutral.surfaceMuted}] rounded-lg border border-[${colorSystem.neutral.border}] text-xs">
+                        <span className="font-bold text-[${colorSystem.neutral.textPrimary}]">{role}</span>
                         <button
                           type="button"
                           onClick={() => {
@@ -1743,7 +1743,7 @@ export default function EditorPanel({
               title="Columnas"
               manualAdjustment={
                 <div className="space-y-3 pt-2">
-                  <label className="block text-xs font-bold text-[#2B1B2E] flex items-center justify-between">
+                  <label className="block text-xs font-bold text-[${colorSystem.neutral.textPrimary}] flex items-center justify-between">
                     <span>Ubicación y Ordenamiento de Secciones</span>
                   </label>
                   <div className="space-y-2">
@@ -1835,10 +1835,10 @@ export default function EditorPanel({
                       const primPos = primOrder.indexOf(sec.id) + 1;
 
                       return (
-                        <div key={sec.id} className="p-2 bg-white rounded-xl border border-[#EFE2C9] text-xs space-y-1.5 shadow-sm">
+                        <div key={sec.id} className="p-2 bg-white rounded-xl border border-[${colorSystem.neutral.border}] text-xs space-y-1.5 shadow-sm">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1.5">
-                              <span className="font-extrabold text-[#2B1B2E]">{sec.label}</span>
+                              <span className="font-extrabold text-[${colorSystem.neutral.textPrimary}]">{sec.label}</span>
                               {secPos > 0 && (currentVal === 'secundaria' || currentVal === 'ambas') && (
                                 <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-rose-100 text-rose-800 font-black">
                                   Sec #{secPos}
@@ -1855,7 +1855,7 @@ export default function EditorPanel({
                                 type="button"
                                 onClick={() => setColumn('secundaria')}
                                 className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
-                                  currentVal === 'secundaria' ? 'bg-[#FF2E63] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                  currentVal === 'secundaria' ? 'bg-[${colorSystem.accent.base}] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                 }`}
                               >
                                 Secundaria
@@ -1864,7 +1864,7 @@ export default function EditorPanel({
                                 type="button"
                                 onClick={() => setColumn('primaria')}
                                 className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
-                                  currentVal === 'primaria' ? 'bg-[#00A8A0] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                  currentVal === 'primaria' ? 'bg-[${colorSystem.secondary.base}] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                 }`}
                               >
                                 Primaria
@@ -1970,11 +1970,11 @@ export default function EditorPanel({
                         }
                       });
                     }}
-                    className="p-2.5 rounded-xl border border-[#EFE2C9] bg-white hover:border-[#FF2E63] text-left transition flex flex-col justify-between cursor-pointer"
+                    className="p-2.5 rounded-xl border border-[${colorSystem.neutral.border}] bg-white hover:border-[${colorSystem.accent.base}] text-left transition flex flex-col justify-between cursor-pointer"
                   >
                     <div>
-                      <span className="text-[11px] font-bold text-[#2B1B2E] block">{preset.name}</span>
-                      <p className="text-[9px] text-[#6B5B6E] font-medium leading-snug mt-0.5">{preset.description}</p>
+                      <span className="text-[11px] font-bold text-[${colorSystem.neutral.textPrimary}] block">{preset.name}</span>
+                      <p className="text-[9px] text-[${colorSystem.neutral.textSecondary}] font-medium leading-snug mt-0.5">{preset.description}</p>
                     </div>
                   </button>
                 ))}

@@ -96,7 +96,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn font-sans">
-      <div className="bg-[#2B1B2E] border border-purple-500/30 text-white rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div className="bg-[${colorSystem.neutral.textPrimary}] border border-purple-500/30 text-white rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
         
         {/* Header */}
         <div className="px-6 py-4 border-b border-purple-500/20 flex items-center justify-between bg-slate-900/80">
@@ -167,21 +167,21 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
             onClick={() => setActiveTab('invite')}
             className={`px-4 py-2 text-xs font-bold transition border-b-2 flex items-center gap-2 cursor-pointer ${
               activeTab === 'invite'
-                ? 'border-[#FF2E63] text-white bg-rose-500/10 rounded-t-xl'
+                ? 'border-[${colorSystem.accent.base}] text-white bg-rose-500/10 rounded-t-xl'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            <UserPlus className="w-3.5 h-3.5 text-[#FF2E63]" /> Invitar Miembro
+            <UserPlus className="w-3.5 h-3.5 text-[${colorSystem.accent.base}]" /> Invitar Miembro
           </button>
           <button
             onClick={() => setActiveTab('accept')}
             className={`px-4 py-2 text-xs font-bold transition border-b-2 flex items-center gap-2 cursor-pointer ${
               activeTab === 'accept'
-                ? 'border-[#00A8A0] text-white bg-emerald-500/10 rounded-t-xl'
+                ? 'border-[${colorSystem.secondary.base}] text-white bg-emerald-500/10 rounded-t-xl'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Key className="w-3.5 h-3.5 text-[#00A8A0]" /> Aceptar Invitación
+            <Key className="w-3.5 h-3.5 text-[${colorSystem.secondary.base}]" /> Aceptar Invitación
           </button>
         </div>
 
@@ -266,7 +266,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-[#FF2E63] hover:bg-[#E31555] text-white font-extrabold text-xs rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-2.5 bg-[${colorSystem.accent.base}] hover:bg-[#E31555] text-white font-extrabold text-xs rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
               >
                 <UserPlus className="w-4 h-4" /> Enviar Invitación al Equipo
               </button>
@@ -291,13 +291,13 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
                   placeholder="Pega el token aquí..."
                   value={invitationTokenInput}
                   onChange={(e) => setInvitationTokenInput(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono outline-none focus:border-[#00A8A0] transition"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono outline-none focus:border-[${colorSystem.secondary.base}] transition"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-[#00A8A0] hover:bg-[#008f88] text-white font-extrabold text-xs rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-2.5 bg-[${colorSystem.secondary.base}] hover:bg-[#008f88] text-white font-extrabold text-xs rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Check className="w-4 h-4" /> Unirse a la Organización
               </button>

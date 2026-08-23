@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Crop, ZoomIn, ZoomOut, RotateCw, Check, X, AlertTriangle, Maximize2 } from 'lucide-react';
 import { useToast } from '../../../shared/core/ui/Toast';
+import { colorSystem } from '../../../shared/core/uiDesignSystem';
 
 export default function CertCropperModal({ 
   isOpen, 
@@ -125,17 +126,17 @@ export default function CertCropperModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in no-print">
-      <div className="bg-[#FFFDF7] rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border-2 border-[#EFE2C9] text-[#2B1B2E]">
+      <div className="bg-[#FFFDF7] rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border-2 border-[${colorSystem.neutral.border}] text-[${colorSystem.neutral.textPrimary}]">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-[#2B1B2E] text-white border-b-2 border-[#EFE2C9]">
+        <div className="flex items-center justify-between px-6 py-4 bg-[${colorSystem.neutral.textPrimary}] text-white border-b-2 border-[${colorSystem.neutral.border}]">
           <div className="flex items-center gap-2 font-black text-base tracking-wide">
             <Crop className="w-5 h-5 text-[#FFC93C]" />
             Ajustar Certificado a Hoja A4
           </div>
           <button 
             onClick={onClose}
-            className="p-1 rounded-lg text-[#EFE2C9] hover:text-white hover:bg-white/10 transition"
+            className="p-1 rounded-lg text-[${colorSystem.neutral.border}] hover:text-white hover:bg-white/10 transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -145,15 +146,15 @@ export default function CertCropperModal({
 
           {/* Record Selector inside Cropper Modal */}
           <div className="w-full">
-            <label className="block text-xs font-black text-[#FF2E63] mb-1 uppercase tracking-wide flex items-center justify-between">
+            <label className="block text-xs font-black text-[${colorSystem.accent.base}] mb-1 uppercase tracking-wide flex items-center justify-between">
               <span>IDENTIFICA TU CERTIFICADO *</span>
               {isSelectionWarningVisible && <span className="text-red-600 text-[11px] font-bold flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" /> Primero elige el registro</span>}
             </label>
             <select
               value={localRegIdx}
               onChange={(e) => handleSelectChange(e.target.value)}
-              className={`w-full text-xs p-2.5 rounded-xl border-2 bg-white text-[#2B1B2E] font-extrabold outline-none transition shadow-sm ${
-                isSelectionWarningVisible ? 'border-red-500 ring-2 ring-red-400/50 bg-red-50/50' : 'border-[#EFE2C9] focus:border-[#FF2E63]'
+              className={`w-full text-xs p-2.5 rounded-xl border-2 bg-white text-[${colorSystem.neutral.textPrimary}] font-extrabold outline-none transition shadow-sm ${
+                isSelectionWarningVisible ? 'border-red-500 ring-2 ring-red-400/50 bg-red-50/50' : 'border-[${colorSystem.neutral.border}] focus:border-[${colorSystem.accent.base}]'
               }`}
             >
               <option value="">-- Primero elige el registro --</option>
@@ -166,7 +167,7 @@ export default function CertCropperModal({
           </div>
 
           {/* Viewport Canvas (Proportional A4 Aspect Ratio 1:1.414) */}
-          <div className="relative border-4 border-[#FF2E63] rounded-xl overflow-hidden shadow-2xl bg-black cursor-grab active:cursor-grabbing">
+          <div className="relative border-4 border-[${colorSystem.accent.base}] rounded-xl overflow-hidden shadow-2xl bg-black cursor-grab active:cursor-grabbing">
             <canvas 
               ref={canvasRef}
               width={260}
@@ -181,9 +182,9 @@ export default function CertCropperModal({
           </div>
 
           {/* Zoom and Rotation Control Bar */}
-          <div className="w-full bg-[#F5EDDA] p-3 rounded-xl space-y-2 border border-[#EFE2C9]">
+          <div className="w-full bg-[${colorSystem.neutral.surfaceMuted}] p-3 rounded-xl space-y-2 border border-[${colorSystem.neutral.border}]">
             <div className="flex items-center gap-3">
-              <ZoomOut className="w-4 h-4 text-[#2B1B2E]" />
+              <ZoomOut className="w-4 h-4 text-[${colorSystem.neutral.textPrimary}]" />
               <input 
                 type="range"
                 min="0.1"
@@ -191,41 +192,41 @@ export default function CertCropperModal({
                 step="0.02"
                 value={zoom}
                 onChange={(e) => setZoom(parseFloat(e.target.value))}
-                className="w-full accent-[#FF2E63] cursor-pointer"
+                className="w-full accent-[${colorSystem.accent.base}] cursor-pointer"
               />
-              <ZoomIn className="w-4 h-4 text-[#2B1B2E]" />
-              <span className="text-xs font-black w-10 text-right text-[#2B1B2E]">{Math.round(zoom * 100)}%</span>
+              <ZoomIn className="w-4 h-4 text-[${colorSystem.neutral.textPrimary}]" />
+              <span className="text-xs font-black w-10 text-right text-[${colorSystem.neutral.textPrimary}]">{Math.round(zoom * 100)}%</span>
             </div>
 
             <div className="flex items-center justify-between pt-1">
               <button 
                 onClick={() => setRotation((r) => (r + 90) % 360)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#EFE2C9] text-xs font-black text-[#2B1B2E] hover:bg-[#FFF7E8] transition shadow-sm"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[${colorSystem.neutral.border}] text-xs font-black text-[${colorSystem.neutral.textPrimary}] hover:bg-[#FFF7E8] transition shadow-sm"
               >
-                <RotateCw className="w-3.5 h-3.5 text-[#FF2E63]" /> Rotar 90°
+                <RotateCw className="w-3.5 h-3.5 text-[${colorSystem.accent.base}]" /> Rotar 90°
               </button>
 
               <button 
                 onClick={() => { setZoom(1); setRotation(0); setOffset({ x: 0, y: 0 }); }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#EFE2C9] text-xs font-black text-[#2B1B2E] hover:bg-[#FFF7E8] transition shadow-sm"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[${colorSystem.neutral.border}] text-xs font-black text-[${colorSystem.neutral.textPrimary}] hover:bg-[#FFF7E8] transition shadow-sm"
               >
-                <Maximize2 className="w-3.5 h-3.5 text-[#00A8A0]" /> Auto-Encajar
+                <Maximize2 className="w-3.5 h-3.5 text-[${colorSystem.secondary.base}]" /> Auto-Encajar
               </button>
             </div>
           </div>
         </div>
 
         {/* Footer Action */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t-2 border-[#EFE2C9] bg-[#F5EDDA]">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t-2 border-[${colorSystem.neutral.border}] bg-[${colorSystem.neutral.surfaceMuted}]">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs font-black text-[#2B1B2E] bg-[#EFE2C9] hover:bg-[#E2D4B8] rounded-xl transition"
+            className="px-4 py-2 text-xs font-black text-[${colorSystem.neutral.textPrimary}] bg-[${colorSystem.neutral.border}] hover:bg-[#E2D4B8] rounded-xl transition"
           >
             Cancelar
           </button>
           <button
             onClick={handleAccept}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#FF2E63] hover:bg-[#E31555] text-white font-black text-xs shadow-lg shadow-[#FF2E63]/30 transition transform active:scale-95"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[${colorSystem.accent.base}] hover:bg-[#E31555] text-white font-black text-xs shadow-lg shadow-[${colorSystem.accent.base}]/30 transition transform active:scale-95"
           >
             <Check className="w-4 h-4" /> ACEPTAR
           </button>

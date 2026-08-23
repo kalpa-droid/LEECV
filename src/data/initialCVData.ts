@@ -77,11 +77,11 @@ export const blankCVTemplate = {
   },
   theme: {
     presetId: "linda-feria",
-    primaryColor: "#FF2E63",
-    secondaryColor: "#2B1B2E",
+    primaryColor: "${colorSystem.accent.base}",
+    secondaryColor: "${colorSystem.neutral.textPrimary}",
     accentColor: "#FFC93C",
-    textColor: "#2B1B2E",
-    bgCorridor: "#FF2E63",
+    textColor: "${colorSystem.neutral.textPrimary}",
+    bgCorridor: "${colorSystem.accent.base}",
     fontFamily: "Arial, sans-serif"
   }
 };

@@ -13,7 +13,7 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn font-sans">
-      <div className="bg-[#2B1B2E] border border-purple-500/30 text-white rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div className="bg-[${colorSystem.neutral.textPrimary}] border border-purple-500/30 text-white rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
         
         {/* Header */}
         <div className="px-6 py-4 border-b border-purple-500/20 flex items-center justify-between bg-slate-900/60">
@@ -40,21 +40,21 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
             onClick={() => setActiveTab('privacy')}
             className={`px-4 py-2.5 text-xs font-bold transition border-b-2 flex items-center gap-2 cursor-pointer ${
               activeTab === 'privacy'
-                ? 'border-[#FF2E63] text-white bg-purple-500/10 rounded-t-xl'
+                ? 'border-[${colorSystem.accent.base}] text-white bg-purple-500/10 rounded-t-xl'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Lock className="w-3.5 h-3.5 text-[#FF2E63]" /> Política de Privacidad
+            <Lock className="w-3.5 h-3.5 text-[${colorSystem.accent.base}]" /> Política de Privacidad
           </button>
           <button
             onClick={() => setActiveTab('terms')}
             className={`px-4 py-2.5 text-xs font-bold transition border-b-2 flex items-center gap-2 cursor-pointer ${
               activeTab === 'terms'
-                ? 'border-[#00A8A0] text-white bg-emerald-500/10 rounded-t-xl'
+                ? 'border-[${colorSystem.secondary.base}] text-white bg-emerald-500/10 rounded-t-xl'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            <FileText className="w-3.5 h-3.5 text-[#00A8A0]" /> Términos de Uso y Servicio
+            <FileText className="w-3.5 h-3.5 text-[${colorSystem.secondary.base}]" /> Términos de Uso y Servicio
           </button>
         </div>
 
@@ -131,7 +131,7 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
           <span className="text-[10px] text-slate-400">Última actualización: Agosto 2026 — LEECV Inc.</span>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 bg-[#FF2E63] hover:bg-[#E31555] text-white font-extrabold text-xs rounded-xl transition cursor-pointer"
+            className="px-4 py-1.5 bg-[${colorSystem.accent.base}] hover:bg-[#E31555] text-white font-extrabold text-xs rounded-xl transition cursor-pointer"
           >
             Entendido
           </button>

@@ -54,15 +54,15 @@ export default function Navbar({
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-[#2B1B2E] border-b border-[#EFE2C9]/30 text-white shadow-xl no-print select-none">
+    <header className="sticky top-0 z-40 bg-[${colorSystem.neutral.textPrimary}] border-b border-[${colorSystem.neutral.border}]/30 text-white shadow-xl no-print select-none">
       {/* Festive Bunting Accent Strip */}
-      <div className="h-1 w-full bg-gradient-to-r from-[#FF2E63] via-[#FFC93C] via-[#00A8A0] via-[#8E44FF] to-[#FF7A29]" />
+      <div className="h-1 w-full bg-gradient-to-r from-[${colorSystem.accent.base}] via-[#FFC93C] via-[${colorSystem.secondary.base}] via-[#8E44FF] to-[#FF7A29]" />
       
       <div className="max-w-7xl mx-auto px-2 sm:px-4 h-12 sm:h-14 flex items-center justify-between gap-1.5">
         
         {/* Left: Brand & Logo */}
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FF2E63] flex items-center justify-center font-black text-xs shadow-md text-white border border-[#FFD9E3]/20">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[${colorSystem.accent.base}] flex items-center justify-center font-black text-xs shadow-md text-white border border-[#FFD9E3]/20">
             LEE
           </div>
           <h1 className="font-black text-sm sm:text-base tracking-wider text-white">
@@ -75,7 +75,7 @@ export default function Navbar({
           {/* 1. NUEVO (Abre confirmación para iniciar nuevo CV) */}
           <button
             onClick={handleNewClick}
-            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-white bg-[#FF2E63] hover:bg-[#E31555] border border-[#FFD9E3]/30 transition shadow-md shadow-[#FF2E63]/20 cursor-pointer whitespace-nowrap active:scale-95"
+            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-white bg-[${colorSystem.accent.base}] hover:bg-[#E31555] border border-[#FFD9E3]/30 transition shadow-md shadow-[${colorSystem.accent.base}]/20 cursor-pointer whitespace-nowrap active:scale-95"
             title="Iniciar un nuevo currículum en blanco"
           >
             <FilePlus className="w-3.5 h-3.5 text-[#FFD9E3] flex-shrink-0" />
@@ -85,7 +85,7 @@ export default function Navbar({
           {/* 2. ABRIR (Abre ventana modal con borradores, Cargar JSON y Google Drive) */}
           <button
             onClick={handleOpenSavedClick}
-            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-[#CFF3F0] bg-[#00A8A0] hover:bg-[#00877F] border border-[#00A8A0]/40 transition shadow-md shadow-[#00A8A0]/20 cursor-pointer whitespace-nowrap active:scale-95"
+            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-[${colorSystem.secondary.muted}] bg-[${colorSystem.secondary.base}] hover:bg-[${colorSystem.secondary.hover}] border border-[${colorSystem.secondary.base}]/40 transition shadow-md shadow-[${colorSystem.secondary.base}]/20 cursor-pointer whitespace-nowrap active:scale-95"
             title="Abrir borradores guardados, importar JSON o sincronizar nube"
           >
             <FolderOpen className="w-3.5 h-3.5 text-white flex-shrink-0" />
@@ -106,10 +106,10 @@ export default function Navbar({
           {/* 4. PDF (Exportar PDF final) */}
           <button
             onClick={onPrint}
-            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-[#FFC93C] hover:bg-[#F0AE00] text-[#2B1B2E] font-black text-xs shadow-lg shadow-[#FFC93C]/30 transition active:scale-95 border border-[#F0AE00] cursor-pointer whitespace-nowrap"
+            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-[#FFC93C] hover:bg-[#F0AE00] text-[${colorSystem.neutral.textPrimary}] font-black text-xs shadow-lg shadow-[#FFC93C]/30 transition active:scale-95 border border-[#F0AE00] cursor-pointer whitespace-nowrap"
             title="Exportar documento PDF final listo para enviar"
           >
-            <Download className="w-3.5 h-3.5 flex-shrink-0 text-[#2B1B2E]" />
+            <Download className="w-3.5 h-3.5 flex-shrink-0 text-[${colorSystem.neutral.textPrimary}]" />
             <span>PDF</span>
           </button>
         </div>
@@ -117,7 +117,7 @@ export default function Navbar({
         {/* Right: User Avatar Circle (Acceso a Cuenta / Suscripción) */}
         <button
           onClick={handlePricingClick}
-          className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#FF7A29] to-[#FFC93C] text-[#2B1B2E] flex items-center justify-center font-black text-xs shadow-md border-2 border-white/40 hover:scale-105 transition cursor-pointer flex-shrink-0"
+          className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#FF7A29] to-[#FFC93C] text-[${colorSystem.neutral.textPrimary}] flex items-center justify-center font-black text-xs shadow-md border-2 border-white/40 hover:scale-105 transition cursor-pointer flex-shrink-0"
           title="Mi Cuenta de Usuario / Suscripción Premium"
         >
           <User className="w-4 h-4 stroke-[2.5]" />

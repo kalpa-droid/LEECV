@@ -27,7 +27,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile: _current
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in no-print overflow-y-auto">
-      <div className="bg-[#1E1222] border border-[#EFE2C9]/30 rounded-3xl max-w-4xl w-full p-6 text-white space-y-6 shadow-2xl relative my-8">
+      <div className="bg-[#1E1222] border border-[${colorSystem.neutral.border}]/30 rounded-3xl max-w-4xl w-full p-6 text-white space-y-6 shadow-2xl relative my-8">
         
         {/* Botón Cerrar */}
         <button 
@@ -39,8 +39,8 @@ export default function PricingModal({ isOpen, onClose, currentProfile: _current
 
         {/* Encabezado */}
         <div className="text-center space-y-2 max-w-xl mx-auto">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FF2E63]/20 border border-[#FF2E63]/40 text-[#FFD9E3] text-xs font-black uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5 text-[#FF2E63]" /> Planes & Suscripciones LEECV
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[${colorSystem.accent.base}]/20 border border-[${colorSystem.accent.base}]/40 text-[#FFD9E3] text-xs font-black uppercase tracking-wider">
+            <Sparkles className="w-3.5 h-3.5 text-[${colorSystem.accent.base}]" /> Planes & Suscripciones LEECV
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
             Elige el plan ideal para tus necesidades
@@ -95,12 +95,12 @@ export default function PricingModal({ isOpen, onClose, currentProfile: _current
           </div>
 
           {/* NIVEL 2: AGENCIA PRO (MÁS POPULAR) */}
-          <div className="bg-gradient-to-b from-[#2B1B2E] to-[#1A0E1D] border-2 border-[#FF2E63] rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-xl shadow-[#FF2E63]/10 relative transform hover:-translate-y-1 transition">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#FF2E63] text-white text-[10px] font-black uppercase px-3 py-0.5 rounded-full tracking-wider shadow">
+          <div className="bg-gradient-to-b from-[${colorSystem.neutral.textPrimary}] to-[#1A0E1D] border-2 border-[${colorSystem.accent.base}] rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-xl shadow-[${colorSystem.accent.base}]/10 relative transform hover:-translate-y-1 transition">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[${colorSystem.accent.base}] text-white text-[10px] font-black uppercase px-3 py-0.5 rounded-full tracking-wider shadow">
               Más Recomendado
             </div>
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[#FF2E63]/20 border border-[#FF2E63]/40 text-[#FF2E63] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-[${colorSystem.accent.base}]/20 border border-[${colorSystem.accent.base}]/40 text-[${colorSystem.accent.base}] flex items-center justify-center">
                 <Crown className="w-5 h-5" />
               </div>
               <div>
@@ -113,19 +113,19 @@ export default function PricingModal({ isOpen, onClose, currentProfile: _current
               </div>
               <ul className="space-y-2 text-xs text-slate-200">
                 <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[#FF2E63] flex-shrink-0" />
+                  <Check className="w-4 h-4 text-[${colorSystem.accent.base}] flex-shrink-0" />
                   <strong>PDFs A4 ILIMITADOS (Sin pagar $1/PDF)</strong>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[#FF2E63] flex-shrink-0" />
+                  <Check className="w-4 h-4 text-[${colorSystem.accent.base}] flex-shrink-0" />
                   <span>Panel Multi-Candidato en Supabase Cloud</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[#FF2E63] flex-shrink-0" />
+                  <Check className="w-4 h-4 text-[${colorSystem.accent.base}] flex-shrink-0" />
                   <span>Respaldo en tu propio Google Drive (15 GB)</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Smartphone className="w-4 h-4 text-[#FF2E63] flex-shrink-0" />
+                  <Smartphone className="w-4 h-4 text-[${colorSystem.accent.base}] flex-shrink-0" />
                   <span>Envío a WhatsApp & Telegram a 1-Clic</span>
                 </li>
               </ul>
@@ -135,7 +135,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile: _current
               <button
                 onClick={() => handleSelectPlan('pro', 'mercadopago')}
                 disabled={loadingGateway !== null}
-                className="w-full py-2.5 bg-[#FF2E63] hover:bg-[#E31555] text-white text-xs font-black rounded-xl shadow-md transition flex items-center justify-center gap-1.5"
+                className="w-full py-2.5 bg-[${colorSystem.accent.base}] hover:bg-[#E31555] text-white text-xs font-black rounded-xl shadow-md transition flex items-center justify-center gap-1.5"
               >
                 <span>🇦🇷 Suscribirse con Mercado Pago</span>
               </button>

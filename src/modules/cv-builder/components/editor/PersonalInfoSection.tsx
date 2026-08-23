@@ -17,7 +17,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
       {/* Header con Toggle */}
       <div className={`flex items-center justify-between p-2.5 rounded-[12px] border transition ${
         isVisible 
-          ? 'bg-white border-[#EFE2C9] text-[#2B1B2E] shadow-sm' 
+          ? 'bg-white border-[${colorSystem.neutral.border}] text-[${colorSystem.neutral.textPrimary}] shadow-sm' 
           : 'bg-slate-200 border-slate-300 text-slate-500 opacity-75'
       }`}>
         <span className={`${typeScale.sectionTitle} uppercase tracking-wide`} style={{ color: colorSystem.neutral.textPrimary }}>
@@ -28,7 +28,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
           onClick={() => toggleSectionVisibility('personales')}
           className={`px-3 py-1 rounded-full text-[11px] font-medium transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
             isVisible
-              ? 'bg-[#00A8A0] text-white hover:bg-[#00877F]'
+              ? 'bg-[${colorSystem.secondary.base}] text-white hover:bg-[${colorSystem.secondary.hover}]'
               : 'bg-slate-400 text-white hover:bg-slate-500'
           }`}
         >
@@ -38,7 +38,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
 
       {isVisible && (
         <div className="space-y-4">
-          <PanelSection icon={<User className="w-4 h-4 text-[#00A8A0]" />} title="Información de Contacto">
+          <PanelSection icon={<User className="w-4 h-4 text-[${colorSystem.secondary.base}]" />} title="Información de Contacto">
             <div className="space-y-3 pt-1">
               {/* Tarjeta Foto de Perfil */}
               <div
@@ -48,7 +48,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
                   borderColor: colorSystem.neutral.border
                 }}
               >
-                <div className="w-14 h-18 rounded-[8px] overflow-hidden bg-white flex items-center justify-center border border-[#D9C9A0] shadow-sm">
+                <div className="w-14 h-18 rounded-[8px] overflow-hidden bg-white flex items-center justify-center border border-[${colorSystem.neutral.borderStrong}] shadow-sm">
                   {cvData.personalInfo?.profilePhoto ? (
                     <img src={cvData.personalInfo.profilePhoto} alt="Perfil" className="w-full h-full object-cover" />
                   ) : (
@@ -233,7 +233,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
                   <span className="flex items-center gap-1.5">
                     <QrCode className="w-3.5 h-3.5" style={{ color: colorSystem.secondary.base }} /> Configuración del Código QR
                   </span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-white border border-[#D9C9A0]" style={{ color: colorSystem.secondary.text }}>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-white border border-[${colorSystem.neutral.borderStrong}]" style={{ color: colorSystem.secondary.text }}>
                     Smart QR
                   </span>
                 </label>

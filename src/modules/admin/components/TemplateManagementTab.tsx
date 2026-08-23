@@ -19,7 +19,7 @@ export function TemplateManagementTab() {
   const [harmonyScheme, setHarmonyScheme] = useState<HarmonyScheme>('complementario');
 
   const handleGenerateHarmony = () => {
-    const palette = generateHarmonyPalette(selectedPreset.palette.primary || '#00A8A0', harmonyScheme);
+    const palette = generateHarmonyPalette(selectedPreset.palette.primary || '${colorSystem.secondary.base}', harmonyScheme);
     const updated = {
       ...selectedPreset,
       palette: {
@@ -139,12 +139,12 @@ export function TemplateManagementTab() {
   };
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#EFE2C9] space-y-6">
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-[${colorSystem.neutral.border}] space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#EFE2C9] pb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[${colorSystem.neutral.border}] pb-4">
         <div>
-          <h2 className="text-base font-black text-[#2B1B2E] flex items-center gap-2">
-            <Layout className="w-5 h-5 text-[#FF2E63]" />
+          <h2 className="text-base font-black text-[${colorSystem.neutral.textPrimary}] flex items-center gap-2">
+            <Layout className="w-5 h-5 text-[${colorSystem.accent.base}]" />
             <span>Gestión Suprema de Plantillas y Presets (Capa 5/8)</span>
           </h2>
           <p className="text-xs text-slate-500 font-medium">
@@ -174,7 +174,7 @@ export function TemplateManagementTab() {
 
       {/* Preset Selector Grid */}
       <div className="space-y-2">
-        <label className="block text-xs font-extrabold text-[#2B1B2E] uppercase tracking-wider">
+        <label className="block text-xs font-extrabold text-[${colorSystem.neutral.textPrimary}] uppercase tracking-wider">
           Seleccionar Plantilla Activa ({presets.length}):
         </label>
 
@@ -187,14 +187,14 @@ export function TemplateManagementTab() {
                 onClick={() => handleSelectPreset(p)}
                 className={`p-3 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between ${
                   isSelected
-                    ? 'border-[#FF2E63] bg-rose-50/50 shadow-md ring-2 ring-rose-200'
+                    ? 'border-[${colorSystem.accent.base}] bg-rose-50/50 shadow-md ring-2 ring-rose-200'
                     : 'border-slate-200 bg-slate-50 hover:bg-white hover:border-slate-300'
                 }`}
               >
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-black text-slate-900 truncate">{p.name}</span>
-                    {isSelected && <CheckCircle2 className="w-4 h-4 text-[#FF2E63]" />}
+                    {isSelected && <CheckCircle2 className="w-4 h-4 text-[${colorSystem.accent.base}]" />}
                   </div>
                   <span className="text-[10px] uppercase font-extrabold text-slate-500 bg-slate-200/70 px-2 py-0.5 rounded-md">
                     {p.pageCategory}
@@ -214,14 +214,14 @@ export function TemplateManagementTab() {
       </div>
 
       {/* Sub-Tabs: Visual Quick Editor vs Raw JSON Editor */}
-      <div className="border-t border-[#EFE2C9] pt-4 space-y-4">
+      <div className="border-t border-[${colorSystem.neutral.border}] pt-4 space-y-4">
         <div className="flex items-center justify-between border-b border-slate-200 pb-2">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setActiveSubTab('visual')}
               className={`px-3 py-1.5 text-xs font-extrabold rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
                 activeSubTab === 'visual'
-                  ? 'bg-[#2B1B2E] text-white shadow-sm'
+                  ? 'bg-[${colorSystem.neutral.textPrimary}] text-white shadow-sm'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -233,7 +233,7 @@ export function TemplateManagementTab() {
               onClick={() => setActiveSubTab('json')}
               className={`px-3 py-1.5 text-xs font-extrabold rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
                 activeSubTab === 'json'
-                  ? 'bg-[#2B1B2E] text-white shadow-sm'
+                  ? 'bg-[${colorSystem.neutral.textPrimary}] text-white shadow-sm'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -267,7 +267,7 @@ export function TemplateManagementTab() {
                   type="text"
                   value={selectedPreset.name}
                   onChange={(e) => handleUpdateField('name', e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-bold text-slate-900 outline-none focus:border-[#FF2E63]"
+                  className="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-bold text-slate-900 outline-none focus:border-[${colorSystem.accent.base}]"
                 />
               </div>
 

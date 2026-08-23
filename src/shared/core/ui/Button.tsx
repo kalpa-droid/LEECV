@@ -26,13 +26,13 @@ export function Button({
   const baseStyles = 'font-black rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95';
 
   const variantStyles: Record<string, string> = {
-    primary: 'bg-[#00A8A0] text-white hover:bg-[#00877F] border border-[#00877F]',
-    secondary: 'bg-[#FF2E63] text-white hover:bg-[#E31555] border border-[#E31555]',
-    accent: 'bg-[#FFC93C] text-[#2B1B2E] hover:bg-[#F0AE00] border border-[#F0AE00]',
-    dark: 'bg-[#2B1B2E] text-white hover:bg-[#1C121E]',
+    primary: 'bg-[${colorSystem.secondary.base}] text-white hover:bg-[${colorSystem.secondary.hover}] border border-[${colorSystem.secondary.hover}]',
+    secondary: 'bg-[${colorSystem.accent.base}] text-white hover:bg-[#E31555] border border-[#E31555]',
+    accent: 'bg-[#FFC93C] text-[${colorSystem.neutral.textPrimary}] hover:bg-[#F0AE00] border border-[#F0AE00]',
+    dark: 'bg-[${colorSystem.neutral.textPrimary}] text-white hover:bg-[#1C121E]',
     danger: 'bg-red-600 text-white hover:bg-red-700 border border-red-700',
-    outline: 'border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] hover:bg-[#FFFDF7]',
-    ghost: 'bg-transparent text-[#2B1B2E] hover:bg-slate-100 shadow-none'
+    outline: 'border-2 border-[${colorSystem.neutral.border}] bg-white text-[${colorSystem.neutral.textPrimary}] hover:bg-[#FFFDF7]',
+    ghost: 'bg-transparent text-[${colorSystem.neutral.textPrimary}] hover:bg-slate-100 shadow-none'
   };
 
   const sizeStyles: Record<string, string> = {

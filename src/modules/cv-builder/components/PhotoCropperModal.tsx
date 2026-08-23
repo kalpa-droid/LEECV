@@ -99,9 +99,9 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in">
-      <div className="bg-white rounded-[16px] shadow-2xl max-w-lg w-full overflow-hidden border border-[#EFE2C9]">
+      <div className="bg-white rounded-[16px] shadow-2xl max-w-lg w-full overflow-hidden border border-[${colorSystem.neutral.border}]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#EFE2C9] bg-[#FAF7F0]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[${colorSystem.neutral.border}] bg-[${colorSystem.neutral.surfaceMuted}]">
           <div className="flex items-center gap-2 font-bold text-sm" style={{ color: colorSystem.neutral.textPrimary }}>
             <Camera className="w-5 h-5" style={{ color: colorSystem.secondary.base }} />
             Recortador de Foto de Perfil
@@ -120,9 +120,9 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
           {!imageSrc ? (
             <div 
               onClick={() => fileInputRef.current?.click()}
-              className="w-full h-64 border-2 border-dashed border-[#D9C9A0] rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[#00A8A0] hover:bg-teal-50/50 transition group"
+              className="w-full h-64 border-2 border-dashed border-[${colorSystem.neutral.borderStrong}] rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[${colorSystem.secondary.base}] hover:bg-teal-50/50 transition group"
             >
-              <div className="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center text-[#00A8A0] group-hover:scale-110 transition duration-300 mb-3">
+              <div className="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center text-[${colorSystem.secondary.base}] group-hover:scale-110 transition duration-300 mb-3">
                 <Upload className="w-8 h-8" />
               </div>
               <span className="font-semibold text-slate-700 text-xs">Haz clic para subir una foto</span>
@@ -131,7 +131,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
           ) : (
             <div className="w-full flex flex-col items-center">
               {/* Canvas viewport container */}
-              <div className="relative border-4 border-[#00A8A0] rounded-xl overflow-hidden shadow-lg bg-slate-950 cursor-grab active:cursor-grabbing">
+              <div className="relative border-4 border-[${colorSystem.secondary.base}] rounded-xl overflow-hidden shadow-lg bg-slate-950 cursor-grab active:cursor-grabbing">
                 <canvas 
                   ref={canvasRef}
                   width={280}
@@ -147,7 +147,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
               </div>
 
               {/* Controls bar */}
-              <div className="w-full mt-5 bg-slate-50 p-4 rounded-xl space-y-3 border border-[#EFE2C9]">
+              <div className="w-full mt-5 bg-slate-50 p-4 rounded-xl space-y-3 border border-[${colorSystem.neutral.border}]">
                 {/* Zoom control */}
                 <div className="flex items-center gap-3">
                   <ZoomOut className="w-4 h-4 text-slate-500" />
@@ -158,7 +158,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
                     step="0.05"
                     value={zoom}
                     onChange={(e) => setZoom(parseFloat(e.target.value))}
-                    className="w-full accent-[#00A8A0] cursor-pointer"
+                    className="w-full accent-[${colorSystem.secondary.base}] cursor-pointer"
                   />
                   <ZoomIn className="w-4 h-4 text-slate-500" />
                   <span className="text-xs font-semibold w-10 text-right">{Math.round(zoom * 100)}%</span>
@@ -177,7 +177,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
                   <button 
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="text-xs text-[#00A8A0] font-semibold hover:underline cursor-pointer"
+                    className="text-xs text-[${colorSystem.secondary.base}] font-semibold hover:underline cursor-pointer"
                   >
                     Cambiar foto
                   </button>
@@ -196,7 +196,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#EFE2C9] bg-[#FAF7F0]">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[${colorSystem.neutral.border}] bg-[${colorSystem.neutral.surfaceMuted}]">
           <button
             type="button"
             onClick={onClose}
