@@ -14,8 +14,13 @@
 
 export const colorSystem = {
   // Acento de marca — la única vez que se define este hex en TODA la web
-  accent: { base: '#FF2E63', hover: '#E0184C', muted: '#FFE8ED', text: '#B3123F' },
-  secondary: { base: '#00A8A0', hover: '#008780', muted: '#E0F5F3', text: '#00655F' },
+  accent: { base: '#FF2E63', hover: '#E0184C', hoverBrand: '#E31555', muted: '#FFE8ED', text: '#B3123F' },
+  secondary: { base: '#00A8A0', hover: '#008780', hoverDark: '#008f88', muted: '#E0F5F3', text: '#00655F' },
+
+  // Acentos de apoyo (Amber/Gold, Purple, Orange)
+  amber: { base: '#FFC93C', hover: '#F0AE00', muted: '#FFF1C2' },
+  purple: { base: '#8E44FF', hover: '#7126E0', light: '#E9DBFF' },
+  orange: { base: '#FF7A29' },
 
   // Neutros — la escala que usa todo texto/borde que no es color de marca
   neutral: {
@@ -26,6 +31,8 @@ export const colorSystem = {
     borderStrong: '#D9C9A0',  // borde en hover/foco
     surface: '#FFFFFF',       // fondo de tarjeta
     surfaceMuted: '#FAF7F0',  // fondo de página/paneles
+    surfaceWarm: '#FFFDF7',   // fondo cálido de tarjeta
+    surfaceCream: '#F7F3E9',  // crema neutro
   },
 
   // Estados — SOLO para estos 3 significados, nunca decorativos

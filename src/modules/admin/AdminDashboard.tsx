@@ -149,7 +149,7 @@ export default function AdminDashboard() {
   const unreadNotifCount = notifications.filter(n => !n.read).length;
 
   return (
-    <div className="min-h-screen bg-[#F7F3E9] text-[var(--color-neutral-text-primary)] font-sans">
+    <div className="min-h-screen bg-[var(--color-neutral-surface-cream)] text-[var(--color-neutral-text-primary)] font-sans">
       {/* Encabezado */}
       <header className="bg-[var(--color-neutral-text-primary)] text-white px-6 py-4 flex items-center justify-between shadow-lg border-b border-[var(--color-neutral-border)]/20">
         <div className="flex items-center gap-3">
@@ -158,12 +158,12 @@ export default function AdminDashboard() {
           </div>
           <div>
             <h1 className="font-black text-base sm:text-lg tracking-wide">🛠️ Panel de Administración Suprema — LEECV</h1>
-            <p className="text-[10px] text-[#FFE0C7]/70">Control de Licencias, Pagos Automáticos, Webhooks & Reclamos</p>
+            <p className="text-[10px] text-white/70">Control de Licencias, Pagos Automáticos, Webhooks & Reclamos</p>
           </div>
         </div>
         <button
           onClick={async () => { await logout(); setProfile(null); }}
-          className="flex items-center gap-1.5 text-xs font-extrabold bg-[var(--color-accent-base)] px-3.5 py-2 rounded-xl hover:bg-[#E31555] transition shadow-md cursor-pointer"
+          className="flex items-center gap-1.5 text-xs font-extrabold bg-[var(--color-accent-base)] px-3.5 py-2 rounded-xl hover:bg-[var(--color-accent-brand-hover)] transition shadow-md cursor-pointer"
         >
           <LogOut className="w-3.5 h-3.5" /> Salir
         </button>
@@ -399,7 +399,7 @@ export default function AdminDashboard() {
           </div>
 
           <table className="w-full text-xs">
-            <thead className="bg-[#F7F3E9] text-[var(--color-neutral-text-primary)]/70 text-left font-extrabold">
+            <thead className="bg-[var(--color-neutral-surface-cream)] text-[var(--color-neutral-text-primary)]/70 text-left font-extrabold">
               <tr>
                 <th className="px-5 py-3">Email de Usuario</th>
                 <th className="px-5 py-3">Alta</th>
@@ -410,7 +410,7 @@ export default function AdminDashboard() {
             </thead>
             <tbody className="divide-y divide-[var(--color-neutral-border)]/60">
               {users.map((u) => (
-                <tr key={u.id} className="hover:bg-[#F7F3E9]/40 transition">
+                <tr key={u.id} className="hover:bg-[var(--color-neutral-surface-cream)]/40 transition">
                   <td className="px-5 py-3 font-bold">{u.email}</td>
                   <td className="px-5 py-3 font-medium text-[var(--color-neutral-text-primary)]/70">
                     {u.created_at ? new Date(u.created_at).toLocaleDateString('es-AR') : '-'}
@@ -472,7 +472,7 @@ export default function AdminDashboard() {
           </table>
 
           {/* Pagination Controls */}
-          <div className="px-5 py-3 bg-[#F7F3E9]/50 border-t border-[var(--color-neutral-border)] flex items-center justify-between text-xs text-slate-600">
+          <div className="px-5 py-3 bg-[var(--color-neutral-surface-cream)]/50 border-t border-[var(--color-neutral-border)] flex items-center justify-between text-xs text-slate-600">
             <span>
               Mostrando {users.length > 0 ? page * pageSize + 1 : 0} a {Math.min((page + 1) * pageSize, totalCount)} de {totalCount} usuarios
             </span>

@@ -214,7 +214,7 @@ export default function SignatureModal({
           <button
             type="button"
             onClick={handleSave}
-            className={`flex items-center gap-2 px-5 py-2 rounded-xl bg-[var(--color-accent-base)] hover:bg-[#E31555] text-white font-black text-xs shadow-md transition cursor-pointer`}
+            className={`flex items-center gap-2 px-5 py-2 rounded-xl bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white font-black text-xs shadow-md transition cursor-pointer`}
           >
             <Check className="w-4 h-4" /> Aplicar Firma al CV
           </button>

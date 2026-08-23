@@ -5,6 +5,8 @@ import { supabase } from '../../../../shared/core/lib/supabaseClient';
 import { CreditCard, Sparkles, Download, LogIn, Check, AlertCircle } from 'lucide-react';
 import { Modal } from '../../../../shared/core/ui/Modal';
 
+import { isValidEmail } from '../../../../shared/core/utils/validationEngine';
+
 export default function PdfCheckoutModal({ 
   isOpen, 
   onClose, 
@@ -20,7 +22,7 @@ export default function PdfCheckoutModal({
   const isProOrEnterprise = currentProfile?.plan === 'pro' || currentProfile?.plan === 'enterprise';
 
   const handleMercadoPagoCheckout = async () => {
-    if (!email || !email.includes('@')) {
+    if (!email || !isValidEmail(email)) {
       setErrorMsg('Por favor ingresa un correo electrónico válido para asociar tu compra.');
       return;
     }
@@ -37,7 +39,7 @@ export default function PdfCheckoutModal({
   };
 
   const handlePackCheckout = async (_packPlan: string) => {
-    if (!email || !email.includes('@')) {
+    if (!email || !isValidEmail(email)) {
       setErrorMsg('Por favor ingresa un correo electrónico válido para asociar tu compra.');
       return;
     }

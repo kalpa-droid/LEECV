@@ -63,11 +63,24 @@
 :root {
   --color-accent-base: #FF2E63;
   --color-accent-hover: #E0184C;
+  --color-accent-brand-hover: #E31555;
   --color-accent-muted: #FFE8ED;
   --color-accent-text: #B3123F;
+  --color-accent-rose-muted: #FFD9E3;
+
+  --color-accent-amber: #FFC93C;
+  --color-accent-amber-hover: #F0AE00;
+  --color-accent-amber-muted: #FFF1C2;
+
+  --color-accent-purple: #8E44FF;
+  --color-accent-purple-hover: #7126E0;
+  --color-accent-purple-light: #E9DBFF;
+
+  --color-accent-orange: #FF7A29;
 
   --color-secondary-base: #00A8A0;
   --color-secondary-hover: #008780;
+  --color-secondary-hover-dark: #008f88;
   --color-secondary-muted: #E0F5F3;
   --color-secondary-text: #00655F;
 
@@ -78,6 +91,10 @@
   --color-neutral-border-strong: #D9C9A0;
   --color-neutral-surface: #FFFFFF;
   --color-neutral-surface-muted: #FAF7F0;
+  --color-neutral-surface-warm: #FFFDF7;
+  --color-neutral-surface-cream: #F7F3E9;
+
+  --ui-bg-dock-hover: #3D2740;
 
   --color-status-success-base: #1D9E75;
   --color-status-success-muted: #E1F5EE;

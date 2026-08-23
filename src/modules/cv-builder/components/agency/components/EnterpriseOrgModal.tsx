@@ -255,7 +255,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
 
               <button
                 type="submit"
-                className={`w-full py-2.5 bg-[var(--color-accent-base)] hover:bg-[#E31555] text-white font-extrabold text-xs rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer`}
+                className={`w-full py-2.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white font-extrabold text-xs rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer`}
               >
                 <UserPlus className="w-4 h-4" /> Enviar Invitación al Equipo
               </button>
@@ -285,7 +285,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
 
               <button
                 type="submit"
-                className={`w-full py-2.5 bg-[var(--color-secondary-base)] hover:bg-[#008f88] text-white font-extrabold text-xs rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer`}
+                className={`w-full py-2.5 bg-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-hover-dark)] text-white font-extrabold text-xs rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer`}
               >
                 <Check className="w-4 h-4" /> Unirse a la Organización
               </button>

@@ -77,7 +77,7 @@ export function Modal({
             className={`flex items-center justify-between px-5 py-3.5 ui-bg-header ui-text-primary border-b ui-border ${headerClassName}`}
           >
             <div className="flex items-center gap-2.5 font-black text-sm tracking-wide">
-              {icon && <span className="text-[#FFC93C] flex-shrink-0">{icon}</span>}
+              {icon && <span className="text-[var(--color-accent-amber)] flex-shrink-0">{icon}</span>}
               <span className="truncate">{title}</span>
             </div>
             <button

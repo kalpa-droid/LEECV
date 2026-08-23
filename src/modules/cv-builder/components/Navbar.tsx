@@ -56,13 +56,13 @@ export default function Navbar({
   return (
     <header className="sticky top-0 z-40 bg-[var(--color-neutral-text-primary)] border-b border-[var(--color-neutral-border)]/30 text-white shadow-xl no-print select-none">
       {/* Festive Bunting Accent Strip */}
-      <div className="h-1 w-full bg-gradient-to-r from-[var(--color-accent-base)] via-[#FFC93C] via-[var(--color-secondary-base)] via-[#8E44FF] to-[#FF7A29]" />
+      <div className="h-1 w-full bg-gradient-to-r from-[var(--color-accent-base)] via-[var(--color-accent-amber)] via-[var(--color-secondary-base)] via-[var(--color-accent-purple)] to-[var(--color-accent-orange)]" />
       
       <div className="max-w-7xl mx-auto px-2 sm:px-4 h-12 sm:h-14 flex items-center justify-between gap-1.5">
         
         {/* Left: Brand & Logo */}
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[var(--color-accent-base)] flex items-center justify-center font-black text-xs shadow-md text-white border border-[#FFD9E3]/20">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[var(--color-accent-base)] flex items-center justify-center font-black text-xs shadow-md text-white border border-[var(--color-accent-rose-muted)]/20">
             LEE
           </div>
           <h1 className="font-black text-sm sm:text-base tracking-wider text-white">
@@ -75,10 +75,10 @@ export default function Navbar({
           {/* 1. NUEVO (Abre confirmación para iniciar nuevo CV) */}
           <button
             onClick={handleNewClick}
-            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-white bg-[var(--color-accent-base)] hover:bg-[#E31555] border border-[#FFD9E3]/30 transition shadow-md shadow-[var(--color-accent-base)]/20 cursor-pointer whitespace-nowrap active:scale-95"
+            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-white bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] border border-[var(--color-accent-rose-muted)]/30 transition shadow-md shadow-[var(--color-accent-base)]/20 cursor-pointer whitespace-nowrap active:scale-95"
             title="Iniciar un nuevo currículum en blanco"
           >
-            <FilePlus className="w-3.5 h-3.5 text-[#FFD9E3] flex-shrink-0" />
+            <FilePlus className="w-3.5 h-3.5 text-[var(--color-accent-rose-muted)] flex-shrink-0" />
             <span>Nuevo</span>
           </button>
 
@@ -96,7 +96,7 @@ export default function Navbar({
           <button
             onClick={handleSaveClick}
             disabled={isSaving}
-            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-[#E9DBFF] bg-[#8E44FF] hover:bg-[#7126E0] border border-[#8E44FF]/40 transition disabled:opacity-50 shadow-md shadow-[#8E44FF]/20 cursor-pointer whitespace-nowrap active:scale-95"
+            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-[var(--color-accent-purple-light)] bg-[var(--color-accent-purple)] hover:bg-[var(--color-accent-purple-hover)] border border-[var(--color-accent-purple)]/40 transition disabled:opacity-50 shadow-md shadow-[var(--color-accent-purple)]/20 cursor-pointer whitespace-nowrap active:scale-95"
             title="Guardar currículum o descargar copia JSON de respaldo"
           >
             <Save className="w-3.5 h-3.5 text-white flex-shrink-0" />
@@ -106,7 +106,7 @@ export default function Navbar({
           {/* 4. PDF (Exportar PDF final) */}
           <button
             onClick={onPrint}
-            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-[#FFC93C] hover:bg-[#F0AE00] text-[var(--color-neutral-text-primary)] font-black text-xs shadow-lg shadow-[#FFC93C]/30 transition active:scale-95 border border-[#F0AE00] cursor-pointer whitespace-nowrap"
+            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-[var(--color-accent-amber)] hover:bg-[var(--color-accent-amber-hover)] text-[var(--color-neutral-text-primary)] font-black text-xs shadow-lg shadow-[var(--color-accent-amber)]/30 transition active:scale-95 border border-[var(--color-accent-amber-hover)] cursor-pointer whitespace-nowrap"
             title="Exportar documento PDF final listo para enviar"
           >
             <Download className="w-3.5 h-3.5 flex-shrink-0 text-[var(--color-neutral-text-primary)]" />
@@ -117,7 +117,7 @@ export default function Navbar({
         {/* Right: User Avatar Circle (Acceso a Cuenta / Suscripción) */}
         <button
           onClick={handlePricingClick}
-          className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#FF7A29] to-[#FFC93C] text-[var(--color-neutral-text-primary)] flex items-center justify-center font-black text-xs shadow-md border-2 border-white/40 hover:scale-105 transition cursor-pointer flex-shrink-0"
+          className="w-8 h-8 rounded-full bg-gradient-to-tr from-[var(--color-accent-orange)] to-[var(--color-accent-amber)] text-[var(--color-neutral-text-primary)] flex items-center justify-center font-black text-xs shadow-md border-2 border-white/40 hover:scale-105 transition cursor-pointer flex-shrink-0"
           title="Mi Cuenta de Usuario / Suscripción Premium"
         >
           <User className="w-4 h-4 stroke-[2.5]" />

@@ -116,7 +116,7 @@ export function RepeatableSection({
             <button
               type="button"
               onClick={handleAddItem}
-              className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-[var(--color-accent-base)] hover:bg-[#E31555] text-white shadow-sm transition cursor-pointer"
+              className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white shadow-sm transition cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>{addLabel}</span>

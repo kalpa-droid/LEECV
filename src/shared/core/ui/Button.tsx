@@ -26,13 +26,13 @@ export function Button({
   const baseStyles = 'font-black rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95';
 
   const variantStyles: Record<string, string> = {
-    primary: 'bg-[var(--color-secondary-base)] text-white hover:bg-[var(--color-secondary-hover)] border border-[var(--color-secondary-hover)]',
-    secondary: 'bg-[var(--color-accent-base)] text-white hover:bg-[#E31555] border border-[#E31555]',
-    accent: 'bg-[#FFC93C] text-[var(--color-neutral-text-primary)] hover:bg-[#F0AE00] border border-[#F0AE00]',
-    dark: 'bg-[var(--color-neutral-text-primary)] text-white hover:bg-[#1C121E]',
-    danger: 'bg-red-600 text-white hover:bg-red-700 border border-red-700',
-    outline: 'border-2 border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] hover:bg-[#FFFDF7]',
-    ghost: 'bg-transparent text-[var(--color-neutral-text-primary)] hover:bg-slate-100 shadow-none'
+    primary: 'bg-[var(--color-accent-base)] text-white hover:bg-[var(--color-accent-hover)] border border-transparent shadow-sm',
+    secondary: 'bg-[var(--color-accent-base)] text-white hover:bg-[var(--color-accent-brand-hover)] border border-[var(--color-accent-brand-hover)]',
+    accent: 'bg-[var(--color-accent-amber)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-accent-amber-hover)] border border-[var(--color-accent-amber-hover)]',
+    dark: 'bg-[var(--color-neutral-text-primary)] text-white hover:bg-[var(--color-neutral-text-primary)]/90',
+    danger: 'bg-[var(--color-status-danger-muted)] text-[var(--color-status-danger-text)] border border-[var(--color-status-danger-base)]/30 hover:bg-[var(--color-status-danger-base)] hover:text-white',
+    outline: 'border-2 border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-surface-warm)]',
+    ghost: 'bg-transparent text-[var(--color-neutral-text-secondary)] hover:text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-surface-muted)]'
   };
 
   const sizeStyles: Record<string, string> = {

@@ -75,7 +75,7 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
 
   if (loading) {
     return (
-      <div className="h-screen bg-[#1F1322] flex flex-col items-center justify-center text-white p-6">
+      <div className="h-screen bg-[var(--ui-preview-bg)] flex flex-col items-center justify-center text-white p-6">
         <Spinner size="lg" />
         <p className="text-xs font-bold uppercase tracking-wider text-purple-300 mt-4 animate-pulse">
           Cargando Currículum Web Verificado…
@@ -86,7 +86,7 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
 
   if (error || !cvData) {
     return (
-      <div className="h-screen bg-[#1F1322] flex flex-col items-center justify-center text-white p-6 text-center">
+      <div className="h-screen bg-[var(--ui-preview-bg)] flex flex-col items-center justify-center text-white p-6 text-center">
         <div className="w-16 h-16 bg-red-500/20 text-red-400 rounded-2xl flex items-center justify-center text-3xl mb-4">
           ⚠️
         </div>
@@ -96,7 +96,7 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
         </p>
         <button
           onClick={() => { window.location.href = '/'; }}
-          className="px-5 py-2.5 bg-[var(--color-accent-base)] hover:bg-[#E31555] text-white font-black text-xs rounded-xl shadow-lg transition"
+          className="px-5 py-2.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white font-black text-xs rounded-xl shadow-lg transition"
         >
           🏠 Ir a la Página Principal de LEECV
         </button>
@@ -105,7 +105,7 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
   }
 
   return (
-    <div className="h-screen bg-[#1F1322] text-white flex flex-col font-sans overflow-hidden">
+    <div className="h-screen bg-[var(--ui-preview-bg)] text-white flex flex-col font-sans overflow-hidden">
       {/* Public Header Bar */}
       <header className="bg-[var(--color-neutral-text-primary)] border-b border-purple-500/30 px-4 py-3 flex items-center justify-between z-30 shadow-lg shrink-0">
         <div className="flex items-center gap-2">
@@ -123,14 +123,14 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
 
         <button
           onClick={() => { window.location.href = '/'; }}
-          className="px-3.5 py-1.5 bg-[var(--color-accent-base)] hover:bg-[#E31555] text-white text-xs font-black rounded-xl transition cursor-pointer shadow-md"
+          className="px-3.5 py-1.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white text-xs font-black rounded-xl transition cursor-pointer shadow-md"
         >
           ✏️ Crear mi propio CV
         </button>
       </header>
 
       {/* Public Viewer */}
-      <main className="flex-1 bg-[#1F1322] overflow-y-auto p-4 flex justify-center items-start relative">
+      <main className="flex-1 bg-[var(--ui-preview-bg)] overflow-y-auto p-4 flex justify-center items-start relative">
         <Suspense fallback={<Spinner />}>
           <CVPreview cvData={cvData} activeTab="personales" zoomLevel={0.85} />
         </Suspense>

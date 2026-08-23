@@ -136,7 +136,7 @@ export default function CertCropperModal({
           </button>
           <button
             onClick={handleAccept}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[var(--color-accent-base)] hover:bg-[#E31555] text-white font-black text-xs shadow-lg transition cursor-pointer`}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white font-black text-xs shadow-lg transition cursor-pointer`}
           >
             <Check className="w-4 h-4" /> ACEPTAR
           </button>

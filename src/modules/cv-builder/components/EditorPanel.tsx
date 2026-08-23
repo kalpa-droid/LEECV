@@ -302,7 +302,7 @@ export default function EditorPanel({
             <button
               type="button"
               onClick={onAddAction}
-              className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-[var(--color-accent-base)] hover:bg-[#E31555] text-white shadow-sm transition cursor-pointer"
+              className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white shadow-sm transition cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>{addLabel}</span>
@@ -441,7 +441,7 @@ export default function EditorPanel({
 
             {cvData?.sectionVisibility?.ecologia !== false && (
               <>
-            <div className="p-3 bg-[#FFF1C2] rounded-xl border-2 border-[#FFC93C] text-xs text-[var(--color-neutral-text-primary)] space-y-1 shadow-sm">
+            <div className="p-3 bg-[var(--color-accent-amber-muted)] rounded-xl border-2 border-[var(--color-accent-amber)] text-xs text-[var(--color-neutral-text-primary)] space-y-1 shadow-sm">
               <div className="flex items-center gap-1.5 font-bold text-[var(--color-accent-base)]">
                 <Info className="w-4 h-4" /> Proyectos Ecológicos, Sociales & Comunitarios
               </div>
@@ -501,35 +501,33 @@ export default function EditorPanel({
                     </button>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-[var(--color-neutral-text-primary)] mb-0.5">Título del Taller / Proyecto Rural</label>
-                    <input 
+                    <Field 
+                      label="Título del Taller / Proyecto Rural"
                       type="text"
                       value={item.title}
-                      onChange={(e) => {
+                      onChange={(e: any) => {
                         const val = e.target.value;
-                        setCvData((prev) => {
+                        setCvData((prev: any) => {
                           const updated = [...prev.ecology.rural];
                           updated[idx].title = val;
                           return { ...prev, ecology: { ...prev.ecology, rural: updated } };
                         });
                       }}
-                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] placeholder-[var(--color-neutral-text-secondary)]/50 font-bold outline-none focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[#FFD9E3] transition"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-[var(--color-neutral-text-primary)] mb-0.5">Institución Organizadora</label>
-                    <input 
+                    <Field 
+                      label="Institución Organizadora"
                       type="text"
                       value={item.institution}
-                      onChange={(e) => {
+                      onChange={(e: any) => {
                         const val = e.target.value;
-                        setCvData((prev) => {
+                        setCvData((prev: any) => {
                           const updated = [...prev.ecology.rural];
                           updated[idx].institution = val;
                           return { ...prev, ecology: { ...prev.ecology, rural: updated } };
                         });
                       }}
-                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] placeholder-[var(--color-neutral-text-secondary)]/50 font-bold outline-none focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[#FFD9E3] transition"
                     />
                   </div>
                 </div>
@@ -587,35 +585,33 @@ export default function EditorPanel({
                     </button>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-[var(--color-neutral-text-primary)] mb-0.5">Nombre del Proyecto Ambiental</label>
-                    <input 
+                    <Field 
+                      label="Nombre del Proyecto Ambiental"
                       type="text"
                       value={item.title}
-                      onChange={(e) => {
+                      onChange={(e: any) => {
                         const val = e.target.value;
-                        setCvData((prev) => {
+                        setCvData((prev: any) => {
                           const updated = [...prev.ecology.environmental];
                           updated[idx].title = val;
                           return { ...prev, ecology: { ...prev.ecology, environmental: updated } };
                         });
                       }}
-                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] placeholder-[var(--color-neutral-text-secondary)]/50 font-bold outline-none focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[#FFD9E3] transition"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-[var(--color-neutral-text-primary)] mb-0.5">Entidad o Red Organizadora</label>
-                    <input 
+                    <Field 
+                      label="Entidad o Red Organizadora"
                       type="text"
                       value={item.institution}
-                      onChange={(e) => {
+                      onChange={(e: any) => {
                         const val = e.target.value;
-                        setCvData((prev) => {
+                        setCvData((prev: any) => {
                           const updated = [...prev.ecology.environmental];
                           updated[idx].institution = val;
                           return { ...prev, ecology: { ...prev.ecology, environmental: updated } };
                         });
                       }}
-                      className="w-full text-xs p-2.5 rounded-xl border-2 border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] placeholder-[var(--color-neutral-text-secondary)]/50 font-bold outline-none focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[#FFD9E3] transition"
                     />
                   </div>
                 </div>
@@ -643,7 +639,7 @@ export default function EditorPanel({
               <select
                 value={selectedRegIdx}
                 onChange={(e) => setSelectedRegIdx(e.target.value)}
-                className="w-full text-xs p-2.5 rounded-xl border-2 border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] font-extrabold outline-none focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[#FFD9E3] transition shadow-sm"
+                className="w-full text-xs p-2.5 rounded-xl border-2 border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] font-extrabold outline-none focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[var(--color-accent-rose-muted)] transition shadow-sm"
               >
                 <option value="">-- Hacer clic para elegir un título o curso --</option>
                 {registeredItems.map((item, idx) => (
@@ -669,7 +665,7 @@ export default function EditorPanel({
                 className={`p-2.5 rounded-xl border-2 flex items-center justify-center gap-1.5 font-black text-xs transition ${
                   certMode === 'upload'
                     ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-base)] text-white shadow-md'
-                    : 'border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] hover:bg-[#FFFDF7]'
+                    : 'border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-surface-warm)]'
                 }`}
               >
                 <Upload className="w-4 h-4" /> Subir Imagen
@@ -685,7 +681,7 @@ export default function EditorPanel({
                 className={`p-2.5 rounded-xl border-2 flex items-center justify-center gap-1.5 font-black text-xs transition ${
                   certMode === 'camera'
                     ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-base)] text-white shadow-md'
-                    : 'border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] hover:bg-[#FFFDF7]'
+                    : 'border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-surface-warm)]'
                 }`}
               >
                 <Camera className="w-4 h-4" /> Usar Cámara
@@ -698,7 +694,7 @@ export default function EditorPanel({
                 <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
                 <button
                   onClick={capturePhoto}
-                  className="absolute bottom-3 flex items-center gap-1.5 px-5 py-2 bg-[var(--color-accent-base)] hover:bg-[#E31555] text-white font-black text-xs rounded-full shadow-lg transition"
+                  className="absolute bottom-3 flex items-center gap-1.5 px-5 py-2 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white font-black text-xs rounded-full shadow-lg transition"
                 >
                   <Camera className="w-4 h-4" /> Capturar Foto
                 </button>
@@ -757,7 +753,7 @@ export default function EditorPanel({
                             )
                           }));
                         }}
-                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-[#FFF1C2] border border-[#FFC93C] text-[var(--color-neutral-text-primary)] font-black text-[11px] hover:bg-[#FFC93C] transition"
+                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-[var(--color-accent-amber-muted)] border border-[var(--color-accent-amber)] text-[var(--color-neutral-text-primary)] font-black text-[11px] hover:bg-[var(--color-accent-amber)] transition"
                         title="Girar imagen 90°"
                       >
                         <RotateCw className="w-3.5 h-3.5 text-[var(--color-accent-base)]" />
@@ -837,7 +833,7 @@ export default function EditorPanel({
             <div className="p-4 bg-white rounded-2xl border-2 border-[var(--color-neutral-border)] space-y-3 text-center shadow-sm">
               {cvData.signature?.dataUrl ? (
                 <div className="space-y-2">
-                  <div className="bg-[#FFFDF7] p-3 rounded-xl border border-[#FFC93C]">
+                  <div className="bg-[var(--color-neutral-surface-warm)] p-3 rounded-xl border border-[var(--color-accent-amber)]">
                     <img src={cvData.signature.dataUrl} alt="Firma" className="h-16 mx-auto object-contain" />
                   </div>
                   <button
@@ -861,7 +857,7 @@ export default function EditorPanel({
 
               <button
                 onClick={onOpenSignature}
-                className="w-full flex items-center justify-center gap-2 py-2.5 bg-[var(--color-accent-base)] hover:bg-[#E31555] text-white text-xs font-black rounded-xl shadow-md transition"
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white text-xs font-black rounded-xl shadow-md transition"
               >
                 <PenTool className="w-4 h-4" /> Abrir Tablero de Firma (Dibujar / Subir)
               </button>
@@ -906,7 +902,7 @@ export default function EditorPanel({
                             signature: { ...(prev.signature || {}), signerRole: val }
                           }));
                         }}
-                        className="w-full text-xs p-2.5 rounded-xl border-2 border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] font-bold outline-none focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[#FFD9E3] cursor-pointer transition"
+                        className="w-full text-xs p-2.5 rounded-xl border-2 border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] font-bold outline-none focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[var(--color-accent-rose-muted)] cursor-pointer transition"
                       >
                         {titleList.map((t, idx) => (
                           <option key={idx} value={t}>{t}</option>
@@ -923,33 +919,27 @@ export default function EditorPanel({
 
               {/* 3. Selector de Fecha con Calendario */}
               <div>
-                <label className="block text-[11px] font-bold text-[var(--color-neutral-text-primary)] mb-1 flex items-center justify-between">
-                  <span>Fecha de Firma</span>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 font-extrabold">Calendario</span>
-                </label>
-                <input 
+                <Field 
+                  label="Fecha de Firma"
                   type="date"
                   value={cvData.signature?.date || new Date().toISOString().split('T')[0]}
-                  onChange={(e) => {
+                  onChange={(e: any) => {
                     const val = e.target.value;
                     setCvData((prev: any) => ({
                       ...prev,
                       signature: { ...(prev.signature || {}), date: val }
                     }));
                   }}
-                  className="w-full text-xs p-2.5 rounded-xl border-2 border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] font-bold outline-none focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[#FFD9E3] cursor-pointer transition"
                 />
               </div>
 
               {/* 4. Lugar / Ciudad de Emisión de la Firma */}
               <div>
-                <label className="block text-[11px] font-bold text-[var(--color-neutral-text-primary)] mb-1">
-                  Lugar / Ciudad de Emisión de la Firma
-                </label>
-                <input 
+                <Field 
+                  label="Lugar / Ciudad de Emisión de la Firma"
                   type="text"
                   value={cvData.signature?.signerCity || cvData.personalInfo?.cityProvince || ''}
-                  onChange={(e) => {
+                  onChange={(e: any) => {
                     const val = e.target.value;
                     setCvData((prev: any) => ({
                       ...prev,
@@ -957,7 +947,6 @@ export default function EditorPanel({
                     }));
                   }}
                   placeholder="Ej: Salta, Argentina"
-                  className="w-full text-xs p-2.5 rounded-xl border-2 border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] font-bold outline-none focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[#FFD9E3] transition"
                 />
               </div>
             </div>
@@ -1253,15 +1242,12 @@ export default function EditorPanel({
               <div id="custom-section-creator-form" className="p-3.5 bg-white rounded-2xl border-2 border-[var(--color-neutral-border)] space-y-4 shadow-sm">
 
                 <div>
-                  <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] mb-1">
-                    Nombre de la Sección Nueva
-                  </label>
-                  <input
+                  <Field
+                    label="Nombre de la Sección Nueva"
                     type="text"
                     value={newSectionTitle}
-                    onChange={(e) => setNewSectionTitle(e.target.value)}
+                    onChange={(e: any) => setNewSectionTitle(e.target.value)}
                     placeholder="Ej: DOCENCIA UNIVERSITARIA, OBRAS DE ARTE"
-                    className="w-full text-xs p-2.5 rounded-xl border-2 border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] font-bold outline-none focus:border-[var(--color-accent-base)] transition"
                   />
                 </div>
 
@@ -1397,7 +1383,7 @@ export default function EditorPanel({
                 savedList.map((item) => (
                   <div
                     key={item.id}
-                    className="p-3.5 rounded-xl border border-[var(--color-neutral-border)] bg-[#FFFDF7]/50  hover:border-purple-500 transition flex items-center justify-between gap-2"
+                    className="p-3.5 rounded-xl border border-[var(--color-neutral-border)] bg-[var(--color-neutral-surface-warm)]/50  hover:border-purple-500 transition flex items-center justify-between gap-2"
                   >
                     <div className="space-y-0.5 min-w-0">
                       <h4 className="text-xs font-black text-[var(--color-neutral-text-primary)] font-black  truncate">
@@ -1516,7 +1502,7 @@ export default function EditorPanel({
                       onClick={() => setCvData((prev: any) => ({ ...prev, activePresetId: styleOpt.id }))}
                       className={`p-3 rounded-xl border text-left transition flex items-start justify-between gap-3 cursor-pointer ${
                         isSelected
-                          ? 'border-[var(--color-accent-base)] bg-[#FFD9E3]/30 ring-2 ring-[var(--color-accent-base)]/30'
+                          ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
                           : 'border-[var(--color-neutral-border)] bg-white hover:border-[var(--color-accent-base)]'
                       }`}
                     >
@@ -1601,7 +1587,7 @@ export default function EditorPanel({
                               onClick={() => applyPreset(preset)}
                               className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between cursor-pointer ${
                                 isSelected
-                                  ? 'border-[var(--color-accent-base)] bg-[#FFD9E3]/30 ring-2 ring-[var(--color-accent-base)]/30'
+                                  ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
                                   : 'border-[var(--color-neutral-border)] bg-white hover:border-[var(--color-accent-base)]'
                               }`}
                             >
@@ -1873,7 +1859,7 @@ export default function EditorPanel({
                                 type="button"
                                 onClick={() => setColumn('ambas')}
                                 className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
-                                  currentVal === 'ambas' ? 'bg-[#8E44FF] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                  currentVal === 'ambas' ? 'bg-[var(--color-accent-purple)] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                 }`}
                               >
                                 Ambas

@@ -65,7 +65,7 @@ export default function CanvaIconDock({
   return (
     <>
       {/* Desktop & Tablet Vertical Left Dock (Width: 64px) — Por encima de Barra Superior y Footer */}
-      <aside className="hidden md:flex flex-col items-center py-3 bg-[#1C121E] border-r border-[var(--color-neutral-text-secondary)]/30 text-white z-[100] select-none w-16 shrink-0 fixed top-0 bottom-0 left-0 h-screen overflow-y-auto no-scrollbar shadow-2xl">
+      <aside className="hidden md:flex flex-col items-center py-3 bg-[var(--color-neutral-text-primary)] border-r border-[var(--color-neutral-text-secondary)]/30 text-white z-[100] select-none w-16 shrink-0 fixed top-0 bottom-0 left-0 h-screen overflow-y-auto no-scrollbar shadow-2xl">
         {/* Toggle Drawer Button (Menú para esconder/abrir panel) */}
         <button
           type="button"
@@ -73,7 +73,7 @@ export default function CanvaIconDock({
           className={`p-2.5 rounded-2xl mb-3 transition transform active:scale-95 cursor-pointer ${
             isPanelOpen
               ? 'bg-[var(--color-accent-base)] text-white shadow-lg shadow-[var(--color-accent-base)]/30'
-              : 'bg-[var(--color-neutral-text-primary)] text-slate-300 hover:text-white hover:bg-[#3D2740]'
+              : 'bg-[var(--color-neutral-text-primary)] text-slate-300 hover:text-white hover:bg-[var(--ui-bg-dock-hover)]'
           }`}
           title={isPanelOpen ? 'Cerrar Panel Editor' : 'Abrir Panel Editor'}
         >
@@ -99,7 +99,7 @@ export default function CanvaIconDock({
                 }`}
                 title={tab.label}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-[#FFC93C]'}`} />
+                <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-[var(--color-accent-amber)]'}`} />
                 <span className="text-[9px] font-bold tracking-tighter mt-0.5">{tab.label}</span>
                 
                 <span className="absolute left-14 bg-[var(--color-neutral-text-primary)] text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-white/10">
@@ -153,7 +153,7 @@ export default function CanvaIconDock({
                 className={`w-12 h-11 rounded-2xl flex flex-col items-center justify-center transition group relative cursor-pointer ${
                   isActive
                     ? 'bg-[var(--color-secondary-base)] text-white shadow-lg shadow-[var(--color-secondary-base)]/30 scale-105'
-                    : 'bg-[var(--color-neutral-text-primary)] text-teal-300 border border-teal-500/30 hover:bg-[#3D2740]'
+                    : 'bg-[var(--color-neutral-text-primary)] text-teal-300 border border-teal-500/30 hover:bg-[var(--ui-bg-dock-hover)]'
                 }`}
                 title={cs.titleText}
               >
@@ -184,7 +184,7 @@ export default function CanvaIconDock({
                 }`}
                 title={sec.label}
               >
-                <DomSectionIcon iconId={sec.iconId} className="w-4 h-4" color={isActive ? '#ffffff' : '#FFC93C'} />
+                <DomSectionIcon iconId={sec.iconId} className="w-4 h-4" color={isActive ? '#ffffff' : 'var(--color-accent-amber)'} />
                 <span className="text-[9px] font-extrabold tracking-tighter mt-0.5 leading-none">{sec.label}</span>
 
                 <span className="absolute left-14 bg-[var(--color-neutral-text-primary)] text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-white/10">
@@ -252,10 +252,10 @@ export default function CanvaIconDock({
               className={`px-3 py-1.5 rounded-xl flex items-center gap-1 text-[11px] font-black shrink-0 transition cursor-pointer ${
                 isActive
                   ? 'bg-[var(--color-accent-base)] text-white shadow-md'
-                  : 'bg-[var(--color-neutral-text-primary)] text-[var(--color-neutral-border)]/80 hover:bg-[#3D2740]'
+                  : 'bg-[var(--color-neutral-text-primary)] text-[var(--color-neutral-border)]/80 hover:bg-[var(--ui-bg-dock-hover)]'
               }`}
             >
-              <Icon className="w-3.5 h-3.5 text-[#FFC93C]" />
+              <Icon className="w-3.5 h-3.5 text-[var(--color-accent-amber)]" />
               <span>{tab.label}</span>
             </button>
           );
@@ -287,10 +287,10 @@ export default function CanvaIconDock({
               className={`px-3 py-1.5 rounded-xl flex items-center gap-1 text-[11px] font-black shrink-0 transition cursor-pointer ${
                 isActive
                   ? 'bg-[var(--color-secondary-base)] text-white shadow-md'
-                  : 'bg-[var(--color-neutral-text-primary)] text-[var(--color-neutral-border)]/80 hover:bg-[#3D2740]'
+                  : 'bg-[var(--color-neutral-text-primary)] text-[var(--color-neutral-border)]/80 hover:bg-[var(--ui-bg-dock-hover)]'
               }`}
             >
-              <DomSectionIcon iconId={sec.iconId} className="w-3.5 h-3.5" color={isActive ? '#ffffff' : '#FFC93C'} />
+              <DomSectionIcon iconId={sec.iconId} className="w-3.5 h-3.5" color={isActive ? '#ffffff' : 'var(--color-accent-amber)'} />
               <span>{sec.label}</span>
             </button>
           );
@@ -307,7 +307,7 @@ export default function CanvaIconDock({
               className={`px-3 py-1.5 rounded-xl flex items-center gap-1 text-[11px] font-black shrink-0 transition cursor-pointer ${
                 isActive
                   ? 'bg-purple-600 text-white shadow-md'
-                  : 'bg-[var(--color-neutral-text-primary)] text-purple-300 hover:bg-[#3D2740]'
+                  : 'bg-[var(--color-neutral-text-primary)] text-purple-300 hover:bg-[var(--ui-bg-dock-hover)]'
               }`}
             >
               <DomSectionIcon iconId={iconId} className="w-3.5 h-3.5" color={isActive ? '#ffffff' : '#A855F7'} />

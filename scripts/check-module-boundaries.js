@@ -66,7 +66,14 @@ function checkFile(fullPath, currentModule = null) {
     // Detecta estilos inline duros con hex
     const hardcodedHexStyleMatches = content.match(/style=\{\{\s*(color|backgroundColor|borderColor):\s*['"]#[0-9a-fA-F]{3,8}['"]/gi);
     if (hardcodedHexStyleMatches) {
-      console.warn(`🎨 UI Governance Warning: [${file}] tiene colores inline duros. Usar colorSystem/uiDesignSystem de /shared/core/uiDesignSystem.`);
+      console.error(`🎨 UI Governance Error: [${file}] tiene colores inline duros: '${hardcodedHexStyleMatches.join(', ')}'. Usar colorSystem/uiDesignSystem de /shared/core/uiDesignSystem.`);
+      uiGovernanceWarnings++;
+    }
+
+    // Detecta hexes arbitrarios en clases de Tailwind (incluyendo via-, from-, to-, shadow-, opacidades como /20 y estados hover:/focus:)
+    const tailwindArbitraryHexMatches = content.match(/(?:hover:|focus:|active:|disabled:|dark:)?(bg|text|border|ring|from|via|to|shadow|placeholder|fill|stroke)-\[#[0-9a-fA-F]{3,8}\](?:\/\d{1,3})?/gi);
+    if (tailwindArbitraryHexMatches) {
+      console.error(`🎨 UI Governance Error: [${file}] usa hex arbitrario en className: '${tailwindArbitraryHexMatches.join(', ')}'. Usar variables CSS var(--color-*) o tokens del sistema.`);
       uiGovernanceWarnings++;
     }
   }
