@@ -404,31 +404,16 @@ export default function EditorPanel({
         {/* TAB 6: INFORMÁTICA */}
         {/* ========================================================================= */}
         {activeTab === 'informatica' && (
-          <RepeatableSection
+          <RecordFormSection
             sectionKey="informatica"
             sectionTitle="Informática y TICs"
+            kindKey="informatics"
             addLabel="Agregar Informática"
             cvData={cvData}
             setCvData={setCvData}
             fieldName="informatics"
-            emptyItem={{ institution: '', course: '' }}
             itemTitlePrefix="Curso Informático"
-            renderItem={(item, idx, updateField) => (
-              <>
-                <Field
-                  label="Nombre del Curso de Informática o TICs"
-                  value={item.course || ''}
-                  onChange={(e) => updateField('course', e.target.value)}
-                  placeholder="Ej: ABC DIGITAL - APRENDER A USAR INTERNET"
-                />
-                <Field
-                  label="Institución o Plataforma Emisora"
-                  value={item.institution || ''}
-                  onChange={(e) => updateField('institution', e.target.value)}
-                  placeholder="Ej: Secretaría de Innovación Pública - Punto Digital"
-                />
-              </>
-            )}
+            helpText="Informática y TICs incluye cursos, herramientas de computación, lenguajes y software profesional."
           />
         )}
 
