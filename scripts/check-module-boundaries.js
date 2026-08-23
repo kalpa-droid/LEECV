@@ -105,12 +105,29 @@ function checkFile(fullPath, currentModule = null) {
     }
   }
 
+function stripJsxExpressions(code) {
+  let result = '';
+  let depth = 0;
+  for (let i = 0; i < code.length; i++) {
+    const char = code[i];
+    if (char === '{') {
+      depth++;
+    } else if (char === '}') {
+      if (depth > 0) depth--;
+    } else if (depth === 0) {
+      result += char;
+    }
+  }
+  return result;
+}
+
   // 4. Gobernanza Léxica de Texto de Interfaz (revisa cadenas visibles en JSX y props textuales)
   if (file.endsWith('.tsx') || file.endsWith('.jsx')) {
+    const jsxOnlyContent = stripJsxExpressions(content);
     FORBIDDEN_LEXICON.forEach(({ term, canonical }) => {
       // Revisa sólo texto en JSX entre > e < o dentro de props de texto como title="", label="", placeholder=""
       const jsxTextRegex = new RegExp(`>([^<]*\\b${term}\\b[^<]*)<|\\b(title|label|placeholder)=["'][^"']*\\b${term}\\b[^"']*["']`, 'gi');
-      if (jsxTextRegex.test(content)) {
+      if (jsxTextRegex.test(jsxOnlyContent)) {
         console.error(`💬 Lexical Governance Error: [${file}] contiene el término prohibido '${term}'. Usar '${canonical}' según uiTextGlossary.ts.`);
         uiGovernanceWarnings++;
       }

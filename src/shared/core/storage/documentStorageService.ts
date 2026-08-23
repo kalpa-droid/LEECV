@@ -1,4 +1,5 @@
 import { supabase, checkStorageStatus } from '../lib/supabaseClient';
+import { dal } from './dataAccessLayer';
 import { optimizeCVImagesToWebP } from '../utils/imageCompressor';
 import { idbStorage } from '../../../modules/cv-builder/services/storageIndexedDB';
 import { SaveDocumentResult, DocumentRecord } from '../../../types/document';
@@ -47,13 +48,8 @@ export const getSavedDocumentsList = async (docTypeId: string = 'cv'): Promise<D
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data, error } = await supabase
-          .from('cvs')
-          .select('id, title, candidate_name, dni, updated_at')
-          .eq('user_id', user.id)
-          .order('updated_at', { ascending: false });
-
-        if (!error && Array.isArray(data)) {
+        const data = await dal.cvs.listByUser(user.id);
+        if (Array.isArray(data)) {
           data.forEach((item: any) => {
             if (item && item.id) {
               map.set(item.id, {
@@ -136,7 +132,7 @@ export const saveDocument = async (docData: any, docTypeId: string = 'cv'): Prom
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          const { error } = await supabase.from('cvs').upsert({
+          const success = await dal.cvs.upsert({
             id,
             user_id: user.id,
             title: summaryRecord.title,
@@ -145,12 +141,7 @@ export const saveDocument = async (docData: any, docTypeId: string = 'cv'): Prom
             cv_data: fullDocObject,
             updated_at: summaryRecord.updated_at
           });
-          if (!error) {
-            syncState = 'synced';
-          } else {
-            console.error('Error guardando en Supabase:', error);
-            syncState = 'pending';
-          }
+          syncState = success ? 'synced' : 'pending';
         }
       } catch (err) {
         console.warn('Error conectando a Supabase:', err);
@@ -186,14 +177,8 @@ export const loadDocumentById = async (id: string, docTypeId: string = 'cv'): Pr
   // 2. Check Supabase
   if (supabase) {
     try {
-      const { data, error } = await supabase
-        .from('cvs')
-        .select('cv_data')
-        .eq('id', id)
-        .single();
-      if (!error && data?.cv_data) {
-        return data.cv_data;
-      }
+      const cvData = await dal.cvs.getById(id);
+      if (cvData) return cvData;
     } catch (err) {
       console.warn('Supabase fetch error:', err);
     }
@@ -229,7 +214,7 @@ export const deleteDocumentById = async (id: string, docTypeId: string = 'cv'): 
 
   if (supabase) {
     try {
-      await supabase.from('cvs').delete().eq('id', id);
+      await dal.cvs.delete(id);
     } catch (err) {
       console.warn('Error eliminando en Supabase:', err);
     }

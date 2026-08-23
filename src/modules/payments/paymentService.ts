@@ -1,4 +1,5 @@
 import { supabase } from '../../shared/core/lib/supabaseClient';
+import { dal } from '../../shared/core/storage/dataAccessLayer';
 import { apiClient } from '../../shared/core/utils/apiClient';
 import { navigation } from '../../shared/core/utils/navigation';
 import { PaymentClaim, PaymentGateway } from '../../types/payments';
@@ -50,30 +51,25 @@ export async function enviarComprobanteManual({
   if (!supabase) throw new Error('Supabase no configurado');
   const { data: { user } } = await supabase.auth.getUser();
 
-  const payload = {
-    user_id: user?.id || null,
+  const payload: Partial<PaymentClaim> = {
+    user_id: user?.id || undefined,
     email,
     plan,
     payment_method: paymentMethod,
-    transaction_reference: transactionRef || null,
-    amount: amount ? String(amount) : null,
+    transaction_reference: transactionRef || undefined,
+    amount: amount ? String(amount) : undefined,
     status: 'pendiente',
   };
 
-  const { data, error } = await supabase
-    .from('payment_claims')
-    .insert(payload)
-    .select()
-    .single();
+  const claim = await dal.paymentClaims.insert(payload);
+  if (!claim) throw new Error('Error al registrar el comprobante manual');
 
-  if (error) throw error;
-
-  await supabase.from('admin_notifications').insert({
+  await dal.adminNotifications.insert({
     type: 'manual_payment_claim',
     title: 'Nuevo comprobante manual de pago',
     detail: `Usuario ${email} envió comprobante (${paymentMethod}) para plan ${plan}`,
     user_id: user?.id || null,
   });
 
-  return data as PaymentClaim;
+  return claim;
 }

@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { dal } from './dataAccessLayer';
 import { apiClient } from '../utils/apiClient';
 
 /**
@@ -99,14 +100,14 @@ export async function publicarCVEnDrive(cvData: any, slug: string): Promise<{ su
     if (supabase) {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user?.id) {
-        await supabase.from('published_cvs').upsert({
+        await dal.publishedCvs.upsert({
           slug,
           user_id: session.user.id,
           drive_file_id: uploadRes.fileId,
           cv_id: cvData?.id || 'cv_default',
           is_active: true,
           updated_at: new Date().toISOString(),
-        }, { onConflict: 'slug' });
+        });
       }
     }
 
@@ -143,9 +144,7 @@ export async function actualizarCVPublicadoEnDrive(cvData: any, slug: string, ex
     await hacerArchivoPublico(accessToken, existingFileId);
 
     if (supabase) {
-      await supabase.from('published_cvs').update({
-        updated_at: new Date().toISOString(),
-      }).eq('slug', slug);
+      await dal.publishedCvs.updateTimestamp(slug);
     }
 
     return { success: true, slug, fileId: existingFileId };
@@ -171,10 +170,7 @@ export async function getGoogleDriveQuota(): Promise<{ usedBytes: number; totalB
     if (supabase) {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user?.id) {
-        await supabase.from('profiles').update({
-          drive_quota_percent: percentUsed,
-          drive_last_checked_at: new Date().toISOString(),
-        }).eq('id', session.user.id);
+        await dal.profiles.updateDriveQuota(session.user.id, percentUsed);
       }
     }
 
