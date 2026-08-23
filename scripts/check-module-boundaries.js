@@ -7,6 +7,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { UI_GLOSSARY } from '../src/shared/core/uiTextGlossary.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,11 +40,13 @@ const EXEMPT_NATIVE_DIALOGS = [
   'Toast.tsx'
 ];
 
-// Términos prohibidos para el chequeo de léxico de interfaz
-const FORBIDDEN_LEXICON = [
-  { term: 'Sintonía fina', canonical: 'Ajuste manual' },
-  { term: 'Personalizado avanzado', canonical: 'Ajuste manual' },
-];
+// Términos prohibidos para el chequeo de léxico de interfaz — se derivan del
+// glosario real (uiTextGlossary.ts), NO de una copia a mano acá. Antes este
+// script tenía su propia lista de 2 términos que duplicaba (mal) las 6 reglas
+// reales del glosario, así que 4 de 6 reglas nunca se estaban chequeando.
+const FORBIDDEN_LEXICON = Object.values(UI_GLOSSARY).flatMap(({ canonical, forbidden }) =>
+  forbidden.map((term) => ({ term, canonical }))
+);
 
 function checkFile(fullPath, currentModule = null) {
   const file = path.basename(fullPath);

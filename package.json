@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "typecheck": "tsc --noEmit",
     "typecheck:api": "tsc -p tsconfig.api.json --noEmit",
-    "check-all": "npm run typecheck && npm run typecheck:api && npm run lint && node scripts/check-module-boundaries.js && npm run build",
+    "check-all": "npm run typecheck && npm run typecheck:api && npm run lint && npx tsx scripts/check-module-boundaries.js && npm run build",
     "preview": "vite preview"
   },
   "dependencies": {
