@@ -770,7 +770,7 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {/* VISTA 1 A 1 DE SECCIÓN PERSONALIZADA SELECCIONADA DESDE EL DOCK */}
         {/* ========================================================================= */}
-        {(cvData.customSections || []).some((s: any) => s.id === activeTab) && (() => {
+        {(cvData.customSections || []).some((s: any) => s.id === activeTab && s.id !== 'ecologia') && (() => {
           const csIdx = (cvData.customSections || []).findIndex((s: any) => s.id === activeTab);
           const cs = cvData.customSections?.[csIdx];
           if (!cs) return null;
@@ -902,12 +902,30 @@ export default function EditorPanel({
                       fields: ['tituloOGrado', 'institucion', 'periodo', 'url']
                     }
                   ].map((presetSec) => {
-                    const isAlreadyAdded = (cvData.customSections || []).some((s: any) => s.id === presetSec.id);
+                    const isAlreadyAdded = presetSec.id === 'ecologia'
+                      ? cvData.sectionVisibility?.ecologia !== false
+                      : (cvData.customSections || []).some((s: any) => s.id === presetSec.id);
+
                     return (
                       <button
                         key={presetSec.id}
                         type="button"
                         onClick={() => {
+                          if (presetSec.id === 'ecologia') {
+                            setCvData((prev: any) => ({
+                              ...prev,
+                              sectionVisibility: {
+                                ...(prev.sectionVisibility || {}),
+                                ecologia: true
+                              },
+                              ecology: Array.isArray(prev.ecology) && prev.ecology.length > 0 ? prev.ecology : [{}],
+                              customSections: (prev.customSections || []).filter((s: any) => s.id !== 'ecologia')
+                            }));
+                            if (typeof setActiveTab === 'function') setActiveTab('ecologia');
+                            showSuccess("Sección 'Proyectos Sustentables & Ecológicos' activada.");
+                            return;
+                          }
+
                           if (isAlreadyAdded) {
                             if (typeof setActiveTab === 'function') setActiveTab(presetSec.id);
                             return;

@@ -1,6 +1,11 @@
 export function sanitizeCvData(rawCvData: any = {}) {
   const data: any = typeof rawCvData === 'object' && rawCvData !== null ? rawCvData : {};
 
+  const customEcologySec = Array.isArray(data.customSections)
+    ? data.customSections.find((cs: any) => cs?.id === 'ecologia')
+    : null;
+  const customEcologyRecs = Array.isArray(customEcologySec?.records) ? customEcologySec.records : [];
+
   return {
     id: data.id || `cv_${Date.now()}`,
     title: data.title || 'Mi Currículum Vitae',
@@ -44,22 +49,27 @@ export function sanitizeCvData(rawCvData: any = {}) {
     coursesAndCertificates: Array.isArray(data.coursesAndCertificates) ? data.coursesAndCertificates : [],
     informatics: Array.isArray(data.informatics) ? data.informatics : [],
     certificatesScanned: Array.isArray(data.certificatesScanned) ? data.certificatesScanned : [],
+
     customSections: Array.isArray(data.customSections)
-      ? data.customSections.map((cs: any) => ({
-          id: cs.id || `custom_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-          titleText: cs.titleText || 'NUEVA SECCIÓN',
-          fields: Array.isArray(cs.fields) ? cs.fields : ['tituloOGrado', 'institucion'],
-          records: Array.isArray(cs.records) ? cs.records : []
-        }))
+      ? data.customSections
+          .filter((cs: any) => cs && cs.id !== 'ecologia')
+          .map((cs: any) => ({
+            id: cs.id || `custom_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+            titleText: cs.titleText || 'NUEVA SECCIÓN',
+            fields: Array.isArray(cs.fields) ? cs.fields : ['tituloOGrado', 'institucion'],
+            records: Array.isArray(cs.records) ? cs.records : []
+          }))
       : [],
 
-    ecology: Array.isArray(data.ecology)
-      ? data.ecology
+    ecology: Array.isArray(data.ecology) && data.ecology.length > 0
+      ? [...data.ecology, ...customEcologyRecs]
       : [
+          ...(Array.isArray(data.ecology) ? data.ecology : []),
           ...(Array.isArray(data.ecology?.rural) ? data.ecology.rural : []),
           ...(Array.isArray(data.ecology?.environmental) ? data.ecology.environmental : []),
           ...(Array.isArray(data.ecology?.community) ? data.ecology.community : []),
-          ...(Array.isArray(data.ecologia) ? data.ecologia : [])
+          ...(Array.isArray(data.ecologia) ? data.ecologia : []),
+          ...customEcologyRecs
         ],
 
     signature: {
