@@ -1363,26 +1363,6 @@ export default function EditorPanel({
                 </button>
               </div>
 
-              {/* Sello / Monograma */}
-              <div className="p-3 bg-white rounded-xl border border-[#EFE2C9] space-y-1.5">
-                <label className="block text-xs font-bold text-[#2B1B2E]">
-                  Iniciales de Sello / Monograma (ej: MB)
-                </label>
-                <input 
-                  type="text"
-                  maxLength={4}
-                  value={cvData.personalInfo?.initials || ''}
-                  onChange={(e) => {
-                    const val = e.target.value.toUpperCase();
-                    setCvData((prev: any) => ({
-                      ...prev,
-                      personalInfo: { ...prev.personalInfo, initials: val }
-                    }));
-                  }}
-                  placeholder="Ej: MB"
-                  className="w-28 text-xs p-2.5 rounded-xl border border-[#EFE2C9] bg-white text-[#2B1B2E] font-black uppercase outline-none focus:border-[#FF2E63] transition"
-                />
-              </div>
 
               {/* Registros Destacados en Portada (Solo Títulos, con botón Agregar/Eliminar) */}
               <div className="p-3 bg-white rounded-xl border border-[#EFE2C9] space-y-3">

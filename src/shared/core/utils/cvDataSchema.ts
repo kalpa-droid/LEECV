@@ -26,7 +26,6 @@ export function sanitizeCvData(rawCvData: any = {}) {
       address: data.personalInfo?.address || '',
       cityProvince: data.personalInfo?.cityProvince || '',
       facebook: data.personalInfo?.facebook || '',
-      initials: data.personalInfo?.initials || 'MDB',
       year: data.personalInfo?.year || '2026',
       quote: data.personalInfo?.quote || '',
       profilePhoto: data.personalInfo?.profilePhoto || ''

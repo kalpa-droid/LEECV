@@ -652,7 +652,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                 ) : (
                   <View style={styles.profilePhotoPlaceholder}>
                     <Text style={{ fontSize: 20, fontFamily: 'Helvetica-Bold', color: '#ffffff' }}>
-                      {personalInfo?.initials || 'CV'}
+                      {`${(personalInfo?.givenNames || 'C')[0]}${(personalInfo?.surname || 'V')[0]}`}
                     </Text>
                   </View>
                 )}
@@ -704,7 +704,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
             ) : (
               <View style={styles.coverPhotoPlaceholder}>
                 <Text style={{ fontSize: 24, fontFamily: 'Helvetica-Bold', color: '#ffffff' }}>
-                  {personalInfo?.initials || 'CV'}
+                  {`${(personalInfo?.givenNames || 'C')[0]}${(personalInfo?.surname || 'V')[0]}`}
                 </Text>
               </View>
             )}
@@ -741,7 +741,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
               <Text style={styles.coverFooterMain}>{personalInfo.cityProvince || 'Salta, Argentina'}</Text>
             </View>
             <View style={{ alignItems: 'flex-end' }}>
-              <Text style={styles.coverFooterSub}>{personalInfo.initials || 'LEECV'} | AÑO {new Date().getFullYear()}</Text>
+              <Text style={styles.coverFooterSub}>LEECV | AÑO {new Date().getFullYear()}</Text>
               <Text style={styles.coverFooterBadge}>DOCUMENTO OFICIAL</Text>
             </View>
           </View>

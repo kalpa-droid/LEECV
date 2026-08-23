@@ -128,19 +128,6 @@ export default function PersonalInfoSection({ onOpenPhotoCropper, registeredItem
         />
       </div>
 
-      <div>
-        <label className="block text-xs font-bold text-[#FF2E63] mb-1">
-          Iniciales de Sello / Monograma de Portada (ej: MB)
-        </label>
-        <input 
-          type="text"
-          maxLength={4}
-          value={cvData.personalInfo?.initials || ''}
-          onChange={(e) => updatePersonalInfo('initials', e.target.value.toUpperCase())}
-          placeholder="Ej: MB"
-          className="w-28 text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-black uppercase outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-        />
-      </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>

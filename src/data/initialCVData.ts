@@ -17,7 +17,6 @@ export const standardExampleCVData = {
     facebook: "facebook.com/valeriasoledadmedina",
     profilePhoto: valeriaProfilePhoto,
     quote: "“Docente apasionada por la enseñanza pedagógica digital, la mediación lectora y la transformación educativa en entornos diversos”",
-    initials: "V.S.M",
     year: "2025"
   },
   roles: [
@@ -168,7 +167,6 @@ export const blankCVTemplate = {
     facebook: "",
     profilePhoto: "",
     quote: "",
-    initials: "CV",
     year: new Date().getFullYear().toString()
   },
   roles: [],
@@ -218,7 +216,6 @@ export const danielaExampleCVData = {
     facebook: "",
     profilePhoto: "",
     quote: "Prof. de Educación Secundaria en Lengua y Literatura | Referente SINIDE | Capacitadora Docente en Tecnologías e Innovación Pedagógica",
-    initials: "M.D.B",
     year: "2026"
   },
   roles: [

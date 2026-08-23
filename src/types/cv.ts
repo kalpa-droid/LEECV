@@ -13,7 +13,6 @@ export interface PersonalInfo {
   address?: string;
   cityProvince?: string;
   facebook?: string;
-  initials?: string;
   year?: string;
   quote?: string;
   website?: string;
