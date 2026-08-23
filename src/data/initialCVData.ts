@@ -61,11 +61,7 @@ export const blankCVTemplate = {
   profession: [],
   experience: [],
   coursesAndCertificates: [],
-  informatics: [],
-  ecology: {
-    rural: [],
-    environmental: []
-  },
+  ecology: [],
   certificatesScanned: [],
   signature: {
     type: "drawn",

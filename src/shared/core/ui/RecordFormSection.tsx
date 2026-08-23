@@ -61,12 +61,12 @@ export function RecordFormSection({
               let legacyKey = fieldId;
               if (fieldId === 'tituloOGrado') {
                 if (fieldName === 'experience') legacyKey = 'role';
-                else if (fieldName === 'coursesAndCertificates' || fieldName === 'informatics') legacyKey = 'title';
+                else if (fieldName === 'coursesAndCertificates' || fieldName === 'informatics' || fieldName === 'ecology') legacyKey = 'title';
                 else legacyKey = 'degree';
               } else if (fieldId === 'cargo') {
                 legacyKey = 'role';
               } else if (fieldId === 'descripcion') {
-                legacyKey = fieldName === 'experience' ? 'details' : 'description';
+                legacyKey = (fieldName === 'experience' || fieldName === 'ecology') ? 'details' : 'description';
               } else if (fieldId === 'periodo') {
                 legacyKey = 'year';
               } else if (fieldId === 'cargaHoraria') {

@@ -436,70 +436,17 @@ export default function EditorPanel({
         {/* TAB 7: ECOLOGÍA & PROYECTOS */}
         {/* ========================================================================= */}
         {activeTab === 'ecologia' && (
-          <div className="space-y-4">
-            <div className="p-3 bg-[var(--color-accent-amber-muted)] rounded-xl border-2 border-[var(--color-accent-amber)] text-xs text-[var(--color-neutral-text-primary)] space-y-1 shadow-sm">
-              <div className="flex items-center gap-1.5 font-bold text-[var(--color-accent-base)]">
-                <Info className="w-4 h-4" /> Proyectos Ecológicos, Sociales & Comunitarios
-              </div>
-              <p className="text-[11px] text-[var(--color-neutral-text-primary)] font-bold">
-                Esta sección permite registrar iniciativas comunitarias, talleres sobre medio ambiente, huertas orgánicas, proyectos rurales, voluntariados y acciones sociales de impacto sustentable.
-              </p>
-            </div>
-
-            <RepeatableSection
-              sectionKey="ecologia"
-              sectionTitle="Proyectos Rurales / Agricultura"
-              addLabel="Agregar Rural"
-              cvData={cvData}
-              setCvData={setCvData}
-              fieldName="ecology.rural"
-              emptyItem={{ title: '', institution: '' }}
-              itemTitlePrefix="Proyecto Rural"
-              renderItem={(item: any, _idx: number, updateField: any) => (
-                <>
-                  <Field 
-                    label="Título del Taller / Proyecto Rural"
-                    type="text"
-                    value={item.title || ''}
-                    onChange={(e: any) => updateField('title', e.target.value)}
-                  />
-                  <Field 
-                    label="Institución Organizadora"
-                    type="text"
-                    value={item.institution || ''}
-                    onChange={(e: any) => updateField('institution', e.target.value)}
-                  />
-                </>
-              )}
-            />
-
-            <RepeatableSection
-              sectionKey="ecologia"
-              sectionTitle="Proyectos Medio Ambientales"
-              addLabel="Agregar Ambiental"
-              cvData={cvData}
-              setCvData={setCvData}
-              fieldName="ecology.environmental"
-              emptyItem={{ title: '', institution: '' }}
-              itemTitlePrefix="Proyecto Ambiental"
-              renderItem={(item: any, _idx: number, updateField: any) => (
-                <>
-                  <Field 
-                    label="Nombre del Proyecto Ambiental"
-                    type="text"
-                    value={item.title || ''}
-                    onChange={(e: any) => updateField('title', e.target.value)}
-                  />
-                  <Field 
-                    label="Entidad o Red Organizadora"
-                    type="text"
-                    value={item.institution || ''}
-                    onChange={(e: any) => updateField('institution', e.target.value)}
-                  />
-                </>
-              )}
-            />
-          </div>
+          <RecordFormSection
+            sectionKey="ecologia"
+            sectionTitle="Proyectos Ecológicos & Sustentables"
+            kindKey="ecology"
+            addLabel="Agregar Proyecto"
+            cvData={cvData}
+            setCvData={setCvData}
+            fieldName="ecology"
+            itemTitlePrefix="Proyecto Ecológico"
+            helpText="Registra iniciativas comunitarias, talleres sobre medio ambiente, huertas orgánicas, proyectos rurales, voluntariados y acciones sociales de impacto sustentable."
+          />
         )}
 
         {/* ========================================================================= */}

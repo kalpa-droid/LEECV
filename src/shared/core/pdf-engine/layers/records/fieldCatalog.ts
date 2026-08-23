@@ -192,5 +192,10 @@ export const BUILTIN_RECORD_KINDS: Record<string, RecordKindSchema> = {
     kind: 'redes',
     label: 'Redes Sociales & Presencia Digital',
     defaultFields: ['plataforma', 'usuario', 'url']
+  },
+  ecology: {
+    kind: 'course',
+    label: 'Proyectos Ecológicos & Sustentables',
+    defaultFields: ['tituloOGrado', 'institucion', 'periodo', 'descripcion']
   }
 };

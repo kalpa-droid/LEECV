@@ -53,13 +53,14 @@ export function sanitizeCvData(rawCvData: any = {}) {
         }))
       : [],
 
-    ecology: {
-      rural: Array.isArray(data.ecology?.rural) ? data.ecology.rural : [],
-      environmental: Array.isArray(data.ecology?.environmental) ? data.ecology.environmental : [],
-      community: Array.isArray(data.ecology?.community) ? data.ecology.community : [],
-      workshops: Array.isArray(data.ecology?.workshops) ? data.ecology.workshops : [],
-      initiatives: Array.isArray(data.ecology?.initiatives) ? data.ecology.initiatives : []
-    },
+    ecology: Array.isArray(data.ecology)
+      ? data.ecology
+      : [
+          ...(Array.isArray(data.ecology?.rural) ? data.ecology.rural : []),
+          ...(Array.isArray(data.ecology?.environmental) ? data.ecology.environmental : []),
+          ...(Array.isArray(data.ecology?.community) ? data.ecology.community : []),
+          ...(Array.isArray(data.ecologia) ? data.ecologia : [])
+        ],
 
     signature: {
       type: data.signature?.type || 'drawn',

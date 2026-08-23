@@ -201,6 +201,34 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
     });
   }
 
+  // Compromiso Ecológico & Proyectos Sustentables (Main)
+  const ecologyItems = Array.isArray(cvData?.ecology)
+    ? cvData.ecology
+    : [
+        ...(Array.isArray(cvData?.ecology?.rural) ? cvData.ecology.rural : []),
+        ...(Array.isArray(cvData?.ecology?.environmental) ? cvData.ecology.environmental : []),
+        ...(Array.isArray(cvData?.ecology?.community) ? cvData.ecology.community : []),
+        ...(Array.isArray(cvData?.ecologia) ? cvData.ecologia : [])
+      ];
+
+  if (ecologyItems.length > 0) {
+    sections.push({
+      id: 'ecologia',
+      titleText: getSectionLabel('ecologia'),
+      records: ecologyItems.map((eco: any, idx: number) => ({
+        id: `rec-eco-${idx}`,
+        kind: 'course',
+        targetSectorRole: 'main',
+        fields: {
+          title: eco.title || eco.tituloOGrado || eco.course || eco.name || '',
+          institution: eco.institution || eco.institucion || '',
+          year: (eco.year || eco.periodo || '').toString(),
+          details: eco.details || eco.description || eco.descripcion || ''
+        }
+      }))
+    });
+  }
+
 
   // Secciones Personalizadas Dinámicas (customSections)
   if (Array.isArray(cvData.customSections)) {
