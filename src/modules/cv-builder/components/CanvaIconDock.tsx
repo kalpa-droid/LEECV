@@ -216,20 +216,6 @@ export default function CanvaIconDock({
 
         <div className="w-px h-6 bg-white/20 shrink-0" />
 
-        {/* Botón Sección + primero en Mobile */}
-        <button
-          type="button"
-          onClick={() => handleTabClick(addSectionTab.id)}
-          className={`px-3 py-1.5 rounded-xl font-black text-[11px] shrink-0 flex items-center gap-1 shadow cursor-pointer border ${
-            activeTab === addSectionTab.id && isPanelOpen
-              ? 'bg-emerald-600 border-emerald-400 text-white'
-              : 'bg-[#2B1B2E] border-emerald-500/60 text-emerald-400'
-          }`}
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>Sección +</span>
-        </button>
-
         {styleTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id && isPanelOpen;
@@ -249,6 +235,20 @@ export default function CanvaIconDock({
             </button>
           );
         })}
+
+        {/* Botón Sección + justo después del botón Columnas en Mobile */}
+        <button
+          type="button"
+          onClick={() => handleTabClick(addSectionTab.id)}
+          className={`px-3 py-1.5 rounded-xl font-black text-[11px] shrink-0 flex items-center gap-1 shadow cursor-pointer border ${
+            activeTab === addSectionTab.id && isPanelOpen
+              ? 'bg-emerald-600 border-emerald-400 text-white'
+              : 'bg-[#2B1B2E] border-emerald-500/60 text-emerald-400'
+          }`}
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>Sección +</span>
+        </button>
 
         <div className="w-px h-6 bg-white/20 shrink-0" />
 
