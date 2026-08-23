@@ -13,6 +13,16 @@ const __dirname = path.dirname(__filename);
 const modulesDir = path.resolve(__dirname, '../src/modules');
 
 let violationsCount = 0;
+let uiGovernanceWarnings = 0;
+
+// Lista de archivos exceptuados (motor de color del PDF en /pdf-engine/ o definidores de tokens)
+const EXEMPT_UI_GOVERNANCE = [
+  'uiDesignSystem.ts',
+  'colorSystem.ts',
+  'fieldCatalog.ts',
+  'presetRegistry.ts',
+  'themePresets.ts'
+];
 
 function checkDir(dir, currentModule) {
   const files = fs.readdirSync(dir);
@@ -25,8 +35,9 @@ function checkDir(dir, currentModule) {
       checkDir(fullPath, currentModule);
     } else if (/\.(js|jsx|ts|tsx)$/.test(file)) {
       const content = fs.readFileSync(fullPath, 'utf8');
-      const importMatches = content.match(/from\s+['"]([^'"]+)['"]/g) || [];
 
+      // 1. Verificación de Fronteras de Módulos
+      const importMatches = content.match(/from\s+['"]([^'"]+)['"]/g) || [];
       for (const match of importMatches) {
         const importPath = match.replace(/from\s+['"]/, '').replace(/['"]$/, '');
         if (importPath.includes('/modules/')) {
@@ -35,6 +46,16 @@ function checkDir(dir, currentModule) {
             console.warn(`⚠️ Boundary Warning: [${currentModule}] imports [${targetModule}] in ${path.relative(process.cwd(), fullPath)}`);
             violationsCount++;
           }
+        }
+      }
+
+      // 2. Gobernanza de Arquitectura de Motor UI (Detecta colores o estilos duros a mano)
+      if (!EXEMPT_UI_GOVERNANCE.some(ex => file.endsWith(ex))) {
+        // Detecta patrones como style={{ color: '#HEX' }} o background '#HEX' escrito a mano
+        const hardcodedHexStyleMatches = content.match(/style=\{\{\s*(color|backgroundColor|borderColor):\s*['"]#(FF2E63|00A8A0|2B1B2E|EFE2C9)['"]/gi);
+        if (hardcodedHexStyleMatches) {
+          console.warn(`🎨 UI Governance Warning: [${file}] tiene colores inline duros. Usar colorSystem/uiDesignSystem de /shared/core/uiDesignSystem.`);
+          uiGovernanceWarnings++;
         }
       }
     }
@@ -51,8 +72,8 @@ if (fs.existsSync(modulesDir)) {
   }
 }
 
-if (violationsCount === 0) {
-  console.log('✅ Module boundary check passed: 0 cross-module violations found!');
+if (violationsCount === 0 && uiGovernanceWarnings === 0) {
+  console.log('✅ Governance & Module boundary check passed: 0 violations found!');
 } else {
-  console.log(`ℹ️ Module boundary check completed with ${violationsCount} warnings.`);
+  console.log(`ℹ️ Check completed: ${violationsCount} boundary warnings, ${uiGovernanceWarnings} UI governance warnings.`);
 }

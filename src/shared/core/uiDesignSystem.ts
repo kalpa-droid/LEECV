@@ -127,5 +127,54 @@ export const tab = {
   inactive: `text-[${colorSystem.neutral.textSecondary}] hover:bg-[${colorSystem.neutral.surfaceMuted}]`,
 } as const;
 
-/** Radios de esquina — 2 tamaños, nunca un valor suelto (rounded-xl vs rounded-2xl mezclados) */
-export const radius = { control: '10px', card: '12px' } as const;
+/** Radios de esquina — 3 tamaños estandarizados */
+export const radius = { control: '10px', card: '12px', modal: '16px' } as const;
+
+// ============================================================
+// 4. CAPAS AVANZADAS DEL MOTOR: ANIMACIÓN, ELEVACIÓN, Z-INDEX Y ACCESIBILIDAD
+// ============================================================
+
+/**
+ * SISTEMA DE ANIMACIÓN Y MICRO-FEEDBACK — Tiempos, curvas y transformaciones táctiles
+ */
+export const motionSystem = {
+  duration: { fast: '150ms', normal: '250ms', slow: '350ms' },
+  ease: { standard: 'cubic-bezier(0.4, 0, 0.2, 1)', decelerate: 'cubic-bezier(0, 0, 0.2, 1)' },
+  interaction: {
+    hoverScale: 'hover:scale-[1.02] transition-transform duration-150',
+    activeScale: 'active:scale-[0.98] transition-transform duration-100',
+    fade: 'animate-fade-in',
+    slideUp: 'animate-slide-up',
+    scaleUp: 'animate-scale-up',
+  },
+} as const;
+
+/**
+ * SISTEMA DE ELEVACIÓN Y SOMBRAS — Profundidad semántica sin sombras duras
+ */
+export const elevationSystem = {
+  flat: 'shadow-none',
+  raised: 'shadow-[0_2px_8px_rgba(43,27,46,0.06)]',
+  floating: 'shadow-[0_8px_24px_rgba(43,27,46,0.12)]',
+  overlay: 'shadow-[0_16px_48px_rgba(43,27,46,0.20)]',
+} as const;
+
+/**
+ * MAPA DE CAPAS Z-INDEX — Control estricto de superposición
+ */
+export const zIndex = {
+  dropdown: 50,
+  sticky: 100,
+  drawer: 500,
+  modal: 1000,
+  toast: 9999,
+} as const;
+
+/**
+ * SISTEMA DE ACCESIBILIDAD Y FOCO NAVEGABLE POR TECLADO
+ */
+export const a11ySystem = {
+  focusRing: `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[${colorSystem.secondary.base}] focus-visible:ring-offset-2`,
+  srOnly: 'sr-only',
+} as const;
+
