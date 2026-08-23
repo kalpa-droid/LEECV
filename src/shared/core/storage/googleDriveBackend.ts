@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabaseClient';
  * Enterprise NO pasa por acá — usa leecvCloudBackend.js con sus 50GB propios.
  */
 
-async function pedirAccessTokenFresco() {
+async function pedirAccessTokenFresco(): Promise<string> {
   if (!supabase) throw new Error('Supabase no inicializado');
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error('No hay sesión activa');
@@ -22,10 +22,10 @@ async function pedirAccessTokenFresco() {
   return data.accessToken;
 }
 
-let carpetaLeecvIdCache = null;
+let carpetaLeecvIdCache: string | null = null;
 
 /** Busca (o crea la primera vez) la carpeta "LEECV" dentro del Drive del usuario */
-async function obtenerCarpetaLeecv(accessToken) {
+async function obtenerCarpetaLeecv(accessToken: string): Promise<string> {
   if (carpetaLeecvIdCache) return carpetaLeecvIdCache;
 
   const query = encodeURIComponent("name = 'LEECV' and mimeType = 'application/vnd.google-apps.folder' and trashed = false");
@@ -53,7 +53,7 @@ async function obtenerCarpetaLeecv(accessToken) {
 }
 
 /** Sube un archivo real al Drive del usuario, dentro de la carpeta LEECV */
-export async function uploadToGoogleDrive(fileBlob, fileName) {
+export async function uploadToGoogleDrive(fileBlob: Blob, fileName: string): Promise<{ success: boolean; provider?: string; fileId?: string; webViewLink?: string; error?: string }> {
   try {
     const accessToken = await pedirAccessTokenFresco();
     const folderId = await obtenerCarpetaLeecv(accessToken);
@@ -72,14 +72,111 @@ export async function uploadToGoogleDrive(fileBlob, fileName) {
     if (!res.ok) throw new Error(data.error?.message || 'Error subiendo a Drive');
 
     return { success: true, provider: 'google_drive', fileId: data.id, webViewLink: data.webViewLink };
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error subiendo a Google Drive:', err);
     return { success: false, error: err.message || String(err) };
   }
 }
 
+/** Configura los permisos de un archivo en Drive para lectura pública sin requerir login */
+export async function hacerArchivoPublico(accessToken: string, fileId: string): Promise<boolean> {
+  try {
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ role: 'reader', type: 'anyone' }),
+    });
+    return res.ok;
+  } catch (err) {
+    console.warn('Error otorgando acceso público en Google Drive:', err);
+    return false;
+  }
+}
+
+/** Sube y publica una versión accesible vía web del CV en el Drive del usuario */
+export async function publicarCVEnDrive(cvData: any, slug: string): Promise<{ success: boolean; slug?: string; fileId?: string; webViewLink?: string; publicUrl?: string; error?: string }> {
+  try {
+    const jsonString = JSON.stringify(cvData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const fileName = `cv_publico_${slug}.json`;
+
+    const uploadRes = await uploadToGoogleDrive(blob, fileName);
+    if (!uploadRes.success || !uploadRes.fileId) {
+      throw new Error(uploadRes.error || 'Fallo la subida a Google Drive');
+    }
+
+    const accessToken = await pedirAccessTokenFresco();
+    await hacerArchivoPublico(accessToken, uploadRes.fileId);
+
+    if (supabase) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        await supabase.from('published_cvs').upsert({
+          slug,
+          user_id: session.user.id,
+          drive_file_id: uploadRes.fileId,
+          cv_id: cvData?.id || 'cv_default',
+          is_active: true,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'slug' });
+      }
+    }
+
+    const publicUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/c/${slug}`;
+    return {
+      success: true,
+      slug,
+      fileId: uploadRes.fileId,
+      webViewLink: uploadRes.webViewLink,
+      publicUrl,
+    };
+  } catch (err: any) {
+    console.error('Error publicando CV en Drive:', err);
+    return { success: false, error: err.message || String(err) };
+  }
+}
+
+/** Actualiza un archivo de CV publicado anteriormente en Google Drive */
+export async function actualizarCVPublicadoEnDrive(cvData: any, slug: string, existingFileId: string): Promise<{ success: boolean; slug?: string; fileId?: string; error?: string }> {
+  try {
+    const accessToken = await pedirAccessTokenFresco();
+    const jsonString = JSON.stringify(cvData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+
+    const res = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${existingFileId}?uploadType=media`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: blob,
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error?.message || 'No se pudo actualizar el archivo en Drive');
+    }
+
+    await hacerArchivoPublico(accessToken, existingFileId);
+
+    if (supabase) {
+      await supabase.from('published_cvs').update({
+        updated_at: new Date().toISOString(),
+      }).eq('slug', slug);
+    }
+
+    return { success: true, slug, fileId: existingFileId };
+  } catch (err: any) {
+    console.error('Error actualizando CV en Drive:', err);
+    return { success: false, error: err.message || String(err) };
+  }
+}
+
 /** Consulta la cuota real de Drive del usuario y actualiza profiles para que el admin la vea */
-export async function getGoogleDriveQuota() {
+export async function getGoogleDriveQuota(): Promise<{ usedBytes: number; totalBytes: number; percentUsed: number; error?: string }> {
   try {
     const accessToken = await pedirAccessTokenFresco();
     const res = await fetch('https://www.googleapis.com/drive/v3/about?fields=storageQuota', {
@@ -102,7 +199,7 @@ export async function getGoogleDriveQuota() {
     }
 
     return { usedBytes: usage, totalBytes: limit, percentUsed };
-  } catch (err) {
+  } catch (err: any) {
     console.warn('No se pudo consultar la cuota de Drive:', err);
     return { usedBytes: 0, totalBytes: 0, percentUsed: 0, error: err.message };
   }
