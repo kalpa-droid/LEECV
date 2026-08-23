@@ -65,12 +65,29 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
         fields: {
           dni: personalInfo.dni || '',
           cuit: personalInfo.cuit || '',
-          birthDate: personalInfo.birthDate || '',
-          quote: personalInfo.quote || ''
+          birthDate: personalInfo.birthDate || ''
         }
       }
     ]
   });
+
+  // Frase / Lema Personal — sección INDEPENDIENTE, no un campo atrapado
+  // adentro de "Datos Personales". Así el sistema de columnas dinámicas
+  // (Paneles) la puede mover sola, igual que cualquier otro registro.
+  if (personalInfo.quote) {
+    sections.push({
+      id: 'frase',
+      titleText: '',
+      records: [
+        {
+          id: 'rec-frase',
+          kind: 'quote-text',
+          targetSectorRole: 'sidebar',
+          fields: { text: personalInfo.quote }
+        }
+      ]
+    });
+  }
 
   // Competencias Clave (Sidebar)
   const skillList = Array.isArray(skills) && skills.length > 0

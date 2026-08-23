@@ -497,6 +497,15 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       );
     }
 
+    if (rec.kind === 'quote-text') {
+      const binding = isSidebarSector ? sidebarType : mainType;
+      return (
+        <Text key={rec.id} style={{ fontSize: preset.typography.caption, fontStyle: 'italic', color: binding.body, marginBottom: 8, lineHeight: 1.4 }}>
+          "{String(f.text || '')}"
+        </Text>
+      );
+    }
+
     if (rec.kind === 'skill') {
       return (
         <Text key={rec.id} style={styles.sidebarItemText}>• {String(f.name || '')}</Text>
