@@ -4,6 +4,7 @@ import { requireAdmin } from './_lib/authMiddleware.js';
 import { applyPayment } from './_lib/applyPayment.js';
 import { errorResponse, successResponse } from './_lib/apiResponse.js';
 import { requireRateLimit } from './_lib/rateLimiter.js';
+import { validateBody } from './_lib/validateBody.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return errorResponse(res, 405, 'Método no permitido');
@@ -17,10 +18,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   });
   if (!rateOk) return;
 
-  try {
-    const { claimId, approve } = req.body || {};
-    if (!claimId) return errorResponse(res, 400, 'Falta claimId');
+  const body = validateBody<{ claimId: string; approve: boolean }>(req, res, ['claimId']);
+  if (!body) return;
+  const { claimId, approve } = body;
 
+  try {
     const { data: claim, error: claimError } = await supabaseAdmin
       .from('payment_claims')
       .select('*')

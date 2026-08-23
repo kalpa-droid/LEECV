@@ -1,3 +1,5 @@
+import { apiClient } from '../../../shared/core/utils/apiClient';
+
 /**
  * Servicio de Monitoreo Preventivo de Cuota de Google Drive & Failover a LEECV Cloud
  */
@@ -6,18 +8,18 @@
  * Consulta la cuota utilizada en Google Drive via Google API
  * Retorna { usedBytes, totalBytes, percentUsed, isNearLimit, isFull }
  */
-export async function checkGoogleDriveQuota(accessToken) {
+export async function checkGoogleDriveQuota(accessToken: string) {
   if (!accessToken) {
     return { isConfigured: false, usedBytes: 0, totalBytes: 0, percentUsed: 0, isNearLimit: false, isFull: false };
   }
 
   try {
-    const res = await fetch('https://www.googleapis.com/drive/v3/about?fields=storageQuota', {
+    const { ok, data, error } = await apiClient.get<any>('https://www.googleapis.com/drive/v3/about?fields=storageQuota', {
       headers: { Authorization: `Bearer ${accessToken}` },
+      requiresAuth: false,
     });
-    if (!res.ok) throw new Error('Error al consultar cuota de Google Drive');
+    if (!ok || !data) throw new Error(error || 'Error al consultar cuota de Google Drive');
 
-    const data = await res.json();
     const quota = data.storageQuota || {};
     const limit = Number(quota.limit || 16106127360); // 15 GB por defecto en bytes
     const usage = Number(quota.usage || 0);

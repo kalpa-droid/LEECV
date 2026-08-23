@@ -1,6 +1,7 @@
 import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { supabase } from '../../../shared/core/lib/supabaseClient';
 import { Spinner } from '../../../shared/core/ui/Spinner';
+import { apiClient } from '../../../shared/core/utils/apiClient';
 
 const CVPreview = lazy(() => import('./CVPreview'));
 
@@ -25,23 +26,16 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
         }
 
         if (!slug) {
-          setError('No se proporcionó un identificador de CV válido.');
+          setError('No se especificó un código de CV válido.');
           setLoading(false);
           return;
         }
 
-        if (!supabase) {
-          setError('Sistema de base de datos no configurado.');
-          setLoading(false);
-          return;
-        }
-
-        // 1. Consultar puntero en Supabase
+        // 1. Buscar el drive_file_id en Supabase mediante el slug o ID público
         const { data: record, error: dbErr } = await supabase
           .from('published_cvs')
-          .select('drive_file_id, cv_id')
-          .eq('slug', slug)
-          .eq('is_active', true)
+          .select('drive_file_id')
+          .or(`slug.eq.${slug},id.eq.${slug}`)
           .single();
 
         if (dbErr || !record?.drive_file_id) {
@@ -52,15 +46,14 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
 
         // 2. Descargar JSON directamente del Google Drive del usuario (lectura pública)
         const driveUrl = `https://www.googleapis.com/drive/v3/files/${record.drive_file_id}?alt=media`;
-        const res = await fetch(driveUrl);
+        const { ok, data } = await apiClient.get(driveUrl, { requiresAuth: false });
 
-        if (!res.ok) {
+        if (!ok || !data) {
           setError('No se pudo acceder al documento en Google Drive. Verifica que los permisos del archivo sean públicos.');
           setLoading(false);
           return;
         }
 
-        const data = await res.json();
         setCvData(data);
       } catch (err: any) {
         console.error('Error cargando CV público:', err);

@@ -1,4 +1,5 @@
 import { supabase } from '../../shared/core/lib/supabaseClient';
+import { apiClient } from '../../shared/core/utils/apiClient';
 import { UserProfile } from '../../types/user';
 import { Session } from '@supabase/supabase-js';
 
@@ -45,15 +46,8 @@ export async function capturarConexionDriveSiCorresponde(session: Session | null
   if (!session?.provider_refresh_token) return false;
 
   try {
-    await fetch('/api/drive/connect', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify({ refreshToken: session.provider_refresh_token }),
-    });
-    return true;
+    const { ok } = await apiClient.post('/api/drive/connect', { refreshToken: session.provider_refresh_token });
+    return ok;
   } catch (err) {
     console.warn('No se pudo guardar la conexión con Drive:', err);
     return false;

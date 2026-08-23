@@ -3,15 +3,11 @@ import { optimizeCVImagesToWebP } from '../utils/imageCompressor';
 import { idbStorage } from '../../../modules/cv-builder/services/storageIndexedDB';
 import { SaveDocumentResult, DocumentRecord } from '../../../types/document';
 import { getDocumentTypeConfig } from '../capabilities/capabilityRegistry';
+import { getMonthNameEs } from '../utils/formatDate';
 
 export { supabase, checkStorageStatus };
 
 const getStorageKeyForType = (docTypeId: string) => `doc_${docTypeId}_saved_list`;
-
-const getMonthNameEs = (date = new Date()) => {
-  const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-  return months[date.getMonth()];
-};
 
 export const DEFAULT_PRESET_CVS: DocumentRecord[] = [];
 

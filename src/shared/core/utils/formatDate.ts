@@ -37,3 +37,8 @@ export function formatDate(
     return String(dateStringOrTimestamp);
   }
 }
+
+export function getMonthNameEs(date: Date = new Date()): string {
+  const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  return months[date.getMonth()] || 'Enero';
+}

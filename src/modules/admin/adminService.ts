@@ -1,4 +1,5 @@
 import { supabase } from '../../shared/core/lib/supabaseClient';
+import { apiClient } from '../../shared/core/utils/apiClient';
 import { UserProfile, UserPlan } from '../../types/user';
 import { PaymentClaim } from '../../types/payments';
 import { Organization } from '../../types/organization';
@@ -104,17 +105,8 @@ export async function listPendingClaims(): Promise<PaymentClaim[]> {
 
 export async function reviewManualClaim(claimId: string, approve: boolean) {
   if (!supabase) throw new Error('Supabase no configurado');
-  const { data: { session } } = await supabase.auth.getSession();
-  const res = await fetch('/api/approve-manual-claim', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${session?.access_token}`,
-    },
-    body: JSON.stringify({ claimId, approve }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Error revisando comprobante');
+  const { ok, data, error } = await apiClient.post('/api/approve-manual-claim', { claimId, approve });
+  if (!ok) throw new Error(error || 'Error revisando comprobante');
   return data;
 }
 
@@ -152,17 +144,8 @@ export async function listDriveConnections(): Promise<UserProfile[]> {
 
 export async function disconnectUserDrive(userId: string) {
   if (!supabase) throw new Error('Supabase no configurado');
-  const { data: { session } } = await supabase.auth.getSession();
-  const res = await fetch('/api/drive/disconnect', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.access_token}`,
-    },
-    body: JSON.stringify({ targetUserId: userId }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'No se pudo desconectar Drive');
+  const { ok, data, error } = await apiClient.post('/api/drive/disconnect', { targetUserId: userId });
+  if (!ok) throw new Error(error || 'No se pudo desconectar Drive');
   await logAdminAction('disconnect_user_drive', userId);
   return data;
 }

@@ -7,6 +7,14 @@ export const PLAN_FEATURES = {
   enterprise: { unlimitedExports: true,  candidateManagement: true,  cloudStorageGB: 50 }, // LEECV Cloud
 };
 
+export function isProOrEnterprise(plan?: string | null): boolean {
+  return plan === 'pro' || plan === 'enterprise';
+}
+
+export function isAdminRole(role?: string | null): boolean {
+  return role === 'admin';
+}
+
 export function useEntitlements() {
   const [plan, setPlan] = useState('free');
   const [loading, setLoading] = useState(true);
@@ -42,11 +50,13 @@ export function useEntitlements() {
   }, []);
 
   const features = PLAN_FEATURES[plan] || PLAN_FEATURES.free;
+  const isPremium = isProOrEnterprise(plan);
 
   return {
     plan,
     loading,
     features,
+    isPremium,
     unlimitedExports: features.unlimitedExports,
     candidateManagement: features.candidateManagement,
     cloudStorageGB: features.cloudStorageGB

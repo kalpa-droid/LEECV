@@ -1,4 +1,6 @@
 import { supabase } from '../../shared/core/lib/supabaseClient';
+import { apiClient } from '../../shared/core/utils/apiClient';
+import { navigation } from '../../shared/core/utils/navigation';
 import { PaymentClaim, PaymentGateway } from '../../types/payments';
 
 /**
@@ -10,22 +12,12 @@ export async function iniciarPagoMercadoPago(plan: 'single_pdf' | 'credits_pack_
     throw new Error('Necesitás iniciar sesión con tu correo para pagar con Mercado Pago');
   }
 
-  const res = await fetch('/api/create-mp-preference', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${session.access_token}`,
-    },
-    body: JSON.stringify({ plan }),
-  });
-  const data = await res.json();
-  if (!res.ok || !data.checkoutUrl) {
-    throw new Error(data.error || 'No se pudo iniciar el pago con Mercado Pago');
+  const { ok, data, error } = await apiClient.post<{ checkoutUrl?: string }>('/api/create-mp-preference', { plan });
+  if (!ok || !data?.checkoutUrl) {
+    throw new Error(error || 'No se pudo iniciar el pago con Mercado Pago');
   }
 
-  if (typeof window !== 'undefined') {
-    window.location.href = data.checkoutUrl;
-  }
+  navigation.goTo(data.checkoutUrl);
 }
 
 export async function iniciarPagoLemonSqueezy(plan: 'pro' | 'enterprise' = 'pro') {
@@ -39,9 +31,7 @@ export async function iniciarPagoLemonSqueezy(plan: 'pro' | 'enterprise' = 'pro'
     url.searchParams.set('checkout[custom][user_id]', user.id);
   }
   url.searchParams.set('checkout[custom][plan]', plan);
-  if (typeof window !== 'undefined') {
-    window.location.href = url.toString();
-  }
+  navigation.goTo(url.toString());
 }
 
 export async function enviarComprobanteManual({

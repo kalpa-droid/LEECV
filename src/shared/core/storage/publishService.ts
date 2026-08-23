@@ -1,5 +1,7 @@
 import { supabase } from '../lib/supabaseClient';
 import { uploadToGoogleDrive } from './googleDriveBackend';
+import { apiClient } from '../utils/apiClient';
+import { isProOrEnterprise } from '../entitlements/useEntitlements';
 
 export interface PublishResult {
   success: boolean;
@@ -16,18 +18,14 @@ export interface PublishResult {
  */
 async function makeDriveFilePublic(fileId: string, accessToken: string): Promise<boolean> {
   try {
-    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        role: 'reader',
-        type: 'anyone',
-      }),
+    const { ok } = await apiClient.post(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
+      role: 'reader',
+      type: 'anyone',
+    }, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      requiresAuth: false,
     });
-    return res.ok;
+    return ok;
   } catch (err) {
     console.warn('No se pudo otorgar permiso público en Drive:', err);
     return false;
@@ -82,10 +80,7 @@ export async function publishCV(cvData: any): Promise<PublishResult> {
     .eq('id', userId)
     .single();
 
-  const isProOrEnterprise = profile?.plan === 'pro' || profile?.plan === 'enterprise';
-
-  // 2. Si es plan gratuito, verificar si este CV ya fue desbloqueado anteriormente
-  let isUnlocked = isProOrEnterprise;
+  let isUnlocked = isProOrEnterprise(profile?.plan);
   if (!isUnlocked) {
     const { data: unlock } = await supabase
       .from('publish_unlocks')
@@ -119,16 +114,9 @@ export async function publishCV(cvData: any): Promise<PublishResult> {
 
   // 4. Hacer el archivo público en Google Drive
   try {
-    const accessRes = await fetch('/api/drive/get-access-token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.access_token}`,
-      },
-    });
-    const { accessToken } = await accessRes.json();
-    if (accessToken) {
-      await makeDriveFilePublic(driveRes.fileId, accessToken);
+    const { ok, data } = await apiClient.post<{ accessToken?: string }>('/api/drive/get-access-token');
+    if (ok && data?.accessToken) {
+      await makeDriveFilePublic(driveRes.fileId, data.accessToken);
     }
   } catch (err) {
     console.warn('Continuando publicacion con permisos por defecto en Drive');

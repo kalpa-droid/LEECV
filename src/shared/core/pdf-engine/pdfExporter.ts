@@ -6,10 +6,7 @@ import { cvDataToContentSections } from './layers/records/cvDataAdapter';
 import { exportBusinessCardSheetToPDF } from './cardSheetExporter';
 import { Preset } from './layers/presets/presetSchema';
 
-const getMonthNameEs = (date = new Date()) => {
-  const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-  return months[date.getMonth()];
-};
+import { getMonthNameEs } from '../utils/formatDate';
 
 /**
  * Native Vector PDF Generator powered by 8-Layer TemplateRenderer + @react-pdf/renderer

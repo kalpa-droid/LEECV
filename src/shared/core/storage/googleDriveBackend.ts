@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { apiClient } from '../utils/apiClient';
 
 /**
  * Backend real de almacenamiento en Google Drive del usuario (Nivel 1/2, Pro).
@@ -6,19 +7,8 @@ import { supabase } from '../lib/supabaseClient';
  */
 
 async function pedirAccessTokenFresco(): Promise<string> {
-  if (!supabase) throw new Error('Supabase no inicializado');
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) throw new Error('No hay sesión activa');
-
-  const res = await fetch('/api/drive/get-access-token', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session.access_token}`,
-    },
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || data.error || 'No se pudo obtener acceso a Drive');
+  const { ok, data, error } = await apiClient.post<{ accessToken?: string }>('/api/drive/get-access-token');
+  if (!ok || !data?.accessToken) throw new Error(error || 'No se pudo obtener acceso a Drive');
   return data.accessToken;
 }
 
@@ -29,27 +19,25 @@ async function obtenerCarpetaLeecv(accessToken: string): Promise<string> {
   if (carpetaLeecvIdCache) return carpetaLeecvIdCache;
 
   const query = encodeURIComponent("name = 'LEECV' and mimeType = 'application/vnd.google-apps.folder' and trashed = false");
-  const buscar = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)`, {
+  const { data } = await apiClient.get<any>(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)`, {
     headers: { Authorization: `Bearer ${accessToken}` },
+    requiresAuth: false,
   });
-  const encontrados = await buscar.json();
 
-  if (encontrados.files?.length) {
-    carpetaLeecvIdCache = encontrados.files[0].id;
+  if (data?.files?.length) {
+    carpetaLeecvIdCache = data.files[0].id;
     return carpetaLeecvIdCache;
   }
 
-  const crear = await fetch('https://www.googleapis.com/drive/v3/files', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ name: 'LEECV', mimeType: 'application/vnd.google-apps.folder' }),
+  const { data: carpeta } = await apiClient.post<any>('https://www.googleapis.com/drive/v3/files', {
+    name: 'LEECV',
+    mimeType: 'application/vnd.google-apps.folder',
+  }, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    requiresAuth: false,
   });
-  const carpeta = await crear.json();
-  carpetaLeecvIdCache = carpeta.id;
-  return carpetaLeecvIdCache;
+  carpetaLeecvIdCache = carpeta?.id;
+  return carpetaLeecvIdCache || '';
 }
 
 /** Sube un archivo real al Drive del usuario, dentro de la carpeta LEECV */
@@ -63,13 +51,11 @@ export async function uploadToGoogleDrive(fileBlob: Blob, fileName: string): Pro
     form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
     form.append('file', fileBlob);
 
-    const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink', {
-      method: 'POST',
+    const { ok, data, error } = await apiClient.post<any>('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink', form, {
       headers: { Authorization: `Bearer ${accessToken}` },
-      body: form,
+      requiresAuth: false,
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error?.message || 'Error subiendo a Drive');
+    if (!ok || !data) throw new Error(error || 'Error subiendo a Drive');
 
     return { success: true, provider: 'google_drive', fileId: data.id, webViewLink: data.webViewLink };
   } catch (err: any) {
@@ -81,15 +67,14 @@ export async function uploadToGoogleDrive(fileBlob: Blob, fileName: string): Pro
 /** Configura los permisos de un archivo en Drive para lectura pública sin requerir login */
 export async function hacerArchivoPublico(accessToken: string, fileId: string): Promise<boolean> {
   try {
-    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ role: 'reader', type: 'anyone' }),
+    const { ok } = await apiClient.post(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
+      role: 'reader',
+      type: 'anyone',
+    }, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      requiresAuth: false,
     });
-    return res.ok;
+    return ok;
   } catch (err) {
     console.warn('Error otorgando acceso público en Google Drive:', err);
     return false;
@@ -146,18 +131,13 @@ export async function actualizarCVPublicadoEnDrive(cvData: any, slug: string, ex
     const jsonString = JSON.stringify(cvData, null, 2);
     const blob = new Blob([jsonString], { type: 'application/json' });
 
-    const res = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${existingFileId}?uploadType=media`, {
-      method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: blob,
+    const { ok, error } = await apiClient.put(`https://www.googleapis.com/upload/drive/v3/files/${existingFileId}?uploadType=media`, blob, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      requiresAuth: false,
     });
 
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error?.message || 'No se pudo actualizar el archivo en Drive');
+    if (!ok) {
+      throw new Error(error || 'No se pudo actualizar el archivo en Drive');
     }
 
     await hacerArchivoPublico(accessToken, existingFileId);
@@ -179,11 +159,11 @@ export async function actualizarCVPublicadoEnDrive(cvData: any, slug: string, ex
 export async function getGoogleDriveQuota(): Promise<{ usedBytes: number; totalBytes: number; percentUsed: number; error?: string }> {
   try {
     const accessToken = await pedirAccessTokenFresco();
-    const res = await fetch('https://www.googleapis.com/drive/v3/about?fields=storageQuota', {
+    const { data } = await apiClient.get<any>('https://www.googleapis.com/drive/v3/about?fields=storageQuota', {
       headers: { Authorization: `Bearer ${accessToken}` },
+      requiresAuth: false,
     });
-    const data = await res.json();
-    const quota = data.storageQuota || {};
+    const quota = data?.storageQuota || {};
     const limit = Number(quota.limit || 16106127360);
     const usage = Number(quota.usage || 0);
     const percentUsed = limit > 0 ? Math.round((usage / limit) * 100) : 0;

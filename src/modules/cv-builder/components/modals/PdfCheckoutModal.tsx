@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { iniciarPagoMercadoPago } from '../../../payments/paymentService';
 import { signInWithGoogle } from '../../../auth/authService';
 import { supabase } from '../../../../shared/core/lib/supabaseClient';
+import { apiClient } from '../../../../shared/core/utils/apiClient';
 import { CreditCard, Sparkles, Download, LogIn, Check, AlertCircle } from 'lucide-react';
 import { Modal } from '../../../../shared/core/ui/Modal';
 
 import { isValidEmail } from '../../../../shared/core/utils/validationEngine';
+import { isProOrEnterprise as checkProOrEnterprise } from '../../../../shared/core/entitlements/useEntitlements';
 
 export default function PdfCheckoutModal({ 
   isOpen, 
@@ -19,21 +21,20 @@ export default function PdfCheckoutModal({
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const isProOrEnterprise = currentProfile?.plan === 'pro' || currentProfile?.plan === 'enterprise';
+  const isProOrEnterprise = checkProOrEnterprise(currentProfile?.plan);
 
   const handleMercadoPagoCheckout = async () => {
     if (!email || !isValidEmail(email)) {
-      setErrorMsg('Por favor ingresa un correo electrónico válido para asociar tu compra.');
+      setErrorMsg('Ingresá un correo electrónico válido para recibir tu comprobante');
       return;
     }
 
-    setIsProcessing(true);
-    setErrorMsg('');
     try {
+      setIsProcessing(true);
+      setErrorMsg('');
       await iniciarPagoMercadoPago('single_pdf');
     } catch (err: any) {
-      console.error(err);
-      setErrorMsg(err.message || 'No se pudo abrir el checkout de Mercado Pago.');
+      setErrorMsg(err.message || 'Error al conectar con Mercado Pago');
       setIsProcessing(false);
     }
   };
@@ -63,19 +64,8 @@ export default function PdfCheckoutModal({
     if (currentProfile?.id) {
       setIsProcessing(true);
       try {
-        const sessionRes = await supabase?.auth.getSession();
-        const token = sessionRes?.data?.session?.access_token;
-
-        const res = await fetch('/api/consume-pdf-credit', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-          },
-          body: JSON.stringify({ userId: currentProfile.id })
-        });
-        const data = await res.json();
-        if (data.success) {
+        const { ok, data } = await apiClient.post('/api/consume-pdf-credit', { userId: currentProfile.id });
+        if (ok && data?.success) {
           onConfirm();
           return;
         }

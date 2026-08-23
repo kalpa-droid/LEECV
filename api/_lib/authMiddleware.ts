@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { User } from '@supabase/supabase-js';
 import { supabaseAdmin } from './supabaseAdmin.js';
+import { errorResponse } from './apiResponse.js';
 
 export interface AuthResult {
   user: User;
@@ -20,13 +21,13 @@ export async function requireAuth(req: VercelRequest, res: VercelResponse): Prom
   const authHeader = req.headers.authorization || '';
   const token = authHeader.replace('Bearer ', '').trim();
   if (!token) {
-    res.status(401).json({ error: 'No autenticado' });
+    errorResponse(res, 401, 'No autenticado');
     return null;
   }
 
   const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
   if (error || !user) {
-    res.status(401).json({ error: 'No autenticado' });
+    errorResponse(res, 401, 'No autenticado');
     return null;
   }
 
@@ -43,7 +44,7 @@ export async function requireAdmin(req: VercelRequest, res: VercelResponse): Pro
 
   const adminOk = await isAdmin(auth.user.id);
   if (!adminOk) {
-    res.status(403).json({ error: 'Requiere permisos de administrador' });
+    errorResponse(res, 403, 'Requiere permisos de administrador');
     return null;
   }
 

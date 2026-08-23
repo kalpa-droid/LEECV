@@ -6,7 +6,10 @@ import { getCurrentProfile, signInWithGoogle } from '../../auth/authService';
 import { publishCV } from '../../../shared/core/storage/publishService';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { Modal } from '../../../shared/core/ui/Modal';
-import { supabase } from '../../../shared/core/lib/supabaseClient';
+import { apiClient } from '../../../shared/core/utils/apiClient';
+
+import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
+import { navigation } from '../../../shared/core/utils/navigation';
 
 export interface CloudStatusModalProps {
   isOpen: boolean;
@@ -31,24 +34,19 @@ export default function CloudStatusModal({
 
   const handlePublish = async () => {
     if (!cvData) return;
-    try {
-      setIsPublishing(true);
+    setIsPublishing(true);
+    await withErrorHandling(async () => {
       const res = await publishCV(cvData);
       if (res.success && res.publicUrl) {
         showSuccess(`¡CV publicado en la web! 🌐 ${res.publicUrl}`);
-        if (typeof window !== 'undefined') {
-          window.open(res.publicUrl, '_blank');
-        }
+        navigation.openExternal(res.publicUrl);
       } else if (res.needsPayment) {
         showInfo('La activación del link público en la web requiere el desbloqueo único de $1 USD.');
       } else {
-        showError(res.error || res.message || 'No se pudo publicar el CV.');
+        throw new Error(res.error || res.message || 'No se pudo publicar el CV.');
       }
-    } catch (err: any) {
-      showError(err?.message || 'Error al publicar el CV.');
-    } finally {
-      setIsPublishing(false);
-    }
+    }, { context: 'Publicar CV' });
+    setIsPublishing(false);
   };
 
   useEffect(() => {
@@ -64,17 +62,9 @@ export default function CloudStatusModal({
         if (userProf?.drive_connected) {
           setLoadingDrive(true);
           try {
-            const { data: { session } } = await supabase?.auth.getSession() || { data: { session: null } };
-            const res = await fetch('/api/drive/get-access-token', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session?.access_token || ''}`,
-              },
-            });
-            if (res.ok) {
-              const { accessToken } = await res.json();
-              const quota = await checkGoogleDriveQuota(accessToken);
+            const { ok, data } = await apiClient.post('/api/drive/get-access-token');
+            if (ok && data?.accessToken) {
+              const quota = await checkGoogleDriveQuota(data.accessToken);
               if (isMounted) setDriveQuota(quota);
             }
           } catch (err) {
