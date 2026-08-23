@@ -3,6 +3,7 @@ import { iniciarPagoMercadoPago } from '../../../payments/paymentService';
 import { signInWithGoogle } from '../../../auth/authService';
 import { supabase } from '../../../../shared/core/lib/supabaseClient';
 import { CreditCard, Sparkles, Download, LogIn, Check, AlertCircle } from 'lucide-react';
+import { Modal } from '../../../../shared/core/ui/Modal';
 
 export default function PdfCheckoutModal({ 
   isOpen, 
@@ -15,8 +16,6 @@ export default function PdfCheckoutModal({
   const [email, setEmail] = useState(currentProfile?.email || '');
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-
-  if (!isOpen) return null;
 
   const isProOrEnterprise = currentProfile?.plan === 'pro' || currentProfile?.plan === 'enterprise';
 
@@ -89,20 +88,34 @@ export default function PdfCheckoutModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in no-print">
-      <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-lg w-full p-6 text-white space-y-4 shadow-2xl overflow-y-auto max-h-[90vh]">
-        
-        {/* Header */}
-        <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/50 text-amber-400 flex items-center justify-center text-2xl">
-            📄
-          </div>
-          <div>
-            <h3 className="text-base font-black text-white">Exportar Documento PDF A4 Nativo</h3>
-            <p className="text-xs text-amber-300 font-bold">Costo por descarga: $1 USD (o equivalente ~$1,200 ARS)</p>
-          </div>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Exportar Documento PDF A4 Nativo"
+      icon={<span className="text-xl">📄</span>}
+      size="lg"
+      footer={
+        <div className="w-full flex items-center justify-between gap-2">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-slate-400 hover:text-white text-xs font-bold transition cursor-pointer"
+          >
+            Volver al Editor
+          </button>
+          {(isProOrEnterprise || currentProfile) && (
+            <button
+              onClick={handleConfirmExport}
+              disabled={isProcessing}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer"
+            >
+              <Check className="w-4 h-4" />
+              <span>{isProOrEnterprise ? 'Exportar PDF A4 Gratis (Plan Pro Activo)' : 'Tengo Créditos / Confirmar Exportación'}</span>
+            </button>
+          )}
         </div>
-
+      }
+    >
+      <div className="space-y-4 text-xs">
         {errorMsg && (
           <div className="p-3 bg-rose-500/20 border border-rose-500/40 rounded-xl text-rose-300 text-xs font-bold flex items-center gap-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -173,7 +186,7 @@ export default function PdfCheckoutModal({
             </span>
           </button>
 
-          {/* Packs de créditos: mejor margen que el pago suelto */}
+          {/* Packs de créditos */}
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => handlePackCheckout('credits_pack_5')}
@@ -212,28 +225,7 @@ export default function PdfCheckoutModal({
             <span>Descargar Copia de Respaldo .JSON Gratis en tu Equipo</span>
           </button>
         </div>
-
-        {/* Existing Credit or Pro Export Confirmation */}
-        {(isProOrEnterprise || currentProfile) && (
-          <div className="pt-2 border-t border-slate-800">
-            <button
-              onClick={handleConfirmExport}
-              disabled={isProcessing}
-              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Check className="w-4 h-4" />
-              <span>{isProOrEnterprise ? 'Exportar PDF A4 Gratis (Plan Pro Activo)' : 'Tengo Créditos / Confirmar Exportación'}</span>
-            </button>
-          </div>
-        )}
-
-        <button
-          onClick={onClose}
-          className="w-full py-2 text-slate-400 hover:text-white text-xs font-bold transition cursor-pointer text-center"
-        >
-          Volver al Editor
-        </button>
       </div>
-    </div>
+    </Modal>
   );
 }

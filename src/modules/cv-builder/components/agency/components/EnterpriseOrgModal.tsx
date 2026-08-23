@@ -1,5 +1,5 @@
 import React, { useEffect, useState, FormEvent } from 'react';
-import { Building, Users, UserPlus, Trash2, Mail, Check, X, HardDrive, Key, AlertCircle } from 'lucide-react';
+import { Building, Users, UserPlus, Trash2, Mail, Check, HardDrive, Key, AlertCircle } from 'lucide-react';
 import { 
   getOrganization, 
   listOrgMembers, 
@@ -9,7 +9,9 @@ import {
 } from '../services/organizationService';
 import { useToast } from '../../../../../shared/core/ui/Toast';
 import { useConfirm } from '../../../../../shared/core/ui/ConfirmDialog';
+import { colorSystem } from '../../../../../shared/core/uiDesignSystem';
 import { Organization, OrgMember, OrgRole } from '../../../../../types/organization';
+import { Modal } from '../../../../../shared/core/ui/Modal';
 
 interface EnterpriseOrgModalProps {
   isOpen: boolean;
@@ -42,8 +44,6 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
   useEffect(() => {
     if (isOpen) loadOrgData();
   }, [isOpen]);
-
-  if (!isOpen) return null;
 
   async function handleSendInvite(e: FormEvent) {
     e.preventDefault();
@@ -95,32 +95,24 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
   const maxMembers = org?.max_members || 10;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn font-sans">
-      <div className="bg-[${colorSystem.neutral.textPrimary}] border border-purple-500/30 text-white rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
-        
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-purple-500/20 flex items-center justify-between bg-slate-900/80">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-purple-600/30 text-purple-300 border border-purple-500/40">
-              <Building className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-base font-black text-white flex items-center gap-2">
-                {org?.name || 'Organización Enterprise'}
-                <span className="px-2 py-0.5 rounded-md bg-purple-900/60 border border-purple-500/50 text-purple-300 text-[10px] font-extrabold">
-                  Enterprise
-                </span>
-              </h2>
-              <p className="text-[11px] text-purple-300/70">Gestión de Equipo Multi-Usuario, Permisos y Almacenamiento Compartido (50GB)</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="p-1.5 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition cursor-pointer">
-            <X className="w-5 h-5" />
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={org?.name || 'Organización Enterprise'}
+      icon={<Building className="w-5 h-5 text-purple-400" />}
+      size="4xl"
+      footer={
+        <div className="w-full flex items-center justify-between text-xs text-slate-400">
+          <span>Organización id: <code className="text-purple-300">{org?.id || 'Enterprise'}</code></span>
+          <button onClick={onClose} className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-extrabold rounded-xl transition cursor-pointer">
+            Cerrar
           </button>
         </div>
-
+      }
+    >
+      <div className="space-y-4 text-xs">
         {/* Top Info Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-6 bg-slate-950/40 border-b border-purple-500/20">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-slate-950/40 rounded-2xl border border-purple-500/20">
           <div className="p-3.5 bg-slate-900/80 rounded-xl border border-purple-500/20 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Users className="w-5 h-5 text-purple-400" />
@@ -152,7 +144,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-purple-500/20 px-6 pt-2 bg-slate-900/30">
+        <div className="flex border-b border-purple-500/20 px-2 pt-2 bg-slate-900/30 rounded-xl">
           <button
             onClick={() => setActiveTab('team')}
             className={`px-4 py-2 text-xs font-bold transition border-b-2 flex items-center gap-2 cursor-pointer ${
@@ -167,28 +159,26 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
             onClick={() => setActiveTab('invite')}
             className={`px-4 py-2 text-xs font-bold transition border-b-2 flex items-center gap-2 cursor-pointer ${
               activeTab === 'invite'
-                ? 'border-[${colorSystem.accent.base}] text-white bg-rose-500/10 rounded-t-xl'
+                ? `border-[${colorSystem.accent.base}] text-white bg-rose-500/10 rounded-t-xl`
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            <UserPlus className="w-3.5 h-3.5 text-[${colorSystem.accent.base}]" /> Invitar Miembro
+            <UserPlus className={`w-3.5 h-3.5 text-[${colorSystem.accent.base}]`} /> Invitar Miembro
           </button>
           <button
             onClick={() => setActiveTab('accept')}
             className={`px-4 py-2 text-xs font-bold transition border-b-2 flex items-center gap-2 cursor-pointer ${
               activeTab === 'accept'
-                ? 'border-[${colorSystem.secondary.base}] text-white bg-emerald-500/10 rounded-t-xl'
+                ? `border-[${colorSystem.secondary.base}] text-white bg-emerald-500/10 rounded-t-xl`
                 : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Key className="w-3.5 h-3.5 text-[${colorSystem.secondary.base}]" /> Aceptar Invitación
+            <Key className={`w-3.5 h-3.5 text-[${colorSystem.secondary.base}]`} /> Aceptar Invitación
           </button>
         </div>
 
         {/* Tab Contents */}
-        <div className="p-6 overflow-y-auto space-y-4">
-          
-          {/* TAB 1: TEAM MEMBERS */}
+        <div className="space-y-4">
           {activeTab === 'team' && (
             <div className="space-y-3">
               {members.length === 0 ? (
@@ -237,7 +227,6 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
             </div>
           )}
 
-          {/* TAB 2: INVITE MEMBER */}
           {activeTab === 'invite' && (
             <form onSubmit={handleSendInvite} className="space-y-4 max-w-md mx-auto">
               <div className="space-y-1.5">
@@ -266,14 +255,13 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-[${colorSystem.accent.base}] hover:bg-[#E31555] text-white font-extrabold text-xs rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                className={`w-full py-2.5 bg-[${colorSystem.accent.base}] hover:bg-[#E31555] text-white font-extrabold text-xs rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer`}
               >
                 <UserPlus className="w-4 h-4" /> Enviar Invitación al Equipo
               </button>
             </form>
           )}
 
-          {/* TAB 3: ACCEPT INVITATION */}
           {activeTab === 'accept' && (
             <form onSubmit={handleAcceptToken} className="space-y-4 max-w-md mx-auto">
               <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl flex items-start gap-2.5 text-xs text-blue-200">
@@ -291,30 +279,20 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
                   placeholder="Pega el token aquí..."
                   value={invitationTokenInput}
                   onChange={(e) => setInvitationTokenInput(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono outline-none focus:border-[${colorSystem.secondary.base}] transition"
+                  className={`w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono outline-none focus:border-[${colorSystem.secondary.base}] transition`}
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-[${colorSystem.secondary.base}] hover:bg-[#008f88] text-white font-extrabold text-xs rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                className={`w-full py-2.5 bg-[${colorSystem.secondary.base}] hover:bg-[#008f88] text-white font-extrabold text-xs rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer`}
               >
                 <Check className="w-4 h-4" /> Unirse a la Organización
               </button>
             </form>
           )}
-
         </div>
-
-        {/* Footer */}
-        <div className="px-6 py-3 border-t border-purple-500/20 bg-slate-950/80 flex items-center justify-between text-xs text-slate-400">
-          <span>Organización id: <code className="text-purple-300">{org?.id || 'Enterprise'}</code></span>
-          <button onClick={onClose} className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-extrabold rounded-xl transition cursor-pointer">
-            Cerrar
-          </button>
-        </div>
-
       </div>
-    </div>
+    </Modal>
   );
 }
