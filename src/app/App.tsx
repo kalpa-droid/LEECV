@@ -28,6 +28,7 @@ import PrivacyModal from '../modules/cv-builder/components/PrivacyModal';
 import { CVProvider, useCVContext } from '../context/CVContext';
 import { ToastProvider, useToast } from '../shared/core/ui/Toast';
 import { useConfirm, ConfirmProvider } from '../shared/core/ui/ConfirmDialog';
+import { getActiveUiTheme } from '../shared/core/uiDesignSystem';
 
 function AppContent() {
   const { cvData, setCvData, resetToBlankCV, saveCV } = useCVContext();
@@ -39,6 +40,8 @@ function AppContent() {
 
   const [isPublicView, setIsPublicView] = useState(false);
   const [publicSlug, setPublicSlug] = useState<string | undefined>(undefined);
+
+  const activeUiTheme = getActiveUiTheme(cvData?.uiTheme);
 
   useEffect(() => {
     getCurrentProfile().then(p => setCurrentProfile(p)).catch(() => {});
@@ -80,21 +83,25 @@ function AppContent() {
   const triggerAutoFit = React.useCallback(() => {
     if (typeof window !== 'undefined') {
       const isMobile = window.innerWidth < 768;
-      const sidebarWidth = isMobile ? 0 : (isPanelOpen ? 500 : 0);
-      const availableWidth = window.innerWidth - sidebarWidth - 48;
+      const sidebarWidth = isMobile ? 0 : (isPanelOpen ? 500 : 64);
+      const availableWidth = window.innerWidth - sidebarWidth - 32;
       const a4WidthPx = 794;
       
-      const calculatedScale = Math.min(Math.max(availableWidth / a4WidthPx, 0.45), 1.1);
+      const calculatedScale = Math.min(Math.max(availableWidth / a4WidthPx, 0.35), 1.0);
       setZoomLevel(Number(calculatedScale.toFixed(2)));
     }
   }, [isPanelOpen]);
 
   useEffect(() => {
     triggerAutoFit();
+    const timer = setTimeout(triggerAutoFit, 350);
     const handleResize = () => triggerAutoFit();
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [triggerAutoFit]);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [isPanelOpen, triggerAutoFit]);
 
   const [isPhotoCropperOpen, setIsPhotoCropperOpen] = useState(false);
   const [isSignatureOpen, setIsSignatureOpen] = useState(false);
@@ -266,7 +273,8 @@ function AppContent() {
         />
 
         <div 
-          className={`transition-all duration-300 ease-in-out border-r border-[#6B5B6E]/30 bg-[#F5EDDA] z-20 flex flex-col h-full overflow-y-auto ${
+          style={{ backgroundColor: activeUiTheme.bgPanel, color: activeUiTheme.textPrimary }}
+          className={`transition-all duration-300 ease-in-out border-r border-[#6B5B6E]/30 z-20 flex flex-col h-full overflow-y-auto ${
             isPanelOpen 
               ? 'w-full md:w-[460px] lg:w-[500px] opacity-100 shadow-2xl' 
               : 'w-0 opacity-0 overflow-hidden hidden md:block'
@@ -498,8 +506,8 @@ function AppContent() {
             className="px-3 py-1 rounded-xl bg-[#2B1B2E] border border-amber-400/40 hover:border-amber-400 text-amber-300 hover:text-amber-200 font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95"
             title="Tocar para cambiar el color de fondo de la interfaz (Cálido, Nocturno, Océano)"
           >
+            <span>Tema</span>
             <Palette className="w-3.5 h-3.5 text-[#FF2E63]" />
-            <span>Tema: {cvData?.uiTheme === 'dark' ? '🌙 Nocturno' : cvData?.uiTheme === 'teal_ocean' ? '🌊 Océano' : '☀️ Cálido'}</span>
           </button>
 
           <span className="text-[10px] font-bold text-slate-500">© 2026 LEECV</span>

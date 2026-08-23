@@ -199,7 +199,13 @@ export const uiThemePresets = {
     bgCard: '#1D3557',
     textPrimary: '#F1FAEE',
     textSecondary: '#A8DADC',
-    border: '#457B9D',
   },
 } as const;
+
+export function getActiveUiTheme(themeId?: string) {
+  if (themeId && themeId in uiThemePresets) {
+    return uiThemePresets[themeId as keyof typeof uiThemePresets];
+  }
+  return uiThemePresets.default;
+}
 
