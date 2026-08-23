@@ -23,7 +23,6 @@ const EXEMPT_UI_GOVERNANCE = [
   'colorSystem.ts',
   'fieldCatalog.ts',
   'presetRegistry.ts',
-  'themePresets.ts',
   'index.css',
   'initialCVData.ts',
   'cvDataSchema.ts',

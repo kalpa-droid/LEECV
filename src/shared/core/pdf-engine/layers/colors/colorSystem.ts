@@ -192,17 +192,17 @@ export interface ResolvedThemeRoles {
  * Si el usuario o el preset elige un color de fondo oscuro, el sistema
  * calcula texto claro automáticamente.
  */
-export function resolveThemeRoles(theme: any = {}): ResolvedThemeRoles {
-  const primary = theme.primaryColor || theme.primary || theme.bgColor || theme.bgCorridor || '#00A8A0';
-  const secondary = theme.secondaryColor || theme.secondary || '#64748b';
-  const accent = theme.accentColor || theme.accent || '#FF2E63';
-  const background = theme.bgColor || theme.background || theme.bgCorridor || '#ffffff';
+export function resolveThemeRoles(palette: any = {}): ResolvedThemeRoles {
+  const primary = palette.primary || palette.primaryColor || '#00A8A0';
+  const secondary = palette.secondary || palette.secondaryColor || '#64748b';
+  const accent = palette.accent || palette.accentColor || '#FF2E63';
+  const background = palette.background || palette.bgColor || '#ffffff';
 
   const textOnPrimary = getContrastTextColor(primary);
   const textOnSecondary = getContrastTextColor(secondary);
   const textOnAccent = getContrastTextColor(accent);
 
-  let text = theme.textColor || theme.text || getContrastTextColor(background);
+  let text = palette.text || palette.textColor || getContrastTextColor(background);
   if (getContrastRatio(background, text) < 3.5) {
     text = getContrastTextColor(background);
   }

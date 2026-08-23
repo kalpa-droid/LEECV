@@ -24,7 +24,6 @@ export interface TemplateRendererProps {
   roles?: any[];
   education?: any[];
   professions?: any[];
-  customTheme?: any;
   customRecordCardDesigns?: {
     education?: string;
     experience?: string;
@@ -59,16 +58,9 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   embedded = false,
   canvasWidthMm,
   canvasHeightMm,
-  customTheme,
   customRecordCardDesigns
 }) => {
-  const rolesColor = resolveThemeRoles({
-    primaryColor: customTheme?.primaryColor || customTheme?.primary || customTheme?.bgCorridor || preset.palette.primary,
-    secondaryColor: customTheme?.secondaryColor || customTheme?.secondary || preset.palette.secondary,
-    accentColor: customTheme?.accentColor || customTheme?.accent || preset.palette.accent,
-    bgColor: customTheme?.bgColor || customTheme?.background || '#ffffff',
-    textColor: customTheme?.textColor || customTheme?.text || preset.palette.text,
-  });
+  const rolesColor = resolveThemeRoles(preset.palette);
 
   // CAPA 5&8 conectada de verdad: cada superficie (sidebar de color vs.
   // columna principal blanca) tiene su propia jerarquía título/subtítulo/

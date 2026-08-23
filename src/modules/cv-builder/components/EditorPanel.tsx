@@ -17,9 +17,9 @@ import {
   Calendar,
   FileText
 } from 'lucide-react';
-import { themePresets, fontOptions } from '../../../data/themePresets';
-import { panelPresets } from '../../../data/panelPresets';
-import { getColumnAssignableSections, getRecordListSections } from '../../../shared/core/sectionRegistry';
+import { fontOptions } from '../../../data/fontOptions';
+import { getColumnAssignableSections, getRecordListSections, panelPresets } from '../../../shared/core/sectionRegistry';
+import { getAllPresets } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { FIELD_CATALOG, FieldDefinition } from '../../../shared/core/pdf-engine/layers/records/fieldCatalog';
 import { PAGE_SIZES } from '../../../shared/core/pdf-engine/pageSizes';
 import { getSavedCVsList, loadCVById, deleteCVById, saveCV } from '../services/cvStorageService';
@@ -1402,89 +1402,31 @@ export default function EditorPanel({
               </div>
             </PanelSection>
 
-            {/* Presets Cromáticos (Absorbidos de pestaña Color) */}
-            <PanelSection icon={<Palette className="w-4 h-4" />} title="Paletas de color"
-              manualAdjustment={
-                <div className="space-y-3 pt-2">
-                  <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">
-                    Ajuste Fino de Colores Personalizados
-                  </label>
-                  
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-[var(--color-neutral-text-primary)] font-bold">Color Primario (Lateral/Portada)</span>
-                    <input 
-                      type="color" 
-                      value={cvData?.theme?.primaryColor || '#1e3a8a'} 
-                      onChange={(e) => updateTheme('primaryColor', e.target.value)}
-                      className="w-7 h-7 rounded cursor-pointer border-0"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-[var(--color-neutral-text-primary)] font-bold">Color Secundario (Encabezados lateral)</span>
-                    <input 
-                      type="color" 
-                      value={cvData?.theme?.secondaryColor || '#172554'} 
-                      onChange={(e) => updateTheme('secondaryColor', e.target.value)}
-                      className="w-7 h-7 rounded cursor-pointer border-0"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-[var(--color-neutral-text-primary)] font-bold">Color de Acento (Barras e Iconos)</span>
-                    <input 
-                      type="color" 
-                      value={cvData?.theme?.accentColor || '#d97706'} 
-                      onChange={(e) => updateTheme('accentColor', e.target.value)}
-                      className="w-7 h-7 rounded cursor-pointer border-0"
-                    />
-                  </div>
-                </div>
-              }
-            >
-              <div className="space-y-3">
-                {['linda-feria', 'docentes', 'ejecutivos', 'jovenes'].map((cat) => {
-                  const categoryPresets = themePresets.filter(p => p.category === cat);
-                  const categoryTitle = cat === 'linda-feria'
-                    ? '🎪 Feria'
-                    : cat === 'docentes' 
-                    ? '🎓 Maestros & Docentes' 
-                    : cat === 'ejecutivos' 
-                    ? '💼 Ejecutivos & Corporativos' 
-                    : '⚡ Jóvenes & Creativos';
-
+            {/* Presets Cromáticos y Plantillas */}
+            <PanelSection icon={<Palette className="w-4 h-4" />} title="Paletas de color y Plantillas">
+              <div className="grid grid-cols-2 gap-2">
+                {getAllPresets().map((preset) => {
+                  const isSelected = (cvData?.activePresetId || 'cv-clasico') === preset.id;
                   return (
-                    <div key={cat} className="space-y-1.5 pt-1">
-                      <h4 className="text-[11px] font-black uppercase text-[var(--color-neutral-text-primary)] font-medium tracking-wider">
-                        {categoryTitle}
-                      </h4>
-                      <div className="grid grid-cols-2 gap-2">
-                        {categoryPresets.map((preset) => {
-                          const isSelected = (cvData?.theme?.presetId || 'purple-monica') === preset.id;
-                          return (
-                            <button
-                              key={preset.id}
-                              onClick={() => applyPreset(preset)}
-                              className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between cursor-pointer ${
-                                isSelected
-                                  ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
-                                  : 'border-[var(--color-neutral-border)] bg-white hover:border-[var(--color-accent-base)]'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between mb-1.5">
-                                <span className="text-[11px] font-bold text-[var(--color-neutral-text-primary)] truncate pr-1">{preset.name}</span>
-                                {isSelected && <Check className="w-3.5 h-3.5 text-[var(--color-secondary-base)] flex-shrink-0" />}
-                              </div>
-                              <div className="flex gap-1.5 items-center">
-                                <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.primaryColor }} />
-                                <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.accentColor }} />
-                                <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.secondaryColor }} />
-                              </div>
-                            </button>
-                          );
-                        })}
+                    <button
+                      key={preset.id}
+                      onClick={() => setCvData((prev: any) => ({ ...prev, activePresetId: preset.id }))}
+                      className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between cursor-pointer ${
+                        isSelected
+                          ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
+                          : 'border-[var(--color-neutral-border)] bg-white hover:border-[var(--color-accent-base)]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[11px] font-bold text-[var(--color-neutral-text-primary)] truncate pr-1">{preset.name}</span>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-[var(--color-secondary-base)] flex-shrink-0" />}
                       </div>
-                    </div>
+                      <div className="flex gap-1.5 items-center">
+                        <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.palette.primary }} />
+                        <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.palette.accent }} />
+                        <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.palette.secondary }} />
+                      </div>
+                    </button>
                   );
                 })}
               </div>
