@@ -11,6 +11,7 @@ import { resolveThemeRoles, getTypographyColorBinding } from '../layers/colors/c
 import { resolvePageTextStyle, buildPageTextTemplate } from '../layers/pageText/pageTextObjects';
 import { CardObjectRenderer } from '../layers/cards/CardObjectRenderer';
 import { SectionBannerCard } from '../layers/cards/SectionBannerCard';
+import { buildStructuredRecordLayout } from '../layers/records/recordLayoutEngine';
 
 export interface TemplateRendererProps {
   preset: Preset;
@@ -624,25 +625,17 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     }
 
     if (rec.kind === 'custom') {
-      const titleVal = String(f.tituloOGrado || f.cargo || f.title || f.nombre || f.degree || f.role || Object.values(f)[0] || '');
-      const subtitleVal = String(f.institucion || f.empresa || f.institution || f.company || '');
-      const badgeVal = String(f.periodo || f.year || f.nivel || f.cargaHoraria || '');
-      const descVal = String(f.descripcion || f.details || f.description || '');
-      const resVal = String(f.resolucion || '');
-      const urlVal = String(f.url || '');
-      const autorVal = String(f.autor || '');
-      const refName = String(f.personaReferencia || '');
-      const refContact = String(f.contactoReferencia || '');
-      const fullDesc = descVal + (resVal ? ` — ${resVal}` : '') + (urlVal ? ` (${urlVal})` : '') + (autorVal ? ` | ${autorVal}` : '') + (refName ? ` | Ref: ${refName} ${refContact}` : '');
+      const layout = buildStructuredRecordLayout(f);
 
       return (
         <CardObjectRenderer
           key={rec.id}
           designId={customRecordCardDesigns?.education || preset.recordCardDesigns?.education || 'accent-card'}
-          title={titleVal}
-          subtitle={subtitleVal}
-          dateOrBadge={badgeVal || undefined}
-          description={fullDesc.trim() || undefined}
+          title={layout.header || ''}
+          subtitle={layout.subheader || undefined}
+          badges={layout.badges}
+          extras={layout.extras}
+          description={layout.block || undefined}
           rolesColor={rolesColor}
           typography={preset.typography}
           sectorRole={isSidebarSector ? 'sidebar' : 'main'}

@@ -14,6 +14,13 @@ export interface FieldDefinition {
 }
 
 export const FIELD_CATALOG: Record<string, FieldDefinition> = {
+  titlePrefix: {
+    id: 'titlePrefix',
+    label: 'Abreviatura / Título Honorífico',
+    placeholder: 'Ej: Prof., Lic., Ing., Dr., Mgtr.',
+    type: 'text',
+    pdfRole: 'badge'
+  },
   tituloOGrado: {
     id: 'tituloOGrado',
     label: 'Título / Grado / Nombre',
@@ -42,6 +49,20 @@ export const FIELD_CATALOG: Record<string, FieldDefinition> = {
     type: 'text',
     pdfRole: 'badge'
   },
+  estado: {
+    id: 'estado',
+    label: 'Estado Académico / Situación',
+    placeholder: 'Ej: Graduado, En Curso (80% aprobado), Finalizado',
+    type: 'text',
+    pdfRole: 'badge'
+  },
+  promedio: {
+    id: 'promedio',
+    label: 'Promedio / Distinción / Mérito',
+    placeholder: 'Ej: Promedio: 9.45 / Summa Cum Laude',
+    type: 'text',
+    pdfRole: 'badge'
+  },
   periodo: {
     id: 'periodo',
     label: 'Periodo / Año',
@@ -63,6 +84,20 @@ export const FIELD_CATALOG: Record<string, FieldDefinition> = {
     type: 'text',
     pdfRole: 'badge'
   },
+  matricula: {
+    id: 'matricula',
+    label: 'Matrícula Profesional N° / Registro',
+    placeholder: 'Ej: Matrícula Prof. N° 45892-A',
+    type: 'text',
+    pdfRole: 'badge'
+  },
+  tomoFolio: {
+    id: 'tomoFolio',
+    label: 'Tomo / Folio / Acta',
+    placeholder: 'Ej: Tomo IV, Folio 128, Libro 2',
+    type: 'text',
+    pdfRole: 'extra'
+  },
   resolucion: {
     id: 'resolucion',
     label: 'Resolución N° / Disposición (Opcional)',
@@ -77,10 +112,24 @@ export const FIELD_CATALOG: Record<string, FieldDefinition> = {
     type: 'textarea',
     pdfRole: 'description'
   },
+  plataforma: {
+    id: 'plataforma',
+    label: 'Red Social / Plataforma',
+    placeholder: 'Ej: LinkedIn, GitHub, Behance, Portafolio, Instagram',
+    type: 'text',
+    pdfRole: 'title'
+  },
+  usuario: {
+    id: 'usuario',
+    label: 'Usuario / Manija (@usuario)',
+    placeholder: 'Ej: @daniela.burgos o linkedin.com/in/daniela-burgos',
+    type: 'text',
+    pdfRole: 'subtitle'
+  },
   url: {
     id: 'url',
     label: 'Enlace / Portfolio / DOI',
-    placeholder: 'Ej: https://doi.org/... o portfolio.com/obra',
+    placeholder: 'Ej: https://linkedin.com/in/usuario o portfolio.com',
     type: 'url',
     pdfRole: 'extra'
   },
@@ -117,26 +166,31 @@ export const BUILTIN_RECORD_KINDS: Record<string, RecordKindSchema> = {
   education: {
     kind: 'education',
     label: 'Formación Académica',
-    defaultFields: ['tituloOGrado', 'institucion', 'nivel', 'periodo']
+    defaultFields: ['tituloOGrado', 'institucion', 'nivel', 'periodo', 'estado', 'promedio', 'descripcion']
   },
   profession: {
     kind: 'education',
     label: 'Títulos Profesionales',
-    defaultFields: ['tituloOGrado', 'institucion', 'periodo', 'resolucion']
+    defaultFields: ['tituloOGrado', 'institucion', 'periodo', 'matricula', 'resolucion', 'tomoFolio']
   },
   experience: {
     kind: 'experience',
     label: 'Experiencia Laboral',
-    defaultFields: ['cargo', 'institucion', 'periodo', 'descripcion', 'resolucion']
+    defaultFields: ['cargo', 'institucion', 'periodo', 'modalidad', 'descripcion', 'resolucion', 'personaReferencia', 'contactoReferencia']
   },
   course: {
     kind: 'course',
     label: 'Cursos y Capacitaciones',
-    defaultFields: ['tituloOGrado', 'institucion', 'periodo', 'cargaHoraria', 'resolucion']
+    defaultFields: ['tituloOGrado', 'institucion', 'periodo', 'cargaHoraria', 'modalidad', 'resolucion', 'url']
   },
   informatics: {
     kind: 'course',
     label: 'Informática y TICs',
-    defaultFields: ['tituloOGrado', 'institucion']
+    defaultFields: ['tituloOGrado', 'institucion', 'nivel', 'descripcion']
+  },
+  redes: {
+    kind: 'redes',
+    label: 'Redes Sociales & Presencia Digital',
+    defaultFields: ['plataforma', 'usuario', 'url']
   }
 };

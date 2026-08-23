@@ -249,6 +249,73 @@ export default function PersonalInfoSection({ onOpenPhotoCropper, registeredItem
         />
       </div>
 
+      <div>
+        <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
+          Sitio Web Personal / Portafolio / Linktree
+        </label>
+        <input 
+          type="text"
+          value={cvData.personalInfo?.website || ''}
+          onChange={(e) => updatePersonalInfo('website', e.target.value)}
+          placeholder="Ej: https://mi-portafolio.com"
+          className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
+            Nacionalidad
+          </label>
+          <input 
+            type="text"
+            value={cvData.personalInfo?.nacionalidad || ''}
+            onChange={(e) => updatePersonalInfo('nacionalidad', e.target.value)}
+            placeholder="Ej: Argentina"
+            className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
+            Estado Civil
+          </label>
+          <input 
+            type="text"
+            value={cvData.personalInfo?.estadoCivil || ''}
+            onChange={(e) => updatePersonalInfo('estadoCivil', e.target.value)}
+            placeholder="Ej: Soltero/a, Casado/a"
+            className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
+            Disponibilidad (Viaje / Horarios)
+          </label>
+          <input 
+            type="text"
+            value={cvData.personalInfo?.disponibilidad || ''}
+            onChange={(e) => updatePersonalInfo('disponibilidad', e.target.value)}
+            placeholder="Ej: Inmediata / Relocalización"
+            className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
+            Licencia de Conducir
+          </label>
+          <input 
+            type="text"
+            value={cvData.personalInfo?.licenciaConducir || ''}
+            onChange={(e) => updatePersonalInfo('licenciaConducir', e.target.value)}
+            placeholder="Ej: Clase B1 (Autos particulares)"
+            className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+          />
+        </div>
+      </div>
+
       {/* QR Code Mode Selector */}
       <div className="p-3 bg-purple-50 rounded-2xl border-2 border-purple-200 space-y-2 shadow-sm">
         <label className="block text-xs font-black text-purple-900 uppercase tracking-wide flex items-center justify-between">

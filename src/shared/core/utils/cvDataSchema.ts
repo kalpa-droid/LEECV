@@ -15,6 +15,7 @@ export function sanitizeCvData(rawCvData: any = {}) {
     coverFeaturedProfessionId: data.coverFeaturedProfessionId ?? null,
 
     personalInfo: {
+      titlePrefix: data.personalInfo?.titlePrefix || '',
       fullName: data.personalInfo?.fullName || '',
       surname: data.personalInfo?.surname || '',
       givenNames: data.personalInfo?.givenNames || '',
@@ -25,6 +26,11 @@ export function sanitizeCvData(rawCvData: any = {}) {
       email: data.personalInfo?.email || '',
       address: data.personalInfo?.address || '',
       cityProvince: data.personalInfo?.cityProvince || '',
+      website: data.personalInfo?.website || '',
+      nacionalidad: data.personalInfo?.nacionalidad || '',
+      estadoCivil: data.personalInfo?.estadoCivil || '',
+      disponibilidad: data.personalInfo?.disponibilidad || '',
+      licenciaConducir: data.personalInfo?.licenciaConducir || '',
       facebook: data.personalInfo?.facebook || '',
       year: data.personalInfo?.year || '2026',
       quote: data.personalInfo?.quote || '',
@@ -56,10 +62,14 @@ export function sanitizeCvData(rawCvData: any = {}) {
     },
 
     signature: {
+      type: data.signature?.type || 'drawn',
       dataUrl: data.signature?.dataUrl || '',
-      signerName: data.signature?.signerName || '',
+      signerTitle: data.signature?.signerTitle || data.personalInfo?.titlePrefix || '',
+      signerName: data.signature?.signerName || data.personalInfo?.fullName || '',
       signerRole: data.signature?.signerRole || '',
-      date: data.signature?.date || ''
+      dni: data.signature?.dni || data.personalInfo?.dni || '',
+      date: data.signature?.date || new Date().toISOString().split('T')[0],
+      signerCity: data.signature?.signerCity || data.personalInfo?.cityProvince || ''
     },
 
     sectionVisibility: {

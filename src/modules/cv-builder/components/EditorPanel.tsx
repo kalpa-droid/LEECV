@@ -940,6 +940,26 @@ export default function EditorPanel({
                   className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] cursor-pointer transition"
                 />
               </div>
+
+              {/* 4. Lugar / Ciudad de Emisión de la Firma */}
+              <div>
+                <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">
+                  Lugar / Ciudad de Emisión de la Firma
+                </label>
+                <input 
+                  type="text"
+                  value={cvData.signature?.signerCity || cvData.personalInfo?.cityProvince || ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setCvData((prev: any) => ({
+                      ...prev,
+                      signature: { ...(prev.signature || {}), signerCity: val }
+                    }));
+                  }}
+                  placeholder="Ej: Salta, Argentina"
+                  className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+                />
+              </div>
             </div>
               </>
             )}
@@ -1094,6 +1114,13 @@ export default function EditorPanel({
                       iconId: 'ecologia',
                       desc: 'Huertas, medio ambiente, proyectos comunitarios.',
                       fields: ['tituloOGrado', 'institucion', 'periodo', 'descripcion']
+                    },
+                    {
+                      id: 'redes',
+                      titleText: 'Redes Sociales & Presencia Digital',
+                      iconId: 'redes',
+                      desc: 'LinkedIn, GitHub, Behance, Portafolio, YouTube, etc.',
+                      fields: ['plataforma', 'usuario', 'url']
                     },
                     {
                       id: 'publicaciones',

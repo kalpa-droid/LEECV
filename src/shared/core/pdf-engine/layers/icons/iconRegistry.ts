@@ -20,6 +20,17 @@ export const ICON_REGISTRY: Record<string, IconDefinition> = {
       'M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'
     ]
   },
+  redes: {
+    id: 'redes',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
+      'M6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
+      'M18 22a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
+      'M8.59 13.51l6.83 3.98',
+      'M15.41 6.51L8.59 10.49'
+    ]
+  },
   contacto: {
     id: 'contacto',
     viewBox: '0 0 24 24',

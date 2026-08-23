@@ -16,6 +16,10 @@ export interface PersonalInfo {
   year?: string;
   quote?: string;
   website?: string;
+  nacionalidad?: string;
+  estadoCivil?: string;
+  disponibilidad?: string;
+  licenciaConducir?: string;
   photoUrl?: string;
   profilePhoto?: string;
   signatureUrl?: string;

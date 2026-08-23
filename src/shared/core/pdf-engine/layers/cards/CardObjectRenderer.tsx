@@ -9,6 +9,8 @@ interface CardObjectRendererProps {
   title: string;
   subtitle?: string;
   dateOrBadge?: string;
+  badges?: Array<{ id: string; label: string; value: string }>;
+  extras?: Array<{ id: string; label: string; value: string; type?: string }>;
   description?: string;
   rolesColor: ResolvedThemeRoles;
   typography: TypographyScale;
@@ -20,6 +22,8 @@ export function CardObjectRenderer({
   title,
   subtitle,
   dateOrBadge,
+  badges = [],
+  extras = [],
   description,
   rolesColor,
   typography,
@@ -43,8 +47,6 @@ export function CardObjectRenderer({
   const borderColor = getRoleColor(design.borderColorRole);
   const backgroundColor = getRoleColor(design.backgroundColorRole);
 
-  // Systemic Contrast Protection: Resolve real background behind the card
-  // If the card background is transparent, the real background is the container sector's color.
   const effectiveBgColor = (backgroundColor && backgroundColor !== 'transparent')
     ? backgroundColor
     : (sectorRole === 'sidebar' ? rolesColor.primary : rolesColor.background);
@@ -98,6 +100,35 @@ export function CardObjectRenderer({
       color: badgeColor,
       fontWeight: 'bold',
     },
+    badgeRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 4,
+      marginTop: 2,
+      marginBottom: 4,
+    },
+    badgePill: {
+      fontSize: typography.caption - 1,
+      fontFamily: typography.fontFamily,
+      color: badgeColor,
+      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+      paddingHorizontal: 4,
+      paddingVertical: 1,
+      borderRadius: 3,
+    },
+    extraRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginTop: 2,
+      marginBottom: 3,
+    },
+    extraText: {
+      fontSize: typography.caption,
+      fontFamily: typography.fontFamily,
+      color: subtitleColor,
+      fontStyle: 'italic',
+    },
     subtitleText: {
       fontSize: typography.body,
       fontFamily: typography.fontFamily,
@@ -119,6 +150,29 @@ export function CardObjectRenderer({
         {dateOrBadge ? <Text style={styles.badgeText}>{dateOrBadge}</Text> : null}
       </View>
       {subtitle ? <Text style={styles.subtitleText}>{subtitle}</Text> : null}
+
+      {/* Dynamic Badge Bar (Collapses cleanly when empty) */}
+      {badges.length > 0 && (
+        <View style={styles.badgeRow}>
+          {badges.map((b) => (
+            <Text key={b.id} style={styles.badgePill}>
+              {b.label}: {b.value}
+            </Text>
+          ))}
+        </View>
+      )}
+
+      {/* Dynamic Extra Lines (Collapses cleanly when empty) */}
+      {extras.length > 0 && (
+        <View style={styles.extraRow}>
+          {extras.map((ex) => (
+            <Text key={ex.id} style={styles.extraText}>
+              📌 {ex.value}
+            </Text>
+          ))}
+        </View>
+      )}
+
       {description ? <Text style={styles.descText}>{description}</Text> : null}
     </View>
   );
