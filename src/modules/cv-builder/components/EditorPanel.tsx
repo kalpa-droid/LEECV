@@ -966,7 +966,7 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {/* VISTA 1 A 1 DE SECCIÓN PERSONALIZADA SELECCIONADA DESDE EL DOCK */}
         {/* ========================================================================= */}
-        {activeTab.startsWith('custom_') && (() => {
+        {(cvData.customSections || []).some((s: any) => s.id === activeTab) && (() => {
           const csIdx = (cvData.customSections || []).findIndex((s: any) => s.id === activeTab);
           const cs = cvData.customSections?.[csIdx];
           if (!cs) return null;
@@ -1088,26 +1088,153 @@ export default function EditorPanel({
         })()}
 
         {/* ========================================================================= */}
-        {/* TAB: NUEVA SECCIÓN PERSONALIZADA */}
+        {/* TAB: NUEVA SECCIÓN PERSONALIZADA (CATÁLOGO PREDISEÑADO + CREADOR A MEDIDA) */}
         {/* ========================================================================= */}
         {activeTab === 'nueva_seccion' && (
           <div className="space-y-6">
-            <PanelSection icon={<Plus className="w-4 h-4 text-[#00A8A0]" />} title="Nueva Sección Personalizada">
-              {/* Formulario de Creación de Sección */}
+            <PanelSection icon={<Plus className="w-4 h-4 text-[#00A8A0]" />} title="Catálogo & Creador (+ Sección)">
+              
+              {/* 1. CATÁLOGO DE SECCIONES PREDISEÑADAS CON 1 CLIC */}
+              <div className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] space-y-3 shadow-sm">
+                <h4 className="text-xs font-black text-[#2B1B2E] uppercase flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-[#00A8A0]" /> Catálogo de Secciones Prediseñadas
+                </h4>
+                <p className="text-[11px] text-[#6B5B6E] font-medium leading-relaxed">
+                  Haz clic en cualquiera de estas secciones para agregarla instantáneamente a tu currículum con sus campos listos para completar:
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                  {[
+                    {
+                      id: 'ecologia',
+                      titleText: 'Proyectos Sustentables & Ecológicos',
+                      iconId: 'ecologia',
+                      desc: 'Huertas, medio ambiente, proyectos comunitarios.',
+                      fields: ['tituloOGrado', 'institucion', 'periodo', 'descripcion']
+                    },
+                    {
+                      id: 'publicaciones',
+                      titleText: 'Publicaciones y Artículos',
+                      iconId: 'publicaciones',
+                      desc: 'Libros, artículos científicos, prensa, ensayos.',
+                      fields: ['tituloOGrado', 'institucion', 'autor', 'periodo', 'url']
+                    },
+                    {
+                      id: 'referencias',
+                      titleText: 'Referencias Laborales',
+                      iconId: 'referencias',
+                      desc: 'Contactos y cartas de recomendación.',
+                      fields: ['personaReferencia', 'institucion', 'contactoReferencia']
+                    },
+                    {
+                      id: 'idiomas',
+                      titleText: 'Idiomas y Certificaciones',
+                      iconId: 'idiomas',
+                      desc: 'Lenguas extranjeras y grado de dominio (A1-C2).',
+                      fields: ['tituloOGrado', 'institucion', 'nivel']
+                    },
+                    {
+                      id: 'voluntariado',
+                      titleText: 'Voluntariado & ONG',
+                      iconId: 'voluntariado',
+                      desc: 'Acción social y trabajo comunitario.',
+                      fields: ['cargo', 'institucion', 'periodo', 'descripcion']
+                    },
+                    {
+                      id: 'premios',
+                      titleText: 'Premios & Distinciones',
+                      iconId: 'premios',
+                      desc: 'Menciones de honor y reconocimientos.',
+                      fields: ['tituloOGrado', 'institucion', 'periodo', 'descripcion']
+                    },
+                    {
+                      id: 'patentes',
+                      titleText: 'Patentes & Habilitaciones',
+                      iconId: 'patentes',
+                      desc: 'Propiedad intelectual, registros y matrículas.',
+                      fields: ['tituloOGrado', 'institucion', 'resolucion', 'periodo']
+                    },
+                    {
+                      id: 'ponencias',
+                      titleText: 'Ponencias & Congresos',
+                      iconId: 'ponencias',
+                      desc: 'Disertaciones, conferencias y jornadas.',
+                      fields: ['tituloOGrado', 'institucion', 'periodo', 'url']
+                    }
+                  ].map((presetSec) => {
+                    const isAlreadyAdded = (cvData.customSections || []).some((s: any) => s.id === presetSec.id);
+                    return (
+                      <button
+                        key={presetSec.id}
+                        type="button"
+                        onClick={() => {
+                          if (isAlreadyAdded) {
+                            if (typeof setActiveTab === 'function') setActiveTab(presetSec.id);
+                            return;
+                          }
+                          const newSection = {
+                            id: presetSec.id,
+                            titleText: presetSec.titleText,
+                            iconId: presetSec.iconId,
+                            fields: presetSec.fields,
+                            records: [{}]
+                          };
+
+                          setCvData((prev: any) => ({
+                            ...prev,
+                            customSections: [...(prev.customSections || []).filter((s: any) => s.id !== presetSec.id), newSection],
+                            layout: {
+                              ...(prev.layout || {}),
+                              columnAssignments: {
+                                ...(prev.layout?.columnAssignments || {}),
+                                [presetSec.id]: 'primaria'
+                              },
+                              sectionOrders: {
+                                ...(prev.layout?.sectionOrders || {}),
+                                primaria: [...(prev.layout?.sectionOrders?.primaria || []), presetSec.id]
+                              }
+                            }
+                          }));
+
+                          showSuccess(`Sección '${presetSec.titleText}' incorporada.`);
+                          if (typeof setActiveTab === 'function') setActiveTab(presetSec.id);
+                        }}
+                        className={`p-2.5 rounded-xl border text-left flex flex-col justify-between transition cursor-pointer ${
+                          isAlreadyAdded
+                            ? 'bg-teal-50 border-teal-300 text-teal-900'
+                            : 'bg-slate-50 border-slate-200 hover:border-[#FF2E63] hover:bg-white'
+                        }`}
+                      >
+                        <div className="space-y-1">
+                          <span className="text-xs font-black text-[#2B1B2E] block">{presetSec.titleText}</span>
+                          <p className="text-[10px] text-[#6B5B6E] font-medium leading-tight">{presetSec.desc}</p>
+                        </div>
+                        <span className={`text-[10px] font-black mt-2 self-end px-2 py-0.5 rounded ${
+                          isAlreadyAdded ? 'bg-teal-200 text-teal-900' : 'bg-[#FF2E63] text-white'
+                        }`}>
+                          {isAlreadyAdded ? '✓ Activa (Editar)' : '+ Incorporar'}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 2. CREADOR DE SECCIÓN A MEDIDA */}
               <div className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] space-y-4 shadow-sm">
                 <h4 className="text-xs font-black text-[#2B1B2E] uppercase flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-[#FF2E63]" /> Crear Tipo de Sección Nueva
+                  <Sparkles className="w-4 h-4 text-[#FF2E63]" /> Crear Sección Personalizada a Medida
                 </h4>
 
                 <div>
                   <label className="block text-xs font-bold text-[#2B1B2E] mb-1">
-                    Nombre de la Sección (ej: Publicaciones, Referencias, Voluntariado)
+                    Nombre de la Sección Nueva
                   </label>
                   <input
                     type="text"
                     value={newSectionTitle}
                     onChange={(e) => setNewSectionTitle(e.target.value)}
-                    placeholder="Ej: PUBLICACIONES Y ARTÍCULOS"
+                    placeholder="Ej: DOCENCIA UNIVERSITARIA, OBRAS DE ARTE"
                     className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none focus:border-[#FF2E63] transition"
                   />
                 </div>
@@ -1155,6 +1282,7 @@ export default function EditorPanel({
                     const newSection = {
                       id: newId,
                       titleText: newSectionTitle.trim(),
+                      iconId: 'custom',
                       fields: [...selectedFields],
                       records: [{}]
                     };
@@ -1177,6 +1305,7 @@ export default function EditorPanel({
 
                     setNewSectionTitle('');
                     showSuccess(`Sección '${newSection.titleText}' creada exitosamente.`);
+                    if (typeof setActiveTab === 'function') setActiveTab(newId);
                   }}
                   className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#00A8A0] hover:bg-[#00877F] text-white text-xs font-black rounded-xl shadow-md transition cursor-pointer"
                 >
@@ -1191,112 +1320,20 @@ export default function EditorPanel({
                     Tus Secciones Personalizadas ({cvData.customSections.length})
                   </h4>
 
-                  {cvData.customSections.map((cs: any, csIdx: number) => (
-                    <div key={cs.id} className="p-3 bg-slate-50 rounded-2xl border-2 border-[#EFE2C9] space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-[#FF2E63] uppercase">
-                          {cs.titleText}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            confirm({
-                              title: `¿Eliminar sección '${cs.titleText}'?`,
-                              message: 'Se eliminarán esta sección y todos sus registros.',
-                              confirmText: 'Eliminar Sección',
-                              onConfirm: () => {
-                                setCvData((prev: any) => ({
-                                  ...prev,
-                                  customSections: (prev.customSections || []).filter((s: any) => s.id !== cs.id)
-                                }));
-                                showSuccess(`Sección '${cs.titleText}' eliminada.`);
-                              }
-                            });
-                          }}
-                          className="flex items-center gap-1 text-[11px] font-bold text-red-600 hover:text-red-800 transition cursor-pointer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" /> Eliminar Sección
-                        </button>
-                      </div>
-
-                      <div className="space-y-3">
-                        {(cs.records || []).map((rec: any, rIdx: number) => (
-                          <div key={rIdx} className="p-3 bg-white rounded-xl border border-[#EFE2C9] space-y-2">
-                            <div className="flex items-center justify-between border-b pb-1">
-                              <span className="text-[11px] font-bold text-[#00A8A0]">Registro #{rIdx + 1}</span>
-                              <div className="flex items-center gap-1">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setCvData((prev: any) => {
-                                      const updatedCustom = [...(prev.customSections || [])];
-                                      const currentRecs = [...(updatedCustom[csIdx].records || [])];
-                                      currentRecs.splice(rIdx + 1, 0, { ...currentRecs[rIdx] });
-                                      updatedCustom[csIdx] = { ...updatedCustom[csIdx], records: currentRecs };
-                                      return { ...prev, customSections: updatedCustom };
-                                    });
-                                  }}
-                                  className="px-2 py-0.5 rounded bg-purple-50 text-purple-700 text-[10px] font-bold"
-                                >
-                                  Duplicar
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setCvData((prev: any) => {
-                                      const updatedCustom = [...(prev.customSections || [])];
-                                      const currentRecs = (updatedCustom[csIdx].records || []).filter((_: any, i: number) => i !== rIdx);
-                                      updatedCustom[csIdx] = { ...updatedCustom[csIdx], records: currentRecs };
-                                      return { ...prev, customSections: updatedCustom };
-                                    });
-                                  }}
-                                  className="p-1 text-red-600 font-bold"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </div>
-
-                            {(cs.fields || ['tituloOGrado', 'institucion']).map((fieldId: string) => {
-                              const fieldDef = FIELD_CATALOG[fieldId];
-                              if (!fieldDef) return null;
-                              return (
-                                <Field
-                                  key={fieldId}
-                                  label={fieldDef.label}
-                                  value={rec[fieldId] || ''}
-                                  onChange={(e: any) => {
-                                    const val = e.target.value;
-                                    setCvData((prev: any) => {
-                                      const updatedCustom = [...(prev.customSections || [])];
-                                      const currentRecs = [...(updatedCustom[csIdx].records || [])];
-                                      currentRecs[rIdx] = { ...currentRecs[rIdx], [fieldId]: val };
-                                      updatedCustom[csIdx] = { ...updatedCustom[csIdx], records: currentRecs };
-                                      return { ...prev, customSections: updatedCustom };
-                                    });
-                                  }}
-                                  placeholder={fieldDef.placeholder}
-                                />
-                              );
-                            })}
-                          </div>
-                        ))}
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCvData((prev: any) => {
-                              const updatedCustom = [...(prev.customSections || [])];
-                              const currentRecs = [...(updatedCustom[csIdx].records || []), {}];
-                              updatedCustom[csIdx] = { ...updatedCustom[csIdx], records: currentRecs };
-                              return { ...prev, customSections: updatedCustom };
-                            });
-                          }}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-black bg-[#FF2E63] text-white shadow transition cursor-pointer"
-                        >
-                          <Plus className="w-3.5 h-3.5" /> Agregar Registro a {cs.titleText}
-                        </button>
-                      </div>
+                  {cvData.customSections.map((cs: any) => (
+                    <div key={cs.id} className="p-3 bg-slate-50 rounded-2xl border-2 border-[#EFE2C9] flex items-center justify-between">
+                      <span className="text-xs font-black text-[#FF2E63] uppercase">
+                        {cs.titleText}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (typeof setActiveTab === 'function') setActiveTab(cs.id);
+                        }}
+                        className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer"
+                      >
+                        Editar Registros →
+                      </button>
                     </div>
                   ))}
                 </div>

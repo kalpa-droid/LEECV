@@ -110,6 +110,74 @@ export const ICON_REGISTRY: Record<string, IconDefinition> = {
       'M2 12l10 5 10-5'
     ]
   },
+  publicaciones: {
+    id: 'publicaciones',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M4 19.5A2.5 2.5 0 0 1 6.5 17H20',
+      'M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z',
+      'M9 7h6',
+      'M9 11h6'
+    ]
+  },
+  referencias: {
+    id: 'referencias',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2',
+      'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
+      'M22 21v-2a4 4 0 0 0-3-3.87',
+      'M16 3.13a4 4 0 0 1 0 7.75'
+    ]
+  },
+  idiomas: {
+    id: 'idiomas',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M5 8l6 6',
+      'M4 14e6 6 0 0 1 6-6h12',
+      'M2 5h12',
+      'M7 2h1',
+      'M22 22l-5-10-5 10',
+      'M14 18h6'
+    ]
+  },
+  voluntariado: {
+    id: 'voluntariado',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.72-8.72 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'
+    ]
+  },
+  premios: {
+    id: 'premios',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M6 9H4.5a2.5 2.5 0 0 1 0-5H6',
+      'M18 9h1.5a2.5 2.5 0 0 0 0-5H18',
+      'M4 22h16',
+      'M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22',
+      'M14 14.66V17c0 .55.47.98.97 1.21 1.18.54 2.03 2.03 2.03 3.79',
+      'M18 2H6v7a6 6 0 0 0 12 0V2z'
+    ]
+  },
+  patentes: {
+    id: 'patentes',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'
+    ]
+  },
+  ponencias: {
+    id: 'ponencias',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z',
+      'M19 10v2a7 7 0 0 1-14 0v-2',
+      'M12 19v3',
+      'M8 22h8'
+    ]
+  },
   custom: {
     id: 'custom',
     viewBox: '0 0 24 24',
