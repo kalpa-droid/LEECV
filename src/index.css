@@ -84,6 +84,75 @@
 .ui-border { border-color: var(--ui-border) !important; transition: border-color 0.25s ease; }
 .ui-preview-bg { background-color: var(--ui-preview-bg) !important; transition: background-color 0.25s ease; }
 
+/* REGLAS DE CASCADA DEL MOTOR: TRADUCCIÓN AUTOMÁTICA DEL 100% DE LA WEB */
+[data-ui-theme="dark"], [data-ui-theme="teal_ocean"] {
+  color-scheme: dark;
+}
+
+[data-ui-theme="dark"] .bg-white,
+[data-ui-theme="dark"] .bg-slate-50,
+[data-ui-theme="dark"] .bg-\[\#FAF7F0\],
+[data-ui-theme="dark"] .bg-\[\#F5EDDA\] {
+  background-color: var(--ui-bg-card) !important;
+  color: var(--ui-text-primary) !important;
+  border-color: var(--ui-border) !important;
+}
+
+[data-ui-theme="dark"] .bg-\[\#2B1B2E\],
+[data-ui-theme="dark"] .bg-\[\#1C121E\] {
+  background-color: var(--ui-bg-dock) !important;
+  color: var(--ui-text-primary) !important;
+}
+
+[data-ui-theme="dark"] .text-\[\#2B1B2E\],
+[data-ui-theme="dark"] .text-slate-800,
+[data-ui-theme="dark"] .text-slate-900 {
+  color: var(--ui-text-primary) !important;
+}
+
+[data-ui-theme="dark"] .text-\[\#6B5B6E\],
+[data-ui-theme="dark"] .text-slate-500,
+[data-ui-theme="dark"] .text-slate-600 {
+  color: var(--ui-text-secondary) !important;
+}
+
+[data-ui-theme="dark"] .border-\[\#EFE2C9\],
+[data-ui-theme="dark"] .border-slate-200 {
+  border-color: var(--ui-border) !important;
+}
+
+[data-ui-theme="teal_ocean"] .bg-white,
+[data-ui-theme="teal_ocean"] .bg-slate-50,
+[data-ui-theme="teal_ocean"] .bg-\[\#FAF7F0\],
+[data-ui-theme="teal_ocean"] .bg-\[\#F5EDDA\] {
+  background-color: var(--ui-bg-card) !important;
+  color: var(--ui-text-primary) !important;
+  border-color: var(--ui-border) !important;
+}
+
+[data-ui-theme="teal_ocean"] .bg-\[\#2B1B2E\],
+[data-ui-theme="teal_ocean"] .bg-\[\#1C121E\] {
+  background-color: var(--ui-bg-dock) !important;
+  color: var(--ui-text-primary) !important;
+}
+
+[data-ui-theme="teal_ocean"] .text-\[\#2B1B2E\],
+[data-ui-theme="teal_ocean"] .text-slate-800,
+[data-ui-theme="teal_ocean"] .text-slate-900 {
+  color: var(--ui-text-primary) !important;
+}
+
+[data-ui-theme="teal_ocean"] .text-\[\#6B5B6E\],
+[data-ui-theme="teal_ocean"] .text-slate-500,
+[data-ui-theme="teal_ocean"] .text-slate-600 {
+  color: var(--ui-text-secondary) !important;
+}
+
+[data-ui-theme="teal_ocean"] .border-\[\#EFE2C9\],
+[data-ui-theme="teal_ocean"] .border-slate-200 {
+  border-color: var(--ui-border) !important;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.98); }
   to { opacity: 1; transform: scale(1); }

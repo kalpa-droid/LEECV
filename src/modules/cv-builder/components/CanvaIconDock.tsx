@@ -200,7 +200,7 @@ export default function CanvaIconDock({
       <nav 
         ref={mobileNavRef}
         onWheel={handleWheelScroll}
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#1C121E]/95 backdrop-blur-md border-t border-[#6B5B6E]/40 px-2 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar shadow-2xl select-none"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-[999] ui-bg-dock border-t border-[#6B5B6E]/40 px-2 py-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar shadow-2xl select-none"
       >
         <button
           type="button"
