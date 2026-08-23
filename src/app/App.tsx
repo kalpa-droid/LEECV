@@ -32,6 +32,7 @@ import { useConfirm, ConfirmProvider } from '../shared/core/ui/ConfirmDialog';
 import { getActiveUiTheme } from '../shared/core/uiDesignSystem';
 
 import { syncPresetsFromStorage } from '../shared/core/pdf-engine/layers/presets/presetRegistry';
+import { navigation } from '../shared/core/utils/navigation';
 
 function AppContent() {
   const { cvData, setCvData, resetToBlankCV, saveCV } = useCVContext();
@@ -51,8 +52,8 @@ function AppContent() {
     getCurrentProfile().then(p => setCurrentProfile(p)).catch(() => {});
 
     if (typeof window !== 'undefined') {
-      const pathname = window.location.pathname;
-      const params = new URLSearchParams(window.location.search);
+      const pathname = navigation.getPathname();
+      const params = navigation.getSearchParams();
       const publicId = params.get('c') || params.get('publicCv') || params.get('share');
 
       if (pathname.startsWith('/c/') || pathname.startsWith('/cv/')) {

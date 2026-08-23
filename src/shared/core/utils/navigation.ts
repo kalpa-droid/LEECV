@@ -43,6 +43,17 @@ export const navigation = {
   },
 
   /**
+   * Devuelve el objeto completo de query params, para cuando hace falta leer
+   * varios a la vez (ej: 'c' O 'publicCv' O 'share' con prioridad entre sí).
+   * Sin esto, cualquier caso que necesite más de un param queda forzado a
+   * volver a `new URLSearchParams(window.location.search)` a mano.
+   */
+  getSearchParams(): URLSearchParams {
+    if (typeof window === 'undefined') return new URLSearchParams();
+    return new URLSearchParams(window.location.search);
+  },
+
+  /**
    * Retorna la ruta actual (pathname).
    */
   getPathname(): string {
