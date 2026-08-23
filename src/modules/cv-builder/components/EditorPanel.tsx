@@ -319,23 +319,6 @@ export default function EditorPanel({
       {/* Tab Form Content Body */}
       <div className="flex-1 overflow-y-auto p-5 space-y-6">
 
-        {/* Banner de Muestra (Solo Lectura) */}
-        {cvData?.id === 'cv_ejemplo_estandar' && (
-          <div className="p-3.5 bg-[#FFF1C2] border-2 border-[#FFC93C] rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-2 shadow-md">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl flex-shrink-0">📌</span>
-              <div>
-                <h4 className="text-xs font-black text-[#2B1B2E] uppercase tracking-wide">
-                  VISTA DE MUESTRA DE EJEMPLO (SÓLO LECTURA)
-                </h4>
-                <p className="text-[11px] font-bold text-[#4A3B4E] leading-relaxed">
-                  Para crear presiona, el botón, "Nuevo"
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* ========================================================================= */}
         {/* TAB 1: DATOS PERSONALES */}
         {/* ========================================================================= */}
@@ -1352,16 +1335,14 @@ export default function EditorPanel({
                 <FolderOpen className="w-4 h-4 text-[#00A8A0]" /> Abrir Mis Documentos Guardados
               </h3>
 
-              {cvData?.id !== 'cv_ejemplo_estandar' && (
-                <button
-                  onClick={handleSaveFromPanel}
-                  disabled={isSavingFromPanel}
-                  className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1"
-                >
-                  <Save className="w-3.5 h-3.5" />
-                  <span>{isSavingFromPanel ? 'Guardando...' : 'Guardar Actual'}</span>
-                </button>
-              )}
+              <button
+                onClick={handleSaveFromPanel}
+                disabled={isSavingFromPanel}
+                className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1 cursor-pointer"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>{isSavingFromPanel ? 'Guardando...' : 'Guardar Actual'}</span>
+              </button>
             </div>
 
             <div className="space-y-2.5">

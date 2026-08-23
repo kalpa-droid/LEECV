@@ -139,11 +139,6 @@ function AppContent() {
   const triggerPdfGeneration = handleStartPDFGeneration;
 
   const handleExportPDFClick = () => {
-    if (cvData?.id === 'cv_ejemplo_estandar') {
-      showInfo('Para comenzar a crear tu propio currículum, presiona el botón "+ Nuevo"');
-      return;
-    }
-
     if (cvData?.activePresetId === 'tarjeta-personal') {
       setIsCardExportOpen(true);
       return;
@@ -153,11 +148,6 @@ function AppContent() {
   };
 
   const handleSaveCVClick = async () => {
-    if (cvData?.id === 'cv_ejemplo_estandar') {
-      showInfo('Para comenzar a crear tu propio currículum, presiona el botón "+ Nuevo"');
-      return;
-    }
-
     setIsSaving(true);
     try {
       const res = await saveCV();
@@ -175,11 +165,6 @@ function AppContent() {
   };
 
   const handleNewCV = async () => {
-    if (cvData?.id === 'cv_ejemplo_estandar') {
-      resetToBlankCV();
-      setActiveTab('personales');
-      return;
-    }
 
     confirm({
       title: '¿Iniciar nuevo currículum?',
