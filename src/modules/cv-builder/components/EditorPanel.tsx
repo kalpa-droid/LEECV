@@ -1000,54 +1000,74 @@ export default function EditorPanel({
             <div className="p-4 bg-white rounded-2xl border-2 border-[#EFE2C9] space-y-3 shadow-sm">
               <h4 className="text-xs font-black text-[#2B1B2E] uppercase">Datos del Pie de Firma</h4>
               
+              {/* 1. Nombre Automático (Abreviaturas / Título + Nombres + Apellidos) */}
               <div>
-                <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">Nombre del Firmante</label>
-                <input 
-                  type="text"
-                  value={cvData.signature?.signerName !== undefined ? cvData.signature.signerName : (cvData.personalInfo?.fullName || '')}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setCvData(prev => ({
-                      ...prev,
-                      signature: { ...prev.signature, signerName: val }
-                    }));
-                  }}
-                  placeholder="Ej: MÓNICA DANIELA BURGOS"
-                  className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-                />
+                <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1 flex items-center justify-between">
+                  <span>Nombre del Firmante</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 font-extrabold">Automático</span>
+                </label>
+                <div className="w-full text-xs p-2.5 rounded-xl border border-[#EFE2C9] bg-slate-50 text-[#2B1B2E] font-extrabold shadow-inner">
+                  {`${cvData.personalInfo?.titlePrefix ? cvData.personalInfo.titlePrefix + ' ' : ''}${cvData.personalInfo?.givenNames || ''} ${cvData.personalInfo?.surname || ''}`.trim() || cvData.personalInfo?.fullName || 'Postulante'}
+                </div>
               </div>
 
-              <div>
-                <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">Cargo / Rol</label>
-                <input 
-                  type="text"
-                  value={cvData.signature?.signerRole !== undefined ? cvData.signature.signerRole : (cvData.roles?.[0] || '')}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setCvData(prev => ({
-                      ...prev,
-                      signature: { ...prev.signature, signerRole: val }
-                    }));
-                  }}
-                  placeholder="Ej: Profesora de Educación Secundaria en Lengua y Literatura"
-                  className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
-                />
-              </div>
+              {/* 2. Selector de Título Profesional (de sección Profesión) */}
+              {(() => {
+                const titleList: string[] = Array.from(new Set([
+                  ...(cvData.profession || []).map((p: any) => p.degree).filter(Boolean),
+                  ...(cvData.education || []).map((e: any) => e.degree).filter(Boolean)
+                ]));
+                const currentSelectedRole = cvData.signature?.signerRole !== undefined 
+                  ? cvData.signature.signerRole 
+                  : (titleList[0] || '');
 
+                return (
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">
+                      Título Profesional (Registros de Profesión)
+                    </label>
+                    {titleList.length > 0 ? (
+                      <select
+                        value={currentSelectedRole}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setCvData((prev: any) => ({
+                            ...prev,
+                            signature: { ...(prev.signature || {}), signerRole: val }
+                          }));
+                        }}
+                        className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] cursor-pointer transition"
+                      >
+                        {titleList.map((t, idx) => (
+                          <option key={idx} value={t}>{t}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div className="w-full text-xs p-2.5 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 font-bold">
+                        ⚠️ No hay títulos agregados en la sección "Títulos Profesionales".
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* 3. Selector de Fecha con Calendario */}
               <div>
-                <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1">Lugar y Fecha</label>
+                <label className="block text-[11px] font-bold text-[#2B1B2E] mb-1 flex items-center justify-between">
+                  <span>Fecha de Firma</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 font-extrabold">Calendario</span>
+                </label>
                 <input 
-                  type="text"
-                  value={cvData.signature?.date !== undefined ? cvData.signature.date : (cvData.personalInfo?.cityProvince ? `${cvData.personalInfo.cityProvince.split(',')[0]}, ${cvData.personalInfo.year || '2025'}` : '')}
+                  type="date"
+                  value={cvData.signature?.date || new Date().toISOString().split('T')[0]}
                   onChange={(e) => {
                     const val = e.target.value;
-                    setCvData(prev => ({
+                    setCvData((prev: any) => ({
                       ...prev,
-                      signature: { ...prev.signature, date: val }
+                      signature: { ...(prev.signature || {}), date: val }
                     }));
                   }}
-                  placeholder="Ej: Salta, 2025"
-                  className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] placeholder-[#6B5B6E]/50 font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] transition"
+                  className="w-full text-xs p-2.5 rounded-xl border-2 border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none focus:border-[#FF2E63] focus:ring-2 focus:ring-[#FFD9E3] cursor-pointer transition"
                 />
               </div>
             </div>

@@ -323,6 +323,11 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       fontSize: preset.typography.caption,
       color: '#64748b'
     },
+    signerDate: {
+      fontSize: preset.typography.caption - 1,
+      color: '#94a3b8',
+      marginTop: 2
+    },
     certPage: {
       backgroundColor: '#ffffff',
       padding: 24,
@@ -607,7 +612,12 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
               <View style={styles.signatureLine} />
             )}
             <Text style={styles.signerName}>{String(f.signerName || '')}</Text>
-            <Text style={styles.signerRole}>{String(f.signerRole || '')}</Text>
+            {f.signerRole ? <Text style={styles.signerRole}>{String(f.signerRole)}</Text> : null}
+            {f.date ? (
+              <Text style={styles.signerDate}>
+                {String(f.date).includes('-') ? String(f.date).split('-').reverse().join('/') : String(f.date)}
+              </Text>
+            ) : null}
           </View>
         </View>
       );

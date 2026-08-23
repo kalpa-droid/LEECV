@@ -203,6 +203,12 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   }
 
   // Firma Digital (Main)
+  const titlePrefix = personalInfo?.titlePrefix ? `${personalInfo.titlePrefix} ` : '';
+  const autoSignerName = `${titlePrefix}${personalInfo?.givenNames || ''} ${personalInfo?.surname || ''}`.trim() || personalInfo?.fullName || '';
+  const selectedRole = signature?.signerRole || (sortedProfession?.[0]?.degree || education?.[0]?.degree || '');
+  const todayISO = new Date().toISOString().split('T')[0];
+  const sigDate = signature?.date || todayISO;
+
   sections.push({
     id: 'firma',
     titleText: 'FIRMA REGISTRADA',
@@ -212,8 +218,9 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
         kind: 'freeform',
         targetSectorRole: 'main',
         fields: {
-          signerName: signature?.signerName || `${personalInfo.surname || ''} ${personalInfo.givenNames || ''}`.trim(),
-          signerRole: signature?.signerRole || 'Firma Registrada',
+          signerName: autoSignerName,
+          signerRole: selectedRole,
+          date: sigDate,
           dataUrl: signature?.dataUrl || ''
         }
       }
