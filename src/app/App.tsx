@@ -157,14 +157,17 @@ function AppContent() {
   const cycleUITheme = () => {
     const current = cvData?.uiTheme || 'default';
     const nextTheme = current === 'default' ? 'dark' : current === 'dark' ? 'teal_ocean' : 'default';
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-ui-theme', nextTheme);
+    }
     setCvData((prev: any) => ({ ...prev, uiTheme: nextTheme }));
-    const labels: Record<string, string> = {
-      default: '☀️ Editorial Warm (Cálido)',
-      dark: '🌙 Cyber Dark (Nocturno)',
-      teal_ocean: '🌊 Midnight Ocean (Teal)'
-    };
-    showInfo(`Fondo de Interfaz: ${labels[nextTheme]}`);
   };
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-ui-theme', cvData?.uiTheme || 'default');
+    }
+  }, [cvData?.uiTheme]);
 
   const toggleDocumentPresetMode = () => {
     const isCard = cvData?.activePresetId === 'tarjeta-personal';

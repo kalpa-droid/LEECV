@@ -92,7 +92,7 @@ export function RepeatableSection({
       {/* Single Line Header Toggle & Add Button */}
       <div className={`flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl border mb-3 transition ${
         isVisible 
-          ? 'bg-white border-[#EFE2C9] text-[#2B1B2E] shadow-sm' 
+          ? 'ui-bg-card ui-border ui-text-primary shadow-sm' 
           : 'bg-slate-200 border-slate-300 text-slate-500 opacity-75'
       }`}>
         <span className="text-xs font-black uppercase tracking-wide">
@@ -126,15 +126,15 @@ export function RepeatableSection({
       </div>
 
       {isVisible && designKey && (
-        <div className="p-2.5 bg-white rounded-xl border border-[#EFE2C9] mb-3 flex items-center justify-between text-xs">
-          <span className="font-bold text-[#2B1B2E]">Estilo de Contenedores ({sectionTitle})</span>
+        <div className="p-2.5 ui-bg-card ui-border ui-text-primary rounded-xl border mb-3 flex items-center justify-between text-xs">
+          <span className="font-bold">Estilo de Contenedores ({sectionTitle})</span>
           <select
             value={cvData.recordCardDesigns?.[designKey] || 'accent-card'}
             onChange={(e) => setCvData(prev => ({
               ...prev,
               recordCardDesigns: { ...(prev.recordCardDesigns || {}), [designKey]: e.target.value }
             }))}
-            className="text-xs p-1.5 rounded-lg border border-[#EFE2C9] bg-white text-[#2B1B2E] font-bold outline-none cursor-pointer"
+            className="text-xs p-1.5 rounded-lg ui-bg-card ui-border ui-text-primary font-bold outline-none cursor-pointer"
           >
             <option value="accent-card">🎨 Borde Acento</option>
             <option value="primary-card">🔷 Borde Primario</option>
@@ -147,7 +147,7 @@ export function RepeatableSection({
       {isVisible && (
         <div className="space-y-4">
           {items.map((item, idx) => (
-            <div key={idx} className="p-3.5 bg-white rounded-2xl border-2 border-[#EFE2C9] shadow-sm space-y-3">
+            <div key={idx} className="p-3.5 ui-bg-card ui-border ui-text-primary rounded-2xl border-2 shadow-sm space-y-3">
               <div className="flex items-center justify-between border-b pb-1 border-slate-200">
                 <span className="text-xs font-bold text-[#00A8A0]">
                   {itemTitlePrefix} #{idx + 1}

@@ -24,7 +24,7 @@ export function Field({
   maxLength,
   ...props
 }: FieldProps) {
-  const baseInputStyle = `w-full rounded-[10px] border px-3 py-2 text-[12px] text-[${colorSystem.neutral.textPrimary}] bg-white outline-none transition-all placeholder:text-[${colorSystem.neutral.textMuted}] shadow-sm focus:border-[${colorSystem.accent.base}] focus:ring-2 focus:ring-[${colorSystem.accent.muted}]`;
+  const baseInputStyle = `w-full rounded-[10px] border px-3 py-2 text-[12px] ui-bg-card ui-text-primary ui-border outline-none transition-all placeholder:text-[${colorSystem.neutral.textMuted}] shadow-sm focus:border-[${colorSystem.accent.base}] focus:ring-2 focus:ring-[${colorSystem.accent.muted}]`;
 
   const effectiveMaxLength = maxLength ?? (Component === 'textarea' ? 2000 : 250);
 
@@ -33,8 +33,7 @@ export function Field({
       {label && (
         <label
           htmlFor={id}
-          className={`${typeScale.fieldLabel} block`}
-          style={{ color: colorSystem.neutral.textPrimary }}
+          className={`${typeScale.fieldLabel} block ui-text-primary`}
         >
           {label}
         </label>
@@ -43,7 +42,6 @@ export function Field({
       <Component
         id={id}
         maxLength={effectiveMaxLength}
-        style={{ borderColor: error ? colorSystem.status.danger.base : colorSystem.neutral.border }}
         className={`${baseInputStyle} ${className}`}
         {...props}
       />
