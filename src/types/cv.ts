@@ -119,6 +119,10 @@ export interface CVData {
    * acá y layout.layoutStyle) y ninguno se conectaba de verdad al render.
    */
   activePresetId?: string;
+  colorPresetId?: string;
+  typographyPresetId?: string;
+  columnLayoutPresetId?: string;
+  manualOverrides?: Record<string, { highlightColorOverride?: string }>;
   theme?: ThemeConfig;
   updatedAt?: string;
   [key: string]: any;

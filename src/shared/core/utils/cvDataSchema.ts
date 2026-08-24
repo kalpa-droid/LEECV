@@ -16,6 +16,12 @@ export function sanitizeCvData(rawCvData: any = {}) {
     // y ninguno se conectaba de verdad al motor de render — activePresetId es el único
     // que el motor realmente lee (ver presetRegistry.ts / CVPreview.tsx).
     activePresetId: data.activePresetId || 'cv-clasico',
+    colorPresetId: data.colorPresetId || undefined,
+    typographyPresetId: data.typographyPresetId || undefined,
+    columnLayoutPresetId: data.columnLayoutPresetId || undefined,
+    manualOverrides: (typeof data.manualOverrides === 'object' && data.manualOverrides !== null)
+      ? data.manualOverrides
+      : {},
     coverFeaturedEducationId: data.coverFeaturedEducationId ?? null,
     coverFeaturedProfessionId: data.coverFeaturedProfessionId ?? null,
 

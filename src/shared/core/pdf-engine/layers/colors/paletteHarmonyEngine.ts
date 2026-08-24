@@ -15,7 +15,7 @@
 import { hexToHSL, hslToHex, getContrastRatio } from './colorSystem';
 import { ColorPalette } from '../presets/presetSchema';
 
-export type HarmonyScheme = 'analogous' | 'complementary' | 'split-complementary' | 'monochromatic';
+export type HarmonyScheme = 'analogous' | 'complementary' | 'split-complementary' | 'monochromatic' | 'triadic';
 
 export function generateHarmoniousPalette(
   seedHex: string,
@@ -38,6 +38,11 @@ export function generateHarmoniousPalette(
     case 'split-complementary':
       secondaryH = (h + 150) % 360;
       accentH = (h + 210) % 360;
+      break;
+
+    case 'triadic':
+      secondaryH = (h + 120) % 360;
+      accentH = (h + 240) % 360;
       break;
 
     case 'monochromatic':

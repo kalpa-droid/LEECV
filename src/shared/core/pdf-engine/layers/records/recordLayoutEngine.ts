@@ -36,6 +36,41 @@ export interface StructuredRecordLayout {
   hasData: boolean;
 }
 
+export function inferPdfRole(fieldId: string, val: string): 'title' | 'subtitle' | 'badge' | 'extra' | 'description' {
+  const lowerId = fieldId.toLowerCase();
+  const cleanVal = val.trim();
+
+  // 1. Pattern matching on fieldId keywords
+  if (/fecha|periodo|year|año|hora|date|duration|hours|duracion|promedio|estado|modalidad/i.test(lowerId)) {
+    return 'badge';
+  }
+  if (/url|link|web|github|linkedin|email|site|sitio|adjunto|pdf/i.test(lowerId)) {
+    return 'extra';
+  }
+  if (/desc|block|detalle|resumen|summary|abstract|contenido|bio|quote|cita/i.test(lowerId)) {
+    return 'description';
+  }
+  if (/subtit|instituc|empresa|company|org|entidad|autor|editorial/i.test(lowerId)) {
+    return 'subtitle';
+  }
+  if (/titul|title|grado|degree|nombre|name|cargo|puesto|role|herramienta/i.test(lowerId)) {
+    return 'title';
+  }
+
+  // 2. Data format / length heuristics as fallback
+  if (/^https?:\/\//i.test(cleanVal) || cleanVal.includes('@')) {
+    return 'extra';
+  }
+  if (/^\d{4}(\s*-\s*\d{4}|\s*-\s*Presente)?$/i.test(cleanVal) || /^\d+\s*(hs|hrs|horas|meses|años)$/i.test(cleanVal)) {
+    return 'badge';
+  }
+  if (cleanVal.length > 120 || cleanVal.includes('\n')) {
+    return 'description';
+  }
+
+  return 'extra';
+}
+
 export function buildStructuredRecordLayout(
   record: Record<string, any>,
   allowedFields?: string[]
@@ -100,20 +135,18 @@ export function buildStructuredRecordLayout(
     hasData = true;
     const def: FieldDefinition | undefined = FIELD_CATALOG[fieldId];
 
-    if (!def) {
-      if (!header) header = val;
-      else extras.push({ id: fieldId, label: fieldId, value: val, type: 'text' });
-      continue;
-    }
+    const effectiveRole = def ? def.pdfRole : inferPdfRole(fieldId, val);
+    const fieldLabel = def ? def.label : fieldId;
+    const fieldType = def ? def.type : (effectiveRole === 'extra' && /^https?:\/\//i.test(val) ? 'url' : 'text');
 
-    switch (def.pdfRole) {
+    switch (effectiveRole) {
       case 'title':
         if (!header) {
           header = val;
         } else if (!subheader) {
           subheader = val;
         } else {
-          extras.push({ id: fieldId, label: def.label, value: val, type: def.type });
+          extras.push({ id: fieldId, label: fieldLabel, value: val, type: fieldType });
         }
         break;
 
@@ -121,14 +154,14 @@ export function buildStructuredRecordLayout(
         if (!subheader) {
           subheader = val;
         } else {
-          extras.push({ id: fieldId, label: def.label, value: val, type: def.type });
+          extras.push({ id: fieldId, label: fieldLabel, value: val, type: fieldType });
         }
         break;
 
       case 'badge':
         badges.push({
           id: fieldId,
-          label: def.label,
+          label: fieldLabel,
           value: val
         });
         break;
@@ -136,9 +169,9 @@ export function buildStructuredRecordLayout(
       case 'extra':
         extras.push({
           id: fieldId,
-          label: def.label,
+          label: fieldLabel,
           value: val,
-          type: def.type === 'url' ? 'url' : 'text'
+          type: fieldType === 'url' ? 'url' : 'text'
         });
         break;
 

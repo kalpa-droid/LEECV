@@ -20,6 +20,13 @@ export interface RecordScaleRatios {
 }
 
 export interface RecordTypographyScale {
+  title: number;
+  subtitle: number;
+  badge: number;
+  extra: number;
+  description: number;
+
+  // Compatibilidad retroactiva
   recordTitle: number;
   recordSubtitle: number;
   recordMeta: number;
@@ -41,12 +48,26 @@ export function deriveRecordScale(
   const metaRatio = ratios?.meta || 0.92;
   const extraRatio = ratios?.extra || 0.85;
 
+  const titleSize = clamp(base.itemTitle || 10.5, 9.5, 20);
+  const subSize = clamp(bodySize * subtitleRatio, 8.5, 16);
+  const bodySizeClamped = clamp(bodySize, 8.0, 14);
+  const metaSize = clamp(bodySize * metaRatio, 7.5, 12);
+  const extraSize = clamp(bodySize * extraRatio, 7.5, 11);
+  const lh = base.lineHeightBody || 1.3;
+
   return {
-    recordTitle: clamp(base.itemTitle || 10.5, 9.5, 20),
-    recordSubtitle: clamp(bodySize * subtitleRatio, 8.5, 16),
-    recordBody: clamp(bodySize, 8.0, 14),
-    recordMeta: clamp(bodySize * metaRatio, 7.5, 12),
-    recordExtra: clamp(bodySize * extraRatio, 7.5, 11),
-    lineHeightBody: base.lineHeightBody || 1.3
+    title: titleSize,
+    subtitle: subSize,
+    badge: metaSize,
+    description: bodySizeClamped,
+    extra: extraSize,
+
+    // Aliases de compatibilidad
+    recordTitle: titleSize,
+    recordSubtitle: subSize,
+    recordBody: bodySizeClamped,
+    recordMeta: metaSize,
+    recordExtra: extraSize,
+    lineHeightBody: lh
   };
 }

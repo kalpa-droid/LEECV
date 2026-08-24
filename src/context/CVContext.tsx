@@ -128,13 +128,25 @@ export function CVProvider({ children }: { children: ReactNode }) {
   };
 
   const applyThemePreset = (preset: any) => {
-    setCvData((prev) => ({
-      ...prev,
-      layout: {
-        ...prev.layout,
-        ...preset
+    setCvData((prev) => {
+      const hasManualOverrides = prev.manualOverrides && Object.keys(prev.manualOverrides).length > 0;
+      if (hasManualOverrides && typeof window !== 'undefined') {
+        const confirmChange = window.confirm(
+          'Advertencia: Cambiar la plantilla restablecerá los ajustes manuales aplicados a registros individuales. ¿Deseas continuar?'
+        );
+        if (!confirmChange) return prev;
       }
-    }));
+
+      return {
+        ...prev,
+        activePresetId: preset.id || preset.presetId || prev.activePresetId,
+        manualOverrides: {},
+        layout: {
+          ...prev.layout,
+          ...preset
+        }
+      };
+    });
   };
 
   const toggleSectionVisibility = (sectionKey: string) => {

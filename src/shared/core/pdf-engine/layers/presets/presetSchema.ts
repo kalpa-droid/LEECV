@@ -21,6 +21,26 @@ export interface ColorPalette {
   textOnPrimary: string;
 }
 
+export interface ColorPreset {
+  id: string;
+  name: string;
+  seedHex?: string;
+  harmonyScheme?: 'monochromatic' | 'analogous' | 'complementary' | 'triadic';
+  palette: ColorPalette;
+}
+
+export interface TypographyPreset {
+  id: string;
+  name: string;
+  typography: TypographyScale;
+}
+
+export interface ColumnLayoutPreset {
+  id: string;
+  name: string;
+  sectionOrder: { sectorRole: string; sectionIds: string[] }[];
+}
+
 export interface TypographyScale {
   /** pt de fuente por nivel de jerarquía */
   title: number;
@@ -50,6 +70,9 @@ export interface TypographyScale {
 export interface Preset {
   id: string;
   name: string;
+  colorPresetId?: string;
+  typographyPresetId?: string;
+  columnLayoutPresetId?: string;
   /** A qué categoría de página aplica — un preset de tarjeta no debería poder elegir A4 */
   pageCategory: 'documento' | 'tarjeta' | 'afiche';
   pageSizeId: string;
@@ -61,7 +84,7 @@ export interface Preset {
   palette: ColorPalette;
   paletteSeed?: {
     seedHex: string;
-    harmonyScheme?: 'analogous' | 'complementary' | 'split-complementary' | 'monochromatic';
+    harmonyScheme?: 'analogous' | 'complementary' | 'split-complementary' | 'monochromatic' | 'triadic';
   };
   typography: TypographyScale;
 
@@ -114,3 +137,5 @@ export interface Preset {
     showCropMarksAndBleed?: boolean;
   };
 }
+
+export type TemplatePreset = Preset;

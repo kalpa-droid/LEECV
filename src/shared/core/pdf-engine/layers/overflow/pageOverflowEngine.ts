@@ -12,7 +12,7 @@
    - Mantiene los `pageTextObjects` (números de página, marcas fijas) en cada hoja resultante.
  */
 
-import { Preset } from '../presets/presetSchema';
+import { Preset, TypographyScale } from '../presets/presetSchema';
 import { ContentSection } from '../records/recordTypes';
 import { MARGIN_PRESETS } from '../margins/marginPresets';
 import { buildStructuredRecordLayout } from '../records/recordLayoutEngine';
@@ -30,35 +30,47 @@ export interface OverflowResult {
 
 import { deriveRecordScale } from '../typography/typographyHierarchyEngine';
 import { resolveRecordLayout, RecordLayoutTemplate } from '../records/recordSpatialLayoutEngine';
+import { arrangeRecordFields } from '../records/fieldPlacementEngine';
 
 const A4_HEIGHT_PT = 841.89;
 
 /**
  * Estima la altura en puntos (pt) ocupada por un registro estructurado.
  */
-function estimateRecordHeightPt(record: any, typography: any, layoutTemplate?: RecordLayoutTemplate): number {
-  const layout = buildStructuredRecordLayout(record.fields || record);
+export function estimateRecordHeightPt(
+  record: any,
+  typography: TypographyScale,
+  layoutTemplate: RecordLayoutTemplate = 'stacked-clean'
+): number {
+  const structured = buildStructuredRecordLayout(record.fields || record);
+  const arranged = arrangeRecordFields(structured, layoutTemplate);
   const scale = deriveRecordScale(typography, typography.recordScaleRatios);
   const spatial = resolveRecordLayout(layoutTemplate);
+
   let height = 0;
 
-  if (spatial.isInlineCompact) {
-    // Título y Subtítulo integrados en la misma línea
-    if (layout.header || layout.subheader) height += Math.max(scale.recordTitle, scale.recordSubtitle) + 4;
-  } else {
-    if (layout.header) height += scale.recordTitle + 4;
-    if (layout.subheader) height += scale.recordSubtitle + 3;
+  if (arranged.headerTitle || arranged.headerSubtitle) {
+    if (spatial.isInlineCompact) {
+      height += Math.max(scale.title, scale.subtitle) + 4;
+    } else {
+      if (arranged.headerTitle) height += scale.title + 4;
+      if (arranged.headerSubtitle) height += scale.subtitle + 3;
+    }
   }
 
-  if (layout.badges.length > 0) height += scale.recordMeta + 4;
-  if (layout.extras.length > 0) height += layout.extras.length * (scale.recordExtra + 3);
-
-  if (layout.block) {
-    const lines = layout.block.split('\n').length;
-    height += lines * (scale.recordBody * scale.lineHeightBody);
+  if (arranged.inlineBadges.length > 0) {
+    height += scale.badge + 4;
   }
 
-  // Padding y márgenes del contenedor del arquetipo
+  if (arranged.extrasList.length > 0) {
+    height += arranged.extrasList.length * (scale.extra + 3);
+  }
+
+  if (arranged.blockDescription) {
+    const lines = arranged.blockDescription.split('\n').length;
+    height += lines * (scale.description * scale.lineHeightBody);
+  }
+
   const paddingTotal = spatial.containerStyle.padding * 2;
   const marginBottom = spatial.containerStyle.marginBottom;
 

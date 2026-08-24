@@ -7,6 +7,8 @@ import { resolveDecorativeStyles } from '../decorations/decorativeLayerEngine';
 import { deriveRecordScale } from '../typography/typographyHierarchyEngine';
 import { resolveAccentTarget } from '../colors/accentApplicationEngine';
 import { resolveRecordLayout } from '../records/recordSpatialLayoutEngine';
+import { arrangeRecordFields } from '../records/fieldPlacementEngine';
+import { resolveColorForRole } from '../colors/surfaceAwareColorEngine';
 
 interface CardObjectRendererProps {
   preset?: Preset;
@@ -71,10 +73,24 @@ export function CardObjectRenderer({
     typographyBinding.caption
   );
 
-  let titleColor = resolvedAccent.titleColor;
-  let badgeColor = resolvedAccent.badgeColor;
-  let subtitleColor = typographyBinding.caption;
-  let descColor = typographyBinding.body;
+  const structuredInput = {
+    header: title,
+    subheader: subtitle || null,
+    badges: [
+      ...(dateOrBadge ? [{ id: 'dateOrBadge', label: 'Período', value: dateOrBadge }] : []),
+      ...badges
+    ],
+    extras: extras.map(e => ({ id: e.id, label: e.label, value: e.value, type: e.type as any })),
+    block: description || null,
+    hasData: Boolean(title || subtitle || dateOrBadge || badges.length > 0 || extras.length > 0 || description)
+  };
+
+  const arranged = arrangeRecordFields(structuredInput, design.layoutTemplate);
+
+  const titleColor = resolveColorForRole('title', 'text', effectiveBgColor, rolesColor);
+  const subtitleColor = resolveColorForRole('subtitle', 'text', effectiveBgColor, rolesColor);
+  const badgeColor = resolveColorForRole('badge', 'highlight', effectiveBgColor, rolesColor);
+  const descColor = resolveColorForRole('description', 'text', effectiveBgColor, rolesColor);
 
   const cardBgColor = decStyles?.cardContainerStyle.backgroundColor ?? (
     spatialLayout.isBoxed ? 'rgba(0,0,0,0.025)' : backgroundColor
@@ -156,15 +172,16 @@ export function CardObjectRenderer({
   return (
     <View style={styles.cardContainer} wrap={false}>
       <View style={styles.headerRow}>
-        <Text style={styles.titleText}>{title}</Text>
-        {dateOrBadge ? <Text style={styles.badgeText}>{dateOrBadge}</Text> : null}
+        <Text style={styles.titleText}>{arranged.headerTitle || title}</Text>
+        {arranged.sideBadge ? <Text style={styles.badgeText}>{arranged.sideBadge}</Text> : null}
       </View>
-      {subtitle ? <Text style={styles.subtitleText}>{subtitle}</Text> : null}
 
-      {/* Dynamic Badge Bar (Collapses cleanly when empty) */}
-      {badges.length > 0 && (
+      {arranged.headerSubtitle ? <Text style={styles.subtitleText}>{arranged.headerSubtitle}</Text> : null}
+
+      {/* Dynamic Badge Bar */}
+      {arranged.inlineBadges.length > 0 && (
         <View style={styles.badgeRow}>
-          {badges.map((b) => (
+          {arranged.inlineBadges.map((b) => (
             <Text key={b.id} style={styles.badgePill}>
               {b.label}: {b.value}
             </Text>
@@ -172,18 +189,19 @@ export function CardObjectRenderer({
         </View>
       )}
 
-      {/* Dynamic Extra Lines (Collapses cleanly when empty) */}
-      {extras.length > 0 && (
+      {/* Extras Rows */}
+      {arranged.extrasList.length > 0 && (
         <View style={styles.extraRow}>
-          {extras.map((ex) => (
-            <Text key={ex.id} style={styles.extraText}>
-              📌 {ex.value}
+          {arranged.extrasList.map((e) => (
+            <Text key={e.id} style={styles.extraText}>
+              • {e.label}: {e.value}
             </Text>
           ))}
         </View>
       )}
 
-      {description ? <Text style={styles.descText}>{description}</Text> : null}
+      {/* Block Description */}
+      {arranged.blockDescription ? <Text style={styles.descText}>{arranged.blockDescription}</Text> : null}
     </View>
   );
 }

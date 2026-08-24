@@ -8,7 +8,7 @@
  * de diseño de alto nivel en lugar de declarar cientos de hex y tokens desarticulados.
  */
 
-import { Preset } from './presetSchema';
+import { Preset, ColorPreset, TypographyPreset, ColumnLayoutPreset } from './presetSchema';
 import { generateHarmoniousPalette, HarmonyScheme } from '../colors/paletteHarmonyEngine';
 import { RecordScaleRatios } from '../typography/typographyHierarchyEngine';
 
@@ -20,29 +20,38 @@ export interface PresetSeed {
   marginPresetId?: string;
   seedHex: string;
   harmonyScheme?: HarmonyScheme;
+  colorPreset?: ColorPreset;
+  typographyPreset?: TypographyPreset;
+  columnLayoutPreset?: ColumnLayoutPreset;
   fontFamily?: string;
   recordScaleRatios?: RecordScaleRatios;
   basePreset: Preset; // Estructura geométrica y sectores base
 }
 
 export function composePreset(seed: PresetSeed): Preset {
-  const generatedPalette = generateHarmoniousPalette(seed.seedHex, seed.harmonyScheme || 'analogous');
+  const seedHex = seed.colorPreset?.seedHex || seed.seedHex;
+  const scheme = seed.colorPreset?.harmonyScheme || seed.harmonyScheme || 'analogous';
+  const generatedPalette = seed.colorPreset?.palette || generateHarmoniousPalette(seedHex, scheme);
 
   return {
     ...seed.basePreset,
     id: seed.id,
     name: seed.name,
+    colorPresetId: seed.colorPreset?.id,
+    typographyPresetId: seed.typographyPreset?.id,
+    columnLayoutPresetId: seed.columnLayoutPreset?.id,
     pageCategory: seed.pageCategory || seed.basePreset.pageCategory,
     pageSizeId: seed.pageSizeId || seed.basePreset.pageSizeId,
     marginPresetId: seed.marginPresetId || seed.basePreset.marginPresetId,
     palette: generatedPalette,
+    sectionOrder: seed.columnLayoutPreset?.sectionOrder || seed.basePreset.sectionOrder,
     paletteSeed: {
-      seedHex: seed.seedHex,
-      harmonyScheme: seed.harmonyScheme || 'analogous'
+      seedHex: seedHex,
+      harmonyScheme: scheme
     },
     typography: {
-      ...seed.basePreset.typography,
-      fontFamily: seed.fontFamily || seed.basePreset.typography.fontFamily,
+      ...(seed.typographyPreset?.typography || seed.basePreset.typography),
+      fontFamily: seed.fontFamily || seed.typographyPreset?.typography.fontFamily || seed.basePreset.typography.fontFamily,
       recordScaleRatios: seed.recordScaleRatios || seed.basePreset.typography.recordScaleRatios
     }
   };
