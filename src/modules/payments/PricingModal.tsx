@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Check, Crown, Zap, Shield, Sparkles, Cloud, Smartphone } from 'lucide-react';
 import { iniciarPagoMercadoPago, iniciarPagoLemonSqueezy } from './paymentService';
 import { useToast } from '../../shared/core/ui/Toast';
-import { colorSystem } from '../../shared/core/uiDesignSystem';
+import {} from '../../shared/core/uiDesignSystem';
 import { Modal } from '../../shared/core/ui/Modal';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
 

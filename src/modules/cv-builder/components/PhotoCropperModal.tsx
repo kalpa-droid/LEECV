@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Camera, ZoomIn, ZoomOut, RotateCw, Check, Upload } from 'lucide-react';
 import { validateImageFile } from '../../../shared/core/utils/validateFile';
 import { useToast } from '../../../shared/core/ui/Toast';
-import { colorSystem, button } from '../../../shared/core/uiDesignSystem';
+import { button } from '../../../shared/core/uiDesignSystem';
 import { Modal } from '../../../shared/core/ui/Modal';
 
 export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, currentPhoto }: any) {

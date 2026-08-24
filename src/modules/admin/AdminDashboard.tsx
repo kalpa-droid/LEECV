@@ -15,8 +15,8 @@ import { useConfirm } from '../../shared/core/ui/ConfirmDialog';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
 import { 
   Users, Crown, LogOut, RefreshCw, CreditCard, HardDrive, 
-  ShieldCheck, CheckCircle2, MessageSquare, AlertCircle, Sparkles, 
-  Search, ChevronLeft, ChevronRight, Bell, Check, X, Layout as LayoutIcon 
+  ShieldCheck, CheckCircle2, AlertCircle, Sparkles, 
+  Search, ChevronLeft, ChevronRight, Bell, Check, Layout as LayoutIcon 
 } from 'lucide-react';
 
 export default function AdminDashboard() {

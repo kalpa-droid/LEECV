@@ -9,8 +9,7 @@ import {
   RotateCw,
   Check,
   Sparkles,
-  Info,
-  Layout,
+    Layout,
   Columns3,
   FolderOpen,
   Save,
@@ -18,12 +17,11 @@ import {
   FileText
 } from 'lucide-react';
 import { fontOptions } from '../../../data/fontOptions';
-import { getColumnAssignableSections, getRecordListSections, panelPresets } from '../../../shared/core/sectionRegistry';
+import { getColumnAssignableSections, panelPresets } from '../../../shared/core/sectionRegistry';
 import { getAllPresets } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
-import { FIELD_CATALOG, FieldDefinition } from '../../../shared/core/pdf-engine/layers/records/fieldCatalog';
+import { FIELD_CATALOG } from '../../../shared/core/pdf-engine/layers/records/fieldCatalog';
 import { PAGE_SIZES } from '../../../shared/core/pdf-engine/pageSizes';
 import { getSavedCVsList, loadCVById, deleteCVById, saveCV } from '../services/cvStorageService';
-import { colorSystem } from '../../../shared/core/uiDesignSystem';
 import CertCropperModal from './CertCropperModal';
 import PersonalInfoSection from './editor/PersonalInfoSection';
 import { PanelSection } from './editor/PanelSection';
@@ -33,7 +31,6 @@ import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { RepeatableSection } from '../../../shared/core/ui/RepeatableSection';
 import { RecordFormSection } from '../../../shared/core/ui/RecordFormSection';
 import { Field } from '../../../shared/core/ui/Field';
-import AgencyCandidateDashboard from './agency/AgencyCandidateDashboard';
 
 export default function EditorPanel({ 
   cvData, 
@@ -159,7 +156,7 @@ export default function EditorPanel({
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
-    } catch (err) {
+    } catch {
       showError('No se pudo acceder a la cámara. Por favor verifica los permisos o sube una imagen.');
       setCertMode('upload');
       setIsCameraActive(false);
@@ -244,23 +241,6 @@ export default function EditorPanel({
         ...prev.theme,
         [field]: value,
         ...(field === 'bgColor' || field === 'bgCorridor' ? { bgColor: value, bgCorridor: value } : {})
-      }
-    }));
-  };
-
-  const applyPreset = (preset: any) => {
-    setCvData((prev: any) => ({
-      ...prev,
-      theme: {
-        ...prev.theme,
-        presetId: preset.id,
-        primaryColor: preset.primaryColor,
-        secondaryColor: preset.secondaryColor,
-        accentColor: preset.accentColor,
-        textColor: preset.textColor,
-        bgCorridor: preset.bgCorridor,
-        bgColor: preset.bgCorridor || preset.bgColor || colorSystem.neutral.surface,
-        fontFamily: preset.fontFamily
       }
     }));
   };

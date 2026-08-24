@@ -1,6 +1,6 @@
 import React from 'react';
 import { PRESET_LIST } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
-import { Preset } from '../../../shared/core/pdf-engine/layers/presets/presetSchema';
+import {} from '../../../shared/core/pdf-engine/layers/presets/presetSchema';
 import { FileText, CreditCard, Download, Printer, Layers } from 'lucide-react';
 import { exportCVToPDF } from '../../../shared/core/pdf-engine/pdfExporter';
 import { exportBusinessCardSheetToPDF } from '../../../shared/core/pdf-engine/cardSheetExporter';

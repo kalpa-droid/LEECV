@@ -82,7 +82,7 @@ export const idbStorage = {
         req.onsuccess = () => resolve();
         req.onerror = () => reject(req.error);
       });
-    } catch (err) {
+    } catch {
       try {
         localStorage.removeItem(key);
       } catch {}
@@ -99,7 +99,7 @@ export const idbStorage = {
         req.onsuccess = () => resolve((req.result as string[]) || []);
         req.onerror = () => reject(req.error);
       });
-    } catch (err) {
+    } catch {
       try {
         return Object.keys(localStorage);
       } catch {

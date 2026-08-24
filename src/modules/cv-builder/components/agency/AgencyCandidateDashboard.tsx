@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Search, Filter, FileText, Download, MessageSquare, ArrowLeft, Building, UserPlus, Sparkles } from 'lucide-react';
+import { Users, Search, Filter, FileText, Download, MessageSquare, ArrowLeft, Building } from 'lucide-react';
 import { listCandidates, getOrganization } from './services/organizationService';
 import EnterpriseOrgModal from './components/EnterpriseOrgModal';
 import { withErrorHandling } from '../../../../shared/core/utils/errorHandler';
@@ -10,7 +10,7 @@ export default function AgencyCandidateDashboard({ onBackToEditor }) {
   const [candidates, setCandidates] = useState([]);
   const [org, setOrg] = useState(null);
   const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
 
   const fallbackCandidates = [
     { id: '1', full_name: 'Valeria Medina', title: 'Prof. Lengua & Literatura', vacant: 'Docencia Secundaria', status: 'Preseleccionado', updated_at: 'Hace 2 horas' },

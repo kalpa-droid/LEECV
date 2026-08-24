@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, ReactNode } from 'react';
 import { X } from 'lucide-react';
-import { colorSystem } from '../uiDesignSystem';
+import {} from '../uiDesignSystem';
 
 export interface ModalProps {
   isOpen: boolean;

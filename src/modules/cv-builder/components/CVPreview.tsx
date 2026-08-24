@@ -6,7 +6,7 @@ import { cvDataToContentSections } from '../../../shared/core/pdf-engine/layers/
 import { buildCardDataFromCV, BusinessCardData } from '../../../shared/core/pdf-engine/layers/records/cardDataAdapter';
 import { VectorDocViewer } from '../../../shared/core/pdf-engine/VectorDocViewer';
 
-export default function CVPreview({ cvData, setCvData, activeTab, zoomLevel = 0.85 }: { cvData?: any; setCvData?: any; activeTab?: string; zoomLevel?: number }) {
+export default function CVPreview({ cvData, setCvData: _setCvData, activeTab: _activeTab, zoomLevel = 0.85 }: { cvData?: any; setCvData?: any; activeTab?: string; zoomLevel?: number }) {
   // Suscripción reactiva con useSyncExternalStore para re-renderizado automático sin F5 al cambiar plantillas
   const presetsVersion = useSyncExternalStore(subscribeToPresetChanges, getPresetsSnapshot, getPresetsSnapshot);
 

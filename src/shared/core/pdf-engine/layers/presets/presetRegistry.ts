@@ -133,6 +133,7 @@ export async function syncPresetsFromStorage(): Promise<Preset[]> {
         updatedCount++;
       }
     });
+    console.info(`[presetRegistry] ${updatedCount} preset(s) sincronizados desde storage`);
 
     return getAllPresets();
   } catch (err) {

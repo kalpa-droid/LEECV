@@ -1,5 +1,5 @@
 import React from 'react';
-import { colorSystem } from '../uiDesignSystem';
+import {} from '../uiDesignSystem';
 
 /**
  * Shared Spinner Component

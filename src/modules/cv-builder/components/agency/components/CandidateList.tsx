@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { listAgencyCandidates, updateCandidateStatus } from '../services/candidatesService';
+import { listAgencyCandidates } from '../services/candidatesService';
 import CandidateStatusBadge from './CandidateStatusBadge';
-import { Users, Search, RefreshCw, FileText } from 'lucide-react';
+import { Users, RefreshCw, FileText } from 'lucide-react';
 
 export default function CandidateList({ onSelectCandidate }) {
   const [candidates, setCandidates] = useState([]);

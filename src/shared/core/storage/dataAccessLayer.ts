@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabaseClient';
 import { safeSupabaseCall } from '../utils/safeSupabaseCall';
-import { UserProfile, UserPlan } from '../../../types/user';
+import { UserProfile } from '../../../types/user';
 import { PaymentClaim } from '../../../types/payments';
 import { Organization } from '../../../types/organization';
 

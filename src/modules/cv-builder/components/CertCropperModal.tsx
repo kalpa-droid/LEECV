@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Crop, ZoomIn, ZoomOut, RotateCw, Check, AlertTriangle, Maximize2 } from 'lucide-react';
 import { useToast } from '../../../shared/core/ui/Toast';
-import { colorSystem } from '../../../shared/core/uiDesignSystem';
+import {} from '../../../shared/core/uiDesignSystem';
 import { Modal } from '../../../shared/core/ui/Modal';
 import { resolveCanvasColor } from '../../../shared/core/utils/canvasColorEngine';
 

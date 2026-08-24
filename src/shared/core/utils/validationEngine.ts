@@ -8,7 +8,6 @@
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const PHONE_REGEX = /^\+?[0-9\s\-()]{6,25}$/;
-const DNI_REGEX = /^[0-9]{1,2}\.?[0-9]{3}\.?[0-9]{3}$/;
 
 /**
  * Valida un correo electrónico según estándar RFC 5322 simplificado.

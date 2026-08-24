@@ -11,10 +11,10 @@ import {
 import { getSavedCVsList, loadCVById, deleteCVById, checkStorageStatus } from '../services/cvStorageService';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { useToast } from '../../../shared/core/ui/Toast';
-import { colorSystem } from '../../../shared/core/uiDesignSystem';
+import {} from '../../../shared/core/uiDesignSystem';
 import { Modal } from '../../../shared/core/ui/Modal';
 import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
-import { validateFieldValue } from '../../../shared/core/utils/validationEngine';
+import {} from '../../../shared/core/utils/validationEngine';
 
 export interface SavedCVsModalProps {
   isOpen: boolean;

@@ -10,7 +10,7 @@ import {
 import { useToast } from '../../../../../shared/core/ui/Toast';
 import { withErrorHandling } from '../../../../../shared/core/utils/errorHandler';
 import { useConfirm } from '../../../../../shared/core/ui/ConfirmDialog';
-import { colorSystem } from '../../../../../shared/core/uiDesignSystem';
+import {} from '../../../../../shared/core/uiDesignSystem';
 import { Organization, OrgMember, OrgRole } from '../../../../../types/organization';
 import { Modal } from '../../../../../shared/core/ui/Modal';
 import { isValidEmail, validateFieldValue } from '../../../../../shared/core/utils/validationEngine';

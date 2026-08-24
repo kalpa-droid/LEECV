@@ -20,7 +20,7 @@ export default function AdminLogin({ onLogin }) {
     try {
       await login(email, password);
       onLogin();
-    } catch (err) {
+    } catch {
       setError('Email o contraseña incorrectos.');
     } finally {
       setLoading(false);

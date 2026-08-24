@@ -26,7 +26,7 @@ export default function CloudStatusModal({
   isSaving,
   cvData
 }: CloudStatusModalProps) {
-  const { showSuccess, showError, showInfo } = useToast();
+  const { showSuccess, showInfo } = useToast();
   const [profile, setProfile] = useState<any>(null);
   const [driveQuota, setDriveQuota] = useState<any>(null);
   const [loadingDrive, setLoadingDrive] = useState(false);

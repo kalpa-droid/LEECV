@@ -119,7 +119,7 @@ export async function publishCV(cvData: any): Promise<PublishResult> {
     if (ok && data?.accessToken) {
       await makeDriveFilePublic(driveRes.fileId, data.accessToken);
     }
-  } catch (err) {
+  } catch {
     console.warn('Continuando publicacion con permisos por defecto en Drive');
   }
 

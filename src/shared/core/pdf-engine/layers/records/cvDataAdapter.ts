@@ -1,4 +1,4 @@
-import { ContentSection, ContentRecord } from './recordTypes';
+import { ContentSection } from './recordTypes';
 import { getSectionLabel } from '../../../sectionRegistry';
 
 const sortByYearDesc = (items: any[]) => {

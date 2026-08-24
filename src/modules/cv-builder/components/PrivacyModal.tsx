@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Shield, FileText, Lock, Database, Server } from 'lucide-react';
-import { colorSystem } from '../../../shared/core/uiDesignSystem';
+import {} from '../../../shared/core/uiDesignSystem';
 import { Modal } from '../../../shared/core/ui/Modal';
 
 interface PrivacyModalProps {

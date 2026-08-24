@@ -33,7 +33,7 @@ export function formatDate(
       month: 'short',
       year: 'numeric'
     });
-  } catch (err) {
+  } catch {
     return String(dateStringOrTimestamp);
   }
 }

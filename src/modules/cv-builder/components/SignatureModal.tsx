@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { PenTool, Upload, RotateCcw, Check, Sparkles } from 'lucide-react';
 import { validateImageFile } from '../../../shared/core/utils/validateFile';
 import { useToast } from '../../../shared/core/ui/Toast';
-import { colorSystem } from '../../../shared/core/uiDesignSystem';
+import {} from '../../../shared/core/uiDesignSystem';
 import { Modal } from '../../../shared/core/ui/Modal';
 import { resolveCanvasColor } from '../../../shared/core/utils/canvasColorEngine';
 

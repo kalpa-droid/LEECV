@@ -3,12 +3,12 @@ import Navbar from '../modules/cv-builder/components/Navbar';
 import CanvaIconDock from '../modules/cv-builder/components/CanvaIconDock';
 import EditorPanel from '../modules/cv-builder/components/EditorPanel';
 const CVPreview = lazy(() => import('../modules/cv-builder/components/CVPreview'));
-import { ZoomIn, ZoomOut, Smartphone, FileText, CreditCard, Palette, Sun, Moon } from 'lucide-react';
+import { ZoomIn, ZoomOut, Smartphone, FileText, CreditCard, Palette } from 'lucide-react';
 
 import { getCurrentProfile, capturarConexionDriveSiCorresponde } from '../modules/auth/authService';
 import { supabase } from '../shared/core/lib/supabaseClient';
 import { exportCVToJson, importCVFromJsonFile } from '../shared/core/utils/jsonImporterExporter';
-import { colorSystem } from '../shared/core/uiDesignSystem';
+import {} from '../shared/core/uiDesignSystem';
 
 const PublicCVView = lazy(() => import('../modules/cv-builder/components/PublicCVView').then(m => ({ default: m.PublicCVView })));
 const CardExportModal = lazy(() => import('../modules/cv-builder/components/modals/CardExportModal').then(m => ({ default: m.CardExportModal })));
@@ -115,7 +115,7 @@ function AppContent() {
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isCloudModalOpen, setIsCloudModalOpen] = useState(false);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
-  const [pdfProgress, setPdfProgress] = useState(0);
+  const [, setPdfProgress] = useState(0);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isPdfComplete, setIsPdfComplete] = useState(false);
   const [isSaving, setIsSaving] = useState(false);

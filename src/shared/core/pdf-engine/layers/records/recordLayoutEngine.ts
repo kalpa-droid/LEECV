@@ -44,10 +44,7 @@ export function buildStructuredRecordLayout(
     return { header: null, subheader: null, badges: [], extras: [], block: null, hasData: false };
   }
 
-  // Si se especifican campos permitidos, los filtramos; de lo contrario usamos todo FIELD_CATALOG
-  const fieldKeys = allowedFields && allowedFields.length > 0
-    ? allowedFields
-    : Object.keys(FIELD_CATALOG);
+  // El filtrado de allowedFields se aplica más abajo, en allKeysToProcess.
 
   // Normalización de claves alternativas (ej: degree -> tituloOGrado, role -> cargo, etc.)
   const normalizedRecord: Record<string, any> = {};

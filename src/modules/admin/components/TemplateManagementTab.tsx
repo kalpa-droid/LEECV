@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Preset } from '../../../shared/core/pdf-engine/layers/presets/presetSchema';
 import { PRESET_LIST } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { fetchPresetsFromSupabase, savePresetToSupabase, deletePresetFromSupabase } from '../../../shared/core/pdf-engine/layers/presets/presetStorageService';
-import { Palette, Code2, Save, Plus, Trash2, Layout, Sparkles, RefreshCw, CheckCircle2, Wand2, Info } from 'lucide-react';
+import { Palette, Code2, Save, Plus, Trash2, Layout, Sparkles, CheckCircle2, Wand2, Info } from 'lucide-react';
 import { generateHarmonyPalette, HarmonyScheme } from '../../../shared/core/pdf-engine/layers/colors/colorSystem';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
@@ -15,7 +15,7 @@ export function TemplateManagementTab() {
   const [selectedPreset, setSelectedPreset] = useState<Preset>(PRESET_LIST[0]);
   const [activeSubTab, setActiveSubTab] = useState<'visual' | 'json'>('visual');
   const [jsonText, setJsonText] = useState<string>(JSON.stringify(PRESET_LIST[0], null, 2));
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [harmonyScheme, setHarmonyScheme] = useState<HarmonyScheme>('complementario');
 
@@ -80,7 +80,7 @@ export function TemplateManagementTab() {
       try {
         presetToSave = JSON.parse(jsonText);
         setSelectedPreset(presetToSave);
-      } catch (err: any) {
+      } catch {
         showError('JSON inválido: verifica la sintaxis antes de guardar.');
         return;
       }
