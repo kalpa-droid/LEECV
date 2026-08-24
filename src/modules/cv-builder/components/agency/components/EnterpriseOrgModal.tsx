@@ -12,7 +12,7 @@ import { useConfirm } from '../../../../../shared/core/ui/ConfirmDialog';
 import { colorSystem } from '../../../../../shared/core/uiDesignSystem';
 import { Organization, OrgMember, OrgRole } from '../../../../../types/organization';
 import { Modal } from '../../../../../shared/core/ui/Modal';
-import { isValidEmail } from '../../../../../shared/core/utils/validationEngine';
+import { isValidEmail, validateFieldValue } from '../../../../../shared/core/utils/validationEngine';
 
 interface EnterpriseOrgModalProps {
   isOpen: boolean;
@@ -286,6 +286,11 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
                   onChange={(e) => setInvitationTokenInput(e.target.value)}
                   className={`w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono outline-none focus:border-[var(--color-secondary-base)] transition`}
                 />
+                {invitationTokenInput.trim() && !validateFieldValue('token', invitationTokenInput).isValid && (
+                  <p className="text-[10px] text-amber-400 font-medium">
+                    {validateFieldValue('token', invitationTokenInput).helperMessage}
+                  </p>
+                )}
               </div>
 
               <button

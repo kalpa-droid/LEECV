@@ -4,6 +4,8 @@ import { calculateCardsPerSheetPreview, exportBusinessCardSheetToPDF, CardExport
 import { Preset } from '../../../shared/core/pdf-engine/layers/presets/presetSchema';
 import { BusinessCardData } from '../../../shared/core/pdf-engine/layers/records/cardDataAdapter';
 import { Printer, AlertTriangle, Download } from 'lucide-react';
+import { useToast } from '../../../shared/core/ui/Toast';
+import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
 
 const CARD_SIZE_OPTIONS = [
   { id: 'tarjeta_estandar', label: 'Estándar AR/US (89 × 51 mm)' },
@@ -22,6 +24,7 @@ interface CardSheetExportSelectorProps {
 }
 
 export function CardSheetExportSelector({ preset, cardData, onExported }: CardSheetExportSelectorProps) {
+  const { showError, showSuccess } = useToast();
   const [cardSizeId, setCardSizeId] = useState('tarjeta_estandar');
   const [customWidthMm, setCustomWidthMm] = useState(85);
   const [customHeightMm, setCustomHeightMm] = useState(55);
@@ -48,19 +51,24 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
 
   const handleExport = async () => {
     setIsExporting(true);
-    try {
-      const options: CardExportOptions = {
-        sheetPageSizeIdOverride: sheetSizeId,
-        trimSizeOverride: trimSize,
-        impositionPresetIdOverride: printerMode,
-      };
-      await exportBusinessCardSheetToPDF(cardData, preset, options);
-      onExported?.();
-    } catch (err) {
-      console.error('Error exportando hoja de tarjetas:', err);
-    } finally {
-      setIsExporting(false);
-    }
+    await withErrorHandling(
+      async () => {
+        const options: CardExportOptions = {
+          sheetPageSizeIdOverride: sheetSizeId,
+          trimSizeOverride: trimSize,
+          impositionPresetIdOverride: printerMode,
+        };
+        await exportBusinessCardSheetToPDF(cardData, preset, options);
+        showSuccess('Hoja de tarjetas generada con éxito.');
+        onExported?.();
+      },
+      {
+        context: 'Exportación de Hoja de Tarjetas',
+        errorMessage: 'Error al exportar la hoja de tarjetas.',
+        notify: (msg) => showError(msg)
+      }
+    );
+    setIsExporting(false);
   };
 
   return (

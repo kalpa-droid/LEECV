@@ -5,6 +5,8 @@ import { buildCardDataFromCV, BusinessCardData } from '../../../../shared/core/p
 import { Preset } from '../../../../shared/core/pdf-engine/layers/presets/presetSchema';
 import { getPreset } from '../../../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { Modal } from '../../../../shared/core/ui/Modal';
+import { useToast } from '../../../../shared/core/ui/Toast';
+import { withErrorHandling } from '../../../../shared/core/utils/errorHandler';
 
 interface CardExportModalProps {
   isOpen: boolean;
@@ -14,6 +16,7 @@ interface CardExportModalProps {
 }
 
 export function CardExportModal({ isOpen, onClose, cvData, presetId = 'tarjeta-personal' }: CardExportModalProps) {
+  const { showError } = useToast();
   const [cardData, setCardData] = useState<BusinessCardData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,14 +28,18 @@ export function CardExportModal({ isOpen, onClose, cvData, presetId = 'tarjeta-p
     let isMounted = true;
     async function prepareCardData() {
       setLoading(true);
-      try {
-        const data = await buildCardDataFromCV(cvData);
-        if (isMounted) setCardData(data);
-      } catch (err) {
-        console.error('Error preparando datos de tarjeta:', err);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
+      await withErrorHandling(
+        async () => {
+          const data = await buildCardDataFromCV(cvData);
+          if (isMounted) setCardData(data);
+        },
+        {
+          context: 'Preparación de Tarjeta de Presentación',
+          errorMessage: 'No se pudieron generar los datos de la tarjeta.',
+          notify: (msg) => showError(msg)
+        }
+      );
+      if (isMounted) setLoading(false);
     }
 
     prepareCardData();

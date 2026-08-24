@@ -130,5 +130,21 @@ export function validateFieldValue(fieldName: string, value: string): FieldValid
     };
   }
 
+  if (nameLower.includes('token') || nameLower.includes('invitacion')) {
+    const valid = /^[A-Za-z0-9_-]{16,64}$/.test(value.trim());
+    return {
+      isValid: valid,
+      helperMessage: valid ? undefined : 'El token no tiene el formato esperado (16-64 caracteres alfanuméricos)'
+    };
+  }
+
+  if (nameLower.includes('nombre') || nameLower.includes('titulo') || nameLower.includes('name')) {
+    const valid = value.trim().length >= 2;
+    return {
+      isValid: valid,
+      helperMessage: valid ? undefined : 'Elegí un nombre un poco más descriptivo (al menos 2 caracteres)'
+    };
+  }
+
   return { isValid: true };
 }

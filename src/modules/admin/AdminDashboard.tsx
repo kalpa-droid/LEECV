@@ -1,35 +1,32 @@
-import React, { useEffect, useState } from 'react';
-import { getCurrentProfile, logout } from '../auth/authService';
-import { 
-  listUsers, 
+import React, { useState, useEffect } from 'react';
+import {
+  listUsers,
   setUserPlan,
-  setPremium, 
-  getBasicStats, 
-  listPendingClaims, 
-  reviewManualClaim,
-  listAdminNotifications, 
-  markNotificationRead 
+  getBasicStats,
+  listPendingClaims, reviewManualClaim,
+  listAdminNotifications, markNotificationRead
 } from './adminService';
+import { getCurrentProfile, logout } from '../auth/authService';
 import AdminLogin from './AdminLogin';
+import { StorageDriveTab } from './components/StorageDriveTab';
+import { TemplateManagementTab } from './components/TemplateManagementTab';
+import { useToast } from '../../shared/core/ui/Toast';
+import { useConfirm } from '../../shared/core/ui/ConfirmDialog';
+import { withErrorHandling } from '../../shared/core/utils/errorHandler';
 import { 
   Users, Crown, LogOut, RefreshCw, CreditCard, HardDrive, 
   ShieldCheck, CheckCircle2, MessageSquare, AlertCircle, Sparkles, 
-  Search, ChevronLeft, ChevronRight, Bell, Check, X 
+  Search, ChevronLeft, ChevronRight, Bell, Check, X, Layout as LayoutIcon 
 } from 'lucide-react';
 
-import { useToast } from '../../shared/core/ui/Toast';
-import { useConfirm } from '../../shared/core/ui/ConfirmDialog';
-import { TemplateManagementTab } from './components/TemplateManagementTab';
-import { StorageDriveTab } from './components/StorageDriveTab';
-import { Layout as LayoutIcon } from 'lucide-react';
-
 export default function AdminDashboard() {
-  const { showSuccess, showError } = useToast();
+  const { showError, showSuccess } = useToast();
   const { confirm } = useConfirm();
-  const [profile, setProfile] = useState(undefined);
-  const [adminTab, setAdminTab] = useState<'users' | 'templates' | 'storage'>('users');
+
+  const [adminTab, setAdminTab] = useState<'users' | 'storage' | 'templates'>('users');
+  const [profile, setProfile] = useState<any>(undefined);
   const [users, setUsers] = useState<any[]>([]);
-  const [stats, setStats] = useState<any>({ totalUsers: 0, proUsers: 0, enterpriseUsers: 0, activeSubscriptions: 0 });
+  const [stats, setStats] = useState({ totalUsers: 0, proUsers: 0, enterpriseUsers: 0, activeSubscriptions: 0 });
   const [loadingData, setLoadingData] = useState(false);
   const [claims, setClaims] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -40,24 +37,27 @@ export default function AdminDashboard() {
 
   async function loadEverything() {
     setLoadingData(true);
-    try {
-      const [userList, s, claimList, notifList] = await Promise.all([
-        listUsers(searchQuery),
-        getBasicStats(),
-        listPendingClaims(),
-        listAdminNotifications()
-      ]);
-      setUsers(userList || []);
-      setTotalCount(userList?.length || 0);
-      setStats(s || { totalUsers: 0, proUsers: 0, enterpriseUsers: 0, activeSubscriptions: 0 });
-      setClaims(claimList || []);
-      setNotifications(notifList || []);
-    } catch (err) {
-      console.error(err);
-      showError('Inconveniente al cargar datos del servidor.');
-    } finally {
-      setLoadingData(false);
-    }
+    await withErrorHandling(
+      async () => {
+        const [userList, s, claimList, notifList] = await Promise.all([
+          listUsers(searchQuery),
+          getBasicStats(),
+          listPendingClaims(),
+          listAdminNotifications()
+        ]);
+        setUsers(userList || []);
+        setTotalCount(userList?.length || 0);
+        setStats(s || { totalUsers: 0, proUsers: 0, enterpriseUsers: 0, activeSubscriptions: 0 });
+        setClaims(claimList || []);
+        setNotifications(notifList || []);
+      },
+      {
+        context: 'Carga del Panel de Administración',
+        errorMessage: 'Inconveniente al cargar datos del servidor.',
+        notify: (msg) => showError(msg)
+      }
+    );
+    setLoadingData(false);
   }
 
   async function checkSession() {
@@ -68,12 +68,9 @@ export default function AdminDashboard() {
 
   useEffect(() => { checkSession(); }, [page, searchQuery]);
 
-  // Live Auto-Refresh Interval (every 45s)
   useEffect(() => {
     if (profile?.role === 'admin') {
-      const timer = setInterval(() => {
-        loadEverything();
-      }, 45000);
+      const timer = setInterval(loadEverything, 45000);
       return () => clearInterval(timer);
     }
   }, [profile]);
@@ -88,27 +85,36 @@ export default function AdminDashboard() {
     );
   }
 
-  async function togglePremium(user, targetPlan = 'pro') {
-    if (targetPlan === 'free' || user.premium_activo && targetPlan === 'free') {
-      confirm({
-        title: `¿Desactivar licencia de ${user.email}?`,
-        message: 'Esta acción removerá el acceso a las funciones Pro/Enterprise de este usuario.',
-        confirmText: 'Desactivar Licencia',
-        variant: 'danger',
-        onConfirm: async () => {
-          await setUserPlan(user.id, 'free');
-          showSuccess(`Licencia desactivada para ${user.email}`);
+  async function togglePremium(user: any, targetPlan = 'pro') {
+    await withErrorHandling(
+      async () => {
+        if (targetPlan === 'free' || (user.premium_activo && targetPlan === 'free')) {
+          confirm({
+            title: `¿Desactivar licencia de ${user.email}?`,
+            message: 'Esta acción removerá el acceso a las funciones Pro/Enterprise de este usuario.',
+            confirmText: 'Desactivar Licencia',
+            variant: 'danger',
+            onConfirm: async () => {
+              await setUserPlan(user.id, 'free');
+              showSuccess(`Licencia desactivada para ${user.email}`);
+              loadEverything();
+            }
+          });
+        } else {
+          await setUserPlan(user.id, targetPlan as any);
+          showSuccess(`Plan ${targetPlan.toUpperCase()} (30 días) asignado a ${user.email}`);
           loadEverything();
         }
-      });
-    } else {
-      await setUserPlan(user.id, targetPlan as any);
-      showSuccess(`Plan ${targetPlan.toUpperCase()} (30 días) asignado a ${user.email}`);
-      loadEverything();
-    }
+      },
+      {
+        context: 'Modificación de Plan de Usuario',
+        errorMessage: 'No se pudo actualizar el plan del usuario.',
+        notify: (msg) => showError(msg)
+      }
+    );
   }
 
-  async function handleReviewClaim(claim, approve) {
+  async function handleReviewClaim(claim: any, approve: boolean) {
     if (!approve) {
       confirm({
         title: `¿Rechazar comprobante de ${claim.email}?`,
@@ -116,34 +122,49 @@ export default function AdminDashboard() {
         confirmText: 'Rechazar Comprobante',
         variant: 'danger',
         onConfirm: async () => {
-          try {
-            await reviewManualClaim(claim.id, false);
-            showSuccess(`❌ Reclamo rechazado para ${claim.email}.`);
-            loadEverything();
-          } catch (err) {
-            showError(err.message || 'Error al rechazar comprobante');
-          }
+          await withErrorHandling(
+            async () => {
+              await reviewManualClaim(claim.id, false);
+              showSuccess(`❌ Reclamo rechazado para ${claim.email}.`);
+              loadEverything();
+            },
+            {
+              context: 'Rechazo de Comprobante Manual',
+              errorMessage: 'Error al rechazar comprobante.',
+              notify: (msg) => showError(msg)
+            }
+          );
         }
       });
       return;
     }
 
-    try {
-      await reviewManualClaim(claim.id, true);
-      showSuccess(`✅ Reclamo aprobado para ${claim.email}. Licencia activada.`);
-      loadEverything();
-    } catch (err) {
-      showError(err.message || 'Error al aprobar comprobante');
-    }
+    await withErrorHandling(
+      async () => {
+        await reviewManualClaim(claim.id, true);
+        showSuccess(`✅ Reclamo aprobado para ${claim.email}. Licencia activada.`);
+        loadEverything();
+      },
+      {
+        context: 'Aprobación de Comprobante Manual',
+        errorMessage: 'Error al aprobar comprobante.',
+        notify: (msg) => showError(msg)
+      }
+    );
   }
 
-  async function handleMarkNotifRead(id) {
-    try {
-      await markNotificationRead(id);
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-    } catch (err) {
-      console.error(err);
-    }
+  async function handleMarkNotifRead(id: string) {
+    await withErrorHandling(
+      async () => {
+        await markNotificationRead(id);
+        setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+      },
+      {
+        context: 'Marcar Notificación como Leída',
+        errorMessage: 'No se pudo actualizar la notificación.',
+        notify: (msg) => showError(msg)
+      }
+    );
   }
 
   const unreadNotifCount = notifications.filter(n => !n.read).length;

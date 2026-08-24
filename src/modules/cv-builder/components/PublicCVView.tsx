@@ -3,6 +3,7 @@ import { dal } from '../../../shared/core/storage/dataAccessLayer';
 import { navigation } from '../../../shared/core/utils/navigation';
 import { Spinner } from '../../../shared/core/ui/Spinner';
 import { apiClient } from '../../../shared/core/utils/apiClient';
+import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
 
 const CVPreview = lazy(() => import('./CVPreview'));
 
@@ -17,49 +18,46 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
 
   useEffect(() => {
     async function fetchPublicCV() {
-      try {
-        setLoading(true);
-        let slug = slugInput;
+      setLoading(true);
+      await withErrorHandling(
+        async () => {
+          let slug = slugInput;
 
-        if (!slug) {
-          slug = navigation.getQueryParam('c') || 
-                 navigation.getQueryParam('publicCv') || 
-                 navigation.getQueryParam('share') || 
-                 navigation.getPathname().replace('/c/', '').replace('/cv/', '');
+          if (!slug) {
+            slug = navigation.getQueryParam('c') || 
+                   navigation.getQueryParam('publicCv') || 
+                   navigation.getQueryParam('share') || 
+                   navigation.getPathname().replace('/c/', '').replace('/cv/', '');
+          }
+
+          if (!slug) {
+            setError('No se especificó un código de CV válido.');
+            return;
+          }
+
+          const record = await dal.publishedCvs.getBySlugOrId(slug);
+
+          if (!record?.drive_file_id) {
+            setError('El currículum solicitado no existe o no está publicado en la web.');
+            return;
+          }
+
+          const driveUrl = `https://www.googleapis.com/drive/v3/files/${record.drive_file_id}?alt=media`;
+          const { ok, data } = await apiClient.get(driveUrl, { requiresAuth: false });
+
+          if (!ok || !data) {
+            setError('No se pudo acceder al documento en Google Drive. Verifica que los permisos del archivo sean públicos.');
+            return;
+          }
+
+          setCvData(data);
+        },
+        {
+          context: 'Consulta de CV Público',
+          errorMessage: 'Inconveniente al cargar el currículum público.'
         }
-
-        if (!slug) {
-          setError('No se especificó un código de CV válido.');
-          setLoading(false);
-          return;
-        }
-
-        // 1. Buscar el drive_file_id en Supabase mediante el slug o ID público (vía DAL)
-        const record = await dal.publishedCvs.getBySlugOrId(slug);
-
-        if (!record?.drive_file_id) {
-          setError('El currículum solicitado no existe o no está publicado en la web.');
-          setLoading(false);
-          return;
-        }
-
-        // 2. Descargar JSON directamente del Google Drive del usuario (lectura pública)
-        const driveUrl = `https://www.googleapis.com/drive/v3/files/${record.drive_file_id}?alt=media`;
-        const { ok, data } = await apiClient.get(driveUrl, { requiresAuth: false });
-
-        if (!ok || !data) {
-          setError('No se pudo acceder al documento en Google Drive. Verifica que los permisos del archivo sean públicos.');
-          setLoading(false);
-          return;
-        }
-
-        setCvData(data);
-      } catch (err: any) {
-        console.error('Error cargando CV público:', err);
-        setError('Inconveniente al cargar el currículum público.');
-      } finally {
-        setLoading(false);
-      }
+      );
+      setLoading(false);
     }
 
     fetchPublicCV();

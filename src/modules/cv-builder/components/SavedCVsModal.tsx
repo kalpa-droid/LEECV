@@ -10,8 +10,11 @@ import {
 } from 'lucide-react';
 import { getSavedCVsList, loadCVById, deleteCVById, checkStorageStatus } from '../services/cvStorageService';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
+import { useToast } from '../../../shared/core/ui/Toast';
 import { colorSystem } from '../../../shared/core/uiDesignSystem';
 import { Modal } from '../../../shared/core/ui/Modal';
+import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
+import { validateFieldValue } from '../../../shared/core/utils/validationEngine';
 
 export interface SavedCVsModalProps {
   isOpen: boolean;
@@ -29,6 +32,7 @@ export default function SavedCVsModal({
   onOpenCloudStatus
 }: SavedCVsModalProps) {
   const { confirm } = useConfirm();
+  const { showSuccess, showError } = useToast();
   const [savedList, setSavedList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -36,14 +40,18 @@ export default function SavedCVsModal({
 
   const fetchList = async () => {
     setIsLoading(true);
-    try {
-      const list = await getSavedCVsList();
-      setSavedList(list);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
+    await withErrorHandling(
+      async () => {
+        const list = await getSavedCVsList();
+        setSavedList(list);
+      },
+      {
+        context: 'Carga de Borradores Guardados',
+        errorMessage: 'Error al obtener la lista de documentos guardados.',
+        notify: (msg) => showError(msg)
+      }
+    );
+    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -53,11 +61,20 @@ export default function SavedCVsModal({
   }, [isOpen]);
 
   const handleOpenCV = async (id: string) => {
-    const loadedData = await loadCVById(id);
-    if (loadedData) {
-      onSelectCV(loadedData);
-      onClose();
-    }
+    await withErrorHandling(
+      async () => {
+        const loadedData = await loadCVById(id);
+        if (loadedData) {
+          onSelectCV(loadedData);
+          onClose();
+        }
+      },
+      {
+        context: 'Apertura de Documento',
+        errorMessage: 'No se pudo abrir el documento seleccionado.',
+        notify: (msg) => showError(msg)
+      }
+    );
   };
 
   const handleDelete = async (id: string, title: string) => {
@@ -66,8 +83,18 @@ export default function SavedCVsModal({
       message: `¿Estás seguro de que deseas eliminar "${title}" de tus archivos guardados?`,
       confirmText: 'Eliminar',
       onConfirm: async () => {
-        await deleteCVById(id);
-        fetchList();
+        await withErrorHandling(
+          async () => {
+            await deleteCVById(id);
+            showSuccess(`Documento "${title}" eliminado.`);
+            fetchList();
+          },
+          {
+            context: 'Eliminación de Documento',
+            errorMessage: 'Error al eliminar el documento.',
+            notify: (msg) => showError(msg)
+          }
+        );
       }
     });
   };
