@@ -40,6 +40,10 @@ export function SectionBannerCard({
   const containerBgHex = surfaceBgColor || (isSidebar ? rolesColor.primary : rolesColor.background);
   const typographyBinding = getTypographyColorBinding(rolesColor, containerBgHex);
 
+  const iconColor = iconStyle === 'minimal' 
+    ? (rolesColor.accent || typographyBinding.sectionHeading) 
+    : typographyBinding.sectionHeading;
+
   if (isSidebar) {
     // Encabezado de Sección en Sidebar: Franja integrada minimalista
     const styles = StyleSheet.create({
@@ -64,7 +68,7 @@ export function SectionBannerCard({
 
     return (
       <View wrap={false} style={styles.sidebarBannerContainer}>
-        {iconId ? <PdfSectionIcon iconId={iconId} size={typography.sectionHeading} color={typographyBinding.sectionHeading} /> : null}
+        {iconId ? <PdfSectionIcon iconId={iconId} size={typography.sectionHeading} color={iconColor} /> : null}
         <Text style={styles.sidebarBanner}>{titleText}</Text>
       </View>
     );
@@ -101,10 +105,6 @@ export function SectionBannerCard({
       color: typographyBinding.sectionHeading,
     },
   });
-
-  const iconColor = iconStyle === 'minimal' 
-    ? (rolesColor.accent || typographyBinding.sectionHeading) 
-    : typographyBinding.sectionHeading;
 
   return (
     <View style={styles.bannerContainer} wrap={false}>
