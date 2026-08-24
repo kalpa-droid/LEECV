@@ -4,6 +4,7 @@ import { CARD_DESIGNS, CardDesign } from './cardDesignSchema';
 import { ResolvedThemeRoles, getTypographyColorBinding } from '../colors/colorSystem';
 import { TypographyScale, Preset } from '../presets/presetSchema';
 import { PdfSectionIcon } from '../icons/PdfSectionIcon';
+import { resolveDecorativeStyles } from '../decorations/decorativeLayerEngine';
 
 interface SectionBannerCardProps {
   preset?: Preset;
@@ -23,6 +24,7 @@ interface SectionBannerCardProps {
  * la Matriz de Traducción Cromática HSL (superficies claras u oscuras) y la Vincuación Tipográfica.
  */
 export function SectionBannerCard({
+  preset,
   titleText,
   iconId,
   designId = 'primary-card',
@@ -32,6 +34,8 @@ export function SectionBannerCard({
   isSidebar = false,
 }: SectionBannerCardProps) {
   const design: CardDesign = CARD_DESIGNS[designId] || CARD_DESIGNS['primary-card'];
+  const decStyles = preset ? resolveDecorativeStyles(preset, designId as any) : null;
+  const iconStyle = decStyles?.headerIconStyle || 'filled';
 
   const containerBgHex = surfaceBgColor || (isSidebar ? rolesColor.primary : rolesColor.background);
   const typographyBinding = getTypographyColorBinding(rolesColor, containerBgHex);
@@ -98,9 +102,13 @@ export function SectionBannerCard({
     },
   });
 
+  const iconColor = iconStyle === 'minimal' 
+    ? (rolesColor.accent || typographyBinding.sectionHeading) 
+    : typographyBinding.sectionHeading;
+
   return (
     <View style={styles.bannerContainer} wrap={false}>
-      {iconId ? <PdfSectionIcon iconId={iconId} size={typography.sectionHeading + 1} color={typographyBinding.sectionHeading} /> : null}
+      {iconId ? <PdfSectionIcon iconId={iconId} size={typography.sectionHeading + 1} color={iconColor} /> : null}
       <Text style={styles.bannerText}>{titleText}</Text>
     </View>
   );

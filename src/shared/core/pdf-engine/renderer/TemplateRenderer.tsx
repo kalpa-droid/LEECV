@@ -535,6 +535,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       return (
         <CardObjectRenderer
           key={rec.id}
+          preset={preset}
           designId={customRecordCardDesigns?.education || preset.recordCardDesigns?.education || 'accent-card'}
           title={layout.header || ''}
           subtitle={layout.subheader || undefined}
