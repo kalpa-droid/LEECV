@@ -28,7 +28,7 @@ export const serverDal = {
     async updateSubscription(
       matchBy: { id?: string; email?: string },
       patch: Record<string, any>
-    ): Promise<void> {
+    ): Promise<{ id: string } | null> {
       let query = supabaseAdmin.from('profiles').update(patch);
       if (matchBy.id) {
         query = query.eq('id', matchBy.id);
@@ -38,8 +38,9 @@ export const serverDal = {
         throw new Error('updateSubscription requiere "id" o "email" para filtrar.');
       }
 
-      const { error } = await query;
+      const { data, error } = await query.select('id').single();
       if (error) throw new Error(`Error actualizando suscripción de perfil: ${error.message}`);
+      return data ? { id: data.id } : null;
     }
   },
 

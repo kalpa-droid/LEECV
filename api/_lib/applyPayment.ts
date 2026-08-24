@@ -84,9 +84,12 @@ async function activateSubscription(
   };
 
   const matchBy = userId ? { id: userId } : { email: email! };
-  await serverDal.profiles.updateSubscription(matchBy, patch);
+  const updated = await serverDal.profiles.updateSubscription(matchBy, patch);
 
-  const targetUserId = userId || null;
+  // Usar el id devuelto por la actualización, no el userId original: en pagos
+  // que sólo traen email (ej. Lemon Squeezy sin custom_data.user_id), userId
+  // llega undefined y esto es lo único que identifica al perfil real.
+  const targetUserId = updated?.id || null;
 
   if (plan === 'enterprise' && targetUserId) {
     const existingOrg = await serverDal.organizations.getByOwnerId(targetUserId);
