@@ -2,6 +2,7 @@ import { Preset } from './presetSchema';
 import { cvClasicoPreset } from './presets/cv-clasico';
 import { modernCorporatePreset } from './presets/modern-corporate';
 import { minimalEditorialPreset } from './presets/minimal-editorial';
+import { creativeSustentablePreset } from './presets/creative-sustentable';
 import { tarjetaPersonalPreset } from './presets/tarjeta-personal';
 
 // Presets nativos por defecto
@@ -9,6 +10,7 @@ const NATIVE_PRESETS: Preset[] = [
   cvClasicoPreset,
   modernCorporatePreset,
   minimalEditorialPreset,
+  creativeSustentablePreset,
   tarjetaPersonalPreset
 ];
 

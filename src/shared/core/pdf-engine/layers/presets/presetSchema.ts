@@ -83,6 +83,14 @@ export interface Preset {
     sectionOrder: { sectorRole: string; sectionIds: string[] }[];
   };
 
+  /** Políticas de adorno y decoración visual (bordes, separadores, sombras) */
+  decorativeElementPolicy?: {
+    cardBorders?: boolean;
+    sectionDividers?: boolean;
+    backgroundShapes?: boolean;
+    shadowEffects?: boolean;
+  };
+
   /** Solo aplica a pageCategory:'tarjeta' — cómo se imprime en una hoja física */
   print?: {
     bleedPresetId: string;
