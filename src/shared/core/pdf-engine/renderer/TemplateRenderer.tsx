@@ -568,7 +568,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
 
         return (
           <View key={sFlow.sector.id} style={[surfaceStyle, widthStyle, { position: 'relative' }]}>
-            <OrnamentRenderer ornamentKind={decStyles.cornerOrnament} color={rolesColor.accent || '#52b788'} />
+            <OrnamentRenderer ornamentKind={decStyles.cornerOrnament} color={rolesColor.accent} />
             <View style={contentStyle}>
               {/* SPACER FIJO DE MARGEN SUPERIOR PARA EVITAR EL BUG DE PAGINACIÓN DE REACT-PDF (#430/#733) */}
               <View fixed style={{ height: usable.margins.topPt || 14 }} />

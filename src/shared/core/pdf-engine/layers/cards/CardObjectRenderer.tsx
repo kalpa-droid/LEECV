@@ -4,6 +4,9 @@ import { CARD_DESIGNS, CardDesign } from './cardDesignSchema';
 import { ResolvedThemeRoles, getTypographyColorBinding } from '../colors/colorSystem';
 import { TypographyScale, Preset } from '../presets/presetSchema';
 import { resolveDecorativeStyles } from '../decorations/decorativeLayerEngine';
+import { deriveRecordScale } from '../typography/typographyHierarchyEngine';
+import { resolveAccentTarget } from '../colors/accentApplicationEngine';
+import { resolveRecordLayout } from '../records/recordSpatialLayoutEngine';
 
 interface CardObjectRendererProps {
   preset?: Preset;
@@ -34,6 +37,8 @@ export function CardObjectRenderer({
 }: CardObjectRendererProps) {
   const design: CardDesign = CARD_DESIGNS[designId] || CARD_DESIGNS['primary-card'];
   const decStyles = preset ? resolveDecorativeStyles(preset, designId as any) : null;
+  const recordScale = deriveRecordScale(typography, typography.recordScaleRatios);
+  const spatialLayout = resolveRecordLayout(design.layoutTemplate);
 
   const getRoleColor = (roleName: string) => {
     switch (roleName) {
@@ -57,31 +62,32 @@ export function CardObjectRenderer({
 
   const typographyBinding = getTypographyColorBinding(rolesColor, effectiveBgColor);
 
-  let titleColor = design.titleColorRole === 'accent' ? rolesColor.accent : typographyBinding.itemTitle;
-  let badgeColor = design.badgeColorRole === 'accent' ? rolesColor.accent : typographyBinding.caption;
+  const resolvedAccent = resolveAccentTarget(
+    design.accentTarget,
+    design.titleColorRole,
+    design.badgeColorRole,
+    rolesColor,
+    typographyBinding.itemTitle,
+    typographyBinding.caption
+  );
+
+  let titleColor = resolvedAccent.titleColor;
+  let badgeColor = resolvedAccent.badgeColor;
   let subtitleColor = typographyBinding.caption;
   let descColor = typographyBinding.body;
 
-  const fontSizeTitle = design.titleSizeToken === 'title' 
-    ? typography.title 
-    : design.titleSizeToken === 'sectionHeading' 
-      ? typography.sectionHeading 
-      : typography.itemTitle;
-
-  const fontSizeBadge = design.badgeSizeToken === 'itemTitle'
-    ? typography.itemTitle
-    : design.badgeSizeToken === 'body'
-      ? typography.body
-      : typography.caption;
+  const cardBgColor = decStyles?.cardContainerStyle.backgroundColor ?? (
+    spatialLayout.isBoxed ? 'rgba(0,0,0,0.025)' : backgroundColor
+  );
 
   const styles = StyleSheet.create({
     cardContainer: {
-      padding: 8,
-      marginBottom: 8,
+      padding: spatialLayout.containerStyle.padding,
+      marginBottom: spatialLayout.containerStyle.marginBottom,
       borderLeftWidth: decStyles?.cardContainerStyle.borderWidthPt ?? design.borderWidthPt,
-      borderLeftColor: decStyles?.cardContainerStyle.borderColor ?? borderColor,
+      borderLeftColor: decStyles?.cardContainerStyle.borderColor ?? resolvedAccent.leftRuleColor ?? borderColor,
       borderLeftStyle: 'solid',
-      backgroundColor: decStyles?.cardContainerStyle.backgroundColor ?? backgroundColor,
+      backgroundColor: cardBgColor,
       borderRadius: decStyles?.cardContainerStyle.borderRadiusPt ?? design.borderRadiusPt,
     },
     headerRow: {
@@ -91,7 +97,7 @@ export function CardObjectRenderer({
       marginBottom: 2,
     },
     titleText: {
-      fontSize: fontSizeTitle,
+      fontSize: recordScale.recordTitle,
       fontFamily: typography.fontFamily,
       color: titleColor,
       fontWeight: 'bold',
@@ -99,7 +105,7 @@ export function CardObjectRenderer({
       marginRight: 6,
     },
     badgeText: {
-      fontSize: fontSizeBadge,
+      fontSize: recordScale.recordMeta,
       fontFamily: typography.fontFamily,
       color: badgeColor,
       fontWeight: 'bold',
@@ -112,7 +118,7 @@ export function CardObjectRenderer({
       marginBottom: 4,
     },
     badgePill: {
-      fontSize: typography.caption - 1,
+      fontSize: recordScale.recordMeta - 1,
       fontFamily: typography.fontFamily,
       color: badgeColor,
       backgroundColor: 'rgba(0, 0, 0, 0.04)',
@@ -128,22 +134,22 @@ export function CardObjectRenderer({
       marginBottom: 3,
     },
     extraText: {
-      fontSize: typography.caption,
+      fontSize: recordScale.recordExtra,
       fontFamily: typography.fontFamily,
       color: subtitleColor,
       fontStyle: 'italic',
     },
     subtitleText: {
-      fontSize: typography.body,
+      fontSize: recordScale.recordSubtitle,
       fontFamily: typography.fontFamily,
       color: subtitleColor,
       marginBottom: 3,
     },
     descText: {
-      fontSize: typography.body,
+      fontSize: recordScale.recordBody,
       fontFamily: typography.fontFamily,
       color: descColor,
-      lineHeight: 1.3,
+      lineHeight: recordScale.lineHeightBody,
     },
   });
 

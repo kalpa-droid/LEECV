@@ -1,3 +1,5 @@
+import { RecordLayoutTemplate } from '../records/recordSpatialLayoutEngine';
+
 export interface CardDesign {
   id: string;
   name: string;
@@ -9,6 +11,8 @@ export interface CardDesign {
   badgeColorRole: 'accent' | 'secondary' | 'primary' | 'transparent';
   titleSizeToken?: 'title' | 'itemTitle' | 'sectionHeading';
   badgeSizeToken?: 'caption' | 'body' | 'itemTitle';
+  accentTarget?: 'title' | 'meta-badge' | 'left-rule' | 'icon-only' | 'none';
+  layoutTemplate?: RecordLayoutTemplate;
 }
 
 export const CARD_DESIGNS: Record<string, CardDesign> = {
@@ -23,6 +27,7 @@ export const CARD_DESIGNS: Record<string, CardDesign> = {
     badgeColorRole: 'accent',
     titleSizeToken: 'itemTitle',
     badgeSizeToken: 'caption',
+    accentTarget: 'title',
   },
   'primary-card': {
     id: 'primary-card',

@@ -28,26 +28,41 @@ export interface OverflowResult {
   hasOverflowed: boolean;
 }
 
+import { deriveRecordScale } from '../typography/typographyHierarchyEngine';
+import { resolveRecordLayout, RecordLayoutTemplate } from '../records/recordSpatialLayoutEngine';
+
 const A4_HEIGHT_PT = 841.89;
 
 /**
  * Estima la altura en puntos (pt) ocupada por un registro estructurado.
  */
-function estimateRecordHeightPt(record: any, typography: any): number {
+function estimateRecordHeightPt(record: any, typography: any, layoutTemplate?: RecordLayoutTemplate): number {
   const layout = buildStructuredRecordLayout(record.fields || record);
+  const scale = deriveRecordScale(typography, typography.recordScaleRatios);
+  const spatial = resolveRecordLayout(layoutTemplate);
   let height = 0;
 
-  if (layout.header) height += (typography.itemTitle || 11) + 4;
-  if (layout.subheader) height += (typography.body || 9.5) + 3;
-  if (layout.badges.length > 0) height += 14;
-  if (layout.extras.length > 0) height += layout.extras.length * 12;
+  if (spatial.isInlineCompact) {
+    // Título y Subtítulo integrados en la misma línea
+    if (layout.header || layout.subheader) height += Math.max(scale.recordTitle, scale.recordSubtitle) + 4;
+  } else {
+    if (layout.header) height += scale.recordTitle + 4;
+    if (layout.subheader) height += scale.recordSubtitle + 3;
+  }
+
+  if (layout.badges.length > 0) height += scale.recordMeta + 4;
+  if (layout.extras.length > 0) height += layout.extras.length * (scale.recordExtra + 3);
 
   if (layout.block) {
     const lines = layout.block.split('\n').length;
-    height += lines * ((typography.body || 9.5) * (typography.lineHeightBody || 1.3));
+    height += lines * (scale.recordBody * scale.lineHeightBody);
   }
 
-  return height + 8; // padding inferior
+  // Padding y márgenes del contenedor del arquetipo
+  const paddingTotal = spatial.containerStyle.padding * 2;
+  const marginBottom = spatial.containerStyle.marginBottom;
+
+  return height + paddingTotal + marginBottom;
 }
 
 /**

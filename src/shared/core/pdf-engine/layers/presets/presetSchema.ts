@@ -40,6 +40,11 @@ export interface TypographyScale {
     footerMain: number;
     footerSub: number;
   };
+  recordScaleRatios?: {
+    subtitle?: number;
+    meta?: number;
+    extra?: number;
+  };
 }
 
 export interface Preset {
@@ -54,6 +59,10 @@ export interface Preset {
   /** Orden en el que las secciones de contenido se acomodan dentro de cada sector */
   sectionOrder: { sectorRole: string; sectionIds: string[] }[];
   palette: ColorPalette;
+  paletteSeed?: {
+    seedHex: string;
+    harmonyScheme?: 'analogous' | 'complementary' | 'split-complementary' | 'monochromatic';
+  };
   typography: TypographyScale;
 
   /** Leyenda explícita de roles por diseño (ej: 'Fondo columna lateral' -> 'primary', 'Título de sección' -> 'accent') */
