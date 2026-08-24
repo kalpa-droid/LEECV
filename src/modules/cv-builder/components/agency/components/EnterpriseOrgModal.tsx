@@ -12,6 +12,7 @@ import { useConfirm } from '../../../../../shared/core/ui/ConfirmDialog';
 import { colorSystem } from '../../../../../shared/core/uiDesignSystem';
 import { Organization, OrgMember, OrgRole } from '../../../../../types/organization';
 import { Modal } from '../../../../../shared/core/ui/Modal';
+import { isValidEmail } from '../../../../../shared/core/utils/validationEngine';
 
 interface EnterpriseOrgModalProps {
   isOpen: boolean;
@@ -47,7 +48,11 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
 
   async function handleSendInvite(e: FormEvent) {
     e.preventDefault();
-    if (!inviteEmail || !org?.id) return;
+    if (!inviteEmail || !isValidEmail(inviteEmail)) {
+      showError('Por favor ingresa un correo electrónico válido para invitar.');
+      return;
+    }
+    if (!org?.id) return;
 
     try {
       await inviteMember(org.id, inviteEmail, inviteRole);

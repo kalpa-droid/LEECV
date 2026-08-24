@@ -4,6 +4,7 @@ import { iniciarPagoMercadoPago, iniciarPagoLemonSqueezy } from './paymentServic
 import { useToast } from '../../shared/core/ui/Toast';
 import { colorSystem } from '../../shared/core/uiDesignSystem';
 import { Modal } from '../../shared/core/ui/Modal';
+import { withErrorHandling } from '../../shared/core/utils/errorHandler';
 
 export default function PricingModal({ isOpen, onClose, currentProfile: _currentProfile }: any) {
   const { showError } = useToast();
@@ -11,17 +12,21 @@ export default function PricingModal({ isOpen, onClose, currentProfile: _current
 
   async function handleSelectPlan(planId: 'pro' | 'enterprise', gateway: 'mercadopago' | 'lemonsqueezy') {
     setLoadingGateway(gateway);
-    try {
-      if (gateway === 'mercadopago') {
-        await iniciarPagoMercadoPago(planId);
-      } else {
-        await iniciarPagoLemonSqueezy(planId);
+    await withErrorHandling(
+      async () => {
+        if (gateway === 'mercadopago') {
+          await iniciarPagoMercadoPago(planId);
+        } else {
+          await iniciarPagoLemonSqueezy(planId);
+        }
+      },
+      {
+        context: 'Selección de Plan de Pago',
+        errorMessage: 'Inconveniente al conectar con la pasarela de pagos.',
+        notify: (msg) => showError(msg)
       }
-    } catch (err: any) {
-      showError('Inconveniente al conectar con la pasarela de pagos: ' + (err?.message || err));
-    } finally {
-      setLoadingGateway(null);
-    }
+    );
+    setLoadingGateway(null);
   }
 
   return (

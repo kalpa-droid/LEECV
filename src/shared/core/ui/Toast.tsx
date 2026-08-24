@@ -33,7 +33,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {toasts.map(toast => {
           let bg: string = colorSystem.secondary.text;
           let border: string = colorSystem.secondary.base;
-          let textColor: string = '#FFFFFF';
+          let textColor: string = colorSystem.neutral.textPrimary;
 
           if (toast.type === 'success') {
             bg = colorSystem.status.success.base;

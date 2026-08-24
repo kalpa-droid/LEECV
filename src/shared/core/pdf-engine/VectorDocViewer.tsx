@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { pdf } from '@react-pdf/renderer';
 import * as pdfjsLib from 'pdfjs-dist';
+import { colorSystem } from '../uiDesignSystem';
 // Vite: importa el worker como URL de asset — funciona igual en build de producción.
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
@@ -89,7 +90,7 @@ export function VectorDocViewer({ document }: VectorDocViewerProps) {
       } catch (err) {
         console.error('Error renderizando el PDF vectorial:', err);
         const detail = err instanceof Error ? err.message : String(err);
-        if (!cancelled && renderTokenRef.current === myToken) {
+        if (!cancelled && renderTokenRef.current !== myToken) {
           setError(detail);
           setLoading(false);
         }
@@ -103,12 +104,12 @@ export function VectorDocViewer({ document }: VectorDocViewerProps) {
   return (
     <div style={{ width: '100%', height: '100%', overflowY: 'auto', overflowX: 'hidden' }}>
       {loading && (
-        <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8', fontSize: 13, fontWeight: 700 }}>
+        <div style={{ padding: 32, textAlign: 'center', color: colorSystem.neutral.textMuted, fontSize: 13, fontWeight: 700 }}>
           Generando vista vectorial…
         </div>
       )}
       {error && (
-        <div style={{ padding: 24, textAlign: 'center', color: '#f87171', fontSize: 12, fontWeight: 600 }}>
+        <div style={{ padding: 24, textAlign: 'center', color: colorSystem.status.danger.base, fontSize: 12, fontWeight: 600 }}>
           <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 6 }}>No se pudo generar la vista previa</div>
           <div style={{ opacity: 0.85, fontFamily: 'monospace', wordBreak: 'break-word' }}>{error}</div>
         </div>

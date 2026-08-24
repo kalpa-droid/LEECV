@@ -157,7 +157,7 @@ export default function CanvaIconDock({
                 }`}
                 title={cs.titleText}
               >
-                <DomSectionIcon iconId={iconId} className="w-4 h-4" color={isActive ? '#ffffff' : 'var(--color-secondary-base)'} />
+                <DomSectionIcon iconId={iconId} className="w-4 h-4" color={isActive ? 'var(--color-neutral-surface)' : 'var(--color-secondary-base)'} />
                 <span className="text-[9px] font-extrabold tracking-tighter mt-0.5 leading-none truncate max-w-[44px]">
                   {cs.titleText?.substring(0, 6) || 'Personal'}
                 </span>
@@ -184,7 +184,7 @@ export default function CanvaIconDock({
                 }`}
                 title={sec.label}
               >
-                <DomSectionIcon iconId={sec.iconId} className="w-4 h-4" color={isActive ? '#ffffff' : 'var(--color-accent-amber)'} />
+                <DomSectionIcon iconId={sec.iconId} className="w-4 h-4" color={isActive ? 'var(--color-neutral-surface)' : 'var(--color-accent-amber)'} />
                 <span className="text-[9px] font-extrabold tracking-tighter mt-0.5 leading-none">{sec.label}</span>
 
                 <span className="absolute left-14 bg-[var(--color-neutral-text-primary)] text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-white/10">
@@ -290,7 +290,7 @@ export default function CanvaIconDock({
                   : 'bg-[var(--color-neutral-text-primary)] text-[var(--color-neutral-border)]/80 hover:bg-[var(--ui-bg-dock-hover)]'
               }`}
             >
-              <DomSectionIcon iconId={sec.iconId} className="w-3.5 h-3.5" color={isActive ? '#ffffff' : 'var(--color-accent-amber)'} />
+              <DomSectionIcon iconId={sec.iconId} className="w-3.5 h-3.5" color={isActive ? 'var(--color-neutral-surface)' : 'var(--color-accent-amber)'} />
               <span>{sec.label}</span>
             </button>
           );
@@ -310,7 +310,7 @@ export default function CanvaIconDock({
                   : 'bg-[var(--color-neutral-text-primary)] text-purple-300 hover:bg-[var(--ui-bg-dock-hover)]'
               }`}
             >
-              <DomSectionIcon iconId={iconId} className="w-3.5 h-3.5" color={isActive ? '#ffffff' : '#A855F7'} />
+              <DomSectionIcon iconId={iconId} className="w-3.5 h-3.5" color={isActive ? 'var(--color-neutral-surface)' : 'var(--color-purple-base)'} />
               <span>{cs.titleText}</span>
             </button>
           );

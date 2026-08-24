@@ -4,6 +4,7 @@ import { validateImageFile } from '../../../shared/core/utils/validateFile';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { colorSystem } from '../../../shared/core/uiDesignSystem';
 import { Modal } from '../../../shared/core/ui/Modal';
+import { resolveCanvasColor } from '../../../shared/core/utils/canvasColorEngine';
 
 export default function SignatureModal({ 
   isOpen, 
@@ -35,19 +36,20 @@ export default function SignatureModal({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    ctx.fillStyle = '#FFFFFF';
+    const bgCanvasColor = resolveCanvasColor('neutral.surface', '#FFFFFF');
+    ctx.fillStyle = bgCanvasColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.strokeStyle = strokeColor;
+    ctx.strokeStyle = resolveCanvasColor(strokeColor, '#000000');
     ctx.lineWidth = strokeWidth;
 
     if (currentSignature?.dataUrl && activeTab === 'draw') {
       const img = new Image();
       img.src = currentSignature.dataUrl;
       img.onload = () => {
-        ctx.fillStyle = '#FFFFFF';
+        ctx.fillStyle = bgCanvasColor;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0);
       };
@@ -97,7 +99,7 @@ export default function SignatureModal({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     const { x, y } = getCoordinates(e);
-    ctx.strokeStyle = strokeColor;
+    ctx.strokeStyle = resolveCanvasColor(strokeColor, '#000000');
     ctx.lineWidth = strokeWidth;
     ctx.lineTo(x, y);
     ctx.stroke();
@@ -112,7 +114,7 @@ export default function SignatureModal({
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = resolveCanvasColor('neutral.surface', '#FFFFFF');
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   };
 

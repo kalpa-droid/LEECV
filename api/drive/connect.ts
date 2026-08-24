@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabaseAdmin } from '../_lib/supabaseAdmin.js';
 import { requireAuth } from '../_lib/authMiddleware.js';
 import { errorResponse, successResponse } from '../_lib/apiResponse.js';
 import { requireRateLimit } from '../_lib/rateLimiter.js';
+import { serverDal } from '../_lib/serverDal.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return errorResponse(res, 405, 'Método no permitido');
@@ -20,19 +20,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { refreshToken } = req.body || {};
     if (!refreshToken) return errorResponse(res, 400, 'Falta refreshToken');
 
-    const { error: tokenError } = await supabaseAdmin
-      .from('google_drive_tokens')
-      .upsert({
-        user_id: auth.user.id,
-        refresh_token: refreshToken,
-        updated_at: new Date().toISOString(),
-      });
-    if (tokenError) throw tokenError;
-
-    await supabaseAdmin
-      .from('profiles')
-      .update({ drive_connected: true })
-      .eq('id', auth.user.id);
+    await serverDal.driveTokens.upsertToken(auth.user.id, refreshToken);
+    await serverDal.profiles.updateDriveStatus(auth.user.id, { drive_connected: true });
 
     return successResponse(res, { success: true });
   } catch (err: any) {

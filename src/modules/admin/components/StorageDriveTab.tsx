@@ -4,6 +4,7 @@ import { checkStorageStatus, supabase } from '../../../shared/core/storage/docum
 import { idbStorage } from '../../cv-builder/services/storageIndexedDB';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
+import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
 
 export function StorageDriveTab() {
   const { showSuccess, showError, showInfo } = useToast();
@@ -15,30 +16,33 @@ export function StorageDriveTab() {
 
   async function refreshDiagnostics() {
     setLoading(true);
-    try {
-      // 1. Check storage status
-      const status = await checkStorageStatus();
-      setStorageStatus(status);
+    await withErrorHandling(
+      async () => {
+        // 1. Check storage status
+        const status = await checkStorageStatus();
+        setStorageStatus(status);
 
-      // 2. Count Cloud Supabase documents
-      if (supabase) {
-        const { count, error } = await supabase
-          .from('cvs')
-          .select('*', { count: 'exact', head: true });
-        if (!error && count !== null) {
-          setCloudDocsCount(count);
+        // 2. Count Cloud Supabase documents
+        if (supabase) {
+          const { count, error } = await supabase
+            .from('cvs')
+            .select('*', { count: 'exact', head: true });
+          if (!error && count !== null) {
+            setCloudDocsCount(count);
+          }
         }
-      }
 
-      // 3. Count Local IndexedDB keys
-      const keys = await idbStorage.keys();
-      setLocalDocsCount(keys.length);
-    } catch (err) {
-      console.error('Error refrescando diagnóstico:', err);
-      showError('Inconveniente al obtener estado de almacenamiento.');
-    } finally {
-      setLoading(false);
-    }
+        // 3. Count Local IndexedDB keys
+        const keys = await idbStorage.keys();
+        setLocalDocsCount(keys.length);
+      },
+      {
+        context: 'Diagnóstico de Almacenamiento',
+        errorMessage: 'Inconveniente al obtener estado de almacenamiento.',
+        notify: (msg) => showError(msg)
+      }
+    );
+    setLoading(false);
   }
 
   useEffect(() => {
@@ -46,21 +50,25 @@ export function StorageDriveTab() {
   }, []);
 
   const handleTestWrite = async () => {
-    try {
-      const testKey = `test_write_${Date.now()}`;
-      await idbStorage.setItem(testKey, { ping: 'pong', timestamp: new Date().toISOString() });
-      const readBack = await idbStorage.getItem(testKey);
-      await idbStorage.removeItem(testKey);
+    await withErrorHandling(
+      async () => {
+        const testKey = `test_write_${Date.now()}`;
+        await idbStorage.setItem(testKey, { ping: 'pong', timestamp: new Date().toISOString() });
+        const readBack = await idbStorage.getItem(testKey);
+        await idbStorage.removeItem(testKey);
 
-      if (readBack?.ping === 'pong') {
-        showSuccess('Prueba de lectura/escritura en IndexedDB realizada con éxito (100% Funcional).');
-      } else {
-        showError('Fallo en la prueba de lectura en almacenamiento local.');
+        if (readBack?.ping === 'pong') {
+          showSuccess('Prueba de lectura/escritura en IndexedDB realizada con éxito (100% Funcional).');
+        } else {
+          showError('Fallo en la prueba de lectura en almacenamiento local.');
+        }
+      },
+      {
+        context: 'Prueba de Escritura',
+        errorMessage: 'Error al escribir en el almacenamiento local.',
+        notify: (msg) => showError(msg)
       }
-    } catch (err) {
-      console.error(err);
-      showError('Error al escribir en el almacenamiento local.');
-    }
+    );
   };
 
   const handleClearLocalCache = () => {
@@ -70,20 +78,25 @@ export function StorageDriveTab() {
       confirmText: 'Limpiar Caché',
       variant: 'danger',
       onConfirm: async () => {
-        try {
-          const keys = await idbStorage.keys();
-          let clearedCount = 0;
-          for (const key of keys) {
-            if (key.startsWith('test_') || key.startsWith('tmp_')) {
-              await idbStorage.removeItem(key);
-              clearedCount++;
+        await withErrorHandling(
+          async () => {
+            const keys = await idbStorage.keys();
+            let clearedCount = 0;
+            for (const key of keys) {
+              if (key.startsWith('test_') || key.startsWith('tmp_')) {
+                await idbStorage.removeItem(key);
+                clearedCount++;
+              }
             }
+            showSuccess(`Caché liberada: ${clearedCount} registros temporales eliminados.`);
+            refreshDiagnostics();
+          },
+          {
+            context: 'Limpieza de Caché',
+            errorMessage: 'Error limpiando caché local.',
+            notify: (msg) => showError(msg)
           }
-          showSuccess(`Caché liberada: ${clearedCount} registros temporales eliminados.`);
-          refreshDiagnostics();
-        } catch (err) {
-          showError('Error limpiando caché local.');
-        }
+        );
       }
     });
   };

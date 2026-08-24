@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabaseAdmin } from '../_lib/supabaseAdmin.js';
 import { requireAuth } from '../_lib/authMiddleware.js';
 import { errorResponse, successResponse } from '../_lib/apiResponse.js';
 import { requireRateLimit } from '../_lib/rateLimiter.js';
+import { serverDal } from '../_lib/serverDal.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return errorResponse(res, 405, 'Método no permitido');
@@ -17,13 +17,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!rateOk) return;
 
   try {
-    const { data: tokenRow, error: tokenError } = await supabaseAdmin
-      .from('google_drive_tokens')
-      .select('refresh_token')
-      .eq('user_id', auth.user.id)
-      .single();
+    const tokenRow = await serverDal.driveTokens.getByUserId(auth.user.id);
 
-    if (tokenError || !tokenRow) {
+    if (!tokenRow || !tokenRow.refresh_token) {
       return errorResponse(res, 404, 'El usuario no conectó Google Drive', { code: 'not_connected' });
     }
 
@@ -42,8 +38,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!response.ok) {
       if (data.error === 'invalid_grant') {
-        await supabaseAdmin.from('profiles').update({ drive_connected: false }).eq('id', auth.user.id);
-        await supabaseAdmin.from('google_drive_tokens').delete().eq('user_id', auth.user.id);
+        await serverDal.profiles.updateDriveStatus(auth.user.id, { drive_connected: false });
+        await serverDal.driveTokens.deleteByUserId(auth.user.id);
         return errorResponse(res, 409, 'La conexión con Drive fue revocada, hay que reconectar', { code: 'revoked' });
       }
       throw new Error(JSON.stringify(data));

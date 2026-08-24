@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, Search, Filter, FileText, Download, MessageSquare, ArrowLeft, Building, UserPlus, Sparkles } from 'lucide-react';
 import { listCandidates, getOrganization } from './services/organizationService';
 import EnterpriseOrgModal from './components/EnterpriseOrgModal';
+import { withErrorHandling } from '../../../../shared/core/utils/errorHandler';
 
 export default function AgencyCandidateDashboard({ onBackToEditor }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,17 +19,19 @@ export default function AgencyCandidateDashboard({ onBackToEditor }) {
 
   async function loadData() {
     setLoading(true);
-    try {
-      const o = await getOrganization();
-      setOrg(o);
-      const list = await listCandidates(o?.id || null);
-      setCandidates(list.length > 0 ? list : fallbackCandidates);
-    } catch (err) {
-      console.error(err);
-      setCandidates(fallbackCandidates);
-    } finally {
-      setLoading(false);
-    }
+    await withErrorHandling(
+      async () => {
+        const o = await getOrganization();
+        setOrg(o);
+        const list = await listCandidates(o?.id || null);
+        setCandidates(list.length > 0 ? list : fallbackCandidates);
+      },
+      {
+        context: 'Carga de Candidatos',
+        errorMessage: 'Error al obtener candidatos de la organización.',
+      }
+    );
+    setLoading(false);
   }
 
   useEffect(() => { loadData(); }, []);

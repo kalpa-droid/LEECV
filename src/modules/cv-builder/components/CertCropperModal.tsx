@@ -3,6 +3,7 @@ import { Crop, ZoomIn, ZoomOut, RotateCw, Check, AlertTriangle, Maximize2 } from
 import { useToast } from '../../../shared/core/ui/Toast';
 import { colorSystem } from '../../../shared/core/uiDesignSystem';
 import { Modal } from '../../../shared/core/ui/Modal';
+import { resolveCanvasColor } from '../../../shared/core/utils/canvasColorEngine';
 
 export default function CertCropperModal({ 
   isOpen, 
@@ -36,7 +37,7 @@ export default function CertCropperModal({
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
 
-      ctx.fillStyle = '#FFFFFF';
+      ctx.fillStyle = resolveCanvasColor('neutral.surface', '#FFFFFF');
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       const isRotated90 = (rotation / 90) % 2 !== 0;

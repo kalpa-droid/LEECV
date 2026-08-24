@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { login } from '../auth/authService';
 import { Lock } from 'lucide-react';
+import { isValidEmail } from '../../shared/core/utils/validationEngine';
 
 export default function AdminLogin({ onLogin }) {
   const [email, setEmail] = useState('');
@@ -10,6 +11,10 @@ export default function AdminLogin({ onLogin }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (!isValidEmail(email)) {
+      setError('Por favor ingresá un formato de correo electrónico válido.');
+      return;
+    }
     setError('');
     setLoading(true);
     try {

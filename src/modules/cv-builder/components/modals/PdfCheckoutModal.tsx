@@ -8,6 +8,7 @@ import { Modal } from '../../../../shared/core/ui/Modal';
 
 import { isValidEmail } from '../../../../shared/core/utils/validationEngine';
 import { isProOrEnterprise as checkProOrEnterprise } from '../../../../shared/core/entitlements/useEntitlements';
+import { withErrorHandling } from '../../../../shared/core/utils/errorHandler';
 
 export default function PdfCheckoutModal({ 
   isOpen, 
@@ -29,12 +30,19 @@ export default function PdfCheckoutModal({
       return;
     }
 
-    try {
-      setIsProcessing(true);
-      setErrorMsg('');
-      await iniciarPagoMercadoPago('single_pdf');
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Error al conectar con Mercado Pago');
+    setIsProcessing(true);
+    setErrorMsg('');
+    const res = await withErrorHandling(
+      async () => {
+        await iniciarPagoMercadoPago('single_pdf');
+      },
+      {
+        context: 'Pago Mercado Pago (Single PDF)',
+        errorMessage: 'Error al conectar con Mercado Pago'
+      }
+    );
+    if (!res.success) {
+      setErrorMsg(res.error?.message || 'Error al conectar con Mercado Pago');
       setIsProcessing(false);
     }
   };
@@ -46,11 +54,17 @@ export default function PdfCheckoutModal({
     }
     setIsProcessing(true);
     setErrorMsg('');
-    try {
-      await iniciarPagoMercadoPago(packPlan);
-    } catch (err: any) {
-      console.error(err);
-      setErrorMsg(err.message || 'No se pudo abrir el checkout de Mercado Pago.');
+    const res = await withErrorHandling(
+      async () => {
+        await iniciarPagoMercadoPago(packPlan);
+      },
+      {
+        context: `Pago Mercado Pago (${packPlan})`,
+        errorMessage: 'No se pudo abrir el checkout de Mercado Pago.'
+      }
+    );
+    if (!res.success) {
+      setErrorMsg(res.error?.message || 'No se pudo abrir el checkout de Mercado Pago.');
       setIsProcessing(false);
     }
   };

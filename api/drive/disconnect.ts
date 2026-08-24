@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabaseAdmin } from '../_lib/supabaseAdmin.js';
 import { requireAuth, isAdmin } from '../_lib/authMiddleware.js';
 import { errorResponse, successResponse } from '../_lib/apiResponse.js';
 import { requireRateLimit } from '../_lib/rateLimiter.js';
+import { serverDal } from '../_lib/serverDal.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return errorResponse(res, 405, 'Método no permitido');
@@ -28,22 +28,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       targetUserId = requestedTarget;
     }
 
-    const { data: tokenRow } = await supabaseAdmin
-      .from('google_drive_tokens')
-      .select('refresh_token')
-      .eq('user_id', targetUserId)
-      .single();
+    const tokenRow = await serverDal.driveTokens.getByUserId(targetUserId);
 
     if (tokenRow?.refresh_token) {
       await fetch(`https://oauth2.googleapis.com/revoke?token=${tokenRow.refresh_token}`, { method: 'POST' })
         .catch(err => console.warn('No se pudo revocar el token en Google:', err));
     }
 
-    await supabaseAdmin.from('google_drive_tokens').delete().eq('user_id', targetUserId);
-    await supabaseAdmin.from('profiles').update({
+    await serverDal.driveTokens.deleteByUserId(targetUserId);
+    await serverDal.profiles.updateDriveStatus(targetUserId, {
       drive_connected: false,
       drive_quota_percent: null,
-    }).eq('id', targetUserId);
+    });
 
     return successResponse(res, { success: true });
   } catch (err: any) {

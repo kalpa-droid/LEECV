@@ -23,6 +23,7 @@ import { getAllPresets } from '../../../shared/core/pdf-engine/layers/presets/pr
 import { FIELD_CATALOG, FieldDefinition } from '../../../shared/core/pdf-engine/layers/records/fieldCatalog';
 import { PAGE_SIZES } from '../../../shared/core/pdf-engine/pageSizes';
 import { getSavedCVsList, loadCVById, deleteCVById, saveCV } from '../services/cvStorageService';
+import { colorSystem } from '../../../shared/core/uiDesignSystem';
 import CertCropperModal from './CertCropperModal';
 import PersonalInfoSection from './editor/PersonalInfoSection';
 import { PanelSection } from './editor/PanelSection';
@@ -258,7 +259,7 @@ export default function EditorPanel({
         accentColor: preset.accentColor,
         textColor: preset.textColor,
         bgCorridor: preset.bgCorridor,
-        bgColor: preset.bgCorridor || preset.bgColor || '#ffffff',
+        bgColor: preset.bgCorridor || preset.bgColor || colorSystem.neutral.surface,
         fontFamily: preset.fontFamily
       }
     }));

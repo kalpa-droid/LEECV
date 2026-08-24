@@ -77,8 +77,8 @@ function checkFile(fullPath, currentModule = null) {
       uiGovernanceWarnings++;
     }
 
-    // Detecta estilos inline duros con hex
-    const hardcodedHexStyleMatches = content.match(/style=\{\{\s*(color|backgroundColor|borderColor):\s*['"]#[0-9a-fA-F]{3,8}['"]/gi);
+    // Detecta estilos inline duros con hex (en cualquier posición de la propiedad dentro de style={{...}})
+    const hardcodedHexStyleMatches = content.match(/style=\{\{[^}]*\b(color|backgroundColor|borderColor|fill|stroke)\s*:\s*['"]#[0-9a-fA-F]{3,8}['"]/gi);
     if (hardcodedHexStyleMatches) {
       console.error(`🎨 UI Governance Error: [${file}] tiene colores inline duros: '${hardcodedHexStyleMatches.join(', ')}'. Usar colorSystem/uiDesignSystem de /shared/core/uiDesignSystem.`);
       uiGovernanceWarnings++;

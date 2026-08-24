@@ -6,6 +6,7 @@ import { Palette, Code2, Save, Plus, Trash2, Layout, Sparkles, RefreshCw, CheckC
 import { generateHarmonyPalette, HarmonyScheme } from '../../../shared/core/pdf-engine/layers/colors/colorSystem';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
+import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
 
 export function TemplateManagementTab() {
   const { showSuccess, showError } = useToast();
@@ -91,19 +92,23 @@ export function TemplateManagementTab() {
     }
 
     setSaving(true);
-    try {
-      const res = await savePresetToSupabase(presetToSave);
-      if (res.success) {
-        showSuccess(`Plantilla "${presetToSave.name}" guardada y sincronizada en Supabase.`);
-        loadPresets();
-      } else {
-        showError(res.error || 'Error guardando plantilla en Supabase.');
+    await withErrorHandling(
+      async () => {
+        const res = await savePresetToSupabase(presetToSave);
+        if (res.success) {
+          showSuccess(`Plantilla "${presetToSave.name}" guardada y sincronizada en Supabase.`);
+          loadPresets();
+        } else {
+          showError(res.error || 'Error guardando plantilla en Supabase.');
+        }
+      },
+      {
+        context: 'Guardado de Plantilla',
+        errorMessage: 'Error al guardar la plantilla.',
+        notify: (msg) => showError(msg)
       }
-    } catch (err: any) {
-      showError(err?.message || 'Error al guardar la plantilla.');
-    } finally {
-      setSaving(false);
-    }
+    );
+    setSaving(false);
   };
 
   const handleCreateNewPreset = () => {

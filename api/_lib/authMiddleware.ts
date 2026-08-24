@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { User } from '@supabase/supabase-js';
 import { supabaseAdmin } from './supabaseAdmin.js';
 import { errorResponse } from './apiResponse.js';
+import { serverDal } from './serverDal.js';
 
 export interface AuthResult {
   user: User;
@@ -60,10 +61,6 @@ export async function requireAdmin(req: VercelRequest, res: VercelResponse): Pro
  * medio de la lógica del endpoint.
  */
 export async function isAdmin(userId: string): Promise<boolean> {
-  const { data } = await supabaseAdmin
-    .from('profiles')
-    .select('role')
-    .eq('id', userId)
-    .single();
-  return data?.role === 'admin';
+  const role = await serverDal.profiles.getRole(userId);
+  return role === 'admin';
 }

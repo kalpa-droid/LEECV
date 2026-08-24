@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { serverDal } from './serverDal.js';
 
 export interface PaymentDetails {
   userId?: string | null;
@@ -10,7 +11,7 @@ export interface PaymentDetails {
   currency?: string | null;
 }
 
-export async function applyPayment(supabaseAdmin: SupabaseClient, payment: PaymentDetails) {
+export async function applyPayment(_supabaseAdmin: SupabaseClient, payment: PaymentDetails) {
   const { userId, email, plan, metodoPago, externalId, amount, currency } = payment;
 
   if (!userId && !email) {
@@ -19,13 +20,7 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
 
   // Check idempotency if externalId is provided
   if (externalId && metodoPago) {
-    const { data: alreadyProcessed } = await supabaseAdmin
-      .from('processed_payments')
-      .select('id')
-      .eq('provider', metodoPago)
-      .eq('external_id', externalId)
-      .single();
-
+    const alreadyProcessed = await serverDal.processedPayments.checkIdempotency(metodoPago, externalId);
     if (alreadyProcessed) {
       console.log(`[applyPayment] Transacción duplicada omitida (${metodoPago}: ${externalId})`);
       return { type: 'already_processed', message: 'Payment already recorded' };
@@ -41,9 +36,10 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
   let result;
 
   if (CREDIT_PACKS[plan]) {
-    result = await grantCredits(supabaseAdmin, userId || '', CREDIT_PACKS[plan]);
+    const res = await serverDal.pdfExportCredits.grantCredits(userId || '', CREDIT_PACKS[plan]);
+    result = { type: 'credits', credits: res.credits };
   } else if (plan === 'pro' || plan === 'enterprise') {
-    result = await activateSubscription(supabaseAdmin, { userId: userId || undefined, email: email || undefined, plan, metodoPago });
+    result = await activateSubscription({ userId: userId || undefined, email: email || undefined, plan, metodoPago });
   } else {
     throw new Error(`Plan desconocido en applyPayment: ${plan}`);
   }
@@ -51,10 +47,10 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
   // Record payment in processed_payments for idempotency
   if (externalId && metodoPago) {
     try {
-      await supabaseAdmin.from('processed_payments').insert({
+      await serverDal.processedPayments.record({
         provider: metodoPago,
         external_id: externalId,
-        user_id: userId || null,
+        user_id: userId || undefined,
         plan
       });
     } catch (err: any) {
@@ -63,36 +59,17 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
   }
 
   // Registro único de auditoría + fuente para el panel de admin ("avisos de pago").
-  await supabaseAdmin.from('admin_notifications').insert({
+  await serverDal.adminNotifications.create({
     type: 'payment_received',
     title: `Pago recibido (${metodoPago})`,
-    detail: `Plan/paquete: ${plan}${amount ? ` — ${amount} ${currency || ''}` : ''}${externalId ? ` — ref: ${externalId}` : ''}`,
-    user_id: userId || null,
-    user_email: email || null,
-    metadata: { plan, metodoPago, externalId, amount, currency },
+    message: `Plan/paquete: ${plan}${amount ? ` — ${amount} ${currency || ''}` : ''}${externalId ? ` — ref: ${externalId}` : ''}`,
+    metadata: { plan, metodoPago, externalId, amount, currency, user_id: userId || null, user_email: email || null },
   });
 
   return result;
 }
 
-async function grantCredits(supabaseAdmin: SupabaseClient, userId: string, amount: number) {
-  const { data: existing } = await supabaseAdmin
-    .from('pdf_export_credits')
-    .select('credits')
-    .eq('user_id', userId)
-    .single();
-
-  const newCredits = (existing?.credits || 0) + amount;
-  const { error } = await supabaseAdmin
-    .from('pdf_export_credits')
-    .upsert({ user_id: userId, credits: newCredits, updated_at: new Date().toISOString() });
-
-  if (error) throw error;
-  return { type: 'credits', credits: newCredits };
-}
-
 async function activateSubscription(
-  supabaseAdmin: SupabaseClient, 
   { userId, email, plan, metodoPago }: { userId?: string; email?: string; plan: string; metodoPago: string }
 ) {
   const vence = new Date();
@@ -106,23 +83,17 @@ async function activateSubscription(
     metodo_pago: metodoPago,
   };
 
-  const query = supabaseAdmin.from('profiles').update(patch);
-  const { data: updated, error } = userId
-    ? await query.eq('id', userId).select('id').single()
-    : await query.eq('email', email).select('id').single();
-  if (error) throw error;
+  const matchBy = userId ? { id: userId } : { email: email! };
+  await serverDal.profiles.updateSubscription(matchBy, patch);
 
-  if (plan === 'enterprise' && updated?.id) {
-    const { data: existingOrg } = await supabaseAdmin
-      .from('organizations')
-      .select('id')
-      .eq('owner_id', updated.id)
-      .single();
+  const targetUserId = userId || null;
 
+  if (plan === 'enterprise' && targetUserId) {
+    const existingOrg = await serverDal.organizations.getByOwnerId(targetUserId);
     if (!existingOrg) {
-      await supabaseAdmin.from('organizations').insert({
+      await serverDal.organizations.create({
         name: email ? `Organización de ${email}` : 'Mi organización',
-        owner_id: updated.id,
+        owner_id: targetUserId,
       });
     }
   }

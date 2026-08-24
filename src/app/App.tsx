@@ -299,7 +299,7 @@ function AppContent() {
           />
         </div>
 
-        <div className={`flex-1 bg-[#1F1322] h-full overflow-y-auto p-2 sm:p-4 justify-center items-start relative ${
+        <div className={`flex-1 bg-[var(--ui-preview-bg)] h-full overflow-y-auto p-2 sm:p-4 justify-center items-start relative ${
           mobileTabState === 'editor' && isPanelOpen ? 'hidden md:flex' : 'flex'
         }`}>
           <Suspense fallback={
@@ -444,7 +444,7 @@ function AppContent() {
       </Suspense>
 
       {/* Barra de Estado Inferior Reorganizada (Zoom, Modo CV/Tarjeta y Switcher de Tema) */}
-      <footer className="hidden md:flex bg-[#1C121E] text-slate-300 border-t border-[var(--color-neutral-border)]/10 py-2 px-4 md:pl-20 items-center justify-between no-print z-30 shadow-2xl select-none text-xs">
+      <footer className="hidden md:flex bg-[var(--color-critical-surface-card)] text-slate-300 border-t border-[var(--color-neutral-border)]/10 py-2 px-4 md:pl-20 items-center justify-between no-print z-30 shadow-2xl select-none text-xs">
         {/* Izquierda: Alternador CV vs Tarjeta Personal */}
         <div className="flex items-center gap-2">
           <button
@@ -455,7 +455,7 @@ function AppContent() {
           >
             {cvData?.activePresetId === 'tarjeta-personal' ? (
               <>
-                <CreditCard className="w-3.5 h-3.5 text-[#FFC93C]" />
+                <CreditCard className="w-3.5 h-3.5 text-[var(--color-accent-amber)]" />
                 <span>Vista: Tarjeta Personal 📇</span>
               </>
             ) : (
@@ -484,7 +484,7 @@ function AppContent() {
             <ZoomOut className="w-3.5 h-3.5" />
           </button>
 
-          <span className="px-2 text-[#FFC93C] text-xs font-black min-w-10 text-center">
+          <span className="px-2 text-[var(--color-accent-amber)] text-xs font-black min-w-10 text-center">
             {Math.round(zoomLevel * 100)}%
           </span>
 
