@@ -8,6 +8,7 @@ import {
   acceptInvitation 
 } from '../services/organizationService';
 import { useToast } from '../../../../../shared/core/ui/Toast';
+import { withErrorHandling } from '../../../../../shared/core/utils/errorHandler';
 import { useConfirm } from '../../../../../shared/core/ui/ConfirmDialog';
 import { colorSystem } from '../../../../../shared/core/uiDesignSystem';
 import { Organization, OrgMember, OrgRole } from '../../../../../types/organization';
@@ -30,16 +31,18 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
   const [activeTab, setActiveTab] = useState<'team' | 'invite' | 'accept'>('team');
 
   async function loadOrgData() {
-    try {
-      const o = await getOrganization();
-      setOrg(o);
-      if (o?.id) {
-        const m = await listOrgMembers(o.id);
-        setMembers(m);
-      }
-    } catch (err: any) {
-      console.error(err);
-    }
+    const res = await withErrorHandling(
+      async () => {
+        const o = await getOrganization();
+        setOrg(o);
+        if (o?.id) {
+          const m = await listOrgMembers(o.id);
+          setMembers(m);
+        }
+      },
+      { context: 'Cargar organización', errorMessage: 'No se pudo cargar la información de tu organización' }
+    );
+    if (!res.success) showError(res.error?.message || 'No se pudo cargar la información de tu organización');
   }
 
   useEffect(() => {
@@ -54,13 +57,13 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
     }
     if (!org?.id) return;
 
-    try {
-      await inviteMember(org.id, inviteEmail, inviteRole);
-      showSuccess(`✅ Invitación enviada a ${inviteEmail}`);
+    const res = await withErrorHandling(
+      () => inviteMember(org.id!, inviteEmail, inviteRole),
+      { context: 'Enviar invitación', notify: (msg, type) => type === 'success' ? showSuccess(msg) : showError(msg), successMessage: `✅ Invitación enviada a ${inviteEmail}`, errorMessage: 'Error al enviar invitación' }
+    );
+    if (res.success) {
       setInviteEmail('');
       loadOrgData();
-    } catch (err: any) {
-      showError(err.message || 'Error al enviar invitación');
     }
   }
 
@@ -71,13 +74,11 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
       confirmText: 'Remover Integrante',
       variant: 'danger',
       onConfirm: async () => {
-        try {
-          await removeMember(member.id);
-          showSuccess(`Integrante desvinculado.`);
-          loadOrgData();
-        } catch (err: any) {
-          showError(err.message || 'Error desvinculando integrante');
-        }
+        const res = await withErrorHandling(
+          () => removeMember(member.id),
+          { context: 'Remover integrante', notify: (msg, type) => type === 'success' ? showSuccess(msg) : showError(msg), successMessage: 'Integrante desvinculado.', errorMessage: 'Error desvinculando integrante' }
+        );
+        if (res.success) loadOrgData();
       }
     });
   }
@@ -86,13 +87,13 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
     e.preventDefault();
     if (!invitationTokenInput) return;
 
-    try {
-      await acceptInvitation(invitationTokenInput);
-      showSuccess('🎉 ¡Te has unido a la organización con éxito!');
+    const res = await withErrorHandling(
+      () => acceptInvitation(invitationTokenInput),
+      { context: 'Aceptar invitación', notify: (msg, type) => type === 'success' ? showSuccess(msg) : showError(msg), successMessage: '🎉 ¡Te has unido a la organización con éxito!', errorMessage: 'Token de invitación no válido' }
+    );
+    if (res.success) {
       setInvitationTokenInput('');
       loadOrgData();
-    } catch (err: any) {
-      showError(err.message || 'Token de invitación no válido');
     }
   }
 

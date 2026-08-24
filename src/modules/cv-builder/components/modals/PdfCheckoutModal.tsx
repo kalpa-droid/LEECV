@@ -77,16 +77,18 @@ export default function PdfCheckoutModal({
 
     if (currentProfile?.id) {
       setIsProcessing(true);
-      try {
-        const { ok, data } = await apiClient.post('/api/consume-pdf-credit', { userId: currentProfile.id });
-        if (ok && data?.success) {
-          onConfirm();
-          return;
-        }
-      } catch (err) {
-        console.warn('Error verificando créditos:', err);
-      } finally {
-        setIsProcessing(false);
+      const res = await withErrorHandling(
+        () => apiClient.post('/api/consume-pdf-credit', { userId: currentProfile.id }),
+        { context: 'Consumir crédito PDF' }
+      );
+      setIsProcessing(false);
+      if (res.success && res.data?.ok && res.data.data?.success) {
+        onConfirm();
+        return;
+      }
+      if (!res.success) {
+        setErrorMsg('No se pudo verificar tus créditos — revisá tu conexión e intentá de nuevo.');
+        return;
       }
     }
 
