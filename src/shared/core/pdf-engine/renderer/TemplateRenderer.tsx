@@ -12,6 +12,9 @@ import { resolvePageTextStyle, buildPageTextTemplate } from '../layers/pageText/
 import { CardObjectRenderer } from '../layers/cards/CardObjectRenderer';
 import { SectionBannerCard } from '../layers/cards/SectionBannerCard';
 import { buildStructuredRecordLayout } from '../layers/records/recordLayoutEngine';
+import { processPageOverflow } from '../layers/overflow/pageOverflowEngine';
+import { OrnamentRenderer } from './OrnamentRenderer';
+import { resolveDecorativeStyles } from '../layers/decorations/decorativeLayerEngine';
 
 export interface TemplateRendererProps {
   preset: Preset;
@@ -416,6 +419,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       return (
         <CardObjectRenderer
           key={rec.id}
+          preset={preset}
           designId={designId}
           title={layout.header || String(f.degree || '')}
           subtitle={layout.subheader || String(f.institution || '')}
@@ -436,6 +440,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       return (
         <CardObjectRenderer
           key={rec.id}
+          preset={preset}
           designId={designId}
           title={layout.header || String(f.role || '')}
           subtitle={layout.subheader || String(f.institution || '')}
@@ -470,6 +475,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       return (
         <CardObjectRenderer
           key={rec.id}
+          preset={preset}
           designId={designId}
           title={layout.header || String(f.title || f.name || '')}
           subtitle={layout.subheader || String(f.institution || '')}
@@ -545,60 +551,62 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     return null;
   };
 
-  const documentBody = (
+  const overflowResult = processPageOverflow(preset, sections);
+  const decStyles = resolveDecorativeStyles(preset);
+
+  const buildDocumentBody = (pageSections: ContentSection[], isFirstPage: boolean) => (
     <View style={embedded ? [styles.pageBody, { width: pageDef.widthPt, height: pageDef.heightPt }] : styles.pageBody}>
       {sectorsWithFlow.map((sFlow) => {
         const isSidebar = sFlow.sector.role === 'sidebar';
         const surfaceStyle = isSidebar ? styles.leftColumnSurface : styles.rightColumnSurface;
         const contentStyle = isSidebar ? styles.leftColumnContent : styles.rightColumnContent;
-        // Solo el sidebar tiene ancho fijo (su caja de sector, en pt, contra
-        // la hoja física completa — Capa 2 ya corregida). La columna de
-        // contenido usa flex:1 y ocupa lo que sobre, así nunca hay huecos.
         const widthStyle = isSidebar ? { width: sFlow.sector.box.widthPt } : {};
 
         const sectorSectionIds = preset.sectionOrder.find(s => s.sectorRole === sFlow.sector.role)?.sectionIds || [];
-        const sectorSections = sections.filter(sec => sectorSectionIds.includes(sec.id));
+        const sectorSections = pageSections.filter(sec => sectorSectionIds.includes(sec.id) || sec.id.endsWith('-cont'));
 
         return (
-          <View key={sFlow.sector.id} style={[surfaceStyle, widthStyle]}>
+          <View key={sFlow.sector.id} style={[surfaceStyle, widthStyle, { position: 'relative' }]}>
+            <OrnamentRenderer ornamentKind={decStyles.cornerOrnament} color={rolesColor.accent || '#52b788'} />
             <View style={contentStyle}>
               {/* SPACER FIJO DE MARGEN SUPERIOR PARA EVITAR EL BUG DE PAGINACIÓN DE REACT-PDF (#430/#733) */}
               <View fixed style={{ height: usable.margins.topPt || 14 }} />
-              {isSidebar && (
-              <View style={styles.sidebarHeader}>
-                {personalInfo?.profilePhoto ? (
-                  <Image src={personalInfo.profilePhoto} style={styles.profilePhoto} />
-                ) : (
-                  <View style={styles.profilePhotoPlaceholder}>
-                    <Text style={{ fontSize: 20, fontFamily: 'Helvetica-Bold', color: '#ffffff' }}>
-                      {`${(personalInfo?.givenNames || 'C')[0]}${(personalInfo?.surname || 'V')[0]}`}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            )}
+              {isSidebar && isFirstPage && (
+                <View style={styles.sidebarHeader}>
+                  {personalInfo?.profilePhoto ? (
+                    <Image src={personalInfo.profilePhoto} style={styles.profilePhoto} />
+                  ) : (
+                    <View style={styles.profilePhotoPlaceholder}>
+                      <Text style={{ fontSize: 20, fontFamily: 'Helvetica-Bold', color: '#ffffff' }}>
+                        {`${(personalInfo?.givenNames || 'C')[0]}${(personalInfo?.surname || 'V')[0]}`}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              )}
 
-            {!isSidebar && (
-              <Text style={styles.headerName}>
-                {personalInfo.surname || ''} <Text style={styles.headerNameHighlight}>{personalInfo.givenNames || ''}</Text>
-              </Text>
-            )}
+              {!isSidebar && isFirstPage && (
+                <Text style={styles.headerName}>
+                  {personalInfo.surname || ''} <Text style={styles.headerNameHighlight}>{personalInfo.givenNames || ''}</Text>
+                </Text>
+              )}
 
-            {sectorSections.map((sec) => (
-              <View key={sec.id}>
-                {sec.titleText && sec.id !== 'firma' && (
-                  <SectionBannerCard
-                    titleText={sec.titleText}
-                    iconId={sec.id}
-                    designId={isSidebar ? undefined : (customRecordCardDesigns?.education || preset.recordCardDesigns?.education)}
-                    rolesColor={rolesColor}
-                    typography={preset.typography}
-                    isSidebar={isSidebar}
-                  />
-                )}
-                {sec.records.map(rec => renderRecord(rec, isSidebar))}
-              </View>
-            ))}
+              {sectorSections.map((sec) => (
+                <View key={sec.id}>
+                  {sec.titleText && sec.id !== 'firma' && (
+                    <SectionBannerCard
+                      preset={preset}
+                      titleText={sec.titleText}
+                      iconId={sec.id}
+                      designId={isSidebar ? undefined : (customRecordCardDesigns?.education || preset.recordCardDesigns?.education)}
+                      rolesColor={rolesColor}
+                      typography={preset.typography}
+                      isSidebar={isSidebar}
+                    />
+                  )}
+                  {sec.records.map(rec => renderRecord(rec, isSidebar))}
+                </View>
+              ))}
             </View>
           </View>
         );
@@ -606,11 +614,9 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     </View>
   );
 
-  // MODO EMBEBIDO: se devuelve solo el contenido, sin Document/Page propios,
-  // sin portada ni páginas de certificados — pensado para ir DENTRO de un
-  // slot de otra hoja ya armada (ej. una tarjeta dentro de un A4 con varias).
+  // MODO EMBEBIDO: se devuelve solo el contenido, sin Document/Page propios
   if (embedded) {
-    return documentBody;
+    return buildDocumentBody(sections, true);
   }
 
   return (
@@ -668,23 +674,20 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
         </Page>
       )}
 
-      {/* LAYER 0-4: MAIN CV CONTENT PAGES */}
-      <Page size={pdfPaperSize} style={styles.page}>
-        {documentBody}
-        {/* CAPA "TEXTO DE HOJA": ancla a la hoja física, no a ningún sector.
-            `fixed` + `render` es el mecanismo NATIVO de @react-pdf/renderer
-            para paginación real — pageNumber/totalPages los calcula el motor
-            de layout (Yoga) después de resolver cuántas hojas hacen falta,
-            no un cálculo manual nuestro. */}
-        {preset.pageTextObjects && preset.pageTextObjects.map(def => (
-          <Text
-            key={def.id}
-            fixed
-            style={resolvePageTextStyle(def) as any}
-            render={({ pageNumber, totalPages }) => buildPageTextTemplate(def.template, pageNumber, totalPages)}
-          />
-        ))}
-      </Page>
+      {/* LAYER 0-4: MAIN CV CONTENT PAGES CON MOTOR DE OVERFLOW */}
+      {overflowResult.pages.map(page => (
+        <Page key={page.pageNumber} size={pdfPaperSize} style={styles.page}>
+          {buildDocumentBody(page.sections, page.pageNumber === 1)}
+          {preset.pageTextObjects && preset.pageTextObjects.map(def => (
+            <Text
+              key={def.id}
+              fixed
+              style={resolvePageTextStyle(def) as any}
+              render={({ pageNumber, totalPages }) => buildPageTextTemplate(def.template, pageNumber, totalPages)}
+            />
+          ))}
+        </Page>
+      ))}
 
       {/* LAYER 4: SCANNED CERTIFICATE PAGES */}
       {certificatesScanned && certificatesScanned.map((cert: any, index: number) => (

@@ -71,58 +71,69 @@ export function processPageOverflow(
   const availableHeightPt = A4_HEIGHT_PT - (topMarginPt + bottomMarginPt);
   const typography = preset.typography;
 
-  const page1Sections: ContentSection[] = [];
-  const page2Sections: ContentSection[] = [];
+  // Organizar secciones por sector según preset.sectionOrder
+  const sidebarSectionIds = preset.sectionOrder.find(s => s.sectorRole === 'sidebar')?.sectionIds || [];
+  const mainSectionIds = preset.sectionOrder.find(s => s.sectorRole === 'main')?.sectionIds || [];
 
-  let currentHeightPt = 0;
-  let overflowed = false;
+  const splitSector = (secList: ContentSection[], reservedHeaderPt: number) => {
+    const p1: ContentSection[] = [];
+    const p2: ContentSection[] = [];
+    let curH = reservedHeaderPt;
+    let hasOverflow = false;
 
-  for (const section of sections) {
-    const sectionTitleHeight = section.titleText ? (typography.sectionHeading || 11) + 12 : 0;
-    
-    // Si agregar la sección supera el presupuesto de la página 1
-    if (currentHeightPt + sectionTitleHeight > availableHeightPt - 40) {
-      overflowed = true;
-      page2Sections.push(section);
-      continue;
-    }
+    for (const section of secList) {
+      const titleH = section.titleText ? (typography.sectionHeading || 11) + 12 : 0;
+      if (curH + titleH > availableHeightPt - 30) {
+        hasOverflow = true;
+        p2.push(section);
+        continue;
+      }
 
-    const fitRecords: any[] = [];
-    const overflowRecords: any[] = [];
-    let secAccumulated = sectionTitleHeight;
+      const fitRecs: any[] = [];
+      const overRecs: any[] = [];
+      let secH = titleH;
 
-    for (const rec of section.records) {
-      const recHeight = estimateRecordHeightPt(rec, typography);
-      if (currentHeightPt + secAccumulated + recHeight <= availableHeightPt - 20) {
-        fitRecords.push(rec);
-        secAccumulated += recHeight;
-      } else {
-        overflowed = true;
-        overflowRecords.push(rec);
+      for (const rec of section.records) {
+        const rH = estimateRecordHeightPt(rec, typography);
+        if (curH + secH + rH <= availableHeightPt - 20) {
+          fitRecs.push(rec);
+          secH += rH;
+        } else {
+          hasOverflow = true;
+          overRecs.push(rec);
+        }
+      }
+
+      if (fitRecs.length > 0) {
+        p1.push({ ...section, records: fitRecs });
+        curH += secH;
+      }
+
+      if (overRecs.length > 0) {
+        p2.push({
+          ...section,
+          id: `${section.id}-cont`,
+          titleText: section.titleText ? `${section.titleText} (cont.)` : '',
+          records: overRecs
+        });
       }
     }
 
-    if (fitRecords.length > 0) {
-      page1Sections.push({
-        ...section,
-        records: fitRecords
-      });
-      currentHeightPt += secAccumulated;
-    }
+    return { p1, p2, hasOverflow };
+  };
 
-    if (overflowRecords.length > 0) {
-      page2Sections.push({
-        ...section,
-        id: `${section.id}-cont`,
-        titleText: section.titleText ? `${section.titleText} (cont.)` : '',
-        records: overflowRecords
-      });
-    }
-  }
+  const sidebarSections = sections.filter(sec => sidebarSectionIds.includes(sec.id));
+  const mainSections = sections.filter(sec => mainSectionIds.includes(sec.id) || (!sidebarSectionIds.includes(sec.id) && !mainSectionIds.includes(sec.id)));
 
-  if (!overflowed || page2Sections.length === 0) {
+  // Reserva de foto en sidebar (150pt) y título de header en main (40pt)
+  const sidebarSplit = splitSector(sidebarSections, 150);
+  const mainSplit = splitSector(mainSections, 40);
+
+  const overflowed = sidebarSplit.hasOverflow || mainSplit.hasOverflow;
+
+  if (!overflowed) {
     return {
-      pages: [{ pageNumber: 1, totalPages: 1, sections: page1Sections.length > 0 ? page1Sections : sections }],
+      pages: [{ pageNumber: 1, totalPages: 1, sections }],
       hasOverflowed: false
     };
   }
@@ -130,8 +141,8 @@ export function processPageOverflow(
   const totalPages = 2;
   return {
     pages: [
-      { pageNumber: 1, totalPages, sections: page1Sections },
-      { pageNumber: 2, totalPages, sections: page2Sections }
+      { pageNumber: 1, totalPages, sections: [...sidebarSplit.p1, ...mainSplit.p1] },
+      { pageNumber: 2, totalPages, sections: [...sidebarSplit.p2, ...mainSplit.p2] }
     ],
     hasOverflowed: true
   };

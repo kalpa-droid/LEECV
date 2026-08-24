@@ -2,9 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet } from '@react-pdf/renderer';
 import { CARD_DESIGNS, CardDesign } from './cardDesignSchema';
 import { ResolvedThemeRoles, getTypographyColorBinding } from '../colors/colorSystem';
-import { TypographyScale } from '../presets/presetSchema';
+import { TypographyScale, Preset } from '../presets/presetSchema';
+import { resolveDecorativeStyles } from '../decorations/decorativeLayerEngine';
 
 interface CardObjectRendererProps {
+  preset?: Preset;
   designId?: string;
   title: string;
   subtitle?: string;
@@ -18,6 +20,7 @@ interface CardObjectRendererProps {
 }
 
 export function CardObjectRenderer({
+  preset,
   designId = 'primary-card',
   title,
   subtitle,
@@ -30,6 +33,7 @@ export function CardObjectRenderer({
   sectorRole = 'main',
 }: CardObjectRendererProps) {
   const design: CardDesign = CARD_DESIGNS[designId] || CARD_DESIGNS['primary-card'];
+  const decStyles = preset ? resolveDecorativeStyles(preset, designId as any) : null;
 
   const getRoleColor = (roleName: string) => {
     switch (roleName) {
@@ -74,11 +78,11 @@ export function CardObjectRenderer({
     cardContainer: {
       padding: 8,
       marginBottom: 8,
-      borderLeftWidth: design.borderWidthPt,
-      borderLeftColor: borderColor,
+      borderLeftWidth: decStyles?.cardContainerStyle.borderWidthPt ?? design.borderWidthPt,
+      borderLeftColor: decStyles?.cardContainerStyle.borderColor ?? borderColor,
       borderLeftStyle: 'solid',
-      backgroundColor: backgroundColor,
-      borderRadius: design.borderRadiusPt,
+      backgroundColor: decStyles?.cardContainerStyle.backgroundColor ?? backgroundColor,
+      borderRadius: decStyles?.cardContainerStyle.borderRadiusPt ?? design.borderRadiusPt,
     },
     headerRow: {
       flexDirection: 'row',

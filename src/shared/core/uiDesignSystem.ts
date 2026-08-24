@@ -107,7 +107,7 @@ export const typeScale = {
  */
 export const button = {
   base: 'rounded-[10px] font-medium text-[13px] px-4 py-2.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed',
-  primary: `bg-[var(--color-accent-base)] text-white hover:bg-[var(--color-accent-hover)] active:scale-[0.98]`,
+  primary: `bg-[image:var(--gradient-brand)] text-white hover:opacity-95 active:scale-[0.98] shadow-md`,
   secondary: `bg-white border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] hover:border-[var(--color-neutral-border-strong)] active:scale-[0.98]`,
   ghost: `bg-transparent text-[var(--color-neutral-text-secondary)] hover:text-[var(--color-neutral-text-primary)]`,
   danger: `bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/30 text-[var(--color-status-danger-text)] hover:bg-[var(--color-status-danger-muted)]`,

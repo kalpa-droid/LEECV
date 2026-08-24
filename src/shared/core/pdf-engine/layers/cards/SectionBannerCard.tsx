@@ -2,10 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet } from '@react-pdf/renderer';
 import { CARD_DESIGNS, CardDesign } from './cardDesignSchema';
 import { ResolvedThemeRoles, getTypographyColorBinding } from '../colors/colorSystem';
-import { TypographyScale } from '../presets/presetSchema';
+import { TypographyScale, Preset } from '../presets/presetSchema';
 import { PdfSectionIcon } from '../icons/PdfSectionIcon';
 
 interface SectionBannerCardProps {
+  preset?: Preset;
   titleText: string;
   iconId?: string;
   designId?: string;
