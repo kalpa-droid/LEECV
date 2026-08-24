@@ -53,7 +53,10 @@ export const creativeSustentablePreset: Preset = {
     cardBorders: true,
     sectionDividers: true,
     backgroundShapes: true,
-    shadowEffects: false
+    shadowEffects: false,
+    cornerOrnaments: 'organic-leaf',
+    watermarkType: 'ecologia',
+    headerIconStyle: 'filled'
   },
   roleLegend: {
     'Fondo de columna lateral / Sidebar': 'primary (#1b4332)',

@@ -83,12 +83,15 @@ export interface Preset {
     sectionOrder: { sectorRole: string; sectionIds: string[] }[];
   };
 
-  /** Políticas de adorno y decoración visual (bordes, separadores, sombras) */
+  /** Políticas de adorno y decoración visual (bordes, separadores, sombras, adornos vectoriales) */
   decorativeElementPolicy?: {
     cardBorders?: boolean;
     sectionDividers?: boolean;
     backgroundShapes?: boolean;
     shadowEffects?: boolean;
+    cornerOrnaments?: 'organic-leaf' | 'geometric-badge' | 'classic-line' | 'none';
+    watermarkType?: 'none' | 'subtle-brand' | 'ecologia';
+    headerIconStyle?: 'filled' | 'outlined' | 'minimal';
   };
 
   /** Solo aplica a pageCategory:'tarjeta' — cómo se imprime en una hoja física */

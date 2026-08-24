@@ -47,6 +47,9 @@
   --ui-text-secondary: #6B5B6E;
   --ui-border: #EFE2C9;
   --ui-preview-bg: #1F1322;
+  --gradient-brand: linear-gradient(135deg, #FF2E63 0%, #8E44FF 100%);
+  --gradient-gold: linear-gradient(135deg, #FFC93C 0%, #FF7A29 100%);
+  --gradient-teal: linear-gradient(135deg, #00A8A0 0%, #008f88 100%);
 }
 
 /* ============================================================ */
@@ -117,6 +120,9 @@
   --ui-text-secondary: #94A3B8;
   --ui-border: #334155;
   --ui-preview-bg: #020617;
+  --gradient-brand: linear-gradient(135deg, #FF2E63 0%, #7126E0 100%);
+  --gradient-gold: linear-gradient(135deg, #F0AE00 0%, #FF7A29 100%);
+  --gradient-teal: linear-gradient(135deg, #008780 0%, #00655F 100%);
 }
 
 [data-ui-theme="teal_ocean"] {
@@ -129,6 +135,9 @@
   --ui-text-secondary: #A8DADC;
   --ui-border: #457B9D;
   --ui-preview-bg: #050E17;
+  --gradient-brand: linear-gradient(135deg, #00A8A0 0%, #457B9D 100%);
+  --gradient-gold: linear-gradient(135deg, #E63946 0%, #F1FAEE 100%);
+  --gradient-teal: linear-gradient(135deg, #1D3557 0%, #457B9D 100%);
 }
 
 /* Clases de Utilidad Globales del Motor de Interfaz */

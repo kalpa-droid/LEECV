@@ -3,7 +3,7 @@ import Navbar from '../modules/cv-builder/components/Navbar';
 import CanvaIconDock from '../modules/cv-builder/components/CanvaIconDock';
 import EditorPanel from '../modules/cv-builder/components/EditorPanel';
 const CVPreview = lazy(() => import('../modules/cv-builder/components/CVPreview'));
-import { ZoomIn, ZoomOut, Smartphone, FileText, CreditCard, Palette } from 'lucide-react';
+import { FileText, CreditCard, Palette } from 'lucide-react';
 
 import { getCurrentProfile, capturarConexionDriveSiCorresponde } from '../modules/auth/authService';
 import { supabase } from '../shared/core/lib/supabaseClient';
@@ -18,6 +18,7 @@ import PhotoCropperModal from '../modules/cv-builder/components/PhotoCropperModa
 import SignatureModal from '../modules/cv-builder/components/SignatureModal';
 import WizardModal from '../modules/cv-builder/components/WizardModal';
 import SavedCVsModal from '../modules/cv-builder/components/SavedCVsModal';
+import { ZoomControls } from '../shared/core/ui/ZoomControls';
 import SaveModal from '../modules/cv-builder/components/SaveModal';
 import CloudStatusModal from '../modules/cv-builder/components/CloudStatusModal';
 import PricingModal from '../modules/payments/PricingModal';
@@ -264,6 +265,15 @@ function AppContent() {
           onSaveCV={handleSaveCVClick}
           isSaving={isSaving}
         />
+        {/* Barra compacta de Zoom en Mobile (< md) */}
+        <div className="flex md:hidden bg-[var(--color-critical-surface-card)] border-b border-white/10 px-3 py-1.5 justify-center z-30">
+          <ZoomControls 
+            zoomLevel={zoomLevel} 
+            setZoomLevel={setZoomLevel} 
+            triggerAutoFit={triggerAutoFit}
+            isMobile={true}
+          />
+        </div>
       </div>
 
       <main className="flex-1 flex overflow-hidden relative min-h-0 md:pl-16">
@@ -475,36 +485,11 @@ function AppContent() {
         </div>
 
         {/* Centro: Controles de Zoom del Visor */}
-        <div className="flex items-center gap-1 bg-[var(--color-neutral-text-primary)] px-2 py-1 rounded-xl border border-white/10 shadow-inner">
-          <button
-            onClick={() => setZoomLevel(prev => Math.max(0.3, parseFloat((prev - 0.1).toFixed(2))))}
-            className="p-1 rounded-lg hover:bg-[var(--color-accent-base)] text-white transition cursor-pointer"
-            title="Alejar (-10%)"
-          >
-            <ZoomOut className="w-3.5 h-3.5" />
-          </button>
-
-          <span className="px-2 text-[var(--color-accent-amber)] text-xs font-black min-w-10 text-center">
-            {Math.round(zoomLevel * 100)}%
-          </span>
-
-          <button
-            onClick={() => setZoomLevel(prev => Math.min(2.0, parseFloat((prev + 0.1).toFixed(2))))}
-            className="p-1 rounded-lg hover:bg-[var(--color-accent-base)] text-white transition cursor-pointer"
-            title="Acercar (+10%)"
-          >
-            <ZoomIn className="w-3.5 h-3.5" />
-          </button>
-
-          <button
-            onClick={triggerAutoFit}
-            className="px-2 py-0.5 rounded-lg bg-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-hover)] text-white text-[10px] font-black transition flex items-center gap-1 shadow-sm cursor-pointer ml-1"
-            title="Auto-encajar el diseño al tamaño de pantalla"
-          >
-            <Smartphone className="w-3 h-3" />
-            <span>Encajar</span>
-          </button>
-        </div>
+        <ZoomControls 
+          zoomLevel={zoomLevel} 
+          setZoomLevel={setZoomLevel} 
+          triggerAutoFit={triggerAutoFit} 
+        />
 
         {/* Derecha: Botón Interactivo de Cambio de Tema de Interfaz */}
         <div className="flex items-center gap-2">

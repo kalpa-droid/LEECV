@@ -52,6 +52,18 @@ export const colorSystem = {
   },
 } as const;
 
+export const gradientSystem = {
+  brand: 'linear-gradient(135deg, var(--color-accent-base) 0%, var(--color-accent-purple) 100%)',
+  surface: 'linear-gradient(180deg, var(--color-neutral-surface) 0%, var(--color-neutral-surface-muted) 100%)',
+  gold: 'linear-gradient(135deg, var(--color-accent-amber) 0%, var(--color-accent-orange) 100%)',
+  teal: 'linear-gradient(135deg, var(--color-secondary-base) 0%, var(--color-secondary-hover-dark) 100%)',
+} as const;
+
+export const glassmorphism = {
+  card: 'backdrop-blur-md bg-white/10 border border-white/20 shadow-xl',
+  panel: 'backdrop-blur-lg bg-slate-900/80 border border-slate-700/40 shadow-2xl',
+} as const;
+
 // ============================================================
 // 2. JERARQUÍA TIPOGRÁFICA — una escala fija, 6 niveles, sin excepciones
 // ============================================================

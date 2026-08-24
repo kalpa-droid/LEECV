@@ -127,7 +127,7 @@ export default function CanvaIconDock({
                     ? 'bg-emerald-600 border-emerald-400 text-white shadow-lg shadow-emerald-600/30 scale-105'
                     : 'bg-[var(--color-neutral-text-primary)] border-emerald-500/60 text-emerald-400 hover:bg-emerald-950'
                 }`}
-                title="Catálogo y Creador de Secciones (Sección +)"
+                title="Catálogo y Creador de Secciones (Sección)"
               >
                 <Plus className="w-5 h-5 text-emerald-400" />
                 <span className="text-[8px] font-black tracking-tighter uppercase mt-0.5 leading-none">
@@ -135,7 +135,7 @@ export default function CanvaIconDock({
                 </span>
 
                 <span className="absolute left-14 bg-[var(--color-neutral-text-primary)] text-emerald-300 text-xs font-bold px-2.5 py-1 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-emerald-500/30">
-                  Catálogo & Creador (+ Sección)
+                  Catálogo & Creador de Secciones
                 </span>
               </button>
             );
@@ -261,7 +261,7 @@ export default function CanvaIconDock({
           );
         })}
 
-        {/* Botón Sección + justo después del botón Columnas en Mobile */}
+        {/* Botón Sección justo después del botón Columnas en Mobile */}
         <button
           type="button"
           onClick={() => handleTabClick(addSectionTab.id)}
@@ -272,7 +272,7 @@ export default function CanvaIconDock({
           }`}
         >
           <Plus className="w-3.5 h-3.5" />
-          <span>Sección +</span>
+          <span>Sección</span>
         </button>
 
         <div className="w-px h-6 bg-white/20 shrink-0" />

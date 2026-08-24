@@ -26,6 +26,9 @@ export interface ResolvedDecorativeStyles {
     marginBottomPt: number;
   };
   backgroundShapeEnabled: boolean;
+  cornerOrnament: 'organic-leaf' | 'geometric-badge' | 'classic-line' | 'none';
+  watermark: 'none' | 'subtle-brand' | 'ecologia';
+  headerIconStyle: 'filled' | 'outlined' | 'minimal';
 }
 
 export function resolveDecorativeStyles(
@@ -36,7 +39,10 @@ export function resolveDecorativeStyles(
     cardBorders: true,
     sectionDividers: true,
     backgroundShapes: true,
-    shadowEffects: false
+    shadowEffects: false,
+    cornerOrnaments: 'none',
+    watermarkType: 'none',
+    headerIconStyle: 'filled'
   };
 
   const palette = preset.palette;
@@ -70,6 +76,9 @@ export function resolveDecorativeStyles(
       marginTopPt: 6,
       marginBottomPt: 8
     },
-    backgroundShapeEnabled: policy.backgroundShapes !== false
+    backgroundShapeEnabled: policy.backgroundShapes !== false,
+    cornerOrnament: policy.cornerOrnaments || 'none',
+    watermark: policy.watermarkType || 'none',
+    headerIconStyle: policy.headerIconStyle || 'filled'
   };
 }
