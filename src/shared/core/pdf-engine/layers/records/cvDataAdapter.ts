@@ -116,8 +116,9 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
         kind: 'course',
         targetSectorRole: 'sidebar',
         fields: {
-          title: inf.course || inf.title || '',
-          institution: inf.institution || ''
+          ...inf,
+          title: inf.course || inf.title || inf.name || '',
+          institution: inf.institution || inf.institucion || ''
         }
       }))
     });
@@ -133,10 +134,11 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
         kind: 'education',
         targetSectorRole: 'main',
         fields: {
-          degree: edu.degree || '',
-          institution: edu.institution || '',
+          ...edu,
+          degree: edu.degree || edu.title || edu.tituloOGrado || '',
+          institution: edu.institution || edu.institucion || '',
           level: edu.level || 'Superior',
-          year: (edu.year || '').toString()
+          year: (edu.year || edu.periodo || '').toString()
         }
       }))
     });
@@ -152,9 +154,10 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
         kind: 'education',
         targetSectorRole: 'main',
         fields: {
-          degree: prof.degree || '',
-          institution: prof.institution || '',
-          year: (prof.year || '').toString()
+          ...prof,
+          degree: prof.degree || prof.title || prof.tituloOGrado || '',
+          institution: prof.institution || prof.institucion || '',
+          year: (prof.year || prof.periodo || '').toString()
         }
       }))
     });
@@ -170,10 +173,11 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
         kind: 'experience',
         targetSectorRole: 'main',
         fields: {
-          role: exp.role || '',
-          institution: exp.institution || exp.company || '',
-          year: (exp.year || '').toString(),
-          details: exp.details || exp.description || ''
+          ...exp,
+          role: exp.role || exp.cargo || exp.title || '',
+          institution: exp.institution || exp.company || exp.institucion || '',
+          year: (exp.year || exp.periodo || '').toString(),
+          details: exp.details || exp.description || exp.descripcion || ''
         }
       }))
     });
@@ -189,10 +193,11 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
         kind: 'course',
         targetSectorRole: 'main',
         fields: {
-          title: c.title || c.name || c.course || '',
-          institution: c.institution || '',
+          ...c,
+          title: c.title || c.name || c.course || c.tituloOGrado || '',
+          institution: c.institution || c.institucion || '',
           hours: (() => {
-            const raw = String(c.hours || '').trim();
+            const raw = String(c.hours || c.cargaHoraria || '').trim();
             if (!raw) return '';
             return /hs/i.test(raw) ? raw : `${raw} hs`;
           })()
@@ -220,6 +225,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
         kind: 'course',
         targetSectorRole: 'main',
         fields: {
+          ...eco,
           title: eco.title || eco.tituloOGrado || eco.course || eco.name || '',
           institution: eco.institution || eco.institucion || '',
           year: (eco.year || eco.periodo || '').toString(),

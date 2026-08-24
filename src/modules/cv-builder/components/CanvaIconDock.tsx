@@ -20,8 +20,8 @@ const styleTabs = [
   { id: 'paneles', label: 'Columnas', icon: Layout },
 ];
 
-// 2. Botón Especial: Sección + (SIEMPRE PRIMERO ARRIBA)
-const addSectionTab = { id: 'nueva_seccion', label: 'Sección +', iconId: 'custom' };
+// 2. Botón Especial: Sección (SIEMPRE PRIMERO ARRIBA)
+const addSectionTab = { id: 'nueva_seccion', label: 'Sección', iconId: 'custom' };
 
 // 3. Orden Fijo Prioritario Solicitado por el Usuario
 const fixedPrioritySections = [
@@ -113,7 +113,7 @@ export default function CanvaIconDock({
         <div className="w-8 h-px bg-white/10 mb-3" />
 
         {/* Content Sections Group */}
-        <div className="flex flex-col items-center gap-1.5 flex-1 w-full px-1">
+        <div className="flex flex-col items-center gap-2 flex-1 w-full px-1">
           {/* 1. BOTÓN SIEMPRE PRIMERO ARRIBA: Sección + */}
           {(() => {
             const isActive = activeTab === addSectionTab.id && isPanelOpen;
