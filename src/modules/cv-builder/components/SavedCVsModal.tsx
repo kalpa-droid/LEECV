@@ -14,6 +14,7 @@ import { useToast } from '../../../shared/core/ui/Toast';
 import {} from '../../../shared/core/uiDesignSystem';
 import { Modal } from '../../../shared/core/ui/Modal';
 import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
+import { sampleFullCVData } from '../../../data/sampleFullCVData';
 import {} from '../../../shared/core/utils/validationEngine';
 
 export interface SavedCVsModalProps {
@@ -128,8 +129,26 @@ export default function SavedCVsModal({
       }
     >
       <div className="space-y-4">
-        {/* Action Header: 2 Options Bar */}
+        {/* Action Header: 3 Options Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              onSelectCV(sampleFullCVData);
+              onClose();
+              showSuccess('CV de Ejemplo Completo cargado exitosamente.');
+            }}
+            className="p-3 rounded-2xl bg-amber-950/40 hover:bg-amber-900/60 border border-amber-800/50 hover:border-amber-500/60 transition cursor-pointer flex items-center gap-3 text-left group sm:col-span-2"
+          >
+            <div className="p-2 rounded-xl bg-amber-500/20 text-amber-300 group-hover:scale-110 transition flex-shrink-0">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-black text-xs text-amber-200">⭐ Cargar CV Ejemplo Completo (Dr. Alejandro Valenzuela)</p>
+              <p className="text-[10px] text-amber-400/80 truncate">56 Registros • 6 Secciones • 2 Certificados PNG • Firma en Lapicera</p>
+            </div>
+          </button>
+
           <label className="p-3 rounded-2xl bg-teal-950/40 hover:bg-teal-900/60 border border-teal-800/40 hover:border-teal-500/60 transition cursor-pointer flex items-center gap-3 group">
             <div className={`p-2 rounded-xl bg-[var(--color-secondary-base)]/20 text-[var(--color-secondary-base)] group-hover:scale-110 transition flex-shrink-0`}>
               <Download className="w-4 h-4" />

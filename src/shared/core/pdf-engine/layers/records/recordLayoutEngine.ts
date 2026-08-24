@@ -48,22 +48,33 @@ export function buildStructuredRecordLayout(
 
   // Normalización de claves alternativas (ej: degree -> tituloOGrado, role -> cargo, etc.)
   const normalizedRecord: Record<string, any> = {};
-  for (const [key, rawVal] of Object.entries(record)) {
-    if (rawVal === undefined || rawVal === null) continue;
-    const strVal = String(rawVal).trim();
-    if (!strVal) continue;
 
-    let canonicalKey = key;
-    if (key === 'degree' || key === 'title' || key === 'name' || key === 'course') canonicalKey = 'tituloOGrado';
-    else if (key === 'role') canonicalKey = 'cargo';
-    else if (key === 'institution' || key === 'company') canonicalKey = 'institucion';
-    else if (key === 'year') canonicalKey = 'periodo';
-    else if (key === 'hours') canonicalKey = 'cargaHoraria';
-    else if (key === 'details' || key === 'description') canonicalKey = 'descripcion';
+  const processKeyValue = (k: string, v: any) => {
+    if (v === undefined || v === null) return;
+    if (typeof v === 'object' && !Array.isArray(v)) {
+      for (const [subK, subV] of Object.entries(v)) {
+        processKeyValue(subK, subV);
+      }
+      return;
+    }
+    const strVal = String(v).trim();
+    if (!strVal || strVal === '[object Object]') return;
+
+    let canonicalKey = k;
+    if (k === 'degree' || k === 'title' || k === 'name' || k === 'course') canonicalKey = 'tituloOGrado';
+    else if (k === 'role') canonicalKey = 'cargo';
+    else if (k === 'institution' || k === 'company') canonicalKey = 'institucion';
+    else if (k === 'year') canonicalKey = 'periodo';
+    else if (k === 'hours') canonicalKey = 'cargaHoraria';
+    else if (k === 'details' || k === 'description') canonicalKey = 'descripcion';
 
     if (!normalizedRecord[canonicalKey]) {
       normalizedRecord[canonicalKey] = strVal;
     }
+  };
+
+  for (const [key, rawVal] of Object.entries(record)) {
+    processKeyValue(key, rawVal);
   }
 
   let header: string | null = null;

@@ -594,7 +594,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
 
               {sectorSections.map((sec) => (
                 <View key={sec.id}>
-                  {sec.titleText && sec.id !== 'firma' && (
+                  {sec.titleText && !sec.id.startsWith('firma') && (
                     <SectionBannerCard
                       preset={preset}
                       titleText={sec.titleText}

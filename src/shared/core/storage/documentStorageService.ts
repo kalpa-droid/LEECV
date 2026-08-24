@@ -5,6 +5,7 @@ import { idbStorage } from '../../../modules/cv-builder/services/storageIndexedD
 import { SaveDocumentResult, DocumentRecord } from '../../../types/document';
 import { getDocumentTypeConfig } from '../capabilities/capabilityRegistry';
 import { getMonthNameEs } from '../utils/formatDate';
+import { sampleFullCVData } from '../../../data/sampleFullCVData';
 
 export { supabase, checkStorageStatus };
 
@@ -63,6 +64,17 @@ export const getSavedDocumentsList = async (docTypeId: string = 'cv'): Promise<D
     } catch (err) {
       console.warn(`Advertencia leyendo Supabase para ${docTypeId}:`, err);
     }
+  }
+
+  if (docTypeId === 'cv' && !map.has('cv_ejemplo_completo_profesional')) {
+    map.set('cv_ejemplo_completo_profesional', {
+      id: 'cv_ejemplo_completo_profesional',
+      doc_type_id: 'cv',
+      title: 'CV EJEMPLO COMPLETO — Dr. Alejandro Valenzuela (56 Registros + Certificados + Firma)',
+      candidate_name: 'Dr. Alejandro Matías Valenzuela (Ejemplo Completo)',
+      dni: '34.567.890',
+      updated_at: '2026-08-24T13:25:00.000Z'
+    });
   }
 
   const result = Array.from(map.values());
@@ -166,6 +178,10 @@ export const saveDocument = async (docData: any, docTypeId: string = 'cv'): Prom
  * Load a single document by ID
  */
 export const loadDocumentById = async (id: string, docTypeId: string = 'cv'): Promise<any> => {
+  if (id === 'cv_ejemplo_completo_profesional') {
+    return sampleFullCVData;
+  }
+
   // 1. Check IndexedDB
   try {
     const idbData = await idbStorage.getItem(`doc_${docTypeId}_data_${id}`) || await idbStorage.getItem(`cv_data_${id}`);

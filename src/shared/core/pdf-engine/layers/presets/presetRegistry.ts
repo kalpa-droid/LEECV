@@ -5,13 +5,15 @@ import { minimalEditorialPreset } from './presets/minimal-editorial';
 import { creativeSustentablePreset } from './presets/creative-sustentable';
 import { tarjetaPersonalPreset } from './presets/tarjeta-personal';
 
-// Presets nativos por defecto
+import { composePreset } from './presetCompositionEngine';
+
+// Presets nativos por defecto compilados vía el Motor de Composición
 const NATIVE_PRESETS: Preset[] = [
-  cvClasicoPreset,
-  modernCorporatePreset,
-  minimalEditorialPreset,
-  creativeSustentablePreset,
-  tarjetaPersonalPreset
+  composePreset({ seedHex: cvClasicoPreset.palette.primary, basePreset: cvClasicoPreset, id: cvClasicoPreset.id, name: cvClasicoPreset.name }),
+  composePreset({ seedHex: modernCorporatePreset.palette.primary, basePreset: modernCorporatePreset, id: modernCorporatePreset.id, name: modernCorporatePreset.name }),
+  composePreset({ seedHex: minimalEditorialPreset.palette.primary, basePreset: minimalEditorialPreset, id: minimalEditorialPreset.id, name: minimalEditorialPreset.name }),
+  composePreset({ seedHex: creativeSustentablePreset.palette.primary, basePreset: creativeSustentablePreset, id: creativeSustentablePreset.id, name: creativeSustentablePreset.name }),
+  composePreset({ seedHex: tarjetaPersonalPreset.palette.primary, basePreset: tarjetaPersonalPreset, id: tarjetaPersonalPreset.id, name: tarjetaPersonalPreset.name })
 ];
 
 // Mapa en memoria dinámico
