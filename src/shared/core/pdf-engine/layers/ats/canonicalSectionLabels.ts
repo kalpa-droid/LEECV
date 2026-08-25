@@ -5,36 +5,43 @@
  * ("Experiencia Laboral", "Formación Académica", "Cursos y Capacitaciones", "Idiomas", "Habilidades").
  */
 
+import { SECTION_CATALOG } from '../../../sectionRegistry';
+
 export interface CanonicalMapping {
   canonicalId: string;
   standardName: string;
   aliases: string[];
 }
 
+const getCatalogLabel = (id: string, fallback: string): string => {
+  const item = SECTION_CATALOG.find((s) => s.id === id);
+  return item ? item.label : fallback;
+};
+
 export const CANONICAL_SECTIONS: CanonicalMapping[] = [
   {
-    canonicalId: 'experience',
-    standardName: 'Experiencia Laboral',
+    canonicalId: 'experiencia',
+    standardName: getCatalogLabel('experiencia', 'Experiencia Laboral'),
     aliases: ['experiencia', 'trayectoria', 'historial laboral', 'trabajo', 'cargos desempeñados', 'laboral', 'experience']
   },
   {
-    canonicalId: 'education',
-    standardName: 'Formación Académica',
+    canonicalId: 'formacion',
+    standardName: getCatalogLabel('formacion', 'Formación Académica'),
     aliases: ['estudios', 'educacion', 'educación', 'formacion', 'formación', 'títulos', 'titulos', 'estudios realizados', 'education']
   },
   {
-    canonicalId: 'course',
-    standardName: 'Cursos y Capacitaciones',
+    canonicalId: 'cursos',
+    standardName: getCatalogLabel('cursos', 'Cursos & Capacitaciones'),
     aliases: ['cursos', 'capacitaciones', 'certificaciones', 'seminarios', 'talleres', 'diplomaturas', 'courses']
   },
   {
-    canonicalId: 'languages',
+    canonicalId: 'idiomas',
     standardName: 'Idiomas',
     aliases: ['idiomas', 'lenguas', 'languages']
   },
   {
-    canonicalId: 'skills',
-    standardName: 'Habilidades Técnicas',
+    canonicalId: 'competencias',
+    standardName: getCatalogLabel('competencias', 'Competencias Clave'),
     aliases: ['habilidades', 'competencias', 'destrezas', 'aptitudes', 'skills', 'tecnologias', 'tecnologías']
   }
 ];

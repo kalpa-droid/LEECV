@@ -5,8 +5,8 @@ import { getPreset } from './layers/presets/presetRegistry';
 import { cvDataToContentSections } from './layers/records/cvDataAdapter';
 import { exportBusinessCardSheetToPDF } from './cardSheetExporter';
 import { Preset } from './layers/presets/presetSchema';
-
 import { getMonthNameEs } from '../utils/formatDate';
+import { downloadBlob } from '../utils/downloadUtils';
 
 /**
  * Native Vector PDF Generator powered by 8-Layer TemplateRenderer + @react-pdf/renderer
@@ -43,16 +43,7 @@ export async function exportCVToPDF(cvData: any, presetInput?: Preset, atsMode?:
 
   // Generate vector PDF blob natively without screen capture
   const blob = await pdf(docElement as any).toBlob();
-
-  // Create download link
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  downloadBlob(blob, fileName);
 
   return true;
 }

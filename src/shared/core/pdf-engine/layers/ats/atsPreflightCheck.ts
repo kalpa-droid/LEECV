@@ -9,6 +9,7 @@ import { Preset } from '../presets/presetSchema';
 import { ContentSection } from '../records/recordTypes';
 import { PersonalInfo } from '../../../../../types/cv';
 import { findCanonicalLabel } from './canonicalSectionLabels';
+import { buildStructuredRecordLayout } from '../records/recordLayoutEngine';
 
 export interface AtsWarning {
   id: string;
@@ -81,9 +82,9 @@ export function runAtsPreflightCheck(
       linearReadingOrder.push(`SECCIÓN: ${sec.titleText} ${canonical ? `[Canónico: ${canonical}]` : ''}`);
     }
     sec.records.forEach((rec) => {
-      const f = rec.fields || {};
-      const title = String(f.tituloOGrado || f.cargo || f.titulo || f.puesto || (rec as any).titulo || 'Registro');
-      const inst = String(f.institucion || f.empresa || (rec as any).institucion || '');
+      const layout = buildStructuredRecordLayout((rec.fields || rec) as any);
+      const title = layout.header || 'Registro';
+      const inst = layout.subheader || '';
       linearReadingOrder.push(`  - ${title} ${inst ? `(${inst})` : ''}`);
     });
   });

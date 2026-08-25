@@ -8,6 +8,7 @@ import { IMPOSITION_PRESETS, resolveImposition, mirrorImpositionForBackSide, Imp
 import { CardFace } from './renderer/cardFaceRenderer';
 import { ContentSection } from './layers/records/recordTypes';
 import { BusinessCardData, cardDataToFrontSections, cardDataToBackSections } from './layers/records/cardDataAdapter';
+import { downloadBlob } from '../utils/downloadUtils';
 
 const MM_TO_PT = 2.8346;
 const mmToPt = (mm: number) => mm * MM_TO_PT;
@@ -164,14 +165,8 @@ export async function exportBusinessCardSheetToPDF(
   const docElement = React.createElement(Document, { title: `Tarjetas - ${card.fullName || 'Sin nombre'}` }, frontPage, backPage);
 
   const blob = await pdf(docElement as any).toBlob();
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `Tarjetas - ${card.fullName || 'Sin nombre'} (hoja ${sheetPageSize.name}, ${impositionFront.totalPerSheet} por hoja).pdf`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  const fileName = `Tarjetas - ${card.fullName || 'Sin nombre'} (hoja ${sheetPageSize.name}, ${impositionFront.totalPerSheet} por hoja).pdf`;
+  downloadBlob(blob, fileName);
 
   return true;
 }

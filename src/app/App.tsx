@@ -8,7 +8,7 @@ import { FileText, CreditCard, Palette } from 'lucide-react';
 import { getCurrentProfile, capturarConexionDriveSiCorresponde } from '../modules/auth/authService';
 import { supabase } from '../shared/core/lib/supabaseClient';
 import { exportCVToJson, importCVFromJsonFile } from '../shared/core/utils/jsonImporterExporter';
-import {} from '../shared/core/uiDesignSystem';
+import { withErrorHandling } from '../shared/core/utils/errorHandler';
 
 const PublicCVView = lazy(() => import('../modules/cv-builder/components/PublicCVView').then(m => ({ default: m.PublicCVView })));
 const CardExportModal = lazy(() => import('../modules/cv-builder/components/modals/CardExportModal').then(m => ({ default: m.CardExportModal })));
@@ -143,22 +143,24 @@ function AppContent() {
     setIsPdfComplete(false);
     setPdfProgress(15);
 
-    try {
-      const { exportDocumentToPDF } = await import('../shared/core/pdf-engine/pdfExporter');
-      const success = await exportDocumentToPDF(cvData, cvData?.activePresetId || 'cv-clasico', true);
-      
-      setPdfProgress(100);
-      if (success) {
-        setIsGeneratingPDF(false);
-        setIsPdfComplete(true);
-        showSuccess('Versión ATS de 1 columna generada exitosamente.');
-      } else {
-        showError('Hubo un inconveniente al generar el PDF ATS.');
-        setIsGeneratingPDF(false);
+    const result = await withErrorHandling(
+      async () => {
+        const { exportDocumentToPDF } = await import('../shared/core/pdf-engine/pdfExporter');
+        return exportDocumentToPDF(cvData, cvData?.activePresetId || 'cv-clasico', true);
+      },
+      {
+        context: 'Exportar PDF ATS',
+        errorMessage: 'Hubo un inconveniente al generar el PDF ATS.',
+        notify: (msg) => showError(msg)
       }
-    } catch (err) {
-      console.error('Error generando PDF ATS:', err);
-      showError('Error inesperado al exportar PDF ATS.');
+    );
+
+    if (result.success && result.data) {
+      setPdfProgress(100);
+      setIsGeneratingPDF(false);
+      setIsPdfComplete(true);
+      showSuccess('Versión ATS de 1 columna generada exitosamente.');
+    } else {
       setIsGeneratingPDF(false);
     }
   };

@@ -1,5 +1,6 @@
 import { CVData } from '../../../types/cv';
 import { sanitizeCvData } from './cvDataSchema';
+import { downloadBlob } from './downloadUtils';
 
 export function exportCVToJson(cvData: CVData | null | undefined): void {
   if (!cvData) return;
@@ -18,15 +19,8 @@ export function exportCVToJson(cvData: CVData | null | undefined): void {
 
   const jsonStr = JSON.stringify(exportPayload, null, 2);
   const blob = new Blob([jsonStr], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `LEECV_${candidateName.replace(/\s+/g, '_')}_v2.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const fileName = `LEECV_${candidateName.replace(/\s+/g, '_')}_v2.json`;
+  downloadBlob(blob, fileName);
 }
 
 export function importCVFromJsonFile(file: File): Promise<CVData> {
