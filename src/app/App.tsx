@@ -32,7 +32,10 @@ import { ToastProvider, useToast } from '../shared/core/ui/Toast';
 import { useConfirm, ConfirmProvider } from '../shared/core/ui/ConfirmDialog';
 import { getActiveUiTheme } from '../shared/core/uiDesignSystem';
 
-import { syncPresetsFromStorage } from '../shared/core/pdf-engine/layers/presets/presetRegistry';
+import { syncPresetsFromStorage, getPreset } from '../shared/core/pdf-engine/layers/presets/presetRegistry';
+import { cvDataToContentSections } from '../shared/core/pdf-engine/layers/records/cvDataAdapter';
+import { runAtsPreflightCheck, AtsPreflightResult } from '../shared/core/pdf-engine/layers/ats/atsPreflightCheck';
+import { AtsCheckModal } from '../modules/cv-builder/components/AtsCheckModal';
 import { navigation } from '../shared/core/utils/navigation';
 
 function AppContent() {
@@ -124,6 +127,41 @@ function AppContent() {
 
   const [isPdfCheckoutOpen, setIsPdfCheckoutOpen] = useState(false);
   const [isCardExportOpen, setIsCardExportOpen] = useState(false);
+  const [isAtsModalOpen, setIsAtsModalOpen] = useState(false);
+  const [atsResult, setAtsResult] = useState<AtsPreflightResult | null>(null);
+
+  const handleOpenAtsCheck = () => {
+    const preset = getPreset(cvData?.activePresetId || 'cv-clasico');
+    const sections = cvDataToContentSections(cvData);
+    const res = runAtsPreflightCheck(preset, sections, cvData?.personalInfo);
+    setAtsResult(res);
+    setIsAtsModalOpen(true);
+  };
+
+  const handleExportAtsPdf = async () => {
+    setIsGeneratingPDF(true);
+    setIsPdfComplete(false);
+    setPdfProgress(15);
+
+    try {
+      const { exportDocumentToPDF } = await import('../shared/core/pdf-engine/pdfExporter');
+      const success = await exportDocumentToPDF(cvData, cvData?.activePresetId || 'cv-clasico', true);
+      
+      setPdfProgress(100);
+      if (success) {
+        setIsGeneratingPDF(false);
+        setIsPdfComplete(true);
+        showSuccess('Versión ATS de 1 columna generada exitosamente.');
+      } else {
+        showError('Hubo un inconveniente al generar el PDF ATS.');
+        setIsGeneratingPDF(false);
+      }
+    } catch (err) {
+      console.error('Error generando PDF ATS:', err);
+      showError('Error inesperado al exportar PDF ATS.');
+      setIsGeneratingPDF(false);
+    }
+  };
 
   const handleStartPDFGeneration = async () => {
     setIsGeneratingPDF(true);
@@ -263,6 +301,8 @@ function AppContent() {
           onOpenPricing={() => setIsPricingModalOpen(true)}
           onNewCV={handleNewCV}
           onSaveCV={handleSaveCVClick}
+          onOpenAtsCheck={handleOpenAtsCheck}
+          onExportAtsPdf={handleExportAtsPdf}
           isSaving={isSaving}
         />
         {/* Barra compacta de Zoom en Mobile (< md) */}
@@ -449,6 +489,15 @@ function AppContent() {
           <PrivacyModal
             isOpen={isPrivacyModalOpen}
             onClose={() => setIsPrivacyModalOpen(false)}
+          />
+        )}
+
+        {isAtsModalOpen && atsResult && (
+          <AtsCheckModal
+            isOpen={isAtsModalOpen}
+            onClose={() => setIsAtsModalOpen(false)}
+            result={atsResult}
+            onExportAtsPdf={handleExportAtsPdf}
           />
         )}
       </Suspense>

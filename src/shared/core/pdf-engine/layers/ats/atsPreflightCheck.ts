@@ -8,6 +8,7 @@
 import { Preset } from '../presets/presetSchema';
 import { ContentSection } from '../records/recordTypes';
 import { PersonalInfo } from '../../../../../types/cv';
+import { findCanonicalLabel } from './canonicalSectionLabels';
 
 export interface AtsWarning {
   id: string;
@@ -64,10 +65,20 @@ export function runAtsPreflightCheck(
     });
   }
 
-  // 3. Simulación de Flujo Lineal de Secciones
+  // 3. Simulación de Flujo Lineal de Secciones y Nombres Canónicos (F5)
   sections.forEach((sec) => {
     if (sec.titleText) {
-      linearReadingOrder.push(`SECCIÓN: ${sec.titleText}`);
+      const canonical = findCanonicalLabel(sec.titleText);
+      if (!canonical) {
+        warnings.push({
+          id: `non_standard_section_${sec.id}`,
+          level: 'info',
+          title: `Título de Sección Creativo: "${sec.titleText}"`,
+          description: 'Los parsers ATS identifican mejor encabezados estándar como "Experiencia Laboral", "Formación Académica" o "Habilidades".',
+          recommendation: 'Considera usar un título de sección estándar para maximizar la compatibilidad con sistemas de empleo.'
+        });
+      }
+      linearReadingOrder.push(`SECCIÓN: ${sec.titleText} ${canonical ? `[Canónico: ${canonical}]` : ''}`);
     }
     sec.records.forEach((rec) => {
       const f = rec.fields || {};

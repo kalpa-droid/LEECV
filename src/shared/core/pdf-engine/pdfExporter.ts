@@ -11,7 +11,7 @@ import { getMonthNameEs } from '../utils/formatDate';
 /**
  * Native Vector PDF Generator powered by 8-Layer TemplateRenderer + @react-pdf/renderer
  */
-export async function exportCVToPDF(cvData: any, presetInput?: Preset): Promise<boolean> {
+export async function exportCVToPDF(cvData: any, presetInput?: Preset, atsMode?: boolean): Promise<boolean> {
   const preset = presetInput || getPreset('cv-clasico');
   const candidateName = (
     cvData?.personalInfo?.fullName || 
@@ -21,11 +21,14 @@ export async function exportCVToPDF(cvData: any, presetInput?: Preset): Promise<
 
   const monthName = getMonthNameEs();
   const yearNum = new Date().getFullYear();
-  const fileName = `CV - ${candidateName} - ${monthName} - ${yearNum}.pdf`;
+  const fileName = atsMode 
+    ? `CV - ${candidateName} - ${monthName} - ${yearNum} - ATS.pdf`
+    : `CV - ${candidateName} - ${monthName} - ${yearNum}.pdf`;
 
   const sections = cvDataToContentSections(cvData);
   const docElement = React.createElement(TemplateRenderer, {
     preset,
+    atsMode,
     sections,
     personalInfo: cvData?.personalInfo || {},
     certificatesScanned: cvData?.certificatesScanned || [],
@@ -59,7 +62,7 @@ import { buildCardDataFromCV } from './layers/records/cardDataAdapter';
 /**
  * Universal PDF exporter connecting all document types (CVs, Business Card Sheets, etc.)
  */
-export async function exportDocumentToPDF(cvData: any, presetId: string = 'cv-clasico'): Promise<boolean> {
+export async function exportDocumentToPDF(cvData: any, presetId: string = 'cv-clasico', atsMode?: boolean): Promise<boolean> {
   const preset = getPreset(presetId);
 
   if (preset.pageCategory === 'tarjeta') {
@@ -67,5 +70,5 @@ export async function exportDocumentToPDF(cvData: any, presetId: string = 'cv-cl
     return exportBusinessCardSheetToPDF(cardData, preset);
   }
 
-  return exportCVToPDF(cvData, preset);
+  return exportCVToPDF(cvData, preset, atsMode);
 }
