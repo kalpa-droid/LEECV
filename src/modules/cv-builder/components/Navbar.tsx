@@ -59,18 +59,18 @@ export default function Navbar({
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-[var(--color-neutral-text-primary)] border-b border-[var(--color-neutral-border)]/30 text-white shadow-xl no-print select-none">
+    <header className="sticky top-0 z-40 bg-[var(--ui-bg-header)] border-b border-[var(--ui-border)] text-[var(--ui-text-primary)] shadow-xl no-print select-none">
       {/* Festive Bunting Accent Strip */}
-      <div className="h-1 w-full bg-gradient-to-r from-[var(--color-accent-base)] via-[var(--color-accent-amber)] via-[var(--color-secondary-base)] via-[var(--color-accent-purple)] to-[var(--color-accent-orange)]" />
+      <div className="h-1 w-full bg-gradient-to-r from-[var(--color-accent-base)] via-[var(--ui-secondary)] to-[var(--ui-accent-purple)]" />
       
       <div className="max-w-7xl mx-auto px-2 sm:px-4 h-12 sm:h-14 flex items-center justify-between gap-1.5">
         
         {/* Left: Brand & Logo */}
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[var(--color-accent-base)] flex items-center justify-center font-black text-xs shadow-md text-white border border-[var(--color-accent-rose-muted)]/20">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[var(--color-accent-base)] flex items-center justify-center font-black text-xs shadow-md text-white border border-white/20">
             LEE
           </div>
-          <h1 className="font-black text-sm sm:text-base tracking-wider text-white">
+          <h1 className="font-black text-sm sm:text-base tracking-wider text-[var(--ui-text-primary)]">
             LEECV
           </h1>
         </div>
@@ -80,7 +80,7 @@ export default function Navbar({
           {/* 1. NUEVO */}
           <button
             onClick={handleNewClick}
-            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-white bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] border border-[var(--color-accent-rose-muted)]/30 transition shadow-md shadow-[var(--color-accent-base)]/20 cursor-pointer whitespace-nowrap active:scale-95"
+            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-white bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] border border-white/10 transition shadow-md cursor-pointer whitespace-nowrap active:scale-95"
             title="Iniciar un nuevo currículum en blanco"
           >
             <FilePlus className="w-3.5 h-3.5 text-white flex-shrink-0" />
@@ -90,10 +90,10 @@ export default function Navbar({
           {/* 2. ABRIR */}
           <button
             onClick={handleOpenSavedClick}
-            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-white bg-[var(--color-secondary-hover-dark)] hover:opacity-90 border border-[var(--color-secondary-base)]/40 transition shadow-md shadow-[var(--color-secondary-base)]/20 cursor-pointer whitespace-nowrap active:scale-95"
+            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-[var(--ui-text-primary)] bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-bg-card)] border border-[var(--ui-border)] transition shadow-sm cursor-pointer whitespace-nowrap active:scale-95"
             title="Abrir borradores guardados, importar JSON o sincronizar nube"
           >
-            <FolderOpen className="w-3.5 h-3.5 text-white flex-shrink-0" />
+            <FolderOpen className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] flex-shrink-0" />
             <span>Abrir</span>
           </button>
 
@@ -101,10 +101,10 @@ export default function Navbar({
           <button
             onClick={handleSaveClick}
             disabled={isSaving}
-            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-white bg-[var(--color-accent-purple-hover)] hover:opacity-90 border border-[var(--color-accent-purple)]/40 transition disabled:opacity-50 shadow-md shadow-[var(--color-accent-purple)]/20 cursor-pointer whitespace-nowrap active:scale-95"
+            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-[var(--ui-text-primary)] bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-bg-card)] border border-[var(--ui-border)] transition disabled:opacity-50 shadow-sm cursor-pointer whitespace-nowrap active:scale-95"
             title="Guardar currículum o descargar copia JSON de respaldo"
           >
-            <Save className="w-3.5 h-3.5 text-white flex-shrink-0" />
+            <Save className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] flex-shrink-0" />
             <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
           </button>
 
@@ -112,10 +112,10 @@ export default function Navbar({
           {onOpenAtsCheck && (
             <button
               onClick={onOpenAtsCheck}
-              className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-[var(--color-status-warning-text)] bg-[var(--color-status-warning-muted)]/80 hover:bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/50 transition shadow-md cursor-pointer whitespace-nowrap active:scale-95"
+              className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-[var(--ui-text-primary)] bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-bg-card)] border border-[var(--ui-border)] transition shadow-sm cursor-pointer whitespace-nowrap active:scale-95"
               title="Auditoría de lectura predictiva para ATS"
             >
-              <Sparkles className="w-3.5 h-3.5 text-[var(--color-status-warning-text)] flex-shrink-0" />
+              <Sparkles className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] flex-shrink-0" />
               <span>ATS</span>
             </button>
           )}
@@ -123,10 +123,10 @@ export default function Navbar({
           {/* 5. PDF */}
           <button
             onClick={onPrint}
-            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-[var(--color-accent-amber)] hover:bg-[var(--color-accent-amber-hover)] text-black font-black text-xs shadow-lg shadow-[var(--color-accent-amber)]/30 transition active:scale-95 border border-[var(--color-accent-amber-hover)] cursor-pointer whitespace-nowrap"
+            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-[var(--color-secondary-base)] hover:opacity-90 text-white font-extrabold text-xs shadow-md transition active:scale-95 border border-white/10 cursor-pointer whitespace-nowrap"
             title="Exportar documento PDF final listo para enviar"
           >
-            <Download className="w-3.5 h-3.5 flex-shrink-0 text-black" />
+            <Download className="w-3.5 h-3.5 flex-shrink-0 text-white" />
             <span>PDF</span>
           </button>
         </div>

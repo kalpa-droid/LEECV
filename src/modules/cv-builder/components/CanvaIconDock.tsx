@@ -65,7 +65,7 @@ export default function CanvaIconDock({
   return (
     <>
       {/* Desktop & Tablet Vertical Left Dock (Width: 64px) — Por encima de Barra Superior y Footer */}
-      <aside className="hidden md:flex flex-col items-center py-3 bg-[var(--color-neutral-text-primary)]/85 backdrop-blur-xl border-r border-[var(--color-neutral-text-secondary)]/30 text-white z-[100] select-none w-16 shrink-0 fixed top-0 bottom-0 left-0 h-screen overflow-y-auto no-scrollbar shadow-2xl">
+      <aside className="hidden md:flex flex-col items-center py-3 bg-[var(--ui-bg-dock)] border-r border-white/10 text-white z-[100] select-none w-16 shrink-0 fixed top-0 bottom-0 left-0 h-screen overflow-y-auto no-scrollbar shadow-2xl">
         {/* Toggle Drawer Button (Menú para esconder/abrir panel) */}
         <button
           type="button"
@@ -73,7 +73,7 @@ export default function CanvaIconDock({
           className={`p-2.5 rounded-2xl mb-3 transition transform active:scale-95 cursor-pointer ${
             isPanelOpen
               ? 'bg-[var(--color-accent-base)] text-white shadow-lg shadow-[var(--color-accent-base)]/30'
-              : 'bg-[var(--color-neutral-text-primary)] text-white/80 hover:text-white hover:bg-[var(--ui-bg-dock-hover)]'
+              : 'bg-white/10 text-white/80 hover:text-white hover:bg-white/20'
           }`}
           title={isPanelOpen ? 'Cerrar Panel Editor' : 'Abrir Panel Editor'}
         >
@@ -95,14 +95,14 @@ export default function CanvaIconDock({
                 className={`w-12 h-12 rounded-2xl flex flex-col items-center justify-center transition group relative cursor-pointer ${
                   isActive
                     ? 'bg-[var(--color-accent-base)] text-white shadow-lg shadow-[var(--color-accent-base)]/30 scale-105'
-                    : 'text-white/60 hover:text-white hover:bg-[var(--color-neutral-text-primary)]'
+                    : 'text-white/80 hover:text-white hover:bg-white/10'
                 }`}
                 title={tab.label}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-[var(--ui-warning)]'}`} />
-                <span className="text-[9px] font-bold tracking-tighter mt-0.5">{tab.label}</span>
+                <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-[var(--color-secondary-bright)]'}`} />
+                <span className="text-[9px] font-bold tracking-tighter mt-0.5 text-white/90">{tab.label}</span>
                 
-                <span className="absolute left-14 bg-[var(--color-neutral-text-primary)] text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-white/10">
+                <span className="absolute left-14 bg-[var(--ui-bg-dock)] text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-white/10">
                   {tab.label}
                 </span>
               </button>
@@ -125,7 +125,7 @@ export default function CanvaIconDock({
                 className={`w-12 h-12 rounded-2xl flex flex-col items-center justify-center transition group relative cursor-pointer border-2 ${
                   isActive
                     ? 'bg-[var(--color-status-success-base)] border-[var(--color-status-success-base)] text-white shadow-md scale-105'
-                    : 'bg-[var(--color-neutral-text-primary)] border-[var(--color-status-success-base)]/60 text-[var(--color-status-success-bright)] hover:bg-[var(--color-status-success-muted)]'
+                    : 'bg-white/5 border-[var(--color-status-success-base)]/80 text-[var(--color-status-success-bright)] hover:bg-white/15'
                 }`}
                 title="Catálogo y Creador de Secciones (Sección)"
               >
@@ -134,7 +134,7 @@ export default function CanvaIconDock({
                   {addSectionTab.label}
                 </span>
 
-                <span className="absolute left-14 bg-[var(--color-neutral-text-primary)] text-[var(--color-status-success-bright)] text-xs font-bold px-2.5 py-1 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--color-status-success-base)]/30">
+                <span className="absolute left-14 bg-[var(--ui-bg-dock)] text-[var(--color-status-success-bright)] text-xs font-bold px-2.5 py-1 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--color-status-success-base)]/30">
                   Catálogo & Creador de Secciones
                 </span>
               </button>
@@ -153,16 +153,16 @@ export default function CanvaIconDock({
                 className={`w-12 h-11 rounded-2xl flex flex-col items-center justify-center transition group relative cursor-pointer ${
                   isActive
                     ? 'bg-[var(--color-secondary-base)] text-white shadow-lg shadow-[var(--color-secondary-base)]/30 scale-105'
-                    : 'bg-[var(--color-neutral-text-primary)] text-[var(--color-secondary-bright)] border border-[var(--color-secondary-base)]/30 hover:bg-[var(--ui-bg-dock-hover)]'
+                    : 'bg-white/5 text-[var(--color-secondary-bright)] border border-[var(--color-secondary-base)]/40 hover:bg-white/15'
                 }`}
                 title={cs.titleText}
               >
-                <DomSectionIcon iconId={iconId} className="w-4 h-4" color={isActive ? 'var(--color-neutral-surface)' : 'var(--color-secondary-base)'} />
-                <span className="text-[9px] font-extrabold tracking-tighter mt-0.5 leading-none truncate max-w-[44px]">
+                <DomSectionIcon iconId={iconId} className="w-4 h-4" color={isActive ? '#FFFFFF' : 'var(--color-secondary-bright)'} />
+                <span className="text-[9px] font-extrabold tracking-tighter mt-0.5 leading-none truncate max-w-[44px] text-white/90">
                   {cs.titleText?.substring(0, 6) || 'Personal'}
                 </span>
 
-                <span className="absolute left-14 bg-[var(--color-neutral-text-primary)] text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-white/10">
+                <span className="absolute left-14 bg-[var(--ui-bg-dock)] text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-white/10">
                   {cs.titleText}
                 </span>
               </button>
@@ -180,14 +180,14 @@ export default function CanvaIconDock({
                 className={`w-12 h-11 rounded-2xl flex flex-col items-center justify-center transition group relative cursor-pointer ${
                   isActive
                     ? 'bg-[var(--color-secondary-base)] text-white shadow-lg shadow-[var(--color-secondary-base)]/30 scale-105'
-                    : 'text-white/60 hover:text-white hover:bg-[var(--color-neutral-text-primary)]'
+                    : 'text-white/80 hover:text-white hover:bg-white/10'
                 }`}
                 title={sec.label}
               >
-                <DomSectionIcon iconId={sec.iconId} className="w-4 h-4" color={isActive ? 'var(--color-neutral-surface)' : 'var(--color-accent-amber)'} />
-                <span className="text-[9px] font-extrabold tracking-tighter mt-0.5 leading-none">{sec.label}</span>
+                <DomSectionIcon iconId={sec.iconId} className="w-4 h-4" color={isActive ? '#FFFFFF' : 'var(--color-secondary-bright)'} />
+                <span className="text-[9px] font-extrabold tracking-tighter mt-0.5 leading-none text-white/90">{sec.label}</span>
 
-                <span className="absolute left-14 bg-[var(--color-neutral-text-primary)] text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-white/10">
+                <span className="absolute left-14 bg-[var(--ui-bg-dock)] text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-white/10">
                   {sec.label}
                 </span>
               </button>
