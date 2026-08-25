@@ -98,7 +98,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
       isOpen={isOpen}
       onClose={onClose}
       title="Recortador de Foto de Perfil"
-      icon={<Camera className="w-5 h-5 text-teal-400" />}
+      icon={<Camera className="w-5 h-5 text-[var(--color-secondary-base)]" />}
       size="md"
       footer={
         <div className="w-full flex items-center justify-end gap-3">
@@ -124,18 +124,18 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
         {!imageSrc ? (
           <div 
             onClick={() => fileInputRef.current?.click()}
-            className={`w-full h-64 border-2 border-dashed border-[var(--color-neutral-border-strong)] rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[var(--color-secondary-base)] hover:bg-teal-50/50 transition group`}
+            className={`w-full h-64 border-2 border-dashed border-[var(--color-neutral-border-strong)] rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-muted)] transition group`}
           >
-            <div className={`w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center text-[var(--color-secondary-base)] group-hover:scale-110 transition duration-300 mb-3`}>
+            <div className={`w-16 h-16 rounded-full bg-[var(--color-secondary-muted)] flex items-center justify-center text-[var(--color-secondary-base)] group-hover:scale-110 transition duration-300 mb-3`}>
               <Upload className="w-8 h-8" />
             </div>
-            <span className="font-semibold text-slate-700 text-xs">Haz clic para subir una foto</span>
-            <span className="text-[10px] text-slate-500 mt-1">Formatos recomendados: JPG, PNG (Hasta 10MB)</span>
+            <span className="font-semibold text-white/80 text-xs">Haz clic para subir una foto</span>
+            <span className="text-[10px] text-white/60 mt-1">Formatos recomendados: JPG, PNG (Hasta 10MB)</span>
           </div>
         ) : (
           <div className="w-full flex flex-col items-center">
             {/* Canvas viewport container */}
-            <div className={`relative border-4 border-[var(--color-secondary-base)] rounded-xl overflow-hidden shadow-lg bg-slate-950 cursor-grab active:cursor-grabbing`}>
+            <div className={`relative border-4 border-[var(--color-secondary-base)] rounded-xl overflow-hidden shadow-lg bg-black/40 cursor-grab active:cursor-grabbing`}>
               <canvas 
                 ref={canvasRef}
                 width={280}
@@ -150,9 +150,9 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
             </div>
 
             {/* Controls bar */}
-            <div className={`w-full mt-5 bg-slate-50 p-4 rounded-xl space-y-3 border border-[var(--color-neutral-border)]`}>
+            <div className={`w-full mt-5 bg-[var(--color-neutral-surface-muted)] p-4 rounded-xl space-y-3 border border-[var(--color-neutral-border)]`}>
               <div className="flex items-center gap-3">
-                <ZoomOut className="w-4 h-4 text-slate-500" />
+                <ZoomOut className="w-4 h-4 text-white/60" />
                 <input 
                   type="range"
                   min="0.5"
@@ -162,7 +162,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
                   onChange={(e) => setZoom(parseFloat(e.target.value))}
                   className={`w-full accent-[var(--color-secondary-base)] cursor-pointer`}
                 />
-                <ZoomIn className="w-4 h-4 text-slate-500" />
+                <ZoomIn className="w-4 h-4 text-white/60" />
                 <span className="text-xs font-semibold w-10 text-right">{Math.round(zoom * 100)}%</span>
               </div>
 
@@ -170,7 +170,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
                 <button 
                   type="button"
                   onClick={() => setRotation((r) => (r + 90) % 360)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-200 text-xs font-medium hover:bg-slate-300 transition cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 text-xs font-medium hover:bg-white/20 transition cursor-pointer"
                 >
                   <RotateCw className="w-3.5 h-3.5" /> Rotar 90°
                 </button>

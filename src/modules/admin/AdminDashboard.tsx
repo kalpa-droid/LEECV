@@ -205,7 +205,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-[var(--color-neutral-border)] flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/30 text-[var(--color-status-warning-text)] flex items-center justify-center">
               <Crown className="w-6 h-6" />
             </div>
             <div>
@@ -215,7 +215,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-[var(--color-neutral-border)] flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/30 text-[var(--color-accent-purple)] flex items-center justify-center">
               <HardDrive className="w-6 h-6" />
             </div>
             <div>
@@ -230,7 +230,7 @@ export default function AdminDashboard() {
           <button
             onClick={() => setAdminTab('users')}
             className={`px-4 py-2 text-xs font-black rounded-xl transition flex items-center gap-2 cursor-pointer ${
-              adminTab === 'users' ? 'bg-[var(--color-neutral-text-primary)] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+              adminTab === 'users' ? 'bg-[var(--color-neutral-text-primary)] text-white shadow-sm' : 'text-[var(--color-neutral-text-secondary)] hover:bg-[var(--color-neutral-surface-muted)]'
             }`}
           >
             <Users className="w-4 h-4" />
@@ -240,7 +240,7 @@ export default function AdminDashboard() {
           <button
             onClick={() => setAdminTab('templates')}
             className={`px-4 py-2 text-xs font-black rounded-xl transition flex items-center gap-2 cursor-pointer ${
-              adminTab === 'templates' ? 'bg-[var(--color-neutral-text-primary)] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+              adminTab === 'templates' ? 'bg-[var(--color-neutral-text-primary)] text-white shadow-sm' : 'text-[var(--color-neutral-text-secondary)] hover:bg-[var(--color-neutral-surface-muted)]'
             }`}
           >
             <LayoutIcon className="w-4 h-4 text-[var(--color-accent-base)]" />
@@ -250,10 +250,10 @@ export default function AdminDashboard() {
           <button
             onClick={() => setAdminTab('storage')}
             className={`px-4 py-2 text-xs font-black rounded-xl transition flex items-center gap-2 cursor-pointer ${
-              adminTab === 'storage' ? 'bg-[var(--color-neutral-text-primary)] text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+              adminTab === 'storage' ? 'bg-[var(--color-neutral-text-primary)] text-white shadow-sm' : 'text-[var(--color-neutral-text-secondary)] hover:bg-[var(--color-neutral-surface-muted)]'
             }`}
           >
-            <HardDrive className="w-4 h-4 text-purple-400" />
+            <HardDrive className="w-4 h-4 text-[var(--color-accent-purple)]" />
             <span>Almacenamiento, Servidores & Drive</span>
           </button>
         </div>
@@ -292,17 +292,17 @@ export default function AdminDashboard() {
                 <div 
                   key={notif.id} 
                   className={`p-3 rounded-xl border flex items-center justify-between gap-3 text-xs transition ${
-                    notif.read ? 'bg-slate-50 border-slate-200 text-slate-500' : 'bg-amber-50/60 border-amber-200 text-slate-800 font-medium'
+                    notif.read ? 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-muted)]' : 'bg-[var(--color-status-warning-muted)] border-[var(--color-status-warning-base)]/30 text-[var(--color-neutral-text-primary)] font-medium'
                   }`}
                 >
                   <div className="space-y-0.5">
-                    <p className="font-bold text-slate-900">{notif.title || notif.type}</p>
-                    <p className="text-[11px] text-slate-600">{notif.detail}</p>
+                    <p className="font-bold text-[var(--color-neutral-text-primary)]">{notif.title || notif.type}</p>
+                    <p className="text-[11px] text-[var(--color-neutral-text-secondary)]">{notif.detail}</p>
                   </div>
                   {!notif.read && (
                     <button 
                       onClick={() => handleMarkNotifRead(notif.id)}
-                      className="p-1 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition cursor-pointer"
+                      className="p-1 rounded-lg text-[var(--color-neutral-text-muted)] hover:text-[var(--color-status-success-text)] hover:bg-[var(--color-status-success-muted)] transition cursor-pointer"
                       title="Marcar como leída"
                     >
                       <Check className="w-4 h-4" />
@@ -316,36 +316,36 @@ export default function AdminDashboard() {
 
         {/* Panel de Reclamos y Soporte Pendiente */}
         {claims.length > 0 && (
-          <div className="bg-amber-500/10 border-2 border-amber-500/40 rounded-2xl p-5 shadow-sm space-y-3">
+          <div className="bg-[var(--color-status-warning-muted)] border-2 border-[var(--color-status-warning-base)]/40 rounded-2xl p-5 shadow-sm space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-amber-600" />
-                <h2 className="font-extrabold text-sm text-amber-950">📩 Reclamos de Activación y Comprobantes Pendientes</h2>
+                <AlertCircle className="w-5 h-5 text-[var(--color-status-warning-text)]" />
+                <h2 className="font-extrabold text-sm text-[var(--color-status-warning-text)]">📩 Reclamos de Activación y Comprobantes Pendientes</h2>
               </div>
-              <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 text-xs font-black">
+              <span className="px-2.5 py-0.5 rounded-full bg-[var(--color-status-warning-base)] text-white text-xs font-black">
                 {claims.length} Pendiente{claims.length > 1 ? 's' : ''}
               </span>
             </div>
 
             <div className="space-y-2">
               {claims.map((claim) => (
-                <div key={claim.id} className="bg-white rounded-xl p-3.5 border border-amber-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                <div key={claim.id} className="bg-white rounded-xl p-3.5 border border-[var(--color-status-warning-base)]/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
                   <div className="space-y-0.5">
                     <p className="font-black text-[var(--color-neutral-text-primary)]">{claim.email}</p>
-                    <p className="text-[11px] text-slate-600">
+                    <p className="text-[11px] text-[var(--color-neutral-text-secondary)]">
                       Método: <strong>{claim.method}</strong> ({claim.amount}) — Comprobante: <code>{claim.proof_id || claim.proofId || 'N/A'}</code>
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleReviewClaim(claim, true)}
-                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl transition shadow-sm cursor-pointer"
+                      className="px-3 py-1.5 bg-[var(--color-status-success-base)] hover:opacity-90 text-white font-extrabold rounded-xl transition shadow-sm cursor-pointer"
                     >
                       ✅ Aprobar y Activar
                     </button>
                     <button
                       onClick={() => handleReviewClaim(claim, false)}
-                      className="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white font-extrabold rounded-xl transition shadow-sm cursor-pointer"
+                      className="px-3 py-1.5 bg-[var(--color-status-danger-base)] hover:opacity-90 text-white font-extrabold rounded-xl transition shadow-sm cursor-pointer"
                     >
                       ❌ Rechazar
                     </button>
@@ -363,34 +363,34 @@ export default function AdminDashboard() {
               <CreditCard className="w-5 h-5 text-[var(--color-secondary-base)]" />
               <h2 className="font-extrabold text-sm text-[var(--color-neutral-text-primary)]">Pasarelas & Webhooks de Cobro Unificado</h2>
             </div>
-            <span className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
+            <span className="text-[11px] text-[var(--color-status-success-text)] font-bold flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5" /> Core applyPayment.js Activo
             </span>
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-            <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/5 flex items-center justify-between">
+            <div className="p-3.5 rounded-xl border border-[var(--color-status-success-base)]/30 bg-[var(--color-status-success-muted)] flex items-center justify-between">
               <div>
-                <p className="text-xs font-black text-emerald-900">Mercado Pago (ARS)</p>
-                <p className="text-[10px] text-emerald-700 font-bold">Cobros Webhook Automáticos</p>
+                <p className="text-xs font-black text-[var(--color-status-success-text)]">Mercado Pago (ARS)</p>
+                <p className="text-[10px] text-[var(--color-status-success-text)] font-bold">Cobros Webhook Automáticos</p>
               </div>
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <CheckCircle2 className="w-4 h-4 text-[var(--color-status-success-base)]" />
             </div>
 
-            <div className="p-3.5 rounded-xl border border-blue-500/30 bg-blue-500/5 flex items-center justify-between">
+            <div className="p-3.5 rounded-xl border border-[var(--color-secondary-base)]/30 bg-[var(--color-secondary-muted)] flex items-center justify-between">
               <div>
-                <p className="text-xs font-black text-blue-900">PayPal (USD)</p>
-                <p className="text-[10px] text-blue-700 font-bold">Firma Webhook Verificada</p>
+                <p className="text-xs font-black text-[var(--color-secondary-text)]">PayPal (USD)</p>
+                <p className="text-[10px] text-[var(--color-secondary-text)] font-bold">Firma Webhook Verificada</p>
               </div>
-              <CheckCircle2 className="w-4 h-4 text-blue-600" />
+              <CheckCircle2 className="w-4 h-4 text-[var(--color-secondary-base)]" />
             </div>
 
-            <div className="p-3.5 rounded-xl border border-purple-500/30 bg-purple-500/5 flex items-center justify-between">
+            <div className="p-3.5 rounded-xl border border-[var(--color-accent-purple)]/30 bg-[var(--color-accent-purple-light)] flex items-center justify-between">
               <div>
-                <p className="text-xs font-black text-purple-900">Lemon Squeezy (USD)</p>
-                <p className="text-[10px] text-purple-700 font-bold">Suscripciones Globales</p>
+                <p className="text-xs font-black text-[var(--color-accent-purple)]">Lemon Squeezy (USD)</p>
+                <p className="text-[10px] text-[var(--color-accent-purple)] font-bold">Suscripciones Globales</p>
               </div>
-              <CheckCircle2 className="w-4 h-4 text-purple-600" />
+              <CheckCircle2 className="w-4 h-4 text-[var(--color-accent-purple)]" />
             </div>
           </div>
         </div>
@@ -404,16 +404,16 @@ export default function AdminDashboard() {
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <div className="relative flex-1 sm:w-64">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-neutral-text-muted)]" />
                 <input
                   type="text"
                   placeholder="Buscar por email..."
                   value={searchQuery}
                   onChange={(e) => { setSearchQuery(e.target.value); setPage(0); }}
-                  className="w-full text-xs pl-9 pr-3 py-2 border border-slate-300 rounded-xl font-medium outline-none focus:border-[var(--color-secondary-base)]"
+                  className="w-full text-xs pl-9 pr-3 py-2 border border-[var(--color-neutral-border)] rounded-xl font-medium outline-none focus:border-[var(--color-secondary-base)]"
                 />
               </div>
-              <button onClick={loadEverything} className="text-[var(--color-secondary-base)] p-2 hover:bg-slate-100 rounded-xl transition cursor-pointer">
+              <button onClick={loadEverything} className="text-[var(--color-secondary-base)] p-2 hover:bg-[var(--color-neutral-surface-muted)] rounded-xl transition cursor-pointer">
                 <RefreshCw className={`w-4 h-4 ${loadingData ? 'animate-spin' : ''}`} />
               </button>
             </div>
@@ -438,19 +438,19 @@ export default function AdminDashboard() {
                   </td>
                   <td className="px-5 py-3 font-medium">
                     {u.metodo_pago === 'mercadopago' ? (
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-800 border border-emerald-500/30 font-bold text-[10px]">
+                      <span className="px-2 py-0.5 rounded-full bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)] border border-[var(--color-status-success-base)]/30 font-bold text-[10px]">
                         🌐 Mercado Pago Automático
                       </span>
                     ) : u.metodo_pago === 'paypal' ? (
-                      <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-800 border border-blue-500/30 font-bold text-[10px]">
+                      <span className="px-2 py-0.5 rounded-full bg-[var(--color-secondary-muted)] text-[var(--color-secondary-text)] border border-[var(--color-secondary-base)]/30 font-bold text-[10px]">
                         💳 PayPal Automático
                       </span>
                     ) : u.metodo_pago === 'lemonsqueezy' ? (
-                      <span className="px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-800 border border-purple-500/30 font-bold text-[10px]">
+                      <span className="px-2 py-0.5 rounded-full bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple)] border border-[var(--color-accent-purple)]/30 font-bold text-[10px]">
                         🌎 Lemon Squeezy USD
                       </span>
                     ) : u.metodo_pago === 'manual' ? (
-                      <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-800 border border-amber-500/30 font-bold text-[10px]">
+                      <span className="px-2 py-0.5 rounded-full bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)] border border-[var(--color-status-warning-base)]/30 font-bold text-[10px]">
                         🏦 Transferencia / Manual
                       </span>
                     ) : (
@@ -480,7 +480,7 @@ export default function AdminDashboard() {
                         </button>
                         <button
                           onClick={() => togglePremium(u, 'enterprise')}
-                          className="text-xs font-extrabold px-2.5 py-1.5 rounded-xl transition shadow-sm cursor-pointer bg-purple-500/10 text-purple-700 hover:bg-purple-500/20 border border-purple-500/30"
+                          className="text-xs font-extrabold px-2.5 py-1.5 rounded-xl transition shadow-sm cursor-pointer bg-[var(--color-accent-purple)]/10 text-[var(--color-accent-purple)] hover:bg-[var(--color-accent-purple)]/20 border border-[var(--color-accent-purple)]/30"
                         >
                           + Enterprise
                         </button>
@@ -493,7 +493,7 @@ export default function AdminDashboard() {
           </table>
 
           {/* Pagination Controls */}
-          <div className="px-5 py-3 bg-[var(--color-neutral-surface-cream)]/50 border-t border-[var(--color-neutral-border)] flex items-center justify-between text-xs text-slate-600">
+          <div className="px-5 py-3 bg-[var(--color-neutral-surface-cream)]/50 border-t border-[var(--color-neutral-border)] flex items-center justify-between text-xs text-[var(--color-neutral-text-secondary)]">
             <span>
               Mostrando {users.length > 0 ? page * pageSize + 1 : 0} a {Math.min((page + 1) * pageSize, totalCount)} de {totalCount} usuarios
             </span>
@@ -501,7 +501,7 @@ export default function AdminDashboard() {
               <button
                 disabled={page === 0}
                 onClick={() => setPage(p => Math.max(0, p - 1))}
-                className="p-1.5 rounded-lg border border-slate-300 disabled:opacity-40 hover:bg-slate-100 transition"
+                className="p-1.5 rounded-lg border border-[var(--color-neutral-border)] disabled:opacity-40 hover:bg-[var(--color-neutral-surface-muted)] transition"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -509,7 +509,7 @@ export default function AdminDashboard() {
               <button
                 disabled={(page + 1) * pageSize >= totalCount}
                 onClick={() => setPage(p => p + 1)}
-                className="p-1.5 rounded-lg border border-slate-300 disabled:opacity-40 hover:bg-slate-100 transition"
+                className="p-1.5 rounded-lg border border-[var(--color-neutral-border)] disabled:opacity-40 hover:bg-[var(--color-neutral-surface-muted)] transition"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>

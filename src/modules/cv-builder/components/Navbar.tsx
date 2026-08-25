@@ -112,10 +112,10 @@ export default function Navbar({
           {onOpenAtsCheck && (
             <button
               onClick={onOpenAtsCheck}
-              className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-amber-200 bg-amber-950/80 hover:bg-amber-900/90 border border-amber-600/50 transition shadow-md cursor-pointer whitespace-nowrap active:scale-95"
+              className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-[var(--color-status-warning-text)] bg-[var(--color-status-warning-muted)]/80 hover:bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/50 transition shadow-md cursor-pointer whitespace-nowrap active:scale-95"
               title="Auditoría de lectura predictiva para ATS"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+              <Sparkles className="w-3.5 h-3.5 text-[var(--color-status-warning-text)] flex-shrink-0" />
               <span>ATS</span>
             </button>
           )}

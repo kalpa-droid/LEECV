@@ -128,7 +128,7 @@ export function RepeatableSection({
       <div className={`flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl border mb-3 transition ${
         isVisible 
           ? 'ui-bg-card ui-border ui-text-primary shadow-sm' 
-          : 'bg-slate-200 border-slate-300 text-slate-500 opacity-75'
+          : 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-muted)] opacity-75'
       }`}>
         <span className="text-xs font-black uppercase tracking-wide">
           {sectionTitle}
@@ -141,7 +141,7 @@ export function RepeatableSection({
             className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
               isVisible
                 ? 'bg-[var(--color-secondary-base)] text-white hover:bg-[var(--color-secondary-hover)]'
-                : 'bg-slate-400 text-white hover:bg-slate-500'
+                : 'bg-[var(--color-neutral-text-muted)] text-white hover:opacity-80'
             }`}
           >
             <span>{isVisible ? 'ACTIVADA' : 'DESACTIVADA'}</span>
@@ -162,7 +162,7 @@ export function RepeatableSection({
             <button
               type="button"
               onClick={onDeleteSection}
-              className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-red-100 text-red-700 hover:bg-red-200 shadow-sm transition cursor-pointer"
+              className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-[var(--color-status-danger-muted)] text-[var(--color-status-danger-text)] hover:opacity-80 shadow-sm transition cursor-pointer"
               title="Eliminar esta sección personalizada"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -195,7 +195,7 @@ export function RepeatableSection({
         <div className="space-y-4">
           {items.map((item: any, idx: number) => (
             <div key={idx} className="p-3.5 ui-bg-card ui-border ui-text-primary rounded-2xl border-2 shadow-sm space-y-3">
-              <div className="flex items-center justify-between border-b pb-1 border-slate-200">
+              <div className="flex items-center justify-between pb-1 border-b border-[var(--color-neutral-border)]">
                 <span className="text-xs font-bold text-[var(--color-secondary-base)]">
                   {itemTitlePrefix} #{idx + 1}
                 </span>
@@ -203,7 +203,7 @@ export function RepeatableSection({
                   <button
                     type="button"
                     onClick={() => handleDuplicateItem(idx)}
-                    className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 hover:bg-purple-100 text-[11px] font-bold transition cursor-pointer"
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple)] hover:opacity-80 text-[11px] font-bold transition cursor-pointer"
                     title="Duplicar este registro para crear una copia editable"
                   >
                     <Copy className="w-3 h-3" />
@@ -212,7 +212,7 @@ export function RepeatableSection({
                   <button
                     type="button"
                     onClick={() => handleDeleteItem(idx)}
-                    className="p-1 text-[var(--color-neutral-text-primary)] font-medium hover:text-red-600 transition cursor-pointer"
+                    className="p-1 text-[var(--color-neutral-text-primary)] font-medium hover:text-[var(--color-status-danger-text)] transition cursor-pointer"
                     title="Eliminar registro"
                   >
                     <Trash2 className="w-3.5 h-3.5" />

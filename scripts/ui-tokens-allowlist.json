@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Allowlist de excepciones legítimas de colores no tokenizados en UI (con justificación obligatoria)",
+  "allowedExceptions": [
+    {
+      "file": "src/modules/admin/AdminLogin.tsx",
+      "pattern": "#4285F4|#34A853|#FBBC05|#EA4335",
+      "reason": "Colores oficiales de marca Google OAuth para el botón de inicio de sesión social"
+    },
+    {
+      "file": "src/modules/cv-builder/components/SignatureModal.tsx",
+      "pattern": "2d|canvas|2DContext|fillStyle|strokeStyle",
+      "reason": "Contexto de dibujo HTML5 Canvas de firmas manuscritas que requiere coordenadas RGB directo"
+    },
+    {
+      "file": "src/modules/cv-builder/components/CertCropperModal.tsx",
+      "pattern": "2d|canvas|2DContext|fillStyle|strokeStyle",
+      "reason": "Contexto de dibujo HTML5 Canvas para recorte de imágenes de certificados escaneados"
+    }
+  ]
+}

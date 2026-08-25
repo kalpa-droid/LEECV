@@ -116,7 +116,7 @@ export default function CloudStatusModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Estado de Sincronización & Nube"
-      icon={<Cloud className="w-6 h-6 text-purple-400 animate-pulse" />}
+      icon={<Cloud className="w-6 h-6 text-[var(--color-accent-purple)] animate-pulse" />}
       size="lg"
       footer={
         <div className="w-full flex items-center justify-between gap-2">
@@ -124,7 +124,7 @@ export default function CloudStatusModal({
             <button
               onClick={handlePublish}
               disabled={isPublishing}
-              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg transition flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-2 bg-[var(--color-status-success-base)] hover:opacity-90 text-white font-extrabold text-xs rounded-xl shadow-lg transition flex items-center gap-1.5 cursor-pointer"
             >
               <Globe className={`w-3.5 h-3.5 ${isPublishing ? 'animate-spin' : ''}`} />
               <span>{isPublishing ? 'Publicando...' : 'Publicar CV Web'}</span>
@@ -136,7 +136,7 @@ export default function CloudStatusModal({
                 onClose();
               }}
               disabled={isSaving}
-              className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs rounded-xl shadow-lg transition flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-2 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-extrabold text-xs rounded-xl shadow-lg transition flex items-center gap-1.5 cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isSaving ? 'animate-spin' : ''}`} />
               <span>{isSaving ? 'Guardando...' : 'Sincronizar'}</span>
@@ -145,7 +145,7 @@ export default function CloudStatusModal({
 
           <button
             onClick={onClose}
-            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl transition cursor-pointer"
+            className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl transition cursor-pointer"
           >
             Cerrar
           </button>
@@ -156,13 +156,13 @@ export default function CloudStatusModal({
         {/* Main Active Status Card */}
         <div className={`p-3.5 rounded-2xl border flex items-center gap-3 ${
           currentColor === 'green'
-            ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-200'
+            ? 'bg-[var(--color-status-success-muted)] border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-text)]'
             : currentColor === 'yellow'
-            ? 'bg-amber-950/40 border-amber-500/40 text-amber-200'
-            : 'bg-red-950/40 border-red-500/40 text-red-200'
+            ? 'bg-[var(--color-status-warning-muted)] border-[var(--color-status-warning-base)]/40 text-[var(--color-status-warning-text)]'
+            : 'bg-[var(--color-status-danger-muted)] border-[var(--color-status-danger-base)]/40 text-[var(--color-status-danger-text)]'
         }`}>
           <Cloud className={`w-6 h-6 flex-shrink-0 ${
-            currentColor === 'green' ? 'text-emerald-400' : currentColor === 'yellow' ? 'text-amber-400' : 'text-red-500'
+            currentColor === 'green' ? 'text-[var(--color-status-success-text)]' : currentColor === 'yellow' ? 'text-[var(--color-status-warning-text)]' : 'text-[var(--color-status-danger-text)]'
           }`} />
 
           <div className="space-y-0.5">
@@ -171,7 +171,7 @@ export default function CloudStatusModal({
               {currentColor === 'yellow' && 'Guardado Local Activo (WebP)'}
               {currentColor === 'red' && 'Sin Conexión a Internet'}
             </h4>
-            <p className="text-[11px] text-slate-300">
+            <p className="text-[11px] text-white/80">
               {currentColor === 'green' && 'Guardado y sincronizado automáticamente en la nube de Supabase.'}
               {currentColor === 'yellow' && 'Guardado automático en tu equipo. Sin pérdida ante cortes de luz.'}
               {currentColor === 'red' && 'Modo sin conexión. Los cambios quedan protegidos en tu equipo.'}
@@ -180,31 +180,31 @@ export default function CloudStatusModal({
         </div>
 
         {/* Google Drive Status Section */}
-        <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-3">
+        <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <HardDrive className="w-4 h-4 text-blue-400" />
+              <HardDrive className="w-4 h-4 text-[var(--color-secondary-base)]" />
               <span className="font-extrabold text-white text-xs">Google Drive Backup</span>
             </div>
             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
               profile?.drive_connected
-                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                : 'bg-slate-800 text-slate-400 border border-slate-700'
+                ? 'bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)] border border-[var(--color-status-success-base)]/40'
+                : 'bg-white/10 text-white/60 border border-white/10'
             }`}>
               {profile?.drive_connected ? 'Conectado' : 'No Conectado'}
             </span>
           </div>
 
           {profile?.email && (
-            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800 text-[11px]">
-              <span className="text-slate-400">Cuenta activa:</span>
+            <div className="flex items-center justify-between p-2 rounded-xl bg-black/30 border border-white/10 text-[11px]">
+              <span className="text-white/60">Cuenta activa:</span>
               <span className="font-bold text-white">{profile.email}</span>
             </div>
           )}
 
           {profile?.drive_connected ? (
-            <div className="space-y-2 text-slate-300 text-[11px]">
-              <div className="flex items-center justify-between text-slate-400">
+            <div className="space-y-2 text-white/80 text-[11px]">
+              <div className="flex items-center justify-between text-white/60">
                 <span>Almacenamiento Usado:</span>
                 <span className="font-extrabold text-white">
                   {loadingDrive ? 'Consultando...' : driveQuota ? `${driveQuota.percentUsed}% (${driveQuota.remainingGB} GB libres)` : '15 GB Disponibles'}
@@ -213,10 +213,10 @@ export default function CloudStatusModal({
 
               {/* Progress Bar */}
               {driveQuota && (
-                <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
                   <div
                     className={`h-full transition-all duration-500 ${
-                      driveQuota.isFull ? 'bg-red-500' : driveQuota.isNearLimit ? 'bg-amber-400' : 'bg-blue-400'
+                      driveQuota.isFull ? 'bg-[var(--color-status-danger-base)]' : driveQuota.isNearLimit ? 'bg-[var(--color-status-warning-base)]' : 'bg-[var(--color-secondary-base)]'
                     }`}
                     style={{ width: `${Math.min(100, driveQuota.percentUsed)}%` }}
                   />
@@ -224,13 +224,13 @@ export default function CloudStatusModal({
               )}
 
               <div className="flex items-center justify-between pt-1">
-                <p className="text-slate-400 text-[10px]">
+                <p className="text-white/60 text-[10px]">
                   Tus respaldos en Google Drive se guardan en la carpeta privada de la aplicación.
                 </p>
                 <button
                   onClick={handleLogout}
                   disabled={isLoggingOut}
-                  className="px-2.5 py-1 rounded-lg bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/50 text-[11px] font-extrabold transition flex items-center gap-1 cursor-pointer flex-shrink-0 ml-2"
+                  className="px-2.5 py-1 rounded-lg bg-[var(--color-status-danger-muted)] hover:opacity-80 text-[var(--color-status-danger-text)] border border-[var(--color-status-danger-base)]/40 text-[11px] font-extrabold transition flex items-center gap-1 cursor-pointer flex-shrink-0 ml-2"
                 >
                   <LogOut className={`w-3 h-3 ${isLoggingOut ? 'animate-spin' : ''}`} />
                   <span>Cerrar Sesión</span>
@@ -239,7 +239,7 @@ export default function CloudStatusModal({
             </div>
           ) : (
             <div className="space-y-2">
-              <p className="text-slate-300 text-[11px]">
+              <p className="text-white/80 text-[11px]">
                 Conecta tu cuenta de Google para respaldar tus currículums y certificados directamente en tu propio Google Drive.
               </p>
 
@@ -251,7 +251,7 @@ export default function CloudStatusModal({
                     console.error('Error conectando Google Drive:', err);
                   }
                 }}
-                className="w-full py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 transition shadow-md cursor-pointer"
+                className="w-full py-2 px-3 rounded-xl bg-[var(--color-secondary-base)] hover:opacity-90 text-white font-extrabold text-xs flex items-center justify-center gap-2 transition shadow-md cursor-pointer"
               >
                 <LogIn className="w-4 h-4" />
                 <span>Vincular Google Drive</span>
@@ -261,31 +261,31 @@ export default function CloudStatusModal({
         </div>
 
         {/* Storage Architecture Overview */}
-        <div className="space-y-2 border-t border-slate-800 pt-3">
-          <h4 className="font-extrabold text-slate-400 text-[11px] uppercase tracking-wider">Capas de Protección de Datos:</h4>
+        <div className="space-y-2 border-t border-white/10 pt-3">
+          <h4 className="font-extrabold text-white/60 text-[11px] uppercase tracking-wider">Capas de Protección de Datos:</h4>
           
           <div className="space-y-2">
-            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-950/40 border border-slate-800">
-              <ShieldCheck className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-black/40 border border-white/10">
+              <ShieldCheck className="w-5 h-5 text-[var(--color-status-success-text)] flex-shrink-0" />
               <div>
-                <span className="font-black text-emerald-400">IndexedDB + WebP:</span>
-                <span className="text-slate-300 ml-1.5">Almacenamiento ilimitado en tu navegador local.</span>
+                <span className="font-black text-[var(--color-status-success-text)]">IndexedDB + WebP:</span>
+                <span className="text-white/80 ml-1.5">Almacenamiento ilimitado en tu navegador local.</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-950/40 border border-slate-800">
-              <Cloud className="w-5 h-5 text-purple-400 flex-shrink-0" />
+            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-black/40 border border-white/10">
+              <Cloud className="w-5 h-5 text-[var(--color-accent-purple)] flex-shrink-0" />
               <div>
-                <span className="font-black text-purple-400">Nube Supabase:</span>
-                <span className="text-slate-300 ml-1.5">Sincronización multi-dispositivo cifrada.</span>
+                <span className="font-black text-[var(--color-accent-purple)]">Nube Supabase:</span>
+                <span className="text-white/80 ml-1.5">Sincronización multi-dispositivo cifrada.</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-950/40 border border-slate-800">
-              <HardDrive className="w-5 h-5 text-blue-400 flex-shrink-0" />
+            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-black/40 border border-white/10">
+              <HardDrive className="w-5 h-5 text-[var(--color-secondary-base)] flex-shrink-0" />
               <div>
-                <span className="font-black text-blue-400">Google Drive API:</span>
-                <span className="text-slate-300 ml-1.5">Copia de respaldo personal en tu cuenta de Google.</span>
+                <span className="font-black text-[var(--color-secondary-base)]">Google Drive API:</span>
+                <span className="text-white/80 ml-1.5">Copia de respaldo personal en tu cuenta de Google.</span>
               </div>
             </div>
           </div>

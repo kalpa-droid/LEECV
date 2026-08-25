@@ -106,7 +106,7 @@ export default function PdfCheckoutModal({
         <div className="w-full flex items-center justify-between gap-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-slate-400 hover:text-white text-xs font-bold transition cursor-pointer"
+            className="px-4 py-2 text-white/60 hover:text-white text-xs font-bold transition cursor-pointer"
           >
             Volver al Editor
           </button>
@@ -114,7 +114,7 @@ export default function PdfCheckoutModal({
             <button
               onClick={handleConfirmExport}
               disabled={isProcessing}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer"
+              className="px-4 py-2 bg-[var(--color-status-success-base)] hover:opacity-90 text-white font-black text-xs rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer"
             >
               <Check className="w-4 h-4" />
               <span>{isProOrEnterprise ? 'Exportar PDF A4 Gratis (Plan Pro Activo)' : 'Tengo Créditos / Confirmar Exportación'}</span>
@@ -125,7 +125,7 @@ export default function PdfCheckoutModal({
     >
       <div className="space-y-4 text-xs">
         {errorMsg && (
-          <div className="p-3 bg-rose-500/20 border border-rose-500/40 rounded-xl text-rose-300 text-xs font-bold flex items-center gap-2">
+          <div className="p-3 bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/40 rounded-xl text-[var(--color-status-danger-text)] text-xs font-bold flex items-center gap-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>{errorMsg}</span>
           </div>
@@ -133,20 +133,20 @@ export default function PdfCheckoutModal({
 
         {/* User Account / Email Section */}
         {!currentProfile ? (
-          <div className="p-4 bg-slate-950/80 border border-slate-800 rounded-2xl space-y-3">
+          <div className="p-4 bg-black/40 border border-white/10 rounded-2xl space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-black text-purple-300 uppercase tracking-wide">
+              <span className="text-xs font-black text-[var(--color-accent-purple)] uppercase tracking-wide">
                 1. Registra tu Correo o Cuenta
               </span>
               <button 
                 onClick={signInWithGoogle}
-                className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-900 rounded-lg text-[11px] font-extrabold flex items-center gap-1 transition cursor-pointer"
+                className="px-2.5 py-1 bg-white hover:bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] rounded-lg text-[11px] font-extrabold flex items-center gap-1 transition cursor-pointer"
               >
-                <LogIn className="w-3.5 h-3.5 text-blue-600" /> Ingresar con Google
+                <LogIn className="w-3.5 h-3.5 text-[var(--color-secondary-base)]" /> Ingresar con Google
               </button>
             </div>
 
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-white/60">
               Ingresa tu correo para enviarte la factura y vincular tus respaldos en la nube:
             </p>
 
@@ -155,16 +155,16 @@ export default function PdfCheckoutModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="tu.email@ejemplo.com"
-              className="w-full text-xs p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 font-bold outline-none focus:border-amber-500 transition"
+              className="w-full text-xs p-2.5 rounded-xl bg-black/40 border border-white/20 text-white placeholder-white/40 font-bold outline-none focus:border-[var(--color-accent-base)] transition"
             />
           </div>
         ) : (
-          <div className="p-3 bg-slate-950/80 border border-slate-800 rounded-2xl flex items-center justify-between text-xs">
+          <div className="p-3 bg-black/40 border border-white/10 rounded-2xl flex items-center justify-between text-xs">
             <div>
-              <span className="text-slate-400 block text-[10px]">Cuenta Activa:</span>
-              <span className="font-extrabold text-purple-300">{currentProfile.email}</span>
+              <span className="text-white/60 block text-[10px]">Cuenta Activa:</span>
+              <span className="font-extrabold text-[var(--color-accent-purple)]">{currentProfile.email}</span>
             </div>
-            <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-black uppercase">
+            <span className="px-2.5 py-1 rounded-lg bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-text)] text-[10px] font-black uppercase">
               Plan {currentProfile.plan || 'Free'}
             </span>
           </div>
@@ -172,7 +172,7 @@ export default function PdfCheckoutModal({
 
         {/* Payment Gateways & Options */}
         <div className="space-y-2.5">
-          <span className="text-xs font-black text-amber-300 uppercase tracking-wide block">
+          <span className="text-xs font-black text-[var(--color-status-warning-text)] uppercase tracking-wide block">
             2. Elige tu Opción de Pago o Descarga
           </span>
 
@@ -180,16 +180,16 @@ export default function PdfCheckoutModal({
           <button
             onClick={handleMercadoPagoCheckout}
             disabled={isProcessing}
-            className="w-full p-3.5 bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs rounded-2xl shadow-lg transition flex items-center justify-between cursor-pointer border border-yellow-300"
+            className="w-full p-3.5 bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-black text-xs rounded-2xl shadow-lg transition flex items-center justify-between cursor-pointer border border-[var(--color-status-warning-base)]/50"
           >
             <div className="flex items-center gap-2.5">
-              <CreditCard className="w-5 h-5 text-slate-950" />
+              <CreditCard className="w-5 h-5 text-black" />
               <div className="text-left">
                 <p className="leading-tight">Pagar 1 Exportación PDF A4 ($1.50 USD)</p>
                 <p className="text-[10px] opacity-80 font-bold">Mercado Pago, Tarjeta de Crédito / Débito, Transferencia</p>
               </div>
             </div>
-            <span className="px-2.5 py-1 bg-slate-950 text-amber-400 rounded-lg text-[10px] font-black">
+            <span className="px-2.5 py-1 bg-black/80 text-[var(--color-status-warning-text)] rounded-lg text-[10px] font-black">
               ~$1,800 ARS
             </span>
           </button>
@@ -199,14 +199,14 @@ export default function PdfCheckoutModal({
             <button
               onClick={() => handlePackCheckout('credits_pack_5')}
               disabled={isProcessing}
-              className="p-2.5 bg-slate-800 hover:bg-slate-700 border border-amber-500/30 text-amber-200 font-extrabold text-[11px] rounded-xl transition cursor-pointer text-center"
+              className="p-2.5 bg-white/10 hover:bg-white/20 border border-[var(--color-status-warning-base)]/30 text-[var(--color-status-warning-text)] font-extrabold text-[11px] rounded-xl transition cursor-pointer text-center"
             >
               Pack 5 créditos — $5 USD
             </button>
             <button
               onClick={() => handlePackCheckout('credits_pack_10')}
               disabled={isProcessing}
-              className="p-2.5 bg-slate-800 hover:bg-slate-700 border border-amber-500/30 text-amber-200 font-extrabold text-[11px] rounded-xl transition cursor-pointer text-center"
+              className="p-2.5 bg-white/10 hover:bg-white/20 border border-[var(--color-status-warning-base)]/30 text-[var(--color-status-warning-text)] font-extrabold text-[11px] rounded-xl transition cursor-pointer text-center"
             >
               Pack 10 créditos — $8 USD
             </button>
@@ -215,21 +215,21 @@ export default function PdfCheckoutModal({
           {/* Option B: Upgrade to Pro ($19/mo) */}
           <button
             onClick={() => { onClose(); if (onOpenPricing) onOpenPricing(); }}
-            className="w-full p-3 bg-purple-950/60 hover:bg-purple-900/80 border border-purple-500/40 text-purple-200 font-extrabold text-xs rounded-2xl transition flex items-center justify-between cursor-pointer"
+            className="w-full p-3 bg-[var(--color-accent-purple-light)]/40 hover:bg-[var(--color-accent-purple-light)]/60 border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple)] font-extrabold text-xs rounded-2xl transition flex items-center justify-between cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-purple-400" />
+              <Sparkles className="w-4 h-4 text-[var(--color-accent-purple)]" />
               <span>Suscribirse a Plan Pro ($19 USD/mes) — Exportaciones Ilimitadas</span>
             </div>
-            <span className="text-[10px] text-purple-300 font-black">Ver Planes &rarr;</span>
+            <span className="text-[10px] text-[var(--color-accent-purple)] font-black">Ver Planes &rarr;</span>
           </button>
 
           {/* Option C: Free JSON Backup */}
           <button
             onClick={() => { onClose(); if (onExportJson) onExportJson(); }}
-            className="w-full p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer border border-slate-700"
+            className="w-full p-2.5 bg-white/10 hover:bg-white/20 text-white/80 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer border border-white/10"
           >
-            <Download className="w-4 h-4 text-amber-400" />
+            <Download className="w-4 h-4 text-[var(--color-status-warning-text)]" />
             <span>Descargar Copia de Respaldo .JSON Gratis en tu Equipo</span>
           </button>
         </div>

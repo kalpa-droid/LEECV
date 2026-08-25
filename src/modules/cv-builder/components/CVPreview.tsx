@@ -32,7 +32,7 @@ export default function CVPreview({ cvData, setCvData: _setCvData, activeTab: _a
       style={dynamicThemeStyle}
     >
       <div 
-        className="w-full max-w-5xl h-[1200px] bg-slate-900 p-2.5 rounded-3xl shadow-2xl border border-slate-800 my-2 no-print transition-transform duration-150 ease-out"
+        className="w-full max-w-5xl h-[1200px] bg-black/40 p-2.5 rounded-3xl shadow-2xl border border-white/10 my-2 no-print transition-transform duration-150 ease-out"
         style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top center' }}
       >
         <VectorDocViewer key={`${activePresetId}_v${presetsVersion}`} document={

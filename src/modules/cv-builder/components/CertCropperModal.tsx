@@ -125,13 +125,13 @@ export default function CertCropperModal({
       isOpen={isOpen && !!rawImageSrc}
       onClose={onClose}
       title="Ajustar Certificado a Hoja A4"
-      icon={<Crop className="w-5 h-5 text-amber-400" />}
+      icon={<Crop className="w-5 h-5 text-[var(--color-status-warning-text)]" />}
       size="md"
       footer={
         <div className="w-full flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs font-black text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-xl transition cursor-pointer"
+            className="px-4 py-2 text-xs font-black text-white/80 bg-white/10 hover:bg-white/20 rounded-xl transition cursor-pointer"
           >
             Cancelar
           </button>
@@ -149,13 +149,13 @@ export default function CertCropperModal({
         <div className="w-full">
           <label className={`block text-xs font-black text-[var(--color-accent-base)] mb-1 uppercase tracking-wide flex items-center justify-between`}>
             <span>IDENTIFICA TU CERTIFICADO *</span>
-            {isSelectionWarningVisible && <span className="text-red-500 text-[11px] font-bold flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" /> Primero elige el registro</span>}
+            {isSelectionWarningVisible && <span className="text-[var(--color-status-danger-text)] text-[11px] font-bold flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" /> Primero elige el registro</span>}
           </label>
           <select
             value={localRegIdx}
             onChange={(e) => handleSelectChange(e.target.value)}
             className={`w-full text-xs p-2.5 rounded-xl border-2 ui-bg-card ui-text-primary font-extrabold outline-none transition shadow-sm ${
-              isSelectionWarningVisible ? 'border-red-500 ring-2 ring-red-400/50 bg-red-50/50' : 'ui-border focus:border-amber-500'
+              isSelectionWarningVisible ? 'border-[var(--color-status-danger-base)] ring-2 ring-[var(--color-status-danger-base)]/50 bg-[var(--color-status-danger-muted)]' : 'ui-border focus:border-[var(--color-status-warning-base)]'
             }`}
           >
             <option value="">-- Primero elige el registro --</option>
@@ -168,7 +168,7 @@ export default function CertCropperModal({
         </div>
 
         {/* Viewport Canvas */}
-        <div className="relative border-4 border-amber-500 rounded-xl overflow-hidden shadow-2xl bg-black cursor-grab active:cursor-grabbing">
+        <div className="relative border-4 border-[var(--color-status-warning-base)] rounded-xl overflow-hidden shadow-2xl bg-black cursor-grab active:cursor-grabbing">
           <canvas 
             ref={canvasRef}
             width={260}
@@ -179,13 +179,13 @@ export default function CertCropperModal({
             onMouseLeave={handleMouseUp}
             className="touch-none bg-white"
           />
-          <div className="absolute inset-0 border-2 border-dashed border-amber-400/60 pointer-events-none rounded-lg" />
+          <div className="absolute inset-0 border-2 border-dashed border-[var(--color-status-warning-base)]/60 pointer-events-none rounded-lg" />
         </div>
 
         {/* Zoom and Rotation Control Bar */}
-        <div className="w-full bg-slate-900 p-3 rounded-xl space-y-2 border border-slate-800">
+        <div className="w-full bg-black/40 p-3 rounded-xl space-y-2 border border-white/10">
           <div className="flex items-center gap-3">
-            <ZoomOut className="w-4 h-4 text-slate-300" />
+            <ZoomOut className="w-4 h-4 text-white/80" />
             <input 
               type="range"
               min="0.1"
@@ -193,25 +193,25 @@ export default function CertCropperModal({
               step="0.02"
               value={zoom}
               onChange={(e) => setZoom(parseFloat(e.target.value))}
-              className="w-full accent-amber-500 cursor-pointer"
+              className="w-full accent-[var(--color-status-warning-base)] cursor-pointer"
             />
-            <ZoomIn className="w-4 h-4 text-slate-300" />
-            <span className="text-xs font-black w-10 text-right text-slate-200">{Math.round(zoom * 100)}%</span>
+            <ZoomIn className="w-4 h-4 text-white/80" />
+            <span className="text-xs font-black w-10 text-right text-white">{Math.round(zoom * 100)}%</span>
           </div>
 
           <div className="flex items-center justify-between pt-1">
             <button 
               onClick={() => setRotation((r) => (r + 90) % 360)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-xs font-black text-slate-200 hover:bg-slate-700 transition shadow-sm cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 border border-white/10 text-xs font-black text-white hover:bg-white/20 transition shadow-sm cursor-pointer"
             >
-              <RotateCw className="w-3.5 h-3.5 text-amber-400" /> Rotar 90°
+              <RotateCw className="w-3.5 h-3.5 text-[var(--color-status-warning-text)]" /> Rotar 90°
             </button>
 
             <button 
               onClick={() => { setZoom(1); setRotation(0); setOffset({ x: 0, y: 0 }); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-xs font-black text-slate-200 hover:bg-slate-700 transition shadow-sm cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 border border-white/10 text-xs font-black text-white hover:bg-white/20 transition shadow-sm cursor-pointer"
             >
-              <Maximize2 className="w-3.5 h-3.5 text-teal-400" /> Auto-Encajar
+              <Maximize2 className="w-3.5 h-3.5 text-[var(--color-secondary-base)]" /> Auto-Encajar
             </button>
           </div>
         </div>

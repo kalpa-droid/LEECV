@@ -67,7 +67,7 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
     return (
       <div className="h-screen bg-[var(--ui-preview-bg)] flex flex-col items-center justify-center text-white p-6">
         <Spinner size="lg" />
-        <p className="text-xs font-bold uppercase tracking-wider text-purple-300 mt-4 animate-pulse">
+        <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent-purple)] mt-4 animate-pulse">
           Cargando Currículum Web Verificado…
         </p>
       </div>
@@ -77,11 +77,11 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
   if (error || !cvData) {
     return (
       <div className="h-screen bg-[var(--ui-preview-bg)] flex flex-col items-center justify-center text-white p-6 text-center">
-        <div className="w-16 h-16 bg-red-500/20 text-red-400 rounded-2xl flex items-center justify-center text-3xl mb-4">
+        <div className="w-16 h-16 bg-[var(--color-status-danger-muted)] text-[var(--color-status-danger-text)] rounded-2xl flex items-center justify-center text-3xl mb-4">
           ⚠️
         </div>
         <h2 className="text-lg font-black text-white mb-2">Currículum No Disponible</h2>
-        <p className="text-xs text-slate-300 max-w-md mb-6 leading-relaxed">
+        <p className="text-xs text-white/80 max-w-md mb-6 leading-relaxed">
           {error || 'No fue posible cargar la versión pública de este currículum.'}
         </p>
         <button
@@ -97,14 +97,14 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
   return (
     <div className="h-screen bg-[var(--ui-preview-bg)] text-white flex flex-col font-sans overflow-hidden">
       {/* Public Header Bar */}
-      <header className="bg-[var(--color-neutral-text-primary)] border-b border-purple-500/30 px-4 py-3 flex items-center justify-between z-30 shadow-lg shrink-0">
+      <header className="bg-[var(--color-neutral-text-primary)] border-b border-white/10 px-4 py-3 flex items-center justify-between z-30 shadow-lg shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-xl">📄</span>
           <div>
             <h1 className="text-sm font-black text-white">
               {cvData?.personalInfo?.fullName || 'Currículum Vitae'}
             </h1>
-            <p className="text-[10px] text-purple-300 font-bold flex items-center gap-1">
+            <p className="text-[10px] text-[var(--color-accent-purple)] font-bold flex items-center gap-1">
               <span>🔒 Verificado Oficial por LEECV</span>
               <span>• Solo Lectura</span>
             </p>

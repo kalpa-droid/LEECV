@@ -51,14 +51,14 @@ export function CardExportModal({ isOpen, onClose, cvData, presetId = 'tarjeta-p
       isOpen={isOpen}
       onClose={onClose}
       title="Impresión de Tarjetas de Presentación"
-      icon={<CreditCard className="w-5 h-5 text-rose-400" />}
+      icon={<CreditCard className="w-5 h-5 text-[var(--color-accent-base)]" />}
       size="lg"
     >
       <div className="space-y-4">
         {loading || !cardData ? (
-          <div className="py-12 flex flex-col items-center justify-center text-slate-400 space-y-3">
-            <div className="w-8 h-8 border-4 border-rose-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-xs font-bold text-slate-300">Generando preview de imposición y QR...</p>
+          <div className="py-12 flex flex-col items-center justify-center text-white/60 space-y-3">
+            <div className="w-8 h-8 border-4 border-[var(--color-accent-base)] border-t-transparent rounded-full animate-spin" />
+            <p className="text-xs font-bold text-white/80">Generando preview de imposición y QR...</p>
           </div>
         ) : (
           <CardSheetExportSelector

@@ -42,11 +42,11 @@ export function TemplateMenu({ activePresetId, onSelectPreset, cvData }: Templat
   };
 
   return (
-    <div className="w-full max-w-5xl bg-slate-900/90 backdrop-blur border border-slate-800 rounded-2xl p-3.5 shadow-2xl mb-4 flex flex-wrap items-center justify-between gap-3 no-print">
+    <div className="w-full max-w-5xl bg-black/40 backdrop-blur border border-white/10 rounded-2xl p-3.5 shadow-2xl mb-4 flex flex-wrap items-center justify-between gap-3 no-print">
       {/* Preset Category & Selector Buttons */}
       <div className="flex items-center gap-2 overflow-x-auto py-1">
-        <div className="flex items-center gap-1.5 text-xs font-black text-slate-400 uppercase tracking-widest mr-2">
-          <Layers className="w-4 h-4 text-purple-400" />
+        <div className="flex items-center gap-1.5 text-xs font-black text-white/60 uppercase tracking-widest mr-2">
+          <Layers className="w-4 h-4 text-[var(--color-accent-purple)]" />
           <span>Plantilla:</span>
         </div>
 
@@ -61,14 +61,14 @@ export function TemplateMenu({ activePresetId, onSelectPreset, cvData }: Templat
               onClick={() => onSelectPreset(preset.id)}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
                 isActive
-                  ? 'bg-purple-600 text-white border-purple-400 shadow-lg shadow-purple-600/30 scale-[1.02]'
-                  : 'bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700/80 hover:text-white'
+                  ? 'bg-[var(--color-accent-purple)] text-white border-[var(--color-accent-purple)]/50 shadow-lg scale-[1.02]'
+                  : 'bg-white/10 text-white/80 border-white/10 hover:bg-white/20 hover:text-white'
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-white' : isCard ? 'text-rose-400' : 'text-purple-400'}`} />
+              <Icon className={`w-4 h-4 ${isActive ? 'text-white' : isCard ? 'text-[var(--color-accent-base)]' : 'text-[var(--color-accent-purple)]'}`} />
               <span>{preset.name}</span>
               <span className={`px-1.5 py-0.5 text-[9px] font-black rounded uppercase ${
-                isActive ? 'bg-white/20 text-white' : 'bg-slate-900 text-slate-400'
+                isActive ? 'bg-white/20 text-white' : 'bg-black/50 text-white/60'
               }`}>
                 {preset.pageSizeId === 'tarjeta_estandar' ? '89×51mm' : preset.pageSizeId.toUpperCase()}
               </span>
@@ -82,7 +82,7 @@ export function TemplateMenu({ activePresetId, onSelectPreset, cvData }: Templat
         <button
           onClick={handleDownload}
           disabled={isExporting}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs font-extrabold rounded-xl shadow-lg shadow-emerald-500/25 hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-status-success-base)] text-white text-xs font-extrabold rounded-xl shadow-md hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
         >
           {activePreset.pageCategory === 'tarjeta' ? (
             <>
