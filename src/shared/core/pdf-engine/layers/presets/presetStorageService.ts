@@ -1,6 +1,6 @@
 import { supabase } from '../../../lib/supabaseClient';
 import { Preset } from './presetSchema';
-import { registerPresetInMemory, getAllPresets } from './presetRegistry';
+import { registerPresetInMemory, getAllPresets, validatePresetShape } from './presetRegistry';
 
 const LOCAL_STORAGE_CACHE_KEY = 'antigravity_preset_cache';
 
@@ -27,7 +27,8 @@ function loadPresetsFromLocalStorageCache(): Preset[] {
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+          const valid = parsed.filter(validatePresetShape);
+          if (valid.length > 0) return valid;
         }
       }
     }
@@ -53,9 +54,14 @@ export async function fetchPresetsWithFallback(): Promise<Preset[]> {
         .eq('is_active', true);
 
       if (!error && data && data.length > 0) {
-        const fetched: Preset[] = data.map((row: any) => row.config as Preset);
-        savePresetsToLocalStorageCache(fetched);
-        return fetched;
+        const fetched: Preset[] = data
+          .map((row: any) => row.config as Preset)
+          .filter(validatePresetShape);
+
+        if (fetched.length > 0) {
+          savePresetsToLocalStorageCache(fetched);
+          return fetched;
+        }
       }
     }
   } catch (err) {

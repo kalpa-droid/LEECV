@@ -39,13 +39,20 @@ export function TemplateManagementTab() {
     setLoading(true);
     try {
       const fetched = await fetchPresetsFromSupabase();
-      setPresets(fetched);
-      if (fetched.length > 0) {
+      if (Array.isArray(fetched) && fetched.length > 0) {
+        setPresets(fetched);
         setSelectedPreset(fetched[0]);
         setJsonText(JSON.stringify(fetched[0], null, 2));
+      } else {
+        setPresets(PRESET_LIST);
+        setSelectedPreset(PRESET_LIST[0]);
+        setJsonText(JSON.stringify(PRESET_LIST[0], null, 2));
       }
     } catch (err) {
       console.warn('Error cargando presets:', err);
+      setPresets(PRESET_LIST);
+      setSelectedPreset(PRESET_LIST[0]);
+      setJsonText(JSON.stringify(PRESET_LIST[0], null, 2));
     } finally {
       setLoading(false);
     }
@@ -397,7 +404,7 @@ export function TemplateManagementTab() {
               </div>
 
               {/* Leyenda de Roles del Diseñador */}
-              {selectedPreset.roleLegend && Object.keys(selectedPreset.roleLegend).length > 0 && (
+              {selectedPreset?.roleLegend && typeof selectedPreset.roleLegend === 'object' && Object.keys(selectedPreset.roleLegend).length > 0 && (
                 <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200 space-y-1.5">
                   <div className="flex items-center gap-1.5 text-amber-900 font-extrabold text-[11px]">
                     <Info className="w-3.5 h-3.5 text-amber-600" />
@@ -407,7 +414,7 @@ export function TemplateManagementTab() {
                     {Object.entries(selectedPreset.roleLegend).map(([elem, role]) => (
                       <div key={elem} className="flex items-center justify-between text-slate-700 font-medium">
                         <span>{elem}:</span>
-                        <span className="font-mono text-purple-800 font-bold">{role}</span>
+                        <span className="font-mono text-purple-800 font-bold">{String(role)}</span>
                       </div>
                     ))}
                   </div>
