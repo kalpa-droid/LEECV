@@ -71,6 +71,10 @@ export function inferPdfRole(fieldId: string, val: string): 'title' | 'subtitle'
   return 'extra';
 }
 
+const INTERNAL_FIELD_DENYLIST = new Set([
+  'id', 'kind', 'level', 'rol', '_meta', 'createdat', 'updatedat', 'fields', 'record'
+]);
+
 export function buildStructuredRecordLayout(
   record: Record<string, any>,
   allowedFields?: string[]
@@ -79,13 +83,22 @@ export function buildStructuredRecordLayout(
     return { header: null, subheader: null, badges: [], extras: [], block: null, hasData: false };
   }
 
-  // El filtrado de allowedFields se aplica más abajo, en allKeysToProcess.
-
   // Normalización de claves alternativas (ej: degree -> tituloOGrado, role -> cargo, etc.)
   const normalizedRecord: Record<string, any> = {};
 
   const processKeyValue = (k: string, v: any) => {
     if (v === undefined || v === null) return;
+    const lowerKey = k.toLowerCase();
+
+    if (INTERNAL_FIELD_DENYLIST.has(lowerKey)) {
+      if (typeof v === 'object' && !Array.isArray(v)) {
+        for (const [subK, subV] of Object.entries(v)) {
+          processKeyValue(subK, subV);
+        }
+      }
+      return;
+    }
+
     if (typeof v === 'object' && !Array.isArray(v)) {
       for (const [subK, subV] of Object.entries(v)) {
         processKeyValue(subK, subV);

@@ -6,7 +6,7 @@
  */
 
 /** Convierte hex #RRGGBB o #RGB a valores sRGB [0-1] */
-function hexToRGB(hex: string): [number, number, number] {
+export function hexToRGB(hex: string): [number, number, number] {
   let cleanHex = hex.replace('#', '').trim();
   if (cleanHex.length === 3) {
     cleanHex = cleanHex.split('').map(c => c + c).join('');
@@ -21,7 +21,7 @@ function hexToRGB(hex: string): [number, number, number] {
 }
 
 /** Convierte sRGB [0-1] a hex #RRGGBB */
-function rgbToHex(r: number, g: number, b: number): string {
+export function rgbToHex(r: number, g: number, b: number): string {
   const toHex = (n: number) => {
     const hex = Math.round(Math.min(255, Math.max(0, n * 255))).toString(16);
     return hex.length === 1 ? '0' + hex : hex;

@@ -58,11 +58,12 @@ export function CardObjectRenderer({
   const borderColor = getRoleColor(design.borderColorRole);
   const backgroundColor = getRoleColor(design.backgroundColorRole);
 
-  const effectiveBgColor = (backgroundColor && backgroundColor !== 'transparent')
-    ? backgroundColor
-    : (sectorRole === 'sidebar' ? rolesColor.primary : rolesColor.background);
+  const parentBgColor = sectorRole === 'sidebar' ? rolesColor.primary : rolesColor.background;
+  const cardBgColor = decStyles?.cardContainerStyle.backgroundColor ?? (
+    spatialLayout.isBoxed ? 'rgba(0,0,0,0.025)' : (backgroundColor && backgroundColor !== 'transparent' ? backgroundColor : parentBgColor)
+  );
 
-  const typographyBinding = getTypographyColorBinding(rolesColor, effectiveBgColor);
+  const typographyBinding = getTypographyColorBinding(rolesColor, cardBgColor);
 
   const resolvedAccent = resolveAccentTarget(
     design.accentTarget,
@@ -87,14 +88,10 @@ export function CardObjectRenderer({
 
   const arranged = arrangeRecordFields(structuredInput, design.layoutTemplate);
 
-  const titleColor = resolveColorForRole('title', 'text', effectiveBgColor, rolesColor);
-  const subtitleColor = resolveColorForRole('subtitle', 'text', effectiveBgColor, rolesColor);
-  const badgeColor = resolveColorForRole('badge', 'highlight', effectiveBgColor, rolesColor);
-  const descColor = resolveColorForRole('description', 'text', effectiveBgColor, rolesColor);
-
-  const cardBgColor = decStyles?.cardContainerStyle.backgroundColor ?? (
-    spatialLayout.isBoxed ? 'rgba(0,0,0,0.025)' : backgroundColor
-  );
+  const titleColor = resolveColorForRole('title', 'text', cardBgColor, rolesColor, parentBgColor);
+  const subtitleColor = resolveColorForRole('subtitle', 'text', cardBgColor, rolesColor, parentBgColor);
+  const badgeColor = resolveColorForRole('badge', 'highlight', cardBgColor, rolesColor, parentBgColor);
+  const descColor = resolveColorForRole('description', 'text', cardBgColor, rolesColor, parentBgColor);
 
   const styles = StyleSheet.create({
     cardContainer: {
