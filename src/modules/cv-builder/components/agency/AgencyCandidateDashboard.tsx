@@ -57,7 +57,7 @@ export default function AgencyCandidateDashboard({ onBackToEditor }) {
               <ArrowLeft className="w-4 h-4" /> Volver al Editor
             </button>
             <h1 className="text-xl font-black text-white flex items-center gap-2">
-              <Users className="w-6 h-6 text-[var(--color-accent-purple-bright)]" /> Panel de Gestión de Candidatos (Agencia)
+              <Users className="w-6 h-6 text-[var(--ui-accent-purple)]" /> Panel de Gestión de Candidatos (Agencia)
             </h1>
           </div>
           
@@ -86,7 +86,7 @@ export default function AgencyCandidateDashboard({ onBackToEditor }) {
           </div>
 
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-[var(--color-accent-purple-bright)]" />
+            <Filter className="w-4 h-4 text-[var(--ui-accent-purple)]" />
             <select 
               value={selectedVacant}
               onChange={(e) => setSelectedVacant(e.target.value)}

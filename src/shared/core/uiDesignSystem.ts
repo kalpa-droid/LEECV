@@ -24,15 +24,15 @@ export const colorSystem = {
 
   // Neutros — la escala que usa todo texto/borde que no es color de marca
   neutral: {
-    textPrimary: '#2B1B2E',   // títulos, valores importantes
-    textSecondary: '#6B5B6E', // texto de apoyo
-    textMuted: '#59495C',     // placeholders, ayuda, metadatos (contraste >= 4.5:1)
-    border: '#EFE2C9',        // borde por defecto
-    borderStrong: '#D9C9A0',  // borde en hover/foco
-    surface: '#FFFFFF',       // fondo de tarjeta
-    surfaceMuted: '#FAF7F0',  // fondo de página/paneles
-    surfaceWarm: '#FFFDF7',   // fondo cálido de tarjeta
-    surfaceCream: '#F7F3E9',  // crema neutro
+    textPrimary: 'var(--ui-text-primary)',   // títulos, valores importantes
+    textSecondary: 'var(--ui-text-secondary)', // texto de apoyo
+    textMuted: 'var(--ui-text-secondary)',     // placeholders, ayuda, metadatos (contraste >= 4.5:1)
+    border: 'var(--ui-border)',        // borde por defecto
+    borderStrong: 'var(--ui-border)',  // borde en hover/foco
+    surface: 'var(--ui-bg-card)',       // fondo de tarjeta
+    surfaceMuted: 'var(--ui-bg-panel)',  // fondo de página/paneles
+    surfaceWarm: 'var(--ui-bg-card)',   // fondo cálido de tarjeta
+    surfaceCream: 'var(--ui-bg-panel)',  // crema neutro
   },
 
   // Estados — SOLO para estos 3 significados, nunca decorativos

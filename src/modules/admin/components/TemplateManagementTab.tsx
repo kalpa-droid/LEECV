@@ -267,7 +267,7 @@ export function TemplateManagementTab() {
               {/* Left Column: Identificadores y Paleta */}
               <div className="space-y-4">
                 <h3 className="font-extrabold text-[var(--color-neutral-text-primary)] uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-[var(--color-accent-purple-text)]" />
+                  <Sparkles className="w-4 h-4 text-[var(--color-secondary-text)]" />
                   <span>Propiedades Básicas & Paleta</span>
                 </h3>
 
@@ -536,7 +536,7 @@ export function TemplateManagementTab() {
           <div className="space-y-3 bg-[var(--color-neutral-text-primary)] text-white p-4 rounded-2xl text-xs font-mono border border-white/10">
             <div className="flex items-center justify-between text-white/60">
               <span>Edición Avanzada de Geometría JSON (Sectores, Layout y Objetos Fijos)</span>
-              <span className="text-[10px] text-[var(--color-accent-amber-bright)] font-bold">⚠️ Se valida esquema al guardar</span>
+              <span className="text-[10px] text-[var(--color-status-warning-bright)] font-bold">⚠️ Se valida esquema al guardar</span>
             </div>
 
             <textarea

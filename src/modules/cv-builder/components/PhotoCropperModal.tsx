@@ -178,7 +178,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
                 <button 
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className={`text-xs text-[var(--color-secondary-text)] font-semibold hover:underline cursor-pointer`}
+                  className={`text-xs text-[var(--ui-secondary)] font-semibold hover:underline cursor-pointer`}
                 >
                   Cambiar foto
                 </button>

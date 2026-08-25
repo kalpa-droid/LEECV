@@ -301,7 +301,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     coverName: {
       fontSize: preset.typography.cover?.name || preset.typography.title,
       fontFamily: 'Helvetica-Bold',
-      color: rolesColor.accent,
+      color: '#ffffff',
       marginBottom: 12,
       textAlign: 'center'
     },

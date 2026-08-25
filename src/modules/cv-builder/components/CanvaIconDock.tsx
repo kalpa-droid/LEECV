@@ -99,7 +99,7 @@ export default function CanvaIconDock({
                 }`}
                 title={tab.label}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-[var(--color-accent-amber)]'}`} />
+                <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-[var(--ui-warning)]'}`} />
                 <span className="text-[9px] font-bold tracking-tighter mt-0.5">{tab.label}</span>
                 
                 <span className="absolute left-14 bg-[var(--color-neutral-text-primary)] text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-white/10">
@@ -236,7 +236,7 @@ export default function CanvaIconDock({
           title="Cambiar Tema de Interfaz"
         >
           <span>Tema</span>
-          <Palette className="w-3.5 h-3.5 text-[var(--color-accent-amber-bright)]" />
+          <Palette className="w-3.5 h-3.5 text-[var(--ui-warning)]" />
         </button>
 
         <div className="w-px h-6 bg-white/20 shrink-0" />

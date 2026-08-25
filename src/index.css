@@ -97,15 +97,15 @@
   --color-secondary-text: #00655F;
   --color-secondary-bright: #5EEAD4;
 
-  --color-neutral-text-primary: #2B1B2E;
-  --color-neutral-text-secondary: #6B5B6E;
-  --color-neutral-text-muted: #59495C;
-  --color-neutral-border: #EFE2C9;
-  --color-neutral-border-strong: #D9C9A0;
-  --color-neutral-surface: #FFFFFF;
-  --color-neutral-surface-muted: #FAF7F0;
-  --color-neutral-surface-warm: #FFFDF7;
-  --color-neutral-surface-cream: #F7F3E9;
+  --color-neutral-text-primary: var(--ui-text-primary);
+  --color-neutral-text-secondary: var(--ui-text-secondary);
+  --color-neutral-text-muted: var(--ui-text-secondary);
+  --color-neutral-border: var(--ui-border);
+  --color-neutral-border-strong: var(--ui-border);
+  --color-neutral-surface: var(--ui-bg-card);
+  --color-neutral-surface-muted: var(--ui-bg-panel);
+  --color-neutral-surface-warm: var(--ui-bg-card);
+  --color-neutral-surface-cream: var(--ui-bg-panel);
 
   --ui-bg-dock-hover: #3D2740;
 
