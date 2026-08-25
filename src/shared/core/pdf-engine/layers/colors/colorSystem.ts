@@ -29,6 +29,64 @@ export function rgbToHex(r: number, g: number, b: number): string {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
+export interface OKLCH {
+  l: number;
+  c: number;
+  h: number;
+}
+
+function srgbToLinear(c: number): number {
+  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+}
+
+function linearToSrgb(c: number): number {
+  const clamped = Math.max(0, Math.min(1, c));
+  return clamped <= 0.0031308 ? clamped * 12.92 : 1.055 * Math.pow(clamped, 1 / 2.4) - 0.055;
+}
+
+/** Convierte Hex #RRGGBB a OKLCH { l, c, h } */
+export function hexToOKLCH(hex: string): OKLCH {
+  const [r, g, b] = hexToRGB(hex);
+  const rL = srgbToLinear(r);
+  const gL = srgbToLinear(g);
+  const bL = srgbToLinear(b);
+
+  const l_ = Math.cbrt(0.4122214708 * rL + 0.5363325363 * gL + 0.0514459929 * bL);
+  const m_ = Math.cbrt(0.2119034982 * rL + 0.6806995451 * gL + 0.1073969566 * bL);
+  const s_ = Math.cbrt(0.0883024619 * rL + 0.2817188376 * gL + 0.6299787005 * bL);
+
+  const L = 0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720403 * s_;
+  const a = 1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_;
+  const bVal = 0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_;
+
+  const C = Math.sqrt(a * a + bVal * bVal);
+  let H = (Math.atan2(bVal, a) * 180) / Math.PI;
+  if (H < 0) H += 360;
+
+  return { l: Number(L.toFixed(4)), c: Number(C.toFixed(4)), h: Number(H.toFixed(2)) };
+}
+
+/** Convierte OKLCH { l, c, h } a Hex #RRGGBB */
+export function oklchToHex(l: number, c: number, h: number): string {
+  const hRad = (h * Math.PI) / 180;
+  const a = c * Math.cos(hRad);
+  const bVal = c * Math.sin(hRad);
+
+  const l_ = l + 0.3963377774 * a + 0.2158037573 * bVal;
+  const m_ = l - 0.1055613458 * a - 0.0638541728 * bVal;
+  const s_ = l - 0.0894841775 * a - 1.2914855480 * bVal;
+
+  const l3 = l_ * l_ * l_;
+  const m3 = m_ * m_ * m_;
+  const s3 = s_ * s_ * s_;
+
+  const rL = +4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699292 * s3;
+  const gL = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
+  const bL = -0.0041960863 * l3 - 0.7034186147 * m3 + 1.7076147010 * s3;
+
+  return rgbToHex(linearToSrgb(rL), linearToSrgb(gL), linearToSrgb(bL));
+}
+
 /** Convierte hex a HSL [0-360, 0-1, 0-1] */
 export function hexToHSL(hex: string): [number, number, number] {
   const [r, g, b] = hexToRGB(hex);

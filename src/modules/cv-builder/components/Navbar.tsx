@@ -4,7 +4,8 @@ import {
   FolderOpen,
   Save,
   Download,
-  User
+  User,
+  Sparkles
 } from 'lucide-react';
 
 export default function Navbar({ 
@@ -15,6 +16,8 @@ export default function Navbar({
   onOpenSaveModal,
   onOpenPricing,
   onNewCV,
+  onOpenAtsCheck,
+  onExportAtsPdf,
   isSaving
 }: {
   onPrint?: any;
@@ -27,6 +30,8 @@ export default function Navbar({
   onOpenDownloadJson?: any;
   onImportJson?: any;
   onExportJson?: any;
+  onOpenAtsCheck?: () => void;
+  onExportAtsPdf?: () => void;
   isSaving?: boolean;
 }) {
   const handleNewClick = () => {
@@ -70,9 +75,9 @@ export default function Navbar({
           </h1>
         </div>
 
-        {/* Middle: 4 Essential Single-Line Action Buttons */}
+        {/* Middle: 5 Action Buttons */}
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* 1. NUEVO (Abre confirmación para iniciar nuevo CV) */}
+          {/* 1. NUEVO */}
           <button
             onClick={handleNewClick}
             className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-white bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] border border-[var(--color-accent-rose-muted)]/30 transition shadow-md shadow-[var(--color-accent-base)]/20 cursor-pointer whitespace-nowrap active:scale-95"
@@ -82,7 +87,7 @@ export default function Navbar({
             <span>Nuevo</span>
           </button>
 
-          {/* 2. ABRIR (Abre ventana modal con borradores, Cargar JSON y Google Drive) */}
+          {/* 2. ABRIR */}
           <button
             onClick={handleOpenSavedClick}
             className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-[var(--color-secondary-muted)] bg-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-hover)] border border-[var(--color-secondary-base)]/40 transition shadow-md shadow-[var(--color-secondary-base)]/20 cursor-pointer whitespace-nowrap active:scale-95"
@@ -92,7 +97,7 @@ export default function Navbar({
             <span>Abrir</span>
           </button>
 
-          {/* 3. GUARDAR (Abre ventana modal con opciones directas de guardado local y exportación JSON) */}
+          {/* 3. GUARDAR */}
           <button
             onClick={handleSaveClick}
             disabled={isSaving}
@@ -103,7 +108,19 @@ export default function Navbar({
             <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
           </button>
 
-          {/* 4. PDF (Exportar PDF final) */}
+          {/* 4. ATS CHECK */}
+          {onOpenAtsCheck && (
+            <button
+              onClick={onOpenAtsCheck}
+              className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-amber-200 bg-amber-950/80 hover:bg-amber-900/90 border border-amber-600/50 transition shadow-md cursor-pointer whitespace-nowrap active:scale-95"
+              title="Auditoría de lectura predictiva para ATS"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+              <span>ATS</span>
+            </button>
+          )}
+
+          {/* 5. PDF */}
           <button
             onClick={onPrint}
             className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-[var(--color-accent-amber)] hover:bg-[var(--color-accent-amber-hover)] text-[var(--color-neutral-text-primary)] font-black text-xs shadow-lg shadow-[var(--color-accent-amber)]/30 transition active:scale-95 border border-[var(--color-accent-amber-hover)] cursor-pointer whitespace-nowrap"

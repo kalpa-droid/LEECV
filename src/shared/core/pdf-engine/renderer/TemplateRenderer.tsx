@@ -15,9 +15,11 @@ import { buildStructuredRecordLayout } from '../layers/records/recordLayoutEngin
 import { processPageOverflow } from '../layers/overflow/pageOverflowEngine';
 import { OrnamentRenderer } from './OrnamentRenderer';
 import { resolveDecorativeStyles } from '../layers/decorations/decorativeLayerEngine';
+import { flattenPresetForATS } from '../layers/ats/atsFlatteningEngine';
 
 export interface TemplateRendererProps {
   preset: Preset;
+  atsMode?: boolean;
   sections: ContentSection[];
   personalInfo?: any;
   certificatesScanned?: any[];
@@ -48,7 +50,8 @@ export interface TemplateRendererProps {
 const MM_TO_PT_LOCAL = 2.8346;
 
 export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
-  preset,
+  preset: basePreset,
+  atsMode = false,
   sections,
   personalInfo = {},
   certificatesScanned = [],
@@ -63,6 +66,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   canvasHeightMm,
   customRecordCardDesigns
 }) => {
+  const preset = atsMode ? flattenPresetForATS(basePreset) : basePreset;
   const rolesColor = resolveThemeRoles(preset.palette);
 
   // CAPA 5&8 conectada de verdad: cada superficie (sidebar de color vs.

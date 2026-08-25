@@ -12,7 +12,7 @@
  * `getContrastRatio` (definido en colorSystem.ts) contra la superficie para asegurar ratio > 4.5:1.
  */
 
-import { hexToHSL, hslToHex, getContrastRatio } from './colorSystem';
+import { hexToOKLCH, oklchToHex, getContrastRatio } from './colorSystem';
 import { ColorPalette } from '../presets/presetSchema';
 
 export type HarmonyScheme = 'analogous' | 'complementary' | 'split-complementary' | 'monochromatic' | 'triadic';
@@ -21,18 +21,22 @@ export function generateHarmoniousPalette(
   seedHex: string,
   scheme: HarmonyScheme = 'analogous'
 ): ColorPalette {
-  const [h, s, l] = hexToHSL(seedHex || '#1e293b');
+  const oklch = hexToOKLCH(seedHex || '#1e293b');
+  const { l, c, h } = oklch;
 
   let secondaryH = h;
   let secondaryL = l;
+  let secondaryC = c;
+
   let accentH = h;
   let accentL = l;
+  let accentC = c;
 
   switch (scheme) {
     case 'complementary':
       secondaryH = (h + 180) % 360;
       accentH = (h + 180) % 360;
-      accentL = Math.min(80, Math.max(30, l + 15));
+      accentL = Math.min(0.9, Math.max(0.3, l + 0.15));
       break;
 
     case 'split-complementary':
@@ -46,8 +50,10 @@ export function generateHarmoniousPalette(
       break;
 
     case 'monochromatic':
-      secondaryL = Math.max(15, l - 20);
-      accentL = Math.min(85, l + 25);
+      secondaryL = Math.max(0.15, l - 0.2);
+      secondaryC = Math.max(0.02, c - 0.05);
+      accentL = Math.min(0.85, l + 0.25);
+      accentC = Math.min(0.35, c + 0.05);
       break;
 
     case 'analogous':
@@ -57,9 +63,9 @@ export function generateHarmoniousPalette(
       break;
   }
 
-  const primaryHex = hslToHex(h, s, l);
-  const secondaryHex = hslToHex(secondaryH, Math.max(0.2, s - 0.1), secondaryL);
-  const accentHex = hslToHex(accentH, Math.min(1.0, s + 0.15), accentL);
+  const primaryHex = oklchToHex(l, c, h);
+  const secondaryHex = oklchToHex(secondaryL, secondaryC, secondaryH);
+  const accentHex = oklchToHex(accentL, accentC, accentH);
 
   // Garantía de Contraste WCAG para textOnPrimary y text
   const contrastAgainstWhite = getContrastRatio(primaryHex, '#ffffff');

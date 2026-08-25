@@ -48,9 +48,9 @@ export function deriveRecordScale(
   const metaRatio = ratios?.meta || 0.92;
   const extraRatio = ratios?.extra || 0.85;
 
-  const titleSize = clamp(base.itemTitle || 10.5, 9.5, 20);
-  const subSize = clamp(bodySize * subtitleRatio, 8.5, 16);
-  const bodySizeClamped = clamp(bodySize, 8.0, 14);
+  const titleSize = clamp(base.itemTitle || 10.5, 10.0, 20);
+  const subSize = clamp(bodySize * subtitleRatio, 9.0, 16);
+  const bodySizeClamped = clamp(bodySize, 10.0, 14);
   const metaSize = clamp(bodySize * metaRatio, 7.5, 12);
   const extraSize = clamp(bodySize * extraRatio, 7.5, 11);
   const lh = base.lineHeightBody || 1.3;
