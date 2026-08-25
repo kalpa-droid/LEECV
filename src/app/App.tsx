@@ -521,7 +521,7 @@ function AppContent() {
           <button
             type="button"
             onClick={toggleDocumentPresetMode}
-            className="px-3 py-1 rounded-xl bg-[var(--color-neutral-text-primary)] border border-white/10 hover:border-[var(--color-accent-base)] text-[var(--color-accent-purple)] hover:text-white font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95"
+            className="px-3 py-1 rounded-xl bg-[var(--color-neutral-text-primary)] border border-white/10 hover:border-[var(--color-accent-base)] text-[var(--color-accent-purple-bright)] hover:text-white font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95"
             title="Alternar entre modo Currículum Vitae A4 y Tarjeta Personal"
           >
             {cvData?.activePresetId === 'tarjeta-personal' ? (
@@ -557,7 +557,7 @@ function AppContent() {
           <button
             type="button"
             onClick={cycleUITheme}
-            className="px-3 py-1 rounded-xl bg-[var(--color-neutral-text-primary)] border border-[var(--color-status-warning-base)]/40 hover:border-[var(--color-status-warning-base)] text-[var(--color-status-warning-text)] font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95"
+            className="px-3 py-1 rounded-xl bg-[var(--color-neutral-text-primary)] border border-[var(--color-status-warning-base)]/40 hover:border-[var(--color-status-warning-base)] text-[var(--color-accent-amber)] font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95"
             title="Tocar para cambiar el color de fondo de la interfaz (Cálido, Nocturno, Océano)"
           >
             <span>Tema</span>

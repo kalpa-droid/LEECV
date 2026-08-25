@@ -18,15 +18,15 @@ export const colorSystem = {
   secondary: { base: '#00A8A0', hover: '#008780', hoverDark: '#008f88', muted: '#E0F5F3', text: '#00655F' },
 
   // Acentos de apoyo (Amber/Gold, Purple, Orange)
-  amber: { base: '#FFC93C', hover: '#F0AE00', muted: '#FFF1C2' },
-  purple: { base: '#8E44FF', hover: '#7126E0', light: '#E9DBFF' },
+  amber: { base: '#FFC93C', hover: '#F0AE00', muted: '#FFF1C2', text: '#854F0B', bright: '#FCD34D' },
+  purple: { base: '#8E44FF', hover: '#7126E0', light: '#E9DBFF', text: '#5B18C8', bright: '#D8B4FE' },
   orange: { base: '#FF7A29' },
 
   // Neutros — la escala que usa todo texto/borde que no es color de marca
   neutral: {
     textPrimary: '#2B1B2E',   // títulos, valores importantes
     textSecondary: '#6B5B6E', // texto de apoyo
-    textMuted: '#9B8B9E',     // placeholders, ayuda, metadatos
+    textMuted: '#59495C',     // placeholders, ayuda, metadatos (contraste >= 4.5:1)
     border: '#EFE2C9',        // borde por defecto
     borderStrong: '#D9C9A0',  // borde en hover/foco
     surface: '#FFFFFF',       // fondo de tarjeta
@@ -37,8 +37,8 @@ export const colorSystem = {
 
   // Estados — SOLO para estos 3 significados, nunca decorativos
   status: {
-    success: { base: '#1D9E75', muted: '#E1F5EE', text: '#0F6E56' },
-    warning: { base: '#BA7517', muted: '#FAEEDA', text: '#854F0B' },
+    success: { base: '#1D9E75', muted: '#E1F5EE', text: '#0F6E56', bright: '#34D399' },
+    warning: { base: '#BA7517', muted: '#FAEEDA', text: '#854F0B', bright: '#FCD34D' },
     danger: { base: '#D14D4D', muted: '#FCEBEB', text: '#A32D2D' },
   },
   // Superficie oscura para estados críticos (ErrorBoundary) — la única

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Cloud, RefreshCw, HardDrive, ShieldCheck, LogIn, Globe, LogOut, User } from 'lucide-react';
+import { Cloud, RefreshCw, HardDrive, ShieldCheck, LogIn, Globe, LogOut } from 'lucide-react';
 import { checkStorageStatus } from '../services/cvStorageService';
 import { checkGoogleDriveQuota } from '../services/googleDriveQuotaService';
 import { getCurrentProfile, signInWithGoogle, logout } from '../../auth/authService';

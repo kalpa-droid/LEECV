@@ -195,7 +195,7 @@ export default function AdminDashboard() {
         {/* Métricas Rápidas */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-[var(--color-neutral-border)] flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-[var(--color-secondary-base)]/10 border border-[var(--color-secondary-base)]/30 text-[var(--color-secondary-base)] flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 text-[var(--color-secondary-text)] flex items-center justify-center">
               <Users className="w-6 h-6" />
             </div>
             <div>
@@ -215,7 +215,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-[var(--color-neutral-border)] flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/30 text-[var(--color-accent-purple)] flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/30 text-[var(--color-accent-purple-text)] flex items-center justify-center">
               <HardDrive className="w-6 h-6" />
             </div>
             <div>
@@ -229,9 +229,10 @@ export default function AdminDashboard() {
         <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-[var(--color-neutral-border)] shadow-sm">
           <button
             onClick={() => setAdminTab('users')}
-            className={`px-4 py-2 text-xs font-black rounded-xl transition flex items-center gap-2 cursor-pointer ${
-              adminTab === 'users' ? 'bg-[var(--color-neutral-text-primary)] text-white shadow-sm' : 'text-[var(--color-neutral-text-secondary)] hover:bg-[var(--color-neutral-surface-muted)]'
-            }`}
+            className={adminTab === 'users'
+              ? 'px-4 py-2 text-xs font-black rounded-xl transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-text-primary)] text-white shadow-sm'
+              : 'px-4 py-2 text-xs font-black rounded-xl transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50'
+            }
           >
             <Users className="w-4 h-4" />
             <span>Usuarios & Licencias</span>
@@ -239,9 +240,10 @@ export default function AdminDashboard() {
 
           <button
             onClick={() => setAdminTab('templates')}
-            className={`px-4 py-2 text-xs font-black rounded-xl transition flex items-center gap-2 cursor-pointer ${
-              adminTab === 'templates' ? 'bg-[var(--color-neutral-text-primary)] text-white shadow-sm' : 'text-[var(--color-neutral-text-secondary)] hover:bg-[var(--color-neutral-surface-muted)]'
-            }`}
+            className={adminTab === 'templates'
+              ? 'px-4 py-2 text-xs font-black rounded-xl transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-text-primary)] text-white shadow-sm'
+              : 'px-4 py-2 text-xs font-black rounded-xl transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50'
+            }
           >
             <LayoutIcon className="w-4 h-4 text-[var(--color-accent-base)]" />
             <span>Gestión de Plantillas y Presets (Capa 5)</span>
@@ -249,9 +251,10 @@ export default function AdminDashboard() {
 
           <button
             onClick={() => setAdminTab('storage')}
-            className={`px-4 py-2 text-xs font-black rounded-xl transition flex items-center gap-2 cursor-pointer ${
-              adminTab === 'storage' ? 'bg-[var(--color-neutral-text-primary)] text-white shadow-sm' : 'text-[var(--color-neutral-text-secondary)] hover:bg-[var(--color-neutral-surface-muted)]'
-            }`}
+            className={adminTab === 'storage'
+              ? 'px-4 py-2 text-xs font-black rounded-xl transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-text-primary)] text-white shadow-sm'
+              : 'px-4 py-2 text-xs font-black rounded-xl transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50'
+            }
           >
             <HardDrive className="w-4 h-4 text-[var(--color-accent-purple)]" />
             <span>Almacenamiento, Servidores & Drive</span>
@@ -413,7 +416,7 @@ export default function AdminDashboard() {
                   className="w-full text-xs pl-9 pr-3 py-2 border border-[var(--color-neutral-border)] rounded-xl font-medium outline-none focus:border-[var(--color-secondary-base)]"
                 />
               </div>
-              <button onClick={loadEverything} className="text-[var(--color-secondary-base)] p-2 hover:bg-[var(--color-neutral-surface-muted)] rounded-xl transition cursor-pointer">
+              <button onClick={loadEverything} className="text-[var(--color-secondary-text)] p-2 hover:bg-[var(--color-neutral-surface-muted)] rounded-xl transition cursor-pointer">
                 <RefreshCw className={`w-4 h-4 ${loadingData ? 'animate-spin' : ''}`} />
               </button>
             </div>
@@ -436,7 +439,7 @@ export default function AdminDashboard() {
                   <td className="px-5 py-3 font-medium text-[var(--color-neutral-text-primary)]/70">
                     {u.created_at ? new Date(u.created_at).toLocaleDateString('es-AR') : '-'}
                   </td>
-                  <td className="px-5 py-3 font-medium">
+                  <td className="px-5 py-3">
                     {u.metodo_pago === 'mercadopago' ? (
                       <span className="px-2 py-0.5 rounded-full bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)] border border-[var(--color-status-success-base)]/30 font-bold text-[10px]">
                         🌐 Mercado Pago Automático
@@ -446,7 +449,7 @@ export default function AdminDashboard() {
                         💳 PayPal Automático
                       </span>
                     ) : u.metodo_pago === 'lemonsqueezy' ? (
-                      <span className="px-2 py-0.5 rounded-full bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple)] border border-[var(--color-accent-purple)]/30 font-bold text-[10px]">
+                      <span className="px-2 py-0.5 rounded-full bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)] border border-[var(--color-accent-purple)]/30 font-bold text-[10px]">
                         🌎 Lemon Squeezy USD
                       </span>
                     ) : u.metodo_pago === 'manual' ? (
@@ -459,14 +462,14 @@ export default function AdminDashboard() {
                   </td>
                   <td className="px-5 py-3">
                     {u.premium_activo
-                      ? <span className="inline-flex items-center gap-1 text-[var(--color-secondary-base)] font-black bg-[var(--color-secondary-base)]/10 px-2.5 py-1 rounded-full text-[11px]">👑 Activa ({u.plan?.toUpperCase() || 'PRO'})</span>
+                      ? <span className="inline-flex items-center gap-1 text-[var(--color-secondary-text)] font-black bg-[var(--color-secondary-muted)] px-2.5 py-1 rounded-full text-[11px]">👑 Activa ({u.plan?.toUpperCase() || 'PRO'})</span>
                       : <span className="text-[var(--color-neutral-text-primary)]/40 font-bold">Gratuito / Estándar</span>}
                   </td>
                   <td className="px-5 py-3 text-right">
                     {u.premium_activo ? (
                       <button
                         onClick={() => togglePremium(u, 'free')}
-                        className="text-xs font-extrabold px-3 py-1.5 rounded-xl transition shadow-sm cursor-pointer bg-[var(--color-accent-base)]/10 text-[var(--color-accent-base)] hover:bg-[var(--color-accent-base)]/20 border border-[var(--color-accent-base)]/30"
+                        className="text-xs font-extrabold px-3 py-1.5 rounded-xl transition shadow-sm cursor-pointer bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] hover:bg-[var(--color-accent-rose-muted)] border border-[var(--color-accent-base)]/30"
                       >
                         Desactivar Licencia
                       </button>
@@ -474,13 +477,13 @@ export default function AdminDashboard() {
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => togglePremium(u, 'pro')}
-                          className="text-xs font-extrabold px-2.5 py-1.5 rounded-xl transition shadow-sm cursor-pointer bg-[var(--color-secondary-base)]/10 text-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-base)]/20 border border-[var(--color-secondary-base)]/30"
+                          className="text-xs font-extrabold px-2.5 py-1.5 rounded-xl transition shadow-sm cursor-pointer bg-[var(--color-secondary-muted)] text-[var(--color-secondary-text)] hover:bg-[var(--color-secondary-muted)]/80 border border-[var(--color-secondary-base)]/30"
                         >
                           + Pro
                         </button>
                         <button
                           onClick={() => togglePremium(u, 'enterprise')}
-                          className="text-xs font-extrabold px-2.5 py-1.5 rounded-xl transition shadow-sm cursor-pointer bg-[var(--color-accent-purple)]/10 text-[var(--color-accent-purple)] hover:bg-[var(--color-accent-purple)]/20 border border-[var(--color-accent-purple)]/30"
+                          className="text-xs font-extrabold px-2.5 py-1.5 rounded-xl transition shadow-sm cursor-pointer bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)] hover:bg-[var(--color-accent-purple-light)]/80 border border-[var(--color-accent-purple)]/30"
                         >
                           + Enterprise
                         </button>

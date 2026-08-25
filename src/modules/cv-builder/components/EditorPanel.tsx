@@ -1253,7 +1253,7 @@ export default function EditorPanel({
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-black text-[var(--color-neutral-text-primary)]">{styleOpt.title}</span>
-                          <span className="text-[9px] px-2 py-0.5 rounded bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple)] font-extrabold">
+                          <span className="text-[9px] px-2 py-0.5 rounded bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)] font-extrabold">
                             {styleOpt.badge}
                           </span>
                         </div>
@@ -1512,7 +1512,7 @@ export default function EditorPanel({
                             <div className="flex items-center gap-1.5">
                               <span className="font-extrabold text-[var(--color-neutral-text-primary)]">{sec.label}</span>
                               {secPos > 0 && (currentVal === 'secundaria' || currentVal === 'ambas') && (
-                                <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[var(--color-accent-rose-muted)] text-[var(--color-accent-base)] font-black">
+                                <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[var(--color-accent-rose-muted)] text-[var(--color-accent-text)] font-black">
                                   Sec #{secPos}
                                 </span>
                               )}
@@ -1526,27 +1526,30 @@ export default function EditorPanel({
                               <button
                                 type="button"
                                 onClick={() => setColumn('secundaria')}
-                                className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
-                                  currentVal === 'secundaria' ? 'bg-[var(--color-accent-base)] text-white shadow-sm' : 'bg-black/10 text-[var(--color-neutral-text-secondary)] hover:bg-black/20'
-                                }`}
+                                className={currentVal === 'secundaria'
+                                  ? 'px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer bg-[var(--color-accent-hover)] text-white shadow-sm'
+                                  : 'px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50'
+                                }
                               >
                                 Secundaria
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setColumn('primaria')}
-                                className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
-                                  currentVal === 'primaria' ? 'bg-[var(--color-secondary-base)] text-white shadow-sm' : 'bg-black/10 text-[var(--color-neutral-text-secondary)] hover:bg-black/20'
-                                }`}
+                                className={currentVal === 'primaria'
+                                  ? 'px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer bg-[var(--color-secondary-base)] text-white shadow-sm'
+                                  : 'px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50'
+                                }
                               >
                                 Primaria
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setColumn('ambas')}
-                                className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
-                                  currentVal === 'ambas' ? 'bg-[var(--color-accent-purple)] text-white shadow-sm' : 'bg-black/10 text-[var(--color-neutral-text-secondary)] hover:bg-black/20'
-                                }`}
+                                className={currentVal === 'ambas'
+                                  ? 'px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer bg-[var(--color-accent-purple-hover)] text-white shadow-sm'
+                                  : 'px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50'
+                                }
                               >
                                 Ambas
                               </button>

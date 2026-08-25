@@ -71,7 +71,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
         {/* Tarjeta de Cuenta Activa / Perfil de Usuario */}
         <div className="bg-black/40 border border-white/10 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="w-10 h-10 rounded-xl bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple)] flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple-text)] flex items-center justify-center flex-shrink-0">
               <User className="w-5 h-5" />
             </div>
             <div>
@@ -171,7 +171,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
               Más Recomendado
             </div>
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple)] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple-text)] flex items-center justify-center">
                 <Crown className="w-5 h-5" />
               </div>
               <div>
@@ -213,7 +213,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
               <button
                 onClick={() => handleSelectPlan('pro', 'lemonsqueezy')}
                 disabled={loadingGateway !== null}
-                className="w-full py-2 bg-[var(--color-accent-purple-light)]/40 hover:bg-[var(--color-accent-purple-light)]/60 text-[var(--color-accent-purple)] text-[11px] font-bold rounded-xl transition flex items-center justify-center gap-1.5 border border-[var(--color-accent-purple)]/30 cursor-pointer"
+                className="w-full py-2 bg-[var(--color-accent-purple-light)]/40 hover:bg-[var(--color-accent-purple-light)]/60 text-[var(--color-accent-purple-text)] text-[11px] font-bold rounded-xl transition flex items-center justify-center gap-1.5 border border-[var(--color-accent-purple)]/30 cursor-pointer"
               >
                 <span>🌎 Suscribirse Internacional (USD)</span>
               </button>

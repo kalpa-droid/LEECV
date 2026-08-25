@@ -90,7 +90,7 @@ export default function Navbar({
           {/* 2. ABRIR */}
           <button
             onClick={handleOpenSavedClick}
-            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-[var(--color-secondary-muted)] bg-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-hover)] border border-[var(--color-secondary-base)]/40 transition shadow-md shadow-[var(--color-secondary-base)]/20 cursor-pointer whitespace-nowrap active:scale-95"
+            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-white bg-[var(--color-secondary-hover-dark)] hover:opacity-90 border border-[var(--color-secondary-base)]/40 transition shadow-md shadow-[var(--color-secondary-base)]/20 cursor-pointer whitespace-nowrap active:scale-95"
             title="Abrir borradores guardados, importar JSON o sincronizar nube"
           >
             <FolderOpen className="w-3.5 h-3.5 text-white flex-shrink-0" />
@@ -101,7 +101,7 @@ export default function Navbar({
           <button
             onClick={handleSaveClick}
             disabled={isSaving}
-            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-[var(--color-accent-purple-light)] bg-[var(--color-accent-purple)] hover:bg-[var(--color-accent-purple-hover)] border border-[var(--color-accent-purple)]/40 transition disabled:opacity-50 shadow-md shadow-[var(--color-accent-purple)]/20 cursor-pointer whitespace-nowrap active:scale-95"
+            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-white bg-[var(--color-accent-purple-hover)] hover:opacity-90 border border-[var(--color-accent-purple)]/40 transition disabled:opacity-50 shadow-md shadow-[var(--color-accent-purple)]/20 cursor-pointer whitespace-nowrap active:scale-95"
             title="Guardar currículum o descargar copia JSON de respaldo"
           >
             <Save className="w-3.5 h-3.5 text-white flex-shrink-0" />

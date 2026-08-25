@@ -126,7 +126,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
             onClick={() => fileInputRef.current?.click()}
             className={`w-full h-64 border-2 border-dashed border-[var(--color-neutral-border-strong)] rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-muted)] transition group`}
           >
-            <div className={`w-16 h-16 rounded-full bg-[var(--color-secondary-muted)] flex items-center justify-center text-[var(--color-secondary-base)] group-hover:scale-110 transition duration-300 mb-3`}>
+            <div className={`w-16 h-16 rounded-full bg-[var(--color-secondary-muted)] flex items-center justify-center text-[var(--color-secondary-text)] group-hover:scale-110 transition duration-300 mb-3`}>
               <Upload className="w-8 h-8" />
             </div>
             <span className="font-semibold text-white/80 text-xs">Haz clic para subir una foto</span>

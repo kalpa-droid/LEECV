@@ -12,7 +12,9 @@
     "check-ui-tokens:selftest": "node scripts/audit-ui-tokens.js --selftest",
     "check-ui-tokens": "node scripts/audit-ui-tokens.js",
     "check-token-usage": "node scripts/check-token-usage.js",
-    "check-all": "npm run typecheck && npm run typecheck:api && npm run lint && npm run check-ui-tokens:selftest && npm run check-token-usage && npx tsx scripts/check-module-boundaries.js && npm run build",
+    "check-contrast:selftest": "node scripts/check-contrast.js --selftest",
+    "check-contrast": "node scripts/check-contrast.js",
+    "check-all": "npm run typecheck && npm run typecheck:api && npm run lint && npm run check-ui-tokens:selftest && npm run check-ui-tokens && npm run check-token-usage && npm run check-contrast:selftest && npm run check-contrast && npx tsx scripts/check-module-boundaries.js && npm run build",
     "preview": "vite preview"
   },
   "dependencies": {

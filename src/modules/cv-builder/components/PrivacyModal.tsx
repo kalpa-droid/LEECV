@@ -58,8 +58,8 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
         {activeTab === 'privacy' ? (
           <div className="space-y-4">
             <div className="p-3 bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/30 rounded-xl flex items-start gap-3">
-              <Database className="w-5 h-5 text-[var(--color-accent-purple)] flex-shrink-0 mt-0.5" />
-              <p className="text-[11px] text-[var(--color-accent-purple)]">
+              <Database className="w-5 h-5 text-[var(--color-accent-purple-text)] flex-shrink-0 mt-0.5" />
+              <p className="text-[11px] text-[var(--color-accent-purple-text)]">
                 LEECV respeta estrictamente tu privacidad. Todos tus datos personales, currículums, fotografías y certificados son de tu exclusiva propiedad y están protegidos por encriptación en tránsito y en reposo (RLS en Supabase).
               </p>
             </div>

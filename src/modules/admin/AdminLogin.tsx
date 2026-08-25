@@ -43,7 +43,7 @@ export default function AdminLogin({ onLogin }: { onLogin: () => void }) {
     <div className="min-h-screen flex items-center justify-center bg-[var(--color-neutral-text-primary)] px-4">
       <div className="bg-[var(--color-neutral-text-primary)] text-white rounded-3xl shadow-2xl p-8 w-full max-w-md border border-white/10 space-y-6">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-[var(--color-accent-base)]/20 border border-[var(--color-accent-base)]/40 text-[var(--color-accent-base)] flex items-center justify-center flex-shrink-0">
+          <div className="w-12 h-12 rounded-2xl bg-[var(--color-accent-base)]/20 border border-[var(--color-accent-base)]/40 text-white flex items-center justify-center flex-shrink-0">
             <Lock className="w-6 h-6" />
           </div>
           <div>

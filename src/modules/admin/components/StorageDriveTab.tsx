@@ -169,7 +169,7 @@ export function StorageDriveTab() {
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-xl font-black text-[var(--color-neutral-text-primary)]">Activo</span>
-            <span className="text-[10px] font-extrabold text-[var(--color-accent-purple)] bg-[var(--color-accent-purple-light)] px-2 py-0.5 rounded-full flex items-center gap-1">
+            <span className="text-[10px] font-extrabold text-[var(--color-accent-purple-text)] bg-[var(--color-accent-purple-light)] px-2 py-0.5 rounded-full flex items-center gap-1">
               <ShieldCheck className="w-3 h-3" /> OK
             </span>
           </div>

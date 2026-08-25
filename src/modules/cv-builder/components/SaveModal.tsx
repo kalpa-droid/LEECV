@@ -54,7 +54,7 @@ export default function SaveModal({
           disabled={isSaving}
           className="w-full text-left p-3.5 rounded-2xl bg-[var(--color-accent-purple-light)]/40 hover:bg-[var(--color-accent-purple-light)]/60 border border-[var(--color-accent-purple)]/40 hover:border-[var(--color-accent-purple)]/60 transition group flex items-start gap-3 cursor-pointer disabled:opacity-50"
         >
-          <div className="p-2.5 rounded-xl bg-[var(--color-accent-purple)]/20 text-[var(--color-accent-purple)] group-hover:scale-110 transition flex-shrink-0">
+          <div className="p-2.5 rounded-xl bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple-text)] group-hover:scale-110 transition flex-shrink-0">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div className="space-y-0.5 min-w-0 flex-1">
@@ -79,7 +79,7 @@ export default function SaveModal({
             }}
             className="w-full text-left p-3.5 rounded-2xl bg-[var(--color-secondary-muted)]/40 hover:bg-[var(--color-secondary-muted)]/60 border border-[var(--color-secondary-base)]/40 hover:border-[var(--color-secondary-base)]/60 transition group flex items-start gap-3 cursor-pointer"
           >
-            <div className="p-2.5 rounded-xl bg-[var(--color-secondary-base)]/20 text-[var(--color-secondary-base)] group-hover:scale-110 transition flex-shrink-0">
+            <div className="p-2.5 rounded-xl bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/40 text-[var(--color-secondary-text)] group-hover:scale-110 transition flex-shrink-0">
               <HardDrive className="w-5 h-5" />
             </div>
             <div className="space-y-0.5 min-w-0 flex-1">

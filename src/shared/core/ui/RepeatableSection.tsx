@@ -203,7 +203,7 @@ export function RepeatableSection({
                   <button
                     type="button"
                     onClick={() => handleDuplicateItem(idx)}
-                    className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple)] hover:opacity-80 text-[11px] font-bold transition cursor-pointer"
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)] hover:opacity-80 text-[11px] font-bold transition cursor-pointer"
                     title="Duplicar este registro para crear una copia editable"
                   >
                     <Copy className="w-3 h-3" />

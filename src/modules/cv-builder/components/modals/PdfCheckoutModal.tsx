@@ -215,13 +215,13 @@ export default function PdfCheckoutModal({
           {/* Option B: Upgrade to Pro ($19/mo) */}
           <button
             onClick={() => { onClose(); if (onOpenPricing) onOpenPricing(); }}
-            className="w-full p-3 bg-[var(--color-accent-purple-light)]/40 hover:bg-[var(--color-accent-purple-light)]/60 border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple)] font-extrabold text-xs rounded-2xl transition flex items-center justify-between cursor-pointer"
+            className="w-full p-3 bg-[var(--color-accent-purple-light)]/40 hover:bg-[var(--color-accent-purple-light)]/60 border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple-text)] font-extrabold text-xs rounded-2xl transition flex items-center justify-between cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[var(--color-accent-purple)]" />
+              <Sparkles className="w-4 h-4 text-[var(--color-accent-purple-text)]" />
               <span>Suscribirse a Plan Pro ($19 USD/mes) — Exportaciones Ilimitadas</span>
             </div>
-            <span className="text-[10px] text-[var(--color-accent-purple)] font-black">Ver Planes &rarr;</span>
+            <span className="text-[10px] text-[var(--color-accent-purple-text)] font-black">Ver Planes &rarr;</span>
           </button>
 
           {/* Option C: Free JSON Backup */}
