@@ -17,6 +17,7 @@ const sharedDir = path.join(srcDir, 'shared');
 
 let violationsCount = 0;
 let uiGovernanceWarnings = 0;
+const auditOnlyFindings = [];
 
 // Lista de archivos exceptuados para la regla de gobernanza de colores/tokens
 const EXEMPT_UI_GOVERNANCE = [
@@ -90,6 +91,25 @@ function checkFile(fullPath, currentModule = null) {
       console.error(`🎨 UI Governance Error: [${file}] usa hex arbitrario en className: '${tailwindArbitraryHexMatches.join(', ')}'. Usar variables CSS var(--color-*) o tokens del sistema.`);
       uiGovernanceWarnings++;
     }
+
+    // PUNTO CIEGO REAL (fase de auditoría, todavía NO bloquea el build):
+    // el regex de arriba solo mira hex — una clase de Tailwind con NOMBRE
+    // (bg-purple-600, shadow-xl, rounded-2xl) viola exactamente la misma
+    // regla ("nada de color/sombra/radio a mano") pero es invisible para
+    // esos checks. Detectado explícitamente ahora, distinto count, no se
+    // suma a uiGovernanceWarnings todavía — ver AGENTS.md antes de activar
+    // el bloqueo, primero hay que migrar los archivos que ya tiene.
+    const namedTailwindColorMatches = content.match(/(?:hover:|focus:|active:|disabled:|dark:)?(bg|text|border|ring|from|via|to)-(red|blue|green|purple|pink|indigo|yellow|amber|emerald|teal|cyan|sky|violet|fuchsia|rose|orange|lime|slate|gray|zinc|neutral|stone)-[0-9]{2,3}\b/gi);
+    const namedShadowMatches = content.match(/\bshadow-(sm|md|lg|xl|2xl|inner)\b/g);
+    const namedRadiusMatches = content.match(/\brounded-(lg|xl|2xl|3xl)\b/g);
+    if (namedTailwindColorMatches || namedShadowMatches || namedRadiusMatches) {
+      auditOnlyFindings.push({
+        file,
+        color: namedTailwindColorMatches?.length || 0,
+        shadow: namedShadowMatches?.length || 0,
+        radius: namedRadiusMatches?.length || 0,
+      });
+    }
   }
 
   // 3. Gobernanza de Diálogos Nativos (bloquea window.confirm y alert sueltos)
@@ -157,6 +177,15 @@ console.log('🔍 Iniciando verificación de Gobernanza de Módulos y UI...');
 // Escanear /modules/ y /shared/
 scanDir(modulesDir);
 scanDir(sharedDir);
+
+if (auditOnlyFindings.length > 0) {
+  const totalColor = auditOnlyFindings.reduce((s, f) => s + f.color, 0);
+  const totalShadow = auditOnlyFindings.reduce((s, f) => s + f.shadow, 0);
+  const totalRadius = auditOnlyFindings.reduce((s, f) => s + f.radius, 0);
+  console.warn(`\n⚠️  AUDITORÍA (no bloquea el build todavía): ${auditOnlyFindings.length} archivo(s) usan clases de Tailwind con nombre en vez del núcleo — ${totalColor} color, ${totalShadow} sombra, ${totalRadius} radio.`);
+  console.warn('   Ver AGENTS.md — migrar a colorSystem/elevationSystem/radius antes de activar el bloqueo de esta regla.');
+  auditOnlyFindings.forEach(f => console.warn(`   - ${f.file}: color=${f.color} shadow=${f.shadow} radius=${f.radius}`));
+}
 
 if (violationsCount === 0 && uiGovernanceWarnings === 0) {
   console.log('✅ Governance & Module boundary check passed: 0 violations found!');
