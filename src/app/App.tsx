@@ -515,23 +515,23 @@ function AppContent() {
       </Suspense>
 
       {/* Barra de Estado Inferior Reorganizada (Zoom, Modo CV/Tarjeta y Switcher de Tema) */}
-      <footer className="hidden md:flex bg-[var(--color-critical-surface-card)] text-white/80 border-t border-[var(--color-neutral-border)]/10 py-2 px-4 md:pl-20 items-center justify-between no-print z-30 shadow-2xl select-none text-xs">
+      <footer className="hidden md:flex bg-[var(--ui-bg-header)] text-[var(--ui-text-primary)] border-t border-[var(--ui-border)] py-2 px-4 md:pl-20 items-center justify-between no-print z-30 shadow-2xl select-none text-xs">
         {/* Izquierda: Alternador CV vs Tarjeta Personal */}
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={toggleDocumentPresetMode}
-            className="px-3 py-1 rounded-xl bg-[var(--color-neutral-text-primary)] border border-white/10 hover:border-[var(--color-accent-base)] text-[var(--color-accent-purple-bright)] hover:text-white font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95"
+            className="px-3 py-1 rounded-xl bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95"
             title="Alternar entre modo Currículum Vitae A4 y Tarjeta Personal"
           >
             {cvData?.activePresetId === 'tarjeta-personal' ? (
               <>
-                <CreditCard className="w-3.5 h-3.5 text-[var(--ui-warning)]" />
+                <CreditCard className="w-3.5 h-3.5 text-[var(--ui-text-secondary)]" />
                 <span>Vista: Tarjeta Personal 📇</span>
               </>
             ) : (
               <>
-                <FileText className="w-3.5 h-3.5 text-[var(--ui-secondary)]" />
+                <FileText className="w-3.5 h-3.5 text-[var(--ui-text-secondary)]" />
                 <span>Vista: Currículum Vitae 📄</span>
               </>
             )}
@@ -539,7 +539,7 @@ function AppContent() {
 
           <button
             onClick={() => setIsPrivacyModalOpen(true)}
-            className="text-white/60 hover:text-white font-bold text-[11px] transition cursor-pointer underline underline-offset-2 ml-2"
+            className="text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] font-bold text-[11px] transition cursor-pointer underline underline-offset-2 ml-2"
           >
             🔒 Privacidad
           </button>
@@ -557,14 +557,14 @@ function AppContent() {
           <button
             type="button"
             onClick={cycleUITheme}
-            className="px-3 py-1 rounded-xl bg-[var(--color-neutral-text-primary)] border border-[var(--color-status-warning-base)]/40 hover:border-[var(--color-status-warning-base)] text-[var(--ui-warning)] font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95"
+            className="px-3 py-1 rounded-xl bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95"
             title="Tocar para cambiar el color de fondo de la interfaz (Cálido, Nocturno, Océano)"
           >
             <span>Tema</span>
-            <Palette className="w-3.5 h-3.5 text-[var(--ui-warning)]" />
+            <Palette className="w-3.5 h-3.5 text-[var(--ui-text-secondary)]" />
           </button>
 
-          <span className="text-[10px] font-bold text-white/40">© 2026 LEECV</span>
+          <span className="text-[10px] font-bold text-[var(--ui-text-secondary)]">© 2026 LEECV</span>
         </div>
       </footer>
     </div>

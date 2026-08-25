@@ -38,21 +38,21 @@
 /* MOTOR NATIVO DE VARIABLES CSS PARA TEMAS DE INTERFAZ (UI THEME ENGINE) */
 /* ============================================================ */
 :root, [data-ui-theme="default"] {
-  --ui-bg-root: #2B1B2E;
-  --ui-bg-panel: #FAF7F0;
+  --ui-bg-root: #F8FAFC;
+  --ui-bg-panel: #F1F5F9;
   --ui-bg-card: #FFFFFF;
-  --ui-bg-header: #2B1B2E;
-  --ui-bg-dock: #1C121E;
-  --ui-text-primary: #2B1B2E;
-  --ui-text-secondary: #6B5B6E;
-  --ui-border: #EFE2C9;
-  --ui-preview-bg: #1F1322;
-  --ui-accent-purple: #5B18C8;
-  --ui-secondary: #00655F;
-  --ui-warning: #612800;
-  --ui-danger: #A32D2D;
-  --ui-success: #0F6E56;
-  --ui-rose: #B3123F;
+  --ui-bg-header: #FFFFFF;
+  --ui-bg-dock: #1E293B;
+  --ui-text-primary: #0F172A;
+  --ui-text-secondary: #475569;
+  --ui-border: #E2E8F0;
+  --ui-preview-bg: #0F172A;
+  --ui-accent-purple: #7C3AED;
+  --ui-secondary: #0D6E66;
+  --ui-warning: #B45309;
+  --ui-danger: #DC2626;
+  --ui-success: #047857;
+  --ui-rose: #E11D48;
   --gradient-brand: linear-gradient(135deg, #FF2E63 0%, #8E44FF 100%);
   --gradient-gold: linear-gradient(135deg, #FFC93C 0%, #FF7A29 100%);
   --gradient-teal: linear-gradient(135deg, #00A8A0 0%, #008f88 100%);
