@@ -1,0 +1,16 @@
+echo ""
+echo "🚀 Pre-push: corriendo check-all completo (typecheck + lint + gobernanza + build)..."
+echo "   Esto puede tardar un minuto. No se puede saltear con --no-verify sin que quede en el historial de sospecha."
+echo ""
+
+npm run check-all
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ PUSH BLOQUEADO: check-all falló. El código no sube a origin/main hasta que"
+  echo "   'npm run check-all' termine en 0 errores, verificado local."
+  echo ""
+  exit 1
+fi
+
+echo "✅ check-all completo OK — push permitido."

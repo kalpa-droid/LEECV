@@ -1,0 +1,22 @@
+echo ""
+echo "🛡️  Pre-commit: chequeando gobernanza antes de permitir el commit..."
+echo ""
+
+npm run check-ui-tokens:selftest && \
+npm run check-ui-tokens && \
+npm run check-token-usage && \
+npm run check-contrast:selftest && \
+npm run check-contrast && \
+npx tsx scripts/check-module-boundaries.js
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ COMMIT BLOQUEADO: hay violaciones de gobernanza (colores a mano, contraste WCAG,"
+  echo "   léxico prohibido, o límites de módulo cruzados). Corregí lo que marcó arriba."
+  echo "   Si es un caso legítimo que debe quedar exento, agregalo a la lista de excepciones"
+  echo "   del script correspondiente en scripts/ — no lo evites con --no-verify."
+  echo ""
+  exit 1
+fi
+
+echo "✅ Gobernanza OK — commit permitido."
