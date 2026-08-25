@@ -119,8 +119,8 @@ export const button = {
  */
 export const selectableCard = {
   base: 'rounded-[10px] p-3 text-left transition-all cursor-pointer border',
-  selected: `border-2 border-[var(--color-accent-base)] bg-[var(--color-accent-muted)]`,
-  unselected: `border-[var(--color-neutral-border)] bg-white hover:border-[var(--color-neutral-border-strong)]`,
+  selected: `border-2 border-[var(--color-accent-base)] bg-[var(--color-accent-muted)] shadow-[var(--glow-accent)]`,
+  unselected: `border-[var(--color-neutral-border)] bg-white hover:border-[var(--color-neutral-border-strong)] shadow-[var(--shadow-raised)]`,
 } as const;
 
 /**
@@ -168,11 +168,14 @@ export const spacing = {
   xxl: '32px',
 } as const;
 
-/** Escala formal de sombras */
+/** Escala formal de sombras — lee la variable CSS del tema activo, nunca
+ * un rgba fijo. En Día es sombra tradicional; en Noche/Océano se vuelve un
+ * halo de luz sutil (glow) coherente con el acento de ese tema, porque una
+ * sombra oscura sobre fondo oscuro no se ve — ver src/index.css. */
 export const shadow = {
-  card: '0 1px 3px rgba(43,27,46,0.08)',
-  elevated: '0 4px 12px rgba(43,27,46,0.12)',
-  floating: '0 8px 24px rgba(43,27,46,0.16)',
+  card: 'var(--shadow-raised)',
+  elevated: 'var(--shadow-floating)',
+  floating: 'var(--shadow-overlay)',
 } as const;
 
 // ============================================================
@@ -195,13 +198,19 @@ export const motionSystem = {
 } as const;
 
 /**
- * SISTEMA DE ELEVACIÓN Y SOMBRAS — Profundidad semántica sin sombras duras
+ * SISTEMA DE ELEVACIÓN Y SOMBRAS — Profundidad semántica, sensible al tema
+ * activo (día = sombra, noche/océano = glow). Usar SIEMPRE estas clases, no
+ * un `shadow-[...]` a mano — así un componente elegante en Día no se
+ * vuelve invisible o feo al cambiar a modo Noche.
  */
 export const elevationSystem = {
   flat: 'shadow-none',
-  raised: 'shadow-[0_2px_8px_rgba(43,27,46,0.06)]',
-  floating: 'shadow-[0_8px_24px_rgba(43,27,46,0.12)]',
-  overlay: 'shadow-[0_16px_48px_rgba(43,27,46,0.20)]',
+  raised: 'shadow-[var(--shadow-raised)]',
+  floating: 'shadow-[var(--shadow-floating)]',
+  overlay: 'shadow-[var(--shadow-overlay)]',
+  /** Brillo puro del acento — para destacar el elemento seleccionado/activo
+   * (ej. la tarjeta de preset elegida), no para elevación general. */
+  glow: 'shadow-[var(--glow-accent)]',
 } as const;
 
 /**

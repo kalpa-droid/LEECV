@@ -56,6 +56,11 @@
   --gradient-brand: linear-gradient(135deg, #FF2E63 0%, #8E44FF 100%);
   --gradient-gold: linear-gradient(135deg, #FFC93C 0%, #FF7A29 100%);
   --gradient-teal: linear-gradient(135deg, #00A8A0 0%, #008f88 100%);
+  /* Día: fondo claro → sombra oscura tradicional, sin brillo */
+  --shadow-raised: 0 2px 8px rgba(43,27,46,0.06);
+  --shadow-floating: 0 8px 24px rgba(43,27,46,0.12);
+  --shadow-overlay: 0 16px 48px rgba(43,27,46,0.20);
+  --glow-accent: 0 0 0 rgba(0,0,0,0);
 }
 
 /* ============================================================ */
@@ -142,6 +147,13 @@
   --ui-danger: #FF8585;
   --ui-success: #34D399;
   --ui-rose: #FDA4AF;
+  /* Noche: fondo oscuro -> la sombra oscura de siempre no se ve. La
+     profundidad se logra con un halo de luz sutil (glow), coherente con
+     el acento del tema en vez de una sombra que desaparece. */
+  --shadow-raised: 0 2px 8px rgba(0,0,0,0.35);
+  --shadow-floating: 0 8px 24px rgba(0,0,0,0.45), 0 0 16px rgba(255,46,99,0.06);
+  --shadow-overlay: 0 16px 48px rgba(0,0,0,0.55), 0 0 32px rgba(255,46,99,0.10);
+  --glow-accent: 0 0 24px rgba(255,46,99,0.25);
 }
 
 [data-ui-theme="teal_ocean"] {
@@ -165,6 +177,12 @@
   --ui-danger: #FF8585;
   --ui-success: #34D399;
   --ui-rose: #FDA4AF;
+  /* Oceano: mismo principio, glow tenido con el acento propio del tema
+     (rojo coral) en vez de reusar el rosa de marca -> coherencia visual. */
+  --shadow-raised: 0 2px 8px rgba(0,0,0,0.35);
+  --shadow-floating: 0 8px 24px rgba(0,0,0,0.45), 0 0 16px rgba(230,57,70,0.08);
+  --shadow-overlay: 0 16px 48px rgba(0,0,0,0.55), 0 0 32px rgba(230,57,70,0.14);
+  --glow-accent: 0 0 24px rgba(230,57,70,0.28);
 }
 
 /* Clases de Utilidad Globales del Motor de Interfaz */
