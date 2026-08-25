@@ -196,7 +196,7 @@ export function RepeatableSection({
           {items.map((item: any, idx: number) => (
             <div key={idx} className="p-3.5 ui-bg-card ui-border ui-text-primary rounded-2xl border-2 shadow-sm space-y-3">
               <div className="flex items-center justify-between pb-1 border-b border-[var(--color-neutral-border)]">
-                <span className="text-xs font-bold text-[var(--color-secondary-base)]">
+                <span className="text-xs font-bold text-[var(--ui-secondary)]">
                   {itemTitlePrefix} #{idx + 1}
                 </span>
                 <div className="flex items-center gap-1">
@@ -212,7 +212,7 @@ export function RepeatableSection({
                   <button
                     type="button"
                     onClick={() => handleDeleteItem(idx)}
-                    className="p-1 text-[var(--color-neutral-text-primary)] font-medium hover:text-[var(--color-status-danger-text)] transition cursor-pointer"
+                    className="p-1 text-[var(--ui-text-primary)] font-medium hover:text-[var(--color-status-danger-text)] transition cursor-pointer"
                     title="Eliminar registro"
                   >
                     <Trash2 className="w-3.5 h-3.5" />

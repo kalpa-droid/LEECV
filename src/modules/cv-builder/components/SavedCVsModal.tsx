@@ -104,7 +104,7 @@ export default function SavedCVsModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Abrir Documento"
-      icon={<FolderOpen className="w-5 h-5 text-[var(--color-secondary-base)]" />}
+      icon={<FolderOpen className="w-5 h-5 text-[var(--ui-secondary)]" />}
       size="2xl"
       footer={
         <div className="w-full flex flex-wrap items-center justify-between gap-2 text-xs text-white/60">
@@ -127,7 +127,7 @@ export default function SavedCVsModal({
         </div>
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-4 p-4 bg-[var(--ui-bg-dock)] text-white rounded-2xl">
         {/* Action Header: 2 Options Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className="p-3 rounded-2xl bg-[var(--color-secondary-muted)] hover:bg-[var(--color-secondary-muted)]/80 border border-[var(--color-secondary-base)]/30 hover:border-[var(--color-secondary-base)]/60 transition cursor-pointer flex items-center gap-3 group">
@@ -172,7 +172,7 @@ export default function SavedCVsModal({
         </div>
 
         {/* Explanation Banner */}
-        <div className="px-4 py-2.5 bg-black/40 border border-white/10 rounded-xl text-[11px] text-white/80 leading-snug flex items-center gap-2">
+        <div className="px-4 py-2.5 bg-[var(--ui-bg-dock)] border border-white/10 rounded-xl text-[11px] text-white/80 leading-snug flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-[var(--color-accent-amber-bright)] flex-shrink-0" />
           <span>
             <strong>Estado:</strong> <span className="text-[var(--color-accent-amber-bright)] font-bold"> 🟠 Borrador (En Edición)</span> pasa a <span className="text-[var(--color-status-success-bright)] font-bold"> 🟢 CV Oficial</span> al exportar tu documento.
@@ -209,7 +209,7 @@ export default function SavedCVsModal({
               return (
                 <div
                   key={item.id}
-                  className="p-4 rounded-2xl bg-black/40 border border-white/10 hover:border-[var(--color-secondary-base)]/50 transition flex items-center justify-between gap-4 group"
+                  className="p-4 rounded-2xl bg-[var(--ui-bg-dock)] border border-white/10 hover:border-[var(--color-secondary-base)]/50 transition flex items-center justify-between gap-4 group"
                 >
                   <div className="space-y-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">

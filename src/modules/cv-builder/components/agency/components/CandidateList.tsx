@@ -27,11 +27,11 @@ export default function CandidateList({ onSelectCandidate }: { onSelectCandidate
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-black text-white flex items-center gap-2">
-          <Users className="w-5 h-5 text-[var(--color-accent-purple)]" /> Candidatos de la Agencia ({filtered.length})
+          <Users className="w-5 h-5 text-[var(--ui-accent-purple)]" /> Candidatos de la Agencia ({filtered.length})
         </h2>
         <button 
           onClick={loadCandidates} 
-          className="p-2 bg-white/10 hover:bg-white/20 text-[var(--color-accent-purple)] rounded-xl transition cursor-pointer"
+          className="p-2 bg-[var(--ui-bg-dock)] hover:opacity-90 text-[var(--color-accent-purple-bright)] border border-white/10 rounded-xl transition cursor-pointer"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
@@ -60,9 +60,9 @@ export default function CandidateList({ onSelectCandidate }: { onSelectCandidate
       ) : (
         <div className="space-y-2">
           {filtered.map((item) => (
-            <div key={item.cv_id} className="p-3.5 bg-black/40 border border-white/10 rounded-2xl flex items-center justify-between hover:border-[var(--color-accent-purple)]/50 transition">
+            <div key={item.cv_id} className="p-3.5 bg-[var(--ui-bg-dock)] border border-white/10 rounded-2xl flex items-center justify-between hover:border-[var(--color-accent-purple)]/50 transition">
               <div className="flex items-center gap-3">
-                <FileText className="w-5 h-5 text-[var(--color-accent-amber)]" />
+                <FileText className="w-5 h-5 text-[var(--color-accent-amber-bright)]" />
                 <div>
                   <h4 className="text-xs font-bold text-white">{item.cvs?.candidate_name || 'Candidato sin nombre'}</h4>
                   <p className="text-[11px] text-white/60">{item.cvs?.title}</p>

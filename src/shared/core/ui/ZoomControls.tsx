@@ -17,7 +17,7 @@ export function ZoomControls({
   isMobile = false
 }: ZoomControlsProps) {
   return (
-    <div className={`flex items-center gap-1 bg-[var(--color-neutral-text-primary)] px-2 py-1 rounded-xl border border-white/10 shadow-inner select-none ${className}`}>
+    <div className={`flex items-center gap-1 bg-[var(--ui-bg-dock)] px-2 py-1 rounded-xl border border-white/10 shadow-inner select-none ${className}`}>
       <button
         type="button"
         onClick={() => setZoomLevel(prev => Math.max(0.3, parseFloat((prev - 0.1).toFixed(2))))}

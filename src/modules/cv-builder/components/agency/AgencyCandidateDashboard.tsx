@@ -86,7 +86,7 @@ export default function AgencyCandidateDashboard({ onBackToEditor }) {
           </div>
 
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-[var(--color-accent-purple)]" />
+            <Filter className="w-4 h-4 text-[var(--color-accent-purple-bright)]" />
             <select 
               value={selectedVacant}
               onChange={(e) => setSelectedVacant(e.target.value)}

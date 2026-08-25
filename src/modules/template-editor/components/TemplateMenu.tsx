@@ -42,7 +42,7 @@ export function TemplateMenu({ activePresetId, onSelectPreset, cvData }: Templat
   };
 
   return (
-    <div className="w-full max-w-5xl bg-black/40 backdrop-blur border border-white/10 rounded-2xl p-3.5 shadow-2xl mb-4 flex flex-wrap items-center justify-between gap-3 no-print">
+    <div className="w-full max-w-5xl bg-[var(--ui-bg-dock)] text-white backdrop-blur border border-white/10 rounded-2xl p-3.5 shadow-2xl mb-4 flex flex-wrap items-center justify-between gap-3 no-print">
       {/* Preset Category & Selector Buttons */}
       <div className="flex items-center gap-2 overflow-x-auto py-1">
         <div className="flex items-center gap-1.5 text-xs font-black text-white/60 uppercase tracking-widest mr-2">
@@ -65,7 +65,7 @@ export function TemplateMenu({ activePresetId, onSelectPreset, cvData }: Templat
                   : 'bg-white/10 text-white/80 border-white/10 hover:bg-white/20 hover:text-white'
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-white' : isCard ? 'text-[var(--color-accent-base)]' : 'text-[var(--color-accent-purple)]'}`} />
+              <Icon className={`w-4 h-4 ${isActive ? 'text-white' : isCard ? 'text-[var(--color-accent-amber-bright)]' : 'text-white'}`} />
               <span>{preset.name}</span>
               <span className={`px-1.5 py-0.5 text-[9px] font-black rounded uppercase ${
                 isActive ? 'bg-white/20 text-white' : 'bg-black/50 text-white/60'

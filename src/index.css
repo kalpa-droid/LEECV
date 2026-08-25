@@ -47,6 +47,12 @@
   --ui-text-secondary: #6B5B6E;
   --ui-border: #EFE2C9;
   --ui-preview-bg: #1F1322;
+  --ui-accent-purple: #5B18C8;
+  --ui-secondary: #00655F;
+  --ui-warning: #612800;
+  --ui-danger: #A32D2D;
+  --ui-success: #0F6E56;
+  --ui-rose: #B3123F;
   --gradient-brand: linear-gradient(135deg, #FF2E63 0%, #8E44FF 100%);
   --gradient-gold: linear-gradient(135deg, #FFC93C 0%, #FF7A29 100%);
   --gradient-teal: linear-gradient(135deg, #00A8A0 0%, #008f88 100%);
@@ -109,7 +115,7 @@
   --color-status-success-bright: #34D399;
   --color-status-warning-base: #BA7517;
   --color-status-warning-muted: #FAEEDA;
-  --color-status-warning-text: #854F0B;
+  --color-status-warning-text: #612800;
   --color-status-danger-base: #D14D4D;
   --color-status-danger-muted: #FCEBEB;
   --color-status-danger-text: #A32D2D;
@@ -123,11 +129,19 @@
   --ui-bg-dock: #0B1120;
   --ui-text-primary: #F8FAFC;
   --ui-text-secondary: #94A3B8;
+  --ui-text-muted: #64748B;
   --ui-border: #334155;
   --ui-preview-bg: #020617;
   --gradient-brand: linear-gradient(135deg, #FF2E63 0%, #7126E0 100%);
   --gradient-gold: linear-gradient(135deg, #F0AE00 0%, #FF7A29 100%);
   --gradient-teal: linear-gradient(135deg, #008780 0%, #00655F 100%);
+
+  --ui-accent-purple: #D8B4FE;
+  --ui-secondary: #5EEAD4;
+  --ui-warning: #FCD34D;
+  --ui-danger: #FF8585;
+  --ui-success: #34D399;
+  --ui-rose: #FDA4AF;
 }
 
 [data-ui-theme="teal_ocean"] {
@@ -138,11 +152,19 @@
   --ui-bg-dock: #0A1622;
   --ui-text-primary: #F1FAEE;
   --ui-text-secondary: #A8DADC;
+  --ui-text-muted: #457B9D;
   --ui-border: #457B9D;
-  --ui-preview-bg: #050E17;
-  --gradient-brand: linear-gradient(135deg, #00A8A0 0%, #457B9D 100%);
-  --gradient-gold: linear-gradient(135deg, #E63946 0%, #F1FAEE 100%);
-  --gradient-teal: linear-gradient(135deg, #1D3557 0%, #457B9D 100%);
+  --ui-preview-bg: #050B11;
+  --gradient-brand: linear-gradient(135deg, #FF2E63 0%, #7126E0 100%);
+  --gradient-gold: linear-gradient(135deg, #F0AE00 0%, #FF7A29 100%);
+  --gradient-teal: linear-gradient(135deg, #008780 0%, #00655F 100%);
+
+  --ui-accent-purple: #D8B4FE;
+  --ui-secondary: #5EEAD4;
+  --ui-warning: #FCD34D;
+  --ui-danger: #FF8585;
+  --ui-success: #34D399;
+  --ui-rose: #FDA4AF;
 }
 
 /* Clases de Utilidad Globales del Motor de Interfaz */

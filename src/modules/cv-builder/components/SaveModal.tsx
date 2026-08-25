@@ -27,12 +27,12 @@ export default function SaveModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Guardar Documento"
-      icon={<Save className="w-5 h-5 text-[var(--color-accent-purple)]" />}
+      icon={<Save className="w-5 h-5 text-[var(--ui-accent-purple)]" />}
       size="md"
       footer={
         <div className="w-full flex items-center justify-between text-xs text-white/60">
           <div className="flex items-center gap-2">
-            <Cloud className="w-4 h-4 text-[var(--color-accent-purple)]" />
+            <Cloud className="w-4 h-4 text-[var(--ui-accent-purple)]" />
             <span className="text-xs font-bold ui-text-primary">{storageStatus.label}</span>
           </div>
           <button
@@ -77,15 +77,15 @@ export default function SaveModal({
               onClose();
               onOpenCloudStatus();
             }}
-            className="w-full text-left p-3.5 rounded-2xl bg-[var(--color-secondary-muted)]/40 hover:bg-[var(--color-secondary-muted)]/60 border border-[var(--color-secondary-base)]/40 hover:border-[var(--color-secondary-base)]/60 transition group flex items-start gap-3 cursor-pointer"
+            className="w-full text-left p-3.5 rounded-2xl bg-[var(--ui-bg-dock)] hover:opacity-90 border border-[var(--color-secondary-base)]/40 transition group flex items-start gap-3 cursor-pointer"
           >
-            <div className="p-2.5 rounded-xl bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/40 text-[var(--color-secondary-text)] group-hover:scale-110 transition flex-shrink-0">
+            <div className="p-2.5 rounded-xl bg-black/40 border border-[var(--color-secondary-base)]/40 text-[var(--color-secondary-bright)] group-hover:scale-110 transition flex-shrink-0">
               <HardDrive className="w-5 h-5" />
             </div>
             <div className="space-y-0.5 min-w-0 flex-1">
               <div className="flex items-center justify-between">
                 <span className="font-extrabold text-xs sm:text-sm text-white">Google Drive / Nube</span>
-                <span className="text-[10px] font-bold text-[var(--color-secondary-text)]">Nube Personal</span>
+                <span className="text-[10px] font-bold text-[var(--color-secondary-bright)]">Nube Personal</span>
               </div>
               <p className="text-[11px] text-white/80">
                 Sincronización y estado de resguardo de archivos en tu cuenta de Google Drive.

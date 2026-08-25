@@ -426,7 +426,7 @@ export default function EditorPanel({
               <>
             {/* 1. Selector */}
             <div>
-              <label className="block text-xs font-black text-[var(--color-accent-base)] mb-1.5 uppercase tracking-wide">
+              <label className="block text-xs font-black text-[var(--color-accent-text)] mb-1.5 uppercase tracking-wide">
                 IDENTIFICA TU CERTIFICADO *
               </label>
               <select
@@ -811,7 +811,7 @@ export default function EditorPanel({
         {activeTab === 'nueva_seccion' && (
           <div className="space-y-6">
             {/* 1. SECCIONES PREDISEÑADAS CON 1 CLIC */}
-            <PanelSection icon={<Sparkles className="w-4 h-4 text-[var(--color-secondary-base)]" />} title="Secciones Prediseñadas">
+            <PanelSection icon={<Sparkles className="w-4 h-4 text-[var(--color-secondary-text)]" />} title="Secciones Prediseñadas">
               <div className="p-3.5 bg-white rounded-2xl border-2 border-[var(--color-neutral-border)] space-y-3 shadow-sm">
                 <p className="text-[11px] text-[var(--color-neutral-text-secondary)] font-medium leading-relaxed">
                   Haz clic en cualquiera de estas secciones para agregarla instantáneamente a tu currículum con sus campos listos para completar:
@@ -982,7 +982,7 @@ export default function EditorPanel({
             </PanelSection>
 
             {/* 2. CREADOR DE SECCIÓN A MEDIDA */}
-            <PanelSection icon={<Plus className="w-4 h-4 text-[var(--color-accent-base)]" />} title="Sección a Medida">
+            <PanelSection icon={<Plus className="w-4 h-4 text-[var(--color-accent-text)]" />} title="Sección a Medida">
               <div id="custom-section-creator-form" className="p-3.5 bg-white rounded-2xl border-2 border-[var(--color-neutral-border)] space-y-4 shadow-sm">
 
                 <div>
@@ -1018,7 +1018,7 @@ export default function EditorPanel({
                                 setSelectedFields(prev => [...prev, f.id]);
                               }
                             }}
-                            className="rounded border-[var(--color-neutral-border)] text-[var(--color-accent-base)] focus:ring-[var(--color-accent-base)]"
+                            className="rounded border-[var(--color-neutral-border)] text-[var(--color-accent-text)] focus:ring-[var(--color-accent-base)]"
                           />
                           <span>{f.label}</span>
                         </label>
@@ -1104,8 +1104,8 @@ export default function EditorPanel({
         {activeTab === 'guardados' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b pb-2 border-[var(--color-neutral-border)]">
-              <h3 className="text-xs font-extrabold uppercase text-[var(--color-accent-base)] flex items-center gap-1.5">
-                <FolderOpen className="w-4 h-4 text-[var(--color-secondary-base)]" /> Abrir Mis Documentos Guardados
+              <h3 className="text-xs font-extrabold uppercase text-[var(--color-accent-text)] flex items-center gap-1.5">
+                <FolderOpen className="w-4 h-4 text-[var(--color-secondary-text)]" /> Abrir Mis Documentos Guardados
               </h3>
 
               <button

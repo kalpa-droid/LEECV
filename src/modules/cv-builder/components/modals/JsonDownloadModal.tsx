@@ -30,7 +30,7 @@ export default function JsonDownloadModal({ isOpen, onClose, cvData }: any) {
         </div>
       }
     >
-      <div className="space-y-4 text-xs">
+      <div className="space-y-4 text-xs p-4 bg-[var(--ui-bg-dock)] text-white rounded-2xl">
         <p className="text-xs text-white/80 leading-relaxed">
           El archivo <strong>.JSON</strong> guarda toda la información ingresada en tu CV (datos personales, experiencia, títulos, fotos y certificados).
         </p>

@@ -116,7 +116,7 @@ export default function CloudStatusModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Estado de Sincronización & Nube"
-      icon={<Cloud className="w-6 h-6 text-[var(--color-accent-purple)] animate-pulse" />}
+      icon={<Cloud className="w-6 h-6 text-[var(--ui-accent-purple)] animate-pulse" />}
       size="lg"
       footer={
         <div className="w-full flex items-center justify-between gap-2">
@@ -152,17 +152,17 @@ export default function CloudStatusModal({
         </div>
       }
     >
-      <div className="space-y-4 text-xs">
+      <div className="space-y-4 text-xs bg-[var(--ui-bg-dock)] p-4 rounded-2xl text-white">
         {/* Main Active Status Card */}
         <div className={`p-3.5 rounded-2xl border flex items-center gap-3 ${
           currentColor === 'green'
-            ? 'bg-[var(--color-status-success-muted)] border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-text)]'
+            ? 'bg-[var(--ui-bg-dock)] border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-bright)]'
             : currentColor === 'yellow'
-            ? 'bg-[var(--color-status-warning-muted)] border-[var(--color-status-warning-base)]/40 text-[var(--color-status-warning-text)]'
-            : 'bg-[var(--color-status-danger-muted)] border-[var(--color-status-danger-base)]/40 text-[var(--color-status-danger-text)]'
+            ? 'bg-[var(--ui-bg-dock)] border-[var(--color-status-warning-base)]/40 text-[var(--color-accent-amber-bright)]'
+            : 'bg-[var(--ui-bg-dock)] border-[var(--color-status-danger-base)]/40 text-[var(--color-status-danger-bright)]'
         }`}>
           <Cloud className={`w-6 h-6 flex-shrink-0 ${
-            currentColor === 'green' ? 'text-[var(--color-status-success-text)]' : currentColor === 'yellow' ? 'text-[var(--color-status-warning-text)]' : 'text-[var(--color-status-danger-text)]'
+            currentColor === 'green' ? 'text-[var(--color-status-success-bright)]' : currentColor === 'yellow' ? 'text-[var(--color-accent-amber-bright)]' : 'text-[var(--color-status-danger-bright)]'
           }`} />
 
           <div className="space-y-0.5">
@@ -180,33 +180,26 @@ export default function CloudStatusModal({
         </div>
 
         {/* Google Drive Status Section */}
-        <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-3">
+        <div className="p-4 rounded-2xl bg-[var(--ui-bg-dock)] border border-white/10 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <HardDrive className="w-4 h-4 text-[var(--color-secondary-base)]" />
+              <HardDrive className="w-4 h-4 text-[var(--color-secondary-bright)]" />
               <span className="font-extrabold text-white text-xs">Google Drive Backup</span>
             </div>
             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
               profile?.drive_connected
-                ? 'bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)] border border-[var(--color-status-success-base)]/40'
+                ? 'bg-[var(--ui-bg-dock)] text-[var(--color-status-success-bright)] border border-[var(--color-status-success-base)]/40'
                 : 'bg-white/10 text-white/60 border border-white/10'
             }`}>
-              {profile?.drive_connected ? 'Conectado' : 'No Conectado'}
+              {profile?.drive_connected ? '🟢 Conectado' : '⚪ No vinculado'}
             </span>
           </div>
 
-          {profile?.email && (
-            <div className="flex items-center justify-between p-2 rounded-xl bg-black/30 border border-white/10 text-[11px]">
-              <span className="text-white/60">Cuenta activa:</span>
-              <span className="font-bold text-white">{profile.email}</span>
-            </div>
-          )}
-
           {profile?.drive_connected ? (
-            <div className="space-y-2 text-white/80 text-[11px]">
-              <div className="flex items-center justify-between text-white/60">
-                <span>Almacenamiento Usado:</span>
-                <span className="font-extrabold text-white">
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-white/60 font-bold">Cuota de Almacenamiento:</span>
+                <span className="text-white font-black">
                   {loadingDrive ? 'Consultando...' : driveQuota ? `${driveQuota.percentUsed}% (${driveQuota.remainingGB} GB libres)` : '15 GB Disponibles'}
                 </span>
               </div>
@@ -216,7 +209,7 @@ export default function CloudStatusModal({
                 <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
                   <div
                     className={`h-full transition-all duration-500 ${
-                      driveQuota.isFull ? 'bg-[var(--color-status-danger-base)]' : driveQuota.isNearLimit ? 'bg-[var(--color-status-warning-base)]' : 'bg-[var(--color-secondary-base)]'
+                      driveQuota.isFull ? 'bg-[var(--color-status-danger-bright)]' : driveQuota.isNearLimit ? 'bg-[var(--color-accent-amber-bright)]' : 'bg-[var(--color-secondary-bright)]'
                     }`}
                     style={{ width: `${Math.min(100, driveQuota.percentUsed)}%` }}
                   />
@@ -230,7 +223,7 @@ export default function CloudStatusModal({
                 <button
                   onClick={handleLogout}
                   disabled={isLoggingOut}
-                  className="px-2.5 py-1 rounded-lg bg-[var(--color-status-danger-muted)] hover:opacity-80 text-[var(--color-status-danger-text)] border border-[var(--color-status-danger-base)]/40 text-[11px] font-extrabold transition flex items-center gap-1 cursor-pointer flex-shrink-0 ml-2"
+                  className="px-2.5 py-1 rounded-lg bg-[var(--color-status-danger-muted)] hover:opacity-80 text-[var(--color-status-danger-bright)] border border-[var(--color-status-danger-base)]/40 text-[11px] font-extrabold transition flex items-center gap-1 cursor-pointer flex-shrink-0 ml-2"
                 >
                   <LogOut className={`w-3 h-3 ${isLoggingOut ? 'animate-spin' : ''}`} />
                   <span>Cerrar Sesión</span>
@@ -265,7 +258,7 @@ export default function CloudStatusModal({
           <h4 className="font-extrabold text-white/60 text-[11px] uppercase tracking-wider">Capas de Protección de Datos:</h4>
           
           <div className="space-y-2">
-            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-black/40 border border-white/10">
+            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-[var(--ui-bg-dock)] border border-white/10">
               <ShieldCheck className="w-5 h-5 text-[var(--color-status-success-bright)] flex-shrink-0" />
               <div>
                 <span className="font-black text-[var(--color-status-success-bright)]">IndexedDB + WebP:</span>
@@ -273,7 +266,7 @@ export default function CloudStatusModal({
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-black/40 border border-white/10">
+            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-[var(--ui-bg-dock)] border border-white/10">
               <Cloud className="w-5 h-5 text-[var(--color-accent-purple-bright)] flex-shrink-0" />
               <div>
                 <span className="font-black text-[var(--color-accent-purple-bright)]">Nube Supabase:</span>
@@ -281,10 +274,10 @@ export default function CloudStatusModal({
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-black/40 border border-white/10">
-              <HardDrive className="w-5 h-5 text-[var(--color-secondary-base)] flex-shrink-0" />
+            <div className="flex items-center gap-3 p-2.5 rounded-xl bg-[var(--ui-bg-dock)] border border-white/10">
+              <HardDrive className="w-5 h-5 text-[var(--color-secondary-bright)] flex-shrink-0" />
               <div>
-                <span className="font-black text-[var(--color-secondary-base)]">Google Drive API:</span>
+                <span className="font-black text-[var(--color-secondary-bright)]">Google Drive API:</span>
                 <span className="text-white/80 ml-1.5">Copia de respaldo personal en tu cuenta de Google.</span>
               </div>
             </div>

@@ -72,3 +72,17 @@ export const multiLineSnippetTestCases = [
     description: 'Fondo morado claro en padre y texto morado text 2 lineas despues debe pasar (6.66:1)'
   }
 ];
+
+export const multiThemeSnippetTestCases = [
+  {
+    id: 'theme_semantic_vars_valid',
+    snippet: `
+      <div className="bg-[var(--ui-bg-panel)] p-4">
+        <p className="text-[var(--ui-text-primary)]">
+          Texto primario de interfaz sobre fondo de panel
+        </p>
+      </div>
+    `,
+    expectedFailingThemes: []
+  }
+];

@@ -98,7 +98,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
       isOpen={isOpen}
       onClose={onClose}
       title="Recortador de Foto de Perfil"
-      icon={<Camera className="w-5 h-5 text-[var(--color-secondary-base)]" />}
+      icon={<Camera className="w-5 h-5 text-[var(--ui-secondary)]" />}
       size="md"
       footer={
         <div className="w-full flex items-center justify-end gap-3">
@@ -178,7 +178,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
                 <button 
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className={`text-xs text-[var(--color-secondary-bright)] font-semibold hover:underline cursor-pointer`}
+                  className={`text-xs text-[var(--color-secondary-text)] font-semibold hover:underline cursor-pointer`}
                 >
                   Cambiar foto
                 </button>

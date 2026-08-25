@@ -193,7 +193,7 @@ export function StorageDriveTab() {
               <div className="font-extrabold text-xs text-[var(--color-secondary-text)]">Prueba de Lectura/Escritura</div>
               <div className="text-[11px] text-[var(--color-secondary-text)]">Verifica la velocidad y respuesta del almacenamiento local</div>
             </div>
-            <ShieldCheck className="w-5 h-5 text-[var(--color-secondary-base)] flex-shrink-0" />
+            <ShieldCheck className="w-5 h-5 text-[var(--color-secondary-text)] flex-shrink-0" />
           </button>
 
           <button
@@ -205,7 +205,7 @@ export function StorageDriveTab() {
               <div className="font-extrabold text-xs text-[var(--color-status-danger-text)]">Limpiar Caché de Borradores Temporales</div>
               <div className="text-[11px] text-[var(--color-status-danger-text)]">Elimina registros huérfanos sin tocar datos de usuarios</div>
             </div>
-            <Trash2 className="w-5 h-5 text-[var(--color-status-danger-base)] flex-shrink-0" />
+            <Trash2 className="w-5 h-5 text-[var(--color-status-danger-text)] flex-shrink-0" />
           </button>
         </div>
       </div>

@@ -171,15 +171,15 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
       </div>
 
       {/* Preview en vivo */}
-      <div className={`p-3.5 rounded-xl border ${preview.warning ? 'bg-[var(--color-status-warning-muted)] border-[var(--color-status-warning-base)]/40' : 'bg-[var(--color-status-success-muted)] border-[var(--color-status-success-base)]/40'}`}>
+      <div className="bg-[var(--ui-bg-dock)] border border-white/10 rounded-2xl p-4 space-y-3">
         {preview.warning ? (
           <div className="flex items-start gap-2">
-            <AlertTriangle className="w-4 h-4 text-[var(--color-status-warning-text)] flex-shrink-0 mt-0.5" />
-            <p className="text-xs font-bold text-[var(--color-status-warning-text)]">{preview.warning}</p>
+            <AlertTriangle className="w-4 h-4 text-[var(--color-accent-amber-bright)] flex-shrink-0 mt-0.5" />
+            <p className="text-xs font-bold text-[var(--color-accent-amber-bright)]">{preview.warning}</p>
           </div>
         ) : (
-          <p className="text-xs font-bold text-[var(--color-status-success-text)]">
-            Entran <span className="font-black">{preview.totalPerSheet} tarjetas</span> por hoja
+          <p className="text-xs font-bold text-[var(--color-secondary-bright)]">
+            Entran <span className="font-black text-white">{preview.totalPerSheet} tarjetas</span> por hoja
             ({preview.cols} columnas × {preview.rows} filas), con sangrado y marcas de corte incluidas.
           </p>
         )}

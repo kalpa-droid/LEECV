@@ -61,7 +61,7 @@ export function AtsCheckModal({
     >
       <div className="space-y-4">
         {/* Score Header */}
-        <div className="p-4 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-between gap-4">
+        <div className="p-4 rounded-2xl bg-[var(--ui-bg-dock)] border border-white/10 flex items-center justify-between gap-4">
           <div className="space-y-1">
             <p className="text-xs text-white/60 font-bold">Puntaje Estimado de Lectura ATS</p>
             <div className="flex items-center gap-3">
@@ -79,17 +79,17 @@ export function AtsCheckModal({
             <div className="p-6 text-center text-[var(--color-status-success-text)] bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/40 rounded-2xl space-y-2">
               <CheckCircle2 className="w-8 h-8 mx-auto text-[var(--color-status-success-text)]" />
               <p className="font-black text-sm">¡Excelente! Tu currículum cumple con las pautas ATS.</p>
-              <p className="text-xs text-[var(--color-status-success-text)]/80">No se detectaron interferencias en el flujo de lectura lineal.</p>
+              <p className="text-xs text-[var(--color-status-success-text)]">No se detectaron interferencias en el flujo de lectura lineal.</p>
             </div>
           ) : (
             result.warnings.map((w) => (
               <div
                 key={w.id}
-                className="p-3.5 rounded-2xl bg-black/40 border border-white/10 space-y-1.5"
+                className="p-3.5 rounded-2xl bg-[var(--ui-bg-dock)] border border-white/10 space-y-1.5"
               >
                 <div className="flex items-center gap-2">
                   {w.level === 'critical' ? (
-                    <AlertCircle className="w-4 h-4 text-[var(--color-status-danger-base)] flex-shrink-0" />
+                    <AlertCircle className="w-4 h-4 text-[var(--color-status-danger-bright)] flex-shrink-0" />
                   ) : (
                     <AlertTriangle className="w-4 h-4 text-[var(--color-accent-amber-bright)] flex-shrink-0" />
                   )}

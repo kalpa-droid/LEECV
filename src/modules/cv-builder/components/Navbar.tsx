@@ -123,10 +123,10 @@ export default function Navbar({
           {/* 5. PDF */}
           <button
             onClick={onPrint}
-            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-[var(--color-accent-amber)] hover:bg-[var(--color-accent-amber-hover)] text-[var(--color-neutral-text-primary)] font-black text-xs shadow-lg shadow-[var(--color-accent-amber)]/30 transition active:scale-95 border border-[var(--color-accent-amber-hover)] cursor-pointer whitespace-nowrap"
+            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-[var(--color-accent-amber)] hover:bg-[var(--color-accent-amber-hover)] text-black font-black text-xs shadow-lg shadow-[var(--color-accent-amber)]/30 transition active:scale-95 border border-[var(--color-accent-amber-hover)] cursor-pointer whitespace-nowrap"
             title="Exportar documento PDF final listo para enviar"
           >
-            <Download className="w-3.5 h-3.5 flex-shrink-0 text-[var(--color-neutral-text-primary)]" />
+            <Download className="w-3.5 h-3.5 flex-shrink-0 text-black" />
             <span>PDF</span>
           </button>
         </div>
@@ -134,7 +134,7 @@ export default function Navbar({
         {/* Right: User Avatar Circle (Acceso a Cuenta / Suscripción) */}
         <button
           onClick={handlePricingClick}
-          className="w-8 h-8 rounded-full bg-gradient-to-tr from-[var(--color-accent-orange)] to-[var(--color-accent-amber)] text-[var(--color-neutral-text-primary)] flex items-center justify-center font-black text-xs shadow-md border-2 border-white/40 hover:scale-105 transition cursor-pointer flex-shrink-0"
+          className="w-8 h-8 rounded-full bg-gradient-to-tr from-[var(--color-accent-orange)] to-[var(--color-accent-amber)] text-black flex items-center justify-center font-black text-xs shadow-md border-2 border-white/40 hover:scale-105 transition cursor-pointer flex-shrink-0"
           title="Mi Cuenta de Usuario / Suscripción Premium"
         >
           <User className="w-4 h-4 stroke-[2.5]" />

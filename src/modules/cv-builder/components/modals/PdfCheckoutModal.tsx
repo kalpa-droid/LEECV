@@ -123,7 +123,7 @@ export default function PdfCheckoutModal({
         </div>
       }
     >
-      <div className="space-y-4 text-xs">
+      <div className="space-y-4 text-xs p-4 bg-[var(--ui-bg-dock)] text-white rounded-2xl">
         {errorMsg && (
           <div className="p-3 bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/40 rounded-xl text-[var(--color-status-danger-text)] text-xs font-bold flex items-center gap-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -159,7 +159,7 @@ export default function PdfCheckoutModal({
             />
           </div>
         ) : (
-          <div className="p-3 bg-black/40 border border-white/10 rounded-2xl flex items-center justify-between text-xs">
+          <div className="p-3 bg-[var(--ui-bg-dock)] border border-white/10 rounded-2xl flex items-center justify-between text-xs">
             <div>
               <span className="text-white/60 block text-[10px]">Cuenta Activa:</span>
               <span className="font-extrabold text-[var(--color-accent-purple-bright)]">{currentProfile.email}</span>
@@ -199,14 +199,14 @@ export default function PdfCheckoutModal({
             <button
               onClick={() => handlePackCheckout('credits_pack_5')}
               disabled={isProcessing}
-              className="p-2.5 bg-white/10 hover:bg-white/20 border border-[var(--color-status-warning-base)]/30 text-[var(--color-status-warning-text)] font-extrabold text-[11px] rounded-xl transition cursor-pointer text-center"
+              className="p-2.5 bg-[var(--ui-bg-dock)] hover:opacity-90 border border-[var(--color-status-warning-base)]/30 text-[var(--color-accent-amber-bright)] font-extrabold text-[11px] rounded-xl transition cursor-pointer text-center"
             >
               Pack 5 créditos — $5 USD
             </button>
             <button
               onClick={() => handlePackCheckout('credits_pack_10')}
               disabled={isProcessing}
-              className="p-2.5 bg-white/10 hover:bg-white/20 border border-[var(--color-status-warning-base)]/30 text-[var(--color-status-warning-text)] font-extrabold text-[11px] rounded-xl transition cursor-pointer text-center"
+              className="p-2.5 bg-[var(--ui-bg-dock)] hover:opacity-90 border border-[var(--color-status-warning-base)]/30 text-[var(--color-accent-amber-bright)] font-extrabold text-[11px] rounded-xl transition cursor-pointer text-center"
             >
               Pack 10 créditos — $8 USD
             </button>
@@ -215,21 +215,21 @@ export default function PdfCheckoutModal({
           {/* Option B: Upgrade to Pro ($19/mo) */}
           <button
             onClick={() => { onClose(); if (onOpenPricing) onOpenPricing(); }}
-            className="w-full p-3 bg-[var(--color-accent-purple-light)]/40 hover:bg-[var(--color-accent-purple-light)]/60 border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple-text)] font-extrabold text-xs rounded-2xl transition flex items-center justify-between cursor-pointer"
+            className="w-full p-3 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-extrabold text-xs rounded-2xl transition flex items-center justify-between cursor-pointer shadow-md"
           >
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[var(--color-accent-purple-text)]" />
+              <Sparkles className="w-4 h-4 text-white" />
               <span>Suscribirse a Plan Pro ($19 USD/mes) — Exportaciones Ilimitadas</span>
             </div>
-            <span className="text-[10px] text-[var(--color-accent-purple-text)] font-black">Ver Planes &rarr;</span>
+            <span className="text-[10px] text-white font-black">Ver Planes &rarr;</span>
           </button>
 
           {/* Option C: Free JSON Backup */}
           <button
             onClick={() => { onClose(); if (onExportJson) onExportJson(); }}
-            className="w-full p-2.5 bg-white/10 hover:bg-white/20 text-white/80 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer border border-white/10"
+            className="w-full p-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer border border-white/10"
           >
-            <Download className="w-4 h-4 text-[var(--color-status-warning-text)]" />
+            <Download className="w-4 h-4 text-white" />
             <span>Descargar Copia de Respaldo .JSON Gratis en tu Equipo</span>
           </button>
         </div>

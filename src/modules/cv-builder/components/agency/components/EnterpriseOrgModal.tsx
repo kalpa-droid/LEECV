@@ -105,18 +105,18 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
       isOpen={isOpen}
       onClose={onClose}
       title={org?.name || 'Organización Enterprise'}
-      icon={<Building className="w-5 h-5 text-[var(--color-accent-purple)]" />}
+      icon={<Building className="w-5 h-5 text-[var(--ui-accent-purple)]" />}
       size="4xl"
       footer={
         <div className="w-full flex items-center justify-between text-xs text-white/60">
-          <span>Organización id: <code className="text-[var(--color-accent-purple)]">{org?.id || 'Enterprise'}</code></span>
+          <span>Organización id: <code className="text-[var(--ui-accent-purple)]">{org?.id || 'Enterprise'}</code></span>
           <button onClick={onClose} className="px-4 py-1.5 bg-white/10 hover:bg-white/20 text-white font-extrabold rounded-xl transition cursor-pointer">
             Cerrar
           </button>
         </div>
       }
     >
-      <div className="space-y-4 text-xs">
+      <div className="space-y-4 text-xs p-4 bg-[var(--ui-bg-dock)] text-white rounded-2xl border border-[var(--color-accent-purple)]/20">
         {/* Top Info Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-black/40 rounded-2xl border border-[var(--color-accent-purple)]/20">
           <div className="p-3.5 bg-black/30 rounded-xl border border-[var(--color-accent-purple)]/20 flex items-center justify-between">
@@ -196,7 +196,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
               ) : (
                 <div className="space-y-2">
                   {members.map((member) => (
-                    <div key={member.id} className="p-3.5 bg-black/40 rounded-xl border border-white/10 flex items-center justify-between text-xs">
+                    <div key={member.id} className="p-3.5 bg-[var(--ui-bg-dock)] rounded-xl border border-white/10 flex items-center justify-between text-xs">
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
                           <Mail className="w-3.5 h-3.5 text-[var(--color-accent-purple-bright)]" />

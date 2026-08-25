@@ -59,7 +59,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
       isOpen={isOpen}
       onClose={onClose}
       title="Mi Cuenta & Suscripciones LEECV"
-      icon={<Sparkles className="w-5 h-5 text-[var(--color-accent-amber)]" />}
+      icon={<Sparkles className="w-5 h-5 text-[var(--ui-accent-purple)]" />}
       size="4xl"
       footer={
         <div className="w-full p-2 text-center text-[11px] text-white/60">
@@ -67,9 +67,9 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
         </div>
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-6 bg-[var(--ui-bg-dock)] p-4 rounded-2xl text-white">
         {/* Tarjeta de Cuenta Activa / Perfil de Usuario */}
-        <div className="bg-black/40 border border-white/10 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="bg-[var(--ui-bg-dock)] border border-white/10 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3 w-full md:w-auto">
             <div className="w-10 h-10 rounded-xl bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple-text)] flex items-center justify-center flex-shrink-0">
               <User className="w-5 h-5" />
@@ -91,32 +91,19 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
           </div>
 
           <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-            {!currentProfile?.drive_connected && (
-              <button
-                onClick={handleGoogleConnect}
-                className="px-3 py-1.5 rounded-xl bg-[var(--color-secondary-muted)] hover:opacity-80 text-[var(--color-secondary-text)] border border-[var(--color-secondary-base)]/40 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                <span>Vincular Google Drive</span>
-              </button>
-            )}
-
             <button
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-              className="px-3.5 py-1.5 rounded-xl bg-[var(--color-status-danger-muted)] hover:opacity-80 text-[var(--color-status-danger-text)] border border-[var(--color-status-danger-base)]/40 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+              onClick={() => handleSelectPlan('pro', 'mercadopago')}
+              className="px-3.5 py-2 rounded-xl bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-extrabold text-xs transition shadow-md cursor-pointer flex items-center gap-1.5"
             >
-              <LogOut className={`w-3.5 h-3.5 ${isLoggingOut ? 'animate-spin' : ''}`} />
-              <span>{isLoggingOut ? 'Cerrando...' : 'Cerrar Sesión'}</span>
+              <Crown className="w-4 h-4" />
+              <span>Mejorar a Plan Agencia ($19/mes)</span>
             </button>
           </div>
         </div>
 
-        {/* Encabezado */}
-        <div className="text-center space-y-2 max-w-xl mx-auto">
-          <h2 className="text-2xl font-black text-white tracking-tight">
-            Elige el plan ideal para tus necesidades
-          </h2>
+        {/* Encabezado Explicativo */}
+        <div className="text-center space-y-1.5 max-w-xl mx-auto">
+          <h2 className="text-lg font-black text-white tracking-tight">Elige el Plan Perfecto para tu Escala</h2>
           <p className="text-xs text-white/80">
             Desde la creación gratuita de tu propio CV hasta la gestión masiva de candidatos para agencias con respaldo en la nube.
           </p>
@@ -125,9 +112,9 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
         {/* Tabla de 3 Niveles */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* NIVEL 1: USUARIO INDIVIDUAL */}
-          <div className="bg-black/40 border border-white/10 rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:border-white/20 transition">
+          <div className="bg-[var(--ui-bg-dock)] border border-white/10 rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:border-white/20 transition">
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-text)] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white flex items-center justify-center">
                 <Zap className="w-5 h-5" />
               </div>
               <div>
@@ -135,8 +122,8 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
                 <p className="text-[11px] text-white/60">Para crear tu propio CV personal</p>
               </div>
               <div className="py-2">
-                <span className="text-2xl font-black text-white">$1 USD</span>
-                <span className="text-xs text-white/60 font-medium"> / por exportación PDF</span>
+                <span className="text-2xl font-black text-white">Gratis</span>
+                <span className="text-xs text-white/60 font-medium"> / editor básico</span>
               </div>
               <ul className="space-y-2 text-xs text-white/80">
                 <li className="flex items-center gap-2">
@@ -166,10 +153,11 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
           </div>
 
           {/* NIVEL 2: AGENCIA PRO (MÁS POPULAR) */}
-          <div className="bg-black/60 border-2 border-[var(--color-accent-purple)] rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-xl relative transform hover:-translate-y-1 transition">
+          <div className="bg-[var(--ui-bg-dock)] border-2 border-[var(--color-accent-purple)] rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-xl relative transform hover:-translate-y-1 transition">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--color-accent-purple)] text-white text-[10px] font-black uppercase px-3 py-0.5 rounded-full tracking-wider shadow">
               Más Recomendado
             </div>
+
             <div className="space-y-3">
               <div className="w-10 h-10 rounded-xl bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple-text)] flex items-center justify-center">
                 <Crown className="w-5 h-5" />
@@ -213,7 +201,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
               <button
                 onClick={() => handleSelectPlan('pro', 'lemonsqueezy')}
                 disabled={loadingGateway !== null}
-                className="w-full py-2 bg-[var(--color-accent-purple-light)]/40 hover:bg-[var(--color-accent-purple-light)]/60 text-[var(--color-accent-purple-text)] text-[11px] font-bold rounded-xl transition flex items-center justify-center gap-1.5 border border-[var(--color-accent-purple)]/30 cursor-pointer"
+                className="w-full py-2 bg-white/10 hover:bg-white/20 text-white text-[11px] font-bold rounded-xl transition flex items-center justify-center gap-1.5 border border-[var(--color-accent-purple)]/30 cursor-pointer"
               >
                 <span>🌎 Suscribirse Internacional (USD)</span>
               </button>
@@ -221,7 +209,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
           </div>
 
           {/* NIVEL 3: AGENCIA ENTERPRISE + LEECV CLOUD */}
-          <div className="bg-black/40 border border-[var(--color-status-warning-base)]/40 rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:border-[var(--color-status-warning-base)]/70 transition">
+          <div className="bg-[var(--ui-bg-dock)] border border-[var(--color-status-warning-base)]/40 rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:border-[var(--color-status-warning-base)]/70 transition">
             <div className="space-y-3">
               <div className="w-10 h-10 rounded-xl bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/40 text-[var(--color-status-warning-text)] flex items-center justify-center">
                 <Cloud className="w-5 h-5" />
@@ -236,19 +224,19 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
               </div>
               <ul className="space-y-2 text-xs text-white/80">
                 <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[var(--color-status-warning-text)] flex-shrink-0" />
+                  <Check className="w-4 h-4 text-[var(--color-accent-amber-bright)] flex-shrink-0" />
                   <strong>Todo lo del Plan Agencia Pro</strong>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[var(--color-status-warning-text)] flex-shrink-0" />
+                  <Check className="w-4 h-4 text-[var(--color-accent-amber-bright)] flex-shrink-0" />
                   <span>+50 GB Almacenamiento LEECV Cloud</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[var(--color-status-warning-text)] flex-shrink-0" />
+                  <Check className="w-4 h-4 text-[var(--color-accent-amber-bright)] flex-shrink-0" />
                   <span>Soporte de Anexos Certificados en PDF</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-[var(--color-status-warning-text)] flex-shrink-0" />
+                  <Shield className="w-4 h-4 text-[var(--color-accent-amber-bright)] flex-shrink-0" />
                   <span>Alertas Preventivas de Espacio sin Falla</span>
                 </li>
               </ul>

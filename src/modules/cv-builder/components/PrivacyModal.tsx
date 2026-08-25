@@ -16,7 +16,7 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
       isOpen={isOpen}
       onClose={onClose}
       title="Política de Privacidad & Términos de Servicio"
-      icon={<Shield className="w-5 h-5 text-[var(--color-accent-purple)]" />}
+      icon={<Shield className="w-5 h-5 text-[var(--ui-accent-purple)]" />}
       size="4xl"
       footer={
         <div className="w-full flex items-center justify-between">

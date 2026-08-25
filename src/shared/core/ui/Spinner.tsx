@@ -17,7 +17,7 @@ export function Spinner({ size = 'md', className = '', label = null }) {
       <div
         className={`${sizeMap[size] || sizeMap.md} border-[var(--color-accent-base)] border-t-transparent rounded-full animate-spin flex-shrink-0`}
       />
-      {label && <span className="text-xs font-bold text-[var(--color-neutral-text-primary)]">{label}</span>}
+      {label && <span className="text-xs font-bold text-[var(--ui-text-primary)]">{label}</span>}
     </div>
   );
 }

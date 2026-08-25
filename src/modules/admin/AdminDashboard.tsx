@@ -200,7 +200,7 @@ export default function AdminDashboard() {
             </div>
             <div>
               <p className="text-2xl font-black text-[var(--color-neutral-text-primary)]">{stats.totalUsers}</p>
-              <p className="text-xs text-[var(--color-neutral-text-primary)]/60 font-bold">Usuarios Registrados</p>
+              <p className="text-xs text-[var(--color-neutral-text-secondary)] font-bold">Usuarios Registrados</p>
             </div>
           </div>
 
@@ -210,7 +210,7 @@ export default function AdminDashboard() {
             </div>
             <div>
               <p className="text-2xl font-black text-[var(--color-neutral-text-primary)]">{stats.proUsers || stats.activeSubscriptions || 0}</p>
-              <p className="text-xs text-[var(--color-neutral-text-primary)]/60 font-bold">Licencias Premium Activas</p>
+              <p className="text-xs text-[var(--color-neutral-text-secondary)] font-bold">Licencias Premium Activas</p>
             </div>
           </div>
 
@@ -220,7 +220,7 @@ export default function AdminDashboard() {
             </div>
             <div>
               <p className="text-2xl font-black text-[var(--color-neutral-text-primary)]">500 MB</p>
-              <p className="text-xs text-[var(--color-neutral-text-primary)]/60 font-bold">Capacidad Base DB Supabase</p>
+              <p className="text-xs text-[var(--color-neutral-text-secondary)] font-bold">Capacidad Base DB Supabase</p>
             </div>
           </div>
         </div>
@@ -377,7 +377,7 @@ export default function AdminDashboard() {
                 <p className="text-xs font-black text-[var(--color-status-success-text)]">Mercado Pago (ARS)</p>
                 <p className="text-[10px] text-[var(--color-status-success-text)] font-bold">Cobros Webhook Automáticos</p>
               </div>
-              <CheckCircle2 className="w-4 h-4 text-[var(--color-status-success-base)]" />
+              <CheckCircle2 className="w-4 h-4 text-[var(--color-status-success-text)]" />
             </div>
 
             <div className="p-3.5 rounded-xl border border-[var(--color-secondary-base)]/30 bg-[var(--color-secondary-muted)] flex items-center justify-between">
@@ -385,7 +385,7 @@ export default function AdminDashboard() {
                 <p className="text-xs font-black text-[var(--color-secondary-text)]">PayPal (USD)</p>
                 <p className="text-[10px] text-[var(--color-secondary-text)] font-bold">Firma Webhook Verificada</p>
               </div>
-              <CheckCircle2 className="w-4 h-4 text-[var(--color-secondary-base)]" />
+              <CheckCircle2 className="w-4 h-4 text-[var(--color-secondary-text)]" />
             </div>
 
             <div className="p-3.5 rounded-xl border border-[var(--color-accent-purple)]/30 bg-[var(--color-accent-purple-light)] flex items-center justify-between">
@@ -457,13 +457,13 @@ export default function AdminDashboard() {
                         🏦 Transferencia / Manual
                       </span>
                     ) : (
-                      <span className="text-[var(--color-neutral-text-primary)]/40 font-bold">Gratuito</span>
+                      <span className="text-[var(--color-neutral-text-secondary)] font-bold">Gratuito</span>
                     )}
                   </td>
                   <td className="px-5 py-3">
                     {u.premium_activo
                       ? <span className="inline-flex items-center gap-1 text-[var(--color-secondary-text)] font-black bg-[var(--color-secondary-muted)] px-2.5 py-1 rounded-full text-[11px]">👑 Activa ({u.plan?.toUpperCase() || 'PRO'})</span>
-                      : <span className="text-[var(--color-neutral-text-primary)]/40 font-bold">Gratuito / Estándar</span>}
+                      : <span className="text-[var(--color-neutral-text-secondary)] font-bold">Gratuito / Estándar</span>}
                   </td>
                   <td className="px-5 py-3 text-right">
                     {u.premium_activo ? (

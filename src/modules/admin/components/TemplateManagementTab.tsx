@@ -295,7 +295,7 @@ export function TemplateManagementTab() {
 
                 {/* Motor de Armonía de Color */}
                 <div className="p-3 bg-[var(--color-accent-purple-light)] rounded-xl border border-[var(--color-accent-purple)]/30 space-y-2">
-                  <label className="block text-[11px] font-black text-[var(--color-accent-purple-text)] flex items-center gap-1.5">
+                  <label className="text-[11px] font-extrabold text-[var(--color-accent-purple-text)] uppercase flex items-center gap-1">
                     <Wand2 className="w-3.5 h-3.5 text-[var(--color-accent-purple-text)]" />
                     <span>Generador de Armonía Cromática (WCAG 2.1)</span>
                   </label>
@@ -412,7 +412,7 @@ export function TemplateManagementTab() {
                       {Object.entries(selectedPreset.roleLegend).map(([elem, role]) => (
                         <div key={elem} className="flex items-center justify-between text-[var(--color-neutral-text-secondary)] font-medium">
                           <span>{elem}:</span>
-                          <span className="font-mono text-[var(--color-accent-purple)] font-bold">{String(role)}</span>
+                          <span className="font-mono text-[var(--color-accent-purple-text)] font-bold">{String(role)}</span>
                         </div>
                       ))}
                     </div>
@@ -482,7 +482,7 @@ export function TemplateManagementTab() {
                 {/* Diseño de Contenedores de Registro */}
                 <div className="space-y-3 pt-3 border-t border-[var(--color-neutral-border)]">
                   <h4 className="font-extrabold text-[var(--color-neutral-text-primary)] uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                    <Layout className="w-4 h-4 text-[var(--color-accent-purple)]" />
+                    <Layout className="w-4 h-4 text-[var(--color-accent-purple-text)]" />
                     <span>Diseño de Registros (Contenedores)</span>
                   </h4>
 
@@ -533,7 +533,7 @@ export function TemplateManagementTab() {
 
         {/* RAW JSON GEOMETRY EDITOR */}
         {activeSubTab === 'json' && (
-          <div className="space-y-3 bg-black/40 p-4 rounded-2xl text-xs font-mono border border-white/10">
+          <div className="space-y-3 bg-[var(--color-neutral-text-primary)] text-white p-4 rounded-2xl text-xs font-mono border border-white/10">
             <div className="flex items-center justify-between text-white/60">
               <span>Edición Avanzada de Geometría JSON (Sectores, Layout y Objetos Fijos)</span>
               <span className="text-[10px] text-[var(--color-accent-amber-bright)] font-bold">⚠️ Se valida esquema al guardar</span>

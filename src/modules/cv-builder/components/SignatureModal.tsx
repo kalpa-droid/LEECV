@@ -202,7 +202,7 @@ export default function SignatureModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Tablero de Firma Digital"
-      icon={<PenTool className="w-5 h-5 text-[var(--color-status-warning-text)]" />}
+      icon={<PenTool className="w-5 h-5 text-[var(--ui-warning)]" />}
       size="xl"
       footer={
         <div className="w-full flex items-center justify-end gap-3">
@@ -223,7 +223,7 @@ export default function SignatureModal({
         </div>
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-4 bg-[var(--ui-bg-dock)] p-4 rounded-2xl text-white">
         {/* Mode Selector Tabs */}
         <div className="flex bg-black/40 p-1.5 rounded-xl border border-white/10">
           <button
@@ -257,25 +257,23 @@ export default function SignatureModal({
               <div className="flex items-center gap-2">
                 <span className="text-xs font-black text-white/80">Color:</span>
                 <input 
-                  type="color"
-                  value={strokeColor}
-                  onChange={(e) => setStrokeColor(e.target.value)}
-                  className="w-6 h-6 rounded cursor-pointer border border-white/20"
+                  type="color" 
+                  value={strokeColor} 
+                  onChange={(e) => setStrokeColor(e.target.value)} 
+                  className="w-6 h-6 rounded cursor-pointer border border-white/20 bg-transparent" 
                 />
-                <span className="text-xs font-black text-white/80 ml-2">Grosor:</span>
-                <input 
-                  type="range"
-                  min="1"
-                  max="8"
-                  value={strokeWidth}
-                  onChange={(e) => setStrokeWidth(parseInt(e.target.value))}
-                  className="w-20 accent-[var(--color-status-warning-base)]"
-                />
+                <button
+                  type="button"
+                  onClick={clearCanvas}
+                  className="px-2.5 py-1 text-[11px] font-black text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg transition cursor-pointer flex items-center gap-1 ml-2"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" /> Limpiar Trazo
+                </button>
               </div>
             </div>
 
-            <div className="relative border-2 border-white/20 rounded-2xl overflow-hidden shadow-inner bg-white">
-              <canvas 
+            <div className="relative border-2 border-white/10 rounded-2xl overflow-hidden bg-white shadow-inner">
+              <canvas
                 ref={canvasRef}
                 width={500}
                 height={180}
@@ -286,15 +284,8 @@ export default function SignatureModal({
                 onTouchStart={startDrawing}
                 onTouchMove={draw}
                 onTouchEnd={stopDrawing}
-                className="w-full h-44 touch-none cursor-crosshair bg-white"
+                className="w-full h-44 touch-none cursor-crosshair"
               />
-              <button
-                type="button"
-                onClick={clearCanvas}
-                className="absolute bottom-2 right-2 flex items-center gap-1 px-3 py-1.5 bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/40 rounded-xl text-xs font-black text-[var(--color-status-warning-text)] hover:opacity-90 transition shadow-sm cursor-pointer"
-              >
-                <RotateCcw className="w-3.5 h-3.5" /> Limpiar
-              </button>
             </div>
           </div>
         ) : (
@@ -324,12 +315,12 @@ export default function SignatureModal({
                       onChange={(e) => setRemoveBgContrast(e.target.checked)}
                       className="rounded accent-[var(--color-accent-purple)]"
                     />
-                    <Sparkles className="w-3.5 h-3.5 text-[var(--color-accent-purple)]" /> Eliminar fondo blanco automáticamente
+                    <Sparkles className="w-3.5 h-3.5 text-[var(--color-accent-purple-bright)]" /> Eliminar fondo blanco automáticamente
                   </label>
                   <button 
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className={`text-[var(--color-secondary-base)] font-black hover:underline cursor-pointer`}
+                    className={`text-[var(--color-secondary-bright)] font-black hover:underline cursor-pointer`}
                   >
                     Cambiar foto
                   </button>

@@ -51,7 +51,7 @@ export function CardExportModal({ isOpen, onClose, cvData, presetId = 'tarjeta-p
       isOpen={isOpen}
       onClose={onClose}
       title="Impresión de Tarjetas de Presentación"
-      icon={<CreditCard className="w-5 h-5 text-[var(--color-accent-base)]" />}
+      icon={<CreditCard className="w-5 h-5 text-[var(--ui-rose)]" />}
       size="lg"
     >
       <div className="space-y-4">
