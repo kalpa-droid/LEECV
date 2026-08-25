@@ -67,7 +67,7 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
     return (
       <div className="h-screen bg-[var(--ui-preview-bg)] flex flex-col items-center justify-center text-white p-6">
         <Spinner size="lg" />
-        <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent-purple)] mt-4 animate-pulse">
+        <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent-purple-bright)] mt-4 animate-pulse">
           Cargando Currículum Web Verificado…
         </p>
       </div>
@@ -104,7 +104,7 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
             <h1 className="text-sm font-black text-white">
               {cvData?.personalInfo?.fullName || 'Currículum Vitae'}
             </h1>
-            <p className="text-[10px] text-[var(--color-accent-purple)] font-bold flex items-center gap-1">
+            <p className="text-[10px] text-[var(--color-accent-purple-bright)] font-bold flex items-center gap-1">
               <span>🔒 Verificado Oficial por LEECV</span>
               <span>• Solo Lectura</span>
             </p>

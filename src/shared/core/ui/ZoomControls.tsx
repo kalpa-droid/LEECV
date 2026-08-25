@@ -27,7 +27,7 @@ export function ZoomControls({
         <ZoomOut className={isMobile ? "w-3 h-3" : "w-3.5 h-3.5"} />
       </button>
 
-      <span className="px-2 text-[var(--color-accent-amber)] text-xs font-black min-w-10 text-center">
+      <span className="px-2 text-[var(--color-accent-amber-bright)] text-xs font-black min-w-10 text-center">
         {Math.round(zoomLevel * 100)}%
       </span>
 

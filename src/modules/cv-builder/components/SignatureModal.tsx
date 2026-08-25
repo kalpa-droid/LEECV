@@ -253,7 +253,7 @@ export default function SignatureModal({
         {activeTab === 'draw' ? (
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className={`text-xs font-black text-[var(--color-accent-base)] uppercase`}>Dibuje su firma en el recuadro</span>
+              <span className={`text-xs font-black text-[var(--color-accent-amber-bright)] uppercase`}>Dibuje su firma en el recuadro</span>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-black text-white/80">Color:</span>
                 <input 
@@ -304,7 +304,7 @@ export default function SignatureModal({
                 onClick={() => fileInputRef.current?.click()}
                 className={`w-full h-44 border-2 border-dashed border-[var(--color-secondary-base)] bg-black/40 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-black/60 transition group`}
               >
-                <Upload className={`w-8 h-8 text-[var(--color-secondary-base)] mb-2 group-hover:scale-110 transition duration-300`} />
+                <Upload className={`w-8 h-8 text-[var(--color-secondary-bright)] mb-2 group-hover:scale-110 transition duration-300`} />
                 <span className="font-black text-xs text-white">Subir imagen de la firma (JPG, PNG, WEBP)</span>
               </div>
             ) : (

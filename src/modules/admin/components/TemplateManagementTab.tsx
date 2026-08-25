@@ -156,7 +156,7 @@ export function TemplateManagementTab() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[var(--color-neutral-border)] pb-4">
         <div>
           <h2 className="text-base font-black text-[var(--color-neutral-text-primary)] flex items-center gap-2">
-            <Layout className="w-5 h-5 text-[var(--color-accent-base)]" />
+            <Layout className="w-5 h-5 text-[var(--color-accent-text)]" />
             <span>Gestión Suprema de Plantillas y Presets (Capa 5/8)</span>
           </h2>
           <p className="text-xs text-[var(--color-neutral-text-secondary)] font-medium">
@@ -206,7 +206,7 @@ export function TemplateManagementTab() {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-black text-[var(--color-neutral-text-primary)] truncate">{p.name}</span>
-                    {isSelected && <CheckCircle2 className="w-4 h-4 text-[var(--color-accent-base)]" />}
+                    {isSelected && <CheckCircle2 className="w-4 h-4 text-[var(--color-accent-text)]" />}
                   </div>
                   <span className="text-[10px] uppercase font-extrabold text-[var(--color-neutral-text-secondary)] bg-[var(--color-neutral-border)]/50 px-2 py-0.5 rounded-md">
                     {p.pageCategory}
@@ -267,7 +267,7 @@ export function TemplateManagementTab() {
               {/* Left Column: Identificadores y Paleta */}
               <div className="space-y-4">
                 <h3 className="font-extrabold text-[var(--color-neutral-text-primary)] uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-[var(--color-accent-purple)]" />
+                  <Sparkles className="w-4 h-4 text-[var(--color-accent-purple-text)]" />
                   <span>Propiedades Básicas & Paleta</span>
                 </h3>
 
@@ -295,8 +295,8 @@ export function TemplateManagementTab() {
 
                 {/* Motor de Armonía de Color */}
                 <div className="p-3 bg-[var(--color-accent-purple-light)] rounded-xl border border-[var(--color-accent-purple)]/30 space-y-2">
-                  <label className="block text-[11px] font-black text-[var(--color-accent-purple)] flex items-center gap-1.5">
-                    <Wand2 className="w-3.5 h-3.5 text-[var(--color-accent-purple)]" />
+                  <label className="block text-[11px] font-black text-[var(--color-accent-purple-text)] flex items-center gap-1.5">
+                    <Wand2 className="w-3.5 h-3.5 text-[var(--color-accent-purple-text)]" />
                     <span>Generador de Armonía Cromática (WCAG 2.1)</span>
                   </label>
                   <div className="flex items-center gap-2">
@@ -405,7 +405,7 @@ export function TemplateManagementTab() {
                 {selectedPreset?.roleLegend && typeof selectedPreset.roleLegend === 'object' && Object.keys(selectedPreset.roleLegend).length > 0 && (
                   <div className="p-3 bg-[var(--color-status-warning-muted)] rounded-xl border border-[var(--color-status-warning-base)]/30 space-y-1.5">
                     <div className="flex items-center gap-1.5 text-[var(--color-status-warning-text)] font-extrabold text-[11px]">
-                      <Info className="w-3.5 h-3.5 text-[var(--color-status-warning-base)]" />
+                      <Info className="w-3.5 h-3.5 text-[var(--color-status-warning-text)]" />
                       <span>Leyenda de Roles de este Diseño</span>
                     </div>
                     <div className="space-y-1 text-[10.5px]">
@@ -536,14 +536,14 @@ export function TemplateManagementTab() {
           <div className="space-y-3 bg-black/40 p-4 rounded-2xl text-xs font-mono border border-white/10">
             <div className="flex items-center justify-between text-white/60">
               <span>Edición Avanzada de Geometría JSON (Sectores, Layout y Objetos Fijos)</span>
-              <span className="text-[10px] text-[var(--color-status-warning-text)] font-bold">⚠️ Se valida esquema al guardar</span>
+              <span className="text-[10px] text-[var(--color-accent-amber-bright)] font-bold">⚠️ Se valida esquema al guardar</span>
             </div>
 
             <textarea
               value={jsonText}
               onChange={(e) => setJsonText(e.target.value)}
               rows={16}
-              className="w-full bg-black/60 text-[var(--color-status-success-text)] p-4 rounded-xl border border-white/10 font-mono text-xs outline-none focus:border-[var(--color-accent-purple)] leading-relaxed resize-y"
+              className="w-full bg-black/60 text-[var(--color-status-success-bright)] p-4 rounded-xl border border-white/10 font-mono text-xs outline-none focus:border-[var(--color-accent-purple)] leading-relaxed resize-y"
             />
           </div>
         )}

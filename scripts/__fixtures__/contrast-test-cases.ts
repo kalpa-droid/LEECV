@@ -41,3 +41,34 @@ export const contrastTestCases: ContrastTestCase[] = [
     description: 'Texto amarillo ambar sobre fondo blanco debe fallar (ratio ~1.5:1)'
   }
 ];
+
+export const multiLineSnippetTestCases = [
+  {
+    id: 'multiline_parent_bg_child_text_invalid',
+    snippet: `
+      <div className="bg-[var(--color-accent-purple-light)] p-4">
+        <div className="flex items-center">
+          <p className="text-[11px] text-[var(--color-accent-purple)]">
+            Texto morado base sobre contenedor morado claro en otra linea
+          </p>
+        </div>
+      </div>
+    `,
+    shouldFail: true,
+    description: 'Fondo morado claro en padre y texto morado base 2 lineas despues debe fallar (3.63:1)'
+  },
+  {
+    id: 'multiline_parent_bg_child_text_valid',
+    snippet: `
+      <div className="bg-[var(--color-accent-purple-light)] p-4">
+        <div className="flex items-center">
+          <p className="text-[11px] text-[var(--color-accent-purple-text)]">
+            Texto morado alto contraste sobre contenedor morado claro en otra linea
+          </p>
+        </div>
+      </div>
+    `,
+    shouldFail: false,
+    description: 'Fondo morado claro en padre y texto morado text 2 lineas despues debe pasar (6.66:1)'
+  }
+];

@@ -266,17 +266,17 @@ export default function CloudStatusModal({
           
           <div className="space-y-2">
             <div className="flex items-center gap-3 p-2.5 rounded-xl bg-black/40 border border-white/10">
-              <ShieldCheck className="w-5 h-5 text-[var(--color-status-success-text)] flex-shrink-0" />
+              <ShieldCheck className="w-5 h-5 text-[var(--color-status-success-bright)] flex-shrink-0" />
               <div>
-                <span className="font-black text-[var(--color-status-success-text)]">IndexedDB + WebP:</span>
+                <span className="font-black text-[var(--color-status-success-bright)]">IndexedDB + WebP:</span>
                 <span className="text-white/80 ml-1.5">Almacenamiento ilimitado en tu navegador local.</span>
               </div>
             </div>
 
             <div className="flex items-center gap-3 p-2.5 rounded-xl bg-black/40 border border-white/10">
-              <Cloud className="w-5 h-5 text-[var(--color-accent-purple)] flex-shrink-0" />
+              <Cloud className="w-5 h-5 text-[var(--color-accent-purple-bright)] flex-shrink-0" />
               <div>
-                <span className="font-black text-[var(--color-accent-purple)]">Nube Supabase:</span>
+                <span className="font-black text-[var(--color-accent-purple-bright)]">Nube Supabase:</span>
                 <span className="text-white/80 ml-1.5">Sincronización multi-dispositivo cifrada.</span>
               </div>
             </div>

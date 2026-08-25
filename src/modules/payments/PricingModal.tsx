@@ -84,7 +84,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
                 </span>
               </div>
               <p className="text-[11px] text-white/60 flex items-center gap-1.5 mt-0.5">
-                <HardDrive className="w-3.5 h-3.5 text-[var(--color-secondary-base)]" />
+                <HardDrive className="w-3.5 h-3.5 text-[var(--color-secondary-bright)]" />
                 <span>Google Drive: {currentProfile?.drive_connected ? '🟢 Conectado' : '⚪ No vinculado'}</span>
               </p>
             </div>
@@ -140,19 +140,19 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
               </div>
               <ul className="space-y-2 text-xs text-white/80">
                 <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[var(--color-status-success-text)] flex-shrink-0" />
+                  <Check className="w-4 h-4 text-[var(--color-status-success-bright)] flex-shrink-0" />
                   <span>Editor 100% Gratis en Navegador</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[var(--color-status-success-text)] flex-shrink-0" />
+                  <Check className="w-4 h-4 text-[var(--color-status-success-bright)] flex-shrink-0" />
                   <span>Respaldo .JSON gratis en PC o en tu Google Drive</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[var(--color-status-success-text)] flex-shrink-0" />
+                  <Check className="w-4 h-4 text-[var(--color-status-success-bright)] flex-shrink-0" />
                   <span>Guardado Local en IndexedDB del navegador</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[var(--color-status-success-text)] flex-shrink-0" />
+                  <Check className="w-4 h-4 text-[var(--color-status-success-bright)] flex-shrink-0" />
                   <span>PDF A4 Nativo de Alta Calidad ($1 USD)</span>
                 </li>
               </ul>
@@ -184,19 +184,19 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
               </div>
               <ul className="space-y-2 text-xs text-white/90">
                 <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[var(--color-accent-purple)] flex-shrink-0" />
+                  <Check className="w-4 h-4 text-[var(--color-accent-purple-bright)] flex-shrink-0" />
                   <strong>PDFs A4 ILIMITADOS (Sin pagar $1/PDF)</strong>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[var(--color-accent-purple)] flex-shrink-0" />
+                  <Check className="w-4 h-4 text-[var(--color-accent-purple-bright)] flex-shrink-0" />
                   <span>Panel Multi-Candidato en Supabase Cloud</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[var(--color-accent-purple)] flex-shrink-0" />
+                  <Check className="w-4 h-4 text-[var(--color-accent-purple-bright)] flex-shrink-0" />
                   <span>Respaldo en tu propio Google Drive (15 GB)</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Smartphone className="w-4 h-4 text-[var(--color-accent-purple)] flex-shrink-0" />
+                  <Smartphone className="w-4 h-4 text-[var(--color-accent-purple-bright)] flex-shrink-0" />
                   <span>Envío a WhatsApp & Telegram a 1-Clic</span>
                 </li>
               </ul>

@@ -161,7 +161,7 @@ export default function SavedCVsModal({
             }}
             className="p-3 rounded-2xl bg-black/40 hover:bg-black/60 border border-white/10 transition cursor-pointer flex items-center gap-3 text-left group"
           >
-            <div className="p-2 rounded-xl bg-white/10 text-[var(--color-secondary-base)] group-hover:scale-110 transition flex-shrink-0">
+            <div className="p-2 rounded-xl bg-white/10 text-white group-hover:scale-110 transition flex-shrink-0">
               <Cloud className="w-4 h-4" />
             </div>
             <div className="min-w-0 flex-1">
@@ -173,9 +173,9 @@ export default function SavedCVsModal({
 
         {/* Explanation Banner */}
         <div className="px-4 py-2.5 bg-black/40 border border-white/10 rounded-xl text-[11px] text-white/80 leading-snug flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-[var(--color-status-warning-text)] flex-shrink-0" />
+          <Sparkles className="w-4 h-4 text-[var(--color-accent-amber-bright)] flex-shrink-0" />
           <span>
-            <strong>Estado:</strong> <span className="text-[var(--color-status-warning-text)] font-bold"> 🟠 Borrador (En Edición)</span> pasa a <span className="text-[var(--color-status-success-text)] font-bold"> 🟢 CV Oficial</span> al exportar tu documento.
+            <strong>Estado:</strong> <span className="text-[var(--color-accent-amber-bright)] font-bold"> 🟠 Borrador (En Edición)</span> pasa a <span className="text-[var(--color-status-success-bright)] font-bold"> 🟢 CV Oficial</span> al exportar tu documento.
           </span>
         </div>
 

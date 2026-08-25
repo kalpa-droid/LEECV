@@ -46,7 +46,7 @@ export function TemplateMenu({ activePresetId, onSelectPreset, cvData }: Templat
       {/* Preset Category & Selector Buttons */}
       <div className="flex items-center gap-2 overflow-x-auto py-1">
         <div className="flex items-center gap-1.5 text-xs font-black text-white/60 uppercase tracking-widest mr-2">
-          <Layers className="w-4 h-4 text-[var(--color-accent-purple)]" />
+          <Layers className="w-4 h-4 text-[var(--color-accent-purple-bright)]" />
           <span>Plantilla:</span>
         </div>
 

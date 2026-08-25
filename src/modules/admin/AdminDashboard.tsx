@@ -245,7 +245,7 @@ export default function AdminDashboard() {
               : 'px-4 py-2 text-xs font-black rounded-xl transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50'
             }
           >
-            <LayoutIcon className="w-4 h-4 text-[var(--color-accent-base)]" />
+            <LayoutIcon className="w-4 h-4 text-white" />
             <span>Gestión de Plantillas y Presets (Capa 5)</span>
           </button>
 
@@ -256,7 +256,7 @@ export default function AdminDashboard() {
               : 'px-4 py-2 text-xs font-black rounded-xl transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50'
             }
           >
-            <HardDrive className="w-4 h-4 text-[var(--color-accent-purple)]" />
+            <HardDrive className="w-4 h-4 text-white" />
             <span>Almacenamiento, Servidores & Drive</span>
           </button>
         </div>
@@ -274,7 +274,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between border-b border-[var(--color-neutral-border)] pb-3">
               <div className="flex items-center gap-2">
                 <div className="relative">
-                  <Bell className="w-5 h-5 text-[var(--color-accent-base)]" />
+                  <Bell className="w-5 h-5 text-[var(--color-accent-text)]" />
                   {unreadNotifCount > 0 && (
                     <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[var(--color-accent-base)] text-white font-black text-[9px] rounded-full flex items-center justify-center animate-pulse">
                       {unreadNotifCount}
@@ -363,7 +363,7 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-[var(--color-neutral-border)] space-y-3">
           <div className="flex items-center justify-between border-b border-[var(--color-neutral-border)] pb-3">
             <div className="flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-[var(--color-secondary-base)]" />
+              <CreditCard className="w-5 h-5 text-[var(--color-secondary-text)]" />
               <h2 className="font-extrabold text-sm text-[var(--color-neutral-text-primary)]">Pasarelas & Webhooks de Cobro Unificado</h2>
             </div>
             <span className="text-[11px] text-[var(--color-status-success-text)] font-bold flex items-center gap-1">
@@ -390,10 +390,10 @@ export default function AdminDashboard() {
 
             <div className="p-3.5 rounded-xl border border-[var(--color-accent-purple)]/30 bg-[var(--color-accent-purple-light)] flex items-center justify-between">
               <div>
-                <p className="text-xs font-black text-[var(--color-accent-purple)]">Lemon Squeezy (USD)</p>
-                <p className="text-[10px] text-[var(--color-accent-purple)] font-bold">Suscripciones Globales</p>
+                <p className="text-xs font-black text-[var(--color-accent-purple-text)]">Lemon Squeezy (USD)</p>
+                <p className="text-[10px] text-[var(--color-accent-purple-text)] font-bold">Suscripciones Globales</p>
               </div>
-              <CheckCircle2 className="w-4 h-4 text-[var(--color-accent-purple)]" />
+              <CheckCircle2 className="w-4 h-4 text-[var(--color-accent-purple-text)]" />
             </div>
           </div>
         </div>
@@ -402,7 +402,7 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-2xl shadow-sm border border-[var(--color-neutral-border)] overflow-hidden">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-b border-[var(--color-neutral-border)]">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-[var(--color-accent-base)]" />
+              <ShieldCheck className="w-5 h-5 text-[var(--color-accent-text)]" />
               <h2 className="font-extrabold text-sm text-[var(--color-neutral-text-primary)]">Gestión de Licencias y Origen de Pago</h2>
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto">

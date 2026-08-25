@@ -147,7 +147,7 @@ export default function CertCropperModal({
       <div className="flex flex-col items-center space-y-3">
         {/* Record Selector inside Cropper Modal */}
         <div className="w-full">
-          <label className={`block text-xs font-black text-[var(--color-accent-base)] mb-1 uppercase tracking-wide flex items-center justify-between`}>
+          <label className={`block text-xs font-black text-[var(--color-accent-text)] mb-1 uppercase tracking-wide flex items-center justify-between`}>
             <span>IDENTIFICA TU CERTIFICADO *</span>
             {isSelectionWarningVisible && <span className="text-[var(--color-status-danger-text)] text-[11px] font-bold flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" /> Primero elige el registro</span>}
           </label>
@@ -176,9 +176,7 @@ export default function CertCropperModal({
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            className="touch-none bg-white"
-          />
+            className="touch-none bg-white" />
           <div className="absolute inset-0 border-2 border-dashed border-[var(--color-status-warning-base)]/60 pointer-events-none rounded-lg" />
         </div>
 
@@ -204,14 +202,14 @@ export default function CertCropperModal({
               onClick={() => setRotation((r) => (r + 90) % 360)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 border border-white/10 text-xs font-black text-white hover:bg-white/20 transition shadow-sm cursor-pointer"
             >
-              <RotateCw className="w-3.5 h-3.5 text-[var(--color-status-warning-text)]" /> Rotar 90°
+              <RotateCw className="w-3.5 h-3.5 text-white" /> Rotar 90°
             </button>
 
             <button 
               onClick={() => { setZoom(1); setRotation(0); setOffset({ x: 0, y: 0 }); }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 border border-white/10 text-xs font-black text-white hover:bg-white/20 transition shadow-sm cursor-pointer"
             >
-              <Maximize2 className="w-3.5 h-3.5 text-[var(--color-secondary-base)]" /> Auto-Encajar
+              <Maximize2 className="w-3.5 h-3.5 text-white" /> Auto-Encajar
             </button>
           </div>
         </div>

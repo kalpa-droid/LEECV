@@ -503,8 +503,8 @@ export default function EditorPanel({
                 }}
                 className="w-full h-28 border-2 border-dashed border-[var(--color-secondary-base)] bg-white rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-[var(--color-secondary-muted)]/30 transition group shadow-sm"
               >
-                <Upload className="w-6 h-6 text-[var(--color-secondary-base)] mb-1 group-hover:scale-110 transition duration-300" />
-                <span className="font-black text-xs text-[var(--color-accent-base)] uppercase tracking-wider">CLIC AQUÍ</span>
+                <Upload className="w-6 h-6 text-[var(--color-secondary-text)] mb-1 group-hover:scale-110 transition duration-300" />
+                <span className="font-black text-xs text-[var(--color-accent-text)] uppercase tracking-wider">CLIC AQUÍ</span>
                 <span className="text-[10px] text-[var(--color-neutral-text-primary)] font-bold">Seleccionar archivo o foto de certificado</span>
               </div>
             )}
@@ -549,7 +549,7 @@ export default function EditorPanel({
                         className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-[var(--color-accent-amber-muted)] border border-[var(--color-accent-amber)] text-[var(--color-neutral-text-primary)] font-black text-[11px] hover:bg-[var(--color-accent-amber)] transition"
                         title="Girar imagen 90°"
                       >
-                        <RotateCw className="w-3.5 h-3.5 text-[var(--color-accent-base)]" />
+                        <RotateCw className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
                         <span>Girar ({cert.rotation || 0}°)</span>
                       </button>
 
@@ -966,7 +966,7 @@ export default function EditorPanel({
                     className="p-2.5 rounded-xl border-2 border-dashed border-[var(--color-accent-base)]/40 bg-[var(--color-accent-rose-muted)]/30 hover:bg-[var(--color-accent-rose-muted)]/50 text-left flex flex-col justify-between transition cursor-pointer"
                   >
                     <div className="space-y-1">
-                      <span className="text-xs font-black text-[var(--color-accent-base)] flex items-center gap-1">
+                      <span className="text-xs font-black text-[var(--color-accent-text)] flex items-center gap-1">
                         <Plus className="w-3.5 h-3.5" /> Sección a Medida
                       </span>
                       <p className="text-[10px] text-[var(--color-neutral-text-secondary)] font-medium leading-tight">
@@ -1078,7 +1078,7 @@ export default function EditorPanel({
 
                   {cvData.customSections.map((cs: any) => (
                     <div key={cs.id} className="p-3 bg-[var(--color-neutral-surface-muted)] rounded-2xl border-2 border-[var(--color-neutral-border)] flex items-center justify-between">
-                      <span className="text-xs font-black text-[var(--color-accent-base)] uppercase">
+                      <span className="text-xs font-black text-[var(--color-accent-text)] uppercase">
                         {cs.titleText}
                       </span>
                       <button
@@ -1259,7 +1259,7 @@ export default function EditorPanel({
                         </div>
                         <p className="text-[10px] text-[var(--color-neutral-text-primary)] font-medium leading-snug">{styleOpt.desc}</p>
                       </div>
-                      {isSelected && <Check className="w-4 h-4 text-[var(--color-secondary-base)] flex-shrink-0 mt-1" />}
+                      {isSelected && <Check className="w-4 h-4 text-[var(--color-secondary-text)] flex-shrink-0 mt-1" />}
                     </button>
                   );
                 })}
@@ -1283,7 +1283,7 @@ export default function EditorPanel({
                     >
                       <div className="flex items-center justify-between mb-1.5">
                         <span className="text-[11px] font-bold text-[var(--color-neutral-text-primary)] truncate pr-1">{preset.name}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-[var(--color-secondary-base)] flex-shrink-0" />}
+                        {isSelected && <Check className="w-3.5 h-3.5 text-[var(--color-secondary-text)] flex-shrink-0" />}
                       </div>
                       <div className="flex gap-1.5 items-center">
                         <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.palette.primary }} />
@@ -1559,7 +1559,7 @@ export default function EditorPanel({
                           <div className="flex items-center justify-end gap-3 text-[10px] text-white/60 pt-1 border-t border-white/10">
                             {(currentVal === 'secundaria' || currentVal === 'ambas') && (
                               <div className="flex items-center gap-1 bg-[var(--color-accent-muted)] px-2 py-0.5 rounded-lg border border-[var(--color-accent-base)]/30">
-                                <span className="font-bold text-[var(--color-accent-base)]">Sec:</span>
+                                <span className="font-bold text-[var(--color-accent-text)]">Sec:</span>
                                 <button
                                   type="button"
                                   onClick={() => moveSection('secundaria', 'up')}

@@ -129,7 +129,7 @@ export default function CanvaIconDock({
                 }`}
                 title="Catálogo y Creador de Secciones (Sección)"
               >
-                <Plus className="w-5 h-5 text-[var(--color-status-success-bright)]" />
+                <Plus className="w-5 h-5 text-white" />
                 <span className="text-[8px] font-black tracking-tighter uppercase mt-0.5 leading-none">
                   {addSectionTab.label}
                 </span>
@@ -236,7 +236,7 @@ export default function CanvaIconDock({
           title="Cambiar Tema de Interfaz"
         >
           <span>Tema</span>
-          <Palette className="w-3.5 h-3.5 text-[var(--color-accent-base)]" />
+          <Palette className="w-3.5 h-3.5 text-[var(--color-accent-amber-bright)]" />
         </button>
 
         <div className="w-px h-6 bg-white/20 shrink-0" />
@@ -255,7 +255,7 @@ export default function CanvaIconDock({
                   : 'bg-[var(--color-neutral-text-primary)] text-[var(--color-neutral-border)]/80 hover:bg-[var(--ui-bg-dock-hover)]'
               }`}
             >
-              <Icon className="w-3.5 h-3.5 text-[var(--color-accent-amber)]" />
+              <Icon className="w-3.5 h-3.5 text-white" />
               <span>{tab.label}</span>
             </button>
           );

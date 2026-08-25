@@ -89,14 +89,14 @@ export function AtsCheckModal({
               >
                 <div className="flex items-center gap-2">
                   {w.level === 'critical' ? (
-                    <AlertCircle className="w-4 h-4 text-[var(--color-status-danger-text)] flex-shrink-0" />
+                    <AlertCircle className="w-4 h-4 text-[var(--color-status-danger-base)] flex-shrink-0" />
                   ) : (
-                    <AlertTriangle className="w-4 h-4 text-[var(--color-status-warning-text)] flex-shrink-0" />
+                    <AlertTriangle className="w-4 h-4 text-[var(--color-accent-amber-bright)] flex-shrink-0" />
                   )}
                   <p className="text-xs font-black text-white">{w.title}</p>
                 </div>
                 <p className="text-[11px] text-white/60 leading-snug">{w.description}</p>
-                <p className="text-[11px] text-[var(--color-status-warning-text)] font-semibold flex items-center gap-1">
+                <p className="text-[11px] text-[var(--color-accent-amber-bright)] font-semibold flex items-center gap-1">
                   <ArrowRight className="w-3 h-3 flex-shrink-0" />
                   <span>{w.recommendation}</span>
                 </p>

@@ -83,7 +83,7 @@ export default function Navbar({
             className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-white bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] border border-[var(--color-accent-rose-muted)]/30 transition shadow-md shadow-[var(--color-accent-base)]/20 cursor-pointer whitespace-nowrap active:scale-95"
             title="Iniciar un nuevo currículum en blanco"
           >
-            <FilePlus className="w-3.5 h-3.5 text-[var(--color-accent-rose-muted)] flex-shrink-0" />
+            <FilePlus className="w-3.5 h-3.5 text-white flex-shrink-0" />
             <span>Nuevo</span>
           </button>
 

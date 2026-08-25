@@ -131,7 +131,7 @@ export function StorageDriveTab() {
         <div className="p-4 bg-[var(--color-neutral-surface-muted)] rounded-2xl border border-[var(--color-neutral-border)] space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[var(--color-neutral-text-secondary)] uppercase">Supabase Cloud DB</span>
-            <Cloud className="w-4 h-4 text-[var(--color-secondary-base)]" />
+            <Cloud className="w-4 h-4 text-[var(--color-secondary-text)]" />
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-xl font-black text-[var(--color-neutral-text-primary)]">
@@ -148,7 +148,7 @@ export function StorageDriveTab() {
         <div className="p-4 bg-[var(--color-neutral-surface-muted)] rounded-2xl border border-[var(--color-neutral-border)] space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[var(--color-neutral-text-secondary)] uppercase">IndexedDB Navegador</span>
-            <Database className="w-4 h-4 text-[var(--color-accent-purple)]" />
+            <Database className="w-4 h-4 text-[var(--color-accent-purple-text)]" />
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-xl font-black text-[var(--color-neutral-text-primary)]">
@@ -165,7 +165,7 @@ export function StorageDriveTab() {
         <div className="p-4 bg-[var(--color-neutral-surface-muted)] rounded-2xl border border-[var(--color-neutral-border)] space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[var(--color-neutral-text-secondary)] uppercase">Google Drive & Servidor</span>
-            <Cpu className="w-4 h-4 text-[var(--color-status-success-base)]" />
+            <Cpu className="w-4 h-4 text-[var(--color-status-success-text)]" />
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-xl font-black text-[var(--color-neutral-text-primary)]">Activo</span>

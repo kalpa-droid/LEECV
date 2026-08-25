@@ -57,7 +57,7 @@ export default function AgencyCandidateDashboard({ onBackToEditor }) {
               <ArrowLeft className="w-4 h-4" /> Volver al Editor
             </button>
             <h1 className="text-xl font-black text-white flex items-center gap-2">
-              <Users className="w-6 h-6 text-[var(--color-accent-purple)]" /> Panel de Gestión de Candidatos (Agencia)
+              <Users className="w-6 h-6 text-[var(--color-accent-purple-bright)]" /> Panel de Gestión de Candidatos (Agencia)
             </h1>
           </div>
           
@@ -102,7 +102,7 @@ export default function AgencyCandidateDashboard({ onBackToEditor }) {
         {/* Candidates Table */}
         <div className="bg-black/40 border border-white/10 rounded-2xl overflow-hidden shadow-xl">
           <table className="w-full text-left text-xs text-white/80">
-            <thead className="bg-black/60 text-[var(--color-accent-purple)] font-extrabold uppercase text-[10px] tracking-wider border-b border-white/10">
+            <thead className="bg-black/60 text-[var(--color-accent-purple-bright)] font-extrabold uppercase text-[10px] tracking-wider border-b border-white/10">
               <tr>
                 <th className="p-4">Candidato</th>
                 <th className="p-4">Título Principal</th>
@@ -115,10 +115,10 @@ export default function AgencyCandidateDashboard({ onBackToEditor }) {
               {filteredCandidates.map(candidat => (
                 <tr key={candidat.id} className="hover:bg-white/5 transition">
                   <td className="p-4 font-bold text-white flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[var(--color-accent-amber)]" /> {candidat.full_name || candidat.name}
+                    <FileText className="w-4 h-4 text-[var(--color-accent-amber-bright)]" /> {candidat.full_name || candidat.name}
                   </td>
                   <td className="p-4">{candidat.title}</td>
-                  <td className="p-4"><span className="px-2.5 py-1 rounded-lg bg-white/10 text-[var(--color-accent-purple)] font-medium">{candidat.vacant}</span></td>
+                  <td className="p-4"><span className="px-2.5 py-1 rounded-lg bg-white/10 text-white font-medium">{candidat.vacant}</span></td>
                   <td className="p-4"><span className="px-2.5 py-1 rounded-lg bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)] font-bold border border-[var(--color-status-success-base)]/30">{candidat.status}</span></td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">

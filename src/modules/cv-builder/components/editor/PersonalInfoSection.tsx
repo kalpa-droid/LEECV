@@ -38,7 +38,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
 
       {isVisible && (
         <div className="space-y-4">
-          <PanelSection icon={<User className="w-4 h-4 text-[var(--color-secondary-base)]" />} title="Información de Contacto">
+          <PanelSection icon={<User className="w-4 h-4 text-[var(--color-secondary-text)]" />} title="Información de Contacto">
             <div className="space-y-3 pt-1">
               {/* Tarjeta Foto de Perfil */}
               <div

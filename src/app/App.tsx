@@ -367,7 +367,7 @@ function AppContent() {
           <Suspense fallback={
             <div className="w-full h-[600px] flex flex-col items-center justify-center p-8 text-white/60">
               <div className="w-10 h-10 border-4 border-[var(--color-accent-purple)] border-t-transparent rounded-full animate-spin mb-4" />
-              <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent-purple)]">Cargando Visor Vectorial de Alta Resolución…</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent-purple-bright)]">Cargando Visor Vectorial de Alta Resolución…</span>
             </div>
           }>
             <CVPreview cvData={cvData} setCvData={setCvData} activeTab={activeTab} zoomLevel={zoomLevel} />
@@ -557,11 +557,11 @@ function AppContent() {
           <button
             type="button"
             onClick={cycleUITheme}
-            className="px-3 py-1 rounded-xl bg-[var(--color-neutral-text-primary)] border border-[var(--color-status-warning-base)]/40 hover:border-[var(--color-status-warning-base)] text-[var(--color-accent-amber)] font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95"
+            className="px-3 py-1 rounded-xl bg-[var(--color-neutral-text-primary)] border border-[var(--color-status-warning-base)]/40 hover:border-[var(--color-status-warning-base)] text-[var(--color-accent-amber-bright)] font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95"
             title="Tocar para cambiar el color de fondo de la interfaz (Cálido, Nocturno, Océano)"
           >
             <span>Tema</span>
-            <Palette className="w-3.5 h-3.5 text-[var(--color-accent-base)]" />
+            <Palette className="w-3.5 h-3.5 text-[var(--color-accent-amber-bright)]" />
           </button>
 
           <span className="text-[10px] font-bold text-white/40">© 2026 LEECV</span>

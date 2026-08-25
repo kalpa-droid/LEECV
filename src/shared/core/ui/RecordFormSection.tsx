@@ -34,7 +34,7 @@ export function RecordFormSection({
     <div className="space-y-3">
       {helpText && (
         <div className="p-3 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 rounded-xl text-xs text-[var(--color-secondary-text)] flex items-start gap-2 leading-relaxed">
-          <Info className="w-4 h-4 text-[var(--color-secondary-base)] flex-shrink-0 mt-0.5" />
+          <Info className="w-4 h-4 text-[var(--color-secondary-text)] flex-shrink-0 mt-0.5" />
           <div>
             <span className="font-bold block">💡 Ayuda Contextual:</span>
             <span>{helpText}</span>
