@@ -107,10 +107,10 @@ export function StorageDriveTab() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[var(--color-neutral-border)] pb-4">
         <div>
           <h2 className="text-base font-black text-[var(--color-neutral-text-primary)] flex items-center gap-2">
-            <HardDrive className="w-5 h-5 text-purple-600" />
+            <HardDrive className="w-5 h-5 text-[var(--color-accent-purple)]" />
             <span>Almacenamiento, Servidores & Google Drive</span>
           </h2>
-          <p className="text-xs text-slate-500 font-medium">
+          <p className="text-xs text-[var(--color-neutral-text-secondary)] font-medium">
             Diagnóstico en vivo de cuotas, bases de datos Supabase e integridad de almacenamiento IndexedDB local.
           </p>
         </div>
@@ -118,7 +118,7 @@ export function StorageDriveTab() {
         <button
           onClick={refreshDiagnostics}
           disabled={loading}
-          className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+          className="px-3.5 py-2 bg-[var(--color-neutral-text-primary)] hover:opacity-90 text-white font-extrabold text-xs rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           <span>Refrescar Diagnóstico</span>
@@ -128,58 +128,58 @@ export function StorageDriveTab() {
       {/* Metrics Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Supabase Status */}
-        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+        <div className="p-4 bg-[var(--color-neutral-surface-muted)] rounded-2xl border border-[var(--color-neutral-border)] space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase">Supabase Cloud DB</span>
-            <Cloud className="w-4 h-4 text-sky-500" />
+            <span className="text-xs font-bold text-[var(--color-neutral-text-secondary)] uppercase">Supabase Cloud DB</span>
+            <Cloud className="w-4 h-4 text-[var(--color-secondary-text)]" />
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-xl font-black text-slate-900">
+            <span className="text-xl font-black text-[var(--color-neutral-text-primary)]">
               {cloudDocsCount !== null ? `${cloudDocsCount} CVs` : 'Conectado'}
             </span>
-            <span className="text-[10px] font-extrabold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+            <span className="text-[10px] font-extrabold text-[var(--color-status-success-text)] bg-[var(--color-status-success-muted)] px-2 py-0.5 rounded-full flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3" /> Online
             </span>
           </div>
-          <p className="text-[11px] text-slate-500">Documentos sincronizados en la nube</p>
+          <p className="text-[11px] text-[var(--color-neutral-text-secondary)]">Documentos sincronizados en la nube</p>
         </div>
 
         {/* Local Storage */}
-        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+        <div className="p-4 bg-[var(--color-neutral-surface-muted)] rounded-2xl border border-[var(--color-neutral-border)] space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase">IndexedDB Navegador</span>
-            <Database className="w-4 h-4 text-purple-500" />
+            <span className="text-xs font-bold text-[var(--color-neutral-text-secondary)] uppercase">IndexedDB Navegador</span>
+            <Database className="w-4 h-4 text-[var(--color-accent-purple-text)]" />
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-xl font-black text-slate-900">
+            <span className="text-xl font-black text-[var(--color-neutral-text-primary)]">
               {localDocsCount !== null ? `${localDocsCount} Claves` : 'Disponible'}
             </span>
-            <span className="text-[10px] font-extrabold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+            <span className="text-[10px] font-extrabold text-[var(--color-status-success-text)] bg-[var(--color-status-success-muted)] px-2 py-0.5 rounded-full flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3" /> Ilimitado
             </span>
           </div>
-          <p className="text-[11px] text-slate-500">Caché ilimitada persistente en cliente</p>
+          <p className="text-[11px] text-[var(--color-neutral-text-secondary)]">Caché ilimitada persistente en cliente</p>
         </div>
 
         {/* Storage Health Status */}
-        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+        <div className="p-4 bg-[var(--color-neutral-surface-muted)] rounded-2xl border border-[var(--color-neutral-border)] space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase">Google Drive & Servidor</span>
-            <Cpu className="w-4 h-4 text-emerald-500" />
+            <span className="text-xs font-bold text-[var(--color-neutral-text-secondary)] uppercase">Google Drive & Servidor</span>
+            <Cpu className="w-4 h-4 text-[var(--color-status-success-text)]" />
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-xl font-black text-slate-900">Activo</span>
-            <span className="text-[10px] font-extrabold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+            <span className="text-xl font-black text-[var(--color-neutral-text-primary)]">Activo</span>
+            <span className="text-[10px] font-extrabold text-[var(--color-accent-purple-text)] bg-[var(--color-accent-purple-light)] px-2 py-0.5 rounded-full flex items-center gap-1">
               <ShieldCheck className="w-3 h-3" /> OK
             </span>
           </div>
-          <p className="text-[11px] text-slate-500">Integración con Google Drive lista</p>
+          <p className="text-[11px] text-[var(--color-neutral-text-secondary)]">Integración con Google Drive lista</p>
         </div>
       </div>
 
       {/* Diagnostic & Maintenance Tools */}
       <div className="space-y-3 border-t border-[var(--color-neutral-border)] pt-4">
-        <h3 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider">
+        <h3 className="text-xs font-extrabold text-[var(--color-neutral-text-primary)] uppercase tracking-wider">
           Herramientas de Mantenimiento y Prueba de Almacenamiento:
         </h3>
 
@@ -187,25 +187,25 @@ export function StorageDriveTab() {
           <button
             type="button"
             onClick={handleTestWrite}
-            className="p-3 bg-teal-50 hover:bg-teal-100/80 border border-teal-200 rounded-xl text-left transition flex items-center justify-between cursor-pointer"
+            className="p-3 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 rounded-xl text-left transition flex items-center justify-between cursor-pointer"
           >
             <div>
-              <div className="font-extrabold text-xs text-teal-900">Prueba de Lectura/Escritura</div>
-              <div className="text-[11px] text-teal-700">Verifica la velocidad y respuesta del almacenamiento local</div>
+              <div className="font-extrabold text-xs text-[var(--color-secondary-text)]">Prueba de Lectura/Escritura</div>
+              <div className="text-[11px] text-[var(--color-secondary-text)]">Verifica la velocidad y respuesta del almacenamiento local</div>
             </div>
-            <ShieldCheck className="w-5 h-5 text-[var(--color-secondary-base)] flex-shrink-0" />
+            <ShieldCheck className="w-5 h-5 text-[var(--color-secondary-text)] flex-shrink-0" />
           </button>
 
           <button
             type="button"
             onClick={handleClearLocalCache}
-            className="p-3 bg-rose-50 hover:bg-rose-100/80 border border-rose-200 rounded-xl text-left transition flex items-center justify-between cursor-pointer"
+            className="p-3 bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/30 rounded-xl text-left transition flex items-center justify-between cursor-pointer"
           >
             <div>
-              <div className="font-extrabold text-xs text-rose-900">Limpiar Caché de Borradores Temporales</div>
-              <div className="text-[11px] text-rose-700">Elimina registros huérfanos sin tocar datos de usuarios</div>
+              <div className="font-extrabold text-xs text-[var(--color-status-danger-text)]">Limpiar Caché de Borradores Temporales</div>
+              <div className="text-[11px] text-[var(--color-status-danger-text)]">Elimina registros huérfanos sin tocar datos de usuarios</div>
             </div>
-            <Trash2 className="w-5 h-5 text-rose-600 flex-shrink-0" />
+            <Trash2 className="w-5 h-5 text-[var(--color-status-danger-text)] flex-shrink-0" />
           </button>
         </div>
       </div>

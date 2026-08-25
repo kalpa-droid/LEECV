@@ -18,15 +18,15 @@ export const colorSystem = {
   secondary: { base: '#00A8A0', hover: '#008780', hoverDark: '#008f88', muted: '#E0F5F3', text: '#00655F' },
 
   // Acentos de apoyo (Amber/Gold, Purple, Orange)
-  amber: { base: '#FFC93C', hover: '#F0AE00', muted: '#FFF1C2' },
-  purple: { base: '#8E44FF', hover: '#7126E0', light: '#E9DBFF' },
+  amber: { base: '#FFC93C', hover: '#F0AE00', muted: '#FFF1C2', text: '#854F0B', bright: '#FCD34D' },
+  purple: { base: '#8E44FF', hover: '#7126E0', light: '#E9DBFF', text: '#5B18C8', bright: '#D8B4FE' },
   orange: { base: '#FF7A29' },
 
   // Neutros — la escala que usa todo texto/borde que no es color de marca
   neutral: {
     textPrimary: '#2B1B2E',   // títulos, valores importantes
     textSecondary: '#6B5B6E', // texto de apoyo
-    textMuted: '#9B8B9E',     // placeholders, ayuda, metadatos
+    textMuted: '#59495C',     // placeholders, ayuda, metadatos (contraste >= 4.5:1)
     border: '#EFE2C9',        // borde por defecto
     borderStrong: '#D9C9A0',  // borde en hover/foco
     surface: '#FFFFFF',       // fondo de tarjeta
@@ -37,8 +37,8 @@ export const colorSystem = {
 
   // Estados — SOLO para estos 3 significados, nunca decorativos
   status: {
-    success: { base: '#1D9E75', muted: '#E1F5EE', text: '#0F6E56' },
-    warning: { base: '#BA7517', muted: '#FAEEDA', text: '#854F0B' },
+    success: { base: '#1D9E75', muted: '#E1F5EE', text: '#0F6E56', bright: '#34D399' },
+    warning: { base: '#BA7517', muted: '#FAEEDA', text: '#854F0B', bright: '#FCD34D' },
     danger: { base: '#D14D4D', muted: '#FCEBEB', text: '#A32D2D' },
   },
   // Superficie oscura para estados críticos (ErrorBoundary) — la única
@@ -216,26 +216,60 @@ export const zIndex = {
 } as const;
 
 /**
- * MATRIZ DE TEMAS DE LA INTERFAZ (UI Theme Matrix - Nocturno, Cálido, Océano)
+ * MATRIZ DE TEMAS DE LA INTERFAZ (UI Theme Matrix - Día, Noche, Océano)
  */
 export const uiThemePresets = {
-  default: {
-    id: 'default',
-    name: 'Editorial Warm (Cálido)',
+  day: {
+    id: 'day',
+    name: 'Editorial Warm (Día / Cálido)',
     bgPanel: '#FAF7F0',
     bgCard: '#FFFFFF',
     textPrimary: '#2B1B2E',
     textSecondary: '#6B5B6E',
+    textMuted: '#9B8B9E',
     border: '#EFE2C9',
+    borderStrong: '#D9C9A0',
+    accent: '#FF2E63',
+    secondary: '#00A8A0',
   },
-  dark: {
-    id: 'dark',
-    name: 'Cyber Dark (Modo Nocturno)',
+  default: {
+    id: 'day',
+    name: 'Editorial Warm (Día / Cálido)',
+    bgPanel: '#FAF7F0',
+    bgCard: '#FFFFFF',
+    textPrimary: '#2B1B2E',
+    textSecondary: '#6B5B6E',
+    textMuted: '#9B8B9E',
+    border: '#EFE2C9',
+    borderStrong: '#D9C9A0',
+    accent: '#FF2E63',
+    secondary: '#00A8A0',
+  },
+  night: {
+    id: 'night',
+    name: 'Cyber Dark (Noche / Oscuro)',
     bgPanel: '#0F172A',
     bgCard: '#1E293B',
     textPrimary: '#F8FAFC',
     textSecondary: '#94A3B8',
+    textMuted: '#64748B',
     border: '#334155',
+    borderStrong: '#475569',
+    accent: '#FF2E63',
+    secondary: '#38BDF8',
+  },
+  dark: {
+    id: 'night',
+    name: 'Cyber Dark (Noche / Oscuro)',
+    bgPanel: '#0F172A',
+    bgCard: '#1E293B',
+    textPrimary: '#F8FAFC',
+    textSecondary: '#94A3B8',
+    textMuted: '#64748B',
+    border: '#334155',
+    borderStrong: '#475569',
+    accent: '#FF2E63',
+    secondary: '#38BDF8',
   },
   teal_ocean: {
     id: 'teal_ocean',
@@ -244,6 +278,11 @@ export const uiThemePresets = {
     bgCard: '#1D3557',
     textPrimary: '#F1FAEE',
     textSecondary: '#A8DADC',
+    textMuted: '#457B9D',
+    border: '#2A4365',
+    borderStrong: '#3182CE',
+    accent: '#E63946',
+    secondary: '#457B9D',
   },
 } as const;
 
@@ -251,6 +290,27 @@ export function getActiveUiTheme(themeId?: string) {
   if (themeId && themeId in uiThemePresets) {
     return uiThemePresets[themeId as keyof typeof uiThemePresets];
   }
-  return uiThemePresets.default;
+  return uiThemePresets.day;
+}
+
+/**
+ * Inyecta las variables CSS de tema en el elemento root de la aplicacion
+ */
+export function applyUiTheme(themeId?: string): void {
+  if (typeof document === 'undefined') return;
+  const theme = getActiveUiTheme(themeId);
+  const root = document.documentElement;
+
+  root.style.setProperty('--ui-bg-panel', theme.bgPanel);
+  root.style.setProperty('--ui-bg-card', theme.bgCard);
+  root.style.setProperty('--ui-text-primary', theme.textPrimary);
+  root.style.setProperty('--ui-text-secondary', theme.textSecondary);
+  root.style.setProperty('--ui-text-muted', theme.textMuted);
+  root.style.setProperty('--ui-border', theme.border);
+  root.style.setProperty('--ui-border-strong', theme.borderStrong);
+  root.style.setProperty('--ui-accent', theme.accent);
+  root.style.setProperty('--ui-secondary', theme.secondary);
+
+  root.setAttribute('data-ui-theme', theme.id);
 }
 

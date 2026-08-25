@@ -18,7 +18,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
       <div className={`flex items-center justify-between p-2.5 rounded-[12px] border transition ${
         isVisible 
           ? 'bg-white border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] shadow-sm' 
-          : 'bg-slate-200 border-slate-300 text-slate-500 opacity-75'
+          : 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-muted)] opacity-75'
       }`}>
         <span className={`${typeScale.sectionTitle} uppercase tracking-wide`} style={{ color: colorSystem.neutral.textPrimary }}>
           Datos Personales & Foto
@@ -29,7 +29,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
           className={`px-3 py-1 rounded-full text-[11px] font-medium transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
             isVisible
               ? 'bg-[var(--color-secondary-base)] text-white hover:bg-[var(--color-secondary-hover)]'
-              : 'bg-slate-400 text-white hover:bg-slate-500'
+              : 'bg-[var(--color-neutral-text-muted)] text-white hover:opacity-80'
           }`}
         >
           <span>{isVisible ? 'ACTIVADA' : 'DESACTIVADA'}</span>
@@ -38,7 +38,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
 
       {isVisible && (
         <div className="space-y-4">
-          <PanelSection icon={<User className="w-4 h-4 text-[var(--color-secondary-base)]" />} title="Información de Contacto">
+          <PanelSection icon={<User className="w-4 h-4 text-[var(--ui-secondary)]" />} title="Información de Contacto">
             <div className="space-y-3 pt-1">
               {/* Tarjeta Foto de Perfil */}
               <div

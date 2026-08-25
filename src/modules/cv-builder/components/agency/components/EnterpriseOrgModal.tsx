@@ -105,81 +105,81 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
       isOpen={isOpen}
       onClose={onClose}
       title={org?.name || 'Organización Enterprise'}
-      icon={<Building className="w-5 h-5 text-purple-400" />}
+      icon={<Building className="w-5 h-5 text-[var(--ui-accent-purple)]" />}
       size="4xl"
       footer={
-        <div className="w-full flex items-center justify-between text-xs text-slate-400">
-          <span>Organización id: <code className="text-purple-300">{org?.id || 'Enterprise'}</code></span>
-          <button onClick={onClose} className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-extrabold rounded-xl transition cursor-pointer">
+        <div className="w-full flex items-center justify-between text-xs text-white/60">
+          <span>Organización id: <code className="text-[var(--ui-accent-purple)]">{org?.id || 'Enterprise'}</code></span>
+          <button onClick={onClose} className="px-4 py-1.5 bg-white/10 hover:bg-white/20 text-white font-extrabold rounded-xl transition cursor-pointer">
             Cerrar
           </button>
         </div>
       }
     >
-      <div className="space-y-4 text-xs">
+      <div className="space-y-4 text-xs p-4 bg-[var(--ui-bg-dock)] text-white rounded-2xl border border-[var(--color-accent-purple)]/20">
         {/* Top Info Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-slate-950/40 rounded-2xl border border-purple-500/20">
-          <div className="p-3.5 bg-slate-900/80 rounded-xl border border-purple-500/20 flex items-center justify-between">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-black/40 rounded-2xl border border-[var(--color-accent-purple)]/20">
+          <div className="p-3.5 bg-black/30 rounded-xl border border-[var(--color-accent-purple)]/20 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Users className="w-5 h-5 text-purple-400" />
+              <Users className="w-5 h-5 text-[var(--color-accent-purple-bright)]" />
               <div>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Miembros de Equipo</p>
+                <p className="text-[10px] text-white/60 font-bold uppercase tracking-wider">Miembros de Equipo</p>
                 <p className="text-sm font-black text-white">{activeCount} / {maxMembers} Miembros</p>
               </div>
             </div>
-            <div className="w-16 bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-700">
+            <div className="w-16 bg-white/10 rounded-full h-2 overflow-hidden border border-white/10">
               <div 
-                className="bg-purple-500 h-full transition-all" 
+                className="bg-[var(--color-accent-purple)] h-full transition-all" 
                 style={{ width: `${Math.min((activeCount / maxMembers) * 100, 100)}%` }} 
               />
             </div>
           </div>
 
-          <div className="p-3.5 bg-slate-900/80 rounded-xl border border-purple-500/20 flex items-center justify-between">
+          <div className="p-3.5 bg-black/30 rounded-xl border border-[var(--color-accent-purple)]/20 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <HardDrive className="w-5 h-5 text-emerald-400" />
+              <HardDrive className="w-5 h-5 text-[var(--color-status-success-bright)]" />
               <div>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Almacenamiento Cloud</p>
-                <p className="text-sm font-black text-emerald-400">50 GB LEECV Cloud</p>
+                <p className="text-[10px] text-white/60 font-bold uppercase tracking-wider">Almacenamiento Cloud</p>
+                <p className="text-sm font-black text-[var(--color-status-success-bright)]">50 GB LEECV Cloud</p>
               </div>
             </div>
-            <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 font-bold">
+            <span className="text-[10px] px-2 py-0.5 rounded bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)] border border-[var(--color-status-success-base)]/30 font-bold">
               Exclusivo Enterprise
             </span>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-purple-500/20 px-2 pt-2 bg-slate-900/30 rounded-xl">
+        <div className="flex border-b border-white/10 px-2 pt-2 bg-black/30 rounded-xl">
           <button
             onClick={() => setActiveTab('team')}
             className={`px-4 py-2 text-xs font-bold transition border-b-2 flex items-center gap-2 cursor-pointer ${
               activeTab === 'team'
-                ? 'border-purple-400 text-white bg-purple-500/10 rounded-t-xl'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-[var(--color-accent-purple)] text-white bg-[var(--color-accent-purple)]/20 rounded-t-xl'
+                : 'border-transparent text-white/60 hover:text-white'
             }`}
           >
-            <Users className="w-3.5 h-3.5 text-purple-400" /> Integrantes ({members.length})
+            <Users className="w-3.5 h-3.5 text-white" /> Integrantes ({members.length})
           </button>
           <button
             onClick={() => setActiveTab('invite')}
             className={`px-4 py-2 text-xs font-bold transition border-b-2 flex items-center gap-2 cursor-pointer ${
               activeTab === 'invite'
-                ? `border-[var(--color-accent-base)] text-white bg-rose-500/10 rounded-t-xl`
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? `border-[var(--color-accent-base)] text-white bg-[var(--color-accent-base)]/20 rounded-t-xl`
+                : 'border-transparent text-white/60 hover:text-white'
             }`}
           >
-            <UserPlus className={`w-3.5 h-3.5 text-[var(--color-accent-base)]`} /> Invitar Miembro
+            <UserPlus className={`w-3.5 h-3.5 text-white`} /> Invitar Miembro
           </button>
           <button
             onClick={() => setActiveTab('accept')}
             className={`px-4 py-2 text-xs font-bold transition border-b-2 flex items-center gap-2 cursor-pointer ${
               activeTab === 'accept'
-                ? `border-[var(--color-secondary-base)] text-white bg-emerald-500/10 rounded-t-xl`
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? `border-[var(--color-secondary-base)] text-white bg-[var(--color-secondary-base)]/20 rounded-t-xl`
+                : 'border-transparent text-white/60 hover:text-white'
             }`}
           >
-            <Key className={`w-3.5 h-3.5 text-[var(--color-secondary-base)]`} /> Aceptar Invitación
+            <Key className={`w-3.5 h-3.5 text-white`} /> Aceptar Invitación
           </button>
         </div>
 
@@ -188,39 +188,39 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
           {activeTab === 'team' && (
             <div className="space-y-3">
               {members.length === 0 ? (
-                <div className="text-center py-8 text-slate-400 space-y-2">
-                  <Users className="w-8 h-8 mx-auto text-slate-500" />
+                <div className="text-center py-8 text-white/60 space-y-2">
+                  <Users className="w-8 h-8 mx-auto text-white/40" />
                   <p className="text-xs font-bold">No hay otros miembros invitados aún.</p>
-                  <p className="text-[11px] text-slate-500">Utiliza la pestaña "Invitar Miembro" para sumar colaboradores a tu equipo.</p>
+                  <p className="text-[11px] text-white/40">Utiliza la pestaña "Invitar Miembro" para sumar colaboradores a tu equipo.</p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   {members.map((member) => (
-                    <div key={member.id} className="p-3.5 bg-slate-900/90 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                    <div key={member.id} className="p-3.5 bg-[var(--ui-bg-dock)] rounded-xl border border-white/10 flex items-center justify-between text-xs">
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
-                          <Mail className="w-3.5 h-3.5 text-purple-400" />
+                          <Mail className="w-3.5 h-3.5 text-[var(--color-accent-purple-bright)]" />
                           <span className="font-bold text-white">{member.invited_email}</span>
                           <span className={`text-[10px] px-2 py-0.5 rounded font-extrabold ${
                             member.status === 'active' 
-                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
-                              : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                              ? 'bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)] border border-[var(--color-status-success-base)]/30' 
+                              : 'bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)] border border-[var(--color-status-warning-base)]/30'
                           }`}>
                             {member.status === 'active' ? '✅ Activo' : '⏳ Pendiente'}
                           </span>
                         </div>
                         {member.invitation_token && member.status === 'pending' && (
-                          <p className="text-[10px] text-slate-400 font-mono">
-                            Token de invitación: <code className="text-purple-300 bg-slate-950 px-1 py-0.5 rounded">{member.invitation_token}</code>
+                          <p className="text-[10px] text-white/60 font-mono">
+                            Token de invitación: <code className="text-[var(--color-accent-purple-bright)] bg-black/50 px-1 py-0.5 rounded">{member.invitation_token}</code>
                           </p>
                         )}
                       </div>
 
                       <div className="flex items-center gap-3">
-                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{member.role}</span>
+                        <span className="text-[11px] font-bold text-white/60 uppercase tracking-wider">{member.role}</span>
                         <button
                           onClick={() => handleRemoveMember(member)}
-                          className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition cursor-pointer"
+                          className="p-1.5 rounded-lg bg-[var(--color-status-danger-muted)] hover:opacity-90 text-[var(--color-status-danger-text)] transition cursor-pointer"
                           title="Remover integrante"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -236,23 +236,23 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
           {activeTab === 'invite' && (
             <form onSubmit={handleSendInvite} className="space-y-4 max-w-md mx-auto">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-300">Email del Colaborador</label>
+                <label className="text-xs font-bold text-white/80">Email del Colaborador</label>
                 <input
                   type="email"
                   required
                   placeholder="ejemplo@empresa.com"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-purple-500 transition"
+                  className="w-full bg-black/40 border border-white/20 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-[var(--color-accent-purple)] transition"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-300">Rol en el Equipo</label>
+                <label className="text-xs font-bold text-white/80">Rol en el Equipo</label>
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value as OrgRole)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-purple-500 transition cursor-pointer"
+                  className="w-full bg-black/40 border border-white/20 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-[var(--color-accent-purple)] transition cursor-pointer"
                 >
                   <option value="editor">Editor (Puede crear y editar candidatos)</option>
                   <option value="admin">Administrador (Puede editar e invitar otros usuarios)</option>
@@ -270,25 +270,25 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
 
           {activeTab === 'accept' && (
             <form onSubmit={handleAcceptToken} className="space-y-4 max-w-md mx-auto">
-              <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl flex items-start gap-2.5 text-xs text-blue-200">
-                <AlertCircle className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+              <div className="p-3 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 rounded-xl flex items-start gap-2.5 text-xs text-[var(--color-secondary-text)]">
+                <AlertCircle className="w-4 h-4 text-[var(--color-secondary-text)] flex-shrink-0 mt-0.5" />
                 <p className="text-[11px]">
                   Si te enviaron un token de invitación para unirte a una organización Enterprise, pégalo a continuación para activar tu acceso.
                 </p>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-300">Token de Invitación</label>
+                <label className="text-xs font-bold text-white/80">Token de Invitación</label>
                 <input
                   type="text"
                   required
                   placeholder="Pega el token aquí..."
                   value={invitationTokenInput}
                   onChange={(e) => setInvitationTokenInput(e.target.value)}
-                  className={`w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono outline-none focus:border-[var(--color-secondary-base)] transition`}
+                  className={`w-full bg-black/40 border border-white/20 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono outline-none focus:border-[var(--color-secondary-base)] transition`}
                 />
                 {invitationTokenInput.trim() && !validateFieldValue('token', invitationTokenInput).isValid && (
-                  <p className="text-[10px] text-amber-400 font-medium">
+                  <p className="text-[10px] text-[var(--color-accent-amber-bright)] font-medium">
                     {validateFieldValue('token', invitationTokenInput).helperMessage}
                   </p>
                 )}

@@ -72,16 +72,16 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
   };
 
   return (
-    <div className="space-y-5 p-5 bg-white rounded-2xl border border-slate-200">
+    <div className="space-y-5 p-5 bg-[var(--color-neutral-surface-muted)] rounded-2xl border border-[var(--color-neutral-border)]">
       {/* Tamaño de tarjeta */}
       <div>
-        <label className="block text-xs font-extrabold text-slate-700 mb-1.5 uppercase tracking-wide">
+        <label className="block text-xs font-extrabold text-[var(--color-neutral-text-primary)] mb-1.5 uppercase tracking-wide">
           Tamaño de la tarjeta
         </label>
         <select
           value={cardSizeId}
           onChange={(e) => setCardSizeId(e.target.value)}
-          className="w-full p-2.5 rounded-xl border border-slate-300 font-semibold text-slate-900 outline-none focus:border-rose-400"
+          className="w-full p-2.5 rounded-xl border border-[var(--color-neutral-border)] font-semibold text-[var(--color-neutral-text-primary)] outline-none focus:border-[var(--color-accent-base)] bg-white cursor-pointer"
         >
           {CARD_SIZE_OPTIONS.map(opt => (
             <option key={opt.id} value={opt.id}>{opt.label}</option>
@@ -91,19 +91,19 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
         {cardSizeId === 'personalizado' && (
           <div className="grid grid-cols-2 gap-2 mt-2">
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 mb-1">Ancho (mm)</label>
+              <label className="block text-[10px] font-bold text-[var(--color-neutral-text-secondary)] mb-1">Ancho (mm)</label>
               <input
                 type="number" min={20} max={200} value={customWidthMm}
                 onChange={(e) => setCustomWidthMm(Number(e.target.value))}
-                className="w-full p-2 rounded-lg border border-slate-300 font-bold text-slate-900"
+                className="w-full p-2 rounded-lg border border-[var(--color-neutral-border)] font-bold text-[var(--color-neutral-text-primary)] bg-white"
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 mb-1">Alto (mm)</label>
+              <label className="block text-[10px] font-bold text-[var(--color-neutral-text-secondary)] mb-1">Alto (mm)</label>
               <input
                 type="number" min={20} max={200} value={customHeightMm}
                 onChange={(e) => setCustomHeightMm(Number(e.target.value))}
-                className="w-full p-2 rounded-lg border border-slate-300 font-bold text-slate-900"
+                className="w-full p-2 rounded-lg border border-[var(--color-neutral-border)] font-bold text-[var(--color-neutral-text-primary)] bg-white"
               />
             </div>
           </div>
@@ -112,13 +112,13 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
 
       {/* Hoja física donde se auto-repite */}
       <div>
-        <label className="block text-xs font-extrabold text-slate-700 mb-1.5 uppercase tracking-wide">
+        <label className="block text-xs font-extrabold text-[var(--color-neutral-text-primary)] mb-1.5 uppercase tracking-wide">
           Hoja donde se va a imprimir
         </label>
         <select
           value={sheetSizeId}
           onChange={(e) => setSheetSizeId(e.target.value)}
-          className="w-full p-2.5 rounded-xl border border-slate-300 font-semibold text-slate-900 outline-none focus:border-rose-400"
+          className="w-full p-2.5 rounded-xl border border-[var(--color-neutral-border)] font-semibold text-[var(--color-neutral-text-primary)] outline-none focus:border-[var(--color-accent-base)] bg-white cursor-pointer"
         >
           {SHEET_SIZE_OPTIONS.map(p => (
             <option key={p.id} value={p.id}>{p.label}</option>
@@ -128,24 +128,24 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
 
       {/* Modo de margen de impresora — la pregunta clave que evita bordes cortados */}
       <div>
-        <label className="block text-xs font-extrabold text-slate-700 mb-1.5 uppercase tracking-wide">
+        <label className="block text-xs font-extrabold text-[var(--color-neutral-text-primary)] mb-1.5 uppercase tracking-wide">
           ¿Tu impresora imprime hasta el borde sin margen blanco?
         </label>
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={() => setPrinterMode('impresora_oficina')}
-            className={`p-3 rounded-xl border-2 text-left transition ${
+            className={`p-3 rounded-xl border-2 text-left transition cursor-pointer ${
               printerMode === 'impresora_oficina'
-                ? 'border-rose-400 bg-rose-50'
-                : 'border-slate-200 bg-slate-50 hover:border-slate-300'
+                ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30'
+                : 'border-[var(--color-neutral-border)] bg-white hover:border-[var(--color-accent-base)]'
             }`}
           >
             <div className="flex items-center gap-1.5 mb-1">
-              <Printer className="w-4 h-4 text-slate-700" />
-              <span className="text-xs font-black text-slate-900">No / no sé</span>
+              <Printer className="w-4 h-4 text-[var(--color-neutral-text-primary)]" />
+              <span className="text-xs font-black text-[var(--color-neutral-text-primary)]">No / no sé</span>
             </div>
-            <p className="text-[10px] text-slate-500 font-medium">
+            <p className="text-[10px] text-[var(--color-neutral-text-secondary)] font-medium">
               La mayoría de las impresoras hogareñas y de oficina — recomendado si tenés dudas.
             </p>
           </button>
@@ -153,17 +153,17 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
           <button
             type="button"
             onClick={() => setPrinterMode('sin_margen_borderless')}
-            className={`p-3 rounded-xl border-2 text-left transition ${
+            className={`p-3 rounded-xl border-2 text-left transition cursor-pointer ${
               printerMode === 'sin_margen_borderless'
-                ? 'border-rose-400 bg-rose-50'
-                : 'border-slate-200 bg-slate-50 hover:border-slate-300'
+                ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30'
+                : 'border-[var(--color-neutral-border)] bg-white hover:border-[var(--color-accent-base)]'
             }`}
           >
             <div className="flex items-center gap-1.5 mb-1">
-              <Printer className="w-4 h-4 text-slate-700" />
-              <span className="text-xs font-black text-slate-900">Sí, es borderless</span>
+              <Printer className="w-4 h-4 text-[var(--color-neutral-text-primary)]" />
+              <span className="text-xs font-black text-[var(--color-neutral-text-primary)]">Sí, es borderless</span>
             </div>
-            <p className="text-[10px] text-slate-500 font-medium">
+            <p className="text-[10px] text-[var(--color-neutral-text-secondary)] font-medium">
               Solo si tu impresora lo indica explícitamente en sus opciones de impresión.
             </p>
           </button>
@@ -171,15 +171,15 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
       </div>
 
       {/* Preview en vivo */}
-      <div className={`p-3.5 rounded-xl border ${preview.warning ? 'bg-amber-50 border-amber-300' : 'bg-emerald-50 border-emerald-200'}`}>
+      <div className="bg-[var(--ui-bg-dock)] border border-white/10 rounded-2xl p-4 space-y-3">
         {preview.warning ? (
           <div className="flex items-start gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-            <p className="text-xs font-bold text-amber-800">{preview.warning}</p>
+            <AlertTriangle className="w-4 h-4 text-[var(--color-accent-amber-bright)] flex-shrink-0 mt-0.5" />
+            <p className="text-xs font-bold text-[var(--color-accent-amber-bright)]">{preview.warning}</p>
           </div>
         ) : (
-          <p className="text-xs font-bold text-emerald-800">
-            Entran <span className="font-black">{preview.totalPerSheet} tarjetas</span> por hoja
+          <p className="text-xs font-bold text-[var(--color-secondary-bright)]">
+            Entran <span className="font-black text-white">{preview.totalPerSheet} tarjetas</span> por hoja
             ({preview.cols} columnas × {preview.rows} filas), con sangrado y marcas de corte incluidas.
           </p>
         )}
@@ -188,7 +188,7 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
       <button
         onClick={handleExport}
         disabled={isExporting || preview.totalPerSheet === 0}
-        className="w-full p-3 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-extrabold text-sm rounded-xl flex items-center justify-center gap-2 transition"
+        className="w-full p-3 bg-[var(--color-accent-purple)] hover:opacity-90 disabled:opacity-50 text-white font-extrabold text-sm rounded-xl flex items-center justify-center gap-2 transition cursor-pointer shadow-md"
       >
         <Download className="w-4 h-4" />
         {isExporting ? 'Generando PDF...' : 'Exportar hoja de tarjetas (frente + dorso)'}

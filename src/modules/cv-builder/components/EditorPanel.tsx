@@ -252,7 +252,7 @@ export default function EditorPanel({
       <div className={`flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl border mb-3 transition ${
         isVisible 
           ? 'bg-white border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] shadow-sm' 
-          : 'bg-slate-200 border-slate-300 text-slate-500 opacity-75'
+          : 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-muted)] opacity-75'
       }`}>
         <span className="text-xs font-black uppercase tracking-wide">
           {sectionTitle}
@@ -273,7 +273,7 @@ export default function EditorPanel({
             className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
               isVisible
                 ? 'bg-[var(--color-secondary-base)] text-white hover:bg-[var(--color-secondary-hover)]'
-                : 'bg-slate-400 text-white hover:bg-slate-500'
+                : 'bg-[var(--color-neutral-text-muted)] text-white hover:opacity-80'
             }`}
           >
             <span>{isVisible ? 'ACTIVADA' : 'DESACTIVADA'}</span>
@@ -426,7 +426,7 @@ export default function EditorPanel({
               <>
             {/* 1. Selector */}
             <div>
-              <label className="block text-xs font-black text-[var(--color-accent-base)] mb-1.5 uppercase tracking-wide">
+              <label className="block text-xs font-black text-[var(--color-accent-text)] mb-1.5 uppercase tracking-wide">
                 IDENTIFICA TU CERTIFICADO *
               </label>
               <select
@@ -503,8 +503,8 @@ export default function EditorPanel({
                 }}
                 className="w-full h-28 border-2 border-dashed border-[var(--color-secondary-base)] bg-white rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-[var(--color-secondary-muted)]/30 transition group shadow-sm"
               >
-                <Upload className="w-6 h-6 text-[var(--color-secondary-base)] mb-1 group-hover:scale-110 transition duration-300" />
-                <span className="font-black text-xs text-[var(--color-accent-base)] uppercase tracking-wider">CLIC AQUÍ</span>
+                <Upload className="w-6 h-6 text-[var(--color-secondary-text)] mb-1 group-hover:scale-110 transition duration-300" />
+                <span className="font-black text-xs text-[var(--color-accent-text)] uppercase tracking-wider">CLIC AQUÍ</span>
                 <span className="text-[10px] text-[var(--color-neutral-text-primary)] font-bold">Seleccionar archivo o foto de certificado</span>
               </div>
             )}
@@ -549,7 +549,7 @@ export default function EditorPanel({
                         className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-[var(--color-accent-amber-muted)] border border-[var(--color-accent-amber)] text-[var(--color-neutral-text-primary)] font-black text-[11px] hover:bg-[var(--color-accent-amber)] transition"
                         title="Girar imagen 90°"
                       >
-                        <RotateCw className="w-3.5 h-3.5 text-[var(--color-accent-base)]" />
+                        <RotateCw className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
                         <span>Girar ({cert.rotation || 0}°)</span>
                       </button>
 
@@ -570,7 +570,7 @@ export default function EditorPanel({
                             }
                           });
                         }}
-                        className="p-1.5 text-[var(--color-neutral-text-primary)] hover:text-red-600 transition"
+                        className="p-1.5 text-[var(--color-neutral-text-primary)] hover:text-[var(--color-status-danger-text)] transition"
                         title="Eliminar"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -639,7 +639,7 @@ export default function EditorPanel({
                         }
                       }));
                     }}
-                    className="flex items-center justify-center gap-1 mx-auto px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold rounded-lg transition"
+                    className="flex items-center justify-center gap-1 mx-auto px-3 py-1 bg-[var(--color-status-danger-muted)] hover:opacity-80 text-[var(--color-status-danger-text)] text-xs font-bold rounded-lg transition cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" /> Quitar Imagen de Firma
                   </button>
@@ -650,7 +650,7 @@ export default function EditorPanel({
 
               <button
                 onClick={onOpenSignature}
-                className="w-full flex items-center justify-center gap-2 py-2.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white text-xs font-black rounded-xl shadow-md transition"
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white text-xs font-black rounded-xl shadow-md transition cursor-pointer"
               >
                 <PenTool className="w-4 h-4" /> Abrir Tablero de Firma (Dibujar / Subir)
               </button>
@@ -663,9 +663,9 @@ export default function EditorPanel({
               <div>
                 <label className="block text-[11px] font-bold text-[var(--color-neutral-text-primary)] mb-1 flex items-center justify-between">
                   <span>Nombre del Firmante</span>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 font-extrabold">Automático</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-[var(--color-secondary-muted)] text-[var(--color-secondary-text)] font-extrabold">Automático</span>
                 </label>
-                <div className="w-full text-xs p-2.5 rounded-xl border border-[var(--color-neutral-border)] bg-slate-50 text-[var(--color-neutral-text-primary)] font-extrabold shadow-inner">
+                <div className="w-full text-xs p-2.5 rounded-xl border border-[var(--color-neutral-border)] bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] font-extrabold shadow-inner">
                   {`${cvData.personalInfo?.titlePrefix ? cvData.personalInfo.titlePrefix + ' ' : ''}${cvData.personalInfo?.givenNames || ''} ${cvData.personalInfo?.surname || ''}`.trim() || cvData.personalInfo?.fullName || 'Postulante'}
                 </div>
               </div>
@@ -702,7 +702,7 @@ export default function EditorPanel({
                         ))}
                       </select>
                     ) : (
-                      <div className="w-full text-xs p-2.5 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 font-bold">
+                      <div className="w-full text-xs p-2.5 rounded-xl border border-[var(--color-status-warning-base)]/30 bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)] font-bold">
                         ⚠️ No hay títulos agregados en la sección "Títulos Profesionales".
                       </div>
                     )}
@@ -811,7 +811,7 @@ export default function EditorPanel({
         {activeTab === 'nueva_seccion' && (
           <div className="space-y-6">
             {/* 1. SECCIONES PREDISEÑADAS CON 1 CLIC */}
-            <PanelSection icon={<Sparkles className="w-4 h-4 text-[var(--color-secondary-base)]" />} title="Secciones Prediseñadas">
+            <PanelSection icon={<Sparkles className="w-4 h-4 text-[var(--color-secondary-text)]" />} title="Secciones Prediseñadas">
               <div className="p-3.5 bg-white rounded-2xl border-2 border-[var(--color-neutral-border)] space-y-3 shadow-sm">
                 <p className="text-[11px] text-[var(--color-neutral-text-secondary)] font-medium leading-relaxed">
                   Haz clic en cualquiera de estas secciones para agregarla instantáneamente a tu currículum con sus campos listos para completar:
@@ -940,8 +940,8 @@ export default function EditorPanel({
                         }}
                         className={`p-2.5 rounded-xl border text-left flex flex-col justify-between transition cursor-pointer ${
                           isAlreadyAdded
-                            ? 'bg-teal-50 border-teal-300 text-teal-900'
-                            : 'bg-slate-50 border-slate-200 hover:border-[var(--color-accent-base)] hover:bg-white'
+                            ? 'bg-[var(--color-secondary-muted)] border-[var(--color-secondary-base)]/40 text-[var(--color-secondary-text)]'
+                            : 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] hover:border-[var(--color-accent-base)] hover:bg-white'
                         }`}
                       >
                         <div className="space-y-1">
@@ -949,7 +949,7 @@ export default function EditorPanel({
                           <p className="text-[10px] text-[var(--color-neutral-text-secondary)] font-medium leading-tight">{presetSec.desc}</p>
                         </div>
                         <span className={`text-[10px] font-black mt-2 self-end px-2 py-0.5 rounded ${
-                          isAlreadyAdded ? 'bg-teal-200 text-teal-900' : 'bg-[var(--color-accent-base)] text-white'
+                          isAlreadyAdded ? 'bg-[var(--color-secondary-base)] text-white' : 'bg-[var(--color-accent-base)] text-white'
                         }`}>
                           {isAlreadyAdded ? '✓ Activa (Editar)' : '+ Incorporar'}
                         </span>
@@ -963,10 +963,10 @@ export default function EditorPanel({
                     onClick={() => {
                       document.getElementById('custom-section-creator-form')?.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className="p-2.5 rounded-xl border-2 border-dashed border-[var(--color-accent-base)]/40 bg-pink-50/50 hover:bg-pink-100 text-left flex flex-col justify-between transition cursor-pointer"
+                    className="p-2.5 rounded-xl border-2 border-dashed border-[var(--color-accent-base)]/40 bg-[var(--color-accent-rose-muted)]/30 hover:bg-[var(--color-accent-rose-muted)]/50 text-left flex flex-col justify-between transition cursor-pointer"
                   >
                     <div className="space-y-1">
-                      <span className="text-xs font-black text-[var(--color-accent-base)] flex items-center gap-1">
+                      <span className="text-xs font-black text-[var(--color-accent-text)] flex items-center gap-1">
                         <Plus className="w-3.5 h-3.5" /> Sección a Medida
                       </span>
                       <p className="text-[10px] text-[var(--color-neutral-text-secondary)] font-medium leading-tight">
@@ -982,7 +982,7 @@ export default function EditorPanel({
             </PanelSection>
 
             {/* 2. CREADOR DE SECCIÓN A MEDIDA */}
-            <PanelSection icon={<Plus className="w-4 h-4 text-[var(--color-accent-base)]" />} title="Sección a Medida">
+            <PanelSection icon={<Plus className="w-4 h-4 text-[var(--color-accent-text)]" />} title="Sección a Medida">
               <div id="custom-section-creator-form" className="p-3.5 bg-white rounded-2xl border-2 border-[var(--color-neutral-border)] space-y-4 shadow-sm">
 
                 <div>
@@ -999,7 +999,7 @@ export default function EditorPanel({
                   <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] mb-1.5">
                     Seleccionar qué campos tendrá cada registro de esta sección:
                   </label>
-                  <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200">
+                  <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 bg-[var(--color-neutral-surface-muted)] rounded-xl border border-[var(--color-neutral-border)]">
                     {Object.values(FIELD_CATALOG).map((f) => {
                       const isChecked = selectedFields.includes(f.id);
                       return (
@@ -1018,7 +1018,7 @@ export default function EditorPanel({
                                 setSelectedFields(prev => [...prev, f.id]);
                               }
                             }}
-                            className="rounded border-slate-300 text-[var(--color-accent-base)] focus:ring-[var(--color-accent-base)]"
+                            className="rounded border-[var(--color-neutral-border)] text-[var(--color-accent-text)] focus:ring-[var(--color-accent-base)]"
                           />
                           <span>{f.label}</span>
                         </label>
@@ -1077,8 +1077,8 @@ export default function EditorPanel({
                   </h4>
 
                   {cvData.customSections.map((cs: any) => (
-                    <div key={cs.id} className="p-3 bg-slate-50 rounded-2xl border-2 border-[var(--color-neutral-border)] flex items-center justify-between">
-                      <span className="text-xs font-black text-[var(--color-accent-base)] uppercase">
+                    <div key={cs.id} className="p-3 bg-[var(--color-neutral-surface-muted)] rounded-2xl border-2 border-[var(--color-neutral-border)] flex items-center justify-between">
+                      <span className="text-xs font-black text-[var(--color-accent-text)] uppercase">
                         {cs.titleText}
                       </span>
                       <button
@@ -1086,7 +1086,7 @@ export default function EditorPanel({
                         onClick={() => {
                           if (typeof setActiveTab === 'function') setActiveTab(cs.id);
                         }}
-                        className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer"
+                        className="px-3 py-1 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer"
                       >
                         Editar Registros →
                       </button>
@@ -1104,14 +1104,14 @@ export default function EditorPanel({
         {activeTab === 'guardados' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b pb-2 border-[var(--color-neutral-border)]">
-              <h3 className="text-xs font-extrabold uppercase text-[var(--color-accent-base)] flex items-center gap-1.5">
-                <FolderOpen className="w-4 h-4 text-[var(--color-secondary-base)]" /> Abrir Mis Documentos Guardados
+              <h3 className="text-xs font-extrabold uppercase text-[var(--color-accent-text)] flex items-center gap-1.5">
+                <FolderOpen className="w-4 h-4 text-[var(--color-secondary-text)]" /> Abrir Mis Documentos Guardados
               </h3>
 
               <button
                 onClick={handleSaveFromPanel}
                 disabled={isSavingFromPanel}
-                className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1 cursor-pointer"
+                className="px-3 py-1.5 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1 cursor-pointer"
               >
                 <Save className="w-3.5 h-3.5" />
                 <span>{isSavingFromPanel ? 'Guardando...' : 'Guardar Actual'}</span>
@@ -1127,7 +1127,7 @@ export default function EditorPanel({
                 savedList.map((item) => (
                   <div
                     key={item.id}
-                    className="p-3.5 rounded-xl border border-[var(--color-neutral-border)] bg-[var(--color-neutral-surface-warm)]/50  hover:border-purple-500 transition flex items-center justify-between gap-2"
+                    className="p-3.5 rounded-xl border border-[var(--color-neutral-border)] bg-[var(--color-neutral-surface-warm)]/50  hover:border-[var(--color-accent-purple)] transition flex items-center justify-between gap-2"
                   >
                     <div className="space-y-0.5 min-w-0">
                       <h4 className="text-xs font-black text-[var(--color-neutral-text-primary)] font-black  truncate">
@@ -1142,14 +1142,14 @@ export default function EditorPanel({
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       <button
                         onClick={() => handleOpenSavedFromPanel(item.id)}
-                        className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 text-white font-black text-[11px] rounded-lg shadow transition flex items-center gap-1"
+                        className="px-3 py-1.5 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-black text-[11px] rounded-lg shadow transition flex items-center gap-1 cursor-pointer"
                       >
                         <FolderOpen className="w-3.5 h-3.5" /> Abrir
                       </button>
 
                       <button
                         onClick={() => handleDeleteSavedFromPanel(item.id, item.candidate_name || item.title)}
-                        className="p-1.5 text-[var(--color-neutral-text-primary)] font-medium hover:text-red-500 rounded-lg hover:bg-[var(--color-neutral-border)]  transition"
+                        className="p-1.5 text-[var(--color-neutral-text-primary)] font-medium hover:text-[var(--color-status-danger-text)] rounded-lg hover:bg-[var(--color-neutral-border)] transition cursor-pointer"
                         title="Eliminar"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -1253,13 +1253,13 @@ export default function EditorPanel({
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-black text-[var(--color-neutral-text-primary)]">{styleOpt.title}</span>
-                          <span className="text-[9px] px-2 py-0.5 rounded bg-purple-100 text-purple-700 font-extrabold">
+                          <span className="text-[9px] px-2 py-0.5 rounded bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)] font-extrabold">
                             {styleOpt.badge}
                           </span>
                         </div>
                         <p className="text-[10px] text-[var(--color-neutral-text-primary)] font-medium leading-snug">{styleOpt.desc}</p>
                       </div>
-                      {isSelected && <Check className="w-4 h-4 text-[var(--color-secondary-base)] flex-shrink-0 mt-1" />}
+                      {isSelected && <Check className="w-4 h-4 text-[var(--color-secondary-text)] flex-shrink-0 mt-1" />}
                     </button>
                   );
                 })}
@@ -1283,7 +1283,7 @@ export default function EditorPanel({
                     >
                       <div className="flex items-center justify-between mb-1.5">
                         <span className="text-[11px] font-bold text-[var(--color-neutral-text-primary)] truncate pr-1">{preset.name}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-[var(--color-secondary-base)] flex-shrink-0" />}
+                        {isSelected && <Check className="w-3.5 h-3.5 text-[var(--color-secondary-text)] flex-shrink-0" />}
                       </div>
                       <div className="flex gap-1.5 items-center">
                         <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.palette.primary }} />
@@ -1308,7 +1308,7 @@ export default function EditorPanel({
               <div className={`flex items-center justify-between p-3 rounded-xl border transition ${
                 cvData.showCoverPage !== false 
                   ? 'bg-white border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] shadow-sm' 
-                  : 'bg-slate-200 border-slate-300 text-slate-500 opacity-75'
+                  : 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-muted)] opacity-75'
               }`}>
                 <span className="text-xs font-bold uppercase tracking-wide">
                   Portada de Impacto (Página 1)
@@ -1319,7 +1319,7 @@ export default function EditorPanel({
                   className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
                     cvData.showCoverPage !== false
                       ? 'bg-[var(--color-secondary-base)] text-white hover:bg-[var(--color-secondary-hover)]'
-                      : 'bg-slate-400 text-white hover:bg-slate-500'
+                      : 'bg-[var(--color-neutral-text-muted)] text-white hover:opacity-80'
                   }`}
                 >
                   <span>{cvData.showCoverPage !== false ? 'ACTIVADA' : 'DESACTIVADA'}</span>
@@ -1391,7 +1391,7 @@ export default function EditorPanel({
                               roles: (prev.roles || []).filter((_: any, i: number) => i !== idx)
                             }));
                           }}
-                          className="p-1 text-red-600 hover:bg-red-50 rounded transition cursor-pointer"
+                          className="p-1 text-[var(--color-status-danger-text)] hover:bg-[var(--color-status-danger-muted)] rounded transition cursor-pointer"
                           title="Eliminar de portada"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -1512,12 +1512,12 @@ export default function EditorPanel({
                             <div className="flex items-center gap-1.5">
                               <span className="font-extrabold text-[var(--color-neutral-text-primary)]">{sec.label}</span>
                               {secPos > 0 && (currentVal === 'secundaria' || currentVal === 'ambas') && (
-                                <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-rose-100 text-rose-800 font-black">
+                                <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[var(--color-accent-rose-muted)] text-[var(--color-accent-text)] font-black">
                                   Sec #{secPos}
                                 </span>
                               )}
                               {primPos > 0 && (currentVal === 'primaria' || currentVal === 'ambas') && (
-                                <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-teal-100 text-teal-800 font-black">
+                                <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[var(--color-secondary-muted)] text-[var(--color-secondary-text)] font-black">
                                   Prim #{primPos}
                                 </span>
                               )}
@@ -1526,42 +1526,45 @@ export default function EditorPanel({
                               <button
                                 type="button"
                                 onClick={() => setColumn('secundaria')}
-                                className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
-                                  currentVal === 'secundaria' ? 'bg-[var(--color-accent-base)] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                }`}
+                                className={currentVal === 'secundaria'
+                                  ? 'px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer bg-[var(--color-accent-hover)] text-white shadow-sm'
+                                  : 'px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50'
+                                }
                               >
                                 Secundaria
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setColumn('primaria')}
-                                className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
-                                  currentVal === 'primaria' ? 'bg-[var(--color-secondary-base)] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                }`}
+                                className={currentVal === 'primaria'
+                                  ? 'px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer bg-[var(--color-secondary-base)] text-white shadow-sm'
+                                  : 'px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50'
+                                }
                               >
                                 Primaria
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setColumn('ambas')}
-                                className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
-                                  currentVal === 'ambas' ? 'bg-[var(--color-accent-purple)] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                }`}
+                                className={currentVal === 'ambas'
+                                  ? 'px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer bg-[var(--color-accent-purple-hover)] text-white shadow-sm'
+                                  : 'px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50'
+                                }
                               >
                                 Ambas
                               </button>
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-end gap-3 text-[10px] text-slate-500 pt-1 border-t border-slate-100">
+                          <div className="flex items-center justify-end gap-3 text-[10px] text-white/60 pt-1 border-t border-white/10">
                             {(currentVal === 'secundaria' || currentVal === 'ambas') && (
-                              <div className="flex items-center gap-1 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-200">
-                                <span className="font-bold text-rose-700">Sec:</span>
+                              <div className="flex items-center gap-1 bg-[var(--color-accent-muted)] px-2 py-0.5 rounded-lg border border-[var(--color-accent-base)]/30">
+                                <span className="font-bold text-[var(--color-accent-text)]">Sec:</span>
                                 <button
                                   type="button"
                                   onClick={() => moveSection('secundaria', 'up')}
                                   disabled={secOrder.indexOf(sec.id) <= 0}
-                                  className="px-1 py-0.5 hover:bg-rose-200 rounded font-black disabled:opacity-30 cursor-pointer"
+                                  className="px-1 py-0.5 hover:opacity-80 rounded font-black disabled:opacity-30 cursor-pointer"
                                 >
                                   ⬆
                                 </button>
@@ -1569,7 +1572,7 @@ export default function EditorPanel({
                                   type="button"
                                   onClick={() => moveSection('secundaria', 'down')}
                                   disabled={secOrder.indexOf(sec.id) === -1 || secOrder.indexOf(sec.id) >= secOrder.length - 1}
-                                  className="px-1 py-0.5 hover:bg-rose-200 rounded font-black disabled:opacity-30 cursor-pointer"
+                                  className="px-1 py-0.5 hover:opacity-80 rounded font-black disabled:opacity-30 cursor-pointer"
                                 >
                                   ⬇
                                 </button>
@@ -1577,13 +1580,13 @@ export default function EditorPanel({
                             )}
 
                             {(currentVal === 'primaria' || currentVal === 'ambas') && (
-                              <div className="flex items-center gap-1 bg-teal-50 px-2 py-0.5 rounded-lg border border-teal-200">
-                                <span className="font-bold text-teal-700">Prim:</span>
+                              <div className="flex items-center gap-1 bg-[var(--color-secondary-muted)] px-2 py-0.5 rounded-lg border border-[var(--color-secondary-base)]/30">
+                                <span className="font-bold text-[var(--color-secondary-text)]">Prim:</span>
                                 <button
                                   type="button"
                                   onClick={() => moveSection('primaria', 'up')}
                                   disabled={primOrder.indexOf(sec.id) <= 0}
-                                  className="px-1 py-0.5 hover:bg-teal-200 rounded font-black disabled:opacity-30 cursor-pointer"
+                                  className="px-1 py-0.5 hover:opacity-80 rounded font-black disabled:opacity-30 cursor-pointer"
                                 >
                                   ⬆
                                 </button>
@@ -1591,7 +1594,7 @@ export default function EditorPanel({
                                   type="button"
                                   onClick={() => moveSection('primaria', 'down')}
                                   disabled={primOrder.indexOf(sec.id) === -1 || primOrder.indexOf(sec.id) >= primOrder.length - 1}
-                                  className="px-1 py-0.5 hover:bg-teal-200 rounded font-black disabled:opacity-30 cursor-pointer"
+                                  className="px-1 py-0.5 hover:opacity-80 rounded font-black disabled:opacity-30 cursor-pointer"
                                 >
                                   ⬇
                                 </button>

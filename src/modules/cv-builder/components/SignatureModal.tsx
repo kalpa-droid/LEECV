@@ -202,14 +202,14 @@ export default function SignatureModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Tablero de Firma Digital"
-      icon={<PenTool className="w-5 h-5 text-amber-400" />}
+      icon={<PenTool className="w-5 h-5 text-[var(--ui-warning)]" />}
       size="xl"
       footer={
         <div className="w-full flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-black text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-xl transition cursor-pointer"
+            className="px-4 py-2 text-xs font-black text-white/80 bg-white/10 hover:bg-white/20 rounded-xl transition cursor-pointer"
           >
             Cancelar
           </button>
@@ -223,16 +223,16 @@ export default function SignatureModal({
         </div>
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-4 bg-[var(--ui-bg-dock)] p-4 rounded-2xl text-white">
         {/* Mode Selector Tabs */}
-        <div className="flex bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+        <div className="flex bg-black/40 p-1.5 rounded-xl border border-white/10">
           <button
             type="button"
             onClick={() => setActiveTab('draw')}
             className={`flex-1 py-2 text-xs font-black rounded-lg flex items-center justify-center gap-2 transition cursor-pointer ${
               activeTab === 'draw'
-                ? 'bg-purple-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-[var(--color-accent-purple)] text-white shadow-md'
+                : 'text-white/60 hover:text-white'
             }`}
           >
             <PenTool className="w-4 h-4" /> Dibujar Firma (Táctil/Mouse)
@@ -242,8 +242,8 @@ export default function SignatureModal({
             onClick={() => setActiveTab('upload')}
             className={`flex-1 py-2 text-xs font-black rounded-lg flex items-center justify-center gap-2 transition cursor-pointer ${
               activeTab === 'upload'
-                ? 'bg-purple-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-[var(--color-accent-purple)] text-white shadow-md'
+                : 'text-white/60 hover:text-white'
             }`}
           >
             <Upload className="w-4 h-4" /> Subir Foto de Firma
@@ -253,29 +253,27 @@ export default function SignatureModal({
         {activeTab === 'draw' ? (
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className={`text-xs font-black text-[var(--color-accent-base)] uppercase`}>Dibuje su firma en el recuadro</span>
+              <span className={`text-xs font-black text-[var(--color-accent-amber-bright)] uppercase`}>Dibuje su firma en el recuadro</span>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-black text-slate-300">Color:</span>
+                <span className="text-xs font-black text-white/80">Color:</span>
                 <input 
-                  type="color"
-                  value={strokeColor}
-                  onChange={(e) => setStrokeColor(e.target.value)}
-                  className="w-6 h-6 rounded cursor-pointer border border-slate-700"
+                  type="color" 
+                  value={strokeColor} 
+                  onChange={(e) => setStrokeColor(e.target.value)} 
+                  className="w-6 h-6 rounded cursor-pointer border border-white/20 bg-transparent" 
                 />
-                <span className="text-xs font-black text-slate-300 ml-2">Grosor:</span>
-                <input 
-                  type="range"
-                  min="1"
-                  max="8"
-                  value={strokeWidth}
-                  onChange={(e) => setStrokeWidth(parseInt(e.target.value))}
-                  className="w-20 accent-amber-500"
-                />
+                <button
+                  type="button"
+                  onClick={clearCanvas}
+                  className="px-2.5 py-1 text-[11px] font-black text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg transition cursor-pointer flex items-center gap-1 ml-2"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" /> Limpiar Trazo
+                </button>
               </div>
             </div>
 
-            <div className="relative border-2 border-slate-700 rounded-2xl overflow-hidden shadow-inner bg-white">
-              <canvas 
+            <div className="relative border-2 border-white/10 rounded-2xl overflow-hidden bg-white shadow-inner">
+              <canvas
                 ref={canvasRef}
                 width={500}
                 height={180}
@@ -286,15 +284,8 @@ export default function SignatureModal({
                 onTouchStart={startDrawing}
                 onTouchMove={draw}
                 onTouchEnd={stopDrawing}
-                className="w-full h-44 touch-none cursor-crosshair bg-white"
+                className="w-full h-44 touch-none cursor-crosshair"
               />
-              <button
-                type="button"
-                onClick={clearCanvas}
-                className="absolute bottom-2 right-2 flex items-center gap-1 px-3 py-1.5 bg-amber-500/20 border border-amber-500/40 rounded-xl text-xs font-black text-amber-300 hover:bg-amber-500/30 transition shadow-sm cursor-pointer"
-              >
-                <RotateCcw className="w-3.5 h-3.5" /> Limpiar
-              </button>
             </div>
           </div>
         ) : (
@@ -302,14 +293,14 @@ export default function SignatureModal({
             {!uploadedImageSrc ? (
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className={`w-full h-44 border-2 border-dashed border-[var(--color-secondary-base)] bg-slate-950/60 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 transition group`}
+                className={`w-full h-44 border-2 border-dashed border-[var(--color-secondary-base)] bg-black/40 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-black/60 transition group`}
               >
-                <Upload className={`w-8 h-8 text-[var(--color-secondary-base)] mb-2 group-hover:scale-110 transition duration-300`} />
+                <Upload className={`w-8 h-8 text-[var(--color-secondary-bright)] mb-2 group-hover:scale-110 transition duration-300`} />
                 <span className="font-black text-xs text-white">Subir imagen de la firma (JPG, PNG, WEBP)</span>
               </div>
             ) : (
               <div className="space-y-3">
-                <div className="relative border-2 border-slate-800 rounded-2xl p-4 flex items-center justify-center bg-white min-h-36">
+                <div className="relative border-2 border-white/10 rounded-2xl p-4 flex items-center justify-center bg-white min-h-36">
                   <img 
                     src={getProcessedUploadedSignature()} 
                     alt="Firma cargada" 
@@ -317,19 +308,19 @@ export default function SignatureModal({
                   />
                 </div>
                 <div className="flex items-center justify-between text-xs">
-                  <label className="flex items-center gap-2 cursor-pointer text-slate-200 font-black">
+                  <label className="flex items-center gap-2 cursor-pointer text-white/90 font-black">
                     <input 
                       type="checkbox"
                       checked={removeBgContrast}
                       onChange={(e) => setRemoveBgContrast(e.target.checked)}
-                      className="rounded accent-purple-500"
+                      className="rounded accent-[var(--color-accent-purple)]"
                     />
-                    <Sparkles className="w-3.5 h-3.5 text-purple-400" /> Eliminar fondo blanco automáticamente
+                    <Sparkles className="w-3.5 h-3.5 text-[var(--color-accent-purple-bright)]" /> Eliminar fondo blanco automáticamente
                   </label>
                   <button 
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className={`text-[var(--color-secondary-base)] font-black hover:underline cursor-pointer`}
+                    className={`text-[var(--color-secondary-bright)] font-black hover:underline cursor-pointer`}
                   >
                     Cambiar foto
                   </button>
@@ -347,23 +338,23 @@ export default function SignatureModal({
         )}
 
         {/* Signer Details Form */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3 border-t border-slate-800">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3 border-t border-white/10">
           <div>
-            <label className="block text-xs font-black text-slate-300 mb-1">Nombre del Firmante</label>
+            <label className="block text-xs font-black text-white/80 mb-1">Nombre del Firmante</label>
             <input 
               type="text"
               value={signerName}
               onChange={(e) => setSignerName(e.target.value)}
-              className="w-full text-xs p-2.5 rounded-xl border border-slate-700 bg-slate-900 text-white font-bold outline-none focus:border-purple-500 transition"
+              className="w-full text-xs p-2.5 rounded-xl border border-white/20 bg-black/40 text-white font-bold outline-none focus:border-[var(--color-accent-purple)] transition"
             />
           </div>
           <div>
-            <label className="block text-xs font-black text-slate-300 mb-1">Lugar y Fecha</label>
+            <label className="block text-xs font-black text-white/80 mb-1">Lugar y Fecha</label>
             <input 
               type="text"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full text-xs p-2.5 rounded-xl border border-slate-700 bg-slate-900 text-white font-bold outline-none focus:border-purple-500 transition"
+              className="w-full text-xs p-2.5 rounded-xl border border-white/20 bg-black/40 text-white font-bold outline-none focus:border-[var(--color-accent-purple)] transition"
             />
           </div>
         </div>

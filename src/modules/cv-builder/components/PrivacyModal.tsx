@@ -16,11 +16,11 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
       isOpen={isOpen}
       onClose={onClose}
       title="Política de Privacidad & Términos de Servicio"
-      icon={<Shield className="w-5 h-5 text-purple-400" />}
+      icon={<Shield className="w-5 h-5 text-[var(--ui-accent-purple)]" />}
       size="4xl"
       footer={
         <div className="w-full flex items-center justify-between">
-          <span className="text-[10px] text-slate-400">Última actualización: Agosto 2026 — LEECV Inc.</span>
+          <span className="text-[10px] text-white/60">Última actualización: Agosto 2026 — LEECV Inc.</span>
           <button
             onClick={onClose}
             className={`px-4 py-1.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white font-extrabold text-xs rounded-xl transition cursor-pointer`}
@@ -30,15 +30,15 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
         </div>
       }
     >
-      <div className="space-y-4 text-xs text-slate-300 leading-relaxed font-normal">
+      <div className="space-y-4 text-xs text-white/80 leading-relaxed font-normal">
         {/* Tab Selector */}
-        <div className="flex border-b border-purple-500/20 bg-slate-950/40 p-1 rounded-xl mb-4">
+        <div className="flex border-b border-white/10 bg-black/40 p-1 rounded-xl mb-4">
           <button
             onClick={() => setActiveTab('privacy')}
             className={`px-4 py-2 text-xs font-bold transition flex-1 flex items-center justify-center gap-2 rounded-lg cursor-pointer ${
               activeTab === 'privacy'
-                ? 'bg-purple-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-[var(--color-accent-purple)] text-white shadow-md'
+                : 'text-white/60 hover:text-white'
             }`}
           >
             <Lock className="w-3.5 h-3.5" /> Política de Privacidad
@@ -47,8 +47,8 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
             onClick={() => setActiveTab('terms')}
             className={`px-4 py-2 text-xs font-bold transition flex-1 flex items-center justify-center gap-2 rounded-lg cursor-pointer ${
               activeTab === 'terms'
-                ? 'bg-emerald-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-[var(--color-status-success-base)] text-white shadow-md'
+                : 'text-white/60 hover:text-white'
             }`}
           >
             <FileText className="w-3.5 h-3.5" /> Términos de Uso y Servicio
@@ -57,9 +57,9 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
 
         {activeTab === 'privacy' ? (
           <div className="space-y-4">
-            <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-xl flex items-start gap-3">
-              <Database className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
-              <p className="text-[11px] text-purple-200">
+            <div className="p-3 bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/30 rounded-xl flex items-start gap-3">
+              <Database className="w-5 h-5 text-[var(--color-accent-purple-text)] flex-shrink-0 mt-0.5" />
+              <p className="text-[11px] text-[var(--color-accent-purple-text)]">
                 LEECV respeta estrictamente tu privacidad. Todos tus datos personales, currículums, fotografías y certificados son de tu exclusiva propiedad y están protegidos por encriptación en tránsito y en reposo (RLS en Supabase).
               </p>
             </div>
@@ -73,7 +73,7 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
             <p>
               Al conectar tu cuenta de Google Drive para el guardado de respaldos, solicitamos únicamente el permiso acotado <code>https://www.googleapis.com/auth/drive.file</code>. 
             </p>
-            <ul className="list-disc pl-5 space-y-1 text-slate-300">
+            <ul className="list-disc pl-5 space-y-1 text-white/80">
               <li>LEECV solo lee y escribe archivos creados por nuestra propia aplicación dentro de la carpeta dedicada <code>LEECV</code>.</li>
               <li>Nunca accedemos, leemos ni modificamos otros archivos personales de tu Google Drive.</li>
               <li>Los tokens de refresco se almacenan en servidores seguros con cifrado de nivel bancario y nunca son expuestos en el navegador.</li>
@@ -91,9 +91,9 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-start gap-3">
-              <Server className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-              <p className="text-[11px] text-emerald-200">
+            <div className="p-3 bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/30 rounded-xl flex items-start gap-3">
+              <Server className="w-5 h-5 text-[var(--color-status-success-text)] flex-shrink-0 mt-0.5" />
+              <p className="text-[11px] text-[var(--color-status-success-text)]">
                 Términos y condiciones de prestación del servicio de maquetación, almacenamiento en la nube y licencias Premium/Enterprise de LEECV.
               </p>
             </div>

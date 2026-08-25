@@ -6,8 +6,8 @@
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text not null,
-  role text not null default 'user' check (role in ('user', 'admin')),
-  plan text not null default 'free' check (plan in ('free', 'pro', 'enterprise')),
+  role text not null default 'user',
+  plan text not null default 'free',
   plan_vence timestamptz,
   premium_activo boolean not null default false,
   premium_vence timestamptz,
@@ -18,6 +18,12 @@ create table if not exists public.profiles (
   created_at timestamptz not null default now()
 );
 
+alter table public.profiles add column if not exists role text not null default 'user';
+alter table public.profiles add column if not exists plan text not null default 'free';
+alter table public.profiles add column if not exists plan_vence timestamptz;
+alter table public.profiles add column if not exists premium_activo boolean not null default false;
+alter table public.profiles add column if not exists premium_vence timestamptz;
+alter table public.profiles add column if not exists metodo_pago text;
 alter table public.profiles add column if not exists drive_connected boolean not null default false;
 alter table public.profiles add column if not exists drive_quota_percent integer;
 alter table public.profiles add column if not exists drive_last_checked_at timestamptz;
@@ -107,7 +113,8 @@ create trigger on_auth_user_created
 create or replace function public.protect_privileged_columns()
 returns trigger as $$
 begin
-  if public.is_admin(auth.uid()) then
+  -- Si la consulta se ejecuta desde la consola SQL de Supabase (auth.uid() es null) o es admin, permitir
+  if auth.uid() is null or public.is_admin(auth.uid()) then
     return new;
   end if;
 

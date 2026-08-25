@@ -83,14 +83,14 @@ export default function Navbar({
             className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-white bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] border border-[var(--color-accent-rose-muted)]/30 transition shadow-md shadow-[var(--color-accent-base)]/20 cursor-pointer whitespace-nowrap active:scale-95"
             title="Iniciar un nuevo currículum en blanco"
           >
-            <FilePlus className="w-3.5 h-3.5 text-[var(--color-accent-rose-muted)] flex-shrink-0" />
+            <FilePlus className="w-3.5 h-3.5 text-white flex-shrink-0" />
             <span>Nuevo</span>
           </button>
 
           {/* 2. ABRIR */}
           <button
             onClick={handleOpenSavedClick}
-            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-[var(--color-secondary-muted)] bg-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-hover)] border border-[var(--color-secondary-base)]/40 transition shadow-md shadow-[var(--color-secondary-base)]/20 cursor-pointer whitespace-nowrap active:scale-95"
+            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-white bg-[var(--color-secondary-hover-dark)] hover:opacity-90 border border-[var(--color-secondary-base)]/40 transition shadow-md shadow-[var(--color-secondary-base)]/20 cursor-pointer whitespace-nowrap active:scale-95"
             title="Abrir borradores guardados, importar JSON o sincronizar nube"
           >
             <FolderOpen className="w-3.5 h-3.5 text-white flex-shrink-0" />
@@ -101,7 +101,7 @@ export default function Navbar({
           <button
             onClick={handleSaveClick}
             disabled={isSaving}
-            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-[var(--color-accent-purple-light)] bg-[var(--color-accent-purple)] hover:bg-[var(--color-accent-purple-hover)] border border-[var(--color-accent-purple)]/40 transition disabled:opacity-50 shadow-md shadow-[var(--color-accent-purple)]/20 cursor-pointer whitespace-nowrap active:scale-95"
+            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-white bg-[var(--color-accent-purple-hover)] hover:opacity-90 border border-[var(--color-accent-purple)]/40 transition disabled:opacity-50 shadow-md shadow-[var(--color-accent-purple)]/20 cursor-pointer whitespace-nowrap active:scale-95"
             title="Guardar currículum o descargar copia JSON de respaldo"
           >
             <Save className="w-3.5 h-3.5 text-white flex-shrink-0" />
@@ -112,10 +112,10 @@ export default function Navbar({
           {onOpenAtsCheck && (
             <button
               onClick={onOpenAtsCheck}
-              className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-amber-200 bg-amber-950/80 hover:bg-amber-900/90 border border-amber-600/50 transition shadow-md cursor-pointer whitespace-nowrap active:scale-95"
+              className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-[var(--color-status-warning-text)] bg-[var(--color-status-warning-muted)]/80 hover:bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/50 transition shadow-md cursor-pointer whitespace-nowrap active:scale-95"
               title="Auditoría de lectura predictiva para ATS"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+              <Sparkles className="w-3.5 h-3.5 text-[var(--color-status-warning-text)] flex-shrink-0" />
               <span>ATS</span>
             </button>
           )}
@@ -123,10 +123,10 @@ export default function Navbar({
           {/* 5. PDF */}
           <button
             onClick={onPrint}
-            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-[var(--color-accent-amber)] hover:bg-[var(--color-accent-amber-hover)] text-[var(--color-neutral-text-primary)] font-black text-xs shadow-lg shadow-[var(--color-accent-amber)]/30 transition active:scale-95 border border-[var(--color-accent-amber-hover)] cursor-pointer whitespace-nowrap"
+            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-[var(--color-accent-amber)] hover:bg-[var(--color-accent-amber-hover)] text-black font-black text-xs shadow-lg shadow-[var(--color-accent-amber)]/30 transition active:scale-95 border border-[var(--color-accent-amber-hover)] cursor-pointer whitespace-nowrap"
             title="Exportar documento PDF final listo para enviar"
           >
-            <Download className="w-3.5 h-3.5 flex-shrink-0 text-[var(--color-neutral-text-primary)]" />
+            <Download className="w-3.5 h-3.5 flex-shrink-0 text-black" />
             <span>PDF</span>
           </button>
         </div>
@@ -134,7 +134,7 @@ export default function Navbar({
         {/* Right: User Avatar Circle (Acceso a Cuenta / Suscripción) */}
         <button
           onClick={handlePricingClick}
-          className="w-8 h-8 rounded-full bg-gradient-to-tr from-[var(--color-accent-orange)] to-[var(--color-accent-amber)] text-[var(--color-neutral-text-primary)] flex items-center justify-center font-black text-xs shadow-md border-2 border-white/40 hover:scale-105 transition cursor-pointer flex-shrink-0"
+          className="w-8 h-8 rounded-full bg-gradient-to-tr from-[var(--color-accent-orange)] to-[var(--color-accent-amber)] text-black flex items-center justify-center font-black text-xs shadow-md border-2 border-white/40 hover:scale-105 transition cursor-pointer flex-shrink-0"
           title="Mi Cuenta de Usuario / Suscripción Premium"
         >
           <User className="w-4 h-4 stroke-[2.5]" />

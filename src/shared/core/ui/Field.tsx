@@ -56,7 +56,7 @@ export function Field({
         name={name}
         value={value}
         maxLength={effectiveMaxLength}
-        className={`${baseInputStyle} ${!softValidation.isValid && !error ? 'border-amber-400 focus:border-amber-500 bg-amber-50/20' : ''} ${className}`}
+        className={`${baseInputStyle} ${!softValidation.isValid && !error ? 'border-[var(--color-status-warning-base)] focus:border-[var(--color-status-warning-base)] bg-[var(--color-status-warning-muted)]' : ''} ${className}`}
         {...props}
       />
 

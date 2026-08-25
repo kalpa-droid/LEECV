@@ -9,6 +9,7 @@ import { getCurrentProfile, capturarConexionDriveSiCorresponde } from '../module
 import { supabase } from '../shared/core/lib/supabaseClient';
 import { exportCVToJson, importCVFromJsonFile } from '../shared/core/utils/jsonImporterExporter';
 import { withErrorHandling } from '../shared/core/utils/errorHandler';
+import { applyUiTheme, uiThemePresets } from '../shared/core/uiDesignSystem';
 
 const PublicCVView = lazy(() => import('../modules/cv-builder/components/PublicCVView').then(m => ({ default: m.PublicCVView })));
 const CardExportModal = lazy(() => import('../modules/cv-builder/components/modals/CardExportModal').then(m => ({ default: m.CardExportModal })));
@@ -50,6 +51,15 @@ function AppContent() {
   const [publicSlug, setPublicSlug] = useState<string | undefined>(undefined);
 
   const activeUiTheme = getActiveUiTheme(cvData?.uiTheme);
+
+  // Autodetección de prefers-color-scheme del sistema operativo (Fase 4) y aplicación de tema
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const themeId = cvData?.uiTheme || (prefersDark ? 'night' : 'day');
+      applyUiTheme(themeId);
+    }
+  }, [cvData?.uiTheme]);
 
   useEffect(() => {
     syncPresetsFromStorage().catch(err => console.warn('Error sincronizando presets iniciales:', err));
@@ -282,8 +292,8 @@ function AppContent() {
   if (isPublicView) {
     return (
       <Suspense fallback={
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center text-rose-400 font-bold text-xs">
-          <div className="w-8 h-8 border-4 border-rose-500 border-t-transparent rounded-full animate-spin mr-3" />
+        <div className="min-h-screen bg-black flex items-center justify-center text-[var(--color-accent-base)] font-bold text-xs">
+          <div className="w-8 h-8 border-4 border-[var(--color-accent-base)] border-t-transparent rounded-full animate-spin mr-3" />
           <span>Cargando Perfil Público…</span>
         </div>
       }>
@@ -355,9 +365,9 @@ function AppContent() {
           mobileTabState === 'editor' && isPanelOpen ? 'hidden md:flex' : 'flex'
         }`}>
           <Suspense fallback={
-            <div className="w-full h-[600px] flex flex-col items-center justify-center p-8 text-slate-400">
-              <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4" />
-              <span className="text-xs font-bold uppercase tracking-wider text-purple-300">Cargando Visor Vectorial de Alta Resolución…</span>
+            <div className="w-full h-[600px] flex flex-col items-center justify-center p-8 text-white/60">
+              <div className="w-10 h-10 border-4 border-[var(--color-accent-purple)] border-t-transparent rounded-full animate-spin mb-4" />
+              <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent-purple-bright)]">Cargando Visor Vectorial de Alta Resolución…</span>
             </div>
           }>
             <CVPreview cvData={cvData} setCvData={setCvData} activeTab={activeTab} zoomLevel={zoomLevel} />
@@ -505,13 +515,13 @@ function AppContent() {
       </Suspense>
 
       {/* Barra de Estado Inferior Reorganizada (Zoom, Modo CV/Tarjeta y Switcher de Tema) */}
-      <footer className="hidden md:flex bg-[var(--color-critical-surface-card)] text-slate-300 border-t border-[var(--color-neutral-border)]/10 py-2 px-4 md:pl-20 items-center justify-between no-print z-30 shadow-2xl select-none text-xs">
+      <footer className="hidden md:flex bg-[var(--color-critical-surface-card)] text-white/80 border-t border-[var(--color-neutral-border)]/10 py-2 px-4 md:pl-20 items-center justify-between no-print z-30 shadow-2xl select-none text-xs">
         {/* Izquierda: Alternador CV vs Tarjeta Personal */}
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={toggleDocumentPresetMode}
-            className="px-3 py-1 rounded-xl bg-[var(--color-neutral-text-primary)] border border-purple-500/40 hover:border-[var(--color-accent-base)] text-purple-200 hover:text-white font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95"
+            className="px-3 py-1 rounded-xl bg-[var(--color-neutral-text-primary)] border border-white/10 hover:border-[var(--color-accent-base)] text-[var(--color-accent-purple-bright)] hover:text-white font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95"
             title="Alternar entre modo Currículum Vitae A4 y Tarjeta Personal"
           >
             {cvData?.activePresetId === 'tarjeta-personal' ? (
@@ -529,7 +539,7 @@ function AppContent() {
 
           <button
             onClick={() => setIsPrivacyModalOpen(true)}
-            className="text-slate-400 hover:text-white font-bold text-[11px] transition cursor-pointer underline underline-offset-2 ml-2"
+            className="text-white/60 hover:text-white font-bold text-[11px] transition cursor-pointer underline underline-offset-2 ml-2"
           >
             🔒 Privacidad
           </button>
@@ -547,14 +557,14 @@ function AppContent() {
           <button
             type="button"
             onClick={cycleUITheme}
-            className="px-3 py-1 rounded-xl bg-[var(--color-neutral-text-primary)] border border-amber-400/40 hover:border-amber-400 text-amber-300 hover:text-amber-200 font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95"
+            className="px-3 py-1 rounded-xl bg-[var(--color-neutral-text-primary)] border border-[var(--color-status-warning-base)]/40 hover:border-[var(--color-status-warning-base)] text-[var(--color-accent-amber-bright)] font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95"
             title="Tocar para cambiar el color de fondo de la interfaz (Cálido, Nocturno, Océano)"
           >
             <span>Tema</span>
-            <Palette className="w-3.5 h-3.5 text-[var(--color-accent-base)]" />
+            <Palette className="w-3.5 h-3.5 text-[var(--color-accent-amber-bright)]" />
           </button>
 
-          <span className="text-[10px] font-bold text-slate-500">© 2026 LEECV</span>
+          <span className="text-[10px] font-bold text-white/40">© 2026 LEECV</span>
         </div>
       </footer>
     </div>
