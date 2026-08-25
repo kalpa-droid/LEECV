@@ -107,7 +107,10 @@ export const saveDocument = async (docData: any, docTypeId: string = 'cv'): Prom
       await idbStorage.setItem('cv_premium_data', fullDocObject);
     }
 
-    // 2. Save summary list to LocalStorage
+    // 2. Save summary list to LocalStorage (liviano, sin el objeto completo —
+    // IndexedDB ya es la fuente primaria de fullDocObject, escribirlo también
+    // acá reintroduce el límite de 5-10MB que la migración a IndexedDB
+    // buscaba evitar, y falla en silencio con muchos certificados).
     try {
       const storageKey = getStorageKeyForType(docTypeId);
       const list = await getSavedDocumentsList(docTypeId);
@@ -118,9 +121,6 @@ export const saveDocument = async (docData: any, docTypeId: string = 'cv'): Prom
         list.unshift(summaryRecord);
       }
       localStorage.setItem(storageKey, JSON.stringify(list));
-      if (docTypeId === 'cv') {
-        localStorage.setItem('cv_premium_data', JSON.stringify(fullDocObject));
-      }
     } catch (lerr) {
       console.warn('Advertencia summary list LocalStorage:', lerr);
     }
