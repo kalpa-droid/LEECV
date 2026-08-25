@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Cloud, RefreshCw, HardDrive, ShieldCheck, LogIn, Globe } from 'lucide-react';
+import { Cloud, RefreshCw, HardDrive, ShieldCheck, LogIn, Globe, LogOut, User } from 'lucide-react';
 import { checkStorageStatus } from '../services/cvStorageService';
 import { checkGoogleDriveQuota } from '../services/googleDriveQuotaService';
-import { getCurrentProfile, signInWithGoogle } from '../../auth/authService';
+import { getCurrentProfile, signInWithGoogle, logout } from '../../auth/authService';
 import { publishCV } from '../../../shared/core/storage/publishService';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { Modal } from '../../../shared/core/ui/Modal';
@@ -31,6 +31,22 @@ export default function CloudStatusModal({
   const [driveQuota, setDriveQuota] = useState<any>(null);
   const [loadingDrive, setLoadingDrive] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    await withErrorHandling(
+      async () => {
+        await logout();
+        showSuccess('Sesión cerrada correctamente. Puedes ingresar con otra cuenta.');
+        if (typeof window !== 'undefined') {
+          window.location.reload();
+        }
+      },
+      { context: 'Cerrar Sesión' }
+    );
+    setIsLoggingOut(false);
+  };
 
   const handlePublish = async () => {
     if (!cvData) return;
@@ -179,6 +195,13 @@ export default function CloudStatusModal({
             </span>
           </div>
 
+          {profile?.email && (
+            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800 text-[11px]">
+              <span className="text-slate-400">Cuenta activa:</span>
+              <span className="font-bold text-white">{profile.email}</span>
+            </div>
+          )}
+
           {profile?.drive_connected ? (
             <div className="space-y-2 text-slate-300 text-[11px]">
               <div className="flex items-center justify-between text-slate-400">
@@ -200,9 +223,19 @@ export default function CloudStatusModal({
                 </div>
               )}
 
-              <p className="text-slate-400 text-[10px]">
-                Tus respaldos en Google Drive se guardan en la carpeta privada de la aplicación sin sobreescribir tus archivos.
-              </p>
+              <div className="flex items-center justify-between pt-1">
+                <p className="text-slate-400 text-[10px]">
+                  Tus respaldos en Google Drive se guardan en la carpeta privada de la aplicación.
+                </p>
+                <button
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="px-2.5 py-1 rounded-lg bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/50 text-[11px] font-extrabold transition flex items-center gap-1 cursor-pointer flex-shrink-0 ml-2"
+                >
+                  <LogOut className={`w-3 h-3 ${isLoggingOut ? 'animate-spin' : ''}`} />
+                  <span>Cerrar Sesión</span>
+                </button>
+              </div>
             </div>
           ) : (
             <div className="space-y-2">

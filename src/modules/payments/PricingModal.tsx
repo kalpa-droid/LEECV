@@ -1,14 +1,39 @@
 import React, { useState } from 'react';
-import { Check, Crown, Zap, Shield, Sparkles, Cloud, Smartphone } from 'lucide-react';
+import { Check, Crown, Zap, Shield, Sparkles, Cloud, Smartphone, User, LogOut, HardDrive, LogIn } from 'lucide-react';
 import { iniciarPagoMercadoPago, iniciarPagoLemonSqueezy } from './paymentService';
 import { useToast } from '../../shared/core/ui/Toast';
-import {} from '../../shared/core/uiDesignSystem';
 import { Modal } from '../../shared/core/ui/Modal';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
+import { logout, signInWithGoogle } from '../auth/authService';
 
-export default function PricingModal({ isOpen, onClose, currentProfile: _currentProfile }: any) {
-  const { showError } = useToast();
+export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
+  const { showError, showSuccess } = useToast();
   const [loadingGateway, setLoadingGateway] = useState<string | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    setIsLoggingOut(true);
+    await withErrorHandling(
+      async () => {
+        await logout();
+        showSuccess('Sesión cerrada correctamente. Puedes ingresar con otra cuenta.');
+        if (typeof window !== 'undefined') {
+          window.location.reload();
+        }
+      },
+      { context: 'Cerrar Sesión' }
+    );
+    setIsLoggingOut(false);
+  }
+
+  async function handleGoogleConnect() {
+    await withErrorHandling(
+      async () => {
+        await signInWithGoogle();
+      },
+      { context: 'Vincular Google Drive' }
+    );
+  }
 
   async function handleSelectPlan(planId: 'pro' | 'enterprise', gateway: 'mercadopago' | 'lemonsqueezy') {
     setLoadingGateway(gateway);
@@ -33,7 +58,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile: _current
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Planes & Suscripciones LEECV"
+      title="Mi Cuenta & Suscripciones LEECV"
       icon={<Sparkles className="w-5 h-5 text-amber-400" />}
       size="4xl"
       footer={
@@ -43,6 +68,50 @@ export default function PricingModal({ isOpen, onClose, currentProfile: _current
       }
     >
       <div className="space-y-6">
+        {/* Tarjeta de Cuenta Activa / Perfil de Usuario */}
+        <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/40 text-purple-300 flex items-center justify-center flex-shrink-0">
+              <User className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black text-white">
+                  {currentProfile?.email || 'Sesión Activa en LEECV'}
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
+                  {currentProfile?.role === 'admin' ? 'Administrador' : currentProfile?.role === 'enterprise' ? 'Empresa' : currentProfile?.role === 'pro' ? 'Pro' : 'Plan Gratuito'}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                <HardDrive className="w-3.5 h-3.5 text-blue-400" />
+                <span>Google Drive: {currentProfile?.drive_connected ? '🟢 Conectado' : '⚪ No vinculado'}</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+            {!currentProfile?.drive_connected && (
+              <button
+                onClick={handleGoogleConnect}
+                className="px-3 py-1.5 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 text-blue-200 border border-blue-500/40 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Vincular Google Drive</span>
+              </button>
+            )}
+
+            <button
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="px-3.5 py-1.5 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/60 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <LogOut className={`w-3.5 h-3.5 ${isLoggingOut ? 'animate-spin' : ''}`} />
+              <span>{isLoggingOut ? 'Cerrando...' : 'Cerrar Sesión'}</span>
+            </button>
+          </div>
+        </div>
+
         {/* Encabezado */}
         <div className="text-center space-y-2 max-w-xl mx-auto">
           <h2 className="text-2xl font-black text-white tracking-tight">
