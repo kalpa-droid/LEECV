@@ -9,7 +9,7 @@ import { getCurrentProfile, capturarConexionDriveSiCorresponde } from '../module
 import { supabase } from '../shared/core/lib/supabaseClient';
 import { exportCVToJson, importCVFromJsonFile } from '../shared/core/utils/jsonImporterExporter';
 import { withErrorHandling } from '../shared/core/utils/errorHandler';
-import { applyUiTheme, uiThemePresets } from '../shared/core/uiDesignSystem';
+import { applyUiTheme } from '../shared/core/uiDesignSystem';
 
 const PublicCVView = lazy(() => import('../modules/cv-builder/components/PublicCVView').then(m => ({ default: m.PublicCVView })));
 const CardExportModal = lazy(() => import('../modules/cv-builder/components/modals/CardExportModal').then(m => ({ default: m.CardExportModal })));
@@ -31,7 +31,6 @@ import PrivacyModal from '../modules/cv-builder/components/PrivacyModal';
 import { CVProvider, useCVContext } from '../context/CVContext';
 import { ToastProvider, useToast } from '../shared/core/ui/Toast';
 import { useConfirm, ConfirmProvider } from '../shared/core/ui/ConfirmDialog';
-import { getActiveUiTheme } from '../shared/core/uiDesignSystem';
 
 import { syncPresetsFromStorage, getPreset } from '../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { cvDataToContentSections } from '../shared/core/pdf-engine/layers/records/cvDataAdapter';
@@ -364,7 +363,7 @@ function AppContent() {
           <Suspense fallback={
             <div className="w-full h-[600px] flex flex-col items-center justify-center p-8 text-white/60">
               <div className="w-10 h-10 border-4 border-[var(--color-accent-purple)] border-t-transparent rounded-full animate-spin mb-4" />
-              <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent-purple-bright)]">Cargando Visor Vectorial de Alta Resolución…</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-[var(--ui-on-dark-purple)]">Cargando Visor Vectorial de Alta Resolución…</span>
             </div>
           }>
             <CVPreview cvData={cvData} setCvData={setCvData} activeTab={activeTab} zoomLevel={zoomLevel} />

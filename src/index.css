@@ -42,7 +42,12 @@
   --ui-bg-panel: #F1F5F9;
   --ui-bg-card: #FFFFFF;
   --ui-bg-header: #FFFFFF;
-  --ui-bg-dock: #1E293B;
+  --ui-bg-dock: #F1F5F9;
+  --ui-dock-text: #0F172A;
+  --ui-dock-text-muted: #475569;
+  --ui-dock-hover: #E2E8F0;
+  --ui-dock-separator: #CBD5E1;
+  --ui-dock-border: #E2E8F0;
   --ui-text-primary: #0F172A;
   --ui-text-secondary: #475569;
   --ui-border: #E2E8F0;
@@ -56,24 +61,17 @@
   --gradient-brand: linear-gradient(135deg, #FF2E63 0%, #8E44FF 100%);
   --gradient-gold: linear-gradient(135deg, #FFC93C 0%, #FF7A29 100%);
   --gradient-teal: linear-gradient(135deg, #00A8A0 0%, #008f88 100%);
-  /* Día: fondo claro → sombra oscura tradicional, sin brillo */
+  /* Día: fondo claro → sombra oscura tradicional con brillo sutil */
   --shadow-raised: 0 2px 8px rgba(43,27,46,0.06);
   --shadow-floating: 0 8px 24px rgba(43,27,46,0.12);
   --shadow-overlay: 0 16px 48px rgba(43,27,46,0.20);
+  --shadow-dock: 4px 0 16px rgba(15,23,42,0.06);
   --glow-accent: 0 0 0 rgba(0,0,0,0);
 }
 
 /* ============================================================ */
 /* TOKENS DE colorSystem (src/shared/core/uiDesignSystem.ts), EXPUESTOS
-   COMO VARIABLES CSS REALES.
-   Motivo: Tailwind genera las clases `bg-[...]` mirando el TEXTO FUENTE
-   en build-time, no lo que el JS arma en runtime. Un string como
-   `bg-[${colorSystem.accent.base}]` nunca genera CSS real porque el
-   valor no existe como texto literal en el archivo — Tailwind no lo ve.
-   `bg-[var(--color-accent-base)]` sí es texto literal, así que SÍ
-   genera una regla real; el valor final lo resuelve el navegador vía
-   la variable. No cambiar estos valores acá sin cambiarlos también en
-   uiDesignSystem.ts — son la misma fuente de verdad en dos formatos. */
+   COMO VARIABLES CSS REALES. */
 :root {
   --color-accent-base: #FF2E63;
   --color-accent-hover: #E0184C;
@@ -85,13 +83,13 @@
   --color-accent-amber: #FFC93C;
   --color-accent-amber-hover: #F0AE00;
   --color-accent-amber-muted: #FFF1C2;
-  --color-accent-amber-bright: #FCD34D;
+  --color-accent-amber-bright: #B45309;
 
   --color-accent-purple: #8E44FF;
   --color-accent-purple-hover: #7126E0;
   --color-accent-purple-light: #E9DBFF;
   --color-accent-purple-text: #5B18C8;
-  --color-accent-purple-bright: #D8B4FE;
+  --color-accent-purple-bright: #6D28D9;
 
   --color-accent-orange: #FF7A29;
 
@@ -101,7 +99,7 @@
   --color-secondary-muted: #E0F5F3;
   --color-secondary-text: #00655F;
   --color-secondary-card-text: #0F172A;
-  --color-secondary-bright: #5EEAD4;
+  --color-secondary-bright: #00655F;
 
   --color-neutral-text-primary: var(--ui-text-primary);
   --color-neutral-text-secondary: var(--ui-text-secondary);
@@ -113,12 +111,17 @@
   --color-neutral-surface-warm: var(--ui-bg-card);
   --color-neutral-surface-cream: var(--ui-bg-panel);
 
-  --ui-bg-dock-hover: #3D2740;
+  --ui-bg-dock-hover: #E2E8F0;
+
+  --ui-on-dark-purple: #D8B4FE;
+  --ui-on-dark-emerald: #34D399;
+  --ui-on-dark-amber: #FCD34D;
+  --ui-on-dark-teal: #5EEAD4;
 
   --color-status-success-base: #1D9E75;
   --color-status-success-muted: #E1F5EE;
   --color-status-success-text: #0F6E56;
-  --color-status-success-bright: #34D399;
+  --color-status-success-bright: #0F6E56;
   --color-status-warning-base: #BA7517;
   --color-status-warning-muted: #FAEEDA;
   --color-status-warning-text: #612800;
@@ -128,15 +131,20 @@
 }
 
 [data-ui-theme="dark"] {
-  --ui-bg-root: #090D16;
-  --ui-bg-panel: #0F172A;
+  --ui-bg-root: #0B0F19;
+  --ui-bg-panel: #111827;
   --ui-bg-card: #1E293B;
-  --ui-bg-header: #0F172A;
-  --ui-bg-dock: #0F172A;
+  --ui-bg-header: #111827;
+  --ui-bg-dock: #111827;
+  --ui-dock-text: #F8FAFC;
+  --ui-dock-text-muted: #94A3B8;
+  --ui-dock-hover: #1E293B;
+  --ui-dock-separator: #1E293B;
+  --ui-dock-border: #1E293B;
   --ui-text-primary: #F8FAFC;
   --ui-text-secondary: #94A3B8;
   --ui-text-muted: #64748B;
-  --ui-border: #334155;
+  --ui-border: #1E293B;
   --ui-preview-bg: #020617;
   --gradient-brand: linear-gradient(135deg, #FF2E63 0%, #7126E0 100%);
   --gradient-gold: linear-gradient(135deg, #F0AE00 0%, #FF7A29 100%);
@@ -145,6 +153,9 @@
   --color-secondary-muted: #0F2942;
   --color-secondary-text: #38BDF8;
   --color-secondary-card-text: #F8FAFC;
+  --color-secondary-bright: #38BDF8;
+  --color-accent-amber-bright: #FCD34D;
+  --color-accent-purple-bright: #D8B4FE;
   --color-accent-muted: #381320;
   --color-accent-text: #FF7A9E;
   --color-accent-amber-muted: #382A0F;
@@ -152,6 +163,7 @@
   --color-accent-purple-text: #D8B4FE;
   --color-status-success-muted: #0D382B;
   --color-status-success-text: #34D399;
+  --color-status-success-bright: #34D399;
   --color-status-warning-muted: #382A0F;
   --color-status-warning-text: #FCD34D;
   --color-status-danger-muted: #381313;
@@ -166,19 +178,25 @@
   --shadow-raised: 0 2px 8px rgba(0,0,0,0.35);
   --shadow-floating: 0 8px 24px rgba(0,0,0,0.45), 0 0 16px rgba(255,46,99,0.06);
   --shadow-overlay: 0 16px 48px rgba(0,0,0,0.55), 0 0 32px rgba(255,46,99,0.10);
+  --shadow-dock: 4px 0 16px rgba(0,0,0,0.35);
   --glow-accent: 0 0 24px rgba(255,46,99,0.25);
 }
 
 [data-ui-theme="teal_ocean"] {
-  --ui-bg-root: #0A1622;
-  --ui-bg-panel: #0D1F2D;
-  --ui-bg-card: #1D3557;
-  --ui-bg-header: #0D1F2D;
-  --ui-bg-dock: #0D1F2D;
-  --ui-text-primary: #F1FAEE;
-  --ui-text-secondary: #A8DADC;
+  --ui-bg-root: #071521;
+  --ui-bg-panel: #0C2135;
+  --ui-bg-card: #163A5C;
+  --ui-bg-header: #0C2135;
+  --ui-bg-dock: #0C2135;
+  --ui-dock-text: #E8F4F8;
+  --ui-dock-text-muted: #7DBECC;
+  --ui-dock-hover: #163A5C;
+  --ui-dock-separator: #1A4971;
+  --ui-dock-border: #1A4971;
+  --ui-text-primary: #E8F4F8;
+  --ui-text-secondary: #7DBECC;
   --ui-text-muted: #457B9D;
-  --ui-border: #2A4365;
+  --ui-border: #1A4971;
   --ui-preview-bg: #050B11;
   --gradient-brand: linear-gradient(135deg, #FF2E63 0%, #7126E0 100%);
   --gradient-gold: linear-gradient(135deg, #F0AE00 0%, #FF7A29 100%);
@@ -186,7 +204,10 @@
 
   --color-secondary-muted: #152E4A;
   --color-secondary-text: #5EEAD4;
-  --color-secondary-card-text: #F1FAEE;
+  --color-secondary-card-text: #E8F4F8;
+  --color-secondary-bright: #5EEAD4;
+  --color-accent-amber-bright: #FCD34D;
+  --color-accent-purple-bright: #D8B4FE;
   --color-accent-muted: #381320;
   --color-accent-text: #FFA8B6;
   --color-accent-amber-muted: #382A0F;
@@ -194,6 +215,7 @@
   --color-accent-purple-text: #D8B4FE;
   --color-status-success-muted: #0D382B;
   --color-status-success-text: #34D399;
+  --color-status-success-bright: #34D399;
   --color-status-warning-muted: #382A0F;
   --color-status-warning-text: #FCD34D;
   --color-status-danger-muted: #381313;
@@ -208,6 +230,7 @@
   --shadow-raised: 0 2px 8px rgba(0,0,0,0.35);
   --shadow-floating: 0 8px 24px rgba(0,0,0,0.45), 0 0 16px rgba(230,57,70,0.08);
   --shadow-overlay: 0 16px 48px rgba(0,0,0,0.55), 0 0 32px rgba(230,57,70,0.14);
+  --shadow-dock: 4px 0 16px rgba(0,0,0,0.45);
   --glow-accent: 0 0 24px rgba(230,57,70,0.28);
 }
 

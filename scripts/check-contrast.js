@@ -538,6 +538,41 @@ function auditCodebaseContrast() {
     }
   }
 
+  // Auditoría explícita de Matriz de Superficies UI por Tema (Dock, Header, Panel, Card)
+  const surfacePairsToTest = [
+    { name: 'Dock Base', bgVar: '--ui-bg-dock', textVar: '--ui-dock-text' },
+    { name: 'Dock Subtexto', bgVar: '--ui-bg-dock', textVar: '--ui-dock-text-muted' },
+    { name: 'Header Base', bgVar: '--ui-bg-header', textVar: '--ui-text-primary' },
+    { name: 'Panel Base', bgVar: '--ui-bg-panel', textVar: '--ui-text-primary' },
+    { name: 'Panel Subtexto', bgVar: '--ui-bg-panel', textVar: '--ui-text-secondary' },
+    { name: 'Tarjeta Base', bgVar: '--ui-bg-card', textVar: '--ui-text-primary' },
+    { name: 'Tarjeta Subtexto', bgVar: '--ui-bg-card', textVar: '--ui-text-secondary' },
+    { name: 'Tarjeta Secundarios', bgVar: '--color-secondary-muted', textVar: '--color-secondary-card-text' },
+  ];
+
+  for (const themeId of Object.keys(themeMaps)) {
+    const map = themeMaps[themeId];
+    for (const pair of surfacePairsToTest) {
+      const bgHex = map.get(pair.bgVar);
+      const textHex = map.get(pair.textVar);
+      if (bgHex && textHex) {
+        const ratio = getContrastRatio(bgHex, textHex);
+        if (ratio < 4.5) {
+          violations.push({
+            file: 'src/index.css',
+            theme: themeId,
+            line: 'Theme Matrix',
+            bgToken: pair.bgVar,
+            textToken: pair.textVar,
+            bgHex,
+            textHex,
+            ratio: ratio.toFixed(2)
+          });
+        }
+      }
+    }
+  }
+
   if (violations.length > 0) {
     console.error('\n🚨 VIOLACIONES DE CONTRASTE DETECTADAS (WCAG 2.1 AA - Mínimo 4.5:1):');
     for (const v of violations) {

@@ -543,7 +543,7 @@ export function TemplateManagementTab() {
               value={jsonText}
               onChange={(e) => setJsonText(e.target.value)}
               rows={16}
-              className="w-full bg-black/60 text-[var(--color-status-success-bright)] p-4 rounded-xl border border-white/10 font-mono text-xs outline-none focus:border-[var(--color-accent-purple)] leading-relaxed resize-y"
+              className="w-full bg-black/60 text-[var(--ui-on-dark-emerald)] p-4 rounded-xl border border-white/10 font-mono text-xs outline-none focus:border-[var(--color-accent-purple)] leading-relaxed resize-y"
             />
           </div>
         )}

@@ -135,7 +135,7 @@ export default function PdfCheckoutModal({
         {!currentProfile ? (
           <div className="p-4 bg-black/40 border border-white/10 rounded-2xl space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-black text-[var(--color-accent-purple-bright)] uppercase tracking-wide">
+              <span className="text-xs font-black text-white uppercase tracking-wide">
                 1. Registra tu Correo o Cuenta
               </span>
               <button 
@@ -162,7 +162,7 @@ export default function PdfCheckoutModal({
           <div className="p-3 bg-[var(--ui-bg-dock)] border border-white/10 rounded-2xl flex items-center justify-between text-xs">
             <div>
               <span className="text-white/60 block text-[10px]">Cuenta Activa:</span>
-              <span className="font-extrabold text-[var(--color-accent-purple-bright)]">{currentProfile.email}</span>
+              <span className="font-extrabold text-[var(--color-accent-purple-text)]">{currentProfile.email}</span>
             </div>
             <span className="px-2.5 py-1 rounded-lg bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-text)] text-[10px] font-black uppercase">
               Plan {currentProfile.plan || 'Free'}
@@ -172,7 +172,7 @@ export default function PdfCheckoutModal({
 
         {/* Payment Gateways & Options */}
         <div className="space-y-2.5">
-          <span className="text-xs font-black text-[var(--color-accent-amber-bright)] uppercase tracking-wide block">
+          <span className="text-xs font-black text-[var(--color-status-warning-text)] uppercase tracking-wide block">
             2. Elige tu Opción de Pago o Descarga
           </span>
 
@@ -189,7 +189,7 @@ export default function PdfCheckoutModal({
                 <p className="text-[10px] opacity-80 font-bold">Mercado Pago, Tarjeta de Crédito / Débito, Transferencia</p>
               </div>
             </div>
-            <span className="px-2.5 py-1 bg-black/80 text-[var(--color-accent-amber-bright)] rounded-lg text-[10px] font-black">
+            <span className="px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] rounded-lg text-[10px] font-black">
               ~$1,800 ARS
             </span>
           </button>
@@ -199,14 +199,14 @@ export default function PdfCheckoutModal({
             <button
               onClick={() => handlePackCheckout('credits_pack_5')}
               disabled={isProcessing}
-              className="p-2.5 bg-[var(--ui-bg-dock)] hover:opacity-90 border border-[var(--color-status-warning-base)]/30 text-[var(--color-accent-amber-bright)] font-extrabold text-[11px] rounded-xl transition cursor-pointer text-center"
+              className="p-2.5 bg-[var(--ui-bg-dock)] hover:opacity-90 border border-[var(--color-status-warning-base)]/30 text-[var(--color-status-warning-text)] font-extrabold text-[11px] rounded-xl transition cursor-pointer text-center"
             >
               Pack 5 créditos — $5 USD
             </button>
             <button
               onClick={() => handlePackCheckout('credits_pack_10')}
               disabled={isProcessing}
-              className="p-2.5 bg-[var(--ui-bg-dock)] hover:opacity-90 border border-[var(--color-status-warning-base)]/30 text-[var(--color-accent-amber-bright)] font-extrabold text-[11px] rounded-xl transition cursor-pointer text-center"
+              className="p-2.5 bg-[var(--ui-bg-dock)] hover:opacity-90 border border-[var(--color-status-warning-base)]/30 text-[var(--color-status-warning-text)] font-extrabold text-[11px] rounded-xl transition cursor-pointer text-center"
             >
               Pack 10 créditos — $8 USD
             </button>

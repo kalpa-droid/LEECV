@@ -293,10 +293,10 @@ export default function SignatureModal({
             {!uploadedImageSrc ? (
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className={`w-full h-44 border-2 border-dashed border-[var(--color-secondary-base)] bg-black/40 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-black/60 transition group`}
+                className={`w-full h-44 border-2 border-dashed border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-[var(--color-secondary-muted)] transition group`}
               >
-                <Upload className={`w-8 h-8 text-[var(--color-secondary-bright)] mb-2 group-hover:scale-110 transition duration-300`} />
-                <span className="font-black text-xs text-white">Subir imagen de la firma (JPG, PNG, WEBP)</span>
+                <Upload className={`w-8 h-8 text-[var(--color-secondary-text)] mb-2 group-hover:scale-110 transition duration-300`} />
+                <span className="font-black text-xs text-[var(--color-neutral-text-primary)]">Subir imagen de la firma (JPG, PNG, WEBP)</span>
               </div>
             ) : (
               <div className="space-y-3">
@@ -320,7 +320,7 @@ export default function SignatureModal({
                   <button 
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className={`text-[var(--color-secondary-bright)] font-black hover:underline cursor-pointer`}
+                    className={`text-[var(--color-secondary-text)] font-black hover:underline cursor-pointer`}
                   >
                     Cambiar foto
                   </button>

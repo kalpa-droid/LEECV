@@ -36,7 +36,7 @@ export default function JsonDownloadModal({ isOpen, onClose, cvData }: any) {
         </p>
 
         <div className="p-3.5 bg-black/40 border border-white/10 rounded-2xl text-[11px] text-white/80 space-y-1.5">
-          <p className="font-extrabold text-[var(--color-accent-purple-bright)]">💡 ¿Para qué sirve este archivo?</p>
+          <p className="font-extrabold text-white">💡 ¿Para qué sirve este archivo?</p>
           <p className="text-white/60 leading-relaxed">
             Puedes conservarlo en tu computadora o pendrive. Si en el futuro ingresas a LEECV desde otro dispositivo, solo presionas <strong>"Abrir"</strong> y cargas este archivo para recuperar tu CV completo de inmediato.
           </p>

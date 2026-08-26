@@ -79,13 +79,13 @@ export default function SaveModal({
             }}
             className="w-full text-left p-3.5 rounded-2xl bg-[var(--ui-bg-dock)] hover:opacity-90 border border-[var(--color-secondary-base)]/40 transition group flex items-start gap-3 cursor-pointer"
           >
-            <div className="p-2.5 rounded-xl bg-black/40 border border-[var(--color-secondary-base)]/40 text-[var(--color-secondary-bright)] group-hover:scale-110 transition flex-shrink-0">
+            <div className="p-2.5 rounded-xl bg-black/40 border border-[var(--color-secondary-base)]/40 text-[var(--ui-on-dark-teal)] group-hover:scale-110 transition flex-shrink-0">
               <HardDrive className="w-5 h-5" />
             </div>
             <div className="space-y-0.5 min-w-0 flex-1">
               <div className="flex items-center justify-between">
                 <span className="font-extrabold text-xs sm:text-sm text-white">Google Drive / Nube</span>
-                <span className="text-[10px] font-bold text-[var(--color-secondary-bright)]">Nube Personal</span>
+                <span className="text-[10px] font-bold text-[var(--color-secondary-text)]">Nube Personal</span>
               </div>
               <p className="text-[11px] text-white/80">
                 Sincronización y estado de resguardo de archivos en tu cuenta de Google Drive.
