@@ -6,7 +6,13 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   base: '/',
   build: {
-    chunkSizeWarningLimit: 1600
+    chunkSizeWarningLimit: 1600,
+    rolldownOptions: {
+      external: ['@react-pdf/renderer']
+    },
+    rollupOptions: {
+      external: ['@react-pdf/renderer']
+    }
   },
   plugins: [
     react(),

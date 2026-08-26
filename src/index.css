@@ -130,8 +130,8 @@
   --ui-bg-root: #090D16;
   --ui-bg-panel: #0F172A;
   --ui-bg-card: #1E293B;
-  --ui-bg-header: #090D16;
-  --ui-bg-dock: #0B1120;
+  --ui-bg-header: #0F172A;
+  --ui-bg-dock: #0F172A;
   --ui-text-primary: #F8FAFC;
   --ui-text-secondary: #94A3B8;
   --ui-text-muted: #64748B;
@@ -141,15 +141,26 @@
   --gradient-gold: linear-gradient(135deg, #F0AE00 0%, #FF7A29 100%);
   --gradient-teal: linear-gradient(135deg, #008780 0%, #00655F 100%);
 
+  --color-secondary-muted: #E0F5F3;
+  --color-secondary-text: #00655F;
+  --color-accent-muted: #FFE8ED;
+  --color-accent-text: #B3123F;
+  --color-accent-amber-muted: #FFF1C2;
+  --color-accent-purple-light: #E9DBFF;
+  --color-accent-purple-text: #5B18C8;
+  --color-status-success-muted: #E1F5EE;
+  --color-status-success-text: #0F6E56;
+  --color-status-warning-muted: #FAEEDA;
+  --color-status-warning-text: #612800;
+  --color-status-danger-muted: #FCEBEB;
+  --color-status-danger-text: #A32D2D;
+
   --ui-accent-purple: #D8B4FE;
   --ui-secondary: #5EEAD4;
   --ui-warning: #FCD34D;
   --ui-danger: #FF8585;
   --ui-success: #34D399;
   --ui-rose: #FDA4AF;
-  /* Noche: fondo oscuro -> la sombra oscura de siempre no se ve. La
-     profundidad se logra con un halo de luz sutil (glow), coherente con
-     el acento del tema en vez de una sombra que desaparece. */
   --shadow-raised: 0 2px 8px rgba(0,0,0,0.35);
   --shadow-floating: 0 8px 24px rgba(0,0,0,0.45), 0 0 16px rgba(255,46,99,0.06);
   --shadow-overlay: 0 16px 48px rgba(0,0,0,0.55), 0 0 32px rgba(255,46,99,0.10);
@@ -160,16 +171,30 @@
   --ui-bg-root: #0A1622;
   --ui-bg-panel: #0D1F2D;
   --ui-bg-card: #1D3557;
-  --ui-bg-header: #0A1622;
-  --ui-bg-dock: #0A1622;
+  --ui-bg-header: #0D1F2D;
+  --ui-bg-dock: #0D1F2D;
   --ui-text-primary: #F1FAEE;
   --ui-text-secondary: #A8DADC;
   --ui-text-muted: #457B9D;
-  --ui-border: #457B9D;
+  --ui-border: #2A4365;
   --ui-preview-bg: #050B11;
   --gradient-brand: linear-gradient(135deg, #FF2E63 0%, #7126E0 100%);
   --gradient-gold: linear-gradient(135deg, #F0AE00 0%, #FF7A29 100%);
   --gradient-teal: linear-gradient(135deg, #008780 0%, #00655F 100%);
+
+  --color-secondary-muted: #E0F5F3;
+  --color-secondary-text: #00655F;
+  --color-accent-muted: #FFE8ED;
+  --color-accent-text: #B3123F;
+  --color-accent-amber-muted: #FFF1C2;
+  --color-accent-purple-light: #E9DBFF;
+  --color-accent-purple-text: #5B18C8;
+  --color-status-success-muted: #E1F5EE;
+  --color-status-success-text: #0F6E56;
+  --color-status-warning-muted: #FAEEDA;
+  --color-status-warning-text: #612800;
+  --color-status-danger-muted: #FCEBEB;
+  --color-status-danger-text: #A32D2D;
 
   --ui-accent-purple: #D8B4FE;
   --ui-secondary: #5EEAD4;
@@ -177,8 +202,6 @@
   --ui-danger: #FF8585;
   --ui-success: #34D399;
   --ui-rose: #FDA4AF;
-  /* Oceano: mismo principio, glow tenido con el acento propio del tema
-     (rojo coral) en vez de reusar el rosa de marca -> coherencia visual. */
   --shadow-raised: 0 2px 8px rgba(0,0,0,0.35);
   --shadow-floating: 0 8px 24px rgba(0,0,0,0.45), 0 0 16px rgba(230,57,70,0.08);
   --shadow-overlay: 0 16px 48px rgba(0,0,0,0.55), 0 0 32px rgba(230,57,70,0.14);

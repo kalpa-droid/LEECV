@@ -14,12 +14,36 @@
 
 export const colorSystem = {
   // Acento de marca — la única vez que se define este hex en TODA la web
-  accent: { base: '#FF2E63', hover: '#E0184C', hoverBrand: '#E31555', muted: '#FFE8ED', text: '#B3123F' },
-  secondary: { base: '#00A8A0', hover: '#008780', hoverDark: '#008f88', muted: '#E0F5F3', text: '#00655F' },
+  accent: {
+    base: '#FF2E63',
+    hover: '#E0184C',
+    hoverBrand: '#E31555',
+    muted: 'var(--color-accent-muted)',
+    text: 'var(--color-accent-text)'
+  },
+  secondary: {
+    base: '#00A8A0',
+    hover: '#008780',
+    hoverDark: '#008f88',
+    muted: 'var(--color-secondary-muted)',
+    text: 'var(--color-secondary-text)'
+  },
 
   // Acentos de apoyo (Amber/Gold, Purple, Orange)
-  amber: { base: '#FFC93C', hover: '#F0AE00', muted: '#FFF1C2', text: '#854F0B', bright: '#FCD34D' },
-  purple: { base: '#8E44FF', hover: '#7126E0', light: '#E9DBFF', text: '#5B18C8', bright: '#D8B4FE' },
+  amber: {
+    base: '#FFC93C',
+    hover: '#F0AE00',
+    muted: 'var(--color-accent-amber-muted)',
+    text: 'var(--color-status-warning-text)',
+    bright: '#FCD34D'
+  },
+  purple: {
+    base: '#8E44FF',
+    hover: '#7126E0',
+    light: 'var(--color-accent-purple-light)',
+    text: 'var(--color-accent-purple-text)',
+    bright: '#D8B4FE'
+  },
   orange: { base: '#FF7A29' },
 
   // Neutros — la escala que usa todo texto/borde que no es color de marca
@@ -37,9 +61,9 @@ export const colorSystem = {
 
   // Estados — SOLO para estos 3 significados, nunca decorativos
   status: {
-    success: { base: '#1D9E75', muted: '#E1F5EE', text: '#0F6E56', bright: '#34D399' },
-    warning: { base: '#BA7517', muted: '#FAEEDA', text: '#854F0B', bright: '#FCD34D' },
-    danger: { base: '#D14D4D', muted: '#FCEBEB', text: '#A32D2D' },
+    success: { base: '#1D9E75', muted: 'var(--color-status-success-muted)', text: 'var(--color-status-success-text)', bright: '#34D399' },
+    warning: { base: '#BA7517', muted: 'var(--color-status-warning-muted)', text: 'var(--color-status-warning-text)', bright: '#FCD34D' },
+    danger: { base: '#D14D4D', muted: 'var(--color-status-danger-muted)', text: 'var(--color-status-danger-text)' },
   },
   // Superficie oscura para estados críticos (ErrorBoundary) — la única
   // superficie intencionalmente oscura de toda la web, para diferenciarse

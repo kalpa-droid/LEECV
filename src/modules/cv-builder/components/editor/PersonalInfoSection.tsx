@@ -48,7 +48,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
                   borderColor: colorSystem.neutral.border
                 }}
               >
-                <div className="w-14 h-18 rounded-[8px] overflow-hidden bg-white flex items-center justify-center border border-[var(--color-neutral-border-strong)] shadow-sm">
+                <div className="w-14 h-18 rounded-[8px] overflow-hidden bg-[var(--color-neutral-surface)] flex items-center justify-center border border-[var(--color-neutral-border-strong)] shadow-sm">
                   {cvData.personalInfo?.profilePhoto ? (
                     <img src={cvData.personalInfo.profilePhoto} alt="Perfil" className="w-full h-full object-cover" />
                   ) : (
