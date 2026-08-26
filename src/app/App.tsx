@@ -9,7 +9,7 @@ import { getCurrentProfile, capturarConexionDriveSiCorresponde } from '../module
 import { supabase } from '../shared/core/lib/supabaseClient';
 import { exportCVToJson, importCVFromJsonFile } from '../shared/core/utils/jsonImporterExporter';
 import { withErrorHandling } from '../shared/core/utils/errorHandler';
-import { applyUiTheme, getNextUiTheme, UI_THEME_META } from '../shared/core/uiDesignSystem';
+import { applyUiTheme, getNextUiTheme } from '../shared/core/uiDesignSystem';
 
 const PublicCVView = lazy(() => import('../modules/cv-builder/components/PublicCVView').then(m => ({ default: m.PublicCVView })));
 const CardExportModal = lazy(() => import('../modules/cv-builder/components/modals/CardExportModal').then(m => ({ default: m.CardExportModal })));
@@ -315,12 +315,14 @@ function AppContent() {
           isSaving={isSaving}
         />
         {/* Barra compacta de Zoom en Mobile (< md) */}
-        <div className="flex md:hidden bg-[var(--color-critical-surface-card)] border-b border-white/10 px-3 py-1.5 justify-center z-30">
+        <div className="flex md:hidden bg-[var(--ui-bg-dock)] border-b border-[var(--ui-dock-border)] px-3 py-1.5 justify-center z-30">
           <ZoomControls 
             zoomLevel={zoomLevel} 
             setZoomLevel={setZoomLevel} 
             triggerAutoFit={triggerAutoFit}
             isMobile={true}
+            currentUiTheme={cvData?.uiTheme || 'default'}
+            onCycleTheme={cycleUITheme}
           />
         </div>
       </div>
@@ -541,31 +543,17 @@ function AppContent() {
           </button>
         </div>
 
-        {/* Centro: Controles de Zoom del Visor */}
+        {/* Centro: Controles de Zoom del Visor + Cambio de Tema de Interfaz */}
         <ZoomControls 
           zoomLevel={zoomLevel} 
           setZoomLevel={setZoomLevel} 
           triggerAutoFit={triggerAutoFit} 
+          currentUiTheme={cvData?.uiTheme || 'default'}
+          onCycleTheme={cycleUITheme}
         />
 
-        {/* Derecha: Botón Interactivo de Cambio de Tema de Interfaz */}
+        {/* Derecha */}
         <div className="flex items-center gap-2">
-          {(() => {
-            const currentThemeId = cvData?.uiTheme || 'default';
-            const meta = UI_THEME_META[currentThemeId] || UI_THEME_META.default;
-            return (
-              <button
-                type="button"
-                onClick={cycleUITheme}
-                className="px-3 py-1.5 rounded-xl bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] font-extrabold flex items-center gap-2 transition cursor-pointer shadow-sm active:scale-95 text-xs"
-                title={`Tema actual: ${meta.label}. Haz clic para cambiar.`}
-              >
-                <span>Tema: {meta.shortLabel}</span>
-                <span className="text-sm leading-none">{meta.emoji}</span>
-              </button>
-            );
-          })()}
-
           <span className="text-[10px] font-bold text-[var(--ui-text-secondary)]">© 2026 LEECV</span>
         </div>
       </footer>

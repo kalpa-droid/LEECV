@@ -353,13 +353,15 @@ export const uiThemePresets = {
 
 export const UI_THEME_CYCLE = ['default', 'dark', 'teal_ocean', 'ink'] as const;
 
-export const UI_THEME_META: Record<string, { label: string; shortLabel: string; emoji: string }> = {
-  day: { label: 'Editorial Warm (Día)', shortLabel: 'Día', emoji: '☀️' },
-  default: { label: 'Editorial Warm (Día)', shortLabel: 'Día', emoji: '☀️' },
-  dark: { label: 'Cyber Dark (Noche)', shortLabel: 'Noche', emoji: '🌙' },
-  night: { label: 'Cyber Dark (Noche)', shortLabel: 'Noche', emoji: '🌙' },
-  teal_ocean: { label: 'Midnight Ocean (Teal)', shortLabel: 'Océano', emoji: '🌊' },
-  ink: { label: 'Figma Dark (Ink)', shortLabel: 'Ink', emoji: '🖊️' },
+import { Sun, Moon, Waves, PenTool, type LucideIcon } from 'lucide-react';
+
+export const UI_THEME_META: Record<string, { label: string; shortLabel: string; emoji: string; icon: LucideIcon }> = {
+  day: { label: 'Editorial Warm (Día)', shortLabel: 'Día', emoji: '☀️', icon: Sun },
+  default: { label: 'Editorial Warm (Día)', shortLabel: 'Día', emoji: '☀️', icon: Sun },
+  dark: { label: 'Cyber Dark (Noche)', shortLabel: 'Noche', emoji: '🌙', icon: Moon },
+  night: { label: 'Cyber Dark (Noche)', shortLabel: 'Noche', emoji: '🌙', icon: Moon },
+  teal_ocean: { label: 'Midnight Ocean (Teal)', shortLabel: 'Océano', emoji: '🌊', icon: Waves },
+  ink: { label: 'Figma Dark (Ink)', shortLabel: 'Ink', emoji: '🖊️', icon: PenTool },
 };
 
 export function getNextUiTheme(currentTheme?: string): string {

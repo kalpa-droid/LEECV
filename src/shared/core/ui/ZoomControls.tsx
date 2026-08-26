@@ -1,5 +1,6 @@
 import React from 'react';
 import { ZoomIn, ZoomOut, Smartphone } from 'lucide-react';
+import { UI_THEME_META } from '../uiDesignSystem';
 
 interface ZoomControlsProps {
   zoomLevel: number;
@@ -7,6 +8,11 @@ interface ZoomControlsProps {
   triggerAutoFit: () => void;
   className?: string;
   isMobile?: boolean;
+  /** Tema activo actual (ej. 'day', 'dark', 'teal_ocean', 'ink'). Si se pasa
+   *  junto con onCycleTheme, se muestra el selector de tema dentro de esta
+   *  misma barra — no hace falta un botón aparte en otro lugar de la UI. */
+  currentUiTheme?: string;
+  onCycleTheme?: () => void;
 }
 
 export function ZoomControls({
@@ -14,8 +20,13 @@ export function ZoomControls({
   setZoomLevel,
   triggerAutoFit,
   className = '',
-  isMobile = false
+  isMobile = false,
+  currentUiTheme,
+  onCycleTheme
 }: ZoomControlsProps) {
+  const themeMeta = currentUiTheme ? (UI_THEME_META[currentUiTheme] || UI_THEME_META.default) : null;
+  const ThemeIcon = themeMeta?.icon;
+
   return (
     <div className={`flex items-center gap-1 bg-[var(--ui-bg-dock)] px-2 py-1 rounded-xl border border-[var(--ui-dock-border)] shadow-inner select-none ${className}`}>
       <button
@@ -49,6 +60,21 @@ export function ZoomControls({
         <Smartphone className="w-3 h-3" />
         <span>Encajar</span>
       </button>
+
+      {themeMeta && ThemeIcon && onCycleTheme && (
+        <>
+          <div className="w-px self-stretch bg-[var(--ui-dock-border)] mx-0.5" />
+          <button
+            type="button"
+            onClick={onCycleTheme}
+            className="p-1 rounded-lg hover:bg-[var(--color-accent-base)] text-[var(--ui-dock-text)] hover:text-white transition cursor-pointer active:scale-95 flex items-center gap-1"
+            title={`Tema actual: ${themeMeta.label}. Clic para cambiar.`}
+          >
+            <ThemeIcon className={isMobile ? "w-3 h-3" : "w-3.5 h-3.5"} />
+            {!isMobile && <span className="text-[10px] font-black">{themeMeta.shortLabel}</span>}
+          </button>
+        </>
+      )}
     </div>
   );
 }
