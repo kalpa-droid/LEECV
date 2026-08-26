@@ -112,3 +112,99 @@ import { button } from '../../../shared/core/uiDesignSystem';
 Cualquier duda sobre un caso puntual que no entre limpio en el patrón, mejor
 preguntar antes de improvisar un 5to estilo de botón o un color nuevo — la
 fuerza de este sistema es que no crece más allá de lo que ya está definido.
+
+---
+
+## Migrar sombra/radio de Tailwind con nombre → `elevationSystem`/`radius`
+
+Esto es aparte del sistema de secciones de arriba — es la limpieza de
+`shadow-lg`, `rounded-xl`, etc. escritos con el nombre de Tailwind en vez
+del núcleo. `npm run check-all` te dice, archivo por archivo, cuántos te
+quedan (sección "⚠️ AUDITORÍA" al final del log de gobernanza).
+
+### Paso 1 — Ver exactamente qué hay en un archivo
+
+```bash
+grep -nE "shadow-(sm|md|lg|xl|2xl|inner)\b|rounded-(lg|xl|2xl|3xl)\b" src/ruta/AlArchivo.tsx
+```
+
+Esto te da el número de línea exacto de cada uno — no hace falta adivinar.
+
+### Paso 2 — La tabla de equivalencia (siempre la misma, no inventar)
+
+| Tenías (Tailwind con nombre) | Ponés (núcleo) |
+|---|---|
+| `shadow-sm` | `${elevationSystem.raised}` |
+| `shadow-md` | `${elevationSystem.raised}` |
+| `shadow-lg` | `${elevationSystem.floating}` |
+| `shadow-xl` | `${elevationSystem.overlay}` |
+| `shadow-2xl` | `${elevationSystem.overlay}` |
+| `shadow-inner` | `${elevationSystem.raised}` (no hay token de sombra interior todavía — avisar si hace falta uno de verdad) |
+| `rounded-lg` | `rounded-[${radius.control}]` |
+| `rounded-xl` | `rounded-[${radius.card}]` |
+| `rounded-2xl` | `rounded-[${radius.modal}]` |
+| `rounded-3xl` | `rounded-[${radius.modal}]` |
+| `rounded-full` | **se deja igual** — es semántico (círculo perfecto: avatar, badge, pill), no forma parte de esta migración |
+
+### Paso 3 — Importar los tokens (si el archivo no los tiene ya)
+
+```tsx
+import { elevationSystem, radius } from '<ruta relativa>/shared/core/uiDesignSystem';
+```
+
+La ruta relativa depende de dónde esté el archivo — contá los `../` que
+necesitás para llegar a `src/shared/core/uiDesignSystem.ts`.
+
+### Paso 4 — Reemplazar, con el detalle que rompe si te lo saltás
+
+`radius.control`/`radius.card`/`radius.modal` son **valores en px** (`'10px'`, `'12px'`, `'16px'`), no clases — por eso siempre van envueltos en `` rounded-[${...}] ``, nunca sueltos. Si tu `className` no es un template literal (comillas invertidas) todavía, tenés que convertirlo a uno para poder interpolar `${radius.card}` adentro.
+
+**Antes:**
+```tsx
+className="p-3 rounded-xl shadow-lg"
+```
+
+**Después:**
+```tsx
+className={`p-3 rounded-[${radius.card}] ${elevationSystem.floating}`}
+```
+
+Si el `className` ya era condicional (un ternario `isActive ? 'a' : 'b'`), la interpolación de tokens va **adentro de cada rama**, no rodeando todo el ternario:
+
+```tsx
+className={`... ${isActive ? `bg-x ${elevationSystem.floating}` : `bg-y ${elevationSystem.raised}`}`}
+```
+
+### Paso 5 — Verificar ese archivo puntual (rápido, sin correr todo)
+
+```bash
+grep -nE "shadow-(sm|md|lg|xl|2xl|inner)\b|rounded-(lg|xl|2xl|3xl)\b" src/ruta/AlArchivo.tsx
+```
+
+Tiene que devolver **0 líneas**. Si devuelve algo, todavía queda alguno.
+
+### Paso 6 — Verificación completa antes de subir
+
+```bash
+npm run check-all
+```
+
+Confirmá 3 cosas en la salida: el archivo que migraste **ya no aparece** en
+la lista de auditoría, `0 violations` de gobernanza, y `build` termina sin
+error.
+
+### Orden recomendado (por volumen, de más a menos instancias)
+
+1. `EditorPanel.tsx` (77) — el más grande, pero son todas del mismo tipo de
+   patrón repetido, se hace rápido una vez agarrás la mano.
+2. `AdminDashboard.tsx` (52)
+3. `TemplateManagementTab.tsx` (38)
+4. `CanvaIconDock.tsx` (30)
+5. El resto, uno por uno, sin apuro — cada uno es un commit separado.
+
+### Cuándo activar el candado
+
+Cuando `npm run check-all` ya no muestre ningún archivo en la sección
+"⚠️ AUDITORÍA" (todos en 0), avisá — ahí se sube esa detección de
+`shadow`/`radius` con nombre al mismo lugar donde ya está el bloqueo de
+hex, y de ahí en más ningún commit nuevo puede reintroducir el problema.
