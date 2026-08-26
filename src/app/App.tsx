@@ -9,7 +9,7 @@ import { getCurrentProfile, capturarConexionDriveSiCorresponde } from '../module
 import { supabase } from '../shared/core/lib/supabaseClient';
 import { exportCVToJson, importCVFromJsonFile } from '../shared/core/utils/jsonImporterExporter';
 import { withErrorHandling } from '../shared/core/utils/errorHandler';
-import { applyUiTheme } from '../shared/core/uiDesignSystem';
+import { applyUiTheme, getNextUiTheme, UI_THEME_META } from '../shared/core/uiDesignSystem';
 
 const PublicCVView = lazy(() => import('../modules/cv-builder/components/PublicCVView').then(m => ({ default: m.PublicCVView })));
 const CardExportModal = lazy(() => import('../modules/cv-builder/components/modals/CardExportModal').then(m => ({ default: m.CardExportModal })));
@@ -209,7 +209,7 @@ function AppContent() {
 
   const cycleUITheme = () => {
     const current = cvData?.uiTheme || 'default';
-    const nextTheme = current === 'default' ? 'dark' : current === 'dark' ? 'teal_ocean' : 'default';
+    const nextTheme = getNextUiTheme(current);
     if (typeof document !== 'undefined') {
       document.documentElement.setAttribute('data-ui-theme', nextTheme);
     }
@@ -550,15 +550,21 @@ function AppContent() {
 
         {/* Derecha: Botón Interactivo de Cambio de Tema de Interfaz */}
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={cycleUITheme}
-            className="px-3 py-1 rounded-xl bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95"
-            title="Tocar para cambiar el color de fondo de la interfaz (Cálido, Nocturno, Océano)"
-          >
-            <span>Tema</span>
-            <Palette className="w-3.5 h-3.5 text-[var(--ui-text-secondary)]" />
-          </button>
+          {(() => {
+            const currentThemeId = cvData?.uiTheme || 'default';
+            const meta = UI_THEME_META[currentThemeId] || UI_THEME_META.default;
+            return (
+              <button
+                type="button"
+                onClick={cycleUITheme}
+                className="px-3 py-1.5 rounded-xl bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] font-extrabold flex items-center gap-2 transition cursor-pointer shadow-sm active:scale-95 text-xs"
+                title={`Tema actual: ${meta.label}. Haz clic para cambiar.`}
+              >
+                <span>Tema: {meta.shortLabel}</span>
+                <span className="text-sm leading-none">{meta.emoji}</span>
+              </button>
+            );
+          })()}
 
           <span className="text-[10px] font-bold text-[var(--ui-text-secondary)]">© 2026 LEECV</span>
         </div>

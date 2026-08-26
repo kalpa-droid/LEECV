@@ -3,6 +3,7 @@ import {
   Palette, Layout, Sparkles, Menu, X, Plus
 } from 'lucide-react';
 import { DomSectionIcon } from '../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
+import { getNextUiTheme, UI_THEME_META } from '../../../shared/core/uiDesignSystem';
 
 export interface CanvaIconDockProps {
   cvData?: any;
@@ -218,26 +219,32 @@ export default function CanvaIconDock({
         <div className="w-px h-6 bg-white/20 shrink-0" />
 
         {/* Botón Tema en Móvil */}
-        <button
-          type="button"
-          onClick={() => {
-            if (setCvData) {
-              setCvData(prev => {
-                const current = prev?.uiTheme || 'default';
-                const nextTheme = current === 'default' ? 'dark' : current === 'dark' ? 'teal_ocean' : 'default';
-                if (typeof document !== 'undefined') {
-                  document.documentElement.setAttribute('data-ui-theme', nextTheme);
+        {(() => {
+          const currentThemeId = cvData?.uiTheme || 'default';
+          const meta = UI_THEME_META[currentThemeId] || UI_THEME_META.default;
+          return (
+            <button
+              type="button"
+              onClick={() => {
+                if (setCvData) {
+                  setCvData((prev: any) => {
+                    const current = prev?.uiTheme || 'default';
+                    const nextTheme = getNextUiTheme(current);
+                    if (typeof document !== 'undefined') {
+                      document.documentElement.setAttribute('data-ui-theme', nextTheme);
+                    }
+                    return { ...prev, uiTheme: nextTheme };
+                  });
                 }
-                return { ...prev, uiTheme: nextTheme };
-              });
-            }
-          }}
-          className="px-2.5 py-1.5 rounded-xl bg-[var(--color-neutral-text-primary)] border border-[var(--color-status-warning-base)]/40 text-[var(--color-accent-amber-bright)] text-[11px] font-black shrink-0 flex items-center gap-1 cursor-pointer active:scale-95"
-          title="Cambiar Tema de Interfaz"
-        >
-          <span>Tema</span>
-          <Palette className="w-3.5 h-3.5 text-[var(--ui-warning)]" />
-        </button>
+              }}
+              className="px-2.5 py-1.5 rounded-xl bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] text-[11px] font-black shrink-0 flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-sm"
+              title={`Tema actual: ${meta.label}`}
+            >
+              <span>{meta.shortLabel}</span>
+              <span className="text-sm leading-none">{meta.emoji}</span>
+            </button>
+          );
+        })()}
 
         <div className="w-px h-6 bg-white/20 shrink-0" />
 

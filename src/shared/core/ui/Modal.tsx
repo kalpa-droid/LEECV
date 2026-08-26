@@ -69,21 +69,21 @@ export function Modal({
       className="fixed inset-0 z-[500] flex items-center justify-center bg-black/75 backdrop-blur-sm p-3 sm:p-5 animate-fade-in no-print select-none"
     >
       <div
-        className={`w-full ${sizeClasses[size] || sizeClasses.md} ui-bg-card ui-text-primary ui-border border-2 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] ${className}`}
+        className={`w-full ${sizeClasses[size] || sizeClasses.md} bg-[var(--ui-bg-card)] ui-bg-card ui-text-primary ui-border border-2 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] ${className}`}
       >
         {/* Header */}
         {(title || icon) && (
           <div
-            className={`flex items-center justify-between px-5 py-3.5 ui-bg-header ui-text-primary border-b ui-border ${headerClassName}`}
+            className={`flex items-center justify-between px-5 py-3.5 bg-[var(--ui-bg-header)] ui-bg-header ui-text-primary border-b ui-border ${headerClassName}`}
           >
             <div className="flex items-center gap-2.5 font-black text-sm tracking-wide">
-              {icon && <span className="text-[var(--color-accent-amber)] flex-shrink-0">{icon}</span>}
+              {icon && <span className="text-[var(--color-accent-amber-bright)] flex-shrink-0">{icon}</span>}
               <span className="truncate">{title}</span>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-xl hover:bg-white/10 text-white/80 hover:text-white transition cursor-pointer"
+              className="p-1.5 rounded-xl hover:bg-[var(--ui-dock-hover)] text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] transition cursor-pointer"
               title="Cerrar ventana"
             >
               <X className="w-4 h-4" />

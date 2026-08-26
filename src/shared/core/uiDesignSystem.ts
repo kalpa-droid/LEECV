@@ -328,7 +328,40 @@ export const uiThemePresets = {
     accent: '#FF2E63',
     secondary: '#5EEAD4',
   },
+  ink: {
+    id: 'ink',
+    name: 'Figma Dark (Monocromático Ink)',
+    bgPanel: '#26262E',
+    bgCard: '#2F2F38',
+    bgHeader: '#26262E',
+    bgDock: '#26262E',
+    textPrimary: '#F0F0F4',
+    textSecondary: '#A4A4B2',
+    textMuted: '#747484',
+    border: '#3E3E4C',
+    borderStrong: '#505060',
+    accent: '#A5A5C7',
+    secondary: '#80B8B5',
+  },
 } as const;
+
+export const UI_THEME_CYCLE = ['default', 'dark', 'teal_ocean', 'ink'] as const;
+
+export const UI_THEME_META: Record<string, { label: string; shortLabel: string; emoji: string }> = {
+  day: { label: 'Editorial Warm (Día)', shortLabel: 'Día', emoji: '☀️' },
+  default: { label: 'Editorial Warm (Día)', shortLabel: 'Día', emoji: '☀️' },
+  dark: { label: 'Cyber Dark (Noche)', shortLabel: 'Noche', emoji: '🌙' },
+  night: { label: 'Cyber Dark (Noche)', shortLabel: 'Noche', emoji: '🌙' },
+  teal_ocean: { label: 'Midnight Ocean (Teal)', shortLabel: 'Océano', emoji: '🌊' },
+  ink: { label: 'Figma Dark (Ink)', shortLabel: 'Ink', emoji: '🖊️' },
+};
+
+export function getNextUiTheme(currentTheme?: string): string {
+  const normalized = (!currentTheme || currentTheme === 'day') ? 'default' : (currentTheme === 'night' ? 'dark' : currentTheme);
+  const index = UI_THEME_CYCLE.indexOf(normalized as any);
+  if (index === -1) return 'default';
+  return UI_THEME_CYCLE[(index + 1) % UI_THEME_CYCLE.length];
+}
 
 export function getActiveUiTheme(themeId?: string) {
   if (themeId && themeId in uiThemePresets) {

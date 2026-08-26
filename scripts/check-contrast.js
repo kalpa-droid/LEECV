@@ -266,6 +266,7 @@ export function loadAllThemeCssVariables() {
   const dayOnly = new Map();
   const nightOverrides = new Map();
   const tealOverrides = new Map();
+  const inkOverrides = new Map();
 
   for (const block of blocks) {
     const sel = block.selector;
@@ -276,6 +277,7 @@ export function loadAllThemeCssVariables() {
     const isDefaultThemeRoot = sel.includes('[data-ui-theme="default"]');
     const isDark = sel.includes('[data-ui-theme="dark"]');
     const isTeal = sel.includes('[data-ui-theme="teal_ocean"]');
+    const isInk = sel.includes('[data-ui-theme="ink"]');
 
     if (isBaseRoot) {
       for (const [k, v] of vars) base.set(k, v);
@@ -288,6 +290,9 @@ export function loadAllThemeCssVariables() {
     }
     if (isTeal) {
       for (const [k, v] of vars) tealOverrides.set(k, v);
+    }
+    if (isInk) {
+      for (const [k, v] of vars) inkOverrides.set(k, v);
     }
   }
 
@@ -310,8 +315,9 @@ export function loadAllThemeCssVariables() {
   const day = utilityDefaults(mergeInto(base, dayOnly));
   const night = utilityDefaults(mergeInto(base, nightOverrides));
   const teal_ocean = utilityDefaults(mergeInto(base, tealOverrides));
+  const ink = utilityDefaults(mergeInto(base, inkOverrides));
 
-  return { day, night, teal_ocean };
+  return { day, night, teal_ocean, ink };
 }
 
 function resolveColorToHex(tokenStr, cssVarMap, activeBgHexForBlend) {
@@ -581,7 +587,7 @@ function auditCodebaseContrast() {
     console.error(`\n❌ Se encontraron ${violations.length} violaciones de contraste WCAG 2.1 AA.`);
     process.exit(1);
   } else {
-    console.log('✅ Auditoría de contraste WCAG 2.1 AA superada en los 3 temas: 0 violaciones encontradas.\n');
+    console.log('✅ Auditoría de contraste WCAG 2.1 AA superada en los 4 temas: 0 violaciones encontradas.\n');
   }
 }
 
