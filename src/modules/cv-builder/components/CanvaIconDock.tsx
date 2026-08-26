@@ -201,7 +201,7 @@ export default function CanvaIconDock({
       <nav 
         ref={mobileNavRef}
         onWheel={handleWheelScroll}
-        className="md:hidden fixed bottom-0 left-0 right-0 z-[999] ui-bg-dock border-t border-[var(--color-neutral-text-secondary)]/40 px-2 py-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar shadow-2xl select-none"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-[999] ui-bg-dock border-t border-[var(--ui-dock-border)] px-2 py-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar shadow-2xl select-none"
       >
         <button
           type="button"
@@ -209,14 +209,14 @@ export default function CanvaIconDock({
           className={`p-2.5 rounded-xl transition flex items-center justify-center shrink-0 cursor-pointer ${
             isPanelOpen
               ? 'bg-[var(--color-accent-base)] text-white shadow-md'
-              : 'bg-[var(--color-neutral-text-primary)] text-[var(--color-accent-amber-bright)] border border-[var(--color-status-warning-base)]/30'
+              : 'bg-[var(--ui-bg-panel)] text-[var(--color-accent-amber-bright)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)]'
           }`}
           title={isPanelOpen ? 'Cerrar Panel' : 'Abrir Panel'}
         >
           {isPanelOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
         </button>
 
-        <div className="w-px h-6 bg-white/20 shrink-0" />
+        <div className="w-px h-6 bg-[var(--ui-dock-border)] shrink-0" />
 
         {/* Botón Tema en Móvil */}
         {(() => {
@@ -237,7 +237,7 @@ export default function CanvaIconDock({
                   });
                 }
               }}
-              className="px-2.5 py-1.5 rounded-xl bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] text-[11px] font-black shrink-0 flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-sm"
+              className="px-2.5 py-1.5 rounded-xl bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] text-[11px] font-black shrink-0 flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-sm"
               title={`Tema actual: ${meta.label}`}
             >
               <span>{meta.shortLabel}</span>
@@ -246,7 +246,7 @@ export default function CanvaIconDock({
           );
         })()}
 
-        <div className="w-px h-6 bg-white/20 shrink-0" />
+        <div className="w-px h-6 bg-[var(--ui-dock-border)] shrink-0" />
 
         {styleTabs.map((tab) => {
           const Icon = tab.icon;
@@ -259,10 +259,10 @@ export default function CanvaIconDock({
               className={`px-3 py-1.5 rounded-xl flex items-center gap-1 text-[11px] font-black shrink-0 transition cursor-pointer ${
                 isActive
                   ? 'bg-[var(--color-accent-base)] text-white shadow-md'
-                  : 'bg-[var(--color-neutral-text-primary)] text-[var(--color-neutral-border)]/80 hover:bg-[var(--ui-bg-dock-hover)]'
+                  : 'bg-[var(--ui-bg-panel)] text-[var(--ui-dock-text-muted)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)] hover:text-[var(--ui-dock-text)]'
               }`}
             >
-              <Icon className="w-3.5 h-3.5 text-white" />
+              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-[var(--ui-dock-text-muted)]'}`} />
               <span>{tab.label}</span>
             </button>
           );
@@ -275,14 +275,14 @@ export default function CanvaIconDock({
           className={`px-3 py-1.5 rounded-xl font-black text-[11px] shrink-0 flex items-center gap-1 shadow cursor-pointer border ${
             activeTab === addSectionTab.id && isPanelOpen
               ? 'bg-[var(--color-status-success-base)] border-[var(--color-status-success-base)] text-white'
-              : 'bg-[var(--color-neutral-text-primary)] border-[var(--color-status-success-base)]/60 text-[var(--color-status-success-bright)]'
+              : 'bg-[var(--ui-bg-panel)] border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-bright)] hover:bg-[var(--color-status-success-muted)]'
           }`}
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Sección</span>
         </button>
 
-        <div className="w-px h-6 bg-white/20 shrink-0" />
+        <div className="w-px h-6 bg-[var(--ui-dock-border)] shrink-0" />
 
         {fixedPrioritySections.map((sec) => {
           const isActive = activeTab === sec.id && isPanelOpen;
@@ -294,10 +294,10 @@ export default function CanvaIconDock({
               className={`px-3 py-1.5 rounded-xl flex items-center gap-1 text-[11px] font-black shrink-0 transition cursor-pointer ${
                 isActive
                   ? 'bg-[var(--color-secondary-base)] text-white shadow-md'
-                  : 'bg-[var(--color-neutral-text-primary)] text-[var(--color-neutral-border)]/80 hover:bg-[var(--ui-bg-dock-hover)]'
+                  : 'bg-[var(--ui-bg-panel)] text-[var(--color-secondary-bright)] border border-[var(--color-secondary-base)]/30 hover:bg-[var(--color-secondary-muted)]'
               }`}
             >
-              <DomSectionIcon iconId={sec.iconId} className="w-3.5 h-3.5" color={isActive ? 'var(--color-neutral-surface)' : 'var(--color-accent-amber)'} />
+              <DomSectionIcon iconId={sec.iconId} className="w-3.5 h-3.5" color={isActive ? '#FFFFFF' : 'var(--color-secondary-bright)'} />
               <span>{sec.label}</span>
             </button>
           );
@@ -314,10 +314,10 @@ export default function CanvaIconDock({
               className={`px-3 py-1.5 rounded-xl flex items-center gap-1 text-[11px] font-black shrink-0 transition cursor-pointer ${
                 isActive
                   ? 'bg-[var(--color-accent-purple)] text-white shadow-md'
-                  : 'bg-[var(--color-neutral-text-primary)] text-[var(--color-accent-purple-bright)] hover:bg-[var(--ui-bg-dock-hover)]'
+                  : 'bg-[var(--ui-bg-panel)] text-[var(--color-accent-purple-bright)] border border-[var(--color-accent-purple)]/30 hover:bg-[var(--color-accent-purple-light)]'
               }`}
             >
-              <DomSectionIcon iconId={iconId} className="w-3.5 h-3.5" color={isActive ? 'var(--color-neutral-surface)' : 'var(--color-purple-base)'} />
+              <DomSectionIcon iconId={iconId} className="w-3.5 h-3.5" color={isActive ? '#FFFFFF' : 'var(--color-accent-purple-bright)'} />
               <span>{cs.titleText}</span>
             </button>
           );
