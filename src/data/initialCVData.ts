@@ -8,6 +8,7 @@
 export const blankCVTemplate = {
   id: "cv_nuevo",
   activePresetId: "cv-clasico",
+  uiTheme: "day",
   showCoverPage: true,
   layout: {
     paperSize: "a4",

@@ -151,7 +151,7 @@ export function TemplateManagementTab() {
   };
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-[var(--color-neutral-border)] space-y-6">
+    <div className="bg-[var(--ui-bg-card)] rounded-2xl p-6 shadow-sm border border-[var(--color-neutral-border)] space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[var(--color-neutral-border)] pb-4">
         <div>
@@ -200,7 +200,7 @@ export function TemplateManagementTab() {
                 className={`p-3 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between ${
                   isSelected
                     ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-muted)] shadow-md ring-2 ring-[var(--color-accent-base)]/30'
-                    : 'border-[var(--color-neutral-border)] bg-[var(--color-neutral-surface-muted)] hover:bg-white hover:border-[var(--color-neutral-border-strong)]'
+                    : 'border-[var(--color-neutral-border)] bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--ui-bg-card)] hover:border-[var(--color-neutral-border-strong)]'
                 }`}
               >
                 <div>

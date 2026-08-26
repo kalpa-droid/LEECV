@@ -50,16 +50,14 @@ function AppContent() {
   const [isPublicView, setIsPublicView] = useState(false);
   const [publicSlug, setPublicSlug] = useState<string | undefined>(undefined);
 
-  const activeUiTheme = getActiveUiTheme(cvData?.uiTheme);
+  const currentUiThemeId = cvData?.uiTheme || 'day';
 
-  // Autodetección de prefers-color-scheme del sistema operativo (Fase 4) y aplicación de tema
+  // Aplicación unificada e instantánea del tema de interfaz
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const themeId = cvData?.uiTheme || (prefersDark ? 'night' : 'day');
-      applyUiTheme(themeId);
+      applyUiTheme(currentUiThemeId);
     }
-  }, [cvData?.uiTheme]);
+  }, [currentUiThemeId]);
 
   useEffect(() => {
     syncPresetsFromStorage().catch(err => console.warn('Error sincronizando presets iniciales:', err));
@@ -343,8 +341,7 @@ function AppContent() {
         />
 
         <div 
-          style={{ backgroundColor: activeUiTheme.bgPanel, color: activeUiTheme.textPrimary }}
-          className={`transition-all duration-300 ease-in-out border-r border-[var(--color-neutral-text-secondary)]/30 z-20 flex flex-col h-full overflow-y-auto ${
+          className={`bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] transition-all duration-300 ease-in-out border-r border-[var(--ui-border)] z-20 flex flex-col h-full overflow-y-auto ${
             isPanelOpen 
               ? 'w-full md:w-[460px] lg:w-[500px] opacity-100 shadow-2xl' 
               : 'w-0 opacity-0 overflow-hidden hidden md:block'

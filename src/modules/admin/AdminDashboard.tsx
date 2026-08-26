@@ -194,7 +194,7 @@ export default function AdminDashboard() {
         
         {/* Métricas Rápidas */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-[var(--color-neutral-border)] flex items-center gap-4">
+          <div className="bg-[var(--ui-bg-card)] rounded-2xl p-5 shadow-sm border border-[var(--color-neutral-border)] flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 text-[var(--color-secondary-text)] flex items-center justify-center">
               <Users className="w-6 h-6" />
             </div>
@@ -204,7 +204,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-[var(--color-neutral-border)] flex items-center gap-4">
+          <div className="bg-[var(--ui-bg-card)] rounded-2xl p-5 shadow-sm border border-[var(--color-neutral-border)] flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/30 text-[var(--color-status-warning-text)] flex items-center justify-center">
               <Crown className="w-6 h-6" />
             </div>
@@ -214,7 +214,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-[var(--color-neutral-border)] flex items-center gap-4">
+          <div className="bg-[var(--ui-bg-card)] rounded-2xl p-5 shadow-sm border border-[var(--color-neutral-border)] flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/30 text-[var(--color-accent-purple-text)] flex items-center justify-center">
               <HardDrive className="w-6 h-6" />
             </div>
@@ -226,7 +226,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Navigation Sub-Tabs */}
-        <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-[var(--color-neutral-border)] shadow-sm">
+        <div className="flex items-center gap-2 bg-[var(--ui-bg-card)] p-1.5 rounded-2xl border border-[var(--color-neutral-border)] shadow-sm">
           <button
             onClick={() => setAdminTab('users')}
             className={adminTab === 'users'
@@ -270,7 +270,7 @@ export default function AdminDashboard() {
 
         {/* Notificaciones de Administración con Badge visual de campana */}
         {notifications.length > 0 && (
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-[var(--color-neutral-border)] space-y-3">
+          <div className="bg-[var(--ui-bg-card)] rounded-2xl p-5 shadow-sm border border-[var(--color-neutral-border)] space-y-3">
             <div className="flex items-center justify-between border-b border-[var(--color-neutral-border)] pb-3">
               <div className="flex items-center gap-2">
                 <div className="relative">
@@ -332,7 +332,7 @@ export default function AdminDashboard() {
 
             <div className="space-y-2">
               {claims.map((claim) => (
-                <div key={claim.id} className="bg-white rounded-xl p-3.5 border border-[var(--color-status-warning-base)]/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                <div key={claim.id} className="bg-[var(--ui-bg-card)] rounded-xl p-3.5 border border-[var(--color-status-warning-base)]/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
                   <div className="space-y-0.5">
                     <p className="font-black text-[var(--color-neutral-text-primary)]">{claim.email}</p>
                     <p className="text-[11px] text-[var(--color-neutral-text-secondary)]">
@@ -360,7 +360,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Estado de Integraciones de Cobro Automático */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-[var(--color-neutral-border)] space-y-3">
+        <div className="bg-[var(--ui-bg-card)] rounded-2xl p-5 shadow-sm border border-[var(--color-neutral-border)] space-y-3">
           <div className="flex items-center justify-between border-b border-[var(--color-neutral-border)] pb-3">
             <div className="flex items-center gap-2">
               <CreditCard className="w-5 h-5 text-[var(--color-secondary-text)]" />
@@ -399,7 +399,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Tabla de Usuarios y Licencias con Búsqueda y Paginación */}
-        <div className="bg-white rounded-2xl shadow-sm border border-[var(--color-neutral-border)] overflow-hidden">
+        <div className="bg-[var(--ui-bg-card)] rounded-2xl shadow-sm border border-[var(--color-neutral-border)] overflow-hidden">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-b border-[var(--color-neutral-border)]">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-[var(--color-accent-text)]" />

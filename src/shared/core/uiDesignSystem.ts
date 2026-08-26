@@ -26,7 +26,8 @@ export const colorSystem = {
     hover: '#008780',
     hoverDark: '#008f88',
     muted: 'var(--color-secondary-muted)',
-    text: 'var(--color-secondary-text)'
+    text: 'var(--color-secondary-text)',
+    textCard: 'var(--color-secondary-card-text)'
   },
 
   // Acentos de apoyo (Amber/Gold, Purple, Orange)

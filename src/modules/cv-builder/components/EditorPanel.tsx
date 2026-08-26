@@ -501,7 +501,7 @@ export default function EditorPanel({
                   }
                   fileInputRef.current?.click();
                 }}
-                className="w-full h-28 border-2 border-dashed border-[var(--color-secondary-base)] bg-white rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-[var(--color-secondary-muted)]/30 transition group shadow-sm"
+                className="w-full h-28 border-2 border-dashed border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-[var(--color-secondary-muted)]/30 transition group shadow-sm"
               >
                 <Upload className="w-6 h-6 text-[var(--color-secondary-text)] mb-1 group-hover:scale-110 transition duration-300" />
                 <span className="font-black text-xs text-[var(--color-accent-text)] uppercase tracking-wider">CLIC AQUÍ</span>
@@ -963,7 +963,7 @@ export default function EditorPanel({
                     onClick={() => {
                       document.getElementById('custom-section-creator-form')?.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className="p-2.5 rounded-xl border-2 border-dashed border-[var(--color-accent-base)]/40 bg-[var(--color-accent-rose-muted)]/30 hover:bg-[var(--color-accent-rose-muted)]/50 text-left flex flex-col justify-between transition cursor-pointer"
+                    className="p-2.5 rounded-xl border-2 border-dashed border-[var(--color-accent-base)]/40 bg-[var(--color-accent-muted)] hover:opacity-90 text-left flex flex-col justify-between transition cursor-pointer"
                   >
                     <div className="space-y-1">
                       <span className="text-xs font-black text-[var(--color-accent-text)] flex items-center gap-1">
@@ -983,7 +983,7 @@ export default function EditorPanel({
 
             {/* 2. CREADOR DE SECCIÓN A MEDIDA */}
             <PanelSection icon={<Plus className="w-4 h-4 text-[var(--ui-rose)]" />} title="Sección a Medida">
-              <div id="custom-section-creator-form" className="p-3.5 bg-white rounded-2xl border-2 border-[var(--color-neutral-border)] space-y-4 shadow-sm">
+              <div id="custom-section-creator-form" className="p-3.5 bg-[var(--ui-bg-card)] rounded-2xl border-2 border-[var(--color-neutral-border)] space-y-4 shadow-sm">
 
                 <div>
                   <Field
@@ -1381,7 +1381,7 @@ export default function EditorPanel({
                     </p>
                   ) : (
                     cvData.roles.map((role: string, idx: number) => (
-                      <div key={idx} className="flex items-center justify-between p-2 bg-[var(--color-neutral-surface-muted)] rounded-lg border border-[var(--color-neutral-border)] text-xs">
+                      <div key={idx} className="flex items-center justify-between p-2 bg-[var(--ui-bg-card)] rounded-lg border border-[var(--color-neutral-border)] text-xs">
                         <span className="font-bold text-[var(--color-neutral-text-primary)]">{role}</span>
                         <button
                           type="button"
@@ -1507,12 +1507,12 @@ export default function EditorPanel({
                       const primPos = primOrder.indexOf(sec.id) + 1;
 
                       return (
-                        <div key={sec.id} className="p-2 bg-white rounded-xl border border-[var(--color-neutral-border)] text-xs space-y-1.5 shadow-sm">
+                        <div key={sec.id} className="p-2 bg-[var(--ui-bg-card)] rounded-xl border border-[var(--color-neutral-border)] text-xs space-y-1.5 shadow-sm">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1.5">
                               <span className="font-extrabold text-[var(--color-neutral-text-primary)]">{sec.label}</span>
                               {secPos > 0 && (currentVal === 'secundaria' || currentVal === 'ambas') && (
-                                <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[var(--color-accent-rose-muted)] text-[var(--color-accent-text)] font-black">
+                                <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] font-black">
                                   Sec #{secPos}
                                 </span>
                               )}

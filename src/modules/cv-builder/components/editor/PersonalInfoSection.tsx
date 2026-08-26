@@ -56,10 +56,10 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
                   )}
                 </div>
                 <div className="flex-1 space-y-1">
-                  <p className={typeScale.fieldLabel} style={{ color: colorSystem.neutral.textPrimary }}>
+                  <p className={typeScale.fieldLabel} style={{ color: colorSystem.secondary.textCard }}>
                     Foto de Perfil
                   </p>
-                  <p className={typeScale.helper} style={{ color: colorSystem.neutral.textSecondary }}>
+                  <p className={typeScale.helper} style={{ color: 'var(--ui-text-secondary)' }}>
                     Se muestra en la portada y en el encabezado principal del CV.
                   </p>
                   <button

@@ -102,12 +102,12 @@ export function StorageDriveTab() {
   };
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-[var(--color-neutral-border)] space-y-6">
+    <div className="bg-[var(--ui-bg-card)] rounded-2xl p-6 shadow-sm border border-[var(--color-neutral-border)] space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[var(--color-neutral-border)] pb-4">
         <div>
           <h2 className="text-base font-black text-[var(--color-neutral-text-primary)] flex items-center gap-2">
-            <HardDrive className="w-5 h-5 text-[var(--color-accent-purple)]" />
+            <HardDrive className="w-5 h-5 text-[var(--color-accent-purple-text)]" />
             <span>Almacenamiento, Servidores & Google Drive</span>
           </h2>
           <p className="text-xs text-[var(--color-neutral-text-secondary)] font-medium">
