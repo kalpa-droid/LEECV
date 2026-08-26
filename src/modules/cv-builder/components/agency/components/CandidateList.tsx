@@ -3,6 +3,8 @@ import { listAgencyCandidates } from '../services/candidatesService';
 import CandidateStatusBadge from './CandidateStatusBadge';
 import { Users, RefreshCw, FileText } from 'lucide-react';
 
+import { radius } from '../../../../../shared/core/uiDesignSystem';
+
 export default function CandidateList({ onSelectCandidate }: { onSelectCandidate: (id: string) => void }) {
   const [candidates, setCandidates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,7 +33,7 @@ export default function CandidateList({ onSelectCandidate }: { onSelectCandidate
         </h2>
         <button 
           onClick={loadCandidates} 
-          className="p-2 bg-[var(--ui-bg-dock)] hover:opacity-90 text-[var(--color-accent-purple-bright)] border border-white/10 rounded-xl transition cursor-pointer"
+          className={`p-2 bg-[var(--ui-bg-dock)] hover:opacity-90 text-[var(--color-accent-purple-bright)] border border-white/10 rounded-[${radius.card}] transition cursor-pointer`}
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
@@ -41,7 +43,7 @@ export default function CandidateList({ onSelectCandidate }: { onSelectCandidate
         <select 
           value={filterStatus} 
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="bg-black/40 border border-white/20 text-xs text-white p-2.5 rounded-xl font-bold outline-none focus:border-[var(--color-accent-purple)] cursor-pointer"
+          className={`bg-black/40 border border-white/20 text-xs text-white p-2.5 rounded-[${radius.card}] font-bold outline-none focus:border-[var(--color-accent-purple)] cursor-pointer`}
         >
           <option value="all">Todos los Estados</option>
           <option value="postulante">Postulante</option>
@@ -54,13 +56,13 @@ export default function CandidateList({ onSelectCandidate }: { onSelectCandidate
       {loading ? (
         <div className="text-center py-8 text-xs text-white/60">Cargando lista de candidatos...</div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-8 text-xs text-white/60 bg-black/30 rounded-2xl border border-white/10">
+        <div className={`text-center py-8 text-xs text-white/60 bg-black/30 rounded-[${radius.modal}] border border-white/10`}>
           No hay candidatos registrados en esta categoría.
         </div>
       ) : (
         <div className="space-y-2">
           {filtered.map((item) => (
-            <div key={item.cv_id} className="p-3.5 bg-[var(--ui-bg-dock)] border border-white/10 rounded-2xl flex items-center justify-between hover:border-[var(--color-accent-purple)]/50 transition">
+            <div key={item.cv_id} className={`p-3.5 bg-[var(--ui-bg-dock)] border border-white/10 rounded-[${radius.modal}] flex items-center justify-between hover:border-[var(--color-accent-purple)]/50 transition`}>
               <div className="flex items-center gap-3">
                 <FileText className="w-5 h-5 text-[var(--color-accent-amber-bright)]" />
                 <div>
@@ -72,7 +74,7 @@ export default function CandidateList({ onSelectCandidate }: { onSelectCandidate
                 <CandidateStatusBadge status={item.status} />
                 <button 
                   onClick={() => onSelectCandidate(item.cv_id)}
-                  className="px-3 py-1.5 bg-[var(--color-accent-purple)] hover:opacity-90 text-white text-xs font-bold rounded-xl transition cursor-pointer"
+                  className={`px-3 py-1.5 bg-[var(--color-accent-purple)] hover:opacity-90 text-white text-xs font-bold rounded-[${radius.card}] transition cursor-pointer`}
                 >
                   Abrir CV
                 </button>

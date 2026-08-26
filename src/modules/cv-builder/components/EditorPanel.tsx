@@ -32,6 +32,8 @@ import { RepeatableSection } from '../../../shared/core/ui/RepeatableSection';
 import { RecordFormSection } from '../../../shared/core/ui/RecordFormSection';
 import { Field } from '../../../shared/core/ui/Field';
 
+import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
+
 export default function EditorPanel({ 
   cvData, 
   setCvData, 
@@ -249,9 +251,9 @@ export default function EditorPanel({
     const isVisible = cvData?.sectionVisibility?.[sectionKey] !== false;
 
     return (
-      <div className={`flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl border mb-3 transition ${
+      <div className={`flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-[${radius.card}] border mb-3 transition ${
         isVisible 
-          ? 'bg-[var(--ui-bg-card)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] shadow-sm' 
+          ? 'bg-[var(--ui-bg-card)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] ${elevationSystem.raised}' 
           : 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-muted)] opacity-75'
       }`}>
         <span className="text-xs font-black uppercase tracking-wide">
@@ -270,7 +272,7 @@ export default function EditorPanel({
                 }
               }));
             }}
-            className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
+            className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 ${elevationSystem.raised} cursor-pointer ${
               isVisible
                 ? 'bg-[var(--color-secondary-base)] text-white hover:bg-[var(--color-secondary-hover)]'
                 : 'bg-[var(--color-neutral-text-muted)] text-white hover:opacity-80'
@@ -283,7 +285,7 @@ export default function EditorPanel({
             <button
               type="button"
               onClick={onAddAction}
-              className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white shadow-sm transition cursor-pointer"
+              className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white ${elevationSystem.raised} transition cursor-pointer`}
             >
               <Plus className="w-3.5 h-3.5" />
               <span>{addLabel}</span>
@@ -432,7 +434,7 @@ export default function EditorPanel({
               <select
                 value={selectedRegIdx}
                 onChange={(e) => setSelectedRegIdx(e.target.value)}
-                className="w-full text-xs p-2.5 rounded-xl border-2 border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-extrabold outline-none focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[var(--color-accent-rose-muted)] transition shadow-sm"
+                className={`w-full text-xs p-2.5 rounded-[${radius.card}] border-2 border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-extrabold outline-none focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[var(--color-accent-rose-muted)] transition ${elevationSystem.raised}`}
               >
                 <option value="">-- Hacer clic para elegir un título o curso --</option>
                 {registeredItems.map((item, idx) => (
@@ -455,9 +457,9 @@ export default function EditorPanel({
                   setCertMode('upload');
                   fileInputRef.current?.click();
                 }}
-                className={`p-2.5 rounded-xl border-2 flex items-center justify-center gap-1.5 font-black text-xs transition ${
+                className={`p-2.5 rounded-[${radius.card}] border-2 flex items-center justify-center gap-1.5 font-black text-xs transition ${
                   certMode === 'upload'
-                    ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-base)] text-white shadow-md'
+                    ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-base)] text-white ${elevationSystem.raised}'
                     : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-surface-warm)]'
                 }`}
               >
@@ -471,9 +473,9 @@ export default function EditorPanel({
                   }
                   startCamera();
                 }}
-                className={`p-2.5 rounded-xl border-2 flex items-center justify-center gap-1.5 font-black text-xs transition ${
+                className={`p-2.5 rounded-[${radius.card}] border-2 flex items-center justify-center gap-1.5 font-black text-xs transition ${
                   certMode === 'camera'
-                    ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-base)] text-white shadow-md'
+                    ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-base)] text-white ${elevationSystem.raised}'
                     : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-surface-warm)]'
                 }`}
               >
@@ -483,11 +485,11 @@ export default function EditorPanel({
 
             {/* 3. Camera view or File dropzone with "CLIC AQUÍ" */}
             {certMode === 'camera' && isCameraActive ? (
-              <div className="relative rounded-xl overflow-hidden bg-black flex flex-col items-center justify-center h-52">
+              <div className={`relative rounded-[${radius.card}] overflow-hidden bg-black flex flex-col items-center justify-center h-52`}>
                 <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
                 <button
                   onClick={capturePhoto}
-                  className="absolute bottom-3 flex items-center gap-1.5 px-5 py-2 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white font-black text-xs rounded-full shadow-lg transition"
+                  className={`absolute bottom-3 flex items-center gap-1.5 px-5 py-2 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white font-black text-xs rounded-full ${elevationSystem.floating} transition`}
                 >
                   <Camera className="w-4 h-4" /> Capturar Foto
                 </button>
@@ -501,7 +503,7 @@ export default function EditorPanel({
                   }
                   fileInputRef.current?.click();
                 }}
-                className="w-full h-28 border-2 border-dashed border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-[var(--color-secondary-muted)]/30 transition group shadow-sm"
+                className={`w-full h-28 border-2 border-dashed border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] rounded-[${radius.modal}] flex flex-col items-center justify-center cursor-pointer hover:bg-[var(--color-secondary-muted)]/30 transition group ${elevationSystem.raised}`}
               >
                 <Upload className="w-6 h-6 text-[var(--color-secondary-text)] mb-1 group-hover:scale-110 transition duration-300" />
                 <span className="font-black text-xs text-[var(--color-accent-text)] uppercase tracking-wider">CLIC AQUÍ</span>
@@ -518,18 +520,18 @@ export default function EditorPanel({
               </span>
 
               {cvData.certificatesScanned.length === 0 ? (
-                <p className="text-xs text-[var(--color-neutral-text-primary)] font-bold italic text-center py-4 border-2 border-dashed border-[var(--color-neutral-border)] rounded-xl bg-[var(--ui-bg-card)]">
+                <p className={`text-xs text-[var(--color-neutral-text-primary)] font-bold italic text-center py-4 border-2 border-dashed border-[var(--color-neutral-border)] rounded-[${radius.card}] bg-[var(--ui-bg-card)]`}>
                   No hay certificados anexados aún.
                 </p>
               ) : (
                 <div className="space-y-2">
                   {cvData.certificatesScanned.map((cert) => (
-                    <div key={cert.id} className="flex items-center gap-3 p-2.5 bg-[var(--ui-bg-card)] rounded-xl border-2 border-[var(--color-neutral-border)] shadow-sm">
+                    <div key={cert.id} className={`flex items-center gap-3 p-2.5 bg-[var(--ui-bg-card)] rounded-[${radius.card}] border-2 border-[var(--color-neutral-border)] ${elevationSystem.raised}`}>
                       <img 
                         src={cert.imageUrl} 
                         alt={cert.title} 
                         style={{ transform: `rotate(${cert.rotation || 0}deg)` }}
-                        className="w-12 h-14 object-cover rounded-lg border border-[var(--color-neutral-border)] flex-shrink-0" 
+                        className={`w-12 h-14 object-cover rounded-[${radius.control}] border border-[var(--color-neutral-border)] flex-shrink-0`} 
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-black text-[var(--color-neutral-text-primary)] truncate">{cert.title}</p>
@@ -546,7 +548,7 @@ export default function EditorPanel({
                             )
                           }));
                         }}
-                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-[var(--color-accent-amber-muted)] border border-[var(--color-accent-amber)] text-[var(--color-neutral-text-primary)] font-black text-[11px] hover:bg-[var(--color-accent-amber)] transition"
+                        className={`flex items-center gap-1 px-2 py-1.5 rounded-[${radius.control}] bg-[var(--color-accent-amber-muted)] border border-[var(--color-accent-amber)] text-[var(--color-neutral-text-primary)] font-black text-[11px] hover:bg-[var(--color-accent-amber)] transition`}
                         title="Girar imagen 90°"
                       >
                         <RotateCw className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
@@ -623,10 +625,10 @@ export default function EditorPanel({
             {cvData?.sectionVisibility?.firma !== false && (
               <>
 
-            <div className="p-4 bg-[var(--ui-bg-card)] rounded-2xl border-2 border-[var(--color-neutral-border)] space-y-3 text-center shadow-sm">
+            <div className={`p-4 bg-[var(--ui-bg-card)] rounded-[${radius.modal}] border-2 border-[var(--color-neutral-border)] space-y-3 text-center ${elevationSystem.raised}`}>
               {cvData.signature?.dataUrl ? (
                 <div className="space-y-2">
-                  <div className="bg-[var(--color-neutral-surface-warm)] p-3 rounded-xl border border-[var(--color-accent-amber)]">
+                  <div className={`bg-[var(--color-neutral-surface-warm)] p-3 rounded-[${radius.card}] border border-[var(--color-accent-amber)]`}>
                     <img src={cvData.signature.dataUrl} alt="Firma" className="h-16 mx-auto object-contain" />
                   </div>
                   <button
@@ -639,7 +641,7 @@ export default function EditorPanel({
                         }
                       }));
                     }}
-                    className="flex items-center justify-center gap-1 mx-auto px-3 py-1 bg-[var(--color-status-danger-muted)] hover:opacity-80 text-[var(--color-status-danger-text)] text-xs font-bold rounded-lg transition cursor-pointer"
+                    className={`flex items-center justify-center gap-1 mx-auto px-3 py-1 bg-[var(--color-status-danger-muted)] hover:opacity-80 text-[var(--color-status-danger-text)] text-xs font-bold rounded-[${radius.control}] transition cursor-pointer`}
                   >
                     <Trash2 className="w-3.5 h-3.5" /> Quitar Imagen de Firma
                   </button>
@@ -650,13 +652,13 @@ export default function EditorPanel({
 
               <button
                 onClick={onOpenSignature}
-                className="w-full flex items-center justify-center gap-2 py-2.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white text-xs font-black rounded-xl shadow-md transition cursor-pointer"
+                className={`w-full flex items-center justify-center gap-2 py-2.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white text-xs font-black rounded-[${radius.card}] ${elevationSystem.raised} transition cursor-pointer`}
               >
                 <PenTool className="w-4 h-4" /> Abrir Tablero de Firma (Dibujar / Subir)
               </button>
             </div>
 
-            <div className="p-4 bg-[var(--ui-bg-card)] rounded-2xl border-2 border-[var(--color-neutral-border)] space-y-3 shadow-sm">
+            <div className={`p-4 bg-[var(--ui-bg-card)] rounded-[${radius.modal}] border-2 border-[var(--color-neutral-border)] space-y-3 ${elevationSystem.raised}`}>
               <h4 className="text-xs font-black text-[var(--color-neutral-text-primary)] uppercase">Datos del Pie de Firma</h4>
               
               {/* 1. Nombre Automático (Abreviaturas / Título + Nombres + Apellidos) */}
@@ -665,7 +667,7 @@ export default function EditorPanel({
                   <span>Nombre del Firmante</span>
                   <span className="text-[9px] px-1.5 py-0.5 rounded bg-[var(--color-secondary-muted)] text-[var(--color-secondary-text)] font-extrabold">Automático</span>
                 </label>
-                <div className="w-full text-xs p-2.5 rounded-xl border border-[var(--color-neutral-border)] bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] font-extrabold shadow-inner">
+                <div className={`w-full text-xs p-2.5 rounded-[${radius.card}] border border-[var(--color-neutral-border)] bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] font-extrabold ${elevationSystem.raised}`}>
                   {`${cvData.personalInfo?.titlePrefix ? cvData.personalInfo.titlePrefix + ' ' : ''}${cvData.personalInfo?.givenNames || ''} ${cvData.personalInfo?.surname || ''}`.trim() || cvData.personalInfo?.fullName || 'Postulante'}
                 </div>
               </div>
@@ -695,14 +697,14 @@ export default function EditorPanel({
                             signature: { ...(prev.signature || {}), signerRole: val }
                           }));
                         }}
-                        className="w-full text-xs p-2.5 rounded-xl border-2 border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[var(--color-accent-rose-muted)] cursor-pointer transition"
+                        className={`w-full text-xs p-2.5 rounded-[${radius.card}] border-2 border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[var(--color-accent-rose-muted)] cursor-pointer transition`}
                       >
                         {titleList.map((t, idx) => (
                           <option key={idx} value={t}>{t}</option>
                         ))}
                       </select>
                     ) : (
-                      <div className="w-full text-xs p-2.5 rounded-xl border border-[var(--color-status-warning-base)]/30 bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)] font-bold">
+                      <div className={`w-full text-xs p-2.5 rounded-[${radius.card}] border border-[var(--color-status-warning-base)]/30 bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)] font-bold`}>
                         ⚠️ No hay títulos agregados en la sección "Títulos Profesionales".
                       </div>
                     )}
@@ -812,7 +814,7 @@ export default function EditorPanel({
           <div className="space-y-6">
             {/* 1. SECCIONES PREDISEÑADAS CON 1 CLIC */}
             <PanelSection icon={<Sparkles className="w-4 h-4 text-[var(--ui-secondary)]" />} title="Secciones Prediseñadas">
-              <div className="p-3.5 bg-[var(--ui-bg-card)] rounded-2xl border-2 border-[var(--color-neutral-border)] space-y-3 shadow-sm">
+              <div className={`p-3.5 bg-[var(--ui-bg-card)] rounded-[${radius.modal}] border-2 border-[var(--color-neutral-border)] space-y-3 ${elevationSystem.raised}`}>
                 <p className="text-[11px] text-[var(--color-neutral-text-secondary)] font-medium leading-relaxed">
                   Haz clic en cualquiera de estas secciones para agregarla instantáneamente a tu currículum con sus campos listos para completar:
                 </p>
@@ -938,7 +940,7 @@ export default function EditorPanel({
                           showSuccess(`Sección '${presetSec.titleText}' incorporada.`);
                           if (typeof setActiveTab === 'function') setActiveTab(presetSec.id);
                         }}
-                        className={`p-2.5 rounded-xl border text-left flex flex-col justify-between transition cursor-pointer ${
+                        className={`p-2.5 rounded-[${radius.card}] border text-left flex flex-col justify-between transition cursor-pointer ${
                           isAlreadyAdded
                             ? 'bg-[var(--color-secondary-muted)] border-[var(--color-secondary-base)]/40 text-[var(--color-secondary-text)]'
                             : 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] hover:border-[var(--color-accent-base)] hover:bg-[var(--ui-bg-card)]'
@@ -963,7 +965,7 @@ export default function EditorPanel({
                     onClick={() => {
                       document.getElementById('custom-section-creator-form')?.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className="p-2.5 rounded-xl border-2 border-dashed border-[var(--color-accent-base)]/40 bg-[var(--color-accent-muted)] hover:opacity-90 text-left flex flex-col justify-between transition cursor-pointer"
+                    className={`p-2.5 rounded-[${radius.card}] border-2 border-dashed border-[var(--color-accent-base)]/40 bg-[var(--color-accent-muted)] hover:opacity-90 text-left flex flex-col justify-between transition cursor-pointer`}
                   >
                     <div className="space-y-1">
                       <span className="text-xs font-black text-[var(--color-accent-text)] flex items-center gap-1">
@@ -983,7 +985,7 @@ export default function EditorPanel({
 
             {/* 2. CREADOR DE SECCIÓN A MEDIDA */}
             <PanelSection icon={<Plus className="w-4 h-4 text-[var(--ui-rose)]" />} title="Sección a Medida">
-              <div id="custom-section-creator-form" className="p-3.5 bg-[var(--ui-bg-card)] rounded-2xl border-2 border-[var(--color-neutral-border)] space-y-4 shadow-sm">
+              <div id="custom-section-creator-form" className={`p-3.5 bg-[var(--ui-bg-card)] rounded-[${radius.modal}] border-2 border-[var(--color-neutral-border)] space-y-4 ${elevationSystem.raised}`}>
 
                 <div>
                   <Field
@@ -999,7 +1001,7 @@ export default function EditorPanel({
                   <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] mb-1.5">
                     Seleccionar qué campos tendrá cada registro de esta sección:
                   </label>
-                  <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 bg-[var(--color-neutral-surface-muted)] rounded-xl border border-[var(--color-neutral-border)]">
+                  <div className={`grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 bg-[var(--color-neutral-surface-muted)] rounded-[${radius.card}] border border-[var(--color-neutral-border)]`}>
                     {Object.values(FIELD_CATALOG).map((f) => {
                       const isChecked = selectedFields.includes(f.id);
                       return (
@@ -1063,7 +1065,7 @@ export default function EditorPanel({
                     showSuccess(`Sección '${newSection.titleText}' creada exitosamente.`);
                     if (typeof setActiveTab === 'function') setActiveTab(newId);
                   }}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-hover)] text-white text-xs font-black rounded-xl shadow-md transition cursor-pointer"
+                  className={`w-full flex items-center justify-center gap-2 py-2.5 bg-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-hover)] text-white text-xs font-black rounded-[${radius.card}] ${elevationSystem.raised} transition cursor-pointer`}
                 >
                   <Plus className="w-4 h-4" /> Crear e Integrar Sección al CV
                 </button>
@@ -1077,7 +1079,7 @@ export default function EditorPanel({
                   </h4>
 
                   {cvData.customSections.map((cs: any) => (
-                    <div key={cs.id} className="p-3 bg-[var(--color-neutral-surface-muted)] rounded-2xl border-2 border-[var(--color-neutral-border)] flex items-center justify-between">
+                    <div key={cs.id} className={`p-3 bg-[var(--color-neutral-surface-muted)] rounded-[${radius.modal}] border-2 border-[var(--color-neutral-border)] flex items-center justify-between`}>
                       <span className="text-xs font-black text-[var(--ui-rose)] uppercase">
                         {cs.titleText}
                       </span>
@@ -1086,7 +1088,7 @@ export default function EditorPanel({
                         onClick={() => {
                           if (typeof setActiveTab === 'function') setActiveTab(cs.id);
                         }}
-                        className="px-3 py-1 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer"
+                        className={`px-3 py-1 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-bold text-xs rounded-[${radius.card}] shadow transition cursor-pointer`}
                       >
                         Editar Registros →
                       </button>
@@ -1111,7 +1113,7 @@ export default function EditorPanel({
               <button
                 onClick={handleSaveFromPanel}
                 disabled={isSavingFromPanel}
-                className="px-3 py-1.5 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1 cursor-pointer"
+                className={`px-3 py-1.5 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-bold text-xs rounded-[${radius.card}] shadow transition flex items-center gap-1 cursor-pointer`}
               >
                 <Save className="w-3.5 h-3.5" />
                 <span>{isSavingFromPanel ? 'Guardando...' : 'Guardar Actual'}</span>
@@ -1120,14 +1122,14 @@ export default function EditorPanel({
 
             <div className="space-y-2.5">
               {savedList.length === 0 ? (
-                <div className="p-6 text-center text-xs text-[var(--color-neutral-text-primary)] font-medium border-2 border-dashed border-[var(--color-neutral-border)] rounded-xl">
+                <div className={`p-6 text-center text-xs text-[var(--color-neutral-text-primary)] font-medium border-2 border-dashed border-[var(--color-neutral-border)] rounded-[${radius.card}]`}>
                   No hay currículums guardados aún. Haz clic en "Guardar Actual" para almacenar este borrador en WebP.
                 </div>
               ) : (
                 savedList.map((item) => (
                   <div
                     key={item.id}
-                    className="p-3.5 rounded-xl border border-[var(--color-neutral-border)] bg-[var(--color-neutral-surface-warm)]/50  hover:border-[var(--color-accent-purple)] transition flex items-center justify-between gap-2"
+                    className={`p-3.5 rounded-[${radius.card}] border border-[var(--color-neutral-border)] bg-[var(--color-neutral-surface-warm)]/50  hover:border-[var(--color-accent-purple)] transition flex items-center justify-between gap-2`}
                   >
                     <div className="space-y-0.5 min-w-0">
                       <h4 className="text-xs font-black text-[var(--color-neutral-text-primary)] font-black  truncate">
@@ -1142,14 +1144,14 @@ export default function EditorPanel({
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       <button
                         onClick={() => handleOpenSavedFromPanel(item.id)}
-                        className="px-3 py-1.5 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-black text-[11px] rounded-lg shadow transition flex items-center gap-1 cursor-pointer"
+                        className={`px-3 py-1.5 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-black text-[11px] rounded-[${radius.control}] shadow transition flex items-center gap-1 cursor-pointer`}
                       >
                         <FolderOpen className="w-3.5 h-3.5" /> Abrir
                       </button>
 
                       <button
                         onClick={() => handleDeleteSavedFromPanel(item.id, item.candidate_name || item.title)}
-                        className="p-1.5 text-[var(--color-neutral-text-primary)] font-medium hover:text-[var(--color-status-danger-text)] rounded-lg hover:bg-[var(--color-neutral-border)] transition cursor-pointer"
+                        className={`p-1.5 text-[var(--color-neutral-text-primary)] font-medium hover:text-[var(--color-status-danger-text)] rounded-[${radius.control}] hover:bg-[var(--color-neutral-border)] transition cursor-pointer`}
                         title="Eliminar"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -1171,7 +1173,7 @@ export default function EditorPanel({
 
             {/* Formato de Papel */}
             <PanelSection icon={<Layout className="w-4 h-4" />} title="Formato de página">
-              <div className="p-3 bg-[var(--ui-bg-card)] rounded-xl border border-[var(--color-neutral-border)]">
+              <div className={`p-3 bg-[var(--ui-bg-card)] rounded-[${radius.card}] border border-[var(--color-neutral-border)]`}>
                 <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] mb-1.5">
                   Tamaño de Hoja / Formato de Papel
                 </label>
@@ -1187,7 +1189,7 @@ export default function EditorPanel({
                       }
                     }));
                   }}
-                  className="w-full text-xs p-2.5 rounded-xl border border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer"
+                  className={`w-full text-xs p-2.5 rounded-[${radius.card}] border border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer`}
                 >
                   {Object.values(PAGE_SIZES).map((size) => (
                     <option key={size.id} value={size.id}>
@@ -1200,14 +1202,14 @@ export default function EditorPanel({
 
             {/* Tipografía Principal */}
             <PanelSection icon={<FileText className="w-4 h-4" />} title="Tipografía">
-              <div className="p-3 bg-[var(--ui-bg-card)] rounded-xl border border-[var(--color-neutral-border)]">
+              <div className={`p-3 bg-[var(--ui-bg-card)] rounded-[${radius.card}] border border-[var(--color-neutral-border)]`}>
                 <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] mb-1.5">
                   Fuente Principal del Documento (Google Fonts)
                 </label>
                 <select
                   value={cvData?.theme?.fontFamily || "'Outfit', sans-serif"}
                   onChange={(e) => updateTheme('fontFamily', e.target.value)}
-                  className="w-full text-xs p-2.5 rounded-xl border border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer"
+                  className={`w-full text-xs p-2.5 rounded-[${radius.card}] border border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer`}
                 >
                   {fontOptions.map((f) => (
                     <option key={f.id} value={f.value}>{f.name}</option>
@@ -1244,7 +1246,7 @@ export default function EditorPanel({
                     <button
                       key={styleOpt.id}
                       onClick={() => setCvData((prev: any) => ({ ...prev, activePresetId: styleOpt.id }))}
-                      className={`p-3 rounded-xl border text-left transition flex items-start justify-between gap-3 cursor-pointer ${
+                      className={`p-3 rounded-[${radius.card}] border text-left transition flex items-start justify-between gap-3 cursor-pointer ${
                         isSelected
                           ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
                           : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]'
@@ -1275,7 +1277,7 @@ export default function EditorPanel({
                     <button
                       key={preset.id}
                       onClick={() => setCvData((prev: any) => ({ ...prev, activePresetId: preset.id }))}
-                      className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between cursor-pointer ${
+                      className={`p-2.5 rounded-[${radius.card}] border text-left transition flex flex-col justify-between cursor-pointer ${
                         isSelected
                           ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
                           : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]'
@@ -1286,9 +1288,9 @@ export default function EditorPanel({
                         {isSelected && <Check className="w-3.5 h-3.5 text-[var(--ui-secondary)] flex-shrink-0" />}
                       </div>
                       <div className="flex gap-1.5 items-center">
-                        <div className="w-4 h-4 rounded-full border border-[var(--ui-border)] shadow-sm" style={{ backgroundColor: preset.palette.primary }} />
-                        <div className="w-4 h-4 rounded-full border border-[var(--ui-border)] shadow-sm" style={{ backgroundColor: preset.palette.accent }} />
-                        <div className="w-4 h-4 rounded-full border border-[var(--ui-border)] shadow-sm" style={{ backgroundColor: preset.palette.secondary }} />
+                        <div className={`w-4 h-4 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: preset.palette.primary }} />
+                        <div className={`w-4 h-4 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: preset.palette.accent }} />
+                        <div className={`w-4 h-4 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: preset.palette.secondary }} />
                       </div>
                     </button>
                   );
@@ -1305,9 +1307,9 @@ export default function EditorPanel({
           <div className="space-y-6">
             <PanelSection icon={<Sparkles className="w-4 h-4" />} title="Portada">
               {/* Cover Page Toggle */}
-              <div className={`flex items-center justify-between p-3 rounded-xl border transition ${
+              <div className={`flex items-center justify-between p-3 rounded-[${radius.card}] border transition ${
                 cvData.showCoverPage !== false 
-                  ? 'bg-[var(--ui-bg-card)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] shadow-sm' 
+                  ? 'bg-[var(--ui-bg-card)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] ${elevationSystem.raised}' 
                   : 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-muted)] opacity-75'
               }`}>
                 <span className="text-xs font-bold uppercase tracking-wide">
@@ -1316,7 +1318,7 @@ export default function EditorPanel({
                 <button
                   type="button"
                   onClick={() => setCvData((prev: any) => ({ ...prev, showCoverPage: prev.showCoverPage === undefined ? false : !prev.showCoverPage }))}
-                  className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
+                  className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 ${elevationSystem.raised} cursor-pointer ${
                     cvData.showCoverPage !== false
                       ? 'bg-[var(--color-secondary-base)] text-white hover:bg-[var(--color-secondary-hover)]'
                       : 'bg-[var(--color-neutral-text-muted)] text-white hover:opacity-80'
@@ -1328,7 +1330,7 @@ export default function EditorPanel({
 
 
               {/* Registros Destacados en Portada (Solo Títulos, con botón Agregar/Eliminar) */}
-              <div className="p-3 bg-[var(--ui-bg-card)] rounded-xl border border-[var(--color-neutral-border)] space-y-3">
+              <div className={`p-3 bg-[var(--ui-bg-card)] rounded-[${radius.card}] border border-[var(--color-neutral-border)] space-y-3`}>
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">
                     Registros Destacados en Portada ({cvData.roles?.length || 0})
@@ -1356,7 +1358,7 @@ export default function EditorPanel({
                       }
                     }}
                     defaultValue=""
-                    className="w-full text-xs p-2.5 rounded-xl border border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer"
+                    className={`w-full text-xs p-2.5 rounded-[${radius.card}] border border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer`}
                   >
                     <option value="" disabled>-- Seleccionar título para destacar --</option>
                     {[
@@ -1376,12 +1378,12 @@ export default function EditorPanel({
                 {/* Lista de Registros Destacados con Botón de Eliminar */}
                 <div className="space-y-1.5 pt-2">
                   {(!cvData.roles || cvData.roles.length === 0) ? (
-                    <p className="text-xs text-[var(--color-neutral-text-secondary)] italic text-center py-2 border border-dashed border-[var(--color-neutral-border)] rounded-xl">
+                    <p className={`text-xs text-[var(--color-neutral-text-secondary)] italic text-center py-2 border border-dashed border-[var(--color-neutral-border)] rounded-[${radius.card}]`}>
                       No hay registros destacados en la portada aún.
                     </p>
                   ) : (
                     cvData.roles.map((role: string, idx: number) => (
-                      <div key={idx} className="flex items-center justify-between p-2 bg-[var(--ui-bg-card)] rounded-lg border border-[var(--color-neutral-border)] text-xs">
+                      <div key={idx} className={`flex items-center justify-between p-2 bg-[var(--ui-bg-card)] rounded-[${radius.control}] border border-[var(--color-neutral-border)] text-xs`}>
                         <span className="font-bold text-[var(--color-neutral-text-primary)]">{role}</span>
                         <button
                           type="button"
@@ -1507,7 +1509,7 @@ export default function EditorPanel({
                       const primPos = primOrder.indexOf(sec.id) + 1;
 
                       return (
-                        <div key={sec.id} className="p-2 bg-[var(--ui-bg-card)] rounded-xl border border-[var(--color-neutral-border)] text-xs space-y-1.5 shadow-sm">
+                        <div key={sec.id} className={`p-2 bg-[var(--ui-bg-card)] rounded-[${radius.card}] border border-[var(--color-neutral-border)] text-xs space-y-1.5 ${elevationSystem.raised}`}>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1.5">
                               <span className="font-extrabold text-[var(--color-neutral-text-primary)]">{sec.label}</span>
@@ -1527,9 +1529,7 @@ export default function EditorPanel({
                                 type="button"
                                 onClick={() => setColumn('secundaria')}
                                 className={currentVal === 'secundaria'
-                                  ? 'px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer bg-[var(--color-accent-hover)] text-white shadow-sm'
-                                  : 'px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50'
-                                }
+                                  ? `px-2 py-1 rounded-[${radius.control}] text-[10px] font-black transition cursor-pointer bg-[var(--color-accent-hover)] text-white ${elevationSystem.raised}` : `px-2 py-1 rounded-[${radius.control}] text-[10px] font-black transition cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50`}
                               >
                                 Secundaria
                               </button>
@@ -1537,9 +1537,7 @@ export default function EditorPanel({
                                 type="button"
                                 onClick={() => setColumn('primaria')}
                                 className={currentVal === 'primaria'
-                                  ? 'px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer bg-[var(--color-secondary-base)] text-white shadow-sm'
-                                  : 'px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50'
-                                }
+                                  ? `px-2 py-1 rounded-[${radius.control}] text-[10px] font-black transition cursor-pointer bg-[var(--color-secondary-base)] text-white ${elevationSystem.raised}` : `px-2 py-1 rounded-[${radius.control}] text-[10px] font-black transition cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50`}
                               >
                                 Primaria
                               </button>
@@ -1547,9 +1545,7 @@ export default function EditorPanel({
                                 type="button"
                                 onClick={() => setColumn('ambas')}
                                 className={currentVal === 'ambas'
-                                  ? 'px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer bg-[var(--color-accent-purple-hover)] text-white shadow-sm'
-                                  : 'px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50'
-                                }
+                                  ? `px-2 py-1 rounded-[${radius.control}] text-[10px] font-black transition cursor-pointer bg-[var(--color-accent-purple-hover)] text-white ${elevationSystem.raised}` : `px-2 py-1 rounded-[${radius.control}] text-[10px] font-black transition cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50`}
                               >
                                 Ambas
                               </button>
@@ -1558,7 +1554,7 @@ export default function EditorPanel({
 
                           <div className="flex items-center justify-end gap-3 text-[10px] text-[var(--ui-text-secondary)] pt-1 border-t border-[var(--ui-border)]">
                             {(currentVal === 'secundaria' || currentVal === 'ambas') && (
-                              <div className="flex items-center gap-1 bg-[var(--color-accent-muted)] px-2 py-0.5 rounded-lg border border-[var(--color-accent-base)]/30">
+                              <div className={`flex items-center gap-1 bg-[var(--color-accent-muted)] px-2 py-0.5 rounded-[${radius.control}] border border-[var(--color-accent-base)]/30`}>
                                 <span className="font-bold text-[var(--color-accent-text)]">Sec:</span>
                                 <button
                                   type="button"
@@ -1580,7 +1576,7 @@ export default function EditorPanel({
                             )}
 
                             {(currentVal === 'primaria' || currentVal === 'ambas') && (
-                              <div className="flex items-center gap-1 bg-[var(--color-secondary-muted)] px-2 py-0.5 rounded-lg border border-[var(--color-secondary-base)]/30">
+                              <div className={`flex items-center gap-1 bg-[var(--color-secondary-muted)] px-2 py-0.5 rounded-[${radius.control}] border border-[var(--color-secondary-base)]/30`}>
                                 <span className="font-bold text-[var(--color-secondary-text)]">Prim:</span>
                                 <button
                                   type="button"
@@ -1645,7 +1641,7 @@ export default function EditorPanel({
                         }
                       });
                     }}
-                    className="p-2.5 rounded-xl border border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)] text-left transition flex flex-col justify-between cursor-pointer"
+                    className={`p-2.5 rounded-[${radius.card}] border border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)] text-left transition flex flex-col justify-between cursor-pointer`}
                   >
                     <div>
                       <span className="text-[11px] font-bold text-[var(--color-neutral-text-primary)] block">{preset.name}</span>
