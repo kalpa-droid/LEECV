@@ -76,8 +76,9 @@ export function VectorDocViewer({ document }: VectorDocViewerProps) {
           canvas.style.height = 'auto';
           canvas.style.display = 'block';
           canvas.style.marginBottom = '16px';
-          canvas.style.boxShadow = '0 4px 24px rgba(0,0,0,0.18)';
-          canvas.style.borderRadius = '4px';
+          canvas.style.border = '1px solid var(--ui-page-border, rgba(255, 255, 255, 0.1))';
+          canvas.style.boxShadow = 'var(--ui-page-shadow, 0 10px 30px -5px rgba(0, 0, 0, 0.3))';
+          canvas.style.borderRadius = '8px';
 
           const ctx = canvas.getContext('2d');
           if (!ctx) continue;

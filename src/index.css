@@ -52,6 +52,8 @@
   --ui-text-secondary: #475569;
   --ui-border: #E2E8F0;
   --ui-preview-bg: #0F172A;
+  --ui-page-border: #CBD5E1;
+  --ui-page-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(15, 23, 42, 0.06);
   --ui-accent-purple: #7C3AED;
   --ui-secondary: #0D6E66;
   --ui-warning: #B45309;
@@ -146,6 +148,8 @@
   --ui-text-muted: #64748B;
   --ui-border: #1E293B;
   --ui-preview-bg: #020617;
+  --ui-page-border: #334155;
+  --ui-page-shadow: 0 12px 36px -6px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
   --gradient-brand: linear-gradient(135deg, #FF2E63 0%, #7126E0 100%);
   --gradient-gold: linear-gradient(135deg, #F0AE00 0%, #FF7A29 100%);
   --gradient-teal: linear-gradient(135deg, #008780 0%, #00655F 100%);
@@ -198,6 +202,8 @@
   --ui-text-muted: #457B9D;
   --ui-border: #1A4971;
   --ui-preview-bg: #050B11;
+  --ui-page-border: #1A4971;
+  --ui-page-shadow: 0 12px 36px -6px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(125, 190, 204, 0.15);
   --gradient-brand: linear-gradient(135deg, #FF2E63 0%, #7126E0 100%);
   --gradient-gold: linear-gradient(135deg, #F0AE00 0%, #FF7A29 100%);
   --gradient-teal: linear-gradient(135deg, #008780 0%, #00655F 100%);
@@ -250,6 +256,8 @@
   --ui-text-muted: #848494;
   --ui-border: #3E3E4C;
   --ui-preview-bg: #141418;
+  --ui-page-border: #3E3E4C;
+  --ui-page-shadow: 0 12px 36px -6px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
   --gradient-brand: linear-gradient(135deg, #FF2E63 0%, #7126E0 100%);
   --gradient-gold: linear-gradient(135deg, #F0AE00 0%, #FF7A29 100%);
   --gradient-teal: linear-gradient(135deg, #008780 0%, #00655F 100%);

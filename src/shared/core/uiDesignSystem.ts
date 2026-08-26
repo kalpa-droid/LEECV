@@ -265,6 +265,7 @@ export const uiThemePresets = {
     textMuted: '#475569',
     border: '#E2E8F0',
     borderStrong: '#CBD5E1',
+    pageBorder: '#CBD5E1',
     accent: '#FF2E63',
     secondary: '#00A8A0',
   },
@@ -280,6 +281,7 @@ export const uiThemePresets = {
     textMuted: '#475569',
     border: '#E2E8F0',
     borderStrong: '#CBD5E1',
+    pageBorder: '#CBD5E1',
     accent: '#FF2E63',
     secondary: '#00A8A0',
   },
@@ -295,6 +297,7 @@ export const uiThemePresets = {
     textMuted: '#64748B',
     border: '#1E293B',
     borderStrong: '#334155',
+    pageBorder: '#334155',
     accent: '#FF2E63',
     secondary: '#38BDF8',
   },
@@ -310,6 +313,7 @@ export const uiThemePresets = {
     textMuted: '#64748B',
     border: '#1E293B',
     borderStrong: '#334155',
+    pageBorder: '#334155',
     accent: '#FF2E63',
     secondary: '#38BDF8',
   },
@@ -325,6 +329,7 @@ export const uiThemePresets = {
     textMuted: '#457B9D',
     border: '#1A4971',
     borderStrong: '#2A6496',
+    pageBorder: '#1A4971',
     accent: '#FF2E63',
     secondary: '#5EEAD4',
   },
@@ -340,6 +345,7 @@ export const uiThemePresets = {
     textMuted: '#747484',
     border: '#3E3E4C',
     borderStrong: '#505060',
+    pageBorder: '#3E3E4C',
     accent: '#A5A5C7',
     secondary: '#80B8B5',
   },
@@ -387,6 +393,7 @@ export function applyUiTheme(themeId?: string): void {
   root.style.setProperty('--ui-text-muted', theme.textMuted);
   root.style.setProperty('--ui-border', theme.border);
   root.style.setProperty('--ui-border-strong', theme.borderStrong);
+  root.style.setProperty('--ui-page-border', theme.pageBorder);
   root.style.setProperty('--ui-accent', theme.accent);
   root.style.setProperty('--ui-secondary', theme.secondary);
 
