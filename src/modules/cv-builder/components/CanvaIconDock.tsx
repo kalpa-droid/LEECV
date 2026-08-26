@@ -3,7 +3,7 @@ import {
   Palette, Layout, Sparkles, Menu, X, Plus
 } from 'lucide-react';
 import { DomSectionIcon } from '../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
-import { getNextUiTheme, UI_THEME_META } from '../../../shared/core/uiDesignSystem';
+import { getNextUiTheme, UI_THEME_META, elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 
 export interface CanvaIconDockProps {
   cvData?: any;
@@ -71,9 +71,9 @@ export default function CanvaIconDock({
         <button
           type="button"
           onClick={() => setIsPanelOpen(!isPanelOpen)}
-          className={`p-2.5 rounded-2xl mb-3 transition transform active:scale-95 cursor-pointer ${
+          className={`p-2.5 rounded-[${radius.modal}] mb-3 transition transform active:scale-95 cursor-pointer ${
             isPanelOpen
-              ? 'bg-[var(--color-accent-base)] text-white shadow-lg shadow-[var(--color-accent-base)]/30'
+              ? `bg-[var(--color-accent-base)] text-white ${elevationSystem.floating} shadow-[var(--color-accent-base)]/30`
               : 'bg-[var(--ui-dock-hover)] text-[var(--ui-dock-text-muted)] hover:text-[var(--ui-dock-text)]'
           }`}
           title={isPanelOpen ? 'Cerrar Panel Editor' : 'Abrir Panel Editor'}
@@ -93,9 +93,9 @@ export default function CanvaIconDock({
                 key={tab.id}
                 type="button"
                 onClick={() => handleTabClick(tab.id)}
-                className={`w-12 h-12 rounded-2xl flex flex-col items-center justify-center transition group relative cursor-pointer ${
+                className={`w-12 h-12 rounded-[${radius.modal}] flex flex-col items-center justify-center transition group relative cursor-pointer ${
                   isActive
-                    ? 'bg-[var(--color-accent-base)] text-white shadow-lg shadow-[var(--color-accent-base)]/30 scale-105'
+                    ? `bg-[var(--color-accent-base)] text-white ${elevationSystem.floating} shadow-[var(--color-accent-base)]/30 scale-105`
                     : 'text-[var(--ui-dock-text-muted)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--ui-dock-hover)]'
                 }`}
                 title={tab.label}
@@ -103,7 +103,7 @@ export default function CanvaIconDock({
                 <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-[var(--color-secondary-bright)]'}`} />
                 <span className={`text-[9px] font-bold tracking-tighter mt-0.5 ${isActive ? 'text-white' : 'text-[var(--ui-dock-text-muted)]'}`}>{tab.label}</span>
                 
-                <span className="absolute left-14 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2.5 py-1 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]">
+                <span className={`absolute left-14 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2.5 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
                   {tab.label}
                 </span>
               </button>
@@ -123,9 +123,9 @@ export default function CanvaIconDock({
                 key={addSectionTab.id}
                 type="button"
                 onClick={() => handleTabClick(addSectionTab.id)}
-                className={`w-12 h-12 rounded-2xl flex flex-col items-center justify-center transition group relative cursor-pointer border-2 ${
+                className={`w-12 h-12 rounded-[${radius.modal}] flex flex-col items-center justify-center transition group relative cursor-pointer border-2 ${
                   isActive
-                    ? 'bg-[var(--color-status-success-base)] border-[var(--color-status-success-base)] text-white shadow-md scale-105'
+                    ? `bg-[var(--color-status-success-base)] border-[var(--color-status-success-base)] text-white ${elevationSystem.raised} scale-105`
                     : 'bg-[var(--ui-dock-hover)] border-[var(--color-status-success-base)]/80 text-[var(--color-status-success-bright)] hover:bg-[var(--color-status-success-muted)]'
                 }`}
                 title="Catálogo y Creador de Secciones (Sección)"
@@ -135,7 +135,7 @@ export default function CanvaIconDock({
                   {addSectionTab.label}
                 </span>
 
-                <span className="absolute left-14 bg-[var(--ui-bg-dock)] text-[var(--color-status-success-text)] text-xs font-bold px-2.5 py-1 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--color-status-success-base)]/30">
+                <span className={`absolute left-14 bg-[var(--ui-bg-dock)] text-[var(--color-status-success-text)] text-xs font-bold px-2.5 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--color-status-success-base)]/30`}>
                   Catálogo & Creador de Secciones
                 </span>
               </button>
@@ -151,9 +151,9 @@ export default function CanvaIconDock({
                 key={cs.id}
                 type="button"
                 onClick={() => handleTabClick(cs.id)}
-                className={`w-12 h-11 rounded-2xl flex flex-col items-center justify-center transition group relative cursor-pointer ${
+                className={`w-12 h-11 rounded-[${radius.modal}] flex flex-col items-center justify-center transition group relative cursor-pointer ${
                   isActive
-                    ? 'bg-[var(--color-secondary-base)] text-white shadow-lg shadow-[var(--color-secondary-base)]/30 scale-105'
+                    ? `bg-[var(--color-secondary-base)] text-white ${elevationSystem.floating} shadow-[var(--color-secondary-base)]/30 scale-105`
                     : 'bg-[var(--ui-dock-hover)] text-[var(--color-secondary-bright)] border border-[var(--color-secondary-base)]/40 hover:bg-[var(--color-secondary-muted)]'
                 }`}
                 title={cs.titleText}
@@ -163,7 +163,7 @@ export default function CanvaIconDock({
                   {cs.titleText?.substring(0, 6) || 'Personal'}
                 </span>
 
-                <span className="absolute left-14 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2.5 py-1 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]">
+                <span className={`absolute left-14 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2.5 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
                   {cs.titleText}
                 </span>
               </button>
@@ -178,9 +178,9 @@ export default function CanvaIconDock({
                 key={sec.id}
                 type="button"
                 onClick={() => handleTabClick(sec.id)}
-                className={`w-12 h-11 rounded-2xl flex flex-col items-center justify-center transition group relative cursor-pointer ${
+                className={`w-12 h-11 rounded-[${radius.modal}] flex flex-col items-center justify-center transition group relative cursor-pointer ${
                   isActive
-                    ? 'bg-[var(--color-secondary-base)] text-white shadow-lg shadow-[var(--color-secondary-base)]/30 scale-105'
+                    ? `bg-[var(--color-secondary-base)] text-white ${elevationSystem.floating} shadow-[var(--color-secondary-base)]/30 scale-105`
                     : 'text-[var(--ui-dock-text-muted)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--ui-dock-hover)]'
                 }`}
                 title={sec.label}
@@ -188,7 +188,7 @@ export default function CanvaIconDock({
                 <DomSectionIcon iconId={sec.iconId} className="w-4 h-4" color={isActive ? '#FFFFFF' : 'var(--color-secondary-bright)'} />
                 <span className={`text-[9px] font-extrabold tracking-tighter mt-0.5 leading-none ${isActive ? 'text-white' : 'text-[var(--ui-dock-text-muted)]'}`}>{sec.label}</span>
 
-                <span className="absolute left-14 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2.5 py-1 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]">
+                <span className={`absolute left-14 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2.5 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
                   {sec.label}
                 </span>
               </button>
@@ -201,14 +201,14 @@ export default function CanvaIconDock({
       <nav 
         ref={mobileNavRef}
         onWheel={handleWheelScroll}
-        className="md:hidden fixed bottom-0 left-0 right-0 z-[999] ui-bg-dock border-t border-[var(--ui-dock-border)] px-2 py-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar shadow-2xl select-none"
+        className={`md:hidden fixed bottom-0 left-0 right-0 z-[999] ui-bg-dock border-t border-[var(--ui-dock-border)] px-2 py-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar ${elevationSystem.overlay} select-none`}
       >
         <button
           type="button"
           onClick={() => setIsPanelOpen(!isPanelOpen)}
-          className={`p-2.5 rounded-xl transition flex items-center justify-center shrink-0 cursor-pointer ${
+          className={`p-2.5 rounded-[${radius.card}] transition flex items-center justify-center shrink-0 cursor-pointer ${
             isPanelOpen
-              ? 'bg-[var(--color-accent-base)] text-white shadow-md'
+              ? `bg-[var(--color-accent-base)] text-white ${elevationSystem.raised}`
               : 'bg-[var(--ui-bg-panel)] text-[var(--color-accent-amber-bright)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)]'
           }`}
           title={isPanelOpen ? 'Cerrar Panel' : 'Abrir Panel'}
@@ -237,7 +237,7 @@ export default function CanvaIconDock({
                   });
                 }
               }}
-              className="px-2.5 py-1.5 rounded-xl bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] text-[11px] font-black shrink-0 flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-sm"
+              className={`px-2.5 py-1.5 rounded-[${radius.card}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] text-[11px] font-black shrink-0 flex items-center gap-1.5 cursor-pointer active:scale-95 ${elevationSystem.raised}`}
               title={`Tema actual: ${meta.label}`}
             >
               <span>{meta.shortLabel}</span>
@@ -256,9 +256,9 @@ export default function CanvaIconDock({
               key={tab.id}
               type="button"
               onClick={() => handleTabClick(tab.id)}
-              className={`px-3 py-1.5 rounded-xl flex items-center gap-1 text-[11px] font-black shrink-0 transition cursor-pointer ${
+              className={`px-3 py-1.5 rounded-[${radius.card}] flex items-center gap-1 text-[11px] font-black shrink-0 transition cursor-pointer ${
                 isActive
-                  ? 'bg-[var(--color-accent-base)] text-white shadow-md'
+                  ? `bg-[var(--color-accent-base)] text-white ${elevationSystem.raised}`
                   : 'bg-[var(--ui-bg-panel)] text-[var(--ui-dock-text-muted)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)] hover:text-[var(--ui-dock-text)]'
               }`}
             >
@@ -272,7 +272,7 @@ export default function CanvaIconDock({
         <button
           type="button"
           onClick={() => handleTabClick(addSectionTab.id)}
-          className={`px-3 py-1.5 rounded-xl font-black text-[11px] shrink-0 flex items-center gap-1 shadow cursor-pointer border ${
+          className={`px-3 py-1.5 rounded-[${radius.card}] font-black text-[11px] shrink-0 flex items-center gap-1 shadow cursor-pointer border ${
             activeTab === addSectionTab.id && isPanelOpen
               ? 'bg-[var(--color-status-success-base)] border-[var(--color-status-success-base)] text-white'
               : 'bg-[var(--ui-bg-panel)] border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-bright)] hover:bg-[var(--color-status-success-muted)]'
@@ -291,9 +291,9 @@ export default function CanvaIconDock({
               key={sec.id}
               type="button"
               onClick={() => handleTabClick(sec.id)}
-              className={`px-3 py-1.5 rounded-xl flex items-center gap-1 text-[11px] font-black shrink-0 transition cursor-pointer ${
+              className={`px-3 py-1.5 rounded-[${radius.card}] flex items-center gap-1 text-[11px] font-black shrink-0 transition cursor-pointer ${
                 isActive
-                  ? 'bg-[var(--color-secondary-base)] text-white shadow-md'
+                  ? `bg-[var(--color-secondary-base)] text-white ${elevationSystem.raised}`
                   : 'bg-[var(--ui-bg-panel)] text-[var(--color-secondary-bright)] border border-[var(--color-secondary-base)]/30 hover:bg-[var(--color-secondary-muted)]'
               }`}
             >
@@ -311,9 +311,9 @@ export default function CanvaIconDock({
               key={cs.id}
               type="button"
               onClick={() => handleTabClick(cs.id)}
-              className={`px-3 py-1.5 rounded-xl flex items-center gap-1 text-[11px] font-black shrink-0 transition cursor-pointer ${
+              className={`px-3 py-1.5 rounded-[${radius.card}] flex items-center gap-1 text-[11px] font-black shrink-0 transition cursor-pointer ${
                 isActive
-                  ? 'bg-[var(--color-accent-purple)] text-white shadow-md'
+                  ? `bg-[var(--color-accent-purple)] text-white ${elevationSystem.raised}`
                   : 'bg-[var(--ui-bg-panel)] text-[var(--color-accent-purple-bright)] border border-[var(--color-accent-purple)]/30 hover:bg-[var(--color-accent-purple-light)]'
               }`}
             >
