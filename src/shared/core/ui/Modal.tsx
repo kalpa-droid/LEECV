@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, ReactNode } from 'react';
 import { X } from 'lucide-react';
-import {} from '../uiDesignSystem';
+import { elevationSystem, radius } from '../uiDesignSystem';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -69,7 +69,7 @@ export function Modal({
       className="fixed inset-0 z-[500] flex items-center justify-center bg-black/75 backdrop-blur-sm p-3 sm:p-5 animate-fade-in no-print select-none"
     >
       <div
-        className={`w-full ${sizeClasses[size] || sizeClasses.md} bg-[var(--ui-bg-card)] ui-bg-card ui-text-primary ui-border border-2 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] ${className}`}
+        className={`w-full ${sizeClasses[size] || sizeClasses.md} bg-[var(--ui-bg-card)] ui-bg-card ui-text-primary ui-border border-2 rounded-[${radius.modal}] ${elevationSystem.overlay} overflow-hidden flex flex-col max-h-[92vh] ${className}`}
       >
         {/* Header */}
         {(title || icon) && (
@@ -83,7 +83,7 @@ export function Modal({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-xl hover:bg-[var(--ui-dock-hover)] text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] transition cursor-pointer"
+              className={`p-1.5 rounded-[${radius.control}] hover:bg-[var(--ui-dock-hover)] text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] transition cursor-pointer`}
               title="Cerrar ventana"
             >
               <X className="w-4 h-4" />

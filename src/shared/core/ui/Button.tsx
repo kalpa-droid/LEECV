@@ -1,4 +1,5 @@
 import React, { ButtonHTMLAttributes, ReactNode, ElementType } from 'react';
+import { elevationSystem, radius } from '../uiDesignSystem';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children?: ReactNode;
@@ -23,10 +24,10 @@ export function Button({
   icon: Icon,
   ...props
 }: ButtonProps) {
-  const baseStyles = 'font-black rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95';
+  const baseStyles = `font-black rounded-[${radius.control}] transition-all flex items-center justify-center gap-1.5 ${elevationSystem.raised} cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95`;
 
   const variantStyles: Record<string, string> = {
-    primary: 'bg-[var(--color-accent-base)] text-white hover:bg-[var(--color-accent-hover)] border border-transparent shadow-sm',
+    primary: 'bg-[var(--color-accent-base)] text-white hover:bg-[var(--color-accent-hover)] border border-transparent',
     secondary: 'bg-[var(--color-accent-base)] text-white hover:bg-[var(--color-accent-brand-hover)] border border-[var(--color-accent-brand-hover)]',
     accent: 'bg-[var(--color-accent-amber)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-accent-amber-hover)] border border-[var(--color-accent-amber-hover)]',
     dark: 'bg-[var(--ui-btn-neutral-bg)] text-[var(--ui-btn-neutral-text)] hover:bg-[var(--ui-btn-neutral-hover)] border border-[var(--ui-btn-neutral-border)]',

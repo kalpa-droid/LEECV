@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { AlertTriangle, Trash2 } from 'lucide-react';
-import { colorSystem, typeScale, button } from '../uiDesignSystem';
+import { colorSystem, typeScale, button, elevationSystem, radius } from '../uiDesignSystem';
 import { Modal } from './Modal';
 
 const ConfirmContext = createContext<any>(null);
@@ -74,7 +74,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
       >
         <div className="space-y-4 text-center p-2">
           <div
-            className="w-12 h-12 rounded-full flex items-center justify-center mx-auto shadow-inner"
+            className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto ${elevationSystem.raised}`}
             style={{
               backgroundColor: colorSystem.status.danger.muted,
               color: colorSystem.status.danger.text

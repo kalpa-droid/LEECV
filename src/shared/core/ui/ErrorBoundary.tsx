@@ -1,5 +1,5 @@
 import React, { Component, ReactNode } from 'react';
-import { colorSystem, button, typeScale } from '../uiDesignSystem';
+import { colorSystem, button, typeScale, elevationSystem, radius } from '../uiDesignSystem';
 import { navigation } from '../utils/navigation';
 
 interface ErrorBoundaryProps {
@@ -54,7 +54,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           style={{ backgroundColor: colorSystem.criticalSurface.bg, color: colorSystem.criticalSurface.textPrimary }}
         >
           <div
-            className="max-w-md p-6 rounded-2xl shadow-2xl space-y-4"
+            className={`max-w-md p-6 rounded-[${radius.modal}] ${elevationSystem.overlay} space-y-4`}
             style={{ backgroundColor: colorSystem.criticalSurface.card, border: `1px solid ${colorSystem.accent.base}66` }}
           >
             <div
@@ -71,7 +71,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </p>
             {this.state.error?.message && (
               <div
-                className="p-3 rounded-xl text-[11px] font-mono break-all text-left"
+                className={`p-3 rounded-[${radius.card}] text-[11px] font-mono break-all text-left`}
                 style={{ backgroundColor: `${colorSystem.status.danger.base}22`, border: `1px solid ${colorSystem.status.danger.base}66`, color: colorSystem.status.danger.base }}
               >
                 {this.state.error.message}

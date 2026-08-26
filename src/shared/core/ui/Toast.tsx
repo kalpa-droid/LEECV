@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { CheckCircle2, AlertTriangle, XCircle, Info, X } from 'lucide-react';
-import { colorSystem, typeScale } from '../uiDesignSystem';
+import { colorSystem, typeScale, elevationSystem, radius } from '../uiDesignSystem';
 
 const ToastContext = createContext(null);
 
@@ -50,7 +50,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             <div
               key={toast.id}
               style={{ backgroundColor: bg, borderColor: border, color: textColor }}
-              className={`pointer-events-auto flex items-center justify-between p-3.5 rounded-[12px] shadow-xl border ${typeScale.body} font-medium transition-all transform animate-slide-up`}
+              className={`pointer-events-auto flex items-center justify-between p-3.5 rounded-[${radius.card}] ${elevationSystem.overlay} border ${typeScale.body} font-medium transition-all transform animate-slide-up`}
             >
               <div className="flex items-center gap-2">
                 {toast.type === 'success' && <CheckCircle2 className="w-4 h-4 flex-shrink-0" />}
