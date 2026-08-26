@@ -80,7 +80,7 @@ export default function Navbar({
           {/* 1. NUEVO */}
           <button
             onClick={handleNewClick}
-            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-white bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] border border-white/10 transition shadow-md cursor-pointer whitespace-nowrap active:scale-95"
+            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-black text-white bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] border border-[var(--color-accent-brand-hover)] transition shadow-md cursor-pointer whitespace-nowrap active:scale-95"
             title="Iniciar un nuevo currículum en blanco"
           >
             <FilePlus className="w-3.5 h-3.5 text-white flex-shrink-0" />
@@ -123,7 +123,7 @@ export default function Navbar({
           {/* 5. PDF */}
           <button
             onClick={onPrint}
-            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-[var(--color-secondary-base)] hover:opacity-90 text-white font-extrabold text-xs shadow-md transition active:scale-95 border border-white/10 cursor-pointer whitespace-nowrap"
+            className="flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-[var(--color-secondary-base)] hover:opacity-90 text-white font-extrabold text-xs shadow-md transition active:scale-95 border border-[var(--color-secondary-hover)] cursor-pointer whitespace-nowrap"
             title="Exportar documento PDF final listo para enviar"
           >
             <Download className="w-3.5 h-3.5 flex-shrink-0 text-white" />
@@ -134,7 +134,7 @@ export default function Navbar({
         {/* Right: User Avatar Circle (Acceso a Cuenta / Suscripción) */}
         <button
           onClick={handlePricingClick}
-          className="w-8 h-8 rounded-full bg-gradient-to-tr from-[var(--color-accent-orange)] to-[var(--color-accent-amber)] text-black flex items-center justify-center font-black text-xs shadow-md border-2 border-white/40 hover:scale-105 transition cursor-pointer flex-shrink-0"
+          className="w-8 h-8 rounded-full bg-[var(--color-accent-amber)] bg-gradient-to-tr from-[var(--color-accent-orange)] to-[var(--color-accent-amber)] text-black flex items-center justify-center font-black text-xs shadow-md border-2 border-[var(--ui-border)] hover:scale-105 transition cursor-pointer flex-shrink-0"
           title="Mi Cuenta de Usuario / Suscripción Premium"
         >
           <User className="w-4 h-4 stroke-[2.5]" />

@@ -68,16 +68,16 @@ export default function WizardModal({
       size="4xl"
       className="h-[88vh]"
       footer={
-        <div className="w-full flex items-center justify-between">
+        <div className="w-full flex items-center justify-between bg-[var(--ui-bg-card)]">
           <button
             onClick={prevStep}
             disabled={currentStepIndex === 0}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border border-white/20 bg-white/10 disabled:opacity-40 transition cursor-pointer text-white"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] disabled:opacity-40 transition cursor-pointer text-[var(--ui-text-primary)]"
           >
             <ChevronLeft className="w-4 h-4" /> Anterior
           </button>
 
-          <div className="text-xs font-semibold text-white/60">
+          <div className="text-xs font-semibold text-[var(--ui-text-secondary)]">
             Sección {currentStepIndex + 1} de {totalSteps}
           </div>
 
@@ -101,7 +101,7 @@ export default function WizardModal({
     >
       <div className="flex flex-col h-full overflow-hidden space-y-3">
         {/* Progress Bar */}
-        <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden flex-shrink-0">
+        <div className="w-full bg-[var(--ui-bg-panel)] h-1.5 rounded-full overflow-hidden flex-shrink-0">
           <div 
             className="bg-[var(--color-accent-purple)] h-full transition-all duration-300"
             style={{ width: `${((currentStepIndex + 1) / totalSteps) * 100}%` }}
@@ -109,7 +109,7 @@ export default function WizardModal({
         </div>
 
         {/* Wizard Step Selector Tabs Toolbar */}
-        <div className="flex border border-white/10 bg-black/40 p-1.5 rounded-xl overflow-x-auto flex-shrink-0 no-scrollbar">
+        <div className="flex border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] p-1.5 rounded-xl overflow-x-auto flex-shrink-0 no-scrollbar">
           {wizardSteps.map((step, idx) => {
             const IconComp = step.icon;
             const isActive = idx === currentStepIndex;
@@ -120,7 +120,7 @@ export default function WizardModal({
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 flex-shrink-0 transition cursor-pointer ${
                   isActive
                     ? 'bg-[var(--color-accent-purple)] text-white shadow-sm'
-                    : 'text-white/60 hover:text-white'
+                    : 'text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]'
                 }`}
               >
                 <IconComp className="w-3.5 h-3.5" />

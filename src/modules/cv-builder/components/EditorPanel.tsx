@@ -251,7 +251,7 @@ export default function EditorPanel({
     return (
       <div className={`flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl border mb-3 transition ${
         isVisible 
-          ? 'bg-white border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] shadow-sm' 
+          ? 'bg-[var(--ui-bg-card)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] shadow-sm' 
           : 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-muted)] opacity-75'
       }`}>
         <span className="text-xs font-black uppercase tracking-wide">
@@ -432,7 +432,7 @@ export default function EditorPanel({
               <select
                 value={selectedRegIdx}
                 onChange={(e) => setSelectedRegIdx(e.target.value)}
-                className="w-full text-xs p-2.5 rounded-xl border-2 border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] font-extrabold outline-none focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[var(--color-accent-rose-muted)] transition shadow-sm"
+                className="w-full text-xs p-2.5 rounded-xl border-2 border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-extrabold outline-none focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[var(--color-accent-rose-muted)] transition shadow-sm"
               >
                 <option value="">-- Hacer clic para elegir un título o curso --</option>
                 {registeredItems.map((item, idx) => (
@@ -458,7 +458,7 @@ export default function EditorPanel({
                 className={`p-2.5 rounded-xl border-2 flex items-center justify-center gap-1.5 font-black text-xs transition ${
                   certMode === 'upload'
                     ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-base)] text-white shadow-md'
-                    : 'border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-surface-warm)]'
+                    : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-surface-warm)]'
                 }`}
               >
                 <Upload className="w-4 h-4" /> Subir Imagen
@@ -474,7 +474,7 @@ export default function EditorPanel({
                 className={`p-2.5 rounded-xl border-2 flex items-center justify-center gap-1.5 font-black text-xs transition ${
                   certMode === 'camera'
                     ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-base)] text-white shadow-md'
-                    : 'border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-surface-warm)]'
+                    : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-surface-warm)]'
                 }`}
               >
                 <Camera className="w-4 h-4" /> Usar Cámara
@@ -518,13 +518,13 @@ export default function EditorPanel({
               </span>
 
               {cvData.certificatesScanned.length === 0 ? (
-                <p className="text-xs text-[var(--color-neutral-text-primary)] font-bold italic text-center py-4 border-2 border-dashed border-[var(--color-neutral-border)] rounded-xl bg-white">
+                <p className="text-xs text-[var(--color-neutral-text-primary)] font-bold italic text-center py-4 border-2 border-dashed border-[var(--color-neutral-border)] rounded-xl bg-[var(--ui-bg-card)]">
                   No hay certificados anexados aún.
                 </p>
               ) : (
                 <div className="space-y-2">
                   {cvData.certificatesScanned.map((cert) => (
-                    <div key={cert.id} className="flex items-center gap-3 p-2.5 bg-white rounded-xl border-2 border-[var(--color-neutral-border)] shadow-sm">
+                    <div key={cert.id} className="flex items-center gap-3 p-2.5 bg-[var(--ui-bg-card)] rounded-xl border-2 border-[var(--color-neutral-border)] shadow-sm">
                       <img 
                         src={cert.imageUrl} 
                         alt={cert.title} 
@@ -623,7 +623,7 @@ export default function EditorPanel({
             {cvData?.sectionVisibility?.firma !== false && (
               <>
 
-            <div className="p-4 bg-white rounded-2xl border-2 border-[var(--color-neutral-border)] space-y-3 text-center shadow-sm">
+            <div className="p-4 bg-[var(--ui-bg-card)] rounded-2xl border-2 border-[var(--color-neutral-border)] space-y-3 text-center shadow-sm">
               {cvData.signature?.dataUrl ? (
                 <div className="space-y-2">
                   <div className="bg-[var(--color-neutral-surface-warm)] p-3 rounded-xl border border-[var(--color-accent-amber)]">
@@ -656,7 +656,7 @@ export default function EditorPanel({
               </button>
             </div>
 
-            <div className="p-4 bg-white rounded-2xl border-2 border-[var(--color-neutral-border)] space-y-3 shadow-sm">
+            <div className="p-4 bg-[var(--ui-bg-card)] rounded-2xl border-2 border-[var(--color-neutral-border)] space-y-3 shadow-sm">
               <h4 className="text-xs font-black text-[var(--color-neutral-text-primary)] uppercase">Datos del Pie de Firma</h4>
               
               {/* 1. Nombre Automático (Abreviaturas / Título + Nombres + Apellidos) */}
@@ -695,7 +695,7 @@ export default function EditorPanel({
                             signature: { ...(prev.signature || {}), signerRole: val }
                           }));
                         }}
-                        className="w-full text-xs p-2.5 rounded-xl border-2 border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] font-bold outline-none focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[var(--color-accent-rose-muted)] cursor-pointer transition"
+                        className="w-full text-xs p-2.5 rounded-xl border-2 border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[var(--color-accent-rose-muted)] cursor-pointer transition"
                       >
                         {titleList.map((t, idx) => (
                           <option key={idx} value={t}>{t}</option>
@@ -812,7 +812,7 @@ export default function EditorPanel({
           <div className="space-y-6">
             {/* 1. SECCIONES PREDISEÑADAS CON 1 CLIC */}
             <PanelSection icon={<Sparkles className="w-4 h-4 text-[var(--ui-secondary)]" />} title="Secciones Prediseñadas">
-              <div className="p-3.5 bg-white rounded-2xl border-2 border-[var(--color-neutral-border)] space-y-3 shadow-sm">
+              <div className="p-3.5 bg-[var(--ui-bg-card)] rounded-2xl border-2 border-[var(--color-neutral-border)] space-y-3 shadow-sm">
                 <p className="text-[11px] text-[var(--color-neutral-text-secondary)] font-medium leading-relaxed">
                   Haz clic en cualquiera de estas secciones para agregarla instantáneamente a tu currículum con sus campos listos para completar:
                 </p>
@@ -941,7 +941,7 @@ export default function EditorPanel({
                         className={`p-2.5 rounded-xl border text-left flex flex-col justify-between transition cursor-pointer ${
                           isAlreadyAdded
                             ? 'bg-[var(--color-secondary-muted)] border-[var(--color-secondary-base)]/40 text-[var(--color-secondary-text)]'
-                            : 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] hover:border-[var(--color-accent-base)] hover:bg-white'
+                            : 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] hover:border-[var(--color-accent-base)] hover:bg-[var(--ui-bg-card)]'
                         }`}
                       >
                         <div className="space-y-1">
@@ -1171,7 +1171,7 @@ export default function EditorPanel({
 
             {/* Formato de Papel */}
             <PanelSection icon={<Layout className="w-4 h-4" />} title="Formato de página">
-              <div className="p-3 bg-white rounded-xl border border-[var(--color-neutral-border)]">
+              <div className="p-3 bg-[var(--ui-bg-card)] rounded-xl border border-[var(--color-neutral-border)]">
                 <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] mb-1.5">
                   Tamaño de Hoja / Formato de Papel
                 </label>
@@ -1187,7 +1187,7 @@ export default function EditorPanel({
                       }
                     }));
                   }}
-                  className="w-full text-xs p-2.5 rounded-xl border border-[var(--color-secondary-base)] bg-white text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer"
+                  className="w-full text-xs p-2.5 rounded-xl border border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer"
                 >
                   {Object.values(PAGE_SIZES).map((size) => (
                     <option key={size.id} value={size.id}>
@@ -1200,14 +1200,14 @@ export default function EditorPanel({
 
             {/* Tipografía Principal */}
             <PanelSection icon={<FileText className="w-4 h-4" />} title="Tipografía">
-              <div className="p-3 bg-white rounded-xl border border-[var(--color-neutral-border)]">
+              <div className="p-3 bg-[var(--ui-bg-card)] rounded-xl border border-[var(--color-neutral-border)]">
                 <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] mb-1.5">
                   Fuente Principal del Documento (Google Fonts)
                 </label>
                 <select
                   value={cvData?.theme?.fontFamily || "'Outfit', sans-serif"}
                   onChange={(e) => updateTheme('fontFamily', e.target.value)}
-                  className="w-full text-xs p-2.5 rounded-xl border border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer"
+                  className="w-full text-xs p-2.5 rounded-xl border border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer"
                 >
                   {fontOptions.map((f) => (
                     <option key={f.id} value={f.value}>{f.name}</option>
@@ -1247,7 +1247,7 @@ export default function EditorPanel({
                       className={`p-3 rounded-xl border text-left transition flex items-start justify-between gap-3 cursor-pointer ${
                         isSelected
                           ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
-                          : 'border-[var(--color-neutral-border)] bg-white hover:border-[var(--color-accent-base)]'
+                          : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]'
                       }`}
                     >
                       <div className="space-y-0.5">
@@ -1278,7 +1278,7 @@ export default function EditorPanel({
                       className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between cursor-pointer ${
                         isSelected
                           ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
-                          : 'border-[var(--color-neutral-border)] bg-white hover:border-[var(--color-accent-base)]'
+                          : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1.5">
@@ -1286,9 +1286,9 @@ export default function EditorPanel({
                         {isSelected && <Check className="w-3.5 h-3.5 text-[var(--ui-secondary)] flex-shrink-0" />}
                       </div>
                       <div className="flex gap-1.5 items-center">
-                        <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.palette.primary }} />
-                        <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.palette.accent }} />
-                        <div className="w-4 h-4 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: preset.palette.secondary }} />
+                        <div className="w-4 h-4 rounded-full border border-[var(--ui-border)] shadow-sm" style={{ backgroundColor: preset.palette.primary }} />
+                        <div className="w-4 h-4 rounded-full border border-[var(--ui-border)] shadow-sm" style={{ backgroundColor: preset.palette.accent }} />
+                        <div className="w-4 h-4 rounded-full border border-[var(--ui-border)] shadow-sm" style={{ backgroundColor: preset.palette.secondary }} />
                       </div>
                     </button>
                   );
@@ -1307,7 +1307,7 @@ export default function EditorPanel({
               {/* Cover Page Toggle */}
               <div className={`flex items-center justify-between p-3 rounded-xl border transition ${
                 cvData.showCoverPage !== false 
-                  ? 'bg-white border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] shadow-sm' 
+                  ? 'bg-[var(--ui-bg-card)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] shadow-sm' 
                   : 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-muted)] opacity-75'
               }`}>
                 <span className="text-xs font-bold uppercase tracking-wide">
@@ -1328,7 +1328,7 @@ export default function EditorPanel({
 
 
               {/* Registros Destacados en Portada (Solo Títulos, con botón Agregar/Eliminar) */}
-              <div className="p-3 bg-white rounded-xl border border-[var(--color-neutral-border)] space-y-3">
+              <div className="p-3 bg-[var(--ui-bg-card)] rounded-xl border border-[var(--color-neutral-border)] space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">
                     Registros Destacados en Portada ({cvData.roles?.length || 0})
@@ -1356,7 +1356,7 @@ export default function EditorPanel({
                       }
                     }}
                     defaultValue=""
-                    className="w-full text-xs p-2.5 rounded-xl border border-[var(--color-secondary-base)] bg-white text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer"
+                    className="w-full text-xs p-2.5 rounded-xl border border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer"
                   >
                     <option value="" disabled>-- Seleccionar título para destacar --</option>
                     {[
@@ -1556,7 +1556,7 @@ export default function EditorPanel({
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-end gap-3 text-[10px] text-white/60 pt-1 border-t border-white/10">
+                          <div className="flex items-center justify-end gap-3 text-[10px] text-[var(--ui-text-secondary)] pt-1 border-t border-[var(--ui-border)]">
                             {(currentVal === 'secundaria' || currentVal === 'ambas') && (
                               <div className="flex items-center gap-1 bg-[var(--color-accent-muted)] px-2 py-0.5 rounded-lg border border-[var(--color-accent-base)]/30">
                                 <span className="font-bold text-[var(--color-accent-text)]">Sec:</span>
@@ -1645,7 +1645,7 @@ export default function EditorPanel({
                         }
                       });
                     }}
-                    className="p-2.5 rounded-xl border border-[var(--color-neutral-border)] bg-white hover:border-[var(--color-accent-base)] text-left transition flex flex-col justify-between cursor-pointer"
+                    className="p-2.5 rounded-xl border border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)] text-left transition flex flex-col justify-between cursor-pointer"
                   >
                     <div>
                       <span className="text-[11px] font-bold text-[var(--color-neutral-text-primary)] block">{preset.name}</span>

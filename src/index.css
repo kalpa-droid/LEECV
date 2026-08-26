@@ -69,6 +69,22 @@
   --shadow-overlay: 0 16px 48px rgba(43,27,46,0.20);
   --shadow-dock: 4px 0 16px rgba(15,23,42,0.06);
   --glow-accent: 0 0 0 rgba(0,0,0,0);
+  /* Matriz de Botones y Objetos Interactivos — Día */
+  --ui-btn-neutral-bg: #F1F5F9;
+  --ui-btn-neutral-text: #0F172A;
+  --ui-btn-neutral-border: #E2E8F0;
+  --ui-btn-neutral-hover: #E2E8F0;
+  --ui-btn-outline-bg: #FFFFFF;
+  --ui-btn-outline-text: #0F172A;
+  --ui-btn-outline-border: #CBD5E1;
+  --ui-btn-outline-hover: #F1F5F9;
+  --ui-btn-ghost-text: #475569;
+  --ui-btn-ghost-text-hover: #0F172A;
+  --ui-btn-ghost-hover: #F1F5F9;
+  --ui-iconbox-bg: #F1F5F9;
+  --ui-iconbox-text: #475569;
+  --ui-iconbox-border: #E2E8F0;
+  --ui-avatar-icon-text: #0F172A;
 }
 
 /* ============================================================ */
@@ -184,6 +200,22 @@
   --shadow-overlay: 0 16px 48px rgba(0,0,0,0.55), 0 0 32px rgba(255,46,99,0.10);
   --shadow-dock: 4px 0 16px rgba(0,0,0,0.35);
   --glow-accent: 0 0 24px rgba(255,46,99,0.25);
+  /* Matriz de Botones y Objetos Interactivos — Noche */
+  --ui-btn-neutral-bg: #1E293B;
+  --ui-btn-neutral-text: #F8FAFC;
+  --ui-btn-neutral-border: #334155;
+  --ui-btn-neutral-hover: #334155;
+  --ui-btn-outline-bg: #111827;
+  --ui-btn-outline-text: #F8FAFC;
+  --ui-btn-outline-border: #334155;
+  --ui-btn-outline-hover: #1E293B;
+  --ui-btn-ghost-text: #94A3B8;
+  --ui-btn-ghost-text-hover: #F8FAFC;
+  --ui-btn-ghost-hover: #1E293B;
+  --ui-iconbox-bg: #1E293B;
+  --ui-iconbox-text: #94A3B8;
+  --ui-iconbox-border: #334155;
+  --ui-avatar-icon-text: #1E293B;
 }
 
 [data-ui-theme="teal_ocean"] {
@@ -238,6 +270,22 @@
   --shadow-overlay: 0 16px 48px rgba(0,0,0,0.55), 0 0 32px rgba(230,57,70,0.14);
   --shadow-dock: 4px 0 16px rgba(0,0,0,0.45);
   --glow-accent: 0 0 24px rgba(230,57,70,0.28);
+  /* Matriz de Botones y Objetos Interactivos — Océano */
+  --ui-btn-neutral-bg: #163A5C;
+  --ui-btn-neutral-text: #E8F4F8;
+  --ui-btn-neutral-border: #1A4971;
+  --ui-btn-neutral-hover: #1A4971;
+  --ui-btn-outline-bg: #0C2135;
+  --ui-btn-outline-text: #E8F4F8;
+  --ui-btn-outline-border: #2A6496;
+  --ui-btn-outline-hover: #163A5C;
+  --ui-btn-ghost-text: #7DBECC;
+  --ui-btn-ghost-text-hover: #E8F4F8;
+  --ui-btn-ghost-hover: #163A5C;
+  --ui-iconbox-bg: #163A5C;
+  --ui-iconbox-text: #7DBECC;
+  --ui-iconbox-border: #1A4971;
+  --ui-avatar-icon-text: #0C2135;
 }
 
 [data-ui-theme="ink"] {
@@ -292,6 +340,22 @@
   --shadow-overlay: 0 16px 48px rgba(0,0,0,0.65);
   --shadow-dock: 4px 0 16px rgba(0,0,0,0.40);
   --glow-accent: 0 0 0 rgba(0,0,0,0);
+  /* Matriz de Botones y Objetos Interactivos — Ink */
+  --ui-btn-neutral-bg: #2F2F38;
+  --ui-btn-neutral-text: #F0F0F4;
+  --ui-btn-neutral-border: #3E3E4C;
+  --ui-btn-neutral-hover: #383844;
+  --ui-btn-outline-bg: #26262E;
+  --ui-btn-outline-text: #F0F0F4;
+  --ui-btn-outline-border: #505060;
+  --ui-btn-outline-hover: #2F2F38;
+  --ui-btn-ghost-text: #B0B0BC;
+  --ui-btn-ghost-text-hover: #F0F0F4;
+  --ui-btn-ghost-hover: #2F2F38;
+  --ui-iconbox-bg: #2F2F38;
+  --ui-iconbox-text: #B0B0BC;
+  --ui-iconbox-border: #3E3E4C;
+  --ui-avatar-icon-text: #26262E;
 }
 
 /* Clases de Utilidad Globales del Motor de Interfaz */

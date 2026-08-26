@@ -17,11 +17,11 @@ export function ZoomControls({
   isMobile = false
 }: ZoomControlsProps) {
   return (
-    <div className={`flex items-center gap-1 bg-[var(--ui-bg-dock)] px-2 py-1 rounded-xl border border-white/10 shadow-inner select-none ${className}`}>
+    <div className={`flex items-center gap-1 bg-[var(--ui-bg-dock)] px-2 py-1 rounded-xl border border-[var(--ui-dock-border)] shadow-inner select-none ${className}`}>
       <button
         type="button"
         onClick={() => setZoomLevel(prev => Math.max(0.3, parseFloat((prev - 0.1).toFixed(2))))}
-        className="p-1 rounded-lg hover:bg-[var(--color-accent-base)] text-white transition cursor-pointer active:scale-95"
+        className="p-1 rounded-lg hover:bg-[var(--color-accent-base)] text-[var(--ui-dock-text)] hover:text-white transition cursor-pointer active:scale-95"
         title="Alejar (-10%)"
       >
         <ZoomOut className={isMobile ? "w-3 h-3" : "w-3.5 h-3.5"} />
@@ -34,7 +34,7 @@ export function ZoomControls({
       <button
         type="button"
         onClick={() => setZoomLevel(prev => Math.min(2.0, parseFloat((prev + 0.1).toFixed(2))))}
-        className="p-1 rounded-lg hover:bg-[var(--color-accent-base)] text-white transition cursor-pointer active:scale-95"
+        className="p-1 rounded-lg hover:bg-[var(--color-accent-base)] text-[var(--ui-dock-text)] hover:text-white transition cursor-pointer active:scale-95"
         title="Acercar (+10%)"
       >
         <ZoomIn className={isMobile ? "w-3 h-3" : "w-3.5 h-3.5"} />

@@ -29,10 +29,10 @@ export function Button({
     primary: 'bg-[var(--color-accent-base)] text-white hover:bg-[var(--color-accent-hover)] border border-transparent shadow-sm',
     secondary: 'bg-[var(--color-accent-base)] text-white hover:bg-[var(--color-accent-brand-hover)] border border-[var(--color-accent-brand-hover)]',
     accent: 'bg-[var(--color-accent-amber)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-accent-amber-hover)] border border-[var(--color-accent-amber-hover)]',
-    dark: 'bg-[var(--color-neutral-text-primary)] text-white hover:bg-[var(--color-neutral-text-primary)]/90',
+    dark: 'bg-[var(--ui-btn-neutral-bg)] text-[var(--ui-btn-neutral-text)] hover:bg-[var(--ui-btn-neutral-hover)] border border-[var(--ui-btn-neutral-border)]',
     danger: 'bg-[var(--color-status-danger-muted)] text-[var(--color-status-danger-text)] border border-[var(--color-status-danger-base)]/30 hover:bg-[var(--color-status-danger-base)] hover:text-white',
-    outline: 'border-2 border-[var(--color-neutral-border)] bg-white text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-surface-warm)]',
-    ghost: 'bg-transparent text-[var(--color-neutral-text-secondary)] hover:text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-surface-muted)]'
+    outline: 'border-2 border-[var(--ui-btn-outline-border)] bg-[var(--ui-btn-outline-bg)] text-[var(--ui-btn-outline-text)] hover:bg-[var(--ui-btn-outline-hover)]',
+    ghost: 'bg-transparent text-[var(--ui-btn-ghost-text)] hover:text-[var(--ui-btn-ghost-text-hover)] hover:bg-[var(--ui-btn-ghost-hover)]'
   };
 
   const sizeStyles: Record<string, string> = {

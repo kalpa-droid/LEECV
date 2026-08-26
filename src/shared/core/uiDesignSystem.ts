@@ -133,7 +133,7 @@ export const typeScale = {
 export const button = {
   base: 'rounded-[10px] font-medium text-[13px] px-4 py-2.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed',
   primary: `bg-[image:var(--gradient-brand)] text-white hover:opacity-95 active:scale-[0.98] shadow-md`,
-  secondary: `bg-white border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] hover:border-[var(--color-neutral-border-strong)] active:scale-[0.98]`,
+  secondary: `bg-[var(--ui-btn-outline-bg)] border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] hover:border-[var(--color-neutral-border-strong)] active:scale-[0.98]`,
   ghost: `bg-transparent text-[var(--color-neutral-text-secondary)] hover:text-[var(--color-neutral-text-primary)]`,
   danger: `bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/30 text-[var(--color-status-danger-text)] hover:bg-[var(--color-status-danger-muted)]`,
 } as const;
@@ -145,7 +145,7 @@ export const button = {
 export const selectableCard = {
   base: 'rounded-[10px] p-3 text-left transition-all cursor-pointer border',
   selected: `border-2 border-[var(--color-accent-base)] bg-[var(--color-accent-muted)] shadow-[var(--glow-accent)]`,
-  unselected: `border-[var(--color-neutral-border)] bg-white hover:border-[var(--color-neutral-border-strong)] shadow-[var(--shadow-raised)]`,
+  unselected: `border-[var(--color-neutral-border)] bg-[var(--ui-btn-outline-bg)] hover:border-[var(--color-neutral-border-strong)] shadow-[var(--shadow-raised)]`,
 } as const;
 
 /**
@@ -153,7 +153,7 @@ export const selectableCard = {
  * en todos así el usuario aprende una sola convención.
  */
 export const input = {
-  base: `w-full rounded-[10px] border border-[var(--color-neutral-border)] px-3 py-2.5 text-[13px] text-[var(--color-neutral-text-primary)] bg-white outline-none transition-colors placeholder:text-[var(--color-neutral-text-muted)]`,
+  base: `w-full rounded-[10px] border border-[var(--color-neutral-border)] px-3 py-2.5 text-[13px] text-[var(--color-neutral-text-primary)] bg-[var(--ui-btn-outline-bg)] outline-none transition-colors placeholder:text-[var(--color-neutral-text-muted)]`,
   focus: `focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[var(--color-accent-muted)]`,
 } as const;
 
