@@ -435,9 +435,10 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     }
 
     if (rec.kind === 'quote-text') {
-      const binding = isSidebarSector ? sidebarType : mainType;
+      const surfaceHex = isSidebarSector ? sidebarRolesColor.primary : mainRolesColor.background;
+      const quoteSpec = resolveUnifiedTextSpec('body', surfaceHex, sectorRolesColor, preset.typography, 'quote-text');
       return (
-        <Text key={rec.id} style={{ fontSize: preset.typography.caption, fontStyle: 'italic', color: binding.body, marginBottom: 8, lineHeight: 1.4 }}>
+        <Text key={rec.id} style={{ fontSize: quoteSpec.fontSizePt, fontFamily: quoteSpec.fontFamily, fontStyle: 'italic', color: quoteSpec.colorHex, opacity: quoteSpec.opacity, marginBottom: 8, lineHeight: 1.4 }}>
           "{String(f.text || '')}"
         </Text>
       );

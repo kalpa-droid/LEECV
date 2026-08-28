@@ -21,7 +21,7 @@ if (!presetEngineContent.includes('translateThemeToSurfaces(')) {
 }
 console.log('  ✓ Consumo de translateThemeToSurfaces en presetCompositionEngine.ts OK.');
 
-// 2. Verificación de consumo de resolveFieldDesign
+// 2. Verificación de consumo de resolveFieldDesign y resolveUnifiedTextSpec
 const cardRendererFile = path.resolve(__dirname, '../src/shared/core/pdf-engine/layers/cards/CardObjectRenderer.tsx');
 if (!fs.existsSync(cardRendererFile)) {
   console.error(`❌ ARCHIVO NO ENCONTRADO: ${cardRendererFile}`);
@@ -33,6 +33,18 @@ if (!cardRendererContent.includes('resolveFieldDesign(')) {
   process.exit(1);
 }
 console.log('  ✓ Consumo de resolveFieldDesign en CardObjectRenderer.tsx OK.');
+
+const unifiedEngineFile = path.resolve(__dirname, '../src/shared/core/pdf-engine/layers/typography/unifiedTextHierarchyEngine.ts');
+if (!fs.existsSync(unifiedEngineFile)) {
+  console.error(`❌ ARCHIVO NO ENCONTRADO: ${unifiedEngineFile}`);
+  process.exit(1);
+}
+const unifiedEngineContent = fs.readFileSync(unifiedEngineFile, 'utf8');
+if (!unifiedEngineContent.includes('resolveUnifiedTextSpec(')) {
+  console.error('❌ VERIFICACIÓN FALLIDA: resolveUnifiedTextSpec no está exportado en unifiedTextHierarchyEngine.ts.');
+  process.exit(1);
+}
+console.log('  ✓ Núcleo unificado resolveUnifiedTextSpec en unifiedTextHierarchyEngine.ts OK.');
 
 // 3. Verificación de Cobertura Completa de Campos (checkFieldDesignCoverage)
 const catalogKeys = Object.keys(FIELD_CATALOG);
