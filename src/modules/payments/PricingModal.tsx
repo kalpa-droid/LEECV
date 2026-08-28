@@ -247,7 +247,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
             <button
               onClick={() => handleSelectPlan('enterprise', 'lemonsqueezy')}
               disabled={loadingGateway !== null}
-              className={`w-full py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black text-xs font-black rounded-[${radius.card}] ${elevationSystem.floating} transition cursor-pointer`}
+              className={`w-full py-2.5 bg-[image:var(--gradient-gold)] hover:opacity-95 text-black text-xs font-black rounded-[${radius.card}] ${elevationSystem.floating} transition cursor-pointer`}
             >
               Activar Plan Enterprise Cloud
             </button>

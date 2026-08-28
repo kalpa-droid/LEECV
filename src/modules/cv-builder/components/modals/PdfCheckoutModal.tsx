@@ -182,7 +182,7 @@ export default function PdfCheckoutModal({
           <button
             onClick={handleMercadoPagoCheckout}
             disabled={isProcessing}
-            className={`w-full p-3.5 bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-black text-xs rounded-[${radius.modal}] ${elevationSystem.floating} transition flex items-center justify-between cursor-pointer border border-[var(--color-status-warning-base)]/50`}
+            className={`w-full p-3.5 bg-[image:var(--gradient-gold)] hover:opacity-95 text-black font-black text-xs rounded-[${radius.modal}] ${elevationSystem.floating} transition flex items-center justify-between cursor-pointer border border-[var(--color-status-warning-base)]/50`}
           >
             <div className="flex items-center gap-2.5">
               <CreditCard className="w-5 h-5 text-black" />
