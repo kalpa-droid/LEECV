@@ -5,6 +5,7 @@ import { ResolvedThemeRoles, getTypographyColorBinding } from '../colors/colorSy
 import { TypographyScale, Preset } from '../presets/presetSchema';
 import { PdfSectionIcon } from '../icons/PdfSectionIcon';
 import { resolveDecorativeStyles } from '../decorations/decorativeLayerEngine';
+import { resolveUnifiedTextSpec } from '../typography/unifiedTextHierarchyEngine';
 
 interface SectionBannerCardProps {
   preset?: Preset;
@@ -38,11 +39,12 @@ export function SectionBannerCard({
   const iconStyle = decStyles?.headerIconStyle || 'filled';
 
   const containerBgHex = surfaceBgColor || (isSidebar ? rolesColor.primary : rolesColor.background);
+  const textSpec = resolveUnifiedTextSpec('title', containerBgHex, rolesColor, typography, 'section-banner');
   const typographyBinding = getTypographyColorBinding(rolesColor, containerBgHex);
 
   const iconColor = iconStyle === 'minimal' 
-    ? (rolesColor.accent || typographyBinding.sectionHeading) 
-    : typographyBinding.sectionHeading;
+    ? (rolesColor.accent || textSpec.colorHex) 
+    : textSpec.colorHex;
 
   if (isSidebar) {
     // Encabezado de Sección en Sidebar: Franja integrada minimalista
@@ -59,10 +61,12 @@ export function SectionBannerCard({
       },
       sidebarBanner: {
         fontSize: typography.sectionHeading,
-        fontFamily: 'Helvetica-Bold',
+        fontFamily: textSpec.fontFamily,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
-        color: typographyBinding.sectionHeading,
+        color: textSpec.colorHex,
+        opacity: textSpec.opacity,
+        fontWeight: textSpec.fontWeight as any,
       },
     });
 
@@ -99,10 +103,12 @@ export function SectionBannerCard({
     },
     bannerText: {
       fontSize: typography.sectionHeading,
-      fontFamily: 'Helvetica-Bold',
+      fontFamily: textSpec.fontFamily,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
-      color: typographyBinding.sectionHeading,
+      color: textSpec.colorHex,
+      opacity: textSpec.opacity,
+      fontWeight: textSpec.fontWeight as any,
     },
   });
 

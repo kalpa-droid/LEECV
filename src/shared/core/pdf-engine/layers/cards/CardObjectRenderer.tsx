@@ -87,11 +87,6 @@ export function CardObjectRenderer({
 
   const arranged = arrangeRecordFields(structuredInput, design.layoutTemplate);
 
-  const titleColor = resolveColorForRole('title', 'text', cardBgColor, rolesColor, parentBgColor);
-  const subtitleColor = resolveColorForRole('subtitle', 'text', cardBgColor, rolesColor, parentBgColor);
-  const badgeColor = resolveColorForRole('badge', 'highlight', cardBgColor, rolesColor, parentBgColor);
-  const descColor = resolveColorForRole('description', 'text', cardBgColor, rolesColor, parentBgColor);
-
   const activePreset: Preset = preset || {
     id: 'default',
     name: 'Default',
@@ -104,6 +99,11 @@ export function CardObjectRenderer({
     palette: { primary: '#00A8A0', secondary: '#64748b', accent: '#FF2E63', text: '#0f172a', textOnPrimary: '#ffffff', background: '#ffffff' },
     typography: typography
   };
+
+  const titleSpec = resolveFieldDesign('title', 'title', activePreset, rolesColor, sectorRole);
+  const subtitleSpec = resolveFieldDesign('subtitle', 'subtitle', activePreset, rolesColor, sectorRole);
+  const descSpec = resolveFieldDesign('description', 'description', activePreset, rolesColor, sectorRole);
+  const badgeSpec = resolveFieldDesign('badge', 'badge', activePreset, rolesColor, sectorRole);
 
   const styles = StyleSheet.create({
     cardContainer: {
@@ -122,18 +122,20 @@ export function CardObjectRenderer({
       marginBottom: 2,
     },
     titleText: {
-      fontSize: recordScale.recordTitle,
-      fontFamily: typography.fontFamily,
-      color: titleColor,
-      fontWeight: 'bold',
+      fontSize: titleSpec.fontSizePt,
+      fontFamily: titleSpec.fontFamily,
+      color: titleSpec.colorHex,
+      opacity: titleSpec.opacity,
+      fontWeight: titleSpec.fontWeight,
       flex: 1,
       marginRight: 6,
     },
     badgeText: {
-      fontSize: recordScale.recordMeta,
-      fontFamily: typography.fontFamily,
-      color: badgeColor,
-      fontWeight: 'bold',
+      fontSize: badgeSpec.fontSizePt,
+      fontFamily: badgeSpec.fontFamily,
+      color: badgeSpec.colorHex,
+      opacity: badgeSpec.opacity,
+      fontWeight: badgeSpec.fontWeight,
     },
     badgeRow: {
       flexDirection: 'row',
@@ -145,7 +147,7 @@ export function CardObjectRenderer({
     badgePill: {
       fontSize: recordScale.recordMeta - 1,
       fontFamily: typography.fontFamily,
-      color: badgeColor,
+      color: badgeSpec.colorHex,
       backgroundColor: 'rgba(0, 0, 0, 0.04)',
       paddingHorizontal: 4,
       paddingVertical: 1,
@@ -161,19 +163,22 @@ export function CardObjectRenderer({
     extraText: {
       fontSize: recordScale.recordExtra,
       fontFamily: typography.fontFamily,
-      color: subtitleColor,
+      color: subtitleSpec.colorHex,
       fontStyle: 'italic',
     },
     subtitleText: {
-      fontSize: recordScale.recordSubtitle,
-      fontFamily: typography.fontFamily,
-      color: subtitleColor,
+      fontSize: subtitleSpec.fontSizePt,
+      fontFamily: subtitleSpec.fontFamily,
+      color: subtitleSpec.colorHex,
+      opacity: subtitleSpec.opacity,
+      fontWeight: subtitleSpec.fontWeight,
       marginBottom: 3,
     },
     descText: {
-      fontSize: recordScale.recordBody,
-      fontFamily: typography.fontFamily,
-      color: descColor,
+      fontSize: descSpec.fontSizePt,
+      fontFamily: descSpec.fontFamily,
+      color: descSpec.colorHex,
+      opacity: descSpec.opacity,
       lineHeight: recordScale.lineHeightBody,
     },
   });

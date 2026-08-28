@@ -12,10 +12,10 @@
  */
 
 import { FIELD_CATALOG, FieldDesignHint } from './fieldCatalog';
-import { deriveRecordScale } from '../typography/typographyHierarchyEngine';
 import { Preset } from '../presets/presetSchema';
 import { ResolvedThemeRoles } from '../colors/colorSystem';
-import { resolveHierarchyTextColors, resolveSubtleCardBackground } from '../colors/surfaceAwareColorEngine';
+import { resolveSubtleCardBackground } from '../colors/surfaceAwareColorEngine';
+import { resolveUnifiedTextSpec, ResolvedTextSpec } from '../typography/unifiedTextHierarchyEngine';
 
 export type PdfRole = 'title' | 'subtitle' | 'badge' | 'description' | 'extra';
 
@@ -25,9 +25,13 @@ export interface ResolvedFieldDesign {
   effectiveRole: PdfRole;
   fontSizePt: number;
   colorHex: string;
+  fontFamily: string;
   fontWeight: 'bold' | 'normal';
+  fontStyle: 'normal' | 'italic';
+  opacity: number;
   position: 'inline-right' | 'inline-left' | 'own-line';
   designHint: FieldDesignHint;
+  unifiedSpec: ResolvedTextSpec;
 }
 
 export function resolveFieldDesign(
@@ -39,52 +43,46 @@ export function resolveFieldDesign(
 ): ResolvedFieldDesign {
   const catalogEntry = FIELD_CATALOG[fieldId];
   
-  // Regla: Si el campo no está catalogado (p. ej. sección custom creada por el usuario), hereda el rol
+  // Regla de oro: Si el campo no está catalogado (secciones custom creadas por el usuario), hereda el rol
   const designHint: FieldDesignHint = catalogEntry?.designHint || {};
   const effectiveRole: PdfRole = designHint.sizeOverride || pdfRole;
 
-  // 1. Tamaño Tipográfico derivado del motor de jerarquía tipográfica
-  const scale = deriveRecordScale(preset.typography, preset.typography.recordScaleRatios);
-  const fontSizePt = scale[effectiveRole] || scale.badge || 9.0;
-
-  // 2. Weight tipográfico por rol efectivo (H1 bold, H2 bold/medium, cuerpo normal)
-  const fontWeight: 'bold' | 'normal' = (effectiveRole === 'title' || effectiveRole === 'subtitle') ? 'bold' : 'normal';
-
-  // 3. Color resuelto por motor HSL consciente de superficie
+  // 1. Resolver la superficie del contenedor de registros en HSL
   const cardBgHex = resolveSubtleCardBackground(sectorRole, sectorRolesColor);
-  const hierarchy = resolveHierarchyTextColors(cardBgHex, sectorRolesColor);
 
-  let colorHex = hierarchy.body;
+  // 2. Obtener la especificacion tipográfica y cromática unificada HSL WCAG
+  const unifiedSpec = resolveUnifiedTextSpec(
+    effectiveRole,
+    cardBgHex,
+    sectorRolesColor,
+    preset.typography,
+    fieldId
+  );
+
+  // Overrides de diseño por catálogo si existen
+  let colorHex = unifiedSpec.colorHex;
   if (designHint.colorOverride === 'accent') {
-    colorHex = hierarchy.accentText;
+    const accentSpec = resolveUnifiedTextSpec('badge', cardBgHex, sectorRolesColor, preset.typography, fieldId);
+    colorHex = accentSpec.colorHex;
   } else if (designHint.colorOverride === 'muted') {
-    colorHex = hierarchy.meta;
-  } else {
-    // Rol por defecto según el nivel de jerarquía
-    if (effectiveRole === 'title') {
-      colorHex = hierarchy.title;
-    } else if (effectiveRole === 'subtitle') {
-      colorHex = hierarchy.subtitle;
-    } else if (effectiveRole === 'badge') {
-      colorHex = hierarchy.accentText;
-    } else if (effectiveRole === 'extra') {
-      colorHex = hierarchy.meta;
-    } else {
-      colorHex = hierarchy.body;
-    }
+    const metaSpec = resolveUnifiedTextSpec('meta', cardBgHex, sectorRolesColor, preset.typography, fieldId);
+    colorHex = metaSpec.colorHex;
   }
 
-  // 4. Posición espacial
   const position = designHint.position || 'own-line';
 
   return {
     fieldId,
     pdfRole,
     effectiveRole,
-    fontSizePt,
+    fontSizePt: unifiedSpec.fontSizePt,
     colorHex,
-    fontWeight,
+    fontFamily: unifiedSpec.fontFamily,
+    fontWeight: unifiedSpec.fontWeight,
+    fontStyle: unifiedSpec.fontStyle,
+    opacity: unifiedSpec.opacity,
     position,
-    designHint
+    designHint,
+    unifiedSpec
   };
 }
