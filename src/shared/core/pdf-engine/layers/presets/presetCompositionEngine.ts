@@ -11,6 +11,7 @@
 import { Preset, ColorPreset, TypographyPreset, ColumnLayoutPreset } from './presetSchema';
 import { generateHarmoniousPalette, HarmonyScheme } from '../colors/paletteHarmonyEngine';
 import { RecordScaleRatios } from '../typography/typographyHierarchyEngine';
+import { translateThemeToSurfaces } from '../colors/themeLightDarkTranslationEngine';
 
 export interface PresetSeed {
   id: string;
@@ -25,13 +26,32 @@ export interface PresetSeed {
   columnLayoutPreset?: ColumnLayoutPreset;
   fontFamily?: string;
   recordScaleRatios?: RecordScaleRatios;
+  sectorSurfaceMode?: {
+    sidebar: 'light' | 'dark';
+    main: 'light' | 'dark';
+  };
   basePreset: Preset; // Estructura geométrica y sectores base
 }
 
 export function composePreset(seed: PresetSeed): Preset {
   const seedHex = seed.colorPreset?.seedHex || seed.seedHex;
   const scheme = seed.colorPreset?.harmonyScheme || seed.harmonyScheme || 'analogous';
-  const generatedPalette = seed.colorPreset?.palette || generateHarmoniousPalette(seedHex, scheme);
+  
+  const targetColorPreset: ColorPreset = seed.colorPreset || {
+    id: `color-${seed.id}`,
+    name: seed.name,
+    seedHex,
+    harmonyScheme: scheme,
+    palette: seed.basePreset.palette || generateHarmoniousPalette(seedHex, scheme)
+  };
+
+  const translatedSurfaces = translateThemeToSurfaces(targetColorPreset);
+  const generatedPalette = targetColorPreset.palette || translatedSurfaces.light;
+
+  const defaultSectorSurfaceMode = seed.sectorSurfaceMode || seed.basePreset.sectorSurfaceMode || {
+    sidebar: 'dark',
+    main: 'light'
+  };
 
   return {
     ...seed.basePreset,
@@ -44,6 +64,11 @@ export function composePreset(seed: PresetSeed): Preset {
     pageSizeId: seed.pageSizeId || seed.basePreset.pageSizeId,
     marginPresetId: seed.marginPresetId || seed.basePreset.marginPresetId,
     palette: generatedPalette,
+    surfacePalettes: {
+      light: translatedSurfaces.light,
+      dark: translatedSurfaces.dark
+    },
+    sectorSurfaceMode: defaultSectorSurfaceMode,
     sectionOrder: seed.columnLayoutPreset?.sectionOrder || seed.basePreset.sectionOrder,
     paletteSeed: {
       seedHex: seedHex,

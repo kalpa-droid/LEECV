@@ -25,7 +25,7 @@ export interface ColorPreset {
   id: string;
   name: string;
   seedHex?: string;
-  harmonyScheme?: 'monochromatic' | 'analogous' | 'complementary' | 'triadic';
+  harmonyScheme?: 'monochromatic' | 'analogous' | 'complementary' | 'triadic' | 'split-complementary';
   palette: ColorPalette;
 }
 
@@ -88,6 +88,16 @@ export interface Preset {
   /** Orden en el que las secciones de contenido se acomodan dentro de cada sector */
   sectionOrder: PresetSectionOrder[];
   palette: ColorPalette;
+  /** Paletas de superficie traducidas científicamente para modo claro/oscuro */
+  surfacePalettes?: {
+    light: ColorPalette;
+    dark: ColorPalette;
+  };
+  /** Modo de superficie asignado por sector (default: sidebar=dark, main=light) */
+  sectorSurfaceMode?: {
+    sidebar: 'light' | 'dark';
+    main: 'light' | 'dark';
+  };
   paletteSeed?: {
     seedHex: string;
     harmonyScheme?: 'analogous' | 'complementary' | 'split-complementary' | 'monochromatic' | 'triadic';

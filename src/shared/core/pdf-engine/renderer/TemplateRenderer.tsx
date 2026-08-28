@@ -7,7 +7,7 @@ import { resolveSectors } from '../layers/sectors/resolveSectors';
 import { placeFixedObjects } from '../layers/fixedObjects/placeFixedObjects';
 import { ContentSection, ContentRecord } from '../layers/records/recordTypes';
 import { getPresentContactFields } from '../layers/records/sharedFields';
-import { resolveThemeRoles, getTypographyColorBinding } from '../layers/colors/colorSystem';
+import { resolveThemeRoles, getTypographyColorBinding, ResolvedThemeRoles } from '../layers/colors/colorSystem';
 import { resolvePageTextStyle, buildPageTextTemplate } from '../layers/pageText/pageTextObjects';
 import { CardObjectRenderer } from '../layers/cards/CardObjectRenderer';
 import { SectionBannerCard } from '../layers/cards/SectionBannerCard';
@@ -68,14 +68,21 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   customRecordCardDesigns
 }) => {
   const preset = atsMode ? flattenPresetForATS(basePreset) : basePreset;
-  const rolesColor = resolveThemeRoles(preset.palette);
+  
+  const surfaceModes = preset.sectorSurfaceMode || { sidebar: 'dark', main: 'light' };
+  const sidebarPalette = preset.surfacePalettes 
+    ? (surfaceModes.sidebar === 'dark' ? preset.surfacePalettes.dark : preset.surfacePalettes.light)
+    : preset.palette;
+  const mainPalette = preset.surfacePalettes 
+    ? (surfaceModes.main === 'light' ? preset.surfacePalettes.light : preset.surfacePalettes.dark)
+    : preset.palette;
 
-  // CAPA 5&8 conectada de verdad: cada superficie (sidebar de color vs.
-  // columna principal blanca) tiene su propia jerarquía título/subtítulo/
-  // cuerpo calculada — antes esta matriz existía pero nunca se llamaba
-  // desde el render, por eso todo salía en un solo color.
-  const sidebarType = getTypographyColorBinding(rolesColor, rolesColor.primary);
-  const mainType = getTypographyColorBinding(rolesColor, rolesColor.background);
+  const sidebarRolesColor = resolveThemeRoles(sidebarPalette);
+  const mainRolesColor = resolveThemeRoles(mainPalette);
+  const rolesColor = mainRolesColor;
+
+  const sidebarType = getTypographyColorBinding(sidebarRolesColor, sidebarRolesColor.primary);
+  const mainType = getTypographyColorBinding(mainRolesColor, mainRolesColor.background);
 
   // En modo embedded el "lienzo" es el objeto (ej. la tarjeta), no una hoja
   // física — nunca se consulta getPageSize() para ese caso.
@@ -386,7 +393,11 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     featuredBadges.push(personalInfo.titlePrefix);
   }
 
-  const renderRecord = (rec: ContentRecord, isSidebarSector: boolean = false) => {
+  const renderRecord = (
+    rec: ContentRecord, 
+    isSidebarSector: boolean = false, 
+    sectorRolesColor: ResolvedThemeRoles = mainRolesColor
+  ) => {
     const f = rec.fields;
 
     if (rec.kind === 'contact-item') {
@@ -431,7 +442,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
           badges={layout.badges}
           extras={layout.extras}
           description={layout.block || undefined}
-          rolesColor={rolesColor}
+          rolesColor={sectorRolesColor}
           typography={preset.typography}
           sectorRole={isSidebarSector ? 'sidebar' : 'main'}
         />
@@ -452,7 +463,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
           badges={layout.badges}
           extras={layout.extras}
           description={layout.block || (f.details ? String(f.details) : undefined)}
-          rolesColor={rolesColor}
+          rolesColor={sectorRolesColor}
           typography={preset.typography}
           sectorRole={isSidebarSector ? 'sidebar' : 'main'}
         />
@@ -487,7 +498,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
           badges={layout.badges}
           extras={layout.extras}
           description={layout.block || undefined}
-          rolesColor={rolesColor}
+          rolesColor={sectorRolesColor}
           typography={preset.typography}
           sectorRole="main"
         />
@@ -547,7 +558,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
           badges={layout.badges}
           extras={layout.extras}
           description={layout.block || undefined}
-          rolesColor={rolesColor}
+          rolesColor={sectorRolesColor}
           typography={preset.typography}
           sectorRole={isSidebarSector ? 'sidebar' : 'main'}
         />
@@ -564,7 +575,8 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     <View style={embedded ? [styles.pageBody, { width: pageDef.widthPt, height: pageDef.heightPt }] : styles.pageBody}>
       {sectorsWithFlow.map((sFlow) => {
         const isSidebar = sFlow.sector.role === 'sidebar';
-        const surfaceStyle = isSidebar ? styles.leftColumnSurface : styles.rightColumnSurface;
+        const sectorRolesColor = isSidebar ? sidebarRolesColor : mainRolesColor;
+        const surfaceStyle = isSidebar ? [styles.leftColumnSurface, { backgroundColor: sectorRolesColor.primary }] : [styles.rightColumnSurface, { backgroundColor: sectorRolesColor.background }];
         const contentStyle = isSidebar ? styles.leftColumnContent : styles.rightColumnContent;
         const widthStyle = isSidebar ? { width: sFlow.sector.box.widthPt } : {};
 
@@ -572,8 +584,8 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
         const sectorSections = pageSections.filter(sec => sectorSectionIds.includes(sec.id) || sec.id.endsWith('-cont'));
 
         return (
-          <View key={sFlow.sector.id} style={[surfaceStyle, widthStyle, { position: 'relative' }]}>
-            <OrnamentRenderer ornamentKind={decStyles.cornerOrnament} color={rolesColor.accent} />
+          <View key={sFlow.sector.id} style={[surfaceStyle, widthStyle, { position: 'relative' }] as any}>
+            <OrnamentRenderer ornamentKind={decStyles.cornerOrnament} color={sectorRolesColor.accent} />
             <View style={contentStyle}>
               {/* SPACER FIJO DE MARGEN SUPERIOR PARA EVITAR EL BUG DE PAGINACIÓN DE REACT-PDF (#430/#733) */}
               <View fixed style={{ height: usable.margins.topPt || 14 }} />
@@ -605,12 +617,12 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                       titleText={sec.titleText}
                       iconId={sec.id}
                       designId={isSidebar ? undefined : (customRecordCardDesigns?.education || preset.recordCardDesigns?.education)}
-                      rolesColor={rolesColor}
+                      rolesColor={sectorRolesColor}
                       typography={preset.typography}
                       isSidebar={isSidebar}
                     />
                   )}
-                  {sec.records.map(rec => renderRecord(rec, isSidebar))}
+                  {sec.records.map(rec => renderRecord(rec, isSidebar, sectorRolesColor))}
                 </View>
               ))}
             </View>
