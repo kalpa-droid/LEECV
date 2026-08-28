@@ -19,6 +19,27 @@ import { flattenPresetForATS } from '../layers/ats/atsFlatteningEngine';
 import { createSubColumnGrid } from '../layers/subColumns/resolveSubColumns';
 import { resolveUnifiedTextSpec } from '../layers/typography/unifiedTextHierarchyEngine';
 import { resolveSubtleCardBackground } from '../layers/colors/surfaceAwareColorEngine';
+import { initPdfFonts } from '../layers/typography/pdfFontRegistry';
+
+function sanitizeSvgDataUrl(dataUrl?: string): string | undefined {
+  if (!dataUrl || typeof dataUrl !== 'string') return dataUrl;
+  if (dataUrl.includes('data:image/svg+xml')) {
+    try {
+      if (dataUrl.includes(';base64,')) {
+        const parts = dataUrl.split(';base64,');
+        const decoded = typeof window !== 'undefined' && window.atob ? window.atob(parts[1]) : Buffer.from(parts[1], 'base64').toString('utf8');
+        const cleaned = decoded.replace(/font-family=['"]?cursive['"]?/gi, 'font-family="Helvetica"');
+        const reencoded = typeof window !== 'undefined' && window.btoa ? window.btoa(cleaned) : Buffer.from(cleaned, 'utf8').toString('base64');
+        return `${parts[0]};base64,${reencoded}`;
+      }
+      return dataUrl.replace(/font-family=['"]?cursive['"]?/gi, 'font-family="Helvetica"');
+    } catch (_e) {
+      return dataUrl;
+    }
+  }
+  return dataUrl;
+}
+
 
 export interface TemplateRendererProps {
   preset: Preset;
@@ -551,7 +572,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
         <View key={rec.id} wrap={false} style={styles.signatureContainer}>
           <View style={styles.signatureBox}>
             {f.dataUrl ? (
-              <Image src={String(f.dataUrl)} style={styles.signatureImage} />
+              <Image src={sanitizeSvgDataUrl(String(f.dataUrl))!} style={styles.signatureImage} />
             ) : (
               <View style={styles.signatureLine} />
             )}

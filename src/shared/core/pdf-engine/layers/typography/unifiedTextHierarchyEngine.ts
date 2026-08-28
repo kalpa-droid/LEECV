@@ -11,6 +11,7 @@ import { TypographyScale, Preset } from '../presets/presetSchema';
 import { ResolvedThemeRoles, hexToHSL, hslToHex } from '../colors/colorSystem';
 import { calculatePerceivedLuminance } from '../colors/surfaceAwareColorEngine';
 import { deriveRecordScale } from './typographyHierarchyEngine';
+import { sanitizeFontFamily } from './pdfFontRegistry';
 
 export type TextRoleLevel = 'title' | 'subtitle' | 'body' | 'meta' | 'accent';
 
@@ -64,43 +65,40 @@ export function resolveUnifiedTextSpec(
 
   // 1. Matriz Tipográfica (Size, Family, Weight, Style)
   let fontSizePt = scale.description;
-  let fontFamily = typography.fontFamily || 'Helvetica';
+  let rawFontFamily = typography?.fontFamily || 'Helvetica';
   let fontWeight: 'bold' | 'normal' = 'normal';
   let fontStyle: 'normal' | 'italic' = 'normal';
 
   switch (level) {
     case 'title':
       fontSizePt = scale.title;
-      fontFamily = 'Helvetica-Bold';
       fontWeight = 'bold';
       fontStyle = 'normal';
       break;
     case 'subtitle':
       fontSizePt = scale.subtitle;
-      fontFamily = 'Helvetica-Bold';
       fontWeight = 'bold';
       fontStyle = 'normal';
       break;
     case 'accent':
       fontSizePt = scale.badge;
-      fontFamily = 'Helvetica-Bold';
       fontWeight = 'bold';
       fontStyle = 'normal';
       break;
     case 'meta':
       fontSizePt = scale.extra;
-      fontFamily = 'Helvetica';
       fontWeight = 'normal';
       fontStyle = 'italic';
       break;
     case 'body':
     default:
       fontSizePt = scale.description;
-      fontFamily = typography.fontFamily || 'Helvetica';
       fontWeight = 'normal';
       fontStyle = 'normal';
       break;
   }
+
+  const fontFamily = sanitizeFontFamily(rawFontFamily, fontWeight === 'bold', fontStyle === 'italic');
 
   // 2. Matriz Cromática HSL W3C WCAG (Luminancia Percibida & Opacidades)
   const cleanSurface = surfaceBgHex && surfaceBgHex.startsWith('#') ? surfaceBgHex : '#ffffff';
@@ -180,3 +178,4 @@ export function resolveUnifiedTextSpec(
     lineHeight: scale.lineHeightBody
   };
 }
+
