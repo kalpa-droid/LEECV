@@ -595,3 +595,23 @@
     display: none !important;
   }
 }
+
+/* ============================================================ */
+/* REGLAS DE MOTOR ESTRUCTURAL DE SUPERFICIE Y CONTEXTO MODAL   */
+/* (Garantiza contraste automático en cualquier sub-elemento)   */
+/* ============================================================ */
+[data-ui-modal="true"] {
+  color: var(--ui-text-primary);
+  background-color: var(--ui-bg-card);
+}
+
+[data-ui-modal="true"] .ui-modal-body {
+  color: var(--ui-text-primary);
+  background-color: var(--ui-bg-panel);
+}
+
+[data-ui-modal="true"] .ui-modal-card {
+  color: var(--ui-text-primary);
+  background-color: var(--ui-bg-card);
+  border-color: var(--ui-border);
+}

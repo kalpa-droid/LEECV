@@ -69,7 +69,8 @@ export function Modal({
       className="fixed inset-0 z-[500] flex items-center justify-center bg-black/75 backdrop-blur-sm p-3 sm:p-5 animate-fade-in no-print select-none"
     >
       <div
-        className={`w-full ${sizeClasses[size] || sizeClasses.md} bg-[var(--ui-bg-card)] ui-bg-card ui-text-primary ui-border border-2 rounded-[${radius.modal}] ${elevationSystem.overlay} overflow-hidden flex flex-col max-h-[92vh] ${className}`}
+        data-ui-modal="true"
+        className={`w-full ${sizeClasses[size] || sizeClasses.md} bg-[var(--ui-bg-card)] ui-bg-card text-[var(--ui-text-primary)] ui-border border-2 rounded-[${radius.modal}] ${elevationSystem.overlay} overflow-hidden flex flex-col max-h-[92vh] ${className}`}
       >
         {/* Header */}
         {(title || icon) && (
