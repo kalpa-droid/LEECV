@@ -21,6 +21,17 @@ export interface SectorDefinition {
   role: SectorRole;
   /** Ancho como % de la hoja física completa (columnas) o 100 si es banda de ancho completo */
   widthPercent: number;
+  /**
+   * Ancho ABSOLUTO en mm, exacto sin importar el tamaño de hoja (A4/Carta/
+   * Legal/A3/etc). Cuando está presente, tiene prioridad sobre widthPercent
+   * para ESTE sector — pero widthPercent sigue siendo obligatorio como
+   * fallback/documentación de intención. Los demás sectores de la misma
+   * fila (sin widthMm) se reparten el espacio que sobra según su propio
+   * widthPercent, normalizado sólo entre ellos — así "68" sigue queriendo
+   * decir "lo que quede", sin tener que recalcular a mano cuando un sector
+   * hermano pasa a usar mm.
+   */
+  widthMm?: number;
   /** Orden de izquierda a derecha / arriba a abajo */
   order: number;
   /**
@@ -48,10 +59,33 @@ export interface PhysicalPageDims {
 /** Capa 0 (hoja física) + Capa 2 (definición de sectores) → cajas resueltas en pt, SIN margen aplicado */
 export function resolveSectors(page: PhysicalPageDims, sectors: SectorDefinition[]): ResolvedSector[] {
   const ordered = [...sectors].sort((a, b) => a.order - b.order);
-  let cursorXPt = 0;
+  const mmToPt = (mm: number) => Math.round(mm * 2.8346);
 
+  // Primero, los sectores con ancho ABSOLUTO (widthMm) — su ancho en pt no
+  // depende del tamaño de hoja, así que se calcula directo.
+  const fixedWidthPtById = new Map<string, number>();
+  let fixedTotalPt = 0;
+  for (const sector of ordered) {
+    if (sector.widthMm !== undefined) {
+      const widthPt = mmToPt(sector.widthMm);
+      fixedWidthPtById.set(sector.id, widthPt);
+      fixedTotalPt += widthPt;
+    }
+  }
+
+  // Lo que queda de la hoja se reparte entre los sectores SIN widthMm,
+  // proporcional a su widthPercent normalizado sólo entre ellos — si no hay
+  // ningún sector con widthMm en la fila, esto es matemáticamente idéntico
+  // al comportamiento anterior (100% de la hoja, 100% de la suma de %).
+  const remainingPt = Math.max(0, page.widthPt - fixedTotalPt);
+  const flexSectors = ordered.filter((sector) => sector.widthMm === undefined);
+  const flexPercentSum = flexSectors.reduce((sum, sector) => sum + sector.widthPercent, 0) || 1;
+
+  let cursorXPt = 0;
   return ordered.map((sector) => {
-    const widthPt = Math.round((sector.widthPercent / 100) * page.widthPt);
+    const widthPt = fixedWidthPtById.has(sector.id)
+      ? fixedWidthPtById.get(sector.id)!
+      : Math.round((sector.widthPercent / flexPercentSum) * remainingPt);
     const resolved: ResolvedSector = {
       id: sector.id,
       role: sector.role,

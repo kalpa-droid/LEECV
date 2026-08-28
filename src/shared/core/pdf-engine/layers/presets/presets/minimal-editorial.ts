@@ -9,7 +9,7 @@ export const minimalEditorialPreset: Preset = {
   pageSizeId: 'a4',
   marginPresetId: 'documento_amplio',
   sectors: [
-    { id: 'sidebar', role: 'sidebar', widthPercent: 32, order: 0 },
+    { id: 'sidebar', role: 'sidebar', widthPercent: 32, widthMm: 77.2, order: 0 }, // +1cm exacto vs 32% en A4 (67.2mm), fijo en cualquier tamaño de hoja
     { id: 'main', role: 'main', widthPercent: 68, order: 1 },
   ],
   fixedObjects: [

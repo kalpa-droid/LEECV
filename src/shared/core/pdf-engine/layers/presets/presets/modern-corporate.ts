@@ -10,7 +10,7 @@ export const modernCorporatePreset: Preset = {
   pageSizeId: 'a4',
   marginPresetId: 'documento_estandar',
   sectors: [
-    { id: 'sidebar', role: 'sidebar', widthPercent: 36, order: 0 },
+    { id: 'sidebar', role: 'sidebar', widthPercent: 36, widthMm: 85.6, order: 0 }, // +1cm exacto vs 36% en A4 (75.6mm), fijo en cualquier tamaño de hoja
     { id: 'main', role: 'main', widthPercent: 64, order: 1 },
   ],
   fixedObjects: [
