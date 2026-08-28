@@ -58,30 +58,30 @@ export function estimateRecordHeightPt(
 
   let atomicH = 0;
 
-  // Gaps alineados al CSS real de CardObjectRenderer con cálculo de wrap por longitud de caracteres:
+  // Gaps alineados al CSS real de CardObjectRenderer con cálculo de wrap denso por longitud de caracteres:
   if (arranged.headerTitle) {
-    const charsPerLine = isSidebar ? 28 : 55;
+    const charsPerLine = isSidebar ? 35 : 70;
     const lines = Math.max(1, Math.ceil(arranged.headerTitle.length / charsPerLine));
     atomicH += lines * scale.title + 2;
   }
 
   if (arranged.headerSubtitle) {
-    const charsPerLine = isSidebar ? 32 : 60;
+    const charsPerLine = isSidebar ? 40 : 75;
     const lines = Math.max(1, Math.ceil(arranged.headerSubtitle.length / charsPerLine));
-    atomicH += lines * scale.subtitle + 3;
+    atomicH += lines * scale.subtitle + 2;
   }
 
   if (arranged.inlineBadges.length > 0) {
-    atomicH += scale.badge + 6;
+    atomicH += scale.badge + 4;
   }
 
   if (arranged.extrasList.length > 0) {
-    atomicH += (scale.extra + 2) * Math.min(arranged.extrasList.length, 2) + 3;
+    atomicH += (scale.extra + 2) * Math.min(arranged.extrasList.length, 2) + 2;
   }
 
   let descH = 0;
   if (arranged.blockDescription) {
-    const charsPerLine = isSidebar ? 35 : 65;
+    const charsPerLine = isSidebar ? 45 : 85;
     let descLines = 0;
     for (const line of arranged.blockDescription.split('\n')) {
       descLines += Math.max(1, Math.ceil((line.length || 1) / charsPerLine));
@@ -89,8 +89,8 @@ export function estimateRecordHeightPt(
     descH += descLines * (scale.description * scale.lineHeightBody);
   }
 
-  const paddingVertical = spatial.containerStyle.padding * 2;
-  const marginBottom = spatial.containerStyle.marginBottom;
+  const paddingVertical = 12;
+  const marginBottom = 6;
 
   const cols = Math.max(1, subColumnsCount);
   const atomicHeaderHeightPt = Math.round((atomicH + paddingVertical + marginBottom) / cols);
@@ -132,8 +132,8 @@ export function processPageOverflow(
     let hasOverflow = false;
 
     for (const section of secList) {
-      const titleH = section.titleText ? (typography.sectionHeading || 11) + 12 : 0;
-      if (curH + titleH > availableHeightPt - 15) {
+      const titleH = section.titleText ? (typography.sectionHeading || 11) + 10 : 0;
+      if (curH + titleH > availableHeightPt - 10) {
         hasOverflow = true;
         p2.push(section);
         continue;
@@ -147,7 +147,7 @@ export function processPageOverflow(
         const subCols = (section as any).subColumnsCount || 1;
         const est = estimateRecordHeightPt(rec, typography, 'stacked-clean', subCols, isSidebar);
         // Evaluar la decisión sobre totalHeightPt para garantizar que el registro completo entre sin cortar descripciones
-        if (curH + secH + est.totalHeightPt <= availableHeightPt - 15) {
+        if (curH + secH + est.totalHeightPt <= availableHeightPt - 10) {
           fitRecs.push(rec);
           secH += est.totalHeightPt;
         } else {
@@ -187,8 +187,8 @@ export function processPageOverflow(
 
   while ((currentSidebar.length > 0 || currentMain.length > 0) && pageNum <= MAX_PAGES) {
     const isFirst = pageNum === 1;
-    const sidebarReserve = isFirst ? 140 : 10;
-    const mainReserve = isFirst ? 30 : 10;
+    const sidebarReserve = isFirst ? 130 : 5;
+    const mainReserve = isFirst ? 25 : 5;
 
     const sidebarSplit = splitSector(currentSidebar, sidebarReserve, true);
     const mainSplit = splitSector(currentMain, mainReserve, false);
