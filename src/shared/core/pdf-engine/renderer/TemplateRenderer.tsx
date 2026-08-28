@@ -139,13 +139,13 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     leftColumnContent: {
       color: rolesColor.textOnPrimary,
       paddingLeft: usable.margins.leftPt || 14,
-      paddingRight: 14,
+      paddingRight: usable.margins.leftPt || 14,
       paddingBottom: usable.margins.bottomPt || 14,
       flex: 1
     },
     rightColumnContent: {
       color: rolesColor.text,
-      paddingLeft: 20,
+      paddingLeft: usable.margins.rightPt || 14,
       paddingRight: usable.margins.rightPt || 14,
       paddingBottom: usable.margins.bottomPt || 14,
       flex: 1
@@ -203,7 +203,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       marginTop: 20,
       paddingTop: 10,
       borderTopWidth: 1,
-      borderTopColor: '#cbd5e1',
+      borderTopColor: mainRolesColor.border,
       alignItems: 'flex-end'
     },
     signatureBox: {
@@ -217,22 +217,22 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     },
     signatureLine: {
       borderBottomWidth: 1,
-      borderBottomColor: '#94a3b8',
+      borderBottomColor: mainRolesColor.border,
       height: 30,
       marginBottom: 4
     },
     signerName: {
       fontSize: preset.typography.itemTitle,
       fontFamily: 'Helvetica-Bold',
-      color: '#0f172a'
+      color: mainRolesColor.text
     },
     signerRole: {
       fontSize: preset.typography.caption,
-      color: '#64748b'
+      color: mainRolesColor.secondary
     },
     signerDate: {
       fontSize: preset.typography.caption - 1,
-      color: '#94a3b8',
+      color: mainRolesColor.secondary,
       marginTop: 2
     },
     certPage: {
@@ -581,7 +581,10 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
         const widthStyle = isSidebar ? { width: sFlow.sector.box.widthPt } : {};
 
         const sectorSectionIds = preset.sectionOrder.find(s => s.sectorRole === sFlow.sector.role)?.sectionIds || [];
-        const sectorSections = pageSections.filter(sec => sectorSectionIds.includes(sec.id) || sec.id.endsWith('-cont'));
+        const sectorSections = pageSections.filter(sec => {
+          const baseId = sec.id.replace(/-cont$/, '');
+          return sectorSectionIds.includes(baseId) || sectorSectionIds.includes(sec.id);
+        });
 
         return (
           <View key={sFlow.sector.id} style={[surfaceStyle, widthStyle, { position: 'relative' }] as any}>

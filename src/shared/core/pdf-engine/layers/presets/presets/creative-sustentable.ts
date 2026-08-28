@@ -15,7 +15,7 @@ export const creativeSustentablePreset: Preset = {
   ],
   sectionOrder: [
     { sectorRole: 'sidebar', sectionIds: ['contacto', 'datos-personales', 'ecologia', 'competencias'] },
-    { sectorRole: 'main', sectionIds: ['formacion', 'experiencia', 'profesion', 'cursos'] },
+    { sectorRole: 'main', sectionIds: ['formacion', 'experiencia', 'profesion', 'cursos', 'firma'] },
   ],
   palette: {
     primary: '#1b4332',

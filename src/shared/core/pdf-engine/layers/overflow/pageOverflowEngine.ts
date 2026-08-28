@@ -137,8 +137,8 @@ export function processPageOverflow(
       for (const rec of section.records) {
         const subCols = (section as any).subColumnsCount || 1;
         const est = estimateRecordHeightPt(rec, typography, 'stacked-clean', subCols);
-        // Evaluar la decisión sobre atomicHeaderHeightPt: si el encabezado entra en P1, se queda
-        if (curH + secH + est.atomicHeaderHeightPt <= availableHeightPt - 20) {
+        // Evaluar la decisión sobre totalHeightPt para garantizar que el registro completo entre sin cortar descripciones
+        if (curH + secH + est.totalHeightPt <= availableHeightPt - 20) {
           fitRecs.push(rec);
           secH += est.totalHeightPt;
         } else {
@@ -153,10 +153,11 @@ export function processPageOverflow(
       }
 
       if (overRecs.length > 0) {
+        const cleanId = section.id.replace(/-cont$/, '');
         p2.push({
           ...section,
-          id: `${section.id}-cont`,
-          titleText: section.titleText ? `${section.titleText} (cont.)` : '',
+          id: `${cleanId}-cont`,
+          titleText: section.titleText ? `${section.titleText.replace(/\s*\(cont\.\)$/, '')} (cont.)` : '',
           records: overRecs
         });
       }
@@ -168,25 +169,47 @@ export function processPageOverflow(
   const sidebarSections = sections.filter(sec => sidebarSectionIds.includes(sec.id));
   const mainSections = sections.filter(sec => mainSectionIds.includes(sec.id) || (!sidebarSectionIds.includes(sec.id) && !mainSectionIds.includes(sec.id)));
 
-  // Reserva de foto en sidebar (150pt) y título de header en main (40pt)
-  const sidebarSplit = splitSector(sidebarSections, 150);
-  const mainSplit = splitSector(mainSections, 40);
+  // Bucle de paginación N-páginas
+  const pages: PageContent[] = [];
+  let currentSidebar = sidebarSections;
+  let currentMain = mainSections;
+  let pageNum = 1;
+  const MAX_PAGES = 10;
 
-  const overflowed = sidebarSplit.hasOverflow || mainSplit.hasOverflow;
+  while ((currentSidebar.length > 0 || currentMain.length > 0) && pageNum <= MAX_PAGES) {
+    const isFirst = pageNum === 1;
+    const sidebarReserve = isFirst ? 150 : 20;
+    const mainReserve = isFirst ? 40 : 20;
 
-  if (!overflowed) {
-    return {
-      pages: [{ pageNumber: 1, totalPages: 1, sections }],
-      hasOverflowed: false
-    };
+    const sidebarSplit = splitSector(currentSidebar, sidebarReserve);
+    const mainSplit = splitSector(currentMain, mainReserve);
+
+    const hasContentOnPage = sidebarSplit.p1.length > 0 || mainSplit.p1.length > 0;
+    if (!hasContentOnPage && !sidebarSplit.hasOverflow && !mainSplit.hasOverflow) {
+      break;
+    }
+
+    pages.push({
+      pageNumber: pageNum,
+      totalPages: 1, // Se actualizará al final
+      sections: [...sidebarSplit.p1, ...mainSplit.p1]
+    });
+
+    currentSidebar = sidebarSplit.p2;
+    currentMain = mainSplit.p2;
+    pageNum++;
+
+    if (!sidebarSplit.hasOverflow && !mainSplit.hasOverflow) {
+      break;
+    }
   }
 
-  const totalPages = 2;
+  // Actualizar totalPages en todas las páginas generadas
+  const finalTotalPages = pages.length;
+  const updatedPages = pages.map(p => ({ ...p, totalPages: finalTotalPages }));
+
   return {
-    pages: [
-      { pageNumber: 1, totalPages, sections: [...sidebarSplit.p1, ...mainSplit.p1] },
-      { pageNumber: 2, totalPages, sections: [...sidebarSplit.p2, ...mainSplit.p2] }
-    ],
-    hasOverflowed: true
+    pages: updatedPages,
+    hasOverflowed: finalTotalPages > 1
   };
 }

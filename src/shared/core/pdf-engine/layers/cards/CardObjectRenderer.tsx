@@ -59,9 +59,11 @@ export function CardObjectRenderer({
   const borderColor = getRoleColor(design.borderColorRole);
   const backgroundColor = getRoleColor(design.backgroundColorRole);
 
-  const parentBgColor = rolesColor.background;
+  const parentBgColor = sectorRole === 'sidebar' ? rolesColor.primary : rolesColor.background;
   const cardBgColor = decStyles?.cardContainerStyle.backgroundColor ?? (
-    spatialLayout.isBoxed ? 'rgba(0,0,0,0.025)' : (backgroundColor && backgroundColor !== 'transparent' ? backgroundColor : parentBgColor)
+    spatialLayout.isBoxed 
+      ? (sectorRole === 'sidebar' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.025)')
+      : (backgroundColor && backgroundColor !== 'transparent' ? backgroundColor : 'transparent')
   );
 
   const typographyBinding = getTypographyColorBinding(rolesColor, cardBgColor);
