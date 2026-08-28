@@ -154,12 +154,14 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     // (ver sector.box, Capa 2), llegue o no al borde físico.
     leftColumnSurface: {
       backgroundColor: rolesColor.primary,
-      flexDirection: 'column'
+      flexDirection: 'column',
+      minHeight: '100%'
     },
     rightColumnSurface: {
       flex: 1,
       backgroundColor: rolesColor.background,
-      flexDirection: 'column'
+      flexDirection: 'column',
+      minHeight: '100%'
     },
     // CAPA "CONTENIDO" — solo manejan margen/padding. Nunca tienen
     // backgroundColor, por eso un cambio de margen JAMÁS puede volver a

@@ -48,7 +48,8 @@ export function estimateRecordHeightPt(
   record: any,
   typography: TypographyScale,
   layoutTemplate: RecordLayoutTemplate = 'stacked-clean',
-  subColumnsCount: number = 1
+  subColumnsCount: number = 1,
+  isSidebar: boolean = false
 ): RecordHeightEstimate {
   const structured = buildStructuredRecordLayout(record.fields || record);
   const arranged = arrangeRecordFields(structured, layoutTemplate);
@@ -57,34 +58,37 @@ export function estimateRecordHeightPt(
 
   let atomicH = 0;
 
-  // Gaps alineados al CSS real de CardObjectRenderer:
-  // headerRow: marginBottom 2, subtitleText: marginBottom 3, badgeRow: marginTop 2 + marginBottom 4
-  if (arranged.headerTitle || arranged.headerSubtitle) {
-    if (spatial.isInlineCompact) {
-      atomicH += Math.max(scale.title, scale.subtitle) + 2;
-    } else {
-      if (arranged.headerTitle) atomicH += scale.title + 2;   // headerRow marginBottom: 2
-      if (arranged.headerSubtitle) atomicH += scale.subtitle + 3; // subtitleText marginBottom: 3
-    }
+  // Gaps alineados al CSS real de CardObjectRenderer con cálculo de wrap por longitud de caracteres:
+  if (arranged.headerTitle) {
+    const charsPerLine = isSidebar ? 28 : 55;
+    const lines = Math.max(1, Math.ceil(arranged.headerTitle.length / charsPerLine));
+    atomicH += lines * scale.title + 2;
+  }
+
+  if (arranged.headerSubtitle) {
+    const charsPerLine = isSidebar ? 32 : 60;
+    const lines = Math.max(1, Math.ceil(arranged.headerSubtitle.length / charsPerLine));
+    atomicH += lines * scale.subtitle + 3;
   }
 
   if (arranged.inlineBadges.length > 0) {
-    atomicH += scale.badge + 6; // badgeRow: marginTop 2 + marginBottom 4
+    atomicH += scale.badge + 6;
   }
 
   if (arranged.extrasList.length > 0) {
-    // extraRow: marginTop 2 + marginBottom 3 (shared), extras inline with gap
     atomicH += (scale.extra + 2) * Math.min(arranged.extrasList.length, 2) + 3;
   }
 
   let descH = 0;
   if (arranged.blockDescription) {
-    const lines = arranged.blockDescription.split('\n').length;
-    descH += lines * (scale.description * scale.lineHeightBody);
+    const charsPerLine = isSidebar ? 35 : 65;
+    let descLines = 0;
+    for (const line of arranged.blockDescription.split('\n')) {
+      descLines += Math.max(1, Math.ceil((line.length || 1) / charsPerLine));
+    }
+    descH += descLines * (scale.description * scale.lineHeightBody);
   }
 
-  // containerStyle.padding aplica solo vertical (paddingVertical ≈ padding en stacked-clean)
-  // pero en el render real cardContainer usa padding (uniforme), el padding horizontal no afecta altura
   const paddingVertical = spatial.containerStyle.padding * 2;
   const marginBottom = spatial.containerStyle.marginBottom;
 
@@ -121,7 +125,7 @@ export function processPageOverflow(
   const sidebarSectionIds = preset.sectionOrder.find(s => s.sectorRole === 'sidebar')?.sectionIds || [];
   const mainSectionIds = preset.sectionOrder.find(s => s.sectorRole === 'main')?.sectionIds || [];
 
-  const splitSector = (secList: ContentSection[], reservedHeaderPt: number) => {
+  const splitSector = (secList: ContentSection[], reservedHeaderPt: number, isSidebar: boolean) => {
     const p1: ContentSection[] = [];
     const p2: ContentSection[] = [];
     let curH = reservedHeaderPt;
@@ -141,7 +145,7 @@ export function processPageOverflow(
 
       for (const rec of section.records) {
         const subCols = (section as any).subColumnsCount || 1;
-        const est = estimateRecordHeightPt(rec, typography, 'stacked-clean', subCols);
+        const est = estimateRecordHeightPt(rec, typography, 'stacked-clean', subCols, isSidebar);
         // Evaluar la decisión sobre totalHeightPt para garantizar que el registro completo entre sin cortar descripciones
         if (curH + secH + est.totalHeightPt <= availableHeightPt - 15) {
           fitRecs.push(rec);
@@ -186,8 +190,8 @@ export function processPageOverflow(
     const sidebarReserve = isFirst ? 140 : 10;
     const mainReserve = isFirst ? 30 : 10;
 
-    const sidebarSplit = splitSector(currentSidebar, sidebarReserve);
-    const mainSplit = splitSector(currentMain, mainReserve);
+    const sidebarSplit = splitSector(currentSidebar, sidebarReserve, true);
+    const mainSplit = splitSector(currentMain, mainReserve, false);
 
     const hasContentOnPage = sidebarSplit.p1.length > 0 || mainSplit.p1.length > 0;
     if (!hasContentOnPage && !sidebarSplit.hasOverflow && !mainSplit.hasOverflow) {
