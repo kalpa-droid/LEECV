@@ -282,5 +282,10 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
     ]
   });
 
-  return sections;
+  // Mapear saltos de página configurados por el usuario
+  const sectionPageBreaks = cvData?.layout?.sectionPageBreaks || cvData?.sectionPageBreaks || {};
+  return sections.map(sec => ({
+    ...sec,
+    breakBefore: !!sectionPageBreaks[sec.id]
+  }));
 }

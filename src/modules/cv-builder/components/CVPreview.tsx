@@ -50,6 +50,7 @@ export default function CVPreview({ cvData, setCvData: _setCvData, activeTab: _a
               roles={cvData?.roles || []}
               education={cvData?.education || []}
               professions={cvData?.professions || []}
+              layoutOverrides={cvData?.layout}
               customRecordCardDesigns={cvData?.recordCardDesigns}
             />
           )

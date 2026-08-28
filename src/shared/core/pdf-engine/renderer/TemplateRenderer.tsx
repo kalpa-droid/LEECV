@@ -20,6 +20,7 @@ import { createSubColumnGrid } from '../layers/subColumns/resolveSubColumns';
 import { resolveUnifiedTextSpec } from '../layers/typography/unifiedTextHierarchyEngine';
 import { resolveSubtleCardBackground } from '../layers/colors/surfaceAwareColorEngine';
 import { initPdfFonts } from '../layers/typography/pdfFontRegistry';
+import { resolveEffectivePresetSectionOrder, CvLayoutOverrides } from '../layers/sectors/layoutResolutionEngine';
 
 function sanitizeSvgDataUrl(dataUrl?: string): string | undefined {
   if (!dataUrl || typeof dataUrl !== 'string') return dataUrl;
@@ -53,6 +54,7 @@ export interface TemplateRendererProps {
   roles?: any[];
   education?: any[];
   professions?: any[];
+  layoutOverrides?: CvLayoutOverrides;
   customRecordCardDesigns?: {
     education?: string;
     experience?: string;
@@ -85,6 +87,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   roles = [],
   education = [],
   professions = [],
+  layoutOverrides,
   embedded = false,
   canvasWidthMm,
   canvasHeightMm,
@@ -615,6 +618,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     return null;
   };
 
+  const effectiveSectionOrder = resolveEffectivePresetSectionOrder(preset, layoutOverrides);
   const overflowResult = processPageOverflow(preset, sections);
   const decStyles = resolveDecorativeStyles(preset);
 
@@ -627,8 +631,8 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
         const contentStyle = isSidebar ? styles.leftColumnContent : styles.rightColumnContent;
         const widthStyle = isSidebar ? { width: sFlow.sector.box.widthPt } : {};
 
-        const sectorSectionIds = preset.sectionOrder.find(s => s.sectorRole === sFlow.sector.role)?.sectionIds || [];
-        const allDefinedSectorIds = preset.sectionOrder.flatMap(s => s.sectionIds || []);
+        const sectorSectionIds = effectiveSectionOrder.find(s => s.sectorRole === sFlow.sector.role)?.sectionIds || [];
+        const allDefinedSectorIds = effectiveSectionOrder.flatMap(s => s.sectionIds || []);
 
         const sectorSections = pageSections.filter(sec => {
           const baseId = sec.id.replace(/-cont$/, '');
@@ -669,11 +673,14 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
               )}
 
               {sectorSections.map((sec) => {
+                const isFirma = sec.id === 'firma' || sec.id.startsWith('firma');
+                const sectionStyle = isFirma ? { marginTop: 'auto' } : undefined;
+
                 if (isSidebar) {
                   // Sidebar: la sección completa es un bloque atómico (wrap={false})
                   return (
-                    <View key={sec.id} wrap={false}>
-                      {sec.titleText && !sec.id.startsWith('firma') && (
+                    <View key={sec.id} break={sec.breakBefore || false} wrap={false} style={sectionStyle as any}>
+                      {sec.titleText && !isFirma && (
                         <SectionBannerCard
                           preset={preset}
                           titleText={sec.titleText}
@@ -691,11 +698,11 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
 
                 // Main Sector: Banner + primer registro son atómicos para evitar título huérfano
                 return (
-                  <View key={sec.id}>
+                  <View key={sec.id} break={sec.breakBefore || false} style={sectionStyle as any}>
                     {sec.records.length > 0 ? (
                       <>
                         <View wrap={false}>
-                          {sec.titleText && !sec.id.startsWith('firma') && (
+                          {sec.titleText && !isFirma && (
                             <SectionBannerCard
                               preset={preset}
                               titleText={sec.titleText}
@@ -715,7 +722,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                         ))}
                       </>
                     ) : (
-                      sec.titleText && !sec.id.startsWith('firma') && (
+                      sec.titleText && !isFirma && (
                         <View wrap={false}>
                           <SectionBannerCard
                             preset={preset}

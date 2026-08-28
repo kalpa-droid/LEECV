@@ -144,7 +144,7 @@ if (fs.existsSync(templatePath)) {
   const trContent = fs.readFileSync(templatePath, 'utf-8');
   check(
     'TemplateRenderer sidebar usa wrap={false} atómico por sección completa',
-    trContent.includes('<View key={sec.id} wrap={false}>'),
+    trContent.includes('<View key={sec.id} break={sec.breakBefore || false} wrap={false}') || trContent.includes('<View key={sec.id} wrap={false}>'),
     'No se encontró wrap={false} atómico por sección en sidebar'
   );
   check(
@@ -199,6 +199,34 @@ if (fs.existsSync(fieldCatalogPath)) {
     'FieldDesignHint soporta ejes independientes weightOverride y styleOverride',
     fcContent.includes('weightOverride?:') && fcContent.includes('styleOverride?:'),
     'FieldDesignHint no declara weightOverride o styleOverride'
+  );
+}
+
+// ─── 8. Plan v23: layoutResolutionEngine, firma al pie y saltos de página ───
+console.log('\n── 8. Plan v23: layoutResolutionEngine, firma al pie y saltos de página ──');
+const layoutEnginePath = path.join(ROOT, 'src/shared/core/pdf-engine/layers/sectors/layoutResolutionEngine.ts');
+if (fs.existsSync(layoutEnginePath)) {
+  const layoutContent = fs.readFileSync(layoutEnginePath, 'utf-8');
+  check(
+    'layoutResolutionEngine define resolveEffectivePresetSectionOrder',
+    layoutContent.includes('resolveEffectivePresetSectionOrder'),
+    'No se encontró resolveEffectivePresetSectionOrder en layoutResolutionEngine.ts'
+  );
+} else {
+  check('layoutResolutionEngine.ts existe', false, `No encontrado: ${layoutEnginePath}`);
+}
+
+if (fs.existsSync(templatePath)) {
+  const trContent = fs.readFileSync(templatePath, 'utf-8');
+  check(
+    'TemplateRenderer ancla la sección firma con marginTop: auto al pie de la hoja',
+    trContent.includes("isFirma = sec.id === 'firma'") && trContent.includes("marginTop: 'auto'"),
+    'TemplateRenderer no ancla la sección firma con marginTop: auto'
+  );
+  check(
+    'TemplateRenderer aplica salto de página nativo break={sec.breakBefore}',
+    trContent.includes('break={sec.breakBefore || false}'),
+    'TemplateRenderer no aplica break={sec.breakBefore || false}'
   );
 }
 

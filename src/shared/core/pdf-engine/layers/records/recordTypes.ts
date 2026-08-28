@@ -27,4 +27,5 @@ export interface ContentSection {
   id: string;
   titleText: string;
   records: ContentRecord[];
+  breakBefore?: boolean;
 }

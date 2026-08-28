@@ -38,6 +38,7 @@ export async function exportCVToPDF(cvData: any, presetInput?: Preset, atsMode?:
     roles: cvData?.roles || [],
     education: cvData?.education || [],
     professions: cvData?.professions || [],
+    layoutOverrides: cvData?.layout,
     customRecordCardDesigns: cvData?.recordCardDesigns
   });
 

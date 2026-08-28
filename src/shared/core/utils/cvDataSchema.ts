@@ -121,7 +121,10 @@ export function sanitizeCvData(rawCvData: any = {}) {
         primaria: Array.isArray(data.layout?.sectionOrders?.primaria)
           ? [...new Set(data.layout.sectionOrders.primaria)]
           : ['personales', 'formacion', 'profesion', 'experiencia', 'cursos', 'ecologia']
-      }
+      },
+      sectionPageBreaks: (typeof data.layout?.sectionPageBreaks === 'object' && data.layout?.sectionPageBreaks !== null)
+        ? data.layout.sectionPageBreaks
+        : {}
     },
 
     // Antes este campo no se preservaba: sanitizeCvData lo borraba en cada carga

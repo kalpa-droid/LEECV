@@ -1552,50 +1552,77 @@ export default function EditorPanel({
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-end gap-3 text-[10px] text-[var(--ui-text-secondary)] pt-1 border-t border-[var(--ui-border)]">
-                            {(currentVal === 'secundaria' || currentVal === 'ambas') && (
-                              <div className={`flex items-center gap-1 bg-[var(--color-accent-muted)] px-2 py-0.5 rounded-[${radius.control}] border border-[var(--color-accent-base)]/30`}>
-                                <span className="font-bold text-[var(--color-accent-text)]">Sec:</span>
-                                <button
-                                  type="button"
-                                  onClick={() => moveSection('secundaria', 'up')}
-                                  disabled={secOrder.indexOf(sec.id) <= 0}
-                                  className="px-1 py-0.5 hover:opacity-80 rounded font-black disabled:opacity-30 cursor-pointer"
-                                >
-                                  ⬆
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => moveSection('secundaria', 'down')}
-                                  disabled={secOrder.indexOf(sec.id) === -1 || secOrder.indexOf(sec.id) >= secOrder.length - 1}
-                                  className="px-1 py-0.5 hover:opacity-80 rounded font-black disabled:opacity-30 cursor-pointer"
-                                >
-                                  ⬇
-                                </button>
-                              </div>
-                            )}
+                          <div className="flex items-center justify-between gap-2 text-[10px] text-[var(--ui-text-secondary)] pt-1 border-t border-[var(--ui-border)]">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const hasBreak = !!cvData.layout?.sectionPageBreaks?.[sec.id];
+                                setCvData((prev: any) => ({
+                                  ...prev,
+                                  layout: {
+                                    ...(prev.layout || {}),
+                                    sectionPageBreaks: {
+                                      ...(prev.layout?.sectionPageBreaks || {}),
+                                      [sec.id]: !hasBreak
+                                    }
+                                  }
+                                }));
+                              }}
+                              className={`px-2 py-0.5 rounded text-[10px] font-extrabold transition cursor-pointer flex items-center gap-1 ${
+                                cvData.layout?.sectionPageBreaks?.[sec.id]
+                                  ? 'bg-[var(--color-accent-purple)] text-white shadow-sm'
+                                  : 'bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-secondary)] hover:bg-[var(--color-neutral-border)]'
+                              }`}
+                              title="Forzar salto de página nativo antes de esta sección"
+                            >
+                              📄 Salto pág: {cvData.layout?.sectionPageBreaks?.[sec.id] ? 'ACTIVADO' : 'OFF'}
+                            </button>
 
-                            {(currentVal === 'primaria' || currentVal === 'ambas') && (
-                              <div className={`flex items-center gap-1 bg-[var(--color-secondary-muted)] px-2 py-0.5 rounded-[${radius.control}] border border-[var(--color-secondary-base)]/30`}>
-                                <span className="font-bold text-[var(--color-secondary-text)]">Prim:</span>
-                                <button
-                                  type="button"
-                                  onClick={() => moveSection('primaria', 'up')}
-                                  disabled={primOrder.indexOf(sec.id) <= 0}
-                                  className="px-1 py-0.5 hover:opacity-80 rounded font-black disabled:opacity-30 cursor-pointer"
-                                >
-                                  ⬆
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => moveSection('primaria', 'down')}
-                                  disabled={primOrder.indexOf(sec.id) === -1 || primOrder.indexOf(sec.id) >= primOrder.length - 1}
-                                  className="px-1 py-0.5 hover:opacity-80 rounded font-black disabled:opacity-30 cursor-pointer"
-                                >
-                                  ⬇
-                                </button>
-                              </div>
-                            )}
+                            <div className="flex items-center gap-2">
+                              {(currentVal === 'secundaria' || currentVal === 'ambas') && (
+                                <div className={`flex items-center gap-1 bg-[var(--color-accent-muted)] px-2 py-0.5 rounded-[${radius.control}] border border-[var(--color-accent-base)]/30`}>
+                                  <span className="font-bold text-[var(--color-accent-text)]">Sec:</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => moveSection('secundaria', 'up')}
+                                    disabled={secOrder.indexOf(sec.id) <= 0}
+                                    className="px-1 py-0.5 hover:opacity-80 rounded font-black disabled:opacity-30 cursor-pointer"
+                                  >
+                                    ⬆
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => moveSection('secundaria', 'down')}
+                                    disabled={secOrder.indexOf(sec.id) === -1 || secOrder.indexOf(sec.id) >= secOrder.length - 1}
+                                    className="px-1 py-0.5 hover:opacity-80 rounded font-black disabled:opacity-30 cursor-pointer"
+                                  >
+                                    ⬇
+                                  </button>
+                                </div>
+                              )}
+
+                              {(currentVal === 'primaria' || currentVal === 'ambas') && (
+                                <div className={`flex items-center gap-1 bg-[var(--color-secondary-muted)] px-2 py-0.5 rounded-[${radius.control}] border border-[var(--color-secondary-base)]/30`}>
+                                  <span className="font-bold text-[var(--color-secondary-text)]">Prim:</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => moveSection('primaria', 'up')}
+                                    disabled={primOrder.indexOf(sec.id) <= 0}
+                                    className="px-1 py-0.5 hover:opacity-80 rounded font-black disabled:opacity-30 cursor-pointer"
+                                  >
+                                    ⬆
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => moveSection('primaria', 'down')}
+                                    disabled={primOrder.indexOf(sec.id) === -1 || primOrder.indexOf(sec.id) >= primOrder.length - 1}
+                                    className="px-1 py-0.5 hover:opacity-80 rounded font-black disabled:opacity-30 cursor-pointer"
+                                  >
+                                    ⬇
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );
