@@ -6,7 +6,7 @@
  * real en la que se ubica el elemento (sidebar oscuro, tarjeta blanca, banner de sección).
  */
 
-import { translatePaletteForSurface, ResolvedThemeRoles, hexToRGB, rgbToHex } from './colorSystem';
+import { translatePaletteForSurface, ResolvedThemeRoles, hexToRGB, rgbToHex, hexToHSL, hslToHex } from './colorSystem';
 
 export type ColorPurpose = 'text' | 'highlight' | 'ornament';
 
@@ -41,6 +41,32 @@ export function compositeOverBackground(colorStr: string, parentBgHex: string = 
   }
 
   return cleanParent;
+}
+
+/**
+ * MOTOR HSL — Calcula el fondo sutil de los contenedores de registro (cards / tarjetas personales)
+ * según el sector en el que habitan (columna clara u oscura).
+ * 
+ * Fórmula Algorítmica HSL:
+ * - Columna Clara (Main): Monocromático Pastel HSL(H, 20%, 94%) derivado del matiz del tema.
+ * - Columna Oscura (Sidebar): Monocromático Sombra HSL(H, max(0.10, S - 0.15), max(0.08, L - 0.08)).
+ */
+export function resolveSubtleCardBackground(
+  sectorRole: 'sidebar' | 'main',
+  rolesColor: ResolvedThemeRoles
+): string {
+  if (sectorRole === 'main') {
+    // 1. Matiz HSL del color base del tema
+    const [h] = hexToHSL(rolesColor.primary);
+    // 2. Monocromático Pastel armónico: Mantener H, S=20%, L=94%
+    return hslToHex(h, 0.20, 0.94);
+  }
+
+  // Columna Oscura (Sidebar)
+  const [h, s, l] = hexToHSL(rolesColor.primary);
+  const shadowS = Math.max(0.10, s - 0.15);
+  const shadowL = Math.max(0.08, l - 0.08);
+  return hslToHex(h, shadowS, shadowL);
 }
 
 export function resolveColorForRole(

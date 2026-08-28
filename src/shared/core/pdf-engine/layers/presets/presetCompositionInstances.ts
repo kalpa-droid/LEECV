@@ -11,7 +11,7 @@ import { generateHarmoniousPalette } from '../colors/paletteHarmonyEngine';
 /**
  * Paletas de Color Curadas y Armónicas
  */
-export const PRESET_COLORS: Record<'sobrio' | 'joven' | 'clasico' | 'elegante', ColorPreset> = {
+export const PRESET_COLORS: Record<'sobrio' | 'joven' | 'clasico' | 'elegante' | 'marino' | 'borgona' | 'amatista', ColorPreset> = {
   sobrio: {
     id: 'color-sobrio',
     name: 'Sobrio Pizarra',
@@ -21,10 +21,10 @@ export const PRESET_COLORS: Record<'sobrio' | 'joven' | 'clasico' | 'elegante', 
   },
   joven: {
     id: 'color-joven',
-    name: 'Joven Neón',
+    name: 'Joven Carmesí',
     seedHex: '#FF2E63',
-    harmonyScheme: 'analogous',
-    palette: generateHarmoniousPalette('#FF2E63', 'analogous')
+    harmonyScheme: 'split-complementary',
+    palette: generateHarmoniousPalette('#FF2E63', 'split-complementary')
   },
   clasico: {
     id: 'color-clasico',
@@ -39,6 +39,27 @@ export const PRESET_COLORS: Record<'sobrio' | 'joven' | 'clasico' | 'elegante', 
     seedHex: '#1D9E75',
     harmonyScheme: 'triadic',
     palette: generateHarmoniousPalette('#1D9E75', 'triadic')
+  },
+  marino: {
+    id: 'color-marino',
+    name: 'Ejecutivo Azul Marino',
+    seedHex: '#004080',
+    harmonyScheme: 'split-complementary',
+    palette: generateHarmoniousPalette('#004080', 'split-complementary')
+  },
+  borgona: {
+    id: 'color-borgona',
+    name: 'Borgoña Noble',
+    seedHex: '#581825',
+    harmonyScheme: 'split-complementary',
+    palette: generateHarmoniousPalette('#581825', 'split-complementary')
+  },
+  amatista: {
+    id: 'color-amatista',
+    name: 'Amatista Real',
+    seedHex: '#3B1C5A',
+    harmonyScheme: 'analogous',
+    palette: generateHarmoniousPalette('#3B1C5A', 'analogous')
   }
 };
 

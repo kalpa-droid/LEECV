@@ -12,7 +12,7 @@
  * `getContrastRatio` (definido en colorSystem.ts) contra la superficie para asegurar ratio > 4.5:1.
  */
 
-import { hexToOKLCH, oklchToHex, getContrastRatio } from './colorSystem';
+import { hexToOKLCH, oklchToHex, getContrastRatio, hexToHSL, hslToHex } from './colorSystem';
 import { ColorPalette } from '../presets/presetSchema';
 
 export type HarmonyScheme = 'analogous' | 'complementary' | 'split-complementary' | 'monochromatic' | 'triadic';
@@ -21,7 +21,8 @@ export function generateHarmoniousPalette(
   seedHex: string,
   scheme: HarmonyScheme = 'analogous'
 ): ColorPalette {
-  const oklch = hexToOKLCH(seedHex || '#1e293b');
+  const cleanSeed = seedHex || '#1e293b';
+  const oklch = hexToOKLCH(cleanSeed);
   const { l, c, h } = oklch;
 
   let secondaryH = h;
@@ -65,7 +66,13 @@ export function generateHarmoniousPalette(
 
   const primaryHex = oklchToHex(l, c, h);
   const secondaryHex = oklchToHex(secondaryL, secondaryC, secondaryH);
-  const accentHex = oklchToHex(accentL, accentC, accentH);
+  
+  // Acento HSL Complementario Dividido (+150°) para mayor viveza armónica si es split-complementary o analogous
+  const [baseH, baseS, baseL] = hexToHSL(primaryHex);
+  const splitAccH = (baseH + 150) % 360;
+  const splitAccHex = hslToHex(splitAccH, Math.min(1, baseS + 0.1), 0.5);
+
+  const accentHex = scheme === 'split-complementary' ? splitAccHex : oklchToHex(accentL, accentC, accentH);
 
   // Garantía de Contraste WCAG para textOnPrimary y text
   const contrastAgainstWhite = getContrastRatio(primaryHex, '#ffffff');

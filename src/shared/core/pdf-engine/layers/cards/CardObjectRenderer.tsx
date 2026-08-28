@@ -8,7 +8,7 @@ import { deriveRecordScale } from '../typography/typographyHierarchyEngine';
 import { resolveAccentTarget } from '../colors/accentApplicationEngine';
 import { resolveRecordLayout } from '../records/recordSpatialLayoutEngine';
 import { arrangeRecordFields } from '../records/fieldPlacementEngine';
-import { resolveColorForRole } from '../colors/surfaceAwareColorEngine';
+import { resolveColorForRole, resolveSubtleCardBackground } from '../colors/surfaceAwareColorEngine';
 import { resolveFieldDesign } from '../records/fieldDesignResolutionEngine';
 
 interface CardObjectRendererProps {
@@ -60,11 +60,7 @@ export function CardObjectRenderer({
   const backgroundColor = getRoleColor(design.backgroundColorRole);
 
   const parentBgColor = sectorRole === 'sidebar' ? rolesColor.primary : rolesColor.background;
-  const cardBgColor = decStyles?.cardContainerStyle.backgroundColor ?? (
-    spatialLayout.isBoxed 
-      ? (sectorRole === 'sidebar' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.025)')
-      : (backgroundColor && backgroundColor !== 'transparent' ? backgroundColor : 'transparent')
-  );
+  const cardBgColor = resolveSubtleCardBackground(sectorRole, rolesColor);
 
   const typographyBinding = getTypographyColorBinding(rolesColor, cardBgColor);
 
