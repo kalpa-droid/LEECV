@@ -37,7 +37,10 @@ export function buildPageTextTemplate(template: string, pageNumber: number, tota
   return template.replace('{page}', String(pageNumber)).replace('{totalPages}', String(totalPages));
 }
 
-export function resolvePageTextStyle(def: PageTextObjectDefinition) {
+import { resolveUnifiedTextSpec } from '../typography/unifiedTextHierarchyEngine';
+import { ResolvedThemeRoles } from '../colors/colorSystem';
+
+export function resolvePageTextStyle(def: PageTextObjectDefinition, pageBgHex: string = '#ffffff', rolesColor?: ResolvedThemeRoles) {
   const edgeStyle: Record<string, number | string> = {};
   if (def.anchor.startsWith('bottom')) edgeStyle.bottom = def.edgeOffsetPt;
   if (def.anchor.startsWith('top')) edgeStyle.top = def.edgeOffsetPt;
@@ -48,10 +51,18 @@ export function resolvePageTextStyle(def: PageTextObjectDefinition) {
     edgeStyle.right = 0;
     edgeStyle.textAlign = 'center';
   }
+
+  const metaSpec = rolesColor 
+    ? resolveUnifiedTextSpec('meta', pageBgHex, rolesColor, { body: 9 } as any, 'page-number')
+    : null;
+
   return {
     position: 'absolute' as const,
     fontSize: def.fontSizePt,
-    color: def.color || '#94a3b8',
+    fontFamily: metaSpec?.fontFamily || 'Helvetica-Oblique',
+    fontStyle: 'italic',
+    color: metaSpec?.colorHex || def.color || '#94a3b8',
+    opacity: metaSpec?.opacity || 0.50,
     ...edgeStyle,
   };
 }

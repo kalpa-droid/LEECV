@@ -17,6 +17,8 @@ import { OrnamentRenderer } from './OrnamentRenderer';
 import { resolveDecorativeStyles } from '../layers/decorations/decorativeLayerEngine';
 import { flattenPresetForATS } from '../layers/ats/atsFlatteningEngine';
 import { createSubColumnGrid } from '../layers/subColumns/resolveSubColumns';
+import { resolveUnifiedTextSpec } from '../layers/typography/unifiedTextHierarchyEngine';
+import { resolveSubtleCardBackground } from '../layers/colors/surfaceAwareColorEngine';
 
 export interface TemplateRendererProps {
   preset: Preset;
@@ -102,8 +104,17 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   const usable = resolveMargins(pageDef, marginDef); // Capa 3: solo para saber CUÁNTO margen aplicar al contenido
   const resolvedSectors = resolveSectors({ widthPt: pageDef.widthPt, heightPt: pageDef.heightPt }, preset.sectors); // Capa 2: geometría sobre la hoja FÍSICA completa, sin margen
   const sectorsWithFlow = placeFixedObjects(resolvedSectors, preset.fixedObjects);
-
   const pdfPaperSize = preset.pageSizeId === 'carta' ? 'LETTER' : preset.pageSizeId === 'legal' ? 'LEGAL' : 'A4';
+
+  const sidebarCardBg = resolveSubtleCardBackground('sidebar', sidebarRolesColor);
+  const mainCardBg = resolveSubtleCardBackground('main', mainRolesColor);
+
+  const headerNameSpec = resolveUnifiedTextSpec('title', mainRolesColor.background, mainRolesColor, preset.typography, 'header-name');
+  const sidebarContactSpec = resolveUnifiedTextSpec('body', sidebarRolesColor.primary, sidebarRolesColor, preset.typography, 'sidebar-contact');
+  const signerNameSpec = resolveUnifiedTextSpec('title', mainRolesColor.background, mainRolesColor, preset.typography, 'signer-name');
+  const signerRoleSpec = resolveUnifiedTextSpec('subtitle', mainRolesColor.background, mainRolesColor, preset.typography, 'signer-role');
+  const signerDateSpec = resolveUnifiedTextSpec('meta', mainRolesColor.background, mainRolesColor, preset.typography, 'signer-date');
+  const certTitleSpec = resolveUnifiedTextSpec('title', '#ffffff', mainRolesColor, preset.typography, 'cert-title');
 
   const styles = StyleSheet.create({
     page: {
@@ -112,10 +123,6 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       fontFamily: preset.typography.fontFamily,
       fontSize: preset.typography.body,
       color: rolesColor.text
-      // SIN padding acá: el sidebar (leftColumn) es un objeto que debe llegar
-      // a los bordes físicos de la hoja (izquierda, arriba, abajo). El margen
-      // de LECTURA se aplica adentro de cada columna, no a nivel página —
-      // así el color de fondo nunca queda "cortado" por el margen general.
     },
     pageBody: {
       flexDirection: 'row',
@@ -137,16 +144,16 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     // backgroundColor, por eso un cambio de margen JAMÁS puede volver a
     // cortar el color: son dos nodos distintos del árbol, no el mismo.
     leftColumnContent: {
-      color: rolesColor.textOnPrimary,
       paddingLeft: usable.margins.leftPt || 14,
       paddingRight: usable.margins.leftPt || 14,
+      paddingTop: usable.margins.topPt || 14,
       paddingBottom: usable.margins.bottomPt || 14,
       flex: 1
     },
     rightColumnContent: {
-      color: rolesColor.text,
       paddingLeft: usable.margins.rightPt || 14,
       paddingRight: usable.margins.rightPt || 14,
+      paddingTop: usable.margins.topPt || 14,
       paddingBottom: usable.margins.bottomPt || 14,
       flex: 1
     },
@@ -178,19 +185,23 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       marginBottom: 8
     },
     sidebarItemText: {
-      fontSize: preset.typography.caption,
+      fontSize: sidebarContactSpec.fontSizePt,
+      fontFamily: sidebarContactSpec.fontFamily,
       marginBottom: 3,
       lineHeight: 1.3,
-      color: sidebarType.body
+      color: sidebarContactSpec.colorHex,
+      opacity: sidebarContactSpec.opacity
     },
     sidebarItemBold: {
       fontFamily: 'Helvetica-Bold'
     },
     headerName: {
-      fontSize: preset.typography.title,
-      fontFamily: 'Helvetica-Bold',
+      fontSize: headerNameSpec.fontSizePt,
+      fontFamily: headerNameSpec.fontFamily,
       textTransform: 'uppercase',
-      color: mainType.title,
+      color: headerNameSpec.colorHex,
+      opacity: headerNameSpec.opacity,
+      fontWeight: headerNameSpec.fontWeight,
       marginBottom: 4,
       paddingBottom: 6,
       borderBottomWidth: 1,
@@ -222,17 +233,25 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       marginBottom: 4
     },
     signerName: {
-      fontSize: preset.typography.itemTitle,
-      fontFamily: 'Helvetica-Bold',
-      color: mainRolesColor.text
+      fontSize: signerNameSpec.fontSizePt,
+      fontFamily: signerNameSpec.fontFamily,
+      color: signerNameSpec.colorHex,
+      opacity: signerNameSpec.opacity,
+      fontWeight: signerNameSpec.fontWeight
     },
     signerRole: {
-      fontSize: preset.typography.caption,
-      color: mainRolesColor.secondary
+      fontSize: signerRoleSpec.fontSizePt,
+      fontFamily: signerRoleSpec.fontFamily,
+      color: signerRoleSpec.colorHex,
+      opacity: signerRoleSpec.opacity,
+      fontWeight: signerRoleSpec.fontWeight
     },
     signerDate: {
-      fontSize: preset.typography.caption - 1,
-      color: mainRolesColor.secondary,
+      fontSize: signerDateSpec.fontSizePt,
+      fontFamily: signerDateSpec.fontFamily,
+      fontStyle: 'italic',
+      color: signerDateSpec.colorHex,
+      opacity: signerDateSpec.opacity,
       marginTop: 2
     },
     certPage: {
@@ -242,9 +261,11 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       justifyContent: 'center'
     },
     certTitle: {
-      fontSize: preset.typography.cover?.title ? Math.round(preset.typography.cover.title * 0.55) : 14,
-      fontFamily: 'Helvetica-Bold',
-      color: '#0f172a',
+      fontSize: certTitleSpec.fontSizePt,
+      fontFamily: certTitleSpec.fontFamily,
+      color: certTitleSpec.colorHex,
+      opacity: certTitleSpec.opacity,
+      fontWeight: certTitleSpec.fontWeight,
       marginBottom: 12
     },
     certImage: {
