@@ -41,7 +41,7 @@ export function AtsCheckModal({
         <div className="w-full flex items-center justify-between gap-3">
           <button
             onClick={onClose}
-            className={`px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-[${radius.card}] transition cursor-pointer`}
+            className={`px-4 py-2 bg-[var(--ui-btn-neutral-bg)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-btn-neutral-text)] border border-[var(--ui-btn-neutral-border)] font-bold text-xs rounded-[${radius.card}] transition cursor-pointer`}
           >
             Cerrar
           </button>
@@ -52,7 +52,7 @@ export function AtsCheckModal({
                 onClose();
                 onExportAtsPdf();
               }}
-              className={`px-4 py-2 bg-[var(--color-status-warning-base)] hover:opacity-90 text-white font-black text-xs rounded-[${radius.card}] ${elevationSystem.raised} transition flex items-center gap-1.5 cursor-pointer`}
+              className={`px-4 py-2 bg-[var(--color-accent-amber)] hover:bg-[var(--color-accent-amber-hover)] text-[var(--color-accent-on-base)] font-black text-xs rounded-[${radius.card}] ${elevationSystem.raised} transition flex items-center gap-1.5 cursor-pointer`}
             >
               <FileText className="w-4 h-4" />
               <span>Exportar Versión ATS (1 Columna)</span>
@@ -63,11 +63,11 @@ export function AtsCheckModal({
     >
       <div className="space-y-4">
         {/* Score Header */}
-        <div className={`p-4 rounded-[${radius.modal}] bg-[var(--ui-bg-dock)] border border-white/10 flex items-center justify-between gap-4`}>
+        <div className={`p-4 rounded-[${radius.modal}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] flex items-center justify-between gap-4`}>
           <div className="space-y-1">
-            <p className="text-xs text-white/60 font-bold">Puntaje Estimado de Lectura ATS</p>
+            <p className="text-xs text-[var(--ui-text-secondary)] font-bold">Puntaje Estimado de Lectura ATS</p>
             <div className="flex items-center gap-3">
-              <span className="text-3xl font-black text-white">{result.score} / 100</span>
+              <span className="text-3xl font-black text-[var(--ui-text-primary)]">{result.score} / 100</span>
               <span className={`px-2.5 py-1 rounded-[${radius.control}] text-xs font-black border ${scoreBadge.color}`}>
                 {scoreBadge.label}
               </span>
@@ -87,7 +87,7 @@ export function AtsCheckModal({
             result.warnings.map((w) => (
               <div
                 key={w.id}
-                className={`p-3.5 rounded-[${radius.modal}] bg-[var(--ui-bg-dock)] border border-white/10 space-y-1.5`}
+                className={`p-3.5 rounded-[${radius.modal}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] space-y-1.5`}
               >
                 <div className="flex items-center gap-2">
                   {w.level === 'critical' ? (
@@ -95,9 +95,9 @@ export function AtsCheckModal({
                   ) : (
                     <AlertTriangle className="w-4 h-4 text-[var(--color-accent-amber-bright)] flex-shrink-0" />
                   )}
-                  <p className="text-xs font-black text-white">{w.title}</p>
+                  <p className="text-xs font-black text-[var(--ui-text-primary)]">{w.title}</p>
                 </div>
-                <p className="text-[11px] text-white/60 leading-snug">{w.description}</p>
+                <p className="text-[11px] text-[var(--ui-text-secondary)] leading-snug">{w.description}</p>
                 <p className="text-[11px] text-[var(--color-accent-amber-bright)] font-semibold flex items-center gap-1">
                   <ArrowRight className="w-3 h-3 flex-shrink-0" />
                   <span>{w.recommendation}</span>
