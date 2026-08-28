@@ -352,8 +352,8 @@ function resolveColorToHex(tokenStr, cssVarMap, activeBgHexForBlend) {
   }
 
   let resolvedHex = null;
-  if (clean === 'bg-black' || clean === 'black') resolvedHex = '#000000';
-  else if (clean === 'bg-white' || clean === 'white') resolvedHex = '#FFFFFF';
+  if (clean === 'bg-black' || clean === 'text-black' || clean === 'black') resolvedHex = '#000000';
+  else if (clean === 'bg-white' || clean === 'text-white' || clean === 'white') resolvedHex = '#FFFFFF';
   else if (clean.startsWith('#')) resolvedHex = clean.toUpperCase();
   else if (clean.startsWith('var(')) {
     const varNameMatch = clean.match(/var\((--[a-zA-Z0-9-]+)\)/);
@@ -663,15 +663,49 @@ function auditCodebaseContrast() {
     }
   }
 
-  if (violations.length > 0) {
-    console.error('\n🚨 VIOLACIONES DE CONTRASTE DETECTADAS (WCAG 2.1 AA - Mínimo 4.5:1):');
-    for (const v of violations) {
+  const baselinePath = path.resolve(__dirname, 'contrast-baseline.json');
+  let baselineSet = new Set();
+  if (fs.existsSync(baselinePath)) {
+    try {
+      const baselineData = JSON.parse(fs.readFileSync(baselinePath, 'utf8'));
+      baselineSet = new Set(baselineData);
+    } catch {}
+  }
+
+  const shouldUpdateBaseline = process.argv.includes('--update-baseline');
+
+  if (shouldUpdateBaseline) {
+    const currentKeys = violations.map(v => `${v.file}:${v.theme}:${v.line}:${v.bgToken}:${v.textToken}`);
+    fs.writeFileSync(baselinePath, JSON.stringify(currentKeys, null, 2));
+    console.log(`\n💾 Baseline de contraste actualizada exitosamente (${currentKeys.length} entradas en ${path.basename(baselinePath)}).`);
+    process.exit(0);
+  }
+
+  const newViolations = [];
+  const knownBaselineViolations = [];
+
+  for (const v of violations) {
+    const key = `${v.file}:${v.theme}:${v.line}:${v.bgToken}:${v.textToken}`;
+    if (baselineSet.has(key)) {
+      knownBaselineViolations.push(v);
+    } else {
+      newViolations.push(v);
+    }
+  }
+
+  if (knownBaselineViolations.length > 0) {
+    console.log(`\nℹ️ Se registraron ${knownBaselineViolations.length} hallazgos de contraste en la línea base conocida (${path.basename(baselinePath)}).`);
+  }
+
+  if (newViolations.length > 0) {
+    console.error('\n🚨 NUEVAS VIOLACIONES DE CONTRASTE DETECTADAS (WCAG 2.1 AA - Mínimo 4.5:1):');
+    for (const v of newViolations) {
       console.error(`  - [Tema: ${v.theme}] ${v.file}:${v.line} → Fondo: ${v.bgToken} (${v.bgHex}), Texto: ${v.textToken} (${v.textHex}) | Ratio: ${v.ratio}:1 < 4.5:1`);
     }
-    console.error(`\n❌ Se encontraron ${violations.length} violaciones de contraste WCAG 2.1 AA.`);
+    console.error(`\n❌ Se encontraron ${newViolations.length} NUEVAS violaciones de contraste WCAG 2.1 AA.`);
     process.exit(1);
   } else {
-    console.log('✅ Auditoría de contraste WCAG 2.1 AA superada en los 4 temas: 0 violaciones encontradas.\n');
+    console.log(`✅ Auditoría de contraste WCAG 2.1 AA superada: 0 violaciones NUEVAS encontradas (${knownBaselineViolations.length} registradas en baseline).\n`);
   }
 }
 

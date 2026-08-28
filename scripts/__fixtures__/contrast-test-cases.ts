@@ -70,6 +70,16 @@ export const multiLineSnippetTestCases = [
     `,
     shouldFail: false,
     description: 'Fondo morado claro en padre y texto morado text 2 lineas despues debe pasar (6.66:1)'
+  },
+  {
+    id: 'text_white_on_light_modal_invalid',
+    snippet: `
+      <div className="bg-[var(--ui-bg-panel)] p-4">
+        <span className="text-white/80">Texto blanco con opacidad sobre fondo claro de modal</span>
+      </div>
+    `,
+    shouldFail: true,
+    description: 'text-white/80 sobre fondo claro de modal debe fallar auditoría de contraste'
   }
 ];
 

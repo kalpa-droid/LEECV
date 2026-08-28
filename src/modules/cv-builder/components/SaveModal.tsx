@@ -32,14 +32,14 @@ export default function SaveModal({
       icon={<Save className="w-5 h-5 text-[var(--ui-accent-purple)]" />}
       size="md"
       footer={
-        <div className="w-full flex items-center justify-between text-xs text-white/60">
+        <div className="w-full flex items-center justify-between text-xs text-[var(--ui-text-secondary)]">
           <div className="flex items-center gap-2">
             <Cloud className="w-4 h-4 text-[var(--ui-accent-purple)]" />
-            <span className="text-xs font-bold ui-text-primary">{storageStatus.label}</span>
+            <span className="text-xs font-bold text-[var(--ui-text-primary)]">{storageStatus.label}</span>
           </div>
           <button
             onClick={onClose}
-            className={`px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold rounded-[${radius.card}] transition cursor-pointer`}
+            className={`px-4 py-2 bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] border border-[var(--ui-border)] font-bold rounded-[${radius.card}] transition cursor-pointer`}
           >
             Cerrar
           </button>
@@ -61,12 +61,12 @@ export default function SaveModal({
           </div>
           <div className="space-y-0.5 min-w-0 flex-1">
             <div className="flex items-center justify-between">
-              <span className="font-extrabold text-xs sm:text-sm text-white">Guardar en Almacenamiento</span>
-              <span className="text-[10px] font-black px-2 py-0.5 rounded bg-[var(--color-accent-purple)]/80 text-white border border-[var(--color-accent-purple)]/50">
+              <span className="font-extrabold text-xs sm:text-sm text-[var(--ui-text-primary)]">Guardar en Almacenamiento</span>
+              <span className="text-[10px] font-black px-2 py-0.5 rounded bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)] border border-[var(--color-accent-purple)]/50">
                 {isSaving ? 'Guardando...' : 'Recomendado'}
               </span>
             </div>
-            <p className="text-[11px] text-white/80">
+            <p className="text-[11px] text-[var(--ui-text-secondary)]">
               Almacena el borrador de forma segura en tu navegador e IndexedDB con compresión WebP.
             </p>
           </div>
@@ -79,17 +79,17 @@ export default function SaveModal({
               onClose();
               onOpenCloudStatus();
             }}
-            className={`w-full text-left p-3.5 rounded-[${radius.modal}] bg-[var(--ui-bg-dock)] hover:opacity-90 border border-[var(--color-secondary-base)]/40 transition group flex items-start gap-3 cursor-pointer`}
+            className={`w-full text-left p-3.5 rounded-[${radius.modal}] bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] transition group flex items-start gap-3 cursor-pointer`}
           >
-            <div className={`p-2.5 rounded-[${radius.card}] bg-black/40 border border-[var(--color-secondary-base)]/40 text-[var(--ui-on-dark-teal)] group-hover:scale-110 transition flex-shrink-0`}>
+            <div className={`p-2.5 rounded-[${radius.card}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-dock-text)] group-hover:scale-110 transition flex-shrink-0`}>
               <HardDrive className="w-5 h-5" />
             </div>
             <div className="space-y-0.5 min-w-0 flex-1">
               <div className="flex items-center justify-between">
-                <span className="font-extrabold text-xs sm:text-sm text-white">Google Drive / Nube</span>
+                <span className="font-extrabold text-xs sm:text-sm text-[var(--ui-text-primary)]">Google Drive / Nube</span>
                 <span className="text-[10px] font-bold text-[var(--color-secondary-text)]">Nube Personal</span>
               </div>
-              <p className="text-[11px] text-white/80">
+              <p className="text-[11px] text-[var(--ui-text-secondary)]">
                 Sincronización y estado de resguardo de archivos en tu cuenta de Google Drive.
               </p>
             </div>
@@ -102,17 +102,17 @@ export default function SaveModal({
             onExportJson();
             onClose();
           }}
-          className={`w-full text-left p-3.5 rounded-[${radius.modal}] bg-black/40 hover:bg-black/60 border border-white/10 hover:border-[var(--color-status-warning-base)]/40 transition group flex items-start gap-3 cursor-pointer`}
+          className={`w-full text-left p-3.5 rounded-[${radius.modal}] bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] hover:border-[var(--color-status-warning-base)]/40 transition group flex items-start gap-3 cursor-pointer`}
         >
           <div className={`p-2.5 rounded-[${radius.card}] bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)] group-hover:scale-110 transition flex-shrink-0`}>
             <Download className="w-5 h-5" />
           </div>
           <div className="space-y-0.5 min-w-0 flex-1">
             <div className="flex items-center justify-between">
-              <span className="font-extrabold text-xs sm:text-sm text-white">Descargar Copia (.JSON)</span>
-              <span className="text-[10px] font-bold text-white/60">Archivo Portátil</span>
+              <span className="font-extrabold text-xs sm:text-sm text-[var(--ui-text-primary)]">Descargar Copia (.JSON)</span>
+              <span className="text-[10px] font-bold text-[var(--ui-text-muted)]">Archivo Portátil</span>
             </div>
-            <p className="text-[11px] text-white/80">
+            <p className="text-[11px] text-[var(--ui-text-secondary)]">
               Exporta un archivo .JSON liviano a tu dispositivo para transferirlo a otra computadora o celular.
             </p>
           </div>
