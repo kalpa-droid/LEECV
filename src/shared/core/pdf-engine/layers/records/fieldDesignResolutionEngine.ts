@@ -16,6 +16,7 @@ import { Preset } from '../presets/presetSchema';
 import { ResolvedThemeRoles } from '../colors/colorSystem';
 import { resolveSubtleCardBackground } from '../colors/surfaceAwareColorEngine';
 import { resolveUnifiedTextSpec, ResolvedTextSpec } from '../typography/unifiedTextHierarchyEngine';
+import { sanitizeFontFamily } from '../typography/pdfFontRegistry';
 
 export type PdfRole = 'title' | 'subtitle' | 'badge' | 'description' | 'extra';
 
@@ -69,6 +70,10 @@ export function resolveFieldDesign(
     colorHex = metaSpec.colorHex;
   }
 
+  let fontWeight = designHint.weightOverride || unifiedSpec.fontWeight;
+  let fontStyle = designHint.styleOverride || unifiedSpec.fontStyle;
+  let fontFamily = sanitizeFontFamily(preset.typography?.fontFamily || 'Helvetica', fontWeight === 'bold', fontStyle === 'italic');
+
   const position = designHint.position || 'own-line';
 
   return {
@@ -77,9 +82,9 @@ export function resolveFieldDesign(
     effectiveRole,
     fontSizePt: unifiedSpec.fontSizePt,
     colorHex,
-    fontFamily: unifiedSpec.fontFamily,
-    fontWeight: unifiedSpec.fontWeight,
-    fontStyle: unifiedSpec.fontStyle,
+    fontFamily,
+    fontWeight,
+    fontStyle,
     opacity: unifiedSpec.opacity,
     position,
     designHint,

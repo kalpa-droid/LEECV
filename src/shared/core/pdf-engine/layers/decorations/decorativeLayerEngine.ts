@@ -9,6 +9,8 @@
  */
 
 import { Preset } from '../presets/presetSchema';
+import { ResolvedThemeRoles } from '../colors/colorSystem';
+import { resolveSubtleCardBackground } from '../colors/surfaceAwareColorEngine';
 
 export interface ResolvedDecorativeStyles {
   cardContainerStyle: {
@@ -33,7 +35,9 @@ export interface ResolvedDecorativeStyles {
 
 export function resolveDecorativeStyles(
   preset: Preset,
-  cardKind: 'primary-card' | 'secondary-card' | 'accent-card' | 'neutral-card' = 'neutral-card'
+  cardKind: 'primary-card' | 'secondary-card' | 'accent-card' | 'neutral-card' = 'neutral-card',
+  rolesColor?: ResolvedThemeRoles,
+  sectorRole: 'sidebar' | 'main' = 'main'
 ): ResolvedDecorativeStyles {
   const policy = preset.decorativeElementPolicy || {
     cardBorders: true,
@@ -47,18 +51,19 @@ export function resolveDecorativeStyles(
 
   const palette = preset.palette;
 
-  let bg = '#ffffff';
-  let borderCol = palette.secondary || '#e5e7eb';
+  // Derivación consciente de superficie para neutral-card
+  let bg = rolesColor ? resolveSubtleCardBackground(sectorRole, rolesColor) : (palette.background || '#ffffff');
+  let borderCol = rolesColor?.border || rolesColor?.secondary || palette.secondary || '#e5e7eb';
 
   if (cardKind === 'primary-card') {
-    bg = palette.primary;
-    borderCol = palette.primary;
+    bg = rolesColor?.primary || palette.primary;
+    borderCol = rolesColor?.primary || palette.primary;
   } else if (cardKind === 'accent-card') {
-    bg = palette.accent;
-    borderCol = palette.accent;
+    bg = rolesColor?.accent || palette.accent;
+    borderCol = rolesColor?.accent || palette.accent;
   } else if (cardKind === 'secondary-card') {
-    bg = palette.secondary;
-    borderCol = palette.secondary;
+    bg = rolesColor?.secondary || palette.secondary;
+    borderCol = rolesColor?.secondary || palette.secondary;
   }
 
   return {
@@ -72,7 +77,7 @@ export function resolveDecorativeStyles(
     dividerStyle: {
       enabled: policy.sectionDividers !== false,
       heightPt: 1,
-      color: palette.accent || palette.primary,
+      color: rolesColor?.accent || palette.accent || palette.primary,
       marginTopPt: 6,
       marginBottomPt: 8
     },

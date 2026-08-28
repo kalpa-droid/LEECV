@@ -168,6 +168,40 @@ if (fs.existsSync(cvDataAdapterPath)) {
   );
 }
 
+// ─── 7. Nuevos motores de armonía tipográfica y adaptabilidad decorativa ───
+console.log('\n── 7. Nuevos motores de armonía tipográfica y adaptabilidad decorativa ──');
+const typoHarmonyPath = path.join(ROOT, 'src/shared/core/pdf-engine/layers/typography/typographyHarmonyEngine.ts');
+if (fs.existsSync(typoHarmonyPath)) {
+  const typoContent = fs.readFileSync(typoHarmonyPath, 'utf-8');
+  check(
+    'typographyHarmonyEngine define TYPOGRAPHY_HARMONY_RATIOS e interfaz modular',
+    typoContent.includes('TYPOGRAPHY_HARMONY_RATIOS') && typoContent.includes('generateHarmoniousTypographyScale'),
+    'No se encontró TYPOGRAPHY_HARMONY_RATIOS o generateHarmoniousTypographyScale en typographyHarmonyEngine.ts'
+  );
+} else {
+  check('typographyHarmonyEngine.ts existe', false, `No encontrado: ${typoHarmonyPath}`);
+}
+
+const decLayerPath = path.join(ROOT, 'src/shared/core/pdf-engine/layers/decorations/decorativeLayerEngine.ts');
+if (fs.existsSync(decLayerPath)) {
+  const decContent = fs.readFileSync(decLayerPath, 'utf-8');
+  check(
+    'decorativeLayerEngine es consciente de superficie mediante resolveSubtleCardBackground',
+    decContent.includes('resolveSubtleCardBackground'),
+    'decorativeLayerEngine no consume resolveSubtleCardBackground'
+  );
+}
+
+const fieldCatalogPath = path.join(ROOT, 'src/shared/core/pdf-engine/layers/records/fieldCatalog.ts');
+if (fs.existsSync(fieldCatalogPath)) {
+  const fcContent = fs.readFileSync(fieldCatalogPath, 'utf-8');
+  check(
+    'FieldDesignHint soporta ejes independientes weightOverride y styleOverride',
+    fcContent.includes('weightOverride?:') && fcContent.includes('styleOverride?:'),
+    'FieldDesignHint no declara weightOverride o styleOverride'
+  );
+}
+
 // ─── Resultado final ───
 console.log(`\n${'═'.repeat(60)}`);
 if (failed === 0) {

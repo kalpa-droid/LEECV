@@ -9,6 +9,8 @@ export interface FieldDesignHint {
   sizeOverride?: 'title' | 'subtitle' | 'badge' | 'extra';
   colorOverride?: 'accent' | 'muted' | 'inherit';
   position?: 'inline-right' | 'inline-left' | 'own-line';
+  weightOverride?: 'bold' | 'normal';
+  styleOverride?: 'italic' | 'normal';
 }
 
 export interface FieldDefinition {

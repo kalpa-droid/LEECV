@@ -27,9 +27,13 @@ for (const preset of presets) {
       failedChecks++;
     }
 
+    totalChecks++;
     const accentBgContrast = getContrastRatio(variant.bg, variant.pal.accent);
     if (accentBgContrast < 3.0) {
-      console.warn(`⚠️ ADVERTENCIA DE CONTRASTE [Preset: ${preset.id}, Variante: ${variant.name}]: Acento (${variant.pal.accent}) en Fondo (${variant.bg}) da ratio ${accentBgContrast.toFixed(2)}:1.`);
+      console.error(`❌ FALLO DE CONTRASTE [Preset: ${preset.id}, Variante: ${variant.name}]: Acento (${variant.pal.accent}) en Fondo (${variant.bg}) da ratio ${accentBgContrast.toFixed(2)}:1 (mínimo 3.0:1).`);
+      failedChecks++;
+    } else {
+      console.log(`  ✓ Preset [${preset.id}] (${variant.name}) - Acento en Fondo ratio ${accentBgContrast.toFixed(2)}:1 OK.`);
     }
   }
 

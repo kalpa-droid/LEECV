@@ -54,10 +54,21 @@ export function translateThemeToSurfaces(colorPreset: ColorPreset): SurfaceTrans
   // 2. Variante Clara (Main Column)
   const lightPrimary = basePalette.primary;
   const lightSecondary = basePalette.secondary;
-  const lightAccent = basePalette.accent;
+  let lightAccent = basePalette.accent;
+  const lightBg = basePalette.background || '#ffffff';
   
+  // Garantizar contraste mínimo de 3.0:1 para el acento en superficie clara
+  if (getContrastRatio(lightBg, lightAccent) < 3.0) {
+    const accentOklch = hexToOKLCH(lightAccent);
+    let adjustedL = Math.max(0.20, accentOklch.l * 0.65);
+    lightAccent = oklchToHex(adjustedL, Math.min(0.25, accentOklch.c), accentOklch.h);
+    if (getContrastRatio(lightBg, lightAccent) < 3.0) {
+      lightAccent = oklchToHex(0.35, Math.min(0.20, accentOklch.c), accentOklch.h);
+    }
+  }
+
   let lightText = basePalette.text || '#0f172a';
-  if (getContrastRatio('#ffffff', lightText) < 4.5) {
+  if (getContrastRatio(lightBg, lightText) < 4.5) {
     lightText = '#0f172a';
   }
 
@@ -67,7 +78,7 @@ export function translateThemeToSurfaces(colorPreset: ColorPreset): SurfaceTrans
     accent: lightAccent,
     text: lightText,
     textOnPrimary: getContrastRatio(lightPrimary, '#ffffff') >= 4.5 ? '#ffffff' : '#0f172a',
-    background: basePalette.background || '#ffffff'
+    background: lightBg
   };
 
   // 3. Variante Oscura (Sidebar Column) - OKLCH Lightness Inversion

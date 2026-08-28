@@ -35,7 +35,7 @@ export function SectionBannerCard({
   isSidebar = false,
 }: SectionBannerCardProps) {
   const design: CardDesign = CARD_DESIGNS[designId] || CARD_DESIGNS['primary-card'];
-  const decStyles = preset ? resolveDecorativeStyles(preset, designId as any) : null;
+  const decStyles = preset ? resolveDecorativeStyles(preset, designId as any, rolesColor, isSidebar ? 'sidebar' : 'main') : null;
   const iconStyle = decStyles?.headerIconStyle || 'filled';
 
   const containerBgHex = surfaceBgColor || (isSidebar ? rolesColor.primary : rolesColor.background);

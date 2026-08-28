@@ -12,6 +12,7 @@ import { Preset, ColorPreset, TypographyPreset, ColumnLayoutPreset } from './pre
 import { generateHarmoniousPalette, HarmonyScheme } from '../colors/paletteHarmonyEngine';
 import { RecordScaleRatios } from '../typography/typographyHierarchyEngine';
 import { translateThemeToSurfaces } from '../colors/themeLightDarkTranslationEngine';
+import { generateHarmoniousTypographyScale, TypographyHarmonyScheme } from '../typography/typographyHarmonyEngine';
 
 export interface PresetSeed {
   id: string;
@@ -24,6 +25,7 @@ export interface PresetSeed {
   colorPreset?: ColorPreset;
   typographyPreset?: TypographyPreset;
   columnLayoutPreset?: ColumnLayoutPreset;
+  typographyHarmonyScheme?: TypographyHarmonyScheme | number;
   fontFamily?: string;
   recordScaleRatios?: RecordScaleRatios;
   sectorSurfaceMode?: {
@@ -53,6 +55,15 @@ export function composePreset(seed: PresetSeed): Preset {
     main: 'light'
   };
 
+  const baseTypo = seed.typographyPreset?.typography || seed.basePreset.typography;
+  const harmoniousTypo = seed.typographyHarmonyScheme
+    ? generateHarmoniousTypographyScale({
+        baseBodyPt: baseTypo.body,
+        scheme: seed.typographyHarmonyScheme,
+        fontFamily: seed.fontFamily || baseTypo.fontFamily
+      })
+    : null;
+
   return {
     ...seed.basePreset,
     id: seed.id,
@@ -75,9 +86,9 @@ export function composePreset(seed: PresetSeed): Preset {
       harmonyScheme: scheme
     },
     typography: {
-      ...(seed.typographyPreset?.typography || seed.basePreset.typography),
-      fontFamily: seed.fontFamily || seed.typographyPreset?.typography.fontFamily || seed.basePreset.typography.fontFamily,
-      recordScaleRatios: seed.recordScaleRatios || seed.basePreset.typography.recordScaleRatios
+      ...(harmoniousTypo || baseTypo),
+      fontFamily: seed.fontFamily || baseTypo.fontFamily,
+      recordScaleRatios: seed.recordScaleRatios || (harmoniousTypo ? harmoniousTypo.recordScaleRatios : baseTypo.recordScaleRatios)
     }
   };
 }

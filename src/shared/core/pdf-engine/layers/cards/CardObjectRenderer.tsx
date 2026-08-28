@@ -39,7 +39,7 @@ export function CardObjectRenderer({
   sectorRole = 'main',
 }: CardObjectRendererProps) {
   const design: CardDesign = CARD_DESIGNS[designId] || CARD_DESIGNS['primary-card'];
-  const decStyles = preset ? resolveDecorativeStyles(preset, designId as any) : null;
+  const decStyles = preset ? resolveDecorativeStyles(preset, designId as any, rolesColor, sectorRole) : null;
   const recordScale = deriveRecordScale(typography, typography.recordScaleRatios);
   const spatialLayout = resolveRecordLayout(design.layoutTemplate);
 
