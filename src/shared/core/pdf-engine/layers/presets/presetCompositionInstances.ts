@@ -132,23 +132,23 @@ export const PRESET_COLUMNS: Record<'sidebar-left' | 'sidebar-right' | 'full-wid
     id: 'layout-sidebar-left',
     name: 'Barra Izquierda (33/67)',
     sectionOrder: [
-      { sectorRole: 'sidebar', sectionIds: ['personal', 'contact', 'skills', 'languages'] },
-      { sectorRole: 'main', sectionIds: ['summary', 'experience', 'education', 'certifications', 'projects'] }
+      { sectorRole: 'sidebar', sectionIds: ['contacto', 'datos-personales', 'frase', 'competencias', 'informatica'] },
+      { sectorRole: 'main', sectionIds: ['formacion', 'profesion', 'experiencia', 'cursos', 'ecologia', 'firma'] }
     ]
   },
   'sidebar-right': {
     id: 'layout-sidebar-right',
     name: 'Barra Derecha (67/33)',
     sectionOrder: [
-      { sectorRole: 'main', sectionIds: ['summary', 'experience', 'education', 'projects'] },
-      { sectorRole: 'sidebar', sectionIds: ['personal', 'contact', 'skills', 'languages', 'certifications'] }
+      { sectorRole: 'main', sectionIds: ['formacion', 'profesion', 'experiencia', 'cursos', 'ecologia', 'firma'] },
+      { sectorRole: 'sidebar', sectionIds: ['contacto', 'datos-personales', 'frase', 'competencias', 'informatica'] }
     ]
   },
   'full-width': {
     id: 'layout-full-width',
     name: 'Columna Única Completa',
     sectionOrder: [
-      { sectorRole: 'main', sectionIds: ['personal', 'summary', 'experience', 'education', 'skills', 'languages', 'certifications', 'projects'] }
+      { sectorRole: 'main', sectionIds: ['contacto', 'datos-personales', 'frase', 'competencias', 'informatica', 'formacion', 'profesion', 'experiencia', 'cursos', 'ecologia', 'firma'] }
     ]
   }
 };

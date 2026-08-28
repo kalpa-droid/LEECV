@@ -581,9 +581,18 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
         const widthStyle = isSidebar ? { width: sFlow.sector.box.widthPt } : {};
 
         const sectorSectionIds = preset.sectionOrder.find(s => s.sectorRole === sFlow.sector.role)?.sectionIds || [];
+        const allDefinedSectorIds = preset.sectionOrder.flatMap(s => s.sectionIds || []);
+
         const sectorSections = pageSections.filter(sec => {
           const baseId = sec.id.replace(/-cont$/, '');
-          return sectorSectionIds.includes(baseId) || sectorSectionIds.includes(sec.id);
+          const isExplicitlyAssigned = sectorSectionIds.includes(baseId) || sectorSectionIds.includes(sec.id);
+          if (isExplicitlyAssigned) return true;
+
+          const isAssignedToOtherSector = allDefinedSectorIds.includes(baseId) || allDefinedSectorIds.includes(sec.id);
+          if (!isAssignedToOtherSector && sFlow.sector.role === 'main') {
+            return true;
+          }
+          return false;
         });
 
         return (
