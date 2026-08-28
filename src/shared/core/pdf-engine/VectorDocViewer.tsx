@@ -91,7 +91,7 @@ export function VectorDocViewer({ document }: VectorDocViewerProps) {
       } catch (err) {
         console.error('Error renderizando el PDF vectorial:', err);
         const detail = err instanceof Error ? err.message : String(err);
-        if (!cancelled && renderTokenRef.current !== myToken) {
+        if (!cancelled && renderTokenRef.current === myToken) {
           setError(detail);
           setLoading(false);
         }

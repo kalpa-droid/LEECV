@@ -89,7 +89,7 @@ export function resolveUnifiedTextSpec(
       break;
     case 'meta':
       fontSizePt = scale.extra;
-      fontFamily = 'Helvetica-Oblique';
+      fontFamily = 'Helvetica';
       fontWeight = 'normal';
       fontStyle = 'italic';
       break;

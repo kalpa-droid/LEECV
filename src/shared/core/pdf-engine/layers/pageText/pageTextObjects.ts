@@ -59,7 +59,7 @@ export function resolvePageTextStyle(def: PageTextObjectDefinition, pageBgHex: s
   return {
     position: 'absolute' as const,
     fontSize: def.fontSizePt,
-    fontFamily: metaSpec?.fontFamily || 'Helvetica-Oblique',
+    fontFamily: metaSpec?.fontFamily || 'Helvetica',
     fontStyle: 'italic',
     color: metaSpec?.colorHex || def.color || '#94a3b8',
     opacity: metaSpec?.opacity || 0.50,
