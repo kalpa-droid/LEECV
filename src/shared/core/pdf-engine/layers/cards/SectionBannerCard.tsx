@@ -47,7 +47,9 @@ export function SectionBannerCard({
     : textSpec.colorHex;
 
   if (isSidebar) {
-    // Encabezado de Sección en Sidebar: Franja integrada minimalista
+    const sidebarFontSize = Math.max(8.5, typography.sectionHeading - 2.5);
+    const cleanIconId = (iconId || '').replace(/-cont$/, '');
+
     const styles = StyleSheet.create({
       sidebarBannerContainer: {
         flexDirection: 'row',
@@ -60,7 +62,7 @@ export function SectionBannerCard({
         borderBottomColor: typographyBinding.border,
       },
       sidebarBanner: {
-        fontSize: typography.sectionHeading,
+        fontSize: sidebarFontSize,
         fontFamily: textSpec.fontFamily,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
@@ -72,7 +74,7 @@ export function SectionBannerCard({
 
     return (
       <View wrap={false} style={styles.sidebarBannerContainer}>
-        {iconId ? <PdfSectionIcon iconId={iconId} size={typography.sectionHeading} color={iconColor} /> : null}
+        {cleanIconId ? <PdfSectionIcon iconId={cleanIconId} size={sidebarFontSize} color={iconColor} /> : null}
         <Text style={styles.sidebarBanner}>{titleText}</Text>
       </View>
     );
@@ -84,6 +86,7 @@ export function SectionBannerCard({
     : 'transparent';
 
   const isTransparentBanner = bannerBgColor === 'transparent';
+  const cleanIconId = (iconId || '').replace(/-cont$/, '');
 
   const styles = StyleSheet.create({
     bannerContainer: {
@@ -114,7 +117,7 @@ export function SectionBannerCard({
 
   return (
     <View style={styles.bannerContainer} wrap={false}>
-      {iconId ? <PdfSectionIcon iconId={iconId} size={typography.sectionHeading + 1} color={iconColor} /> : null}
+      {cleanIconId ? <PdfSectionIcon iconId={cleanIconId} size={typography.sectionHeading + 1} color={iconColor} /> : null}
       <Text style={styles.bannerText}>{titleText}</Text>
     </View>
   );

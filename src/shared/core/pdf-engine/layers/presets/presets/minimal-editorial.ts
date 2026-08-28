@@ -9,8 +9,8 @@ export const minimalEditorialPreset: Preset = {
   pageSizeId: 'a4',
   marginPresetId: 'documento_amplio',
   sectors: [
-    { id: 'sidebar', role: 'sidebar', widthPercent: 28, order: 0 },
-    { id: 'main', role: 'main', widthPercent: 72, order: 1 },
+    { id: 'sidebar', role: 'sidebar', widthPercent: 32, order: 0 },
+    { id: 'main', role: 'main', widthPercent: 68, order: 1 },
   ],
   fixedObjects: [
     { id: 'foto-perfil', sectorId: 'sidebar', type: 'photo', anchor: 'top', heightPt: 110 },
@@ -34,8 +34,8 @@ export const minimalEditorialPreset: Preset = {
     lineHeightHeading: 1.25,
     cover: {
       badge: 8.5,
-      title: 27,
-      name: 20,
+      title: 12,
+      name: 28,
       role: 9,
       quote: 10,
       footerMain: 9.5,

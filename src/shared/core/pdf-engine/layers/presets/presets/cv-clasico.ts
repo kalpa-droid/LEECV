@@ -32,9 +32,9 @@ export const cvClasicoPreset: Preset = {
     lineHeightHeading: 1.2,
     cover: {
       badge: 9,
-      title: 26,
-      name: 20,
-      role: 9,
+      title: 12,
+      name: 28,
+      role: 9.5,
       quote: 10.5,
       footerMain: 10,
       footerSub: 8.5

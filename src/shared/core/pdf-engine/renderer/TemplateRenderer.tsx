@@ -217,7 +217,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       fontFamily: 'Helvetica-Bold'
     },
     headerName: {
-      fontSize: headerNameSpec.fontSizePt,
+      fontSize: Math.max(20, (headerNameSpec.fontSizePt || 16) + 4),
       fontFamily: headerNameSpec.fontFamily,
       textTransform: 'uppercase',
       color: headerNameSpec.colorHex,
@@ -341,17 +341,19 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       color: '#ffffff'
     },
     coverTitle: {
-      fontSize: preset.typography.cover?.title || preset.typography.title,
+      fontSize: preset.typography.cover?.title || 12,
       fontFamily: 'Helvetica-Bold',
       color: '#ffffff',
-      marginBottom: 10,
+      opacity: 0.85,
+      marginBottom: 6,
       textTransform: 'uppercase',
-      letterSpacing: 1
+      letterSpacing: 2
     },
     coverName: {
-      fontSize: preset.typography.cover?.name || preset.typography.title,
+      fontSize: preset.typography.cover?.name || 28,
       fontFamily: 'Helvetica-Bold',
       color: '#ffffff',
+      opacity: 1.0,
       marginBottom: 12,
       textAlign: 'center'
     },

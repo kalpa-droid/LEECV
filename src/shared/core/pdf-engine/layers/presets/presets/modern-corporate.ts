@@ -35,8 +35,8 @@ export const modernCorporatePreset: Preset = {
     lineHeightHeading: 1.2,
     cover: {
       badge: 9.5,
-      title: 28,
-      name: 21,
+      title: 12,
+      name: 28,
       role: 9.5,
       quote: 11,
       footerMain: 10.5,

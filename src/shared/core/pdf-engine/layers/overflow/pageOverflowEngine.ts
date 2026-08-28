@@ -124,7 +124,7 @@ export function processPageOverflow(
 
     for (const section of secList) {
       const titleH = section.titleText ? (typography.sectionHeading || 11) + 12 : 0;
-      if (curH + titleH > availableHeightPt - 30) {
+      if (curH + titleH > availableHeightPt - 15) {
         hasOverflow = true;
         p2.push(section);
         continue;
@@ -138,7 +138,7 @@ export function processPageOverflow(
         const subCols = (section as any).subColumnsCount || 1;
         const est = estimateRecordHeightPt(rec, typography, 'stacked-clean', subCols);
         // Evaluar la decisión sobre totalHeightPt para garantizar que el registro completo entre sin cortar descripciones
-        if (curH + secH + est.totalHeightPt <= availableHeightPt - 20) {
+        if (curH + secH + est.totalHeightPt <= availableHeightPt - 15) {
           fitRecs.push(rec);
           secH += est.totalHeightPt;
         } else {
@@ -157,7 +157,7 @@ export function processPageOverflow(
         p2.push({
           ...section,
           id: `${cleanId}-cont`,
-          titleText: section.titleText ? `${section.titleText.replace(/\s*\(cont\.\)$/, '')} (cont.)` : '',
+          titleText: section.titleText ? section.titleText.replace(/\s*\(cont\.\)$/, '') : '',
           records: overRecs
         });
       }
