@@ -27,7 +27,7 @@ let initialized = false;
 export function initPdfFonts(): void {
   if (initialized) return;
   try {
-    Font.registerHyphenation((word) => [word]);
+    Font.registerHyphenationCallback((word) => [word]);
     initialized = true;
   } catch (_e) {
     // Ignorar si ya está registrado en el entorno
