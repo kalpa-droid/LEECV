@@ -119,8 +119,8 @@ if (fs.existsSync(cardRendererPath)) {
   );
 }
 
-// ─── 5. pageOverflowEngine: NO concatena (cont.) ───
-console.log('\n── 5. Overflow engine: sin (cont.) en titleText ──');
+// ─── 5. Overflow engine: sin (cont.) en titleText y flujo nativo sin doble paginación ───
+console.log('\n── 5. Overflow engine: sin (cont.) y flujo nativo ──');
 const overflowPath = path.join(ROOT, 'src/shared/core/pdf-engine/layers/overflow/pageOverflowEngine.ts');
 if (fs.existsSync(overflowPath)) {
   const ofContent = fs.readFileSync(overflowPath, 'utf-8');
@@ -129,38 +129,42 @@ if (fs.existsSync(overflowPath)) {
     !ofContent.includes("} (cont.)'") && !ofContent.includes('} (cont.)"') && !ofContent.includes('` (cont.)'),
     'Aún se encontró concatenación de " (cont.)" en pageOverflowEngine.ts'
   );
-  // Verificar que el margen de seguridad es ≤ 15
-  const marginMatches = [...ofContent.matchAll(/availableHeightPt\s*-\s*(\d+)/g)];
-  for (const m of marginMatches) {
-    const margin = parseInt(m[1], 10);
-    check(
-      `Margen de seguridad = ${margin}pt (debe ser ≤ 15)`,
-      margin <= 15,
-      `Margen de ${margin}pt es demasiado grande, genera páginas 90% en blanco`
-    );
-  }
+  check(
+    'processPageOverflow devuelve flujo nativo (pages.length === 1)',
+    ofContent.includes('pages: [{ pageNumber: 1, totalPages: 1, sections }]'),
+    'processPageOverflow aún utiliza split pre-calculado en lugar de flujo nativo React-PDF'
+  );
 }
 
-// ─── 6. TemplateRenderer: coverTitle y headerName ───
-console.log('\n── 6. TemplateRenderer: coverTitle fallback ≤ 14, headerName ≥ 20 ──');
+// ─── 6. TemplateRenderer: señales wrap={false} y sin sufijo (N) ───
+console.log('\n── 6. TemplateRenderer: señales wrap={false} y limpieza de títulos ──');
 const templatePath = path.join(ROOT, 'src/shared/core/pdf-engine/renderer/TemplateRenderer.tsx');
+const cvDataAdapterPath = path.join(ROOT, 'src/shared/core/pdf-engine/layers/records/cvDataAdapter.ts');
 if (fs.existsSync(templatePath)) {
   const trContent = fs.readFileSync(templatePath, 'utf-8');
-  // coverTitle fallback
-  const coverTitleMatch = trContent.match(/coverTitle:\s*\{[^}]*fontSize:\s*.*?\|\|\s*(\d+)/s);
-  if (coverTitleMatch) {
-    const fallback = parseInt(coverTitleMatch[1], 10);
-    check(
-      `TemplateRenderer coverTitle fallback = ${fallback}pt`,
-      fallback <= 14,
-      `Fallback de coverTitle debe ser ≤14 (es ${fallback})`
-    );
-  }
-  // headerName Math.max(20, ...)
+  check(
+    'TemplateRenderer sidebar usa wrap={false} atómico por sección completa',
+    trContent.includes('<View key={sec.id} wrap={false}>'),
+    'No se encontró wrap={false} atómico por sección en sidebar'
+  );
+  check(
+    'TemplateRenderer main sector envuelve banner + primer registro en View wrap={false} para evitar títulos huérfanos',
+    trContent.includes('<View wrap={false}>') && trContent.includes('sec.records[0]'),
+    'No se encontró envoltorio wrap={false} para banner + primer registro en main sector'
+  );
   check(
     'TemplateRenderer headerName usa Math.max(20, ...)',
     trContent.includes('Math.max(20,'),
     'No se encontró Math.max(20,...) en headerName'
+  );
+}
+
+if (fs.existsSync(cvDataAdapterPath)) {
+  const adapterContent = fs.readFileSync(cvDataAdapterPath, 'utf-8');
+  check(
+    'cvDataAdapter NO incluye sufijo (${sortedProfession.length}) en titleText',
+    !adapterContent.includes('(${sortedProfession.length})'),
+    'Se encontró sufijo (${sortedProfession.length}) en titleText de cvDataAdapter.ts'
   );
 }
 

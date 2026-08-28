@@ -668,22 +668,70 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                 </Text>
               )}
 
-              {sectorSections.map((sec) => (
-                <View key={sec.id}>
-                  {sec.titleText && !sec.id.startsWith('firma') && (
-                    <SectionBannerCard
-                      preset={preset}
-                      titleText={sec.titleText}
-                      iconId={sec.id}
-                      designId={isSidebar ? undefined : (customRecordCardDesigns?.education || preset.recordCardDesigns?.education)}
-                      rolesColor={sectorRolesColor}
-                      typography={preset.typography}
-                      isSidebar={isSidebar}
-                    />
-                  )}
-                  {sec.records.map(rec => renderRecord(rec, isSidebar, sectorRolesColor))}
-                </View>
-              ))}
+              {sectorSections.map((sec) => {
+                if (isSidebar) {
+                  // Sidebar: la sección completa es un bloque atómico (wrap={false})
+                  return (
+                    <View key={sec.id} wrap={false}>
+                      {sec.titleText && !sec.id.startsWith('firma') && (
+                        <SectionBannerCard
+                          preset={preset}
+                          titleText={sec.titleText}
+                          iconId={sec.id}
+                          designId={undefined}
+                          rolesColor={sectorRolesColor}
+                          typography={preset.typography}
+                          isSidebar={isSidebar}
+                        />
+                      )}
+                      {sec.records.map(rec => renderRecord(rec, isSidebar, sectorRolesColor))}
+                    </View>
+                  );
+                }
+
+                // Main Sector: Banner + primer registro son atómicos para evitar título huérfano
+                return (
+                  <View key={sec.id}>
+                    {sec.records.length > 0 ? (
+                      <>
+                        <View wrap={false}>
+                          {sec.titleText && !sec.id.startsWith('firma') && (
+                            <SectionBannerCard
+                              preset={preset}
+                              titleText={sec.titleText}
+                              iconId={sec.id}
+                              designId={customRecordCardDesigns?.education || preset.recordCardDesigns?.education}
+                              rolesColor={sectorRolesColor}
+                              typography={preset.typography}
+                              isSidebar={isSidebar}
+                            />
+                          )}
+                          {renderRecord(sec.records[0], isSidebar, sectorRolesColor)}
+                        </View>
+                        {sec.records.slice(1).map(rec => (
+                          <View key={rec.id || `rec-${Math.random()}`} wrap={false}>
+                            {renderRecord(rec, isSidebar, sectorRolesColor)}
+                          </View>
+                        ))}
+                      </>
+                    ) : (
+                      sec.titleText && !sec.id.startsWith('firma') && (
+                        <View wrap={false}>
+                          <SectionBannerCard
+                            preset={preset}
+                            titleText={sec.titleText}
+                            iconId={sec.id}
+                            designId={customRecordCardDesigns?.education || preset.recordCardDesigns?.education}
+                            rolesColor={sectorRolesColor}
+                            typography={preset.typography}
+                            isSidebar={isSidebar}
+                          />
+                        </View>
+                      )
+                    )}
+                  </View>
+                );
+              })}
             </View>
           </View>
         );
@@ -751,20 +799,18 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
         </Page>
       )}
 
-      {/* LAYER 0-4: MAIN CV CONTENT PAGES CON MOTOR DE OVERFLOW */}
-      {overflowResult.pages.map(page => (
-        <Page key={page.pageNumber} size={pdfPaperSize} style={styles.page}>
-          {buildDocumentBody(page.sections, page.pageNumber === 1)}
-          {preset.pageTextObjects && preset.pageTextObjects.map(def => (
-            <Text
-              key={def.id}
-              fixed
-              style={resolvePageTextStyle(def) as any}
-              render={({ pageNumber, totalPages }) => buildPageTextTemplate(def.template, pageNumber, totalPages)}
-            />
-          ))}
-        </Page>
-      ))}
+      {/* LAYER 0-4: MAIN CV CONTENT PAGES CON FLUJO NATIVO REACT-PDF */}
+      <Page size={pdfPaperSize} style={styles.page}>
+        {buildDocumentBody(sections, true)}
+        {preset.pageTextObjects && preset.pageTextObjects.map(def => (
+          <Text
+            key={def.id}
+            fixed
+            style={resolvePageTextStyle(def) as any}
+            render={({ pageNumber, totalPages }) => buildPageTextTemplate(def.template, pageNumber, totalPages)}
+          />
+        ))}
+      </Page>
 
       {/* LAYER 4: SCANNED CERTIFICATE PAGES */}
       {certificatesScanned && certificatesScanned.map((cert: any, index: number) => (

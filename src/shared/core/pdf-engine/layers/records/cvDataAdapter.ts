@@ -148,7 +148,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   if (Array.isArray(sortedProfession) && sortedProfession.length > 0) {
     sections.push({
       id: 'profesion',
-      titleText: `${getSectionLabel('profesion')} (${sortedProfession.length})`,
+      titleText: getSectionLabel('profesion'),
       records: sortedProfession.map((prof: any, idx: number) => ({
         id: `rec-prof-${idx}`,
         kind: 'education',
