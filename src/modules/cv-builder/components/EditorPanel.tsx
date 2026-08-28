@@ -1261,7 +1261,7 @@ export default function EditorPanel({
                         </div>
                         <p className="text-[10px] text-[var(--color-neutral-text-primary)] font-medium leading-snug">{styleOpt.desc}</p>
                       </div>
-                      {isSelected && <Check className="w-4 h-4 text-[var(--ui-secondary)] flex-shrink-0 mt-1" />}
+                      {isSelected && <Check className="w-4 h-4 text-[var(--ui-text-primary)] flex-shrink-0 mt-1" />}
                     </button>
                   );
                 })}
@@ -1285,7 +1285,7 @@ export default function EditorPanel({
                     >
                       <div className="flex items-center justify-between mb-1.5">
                         <span className="text-[11px] font-bold text-[var(--color-neutral-text-primary)] truncate pr-1">{preset.name}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-[var(--ui-secondary)] flex-shrink-0" />}
+                        {isSelected && <Check className="w-3.5 h-3.5 text-[var(--ui-text-primary)] flex-shrink-0" />}
                       </div>
                       <div className="flex gap-1.5 items-center">
                         <div className={`w-4 h-4 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: preset.palette.primary }} />

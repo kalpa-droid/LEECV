@@ -11,7 +11,7 @@ import {
 import { getSavedCVsList, loadCVById, deleteCVById, checkStorageStatus } from '../services/cvStorageService';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { useToast } from '../../../shared/core/ui/Toast';
-import {} from '../../../shared/core/uiDesignSystem';
+import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { Modal } from '../../../shared/core/ui/Modal';
 import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
 import {} from '../../../shared/core/utils/validationEngine';
@@ -109,7 +109,7 @@ export default function SavedCVsModal({
       footer={
         <div className="w-full flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--ui-text-secondary)]">
           <div className="flex items-center gap-2">
-            <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black border flex items-center gap-1.5 ${
+            <span className={`px-2.5 py-1 rounded-[${radius.control}] text-[10px] font-black border flex items-center gap-1.5 ${
               statusInfo.isCloud 
                 ? 'bg-[var(--color-status-success-muted)] border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-text)]' 
                 : 'bg-[var(--color-secondary-muted)] border-[var(--color-secondary-base)]/40 text-[var(--color-secondary-text)]'
@@ -120,18 +120,18 @@ export default function SavedCVsModal({
 
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-[var(--ui-dock-hover)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] font-bold rounded-xl transition cursor-pointer"
+            className={`px-4 py-2 bg-[var(--ui-dock-hover)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] font-bold rounded-[${radius.card}] transition cursor-pointer`}
           >
             Cerrar
           </button>
         </div>
       }
     >
-      <div className="space-y-4 p-4 bg-[var(--ui-bg-dock)] text-white rounded-2xl">
+      <div className={`space-y-4 p-4 bg-[var(--ui-bg-dock)] text-white rounded-[${radius.modal}]`}>
         {/* Action Header: 2 Options Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <label className="p-3 rounded-2xl bg-[var(--color-secondary-muted)] hover:bg-[var(--color-secondary-muted)]/80 border border-[var(--color-secondary-base)]/30 hover:border-[var(--color-secondary-base)]/60 transition cursor-pointer flex items-center gap-3 group">
-            <div className={`p-2 rounded-xl bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/40 text-[var(--color-secondary-text)] group-hover:scale-110 transition flex-shrink-0`}>
+          <label className={`p-3 rounded-[${radius.modal}] bg-[var(--color-secondary-muted)] hover:bg-[var(--color-secondary-muted)]/80 border border-[var(--color-secondary-base)]/30 hover:border-[var(--color-secondary-base)]/60 transition cursor-pointer flex items-center gap-3 group`}>
+            <div className={`p-2 rounded-[${radius.card}] bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/40 text-[var(--color-secondary-text)] group-hover:scale-110 transition flex-shrink-0`}>
               <Download className="w-4 h-4" />
             </div>
             <div className="min-w-0 flex-1">
@@ -159,9 +159,9 @@ export default function SavedCVsModal({
                 onOpenCloudStatus();
               }
             }}
-            className="p-3 rounded-2xl bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-dock-hover)] border border-[var(--ui-border)] transition cursor-pointer flex items-center gap-3 text-left group"
+            className={`p-3 rounded-[${radius.modal}] bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-dock-hover)] border border-[var(--ui-border)] transition cursor-pointer flex items-center gap-3 text-left group`}
           >
-            <div className="p-2 rounded-xl bg-[var(--ui-dock-hover)] text-[var(--ui-text-primary)] group-hover:scale-110 transition flex-shrink-0">
+            <div className={`p-2 rounded-[${radius.card}] bg-[var(--ui-dock-hover)] text-[var(--ui-text-primary)] group-hover:scale-110 transition flex-shrink-0`}>
               <Cloud className="w-4 h-4" />
             </div>
             <div className="min-w-0 flex-1">
@@ -172,7 +172,7 @@ export default function SavedCVsModal({
         </div>
 
         {/* Explanation Banner */}
-        <div className="px-4 py-2.5 bg-[var(--ui-bg-dock)] border border-[var(--ui-border)] rounded-xl text-[11px] text-[var(--ui-text-secondary)] leading-snug flex items-center gap-2">
+        <div className={`px-4 py-2.5 bg-[var(--ui-bg-dock)] border border-[var(--ui-border)] rounded-[${radius.card}] text-[11px] text-[var(--ui-text-secondary)] leading-snug flex items-center gap-2`}>
           <Sparkles className="w-4 h-4 text-[var(--color-accent-amber-bright)] flex-shrink-0" />
           <span>
             <strong>Estado:</strong> <span className="text-[var(--color-accent-amber-bright)] font-bold"> 🟠 Borrador (En Edición)</span> pasa a <span className="text-[var(--color-status-success-bright)] font-bold"> 🟢 CV Oficial</span> al exportar tu documento.
@@ -187,7 +187,7 @@ export default function SavedCVsModal({
               <p className="text-xs font-bold">Cargando borradores guardados...</p>
             </div>
           ) : savedList.length === 0 ? (
-            <div className="py-12 text-center text-[var(--ui-text-secondary)] space-y-3 border-2 border-dashed border-[var(--ui-border)] rounded-2xl bg-[var(--ui-bg-panel)]">
+            <div className={`py-12 text-center text-[var(--ui-text-secondary)] space-y-3 border-2 border-dashed border-[var(--ui-border)] rounded-[${radius.modal}] bg-[var(--ui-bg-panel)]`}>
               <FileText className="w-10 h-10 mx-auto text-[var(--ui-text-secondary)]" />
               <div>
                 <p className="text-sm font-bold text-[var(--ui-text-secondary)]">No hay borradores guardados todavía</p>
@@ -209,7 +209,7 @@ export default function SavedCVsModal({
               return (
                 <div
                   key={item.id}
-                  className="p-4 rounded-2xl bg-[var(--ui-bg-dock)] border border-[var(--ui-border)] hover:border-[var(--color-secondary-base)]/50 transition flex items-center justify-between gap-4 group"
+                  className={`p-4 rounded-[${radius.modal}] bg-[var(--ui-bg-dock)] border border-[var(--ui-border)] hover:border-[var(--color-secondary-base)]/50 transition flex items-center justify-between gap-4 group`}
                 >
                   <div className="space-y-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -240,7 +240,7 @@ export default function SavedCVsModal({
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button
                       onClick={() => handleOpenCV(item.id)}
-                      className="px-4 py-2 bg-[var(--color-secondary-base)] hover:opacity-90 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer"
+                      className={`px-4 py-2 bg-[var(--color-secondary-base)] hover:opacity-90 text-white font-extrabold text-xs rounded-[${radius.card}] ${elevationSystem.raised} transition flex items-center gap-1.5 cursor-pointer`}
                     >
                       <FolderOpen className="w-3.5 h-3.5" />
                       <span>Abrir</span>
@@ -248,7 +248,7 @@ export default function SavedCVsModal({
 
                     <button
                       onClick={() => handleDelete(item.id, item.candidate_name || item.title)}
-                      className="p-2 text-[var(--ui-text-secondary)] hover:text-[var(--color-status-danger-text)] hover:bg-[var(--color-status-danger-muted)] rounded-xl transition border border-transparent hover:border-[var(--color-status-danger-base)]/50 cursor-pointer"
+                      className={`p-2 text-[var(--ui-text-secondary)] hover:text-[var(--color-status-danger-text)] hover:bg-[var(--color-status-danger-muted)] rounded-[${radius.card}] transition border border-transparent hover:border-[var(--color-status-danger-base)]/50 cursor-pointer`}
                       title="Eliminar este documento"
                     >
                       <Trash2 className="w-4 h-4" />

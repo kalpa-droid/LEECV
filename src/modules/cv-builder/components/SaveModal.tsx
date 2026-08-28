@@ -3,6 +3,8 @@ import { Save, Download, Cloud, ShieldCheck, HardDrive } from 'lucide-react';
 import { checkStorageStatus } from '../services/cvStorageService';
 import { Modal } from '../../../shared/core/ui/Modal';
 
+import { radius } from '../../../shared/core/uiDesignSystem';
+
 export interface SaveModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -37,7 +39,7 @@ export default function SaveModal({
           </div>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition cursor-pointer"
+            className={`px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold rounded-[${radius.card}] transition cursor-pointer`}
           >
             Cerrar
           </button>
@@ -52,9 +54,9 @@ export default function SaveModal({
             onClose();
           }}
           disabled={isSaving}
-          className="w-full text-left p-3.5 rounded-2xl bg-[var(--color-accent-purple-light)]/40 hover:bg-[var(--color-accent-purple-light)]/60 border border-[var(--color-accent-purple)]/40 hover:border-[var(--color-accent-purple)]/60 transition group flex items-start gap-3 cursor-pointer disabled:opacity-50"
+          className={`w-full text-left p-3.5 rounded-[${radius.modal}] bg-[var(--color-accent-purple-light)]/40 hover:bg-[var(--color-accent-purple-light)]/60 border border-[var(--color-accent-purple)]/40 hover:border-[var(--color-accent-purple)]/60 transition group flex items-start gap-3 cursor-pointer disabled:opacity-50`}
         >
-          <div className="p-2.5 rounded-xl bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple-text)] group-hover:scale-110 transition flex-shrink-0">
+          <div className={`p-2.5 rounded-[${radius.card}] bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple-text)] group-hover:scale-110 transition flex-shrink-0`}>
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div className="space-y-0.5 min-w-0 flex-1">
@@ -77,9 +79,9 @@ export default function SaveModal({
               onClose();
               onOpenCloudStatus();
             }}
-            className="w-full text-left p-3.5 rounded-2xl bg-[var(--ui-bg-dock)] hover:opacity-90 border border-[var(--color-secondary-base)]/40 transition group flex items-start gap-3 cursor-pointer"
+            className={`w-full text-left p-3.5 rounded-[${radius.modal}] bg-[var(--ui-bg-dock)] hover:opacity-90 border border-[var(--color-secondary-base)]/40 transition group flex items-start gap-3 cursor-pointer`}
           >
-            <div className="p-2.5 rounded-xl bg-black/40 border border-[var(--color-secondary-base)]/40 text-[var(--ui-on-dark-teal)] group-hover:scale-110 transition flex-shrink-0">
+            <div className={`p-2.5 rounded-[${radius.card}] bg-black/40 border border-[var(--color-secondary-base)]/40 text-[var(--ui-on-dark-teal)] group-hover:scale-110 transition flex-shrink-0`}>
               <HardDrive className="w-5 h-5" />
             </div>
             <div className="space-y-0.5 min-w-0 flex-1">
@@ -100,9 +102,9 @@ export default function SaveModal({
             onExportJson();
             onClose();
           }}
-          className="w-full text-left p-3.5 rounded-2xl bg-black/40 hover:bg-black/60 border border-white/10 hover:border-[var(--color-status-warning-base)]/40 transition group flex items-start gap-3 cursor-pointer"
+          className={`w-full text-left p-3.5 rounded-[${radius.modal}] bg-black/40 hover:bg-black/60 border border-white/10 hover:border-[var(--color-status-warning-base)]/40 transition group flex items-start gap-3 cursor-pointer`}
         >
-          <div className="p-2.5 rounded-xl bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)] group-hover:scale-110 transition flex-shrink-0">
+          <div className={`p-2.5 rounded-[${radius.card}] bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)] group-hover:scale-110 transition flex-shrink-0`}>
             <Download className="w-5 h-5" />
           </div>
           <div className="space-y-0.5 min-w-0 flex-1">

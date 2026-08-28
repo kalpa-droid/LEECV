@@ -5,6 +5,8 @@ import { Spinner } from '../../../shared/core/ui/Spinner';
 import { apiClient } from '../../../shared/core/utils/apiClient';
 import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
 
+import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
+
 const CVPreview = lazy(() => import('./CVPreview'));
 
 interface PublicCVViewProps {
@@ -77,7 +79,7 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
   if (error || !cvData) {
     return (
       <div className="h-screen bg-[var(--ui-preview-bg)] flex flex-col items-center justify-center text-white p-6 text-center">
-        <div className="w-16 h-16 bg-[var(--color-status-danger-muted)] text-[var(--color-status-danger-text)] rounded-2xl flex items-center justify-center text-3xl mb-4">
+        <div className={`w-16 h-16 bg-[var(--color-status-danger-muted)] text-[var(--color-status-danger-text)] rounded-[${radius.modal}] flex items-center justify-center text-3xl mb-4`}>
           ⚠️
         </div>
         <h2 className="text-lg font-black text-white mb-2">Currículum No Disponible</h2>
@@ -86,7 +88,7 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
         </p>
         <button
           onClick={() => { navigation.goTo('/'); }}
-          className="px-5 py-2.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white font-black text-xs rounded-xl shadow-lg transition"
+          className={`px-5 py-2.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white font-black text-xs rounded-[${radius.card}] ${elevationSystem.floating} transition`}
         >
           🏠 Ir a la Página Principal de LEECV
         </button>
@@ -97,7 +99,7 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
   return (
     <div className="h-screen bg-[var(--ui-preview-bg)] text-white flex flex-col font-sans overflow-hidden">
       {/* Public Header Bar */}
-      <header className="bg-[var(--color-neutral-text-primary)] border-b border-white/10 px-4 py-3 flex items-center justify-between z-30 shadow-lg shrink-0">
+      <header className={`bg-[var(--color-neutral-text-primary)] border-b border-white/10 px-4 py-3 flex items-center justify-between z-30 ${elevationSystem.floating} shrink-0`}>
         <div className="flex items-center gap-2">
           <span className="text-xl">📄</span>
           <div>
@@ -113,7 +115,7 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
 
         <button
           onClick={() => { navigation.goTo('/'); }}
-          className="px-3.5 py-1.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white text-xs font-black rounded-xl transition cursor-pointer shadow-md"
+          className={`px-3.5 py-1.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white text-xs font-black rounded-[${radius.card}] transition cursor-pointer ${elevationSystem.raised}`}
         >
           ✏️ Crear mi propio CV
         </button>

@@ -3,7 +3,7 @@ import { User, Camera, QrCode } from 'lucide-react';
 import { useCVContext } from '../../../../context/CVContext';
 import { Field } from '../../../../shared/core/ui/Field';
 import { PanelSection } from './PanelSection';
-import { colorSystem, typeScale, button } from '../../../../shared/core/uiDesignSystem';
+import { colorSystem, typeScale, button, elevationSystem } from '../../../../shared/core/uiDesignSystem';
 
 export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhotoCropper: () => void; registeredItems?: any[] }) {
   const { cvData, setCvData, updatePersonalInfo, toggleSectionVisibility } = useCVContext();
@@ -17,7 +17,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
       {/* Header con Toggle */}
       <div className={`flex items-center justify-between p-2.5 rounded-[12px] border transition ${
         isVisible 
-          ? 'bg-white border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] shadow-sm' 
+          ? 'bg-white border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] ${elevationSystem.raised}' 
           : 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-muted)] opacity-75'
       }`}>
         <span className={`${typeScale.sectionTitle} uppercase tracking-wide`} style={{ color: colorSystem.neutral.textPrimary }}>
@@ -26,7 +26,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
         <button
           type="button"
           onClick={() => toggleSectionVisibility('personales')}
-          className={`px-3 py-1 rounded-full text-[11px] font-medium transition flex items-center gap-1.5 shadow-sm cursor-pointer ${
+          className={`px-3 py-1 rounded-full text-[11px] font-medium transition flex items-center gap-1.5 ${elevationSystem.raised} cursor-pointer ${
             isVisible
               ? 'bg-[var(--color-secondary-base)] text-white hover:bg-[var(--color-secondary-hover)]'
               : 'bg-[var(--color-neutral-text-muted)] text-white hover:opacity-80'
@@ -48,7 +48,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
                   borderColor: colorSystem.neutral.border
                 }}
               >
-                <div className="w-14 h-18 rounded-[8px] overflow-hidden bg-[var(--color-neutral-surface)] flex items-center justify-center border border-[var(--color-neutral-border-strong)] shadow-sm">
+                <div className={`w-14 h-18 rounded-[8px] overflow-hidden bg-[var(--color-neutral-surface)] flex items-center justify-center border border-[var(--color-neutral-border-strong)] ${elevationSystem.raised}`}>
                   {cvData.personalInfo?.profilePhoto ? (
                     <img src={cvData.personalInfo.profilePhoto} alt="Perfil" className="w-full h-full object-cover" />
                   ) : (

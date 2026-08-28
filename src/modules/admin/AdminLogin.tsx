@@ -3,6 +3,8 @@ import { login, signInWithGoogle } from '../auth/authService';
 import { Lock } from 'lucide-react';
 import { isValidEmail } from '../../shared/core/utils/validationEngine';
 
+import { elevationSystem, radius } from '../../shared/core/uiDesignSystem';
+
 export default function AdminLogin({ onLogin }: { onLogin: () => void }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,9 +43,9 @@ export default function AdminLogin({ onLogin }: { onLogin: () => void }) {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[var(--color-neutral-text-primary)] px-4">
-      <div className="bg-[var(--color-neutral-text-primary)] text-white rounded-3xl shadow-2xl p-8 w-full max-w-md border border-white/10 space-y-6">
+      <div className={`bg-[var(--color-neutral-text-primary)] text-white rounded-[${radius.modal}] ${elevationSystem.overlay} p-8 w-full max-w-md border border-white/10 space-y-6`}>
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-[var(--color-accent-base)]/20 border border-[var(--color-accent-base)]/40 text-white flex items-center justify-center flex-shrink-0">
+          <div className={`w-12 h-12 rounded-[${radius.modal}] bg-[var(--color-accent-base)]/20 border border-[var(--color-accent-base)]/40 text-white flex items-center justify-center flex-shrink-0`}>
             <Lock className="w-6 h-6" />
           </div>
           <div>
@@ -58,7 +60,7 @@ export default function AdminLogin({ onLogin }: { onLogin: () => void }) {
             type="button"
             onClick={handleGoogleLogin}
             disabled={loadingGoogle}
-            className="w-full py-3 px-4 rounded-2xl bg-white hover:bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] font-extrabold text-sm flex items-center justify-center gap-3 transition shadow-lg cursor-pointer disabled:opacity-50"
+            className={`w-full py-3 px-4 rounded-[${radius.modal}] bg-white hover:bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] font-extrabold text-sm flex items-center justify-center gap-3 transition ${elevationSystem.floating} cursor-pointer disabled:opacity-50`}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
@@ -83,7 +85,7 @@ export default function AdminLogin({ onLogin }: { onLogin: () => void }) {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full mt-1 px-3.5 py-2.5 rounded-xl bg-black/30 border border-white/20 text-white text-xs focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-base)]"
+              className={`w-full mt-1 px-3.5 py-2.5 rounded-[${radius.card}] bg-black/30 border border-white/20 text-white text-xs focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-base)]`}
               required
             />
           </div>
@@ -94,17 +96,17 @@ export default function AdminLogin({ onLogin }: { onLogin: () => void }) {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full mt-1 px-3.5 py-2.5 rounded-xl bg-black/30 border border-white/20 text-white text-xs focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-base)]"
+              className={`w-full mt-1 px-3.5 py-2.5 rounded-[${radius.card}] bg-black/30 border border-white/20 text-white text-xs focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-base)]`}
               required
             />
           </div>
 
-          {error && <p className="text-[var(--color-status-danger-text)] text-xs font-bold text-center p-2 rounded-xl bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/40">{error}</p>}
+          {error && <p className={`text-[var(--color-status-danger-text)] text-xs font-bold text-center p-2 rounded-[${radius.card}] bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/40`}>{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-2xl font-black text-xs text-white bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] transition shadow-lg disabled:opacity-50 cursor-pointer"
+            className={`w-full py-3 rounded-[${radius.modal}] font-black text-xs text-white bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] transition ${elevationSystem.floating} disabled:opacity-50 cursor-pointer`}
           >
             {loading ? 'Verificando...' : 'Ingresar con Contraseña'}
           </button>

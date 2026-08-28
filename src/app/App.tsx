@@ -9,7 +9,7 @@ import { getCurrentProfile, capturarConexionDriveSiCorresponde } from '../module
 import { supabase } from '../shared/core/lib/supabaseClient';
 import { exportCVToJson, importCVFromJsonFile } from '../shared/core/utils/jsonImporterExporter';
 import { withErrorHandling } from '../shared/core/utils/errorHandler';
-import { applyUiTheme, getNextUiTheme } from '../shared/core/uiDesignSystem';
+import { applyUiTheme, getNextUiTheme, elevationSystem, radius } from '../shared/core/uiDesignSystem';
 
 const PublicCVView = lazy(() => import('../modules/cv-builder/components/PublicCVView').then(m => ({ default: m.PublicCVView })));
 const CardExportModal = lazy(() => import('../modules/cv-builder/components/modals/CardExportModal').then(m => ({ default: m.CardExportModal })));
@@ -344,7 +344,7 @@ function AppContent() {
         <div 
           className={`bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] transition-all duration-300 ease-in-out border-r border-[var(--ui-border)] z-20 flex flex-col h-full overflow-y-auto ${
             isPanelOpen 
-              ? 'w-full md:w-[460px] lg:w-[500px] opacity-100 shadow-2xl' 
+              ? 'w-full md:w-[460px] lg:w-[500px] opacity-100 ${elevationSystem.overlay}' 
               : 'w-0 opacity-0 overflow-hidden hidden md:block'
           } ${mobileTabState === 'preview' ? 'hidden md:flex' : 'flex'}`}
         >
@@ -513,13 +513,13 @@ function AppContent() {
       </Suspense>
 
       {/* Barra de Estado Inferior Reorganizada (Zoom, Modo CV/Tarjeta y Switcher de Tema) */}
-      <footer className="hidden md:flex bg-[var(--ui-bg-header)] text-[var(--ui-text-primary)] border-t border-[var(--ui-border)] py-2 px-4 md:pl-20 items-center justify-between no-print z-30 shadow-2xl select-none text-xs">
+      <footer className={`hidden md:flex bg-[var(--ui-bg-header)] text-[var(--ui-text-primary)] border-t border-[var(--ui-border)] py-2 px-4 md:pl-20 items-center justify-between no-print z-30 ${elevationSystem.overlay} select-none text-xs`}>
         {/* Izquierda: Alternador CV vs Tarjeta Personal */}
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={toggleDocumentPresetMode}
-            className="px-3 py-1 rounded-xl bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] font-extrabold flex items-center gap-1.5 transition cursor-pointer shadow-sm active:scale-95"
+            className={`px-3 py-1 rounded-[${radius.card}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] font-extrabold flex items-center gap-1.5 transition cursor-pointer ${elevationSystem.raised} active:scale-95`}
             title="Alternar entre modo Currículum Vitae A4 y Tarjeta Personal"
           >
             {cvData?.activePresetId === 'tarjeta-personal' ? (

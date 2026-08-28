@@ -1,6 +1,8 @@
 import React from 'react';
 import { Modal } from '../../../../shared/core/ui/Modal';
 
+import { radius } from '../../../../shared/core/uiDesignSystem';
+
 export default function PdfProgressModal({ isGenerating, isComplete, onClose }: any) {
   return (
     <Modal
@@ -13,7 +15,7 @@ export default function PdfProgressModal({ isGenerating, isComplete, onClose }: 
         isComplete ? (
           <button
             onClick={onClose}
-            className="w-full py-2 bg-[var(--color-status-success-base)] hover:opacity-90 text-white text-xs font-bold rounded-xl transition cursor-pointer"
+            className={`w-full py-2 bg-[var(--color-status-success-base)] hover:opacity-90 text-white text-xs font-bold rounded-[${radius.card}] transition cursor-pointer`}
           >
             Aceptar
           </button>
@@ -31,7 +33,7 @@ export default function PdfProgressModal({ isGenerating, isComplete, onClose }: 
           </>
         ) : (
           <>
-            <div className="w-12 h-12 rounded-2xl bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/50 text-[var(--color-status-success-text)] flex items-center justify-center text-2xl mx-auto">
+            <div className={`w-12 h-12 rounded-[${radius.modal}] bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/50 text-[var(--color-status-success-text)] flex items-center justify-center text-2xl mx-auto`}>
               ✓
             </div>
             <h3 className="text-base font-black text-white">¡PDF Generado Exitosamente!</h3>

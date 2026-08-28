@@ -111,6 +111,22 @@
 
   --color-accent-orange: #FF7A29;
 
+  /* NÚCLEO — Color de texto/ícono legible sobre los 3 fondos de acento
+     saturados (accent-base, secondary-base, status-success-base).
+     Estos 3 fondos son fijos en los 4 temas (día/noche/teal_ocean/ink), así
+     que su color "on" también es fijo. Verificado matemáticamente contra
+     WCAG 2.1 AA (4.5:1 mínimo):
+       accent-base    (#FF2E63) vs #0F172A → 4.95:1 OK   (vs #FFFFFF → 3.61:1 FALLA)
+       secondary-base (#00A8A0) vs #0F172A → 6.04:1 OK   (vs #FFFFFF → 2.95:1 FALLA)
+       status-success-base (#1D9E75) vs #0F172A → 5.27:1 OK (vs #FFFFFF → 3.39:1 FALLA)
+     `text-white` sobre estos 3 fondos falla WCAG AA — no usar acá.
+     accent-purple (#8E44FF) sí pasa con blanco (4.75:1), mantiene text-white.
+     Cualquier botón "activo" nuevo que use estos 3 fondos debe consumir
+     estos tokens, no volver a hardcodear un color de texto a mano. */
+  --color-accent-on-base: #0F172A;
+  --color-secondary-on-base: #0F172A;
+  --color-status-success-on-base: #0F172A;
+
   --color-secondary-base: #00A8A0;
   --color-secondary-hover: #008780;
   --color-secondary-hover-dark: #008f88;

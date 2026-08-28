@@ -6,6 +6,8 @@ import { Modal } from '../../shared/core/ui/Modal';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
 import { logout, signInWithGoogle } from '../auth/authService';
 
+import { elevationSystem, radius } from '../../shared/core/uiDesignSystem';
+
 export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
   const { showError, showSuccess } = useToast();
   const [loadingGateway, setLoadingGateway] = useState<string | null>(null);
@@ -67,11 +69,11 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
         </div>
       }
     >
-      <div className="space-y-6 bg-[var(--ui-bg-dock)] p-4 rounded-2xl text-white">
+      <div className={`space-y-6 bg-[var(--ui-bg-dock)] p-4 rounded-[${radius.modal}] text-white`}>
         {/* Tarjeta de Cuenta Activa / Perfil de Usuario */}
-        <div className="bg-[var(--ui-bg-dock)] border border-white/10 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className={`bg-[var(--ui-bg-dock)] border border-white/10 rounded-[${radius.modal}] p-4 flex flex-col md:flex-row items-center justify-between gap-4`}>
           <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="w-10 h-10 rounded-xl bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple-text)] flex items-center justify-center flex-shrink-0">
+            <div className={`w-10 h-10 rounded-[${radius.card}] bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple-text)] flex items-center justify-center flex-shrink-0`}>
               <User className="w-5 h-5" />
             </div>
             <div>
@@ -93,7 +95,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
           <div className="flex items-center gap-2 w-full md:w-auto justify-end">
             <button
               onClick={() => handleSelectPlan('pro', 'mercadopago')}
-              className="px-3.5 py-2 rounded-xl bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-extrabold text-xs transition shadow-md cursor-pointer flex items-center gap-1.5"
+              className={`px-3.5 py-2 rounded-[${radius.card}] bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-extrabold text-xs transition ${elevationSystem.raised} cursor-pointer flex items-center gap-1.5`}
             >
               <Crown className="w-4 h-4" />
               <span>Mejorar a Plan Agencia ($19/mes)</span>
@@ -112,9 +114,9 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
         {/* Tabla de 3 Niveles */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* NIVEL 1: USUARIO INDIVIDUAL */}
-          <div className="bg-[var(--ui-bg-dock)] border border-white/10 rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:border-white/20 transition">
+          <div className={`bg-[var(--ui-bg-dock)] border border-white/10 rounded-[${radius.modal}] p-5 flex flex-col justify-between space-y-4 hover:border-white/20 transition`}>
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white flex items-center justify-center">
+              <div className={`w-10 h-10 rounded-[${radius.card}] bg-white/5 border border-white/10 text-white flex items-center justify-center`}>
                 <Zap className="w-5 h-5" />
               </div>
               <div>
@@ -146,20 +148,20 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
             </div>
             <button
               onClick={onClose}
-              className="w-full py-2.5 bg-white/10 hover:bg-white/20 text-white/80 text-xs font-black rounded-xl transition cursor-pointer"
+              className={`w-full py-2.5 bg-white/10 hover:bg-white/20 text-white/80 text-xs font-black rounded-[${radius.card}] transition cursor-pointer`}
             >
               Usar Editor Gratuito
             </button>
           </div>
 
           {/* NIVEL 2: AGENCIA PRO (MÁS POPULAR) */}
-          <div className="bg-[var(--ui-bg-dock)] border-2 border-[var(--color-accent-purple)] rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-xl relative transform hover:-translate-y-1 transition">
+          <div className={`bg-[var(--ui-bg-dock)] border-2 border-[var(--color-accent-purple)] rounded-[${radius.modal}] p-5 flex flex-col justify-between space-y-4 ${elevationSystem.overlay} relative transform hover:-translate-y-1 transition`}>
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--color-accent-purple)] text-white text-[10px] font-black uppercase px-3 py-0.5 rounded-full tracking-wider shadow">
               Más Recomendado
             </div>
 
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple-text)] flex items-center justify-center">
+              <div className={`w-10 h-10 rounded-[${radius.card}] bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple-text)] flex items-center justify-center`}>
                 <Crown className="w-5 h-5" />
               </div>
               <div>
@@ -194,14 +196,14 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
               <button
                 onClick={() => handleSelectPlan('pro', 'mercadopago')}
                 disabled={loadingGateway !== null}
-                className="w-full py-2.5 bg-[var(--color-accent-purple)] hover:opacity-90 text-white text-xs font-black rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
+                className={`w-full py-2.5 bg-[var(--color-accent-purple)] hover:opacity-90 text-white text-xs font-black rounded-[${radius.card}] ${elevationSystem.raised} transition flex items-center justify-center gap-1.5 cursor-pointer`}
               >
                 <span>🇦🇷 Suscribirse con Mercado Pago</span>
               </button>
               <button
                 onClick={() => handleSelectPlan('pro', 'lemonsqueezy')}
                 disabled={loadingGateway !== null}
-                className="w-full py-2 bg-white/10 hover:bg-white/20 text-white text-[11px] font-bold rounded-xl transition flex items-center justify-center gap-1.5 border border-[var(--color-accent-purple)]/30 cursor-pointer"
+                className={`w-full py-2 bg-white/10 hover:bg-white/20 text-white text-[11px] font-bold rounded-[${radius.card}] transition flex items-center justify-center gap-1.5 border border-[var(--color-accent-purple)]/30 cursor-pointer`}
               >
                 <span>🌎 Suscribirse Internacional (USD)</span>
               </button>
@@ -209,9 +211,9 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
           </div>
 
           {/* NIVEL 3: AGENCIA ENTERPRISE + LEECV CLOUD */}
-          <div className="bg-[var(--ui-bg-dock)] border border-[var(--color-status-warning-base)]/40 rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:border-[var(--color-status-warning-base)]/70 transition">
+          <div className={`bg-[var(--ui-bg-dock)] border border-[var(--color-status-warning-base)]/40 rounded-[${radius.modal}] p-5 flex flex-col justify-between space-y-4 hover:border-[var(--color-status-warning-base)]/70 transition`}>
             <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/40 text-[var(--color-status-warning-text)] flex items-center justify-center">
+              <div className={`w-10 h-10 rounded-[${radius.card}] bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/40 text-[var(--color-status-warning-text)] flex items-center justify-center`}>
                 <Cloud className="w-5 h-5" />
               </div>
               <div>
@@ -245,7 +247,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
             <button
               onClick={() => handleSelectPlan('enterprise', 'lemonsqueezy')}
               disabled={loadingGateway !== null}
-              className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black text-xs font-black rounded-xl shadow-lg transition cursor-pointer"
+              className={`w-full py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black text-xs font-black rounded-[${radius.card}] ${elevationSystem.floating} transition cursor-pointer`}
             >
               Activar Plan Enterprise Cloud
             </button>

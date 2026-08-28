@@ -428,12 +428,31 @@ function evaluateBranchTokens(branchText, cssVarMap, inheritedBgHex) {
 function auditLinesForContrast(lines, cssVarMap) {
   const violations = [];
   const bgStack = [];
+  // Pila SEPARADA para fondos condicionales de ternarios partidos en 3
+  // líneas (condición / `? '...'` / `: '...'`). Guarda el PAR
+  // {trueBgHex, falseBgHex}: así, un ternario de texto puro que sigue unas
+  // líneas más abajo (mismo elemento, misma condición — ícono/label de un
+  // botón activo/inactivo) alinea su propia rama verdadera contra
+  // `trueBgHex` y su rama falsa contra `falseBgHex`, sin que ninguna rama
+  // termine evaluada contra el fondo de la OTRA rama. Nunca se mezcla con
+  // `bgStack` (fondos incondicionales) — evita la fuga entre ramas que
+  // motivó originalmente excluir estas líneas de `bgStack`.
+  const conditionalBgStack = [];
   let domDepth = 0;
   const rootCardBg = cssVarMap.get('--ui-bg-card') || cssVarMap.get('--ui-bg-root') || '#FFFFFF';
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const lineNum = i + 1;
+
+    // Directiva explícita de supresión, tipo eslint-disable-next-line —
+    // sólo para casos verificados a mano con matemática real. Hoy existe
+    // un único caso: ternarios anidados de 3 ramas en una línea, que este
+    // auditor line-based no resuelve todavía (sólo separa 2 ramas).
+    const prevLine = i > 0 ? lines[i - 1] : '';
+    if (prevLine.includes('check-contrast-ignore-next-line')) {
+      continue;
+    }
 
     const openContainerTags = (line.match(/<(?:div|section|aside|nav|header|footer|button|label|td|th|li|article|select|textarea)(?:[\s>]|$)/g) || []).length;
     const selfClosingContainerTags = (line.match(/<(?:div|section|aside|nav|header|footer|button|label|td|th|li|article|select|textarea)[^>]*\/>/g) || []).length;
@@ -442,18 +461,29 @@ function auditLinesForContrast(lines, cssVarMap) {
     const netOpenTags = Math.max(0, openContainerTags - selfClosingContainerTags);
     const netCloseTags = closeContainerTags;
 
+    const condTop = conditionalBgStack.length > 0 ? conditionalBgStack[conditionalBgStack.length - 1] : null;
+    const inheritedBgFallback = bgStack.length > 0 ? bgStack[bgStack.length - 1].bgHex : rootCardBg;
+
     const ternaryMatch = line.match(TERNARY_RE);
     if (ternaryMatch) {
-      const inheritedBg = bgStack.length > 0 ? bgStack[bgStack.length - 1].bgHex : rootCardBg;
       const [, trueBranch, falseBranch] = ternaryMatch;
-      for (const branch of [trueBranch, falseBranch]) {
-        const branchViolations = evaluateBranchTokens(branch, cssVarMap, inheritedBg);
-        for (const v of branchViolations) violations.push({ line: lineNum, ...v });
-      }
+      // Alinear rama-verdadera contra fondo-si-activo, rama-falsa contra
+      // fondo-si-inactivo, cuando hay un ternario de fondo abierto más
+      // arriba en este mismo elemento; si no hay ninguno, ambas ramas usan
+      // el mismo fondo heredado incondicional (comportamiento previo).
+      const trueBg = condTop ? condTop.trueBgHex : inheritedBgFallback;
+      const falseBg = condTop ? condTop.falseBgHex : inheritedBgFallback;
+      const trueViolations = evaluateBranchTokens(trueBranch, cssVarMap, trueBg);
+      const falseViolations = evaluateBranchTokens(falseBranch, cssVarMap, falseBg);
+      for (const v of [...trueViolations, ...falseViolations]) violations.push({ line: lineNum, ...v });
+
       domDepth += netOpenTags;
       domDepth = Math.max(0, domDepth - netCloseTags);
       while (bgStack.length > 0 && bgStack[bgStack.length - 1].depth > domDepth) {
         bgStack.pop();
+      }
+      while (conditionalBgStack.length > 0 && conditionalBgStack[conditionalBgStack.length - 1].depth > domDepth) {
+        conditionalBgStack.pop();
       }
       continue;
     }
@@ -466,7 +496,13 @@ function auditLinesForContrast(lines, cssVarMap) {
     const textMatch = isPseudoText ? null : (textMatchRaw ? [textMatchRaw[1]] : null);
 
     const isSelfClosing = line.includes('/>');
-    const isTernaryLine = line.includes('?') || line.trim().startsWith('?') || line.trim().startsWith(':');
+    const trimmedLine = line.trim();
+    const isBareQuestionBranch = trimmedLine.startsWith('?') && !ternaryMatch;
+    const isBareColonBranch = trimmedLine.startsWith(':') && !ternaryMatch;
+    // Estas dos líneas nunca alimentan `bgStack` (el incondicional): su bg,
+    // si tiene, sólo es real bajo una condición — de eso se ocupa
+    // `conditionalBgStack`, con las dos ramas separadas.
+    const isTernaryLine = isBareQuestionBranch || isBareColonBranch || line.includes('?');
 
     // Incrementar profundidad para etiquetas abiertas en esta linea antes de apilar
     domDepth += netOpenTags;
@@ -483,7 +519,31 @@ function auditLinesForContrast(lines, cssVarMap) {
       }
     }
 
+    // Detectar el par condicional: línea `? '...'` sola con su propio bg,
+    // seguida por una línea `: '...'` sola — su bg propio (si tiene, sin
+    // contar pseudo-clases hover/focus) es el fondo real de la rama
+    // inactiva; si no tiene, la rama inactiva hereda el fondo incondicional
+    // externo.
+    if (isBareQuestionBranch && bgMatch) {
+      const inheritedBgForBlend = bgStack.length > 0 ? bgStack[bgStack.length - 1].bgHex : rootCardBg;
+      const trueBgHex = resolveColorToHex(bgMatch[0], cssVarMap, inheritedBgForBlend);
+      if (trueBgHex) {
+        const nextLine = i + 1 < lines.length ? lines[i + 1].trim() : '';
+        const nextBgMatchRaw = nextLine.match(/(?:(?:hover|focus|active|disabled):)?(bg-\[(?:var\(--[a-zA-Z0-9-]+\)|#[0-9a-fA-F]{3,6})\](?:\/[\d]+)?|bg-black(?:\/[\d]+)?|bg-white(?:\/[\d]+)?|bg-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-[0-9]{2,3}(?:\/[\d]+)?)/);
+        const nextIsHoverBg = nextBgMatchRaw && (nextBgMatchRaw[0].startsWith('hover:') || nextBgMatchRaw[0].startsWith('focus:') || nextBgMatchRaw[0].startsWith('active:'));
+        const falseBgHex = (nextBgMatchRaw && !nextIsHoverBg)
+          ? (resolveColorToHex(nextBgMatchRaw[1], cssVarMap, inheritedBgForBlend) || inheritedBgForBlend)
+          : inheritedBgForBlend;
+
+        while (conditionalBgStack.length > 0 && conditionalBgStack[conditionalBgStack.length - 1].depth >= domDepth) {
+          conditionalBgStack.pop();
+        }
+        conditionalBgStack.push({ trueBgHex, falseBgHex, depth: domDepth, lineNum });
+      }
+    }
+
     const currentActiveBg = bgStack.length > 0 ? bgStack[bgStack.length - 1].bgHex : rootCardBg;
+    const condTopForText = conditionalBgStack.length > 0 ? conditionalBgStack[conditionalBgStack.length - 1] : null;
 
     if (textMatch) {
       const textToken = textMatch[0];
@@ -493,6 +553,27 @@ function auditLinesForContrast(lines, cssVarMap) {
       if (bgMatch) {
         activeBgToken = bgMatch[0];
         activeBgHex = resolveColorToHex(activeBgToken, cssVarMap, currentActiveBg);
+      } else if (isBareColonBranch && condTopForText) {
+        // Este texto ES la rama falsa de un ternario de fondo abierto más
+        // arriba — se evalúa SOLO contra el fondo de su propia rama
+        // (inactivo), no contra el peor caso.
+        activeBgToken = 'condicional(inactivo)';
+        activeBgHex = condTopForText.falseBgHex;
+      } else if (condTopForText) {
+        // Texto incondicional (sin su propio ternario) dentro de un
+        // elemento cuyo FONDO sí es condicional: no sabemos en build-time
+        // cuál rama está activa, así que se audita contra el peor caso de
+        // las dos — si falla contra cualquiera de las dos, es una
+        // violación real en al menos un estado del botón.
+        const ratioTrue = getContrastRatio(condTopForText.trueBgHex, resolveColorToHex(textToken, cssVarMap, condTopForText.trueBgHex) || '#000000');
+        const ratioFalse = getContrastRatio(condTopForText.falseBgHex, resolveColorToHex(textToken, cssVarMap, condTopForText.falseBgHex) || '#000000');
+        if (ratioTrue <= ratioFalse) {
+          activeBgToken = 'condicional(activo)';
+          activeBgHex = condTopForText.trueBgHex;
+        } else {
+          activeBgToken = 'condicional(inactivo)';
+          activeBgHex = condTopForText.falseBgHex;
+        }
       } else if (currentActiveBg) {
         activeBgToken = bgStack.length > 0 ? bgStack[bgStack.length - 1].bgToken : 'ui-bg-card';
         activeBgHex = currentActiveBg;
@@ -518,6 +599,9 @@ function auditLinesForContrast(lines, cssVarMap) {
     domDepth = Math.max(0, domDepth - netCloseTags);
     while (bgStack.length > 0 && bgStack[bgStack.length - 1].depth > domDepth) {
       bgStack.pop();
+    }
+    while (conditionalBgStack.length > 0 && conditionalBgStack[conditionalBgStack.length - 1].depth > domDepth) {
+      conditionalBgStack.pop();
     }
   }
 

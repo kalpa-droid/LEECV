@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Shield, FileText, Lock, Database, Server } from 'lucide-react';
-import {} from '../../../shared/core/uiDesignSystem';
+import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { Modal } from '../../../shared/core/ui/Modal';
 
 interface PrivacyModalProps {
@@ -23,7 +23,7 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
           <span className="text-[10px] text-[var(--ui-text-secondary)]">Última actualización: Agosto 2026 — LEECV Inc.</span>
           <button
             onClick={onClose}
-            className={`px-4 py-1.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white font-extrabold text-xs rounded-xl transition cursor-pointer`}
+            className={`px-4 py-1.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white font-extrabold text-xs rounded-[${radius.card}] transition cursor-pointer`}
           >
             Entendido
           </button>
@@ -32,12 +32,12 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
     >
       <div className="space-y-4 text-xs text-[var(--ui-text-secondary)] leading-relaxed font-normal">
         {/* Tab Selector */}
-        <div className="flex border-b border-[var(--ui-border)] bg-[var(--ui-bg-panel)] p-1 rounded-xl mb-4">
+        <div className={`flex border-b border-[var(--ui-border)] bg-[var(--ui-bg-panel)] p-1 rounded-[${radius.card}] mb-4`}>
           <button
             onClick={() => setActiveTab('privacy')}
-            className={`px-4 py-2 text-xs font-bold transition flex-1 flex items-center justify-center gap-2 rounded-lg cursor-pointer ${
+            className={`px-4 py-2 text-xs font-bold transition flex-1 flex items-center justify-center gap-2 rounded-[${radius.control}] cursor-pointer ${
               activeTab === 'privacy'
-                ? 'bg-[var(--color-accent-purple)] text-white shadow-md'
+                ? 'bg-[var(--color-accent-purple)] text-white ${elevationSystem.raised}'
                 : 'text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]'
             }`}
           >
@@ -45,9 +45,9 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
           </button>
           <button
             onClick={() => setActiveTab('terms')}
-            className={`px-4 py-2 text-xs font-bold transition flex-1 flex items-center justify-center gap-2 rounded-lg cursor-pointer ${
+            className={`px-4 py-2 text-xs font-bold transition flex-1 flex items-center justify-center gap-2 rounded-[${radius.control}] cursor-pointer ${
               activeTab === 'terms'
-                ? 'bg-[var(--color-status-success-base)] text-white shadow-md'
+                ? 'bg-[var(--color-status-success-base)] text-white ${elevationSystem.raised}'
                 : 'text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]'
             }`}
           >
@@ -57,7 +57,7 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
 
         {activeTab === 'privacy' ? (
           <div className="space-y-4">
-            <div className="p-3 bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/30 rounded-xl flex items-start gap-3">
+            <div className={`p-3 bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/30 rounded-[${radius.card}] flex items-start gap-3`}>
               <Database className="w-5 h-5 text-[var(--color-accent-purple-text)] flex-shrink-0 mt-0.5" />
               <p className="text-[11px] text-[var(--color-accent-purple-text)]">
                 LEECV respeta estrictamente tu privacidad. Todos tus datos personales, currículums, fotografías y certificados son de tu exclusiva propiedad y están protegidos por encriptación en tránsito y en reposo (RLS en Supabase).
@@ -91,7 +91,7 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="p-3 bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/30 rounded-xl flex items-start gap-3">
+            <div className={`p-3 bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/30 rounded-[${radius.card}] flex items-start gap-3`}>
               <Server className="w-5 h-5 text-[var(--color-status-success-text)] flex-shrink-0 mt-0.5" />
               <p className="text-[11px] text-[var(--color-status-success-text)]">
                 Términos y condiciones de prestación del servicio de maquetación, almacenamiento en la nube y licencias Premium/Enterprise de LEECV.

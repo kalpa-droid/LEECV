@@ -7,6 +7,8 @@ import { Printer, AlertTriangle, Download } from 'lucide-react';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
 
+import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
+
 const CARD_SIZE_OPTIONS = [
   { id: 'tarjeta_estandar', label: 'Estándar AR/US (89 × 51 mm)' },
   { id: 'tarjeta_europea', label: 'Europea (85 × 54 mm)' },
@@ -72,7 +74,7 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
   };
 
   return (
-    <div className="space-y-5 p-5 bg-[var(--color-neutral-surface-muted)] rounded-2xl border border-[var(--color-neutral-border)]">
+    <div className={`space-y-5 p-5 bg-[var(--color-neutral-surface-muted)] rounded-[${radius.modal}] border border-[var(--color-neutral-border)]`}>
       {/* Tamaño de tarjeta */}
       <div>
         <label className="block text-xs font-extrabold text-[var(--color-neutral-text-primary)] mb-1.5 uppercase tracking-wide">
@@ -81,7 +83,7 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
         <select
           value={cardSizeId}
           onChange={(e) => setCardSizeId(e.target.value)}
-          className="w-full p-2.5 rounded-xl border border-[var(--color-neutral-border)] font-semibold text-[var(--color-neutral-text-primary)] outline-none focus:border-[var(--color-accent-base)] bg-white cursor-pointer"
+          className={`w-full p-2.5 rounded-[${radius.card}] border border-[var(--color-neutral-border)] font-semibold text-[var(--color-neutral-text-primary)] outline-none focus:border-[var(--color-accent-base)] bg-white cursor-pointer`}
         >
           {CARD_SIZE_OPTIONS.map(opt => (
             <option key={opt.id} value={opt.id}>{opt.label}</option>
@@ -95,7 +97,7 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
               <input
                 type="number" min={20} max={200} value={customWidthMm}
                 onChange={(e) => setCustomWidthMm(Number(e.target.value))}
-                className="w-full p-2 rounded-lg border border-[var(--color-neutral-border)] font-bold text-[var(--color-neutral-text-primary)] bg-white"
+                className={`w-full p-2 rounded-[${radius.control}] border border-[var(--color-neutral-border)] font-bold text-[var(--color-neutral-text-primary)] bg-white`}
               />
             </div>
             <div>
@@ -103,7 +105,7 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
               <input
                 type="number" min={20} max={200} value={customHeightMm}
                 onChange={(e) => setCustomHeightMm(Number(e.target.value))}
-                className="w-full p-2 rounded-lg border border-[var(--color-neutral-border)] font-bold text-[var(--color-neutral-text-primary)] bg-white"
+                className={`w-full p-2 rounded-[${radius.control}] border border-[var(--color-neutral-border)] font-bold text-[var(--color-neutral-text-primary)] bg-white`}
               />
             </div>
           </div>
@@ -118,7 +120,7 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
         <select
           value={sheetSizeId}
           onChange={(e) => setSheetSizeId(e.target.value)}
-          className="w-full p-2.5 rounded-xl border border-[var(--color-neutral-border)] font-semibold text-[var(--color-neutral-text-primary)] outline-none focus:border-[var(--color-accent-base)] bg-white cursor-pointer"
+          className={`w-full p-2.5 rounded-[${radius.card}] border border-[var(--color-neutral-border)] font-semibold text-[var(--color-neutral-text-primary)] outline-none focus:border-[var(--color-accent-base)] bg-white cursor-pointer`}
         >
           {SHEET_SIZE_OPTIONS.map(p => (
             <option key={p.id} value={p.id}>{p.label}</option>
@@ -135,7 +137,7 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
           <button
             type="button"
             onClick={() => setPrinterMode('impresora_oficina')}
-            className={`p-3 rounded-xl border-2 text-left transition cursor-pointer ${
+            className={`p-3 rounded-[${radius.card}] border-2 text-left transition cursor-pointer ${
               printerMode === 'impresora_oficina'
                 ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30'
                 : 'border-[var(--color-neutral-border)] bg-white hover:border-[var(--color-accent-base)]'
@@ -153,7 +155,7 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
           <button
             type="button"
             onClick={() => setPrinterMode('sin_margen_borderless')}
-            className={`p-3 rounded-xl border-2 text-left transition cursor-pointer ${
+            className={`p-3 rounded-[${radius.card}] border-2 text-left transition cursor-pointer ${
               printerMode === 'sin_margen_borderless'
                 ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30'
                 : 'border-[var(--color-neutral-border)] bg-white hover:border-[var(--color-accent-base)]'
@@ -171,7 +173,7 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
       </div>
 
       {/* Preview en vivo */}
-      <div className="bg-[var(--ui-bg-dock)] border border-white/10 rounded-2xl p-4 space-y-3">
+      <div className={`bg-[var(--ui-bg-dock)] border border-white/10 rounded-[${radius.modal}] p-4 space-y-3`}>
         {preview.warning ? (
           <div className="flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 text-[var(--color-accent-amber-bright)] flex-shrink-0 mt-0.5" />
@@ -188,7 +190,7 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
       <button
         onClick={handleExport}
         disabled={isExporting || preview.totalPerSheet === 0}
-        className="w-full p-3 bg-[var(--color-accent-purple)] hover:opacity-90 disabled:opacity-50 text-white font-extrabold text-sm rounded-xl flex items-center justify-center gap-2 transition cursor-pointer shadow-md"
+        className={`w-full p-3 bg-[var(--color-accent-purple)] hover:opacity-90 disabled:opacity-50 text-white font-extrabold text-sm rounded-[${radius.card}] flex items-center justify-center gap-2 transition cursor-pointer ${elevationSystem.raised}`}
       >
         <Download className="w-4 h-4" />
         {isExporting ? 'Generando PDF...' : 'Exportar hoja de tarjetas (frente + dorso)'}

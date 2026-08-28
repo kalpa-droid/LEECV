@@ -17,6 +17,8 @@ import {
 import EditorPanel from './EditorPanel';
 import { Modal } from '../../../shared/core/ui/Modal';
 
+import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
+
 export default function WizardModal({ 
   isOpen, 
   onClose, 
@@ -64,7 +66,7 @@ export default function WizardModal({
       isOpen={isOpen}
       onClose={onClose}
       title={`Asistente Paso a Paso: ${activeStep.title}`}
-      icon={<span className="w-7 h-7 rounded-xl bg-[var(--color-accent-purple)] text-white flex items-center justify-center font-black text-xs shadow-md">{currentStepIndex + 1}</span>}
+      icon={<span className={`w-7 h-7 rounded-[${radius.card}] bg-[var(--color-accent-purple)] text-white flex items-center justify-center font-black text-xs ${elevationSystem.raised}`}>{currentStepIndex + 1}</span>}
       size="4xl"
       className="h-[88vh]"
       footer={
@@ -72,7 +74,7 @@ export default function WizardModal({
           <button
             onClick={prevStep}
             disabled={currentStepIndex === 0}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] disabled:opacity-40 transition cursor-pointer text-[var(--ui-text-primary)]"
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-[${radius.card}] text-xs font-bold border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] disabled:opacity-40 transition cursor-pointer text-[var(--ui-text-primary)]`}
           >
             <ChevronLeft className="w-4 h-4" /> Anterior
           </button>
@@ -84,14 +86,14 @@ export default function WizardModal({
           {currentStepIndex < totalSteps - 1 ? (
             <button
               onClick={nextStep}
-              className="flex items-center gap-1.5 px-6 py-2 rounded-xl bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-bold text-xs shadow-md transition cursor-pointer"
+              className={`flex items-center gap-1.5 px-6 py-2 rounded-[${radius.card}] bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-bold text-xs ${elevationSystem.raised} transition cursor-pointer`}
             >
               Siguiente <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
             <button
               onClick={handleFinish}
-              className="flex items-center gap-1.5 px-6 py-2 rounded-xl bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-black text-xs shadow-lg transition cursor-pointer"
+              className={`flex items-center gap-1.5 px-6 py-2 rounded-[${radius.card}] bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-black text-xs ${elevationSystem.floating} transition cursor-pointer`}
             >
               <Check className="w-4 h-4" /> Finalizar y Ver CV
             </button>
@@ -109,7 +111,7 @@ export default function WizardModal({
         </div>
 
         {/* Wizard Step Selector Tabs Toolbar */}
-        <div className="flex border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] p-1.5 rounded-xl overflow-x-auto flex-shrink-0 no-scrollbar">
+        <div className={`flex border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] p-1.5 rounded-[${radius.card}] overflow-x-auto flex-shrink-0 no-scrollbar`}>
           {wizardSteps.map((step, idx) => {
             const IconComp = step.icon;
             const isActive = idx === currentStepIndex;
@@ -117,9 +119,9 @@ export default function WizardModal({
               <button
                 key={step.id}
                 onClick={() => setCurrentStepIndex(idx)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 flex-shrink-0 transition cursor-pointer ${
+                className={`px-3 py-1.5 rounded-[${radius.control}] text-xs font-bold flex items-center gap-1.5 flex-shrink-0 transition cursor-pointer ${
                   isActive
-                    ? 'bg-[var(--color-accent-purple)] text-white shadow-sm'
+                    ? 'bg-[var(--color-accent-purple)] text-white ${elevationSystem.raised}'
                     : 'text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]'
                 }`}
               >

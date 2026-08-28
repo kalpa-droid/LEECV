@@ -2,6 +2,8 @@ import React from 'react';
 import { ZoomIn, ZoomOut, Smartphone } from 'lucide-react';
 import { UI_THEME_META } from '../uiDesignSystem';
 
+import { elevationSystem, radius } from '../uiDesignSystem';
+
 interface ZoomControlsProps {
   zoomLevel: number;
   setZoomLevel: React.Dispatch<React.SetStateAction<number>>;
@@ -28,11 +30,11 @@ export function ZoomControls({
   const ThemeIcon = themeMeta?.icon;
 
   return (
-    <div className={`flex items-center gap-1 bg-[var(--ui-bg-dock)] px-2 py-1 rounded-xl border border-[var(--ui-dock-border)] shadow-inner select-none ${className}`}>
+    <div className={`flex items-center gap-1 bg-[var(--ui-bg-dock)] px-2 py-1 rounded-[${radius.card}] border border-[var(--ui-dock-border)] ${elevationSystem.raised} select-none ${className}`}>
       <button
         type="button"
         onClick={() => setZoomLevel(prev => Math.max(0.3, parseFloat((prev - 0.1).toFixed(2))))}
-        className="p-1 rounded-lg hover:bg-[var(--color-accent-base)] text-[var(--ui-dock-text)] hover:text-white transition cursor-pointer active:scale-95"
+        className={`p-1 rounded-[${radius.control}] hover:bg-[var(--color-accent-base)] text-[var(--ui-dock-text)] hover:text-white transition cursor-pointer active:scale-95`}
         title="Alejar (-10%)"
       >
         <ZoomOut className={isMobile ? "w-3 h-3" : "w-3.5 h-3.5"} />
@@ -45,7 +47,7 @@ export function ZoomControls({
       <button
         type="button"
         onClick={() => setZoomLevel(prev => Math.min(2.0, parseFloat((prev + 0.1).toFixed(2))))}
-        className="p-1 rounded-lg hover:bg-[var(--color-accent-base)] text-[var(--ui-dock-text)] hover:text-white transition cursor-pointer active:scale-95"
+        className={`p-1 rounded-[${radius.control}] hover:bg-[var(--color-accent-base)] text-[var(--ui-dock-text)] hover:text-white transition cursor-pointer active:scale-95`}
         title="Acercar (+10%)"
       >
         <ZoomIn className={isMobile ? "w-3 h-3" : "w-3.5 h-3.5"} />
@@ -54,7 +56,7 @@ export function ZoomControls({
       <button
         type="button"
         onClick={triggerAutoFit}
-        className="px-2 py-0.5 rounded-lg bg-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-hover)] text-white text-[10px] font-black transition flex items-center gap-1 shadow-sm cursor-pointer ml-1 active:scale-95"
+        className={`px-2 py-0.5 rounded-[${radius.control}] bg-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-hover)] text-white text-[10px] font-black transition flex items-center gap-1 ${elevationSystem.raised} cursor-pointer ml-1 active:scale-95`}
         title="Auto-encajar el diseño al tamaño de pantalla"
       >
         <Smartphone className="w-3 h-3" />
@@ -67,7 +69,7 @@ export function ZoomControls({
           <button
             type="button"
             onClick={onCycleTheme}
-            className="p-1 rounded-lg hover:bg-[var(--color-accent-base)] text-[var(--ui-dock-text)] hover:text-white transition cursor-pointer active:scale-95 flex items-center gap-1"
+            className={`p-1 rounded-[${radius.control}] hover:bg-[var(--color-accent-base)] text-[var(--ui-dock-text)] hover:text-white transition cursor-pointer active:scale-95 flex items-center gap-1`}
             title={`Tema actual: ${themeMeta.label}. Clic para cambiar.`}
           >
             <ThemeIcon className={isMobile ? "w-3 h-3" : "w-3.5 h-3.5"} />

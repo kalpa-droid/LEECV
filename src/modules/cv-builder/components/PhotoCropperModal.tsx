@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Camera, ZoomIn, ZoomOut, RotateCw, Check, Upload } from 'lucide-react';
 import { validateImageFile } from '../../../shared/core/utils/validateFile';
 import { useToast } from '../../../shared/core/ui/Toast';
-import { button } from '../../../shared/core/uiDesignSystem';
+import { button, elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { Modal } from '../../../shared/core/ui/Modal';
 
 export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, currentPhoto }: any) {
@@ -124,7 +124,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
         {!imageSrc ? (
           <div 
             onClick={() => fileInputRef.current?.click()}
-            className={`w-full h-64 border-2 border-dashed border-[var(--color-neutral-border-strong)] rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-muted)] transition group`}
+            className={`w-full h-64 border-2 border-dashed border-[var(--color-neutral-border-strong)] rounded-[${radius.card}] flex flex-col items-center justify-center cursor-pointer hover:border-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-muted)] transition group`}
           >
             <div className={`w-16 h-16 rounded-full bg-[var(--color-secondary-muted)] flex items-center justify-center text-[var(--color-secondary-text)] group-hover:scale-110 transition duration-300 mb-3`}>
               <Upload className="w-8 h-8" />
@@ -135,7 +135,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
         ) : (
           <div className="w-full flex flex-col items-center">
             {/* Canvas viewport container */}
-            <div className={`relative border-4 border-[var(--color-secondary-base)] rounded-xl overflow-hidden shadow-lg bg-black/40 cursor-grab active:cursor-grabbing`}>
+            <div className={`relative border-4 border-[var(--color-secondary-base)] rounded-[${radius.card}] overflow-hidden ${elevationSystem.floating} bg-black/40 cursor-grab active:cursor-grabbing`}>
               <canvas 
                 ref={canvasRef}
                 width={280}
@@ -146,11 +146,11 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
                 onMouseLeave={handleMouseUp}
                 className="touch-none"
               />
-              <div className="absolute inset-0 border-2 border-white/40 pointer-events-none rounded-lg" />
+              <div className={`absolute inset-0 border-2 border-white/40 pointer-events-none rounded-[${radius.control}]`} />
             </div>
 
             {/* Controls bar */}
-            <div className={`w-full mt-5 bg-[var(--color-neutral-surface-muted)] p-4 rounded-xl space-y-3 border border-[var(--color-neutral-border)]`}>
+            <div className={`w-full mt-5 bg-[var(--color-neutral-surface-muted)] p-4 rounded-[${radius.card}] space-y-3 border border-[var(--color-neutral-border)]`}>
               <div className="flex items-center gap-3">
                 <ZoomOut className="w-4 h-4 text-white/60" />
                 <input 
@@ -170,7 +170,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
                 <button 
                   type="button"
                   onClick={() => setRotation((r) => (r + 90) % 360)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 text-xs font-medium hover:bg-white/20 transition cursor-pointer"
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[${radius.control}] bg-white/10 text-xs font-medium hover:bg-white/20 transition cursor-pointer`}
                 >
                   <RotateCw className="w-3.5 h-3.5" /> Rotar 90°
                 </button>

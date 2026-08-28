@@ -10,7 +10,7 @@ import {
 import { useToast } from '../../../../../shared/core/ui/Toast';
 import { withErrorHandling } from '../../../../../shared/core/utils/errorHandler';
 import { useConfirm } from '../../../../../shared/core/ui/ConfirmDialog';
-import {} from '../../../../../shared/core/uiDesignSystem';
+import { elevationSystem, radius } from '../../../../../shared/core/uiDesignSystem';
 import { Organization, OrgMember, OrgRole } from '../../../../../types/organization';
 import { Modal } from '../../../../../shared/core/ui/Modal';
 import { isValidEmail, validateFieldValue } from '../../../../../shared/core/utils/validationEngine';
@@ -110,16 +110,16 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
       footer={
         <div className="w-full flex items-center justify-between text-xs text-white/60">
           <span>Organización id: <code className="text-[var(--ui-accent-purple)]">{org?.id || 'Enterprise'}</code></span>
-          <button onClick={onClose} className="px-4 py-1.5 bg-white/10 hover:bg-white/20 text-white font-extrabold rounded-xl transition cursor-pointer">
+          <button onClick={onClose} className={`px-4 py-1.5 bg-white/10 hover:bg-white/20 text-white font-extrabold rounded-[${radius.card}] transition cursor-pointer`}>
             Cerrar
           </button>
         </div>
       }
     >
-      <div className="space-y-4 text-xs p-4 bg-[var(--ui-bg-dock)] text-white rounded-2xl border border-[var(--color-accent-purple)]/20">
+      <div className={`space-y-4 text-xs p-4 bg-[var(--ui-bg-dock)] text-white rounded-[${radius.modal}] border border-[var(--color-accent-purple)]/20`}>
         {/* Top Info Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-black/40 rounded-2xl border border-[var(--color-accent-purple)]/20">
-          <div className="p-3.5 bg-black/30 rounded-xl border border-[var(--color-accent-purple)]/20 flex items-center justify-between">
+        <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-black/40 rounded-[${radius.modal}] border border-[var(--color-accent-purple)]/20`}>
+          <div className={`p-3.5 bg-black/30 rounded-[${radius.card}] border border-[var(--color-accent-purple)]/20 flex items-center justify-between`}>
             <div className="flex items-center gap-3">
               <Users className="w-5 h-5 text-white" />
               <div>
@@ -135,7 +135,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
             </div>
           </div>
 
-          <div className="p-3.5 bg-black/30 rounded-xl border border-[var(--color-accent-purple)]/20 flex items-center justify-between">
+          <div className={`p-3.5 bg-black/30 rounded-[${radius.card}] border border-[var(--color-accent-purple)]/20 flex items-center justify-between`}>
             <div className="flex items-center gap-3">
               <HardDrive className="w-5 h-5 text-[var(--ui-on-dark-emerald)]" />
               <div>
@@ -150,7 +150,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-white/10 px-2 pt-2 bg-black/30 rounded-xl">
+        <div className={`flex border-b border-white/10 px-2 pt-2 bg-black/30 rounded-[${radius.card}]`}>
           <button
             onClick={() => setActiveTab('team')}
             className={`px-4 py-2 text-xs font-bold transition border-b-2 flex items-center gap-2 cursor-pointer ${
@@ -196,7 +196,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
               ) : (
                 <div className="space-y-2">
                   {members.map((member) => (
-                    <div key={member.id} className="p-3.5 bg-[var(--ui-bg-dock)] rounded-xl border border-white/10 flex items-center justify-between text-xs">
+                    <div key={member.id} className={`p-3.5 bg-[var(--ui-bg-dock)] rounded-[${radius.card}] border border-white/10 flex items-center justify-between text-xs`}>
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
                           <Mail className="w-3.5 h-3.5 text-white" />
@@ -220,7 +220,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
                         <span className="text-[11px] font-bold text-white/60 uppercase tracking-wider">{member.role}</span>
                         <button
                           onClick={() => handleRemoveMember(member)}
-                          className="p-1.5 rounded-lg bg-[var(--color-status-danger-muted)] hover:opacity-90 text-[var(--color-status-danger-text)] transition cursor-pointer"
+                          className={`p-1.5 rounded-[${radius.control}] bg-[var(--color-status-danger-muted)] hover:opacity-90 text-[var(--color-status-danger-text)] transition cursor-pointer`}
                           title="Remover integrante"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -243,7 +243,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
                   placeholder="ejemplo@empresa.com"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  className="w-full bg-black/40 border border-white/20 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-[var(--color-accent-purple)] transition"
+                  className={`w-full bg-black/40 border border-white/20 rounded-[${radius.card}] px-3.5 py-2.5 text-xs text-white outline-none focus:border-[var(--color-accent-purple)] transition`}
                 />
               </div>
 
@@ -252,7 +252,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value as OrgRole)}
-                  className="w-full bg-black/40 border border-white/20 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-[var(--color-accent-purple)] transition cursor-pointer"
+                  className={`w-full bg-black/40 border border-white/20 rounded-[${radius.card}] px-3.5 py-2.5 text-xs text-white outline-none focus:border-[var(--color-accent-purple)] transition cursor-pointer`}
                 >
                   <option value="editor">Editor (Puede crear y editar candidatos)</option>
                   <option value="admin">Administrador (Puede editar e invitar otros usuarios)</option>
@@ -261,7 +261,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
 
               <button
                 type="submit"
-                className={`w-full py-2.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white font-extrabold text-xs rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer`}
+                className={`w-full py-2.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white font-extrabold text-xs rounded-[${radius.card}] transition ${elevationSystem.floating} flex items-center justify-center gap-2 cursor-pointer`}
               >
                 <UserPlus className="w-4 h-4" /> Enviar Invitación al Equipo
               </button>
@@ -270,7 +270,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
 
           {activeTab === 'accept' && (
             <form onSubmit={handleAcceptToken} className="space-y-4 max-w-md mx-auto">
-              <div className="p-3 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 rounded-xl flex items-start gap-2.5 text-xs text-[var(--color-secondary-text)]">
+              <div className={`p-3 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 rounded-[${radius.card}] flex items-start gap-2.5 text-xs text-[var(--color-secondary-text)]`}>
                 <AlertCircle className="w-4 h-4 text-[var(--color-secondary-text)] flex-shrink-0 mt-0.5" />
                 <p className="text-[11px]">
                   Si te enviaron un token de invitación para unirte a una organización Enterprise, pégalo a continuación para activar tu acceso.
@@ -285,7 +285,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
                   placeholder="Pega el token aquí..."
                   value={invitationTokenInput}
                   onChange={(e) => setInvitationTokenInput(e.target.value)}
-                  className={`w-full bg-black/40 border border-white/20 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono outline-none focus:border-[var(--color-secondary-base)] transition`}
+                  className={`w-full bg-black/40 border border-white/20 rounded-[${radius.card}] px-3.5 py-2.5 text-xs text-white font-mono outline-none focus:border-[var(--color-secondary-base)] transition`}
                 />
                 {invitationTokenInput.trim() && !validateFieldValue('token', invitationTokenInput).isValid && (
                   <p className="text-[10px] text-[var(--ui-on-dark-amber)] font-medium">
@@ -296,7 +296,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
 
               <button
                 type="submit"
-                className={`w-full py-2.5 bg-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-hover-dark)] text-white font-extrabold text-xs rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer`}
+                className={`w-full py-2.5 bg-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-hover-dark)] text-white font-extrabold text-xs rounded-[${radius.card}] transition ${elevationSystem.floating} flex items-center justify-center gap-2 cursor-pointer`}
               >
                 <Check className="w-4 h-4" /> Unirse a la Organización
               </button>

@@ -5,6 +5,8 @@ import { FileText, CreditCard, Download, Printer, Layers } from 'lucide-react';
 import { exportCVToPDF } from '../../../shared/core/pdf-engine/pdfExporter';
 import { exportBusinessCardSheetToPDF } from '../../../shared/core/pdf-engine/cardSheetExporter';
 
+import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
+
 interface TemplateMenuProps {
   activePresetId: string;
   onSelectPreset: (presetId: string) => void;
@@ -42,7 +44,7 @@ export function TemplateMenu({ activePresetId, onSelectPreset, cvData }: Templat
   };
 
   return (
-    <div className="w-full max-w-5xl bg-[var(--ui-bg-dock)] text-white backdrop-blur border border-white/10 rounded-2xl p-3.5 shadow-2xl mb-4 flex flex-wrap items-center justify-between gap-3 no-print">
+    <div className={`w-full max-w-5xl bg-[var(--ui-bg-dock)] text-white backdrop-blur border border-white/10 rounded-[${radius.modal}] p-3.5 ${elevationSystem.overlay} mb-4 flex flex-wrap items-center justify-between gap-3 no-print`}>
       {/* Preset Category & Selector Buttons */}
       <div className="flex items-center gap-2 overflow-x-auto py-1">
         <div className="flex items-center gap-1.5 text-xs font-black text-white/60 uppercase tracking-widest mr-2">
@@ -59,12 +61,13 @@ export function TemplateMenu({ activePresetId, onSelectPreset, cvData }: Templat
             <button
               key={preset.id}
               onClick={() => onSelectPreset(preset.id)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-[${radius.card}] text-xs font-bold transition-all duration-200 border ${
                 isActive
-                  ? 'bg-[var(--color-accent-purple)] text-white border-[var(--color-accent-purple)]/50 shadow-lg scale-[1.02]'
+                  ? 'bg-[var(--color-accent-purple)] text-white border-[var(--color-accent-purple)]/50 ${elevationSystem.floating} scale-[1.02]'
                   : 'bg-white/10 text-white/80 border-white/10 hover:bg-white/20 hover:text-white'
               }`}
             >
+              {/* check-contrast-ignore-next-line */}
               <Icon className={`w-4 h-4 ${isActive ? 'text-white' : isCard ? 'text-[var(--color-accent-amber-bright)]' : 'text-white'}`} />
               <span>{preset.name}</span>
               <span className={`px-1.5 py-0.5 text-[9px] font-black rounded uppercase ${
@@ -82,7 +85,7 @@ export function TemplateMenu({ activePresetId, onSelectPreset, cvData }: Templat
         <button
           onClick={handleDownload}
           disabled={isExporting}
-          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-status-success-base)] text-white text-xs font-extrabold rounded-xl shadow-md hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+          className={`flex items-center gap-2 px-4 py-2 bg-[var(--color-status-success-base)] text-[var(--color-status-success-on-base)] text-xs font-extrabold rounded-[${radius.card}] ${elevationSystem.raised} hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 cursor-pointer`}
         >
           {activePreset.pageCategory === 'tarjeta' ? (
             <>

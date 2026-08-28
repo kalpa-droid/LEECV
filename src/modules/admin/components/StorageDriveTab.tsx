@@ -6,6 +6,8 @@ import { useToast } from '../../../shared/core/ui/Toast';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
 
+import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
+
 export function StorageDriveTab() {
   const { showSuccess, showError } = useToast();
   const { confirm } = useConfirm();
@@ -102,7 +104,7 @@ export function StorageDriveTab() {
   };
 
   return (
-    <div className="bg-[var(--ui-bg-card)] rounded-2xl p-6 shadow-sm border border-[var(--color-neutral-border)] space-y-6">
+    <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-6 ${elevationSystem.raised} border border-[var(--color-neutral-border)] space-y-6`}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[var(--color-neutral-border)] pb-4">
         <div>
@@ -118,7 +120,7 @@ export function StorageDriveTab() {
         <button
           onClick={refreshDiagnostics}
           disabled={loading}
-          className="px-3.5 py-2 bg-[var(--color-neutral-text-primary)] hover:opacity-90 text-white font-extrabold text-xs rounded-xl shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+          className={`px-3.5 py-2 bg-[var(--color-neutral-text-primary)] hover:opacity-90 text-white font-extrabold text-xs rounded-[${radius.card}] ${elevationSystem.raised} transition flex items-center gap-1.5 cursor-pointer`}
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           <span>Refrescar Diagnóstico</span>
@@ -128,7 +130,7 @@ export function StorageDriveTab() {
       {/* Metrics Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Supabase Status */}
-        <div className="p-4 bg-[var(--color-neutral-surface-muted)] rounded-2xl border border-[var(--color-neutral-border)] space-y-2">
+        <div className={`p-4 bg-[var(--color-neutral-surface-muted)] rounded-[${radius.modal}] border border-[var(--color-neutral-border)] space-y-2`}>
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[var(--color-neutral-text-secondary)] uppercase">Supabase Cloud DB</span>
             <Cloud className="w-4 h-4 text-[var(--color-secondary-text)]" />
@@ -145,7 +147,7 @@ export function StorageDriveTab() {
         </div>
 
         {/* Local Storage */}
-        <div className="p-4 bg-[var(--color-neutral-surface-muted)] rounded-2xl border border-[var(--color-neutral-border)] space-y-2">
+        <div className={`p-4 bg-[var(--color-neutral-surface-muted)] rounded-[${radius.modal}] border border-[var(--color-neutral-border)] space-y-2`}>
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[var(--color-neutral-text-secondary)] uppercase">IndexedDB Navegador</span>
             <Database className="w-4 h-4 text-[var(--color-accent-purple-text)]" />
@@ -162,7 +164,7 @@ export function StorageDriveTab() {
         </div>
 
         {/* Storage Health Status */}
-        <div className="p-4 bg-[var(--color-neutral-surface-muted)] rounded-2xl border border-[var(--color-neutral-border)] space-y-2">
+        <div className={`p-4 bg-[var(--color-neutral-surface-muted)] rounded-[${radius.modal}] border border-[var(--color-neutral-border)] space-y-2`}>
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[var(--color-neutral-text-secondary)] uppercase">Google Drive & Servidor</span>
             <Cpu className="w-4 h-4 text-[var(--color-status-success-text)]" />
@@ -187,7 +189,7 @@ export function StorageDriveTab() {
           <button
             type="button"
             onClick={handleTestWrite}
-            className="p-3 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 rounded-xl text-left transition flex items-center justify-between cursor-pointer"
+            className={`p-3 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 rounded-[${radius.card}] text-left transition flex items-center justify-between cursor-pointer`}
           >
             <div>
               <div className="font-extrabold text-xs text-[var(--color-secondary-text)]">Prueba de Lectura/Escritura</div>
@@ -199,7 +201,7 @@ export function StorageDriveTab() {
           <button
             type="button"
             onClick={handleClearLocalCache}
-            className="p-3 bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/30 rounded-xl text-left transition flex items-center justify-between cursor-pointer"
+            className={`p-3 bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/30 rounded-[${radius.card}] text-left transition flex items-center justify-between cursor-pointer`}
           >
             <div>
               <div className="font-extrabold text-xs text-[var(--color-status-danger-text)]">Limpiar Caché de Borradores Temporales</div>
