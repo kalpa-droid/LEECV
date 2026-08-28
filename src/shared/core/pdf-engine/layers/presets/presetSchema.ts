@@ -19,6 +19,7 @@ export interface ColorPalette {
   accent: string;
   text: string;
   textOnPrimary: string;
+  background: string;
 }
 
 export interface ColorPreset {

@@ -23,6 +23,7 @@ export const cvClasicoPreset: Preset = {
     accent: '#40a08e',
     text: '#333333',
     textOnPrimary: '#ffffff',
+    background: '#ffffff',
   },
   typography: {
     title: 18, sectionHeading: 10, itemTitle: 10.5, body: 9.5, caption: 9,

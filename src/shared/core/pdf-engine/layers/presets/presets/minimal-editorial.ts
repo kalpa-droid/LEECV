@@ -25,6 +25,7 @@ export const minimalEditorialPreset: Preset = {
     accent: '#b5462f',
     text: '#2b2b2b',
     textOnPrimary: '#2b2b2b',
+    background: '#ffffff',
   },
   typography: {
     title: 20, sectionHeading: 9.5, itemTitle: 10, body: 9, caption: 8.5,

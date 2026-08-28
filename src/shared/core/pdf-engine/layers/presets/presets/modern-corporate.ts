@@ -26,6 +26,7 @@ export const modernCorporatePreset: Preset = {
     accent: '#c9a227',
     text: '#1a1a1a',
     textOnPrimary: '#ffffff',
+    background: '#ffffff',
   },
   typography: {
     title: 19, sectionHeading: 10.5, itemTitle: 10.5, body: 9.5, caption: 9,

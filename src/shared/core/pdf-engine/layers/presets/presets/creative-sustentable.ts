@@ -23,6 +23,7 @@ export const creativeSustentablePreset: Preset = {
     accent: '#52b788',
     text: '#111827',
     textOnPrimary: '#ffffff',
+    background: '#ffffff',
   },
   typography: {
     title: 20,

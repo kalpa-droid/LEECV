@@ -42,6 +42,21 @@ for (const preset of presets) {
   } else {
     console.log(`  ✓ Preset [${preset.id}] - OK (Delta Hue Acentos: ${coherence.hueDeltaDeg}°).`);
   }
+
+  // PRUEBA DE INTEGRACIÓN REAL DE SUPERFICIE DE SECTOR
+  const surfaceModes = preset.sectorSurfaceMode || { sidebar: 'dark', main: 'light' };
+  const sidebarPal = surfaceModes.sidebar === 'dark' ? surfaces.dark : surfaces.light;
+  const mainPal = surfaceModes.main === 'light' ? surfaces.light : surfaces.dark;
+
+  totalChecks++;
+  if (surfaceModes.sidebar === 'dark' && surfaceModes.main === 'light') {
+    if (sidebarPal.background === mainPal.background) {
+      console.error(`❌ FALLO DE INTEGRACIÓN DE SUPERFICIE [Preset: ${preset.id}]: El fondo del sidebar (${sidebarPal.background}) es idéntico al fondo de main (${mainPal.background}) en un tema de superficie oscura.`);
+      failedChecks++;
+    } else {
+      console.log(`  ✓ Preset [${preset.id}] - Integración de superficie de sector OK (Sidebar: ${sidebarPal.background}, Main: ${mainPal.background}).`);
+    }
+  }
 }
 
 if (failedChecks > 0) {

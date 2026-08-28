@@ -66,7 +66,8 @@ export function translateThemeToSurfaces(colorPreset: ColorPreset): SurfaceTrans
     secondary: lightSecondary,
     accent: lightAccent,
     text: lightText,
-    textOnPrimary: getContrastRatio(lightPrimary, '#ffffff') >= 4.5 ? '#ffffff' : '#0f172a'
+    textOnPrimary: getContrastRatio(lightPrimary, '#ffffff') >= 4.5 ? '#ffffff' : '#0f172a',
+    background: basePalette.background || '#ffffff'
   };
 
   // 3. Variante Oscura (Sidebar Column) - OKLCH Lightness Inversion
@@ -108,7 +109,8 @@ export function translateThemeToSurfaces(colorPreset: ColorPreset): SurfaceTrans
     secondary: darkSecondaryHex,
     accent: darkAccentHex,
     text: darkText,
-    textOnPrimary: getContrastRatio(darkPrimaryHex, '#ffffff') >= 4.5 ? '#ffffff' : '#0f172a'
+    textOnPrimary: getContrastRatio(darkPrimaryHex, '#ffffff') >= 4.5 ? '#ffffff' : '#0f172a',
+    background: darkPrimaryHex
   };
 
   return {

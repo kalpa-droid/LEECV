@@ -40,6 +40,7 @@ export const tarjetaPersonalPreset: Preset = {
     accent: '#e94560',
     text: '#1a1a2e',
     textOnPrimary: '#ffffff',
+    background: '#ffffff',
   },
   typography: {
     title: 13, sectionHeading: 7, itemTitle: 8, body: 7.5, caption: 6.5,

@@ -79,6 +79,7 @@ export function generateHarmoniousPalette(
     secondary: secondaryHex,
     accent: accentHex,
     text: textHex,
-    textOnPrimary: textOnPrimaryHex
+    textOnPrimary: textOnPrimaryHex,
+    background: '#ffffff'
   };
 }
