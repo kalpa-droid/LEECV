@@ -65,5 +65,8 @@ Buscá primero si ya existe algo con un nombre parecido (`grep -rn "nombreConcep
 Este repo ya tuvo el problema de tener DOS sistemas para el mismo concepto
 (`documentEngine/` vs `capabilities/capabilityRegistry.ts`, `coverPreset`/`layoutStyle`/`layout.layoutStyle`/`activePresetId`
 todos significando "qué plantilla está elegida") — uno de los dos siempre
-termina muerto y confunde a quien lo encuentra después. Si dudás si ya existe,
-preguntá antes de crear uno nuevo.
+termina muerto y confunde a quien lo encuentra después. Si dudás si ya existe, preguntá antes de crear uno nuevo.
+
+## Regla 5 — Limitaciones conocidas de scripts de auditoría
+
+- **`scripts/check-contrast.js`**: No resuelve gradientes `bg-[image:var(--gradient-X)]`, sólo fondos de color sólido (`bg-[var(--color-X)]`). Al usar un gradiente para el fondo de un botón u objeto interactivo (ej. `--gradient-gold`), verificar manualmente que el color del texto sobre el gradiente cumpla la relación de contraste WCAG 2.1 AA (mínimo 4.5:1).
