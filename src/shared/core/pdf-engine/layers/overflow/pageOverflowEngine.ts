@@ -32,49 +32,63 @@ import { deriveRecordScale } from '../typography/typographyHierarchyEngine';
 import { resolveRecordLayout, RecordLayoutTemplate } from '../records/recordSpatialLayoutEngine';
 import { arrangeRecordFields } from '../records/fieldPlacementEngine';
 
+export interface RecordHeightEstimate {
+  atomicHeaderHeightPt: number;
+  flowableDescriptionHeightPt: number;
+  totalHeightPt: number;
+}
+
 const A4_HEIGHT_PT = 841.89;
 
 /**
- * Estima la altura en puntos (pt) ocupada por un registro estructurado.
+ * Estima la altura en puntos (pt) ocupada por un registro estructurado,
+ * desglosando el bloque atómico de cabecera de la descripción fluyente.
  */
 export function estimateRecordHeightPt(
   record: any,
   typography: TypographyScale,
-  layoutTemplate: RecordLayoutTemplate = 'stacked-clean'
-): number {
+  layoutTemplate: RecordLayoutTemplate = 'stacked-clean',
+  subColumnsCount: number = 1
+): RecordHeightEstimate {
   const structured = buildStructuredRecordLayout(record.fields || record);
   const arranged = arrangeRecordFields(structured, layoutTemplate);
   const scale = deriveRecordScale(typography, typography.recordScaleRatios);
   const spatial = resolveRecordLayout(layoutTemplate);
 
-  let height = 0;
+  let atomicH = 0;
 
   if (arranged.headerTitle || arranged.headerSubtitle) {
     if (spatial.isInlineCompact) {
-      height += Math.max(scale.title, scale.subtitle) + 4;
+      atomicH += Math.max(scale.title, scale.subtitle) + 4;
     } else {
-      if (arranged.headerTitle) height += scale.title + 4;
-      if (arranged.headerSubtitle) height += scale.subtitle + 3;
+      if (arranged.headerTitle) atomicH += scale.title + 4;
+      if (arranged.headerSubtitle) atomicH += scale.subtitle + 3;
     }
   }
 
   if (arranged.inlineBadges.length > 0) {
-    height += scale.badge + 4;
+    atomicH += scale.badge + 4;
   }
 
   if (arranged.extrasList.length > 0) {
-    height += arranged.extrasList.length * (scale.extra + 3);
+    atomicH += arranged.extrasList.length * (scale.extra + 3);
   }
 
+  let descH = 0;
   if (arranged.blockDescription) {
     const lines = arranged.blockDescription.split('\n').length;
-    height += lines * (scale.description * scale.lineHeightBody);
+    descH += lines * (scale.description * scale.lineHeightBody);
   }
 
   const paddingTotal = spatial.containerStyle.padding * 2;
   const marginBottom = spatial.containerStyle.marginBottom;
 
-  return height + paddingTotal + marginBottom;
+  const cols = Math.max(1, subColumnsCount);
+  const atomicHeaderHeightPt = Math.round((atomicH + paddingTotal + marginBottom) / cols);
+  const flowableDescriptionHeightPt = Math.round(descH / cols);
+  const totalHeightPt = atomicHeaderHeightPt + flowableDescriptionHeightPt;
+
+  return { atomicHeaderHeightPt, flowableDescriptionHeightPt, totalHeightPt };
 }
 
 /**
@@ -121,10 +135,12 @@ export function processPageOverflow(
       let secH = titleH;
 
       for (const rec of section.records) {
-        const rH = estimateRecordHeightPt(rec, typography);
-        if (curH + secH + rH <= availableHeightPt - 20) {
+        const subCols = (section as any).subColumnsCount || 1;
+        const est = estimateRecordHeightPt(rec, typography, 'stacked-clean', subCols);
+        // Evaluar la decisión sobre atomicHeaderHeightPt: si el encabezado entra en P1, se queda
+        if (curH + secH + est.atomicHeaderHeightPt <= availableHeightPt - 20) {
           fitRecs.push(rec);
-          secH += rH;
+          secH += est.totalHeightPt;
         } else {
           hasOverflow = true;
           overRecs.push(rec);

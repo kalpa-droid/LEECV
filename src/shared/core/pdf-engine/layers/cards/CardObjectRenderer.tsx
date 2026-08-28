@@ -167,37 +167,44 @@ export function CardObjectRenderer({
   });
 
   return (
-    <View style={styles.cardContainer} wrap={false}>
-      <View style={styles.headerRow}>
-        <Text style={styles.titleText}>{arranged.headerTitle || title}</Text>
-        {arranged.sideBadge ? <Text style={styles.badgeText}>{arranged.sideBadge}</Text> : null}
+    <View style={styles.cardContainer}>
+      {/*
+        Bloque atómico: título + institución + insignias NUNCA deben quedar
+        separados entre dos hojas — por eso wrap={false} acá adentro, no en
+        todo el contenedor.
+      */}
+      <View wrap={false}>
+        <View style={styles.headerRow}>
+          <Text style={styles.titleText}>{arranged.headerTitle || title}</Text>
+          {arranged.sideBadge ? <Text style={styles.badgeText}>{arranged.sideBadge}</Text> : null}
+        </View>
+
+        {arranged.headerSubtitle ? <Text style={styles.subtitleText}>{arranged.headerSubtitle}</Text> : null}
+
+        {/* Dynamic Badge Bar */}
+        {arranged.inlineBadges.length > 0 && (
+          <View style={styles.badgeRow}>
+            {arranged.inlineBadges.map((b) => (
+              <Text key={b.id} style={styles.badgePill}>
+                {b.label}: {b.value}
+              </Text>
+            ))}
+          </View>
+        )}
+
+        {/* Extras Rows */}
+        {arranged.extrasList.length > 0 && (
+          <View style={styles.extraRow}>
+            {arranged.extrasList.map((e) => (
+              <Text key={e.id} style={styles.extraText}>
+                • {e.label}: {e.value}
+              </Text>
+            ))}
+          </View>
+        )}
       </View>
 
-      {arranged.headerSubtitle ? <Text style={styles.subtitleText}>{arranged.headerSubtitle}</Text> : null}
-
-      {/* Dynamic Badge Bar */}
-      {arranged.inlineBadges.length > 0 && (
-        <View style={styles.badgeRow}>
-          {arranged.inlineBadges.map((b) => (
-            <Text key={b.id} style={styles.badgePill}>
-              {b.label}: {b.value}
-            </Text>
-          ))}
-        </View>
-      )}
-
-      {/* Extras Rows */}
-      {arranged.extrasList.length > 0 && (
-        <View style={styles.extraRow}>
-          {arranged.extrasList.map((e) => (
-            <Text key={e.id} style={styles.extraText}>
-              • {e.label}: {e.value}
-            </Text>
-          ))}
-        </View>
-      )}
-
-      {/* Block Description */}
+      {/* Block Description — SIN wrap={false}: fluye libremente entre hojas */}
       {arranged.blockDescription ? <Text style={styles.descText}>{arranged.blockDescription}</Text> : null}
     </View>
   );

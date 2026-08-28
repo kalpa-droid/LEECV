@@ -52,3 +52,23 @@ export function resolveSubColumns(contentWidthPt: number, columns: SubColumnDefi
     return resolved;
   });
 }
+
+/**
+ * Helper para generar sub-columnas equitativas (ej. 2 o 3 columnas iguales) a partir de subColumnsCount.
+ */
+export function createSubColumnGrid(
+  contentWidthPt: number,
+  subColumnsCount: number,
+  sectionIds: string[] = []
+): ResolvedSubColumn[] {
+  const count = Math.max(1, Math.min(4, subColumnsCount));
+  const percentPerCol = 100 / count;
+  const defs: SubColumnDefinition[] = Array.from({ length: count }, (_, idx) => ({
+    id: `subcol-${idx + 1}`,
+    widthPercent: percentPerCol,
+    order: idx + 1,
+    sectionIds: sectionIds
+  }));
+
+  return resolveSubColumns(contentWidthPt, defs);
+}

@@ -35,10 +35,16 @@ export interface TypographyPreset {
   typography: TypographyScale;
 }
 
+export interface PresetSectionOrder {
+  sectorRole: string;
+  sectionIds: string[];
+  subColumnsCount?: number;
+}
+
 export interface ColumnLayoutPreset {
   id: string;
   name: string;
-  sectionOrder: { sectorRole: string; sectionIds: string[] }[];
+  sectionOrder: PresetSectionOrder[];
 }
 
 export interface TypographyScale {
@@ -80,7 +86,7 @@ export interface Preset {
   sectors: SectorDefinition[];
   fixedObjects: FixedObjectDefinition[];
   /** Orden en el que las secciones de contenido se acomodan dentro de cada sector */
-  sectionOrder: { sectorRole: string; sectionIds: string[] }[];
+  sectionOrder: PresetSectionOrder[];
   palette: ColorPalette;
   paletteSeed?: {
     seedHex: string;
@@ -112,7 +118,7 @@ export interface Preset {
   back?: {
     sectors: SectorDefinition[];
     fixedObjects: FixedObjectDefinition[];
-    sectionOrder: { sectorRole: string; sectionIds: string[] }[];
+    sectionOrder: PresetSectionOrder[];
   };
 
   /** Políticas de adorno y decoración visual (bordes, separadores, sombras, adornos vectoriales) */

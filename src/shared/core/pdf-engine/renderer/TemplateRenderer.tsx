@@ -16,6 +16,7 @@ import { processPageOverflow } from '../layers/overflow/pageOverflowEngine';
 import { OrnamentRenderer } from './OrnamentRenderer';
 import { resolveDecorativeStyles } from '../layers/decorations/decorativeLayerEngine';
 import { flattenPresetForATS } from '../layers/ats/atsFlatteningEngine';
+import { createSubColumnGrid } from '../layers/subColumns/resolveSubColumns';
 
 export interface TemplateRendererProps {
   preset: Preset;
