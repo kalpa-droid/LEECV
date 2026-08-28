@@ -57,21 +57,24 @@ export function estimateRecordHeightPt(
 
   let atomicH = 0;
 
+  // Gaps alineados al CSS real de CardObjectRenderer:
+  // headerRow: marginBottom 2, subtitleText: marginBottom 3, badgeRow: marginTop 2 + marginBottom 4
   if (arranged.headerTitle || arranged.headerSubtitle) {
     if (spatial.isInlineCompact) {
-      atomicH += Math.max(scale.title, scale.subtitle) + 4;
+      atomicH += Math.max(scale.title, scale.subtitle) + 2;
     } else {
-      if (arranged.headerTitle) atomicH += scale.title + 4;
-      if (arranged.headerSubtitle) atomicH += scale.subtitle + 3;
+      if (arranged.headerTitle) atomicH += scale.title + 2;   // headerRow marginBottom: 2
+      if (arranged.headerSubtitle) atomicH += scale.subtitle + 3; // subtitleText marginBottom: 3
     }
   }
 
   if (arranged.inlineBadges.length > 0) {
-    atomicH += scale.badge + 4;
+    atomicH += scale.badge + 6; // badgeRow: marginTop 2 + marginBottom 4
   }
 
   if (arranged.extrasList.length > 0) {
-    atomicH += arranged.extrasList.length * (scale.extra + 3);
+    // extraRow: marginTop 2 + marginBottom 3 (shared), extras inline with gap
+    atomicH += (scale.extra + 2) * Math.min(arranged.extrasList.length, 2) + 3;
   }
 
   let descH = 0;
@@ -80,11 +83,13 @@ export function estimateRecordHeightPt(
     descH += lines * (scale.description * scale.lineHeightBody);
   }
 
-  const paddingTotal = spatial.containerStyle.padding * 2;
+  // containerStyle.padding aplica solo vertical (paddingVertical ≈ padding en stacked-clean)
+  // pero en el render real cardContainer usa padding (uniforme), el padding horizontal no afecta altura
+  const paddingVertical = spatial.containerStyle.padding * 2;
   const marginBottom = spatial.containerStyle.marginBottom;
 
   const cols = Math.max(1, subColumnsCount);
-  const atomicHeaderHeightPt = Math.round((atomicH + paddingTotal + marginBottom) / cols);
+  const atomicHeaderHeightPt = Math.round((atomicH + paddingVertical + marginBottom) / cols);
   const flowableDescriptionHeightPt = Math.round(descH / cols);
   const totalHeightPt = atomicHeaderHeightPt + flowableDescriptionHeightPt;
 
@@ -178,8 +183,8 @@ export function processPageOverflow(
 
   while ((currentSidebar.length > 0 || currentMain.length > 0) && pageNum <= MAX_PAGES) {
     const isFirst = pageNum === 1;
-    const sidebarReserve = isFirst ? 150 : 20;
-    const mainReserve = isFirst ? 40 : 20;
+    const sidebarReserve = isFirst ? 140 : 10;
+    const mainReserve = isFirst ? 30 : 10;
 
     const sidebarSplit = splitSector(currentSidebar, sidebarReserve);
     const mainSplit = splitSector(currentMain, mainReserve);
