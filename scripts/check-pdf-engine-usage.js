@@ -1,24 +1,55 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { FIELD_CATALOG } from '../src/shared/core/pdf-engine/layers/records/fieldCatalog.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-console.log('🔍 Iniciando verificación de consumo del Motor de PDF (check-pdf-engine-usage)...');
+console.log('🔍 Iniciando verificación de consumo del Motor de PDF y cobertura de diseño (check-pdf-engine-usage)...');
 
-const targetFile = path.resolve(__dirname, '../src/shared/core/pdf-engine/layers/presets/presetCompositionEngine.ts');
-
-if (!fs.existsSync(targetFile)) {
-  console.error(`❌ ARCHIVO NO ENCONTRADO: ${targetFile}`);
+// 1. Verificación de consumo de translateThemeToSurfaces
+const presetEngineFile = path.resolve(__dirname, '../src/shared/core/pdf-engine/layers/presets/presetCompositionEngine.ts');
+if (!fs.existsSync(presetEngineFile)) {
+  console.error(`❌ ARCHIVO NO ENCONTRADO: ${presetEngineFile}`);
   process.exit(1);
 }
-
-const content = fs.readFileSync(targetFile, 'utf8');
-
-if (!content.includes('translateThemeToSurfaces(')) {
+const presetEngineContent = fs.readFileSync(presetEngineFile, 'utf8');
+if (!presetEngineContent.includes('translateThemeToSurfaces(')) {
   console.error('❌ VERIFICACIÓN FALLIDA: translateThemeToSurfaces no está siendo consumido en presetCompositionEngine.ts.');
   process.exit(1);
 }
+console.log('  ✓ Consumo de translateThemeToSurfaces en presetCompositionEngine.ts OK.');
 
-console.log('✅ Verificación de consumo de translateThemeToSurfaces pasada exitosamente.');
+// 2. Verificación de consumo de resolveFieldDesign
+const cardRendererFile = path.resolve(__dirname, '../src/shared/core/pdf-engine/layers/cards/CardObjectRenderer.tsx');
+if (!fs.existsSync(cardRendererFile)) {
+  console.error(`❌ ARCHIVO NO ENCONTRADO: ${cardRendererFile}`);
+  process.exit(1);
+}
+const cardRendererContent = fs.readFileSync(cardRendererFile, 'utf8');
+if (!cardRendererContent.includes('resolveFieldDesign(')) {
+  console.error('❌ VERIFICACIÓN FALLIDA: resolveFieldDesign no está siendo consumido en CardObjectRenderer.tsx.');
+  process.exit(1);
+}
+console.log('  ✓ Consumo de resolveFieldDesign en CardObjectRenderer.tsx OK.');
+
+// 3. Verificación de Cobertura Completa de Campos (checkFieldDesignCoverage)
+const catalogKeys = Object.keys(FIELD_CATALOG);
+let missingHintsCount = 0;
+
+for (const key of catalogKeys) {
+  const fieldDef = FIELD_CATALOG[key];
+  if (!fieldDef || fieldDef.designHint === undefined) {
+    console.error(`❌ COBERTURA INCOMPLETA: El campo '${key}' en FIELD_CATALOG no declara 'designHint'.`);
+    missingHintsCount++;
+  }
+}
+
+if (missingHintsCount > 0) {
+  console.error(`❌ AUDITORÍA DE COBERTURA FALLIDA: ${missingHintsCount} campos de ${catalogKeys.length} no tienen designHint declarado.`);
+  process.exit(1);
+}
+
+console.log(`✅ COBERTURA DE DISEÑO POR CAMPO AL 100%: Los ${catalogKeys.length}/${catalogKeys.length} campos del catálogo tienen su designHint declarado.`);
+

@@ -8,6 +8,7 @@
 
 import { StructuredRecordLayout } from './recordLayoutEngine';
 import { RecordLayoutTemplate } from './recordSpatialLayoutEngine';
+import { FIELD_CATALOG } from './fieldCatalog';
 
 export interface PlacedRecordElement {
   id: string;
@@ -23,6 +24,7 @@ export interface ArrangedRecordLayout {
   headerSubtitle: string | null;
   sideBadge: string | null;
   inlineBadges: PlacedRecordElement[];
+  inlineRightBadges: PlacedRecordElement[];
   extrasList: PlacedRecordElement[];
   blockDescription: string | null;
   totalFieldsCount: number;
@@ -33,6 +35,7 @@ export function arrangeRecordFields(
   archetype: RecordLayoutTemplate = 'stacked-clean'
 ): ArrangedRecordLayout {
   const inlineBadges: PlacedRecordElement[] = [];
+  const inlineRightBadges: PlacedRecordElement[] = [];
   const extrasList: PlacedRecordElement[] = [];
   let sideBadge: string | null = null;
   let fieldCount = 0;
@@ -44,8 +47,17 @@ export function arrangeRecordFields(
   // Procesamiento de Badges
   structured.badges.forEach((b, idx) => {
     fieldCount++;
+    const hint = FIELD_CATALOG[b.id]?.designHint;
+
     if (archetype === 'split-date-left' && idx === 0) {
       sideBadge = b.value;
+    } else if (hint?.position === 'inline-right') {
+      inlineRightBadges.push({
+        id: b.id,
+        role: 'badge',
+        label: b.label,
+        value: b.value
+      });
     } else {
       inlineBadges.push({
         id: b.id,
@@ -74,6 +86,7 @@ export function arrangeRecordFields(
     headerSubtitle: structured.subheader,
     sideBadge,
     inlineBadges,
+    inlineRightBadges,
     extrasList,
     blockDescription: structured.block,
     totalFieldsCount: fieldCount

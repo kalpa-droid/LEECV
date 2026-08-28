@@ -9,6 +9,7 @@ import { resolveAccentTarget } from '../colors/accentApplicationEngine';
 import { resolveRecordLayout } from '../records/recordSpatialLayoutEngine';
 import { arrangeRecordFields } from '../records/fieldPlacementEngine';
 import { resolveColorForRole } from '../colors/surfaceAwareColorEngine';
+import { resolveFieldDesign } from '../records/fieldDesignResolutionEngine';
 
 interface CardObjectRendererProps {
   preset?: Preset;
@@ -78,7 +79,7 @@ export function CardObjectRenderer({
     header: title,
     subheader: subtitle || null,
     badges: [
-      ...(dateOrBadge ? [{ id: 'dateOrBadge', label: 'Período', value: dateOrBadge }] : []),
+      ...(dateOrBadge ? [{ id: 'periodo', label: 'Período', value: dateOrBadge }] : []),
       ...badges
     ],
     extras: extras.map(e => ({ id: e.id, label: e.label, value: e.value, type: e.type as any })),
@@ -92,6 +93,19 @@ export function CardObjectRenderer({
   const subtitleColor = resolveColorForRole('subtitle', 'text', cardBgColor, rolesColor, parentBgColor);
   const badgeColor = resolveColorForRole('badge', 'highlight', cardBgColor, rolesColor, parentBgColor);
   const descColor = resolveColorForRole('description', 'text', cardBgColor, rolesColor, parentBgColor);
+
+  const activePreset: Preset = preset || {
+    id: 'default',
+    name: 'Default',
+    pageCategory: 'documento',
+    pageSizeId: 'a4',
+    marginPresetId: 'default',
+    sectors: [],
+    fixedObjects: [],
+    sectionOrder: [],
+    palette: { primary: '#00A8A0', secondary: '#64748b', accent: '#FF2E63', text: '#0f172a', textOnPrimary: '#ffffff', background: '#ffffff' },
+    typography: typography
+  };
 
   const styles = StyleSheet.create({
     cardContainer: {
@@ -168,15 +182,23 @@ export function CardObjectRenderer({
 
   return (
     <View style={styles.cardContainer}>
-      {/*
-        Bloque atómico: título + institución + insignias NUNCA deben quedar
-        separados entre dos hojas — por eso wrap={false} acá adentro, no en
-        todo el contenedor.
-      */}
       <View wrap={false}>
         <View style={styles.headerRow}>
           <Text style={styles.titleText}>{arranged.headerTitle || title}</Text>
-          {arranged.sideBadge ? <Text style={styles.badgeText}>{arranged.sideBadge}</Text> : null}
+          {arranged.sideBadge ? (
+            <Text style={styles.badgeText}>{arranged.sideBadge}</Text>
+          ) : arranged.inlineRightBadges.length > 0 ? (
+            <View style={{ flexDirection: 'row', gap: 4 }}>
+              {arranged.inlineRightBadges.map((b) => {
+                const spec = resolveFieldDesign(b.id, 'badge', activePreset, rolesColor);
+                return (
+                  <Text key={b.id} style={[styles.badgeText, { color: spec.colorHex, fontSize: spec.fontSizePt }]}>
+                    {b.value}
+                  </Text>
+                );
+              })}
+            </View>
+          ) : null}
         </View>
 
         {arranged.headerSubtitle ? <Text style={styles.subtitleText}>{arranged.headerSubtitle}</Text> : null}
@@ -184,27 +206,33 @@ export function CardObjectRenderer({
         {/* Dynamic Badge Bar */}
         {arranged.inlineBadges.length > 0 && (
           <View style={styles.badgeRow}>
-            {arranged.inlineBadges.map((b) => (
-              <Text key={b.id} style={styles.badgePill}>
-                {b.label}: {b.value}
-              </Text>
-            ))}
+            {arranged.inlineBadges.map((b) => {
+              const spec = resolveFieldDesign(b.id, 'badge', activePreset, rolesColor);
+              return (
+                <Text key={b.id} style={[styles.badgePill, { color: spec.colorHex, fontSize: spec.fontSizePt }]}>
+                  {b.label}: {b.value}
+                </Text>
+              );
+            })}
           </View>
         )}
 
         {/* Extras Rows */}
         {arranged.extrasList.length > 0 && (
           <View style={styles.extraRow}>
-            {arranged.extrasList.map((e) => (
-              <Text key={e.id} style={styles.extraText}>
-                • {e.label}: {e.value}
-              </Text>
-            ))}
+            {arranged.extrasList.map((e) => {
+              const spec = resolveFieldDesign(e.id, 'extra', activePreset, rolesColor);
+              return (
+                <Text key={e.id} style={[styles.extraText, { color: spec.colorHex, fontSize: spec.fontSizePt }]}>
+                  • {e.label}: {e.value}
+                </Text>
+              );
+            })}
           </View>
         )}
       </View>
 
-      {/* Block Description — SIN wrap={false}: fluye libremente entre hojas */}
+      {/* Block Description */}
       {arranged.blockDescription ? <Text style={styles.descText}>{arranged.blockDescription}</Text> : null}
     </View>
   );
