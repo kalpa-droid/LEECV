@@ -26,12 +26,37 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     this.state = { hasError: false, error: null };
   }
 
+  componentDidMount(): void {
+    try {
+      if (!this.state.hasError) {
+        sessionStorage.removeItem('chunk_reload_retry');
+      }
+    } catch {}
+  }
+
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     console.error('CRITICAL APP ERROR:', error, errorInfo);
+
+    const isChunkLoadError = error?.message && (
+      /failed to fetch dynamically imported module/i.test(error.message) ||
+      /importing a module script failed/i.test(error.message) ||
+      (/failed to fetch/i.test(error.message) && error.message.includes('.js'))
+    );
+
+    if (isChunkLoadError) {
+      try {
+        const hasRetried = sessionStorage.getItem('chunk_reload_retry');
+        if (!hasRetried) {
+          sessionStorage.setItem('chunk_reload_retry', 'true');
+          navigation.goTo(`${navigation.getOrigin()}${navigation.getPathname()}?reload=${Date.now()}`);
+          return;
+        }
+      } catch {}
+    }
   }
 
   handleSoftRetry = () => {
