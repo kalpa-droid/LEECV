@@ -56,9 +56,9 @@ export function CardExportModal({ isOpen, onClose, cvData, presetId = 'tarjeta-p
     >
       <div className="space-y-4">
         {loading || !cardData ? (
-          <div className="py-12 flex flex-col items-center justify-center text-white/60 space-y-3">
+          <div className="py-12 flex flex-col items-center justify-center text-[var(--ui-text-secondary)] space-y-3">
             <div className="w-8 h-8 border-4 border-[var(--color-accent-base)] border-t-transparent rounded-full animate-spin" />
-            <p className="text-xs font-bold text-white/80">Generando preview de imposición y QR...</p>
+            <p className="text-xs font-bold text-[var(--ui-text-primary)]">Generando preview de imposición y QR...</p>
           </div>
         ) : (
           <CardSheetExportSelector

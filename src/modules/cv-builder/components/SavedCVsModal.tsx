@@ -107,27 +107,18 @@ export default function SavedCVsModal({
       icon={<FolderOpen className="w-5 h-5 text-[var(--ui-secondary)]" />}
       size="2xl"
       footer={
-        <div className="w-full flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--ui-text-secondary)]">
-          <div className="flex items-center gap-2">
-            <span className={`px-2.5 py-1 rounded-[${radius.control}] text-[10px] font-black border flex items-center gap-1.5 ${
-              statusInfo.isCloud 
-                ? 'bg-[var(--color-status-success-muted)] border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-text)]' 
-                : 'bg-[var(--color-secondary-muted)] border-[var(--color-secondary-base)]/40 text-[var(--color-secondary-text)]'
-            }`}>
-              <Cloud className="w-3.5 h-3.5" /> {statusInfo.label}
-            </span>
-          </div>
-
+        <div className="w-full flex items-center justify-between gap-2 text-xs text-[var(--ui-text-secondary)]">
+          <span>Almacenamiento Local (IndexedDB / LocalStorage)</span>
           <button
             onClick={onClose}
-            className={`px-4 py-2 bg-[var(--ui-dock-hover)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] font-bold rounded-[${radius.card}] transition cursor-pointer`}
+            className={`px-4 py-1.5 bg-[var(--ui-btn-neutral-bg)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-btn-neutral-text)] border border-[var(--ui-btn-neutral-border)] font-bold rounded-[${radius.card}] transition cursor-pointer`}
           >
             Cerrar
           </button>
         </div>
       }
     >
-      <div className={`space-y-4 p-4 bg-[var(--ui-bg-dock)] text-white rounded-[${radius.modal}]`}>
+      <div className={`space-y-4 p-4 bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] rounded-[${radius.modal}]`}>
         {/* Action Header: 2 Options Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className={`p-3 rounded-[${radius.modal}] bg-[var(--color-secondary-muted)] hover:bg-[var(--color-secondary-muted)]/80 border border-[var(--color-secondary-base)]/30 hover:border-[var(--color-secondary-base)]/60 transition cursor-pointer flex items-center gap-3 group`}>
@@ -172,7 +163,7 @@ export default function SavedCVsModal({
         </div>
 
         {/* Explanation Banner */}
-        <div className={`px-4 py-2.5 bg-[var(--ui-bg-dock)] border border-[var(--ui-border)] rounded-[${radius.card}] text-[11px] text-[var(--ui-text-secondary)] leading-snug flex items-center gap-2`}>
+        <div className={`px-4 py-2.5 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.card}] text-[11px] text-[var(--ui-text-secondary)] leading-snug flex items-center gap-2`}>
           <Sparkles className="w-4 h-4 text-[var(--color-accent-amber-bright)] flex-shrink-0" />
           <span>
             <strong>Estado:</strong> <span className="text-[var(--color-accent-amber-bright)] font-bold"> 🟠 Borrador (En Edición)</span> pasa a <span className="text-[var(--color-status-success-bright)] font-bold"> 🟢 CV Oficial</span> al exportar tu documento.
@@ -209,7 +200,7 @@ export default function SavedCVsModal({
               return (
                 <div
                   key={item.id}
-                  className={`p-4 rounded-[${radius.modal}] bg-[var(--ui-bg-dock)] border border-[var(--ui-border)] hover:border-[var(--color-secondary-base)]/50 transition flex items-center justify-between gap-4 group`}
+                  className={`p-4 rounded-[${radius.modal}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-secondary-base)]/50 transition flex items-center justify-between gap-4 group`}
                 >
                   <div className="space-y-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -240,7 +231,7 @@ export default function SavedCVsModal({
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button
                       onClick={() => handleOpenCV(item.id)}
-                      className={`px-4 py-2 bg-[var(--color-secondary-base)] hover:opacity-90 text-white font-extrabold text-xs rounded-[${radius.card}] ${elevationSystem.raised} transition flex items-center gap-1.5 cursor-pointer`}
+                      className={`px-4 py-2 bg-[var(--color-secondary-base)] hover:opacity-90 text-[var(--color-secondary-on-base)] font-extrabold text-xs rounded-[${radius.card}] ${elevationSystem.raised} transition flex items-center gap-1.5 cursor-pointer`}
                     >
                       <FolderOpen className="w-3.5 h-3.5" />
                       <span>Abrir</span>

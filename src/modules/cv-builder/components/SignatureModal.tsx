@@ -209,30 +209,30 @@ export default function SignatureModal({
           <button
             type="button"
             onClick={onClose}
-            className={`px-4 py-2 text-xs font-black text-white/80 bg-white/10 hover:bg-white/20 rounded-[${radius.card}] transition cursor-pointer`}
+            className={`px-4 py-2 text-xs font-black text-[var(--ui-btn-neutral-text)] bg-[var(--ui-btn-neutral-bg)] hover:bg-[var(--ui-btn-neutral-hover)] border border-[var(--ui-btn-neutral-border)] rounded-[${radius.card}] transition cursor-pointer`}
           >
             Cancelar
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className={`flex items-center gap-2 px-5 py-2 rounded-[${radius.card}] bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white font-black text-xs ${elevationSystem.raised} transition cursor-pointer`}
+            className={`flex items-center gap-2 px-5 py-2 rounded-[${radius.card}] bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-[var(--color-accent-on-base)] font-black text-xs ${elevationSystem.raised} transition cursor-pointer`}
           >
             <Check className="w-4 h-4" /> Aplicar Firma al CV
           </button>
         </div>
       }
     >
-      <div className={`space-y-4 bg-[var(--ui-bg-dock)] p-4 rounded-[${radius.modal}] text-white`}>
+      <div className={`space-y-4 bg-[var(--ui-bg-panel)] p-4 rounded-[${radius.modal}] text-[var(--ui-text-primary)]`}>
         {/* Mode Selector Tabs */}
-        <div className={`flex bg-black/40 p-1.5 rounded-[${radius.card}] border border-white/10`}>
+        <div className={`flex bg-[var(--ui-bg-card)] p-1.5 rounded-[${radius.card}] border border-[var(--ui-border)]`}>
           <button
             type="button"
             onClick={() => setActiveTab('draw')}
             className={`flex-1 py-2 text-xs font-black rounded-[${radius.control}] flex items-center justify-center gap-2 transition cursor-pointer ${
               activeTab === 'draw'
                 ? 'bg-[var(--color-accent-purple)] text-white ${elevationSystem.raised}'
-                : 'text-white/60 hover:text-white'
+                : 'text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]'
             }`}
           >
             <PenTool className="w-4 h-4" /> Dibujar Firma (Táctil/Mouse)
@@ -243,7 +243,7 @@ export default function SignatureModal({
             className={`flex-1 py-2 text-xs font-black rounded-[${radius.control}] flex items-center justify-center gap-2 transition cursor-pointer ${
               activeTab === 'upload'
                 ? 'bg-[var(--color-accent-purple)] text-white ${elevationSystem.raised}'
-                : 'text-white/60 hover:text-white'
+                : 'text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]'
             }`}
           >
             <Upload className="w-4 h-4" /> Subir Foto de Firma
@@ -255,24 +255,24 @@ export default function SignatureModal({
             <div className="flex items-center justify-between mb-2">
               <span className={`text-xs font-black text-[var(--color-accent-amber-bright)] uppercase`}>Dibuje su firma en el recuadro</span>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-black text-white/80">Color:</span>
+                <span className="text-xs font-black text-[var(--ui-text-secondary)]">Color:</span>
                 <input 
                   type="color" 
                   value={strokeColor} 
                   onChange={(e) => setStrokeColor(e.target.value)} 
-                  className="w-6 h-6 rounded cursor-pointer border border-white/20 bg-transparent" 
+                  className="w-6 h-6 rounded cursor-pointer border border-[var(--ui-border)] bg-transparent" 
                 />
                 <button
                   type="button"
                   onClick={clearCanvas}
-                  className={`px-2.5 py-1 text-[11px] font-black text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-[${radius.control}] transition cursor-pointer flex items-center gap-1 ml-2`}
+                  className={`px-2.5 py-1 text-[11px] font-black text-[var(--ui-btn-neutral-text)] bg-[var(--ui-btn-neutral-bg)] hover:bg-[var(--ui-btn-neutral-hover)] border border-[var(--ui-btn-neutral-border)] rounded-[${radius.control}] transition cursor-pointer flex items-center gap-1 ml-2`}
                 >
                   <RotateCcw className="w-3.5 h-3.5" /> Limpiar Trazo
                 </button>
               </div>
             </div>
 
-            <div className={`relative border-2 border-white/10 rounded-[${radius.modal}] overflow-hidden bg-white ${elevationSystem.raised}`}>
+            <div className={`relative border-2 border-[var(--ui-border)] rounded-[${radius.modal}] overflow-hidden bg-white ${elevationSystem.raised}`}>
               <canvas
                 ref={canvasRef}
                 width={500}
@@ -296,11 +296,11 @@ export default function SignatureModal({
                 className={`w-full h-44 border-2 border-dashed border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] rounded-[${radius.modal}] flex flex-col items-center justify-center cursor-pointer hover:bg-[var(--color-secondary-muted)] transition group`}
               >
                 <Upload className={`w-8 h-8 text-[var(--color-secondary-text)] mb-2 group-hover:scale-110 transition duration-300`} />
-                <span className="font-black text-xs text-[var(--color-neutral-text-primary)]">Subir imagen de la firma (JPG, PNG, WEBP)</span>
+                <span className="font-black text-xs text-[var(--ui-text-primary)]">Subir imagen de la firma (JPG, PNG, WEBP)</span>
               </div>
             ) : (
               <div className="space-y-3">
-                <div className={`relative border-2 border-white/10 rounded-[${radius.modal}] p-4 flex items-center justify-center bg-white min-h-36`}>
+                <div className={`relative border-2 border-[var(--ui-border)] rounded-[${radius.modal}] p-4 flex items-center justify-center bg-white min-h-36`}>
                   <img 
                     src={getProcessedUploadedSignature()} 
                     alt="Firma cargada" 
@@ -308,7 +308,7 @@ export default function SignatureModal({
                   />
                 </div>
                 <div className="flex items-center justify-between text-xs">
-                  <label className="flex items-center gap-2 cursor-pointer text-white/90 font-black">
+                  <label className="flex items-center gap-2 cursor-pointer text-[var(--ui-text-primary)] font-black">
                     <input 
                       type="checkbox"
                       checked={removeBgContrast}
@@ -338,23 +338,23 @@ export default function SignatureModal({
         )}
 
         {/* Signer Details Form */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3 border-t border-white/10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3 border-t border-[var(--ui-border)]">
           <div>
-            <label className="block text-xs font-black text-white/80 mb-1">Nombre del Firmante</label>
+            <label className="block text-xs font-black text-[var(--ui-text-secondary)] mb-1">Nombre del Firmante</label>
             <input 
               type="text"
               value={signerName}
               onChange={(e) => setSignerName(e.target.value)}
-              className={`w-full text-xs p-2.5 rounded-[${radius.card}] border border-white/20 bg-black/40 text-white font-bold outline-none focus:border-[var(--color-accent-purple)] transition`}
+              className={`w-full text-xs p-2.5 rounded-[${radius.card}] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] font-bold outline-none focus:border-[var(--color-accent-purple)] transition`}
             />
           </div>
           <div>
-            <label className="block text-xs font-black text-white/80 mb-1">Lugar y Fecha</label>
+            <label className="block text-xs font-black text-[var(--ui-text-secondary)] mb-1">Lugar y Fecha</label>
             <input 
               type="text"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className={`w-full text-xs p-2.5 rounded-[${radius.card}] border border-white/20 bg-black/40 text-white font-bold outline-none focus:border-[var(--color-accent-purple)] transition`}
+              className={`w-full text-xs p-2.5 rounded-[${radius.card}] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] font-bold outline-none focus:border-[var(--color-accent-purple)] transition`}
             />
           </div>
         </div>

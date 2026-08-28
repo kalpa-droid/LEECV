@@ -131,7 +131,7 @@ export default function CertCropperModal({
         <div className="w-full flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className={`px-4 py-2 text-xs font-black text-white/80 bg-white/10 hover:bg-white/20 rounded-[${radius.card}] transition cursor-pointer`}
+            className={`px-4 py-2 text-xs font-black text-[var(--ui-btn-neutral-text)] bg-[var(--ui-btn-neutral-bg)] hover:bg-[var(--ui-btn-neutral-hover)] border border-[var(--ui-btn-neutral-border)] rounded-[${radius.card}] transition cursor-pointer`}
           >
             Cancelar
           </button>
@@ -181,9 +181,9 @@ export default function CertCropperModal({
         </div>
 
         {/* Zoom and Rotation Control Bar */}
-        <div className={`w-full bg-black/40 p-3 rounded-[${radius.card}] space-y-2 border border-white/10`}>
+        <div className={`w-full bg-[var(--ui-bg-panel)] p-3 rounded-[${radius.card}] space-y-2 border border-[var(--ui-border)] text-[var(--ui-text-primary)]`}>
           <div className="flex items-center gap-3">
-            <ZoomOut className="w-4 h-4 text-white/80" />
+            <ZoomOut className="w-4 h-4 text-[var(--ui-text-secondary)]" />
             <input 
               type="range"
               min="0.1"
@@ -193,23 +193,23 @@ export default function CertCropperModal({
               onChange={(e) => setZoom(parseFloat(e.target.value))}
               className="w-full accent-[var(--color-status-warning-base)] cursor-pointer"
             />
-            <ZoomIn className="w-4 h-4 text-white/80" />
-            <span className="text-xs font-black w-10 text-right text-white">{Math.round(zoom * 100)}%</span>
+            <ZoomIn className="w-4 h-4 text-[var(--ui-text-secondary)]" />
+            <span className="text-xs font-black w-10 text-right text-[var(--ui-text-primary)]">{Math.round(zoom * 100)}%</span>
           </div>
 
           <div className="flex items-center justify-between pt-1">
             <button 
               onClick={() => setRotation((r) => (r + 90) % 360)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[${radius.card}] bg-white/10 border border-white/10 text-xs font-black text-white hover:bg-white/20 transition ${elevationSystem.raised} cursor-pointer`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] text-xs font-black text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-panel)] transition ${elevationSystem.raised} cursor-pointer`}
             >
-              <RotateCw className="w-3.5 h-3.5 text-white" /> Rotar 90°
+              <RotateCw className="w-3.5 h-3.5 text-[var(--ui-text-primary)]" /> Rotar 90°
             </button>
 
             <button 
               onClick={() => { setZoom(1); setRotation(0); setOffset({ x: 0, y: 0 }); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[${radius.card}] bg-white/10 border border-white/10 text-xs font-black text-white hover:bg-white/20 transition ${elevationSystem.raised} cursor-pointer`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] text-xs font-black text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-panel)] transition ${elevationSystem.raised} cursor-pointer`}
             >
-              <Maximize2 className="w-3.5 h-3.5 text-white" /> Auto-Encajar
+              <Maximize2 className="w-3.5 h-3.5 text-[var(--ui-text-primary)]" /> Auto-Encajar
             </button>
           </div>
         </div>
