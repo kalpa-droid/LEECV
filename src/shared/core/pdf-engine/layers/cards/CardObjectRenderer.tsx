@@ -188,7 +188,7 @@ export function CardObjectRenderer({
           ) : arranged.inlineRightBadges.length > 0 ? (
             <View style={{ flexDirection: 'row', gap: 4 }}>
               {arranged.inlineRightBadges.map((b) => {
-                const spec = resolveFieldDesign(b.id, 'badge', activePreset, rolesColor);
+                const spec = resolveFieldDesign(b.id, 'badge', activePreset, rolesColor, sectorRole);
                 return (
                   <Text key={b.id} style={[styles.badgeText, { color: spec.colorHex, fontSize: spec.fontSizePt }]}>
                     {b.value}
@@ -205,7 +205,7 @@ export function CardObjectRenderer({
         {arranged.inlineBadges.length > 0 && (
           <View style={styles.badgeRow}>
             {arranged.inlineBadges.map((b) => {
-              const spec = resolveFieldDesign(b.id, 'badge', activePreset, rolesColor);
+              const spec = resolveFieldDesign(b.id, 'badge', activePreset, rolesColor, sectorRole);
               return (
                 <Text key={b.id} style={[styles.badgePill, { color: spec.colorHex, fontSize: spec.fontSizePt }]}>
                   {b.label}: {b.value}
@@ -219,7 +219,7 @@ export function CardObjectRenderer({
         {arranged.extrasList.length > 0 && (
           <View style={styles.extraRow}>
             {arranged.extrasList.map((e) => {
-              const spec = resolveFieldDesign(e.id, 'extra', activePreset, rolesColor);
+              const spec = resolveFieldDesign(e.id, 'extra', activePreset, rolesColor, sectorRole);
               return (
                 <Text key={e.id} style={[styles.extraText, { color: spec.colorHex, fontSize: spec.fontSizePt }]}>
                   • {e.label}: {e.value}

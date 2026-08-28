@@ -69,6 +69,75 @@ export function resolveSubtleCardBackground(
   return hslToHex(h, shadowS, shadowL);
 }
 
+/**
+  * MOTOR DE LUMINANCIA PERCIBIDA (W3C WCAG)
+  * Luminancia = (0.299 * R) + (0.587 * G) + (0.114 * B)
+  * R, G, B en escala 0..255.
+  */
+export function calculatePerceivedLuminance(hex: string): number {
+  const [r, g, b] = hexToRGB(hex);
+  return (0.299 * (r * 255)) + (0.587 * (g * 255)) + (0.114 * (b * 255));
+}
+
+export interface HierarchyTextColors {
+  title: string;       // H1 - 100% opacidad
+  subtitle: string;    // H2 - 85% opacidad
+  body: string;        // Cuerpo - 70% opacidad
+  meta: string;        // Metadata - 50% opacidad
+  accentText: string;  // Resalte - 100% opacidad (con L * 0.7 en fondos claros si el contraste es bajo)
+  isDarkSurface: boolean;
+}
+
+/**
+ * MOTOR HSL DE JERARQUÍA TIPOGRÁFICA Y CONTRASTE AUTOMÁTICO
+ * Asigna los colores y opacidades exactas a cada nivel de texto (H1, H2, Cuerpo, Metadata)
+ * garantizando legibilidad y elegancia WCAG sobre cualquier superficie.
+ */
+export function resolveHierarchyTextColors(
+  surfaceBgHex: string,
+  rolesColor: ResolvedThemeRoles
+): HierarchyTextColors {
+  const cleanSurface = surfaceBgHex && surfaceBgHex.startsWith('#') ? surfaceBgHex : '#ffffff';
+  const luminance = calculatePerceivedLuminance(cleanSurface);
+  const isDarkSurface = luminance <= 128;
+
+  if (isDarkSurface) {
+    // Escenario B: Rectángulo en Fondo Oscuro
+    // Color Base Claro: Blanco Puro con opacidades
+    return {
+      title: '#ffffff',                   // 100% opacidad (rgba 1.0)
+      subtitle: 'rgba(255, 255, 255, 0.85)', // 85% opacidad
+      body: 'rgba(255, 255, 255, 0.70)',     // 70% opacidad
+      meta: 'rgba(255, 255, 255, 0.50)',     // 50% opacidad
+      accentText: rolesColor.accent || '#38bdf8',
+      isDarkSurface: true
+    };
+  }
+
+  // Escenario A: Rectángulo en Fondo Claro / Pastel
+  // Color Base del Texto Oscuro Integrado: HSL(H, 40%, 15%) entintado con el matiz base
+  const [baseH] = hexToHSL(rolesColor.primary);
+  
+  const titleHex = hslToHex(baseH, 0.40, 0.15);    // 100% opacidad
+  const subHex = hslToHex(baseH, 0.35, 0.26);      // ~85% equivalente perceptual
+  const bodyHex = hslToHex(baseH, 0.30, 0.35);     // ~70% equivalente perceptual
+  const metaHex = hslToHex(baseH, 0.25, 0.48);     // ~50% equivalente perceptual
+
+  // El Resalte (Accent): Si sobre el fondo claro el acento tiene luminancia alta, se le resta 30% de L
+  const [accH, accS, accL] = hexToHSL(rolesColor.accent || '#FF2E63');
+  const adjustedAccL = accL > 0.55 ? Math.max(0.20, accL * 0.70) : accL;
+  const accentTextHex = hslToHex(accH, accS, adjustedAccL);
+
+  return {
+    title: titleHex,
+    subtitle: subHex,
+    body: bodyHex,
+    meta: metaHex,
+    accentText: accentTextHex,
+    isDarkSurface: false
+  };
+}
+
 export function resolveColorForRole(
   pdfRole: 'title' | 'subtitle' | 'badge' | 'extra' | 'description' | string,
   purpose: ColorPurpose,
@@ -77,27 +146,26 @@ export function resolveColorForRole(
   parentBgHex?: string
 ): string {
   const actualSurfaceHex = compositeOverBackground(surfaceBgHex, parentBgHex || '#ffffff');
-  const surfacePalette = translatePaletteForSurface(rolesColor, actualSurfaceHex);
+  const hierarchy = resolveHierarchyTextColors(actualSurfaceHex, rolesColor);
 
-  if (purpose === 'ornament') {
-    return surfacePalette.accent;
-  }
-
-  if (purpose === 'highlight') {
-    return surfacePalette.accent;
+  if (purpose === 'ornament' || purpose === 'highlight') {
+    return hierarchy.accentText;
   }
 
   // propósito 'text'
   switch (pdfRole) {
     case 'title':
-      return surfacePalette.title;
+      return hierarchy.title;
     case 'subtitle':
-      return surfacePalette.subtitle;
+      return hierarchy.subtitle;
     case 'badge':
-      return surfacePalette.accent;
+      return hierarchy.accentText;
     case 'extra':
+    case 'meta':
+      return hierarchy.meta;
     case 'description':
+    case 'body':
     default:
-      return surfacePalette.bodyText;
+      return hierarchy.body;
   }
 }
