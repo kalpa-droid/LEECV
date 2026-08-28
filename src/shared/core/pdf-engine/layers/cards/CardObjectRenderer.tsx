@@ -184,7 +184,7 @@ export function CardObjectRenderer({
   });
 
   return (
-    <View style={styles.cardContainer} wrap={false}>
+    <View style={styles.cardContainer}>
       <View wrap={false}>
         <View style={styles.headerRow}>
           <Text style={styles.titleText}>{arranged.headerTitle || title}</Text>

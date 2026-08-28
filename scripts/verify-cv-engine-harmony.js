@@ -103,14 +103,19 @@ if (fs.existsSync(sectionBannerPath)) {
 }
 
 // ─── 4. CardObjectRenderer: wrap={false} en cardContainer ───
-console.log('\n── 4. Card atomicidad: wrap={false} en cardContainer ──');
+console.log('\n── 4. Card atomicidad: inner wrap={false} sin conflicto exterior ──');
 const cardRendererPath = path.join(ROOT, 'src/shared/core/pdf-engine/layers/cards/CardObjectRenderer.tsx');
 if (fs.existsSync(cardRendererPath)) {
   const crContent = fs.readFileSync(cardRendererPath, 'utf-8');
   check(
-    'CardObjectRenderer tiene wrap={false} en cardContainer',
-    crContent.includes('style={styles.cardContainer} wrap={false}'),
-    'No se encontró wrap={false} en el View de cardContainer'
+    'CardObjectRenderer NO tiene wrap={false} en cardContainer externo (evita conflicto con overflow engine)',
+    !crContent.includes('style={styles.cardContainer} wrap={false}'),
+    'Se encontró wrap={false} en cardContainer externo — conflicto con overflow engine'
+  );
+  check(
+    'CardObjectRenderer tiene inner wrap={false} para proteger header atómico',
+    crContent.includes('<View wrap={false}>'),
+    'No se encontró inner wrap={false} para el header atómico'
   );
 }
 
