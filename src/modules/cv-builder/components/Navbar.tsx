@@ -62,8 +62,8 @@ export default function Navbar({
 
   return (
     <header className={`sticky top-0 z-40 bg-[var(--ui-bg-header)] border-b border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.overlay} no-print select-none`}>
-      {/* Festive Bunting Accent Strip */}
-      <div className="ui-topbar-sweep h-1 w-full bg-gradient-to-r from-[var(--color-accent-base)] via-[var(--ui-secondary)] to-[var(--ui-accent-purple)]" />
+      {/* Festive Rainbow Accent Strip (Movimiento Real) */}
+      <div className="ui-topbar-rainbow h-1 w-full" />
       
       <div className="max-w-7xl mx-auto px-2 sm:px-4 h-12 sm:h-14 flex items-center justify-between gap-1.5">
         
