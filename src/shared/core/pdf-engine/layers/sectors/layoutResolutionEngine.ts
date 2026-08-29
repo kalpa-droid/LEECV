@@ -25,13 +25,15 @@ export function resolveEffectivePresetSectionOrder(
   const baseSidebar = preset.sectionOrder.find(s => s.sectorRole === 'sidebar')?.sectionIds || [];
   const baseMain = preset.sectionOrder.find(s => s.sectorRole === 'main')?.sectionIds || [];
 
-  if (!layoutOverrides) {
+  const hasSidebarSector = Array.isArray(preset.sectors) && preset.sectors.some(s => s.role === 'sidebar');
+
+  if (!layoutOverrides && hasSidebarSector) {
     return preset.sectionOrder;
   }
 
-  const userSecOrder = layoutOverrides.sectionOrders?.secundaria;
-  const userPrimOrder = layoutOverrides.sectionOrders?.primaria;
-  const assignments = layoutOverrides.columnAssignments || {};
+  const userSecOrder = layoutOverrides?.sectionOrders?.secundaria;
+  const userPrimOrder = layoutOverrides?.sectionOrders?.primaria;
+  const assignments = layoutOverrides?.columnAssignments || {};
 
   let sidebarIds: string[] = Array.isArray(userSecOrder) && userSecOrder.length > 0
     ? [...userSecOrder]
@@ -53,6 +55,13 @@ export function resolveEffectivePresetSectionOrder(
       sidebarIds = sidebarIds.filter(id => id !== cleanId);
     }
   });
+
+  if (!hasSidebarSector) {
+    const consolidatedMainIds = [...new Set([...sidebarIds, ...mainIds])];
+    return [
+      { sectorRole: 'main', sectionIds: consolidatedMainIds }
+    ];
+  }
 
   return [
     { sectorRole: 'sidebar', sectionIds: [...new Set(sidebarIds)] },

@@ -6,7 +6,21 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   base: '/',
   build: {
-    chunkSizeWarningLimit: 2000
+    chunkSizeWarningLimit: 2000,
+    sourcemap: 'hidden',
+    rollupOptions: {
+      output: {
+        sourcemap: 'hidden',
+        manualChunks(id) {
+          if (id.includes('@react-pdf/renderer')) {
+            return 'vendor-react-pdf';
+          }
+          if (id.includes('lucide-react')) {
+            return 'vendor-lucide';
+          }
+        }
+      }
+    }
   },
   define: {
     'process.env': {}

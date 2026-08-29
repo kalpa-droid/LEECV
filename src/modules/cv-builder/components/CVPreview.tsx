@@ -22,7 +22,15 @@ export default function CVPreview({ cvData, setCvData: _setCvData, activeTab: _a
   const [cardData, setCardData] = useState<BusinessCardData | null>(null);
   const { theme = {} } = debouncedCvData || {};
 
-  const activePreset = resolveActivePreset(debouncedCvData);
+  const activePreset = useMemo(
+    () => resolveActivePreset(debouncedCvData),
+    [
+      debouncedCvData?.activePresetId,
+      debouncedCvData?.colorPresetId,
+      debouncedCvData?.typographyPresetId,
+      debouncedCvData?.columnLayoutPresetId
+    ]
+  );
   const sections = useMemo(() => cvDataToContentSections(debouncedCvData), [debouncedCvData]);
 
   useEffect(() => {

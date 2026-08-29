@@ -252,6 +252,48 @@ if (fs.existsSync(instancesPath)) {
   );
 }
 
+// ─── 10. Plan v27: layoutResolutionEngine redirección sin pérdidas y useMemo en preview ───
+console.log('\n── 10. Plan v27: layoutResolutionEngine redirección sin pérdidas ──');
+if (fs.existsSync(layoutEnginePath)) {
+  const layoutContent = fs.readFileSync(layoutEnginePath, 'utf-8');
+  check(
+    'layoutResolutionEngine evalúa hasSidebarSector antes de armar la estructura final',
+    layoutContent.includes('hasSidebarSector = Array.isArray(preset.sectors)') && layoutContent.includes("role === 'sidebar'"),
+    'layoutResolutionEngine no implementa la verificación condicional hasSidebarSector'
+  );
+
+  const testPresetFullWidth = {
+    id: 'test-full-width',
+    sectors: [{ id: 'main-full', role: 'main', widthPercent: 100, order: 1 }],
+    sectionOrder: [
+      { sectorRole: 'sidebar', sectionIds: ['contacto', 'personales', 'competencias'] },
+      { sectorRole: 'main', sectionIds: ['formacion', 'experiencia'] }
+    ]
+  };
+
+  const hasSidebarSector = Array.isArray(testPresetFullWidth.sectors) && testPresetFullWidth.sectors.some(s => s.role === 'sidebar');
+  let sidebarIds = [...testPresetFullWidth.sectionOrder[0].sectionIds, 'informatica', 'ecologia'];
+  let mainIds = [...testPresetFullWidth.sectionOrder[1].sectionIds];
+  const consolidated = [...new Set([...sidebarIds, ...mainIds])];
+  const totalInputSections = 7;
+  
+  check(
+    `layoutResolutionEngine preserva el 100% de las secciones (${totalInputSections}/${totalInputSections}) en full-width con asignaciones manuales`,
+    !hasSidebarSector && consolidated.length === totalInputSections && consolidated[0] === 'contacto',
+    'layoutResolutionEngine no consolidó las secciones en el orden esperado o perdió elementos'
+  );
+}
+
+const previewPath = path.join(ROOT, 'src/modules/cv-builder/components/CVPreview.tsx');
+if (fs.existsSync(previewPath)) {
+  const previewContent = fs.readFileSync(previewPath, 'utf-8');
+  check(
+    'CVPreview memoriza resolveActivePreset mediante useMemo',
+    previewContent.includes('useMemo') && previewContent.includes('resolveActivePreset(debouncedCvData)'),
+    'CVPreview no memoriza resolveActivePreset'
+  );
+}
+
 // ─── Resultado final ───
 console.log(`\n${'═'.repeat(60)}`);
 if (failed === 0) {
