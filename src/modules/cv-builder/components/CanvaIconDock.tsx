@@ -27,6 +27,7 @@ const addSectionTab = { id: 'nueva_seccion', label: 'Sección', iconId: 'custom'
 // 3. Orden Fijo Prioritario Solicitado por el Usuario
 const fixedPrioritySections = [
   { id: 'personales', label: 'Personal', iconId: 'personales' },
+  { id: 'competencias', label: 'Competencias', iconId: 'competencias' },
   { id: 'formacion', label: 'Formación', iconId: 'formacion' },
   { id: 'profesion', label: 'Profesión', iconId: 'profesion' },
   { id: 'cursos', label: 'Cursos', iconId: 'cursos' },

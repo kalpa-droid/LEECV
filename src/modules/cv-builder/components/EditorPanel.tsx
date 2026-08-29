@@ -313,6 +313,38 @@ export default function EditorPanel({
         )}
 
         {/* ========================================================================= */}
+        {/* TAB 1.5: COMPETENCIAS CLAVE */}
+        {/* ========================================================================= */}
+        {activeTab === 'competencias' && (
+          <RepeatableSection
+            sectionKey="competencias"
+            sectionTitle="Competencias Clave / Habilidades"
+            addLabel="Agregar Competencia"
+            cvData={cvData}
+            setCvData={setCvData}
+            fieldName="skills"
+            emptyItem="Nueva Competencia"
+            itemTitlePrefix="Competencia"
+            getItemName={(item: any, idx: number) => typeof item === 'string' ? item : (item?.name || item?.title || `Competencia #${idx + 1}`)}
+            renderItem={(item: any, idx: number, updateField: (field: string, val: any) => void) => (
+              <Field
+                label={`Competencia Clave #${idx + 1}`}
+                value={typeof item === 'string' ? item : (item?.name || '')}
+                onChange={(e: any) => {
+                  const val = e.target.value;
+                  setCvData((prev: any) => {
+                    const currentSkills = [...(Array.isArray(prev.skills) ? prev.skills : [])];
+                    currentSkills[idx] = val;
+                    return { ...prev, skills: currentSkills };
+                  });
+                }}
+                placeholder="Ej: Pedagogía Dialógica, Alfabetización Digital, Liderazgo..."
+              />
+            )}
+          />
+        )}
+
+        {/* ========================================================================= */}
         {/* TAB 2: FORMACIÓN ACADÉMICA */}
         {/* ========================================================================= */}
         {/* ========================================================================= */}

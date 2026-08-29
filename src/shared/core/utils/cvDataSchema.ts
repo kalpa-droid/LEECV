@@ -50,6 +50,7 @@ export function sanitizeCvData(rawCvData: any = {}) {
     },
 
     roles: Array.isArray(data.roles) ? data.roles : [],
+    skills: Array.isArray(data.skills) ? data.skills : (Array.isArray(data.competencias) ? data.competencias : []),
     education: Array.isArray(data.education) ? data.education : [],
     profession: Array.isArray(data.profession) ? data.profession : (Array.isArray(data.professions) ? data.professions : []),
     experience: Array.isArray(data.experience) ? data.experience : [],
