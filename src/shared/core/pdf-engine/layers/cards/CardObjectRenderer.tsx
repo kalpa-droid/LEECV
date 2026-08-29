@@ -10,6 +10,7 @@ import { resolveRecordLayout } from '../records/recordSpatialLayoutEngine';
 import { arrangeRecordFields } from '../records/fieldPlacementEngine';
 import { resolveColorForRole, resolveSubtleCardBackground } from '../colors/surfaceAwareColorEngine';
 import { resolveFieldDesign } from '../records/fieldDesignResolutionEngine';
+import { sanitizeFontFamily } from '../typography/pdfFontRegistry';
 
 interface CardObjectRendererProps {
   preset?: Preset;
@@ -146,7 +147,7 @@ export function CardObjectRenderer({
     },
     badgePill: {
       fontSize: recordScale.recordMeta - 1,
-      fontFamily: typography.fontFamily,
+      fontFamily: sanitizeFontFamily(typography.fontFamily),
       color: badgeSpec.colorHex,
       backgroundColor: 'rgba(0, 0, 0, 0.04)',
       paddingHorizontal: 4,
@@ -162,7 +163,7 @@ export function CardObjectRenderer({
     },
     extraText: {
       fontSize: recordScale.recordExtra,
-      fontFamily: typography.fontFamily,
+      fontFamily: sanitizeFontFamily(typography.fontFamily, false, true),
       color: subtitleSpec.colorHex,
       fontStyle: 'italic',
     },

@@ -19,7 +19,7 @@ import { flattenPresetForATS } from '../layers/ats/atsFlatteningEngine';
 import { createSubColumnGrid } from '../layers/subColumns/resolveSubColumns';
 import { resolveUnifiedTextSpec } from '../layers/typography/unifiedTextHierarchyEngine';
 import { resolveSubtleCardBackground } from '../layers/colors/surfaceAwareColorEngine';
-import { initPdfFonts } from '../layers/typography/pdfFontRegistry';
+import { initPdfFonts, sanitizeFontFamily } from '../layers/typography/pdfFontRegistry';
 import { resolveEffectivePresetSectionOrder, CvLayoutOverrides } from '../layers/sectors/layoutResolutionEngine';
 
 function sanitizeSvgDataUrl(dataUrl?: string): string | undefined {
@@ -95,17 +95,16 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   canvasHeightMm,
   customRecordCardDesigns
 }) => {
-  const activeFontFamily = userFontFamily || personalInfo?.fontFamily;
+  const rawFontFamily = userFontFamily || personalInfo?.fontFamily || basePreset.typography.fontFamily;
+  const activeFontFamily = sanitizeFontFamily(rawFontFamily);
   const rawPreset = atsMode ? flattenPresetForATS(basePreset) : basePreset;
-  const preset = activeFontFamily
-    ? {
-        ...rawPreset,
-        typography: {
-          ...rawPreset.typography,
-          fontFamily: activeFontFamily
-        }
-      }
-    : rawPreset;
+  const preset = {
+    ...rawPreset,
+    typography: {
+      ...rawPreset.typography,
+      fontFamily: activeFontFamily
+    }
+  };
   
   const surfaceModes = preset.sectorSurfaceMode || { sidebar: 'dark', main: 'light' };
   const sidebarPalette = preset.surfacePalettes 

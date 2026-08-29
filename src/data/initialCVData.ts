@@ -80,7 +80,7 @@ export const blankCVTemplate = {
     textColor: "var(--color-neutral-text-primary)",
     bgColor: "var(--color-accent-base)",
     bgCorridor: "var(--color-accent-base)",
-    fontFamily: "Arial, sans-serif"
+    fontFamily: "Helvetica"
   }
 };
 

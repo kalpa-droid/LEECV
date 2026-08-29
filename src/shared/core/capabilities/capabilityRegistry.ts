@@ -17,7 +17,7 @@ export const CAPABILITY_REGISTRY: Record<string, CapabilityConfig> = {
       accentColor: '#40a08e',
       textColor: '#333333',
       bgCorridor: '#aa57a4',
-      fontFamily: 'Arial, sans-serif'
+      fontFamily: 'Helvetica'
     }
   },
   paper_size: {

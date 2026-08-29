@@ -138,7 +138,7 @@ export function sanitizeCvData(rawCvData: any = {}) {
       textColor: data.theme?.textColor || '#0f172a',
       bgColor: data.theme?.bgColor || data.theme?.bgCorridor || data.theme?.primaryColor || '#1e3a8a',
       bgCorridor: data.theme?.bgColor || data.theme?.bgCorridor || data.theme?.primaryColor || '#1e3a8a',
-      fontFamily: data.theme?.fontFamily || "'Outfit', sans-serif"
+      fontFamily: data.theme?.fontFamily || 'Helvetica'
     }
   };
 }
