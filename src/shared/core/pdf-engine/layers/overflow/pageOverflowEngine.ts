@@ -1,15 +1,12 @@
 /**
- * NÚCLEO — MOTOR DE PAGINACIÓN A4 Y CONTROL DE OVERFLOW (pageOverflowEngine.ts)
+ * NÚCLEO — MOTOR DE PAGINACIÓN Y CONTROL DE FLUJO DE SECCIONES (pageOverflowEngine.ts)
  * 
  * Reglas de Arquitectura:
  * 1. Aplica EXCLUSIVAMENTE a presets con `pageCategory: 'documento'`. Presets de 'tarjeta' u 'afiche'
  *    son estrictamente de tamaño fijo y NUNCA se paginan.
- * 2. Mide el presupuesto de altura Pt por página (A4: 841.89pt menos márgenes y encabezados fijos).
- * 3. Si una sección desborda la Página 1:
-   - Trunca o colapsa metadatos secundarios (extras) antes de cortar.
-   - Refluye los registros sobrantes a la Página 2+.
-   - Agrega la leyenda de continuación `(cont.)` en el título de la sección en la nueva página.
-   - Mantiene los `pageTextObjects` (números de página, marcas fijas) en cada hoja resultante.
+ * 2. Transfiere el flujo de contenido de forma íntegra e ininterrumpida al motor vectorial nativo (@react-pdf/renderer).
+ * 3. Garantiza que no existan truncamientos destructivos de metadatos ni agregados artificiales de sufijos "(cont.)".
+ * 4. Respeta los saltos de página nativos forzados por el usuario (`break={sec.breakBefore}`).
  */
 
 import { Preset, TypographyScale } from '../presets/presetSchema';

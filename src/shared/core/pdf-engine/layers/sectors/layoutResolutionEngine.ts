@@ -1,17 +1,17 @@
 /**
  * NÚCLEO — MOTOR DE RESOLUCIÓN DE DISPOSICIÓN DE COLUMNAS (layoutResolutionEngine.ts)
  * 
- * Fusiona las preferencias de disposición del usuario (`layout.columnAssignments` y `layout.sectionOrders` de `primaria`/`secundaria`/`ambas`)
+ * Fusiona las preferencias de disposición del usuario (`layout.columnAssignments` y `layout.sectionOrders` de `primaria`/`secundaria`)
  * con el orden de secciones base declarado por el Preset (`preset.sectionOrder`).
  * 
- * Garantiza que mover una sección a columna primaria (main), secundaria (sidebar) o ambas (both)
+ * Garantiza que mover una sección a columna primaria (main / derecha) o secundaria (sidebar / izquierda)
  * se aplique síncronamente con total fidelidad en el lienzo de PDF y en la vista previa.
  */
 
 import { Preset, PresetSectionOrder } from '../presets/presetSchema';
 
 export interface CvLayoutOverrides {
-  columnAssignments?: Record<string, 'primaria' | 'secundaria' | 'ambas' | string>;
+  columnAssignments?: Record<string, 'primaria' | 'secundaria' | string>;
   sectionOrders?: {
     primaria?: string[];
     secundaria?: string[];
@@ -51,9 +51,6 @@ export function resolveEffectivePresetSectionOrder(
     } else if (targetRole === 'primaria') {
       if (!mainIds.includes(cleanId)) mainIds.push(cleanId);
       sidebarIds = sidebarIds.filter(id => id !== cleanId);
-    } else if (targetRole === 'ambas') {
-      if (!sidebarIds.includes(cleanId)) sidebarIds.push(cleanId);
-      if (!mainIds.includes(cleanId)) mainIds.push(cleanId);
     }
   });
 

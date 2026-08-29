@@ -17,7 +17,7 @@ import {
   FileText
 } from 'lucide-react';
 import { fontOptions } from '../../../data/fontOptions';
-import { getColumnAssignableSections, panelPresets } from '../../../shared/core/sectionRegistry';
+import { getColumnAssignableSections } from '../../../shared/core/sectionRegistry';
 import { getAllPresets } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { FIELD_CATALOG } from '../../../shared/core/pdf-engine/layers/records/fieldCatalog';
 import { PAGE_SIZES } from '../../../shared/core/pdf-engine/pageSizes';
@@ -1415,26 +1415,17 @@ export default function EditorPanel({
             <PanelSection 
               icon={<Columns3 className="w-4 h-4" />} 
               title="Columnas"
-              manualAdjustment={
-                <div className="space-y-3 pt-2">
-                  <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] flex items-center justify-between">
-                    <span>Ubicación y Ordenamiento de Secciones</span>
-                  </label>
+            >
+              <div className="space-y-3 pt-2">
+                <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] flex items-center justify-between">
+                  <span>Ubicación, Ordenamiento y Saltos de Página</span>
+                </label>
                   <div className="space-y-2">
                     {getColumnAssignableSections(cvData.customSections).map((sec) => {
                       const assignments = cvData.layout?.columnAssignments || {};
-                      let currentVal = 'primaria';
-                      if (typeof assignments[sec.id] === 'string') {
-                        currentVal = assignments[sec.id];
-                      } else {
-                        const leftList = assignments.left || ["contacto", "personales", "frase", "formacion", "cursos", "informatica", "competencias"];
-                        const rightList = assignments.right || ["profesion", "experiencia", "ecologia", "certificados", "firma"];
-                        const inLeft = leftList.includes(sec.id);
-                        const inRight = rightList.includes(sec.id);
-                        if (inLeft && inRight) currentVal = 'ambas';
-                        else if (inLeft) currentVal = 'secundaria';
-                        else currentVal = 'primaria';
-                      }
+                      const currentVal = typeof assignments[sec.id] === 'string'
+                        ? assignments[sec.id]
+                        : (sec.defaultSectorRole === 'sidebar' ? 'secundaria' : 'primaria');
 
                       const defaultSecundaria = ["contacto", "personales", "frase", "informatica", "competencias", "ecologia"];
                       const defaultPrimaria = ["personales", "formacion", "profesion", "experiencia", "cursos", "ecologia"];
@@ -1458,9 +1449,6 @@ export default function EditorPanel({
                           } else if (targetVal === 'primaria') {
                             if (!newPrimOrder.includes(sec.id)) newPrimOrder.push(sec.id);
                             newSecOrder = newSecOrder.filter(id => id !== sec.id);
-                          } else if (targetVal === 'ambas') {
-                            if (!newSecOrder.includes(sec.id)) newSecOrder.push(sec.id);
-                            if (!newPrimOrder.includes(sec.id)) newPrimOrder.push(sec.id);
                           }
 
                           return {
@@ -1513,12 +1501,12 @@ export default function EditorPanel({
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1.5">
                               <span className="font-extrabold text-[var(--color-neutral-text-primary)]">{sec.label}</span>
-                              {secPos > 0 && (currentVal === 'secundaria' || currentVal === 'ambas') && (
+                              {secPos > 0 && currentVal === 'secundaria' && (
                                 <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] font-black">
                                   Sec #{secPos}
                                 </span>
                               )}
-                              {primPos > 0 && (currentVal === 'primaria' || currentVal === 'ambas') && (
+                              {primPos > 0 && currentVal === 'primaria' && (
                                 <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[var(--color-secondary-muted)] text-[var(--color-secondary-text)] font-black">
                                   Prim #{primPos}
                                 </span>
@@ -1537,7 +1525,7 @@ export default function EditorPanel({
                                 type="button"
                                 onClick={() => setColumn('primaria')}
                                 className={currentVal === 'primaria'
-                                  ? `px-2 py-1 rounded-[${radius.control}] text-[10px] font-black transition cursor-pointer bg-[var(--color-secondary-base)] text-white ${elevationSystem.raised}` : `px-2 py-1 rounded-[${radius.control}] text-[10px] font-black transition cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50`}
+                                  ? `px-2 py-1 rounded-[${radius.control}] text-[10px] font-black transition cursor-pointer bg-[var(--color-accent-purple-hover)] text-white ${elevationSystem.raised}` : `px-2 py-1 rounded-[${radius.control}] text-[10px] font-black transition cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50`}
                               >
                                 Primaria (Derecha)
                               </button>
@@ -1571,7 +1559,7 @@ export default function EditorPanel({
                             </button>
 
                             <div className="flex items-center gap-2">
-                              {(currentVal === 'secundaria' || currentVal === 'ambas') && (
+                              {currentVal === 'secundaria' && (
                                 <div className={`flex items-center gap-1 bg-[var(--color-accent-muted)] px-2 py-0.5 rounded-[${radius.control}] border border-[var(--color-accent-base)]/30`}>
                                   <span className="font-bold text-[var(--color-accent-text)]">Sec:</span>
                                   <button
@@ -1593,7 +1581,7 @@ export default function EditorPanel({
                                 </div>
                               )}
 
-                              {(currentVal === 'primaria' || currentVal === 'ambas') && (
+                              {currentVal === 'primaria' && (
                                 <div className={`flex items-center gap-1 bg-[var(--color-secondary-muted)] px-2 py-0.5 rounded-[${radius.control}] border border-[var(--color-secondary-base)]/30`}>
                                   <span className="font-bold text-[var(--color-secondary-text)]">Prim:</span>
                                   <button
@@ -1621,55 +1609,7 @@ export default function EditorPanel({
                     })}
                   </div>
                 </div>
-              }
-            >
-              {/* Presets de Distribución de Columnas (1-Clic) */}
-              <div className="grid grid-cols-2 gap-2">
-                {panelPresets.map((preset) => (
-                  <button
-                    key={preset.id}
-                    onClick={() => {
-                      confirm({
-                        title: `¿Aplicar preset '${preset.name}'?`,
-                        message: 'Esta acción restablecerá la distribución de columnas al estándar del preset.',
-                        confirmText: 'Aplicar Preset',
-                        variant: 'secondary',
-                        onConfirm: () => {
-                          setCvData((prev: any) => {
-                            const newAssigns: any = {};
-                            (preset.secondarySections || []).forEach(s => { newAssigns[s] = 'secundaria'; });
-                            (preset.bothSections || []).forEach(s => { newAssigns[s] = 'ambas'; });
-                            (preset.primarySections || []).forEach(s => { 
-                              if (newAssigns[s] === 'secundaria') newAssigns[s] = 'ambas';
-                              else if (!newAssigns[s]) newAssigns[s] = 'primaria';
-                            });
-
-                            return {
-                              ...prev,
-                              layout: {
-                                ...prev.layout,
-                                columnAssignments: newAssigns,
-                                sectionOrders: {
-                                  secundaria: preset.secondarySections || [],
-                                  primaria: preset.primarySections || []
-                                }
-                              }
-                            };
-                          });
-                          showSuccess(`Preset '${preset.name}' aplicado.`);
-                        }
-                      });
-                    }}
-                    className={`p-2.5 rounded-[${radius.card}] border border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)] text-left transition flex flex-col justify-between cursor-pointer`}
-                  >
-                    <div>
-                      <span className="text-[11px] font-bold text-[var(--color-neutral-text-primary)] block">{preset.name}</span>
-                      <p className="text-[9px] text-[var(--color-neutral-text-secondary)] font-medium leading-snug mt-0.5">{preset.description}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </PanelSection>
+              </PanelSection>
           </div>
         )}
 
