@@ -151,7 +151,11 @@ export const PRESET_TYPOGRAPHY: Record<'editorial' | 'moderna' | 'clasica' | 'co
 export const PRESET_COLUMNS: Record<'sidebar-left' | 'sidebar-right' | 'full-width', ColumnLayoutPreset> = {
   'sidebar-left': {
     id: 'layout-sidebar-left',
-    name: 'Barra Izquierda (33/67)',
+    name: 'Barra Izquierda (32/68)',
+    sectors: [
+      { id: 'sidebar-col', role: 'sidebar', widthPercent: 32, order: 1 },
+      { id: 'main-col', role: 'main', widthPercent: 68, order: 2 }
+    ],
     sectionOrder: [
       { sectorRole: 'sidebar', sectionIds: ['contacto', 'datos-personales', 'frase', 'competencias', 'informatica'] },
       { sectorRole: 'main', sectionIds: ['formacion', 'profesion', 'experiencia', 'cursos', 'ecologia', 'firma'] }
@@ -159,7 +163,11 @@ export const PRESET_COLUMNS: Record<'sidebar-left' | 'sidebar-right' | 'full-wid
   },
   'sidebar-right': {
     id: 'layout-sidebar-right',
-    name: 'Barra Derecha (67/33)',
+    name: 'Barra Derecha (68/32)',
+    sectors: [
+      { id: 'main-col', role: 'main', widthPercent: 68, order: 1 },
+      { id: 'sidebar-col', role: 'sidebar', widthPercent: 32, order: 2 }
+    ],
     sectionOrder: [
       { sectorRole: 'main', sectionIds: ['formacion', 'profesion', 'experiencia', 'cursos', 'ecologia', 'firma'] },
       { sectorRole: 'sidebar', sectionIds: ['contacto', 'datos-personales', 'frase', 'competencias', 'informatica'] }
@@ -167,7 +175,10 @@ export const PRESET_COLUMNS: Record<'sidebar-left' | 'sidebar-right' | 'full-wid
   },
   'full-width': {
     id: 'layout-full-width',
-    name: 'Columna Única Completa',
+    name: 'Columna Única Completa (100%)',
+    sectors: [
+      { id: 'main-full', role: 'main', widthPercent: 100, order: 1 }
+    ],
     sectionOrder: [
       { sectorRole: 'main', sectionIds: ['contacto', 'datos-personales', 'frase', 'competencias', 'informatica', 'formacion', 'profesion', 'experiencia', 'cursos', 'ecologia', 'firma'] }
     ]

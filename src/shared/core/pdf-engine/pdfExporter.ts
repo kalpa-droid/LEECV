@@ -1,7 +1,7 @@
 import React from 'react';
 import { pdf } from '@react-pdf/renderer';
 import { TemplateRenderer } from './renderer/TemplateRenderer';
-import { getPreset } from './layers/presets/presetRegistry';
+import { getPreset, resolveActivePreset } from './layers/presets/presetRegistry';
 import { cvDataToContentSections } from './layers/records/cvDataAdapter';
 import { exportBusinessCardSheetToPDF } from './cardSheetExporter';
 import { Preset } from './layers/presets/presetSchema';
@@ -12,7 +12,7 @@ import { downloadBlob } from '../utils/downloadUtils';
  * Native Vector PDF Generator powered by 8-Layer TemplateRenderer + @react-pdf/renderer
  */
 export async function exportCVToPDF(cvData: any, presetInput?: Preset, atsMode?: boolean): Promise<boolean> {
-  const preset = presetInput || getPreset('cv-clasico');
+  const preset = presetInput || resolveActivePreset(cvData);
   const candidateName = (
     cvData?.personalInfo?.fullName || 
     `${cvData?.personalInfo?.surname || ''} ${cvData?.personalInfo?.givenNames || ''}`.trim() || 
@@ -55,8 +55,8 @@ import { buildCardDataFromCV } from './layers/records/cardDataAdapter';
 /**
  * Universal PDF exporter connecting all document types (CVs, Business Card Sheets, etc.)
  */
-export async function exportDocumentToPDF(cvData: any, presetId: string = 'cv-clasico', atsMode?: boolean): Promise<boolean> {
-  const preset = getPreset(presetId);
+export async function exportDocumentToPDF(cvData: any, presetInput: string | Preset = 'cv-clasico', atsMode?: boolean): Promise<boolean> {
+  const preset = typeof presetInput === 'string' ? getPreset(presetInput) : presetInput;
 
   if (preset.pageCategory === 'tarjeta') {
     const cardData = await buildCardDataFromCV(cvData);

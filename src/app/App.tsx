@@ -32,7 +32,7 @@ import { CVProvider, useCVContext } from '../context/CVContext';
 import { ToastProvider, useToast } from '../shared/core/ui/Toast';
 import { useConfirm, ConfirmProvider } from '../shared/core/ui/ConfirmDialog';
 
-import { syncPresetsFromStorage, getPreset } from '../shared/core/pdf-engine/layers/presets/presetRegistry';
+import { syncPresetsFromStorage, getPreset, resolveActivePreset } from '../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { cvDataToContentSections } from '../shared/core/pdf-engine/layers/records/cvDataAdapter';
 import { runAtsPreflightCheck, AtsPreflightResult } from '../shared/core/pdf-engine/layers/ats/atsPreflightCheck';
 import { AtsCheckModal } from '../modules/cv-builder/components/AtsCheckModal';
@@ -138,7 +138,7 @@ function AppContent() {
   const [atsResult, setAtsResult] = useState<AtsPreflightResult | null>(null);
 
   const handleOpenAtsCheck = () => {
-    const preset = getPreset(cvData?.activePresetId || 'cv-clasico');
+    const preset = resolveActivePreset(cvData);
     const sections = cvDataToContentSections(cvData);
     const res = runAtsPreflightCheck(preset, sections, cvData?.personalInfo);
     setAtsResult(res);
@@ -153,7 +153,7 @@ function AppContent() {
     const result = await withErrorHandling(
       async () => {
         const { exportDocumentToPDF } = await import('../shared/core/pdf-engine/pdfExporter');
-        return exportDocumentToPDF(cvData, cvData?.activePresetId || 'cv-clasico', true);
+        return exportDocumentToPDF(cvData, resolveActivePreset(cvData), true);
       },
       {
         context: 'Exportar PDF ATS',
@@ -179,7 +179,7 @@ function AppContent() {
 
     try {
       const { exportDocumentToPDF } = await import('../shared/core/pdf-engine/pdfExporter');
-      const success = await exportDocumentToPDF(cvData, cvData?.activePresetId || 'cv-clasico');
+      const success = await exportDocumentToPDF(cvData, resolveActivePreset(cvData));
       
       setPdfProgress(100);
       if (success) {

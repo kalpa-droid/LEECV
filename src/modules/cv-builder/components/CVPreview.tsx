@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useSyncExternalStore } from 'react';
 import { TemplateRenderer } from '../../../shared/core/pdf-engine/renderer/TemplateRenderer';
 import { CardSheetDocument } from '../../../shared/core/pdf-engine/renderer/CardSheetDocument';
-import { getPreset, subscribeToPresetChanges, getPresetsSnapshot } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
+import { getPreset, resolveActivePreset, subscribeToPresetChanges, getPresetsSnapshot } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { cvDataToContentSections } from '../../../shared/core/pdf-engine/layers/records/cvDataAdapter';
 import { buildCardDataFromCV, BusinessCardData } from '../../../shared/core/pdf-engine/layers/records/cardDataAdapter';
 import { VectorDocViewer } from '../../../shared/core/pdf-engine/VectorDocViewer';
@@ -19,12 +19,10 @@ export default function CVPreview({ cvData, setCvData: _setCvData, activeTab: _a
     return () => clearTimeout(handler);
   }, [cvData]);
 
-  // activePresetId vive en cvData — es la ÚNICA fuente de verdad de "qué plantilla está elegida"
-  const activePresetId = debouncedCvData?.activePresetId || 'cv-clasico';
   const [cardData, setCardData] = useState<BusinessCardData | null>(null);
   const { theme = {} } = debouncedCvData || {};
 
-  const activePreset = getPreset(activePresetId);
+  const activePreset = resolveActivePreset(debouncedCvData);
   const sections = useMemo(() => cvDataToContentSections(debouncedCvData), [debouncedCvData]);
 
   useEffect(() => {
@@ -68,7 +66,7 @@ export default function CVPreview({ cvData, setCvData: _setCvData, activeTab: _a
         style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top center' }}
       >
         <VectorDocViewer 
-          key={`${activePresetId}_v${presetsVersion}`} 
+          key={`${activePreset.id}_v${presetsVersion}`} 
           document={renderedDocument} 
           zoomLevel={zoomLevel}
         />

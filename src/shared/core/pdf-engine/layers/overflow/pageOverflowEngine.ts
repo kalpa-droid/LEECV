@@ -7,6 +7,7 @@
  * 2. Transfiere el flujo de contenido de forma íntegra e ininterrumpida al motor vectorial nativo (@react-pdf/renderer).
  * 3. Garantiza que no existan truncamientos destructivos de metadatos ni agregados artificiales de sufijos "(cont.)".
  * 4. Respeta los saltos de página nativos forzados por el usuario (`break={sec.breakBefore}`).
+ * 5. En maquetaciones de canal único (full-width sin sector sidebar), todas las secciones fluyen transparentemente a través del sector main de ancho completo (100%).
  */
 
 import { Preset, TypographyScale } from '../presets/presetSchema';

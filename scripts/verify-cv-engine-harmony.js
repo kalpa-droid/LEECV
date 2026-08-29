@@ -230,6 +230,28 @@ if (fs.existsSync(templatePath)) {
   );
 }
 
+// ─── 9. Plan v26: resolveActivePreset y sectores geométricos ───
+console.log('\n── 9. Plan v26: resolveActivePreset y sectores geométricos ──');
+const registryPath = path.join(ROOT, 'src/shared/core/pdf-engine/layers/presets/presetRegistry.ts');
+if (fs.existsSync(registryPath)) {
+  const regContent = fs.readFileSync(registryPath, 'utf-8');
+  check(
+    'presetRegistry define y exporta resolveActivePreset para composición en tiempo de ejecución',
+    regContent.includes('export function resolveActivePreset'),
+    'No se encontró resolveActivePreset en presetRegistry.ts'
+  );
+}
+
+const instancesPath = path.join(ROOT, 'src/shared/core/pdf-engine/layers/presets/presetCompositionInstances.ts');
+if (fs.existsSync(instancesPath)) {
+  const instContent = fs.readFileSync(instancesPath, 'utf-8');
+  check(
+    'PRESET_COLUMNS define sectores geométricos y full-width contiene las 9 secciones completas',
+    instContent.includes('widthPercent: 100') && instContent.includes('contacto') && instContent.includes('informatica'),
+    'PRESET_COLUMNS no define sectores geométricos o carece de secciones en full-width'
+  );
+}
+
 // ─── Resultado final ───
 console.log(`\n${'═'.repeat(60)}`);
 if (failed === 0) {

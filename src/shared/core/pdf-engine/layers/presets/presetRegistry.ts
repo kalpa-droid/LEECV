@@ -8,6 +8,30 @@ import { tarjetaPersonalPreset } from './presets/tarjeta-personal';
 import { composePreset } from './presetCompositionEngine';
 import { PRESET_COLORS, PRESET_TYPOGRAPHY, PRESET_COLUMNS } from './presetCompositionInstances';
 
+export { PRESET_COLORS, PRESET_TYPOGRAPHY, PRESET_COLUMNS };
+
+export function resolveActivePreset(cvData: any): Preset {
+  const basePreset = getPreset(cvData?.activePresetId || 'cv-clasico');
+
+  const customColor = cvData?.colorPresetId ? (PRESET_COLORS as any)[cvData.colorPresetId] : undefined;
+  const customTypo = cvData?.typographyPresetId ? (PRESET_TYPOGRAPHY as any)[cvData.typographyPresetId] : undefined;
+  const customLayout = cvData?.columnLayoutPresetId ? (PRESET_COLUMNS as any)[cvData.columnLayoutPresetId] : undefined;
+
+  if (!customColor && !customTypo && !customLayout) {
+    return basePreset;
+  }
+
+  return composePreset({
+    seedHex: customColor?.seedHex || basePreset.paletteSeed?.seedHex || basePreset.palette.primary,
+    basePreset,
+    colorPreset: customColor,
+    typographyPreset: customTypo,
+    columnLayoutPreset: customLayout,
+    id: `${basePreset.id}-custom`,
+    name: `${basePreset.name} (Personalizado)`
+  });
+}
+
 // Presets nativos por defecto compilados vía el Motor de Composición
 const NATIVE_PRESETS: Preset[] = [
   composePreset({

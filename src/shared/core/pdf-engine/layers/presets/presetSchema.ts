@@ -46,6 +46,7 @@ export interface ColumnLayoutPreset {
   id: string;
   name: string;
   sectionOrder: PresetSectionOrder[];
+  sectors?: SectorDefinition[];
 }
 
 export interface TypographyScale {

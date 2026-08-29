@@ -65,3 +65,16 @@ if (missingHintsCount > 0) {
 
 console.log(`✅ COBERTURA DE DISEÑO POR CAMPO AL 100%: Los ${catalogKeys.length}/${catalogKeys.length} campos del catálogo tienen su designHint declarado.`);
 
+// 4. Verificación de consumo de resolveActivePreset en tiempo de ejecución
+const previewFile = path.resolve(__dirname, '../src/modules/cv-builder/components/CVPreview.tsx');
+if (!fs.existsSync(previewFile)) {
+  console.error(`❌ ARCHIVO NO ENCONTRADO: ${previewFile}`);
+  process.exit(1);
+}
+const previewContent = fs.readFileSync(previewFile, 'utf8');
+if (!previewContent.includes('resolveActivePreset(')) {
+  console.error('❌ VERIFICACIÓN FALLIDA: resolveActivePreset no está siendo consumido en CVPreview.tsx.');
+  process.exit(1);
+}
+console.log('  ✓ Consumo de resolveActivePreset en tiempo de ejecución OK.');
+

@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { fontOptions } from '../../../data/fontOptions';
 import { getColumnAssignableSections } from '../../../shared/core/sectionRegistry';
-import { getAllPresets } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
+import { getAllPresets, PRESET_COLORS, PRESET_TYPOGRAPHY, PRESET_COLUMNS } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { FIELD_CATALOG } from '../../../shared/core/pdf-engine/layers/records/fieldCatalog';
 import { PAGE_SIZES } from '../../../shared/core/pdf-engine/pageSizes';
 import { getSavedCVsList, loadCVById, deleteCVById, saveCV } from '../services/cvStorageService';
@@ -1218,65 +1218,97 @@ export default function EditorPanel({
               </div>
             </PanelSection>
 
-            {/* Plantilla del Documento */}
-            <PanelSection icon={<Sparkles className="w-4 h-4" />} title="Plantilla">
+            {/* Estructura de Columnas (Layout) */}
+            <PanelSection icon={<Columns3 className="w-4 h-4" />} title="Disposición de columnas (Layout)">
               <div className="grid grid-cols-1 gap-2">
-                {[
-                  {
-                    id: 'cv-clasico',
-                    title: 'CV Clásico',
-                    desc: 'Columna lateral con foto y datos de contacto, cuerpo principal con formación y experiencia.',
-                    badge: 'Uso General'
-                  },
-                  {
-                    id: 'modern-corporate',
-                    title: 'Corporativo Moderno',
-                    desc: 'Sidebar más ancha en azul marino con acentos dorados, tipografía firme.',
-                    badge: 'Empresas & Ejecutivos'
-                  },
-                  {
-                    id: 'minimal-editorial',
-                    title: 'Editorial Minimalista',
-                    desc: 'Sidebar angosta en tono claro, tipografía serif protagonista, acentos terracota.',
-                    badge: 'Jóvenes & Creativos'
-                  }
-                ].map((styleOpt) => {
-                  const isSelected = (cvData.activePresetId || 'cv-clasico') === styleOpt.id;
+                {Object.entries(PRESET_COLUMNS).map(([key, layout]) => {
+                  const isSelected = cvData?.columnLayoutPresetId === key || (!cvData?.columnLayoutPresetId && key === 'sidebar-left');
                   return (
                     <button
-                      key={styleOpt.id}
-                      onClick={() => setCvData((prev: any) => ({ ...prev, activePresetId: styleOpt.id }))}
-                      className={`p-3 rounded-[${radius.card}] border text-left transition flex items-start justify-between gap-3 cursor-pointer ${
+                      key={key}
+                      onClick={() => setCvData((prev: any) => ({ ...prev, columnLayoutPresetId: key }))}
+                      className={`p-3 rounded-[${radius.card}] border text-left transition flex items-center justify-between gap-3 cursor-pointer ${
                         isSelected
                           ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
                           : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]'
                       }`}
                     >
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-black text-[var(--color-neutral-text-primary)]">{styleOpt.title}</span>
-                          <span className="text-[9px] px-2 py-0.5 rounded bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)] font-extrabold">
-                            {styleOpt.badge}
-                          </span>
-                        </div>
-                        <p className="text-[10px] text-[var(--color-neutral-text-primary)] font-medium leading-snug">{styleOpt.desc}</p>
-                      </div>
-                      {isSelected && <Check className="w-4 h-4 text-[var(--ui-text-primary)] flex-shrink-0 mt-1" />}
+                      <span className="text-xs font-black text-[var(--color-neutral-text-primary)]">{layout.name}</span>
+                      {isSelected && <Check className="w-4 h-4 text-[var(--ui-text-primary)] flex-shrink-0" />}
                     </button>
                   );
                 })}
               </div>
             </PanelSection>
 
-            {/* Presets Cromáticos y Plantillas */}
-            <PanelSection icon={<Palette className="w-4 h-4" />} title="Paletas de color y Plantillas">
+            {/* Armonía Cromática */}
+            <PanelSection icon={<Palette className="w-4 h-4" />} title="Paleta de color armónica">
+              <div className="grid grid-cols-2 gap-2">
+                {Object.entries(PRESET_COLORS).map(([key, colorPreset]) => {
+                  const isSelected = cvData?.colorPresetId === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setCvData((prev: any) => ({ ...prev, colorPresetId: key }))}
+                      className={`p-2.5 rounded-[${radius.card}] border text-left transition flex flex-col justify-between cursor-pointer ${
+                        isSelected
+                          ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
+                          : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[11px] font-bold text-[var(--color-neutral-text-primary)] truncate pr-1">{colorPreset.name}</span>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-[var(--ui-text-primary)] flex-shrink-0" />}
+                      </div>
+                      <div className="flex gap-1.5 items-center">
+                        <div className={`w-4 h-4 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: colorPreset.palette.primary }} />
+                        <div className={`w-4 h-4 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: colorPreset.palette.accent }} />
+                        <div className={`w-4 h-4 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: colorPreset.palette.secondary }} />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </PanelSection>
+
+            {/* Escala Tipográfica */}
+            <PanelSection icon={<FileText className="w-4 h-4" />} title="Escala tipográfica armónica">
+              <div className="grid grid-cols-2 gap-2">
+                {Object.entries(PRESET_TYPOGRAPHY).map(([key, typoPreset]) => {
+                  const isSelected = cvData?.typographyPresetId === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setCvData((prev: any) => ({ ...prev, typographyPresetId: key }))}
+                      className={`p-2.5 rounded-[${radius.card}] border text-left transition flex items-center justify-between cursor-pointer ${
+                        isSelected
+                          ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
+                          : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]'
+                      }`}
+                    >
+                      <span className="text-[11px] font-bold text-[var(--color-neutral-text-primary)]">{typoPreset.name}</span>
+                      {isSelected && <Check className="w-3.5 h-3.5 text-[var(--ui-text-primary)] flex-shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </PanelSection>
+
+            {/* Plantilla Base Predefinida */}
+            <PanelSection icon={<Sparkles className="w-4 h-4" />} title="Plantilla base predefinida">
               <div className="grid grid-cols-2 gap-2">
                 {getAllPresets().map((preset) => {
-                  const isSelected = (cvData?.activePresetId || 'cv-clasico') === preset.id;
+                  const isSelected = (cvData?.activePresetId || 'cv-clasico') === preset.id && !cvData?.colorPresetId && !cvData?.typographyPresetId && !cvData?.columnLayoutPresetId;
                   return (
                     <button
                       key={preset.id}
-                      onClick={() => setCvData((prev: any) => ({ ...prev, activePresetId: preset.id }))}
+                      onClick={() => setCvData((prev: any) => ({
+                        ...prev,
+                        activePresetId: preset.id,
+                        colorPresetId: undefined,
+                        typographyPresetId: undefined,
+                        columnLayoutPresetId: undefined
+                      }))}
                       className={`p-2.5 rounded-[${radius.card}] border text-left transition flex flex-col justify-between cursor-pointer ${
                         isSelected
                           ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
@@ -1320,7 +1352,7 @@ export default function EditorPanel({
                   onClick={() => setCvData((prev: any) => ({ ...prev, showCoverPage: prev.showCoverPage === undefined ? false : !prev.showCoverPage }))}
                   className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 ${elevationSystem.raised} cursor-pointer ${
                     cvData.showCoverPage !== false
-                      ? 'bg-[var(--color-secondary-base)] text-white hover:bg-[var(--color-secondary-hover)]'
+                      ? 'bg-[var(--color-accent-purple-hover)] text-white hover:opacity-90'
                       : 'bg-[var(--color-neutral-text-muted)] text-white hover:opacity-80'
                   }`}
                 >

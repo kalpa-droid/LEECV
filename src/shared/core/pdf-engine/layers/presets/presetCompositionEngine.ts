@@ -80,6 +80,7 @@ export function composePreset(seed: PresetSeed): Preset {
       dark: translatedSurfaces.dark
     },
     sectorSurfaceMode: defaultSectorSurfaceMode,
+    sectors: seed.columnLayoutPreset?.sectors || seed.basePreset.sectors,
     sectionOrder: seed.columnLayoutPreset?.sectionOrder || seed.basePreset.sectionOrder,
     paletteSeed: {
       seedHex: seedHex,
