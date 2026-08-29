@@ -294,6 +294,56 @@ if (fs.existsSync(previewPath)) {
   );
 }
 
+// ─── 11. Plan v28 Refinado: Almacenamiento óptimo, backup incremental e integridad round-trip ───
+console.log('\n── 11. Plan v28 Refinado: Almacenamiento óptimo, backup incremental e integridad ──');
+const hashBlobPath = path.join(ROOT, 'src/shared/core/utils/hashBlob.ts');
+if (fs.existsSync(hashBlobPath)) {
+  const hashContent = fs.readFileSync(hashBlobPath, 'utf-8');
+  check(
+    'hashBlob.ts define hashBlob usando Web Crypto API (SHA-256)',
+    hashContent.includes('crypto.subtle.digest') && hashContent.includes('SHA-256'),
+    'hashBlob.ts no implementa Web Crypto API SHA-256'
+  );
+} else {
+  check('hashBlob.ts existe', false, `No encontrado: ${hashBlobPath}`);
+}
+
+const packagerPath = path.join(ROOT, 'src/shared/core/storage/driveDocumentPackager.ts');
+if (fs.existsSync(packagerPath)) {
+  const packContent = fs.readFileSync(packagerPath, 'utf-8');
+  check(
+    'driveDocumentPackager.ts implementa splitCvDataForDrive y reconstructCvDataFromParts',
+    packContent.includes('export async function splitCvDataForDrive') && packContent.includes('export async function reconstructCvDataFromParts'),
+    'driveDocumentPackager.ts no declara las funciones bidireccionales'
+  );
+} else {
+  check('driveDocumentPackager.ts existe', false, `No encontrado: ${packagerPath}`);
+}
+
+const enterprisePath = path.join(ROOT, 'src/shared/core/storage/enterpriseStorageStrategy.ts');
+if (fs.existsSync(enterprisePath)) {
+  const entContent = fs.readFileSync(enterprisePath, 'utf-8');
+  check(
+    'enterpriseStorageStrategy.ts implementa conteo de referencias refCount en bóveda enterprise',
+    entContent.includes('incrementVaultAssetRefCount') && entContent.includes('decrementVaultAssetRefCount'),
+    'enterpriseStorageStrategy.ts no implementa el conteo de referencias'
+  );
+} else {
+  check('enterpriseStorageStrategy.ts existe', false, `No encontrado: ${enterprisePath}`);
+}
+
+const driveBackupPath = path.join(ROOT, 'src/shared/core/storage/driveBackupService.ts');
+if (fs.existsSync(driveBackupPath)) {
+  const driveContent = fs.readFileSync(driveBackupPath, 'utf-8');
+  check(
+    'driveBackupService.ts implementa la verificación incremental por hash y estado driveSyncState',
+    driveContent.includes('drive_asset_hashes_') && driveContent.includes('driveSyncState'),
+    'driveBackupService.ts no implementa la verificación incremental por hash'
+  );
+} else {
+  check('driveBackupService.ts existe', false, `No encontrado: ${driveBackupPath}`);
+}
+
 // ─── Resultado final ───
 console.log(`\n${'═'.repeat(60)}`);
 if (failed === 0) {

@@ -5,6 +5,7 @@ import { idbStorage } from '../../../modules/cv-builder/services/storageIndexedD
 import { SaveDocumentResult, DocumentRecord } from '../../../types/document';
 import { getDocumentTypeConfig } from '../capabilities/capabilityRegistry';
 import { getMonthNameEs } from '../utils/formatDate';
+import { backupCvToGoogleDrive } from './driveBackupService';
 
 export { supabase, checkStorageStatus };
 
@@ -126,6 +127,7 @@ export const saveDocument = async (docData: any, docTypeId: string = 'cv'): Prom
     }
 
     let syncState: 'local' | 'synced' | 'pending' = 'local';
+    let driveSyncState: 'not-configured' | 'synced' | 'pending' = 'pending';
 
     // 3. Sync to Supabase in parallel
     if (supabase) {
@@ -149,9 +151,21 @@ export const saveDocument = async (docData: any, docTypeId: string = 'cv'): Prom
       }
     }
 
+    // 4. Respaldo incremental en segundo plano a Google Drive
+    if (docTypeId === 'cv') {
+      backupCvToGoogleDrive(fullDocObject).then(res => {
+        if (res.success) {
+          summaryRecord.driveSyncState = 'synced';
+        }
+      }).catch(err => {
+        console.warn('Advertencia en respaldo a Google Drive:', err);
+      });
+    }
+
     return { 
       success: true, 
       syncState,
+      driveSyncState,
       record: summaryRecord, 
       title: summaryRecord.title, 
       doc_data: fullDocObject 

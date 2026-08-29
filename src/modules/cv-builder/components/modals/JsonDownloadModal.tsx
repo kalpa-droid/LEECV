@@ -1,5 +1,4 @@
-import React from 'react';
-import { exportCVToJson } from '../../../../shared/core/utils/jsonImporterExporter';
+import { exportCVToJson, exportCVToZip } from '../../../../shared/core/utils/jsonImporterExporter';
 import { Modal } from '../../../../shared/core/ui/Modal';
 
 import { elevationSystem, radius } from '../../../../shared/core/uiDesignSystem';
@@ -9,14 +8,14 @@ export default function JsonDownloadModal({ isOpen, onClose, cvData }: any) {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Respaldo en Formato .JSON"
+      title="Respaldo Local (JSON / ZIP)"
       icon={<span className="text-xl">💾</span>}
       size="md"
       footer={
-        <div className="w-full flex items-center justify-between gap-2">
+        <div className="w-full flex flex-wrap items-center justify-end gap-2">
           <button
             onClick={onClose}
-            className={`px-4 py-2 bg-[var(--ui-btn-neutral-bg)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-btn-neutral-text)] border border-[var(--ui-btn-neutral-border)] text-xs font-bold rounded-[${radius.card}] transition cursor-pointer`}
+            className={`px-3 py-1.5 bg-[var(--ui-btn-neutral-bg)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-btn-neutral-text)] border border-[var(--ui-btn-neutral-border)] text-xs font-bold rounded-[${radius.card}] transition cursor-pointer`}
           >
             Cerrar
           </button>
@@ -25,9 +24,18 @@ export default function JsonDownloadModal({ isOpen, onClose, cvData }: any) {
               exportCVToJson(cvData);
               onClose();
             }}
-            className={`px-4 py-2 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-black text-xs rounded-[${radius.card}] ${elevationSystem.floating} transition flex items-center gap-2 cursor-pointer`}
+            className={`px-3 py-1.5 bg-[var(--ui-btn-neutral-bg)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] border border-[var(--ui-border)] text-xs font-bold rounded-[${radius.card}] transition flex items-center gap-1.5 cursor-pointer`}
           >
-            <span>⬇️ Descargar Archivo .JSON</span>
+            <span>📄 JSON Portable</span>
+          </button>
+          <button
+            onClick={async () => {
+              await exportCVToZip(cvData);
+              onClose();
+            }}
+            className={`px-4 py-1.5 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-black text-xs rounded-[${radius.card}] ${elevationSystem.floating} transition flex items-center gap-1.5 cursor-pointer`}
+          >
+            <span>📦 Paquete Liviano (.ZIP)</span>
           </button>
         </div>
       }

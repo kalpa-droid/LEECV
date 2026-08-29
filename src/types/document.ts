@@ -27,11 +27,13 @@ export interface DocumentRecord {
   candidate_name?: string;
   dni?: string;
   updated_at: string;
+  driveSyncState?: 'not-configured' | 'synced' | 'pending';
 }
 
 export interface SaveDocumentResult {
   success: boolean;
   syncState?: 'local' | 'synced' | 'pending';
+  driveSyncState?: 'not-configured' | 'synced' | 'pending';
   record?: DocumentRecord;
   title?: string;
   doc_data?: any;
