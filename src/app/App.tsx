@@ -39,7 +39,7 @@ import { AtsCheckModal } from '../modules/cv-builder/components/AtsCheckModal';
 import { navigation } from '../shared/core/utils/navigation';
 
 function AppContent() {
-  const { cvData, setCvData, resetToBlankCV, saveCV } = useCVContext();
+  const { cvData, setCvData, resetToBlankCV, saveCV, saveCVAs } = useCVContext();
   const { showSuccess, showError, showInfo } = useToast();
   const { confirm } = useConfirm();
   const [currentProfile, setCurrentProfile] = useState<any>(null);
@@ -246,6 +246,23 @@ function AppContent() {
     }
   };
 
+  const handleSaveCVAsClick = async (versionLabel: string) => {
+    setIsSaving(true);
+    try {
+      const res = await saveCVAs(versionLabel);
+      if (res?.success) {
+        showSuccess(`¡Nueva versión guardada! 📌 Título: "${res.title || versionLabel}"`);
+      } else {
+        showError('Hubo un inconveniente al crear la nueva versión.');
+      }
+    } catch (err) {
+      console.error(err);
+      showError('Error al crear la nueva versión del documento.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleNewCV = async () => {
 
     confirm({
@@ -441,6 +458,7 @@ function AppContent() {
             isOpen={isSaveModalOpen}
             onClose={() => setIsSaveModalOpen(false)}
             onSaveStorage={handleSaveCVClick}
+            onSaveAs={handleSaveCVAsClick}
             onExportJson={() => exportCVToJson(cvData)}
             onOpenCloudStatus={() => setIsCloudModalOpen(true)}
             isSaving={isSaving}

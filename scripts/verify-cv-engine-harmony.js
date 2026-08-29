@@ -344,6 +344,73 @@ if (fs.existsSync(driveBackupPath)) {
   check('driveBackupService.ts existe', false, `No encontrado: ${driveBackupPath}`);
 }
 
+// ─── 12. Plan v29: Fix Importación JSON, Catálogo de Puestos y "Guardar como" ───
+console.log('\n── 12. Plan v29: Fix Importación JSON, Catálogo de Puestos y "Guardar como" ──');
+
+const jsonImporterPath = path.join(ROOT, 'src/shared/core/utils/jsonImporterExporter.ts');
+if (fs.existsSync(jsonImporterPath)) {
+  const jsonContent = fs.readFileSync(jsonImporterPath, 'utf-8');
+  check(
+    'importCVFromJsonFile maneja reader.onerror sin reject síncrono previo',
+    jsonContent.includes('reader.onerror = () =>') && !jsonContent.includes("    reject(new Error('No se pudo leer el archivo.'));\n    reader.readAsText(file);"),
+    'importCVFromJsonFile mantiene el reject síncrono que rompe las importaciones JSON'
+  );
+} else {
+  check('jsonImporterExporter.ts existe', false, `No encontrado: ${jsonImporterPath}`);
+}
+
+const jobCatalogPath = path.join(ROOT, 'src/shared/core/data/jobPositionCatalog.ts');
+if (fs.existsSync(jobCatalogPath)) {
+  const catContent = fs.readFileSync(jobCatalogPath, 'utf-8');
+  check(
+    'jobPositionCatalog.ts exporta JOB_POSITION_CATALOG con categorías y ALL_POSITIONS_FLAT',
+    catContent.includes('export const JOB_POSITION_CATALOG') && catContent.includes('export const ALL_POSITIONS_FLAT'),
+    'jobPositionCatalog.ts no exporta el catálogo ni la lista plana de puestos'
+  );
+} else {
+  check('jobPositionCatalog.ts existe', false, `No encontrado: ${jobCatalogPath}`);
+}
+
+const docTypesPath = path.join(ROOT, 'src/types/document.ts');
+if (fs.existsSync(docTypesPath)) {
+  const docTypesContent = fs.readFileSync(docTypesPath, 'utf-8');
+  check(
+    'DocumentRecord incluye la propiedad opcional version_label',
+    docTypesContent.includes('version_label?: string;'),
+    'DocumentRecord no declara version_label'
+  );
+}
+
+const docStoragePath = path.join(ROOT, 'src/shared/core/storage/documentStorageService.ts');
+if (fs.existsSync(docStoragePath)) {
+  const storageContent = fs.readFileSync(docStoragePath, 'utf-8');
+  check(
+    'documentStorageService.ts exporta saveDocumentAs con soporte de versionLabel',
+    storageContent.includes('export const saveDocumentAs = async') && storageContent.includes('versionLabel?: string'),
+    'documentStorageService.ts no exporta saveDocumentAs'
+  );
+}
+
+const cvStoragePath = path.join(ROOT, 'src/modules/cv-builder/services/cvStorageService.ts');
+if (fs.existsSync(cvStoragePath)) {
+  const cvStorageContent = fs.readFileSync(cvStoragePath, 'utf-8');
+  check(
+    'cvStorageService.ts re-exporta saveCVAs',
+    cvStorageContent.includes('export const saveCVAs ='),
+    'cvStorageService.ts no re-exporta saveCVAs'
+  );
+}
+
+const cvContextPath = path.join(ROOT, 'src/context/CVContext.tsx');
+if (fs.existsSync(cvContextPath)) {
+  const contextContent = fs.readFileSync(cvContextPath, 'utf-8');
+  check(
+    'CVContext.tsx sincroniza cvData.id al guardar y ofrece la función saveCVAs',
+    contextContent.includes('setCvData((prev: CVData) => ({ ...prev, id: res.record!.id }))') && contextContent.includes('saveCVAs'),
+    'CVContext.tsx no sincroniza id o no ofrece saveCVAs'
+  );
+}
+
 // ─── Resultado final ───
 console.log(`\n${'═'.repeat(60)}`);
 if (failed === 0) {

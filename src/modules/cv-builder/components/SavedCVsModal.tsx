@@ -216,6 +216,12 @@ export default function SavedCVsModal({
                         </span>
                       )}
 
+                      {(item.version_label || item.versionLabel) && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-black bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)] border border-[var(--color-accent-purple)]/40 flex items-center gap-1">
+                          📋 Puesto: {item.version_label || item.versionLabel}
+                        </span>
+                      )}
+
                       {item.dni && (
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[var(--ui-dock-hover)] text-[var(--ui-text-secondary)]">
                           DNI: {item.dni}

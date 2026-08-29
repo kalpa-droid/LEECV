@@ -28,6 +28,7 @@ export interface DocumentRecord {
   dni?: string;
   updated_at: string;
   driveSyncState?: 'not-configured' | 'synced' | 'pending';
+  version_label?: string;
 }
 
 export interface SaveDocumentResult {

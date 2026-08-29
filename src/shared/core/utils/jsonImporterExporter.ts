@@ -57,7 +57,9 @@ export function importCVFromJsonFile(file: File): Promise<CVData> {
         reject(new Error('Error al procesar el archivo JSON: ' + (err?.message || err)));
       }
     };
-    reject(new Error('No se pudo leer el archivo.'));
+    reader.onerror = () => {
+      reject(new Error('No se pudo leer el archivo.'));
+    };
     reader.readAsText(file);
   });
 }

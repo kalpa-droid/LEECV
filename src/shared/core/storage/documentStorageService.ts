@@ -34,7 +34,8 @@ export const getSavedDocumentsList = async (docTypeId: string = 'cv'): Promise<D
               title: item.title,
               candidate_name: item.candidate_name,
               dni: item.dni,
-              updated_at: item.updated_at
+              updated_at: item.updated_at,
+              ...(item.version_label ? { version_label: item.version_label } : {})
             });
           }
         });
@@ -72,9 +73,13 @@ export const getSavedDocumentsList = async (docTypeId: string = 'cv'): Promise<D
 };
 
 /**
- * Save any document type to storage (IndexedDB + LocalStorage Summary + Cloud Sync)
+ * Internal implementation for saving documents (with optional version label and new ID enforcement)
  */
-export const saveDocument = async (docData: any, docTypeId: string = 'cv'): Promise<SaveDocumentResult> => {
+const saveDocumentInternal = async (
+  docData: any,
+  docTypeId: string = 'cv',
+  versionLabel?: string
+): Promise<SaveDocumentResult> => {
   try {
     const docConfig = getDocumentTypeConfig(docTypeId);
     const optimizedDoc = docTypeId === 'cv' ? await optimizeCVImagesToWebP(docData) : docData;
@@ -87,7 +92,8 @@ export const saveDocument = async (docData: any, docTypeId: string = 'cv'): Prom
     ).trim();
     const monthName = getMonthNameEs();
     const yearNum = new Date().getFullYear();
-    const formattedTitle = `${docConfig.name.toUpperCase()} - ${candidateName} - ${monthName} - ${yearNum}`;
+    const labelSuffix = versionLabel ? ` — ${versionLabel}` : '';
+    const formattedTitle = `${docConfig.name.toUpperCase()} - ${candidateName}${labelSuffix} - ${monthName} - ${yearNum}`;
     const nowIso = new Date().toISOString();
 
     const summaryRecord: DocumentRecord = {
@@ -96,10 +102,17 @@ export const saveDocument = async (docData: any, docTypeId: string = 'cv'): Prom
       title: formattedTitle,
       candidate_name: candidateName,
       dni: optimizedDoc.personalInfo?.dni || '',
-      updated_at: nowIso
+      updated_at: nowIso,
+      ...(versionLabel ? { version_label: versionLabel } : {})
     };
 
-    const fullDocObject = { ...optimizedDoc, id, doc_type_id: docTypeId, updated_at: nowIso };
+    const fullDocObject = {
+      ...optimizedDoc,
+      id,
+      doc_type_id: docTypeId,
+      updated_at: nowIso,
+      ...(versionLabel ? { version_label: versionLabel } : {})
+    };
 
     // 1. Primary Save to IndexedDB (Unlimited Capacity)
     await idbStorage.setItem(`doc_${docTypeId}_data_${id}`, fullDocObject);
@@ -108,10 +121,7 @@ export const saveDocument = async (docData: any, docTypeId: string = 'cv'): Prom
       await idbStorage.setItem('cv_premium_data', fullDocObject);
     }
 
-    // 2. Save summary list to LocalStorage (liviano, sin el objeto completo —
-    // IndexedDB ya es la fuente primaria de fullDocObject, escribirlo también
-    // acá reintroduce el límite de 5-10MB que la migración a IndexedDB
-    // buscaba evitar, y falla en silencio con muchos certificados).
+    // 2. Save summary list to LocalStorage (liviano)
     try {
       const storageKey = getStorageKeyForType(docTypeId);
       const list = await getSavedDocumentsList(docTypeId);
@@ -174,6 +184,26 @@ export const saveDocument = async (docData: any, docTypeId: string = 'cv'): Prom
     console.error(`Error crítico al guardar documento [${docTypeId}]:`, err);
     return { success: false, error: err };
   }
+};
+
+/**
+ * Save any document type to storage (IndexedDB + LocalStorage Summary + Cloud Sync)
+ */
+export const saveDocument = async (docData: any, docTypeId: string = 'cv'): Promise<SaveDocumentResult> => {
+  return saveDocumentInternal(docData, docTypeId);
+};
+
+/**
+ * Save document as a new independent version with a custom version label
+ */
+export const saveDocumentAs = async (
+  docData: any,
+  versionLabel?: string,
+  docTypeId: string = 'cv'
+): Promise<SaveDocumentResult> => {
+  const newId = `doc_${docTypeId}_${Date.now()}`;
+  const dataWithNewId = { ...docData, id: newId };
+  return saveDocumentInternal(dataWithNewId, docTypeId, versionLabel);
 };
 
 /**

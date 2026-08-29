@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
 import { blankCVTemplate } from '../data/initialCVData';
-import { saveCV as saveCVStorage } from '../modules/cv-builder/services/cvStorageService';
+import { saveCV as saveCVStorage, saveCVAs as saveCVAsStorage } from '../modules/cv-builder/services/cvStorageService';
 import { sanitizeCvData } from '../shared/core/utils/cvDataSchema';
 import { navigation } from '../shared/core/utils/navigation';
 import { CVData } from '../types/cv';
@@ -15,6 +15,7 @@ interface CVContextType {
   resetToBlankCV: () => void;
   loadCVData: (newCVData: CVData) => void;
   saveCV: () => Promise<any>;
+  saveCVAs: (versionLabel?: string) => Promise<any>;
   isSaving: boolean;
   undo: () => void;
   redo: () => void;
@@ -193,9 +194,28 @@ export function CVProvider({ children }: { children: ReactNode }) {
     setIsSaving(true);
     try {
       const res = await saveCVStorage(cvData);
+      if (res?.success && res.record?.id && res.record.id !== cvData.id) {
+        setCvData((prev: CVData) => ({ ...prev, id: res.record!.id }));
+      }
       return res;
     } catch (err) {
       console.error('Error guardando en CVContext:', err);
+      return { success: false, error: err };
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const saveCVAs = async (versionLabel?: string) => {
+    setIsSaving(true);
+    try {
+      const res = await saveCVAsStorage(cvData, versionLabel);
+      if (res?.success && res.record?.id) {
+        setCvData((prev: CVData) => ({ ...prev, id: res.record!.id }));
+      }
+      return res;
+    } catch (err) {
+      console.error('Error en Guardar como en CVContext:', err);
       return { success: false, error: err };
     } finally {
       setIsSaving(false);
@@ -214,6 +234,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
         resetToBlankCV,
         loadCVData,
         saveCV,
+        saveCVAs,
         isSaving,
         undo,
         redo,
