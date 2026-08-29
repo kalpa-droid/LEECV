@@ -54,6 +54,7 @@ export interface TemplateRendererProps {
   roles?: any[];
   education?: any[];
   professions?: any[];
+  userFontFamily?: string;
   layoutOverrides?: CvLayoutOverrides;
   customRecordCardDesigns?: {
     education?: string;
@@ -87,13 +88,24 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   roles = [],
   education = [],
   professions = [],
+  userFontFamily,
   layoutOverrides,
   embedded = false,
   canvasWidthMm,
   canvasHeightMm,
   customRecordCardDesigns
 }) => {
-  const preset = atsMode ? flattenPresetForATS(basePreset) : basePreset;
+  const activeFontFamily = userFontFamily || personalInfo?.fontFamily;
+  const rawPreset = atsMode ? flattenPresetForATS(basePreset) : basePreset;
+  const preset = activeFontFamily
+    ? {
+        ...rawPreset,
+        typography: {
+          ...rawPreset.typography,
+          fontFamily: activeFontFamily
+        }
+      }
+    : rawPreset;
   
   const surfaceModes = preset.sectorSurfaceMode || { sidebar: 'dark', main: 'light' };
   const sidebarPalette = preset.surfacePalettes 

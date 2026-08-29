@@ -10,6 +10,8 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 interface VectorDocViewerProps {
   /** El documento de @react-pdf/renderer a renderizar, ej: <CvPdfDocument cvData={cvData} /> */
   document: React.ReactElement;
+  /** Nivel de zoom actual (ej: 1.0, 1.25) para mantener nitidez cristalina en alta resolución */
+  zoomLevel?: number;
 }
 
 /**
@@ -29,7 +31,7 @@ interface VectorDocViewerProps {
  * literalmente, el mismo PDF que el usuario termina descargando — cero
  * posibilidad de que preview y descarga difieran.
  */
-export function VectorDocViewer({ document }: VectorDocViewerProps) {
+export function VectorDocViewer({ document, zoomLevel = 1 }: VectorDocViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,11 +55,9 @@ export function VectorDocViewer({ document }: VectorDocViewerProps) {
 
         const container = containerRef.current;
         if (!container) return;
-        container.innerHTML = '';
 
-        // Ancho disponible real del contenedor, para que cada página se dibuje
-        // nítida (sin escalar un canvas más chico hacia arriba) tanto en un
-        // monitor grande como en la pantalla angosta de un celular.
+        // Renderizado offscreen en Fragment para evitar parpadeos blancos durante el renderizado
+        const fragment = window.document.createDocumentFragment();
         const containerWidth = container.clientWidth || 800;
         const devicePixelRatio = window.devicePixelRatio || 1;
 
@@ -66,8 +66,8 @@ export function VectorDocViewer({ document }: VectorDocViewerProps) {
           const page = await pdfDoc.getPage(pageNum);
 
           const unscaledViewport = page.getViewport({ scale: 1 });
-          const scale = containerWidth / unscaledViewport.width;
-          const viewport = page.getViewport({ scale: scale * devicePixelRatio });
+          const baseScale = containerWidth / unscaledViewport.width;
+          const viewport = page.getViewport({ scale: baseScale * zoomLevel * devicePixelRatio });
 
           const canvas = window.document.createElement('canvas');
           canvas.width = viewport.width;
@@ -83,11 +83,15 @@ export function VectorDocViewer({ document }: VectorDocViewerProps) {
           const ctx = canvas.getContext('2d');
           if (!ctx) continue;
 
-          container.appendChild(canvas);
+          fragment.appendChild(canvas);
           await page.render({ canvasContext: ctx, viewport }).promise;
         }
 
-        if (!cancelled && renderTokenRef.current === myToken) setLoading(false);
+        if (!cancelled && renderTokenRef.current === myToken) {
+          container.innerHTML = '';
+          container.appendChild(fragment);
+          setLoading(false);
+        }
       } catch (err) {
         console.error('Error renderizando el PDF vectorial:', err);
         const detail = err instanceof Error ? err.message : String(err);
@@ -100,7 +104,7 @@ export function VectorDocViewer({ document }: VectorDocViewerProps) {
 
     renderPdf();
     return () => { cancelled = true; };
-  }, [document]);
+  }, [document, zoomLevel]);
 
   return (
     <div style={{ width: '100%', height: '100%', overflowY: 'auto', overflowX: 'hidden' }}>

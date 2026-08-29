@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useSyncExternalStore } from 'react';
+import React, { useState, useEffect, useMemo, useSyncExternalStore } from 'react';
 import { TemplateRenderer } from '../../../shared/core/pdf-engine/renderer/TemplateRenderer';
 import { CardSheetDocument } from '../../../shared/core/pdf-engine/renderer/CardSheetDocument';
 import { getPreset, subscribeToPresetChanges, getPresetsSnapshot } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
@@ -10,21 +10,53 @@ export default function CVPreview({ cvData, setCvData: _setCvData, activeTab: _a
   // Suscripción reactiva con useSyncExternalStore para re-renderizado automático sin F5 al cambiar plantillas
   const presetsVersion = useSyncExternalStore(subscribeToPresetChanges, getPresetsSnapshot, getPresetsSnapshot);
 
-  // activePresetId vive en cvData — es la ÚNICA fuente de verdad de "qué plantilla está elegida"
-  const activePresetId = cvData?.activePresetId || 'cv-clasico';
-  const [cardData, setCardData] = useState<BusinessCardData | null>(null);
-  const { theme = {} } = cvData || {};
-
-  const activePreset = getPreset(activePresetId);
-  const sections = cvDataToContentSections(cvData);
-
+  // Debounce de cvData para evitar re-generar el PDF en cada pulsación de tecla
+  const [debouncedCvData, setDebouncedCvData] = useState(cvData);
   useEffect(() => {
-    buildCardDataFromCV(cvData).then(setCardData);
+    const handler = setTimeout(() => {
+      setDebouncedCvData(cvData);
+    }, 300);
+    return () => clearTimeout(handler);
   }, [cvData]);
 
-  const dynamicThemeStyle = {
+  // activePresetId vive en cvData — es la ÚNICA fuente de verdad de "qué plantilla está elegida"
+  const activePresetId = debouncedCvData?.activePresetId || 'cv-clasico';
+  const [cardData, setCardData] = useState<BusinessCardData | null>(null);
+  const { theme = {} } = debouncedCvData || {};
+
+  const activePreset = getPreset(activePresetId);
+  const sections = useMemo(() => cvDataToContentSections(debouncedCvData), [debouncedCvData]);
+
+  useEffect(() => {
+    buildCardDataFromCV(debouncedCvData).then(setCardData);
+  }, [debouncedCvData]);
+
+  const dynamicThemeStyle = useMemo(() => ({
     fontFamily: theme.fontFamily || 'Arial, sans-serif'
-  };
+  }), [theme.fontFamily]);
+
+  const renderedDocument = useMemo(() => {
+    if (activePreset.pageCategory === 'tarjeta') {
+      return <CardSheetDocument card={cardData} preset={activePreset} />;
+    }
+    return (
+      <TemplateRenderer
+        preset={activePreset}
+        sections={sections}
+        personalInfo={debouncedCvData?.personalInfo || {}}
+        certificatesScanned={debouncedCvData?.certificatesScanned || []}
+        showCoverPage={debouncedCvData?.showCoverPage !== false}
+        coverFeaturedEducationId={debouncedCvData?.coverFeaturedEducationId}
+        coverFeaturedProfessionId={debouncedCvData?.coverFeaturedProfessionId}
+        roles={debouncedCvData?.roles || []}
+        education={debouncedCvData?.education || []}
+        professions={debouncedCvData?.professions || []}
+        userFontFamily={debouncedCvData?.theme?.fontFamily}
+        layoutOverrides={debouncedCvData?.layout}
+        customRecordCardDesigns={debouncedCvData?.recordCardDesigns}
+      />
+    );
+  }, [activePreset, sections, cardData, debouncedCvData]);
 
   return (
     <div 
@@ -35,26 +67,11 @@ export default function CVPreview({ cvData, setCvData: _setCvData, activeTab: _a
         className="w-full max-w-5xl my-2 no-print transition-transform duration-150 ease-out"
         style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top center' }}
       >
-        <VectorDocViewer key={`${activePresetId}_v${presetsVersion}`} document={
-          activePreset.pageCategory === 'tarjeta' ? (
-            <CardSheetDocument card={cardData} preset={activePreset} />
-          ) : (
-            <TemplateRenderer
-              preset={activePreset}
-              sections={sections}
-              personalInfo={cvData?.personalInfo || {}}
-              certificatesScanned={cvData?.certificatesScanned || []}
-              showCoverPage={cvData?.showCoverPage !== false}
-              coverFeaturedEducationId={cvData?.coverFeaturedEducationId}
-              coverFeaturedProfessionId={cvData?.coverFeaturedProfessionId}
-              roles={cvData?.roles || []}
-              education={cvData?.education || []}
-              professions={cvData?.professions || []}
-              layoutOverrides={cvData?.layout}
-              customRecordCardDesigns={cvData?.recordCardDesigns}
-            />
-          )
-        } />
+        <VectorDocViewer 
+          key={`${activePresetId}_v${presetsVersion}`} 
+          document={renderedDocument} 
+          zoomLevel={zoomLevel}
+        />
       </div>
     </div>
   );

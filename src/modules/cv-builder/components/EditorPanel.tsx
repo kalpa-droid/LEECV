@@ -1531,7 +1531,7 @@ export default function EditorPanel({
                                 className={currentVal === 'secundaria'
                                   ? `px-2 py-1 rounded-[${radius.control}] text-[10px] font-black transition cursor-pointer bg-[var(--color-accent-hover)] text-white ${elevationSystem.raised}` : `px-2 py-1 rounded-[${radius.control}] text-[10px] font-black transition cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50`}
                               >
-                                Secundaria
+                                Secundaria (Izquierda)
                               </button>
                               <button
                                 type="button"
@@ -1539,15 +1539,7 @@ export default function EditorPanel({
                                 className={currentVal === 'primaria'
                                   ? `px-2 py-1 rounded-[${radius.control}] text-[10px] font-black transition cursor-pointer bg-[var(--color-secondary-base)] text-white ${elevationSystem.raised}` : `px-2 py-1 rounded-[${radius.control}] text-[10px] font-black transition cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50`}
                               >
-                                Primaria
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setColumn('ambas')}
-                                className={currentVal === 'ambas'
-                                  ? `px-2 py-1 rounded-[${radius.control}] text-[10px] font-black transition cursor-pointer bg-[var(--color-accent-purple-hover)] text-white ${elevationSystem.raised}` : `px-2 py-1 rounded-[${radius.control}] text-[10px] font-black transition cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50`}
-                              >
-                                Ambas
+                                Primaria (Derecha)
                               </button>
                             </div>
                           </div>

@@ -78,7 +78,7 @@ export default function Navbar({
         </div>
 
         {/* Middle: 5 Action Buttons */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar max-w-full py-1">
           {/* 1. NUEVO */}
           <button
             onClick={handleNewClick}
