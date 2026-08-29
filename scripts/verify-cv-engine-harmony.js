@@ -219,9 +219,9 @@ if (fs.existsSync(layoutEnginePath)) {
 if (fs.existsSync(templatePath)) {
   const trContent = fs.readFileSync(templatePath, 'utf-8');
   check(
-    'TemplateRenderer ancla la sección firma con marginTop: auto al pie de la hoja',
-    trContent.includes("isFirma = sec.id === 'firma'") && trContent.includes("marginTop: 'auto'"),
-    'TemplateRenderer no ancla la sección firma con marginTop: auto'
+    'TemplateRenderer ancla la sección firma con espaciado nativo al pie de la hoja',
+    trContent.includes("isFirma = sec.id === 'firma'") && trContent.includes("marginTop: 16"),
+    'TemplateRenderer no ancla la sección firma con espaciado nativo'
   );
   check(
     'TemplateRenderer aplica salto de página nativo break={sec.breakBefore}',

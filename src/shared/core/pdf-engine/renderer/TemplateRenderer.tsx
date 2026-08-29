@@ -686,7 +686,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
 
               {sectorSections.map((sec) => {
                 const isFirma = sec.id === 'firma' || sec.id.startsWith('firma');
-                const sectionStyle = isFirma ? { marginTop: 'auto' } : undefined;
+                const sectionStyle = isFirma ? { marginTop: 16 } : undefined;
 
                 if (isSidebar) {
                   // Sidebar: la sección completa es un bloque atómico (wrap={false})
