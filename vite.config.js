@@ -10,7 +10,6 @@ export default defineConfig({
     sourcemap: 'hidden',
     rollupOptions: {
       output: {
-        sourcemap: 'hidden',
         manualChunks(id) {
           if (id.includes('@react-pdf/renderer')) {
             return 'vendor-react-pdf';
