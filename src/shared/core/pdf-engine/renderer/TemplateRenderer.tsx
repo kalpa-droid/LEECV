@@ -461,10 +461,12 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     const f = rec.fields;
 
     if (rec.kind === 'contact-item') {
+      const surfaceHex = isSidebarSector ? sidebarRolesColor.primary : mainRolesColor.background;
+      const contactSpec = resolveUnifiedTextSpec('body', surfaceHex, sectorRolesColor, preset.typography, isSidebarSector ? 'sidebar-contact' : 'main-body');
       return (
         <View key={rec.id} wrap={false}>
           {getPresentContactFields(rec, 'document').map((f) => (
-            <Text key={f.key} style={styles.sidebarItemText}>
+            <Text key={f.key} style={[styles.sidebarItemText, { color: contactSpec.colorHex, opacity: contactSpec.opacity }]}>
               {f.cvLabel}{' '}
               {f.cardOmit ? <Text style={styles.sidebarItemBold}>{f.value}</Text> : f.value}
             </Text>
