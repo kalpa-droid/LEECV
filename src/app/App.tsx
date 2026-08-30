@@ -651,9 +651,23 @@ function AppContent() {
       {/* BARRA INFERIOR / FOOTER: Pestañas de Documentos + Botón "+" + Botón ATS en Margen Derecho (mb-14 en celular para verse sobre muelle) */}
       <footer className="h-10 bg-[var(--ui-bg-panel)] border-t border-[var(--ui-border)] text-[var(--ui-text-primary)] px-3 md:pl-20 flex items-center justify-between gap-2 shrink-0 no-print select-none text-xs font-sans z-40 mb-14 md:mb-0">
         
-        {/* Pestañas de CVs Abiertos + Botón "+" */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
-          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-full">
+        {/* Pestañas de CVs Abiertos + Botón "+" (con desplazamiento suave por ruedita del mouse) */}
+        <div 
+          onWheel={(e) => {
+            if (e.currentTarget) {
+              e.currentTarget.scrollLeft += (e.deltaY || e.deltaX);
+            }
+          }}
+          className="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5"
+        >
+          <div 
+            onWheel={(e) => {
+              if (e.currentTarget) {
+                e.currentTarget.scrollLeft += (e.deltaY || e.deltaX);
+              }
+            }}
+            className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-full"
+          >
             {tabs.map((tab) => {
               const isActive = tab.cvId === activeCvId;
               return (

@@ -59,7 +59,12 @@ export default function CanvaIconDock({
   return (
     <>
       {/* Desktop & Tablet Vertical Left Dock (Width: 64px) */}
-      <aside className="hidden md:flex flex-col items-center py-3 bg-[var(--ui-bg-dock)] border-r border-[var(--ui-dock-border)] text-[var(--ui-dock-text)] z-[100] select-none w-16 shrink-0 fixed top-0 bottom-0 left-0 h-screen overflow-y-auto no-scrollbar shadow-[var(--shadow-dock)]">
+      <aside 
+        onWheel={(e) => {
+          e.currentTarget.scrollTop += e.deltaY;
+        }}
+        className="hidden md:flex flex-col items-center py-3 bg-[var(--ui-bg-dock)] border-r border-[var(--ui-dock-border)] text-[var(--ui-dock-text)] z-[100] select-none w-16 shrink-0 fixed top-0 bottom-0 left-0 h-screen overflow-y-auto no-scrollbar shadow-[var(--shadow-dock)]"
+      >
         {/* Toggle Drawer Button */}
         <button
           type="button"
@@ -183,7 +188,7 @@ export default function CanvaIconDock({
                   className="w-4 h-4"
                   color={sec.isCustom ? (isActive ? '#FFFFFF' : 'var(--color-secondary-bright)') : (isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)')}
                 />
-                <span className={`text-[9px] font-extrabold tracking-tighter mt-0.5 leading-none truncate max-w-[44px] ${isActive ? (sec.isCustom ? 'text-white' : 'text-[var(--color-secondary-on-base)]') : 'text-[var(--ui-dock-text-muted)]'}`}>
+                <span className={`text-[9px] font-extrabold tracking-tighter mt-0.5 leading-none truncate max-w-[44px] ${isActive ? 'text-[var(--ui-dock-text)]' : 'text-[var(--ui-dock-text-muted)]'}`}>
                   {sec.isCustom ? sec.label.substring(0, 6) : sec.label}
                 </span>
 
@@ -204,7 +209,11 @@ export default function CanvaIconDock({
       {/* Mobile Bottom Dock Bar (< 768px) */}
       <nav 
         ref={mobileNavRef}
-        onWheel={handleWheelScroll}
+        onWheel={(e) => {
+          if (e.currentTarget) {
+            e.currentTarget.scrollLeft += (e.deltaY || e.deltaX);
+          }
+        }}
         className={`md:hidden fixed bottom-0 left-0 right-0 z-[999] bg-[var(--ui-bg-dock)] border-t border-[var(--ui-dock-border)] px-2 py-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar ${elevationSystem.overlay} select-none`}
       >
         <button

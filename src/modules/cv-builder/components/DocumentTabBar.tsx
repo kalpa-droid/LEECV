@@ -51,9 +51,23 @@ export function DocumentTabBar({
   };
 
   return (
-    <div className="w-full bg-[var(--ui-bg-dock)] border-b border-[var(--ui-dock-border)] px-3 py-1.5 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar z-20 select-none">
+    <div 
+      onWheel={(e) => {
+        if (e.currentTarget) {
+          e.currentTarget.scrollLeft += (e.deltaY || e.deltaX);
+        }
+      }}
+      className="w-full bg-[var(--ui-bg-dock)] border-b border-[var(--ui-dock-border)] px-3 py-1.5 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar z-20 select-none"
+    >
       {/* Listado Horizontal de Pestañas Abiertas */}
-      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+      <div 
+        onWheel={(e) => {
+          if (e.currentTarget) {
+            e.currentTarget.scrollLeft += (e.deltaY || e.deltaX);
+          }
+        }}
+        className="flex items-center gap-1.5 overflow-x-auto no-scrollbar"
+      >
         {tabs.map((tab) => {
           const isActive = tab.cvId === activeCvId;
           return (
