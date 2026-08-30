@@ -83,13 +83,25 @@ export function DocumentTabBar({
               }`}
               title={tab.title}
             >
-              <FileText className={`w-3.5 h-3.5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
-              <span className="truncate max-w-[140px] leading-none">
-                {tab.title}
-              </span>
+              {/* ICONO INMÓVIL A LA IZQUIERDA */}
+              <FileText className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
+
+              {/* CONTENEDOR DE TEXTO QUE SE MUEVE INTERNAMENTE */}
+              <div 
+                onWheel={(e) => {
+                  if (e.currentTarget) {
+                    e.currentTarget.scrollLeft += (e.deltaY || e.deltaX);
+                  }
+                }}
+                className="overflow-x-auto no-scrollbar max-w-[140px] flex items-center"
+              >
+                <span className="whitespace-nowrap leading-none block">
+                  {tab.title}
+                </span>
+              </div>
 
               {tab.versionLabel && (
-                <span className={`text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-tighter ${
+                <span className={`text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-tighter shrink-0 ${
                   isActive
                     ? 'bg-[var(--color-accent-on-base)] text-[var(--color-accent-base)]'
                     : 'bg-[var(--ui-bg-card)] text-[var(--color-secondary-bright)] border border-[var(--ui-border)]'

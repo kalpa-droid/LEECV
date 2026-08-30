@@ -79,10 +79,10 @@ export default function CanvaIconDock({
           <Menu className="w-5 h-5" />
         </button>
 
-        <div className="w-8 h-px bg-[var(--ui-dock-separator)] mb-3" />
+        <div className="w-8 h-px bg-[var(--ui-dock-separator)] mb-1.5" />
 
-        {/* Style & Layout Group: Los 3 primeros botones SOLO tienen icono sin texto */}
-        <div className="flex flex-col items-center gap-2 mb-3">
+        {/* Style & Layout Group: Los 3 primeros botones compactos y agrupados (SOLO icono) */}
+        <div className="flex flex-col items-center gap-1.5 mb-1.5">
           {styleTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id && isPanelOpen;
@@ -91,7 +91,7 @@ export default function CanvaIconDock({
                 key={tab.id}
                 type="button"
                 onClick={() => handleTabClick(tab.id)}
-                className={`w-11 h-11 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer ${
+                className={`w-10 h-10 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer ${
                   isActive
                     ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.floating} shadow-[var(--color-accent-base)]/30 scale-105`
                     : 'text-[var(--ui-dock-text-muted)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--ui-dock-hover)]'
@@ -109,7 +109,7 @@ export default function CanvaIconDock({
           })}
         </div>
 
-        <div className="w-8 h-px bg-[var(--ui-dock-separator)] mb-3" />
+        <div className="w-8 h-px bg-[var(--ui-dock-separator)] mb-2" />
 
         {/* Content Sections Group */}
         <div className="flex flex-col items-center gap-2 flex-1 w-full px-1">
