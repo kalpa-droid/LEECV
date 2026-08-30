@@ -12,10 +12,9 @@ export interface TopBarAction {
 }
 
 export const TOP_BAR_ACTIONS: TopBarAction[] = [
-  // Cluster Izquierdo (Marca + Herramientas + Controles)
+  // Cluster Izquierdo (Marca + Herramientas + Tema)
   { id: 'brand-logo', label: 'LEECV', location: 'navbar' },
   { id: 'ats-check', label: 'ATS', location: 'navbar' },
-  { id: 'zoom-controls', label: 'Zoom', location: 'navbar' },
   { id: 'theme-switcher', label: 'Tema', location: 'navbar' },
 
   // Cluster Central (Pestañas + Nuevo)
@@ -32,7 +31,7 @@ export const TOP_BAR_ACTIONS: TopBarAction[] = [
   { id: 'auth-toggle', label: 'Ingresar / Cerrar Sesión', location: 'account-menu' },
   { id: 'plans-pricing', label: 'Planes', location: 'account-menu' },
   { id: 'agency-panel', label: 'Panel', location: 'account-menu' },
-  { id: 'save-email', label: 'Guardar en mi Correo', location: 'account-menu' }
+  { id: 'share-app', label: 'Compartir Aplicación', location: 'account-menu' }
 ];
 
 export function getActionsForLocation(location: 'navbar' | 'action-menu' | 'account-menu'): TopBarAction[] {

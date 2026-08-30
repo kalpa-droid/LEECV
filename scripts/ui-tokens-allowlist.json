@@ -16,6 +16,11 @@
       "file": "src/modules/cv-builder/components/CertCropperModal.tsx",
       "pattern": "2d|canvas|2DContext|fillStyle|strokeStyle",
       "reason": "Contexto de dibujo HTML5 Canvas para recorte de imágenes de certificados escaneados"
+    },
+    {
+      "file": "src/modules/cv-builder/components/modals/ShareAppModal.tsx",
+      "pattern": "#25D366|#229ED9|#0A66C2",
+      "reason": "Colores oficiales de marca corporativa (WhatsApp, Telegram, LinkedIn) para botones de compartir en redes sociales"
     }
   ]
 }

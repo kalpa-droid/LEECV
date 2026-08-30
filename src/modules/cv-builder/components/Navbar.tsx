@@ -14,14 +14,16 @@ import {
   LogOut, 
   Gem, 
   Building2, 
-  Mail 
+  Share2,
+  Palette
 } from 'lucide-react';
-import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
+import { elevationSystem, radius, UI_THEME_META, getNextUiTheme } from '../../../shared/core/uiDesignSystem';
 import { getOpenTabs, removeOpenTab, addOpenTab, OpenTabItem } from '../../../shared/core/storage/documentTabEngine';
-import { ZoomControls } from '../../../shared/core/ui/ZoomControls';
+import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 
 export interface NavbarProps {
   currentCvData: any;
+  setCvData?: React.Dispatch<React.SetStateAction<any>>;
   onSwitchDocumentTab: (cvId: string) => Promise<void>;
   onNewCV: () => void;
   onOpenSavedCVsModal: () => void;
@@ -32,19 +34,17 @@ export interface NavbarProps {
   onOpenAtsCheck?: () => void;
   onOpenPricing?: () => void;
   onOpenAgencyPanel?: () => void;
-  onOpenEmailSaveModal: () => void;
+  onOpenShareAppModal: () => void;
   onAuthToggle?: () => void;
   isLoggedIn?: boolean;
   userRole?: string;
   isSaving?: boolean;
-  zoomLevel: number;
-  setZoomLevel: React.Dispatch<React.SetStateAction<number>>;
-  triggerAutoFit: () => void;
   cycleUITheme: () => void;
 }
 
 export default function Navbar({ 
   currentCvData,
+  setCvData,
   onSwitchDocumentTab,
   onNewCV,
   onOpenSavedCVsModal,
@@ -55,16 +55,14 @@ export default function Navbar({
   onOpenAtsCheck,
   onOpenPricing,
   onOpenAgencyPanel,
-  onOpenEmailSaveModal,
+  onOpenShareAppModal,
   onAuthToggle,
   isLoggedIn = false,
   userRole = 'candidate',
   isSaving = false,
-  zoomLevel,
-  setZoomLevel,
-  triggerAutoFit,
   cycleUITheme
 }: NavbarProps) {
+  const { confirm } = useConfirm();
   const [tabs, setTabs] = useState<OpenTabItem[]>([]);
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
@@ -73,8 +71,10 @@ export default function Navbar({
   const accountMenuRef = useRef<HTMLDivElement>(null);
 
   const activeCvId = currentCvData?.id || '';
+  const currentThemeId = currentCvData?.uiTheme || 'day';
+  const themeMeta = UI_THEME_META[currentThemeId] || UI_THEME_META.default;
 
-  // Synchronize open tabs list
+  // Sincronización de lista de pestañas abiertas
   useEffect(() => {
     if (activeCvId) {
       const updated = addOpenTab(
@@ -88,7 +88,7 @@ export default function Navbar({
     }
   }, [activeCvId, currentCvData?.title, currentCvData?.version_label]);
 
-  // Click outside listener for dropdown menus
+  // Cierre de desplegables al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (actionMenuRef.current && !actionMenuRef.current.contains(event.target as Node)) {
@@ -102,19 +102,26 @@ export default function Navbar({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleCloseTab = async (e: React.MouseEvent, cvId: string) => {
+  const handleCloseTab = (e: React.MouseEvent, cvId: string, title: string) => {
     e.stopPropagation();
-    const remaining = removeOpenTab(cvId);
-    setTabs(remaining);
+    confirm({
+      title: '¿Cerrar pestaña?',
+      message: `¿Deseas cerrar "${title}"? Tus datos guardados se mantendrán a salvo en tus archivos.`,
+      confirmText: 'Cerrar Pestaña',
+      onConfirm: async () => {
+        const remaining = removeOpenTab(cvId);
+        setTabs(remaining);
 
-    if (cvId === activeCvId) {
-      if (remaining.length > 0) {
-        const lastTab = remaining[remaining.length - 1];
-        await onSwitchDocumentTab(lastTab.cvId);
-      } else {
-        onNewCV();
+        if (cvId === activeCvId) {
+          if (remaining.length > 0) {
+            const lastTab = remaining[remaining.length - 1];
+            await onSwitchDocumentTab(lastTab.cvId);
+          } else {
+            onNewCV();
+          }
+        }
       }
-    }
+    });
   };
 
   const isAgencyUser = userRole === 'agency' || userRole === 'enterprise' || userRole === 'admin';
@@ -124,10 +131,11 @@ export default function Navbar({
       {/* Festive Rainbow Accent Strip */}
       <div className="ui-topbar-rainbow h-1 w-full" />
       
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 h-12 sm:h-14 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+      {/* Contenedor Principal: SIN overflow-x-auto para no recortar los menús desplegables */}
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 h-12 sm:h-14 flex items-center justify-between gap-2 relative">
         
-        {/* CLUSTER IZQUIERDO: LEECV | ATS | Zoom (100% Encajar) | Tema */}
-        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+        {/* CLUSTER IZQUIERDO: LEECV | ATS | Tema */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Logo Brand */}
           <div className="flex items-center gap-1.5">
             <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-[${radius.control}] bg-[var(--color-accent-base)] flex items-center justify-center font-black text-xs ${elevationSystem.raised} text-[var(--color-accent-on-base)] border border-white/20`}>
@@ -153,17 +161,20 @@ export default function Navbar({
             </button>
           )}
 
-          {/* Controles de Zoom + Tema Integrados */}
-          <ZoomControls
-            zoomLevel={zoomLevel}
-            setZoomLevel={setZoomLevel}
-            triggerAutoFit={triggerAutoFit}
-            currentUiTheme={currentCvData?.uiTheme || 'default'}
-            onCycleTheme={cycleUITheme}
-          />
+          {/* Botón Selector de Tema Cromático */}
+          <button
+            type="button"
+            onClick={cycleUITheme}
+            className={`flex items-center gap-1 px-2 py-1 rounded-[${radius.card}] text-xs font-black text-[var(--ui-text-primary)] bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-bg-card)] border border-[var(--ui-border)] transition ${elevationSystem.raised} cursor-pointer whitespace-nowrap active:scale-95`}
+            title={`Tema actual: ${themeMeta.label}. Clic para alternar tema.`}
+          >
+            <Palette className="w-3.5 h-3.5 text-[var(--color-secondary-bright)] flex-shrink-0" />
+            <span className="hidden sm:inline">{themeMeta.shortLabel}</span>
+            <span className="text-xs leading-none">{themeMeta.emoji}</span>
+          </button>
         </div>
 
-        {/* CLUSTER CENTRAL: Pestañas de CVs Abiertos + Botón "+" (Nuevo) */}
+        {/* CLUSTER CENTRAL: Pestañas de CVs Abiertos + Botón "+" (ÚNICO contenedor con overflow-x-auto) */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar min-w-0 flex-1 justify-center px-1">
           <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-full py-0.5">
             {tabs.map((tab) => {
@@ -182,7 +193,7 @@ export default function Navbar({
                   title={tab.title}
                 >
                   <FileText className={`w-3.5 h-3.5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
-                  <span className="truncate max-w-[110px] sm:max-w-[150px] leading-none">
+                  <span className="truncate max-w-[100px] sm:max-w-[140px] leading-none">
                     {tab.title}
                   </span>
 
@@ -198,8 +209,8 @@ export default function Navbar({
 
                   <button
                     type="button"
-                    onClick={(e) => handleCloseTab(e, tab.cvId)}
-                    className={`p-0.5 rounded transition cursor-pointer opacity-80 hover:opacity-100`}
+                    onClick={(e) => handleCloseTab(e, tab.cvId, tab.title)}
+                    className="p-0.5 rounded transition cursor-pointer opacity-80 hover:opacity-100"
                     title="Cerrar Pestaña"
                   >
                     <X className="w-3 h-3" />
@@ -220,8 +231,8 @@ export default function Navbar({
           </button>
         </div>
 
-        {/* CLUSTER DERECHO: Píldoras Ovaladas de Menús (Acciones 📁💾 | Cuenta 👤🔑) */}
-        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+        {/* CLUSTER DERECHO: Píldoras Ovaladas de Menús (Acciones 📁💾 | Cuenta 👤🔑) — SIN overflow clipping */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           
           {/* PÍLDORA 1: MENÚ DE ACCIONES (Iconos de Abrir 📁 y Guardar 💾) */}
           <div className="relative" ref={actionMenuRef}>
@@ -324,7 +335,7 @@ export default function Navbar({
                 setIsActionMenuOpen(false);
               }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--color-accent-amber)] bg-gradient-to-tr from-[var(--color-accent-orange)] to-[var(--color-accent-amber)] text-black border-2 border-[var(--ui-border)] transition ${elevationSystem.raised} cursor-pointer active:scale-95`}
-              title="Cuenta de Usuario / Suscripción / Opciones"
+              title="Cuenta de Usuario / Suscripción / Compartir"
             >
               <User className="w-4 h-4 stroke-[2.5]" />
               {isLoggedIn ? (
@@ -392,17 +403,17 @@ export default function Navbar({
                   </button>
                 )}
 
-                {/* 4. Guardar en mi Correo */}
+                {/* 4. Compartir Aplicación */}
                 <button
                   type="button"
                   onClick={() => {
                     setIsAccountMenuOpen(false);
-                    onOpenEmailSaveModal();
+                    onOpenShareAppModal();
                   }}
                   className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
                 >
-                  <Mail className="w-4 h-4 text-[var(--color-secondary-bright)]" />
-                  <span>Guardar en mi Correo</span>
+                  <Share2 className="w-4 h-4 text-[var(--color-secondary-bright)]" />
+                  <span>📲 Compartir Aplicación</span>
                 </button>
               </div>
             )}

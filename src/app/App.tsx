@@ -39,7 +39,8 @@ import { AtsCheckModal } from '../modules/cv-builder/components/AtsCheckModal';
 import { navigation } from '../shared/core/utils/navigation';
 
 import EmailSaveModal from '../modules/cv-builder/components/modals/EmailSaveModal';
-import { loadCVById } from '../shared/core/storage/documentStorageService';
+import ShareAppModal from '../modules/cv-builder/components/modals/ShareAppModal';
+import { loadCVById, saveCV } from '../shared/core/storage/documentStorageService';
 import { runWithSafeSave } from '../shared/core/storage/safeNavigationEngine';
 import { signInWithGoogle, logout } from '../modules/auth/authService';
 
@@ -162,6 +163,7 @@ function AppContent() {
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [initialSaveAsOpen, setInitialSaveAsOpen] = useState(false);
   const [isEmailSaveModalOpen, setIsEmailSaveModalOpen] = useState(false);
+  const [isShareAppModalOpen, setIsShareAppModalOpen] = useState(false);
   const [isCloudModalOpen, setIsCloudModalOpen] = useState(false);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [, setPdfProgress] = useState(0);
@@ -175,12 +177,29 @@ function AppContent() {
   const [isAtsModalOpen, setIsAtsModalOpen] = useState(false);
   const [atsResult, setAtsResult] = useState<AtsPreflightResult | null>(null);
 
+  // Protección ante cierre accidental del navegador
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (cvData) {
+        e.preventDefault();
+        e.returnValue = '¿Deseas salir de la página? Asegúrate de que tus datos estén guardados.';
+        return e.returnValue;
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [cvData]);
+
   const handleAuthToggle = async () => {
     if (currentProfile) {
       await logout();
       setCurrentProfile(null);
       showSuccess('Sesión cerrada correctamente.');
     } else {
+      // Proteger todos los datos y pestañas abiertas antes del redireccionamiento OAuth
+      try {
+        if (cvData) await saveCV();
+      } catch {}
       await signInWithGoogle();
     }
   };
@@ -369,6 +388,7 @@ function AppContent() {
       <div className="md:pl-16">
         <Navbar 
           currentCvData={cvData}
+          setCvData={setCvData}
           onSwitchDocumentTab={handleSwitchDocumentTab}
           onNewCV={handleNewCV}
           onOpenSavedCVsModal={() => setIsSavedCVsOpen(true)}
@@ -381,14 +401,11 @@ function AppContent() {
           onPrint={handleExportPDFClick}
           onOpenAtsCheck={handleOpenAtsCheck}
           onOpenPricing={() => setIsPricingModalOpen(true)}
-          onOpenEmailSaveModal={() => setIsEmailSaveModalOpen(true)}
+          onOpenShareAppModal={() => setIsShareAppModalOpen(true)}
           onAuthToggle={handleAuthToggle}
           isLoggedIn={!!currentProfile}
           userRole={currentProfile?.role || 'candidate'}
           isSaving={isSaving}
-          zoomLevel={zoomLevel}
-          setZoomLevel={setZoomLevel}
-          triggerAutoFit={triggerAutoFit}
           cycleUITheme={cycleUITheme}
         />
       </div>
@@ -518,11 +535,10 @@ function AppContent() {
           />
         )}
 
-        {isEmailSaveModalOpen && (
-          <EmailSaveModal
-            isOpen={isEmailSaveModalOpen}
-            onClose={() => setIsEmailSaveModalOpen(false)}
-            cvData={cvData}
+        {isShareAppModalOpen && (
+          <ShareAppModal
+            isOpen={isShareAppModalOpen}
+            onClose={() => setIsShareAppModalOpen(false)}
           />
         )}
 

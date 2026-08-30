@@ -535,6 +535,11 @@ if (fs.existsSync(navbarPath)) {
     navContent.includes('FolderOpen') && navContent.includes('Save') && navContent.includes('User'),
     'Navbar.tsx no contiene la estructura de píldoras ovaladas de menú'
   );
+  check(
+    'Navbar.tsx no duplica ZoomControls en la barra superior',
+    !navContent.includes('ZoomControls'),
+    'Navbar.tsx aún contiene ZoomControls duplicado en la barra superior'
+  );
 }
 
 const saveModalPath = path.join(ROOT, 'src/modules/cv-builder/components/SaveModal.tsx');
@@ -547,13 +552,13 @@ if (fs.existsSync(saveModalPath)) {
   );
 }
 
-const emailModalPath = path.join(ROOT, 'src/modules/cv-builder/components/modals/EmailSaveModal.tsx');
-if (fs.existsSync(emailModalPath)) {
-  const emailContent = fs.readFileSync(emailModalPath, 'utf-8');
+const shareModalPath = path.join(ROOT, 'src/modules/cv-builder/components/modals/ShareAppModal.tsx');
+if (fs.existsSync(shareModalPath)) {
+  const shareContent = fs.readFileSync(shareModalPath, 'utf-8');
   check(
-    'EmailSaveModal.tsx exporta el componente de guardado por correo',
-    emailContent.includes('export default function EmailSaveModal'),
-    'EmailSaveModal.tsx no exporta el componente'
+    'ShareAppModal.tsx exporta el componente de compartir aplicación',
+    shareContent.includes('export default function ShareAppModal'),
+    'ShareAppModal.tsx no exporta el componente'
   );
 }
 
