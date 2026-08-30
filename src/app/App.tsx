@@ -3,7 +3,8 @@ import Navbar from '../modules/cv-builder/components/Navbar';
 import CanvaIconDock from '../modules/cv-builder/components/CanvaIconDock';
 import EditorPanel from '../modules/cv-builder/components/EditorPanel';
 const CVPreview = lazy(() => import('../modules/cv-builder/components/CVPreview'));
-import { FileText, CreditCard, Palette } from 'lucide-react';
+import { FileText, CreditCard, Palette, Plus, X } from 'lucide-react';
+import { getOpenTabs, addOpenTab, removeOpenTab, OpenTabItem } from '../shared/core/storage/documentTabEngine';
 
 import { getCurrentProfile, capturarConexionDriveSiCorresponde } from '../modules/auth/authService';
 import { supabase } from '../shared/core/lib/supabaseClient';
@@ -176,6 +177,44 @@ function AppContent() {
   const [isCardExportOpen, setIsCardExportOpen] = useState(false);
   const [isAtsModalOpen, setIsAtsModalOpen] = useState(false);
   const [atsResult, setAtsResult] = useState<AtsPreflightResult | null>(null);
+
+  const [tabs, setTabs] = useState<OpenTabItem[]>([]);
+  const activeCvId = cvData?.id || '';
+
+  useEffect(() => {
+    if (activeCvId) {
+      const updated = addOpenTab(
+        activeCvId,
+        cvData?.title || 'Mi Currículum Vitae',
+        cvData?.version_label
+      );
+      setTabs(updated);
+    } else {
+      setTabs(getOpenTabs());
+    }
+  }, [activeCvId, cvData?.title, cvData?.version_label]);
+
+  const handleCloseFooterTab = (e: React.MouseEvent, cvId: string, title: string) => {
+    e.stopPropagation();
+    confirm({
+      title: '¿Cerrar pestaña?',
+      message: `¿Deseas cerrar "${title}"? Tus datos guardados se mantendrán a salvo en tus archivos.`,
+      confirmText: 'Cerrar Pestaña',
+      onConfirm: async () => {
+        const remaining = removeOpenTab(cvId);
+        setTabs(remaining);
+
+        if (cvId === activeCvId) {
+          if (remaining.length > 0) {
+            const lastTab = remaining[remaining.length - 1];
+            await handleSwitchDocumentTab(lastTab.cvId);
+          } else {
+            handleNewCV();
+          }
+        }
+      }
+    });
+  };
 
   // Protección ante cierre accidental del navegador
   useEffect(() => {
@@ -389,8 +428,6 @@ function AppContent() {
         <Navbar 
           currentCvData={cvData}
           setCvData={setCvData}
-          onSwitchDocumentTab={handleSwitchDocumentTab}
-          onNewCV={handleNewCV}
           onOpenSavedCVsModal={() => setIsSavedCVsOpen(true)}
           onSaveCVClick={handleSaveCVClick}
           onOpenSaveAsModal={() => {
@@ -402,10 +439,14 @@ function AppContent() {
           onOpenAtsCheck={handleOpenAtsCheck}
           onOpenPricing={() => setIsPricingModalOpen(true)}
           onOpenShareAppModal={() => setIsShareAppModalOpen(true)}
+          onOpenPrivacy={() => setIsPrivacyModalOpen(true)}
           onAuthToggle={handleAuthToggle}
           isLoggedIn={!!currentProfile}
           userRole={currentProfile?.role || 'candidate'}
           isSaving={isSaving}
+          zoomLevel={zoomLevel}
+          setZoomLevel={setZoomLevel}
+          triggerAutoFit={triggerAutoFit}
           cycleUITheme={cycleUITheme}
         />
       </div>
@@ -607,48 +648,68 @@ function AppContent() {
         )}
       </Suspense>
 
-      {/* Barra de Estado Inferior Reorganizada (Zoom, Modo CV/Tarjeta y Switcher de Tema) */}
-      <footer className={`hidden md:flex bg-[var(--ui-bg-header)] text-[var(--ui-text-primary)] border-t border-[var(--ui-border)] py-2 px-4 md:pl-20 items-center justify-between no-print z-30 ${elevationSystem.overlay} select-none text-xs`}>
-        {/* Izquierda: Alternador CV vs Tarjeta Personal */}
-        <div className="flex items-center gap-2">
+      {/* BARRA INFERIOR / FOOTER: Pestañas de Documentos + Botón "+" + Copyright © 2026 LEECV */}
+      <footer className="h-10 bg-[var(--ui-bg-panel)] border-t border-[var(--ui-border)] text-[var(--ui-text-primary)] px-3 flex items-center justify-between gap-2 shrink-0 no-print select-none text-xs font-sans">
+        
+        {/* Izquierda / Centro: Pestañas de CVs Abiertos + Botón "+" */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-full">
+            {tabs.map((tab) => {
+              const isActive = tab.cvId === activeCvId;
+              return (
+                <div
+                  key={tab.cvId}
+                  onClick={() => {
+                    if (!isActive) handleSwitchDocumentTab(tab.cvId);
+                  }}
+                  className={`group flex items-center gap-1.5 px-2.5 py-1 rounded-[${radius.card}] text-xs font-bold transition cursor-pointer shrink-0 border ${
+                    isActive
+                      ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--color-accent-base)] ${elevationSystem.raised}`
+                      : 'bg-[var(--ui-bg-card)] text-[var(--ui-dock-text-muted)] border-[var(--ui-border)] hover:bg-[var(--ui-bg-panel)] hover:text-[var(--ui-dock-text)]'
+                  }`}
+                  title={tab.title}
+                >
+                  <FileText className={`w-3.5 h-3.5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
+                  <span className="truncate max-w-[100px] sm:max-w-[140px] leading-none">
+                    {tab.title}
+                  </span>
+
+                  {tab.versionLabel && (
+                    <span className={`text-[9px] px-1 py-0.5 rounded font-black uppercase tracking-tighter ${
+                      isActive
+                        ? 'bg-[var(--color-accent-on-base)] text-[var(--color-accent-base)]'
+                        : 'bg-[var(--ui-bg-panel)] text-[var(--color-secondary-bright)] border border-[var(--ui-border)]'
+                    }`}>
+                      {tab.versionLabel}
+                    </span>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={(e) => handleCloseFooterTab(e, tab.cvId, tab.title)}
+                    className="p-0.5 rounded transition cursor-pointer opacity-80 hover:opacity-100"
+                    title="Cerrar Pestaña"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Botón "+" (Agregar Pestaña / Nuevo Documento) */}
           <button
             type="button"
-            onClick={toggleDocumentPresetMode}
-            className={`px-3 py-1 rounded-[${radius.card}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] font-extrabold flex items-center gap-1.5 transition cursor-pointer ${elevationSystem.raised} active:scale-95`}
-            title="Alternar entre modo Currículum Vitae A4 y Tarjeta Personal"
+            onClick={handleNewCV}
+            className={`p-1.5 rounded-full bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-panel)] text-[var(--color-status-success-bright)] transition cursor-pointer active:scale-95 shrink-0 ${elevationSystem.raised}`}
+            title="Crear Nuevo Documento (+)"
           >
-            {cvData?.activePresetId === 'tarjeta-personal' ? (
-              <>
-                <CreditCard className="w-3.5 h-3.5 text-[var(--ui-text-secondary)]" />
-                <span>Vista: Tarjeta Personal 📇</span>
-              </>
-            ) : (
-              <>
-                <FileText className="w-3.5 h-3.5 text-[var(--ui-text-secondary)]" />
-                <span>Vista: Currículum Vitae 📄</span>
-              </>
-            )}
-          </button>
-
-          <button
-            onClick={() => setIsPrivacyModalOpen(true)}
-            className="text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] font-bold text-[11px] transition cursor-pointer underline underline-offset-2 ml-2"
-          >
-            🔒 Privacidad
+            <Plus className="w-4 h-4 stroke-[3]" />
           </button>
         </div>
 
-        {/* Centro: Controles de Zoom del Visor + Cambio de Tema de Interfaz */}
-        <ZoomControls 
-          zoomLevel={zoomLevel} 
-          setZoomLevel={setZoomLevel} 
-          triggerAutoFit={triggerAutoFit} 
-          currentUiTheme={cvData?.uiTheme || 'default'}
-          onCycleTheme={cycleUITheme}
-        />
-
-        {/* Derecha */}
-        <div className="flex items-center gap-2">
+        {/* Derecha: Exclusivamente Copyright © 2026 LEECV */}
+        <div className="flex items-center gap-2 shrink-0">
           <span className="text-[10px] font-bold text-[var(--ui-text-secondary)]">© 2026 LEECV</span>
         </div>
       </footer>

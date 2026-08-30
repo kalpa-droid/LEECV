@@ -4,9 +4,6 @@ import {
   Save, 
   User, 
   Sparkles, 
-  Plus, 
-  FileText, 
-  X, 
   Download, 
   CopyPlus, 
   FileArchive, 
@@ -15,17 +12,15 @@ import {
   Gem, 
   Building2, 
   Share2,
-  Palette
+  Palette,
+  ShieldCheck
 } from 'lucide-react';
-import { elevationSystem, radius, UI_THEME_META, getNextUiTheme } from '../../../shared/core/uiDesignSystem';
-import { getOpenTabs, removeOpenTab, addOpenTab, OpenTabItem } from '../../../shared/core/storage/documentTabEngine';
-import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
+import { elevationSystem, radius, UI_THEME_META } from '../../../shared/core/uiDesignSystem';
+import { ZoomControls } from '../../../shared/core/ui/ZoomControls';
 
 export interface NavbarProps {
   currentCvData: any;
   setCvData?: React.Dispatch<React.SetStateAction<any>>;
-  onSwitchDocumentTab: (cvId: string) => Promise<void>;
-  onNewCV: () => void;
   onOpenSavedCVsModal: () => void;
   onSaveCVClick: () => void;
   onOpenSaveAsModal: () => void;
@@ -35,18 +30,20 @@ export interface NavbarProps {
   onOpenPricing?: () => void;
   onOpenAgencyPanel?: () => void;
   onOpenShareAppModal: () => void;
+  onOpenPrivacy?: () => void;
   onAuthToggle?: () => void;
   isLoggedIn?: boolean;
   userRole?: string;
   isSaving?: boolean;
+  zoomLevel: number;
+  setZoomLevel: React.Dispatch<React.SetStateAction<number>>;
+  triggerAutoFit: () => void;
   cycleUITheme: () => void;
 }
 
 export default function Navbar({ 
   currentCvData,
   setCvData,
-  onSwitchDocumentTab,
-  onNewCV,
   onOpenSavedCVsModal,
   onSaveCVClick,
   onOpenSaveAsModal,
@@ -56,37 +53,24 @@ export default function Navbar({
   onOpenPricing,
   onOpenAgencyPanel,
   onOpenShareAppModal,
+  onOpenPrivacy,
   onAuthToggle,
   isLoggedIn = false,
   userRole = 'candidate',
   isSaving = false,
+  zoomLevel,
+  setZoomLevel,
+  triggerAutoFit,
   cycleUITheme
 }: NavbarProps) {
-  const { confirm } = useConfirm();
-  const [tabs, setTabs] = useState<OpenTabItem[]>([]);
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
 
   const actionMenuRef = useRef<HTMLDivElement>(null);
   const accountMenuRef = useRef<HTMLDivElement>(null);
 
-  const activeCvId = currentCvData?.id || '';
   const currentThemeId = currentCvData?.uiTheme || 'day';
   const themeMeta = UI_THEME_META[currentThemeId] || UI_THEME_META.default;
-
-  // Sincronización de lista de pestañas abiertas
-  useEffect(() => {
-    if (activeCvId) {
-      const updated = addOpenTab(
-        activeCvId,
-        currentCvData?.title || 'Mi Currículum Vitae',
-        currentCvData?.version_label
-      );
-      setTabs(updated);
-    } else {
-      setTabs(getOpenTabs());
-    }
-  }, [activeCvId, currentCvData?.title, currentCvData?.version_label]);
 
   // Cierre de desplegables al hacer clic fuera
   useEffect(() => {
@@ -102,28 +86,6 @@ export default function Navbar({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleCloseTab = (e: React.MouseEvent, cvId: string, title: string) => {
-    e.stopPropagation();
-    confirm({
-      title: '¿Cerrar pestaña?',
-      message: `¿Deseas cerrar "${title}"? Tus datos guardados se mantendrán a salvo en tus archivos.`,
-      confirmText: 'Cerrar Pestaña',
-      onConfirm: async () => {
-        const remaining = removeOpenTab(cvId);
-        setTabs(remaining);
-
-        if (cvId === activeCvId) {
-          if (remaining.length > 0) {
-            const lastTab = remaining[remaining.length - 1];
-            await onSwitchDocumentTab(lastTab.cvId);
-          } else {
-            onNewCV();
-          }
-        }
-      }
-    });
-  };
-
   const isAgencyUser = userRole === 'agency' || userRole === 'enterprise' || userRole === 'admin';
 
   return (
@@ -131,12 +93,12 @@ export default function Navbar({
       {/* Festive Rainbow Accent Strip */}
       <div className="ui-topbar-rainbow h-1 w-full" />
       
-      {/* Contenedor Principal: SIN overflow-x-auto para no recortar los menús desplegables */}
+      {/* Contenedor Principal: SIN overflow clipping para desplegables libres */}
       <div className="max-w-7xl mx-auto px-2 sm:px-4 h-12 sm:h-14 flex items-center justify-between gap-2 relative">
         
-        {/* CLUSTER IZQUIERDO: LEECV | ATS | Tema */}
+        {/* CLUSTER IZQUIERDO: LEECV | ATS | Tema | Zoom */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Logo Brand */}
+          {/* 1. Logo LEECV */}
           <div className="flex items-center gap-1.5">
             <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-[${radius.control}] bg-[var(--color-accent-base)] flex items-center justify-center font-black text-xs ${elevationSystem.raised} text-[var(--color-accent-on-base)] border border-white/20`}>
               LEE
@@ -148,7 +110,7 @@ export default function Navbar({
 
           <div className="w-px h-5 bg-[var(--ui-border)] mx-0.5" />
 
-          {/* Botón ATS */}
+          {/* 2. Botón ATS */}
           {onOpenAtsCheck && (
             <button
               type="button"
@@ -161,7 +123,7 @@ export default function Navbar({
             </button>
           )}
 
-          {/* Botón Selector de Tema Cromático */}
+          {/* 3. Botón Tema */}
           <button
             type="button"
             onClick={cycleUITheme}
@@ -172,66 +134,20 @@ export default function Navbar({
             <span className="hidden sm:inline">{themeMeta.shortLabel}</span>
             <span className="text-xs leading-none">{themeMeta.emoji}</span>
           </button>
-        </div>
 
-        {/* CLUSTER CENTRAL: Pestañas de CVs Abiertos + Botón "+" (ÚNICO contenedor con overflow-x-auto) */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar min-w-0 flex-1 justify-center px-1">
-          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-full py-0.5">
-            {tabs.map((tab) => {
-              const isActive = tab.cvId === activeCvId;
-              return (
-                <div
-                  key={tab.cvId}
-                  onClick={() => {
-                    if (!isActive) onSwitchDocumentTab(tab.cvId);
-                  }}
-                  className={`group flex items-center gap-1.5 px-2.5 py-1 rounded-[${radius.card}] text-xs font-bold transition cursor-pointer shrink-0 border ${
-                    isActive
-                      ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--color-accent-base)] ${elevationSystem.raised}`
-                      : 'bg-[var(--ui-bg-panel)] text-[var(--ui-dock-text-muted)] border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)] hover:text-[var(--ui-dock-text)]'
-                  }`}
-                  title={tab.title}
-                >
-                  <FileText className={`w-3.5 h-3.5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
-                  <span className="truncate max-w-[100px] sm:max-w-[140px] leading-none">
-                    {tab.title}
-                  </span>
+          <div className="w-px h-5 bg-[var(--ui-border)] mx-0.5 hidden sm:block" />
 
-                  {tab.versionLabel && (
-                    <span className={`text-[9px] px-1 py-0.5 rounded font-black uppercase tracking-tighter ${
-                      isActive
-                        ? 'bg-[var(--color-accent-on-base)] text-[var(--color-accent-base)]'
-                        : 'bg-[var(--ui-bg-card)] text-[var(--color-secondary-bright)] border border-[var(--ui-border)]'
-                    }`}>
-                      {tab.versionLabel}
-                    </span>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={(e) => handleCloseTab(e, tab.cvId, tab.title)}
-                    className="p-0.5 rounded transition cursor-pointer opacity-80 hover:opacity-100"
-                    title="Cerrar Pestaña"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              );
-            })}
+          {/* 4. Botón ZoomControls */}
+          <div className="hidden sm:block">
+            <ZoomControls
+              zoomLevel={zoomLevel}
+              setZoomLevel={setZoomLevel}
+              triggerAutoFit={triggerAutoFit}
+            />
           </div>
-
-          {/* Botón "+" (Agregar Pestaña / Nuevo Documento) */}
-          <button
-            type="button"
-            onClick={onNewCV}
-            className={`p-1.5 rounded-full bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)] text-[var(--color-status-success-bright)] transition cursor-pointer active:scale-95 shrink-0 ${elevationSystem.raised}`}
-            title="Crear Nuevo Documento (+)"
-          >
-            <Plus className="w-4 h-4 stroke-[3]" />
-          </button>
         </div>
 
-        {/* CLUSTER DERECHO: Píldoras Ovaladas de Menús (Acciones 📁💾 | Cuenta 👤🔑) — SIN overflow clipping */}
+        {/* CLUSTER DERECHO: Píldoras Ovaladas de Menús (Acciones 📁💾 | Cuenta 👤🔑) */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           
           {/* PÍLDORA 1: MENÚ DE ACCIONES (Iconos de Abrir 📁 y Guardar 💾) */}
@@ -335,7 +251,7 @@ export default function Navbar({
                 setIsActionMenuOpen(false);
               }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--color-accent-amber)] bg-gradient-to-tr from-[var(--color-accent-orange)] to-[var(--color-accent-amber)] text-black border-2 border-[var(--ui-border)] transition ${elevationSystem.raised} cursor-pointer active:scale-95`}
-              title="Cuenta de Usuario / Suscripción / Compartir"
+              title="Cuenta de Usuario / Suscripción / Compartir / Privacidad"
             >
               <User className="w-4 h-4 stroke-[2.5]" />
               {isLoggedIn ? (
@@ -415,6 +331,23 @@ export default function Navbar({
                   <Share2 className="w-4 h-4 text-[var(--color-secondary-bright)]" />
                   <span>📲 Compartir Aplicación</span>
                 </button>
+
+                <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
+
+                {/* 5. Política de Privacidad */}
+                {onOpenPrivacy && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAccountMenuOpen(false);
+                      onOpenPrivacy();
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer text-[var(--ui-text-secondary)]`}
+                  >
+                    <ShieldCheck className="w-4 h-4 text-[var(--color-status-success-bright)]" />
+                    <span>Política de Privacidad</span>
+                  </button>
+                )}
               </div>
             )}
           </div>
