@@ -213,7 +213,7 @@ export default function CanvaIconDock({
         <button
           type="button"
           onClick={() => setIsPanelOpen(!isPanelOpen)}
-          className={`p-1.5 rounded-[${radius.card}] transition flex flex-col items-center justify-center shrink-0 cursor-pointer ${
+          className={`p-2 rounded-[${radius.card}] flex items-center justify-center shrink-0 transition cursor-pointer ${
             isPanelOpen
               ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.raised}`
               : 'bg-[var(--ui-bg-panel)] text-[var(--color-accent-amber-bright)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)]'
@@ -221,7 +221,6 @@ export default function CanvaIconDock({
           title={isPanelOpen ? 'Cerrar Panel' : 'Abrir Panel'}
         >
           {isPanelOpen ? <X className="w-3.5 h-3.5" /> : <Menu className="w-3.5 h-3.5" />}
-          <span className="text-[8px] font-extrabold mt-0.5">Menú</span>
         </button>
 
         <div className="w-px h-5 bg-[var(--ui-dock-border)] shrink-0" />
