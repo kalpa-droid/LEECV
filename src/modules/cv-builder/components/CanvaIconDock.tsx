@@ -1,6 +1,6 @@
 import React, { useMemo, useRef } from 'react';
 import { 
-  Palette, Layout, Layers, Menu, X, Plus
+  Palette, Layout, Layers, Menu, X, Plus, ChevronDown, ChevronRight
 } from 'lucide-react';
 import { DomSectionIcon } from '../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
 import { getNextUiTheme, UI_THEME_META, elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
@@ -193,10 +193,15 @@ export default function CanvaIconDock({
               </button>
             );
           })}
+
+          {/* FLECHA SUTIL Y ELEGANTE AL FINAL DEL DOCK EN ESCRITORIO: Indica más secciones abajo */}
+          <div className="pt-2 pb-1 flex flex-col items-center justify-center text-[var(--color-secondary-bright)] animate-bounce opacity-70 hover:opacity-100 transition cursor-pointer shrink-0" title="Desliza para ver más secciones">
+            <ChevronDown className="w-4 h-4 stroke-[2.5]" />
+          </div>
         </div>
       </aside>
 
-      {/* Mobile Bottom Dock Bar (< 768px): Icono arriba y texto abajo */}
+      {/* Mobile Bottom Dock Bar (< 768px) */}
       <nav 
         ref={mobileNavRef}
         onWheel={handleWheelScroll}
@@ -218,6 +223,7 @@ export default function CanvaIconDock({
 
         <div className="w-px h-6 bg-[var(--ui-dock-border)] shrink-0" />
 
+        {/* LOS TRES PRIMEROS BOTONES EN MÓVIL TAMBIÉN SON SOLO ICONOS SIN TEXTO */}
         {styleTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id && isPanelOpen;
@@ -226,14 +232,14 @@ export default function CanvaIconDock({
               key={tab.id}
               type="button"
               onClick={() => handleTabClick(tab.id)}
-              className={`px-2.5 py-1 rounded-[${radius.card}] flex flex-col items-center justify-center text-[10px] font-black shrink-0 transition cursor-pointer ${
+              className={`p-2.5 rounded-[${radius.card}] flex items-center justify-center shrink-0 transition cursor-pointer ${
                 isActive
                   ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.raised}`
                   : 'bg-[var(--ui-bg-panel)] text-[var(--ui-dock-text-muted)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)] hover:text-[var(--ui-dock-text)]'
               }`}
+              title={tab.label}
             >
               <Icon className={`w-4 h-4 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--ui-dock-text-muted)]'}`} />
-              <span className="mt-0.5 leading-none">{tab.label}</span>
             </button>
           );
         })}
@@ -298,6 +304,11 @@ export default function CanvaIconDock({
             </button>
           );
         })}
+
+        {/* FLECHA SUTIL Y ELEGANTE EN MÓVIL: Indica más secciones desplazables a la derecha */}
+        <div className="shrink-0 px-1 flex items-center justify-center text-[var(--color-accent-amber-bright)] animate-pulse opacity-90" title="Desliza horizontalmente para ver más secciones">
+          <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+        </div>
       </nav>
     </>
   );

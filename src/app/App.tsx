@@ -3,7 +3,7 @@ import Navbar from '../modules/cv-builder/components/Navbar';
 import CanvaIconDock from '../modules/cv-builder/components/CanvaIconDock';
 import EditorPanel from '../modules/cv-builder/components/EditorPanel';
 const CVPreview = lazy(() => import('../modules/cv-builder/components/CVPreview'));
-import { FileText, CreditCard, Palette, Plus, X, Sparkles } from 'lucide-react';
+import { FileText, CreditCard, Palette, Plus, X, Sparkles, ChevronRight } from 'lucide-react';
 import { getOpenTabs, addOpenTab, removeOpenTab, OpenTabItem } from '../shared/core/storage/documentTabEngine';
 
 import { getCurrentProfile, capturarConexionDriveSiCorresponde } from '../modules/auth/authService';
@@ -706,6 +706,11 @@ function AppContent() {
           >
             <Plus className="w-4 h-4 stroke-[3]" />
           </button>
+
+          {/* Flecha sutil y elegante que indica que hay más pestañas desplazables */}
+          <div className="flex items-center text-[var(--color-accent-amber-bright)] opacity-80 animate-pulse shrink-0 px-0.5 pointer-events-none" title="Pestañas de CV desplazables">
+            <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+          </div>
         </div>
 
         {/* Margen Derecho: Botón ATS Compacto (Icono + siglas ATS) */}
