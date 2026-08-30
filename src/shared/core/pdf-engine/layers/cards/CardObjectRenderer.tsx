@@ -8,7 +8,7 @@ import { deriveRecordScale } from '../typography/typographyHierarchyEngine';
 import { resolveAccentTarget } from '../colors/accentApplicationEngine';
 import { resolveRecordLayout } from '../records/recordSpatialLayoutEngine';
 import { arrangeRecordFields } from '../records/fieldPlacementEngine';
-import { resolveColorForRole, resolveSubtleCardBackground } from '../colors/surfaceAwareColorEngine';
+import { resolveSubtleCardBackground } from '../colors/surfaceAwareColorEngine';
 import { resolveFieldDesign } from '../records/fieldDesignResolutionEngine';
 import { sanitizeFontFamily } from '../typography/pdfFontRegistry';
 

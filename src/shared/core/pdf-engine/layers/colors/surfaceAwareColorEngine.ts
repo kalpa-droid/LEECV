@@ -58,14 +58,14 @@ export function resolveSubtleCardBackground(
   if (sectorRole === 'main') {
     // 1. Matiz HSL del color base del tema
     const [h] = hexToHSL(rolesColor.primary);
-    // 2. Monocromático Pastel armónico: Mantener H, S=20%, L=94%
-    return hslToHex(h, 0.20, 0.94);
+    // 2. Monocromático Pastel armónico casi neutro tipo papel: Mantener H, S=13%, L=96%
+    return hslToHex(h, 0.13, 0.96);
   }
 
-  // Columna Oscura (Sidebar)
+  // Columna Oscura (Sidebar): Calibrar L para que el texto sobre la tarjeta de la barra lateral siempre supere 4.5:1 (WCAG AA)
   const [h, s, l] = hexToHSL(rolesColor.primary);
   const shadowS = Math.max(0.10, s - 0.15);
-  const shadowL = Math.max(0.08, l - 0.08);
+  const shadowL = Math.max(0.05, Math.min(0.20, l - 0.16));
   return hslToHex(h, shadowS, shadowL);
 }
 

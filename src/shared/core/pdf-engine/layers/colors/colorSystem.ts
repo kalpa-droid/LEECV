@@ -374,8 +374,11 @@ export interface TypographyColorBinding {
 
 /**
  * CAPA 5 & 8 — VINCULACIÓN TIPOGRAFÍA ↔ ROLES CROMÁTICOS DE SUPERFICIE
- * Vincula cada nivel de la escala tipográfica (title, sectionHeading, itemTitle, body, caption)
- * con los roles cromáticos resueltos para la superficie actual.
+ * Vincula cada nivel de la escala tipográfica con los roles cromáticos resueltos.
+ * 
+ * NOTA DE ARQUITECTURA: Esta función actúa únicamente como fallback de parámetros
+ * para `resolveAccentTarget()`. La fuente de verdad cromática y tipográfica real de las tarjetas
+ * se resuelve mediante `unifiedTextHierarchyEngine.ts` (`resolveUnifiedTextSpec`).
  */
 export function getTypographyColorBinding(
   rolesColor: ResolvedThemeRoles,

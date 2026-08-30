@@ -1,6 +1,8 @@
 import { getAllPresets } from '../src/shared/core/pdf-engine/layers/presets/presetRegistry';
 import { getContrastRatio, hexToOKLCH } from '../src/shared/core/pdf-engine/layers/colors/colorSystem';
 import { checkThemeHueCoherence } from '../src/shared/core/pdf-engine/layers/colors/themeLightDarkTranslationEngine';
+import { resolveSubtleCardBackground } from '../src/shared/core/pdf-engine/layers/colors/surfaceAwareColorEngine';
+import { resolveUnifiedTextSpec } from '../src/shared/core/pdf-engine/layers/typography/unifiedTextHierarchyEngine';
 
 console.log('🔍 Iniciando auditoría de contraste WCAG 2.1 AA y coherencia cromática en presets de PDF...');
 
@@ -59,6 +61,28 @@ for (const preset of presets) {
       failedChecks++;
     } else {
       console.log(`  ✓ Preset [${preset.id}] - Integración de superficie de sector OK (Sidebar: ${sidebarPal.background}, Main: ${mainPal.background}).`);
+    }
+  }
+
+  // AUDITORÍA INTEGRAL DE JERARQUÍA TIPOGRÁFICA Y CONTRASTE WCAG 2.1 AA EN MOTOR UNIFICADO (resolveUnifiedTextSpec)
+  const cardBgHex = resolveSubtleCardBackground('main', mainPal);
+  const textRolesToTest = [
+    { role: 'title', minRatio: 4.5, name: 'Título (title)' },
+    { role: 'subtitle', minRatio: 4.5, name: 'Subtítulo (subtitle)' },
+    { role: 'description', minRatio: 4.5, name: 'Cuerpo (description/body)' },
+    { role: 'meta', minRatio: 4.5, name: 'Metadata (meta/extra)' }
+  ];
+
+  for (const textRole of textRolesToTest) {
+    totalChecks++;
+    const spec = resolveUnifiedTextSpec(textRole.role, cardBgHex, mainPal, preset.typography);
+    const contrastRatio = getContrastRatio(cardBgHex, spec.colorHex);
+
+    if (contrastRatio < textRole.minRatio) {
+      console.error(`❌ FALLO DE CONTRASTE EN MOTOR DE JERARQUÍA [Preset: ${preset.id}, Nivel: ${textRole.name}]: Color (${spec.colorHex}) en Fondo de Tarjeta (${cardBgHex}) da ratio ${contrastRatio.toFixed(2)}:1 (mínimo ${textRole.minRatio}:1).`);
+      failedChecks++;
+    } else {
+      console.log(`  ✓ Preset [${preset.id}] - Motor Jerarquía ${textRole.name} (${spec.colorHex}) en Tarjeta (${cardBgHex}) da ratio ${contrastRatio.toFixed(2)}:1 OK (≥ ${textRole.minRatio}:1).`);
     }
   }
 }

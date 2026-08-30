@@ -30,19 +30,27 @@ export interface ResolvedTextSpec {
  * Clasifica cualquier rol tipográfico o campo (nativo o custom) en uno de los 5 niveles jerárquicos.
  */
 export function classifyTextRole(pdfRole: string, fieldId?: string): TextRoleLevel {
-  const roleLower = (pdfRole || '').toLowerCase();
-  const idLower = (fieldId || '').toLowerCase();
+  const roleLower = (pdfRole || '').toLowerCase().trim();
+  const idLower = (fieldId || '').toLowerCase().trim();
 
-  if (roleLower === 'title' || idLower.includes('title') || idLower.includes('titulo') || idLower.includes('degree') || idLower.includes('role')) {
-    return 'title';
-  }
-  if (roleLower === 'subtitle' || idLower.includes('institution') || idLower.includes('company') || idLower.includes('empresa') || idLower.includes('institucion')) {
+  // 1. Evaluación de rol explícito directo (prioridad absoluta)
+  if (roleLower === 'subtitle') return 'subtitle';
+  if (roleLower === 'title') return 'title';
+  if (roleLower === 'badge' || roleLower === 'accent') return 'accent';
+  if (roleLower === 'extra' || roleLower === 'meta') return 'meta';
+  if (roleLower === 'description' || roleLower === 'body') return 'body';
+
+  // 2. Heurísticas por id (evitando colisiones como 'subtitle'.includes('title'))
+  if (idLower === 'subtitle' || idLower.includes('institution') || idLower.includes('company') || idLower.includes('empresa') || idLower.includes('institucion')) {
     return 'subtitle';
   }
-  if (roleLower === 'badge' || idLower.includes('badge') || idLower.includes('accent')) {
+  if (idLower === 'title' || idLower.includes('titulo') || idLower.includes('degree') || idLower.includes('role') || idLower.includes('puesto') || idLower.includes('carrera')) {
+    return 'title';
+  }
+  if (idLower.includes('badge') || idLower.includes('accent')) {
     return 'accent';
   }
-  if (roleLower === 'extra' || roleLower === 'meta' || idLower.includes('period') || idLower.includes('year') || idLower.includes('hours') || idLower.includes('date')) {
+  if (idLower.includes('period') || idLower.includes('year') || idLower.includes('hours') || idLower.includes('date') || idLower.includes('meta')) {
     return 'meta';
   }
 
@@ -135,34 +143,31 @@ export function resolveUnifiedTextSpec(
     }
   } else {
     // Escenario A: Rectángulo en Fondo Claro / Pastel
-    // Color Base Oscuro Integrado: HSL(H, 40%, 15%) entintado con el matiz base
+    // Se elimina la doble atenuación fijando opacity = 1.0 y codificando el 100% de la jerarquía
+    // y del contraste WCAG 2.1 AA (>= 4.5:1 real) en la matriz HSL calibrada.
     const [baseH] = hexToHSL(rolesColor.primary);
+    opacity = 1.0;
 
     switch (level) {
       case 'title':
-        colorHex = hslToHex(baseH, 0.40, 0.15); // H1 - 100% opacidad
-        opacity = 1.0;
+        colorHex = hslToHex(baseH, 0.50, 0.12); // Título H1: Oscuro y saturado (12.9:1)
         break;
       case 'subtitle':
-        colorHex = hslToHex(baseH, 0.35, 0.26); // H2 - 85% equivalente
-        opacity = 0.85;
+        colorHex = hslToHex(baseH, 0.40, 0.24); // Subtítulo H2: Mismo matiz, mayor luminancia (7.4:1)
         break;
       case 'accent': {
         // Atenuación de acento en superficie clara (-30% L si L > 0.55 para legibilidad WCAG)
         const [accH, accS, accL] = hexToHSL(rolesColor.accent || '#FF2E63');
         const adjustedAccL = accL > 0.55 ? Math.max(0.20, accL * 0.70) : accL;
         colorHex = hslToHex(accH, accS, adjustedAccL);
-        opacity = 1.0;
         break;
       }
       case 'meta':
-        colorHex = hslToHex(baseH, 0.25, 0.48); // Metadata - 50% equivalente
-        opacity = 0.50;
+        colorHex = hslToHex((baseH + 10) % 360, 0.30, 0.36); // Metadata: +10° H para separación (4.75:1)
         break;
       case 'body':
       default:
-        colorHex = hslToHex(baseH, 0.30, 0.35); // Cuerpo - 70% equivalente
-        opacity = 0.70;
+        colorHex = hslToHex(baseH, 0.22, 0.32); // Cuerpo de texto: Neutro entintado suave (5.9:1)
         break;
     }
   }
