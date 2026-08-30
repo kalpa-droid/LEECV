@@ -411,6 +411,31 @@ if (fs.existsSync(cvContextPath)) {
   );
 }
 
+// ─── 13. Plan v30: Motor Dinámico de Muelle/Dock de Secciones Activas ───
+console.log('\n── 13. Plan v30: Motor Dinámico de Muelle/Dock de Secciones Activas ──');
+
+const dockEnginePath = path.join(ROOT, 'src/shared/core/sections/activeSectionsDockEngine.ts');
+if (fs.existsSync(dockEnginePath)) {
+  const dockContent = fs.readFileSync(dockEnginePath, 'utf-8');
+  check(
+    'activeSectionsDockEngine.ts implementa resolveActiveDockSections filtrando por sectionVisibility y absorbiendo datos personales',
+    dockContent.includes('export function resolveActiveDockSections') && dockContent.includes('ABSORBED_INTO_PERSONAL_TAB'),
+    'activeSectionsDockEngine.ts no exporta resolveActiveDockSections'
+  );
+} else {
+  check('activeSectionsDockEngine.ts existe', false, `No encontrado: ${dockEnginePath}`);
+}
+
+const dockUiPath = path.join(ROOT, 'src/modules/cv-builder/components/CanvaIconDock.tsx');
+if (fs.existsSync(dockUiPath)) {
+  const dockUiContent = fs.readFileSync(dockUiPath, 'utf-8');
+  check(
+    'CanvaIconDock.tsx consume resolveActiveDockSections mediante useMemo (sin arrays fijos a mano)',
+    dockUiContent.includes('resolveActiveDockSections(cvData)') && !dockUiContent.includes('fixedPrioritySections'),
+    'CanvaIconDock.tsx mantiene arrays fijos a mano'
+  );
+}
+
 // ─── Resultado final ───
 console.log(`\n${'═'.repeat(60)}`);
 if (failed === 0) {
