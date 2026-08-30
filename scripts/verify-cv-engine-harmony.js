@@ -531,9 +531,39 @@ const navbarPath = path.join(ROOT, 'src/modules/cv-builder/components/Navbar.tsx
 if (fs.existsSync(navbarPath)) {
   const navContent = fs.readFileSync(navbarPath, 'utf-8');
   check(
-    'Navbar.tsx no duplica botones de sesión ("<span>Nuevo</span>" o "<span>Abrir</span>")',
-    !navContent.includes('<span>Nuevo</span>') && !navContent.includes('<span>Abrir</span>'),
-    'Navbar.tsx aún contiene botones de sesión duplicados'
+    'Navbar.tsx integra la barra superior unificada con píldoras de menú ovaladas',
+    navContent.includes('FolderOpen') && navContent.includes('Save') && navContent.includes('User'),
+    'Navbar.tsx no contiene la estructura de píldoras ovaladas de menú'
+  );
+}
+
+const saveModalPath = path.join(ROOT, 'src/modules/cv-builder/components/SaveModal.tsx');
+if (fs.existsSync(saveModalPath)) {
+  const saveContent = fs.readFileSync(saveModalPath, 'utf-8');
+  check(
+    'SaveModal.tsx usa la leyenda exacta "Guardar como copia para Puesto"',
+    saveContent.includes('Guardar como copia para Puesto'),
+    'SaveModal.tsx no contiene la leyenda actualizada'
+  );
+}
+
+const emailModalPath = path.join(ROOT, 'src/modules/cv-builder/components/modals/EmailSaveModal.tsx');
+if (fs.existsSync(emailModalPath)) {
+  const emailContent = fs.readFileSync(emailModalPath, 'utf-8');
+  check(
+    'EmailSaveModal.tsx exporta el componente de guardado por correo',
+    emailContent.includes('export default function EmailSaveModal'),
+    'EmailSaveModal.tsx no exporta el componente'
+  );
+}
+
+const canvaDockPath = path.join(ROOT, 'src/modules/cv-builder/components/CanvaIconDock.tsx');
+if (fs.existsSync(canvaDockPath)) {
+  const dockContent = fs.readFileSync(canvaDockPath, 'utf-8');
+  check(
+    'CanvaIconDock.tsx no duplica el botón de tema en la barra móvil',
+    !dockContent.includes('Botón Tema en Móvil'),
+    'CanvaIconDock.tsx aún contiene el botón de tema duplicado'
   );
 }
 

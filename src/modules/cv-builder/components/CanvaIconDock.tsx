@@ -217,36 +217,6 @@ export default function CanvaIconDock({
 
         <div className="w-px h-6 bg-[var(--ui-dock-border)] shrink-0" />
 
-        {/* Botón Tema en Móvil */}
-        {(() => {
-          const currentThemeId = cvData?.uiTheme || 'default';
-          const meta = UI_THEME_META[currentThemeId] || UI_THEME_META.default;
-          return (
-            <button
-              type="button"
-              onClick={() => {
-                if (setCvData) {
-                  setCvData((prev: any) => {
-                    const current = prev?.uiTheme || 'default';
-                    const nextTheme = getNextUiTheme(current);
-                    if (typeof document !== 'undefined') {
-                      document.documentElement.setAttribute('data-ui-theme', nextTheme);
-                    }
-                    return { ...prev, uiTheme: nextTheme };
-                  });
-                }
-              }}
-              className={`px-2.5 py-1.5 rounded-[${radius.card}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] text-[11px] font-black shrink-0 flex items-center gap-1.5 cursor-pointer active:scale-95 ${elevationSystem.raised}`}
-              title={`Tema actual: ${meta.label}`}
-            >
-              <span>{meta.shortLabel}</span>
-              <span className="text-sm leading-none">{meta.emoji}</span>
-            </button>
-          );
-        })()}
-
-        <div className="w-px h-6 bg-[var(--ui-dock-border)] shrink-0" />
-
         {styleTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id && isPanelOpen;

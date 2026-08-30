@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Download, Cloud, ShieldCheck, HardDrive, CopyPlus, Tag, Briefcase } from 'lucide-react';
+import { Save, Download, Cloud, ShieldCheck, CopyPlus, Tag, Briefcase, FileArchive } from 'lucide-react';
 import { checkStorageStatus } from '../services/cvStorageService';
 import { Modal } from '../../../shared/core/ui/Modal';
 import { radius } from '../../../shared/core/uiDesignSystem';
@@ -13,6 +13,7 @@ export interface SaveModalProps {
   onOpenCloudStatus?: () => void;
   isSaving?: boolean;
   onSaveAs?: (versionLabel: string) => void;
+  initialSaveAsOpen?: boolean;
 }
 
 export default function SaveModal({
@@ -22,18 +23,24 @@ export default function SaveModal({
   onExportJson,
   onOpenCloudStatus,
   isSaving = false,
-  onSaveAs
+  onSaveAs,
+  initialSaveAsOpen = false
 }: SaveModalProps) {
   const storageStatus = checkStorageStatus();
 
-  // State for "Guardar como Nueva Versión"
+  // State for "Guardar como copia para Puesto"
   const [selectedCategory, setSelectedCategory] = useState<string>(JOB_POSITION_CATALOG[0].category);
   const [selectedPosition, setSelectedPosition] = useState<string>(JOB_POSITION_CATALOG[0].positions[0]);
   const [customPositionInput, setCustomPositionInput] = useState<string>('');
-  const [isSaveAsActive, setIsSaveAsActive] = useState<boolean>(false);
+  const [isSaveAsActive, setIsSaveAsActive] = useState<boolean>(initialSaveAsOpen);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setIsSaveAsActive(initialSaveAsOpen);
+    }
+  }, [isOpen, initialSaveAsOpen]);
 
   const currentCategoryObj = JOB_POSITION_CATALOG.find(c => c.category === selectedCategory) || JOB_POSITION_CATALOG[0];
-
   const effectiveLabel = customPositionInput.trim() || selectedPosition || selectedCategory;
 
   const handleCategoryChange = (catName: string) => {
@@ -63,8 +70,21 @@ export default function SaveModal({
           <div className="flex items-center gap-2">
             <Cloud className="w-4 h-4 text-[var(--ui-accent-purple)]" />
             <span className="text-xs font-bold text-[var(--ui-text-primary)]">{storageStatus.label}</span>
+            {onOpenCloudStatus && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenCloudStatus();
+                }}
+                className="ml-2 text-[10px] font-extrabold text-[var(--color-secondary-bright)] hover:underline cursor-pointer"
+              >
+                ⚙️ Estado de Nube & Drive
+              </button>
+            )}
           </div>
           <button
+            type="button"
             onClick={onClose}
             className={`px-4 py-2 bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] border border-[var(--ui-border)] font-bold rounded-[${radius.card}] transition cursor-pointer`}
           >
@@ -74,8 +94,9 @@ export default function SaveModal({
       }
     >
       <div className="space-y-3">
-        {/* Option 1: Guardar en Almacenamiento Local / Nube */}
+        {/* Opción 1: Guardar Cambios (Sobrescribir Activo) */}
         <button
+          type="button"
           onClick={() => {
             onSaveStorage();
             onClose();
@@ -88,18 +109,18 @@ export default function SaveModal({
           </div>
           <div className="space-y-0.5 min-w-0 flex-1">
             <div className="flex items-center justify-between">
-              <span className="font-extrabold text-xs sm:text-sm text-[var(--ui-text-primary)]">Guardar en Almacenamiento</span>
+              <span className="font-extrabold text-xs sm:text-sm text-[var(--ui-text-primary)]">Guardar Cambios (Sobrescribir Activo)</span>
               <span className="text-[10px] font-black px-2 py-0.5 rounded bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)] border border-[var(--color-accent-purple)]/50">
                 {isSaving ? 'Guardando...' : 'Sobrescribir Activo'}
               </span>
             </div>
             <p className="text-[11px] text-[var(--ui-text-secondary)]">
-              Actualiza el documento activo en tu navegador e IndexedDB con compresión WebP.
+              Actualiza el documento activo en tu Navegador, Supabase y Google Drive simultáneamente.
             </p>
           </div>
         </button>
 
-        {/* Option 2: Guardar como Nueva Versión (por Puesto / Etiqueta) */}
+        {/* Opción 2: Guardar como copia para Puesto */}
         {onSaveAs && (
           <div className={`p-3.5 rounded-[${radius.modal}] bg-[var(--color-secondary-muted)]/50 border border-[var(--color-secondary-base)]/40 space-y-3`}>
             <button
@@ -112,18 +133,18 @@ export default function SaveModal({
               </div>
               <div className="space-y-0.5 min-w-0 flex-1">
                 <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-xs sm:text-sm text-[var(--ui-text-primary)]">Guardar como Nueva Versión</span>
+                  <span className="font-extrabold text-xs sm:text-sm text-[var(--ui-text-primary)]">Guardar como copia para Puesto</span>
                   <span className="text-[10px] font-black px-2 py-0.5 rounded bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)]">
-                    Versión Independiente
+                    Copia Independiente
                   </span>
                 </div>
                 <p className="text-[11px] text-[var(--ui-text-secondary)]">
-                  Crea una nueva copia con ID único etiquetada para un puesto de trabajo específico (ej. "Docencia", "Administrativo").
+                  Crea una nueva copia con ID único etiquetada para un puesto específico (ej. "Docencia", "Gerente").
                 </p>
               </div>
             </button>
 
-            {/* Expandable Job Position Form */}
+            {/* Formulario desplegable de puesto */}
             {isSaveAsActive && (
               <div className="pt-2 border-t border-[var(--color-secondary-base)]/20 space-y-3 animate-fadeIn">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -189,7 +210,7 @@ export default function SaveModal({
                     className="px-4 py-2 bg-[var(--color-secondary-base)] hover:opacity-90 text-[var(--color-secondary-on-base)] font-black text-xs rounded transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                   >
                     <CopyPlus className="w-4 h-4" />
-                    <span>Guardar como "{effectiveLabel}"</span>
+                    <span>Guardar como copia para "{effectiveLabel}"</span>
                   </button>
                 </div>
               </div>
@@ -197,32 +218,9 @@ export default function SaveModal({
           </div>
         )}
 
-        {/* Option 3: Google Drive / Nube Status */}
-        {onOpenCloudStatus && (
-          <button
-            onClick={() => {
-              onClose();
-              onOpenCloudStatus();
-            }}
-            className={`w-full text-left p-3.5 rounded-[${radius.modal}] bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] transition group flex items-start gap-3 cursor-pointer`}
-          >
-            <div className={`p-2.5 rounded-[${radius.card}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-dock-text)] group-hover:scale-110 transition flex-shrink-0`}>
-              <HardDrive className="w-5 h-5" />
-            </div>
-            <div className="space-y-0.5 min-w-0 flex-1">
-              <div className="flex items-center justify-between">
-                <span className="font-extrabold text-xs sm:text-sm text-[var(--ui-text-primary)]">Google Drive / Nube</span>
-                <span className="text-[10px] font-bold text-[var(--color-secondary-text)]">Nube Personal</span>
-              </div>
-              <p className="text-[11px] text-[var(--ui-text-secondary)]">
-                Sincronización y estado de resguardo de archivos en tu cuenta de Google Drive.
-              </p>
-            </div>
-          </button>
-        )}
-
-        {/* Option 4: Descargar Copia (.JSON) */}
+        {/* Opción 3: Descargar Copia Portátil (.JSON / .ZIP) */}
         <button
+          type="button"
           onClick={() => {
             onExportJson();
             onClose();
@@ -230,15 +228,15 @@ export default function SaveModal({
           className={`w-full text-left p-3.5 rounded-[${radius.modal}] bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] hover:border-[var(--color-status-warning-base)]/40 transition group flex items-start gap-3 cursor-pointer`}
         >
           <div className={`p-2.5 rounded-[${radius.card}] bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)] group-hover:scale-110 transition flex-shrink-0`}>
-            <Download className="w-5 h-5" />
+            <FileArchive className="w-5 h-5" />
           </div>
           <div className="space-y-0.5 min-w-0 flex-1">
             <div className="flex items-center justify-between">
-              <span className="font-extrabold text-xs sm:text-sm text-[var(--ui-text-primary)]">Descargar Copia (.JSON)</span>
-              <span className="text-[10px] font-bold text-[var(--ui-text-secondary)]">Archivo Portátil</span>
+              <span className="font-extrabold text-xs sm:text-sm text-[var(--ui-text-primary)]">Descargar Copia Portátil (.JSON / .ZIP)</span>
+              <span className="text-[10px] font-bold text-[var(--ui-text-secondary)]">Llevar a otra PC</span>
             </div>
             <p className="text-[11px] text-[var(--ui-text-secondary)]">
-              Exporta un archivo .JSON liviano a tu dispositivo para transferirlo a otra computadora o celular.
+              Elige descargar un archivo .JSON liviano o un paquete .ZIP completo para llevar tu CV en pendrive o enviar por email a otra computadora.
             </p>
           </div>
         </button>

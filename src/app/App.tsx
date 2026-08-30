@@ -38,9 +38,10 @@ import { runAtsPreflightCheck, AtsPreflightResult } from '../shared/core/pdf-eng
 import { AtsCheckModal } from '../modules/cv-builder/components/AtsCheckModal';
 import { navigation } from '../shared/core/utils/navigation';
 
-import { DocumentTabBar } from '../modules/cv-builder/components/DocumentTabBar';
+import EmailSaveModal from '../modules/cv-builder/components/modals/EmailSaveModal';
 import { loadCVById } from '../shared/core/storage/documentStorageService';
 import { runWithSafeSave } from '../shared/core/storage/safeNavigationEngine';
+import { signInWithGoogle, logout } from '../modules/auth/authService';
 
 function AppContent() {
   const { cvData, setCvData, resetToBlankCV, saveCV, saveCVAs } = useCVContext();
@@ -159,6 +160,8 @@ function AppContent() {
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [isSavedCVsOpen, setIsSavedCVsOpen] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [initialSaveAsOpen, setInitialSaveAsOpen] = useState(false);
+  const [isEmailSaveModalOpen, setIsEmailSaveModalOpen] = useState(false);
   const [isCloudModalOpen, setIsCloudModalOpen] = useState(false);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [, setPdfProgress] = useState(0);
@@ -171,6 +174,16 @@ function AppContent() {
   const [isCardExportOpen, setIsCardExportOpen] = useState(false);
   const [isAtsModalOpen, setIsAtsModalOpen] = useState(false);
   const [atsResult, setAtsResult] = useState<AtsPreflightResult | null>(null);
+
+  const handleAuthToggle = async () => {
+    if (currentProfile) {
+      await logout();
+      setCurrentProfile(null);
+      showSuccess('Sesión cerrada correctamente.');
+    } else {
+      await signInWithGoogle();
+    }
+  };
 
   const handleOpenAtsCheck = () => {
     const preset = resolveActivePreset(cvData);
@@ -355,36 +368,30 @@ function AppContent() {
     <div className="h-screen bg-[var(--color-neutral-text-primary)] text-white flex flex-col font-sans overflow-hidden selection:bg-[var(--color-accent-base)] selection:text-white relative">
       <div className="md:pl-16">
         <Navbar 
-          onPrint={handleExportPDFClick} 
-          onStartNewCVWizard={() => setIsWizardOpen(true)}
-          onOpenSavedCVs={() => setIsSavedCVsOpen(true)}
-          onOpenSaveModal={() => setIsSaveModalOpen(true)}
-          onOpenPricing={() => setIsPricingModalOpen(true)}
+          currentCvData={cvData}
+          onSwitchDocumentTab={handleSwitchDocumentTab}
           onNewCV={handleNewCV}
-          onSaveCV={handleSaveCVClick}
+          onOpenSavedCVsModal={() => setIsSavedCVsOpen(true)}
+          onSaveCVClick={handleSaveCVClick}
+          onOpenSaveAsModal={() => {
+            setInitialSaveAsOpen(true);
+            setIsSaveModalOpen(true);
+          }}
+          onOpenJsonDownloadModal={() => setIsDownloadModalOpen(true)}
+          onPrint={handleExportPDFClick}
           onOpenAtsCheck={handleOpenAtsCheck}
-          onExportAtsPdf={handleExportAtsPdf}
+          onOpenPricing={() => setIsPricingModalOpen(true)}
+          onOpenEmailSaveModal={() => setIsEmailSaveModalOpen(true)}
+          onAuthToggle={handleAuthToggle}
+          isLoggedIn={!!currentProfile}
+          userRole={currentProfile?.role || 'candidate'}
           isSaving={isSaving}
+          zoomLevel={zoomLevel}
+          setZoomLevel={setZoomLevel}
+          triggerAutoFit={triggerAutoFit}
+          cycleUITheme={cycleUITheme}
         />
-        {/* Barra compacta de Zoom en Mobile (< md) */}
-        <div className="flex md:hidden bg-[var(--ui-bg-dock)] border-b border-[var(--ui-dock-border)] px-3 py-1.5 justify-center z-30">
-          <ZoomControls 
-            zoomLevel={zoomLevel} 
-            setZoomLevel={setZoomLevel} 
-            triggerAutoFit={triggerAutoFit}
-            isMobile={true}
-            currentUiTheme={cvData?.uiTheme || 'default'}
-            onCycleTheme={cycleUITheme}
-          />
-        </div>
       </div>
-
-      <DocumentTabBar
-        currentCvData={cvData}
-        onSwitchDocument={handleSwitchDocumentTab}
-        onNewDocument={handleNewCV}
-        onOpenSavedModal={() => setIsSavedCVsOpen(true)}
-      />
 
       <main className="flex-1 flex overflow-hidden relative min-h-0 md:pl-16">
         <CanvaIconDock 
@@ -496,14 +503,26 @@ function AppContent() {
         )}
 
         {isSaveModalOpen && (
-          <SaveModal
+          <SaveModal 
             isOpen={isSaveModalOpen}
-            onClose={() => setIsSaveModalOpen(false)}
+            onClose={() => {
+              setIsSaveModalOpen(false);
+              setInitialSaveAsOpen(false);
+            }}
             onSaveStorage={handleSaveCVClick}
             onSaveAs={handleSaveCVAsClick}
-            onExportJson={() => exportCVToJson(cvData)}
+            onExportJson={() => setIsDownloadModalOpen(true)}
             onOpenCloudStatus={() => setIsCloudModalOpen(true)}
             isSaving={isSaving}
+            initialSaveAsOpen={initialSaveAsOpen}
+          />
+        )}
+
+        {isEmailSaveModalOpen && (
+          <EmailSaveModal
+            isOpen={isEmailSaveModalOpen}
+            onClose={() => setIsEmailSaveModalOpen(false)}
+            cvData={cvData}
           />
         )}
 
