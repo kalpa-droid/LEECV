@@ -6,6 +6,8 @@ import { SaveDocumentResult, DocumentRecord } from '../../../types/document';
 import { getDocumentTypeConfig } from '../capabilities/capabilityRegistry';
 import { getMonthNameEs } from '../utils/formatDate';
 import { backupCvToGoogleDrive } from './driveBackupService';
+import { dedupAssetsForLocalStorage, reconstructCvDataFromParts } from './driveDocumentPackager';
+import { migrateCvData } from './cvMigrationEngine';
 
 export { supabase, checkStorageStatus };
 
@@ -28,63 +30,63 @@ export const getSavedDocumentsList = async (docTypeId: string = 'cv'): Promise<D
       if (Array.isArray(parsed)) {
         parsed.forEach((item: DocumentRecord) => {
           if (item && item.id) {
-            map.set(item.id, {
-              id: item.id,
-              doc_type_id: item.doc_type_id || docTypeId,
-              title: item.title,
-              candidate_name: item.candidate_name,
-              dni: item.dni,
-              updated_at: item.updated_at,
-              ...(item.version_label ? { version_label: item.version_label } : {})
-            });
+            map.set(item.id, item);
           }
         });
       }
     }
   } catch (err) {
-    console.error(`Error leyendo LocalStorage para ${docTypeId}:`, err);
+    console.warn('LocalStorage summary list read error:', err);
   }
 
-  // 2. Read Cloud Supabase documents if available
+  // 2. Sync from Supabase in background
   if (supabase) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const data = await dal.cvs.listByUser(user.id);
-        if (Array.isArray(data)) {
-          data.forEach((item: any) => {
-            if (item && item.id) {
-              map.set(item.id, {
-                ...item,
-                doc_type_id: docTypeId
-              });
-            }
+        const remoteCVs = await dal.cvs.listByUser(user.id);
+        if (remoteCVs && remoteCVs.length > 0) {
+          remoteCVs.forEach(remote => {
+            const formattedTitle = remote.title || `CV - ${remote.candidate_name || 'DOCUMENTO'}`;
+            const rec: DocumentRecord = {
+              id: remote.id,
+              doc_type_id: docTypeId,
+              title: formattedTitle,
+              candidate_name: remote.candidate_name || '',
+              dni: remote.dni || '',
+              updated_at: remote.updated_at,
+              syncState: 'synced',
+              ...(remote.version_label ? { version_label: remote.version_label } : {})
+            };
+            map.set(remote.id, rec);
           });
         }
       }
     } catch (err) {
-      console.warn(`Advertencia leyendo Supabase para ${docTypeId}:`, err);
+      console.warn('Supabase listByUser sync error:', err);
     }
   }
 
-  const result = Array.from(map.values());
-  result.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
-  return result;
+  return Array.from(map.values()).sort(
+    (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+  );
 };
 
-/**
- * Internal implementation for saving documents (with optional version label and new ID enforcement)
- */
 const saveDocumentInternal = async (
   docData: any,
   docTypeId: string = 'cv',
   versionLabel?: string
 ): Promise<SaveDocumentResult> => {
-  try {
-    const docConfig = getDocumentTypeConfig(docTypeId);
-    const optimizedDoc = docTypeId === 'cv' ? await optimizeCVImagesToWebP(docData) : docData;
+  if (!docData) {
+    return { success: false, error: 'DocumentData es nulo o indefinido' };
+  }
 
-    const id = docData.id || `doc_${docTypeId}_${Date.now()}`;
+  const docConfig = getDocumentTypeConfig(docTypeId);
+  const id = docData.id || `doc_${docTypeId}_${Date.now()}`;
+
+  try {
+    const optimizedDoc = await optimizeCVImagesToWebP(docData);
+
     const candidateName = (
       optimizedDoc.personalInfo?.fullName || 
       `${optimizedDoc.personalInfo?.surname || ''} ${optimizedDoc.personalInfo?.givenNames || ''}`.trim() || 
@@ -114,11 +116,14 @@ const saveDocumentInternal = async (
       ...(versionLabel ? { version_label: versionLabel } : {})
     };
 
+    // Deduplicación en el borde de almacenamiento (referencias asset://)
+    const storedDocObject = await dedupAssetsForLocalStorage(fullDocObject);
+
     // 1. Primary Save to IndexedDB (Unlimited Capacity)
-    await idbStorage.setItem(`doc_${docTypeId}_data_${id}`, fullDocObject);
+    await idbStorage.setItem(`doc_${docTypeId}_data_${id}`, storedDocObject);
     if (docTypeId === 'cv') {
-      await idbStorage.setItem('cv_data_' + id, fullDocObject);
-      await idbStorage.setItem('cv_premium_data', fullDocObject);
+      await idbStorage.setItem('cv_data_' + id, storedDocObject);
+      await idbStorage.setItem('cv_premium_data', storedDocObject);
     }
 
     // 2. Save summary list to LocalStorage (liviano)
@@ -150,7 +155,7 @@ const saveDocumentInternal = async (
             title: summaryRecord.title,
             candidate_name: summaryRecord.candidate_name,
             dni: summaryRecord.dni,
-            cv_data: fullDocObject,
+            cv_data: storedDocObject,
             updated_at: summaryRecord.updated_at
           });
           syncState = success ? 'synced' : 'pending';
@@ -207,34 +212,44 @@ export const saveDocumentAs = async (
 };
 
 /**
- * Load a single document by ID
+ * Load a single document by ID with asset hydration and schema migration
  */
 export const loadDocumentById = async (id: string, docTypeId: string = 'cv'): Promise<any> => {
+  let raw: any = null;
+
   // 1. Check IndexedDB
   try {
     const idbData = await idbStorage.getItem(`doc_${docTypeId}_data_${id}`) || await idbStorage.getItem(`cv_data_${id}`);
-    if (idbData) return idbData;
+    if (idbData) raw = idbData;
   } catch (err) {
     console.warn('idbStorage fetch error:', err);
   }
 
   // 2. Check Supabase
-  if (supabase) {
+  if (!raw && supabase) {
     try {
       const cvData = await dal.cvs.getById(id);
-      if (cvData) return cvData;
+      if (cvData) raw = cvData;
     } catch (err) {
       console.warn('Supabase fetch error:', err);
     }
   }
 
   // 3. Fallback LocalStorage
-  try {
-    const stored = localStorage.getItem(`doc_${docTypeId}_data_${id}`) || localStorage.getItem(`cv_data_${id}`);
-    if (stored) return JSON.parse(stored);
-  } catch {}
+  if (!raw) {
+    try {
+      const stored = localStorage.getItem(`doc_${docTypeId}_data_${id}`) || localStorage.getItem(`cv_data_${id}`);
+      if (stored) raw = JSON.parse(stored);
+    } catch {}
+  }
 
-  return null;
+  if (!raw) return null;
+
+  // 4. Hidratar referencias de assets si existen (asset://<hash>)
+  const hydrated = await reconstructCvDataFromParts(raw);
+
+  // 5. Aplicar migración universal de esquema
+  return migrateCvData(hydrated);
 };
 
 /**

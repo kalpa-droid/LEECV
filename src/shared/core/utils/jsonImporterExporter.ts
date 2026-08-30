@@ -3,6 +3,7 @@ import { sanitizeCvData } from './cvDataSchema';
 import { downloadBlob } from './downloadUtils';
 import JSZip from 'jszip';
 import { splitCvDataForDrive, reconstructCvDataFromParts } from '../storage/driveDocumentPackager';
+import { migrateCvData } from '../storage/cvMigrationEngine';
 
 export function exportCVToJson(cvData: CVData | null | undefined): void {
   if (!cvData) return;
@@ -48,8 +49,8 @@ export function importCVFromJsonFile(file: File): Promise<CVData> {
         }
 
         if (targetData && typeof targetData === 'object') {
-          const sanitized = sanitizeCvData(targetData);
-          resolve(sanitized as CVData);
+          const migrated = migrateCvData(targetData);
+          resolve(migrated as CVData);
         } else {
           reject(new Error('El archivo no contiene un formato de CV válido.'));
         }
@@ -123,10 +124,11 @@ export function importCVFromZipFile(file: File): Promise<CVData> {
       }
 
       const reconstructed = await reconstructCvDataFromParts(rawCvData, binaryAssets);
-      const sanitized = sanitizeCvData(reconstructed);
-      resolve(sanitized as CVData);
+      const migrated = migrateCvData(reconstructed);
+      resolve(migrated as CVData);
     } catch (err: any) {
       reject(new Error('Error al importar archivo ZIP: ' + (err?.message || err)));
     }
   });
 }
+

@@ -1,4 +1,5 @@
 import { hashBlob } from '../utils/hashBlob';
+import { idbStorage } from '../../../modules/cv-builder/services/storageIndexedDB';
 
 export interface BinaryAsset {
   filename: string;
@@ -113,12 +114,48 @@ export async function splitCvDataForDrive(cvData: any): Promise<SplitCvDataResul
 }
 
 /**
- * Reconstruye el objeto `cvData` hidratado sustituyendo las referencias "ref://..."
+ * Extrae y guarda los binarios de imagen en la tabla IndexedDB cv_assets
+ * indexados por su hash SHA-256 inmutable, sustituyendo los base64 en la copia
+ * de almacenamiento local por "asset://<hash>".
+ */
+export async function dedupAssetsForLocalStorage(cvData: any): Promise<any> {
+  if (!cvData || typeof cvData !== 'object') return cvData;
+
+  const { cleanCvData, binaryAssets } = await splitCvDataForDrive(cvData);
+  const storedCvData = JSON.parse(JSON.stringify(cleanCvData));
+
+  for (const asset of binaryAssets) {
+    try {
+      await idbStorage.setItem('cv_asset_' + asset.hash, asset.blob);
+    } catch (err) {
+      console.warn(`Advertencia al guardar asset en IndexedDB [${asset.hash}]:`, err);
+    }
+
+    if (asset.fieldPath === 'personalInfo.profilePhoto' && storedCvData.personalInfo) {
+      storedCvData.personalInfo.profilePhoto = `asset://${asset.hash}`;
+    } else if (asset.fieldPath === 'signature.dataUrl' && storedCvData.signature) {
+      storedCvData.signature.dataUrl = `asset://${asset.hash}`;
+    } else if (asset.fieldPath.startsWith('certificatesScanned[')) {
+      const match = asset.fieldPath.match(/\[(\d+)\]/);
+      if (match && storedCvData.certificatesScanned) {
+        const idx = parseInt(match[1], 10);
+        if (storedCvData.certificatesScanned[idx]) {
+          storedCvData.certificatesScanned[idx].dataUrl = `asset://${asset.hash}`;
+        }
+      }
+    }
+  }
+
+  return storedCvData;
+}
+
+/**
+ * Reconstruye el objeto `cvData` hidratado sustituyendo las referencias "ref://..." o "asset://..."
  * por los binarios en base64 correspondientes.
  */
 export async function reconstructCvDataFromParts(
   cleanCvData: any,
-  binaryAssets: BinaryAsset[] | Record<string, Blob | string>
+  binaryAssets?: BinaryAsset[] | Record<string, Blob | string>
 ): Promise<any> {
   if (!cleanCvData || typeof cleanCvData !== 'object') return cleanCvData;
 
@@ -130,19 +167,33 @@ export async function reconstructCvDataFromParts(
     binaryAssets.forEach(asset => {
       assetMap.set(asset.filename, asset.blob);
       assetMap.set(`ref://${asset.filename}`, asset.blob);
+      assetMap.set(`asset://${asset.hash}`, asset.blob);
     });
   } else if (binaryAssets && typeof binaryAssets === 'object') {
     Object.entries(binaryAssets).forEach(([key, val]) => {
       assetMap.set(key, val);
       assetMap.set(`ref://${key}`, val);
+      assetMap.set(`asset://${key}`, val);
     });
   }
 
   async function resolveRefToDataUrl(refValue: string): Promise<string> {
-    if (!refValue || typeof refValue !== 'string' || !refValue.startsWith('ref://')) {
+    if (!refValue || typeof refValue !== 'string') return refValue;
+    if (!refValue.startsWith('ref://') && !refValue.startsWith('asset://')) {
       return refValue;
     }
-    const asset = assetMap.get(refValue) || assetMap.get(refValue.replace('ref://', ''));
+
+    const cleanRef = refValue.replace('ref://', '').replace('asset://', '');
+    let asset = assetMap.get(refValue) || assetMap.get(cleanRef);
+
+    if (!asset) {
+      try {
+        asset = await idbStorage.getItem('cv_asset_' + cleanRef);
+      } catch (err) {
+        console.warn(`Error buscando asset local [${cleanRef}]:`, err);
+      }
+    }
+
     if (!asset) return refValue;
 
     if (typeof asset === 'string') {

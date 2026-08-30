@@ -436,6 +436,49 @@ if (fs.existsSync(dockUiPath)) {
   );
 }
 
+// ─── 14. Plan v31: Versionado de Esquema, Deduplicación en Borde y Pestañas Multidocumento ───
+console.log('\n── 14. Plan v31: Versionado de Esquema, Deduplicación en Borde y Pestañas Multidocumento ──');
+
+const migrationPath = path.join(ROOT, 'src/shared/core/storage/cvMigrationEngine.ts');
+if (fs.existsSync(migrationPath)) {
+  const migContent = fs.readFileSync(migrationPath, 'utf-8');
+  check(
+    'cvMigrationEngine.ts define CURRENT_SCHEMA_VERSION y exporta migrateCvData',
+    migContent.includes('CURRENT_SCHEMA_VERSION = 1') && migContent.includes('export function migrateCvData'),
+    'cvMigrationEngine.ts no exporta migrateCvData'
+  );
+}
+
+const localPackagerPath = path.join(ROOT, 'src/shared/core/storage/driveDocumentPackager.ts');
+if (fs.existsSync(localPackagerPath)) {
+  const packContent = fs.readFileSync(localPackagerPath, 'utf-8');
+  check(
+    'driveDocumentPackager.ts implementa dedupAssetsForLocalStorage e hidratación asset://',
+    packContent.includes('dedupAssetsForLocalStorage') && packContent.includes('asset://'),
+    'driveDocumentPackager.ts no implementa dedupAssetsForLocalStorage'
+  );
+}
+
+const tabEnginePath = path.join(ROOT, 'src/shared/core/storage/documentTabEngine.ts');
+if (fs.existsSync(tabEnginePath)) {
+  const tabContent = fs.readFileSync(tabEnginePath, 'utf-8');
+  check(
+    'documentTabEngine.ts implementa getOpenTabs, addOpenTab, removeOpenTab con persistencia cv_open_tabs',
+    tabContent.includes('getOpenTabs') && tabContent.includes('cv_open_tabs'),
+    'documentTabEngine.ts no implementa persistencia de pestañas'
+  );
+}
+
+const tabUiPath = path.join(ROOT, 'src/modules/cv-builder/components/DocumentTabBar.tsx');
+if (fs.existsSync(tabUiPath)) {
+  const tabUiContent = fs.readFileSync(tabUiPath, 'utf-8');
+  check(
+    'DocumentTabBar.tsx exporta el componente interactivo de pestañas multidocumento',
+    tabUiContent.includes('export function DocumentTabBar'),
+    'DocumentTabBar.tsx no exporta el componente'
+  );
+}
+
 // ─── Resultado final ───
 console.log(`\n${'═'.repeat(60)}`);
 if (failed === 0) {

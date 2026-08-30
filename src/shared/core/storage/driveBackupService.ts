@@ -2,7 +2,8 @@ import { splitCvDataForDrive } from './driveDocumentPackager';
 import { uploadToGoogleDrive } from './googleDriveBackend';
 import { idbStorage } from '../../../modules/cv-builder/services/storageIndexedDB';
 
-const DRIVE_HASH_PREFIX = 'drive_asset_hashes_';
+const DRIVE_GLOBAL_HASH_KEY = 'drive_asset_hashes_global';
+const DRIVE_PER_CV_HASH_PREFIX = 'drive_asset_hashes_';
 
 export interface DriveBackupResult {
   success: boolean;
@@ -13,10 +14,10 @@ export interface DriveBackupResult {
 }
 
 /**
- * NÚCLEO — RESPALDO INCREMENTAL POR HASH EN GOOGLE DRIVE (driveBackupService.ts)
+ * NÚCLEO — RESPALDO INCREMENTAL GLOBAL Y DEDUPLICADO EN GOOGLE DRIVE (driveBackupService.ts)
  * 
- * Sube datos.json y binarios a Google Drive en subcarpetas dedicadas. Omite binarios
- * cuyo hash SHA-256 no haya cambiado desde el último respaldo exitoso.
+ * Sube datos.json y binarios a Google Drive en subcarpetas dedicadas. Reutiliza imágenes
+ * ya existentes entre distintas versiones del CV mediante un índice global de hashes.
  */
 export async function backupCvToGoogleDrive(cvData: any): Promise<DriveBackupResult> {
   if (!cvData || !cvData.id) {
@@ -24,38 +25,42 @@ export async function backupCvToGoogleDrive(cvData: any): Promise<DriveBackupRes
   }
 
   const cvId = cvData.id;
-  const storageKey = `${DRIVE_HASH_PREFIX}${cvId}`;
+  const perCvStorageKey = `${DRIVE_PER_CV_HASH_PREFIX}${cvId}`;
 
   try {
     // 1. Separar binarios del JSON estructurado
     const { cleanCvData, binaryAssets } = await splitCvDataForDrive(cvData);
-    
-    // 2. Leer hashes anteriores desde IndexedDB
-    let previousHashes: Record<string, string> = {};
+
+    // 2. Leer hashes globales e individuales del usuario desde IndexedDB
+    let globalHashes: Record<string, string> = {};
+    let previousPerCvHashes: Record<string, string> = {};
     try {
-      const stored = await idbStorage.getItem(storageKey);
-      if (stored && typeof stored === 'object') {
-        previousHashes = stored;
-      }
-    } catch {
-      previousHashes = {};
-    }
+      const gStored = await idbStorage.getItem(DRIVE_GLOBAL_HASH_KEY);
+      if (gStored && typeof gStored === 'object') globalHashes = gStored;
+
+      const pStored = await idbStorage.getItem(perCvStorageKey);
+      if (pStored && typeof pStored === 'object') previousPerCvHashes = pStored;
+    } catch {}
 
     const uploadedFiles: string[] = [];
     const skippedFiles: string[] = [];
-    const updatedHashes: Record<string, string> = { ...previousHashes };
+    const updatedPerCvHashes: Record<string, string> = { ...previousPerCvHashes };
+    const updatedGlobalHashes: Record<string, string> = { ...globalHashes };
 
-    // 3. Subir binarios cuyo hash haya cambiado
+    // 3. Subir o deduplicar binarios según el hash SHA-256 global
     for (const asset of binaryAssets) {
-      if (previousHashes[asset.filename] === asset.hash) {
+      // Si el asset ya fue subido previamente para este CV o existe en el índice global del usuario
+      if (previousPerCvHashes[asset.filename] === asset.hash || globalHashes[asset.hash]) {
         skippedFiles.push(asset.filename);
+        updatedPerCvHashes[asset.filename] = asset.hash;
         continue;
       }
 
       const uploadRes = await uploadToGoogleDrive(asset.blob, `${cvId}_${asset.filename.replace('/', '_')}`);
       if (uploadRes.success) {
         uploadedFiles.push(asset.filename);
-        updatedHashes[asset.filename] = asset.hash;
+        updatedPerCvHashes[asset.filename] = asset.hash;
+        updatedGlobalHashes[asset.hash] = asset.filename;
       } else {
         console.warn(`Advertencia al subir binario a Drive [${asset.filename}]:`, uploadRes.error);
       }
@@ -78,8 +83,9 @@ export async function backupCvToGoogleDrive(cvData: any): Promise<DriveBackupRes
 
     uploadedFiles.push('datos.json');
 
-    // 5. Guardar hashes actualizados en IndexedDB
-    await idbStorage.setItem(storageKey, updatedHashes);
+    // 5. Guardar hashes globales y locales actualizados en IndexedDB
+    await idbStorage.setItem(perCvStorageKey, updatedPerCvHashes);
+    await idbStorage.setItem(DRIVE_GLOBAL_HASH_KEY, updatedGlobalHashes);
 
     return {
       success: true,

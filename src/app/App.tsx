@@ -38,6 +38,9 @@ import { runAtsPreflightCheck, AtsPreflightResult } from '../shared/core/pdf-eng
 import { AtsCheckModal } from '../modules/cv-builder/components/AtsCheckModal';
 import { navigation } from '../shared/core/utils/navigation';
 
+import { DocumentTabBar } from '../modules/cv-builder/components/DocumentTabBar';
+import { loadCVById } from '../shared/core/storage/documentStorageService';
+
 function AppContent() {
   const { cvData, setCvData, resetToBlankCV, saveCV, saveCVAs } = useCVContext();
   const { showSuccess, showError, showInfo } = useToast();
@@ -100,6 +103,29 @@ function AppContent() {
     }
     prevCvIdRef.current = cvData?.id;
   }, [cvData?.id]);
+
+  const handleSwitchDocumentTab = async (targetCvId: string) => {
+    if (!targetCvId || targetCvId === cvData?.id) return;
+
+    try {
+      await saveCV();
+    } catch (err) {
+      console.warn('Advertencia auto-guardando al conmutar pestaña:', err);
+    }
+
+    try {
+      const loaded = await loadCVById(targetCvId);
+      if (loaded) {
+        setCvData(loaded);
+        showSuccess(`Conmutado a "${loaded.title || 'Documento'}"`);
+      } else {
+        showError('No se pudo cargar el documento de la pestaña seleccionada.');
+      }
+    } catch (err) {
+      console.error('Error al conmutar pestaña de documento:', err);
+      showError('Error al abrir la pestaña de documento.');
+    }
+  };
   const [isPanelOpen, setIsPanelOpen] = useState(true);
 
   // Zoom and Responsive A4 Auto-Fit state
@@ -352,6 +378,13 @@ function AppContent() {
           />
         </div>
       </div>
+
+      <DocumentTabBar
+        currentCvData={cvData}
+        onSwitchDocument={handleSwitchDocumentTab}
+        onNewDocument={handleNewCV}
+        onOpenSavedModal={() => setIsSavedCVsOpen(true)}
+      />
 
       <main className="flex-1 flex overflow-hidden relative min-h-0 md:pl-16">
         <CanvaIconDock 

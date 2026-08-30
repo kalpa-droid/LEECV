@@ -27,6 +27,7 @@ export interface DocumentRecord {
   candidate_name?: string;
   dni?: string;
   updated_at: string;
+  syncState?: 'local' | 'synced' | 'pending';
   driveSyncState?: 'not-configured' | 'synced' | 'pending';
   version_label?: string;
 }
