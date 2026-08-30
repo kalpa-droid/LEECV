@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import Navbar from '../modules/cv-builder/components/Navbar';
 import CanvaIconDock from '../modules/cv-builder/components/CanvaIconDock';
 import EditorPanel from '../modules/cv-builder/components/EditorPanel';
@@ -91,6 +91,15 @@ function AppContent() {
   }, []);
 
   const [activeTab, setActiveTab] = useState('personales');
+
+  // Resetea activeTab a 'personales' cuando se abre o cambia a un documento distinto (cvData.id cambia)
+  const prevCvIdRef = useRef(cvData?.id);
+  useEffect(() => {
+    if (cvData?.id && prevCvIdRef.current && prevCvIdRef.current !== cvData.id) {
+      setActiveTab('personales');
+    }
+    prevCvIdRef.current = cvData?.id;
+  }, [cvData?.id]);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
 
   // Zoom and Responsive A4 Auto-Fit state
