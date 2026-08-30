@@ -572,8 +572,28 @@
   pointer-events: none;
 }
 
+/* NÚCLEO — Marquee de título de pestaña de CV (título largo que no entra
+   en el ancho fijo del tab). Antes dependía de `group-hover`, que nunca se
+   dispara en pantallas táctiles — así que en celular el texto largo
+   quedaba cortado para siempre, sin forma de leerlo completo. Esta clase
+   se aplica sólo cuando el texto realmente desborda (JS lo detecta en
+   App.tsx), y funciona igual con mouse o con dedo porque no depende de
+   ningún evento de puntero — es una animación en loop, no un hover. */
+@keyframes uiTabTitleMarquee {
+  0%, 15%   { transform: translateX(0); }
+  50%       { transform: translateX(calc(-100% + 40px)); }
+  85%, 100% { transform: translateX(0); }
+}
+
+.ui-tab-title-marquee {
+  animation: uiTabTitleMarquee 5s ease-in-out infinite;
+}
+
 /* Respeta a quien prefiere menos movimiento en pantalla (accesibilidad) */
 @media (prefers-reduced-motion: reduce) {
+  .ui-tab-title-marquee {
+    animation: none;
+  }
   .ui-topbar-rainbow {
     animation: none;
     background-size: 100% 100%;

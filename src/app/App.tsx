@@ -423,7 +423,7 @@ function AppContent() {
   }
 
   return (
-    <div className="h-screen bg-[var(--color-neutral-text-primary)] text-white flex flex-col font-sans overflow-hidden selection:bg-[var(--color-accent-base)] selection:text-white relative">
+    <div className="h-screen h-[100dvh] bg-[var(--color-neutral-text-primary)] text-white flex flex-col font-sans overflow-hidden selection:bg-[var(--color-accent-base)] selection:text-white relative">
       <div className="md:pl-16">
         <Navbar 
           currentCvData={cvData}
@@ -696,7 +696,22 @@ function AppContent() {
                     }}
                     className="overflow-x-auto no-scrollbar max-w-[85px] sm:max-w-[130px] flex items-center scroll-smooth"
                   >
-                    <span className="whitespace-nowrap leading-none block group-hover:translate-x-[-15%] transition-transform duration-700 ease-in-out">
+                    <span
+                      ref={(el) => {
+                        // Auto-scroll SOLO si el texto desborda su contenedor —
+                        // `group-hover` nunca se dispara en pantallas táctiles
+                        // (no hay "hover" en celular), así que ahí ese título
+                        // largo nunca se veía completo. Esto funciona en
+                        // mouse Y en dedo por igual, no depende de ningún
+                        // evento de puntero.
+                        if (!el) return;
+                        const parent = el.parentElement;
+                        if (!parent) return;
+                        const overflowsX = el.scrollWidth > parent.clientWidth + 2;
+                        el.classList.toggle('ui-tab-title-marquee', overflowsX);
+                      }}
+                      className="whitespace-nowrap leading-none block"
+                    >
                       {tab.title}
                     </span>
                   </div>
