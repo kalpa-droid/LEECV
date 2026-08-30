@@ -15,6 +15,13 @@ interface RecordFormSectionProps {
   fieldName: string;
   itemTitlePrefix: string;
   helpText?: string;
+  /**
+   * Para secciones creadas por la persona desde "Nueva Sección": la lista de
+   * campos la eligió el usuario, no viene de BUILTIN_RECORD_KINDS. Cuando
+   * se pasa esto, tiene prioridad sobre kindKey — mismo componente, mismo
+   * render, cero código nuevo por cada sección personalizada que se cree.
+   */
+  customFields?: string[];
 }
 
 export function RecordFormSection({
@@ -26,10 +33,11 @@ export function RecordFormSection({
   setCvData,
   fieldName,
   itemTitlePrefix,
-  helpText
+  helpText,
+  customFields
 }: RecordFormSectionProps) {
   const schema = BUILTIN_RECORD_KINDS[kindKey] || BUILTIN_RECORD_KINDS['education'];
-  const fieldList = schema.defaultFields || ['tituloOGrado', 'institucion'];
+  const fieldList = customFields && customFields.length > 0 ? customFields : (schema.defaultFields || ['tituloOGrado', 'institucion']);
 
   return (
     <div className="space-y-3">

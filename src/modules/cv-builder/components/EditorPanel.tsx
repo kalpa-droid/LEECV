@@ -1133,6 +1133,31 @@ export default function EditorPanel({
         )}
 
         {/* ========================================================================= */}
+        {/* PANEL DE EDICIÓN DE UNA SECCIÓN PERSONALIZADA (activeTab = id dinámico) */}
+        {/* Antes esto no existía: el botón del dock se activaba (setActiveTab(cs.id))
+            pero ninguna rama de EditorPanel coincidía con ese id, así que el panel
+            quedaba en blanco. Un solo bloque genérico sirve para cualquier sección
+            que la persona haya creado, sin importar cuántas tenga. */}
+        {(() => {
+          const customIdx = (cvData.customSections || []).findIndex((cs: any) => cs.id === activeTab);
+          if (customIdx === -1) return null;
+          const cs = cvData.customSections[customIdx];
+          return (
+            <RecordFormSection
+              sectionKey={cs.id}
+              sectionTitle={cs.titleText}
+              kindKey="custom"
+              customFields={cs.fields}
+              addLabel={`Agregar a ${cs.titleText}`}
+              cvData={cvData}
+              setCvData={setCvData}
+              fieldName={`customSections.${customIdx}.records`}
+              itemTitlePrefix={cs.titleText}
+            />
+          );
+        })()}
+
+        {/* ========================================================================= */}
         {/* TAB 10: CVS GUARDADOS / ABRIR */}
         {/* ========================================================================= */}
         {activeTab === 'guardados' && (
