@@ -1639,7 +1639,7 @@ export default function EditorPanel({
                               }}
                               className={`px-2 py-0.5 rounded text-[10px] font-extrabold transition cursor-pointer flex items-center gap-1 ${
                                 cvData.layout?.sectionPageBreaks?.[sec.id]
-                                  ? 'bg-[var(--color-accent-purple)] text-white shadow-sm'
+                                  ? `bg-[var(--color-accent-purple)] text-white ${elevationSystem.raised}`
                                   : 'bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-secondary)] hover:bg-[var(--color-neutral-border)]'
                               }`}
                               title="Forzar salto de página nativo antes de esta sección"
