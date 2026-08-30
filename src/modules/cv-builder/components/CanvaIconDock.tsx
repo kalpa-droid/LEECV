@@ -1,6 +1,6 @@
 import React, { useMemo, useRef } from 'react';
 import { 
-  Palette, Layout, Sparkles, Menu, X, Plus
+  Palette, Layout, Layers, Menu, X, Plus
 } from 'lucide-react';
 import { DomSectionIcon } from '../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
 import { getNextUiTheme, UI_THEME_META, elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
@@ -15,10 +15,10 @@ export interface CanvaIconDockProps {
   setIsPanelOpen: (open: boolean) => void;
 }
 
-// 1. Pestañas de Estilo y Maquetación
+// 1. Pestañas de Estilo y Maquetación (Icono de Portada cambiado a Layers para no confundir con ATS)
 const styleTabs = [
   { id: 'diseno', label: 'Diseño', icon: Palette },
-  { id: 'portada', label: 'Portada', icon: Sparkles },
+  { id: 'portada', label: 'Portada', icon: Layers },
   { id: 'paneles', label: 'Columnas', icon: Layout },
 ];
 
@@ -76,7 +76,7 @@ export default function CanvaIconDock({
 
         <div className="w-8 h-px bg-[var(--ui-dock-separator)] mb-3" />
 
-        {/* Style & Layout Group */}
+        {/* Style & Layout Group: Los 3 primeros botones SOLO tienen icono sin texto */}
         <div className="flex flex-col items-center gap-2 mb-3">
           {styleTabs.map((tab) => {
             const Icon = tab.icon;
@@ -86,7 +86,7 @@ export default function CanvaIconDock({
                 key={tab.id}
                 type="button"
                 onClick={() => handleTabClick(tab.id)}
-                className={`w-12 h-12 rounded-[${radius.modal}] flex flex-col items-center justify-center transition group relative cursor-pointer ${
+                className={`w-11 h-11 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer ${
                   isActive
                     ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.floating} shadow-[var(--color-accent-base)]/30 scale-105`
                     : 'text-[var(--ui-dock-text-muted)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--ui-dock-hover)]'
@@ -94,8 +94,8 @@ export default function CanvaIconDock({
                 title={tab.label}
               >
                 <Icon className={`w-5 h-5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
-                <span className={`text-[9px] font-bold tracking-tighter mt-0.5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--ui-dock-text-muted)]'}`}>{tab.label}</span>
                 
+                {/* Tooltip flotante al pasar el cursor en escritorio */}
                 <span className={`absolute left-14 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2.5 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
                   {tab.label}
                 </span>
@@ -196,16 +196,16 @@ export default function CanvaIconDock({
         </div>
       </aside>
 
-      {/* Mobile Bottom Dock Bar (< 768px) */}
+      {/* Mobile Bottom Dock Bar (< 768px): Icono arriba y texto abajo */}
       <nav 
         ref={mobileNavRef}
         onWheel={handleWheelScroll}
-        className={`md:hidden fixed bottom-0 left-0 right-0 z-[999] ui-bg-dock border-t border-[var(--ui-dock-border)] px-2 py-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar ${elevationSystem.overlay} select-none`}
+        className={`md:hidden fixed bottom-0 left-0 right-0 z-[999] bg-[var(--ui-bg-dock)] border-t border-[var(--ui-dock-border)] px-2 py-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar ${elevationSystem.overlay} select-none`}
       >
         <button
           type="button"
           onClick={() => setIsPanelOpen(!isPanelOpen)}
-          className={`p-2.5 rounded-[${radius.card}] transition flex items-center justify-center shrink-0 cursor-pointer ${
+          className={`p-2 rounded-[${radius.card}] transition flex flex-col items-center justify-center shrink-0 cursor-pointer ${
             isPanelOpen
               ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.raised}`
               : 'bg-[var(--ui-bg-panel)] text-[var(--color-accent-amber-bright)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)]'
@@ -213,6 +213,7 @@ export default function CanvaIconDock({
           title={isPanelOpen ? 'Cerrar Panel' : 'Abrir Panel'}
         >
           {isPanelOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+          <span className="text-[9px] font-extrabold mt-0.5">Menú</span>
         </button>
 
         <div className="w-px h-6 bg-[var(--ui-dock-border)] shrink-0" />
@@ -225,30 +226,30 @@ export default function CanvaIconDock({
               key={tab.id}
               type="button"
               onClick={() => handleTabClick(tab.id)}
-              className={`px-3 py-1.5 rounded-[${radius.card}] flex items-center gap-1 text-[11px] font-black shrink-0 transition cursor-pointer ${
+              className={`px-2.5 py-1 rounded-[${radius.card}] flex flex-col items-center justify-center text-[10px] font-black shrink-0 transition cursor-pointer ${
                 isActive
                   ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.raised}`
                   : 'bg-[var(--ui-bg-panel)] text-[var(--ui-dock-text-muted)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)] hover:text-[var(--ui-dock-text)]'
               }`}
             >
-              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--ui-dock-text-muted)]'}`} />
-              <span>{tab.label}</span>
+              <Icon className={`w-4 h-4 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--ui-dock-text-muted)]'}`} />
+              <span className="mt-0.5 leading-none">{tab.label}</span>
             </button>
           );
         })}
 
-        {/* Botón Sección justo después del botón Columnas en Mobile */}
+        {/* Botón Sección justo después de Columnas en Mobile */}
         <button
           type="button"
           onClick={() => handleTabClick(addSectionTab.id)}
-          className={`px-3 py-1.5 rounded-[${radius.card}] font-black text-[11px] shrink-0 flex items-center gap-1 shadow cursor-pointer border ${
+          className={`px-2.5 py-1 rounded-[${radius.card}] font-black text-[10px] shrink-0 flex flex-col items-center justify-center cursor-pointer border ${
             activeTab === addSectionTab.id && isPanelOpen
               ? 'bg-[var(--color-status-success-base)] border-[var(--color-status-success-base)] text-[var(--color-status-success-on-base)]'
               : 'bg-[var(--ui-bg-panel)] border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-bright)] hover:bg-[var(--color-status-success-muted)]'
           }`}
         >
-          <Plus className={`w-3.5 h-3.5 ${activeTab === addSectionTab.id && isPanelOpen ? 'text-[var(--color-status-success-on-base)]' : ''}`} />
-          <span>Sección</span>
+          <Plus className={`w-4 h-4 ${activeTab === addSectionTab.id && isPanelOpen ? 'text-[var(--color-status-success-on-base)]' : ''}`} />
+          <span className="mt-0.5 leading-none">{addSectionTab.label}</span>
         </button>
 
         <div className="w-px h-6 bg-[var(--ui-dock-border)] shrink-0" />
@@ -259,14 +260,14 @@ export default function CanvaIconDock({
             <button
               type="button"
               onClick={() => handleTabClick(personalTab.id)}
-              className={`px-3 py-1.5 rounded-[${radius.card}] flex items-center gap-1 text-[11px] font-black shrink-0 transition cursor-pointer ${
+              className={`px-2.5 py-1 rounded-[${radius.card}] flex flex-col items-center justify-center text-[10px] font-black shrink-0 transition cursor-pointer ${
                 isActive
                   ? `bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.raised}`
                   : 'bg-[var(--ui-bg-panel)] text-[var(--color-secondary-bright)] border border-[var(--color-secondary-base)]/30 hover:bg-[var(--color-secondary-muted)]'
               }`}
             >
-              <DomSectionIcon iconId={personalTab.iconId} className="w-3.5 h-3.5" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
-              <span>{personalTab.label}</span>
+              <DomSectionIcon iconId={personalTab.iconId} className="w-4 h-4" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
+              <span className="mt-0.5 leading-none">{personalTab.label}</span>
             </button>
           );
         })()}
@@ -278,7 +279,7 @@ export default function CanvaIconDock({
               key={sec.id}
               type="button"
               onClick={() => handleTabClick(sec.id)}
-              className={`px-3 py-1.5 rounded-[${radius.card}] flex items-center gap-1 text-[11px] font-black shrink-0 transition cursor-pointer ${
+              className={`px-2.5 py-1 rounded-[${radius.card}] flex flex-col items-center justify-center text-[10px] font-black shrink-0 transition cursor-pointer ${
                 isActive
                   ? sec.isCustom
                     ? `bg-[var(--color-accent-purple)] text-white ${elevationSystem.raised}`
@@ -290,10 +291,10 @@ export default function CanvaIconDock({
             >
               <DomSectionIcon
                 iconId={sec.iconId}
-                className="w-3.5 h-3.5"
+                className="w-4 h-4"
                 color={sec.isCustom ? (isActive ? '#FFFFFF' : 'var(--color-accent-purple-bright)') : (isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)')}
               />
-              <span>{sec.label}</span>
+              <span className="mt-0.5 leading-none">{sec.label}</span>
             </button>
           );
         })}

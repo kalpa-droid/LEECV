@@ -3,7 +3,7 @@ import Navbar from '../modules/cv-builder/components/Navbar';
 import CanvaIconDock from '../modules/cv-builder/components/CanvaIconDock';
 import EditorPanel from '../modules/cv-builder/components/EditorPanel';
 const CVPreview = lazy(() => import('../modules/cv-builder/components/CVPreview'));
-import { FileText, CreditCard, Palette, Plus, X } from 'lucide-react';
+import { FileText, CreditCard, Palette, Plus, X, Sparkles } from 'lucide-react';
 import { getOpenTabs, addOpenTab, removeOpenTab, OpenTabItem } from '../shared/core/storage/documentTabEngine';
 
 import { getCurrentProfile, capturarConexionDriveSiCorresponde } from '../modules/auth/authService';
@@ -648,8 +648,8 @@ function AppContent() {
         )}
       </Suspense>
 
-      {/* BARRA INFERIOR / FOOTER: Pestañas de Documentos + Botón "+" (con md:pl-20 para no tapar con muelle izquierdo) */}
-      <footer className="h-10 bg-[var(--ui-bg-panel)] border-t border-[var(--ui-border)] text-[var(--ui-text-primary)] px-3 md:pl-20 flex items-center justify-between gap-2 shrink-0 no-print select-none text-xs font-sans z-30">
+      {/* BARRA INFERIOR / FOOTER: Pestañas de Documentos + Botón "+" + Botón ATS en Margen Derecho (mb-14 en celular para verse sobre muelle) */}
+      <footer className="h-10 bg-[var(--ui-bg-panel)] border-t border-[var(--ui-border)] text-[var(--ui-text-primary)] px-3 md:pl-20 flex items-center justify-between gap-2 shrink-0 no-print select-none text-xs font-sans z-40 mb-14 md:mb-0">
         
         {/* Pestañas de CVs Abiertos + Botón "+" */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
@@ -707,6 +707,17 @@ function AppContent() {
             <Plus className="w-4 h-4 stroke-[3]" />
           </button>
         </div>
+
+        {/* Margen Derecho: Botón ATS Compacto (Icono + siglas ATS) */}
+        <button
+          type="button"
+          onClick={handleOpenAtsCheck}
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-[${radius.card}] text-xs font-black text-[var(--ui-text-primary)] bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] transition ${elevationSystem.raised} cursor-pointer whitespace-nowrap active:scale-95 shrink-0 ml-2`}
+          title="Auditoría de lectura predictiva para ATS"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-[var(--color-accent-amber-bright)] flex-shrink-0" />
+          <span>ATS</span>
+        </button>
       </footer>
     </div>
   );

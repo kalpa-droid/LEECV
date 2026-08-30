@@ -150,29 +150,8 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* CLUSTER DERECHO: Píldora ATS Interactiva + Píldoras Ovaladas de Menús (Acciones 📁💾 | Cuenta 👤🔑) */}
+        {/* CLUSTER DERECHO: Píldoras Ovaladas de Menús (Acciones 📁💾 | Cuenta 👤🔑) */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          
-          {/* BOTÓN OVALADO ATS CON PUNTAJE EN TIEMPO REAL */}
-          {onOpenAtsCheck && (
-            <button
-              type="button"
-              onClick={onOpenAtsCheck}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-bg-card)] border-2 border-[var(--ui-border)] text-xs font-black text-[var(--ui-text-primary)] transition ${elevationSystem.raised} cursor-pointer whitespace-nowrap active:scale-95`}
-              title={`Puntaje de optimización ATS: ${atsScore}%. Clic para abrir auditoría completa.`}
-            >
-              {/* Primera Mitad: Puntaje Interactivo en tiempo real */}
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-[var(--ui-bg-card)] text-[var(--color-accent-amber-bright)] border border-[var(--ui-border)]">
-                {atsScore}%
-              </span>
-
-              <div className="w-px h-3.5 bg-[var(--ui-border)]" />
-
-              {/* Segunda Mitad: Icono y siglas ATS */}
-              <Sparkles className="w-3.5 h-3.5 text-[var(--color-accent-amber-bright)] flex-shrink-0 animate-pulse" />
-              <span className="font-extrabold text-xs text-[var(--ui-text-primary)]">ATS</span>
-            </button>
-          )}
 
           {/* PÍLDORA 1: MENÚ DE ACCIONES (Iconos de Abrir 📁 y Guardar 💾) */}
           <div className="relative" ref={actionMenuRef}>
