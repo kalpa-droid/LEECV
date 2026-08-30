@@ -1354,7 +1354,7 @@ export default function EditorPanel({
             {/* Plantilla Base Predefinida */}
             <PanelSection icon={<Sparkles className="w-4 h-4" />} title="Plantilla base predefinida">
               <div className="grid grid-cols-2 gap-2">
-                {getAllPresets().map((preset) => {
+                {getAllPresets().filter(p => p.id !== 'tarjeta-personal').map((preset) => {
                   const isSelected = (cvData?.activePresetId || 'cv-clasico') === preset.id && !cvData?.colorPresetId && !cvData?.typographyPresetId && !cvData?.columnLayoutPresetId;
                   return (
                     <button

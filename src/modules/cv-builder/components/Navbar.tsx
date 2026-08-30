@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { 
   FolderOpen, 
   Save, 
@@ -17,6 +17,9 @@ import {
 } from 'lucide-react';
 import { elevationSystem, radius, UI_THEME_META } from '../../../shared/core/uiDesignSystem';
 import { ZoomControls } from '../../../shared/core/ui/ZoomControls';
+import { resolveActivePreset } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
+import { cvDataToContentSections } from '../../../shared/core/pdf-engine/layers/records/cvDataAdapter';
+import { runAtsPreflightCheck } from '../../../shared/core/pdf-engine/layers/ats/atsPreflightCheck';
 
 export interface NavbarProps {
   currentCvData: any;
@@ -72,6 +75,19 @@ export default function Navbar({
   const currentThemeId = currentCvData?.uiTheme || 'day';
   const themeMeta = UI_THEME_META[currentThemeId] || UI_THEME_META.default;
 
+  // Cálculo en tiempo real del puntaje de optimización ATS (reactivo a la edición)
+  const atsScore = useMemo(() => {
+    if (!currentCvData) return 0;
+    try {
+      const preset = resolveActivePreset(currentCvData);
+      const sections = cvDataToContentSections(currentCvData);
+      const res = runAtsPreflightCheck(preset, sections, currentCvData?.personalInfo);
+      return res.score || 0;
+    } catch {
+      return 0;
+    }
+  }, [currentCvData]);
+
   // Cierre de desplegables al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -93,12 +109,11 @@ export default function Navbar({
       {/* Festive Rainbow Accent Strip */}
       <div className="ui-topbar-rainbow h-1 w-full" />
       
-      {/* Contenedor Principal: SIN overflow clipping para desplegables libres */}
+      {/* Contenedor Principal: Respetando padding lateral de la barra vertical */}
       <div className="max-w-7xl mx-auto px-2 sm:px-4 h-12 sm:h-14 flex items-center justify-between gap-2 relative">
         
-        {/* CLUSTER IZQUIERDO: LEECV | ATS | Tema | Zoom */}
+        {/* CLUSTER IZQUIERDO: Logo LEECV */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* 1. Logo LEECV */}
           <div className="flex items-center gap-1.5">
             <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-[${radius.control}] bg-[var(--color-accent-base)] flex items-center justify-center font-black text-xs ${elevationSystem.raised} text-[var(--color-accent-on-base)] border border-white/20`}>
               LEE
@@ -107,27 +122,15 @@ export default function Navbar({
               LEECV
             </h1>
           </div>
+        </div>
 
-          <div className="w-px h-5 bg-[var(--ui-border)] mx-0.5" />
-
-          {/* 2. Botón ATS */}
-          {onOpenAtsCheck && (
-            <button
-              type="button"
-              onClick={onOpenAtsCheck}
-              className={`flex items-center gap-1 px-2 py-1 rounded-[${radius.card}] text-xs font-black text-[var(--ui-text-primary)] bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-bg-card)] border border-[var(--ui-border)] transition ${elevationSystem.raised} cursor-pointer whitespace-nowrap active:scale-95`}
-              title="Auditoría de lectura predictiva para ATS"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[var(--color-accent-amber-bright)] flex-shrink-0" />
-              <span>ATS</span>
-            </button>
-          )}
-
-          {/* 3. Botón Tema */}
+        {/* CLUSTER CENTRO: Botón de Tema + Controles de Zoom (Visibles en PC y Móvil) */}
+        <div className="flex items-center gap-1.5 justify-center flex-1 min-w-0">
+          {/* Botón Selector de Tema Cromático */}
           <button
             type="button"
             onClick={cycleUITheme}
-            className={`flex items-center gap-1 px-2 py-1 rounded-[${radius.card}] text-xs font-black text-[var(--ui-text-primary)] bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-bg-card)] border border-[var(--ui-border)] transition ${elevationSystem.raised} cursor-pointer whitespace-nowrap active:scale-95`}
+            className={`flex items-center gap-1 px-2 py-1 rounded-[${radius.card}] text-xs font-black text-[var(--ui-text-primary)] bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-bg-card)] border border-[var(--ui-border)] transition ${elevationSystem.raised} cursor-pointer whitespace-nowrap active:scale-95 shrink-0`}
             title={`Tema actual: ${themeMeta.label}. Clic para alternar tema.`}
           >
             <Palette className="w-3.5 h-3.5 text-[var(--color-secondary-bright)] flex-shrink-0" />
@@ -135,10 +138,10 @@ export default function Navbar({
             <span className="text-xs leading-none">{themeMeta.emoji}</span>
           </button>
 
-          <div className="w-px h-5 bg-[var(--ui-border)] mx-0.5 hidden sm:block" />
+          <div className="w-px h-5 bg-[var(--ui-border)] mx-0.5" />
 
-          {/* 4. Botón ZoomControls */}
-          <div className="hidden sm:block">
+          {/* Controles de Zoom (Visibles tanto en Escritorio como en Celular) */}
+          <div className="shrink-0">
             <ZoomControls
               zoomLevel={zoomLevel}
               setZoomLevel={setZoomLevel}
@@ -147,9 +150,30 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* CLUSTER DERECHO: Píldoras Ovaladas de Menús (Acciones 📁💾 | Cuenta 👤🔑) */}
+        {/* CLUSTER DERECHO: Píldora ATS Interactiva + Píldoras Ovaladas de Menús (Acciones 📁💾 | Cuenta 👤🔑) */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           
+          {/* BOTÓN OVALADO ATS CON PUNTAJE EN TIEMPO REAL */}
+          {onOpenAtsCheck && (
+            <button
+              type="button"
+              onClick={onOpenAtsCheck}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-bg-card)] border-2 border-[var(--ui-border)] text-xs font-black text-[var(--ui-text-primary)] transition ${elevationSystem.raised} cursor-pointer whitespace-nowrap active:scale-95`}
+              title={`Puntaje de optimización ATS: ${atsScore}%. Clic para abrir auditoría completa.`}
+            >
+              {/* Primera Mitad: Puntaje Interactivo en tiempo real */}
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-[var(--ui-bg-card)] text-[var(--color-accent-amber-bright)] border border-[var(--ui-border)]">
+                {atsScore}%
+              </span>
+
+              <div className="w-px h-3.5 bg-[var(--ui-border)]" />
+
+              {/* Segunda Mitad: Icono y siglas ATS */}
+              <Sparkles className="w-3.5 h-3.5 text-[var(--color-accent-amber-bright)] flex-shrink-0 animate-pulse" />
+              <span className="font-extrabold text-xs text-[var(--ui-text-primary)]">ATS</span>
+            </button>
+          )}
+
           {/* PÍLDORA 1: MENÚ DE ACCIONES (Iconos de Abrir 📁 y Guardar 💾) */}
           <div className="relative" ref={actionMenuRef}>
             <button

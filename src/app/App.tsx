@@ -648,10 +648,10 @@ function AppContent() {
         )}
       </Suspense>
 
-      {/* BARRA INFERIOR / FOOTER: Pestañas de Documentos + Botón "+" + Copyright © 2026 LEECV */}
-      <footer className="h-10 bg-[var(--ui-bg-panel)] border-t border-[var(--ui-border)] text-[var(--ui-text-primary)] px-3 flex items-center justify-between gap-2 shrink-0 no-print select-none text-xs font-sans">
+      {/* BARRA INFERIOR / FOOTER: Pestañas de Documentos + Botón "+" (con md:pl-20 para no tapar con muelle izquierdo) */}
+      <footer className="h-10 bg-[var(--ui-bg-panel)] border-t border-[var(--ui-border)] text-[var(--ui-text-primary)] px-3 md:pl-20 flex items-center justify-between gap-2 shrink-0 no-print select-none text-xs font-sans z-30">
         
-        {/* Izquierda / Centro: Pestañas de CVs Abiertos + Botón "+" */}
+        {/* Pestañas de CVs Abiertos + Botón "+" */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
           <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-full">
             {tabs.map((tab) => {
@@ -706,11 +706,6 @@ function AppContent() {
           >
             <Plus className="w-4 h-4 stroke-[3]" />
           </button>
-        </div>
-
-        {/* Derecha: Exclusivamente Copyright © 2026 LEECV */}
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[10px] font-bold text-[var(--ui-text-secondary)]">© 2026 LEECV</span>
         </div>
       </footer>
     </div>
