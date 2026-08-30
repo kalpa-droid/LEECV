@@ -90,12 +90,13 @@ export function DocumentTabBar({
               <div 
                 onWheel={(e) => {
                   if (e.currentTarget) {
+                    e.stopPropagation();
                     e.currentTarget.scrollLeft += (e.deltaY || e.deltaX);
                   }
                 }}
-                className="overflow-x-auto no-scrollbar max-w-[140px] flex items-center"
+                className="overflow-x-auto no-scrollbar max-w-[130px] flex items-center scroll-smooth"
               >
-                <span className="whitespace-nowrap leading-none block">
+                <span className="whitespace-nowrap leading-none block group-hover:translate-x-[-15%] transition-transform duration-700 ease-in-out">
                   {tab.title}
                 </span>
               </div>

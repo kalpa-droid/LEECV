@@ -648,17 +648,17 @@ function AppContent() {
         )}
       </Suspense>
 
-      {/* BARRA INFERIOR / FOOTER: Pestañas de Documentos + Botón "+" + Botón ATS en Margen Derecho (sin recorte en celulares) */}
-      <footer className="h-11 md:h-10 bg-[var(--ui-bg-panel)] border-t border-[var(--ui-border)] text-[var(--ui-text-primary)] px-2 sm:px-3 md:pl-20 flex items-center justify-between gap-1.5 sm:gap-2 shrink-0 no-print select-none text-xs font-sans z-40 mb-[52px] pb-0.5 md:mb-0 md:pb-0">
+      {/* BARRA INFERIOR / FOOTER: Fina (h-8), sin recorte en celulares y con pestañas de texto desplazable e icono inmóvil */}
+      <footer className="h-8 bg-[var(--ui-bg-panel)] border-t border-[var(--ui-border)] text-[var(--ui-text-primary)] px-2 sm:px-3 md:pl-20 flex items-center justify-between gap-1.5 shrink-0 no-print select-none text-[11px] font-sans z-40 mb-[44px] md:mb-0">
         
-        {/* Pestañas de CVs Abiertos + Botón "+" (con desplazamiento suave por ruedita del mouse) */}
+        {/* Pestañas de CVs Abiertos + Botón "+" (con desplazamiento por ruedita del mouse) */}
         <div 
           onWheel={(e) => {
             if (e.currentTarget) {
               e.currentTarget.scrollLeft += (e.deltaY || e.deltaX);
             }
           }}
-          className="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5"
+          className="flex items-center gap-1 overflow-x-auto no-scrollbar flex-1 py-0.5"
         >
           <div 
             onWheel={(e) => {
@@ -676,7 +676,7 @@ function AppContent() {
                   onClick={() => {
                     if (!isActive) handleSwitchDocumentTab(tab.cvId);
                   }}
-                  className={`group flex items-center gap-1.5 px-2.5 py-1 rounded-[${radius.card}] text-xs font-bold transition cursor-pointer shrink-0 border ${
+                  className={`group flex items-center gap-1 px-2 py-0.5 h-6 rounded-[${radius.card}] text-[11px] font-bold transition cursor-pointer shrink-0 border ${
                     isActive
                       ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--color-accent-base)] ${elevationSystem.raised}`
                       : 'bg-[var(--ui-bg-card)] text-[var(--ui-dock-text-muted)] border-[var(--ui-border)] hover:bg-[var(--ui-bg-panel)] hover:text-[var(--ui-dock-text)]'
@@ -686,22 +686,23 @@ function AppContent() {
                   {/* ICONO INMÓVIL A LA IZQUIERDA */}
                   <FileText className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
 
-                  {/* CONTENEDOR DE TEXTO QUE SE MUEVE/DESPLAZA INTERNAMENTE */}
+                  {/* CONTENEDOR DE TEXTO CON DESPLAZAMIENTO INTERNO */}
                   <div 
                     onWheel={(e) => {
                       if (e.currentTarget) {
+                        e.stopPropagation();
                         e.currentTarget.scrollLeft += (e.deltaY || e.deltaX);
                       }
                     }}
-                    className="overflow-x-auto no-scrollbar max-w-[85px] sm:max-w-[140px] flex items-center"
+                    className="overflow-x-auto no-scrollbar max-w-[85px] sm:max-w-[130px] flex items-center scroll-smooth"
                   >
-                    <span className="whitespace-nowrap leading-none block">
+                    <span className="whitespace-nowrap leading-none block group-hover:translate-x-[-15%] transition-transform duration-700 ease-in-out">
                       {tab.title}
                     </span>
                   </div>
 
                   {tab.versionLabel && (
-                    <span className={`text-[9px] px-1 py-0.5 rounded font-black uppercase tracking-tighter shrink-0 ${
+                    <span className={`text-[9px] px-1 py-0.2 rounded font-black uppercase tracking-tighter shrink-0 ${
                       isActive
                         ? 'bg-[var(--color-accent-on-base)] text-[var(--color-accent-base)]'
                         : 'bg-[var(--ui-bg-panel)] text-[var(--color-secondary-bright)] border border-[var(--ui-border)]'
