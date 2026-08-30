@@ -490,6 +490,21 @@ if (fs.existsSync(driveBackendPath)) {
     driveContent.includes('export async function addFolderAsParent'),
     'googleDriveBackend.ts no exporta addFolderAsParent'
   );
+  check(
+    'googleDriveBackend.ts implementa getOrCreateCvFolderInDrive para resolver el ID de carpeta real',
+    driveContent.includes('export async function getOrCreateCvFolderInDrive'),
+    'googleDriveBackend.ts no exporta getOrCreateCvFolderInDrive'
+  );
+}
+
+const driveBackupServiceFile = path.join(ROOT, 'src/shared/core/storage/driveBackupService.ts');
+if (fs.existsSync(driveBackupServiceFile)) {
+  const backupContent = fs.readFileSync(driveBackupServiceFile, 'utf-8');
+  check(
+    'driveBackupService.ts pasa el driveFolderId real a addFolderAsParent en lugar de la string cvId',
+    backupContent.includes('addFolderAsParent(existingFileId, driveFolderId)'),
+    'driveBackupService.ts sigue pasando cvId a addFolderAsParent'
+  );
 }
 
 const safeNavPath = path.join(ROOT, 'src/shared/core/storage/safeNavigationEngine.ts');

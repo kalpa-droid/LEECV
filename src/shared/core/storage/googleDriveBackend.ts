@@ -42,11 +42,59 @@ async function obtenerCarpetaLeecv(accessToken: string): Promise<string> {
   return carpetaLeecvIdCache || '';
 }
 
-/** Sube un archivo real al Drive del usuario, dentro de la carpeta LEECV */
-export async function uploadToGoogleDrive(fileBlob: Blob, fileName: string): Promise<{ success: boolean; provider?: string; fileId?: string; webViewLink?: string; error?: string }> {
+/** Busca (o crea) una subcarpeta para un CV específico dentro de la carpeta "LEECV" en Drive */
+const subcarpetasCvCache: Record<string, string> = {};
+
+export async function getOrCreateCvFolderInDrive(cvId: string, title?: string): Promise<string> {
+  if (subcarpetasCvCache[cvId]) return subcarpetasCvCache[cvId];
   try {
     const accessToken = await pedirAccessTokenFresco();
-    const folderId = await obtenerCarpetaLeecv(accessToken);
+    const rootFolderId = await obtenerCarpetaLeecv(accessToken);
+    if (!rootFolderId) return '';
+
+    const safeTitle = (title || cvId).replace(/[/\\?%*:|"<>]/g, '_').trim();
+    const folderName = `CV - ${safeTitle}`;
+    const query = encodeURIComponent(`name = '${folderName.replace(/'/g, "\\'")}' and '${rootFolderId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`);
+
+    const { data } = await apiClient.get<any>(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      requiresAuth: false,
+    });
+
+    if (data?.files?.length) {
+      subcarpetasCvCache[cvId] = data.files[0].id;
+      return subcarpetasCvCache[cvId];
+    }
+
+    const { data: carpeta } = await apiClient.post<any>('https://www.googleapis.com/drive/v3/files', {
+      name: folderName,
+      mimeType: 'application/vnd.google-apps.folder',
+      parents: [rootFolderId]
+    }, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      requiresAuth: false,
+    });
+
+    if (carpeta?.id) {
+      subcarpetasCvCache[cvId] = carpeta.id;
+      return carpeta.id;
+    }
+    return rootFolderId;
+  } catch (err) {
+    console.warn('Error resolviendo subcarpeta de CV en Google Drive:', err);
+    return carpetaLeecvIdCache || '';
+  }
+}
+
+/** Sube un archivo real al Drive del usuario, dentro de la carpeta de su CV o LEECV */
+export async function uploadToGoogleDrive(
+  fileBlob: Blob,
+  fileName: string,
+  targetFolderId?: string
+): Promise<{ success: boolean; provider?: string; fileId?: string; webViewLink?: string; error?: string }> {
+  try {
+    const accessToken = await pedirAccessTokenFresco();
+    const folderId = targetFolderId || (await obtenerCarpetaLeecv(accessToken));
 
     const metadata = { name: fileName, parents: [folderId] };
     const form = new FormData();

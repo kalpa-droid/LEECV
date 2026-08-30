@@ -1,5 +1,5 @@
 import { splitCvDataForDrive } from './driveDocumentPackager';
-import { uploadToGoogleDrive, addFolderAsParent } from './googleDriveBackend';
+import { uploadToGoogleDrive, addFolderAsParent, getOrCreateCvFolderInDrive } from './googleDriveBackend';
 import { idbStorage } from '../../../modules/cv-builder/services/storageIndexedDB';
 
 const DRIVE_GLOBAL_HASH_KEY = 'drive_asset_hashes_global';
@@ -43,6 +43,15 @@ export async function backupCvToGoogleDrive(cvData: any): Promise<DriveBackupRes
       if (pStored && typeof pStored === 'object') previousPerCvHashes = pStored;
     } catch {}
 
+    // 2.5 Obtener el Folder ID real de Google Drive para la carpeta de este CV
+    let driveFolderId: string | undefined = undefined;
+    try {
+      const resolvedId = await getOrCreateCvFolderInDrive(cvId, cvData.title || cvData.personalInfo?.fullName);
+      if (resolvedId) driveFolderId = resolvedId;
+    } catch (err) {
+      console.warn('Advertencia al obtener carpeta de Drive:', err);
+    }
+
     const uploadedFiles: string[] = [];
     const skippedFiles: string[] = [];
     const updatedPerCvHashes: Record<string, string> = { ...previousPerCvHashes };
@@ -62,14 +71,16 @@ export async function backupCvToGoogleDrive(cvData: any): Promise<DriveBackupRes
       if (existingFileId) {
         skippedFiles.push(asset.filename);
         updatedPerCvHashes[asset.filename] = asset.hash;
-        // La vinculación multi-parent ocurre en segundo plano de manera no bloqueante
-        addFolderAsParent(existingFileId, cvId).catch(err => {
-          console.warn(`Error en multi-parent Drive [${asset.filename}]:`, err);
-        });
+        // La vinculación multi-parent ocurre usando el ID real de carpeta de Drive (no la string cvId)
+        if (driveFolderId) {
+          addFolderAsParent(existingFileId, driveFolderId).catch(err => {
+            console.warn(`Error en multi-parent Drive [${asset.filename}]:`, err);
+          });
+        }
         continue;
       }
 
-      const uploadRes = await uploadToGoogleDrive(asset.blob, `${cvId}_${asset.filename.replace('/', '_')}`);
+      const uploadRes = await uploadToGoogleDrive(asset.blob, `${cvId}_${asset.filename.replace('/', '_')}`, driveFolderId);
       if (uploadRes.success && uploadRes.fileId) {
         uploadedFiles.push(asset.filename);
         updatedPerCvHashes[asset.filename] = asset.hash;
@@ -82,7 +93,7 @@ export async function backupCvToGoogleDrive(cvData: any): Promise<DriveBackupRes
     // 4. Subir datos.json (siempre se actualiza al ser liviano)
     const jsonString = JSON.stringify(cleanCvData, null, 2);
     const jsonBlob = new Blob([jsonString], { type: 'application/json' });
-    const jsonUploadRes = await uploadToGoogleDrive(jsonBlob, `${cvId}_datos.json`);
+    const jsonUploadRes = await uploadToGoogleDrive(jsonBlob, `${cvId}_datos.json`, driveFolderId);
 
     if (!jsonUploadRes.success) {
       return {
