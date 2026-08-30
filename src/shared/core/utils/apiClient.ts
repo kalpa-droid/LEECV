@@ -98,6 +98,8 @@ export const apiClient = {
     apiFetch<T>(url, { ...options, method: 'POST', body }),
   put: <T = any>(url: string, body?: any, options?: ApiClientOptions) =>
     apiFetch<T>(url, { ...options, method: 'PUT', body }),
+  patch: <T = any>(url: string, body?: any, options?: ApiClientOptions) =>
+    apiFetch<T>(url, { ...options, method: 'PATCH', body }),
   delete: <T = any>(url: string, options?: ApiClientOptions) =>
     apiFetch<T>(url, { ...options, method: 'DELETE' }),
 };

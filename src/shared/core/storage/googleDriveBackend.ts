@@ -66,6 +66,26 @@ export async function uploadToGoogleDrive(fileBlob: Blob, fileName: string): Pro
   }
 }
 
+/** Vincula una carpeta existente como padre adicional de un archivo en Drive (Multi-Parent Linking) */
+export async function addFolderAsParent(fileId: string, folderId: string): Promise<boolean> {
+  if (!fileId || !folderId) return false;
+  try {
+    const accessToken = await pedirAccessTokenFresco();
+    const { ok } = await apiClient.patch(
+      `https://www.googleapis.com/drive/v3/files/${fileId}?addParents=${folderId}&fields=id,parents`,
+      {},
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        requiresAuth: false,
+      }
+    );
+    return ok;
+  } catch (err) {
+    console.warn(`Advertencia al vincular multi-parent en Google Drive [file:${fileId}, folder:${folderId}]:`, err);
+    return false;
+  }
+}
+
 /** Configura los permisos de un archivo en Drive para lectura pública sin requerir login */
 export async function hacerArchivoPublico(accessToken: string, fileId: string): Promise<boolean> {
   try {

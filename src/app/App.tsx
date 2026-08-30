@@ -40,6 +40,7 @@ import { navigation } from '../shared/core/utils/navigation';
 
 import { DocumentTabBar } from '../modules/cv-builder/components/DocumentTabBar';
 import { loadCVById } from '../shared/core/storage/documentStorageService';
+import { runWithSafeSave } from '../shared/core/storage/safeNavigationEngine';
 
 function AppContent() {
   const { cvData, setCvData, resetToBlankCV, saveCV, saveCVAs } = useCVContext();
@@ -107,24 +108,23 @@ function AppContent() {
   const handleSwitchDocumentTab = async (targetCvId: string) => {
     if (!targetCvId || targetCvId === cvData?.id) return;
 
-    try {
-      await saveCV();
-    } catch (err) {
-      console.warn('Advertencia auto-guardando al conmutar pestaña:', err);
-    }
-
-    try {
-      const loaded = await loadCVById(targetCvId);
-      if (loaded) {
-        setCvData(loaded);
-        showSuccess(`Conmutado a "${loaded.title || 'Documento'}"`);
-      } else {
-        showError('No se pudo cargar el documento de la pestaña seleccionada.');
+    await runWithSafeSave(
+      saveCV,
+      async () => {
+        try {
+          const loaded = await loadCVById(targetCvId);
+          if (loaded) {
+            setCvData(loaded);
+            showSuccess(`Conmutado a "${loaded.title || 'Documento'}"`);
+          } else {
+            showError('No se pudo cargar el documento de la pestaña seleccionada.');
+          }
+        } catch (err) {
+          console.error('Error al conmutar pestaña de documento:', err);
+          showError('Error al abrir la pestaña de documento.');
+        }
       }
-    } catch (err) {
-      console.error('Error al conmutar pestaña de documento:', err);
-      showError('Error al abrir la pestaña de documento.');
-    }
+    );
   };
   const [isPanelOpen, setIsPanelOpen] = useState(true);
 
@@ -305,14 +305,14 @@ function AppContent() {
       message: '¿Deseas iniciar un nuevo currículum en blanco? Se guardará un borrador automático de tu currículum actual.',
       confirmText: 'Sí, crear nuevo',
       onConfirm: async () => {
-        try {
-          await saveCV();
-        } catch (err) {
-          console.warn('Error auto-guardando borrador al crear nuevo CV:', err);
-        }
-        resetToBlankCV();
-        setActiveTab('personales');
-        showSuccess('Tu borrador anterior ha sido resguardado con éxito. Ahora estás editando un currículum en blanco.');
+        await runWithSafeSave(
+          saveCV,
+          () => {
+            resetToBlankCV();
+            setActiveTab('personales');
+            showSuccess('Tu borrador anterior ha sido resguardado con éxito. Ahora estás editando un currículum en blanco.');
+          }
+        );
       }
     });
   };

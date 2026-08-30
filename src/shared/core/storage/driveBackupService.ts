@@ -1,5 +1,5 @@
 import { splitCvDataForDrive } from './driveDocumentPackager';
-import { uploadToGoogleDrive } from './googleDriveBackend';
+import { uploadToGoogleDrive, addFolderAsParent } from './googleDriveBackend';
 import { idbStorage } from '../../../modules/cv-builder/services/storageIndexedDB';
 
 const DRIVE_GLOBAL_HASH_KEY = 'drive_asset_hashes_global';
@@ -17,7 +17,8 @@ export interface DriveBackupResult {
  * NÚCLEO — RESPALDO INCREMENTAL GLOBAL Y DEDUPLICADO EN GOOGLE DRIVE (driveBackupService.ts)
  * 
  * Sube datos.json y binarios a Google Drive en subcarpetas dedicadas. Reutiliza imágenes
- * ya existentes entre distintas versiones del CV mediante un índice global de hashes.
+ * ya existentes entre distintas versiones del CV mediante un índice global de hashes
+ * y vinculación multi-parent (addParents).
  */
 export async function backupCvToGoogleDrive(cvData: any): Promise<DriveBackupResult> {
   if (!cvData || !cvData.id) {
@@ -49,18 +50,30 @@ export async function backupCvToGoogleDrive(cvData: any): Promise<DriveBackupRes
 
     // 3. Subir o deduplicar binarios según el hash SHA-256 global
     for (const asset of binaryAssets) {
-      // Si el asset ya fue subido previamente para este CV o existe en el índice global del usuario
-      if (previousPerCvHashes[asset.filename] === asset.hash || globalHashes[asset.hash]) {
+      const existingFileId = globalHashes[asset.hash];
+
+      if (previousPerCvHashes[asset.filename] === asset.hash) {
         skippedFiles.push(asset.filename);
         updatedPerCvHashes[asset.filename] = asset.hash;
         continue;
       }
 
+      // Si la imagen ya fue subida por otra versión del CV en Drive, la vinculamos mediante multi-parent
+      if (existingFileId) {
+        skippedFiles.push(asset.filename);
+        updatedPerCvHashes[asset.filename] = asset.hash;
+        // La vinculación multi-parent ocurre en segundo plano de manera no bloqueante
+        addFolderAsParent(existingFileId, cvId).catch(err => {
+          console.warn(`Error en multi-parent Drive [${asset.filename}]:`, err);
+        });
+        continue;
+      }
+
       const uploadRes = await uploadToGoogleDrive(asset.blob, `${cvId}_${asset.filename.replace('/', '_')}`);
-      if (uploadRes.success) {
+      if (uploadRes.success && uploadRes.fileId) {
         uploadedFiles.push(asset.filename);
         updatedPerCvHashes[asset.filename] = asset.hash;
-        updatedGlobalHashes[asset.hash] = asset.filename;
+        updatedGlobalHashes[asset.hash] = uploadRes.fileId;
       } else {
         console.warn(`Advertencia al subir binario a Drive [${asset.filename}]:`, uploadRes.error);
       }

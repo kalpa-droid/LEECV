@@ -1,9 +1,8 @@
 import React from 'react';
 import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
+import { runWithSafeSave } from '../../../shared/core/storage/safeNavigationEngine';
 
 import { 
-  FilePlus,
-  FolderOpen,
   Save,
   Download,
   User,
@@ -12,14 +11,10 @@ import {
 
 export default function Navbar({ 
   onPrint, 
-  onStartNewCVWizard,
-  onOpenSavedCVs,
-  onSaveCV,
   onOpenSaveModal,
+  onSaveCV,
   onOpenPricing,
-  onNewCV,
   onOpenAtsCheck,
-  onExportAtsPdf,
   isSaving
 }: {
   onPrint?: any;
@@ -36,17 +31,6 @@ export default function Navbar({
   onExportAtsPdf?: () => void;
   isSaving?: boolean;
 }) {
-  const handleNewClick = () => {
-    if (onSaveCV) onSaveCV();
-    if (onNewCV) onNewCV();
-    else if (onStartNewCVWizard) onStartNewCVWizard();
-  };
-
-  const handleOpenSavedClick = () => {
-    if (onSaveCV) onSaveCV();
-    if (onOpenSavedCVs) onOpenSavedCVs();
-  };
-
   const handleSaveClick = () => {
     if (onOpenSaveModal) {
       onOpenSaveModal();
@@ -56,8 +40,7 @@ export default function Navbar({
   };
 
   const handlePricingClick = () => {
-    if (onSaveCV) onSaveCV();
-    if (onOpenPricing) onOpenPricing();
+    runWithSafeSave(onSaveCV, onOpenPricing);
   };
 
   return (
@@ -69,7 +52,7 @@ export default function Navbar({
         
         {/* Left: Brand & Logo */}
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-[${radius.control}] bg-[var(--color-accent-base)] flex items-center justify-center font-black text-xs ${elevationSystem.raised} text-white border border-white/20`}>
+          <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-[${radius.control}] bg-[var(--color-accent-base)] flex items-center justify-center font-black text-xs ${elevationSystem.raised} text-[var(--color-accent-on-base)] border border-white/20`}>
             LEE
           </div>
           <h1 className="font-black text-sm sm:text-base tracking-wider text-[var(--ui-text-primary)]">
@@ -77,40 +60,20 @@ export default function Navbar({
           </h1>
         </div>
 
-        {/* Middle: 5 Action Buttons */}
+        {/* Middle: Acciones del Documento Activo */}
         <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar max-w-full py-1">
-          {/* 1. NUEVO */}
-          <button
-            onClick={handleNewClick}
-            className={`flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-[${radius.card}] text-xs font-black text-white bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] border border-[var(--color-accent-brand-hover)] transition ${elevationSystem.raised} cursor-pointer whitespace-nowrap active:scale-95`}
-            title="Iniciar un nuevo currículum en blanco"
-          >
-            <FilePlus className="w-3.5 h-3.5 text-white flex-shrink-0" />
-            <span>Nuevo</span>
-          </button>
-
-          {/* 2. ABRIR */}
-          <button
-            onClick={handleOpenSavedClick}
-            className={`flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-[${radius.card}] text-xs font-black text-[var(--ui-text-primary)] bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-bg-card)] border border-[var(--ui-border)] transition ${elevationSystem.raised} cursor-pointer whitespace-nowrap active:scale-95`}
-            title="Abrir borradores guardados, importar JSON o sincronizar nube"
-          >
-            <FolderOpen className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] flex-shrink-0" />
-            <span>Abrir</span>
-          </button>
-
-          {/* 3. GUARDAR */}
+          {/* 1. GUARDAR / GUARDAR COMO */}
           <button
             onClick={handleSaveClick}
             disabled={isSaving}
             className={`flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-[${radius.card}] text-xs font-black text-[var(--ui-text-primary)] bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-bg-card)] border border-[var(--ui-border)] transition disabled:opacity-50 ${elevationSystem.raised} cursor-pointer whitespace-nowrap active:scale-95`}
-            title="Guardar currículum o descargar copia JSON de respaldo"
+            title="Guardar currículum o guardar nueva versión independiente"
           >
             <Save className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] flex-shrink-0" />
             <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
           </button>
 
-          {/* 4. ATS CHECK */}
+          {/* 2. ATS CHECK */}
           {onOpenAtsCheck && (
             <button
               onClick={onOpenAtsCheck}
@@ -122,13 +85,13 @@ export default function Navbar({
             </button>
           )}
 
-          {/* 5. PDF */}
+          {/* 3. PDF */}
           <button
             onClick={onPrint}
-            className={`flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-[${radius.card}] bg-[var(--color-secondary-base)] hover:opacity-90 text-white font-extrabold text-xs ${elevationSystem.raised} transition active:scale-95 border border-[var(--color-secondary-hover)] cursor-pointer whitespace-nowrap`}
+            className={`flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-[${radius.card}] bg-[var(--color-secondary-base)] hover:opacity-90 text-[var(--color-secondary-on-base)] font-extrabold text-xs ${elevationSystem.raised} transition active:scale-95 border border-[var(--color-secondary-hover)] cursor-pointer whitespace-nowrap`}
             title="Exportar documento PDF final listo para enviar"
           >
-            <Download className="w-3.5 h-3.5 flex-shrink-0 text-white" />
+            <Download className="w-3.5 h-3.5 flex-shrink-0 text-[var(--color-secondary-on-base)]" />
             <span>PDF</span>
           </button>
         </div>

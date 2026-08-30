@@ -479,6 +479,49 @@ if (fs.existsSync(tabUiPath)) {
   );
 }
 
+// ─── 15. Plan v32: Multi-Parent Drive, Safe Navigation & TopBar Registry ───
+console.log('\n── 15. Plan v32: Multi-Parent Drive, Safe Navigation & TopBar Registry ──');
+
+const driveBackendPath = path.join(ROOT, 'src/shared/core/storage/googleDriveBackend.ts');
+if (fs.existsSync(driveBackendPath)) {
+  const driveContent = fs.readFileSync(driveBackendPath, 'utf-8');
+  check(
+    'googleDriveBackend.ts implementa addFolderAsParent para vincular multi-parent en Drive API v3',
+    driveContent.includes('export async function addFolderAsParent'),
+    'googleDriveBackend.ts no exporta addFolderAsParent'
+  );
+}
+
+const safeNavPath = path.join(ROOT, 'src/shared/core/storage/safeNavigationEngine.ts');
+if (fs.existsSync(safeNavPath)) {
+  const safeNavContent = fs.readFileSync(safeNavPath, 'utf-8');
+  check(
+    'safeNavigationEngine.ts exporta runWithSafeSave para autoguardado unificado previo a navegación',
+    safeNavContent.includes('export async function runWithSafeSave'),
+    'safeNavigationEngine.ts no exporta runWithSafeSave'
+  );
+}
+
+const topBarRegistryPath = path.join(ROOT, 'src/shared/core/ui/topBarActionRegistry.ts');
+if (fs.existsSync(topBarRegistryPath)) {
+  const regContent = fs.readFileSync(topBarRegistryPath, 'utf-8');
+  check(
+    'topBarActionRegistry.ts exporta TOP_BAR_ACTIONS con asignaciones declarativas',
+    regContent.includes('export const TOP_BAR_ACTIONS'),
+    'topBarActionRegistry.ts no exporta TOP_BAR_ACTIONS'
+  );
+}
+
+const navbarPath = path.join(ROOT, 'src/modules/cv-builder/components/Navbar.tsx');
+if (fs.existsSync(navbarPath)) {
+  const navContent = fs.readFileSync(navbarPath, 'utf-8');
+  check(
+    'Navbar.tsx no duplica botones de sesión ("<span>Nuevo</span>" o "<span>Abrir</span>")',
+    !navContent.includes('<span>Nuevo</span>') && !navContent.includes('<span>Abrir</span>'),
+    'Navbar.tsx aún contiene botones de sesión duplicados'
+  );
+}
+
 // ─── Resultado final ───
 console.log(`\n${'═'.repeat(60)}`);
 if (failed === 0) {
