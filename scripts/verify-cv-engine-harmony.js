@@ -620,6 +620,16 @@ if (fs.existsSync(sectionRegPath)) {
   );
 }
 
+const schemaPath = path.join(ROOT, 'src/shared/core/utils/cvDataSchema.ts');
+if (fs.existsSync(schemaPath)) {
+  const schemaContent = fs.readFileSync(schemaPath, 'utf-8');
+  check(
+    'cvDataSchema.ts incluye activeFormatId en la lista blanca de sanitización para persistencia',
+    schemaContent.includes('activeFormatId: data.activeFormatId || undefined'),
+    'cvDataSchema.ts descarta activeFormatId al guardar/cargar CV'
+  );
+}
+
 // ─── Resultado final ───
 console.log(`\n${'═'.repeat(60)}`);
 if (failed === 0) {

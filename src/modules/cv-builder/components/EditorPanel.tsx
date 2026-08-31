@@ -1416,7 +1416,7 @@ export default function EditorPanel({
                           <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase bg-white border border-[var(--color-neutral-border-strong)] text-[var(--color-neutral-text-secondary)]">
                             {format.columnLayoutPresetId === 'full-width' ? '1 Columna' : '2 Columnas'}
                           </span>
-                          {isSelected && <Check className="w-4 h-4 text-[var(--color-accent-base)] flex-shrink-0" />}
+                          {isSelected && <Check className="w-4 h-4 text-[var(--ui-text-primary)] flex-shrink-0" />}
                         </div>
                       </div>
                       <p className="text-[11px] text-[var(--color-neutral-text-secondary)] leading-relaxed">
