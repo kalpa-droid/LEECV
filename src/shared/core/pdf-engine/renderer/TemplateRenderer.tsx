@@ -146,11 +146,27 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   const mainCardBg = resolveSubtleCardBackground('main', mainRolesColor);
 
   const headerNameSpec = resolveUnifiedTextSpec('title', mainRolesColor.background, mainRolesColor, preset.typography, 'header-name');
+  const headerSubtitleSpec = resolveUnifiedTextSpec('subtitle', mainRolesColor.background, mainRolesColor, preset.typography, 'header-subtitle');
   const sidebarContactSpec = resolveUnifiedTextSpec('body', sidebarRolesColor.primary, sidebarRolesColor, preset.typography, 'sidebar-contact');
   const signerNameSpec = resolveUnifiedTextSpec('title', mainRolesColor.background, mainRolesColor, preset.typography, 'signer-name');
   const signerRoleSpec = resolveUnifiedTextSpec('subtitle', mainRolesColor.background, mainRolesColor, preset.typography, 'signer-role');
   const signerDateSpec = resolveUnifiedTextSpec('meta', mainRolesColor.background, mainRolesColor, preset.typography, 'signer-date');
   const certTitleSpec = resolveUnifiedTextSpec('title', '#ffffff', mainRolesColor, preset.typography, 'cert-title');
+
+  // FUENTES Y RESOLUCIÓN CROMÁTICA DE PORTADA
+  const coverBgHex = preset.surfacePalettes?.dark?.primary || preset.palette.primary;
+  const coverRolesColor = resolveThemeRoles(preset.surfacePalettes?.dark || preset.palette);
+  const coverFontRegular = sanitizeFontFamily(preset.typography.fontFamily, false, false);
+  const coverFontBold = sanitizeFontFamily(preset.typography.fontFamily, true, false);
+  const coverFontItalic = sanitizeFontFamily(preset.typography.fontFamily, false, true);
+
+  const coverBadgeTextSpec = resolveUnifiedTextSpec('accent', coverBgHex, coverRolesColor, preset.typography, 'cover-badge');
+  const coverTitleTextSpec = resolveUnifiedTextSpec('title', coverBgHex, coverRolesColor, preset.typography, 'cover-title');
+  const coverNameTextSpec = resolveUnifiedTextSpec('title', coverBgHex, coverRolesColor, preset.typography, 'cover-name');
+  const coverRoleTextSpec = resolveUnifiedTextSpec('subtitle', coverBgHex, coverRolesColor, preset.typography, 'cover-role');
+  const coverQuoteTextSpec = resolveUnifiedTextSpec('body', coverBgHex, coverRolesColor, preset.typography, 'cover-quote');
+  const coverFooterMainSpec = resolveUnifiedTextSpec('subtitle', coverBgHex, coverRolesColor, preset.typography, 'cover-footer-main');
+  const coverFooterSubSpec = resolveUnifiedTextSpec('meta', coverBgHex, coverRolesColor, preset.typography, 'cover-footer-sub');
 
   const styles = StyleSheet.create({
     page: {
@@ -481,11 +497,36 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     }
 
     if (rec.kind === 'quote-text') {
-      const quoteSpec = resolveUnifiedTextSpec('body', surfaceHex, sectorRolesColor, preset.typography, 'quote-text');
+      const quoteSpec = resolveUnifiedTextSpec('subtitle', surfaceHex, sectorRolesColor, preset.typography, 'quote-text');
+      const cardBg = resolveSubtleCardBackground(isSidebarSector ? 'sidebar' : 'main', sectorRolesColor);
       return (
-        <Text key={rec.id} style={{ fontSize: quoteSpec.fontSizePt, fontFamily: quoteSpec.fontFamily, fontStyle: 'italic', color: quoteSpec.colorHex, opacity: quoteSpec.opacity, marginBottom: 8, lineHeight: 1.4 }}>
-          "{String(f.text || '')}"
-        </Text>
+        <View
+          key={rec.id}
+          wrap={false}
+          style={{
+            backgroundColor: cardBg,
+            borderLeftWidth: 3,
+            borderLeftColor: sectorRolesColor.accent,
+            paddingVertical: 8,
+            paddingHorizontal: 12,
+            borderRadius: 4,
+            marginBottom: 10,
+            marginTop: 4
+          }}
+        >
+          <Text
+            style={{
+              fontSize: quoteSpec.fontSizePt,
+              fontFamily: quoteSpec.fontFamily,
+              fontStyle: 'italic',
+              color: quoteSpec.colorHex,
+              opacity: quoteSpec.opacity,
+              lineHeight: 1.35
+            }}
+          >
+            "{String(f.text || '')}"
+          </Text>
+        </View>
       );
     }
 
@@ -708,9 +749,16 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
               )}
 
               {!isSidebar && isFirstPage && (
-                <Text style={styles.headerName}>
-                  {personalInfo.surname || ''} <Text style={styles.headerNameHighlight}>{personalInfo.givenNames || ''}</Text>
-                </Text>
+                <View style={{ marginBottom: 12 }}>
+                  <Text style={styles.headerName}>
+                    {personalInfo.surname || ''} <Text style={styles.headerNameHighlight}>{personalInfo.givenNames || ''}</Text>
+                  </Text>
+                  {personalInfo.profession && (
+                    <Text style={{ fontSize: headerSubtitleSpec.fontSizePt, fontFamily: headerSubtitleSpec.fontFamily, color: headerSubtitleSpec.colorHex, opacity: headerSubtitleSpec.opacity, marginTop: -6, marginBottom: 4 }}>
+                      {personalInfo.profession}
+                    </Text>
+                  )}
+                </View>
               )}
 
               {sectorSections.map((sec) => {
@@ -796,52 +844,73 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     <Document title={preset.name}>
       {/* LAYER 0-4: COVER PAGE (PAGE 1) */}
       {showCoverPage && (
-        <Page size={pdfPaperSize} style={styles.coverPage}>
+        <Page size={pdfPaperSize} style={[styles.coverPage, { backgroundColor: coverBgHex }]}>
+          <DecorativeBackgroundRenderer
+            backgroundShapeEnabled={decStyles.backgroundShapeEnabled}
+            watermark={decStyles.watermark}
+            color={coverRolesColor.accent}
+          />
+          <OrnamentRenderer ornamentKind={decStyles.cornerOrnament} color={coverRolesColor.accent} />
+
           <View style={styles.coverHeaderBlock}>
             {personalInfo?.profilePhoto ? (
-              <Image src={personalInfo.profilePhoto} style={styles.coverPhoto} />
+              <Image src={personalInfo.profilePhoto} style={[styles.coverPhoto, { borderColor: coverRolesColor.accent }]} />
             ) : (
-              <View style={styles.coverPhotoPlaceholder}>
-                <Text style={{ fontSize: 24, fontFamily: 'Helvetica-Bold', color: '#ffffff' }}>
+              <View style={[styles.coverPhotoPlaceholder, { borderColor: coverRolesColor.accent, backgroundColor: resolveSubtleCardBackground('sidebar', coverRolesColor) }]}>
+                <Text style={{ fontSize: 24, fontFamily: coverFontBold, color: coverTitleTextSpec.colorHex }}>
                   {`${(personalInfo?.givenNames || 'C')[0]}${(personalInfo?.surname || 'V')[0]}`}
                 </Text>
               </View>
             )}
 
-            <View style={styles.coverBadgeContainer}>
-              <Text style={styles.coverBadgeText}>PORTAFOLIO PROFESIONAL</Text>
+            <View style={[styles.coverBadgeContainer, { backgroundColor: resolveSubtleCardBackground('sidebar', coverRolesColor) }]}>
+              <Text style={[styles.coverBadgeText, { color: coverBadgeTextSpec.colorHex, fontFamily: coverFontBold, fontSize: preset.typography.cover?.badge || 8 }]}>
+                PORTAFOLIO PROFESIONAL
+              </Text>
             </View>
 
-            <Text style={styles.coverTitle}>CURRICULUM VITAE</Text>
-            <Text style={styles.coverName}>
+            <Text style={[styles.coverTitle, { color: coverTitleTextSpec.colorHex, opacity: coverTitleTextSpec.opacity, fontFamily: coverFontBold, fontSize: preset.typography.cover?.title || 12 }]}>
+              CURRICULUM VITAE
+            </Text>
+            <Text style={[styles.coverName, { color: coverNameTextSpec.colorHex, opacity: coverNameTextSpec.opacity, fontFamily: coverFontBold, fontSize: preset.typography.cover?.name || 26 }]}>
               {personalInfo.fullName || `${personalInfo.surname || ''} ${personalInfo.givenNames || ''}`.trim() || 'Postulante'}
             </Text>
 
             {featuredBadges.length > 0 && (
               <View style={styles.coverRolesRow}>
                 {featuredBadges.map((badge, idx) => (
-                  <View key={idx} style={styles.coverRoleBadge}>
-                    <Text style={styles.coverRoleText}>{badge}</Text>
+                  <View key={idx} style={[styles.coverRoleBadge, { borderColor: coverRolesColor.accent, backgroundColor: resolveSubtleCardBackground('sidebar', coverRolesColor) }]}>
+                    <Text style={[styles.coverRoleText, { color: coverRoleTextSpec.colorHex, fontFamily: coverFontBold, fontSize: preset.typography.cover?.role || 9 }]}>{badge}</Text>
                   </View>
                 ))}
               </View>
             )}
 
             {personalInfo.quote && (
-              <View style={styles.coverQuoteBox}>
-                <Text style={styles.coverQuoteText}>"{personalInfo.quote}"</Text>
+              <View style={[styles.coverQuoteBox, { borderLeftWidth: 3, borderLeftColor: coverRolesColor.accent, backgroundColor: resolveSubtleCardBackground('sidebar', coverRolesColor) }]}>
+                <Text style={[styles.coverQuoteText, { color: coverQuoteTextSpec.colorHex, fontFamily: coverFontItalic, fontSize: preset.typography.cover?.quote || 10 }]}>
+                  "{personalInfo.quote}"
+                </Text>
               </View>
             )}
           </View>
 
-          <View style={styles.coverFooterBar}>
+          <View style={[styles.coverFooterBar, { backgroundColor: resolveSubtleCardBackground('sidebar', coverRolesColor), borderColor: coverRolesColor.accent }]}>
             <View>
-              <Text style={styles.coverFooterSub}>DNI: {personalInfo.dni || '---'} | CUIT: {personalInfo.cuit || '---'}</Text>
-              <Text style={styles.coverFooterMain}>{personalInfo.cityProvince || 'Salta, Argentina'}</Text>
+              <Text style={[styles.coverFooterSub, { color: coverFooterSubSpec.colorHex, fontFamily: coverFontRegular, fontSize: preset.typography.cover?.footerSub || 8 }]}>
+                DNI: {personalInfo.dni || '---'} | CUIT: {personalInfo.cuit || '---'}
+              </Text>
+              <Text style={[styles.coverFooterMain, { color: coverFooterMainSpec.colorHex, fontFamily: coverFontBold, fontSize: preset.typography.cover?.footerMain || 10 }]}>
+                {personalInfo.cityProvince || 'Salta, Argentina'}
+              </Text>
             </View>
             <View style={{ alignItems: 'flex-end' }}>
-              <Text style={styles.coverFooterSub}>LEECV | AÑO {new Date().getFullYear()}</Text>
-              <Text style={styles.coverFooterBadge}>DOCUMENTO OFICIAL</Text>
+              <Text style={[styles.coverFooterSub, { color: coverFooterSubSpec.colorHex, fontFamily: coverFontRegular, fontSize: preset.typography.cover?.footerSub || 8 }]}>
+                LEECV | AÑO {new Date().getFullYear()}
+              </Text>
+              <Text style={[styles.coverFooterBadge, { color: coverRolesColor.accent, fontFamily: coverFontBold, fontSize: preset.typography.cover?.footerSub || 8 }]}>
+                DOCUMENTO OFICIAL
+              </Text>
             </View>
           </View>
         </Page>

@@ -157,8 +157,8 @@ export const PRESET_COLUMNS: Record<'sidebar-left' | 'sidebar-right' | 'full-wid
       { id: 'main-col', role: 'main', widthPercent: 68, order: 2 }
     ],
     sectionOrder: [
-      { sectorRole: 'sidebar', sectionIds: ['contacto', 'datos-personales', 'frase', 'competencias', 'informatica'] },
-      { sectorRole: 'main', sectionIds: ['formacion', 'profesion', 'experiencia', 'cursos', 'ecologia', 'firma'] }
+      { sectorRole: 'sidebar', sectionIds: ['contacto', 'datos-personales', 'competencias', 'informatica'] },
+      { sectorRole: 'main', sectionIds: ['frase', 'formacion', 'profesion', 'experiencia', 'cursos', 'ecologia', 'firma'] }
     ]
   },
   'sidebar-right': {
@@ -169,8 +169,8 @@ export const PRESET_COLUMNS: Record<'sidebar-left' | 'sidebar-right' | 'full-wid
       { id: 'sidebar-col', role: 'sidebar', widthPercent: 32, order: 2 }
     ],
     sectionOrder: [
-      { sectorRole: 'main', sectionIds: ['formacion', 'profesion', 'experiencia', 'cursos', 'ecologia', 'firma'] },
-      { sectorRole: 'sidebar', sectionIds: ['contacto', 'datos-personales', 'frase', 'competencias', 'informatica'] }
+      { sectorRole: 'main', sectionIds: ['frase', 'formacion', 'profesion', 'experiencia', 'cursos', 'ecologia', 'firma'] },
+      { sectorRole: 'sidebar', sectionIds: ['contacto', 'datos-personales', 'competencias', 'informatica'] }
     ]
   },
   'full-width': {

@@ -99,8 +99,28 @@ for (const preset of presets) {
     if (skillRatio < 4.5) {
       console.error(`❌ FALLO DE CONTRASTE EN SKILL [Preset: ${preset.id}, Superficie: ${surf.name}]: Color (${skillSpec.colorHex}) en (${surf.bg}) da ratio ${skillRatio.toFixed(2)}:1 (mínimo 4.5:1).`);
       failedChecks++;
+    }
+  }
+
+  // AUDITORÍA DE LA PORTADA (COVER PAGE)
+  const coverBgHex = preset.surfacePalettes?.dark?.primary || preset.palette.primary;
+  const coverRolesColor = preset.surfacePalettes?.dark || preset.palette;
+  const coverRolesToTest = [
+    { role: 'title', minRatio: 4.5, name: 'Portada Título' },
+    { role: 'subtitle', minRatio: 4.5, name: 'Portada Subtítulo/Roles' },
+    { role: 'body', minRatio: 4.5, name: 'Portada Quote' },
+    { role: 'meta', minRatio: 4.5, name: 'Portada Footer' }
+  ];
+
+  for (const cRole of coverRolesToTest) {
+    totalChecks++;
+    const spec = resolveUnifiedTextSpec(cRole.role, coverBgHex, coverRolesColor, preset.typography);
+    const ratio = getContrastRatio(coverBgHex, spec.colorHex);
+    if (ratio < cRole.minRatio) {
+      console.error(`❌ FALLO DE CONTRASTE EN PORTADA [Preset: ${preset.id}, Elemento: ${cRole.name}]: Color (${spec.colorHex}) en Fondo de Portada (${coverBgHex}) da ratio ${ratio.toFixed(2)}:1 (mínimo ${cRole.minRatio}:1).`);
+      failedChecks++;
     } else {
-      console.log(`  ✓ Preset [${preset.id}] - Skill (${skillSpec.colorHex}) en ${surf.name} (${surf.bg}) da ratio ${skillRatio.toFixed(2)}:1 OK (≥ 4.5:1).`);
+      console.log(`  ✓ Preset [${preset.id}] - Portada ${cRole.name} (${spec.colorHex}) en (${coverBgHex}) da ratio ${ratio.toFixed(2)}:1 OK (≥ ${cRole.minRatio}:1).`);
     }
   }
 }

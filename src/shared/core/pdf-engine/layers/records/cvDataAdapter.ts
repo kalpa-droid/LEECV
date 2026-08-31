@@ -81,7 +81,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
         {
           id: 'rec-frase',
           kind: 'quote-text',
-          targetSectorRole: 'sidebar',
+          targetSectorRole: 'main',
           fields: { text: personalInfo.quote }
         }
       ]

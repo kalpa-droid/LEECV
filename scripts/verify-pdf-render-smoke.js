@@ -19,6 +19,7 @@ const mockFullCvData = {
     linkedin: 'linkedin.com/in/alexmorgan',
     github: 'github.com/alexmorgan',
     website: 'alexmorgan.dev',
+    quote: 'Innovación constante a través de código limpio y arquitectura robusta.',
     summary: 'Profesional altamente enfocado en arquitectura de software, optimización de motores de rendimiento y desarrollo web de alta escala.'
   },
   experience: [
