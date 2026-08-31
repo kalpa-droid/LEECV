@@ -1,5 +1,6 @@
 import { ContentSection } from './recordTypes';
 import { getSectionLabel } from '../../../sectionRegistry';
+import { getCvFormat } from '../../../formats/cvFormatRegistry';
 
 const sortByYearDesc = (items: any[]) => {
   if (!Array.isArray(items)) return [];
@@ -28,6 +29,9 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
     signature = {}
   } = cvData;
 
+  const activeFormat = cvData?.activeFormatId ? getCvFormat(cvData.activeFormatId) : null;
+  const hiddenFieldsSet = new Set(activeFormat?.hiddenPersonalFields || []);
+
   const sortedCourses = sortByYearDesc(coursesAndCertificates);
   const sortedExperience = sortByYearDesc(experience);
   const sortedProfession = sortByYearDesc(profession);
@@ -54,23 +58,30 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
     ]
   });
 
-  // Datos Personales (Sidebar)
-  sections.push({
-    id: 'datos-personales',
-    titleText: getSectionLabel('datos-personales'),
-    records: [
-      {
-        id: 'rec-personal-details',
-        kind: 'contact-item',
-        targetSectorRole: 'sidebar',
-        fields: {
-          dni: personalInfo.dni || '',
-          cuit: personalInfo.cuit || '',
-          birthDate: personalInfo.birthDate || ''
+  // Datos Personales (Sidebar - Filtrados dinámicamente según hiddenPersonalFields del Formato Activo)
+  const personalDetailsFields = {
+    dni: hiddenFieldsSet.has('dni') ? '' : personalInfo.dni || '',
+    cuit: hiddenFieldsSet.has('cuit') ? '' : personalInfo.cuit || '',
+    birthDate: hiddenFieldsSet.has('birthDate') ? '' : personalInfo.birthDate || '',
+    nacionalidad: hiddenFieldsSet.has('nacionalidad') ? '' : personalInfo.nacionalidad || '',
+    estadoCivil: hiddenFieldsSet.has('estadoCivil') ? '' : personalInfo.estadoCivil || ''
+  };
+
+  const hasPersonalDetails = Object.values(personalDetailsFields).some((val) => !!val);
+  if (hasPersonalDetails) {
+    sections.push({
+      id: 'datos-personales',
+      titleText: getSectionLabel('datos-personales'),
+      records: [
+        {
+          id: 'rec-personal-details',
+          kind: 'contact-item',
+          targetSectorRole: 'sidebar',
+          fields: personalDetailsFields
         }
-      }
-    ]
-  });
+      ]
+    });
+  }
 
   // Frase / Lema Personal
   if (personalInfo.quote) {
@@ -392,9 +403,25 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
     ]
   });
 
+  // Si el usuario eligió un Formato Global activo (ej: US Resume, Europass),
+  // reordenar las secciones dinámicamente según el estándar internacional (defaultVisibleSections)
+  let orderedSections = sections;
+  if (activeFormat && Array.isArray(activeFormat.defaultVisibleSections) && activeFormat.defaultVisibleSections.length > 0) {
+    const formatOrderMap = new Map<string, number>();
+    activeFormat.defaultVisibleSections.forEach((secId, idx) => {
+      formatOrderMap.set(secId, idx);
+    });
+
+    orderedSections = [...sections].sort((a, b) => {
+      const posA = formatOrderMap.has(a.id) ? formatOrderMap.get(a.id)! : 999;
+      const posB = formatOrderMap.has(b.id) ? formatOrderMap.get(b.id)! : 999;
+      return posA - posB;
+    });
+  }
+
   // Mapear saltos de página configurados por el usuario
   const sectionPageBreaks = cvData?.layout?.sectionPageBreaks || cvData?.sectionPageBreaks || {};
-  return sections.map(sec => ({
+  return orderedSections.map(sec => ({
     ...sec,
     breakBefore: !!sectionPageBreaks[sec.id]
   }));

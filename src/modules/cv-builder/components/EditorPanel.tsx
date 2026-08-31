@@ -1391,10 +1391,14 @@ export default function EditorPanel({
                       onClick={() => {
                         const fmt = getCvFormat(format.id);
                         const newVis = getFormatDefaultVisibility(format.id);
+                        const recPreset = fmt.recommendedPresetIds?.[0] || 'cv-clasico';
                         setCvData((prev: any) => ({
                           ...prev,
                           activeFormatId: format.id,
                           columnLayoutPresetId: fmt.columnLayoutPresetId,
+                          activePresetId: fmt.recommendedPresetIds?.includes(prev?.activePresetId)
+                            ? prev.activePresetId
+                            : recPreset,
                           sectionVisibility: {
                             ...(prev?.sectionVisibility || {}),
                             ...newVis

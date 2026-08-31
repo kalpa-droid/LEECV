@@ -22,6 +22,7 @@ import { resolveUnifiedTextSpec } from '../layers/typography/unifiedTextHierarch
 import { resolveSubtleCardBackground } from '../layers/colors/surfaceAwareColorEngine';
 import { initPdfFonts, sanitizeFontFamily } from '../layers/typography/pdfFontRegistry';
 import { resolveEffectivePresetSectionOrder, CvLayoutOverrides } from '../layers/sectors/layoutResolutionEngine';
+import { getCvFormat } from '../../formats/cvFormatRegistry';
 
 function sanitizeSvgDataUrl(dataUrl?: string): string | undefined {
   if (!dataUrl || typeof dataUrl !== 'string') return dataUrl;
@@ -48,6 +49,7 @@ export interface TemplateRendererProps {
   atsMode?: boolean;
   sections: ContentSection[];
   personalInfo?: any;
+  activeFormatId?: string;
   certificatesScanned?: any[];
   showCoverPage?: boolean;
   coverFeaturedEducationId?: string;
@@ -82,6 +84,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   atsMode = false,
   sections,
   personalInfo = {},
+  activeFormatId,
   certificatesScanned = [],
   showCoverPage = false,
   coverFeaturedEducationId,
@@ -524,7 +527,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
               lineHeight: 1.35
             }}
           >
-            "{String(f.text || '')}"
+            {String(f.text || '')}
           </Text>
         </View>
       );
@@ -695,6 +698,10 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     return null;
   };
 
+  const resolvedFormatId = activeFormatId || personalInfo?.activeFormatId;
+  const activeFormat = resolvedFormatId ? getCvFormat(resolvedFormatId) : null;
+  const hidePhoto = activeFormat?.hiddenPersonalFields?.includes('profilePhoto');
+
   const effectiveSectionOrder = resolveEffectivePresetSectionOrder(preset, layoutOverrides);
   const overflowResult = processPageOverflow(preset, sections);
   const decStyles = resolveDecorativeStyles(preset);
@@ -734,7 +741,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
             <View style={contentStyle}>
               {/* SPACER FIJO DE MARGEN SUPERIOR PARA EVITAR EL BUG DE PAGINACIÓN DE REACT-PDF (#430/#733) */}
               <View fixed style={{ height: usable.margins.topPt || 14 }} />
-              {isSidebar && isFirstPage && (
+              {isSidebar && isFirstPage && !hidePhoto && (
                 <View style={styles.sidebarHeader}>
                   {personalInfo?.profilePhoto ? (
                     <Image src={personalInfo.profilePhoto} style={styles.profilePhoto} />
@@ -853,14 +860,16 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
           <OrnamentRenderer ornamentKind={decStyles.cornerOrnament} color={coverRolesColor.accent} />
 
           <View style={styles.coverHeaderBlock}>
-            {personalInfo?.profilePhoto ? (
-              <Image src={personalInfo.profilePhoto} style={[styles.coverPhoto, { borderColor: coverRolesColor.accent }]} />
-            ) : (
-              <View style={[styles.coverPhotoPlaceholder, { borderColor: coverRolesColor.accent, backgroundColor: resolveSubtleCardBackground('sidebar', coverRolesColor) }]}>
-                <Text style={{ fontSize: 24, fontFamily: coverFontBold, color: coverTitleTextSpec.colorHex }}>
-                  {`${(personalInfo?.givenNames || 'C')[0]}${(personalInfo?.surname || 'V')[0]}`}
-                </Text>
-              </View>
+            {!hidePhoto && (
+              personalInfo?.profilePhoto ? (
+                <Image src={personalInfo.profilePhoto} style={[styles.coverPhoto, { borderColor: coverRolesColor.accent }]} />
+              ) : (
+                <View style={[styles.coverPhotoPlaceholder, { borderColor: coverRolesColor.accent, backgroundColor: resolveSubtleCardBackground('sidebar', coverRolesColor) }]}>
+                  <Text style={{ fontSize: 24, fontFamily: coverFontBold, color: coverTitleTextSpec.colorHex }}>
+                    {`${(personalInfo?.givenNames || 'C')[0]}${(personalInfo?.surname || 'V')[0]}`}
+                  </Text>
+                </View>
+              )
             )}
 
             <View style={[styles.coverBadgeContainer, { backgroundColor: resolveSubtleCardBackground('sidebar', coverRolesColor) }]}>
@@ -889,7 +898,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
             {personalInfo.quote && (
               <View style={[styles.coverQuoteBox, { borderLeftWidth: 3, borderLeftColor: coverRolesColor.accent, backgroundColor: resolveSubtleCardBackground('sidebar', coverRolesColor) }]}>
                 <Text style={[styles.coverQuoteText, { color: coverQuoteTextSpec.colorHex, fontFamily: coverFontItalic, fontSize: preset.typography.cover?.quote || 10 }]}>
-                  "{personalInfo.quote}"
+                  {personalInfo.quote}
                 </Text>
               </View>
             )}

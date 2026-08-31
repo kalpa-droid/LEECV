@@ -88,15 +88,13 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
                 placeholder="Ej: Lic. / Prof. / Dr. / Ing. / MP 1402"
               />
 
-              {/* Frase de Presentación */}
+              {/* Titular Profesional */}
               <Field
                 id="quote"
-                as="textarea"
-                rows={3}
-                label="Frase de Presentación / Perfil Profesional"
+                label="Titular Profesional (una línea, debajo de tu nombre)"
                 value={cvData.personalInfo?.quote || ''}
                 onChange={(e: any) => updatePersonalInfo('quote', e.target.value)}
-                placeholder="Ej: Mi experiencia personal y profesional me permite desarrollar eficientemente..."
+                placeholder="Ej: Profesora de Lengua y Literatura | Referente en Innovación Educativa"
               />
 
               <div className="grid grid-cols-2 gap-3">

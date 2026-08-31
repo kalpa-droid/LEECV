@@ -39,7 +39,7 @@ export interface SectionCatalogEntry {
 export const SECTION_CATALOG: SectionCatalogEntry[] = [
   { id: 'contacto', label: 'Contacto & Redes', tabId: 'personales', dataType: 'single_text', defaultSectorRole: 'sidebar', assignableToColumns: true },
   { id: 'datos-personales', label: 'Datos Personales', tabId: 'personales', dataType: 'single_text', defaultSectorRole: 'sidebar', assignableToColumns: true },
-  { id: 'frase', label: 'Frase / Lema Personal', tabId: 'personales', dataType: 'single_text', defaultSectorRole: 'sidebar', coverDisplayFields: ['quote'], assignableToColumns: true },
+  { id: 'frase', label: 'Titular Profesional', tabId: 'personales', dataType: 'single_text', defaultSectorRole: 'sidebar', coverDisplayFields: ['quote'], assignableToColumns: true, shortLabel: 'Titular' },
   { id: 'resumen', label: 'Resumen Profesional', tabId: 'resumen', dataType: 'single_text', defaultSectorRole: 'main', assignableToColumns: true, shortLabel: 'Resumen' },
   { id: 'experiencia', label: 'Experiencia Laboral', tabId: 'experiencia', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['role'], assignableToColumns: true, shortLabel: 'Experiencia' },
   { id: 'formacion', label: 'Formación Académica', tabId: 'formacion', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['degree'], assignableToColumns: true, shortLabel: 'Formación' },

@@ -630,6 +630,25 @@ if (fs.existsSync(schemaPath)) {
   );
 }
 
+const cvAdapterPath = path.join(ROOT, 'src/shared/core/pdf-engine/layers/records/cvDataAdapter.ts');
+if (fs.existsSync(cvAdapterPath)) {
+  const adapterContent = fs.readFileSync(cvAdapterPath, 'utf-8');
+  check(
+    'cvDataAdapter.ts conecta activeFormatId con getCvFormat para reordenamiento de secciones y filtrado de datos personales',
+    adapterContent.includes('getCvFormat') && adapterContent.includes('hiddenFieldsSet') && adapterContent.includes('formatOrderMap'),
+    'cvDataAdapter.ts no consume el motor de formatos globales para reordenar secciones o filtrar datos personales'
+  );
+}
+
+if (fs.existsSync(sectionRegPath)) {
+  const regContent = fs.readFileSync(sectionRegPath, 'utf-8');
+  check(
+    'sectionRegistry.ts etiqueta la sección frase como "Titular Profesional"',
+    regContent.includes("label: 'Titular Profesional'"),
+    'sectionRegistry.ts mantiene la etiqueta obsoleta Frase / Lema Personal'
+  );
+}
+
 // ─── Resultado final ───
 console.log(`\n${'═'.repeat(60)}`);
 if (failed === 0) {
