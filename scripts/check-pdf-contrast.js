@@ -85,6 +85,24 @@ for (const preset of presets) {
       console.log(`  ✓ Preset [${preset.id}] - Motor Jerarquía ${textRole.name} (${spec.colorHex}) en Tarjeta (${cardBgHex}) da ratio ${contrastRatio.toFixed(2)}:1 OK (≥ ${textRole.minRatio}:1).`);
     }
   }
+
+  // Verificación explícita de registros inline (skill, contact, quote) en superficies MAIN (clara) y SIDEBAR (oscura)
+  const inlineSurfacesToTest = [
+    { name: 'Sidebar', bg: sidebarPal.primary || sidebarPal.background, roles: sidebarPal },
+    { name: 'Main', bg: mainPal.background || '#ffffff', roles: mainPal }
+  ];
+
+  for (const surf of inlineSurfacesToTest) {
+    totalChecks++;
+    const skillSpec = resolveUnifiedTextSpec('body', surf.bg, surf.roles, preset.typography, 'skill');
+    const skillRatio = getContrastRatio(surf.bg, skillSpec.colorHex);
+    if (skillRatio < 4.5) {
+      console.error(`❌ FALLO DE CONTRASTE EN SKILL [Preset: ${preset.id}, Superficie: ${surf.name}]: Color (${skillSpec.colorHex}) en (${surf.bg}) da ratio ${skillRatio.toFixed(2)}:1 (mínimo 4.5:1).`);
+      failedChecks++;
+    } else {
+      console.log(`  ✓ Preset [${preset.id}] - Skill (${skillSpec.colorHex}) en ${surf.name} (${surf.bg}) da ratio ${skillRatio.toFixed(2)}:1 OK (≥ 4.5:1).`);
+    }
+  }
 }
 
 if (failedChecks > 0) {

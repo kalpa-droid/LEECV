@@ -464,9 +464,9 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     sectorRolesColor: ResolvedThemeRoles = mainRolesColor
   ) => {
     const f = rec.fields;
+    const surfaceHex = isSidebarSector ? sidebarRolesColor.primary : mainRolesColor.background;
 
     if (rec.kind === 'contact-item') {
-      const surfaceHex = isSidebarSector ? sidebarRolesColor.primary : mainRolesColor.background;
       const contactSpec = resolveUnifiedTextSpec('body', surfaceHex, sectorRolesColor, preset.typography, isSidebarSector ? 'sidebar-contact' : 'main-body');
       return (
         <View key={rec.id} wrap={false}>
@@ -481,7 +481,6 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     }
 
     if (rec.kind === 'quote-text') {
-      const surfaceHex = isSidebarSector ? sidebarRolesColor.primary : mainRolesColor.background;
       const quoteSpec = resolveUnifiedTextSpec('body', surfaceHex, sectorRolesColor, preset.typography, 'quote-text');
       return (
         <Text key={rec.id} style={{ fontSize: quoteSpec.fontSizePt, fontFamily: quoteSpec.fontFamily, fontStyle: 'italic', color: quoteSpec.colorHex, opacity: quoteSpec.opacity, marginBottom: 8, lineHeight: 1.4 }}>
@@ -491,8 +490,22 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     }
 
     if (rec.kind === 'skill') {
+      const itemSpec = resolveUnifiedTextSpec('body', surfaceHex, sectorRolesColor, preset.typography, 'skill');
       return (
-        <Text key={rec.id} style={styles.sidebarItemText}>• {String(f.name || '')}</Text>
+        <Text
+          key={rec.id}
+          style={[
+            styles.sidebarItemText,
+            {
+              color: itemSpec.colorHex,
+              opacity: itemSpec.opacity,
+              fontSize: itemSpec.fontSizePt,
+              fontFamily: itemSpec.fontFamily
+            }
+          ]}
+        >
+          • {String(f.name || '')}
+        </Text>
       );
     }
 
@@ -542,13 +555,16 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       const layout = buildStructuredRecordLayout(f);
 
       if (isSidebarSector || rec.targetSectorRole === 'sidebar') {
+        const titleSpec = resolveUnifiedTextSpec('subtitle', surfaceHex, sectorRolesColor, preset.typography, 'course-title');
+        const subSpec = resolveUnifiedTextSpec('meta', surfaceHex, sectorRolesColor, preset.typography, 'course-institution');
+
         return (
           <View key={rec.id} style={{ marginBottom: 6 }} wrap={false}>
-            <Text style={[styles.sidebarItemText, styles.sidebarItemBold]}>
+            <Text style={[styles.sidebarItemText, styles.sidebarItemBold, { color: titleSpec.colorHex, opacity: titleSpec.opacity }]}>
               {layout.header || String(f.title || f.name || '')}
             </Text>
             {layout.subheader ? (
-              <Text style={[styles.sidebarItemText, { color: 'rgba(255, 255, 255, 0.85)' }]}>
+              <Text style={[styles.sidebarItemText, { color: subSpec.colorHex, opacity: subSpec.opacity }]}>
                 {layout.subheader}
               </Text>
             ) : null}
@@ -574,20 +590,22 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     }
 
     if (rec.kind === 'social-link') {
+      const linkSpec = resolveUnifiedTextSpec('body', surfaceHex, sectorRolesColor, preset.typography, 'social-link');
       return (
-        <Text key={rec.id} style={styles.sidebarItemText}>
+        <Text key={rec.id} style={[styles.sidebarItemText, { color: linkSpec.colorHex, opacity: linkSpec.opacity }]}>
           {String(f.icon || '🔗')} {String(f.label || f.url || '')}
         </Text>
       );
     }
 
     if (rec.kind === 'qr') {
+      const captionSpec = resolveUnifiedTextSpec('meta', surfaceHex, sectorRolesColor, preset.typography, 'qr-caption');
       return (
         <View key={rec.id} wrap={false} style={{ alignItems: 'center', marginVertical: 8 }}>
           {f.dataUrl || f.url ? (
             <Image src={String(f.dataUrl || f.url)} style={{ width: 64, height: 64, borderRadius: 4 }} />
           ) : null}
-          {f.caption && <Text style={styles.sidebarItemText}>{String(f.caption)}</Text>}
+          {f.caption && <Text style={[styles.sidebarItemText, { color: captionSpec.colorHex, opacity: captionSpec.opacity }]}>{String(f.caption)}</Text>}
         </View>
       );
     }

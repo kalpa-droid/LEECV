@@ -8,7 +8,7 @@
  */
 
 import { TypographyScale, Preset } from '../presets/presetSchema';
-import { ResolvedThemeRoles, hexToHSL, hslToHex } from '../colors/colorSystem';
+import { ResolvedThemeRoles, hexToHSL, hslToHex, getContrastRatio } from '../colors/colorSystem';
 import { calculatePerceivedLuminance } from '../colors/surfaceAwareColorEngine';
 import { deriveRecordScale } from './typographyHierarchyEngine';
 import { sanitizeFontFamily } from './pdfFontRegistry';
@@ -111,7 +111,10 @@ export function resolveUnifiedTextSpec(
   // 2. Matriz Cromática HSL W3C WCAG (Luminancia Percibida & Opacidades)
   const cleanSurface = surfaceBgHex && surfaceBgHex.startsWith('#') ? surfaceBgHex : '#ffffff';
   const luminance = calculatePerceivedLuminance(cleanSurface);
-  const isDarkSurface = luminance <= 128;
+  
+  // Una superficie es oscura si su luminancia es <= 105 (donde el texto blanco #ffffff garantiza ratio WCAG >= 4.5:1).
+  // Si la luminancia es > 105 (superficie media o clara), se usa la matriz HSL entintada para contraste garantizado.
+  const isDarkSurface = luminance <= 105;
 
   let colorHex = '#000000';
   let opacity = 1.0;
