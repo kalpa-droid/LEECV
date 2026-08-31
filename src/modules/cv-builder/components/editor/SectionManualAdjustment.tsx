@@ -16,8 +16,8 @@ export function getMountedManualAdjustments(): Set<string> {
   return MOUNTED_MANUAL_ADJUSTMENTS;
 }
 
-const DEFAULT_SECUNDARIA = ['contacto', 'personales', 'frase', 'redes', 'informatica', 'competencias', 'ecologia'];
-const DEFAULT_PRIMARIA = ['personales', 'formacion', 'profesion', 'experiencia', 'cursos', 'ecologia'];
+const DEFAULT_SECUNDARIA = ['contacto', 'datos-personales', 'frase', 'redes', 'habilidades', 'competencias', 'idiomas', 'informatica', 'ecologia'];
+const DEFAULT_PRIMARIA = ['resumen', 'personales', 'formacion', 'profesion', 'experiencia', 'proyectos', 'publicaciones', 'referencias', 'cursos', 'ecologia', 'certificados', 'firma'];
 
 export function SectionManualAdjustment({ sectionId, cvData, setCvData, designKey }: SectionManualAdjustmentProps) {
   useEffect(() => {
@@ -34,7 +34,7 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData, designKe
   if (!cvData || !setCvData) return null;
 
   const activeDesignKey = designKey || sectionId;
-  const currentCardDesign = cvData.recordCardDesigns?.[activeDesignKey] || 'accent-card';
+  const currentCardDesign = cvData.recordCardDesigns?.[activeDesignKey] || (activeDesignKey === 'resumen' ? 'accent-outline' : 'accent-card');
 
   const catalogEntry = getSection(sectionId, cvData.customSections || []);
   const assignableToColumns = catalogEntry ? catalogEntry.assignableToColumns !== false : true;
@@ -89,8 +89,11 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData, designKe
     setCvData((prev: any) => {
       const colName = currentColumn;
       const curOrders = [...(prev.layout?.sectionOrders?.[colName] || (colName === 'secundaria' ? DEFAULT_SECUNDARIA : DEFAULT_PRIMARIA))];
-      const idx = curOrders.indexOf(sectionId);
-      if (idx === -1) return prev;
+      let idx = curOrders.indexOf(sectionId);
+      if (idx === -1) {
+        curOrders.push(sectionId);
+        idx = curOrders.length - 1;
+      }
 
       const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
       if (targetIdx < 0 || targetIdx >= curOrders.length) return prev;

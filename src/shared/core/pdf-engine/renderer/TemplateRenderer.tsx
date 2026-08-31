@@ -23,6 +23,7 @@ import { resolveSubtleCardBackground } from '../layers/colors/surfaceAwareColorE
 import { initPdfFonts, sanitizeFontFamily } from '../layers/typography/pdfFontRegistry';
 import { resolveEffectivePresetSectionOrder, CvLayoutOverrides } from '../layers/sectors/layoutResolutionEngine';
 import { getCvFormat } from '../../formats/cvFormatRegistry';
+import { getContainerStyle } from '../../styles/containerStyleEngine';
 
 function sanitizeSvgDataUrl(dataUrl?: string): string | undefined {
   if (!dataUrl || typeof dataUrl !== 'string') return dataUrl;
@@ -59,11 +60,7 @@ export interface TemplateRendererProps {
   professions?: any[];
   userFontFamily?: string;
   layoutOverrides?: CvLayoutOverrides;
-  customRecordCardDesigns?: {
-    education?: string;
-    experience?: string;
-    course?: string;
-  };
+  customRecordCardDesigns?: Record<string, string | undefined>;
   /**
    * Modo embebido: devuelve solo el contenido (sin Document/Page propios,
    * sin portada, sin páginas de certificados) para insertarlo dentro de un
@@ -500,16 +497,26 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     }
 
     if (rec.kind === 'quote-text') {
+      const designId = customRecordCardDesigns?.resumen || preset.recordCardDesigns?.resumen || 'accent-outline';
+      const containerStyle = getContainerStyle(designId);
       const quoteSpec = resolveUnifiedTextSpec('subtitle', surfaceHex, sectorRolesColor, preset.typography, 'quote-text');
-      const cardBg = resolveSubtleCardBackground(isSidebarSector ? 'sidebar' : 'main', sectorRolesColor);
+      const cardBg = containerStyle.hasBackground ? resolveSubtleCardBackground(isSidebarSector ? 'sidebar' : 'main', sectorRolesColor) : 'transparent';
+      const borderColor = containerStyle.borderColorRole === 'accent'
+        ? sectorRolesColor.accent
+        : containerStyle.borderColorRole === 'primary'
+          ? sectorRolesColor.primary
+          : containerStyle.borderColorRole === 'border'
+            ? sectorRolesColor.border
+            : 'transparent';
+
       return (
         <View
           key={rec.id}
           wrap={false}
           style={{
             backgroundColor: cardBg,
-            borderLeftWidth: 3,
-            borderLeftColor: sectorRolesColor.accent,
+            borderLeftWidth: containerStyle.borderWidthPt > 0 ? Math.max(3, containerStyle.borderWidthPt) : 0,
+            borderLeftColor: borderColor,
             paddingVertical: 8,
             paddingHorizontal: 12,
             borderRadius: 4,

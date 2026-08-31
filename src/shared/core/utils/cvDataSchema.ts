@@ -146,14 +146,19 @@ export function sanitizeCvData(rawCvData: any = {}) {
       sectionOrders: {
         secundaria: Array.isArray(data.layout?.sectionOrders?.secundaria)
           ? [...new Set(data.layout.sectionOrders.secundaria)]
-          : ['personales', 'habilidades', 'competencias', 'idiomas', 'informatica', 'ecologia'],
+          : ['contacto', 'datos-personales', 'frase', 'redes', 'habilidades', 'competencias', 'idiomas', 'informatica', 'ecologia'],
         primaria: Array.isArray(data.layout?.sectionOrders?.primaria)
           ? [...new Set(data.layout.sectionOrders.primaria)]
-          : ['personales', 'resumen', 'formacion', 'profesion', 'experiencia', 'proyectos', 'publicaciones', 'referencias', 'cursos', 'ecologia']
+          : ['resumen', 'personales', 'formacion', 'profesion', 'experiencia', 'proyectos', 'publicaciones', 'referencias', 'cursos', 'ecologia', 'certificados', 'firma']
       },
       sectionPageBreaks: (typeof data.layout?.sectionPageBreaks === 'object' && data.layout?.sectionPageBreaks !== null)
         ? data.layout.sectionPageBreaks
         : {}
+    },
+
+    recordCardDesigns: {
+      resumen: data.recordCardDesigns?.resumen || 'accent-outline',
+      ...(typeof data.recordCardDesigns === 'object' && data.recordCardDesigns !== null ? data.recordCardDesigns : {})
     },
 
     // Antes este campo no se preservaba: sanitizeCvData lo borraba en cada carga
