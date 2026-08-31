@@ -137,7 +137,7 @@ function AppContent() {
   const triggerAutoFit = React.useCallback(() => {
     if (typeof window !== 'undefined') {
       const isMobile = window.innerWidth < 768;
-      const sidebarWidth = isMobile ? 0 : (isPanelOpen ? 500 : 64);
+      const sidebarWidth = isMobile ? 0 : (isPanelOpen ? 500 : 96);
       const availableWidth = window.innerWidth - sidebarWidth - 32;
       const a4WidthPx = 794;
       
@@ -424,7 +424,7 @@ function AppContent() {
 
   return (
     <div className="h-screen h-[100dvh] bg-[var(--color-neutral-text-primary)] text-white flex flex-col font-sans overflow-hidden selection:bg-[var(--color-accent-base)] selection:text-white relative">
-      <div className="md:pl-16">
+      <div className="md:pl-24">
         <Navbar 
           currentCvData={cvData}
           setCvData={setCvData}
@@ -451,7 +451,7 @@ function AppContent() {
         />
       </div>
 
-      <main className="flex-1 flex overflow-hidden relative min-h-0 md:pl-16">
+      <main className="flex-1 flex overflow-hidden relative min-h-0 md:pl-24">
         <CanvaIconDock 
           cvData={cvData}
           setCvData={setCvData}
@@ -463,6 +463,7 @@ function AppContent() {
           }} 
           isPanelOpen={isPanelOpen}
           setIsPanelOpen={setIsPanelOpen}
+          onOpenAtsCheck={handleOpenAtsCheck}
         />
 
         <div 
@@ -649,7 +650,7 @@ function AppContent() {
       </Suspense>
 
       {/* BARRA INFERIOR / FOOTER: Fina (h-8), sin recorte en celulares y con pestañas de texto desplazable e icono inmóvil */}
-      <footer className="h-8 bg-[var(--ui-bg-panel)] border-t border-[var(--ui-border)] text-[var(--ui-text-primary)] px-2 sm:px-3 md:pl-20 flex items-center justify-between gap-1.5 shrink-0 no-print select-none text-[11px] font-sans z-40 mb-[44px] md:mb-0">
+      <footer className="h-8 bg-[var(--ui-bg-panel)] border-t border-[var(--ui-border)] text-[var(--ui-text-primary)] px-2 sm:px-3 md:pl-28 flex items-center justify-between gap-1.5 shrink-0 no-print select-none text-[11px] font-sans z-40 mb-[76px] md:mb-0">
         
         {/* Pestañas de CVs Abiertos + Botón "+" (con desplazamiento por ruedita del mouse) */}
         <div 
@@ -698,12 +699,6 @@ function AppContent() {
                   >
                     <span
                       ref={(el) => {
-                        // Auto-scroll SOLO si el texto desborda su contenedor —
-                        // `group-hover` nunca se dispara en pantallas táctiles
-                        // (no hay "hover" en celular), así que ahí ese título
-                        // largo nunca se veía completo. Esto funciona en
-                        // mouse Y en dedo por igual, no depende de ningún
-                        // evento de puntero.
                         if (!el) return;
                         const parent = el.parentElement;
                         if (!parent) return;
@@ -754,17 +749,6 @@ function AppContent() {
             <ChevronRight className="w-4 h-4 stroke-[2.5]" />
           </div>
         </div>
-
-        {/* Margen Derecho: Botón ATS Compacto (Icono + siglas ATS) */}
-        <button
-          type="button"
-          onClick={handleOpenAtsCheck}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-[${radius.card}] text-xs font-black text-[var(--ui-text-primary)] bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] transition ${elevationSystem.raised} cursor-pointer whitespace-nowrap active:scale-95 shrink-0 ml-2`}
-          title="Auditoría de lectura predictiva para ATS"
-        >
-          <Sparkles className="w-3.5 h-3.5 text-[var(--color-accent-amber-bright)] flex-shrink-0" />
-          <span>ATS</span>
-        </button>
       </footer>
     </div>
   );

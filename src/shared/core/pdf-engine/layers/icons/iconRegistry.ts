@@ -121,6 +121,33 @@ export const ICON_REGISTRY: Record<string, IconDefinition> = {
       'M14 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2h-4c-1.25 0-2 .75-2 2v6c0 1.25.75 2 2 2h3c0 4-3 6-4 6z'
     ]
   },
+  resumen: {
+    id: 'resumen',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z',
+      'M14 2v6h6',
+      'M16 13H8',
+      'M16 17H8',
+      'M10 9H8'
+    ]
+  },
+  proyectos: {
+    id: 'proyectos',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z',
+      'M12 11v6',
+      'M9 14h6'
+    ]
+  },
+  habilidades: {
+    id: 'habilidades',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z'
+    ]
+  },
   competencias: {
     id: 'competencias',
     viewBox: '0 0 24 24',

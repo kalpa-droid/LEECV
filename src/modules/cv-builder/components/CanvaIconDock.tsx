@@ -1,6 +1,6 @@
 import React, { useMemo, useRef } from 'react';
 import { 
-  Palette, Layout, Menu, X, Plus, ChevronDown, ChevronRight
+  Palette, Menu, X, Plus, Sparkles, ChevronDown, ChevronRight
 } from 'lucide-react';
 import { DomSectionIcon } from '../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
 import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
@@ -13,6 +13,7 @@ export interface CanvaIconDockProps {
   setActiveTab: (tabId: string) => void;
   isPanelOpen: boolean;
   setIsPanelOpen: (open: boolean) => void;
+  onOpenAtsCheck?: () => void;
 }
 
 // 1. Pestañas de Estilo (Diseño)
@@ -31,7 +32,8 @@ export default function CanvaIconDock({
   activeTab, 
   setActiveTab, 
   isPanelOpen, 
-  setIsPanelOpen 
+  setIsPanelOpen,
+  onOpenAtsCheck
 }: CanvaIconDockProps) {
   const mobileNavRef = useRef<HTMLDivElement>(null);
 
@@ -49,31 +51,47 @@ export default function CanvaIconDock({
 
   return (
     <>
-      {/* Desktop & Tablet Vertical Left Dock (Width: 64px) con interlineado compacto */}
+      {/* Desktop & Tablet Vertical Left Dock (2 Columnas, Width: 96px / w-24) */}
       <aside 
         onWheel={(e) => {
           e.currentTarget.scrollTop += e.deltaY;
         }}
-        className="hidden md:flex flex-col items-center py-2 bg-[var(--ui-bg-dock)] border-r border-[var(--ui-dock-border)] text-[var(--ui-dock-text)] z-[100] select-none w-16 shrink-0 fixed top-0 bottom-0 left-0 h-screen overflow-y-auto no-scrollbar shadow-[var(--shadow-dock)]"
+        className="hidden md:flex flex-col items-center py-2 bg-[var(--ui-bg-dock)] border-r border-[var(--ui-dock-border)] text-[var(--ui-dock-text)] z-[100] select-none w-24 shrink-0 fixed top-0 bottom-0 left-0 h-screen overflow-y-auto no-scrollbar shadow-[var(--shadow-dock)] px-1.5"
       >
-        {/* Toggle Drawer Button */}
-        <button
-          type="button"
-          onClick={() => setIsPanelOpen(!isPanelOpen)}
-          className={`p-2 rounded-[${radius.modal}] mb-1.5 transition transform active:scale-95 cursor-pointer ${
-            isPanelOpen
-              ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.floating} shadow-[var(--color-accent-base)]/30`
-              : 'bg-[var(--ui-dock-hover)] text-[var(--ui-dock-text-muted)] hover:text-[var(--ui-dock-text)]'
-          }`}
-          title={isPanelOpen ? 'Cerrar Panel Editor' : 'Abrir Panel Editor'}
-        >
-          <Menu className="w-4.5 h-4.5" />
-        </button>
+        {/* Rejilla de 2 Columnas para PC */}
+        <div className="grid grid-cols-2 gap-1.5 w-full items-center justify-items-center">
+          
+          {/* 1. BOTÓN ATS (Fila 1, Columna 1) */}
+          <button
+            type="button"
+            onClick={onOpenAtsCheck}
+            className={`w-9 h-9 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer border bg-[var(--ui-dock-hover)] border-[var(--color-status-warning-text)]/80 text-[var(--color-status-warning-text)] hover:bg-[var(--color-accent-amber-muted)] hover:scale-105 active:scale-95`}
+            title="Auditoría Predictiva ATS"
+          >
+            <Sparkles className="w-4.5 h-4.5 text-[var(--color-status-warning-text)]" />
+            <span className={`absolute left-20 bg-[var(--ui-bg-dock)] text-[var(--color-status-warning-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--color-status-warning-text)]/40`}>
+              Auditoría ATS
+            </span>
+          </button>
 
-        <div className="w-7 h-px bg-[var(--ui-dock-separator)] mb-1.5" />
+          {/* 2. BOTÓN MENÚ / DRAWER TOGGLE (Fila 1, Columna 2) */}
+          <button
+            type="button"
+            onClick={() => setIsPanelOpen(!isPanelOpen)}
+            className={`w-9 h-9 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer active:scale-95 ${
+              isPanelOpen
+                ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.floating} shadow-[var(--color-accent-base)]/30`
+                : 'bg-[var(--ui-dock-hover)] text-[var(--ui-dock-text-muted)] hover:text-[var(--ui-dock-text)]'
+            }`}
+            title={isPanelOpen ? 'Cerrar Panel Editor' : 'Abrir Panel Editor'}
+          >
+            {isPanelOpen ? <X className="w-4.5 h-4.5" /> : <Menu className="w-4.5 h-4.5" />}
+            <span className={`absolute left-20 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
+              {isPanelOpen ? 'Cerrar Panel' : 'Abrir Panel'}
+            </span>
+          </button>
 
-        {/* Style Group: Botones de Estilo (SOLO icono) */}
-        <div className="flex flex-col items-center gap-1 mb-1.5">
+          {/* 3. BOTÓN DISEÑO / ESTILO (Fila 2, Columna 1) */}
           {styleTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id && isPanelOpen;
@@ -82,29 +100,22 @@ export default function CanvaIconDock({
                 key={tab.id}
                 type="button"
                 onClick={() => handleTabClick(tab.id)}
-                className={`w-10 h-10 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer ${
+                className={`w-9 h-9 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer ${
                   isActive
                     ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.floating} shadow-[var(--color-accent-base)]/30 scale-105`
                     : 'text-[var(--ui-dock-text-muted)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--ui-dock-hover)]'
                 }`}
                 title={tab.label}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
-                
-                {/* Tooltip flotante al pasar el cursor en escritorio */}
-                <span className={`absolute left-14 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
+                <Icon className={`w-4.5 h-4.5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
+                <span className={`absolute left-20 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
                   {tab.label}
                 </span>
               </button>
             );
           })}
-        </div>
 
-        <div className="w-7 h-px bg-[var(--ui-dock-separator)] mb-1.5" />
-
-        {/* Content Sections Group: Íconos nítidos sin texto saturado */}
-        <div className="flex flex-col items-center gap-1.5 flex-1 w-full px-1">
-          {/* 1. BOTÓN SIEMPRE PRIMERO ARRIBA: Sección + */}
+          {/* 4. BOTÓN SECCIÓN + (Fila 2, Columna 2) */}
           {(() => {
             const isActive = activeTab === addSectionTab.id && isPanelOpen;
             return (
@@ -112,23 +123,22 @@ export default function CanvaIconDock({
                 key={addSectionTab.id}
                 type="button"
                 onClick={() => handleTabClick(addSectionTab.id)}
-                className={`w-10 h-10 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer border ${
+                className={`w-9 h-9 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer border ${
                   isActive
                     ? `bg-[var(--color-status-success-base)] border-[var(--color-status-success-base)] text-[var(--color-status-success-on-base)] ${elevationSystem.raised} scale-105`
                     : 'bg-[var(--ui-dock-hover)] border-[var(--color-status-success-base)]/80 text-[var(--color-status-success-bright)] hover:bg-[var(--color-status-success-muted)]'
                 }`}
                 title="Catálogo & Creador de Secciones"
               >
-                <Plus className={`w-5 h-5 ${isActive ? 'text-[var(--color-status-success-on-base)]' : 'text-[var(--color-status-success-text)]'}`} />
-
-                <span className={`absolute left-14 bg-[var(--ui-bg-dock)] text-[var(--color-status-success-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--color-status-success-base)]/30`}>
+                <Plus className={`w-4.5 h-4.5 ${isActive ? 'text-[var(--color-status-success-on-base)]' : 'text-[var(--color-status-success-text)]'}`} />
+                <span className={`absolute left-20 bg-[var(--ui-bg-dock)] text-[var(--color-status-success-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--color-status-success-base)]/30`}>
                   Catálogo & Creador de Secciones
                 </span>
               </button>
             );
           })()}
 
-          {/* 2. BOTÓN PORTADA */}
+          {/* 5. BOTÓN PORTADA (Fila 3, Columna 1) */}
           {(() => {
             const isActive = activeTab === portadaTab.id && isPanelOpen;
             return (
@@ -136,23 +146,22 @@ export default function CanvaIconDock({
                 key={portadaTab.id}
                 type="button"
                 onClick={() => handleTabClick(portadaTab.id)}
-                className={`w-10 h-10 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer border ${
+                className={`w-9 h-9 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer border ${
                   isActive
                     ? `bg-[var(--color-accent-base)] border-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.floating} shadow-[var(--color-accent-base)]/30 scale-105`
                     : 'bg-[var(--ui-dock-hover)] border-[var(--ui-dock-border)] text-[var(--color-secondary-bright)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--color-secondary-muted)]'
                 }`}
                 title="Portada Profesional"
               >
-                <DomSectionIcon iconId="portada" className="w-5 h-5" color={isActive ? 'var(--color-accent-on-base)' : 'var(--color-secondary-bright)'} />
-
-                <span className={`absolute left-14 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
+                <DomSectionIcon iconId="portada" className="w-4.5 h-4.5" color={isActive ? 'var(--color-accent-on-base)' : 'var(--color-secondary-bright)'} />
+                <span className={`absolute left-20 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
                   Portada Profesional
                 </span>
               </button>
             );
           })()}
 
-          {/* 3. Personal */}
+          {/* 6. BOTÓN PERSONAL (Fila 3, Columna 2) */}
           {(() => {
             const isActive = activeTab === personalTab.id && isPanelOpen;
             return (
@@ -160,23 +169,22 @@ export default function CanvaIconDock({
                 key={personalTab.id}
                 type="button"
                 onClick={() => handleTabClick(personalTab.id)}
-                className={`w-10 h-10 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer ${
+                className={`w-9 h-9 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer ${
                   isActive
                     ? `bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.floating} shadow-[var(--color-secondary-base)]/30 scale-105`
                     : 'text-[var(--ui-dock-text-muted)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--ui-dock-hover)]'
                 }`}
                 title={personalTab.label}
               >
-                <DomSectionIcon iconId={personalTab.iconId} className="w-5 h-5" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
-
-                <span className={`absolute left-14 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
+                <DomSectionIcon iconId={personalTab.iconId} className="w-4.5 h-4.5" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
+                <span className={`absolute left-20 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
                   {personalTab.label}
                 </span>
               </button>
             );
           })()}
 
-          {/* 4. Secciones dinámicas generadas por activeSectionsDockEngine */}
+          {/* 7..N. SECCIONES DINÁMICAS (En 2 Columnas) */}
           {dockSections.map((sec) => {
             const isActive = activeTab === sec.id && isPanelOpen;
             return (
@@ -184,7 +192,7 @@ export default function CanvaIconDock({
                 key={sec.id}
                 type="button"
                 onClick={() => handleTabClick(sec.id)}
-                className={`w-10 h-10 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer ${
+                className={`w-9 h-9 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer ${
                   isActive
                     ? sec.isCustom
                       ? `bg-[var(--color-accent-purple)] text-white ${elevationSystem.floating} shadow-[var(--color-accent-purple)]/30 scale-105`
@@ -197,25 +205,24 @@ export default function CanvaIconDock({
               >
                 <DomSectionIcon
                   iconId={sec.iconId}
-                  className="w-5 h-5"
+                  className="w-4.5 h-4.5"
                   color={sec.isCustom ? (isActive ? '#FFFFFF' : 'var(--color-secondary-bright)') : (isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)')}
                 />
-
-                <span className={`absolute left-14 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
+                <span className={`absolute left-20 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
                   {sec.label}
                 </span>
               </button>
             );
           })}
+        </div>
 
-          {/* FLECHA SUTIL Y ELEGANTE AL FINAL DEL DOCK EN ESCRITORIO: Indica más secciones abajo */}
-          <div className="pt-1.5 pb-1 flex flex-col items-center justify-center text-[var(--color-secondary-bright)] animate-bounce opacity-70 hover:opacity-100 transition cursor-pointer shrink-0" title="Desliza para ver más secciones">
-            <ChevronDown className="w-3.5 h-3.5 stroke-[2.5]" />
-          </div>
+        {/* Indicador sutil de scroll */}
+        <div className="pt-2 pb-1 flex flex-col items-center justify-center text-[var(--color-secondary-bright)] animate-bounce opacity-70 hover:opacity-100 transition cursor-pointer shrink-0 mt-auto" title="Desliza para ver más secciones">
+          <ChevronDown className="w-3.5 h-3.5 stroke-[2.5]" />
         </div>
       </aside>
 
-      {/* Mobile Bottom Dock Bar (< 768px): Compacto y estilizado */}
+      {/* Mobile Bottom Dock Bar (< 768px): 2 Filas Horizontales con Flujo Grid (Height: 76px) */}
       <nav 
         ref={mobileNavRef}
         onWheel={(e) => {
@@ -223,24 +230,33 @@ export default function CanvaIconDock({
             e.currentTarget.scrollLeft += (e.deltaY || e.deltaX);
           }
         }}
-        className={`md:hidden fixed bottom-0 left-0 right-0 z-[999] bg-[var(--ui-bg-dock)] border-t border-[var(--ui-dock-border)] px-1.5 py-1 flex items-center gap-1 overflow-x-auto no-scrollbar ${elevationSystem.overlay} select-none h-11`}
+        className={`md:hidden fixed bottom-0 left-0 right-0 z-[999] bg-[var(--ui-bg-dock)] border-t border-[var(--ui-dock-border)] p-1.5 grid grid-rows-2 grid-flow-col gap-1.5 overflow-x-auto no-scrollbar ${elevationSystem.overlay} select-none h-[76px] items-center`}
       >
+        {/* 1. BOTÓN ATS (Fila 1, Columna 1 en Celular) */}
+        <button
+          type="button"
+          onClick={onOpenAtsCheck}
+          className="w-8 h-8 rounded-[6px] flex items-center justify-center shrink-0 border bg-[var(--ui-bg-panel)] border-[var(--color-status-warning-text)]/80 text-[var(--color-status-warning-text)] active:scale-95 cursor-pointer"
+          title="Auditoría ATS"
+        >
+          <Sparkles className="w-4 h-4 text-[var(--color-status-warning-text)]" />
+        </button>
+
+        {/* 2. BOTÓN MENÚ (Fila 2, Columna 1 en Celular - Pegado al Margen Inferior Izquierdo) */}
         <button
           type="button"
           onClick={() => setIsPanelOpen(!isPanelOpen)}
-          className={`p-2 rounded-[${radius.card}] flex items-center justify-center shrink-0 transition cursor-pointer ${
+          className={`w-8 h-8 rounded-[6px] flex items-center justify-center shrink-0 transition cursor-pointer active:scale-95 ${
             isPanelOpen
               ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.raised}`
-              : 'bg-[var(--ui-bg-panel)] text-[var(--color-accent-amber-bright)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)]'
+              : 'bg-[var(--ui-bg-panel)] text-[var(--color-accent-amber-bright)] border border-[var(--ui-border)]'
           }`}
           title={isPanelOpen ? 'Cerrar Panel' : 'Abrir Panel'}
         >
-          {isPanelOpen ? <X className="w-3.5 h-3.5" /> : <Menu className="w-3.5 h-3.5" />}
+          {isPanelOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
         </button>
 
-        <div className="w-px h-5 bg-[var(--ui-dock-border)] shrink-0" />
-
-        {/* BOTONES DE ESTILO EN MÓVIL (Diseño y Columnas) */}
+        {/* 3. BOTÓN DISEÑO / ESTILO (Fila 1, Columna 2 en Celular) */}
         {styleTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id && isPanelOpen;
@@ -249,72 +265,71 @@ export default function CanvaIconDock({
               key={tab.id}
               type="button"
               onClick={() => handleTabClick(tab.id)}
-              className={`p-2 rounded-[${radius.card}] flex items-center justify-center shrink-0 transition cursor-pointer ${
+              className={`w-8 h-8 rounded-[6px] flex items-center justify-center shrink-0 transition cursor-pointer ${
                 isActive
                   ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.raised}`
-                  : 'bg-[var(--ui-bg-panel)] text-[var(--ui-dock-text-muted)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-card)] hover:text-[var(--ui-dock-text)]'
+                  : 'bg-[var(--ui-bg-panel)] text-[var(--ui-dock-text-muted)] border border-[var(--ui-border)]'
               }`}
               title={tab.label}
             >
-              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--ui-dock-text-muted)]'}`} />
+              <Icon className={`w-4 h-4 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--ui-dock-text-muted)]'}`} />
             </button>
           );
         })}
 
-        {/* Botón Sección justo después de Columnas en Mobile */}
+        {/* 4. BOTÓN SECCIÓN + (Fila 2, Columna 2 en Celular) */}
         <button
           type="button"
           onClick={() => handleTabClick(addSectionTab.id)}
-          className={`px-2 py-1 rounded-[${radius.card}] font-black text-[9px] shrink-0 flex flex-col items-center justify-center cursor-pointer border ${
+          className={`w-8 h-8 rounded-[6px] flex items-center justify-center shrink-0 cursor-pointer border transition ${
             activeTab === addSectionTab.id && isPanelOpen
               ? 'bg-[var(--color-status-success-base)] border-[var(--color-status-success-base)] text-[var(--color-status-success-on-base)]'
-              : 'bg-[var(--ui-bg-panel)] border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-bright)] hover:bg-[var(--color-status-success-muted)]'
+              : 'bg-[var(--ui-bg-panel)] border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-bright)]'
           }`}
+          title="Agregar Sección +"
         >
-          <Plus className={`w-3.5 h-3.5 ${activeTab === addSectionTab.id && isPanelOpen ? 'text-[var(--color-status-success-on-base)]' : ''}`} />
-          <span className="mt-0.5 leading-none">{addSectionTab.label}</span>
+          <Plus className={`w-4 h-4 ${activeTab === addSectionTab.id && isPanelOpen ? 'text-[var(--color-status-success-on-base)]' : ''}`} />
         </button>
 
-        {/* Botón Portada ubicado inmediatamente después del botón Sección + en Mobile */}
+        {/* 5. BOTÓN PORTADA (Fila 1, Columna 3 en Celular) */}
         {(() => {
           const isActive = activeTab === portadaTab.id && isPanelOpen;
           return (
             <button
               type="button"
               onClick={() => handleTabClick(portadaTab.id)}
-              className={`px-2 py-1 rounded-[${radius.card}] font-black text-[9px] shrink-0 flex flex-col items-center justify-center cursor-pointer border transition ${
+              className={`w-8 h-8 rounded-[6px] flex items-center justify-center shrink-0 cursor-pointer border transition ${
                 isActive
                   ? 'bg-[var(--color-accent-base)] border-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
-                  : 'bg-[var(--ui-bg-panel)] border-[var(--ui-border)] text-[var(--color-secondary-bright)] hover:bg-[var(--ui-bg-card)]'
+                  : 'bg-[var(--ui-bg-panel)] border-[var(--ui-border)] text-[var(--color-secondary-bright)]'
               }`}
               title="Portada Profesional"
             >
-              <DomSectionIcon iconId="portada" className="w-3.5 h-3.5" color={isActive ? 'var(--color-accent-on-base)' : 'var(--color-secondary-bright)'} />
-              <span className="mt-0.5 leading-none">{portadaTab.label}</span>
+              <DomSectionIcon iconId="portada" className="w-4 h-4" color={isActive ? 'var(--color-accent-on-base)' : 'var(--color-secondary-bright)'} />
             </button>
           );
         })()}
 
-        <div className="w-px h-5 bg-[var(--ui-dock-border)] shrink-0" />
-
+        {/* 6. BOTÓN PERSONAL (Fila 2, Columna 3 en Celular) */}
         {(() => {
           const isActive = activeTab === personalTab.id && isPanelOpen;
           return (
             <button
               type="button"
               onClick={() => handleTabClick(personalTab.id)}
-              className={`px-2 py-1 rounded-[${radius.card}] flex flex-col items-center justify-center text-[9px] font-black shrink-0 transition cursor-pointer ${
+              className={`w-8 h-8 rounded-[6px] flex items-center justify-center shrink-0 transition cursor-pointer border ${
                 isActive
                   ? `bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.raised}`
-                  : 'bg-[var(--ui-bg-panel)] text-[var(--color-secondary-bright)] border border-[var(--color-secondary-base)]/30 hover:bg-[var(--color-secondary-muted)]'
+                  : 'bg-[var(--ui-bg-panel)] text-[var(--color-secondary-bright)] border-[var(--color-secondary-base)]/30'
               }`}
+              title={personalTab.label}
             >
-              <DomSectionIcon iconId={personalTab.iconId} className="w-3.5 h-3.5" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
-              <span className="mt-0.5 leading-none">{personalTab.label}</span>
+              <DomSectionIcon iconId={personalTab.iconId} className="w-4 h-4" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
             </button>
           );
         })()}
 
+        {/* 7..N. SECCIONES DINÁMICAS (En 2 Filas Horizontales) */}
         {dockSections.map((sec) => {
           const isActive = activeTab === sec.id && isPanelOpen;
           return (
@@ -322,27 +337,27 @@ export default function CanvaIconDock({
               key={sec.id}
               type="button"
               onClick={() => handleTabClick(sec.id)}
-              className={`px-2 py-1 rounded-[${radius.card}] flex flex-col items-center justify-center text-[9px] font-black shrink-0 transition cursor-pointer ${
+              className={`w-8 h-8 rounded-[6px] flex items-center justify-center shrink-0 transition cursor-pointer border ${
                 isActive
                   ? sec.isCustom
                     ? `bg-[var(--color-accent-purple)] text-white ${elevationSystem.raised}`
                     : `bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.raised}`
                   : sec.isCustom
-                    ? 'bg-[var(--ui-bg-panel)] text-[var(--color-accent-purple-bright)] border border-[var(--color-accent-purple)]/30 hover:bg-[var(--color-accent-purple-light)]'
-                    : 'bg-[var(--ui-bg-panel)] text-[var(--color-secondary-bright)] border border-[var(--color-secondary-base)]/30 hover:bg-[var(--color-secondary-muted)]'
+                    ? 'bg-[var(--ui-bg-panel)] text-[var(--color-accent-purple-bright)] border-[var(--color-accent-purple)]/30'
+                    : 'bg-[var(--ui-bg-panel)] text-[var(--color-secondary-bright)] border-[var(--color-secondary-base)]/30'
               }`}
+              title={sec.label}
             >
               <DomSectionIcon
                 iconId={sec.iconId}
-                className="w-3.5 h-3.5"
+                className="w-4 h-4"
                 color={sec.isCustom ? (isActive ? '#FFFFFF' : 'var(--color-accent-purple-bright)') : (isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)')}
               />
-              <span className="mt-0.5 leading-none">{sec.label}</span>
             </button>
           );
         })}
 
-        {/* FLECHA SUTIL Y ELEGANTE EN MÓVIL: Indica más secciones desplazables a la derecha */}
+        {/* FLECHA SUTIL Y ELEGANTE EN MÓVIL: Indica más secciones desplazables */}
         <div className="shrink-0 px-1 flex items-center justify-center text-[var(--color-accent-amber-bright)] animate-pulse opacity-90" title="Desliza horizontalmente para ver más secciones">
           <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
         </div>
