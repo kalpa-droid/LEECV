@@ -14,6 +14,7 @@ import { SectionBannerCard } from '../layers/cards/SectionBannerCard';
 import { buildStructuredRecordLayout } from '../layers/records/recordLayoutEngine';
 import { processPageOverflow } from '../layers/overflow/pageOverflowEngine';
 import { OrnamentRenderer } from './OrnamentRenderer';
+import { DecorativeBackgroundRenderer } from './DecorativeBackgroundRenderer';
 import { resolveDecorativeStyles } from '../layers/decorations/decorativeLayerEngine';
 import { flattenPresetForATS } from '../layers/ats/atsFlatteningEngine';
 import { createSubColumnGrid } from '../layers/subColumns/resolveSubColumns';
@@ -637,6 +638,11 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
 
   const buildDocumentBody = (pageSections: ContentSection[], isFirstPage: boolean) => (
     <View style={embedded ? [styles.pageBody, { width: pageDef.widthPt, height: pageDef.heightPt }] : styles.pageBody}>
+      <DecorativeBackgroundRenderer
+        backgroundShapeEnabled={decStyles.backgroundShapeEnabled}
+        watermark={decStyles.watermark}
+        color={rolesColor.accent}
+      />
       {sectorsWithFlow.map((sFlow) => {
         const isSidebar = sFlow.sector.role === 'sidebar';
         const sectorRolesColor = isSidebar ? sidebarRolesColor : mainRolesColor;

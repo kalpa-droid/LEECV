@@ -125,7 +125,7 @@ export function CardObjectRenderer({
     titleText: {
       fontSize: titleSpec.fontSizePt,
       fontFamily: titleSpec.fontFamily,
-      color: titleSpec.colorHex,
+      color: (design.accentTarget === 'title' || design.titleColorRole === 'accent') ? resolvedAccent.titleColor : titleSpec.colorHex,
       opacity: titleSpec.opacity,
       fontWeight: titleSpec.fontWeight,
       flex: 1,
@@ -134,7 +134,7 @@ export function CardObjectRenderer({
     badgeText: {
       fontSize: badgeSpec.fontSizePt,
       fontFamily: badgeSpec.fontFamily,
-      color: badgeSpec.colorHex,
+      color: (design.accentTarget === 'meta-badge' || design.badgeColorRole === 'accent') ? resolvedAccent.badgeColor : badgeSpec.colorHex,
       opacity: badgeSpec.opacity,
       fontWeight: badgeSpec.fontWeight,
     },

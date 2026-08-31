@@ -50,6 +50,8 @@ export function SectionBannerCard({
     const sidebarFontSize = Math.max(8.5, typography.sectionHeading - 2.5);
     const cleanIconId = (iconId || '').replace(/-cont$/, '');
 
+    const hasDivider = decStyles ? decStyles.dividerStyle.enabled : true;
+
     const styles = StyleSheet.create({
       sidebarBannerContainer: {
         flexDirection: 'row',
@@ -58,8 +60,8 @@ export function SectionBannerCard({
         marginTop: 14,
         marginBottom: 6,
         paddingBottom: 4,
-        borderBottomWidth: 1,
-        borderBottomColor: typographyBinding.border,
+        borderBottomWidth: hasDivider ? (decStyles ? decStyles.dividerStyle.heightPt : 1) : 0,
+        borderBottomColor: decStyles ? decStyles.dividerStyle.color : typographyBinding.border,
       },
       sidebarBanner: {
         fontSize: sidebarFontSize,
@@ -87,6 +89,7 @@ export function SectionBannerCard({
 
   const isTransparentBanner = bannerBgColor === 'transparent';
   const cleanIconId = (iconId || '').replace(/-cont$/, '');
+  const hasDivider = decStyles ? decStyles.dividerStyle.enabled : true;
 
   const styles = StyleSheet.create({
     bannerContainer: {
@@ -97,10 +100,10 @@ export function SectionBannerCard({
       paddingHorizontal: isTransparentBanner ? 0 : 10,
       paddingVertical: isTransparentBanner ? 4 : 5,
       borderRadius: isTransparentBanner ? 0 : (design.borderRadiusPt || 4),
-      marginTop: 16,
-      marginBottom: 8,
-      borderBottomWidth: isTransparentBanner ? 1.5 : 0,
-      borderBottomColor: rolesColor.accent || rolesColor.primary,
+      marginTop: decStyles ? decStyles.dividerStyle.marginTopPt + 10 : 16,
+      marginBottom: decStyles ? decStyles.dividerStyle.marginBottomPt : 8,
+      borderBottomWidth: isTransparentBanner && hasDivider ? (decStyles ? decStyles.dividerStyle.heightPt || 1.5 : 1.5) : 0,
+      borderBottomColor: decStyles ? decStyles.dividerStyle.color : (rolesColor.accent || rolesColor.primary),
       borderLeftWidth: (!isTransparentBanner && design.borderWidthPt) ? Math.max(2, design.borderWidthPt) : 0,
       borderLeftColor: rolesColor[design.borderColorRole as keyof ResolvedThemeRoles] as string || rolesColor.accent,
     },

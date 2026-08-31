@@ -78,3 +78,20 @@ if (!previewContent.includes('resolveActivePreset(')) {
 }
 console.log('  ✓ Consumo de resolveActivePreset en tiempo de ejecución OK.');
 
+// 5. Verificación de consumo de capas decorativas
+const sectionBannerFile = path.resolve(__dirname, '../src/shared/core/pdf-engine/layers/cards/SectionBannerCard.tsx');
+const sectionBannerContent = fs.readFileSync(sectionBannerFile, 'utf8');
+if (!sectionBannerContent.includes('dividerStyle')) {
+  console.error('❌ VERIFICACIÓN FALLIDA: dividerStyle no está siendo consumido en SectionBannerCard.tsx.');
+  process.exit(1);
+}
+console.log('  ✓ Consumo de dividerStyle en SectionBannerCard.tsx OK.');
+
+const templateRendererFile = path.resolve(__dirname, '../src/shared/core/pdf-engine/renderer/TemplateRenderer.tsx');
+const templateRendererContent = fs.readFileSync(templateRendererFile, 'utf8');
+if (!templateRendererContent.includes('DecorativeBackgroundRenderer')) {
+  console.error('❌ VERIFICACIÓN FALLIDA: DecorativeBackgroundRenderer no está siendo consumido en TemplateRenderer.tsx.');
+  process.exit(1);
+}
+console.log('  ✓ Consumo de DecorativeBackgroundRenderer en TemplateRenderer.tsx OK.');
+
