@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { pdf } from '@react-pdf/renderer';
 import * as pdfjsLib from 'pdfjs-dist';
 import { colorSystem } from '../uiDesignSystem';
+import { scrollToPdfAnchor } from './layers/anchors/pdfAnchorEngine';
+import { ContentSection } from './layers/records/recordTypes';
+import { Preset } from './layers/presets/presetSchema';
 // Vite: importa el worker como URL de asset — funciona igual en build de producción.
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
@@ -12,6 +15,10 @@ interface VectorDocViewerProps {
   document: React.ReactElement;
   /** Nivel de zoom actual (ej: 1.0, 1.25) para mantener nitidez cristalina en alta resolución */
   zoomLevel?: number;
+  /** Pestaña / Sección activa de la UI para desplazamiento e interactividad */
+  activeTab?: string;
+  sections?: ContentSection[];
+  preset?: Preset;
 }
 
 /**
@@ -31,8 +38,9 @@ interface VectorDocViewerProps {
  * literalmente, el mismo PDF que el usuario termina descargando — cero
  * posibilidad de que preview y descarga difieran.
  */
-export function VectorDocViewer({ document, zoomLevel = 1 }: VectorDocViewerProps) {
+export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections = [], preset }: VectorDocViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const renderTokenRef = useRef(0);
@@ -70,6 +78,7 @@ export function VectorDocViewer({ document, zoomLevel = 1 }: VectorDocViewerProp
           const viewport = page.getViewport({ scale: baseScale * zoomLevel * devicePixelRatio });
 
           const canvas = window.document.createElement('canvas');
+          canvas.setAttribute('data-page-number', String(pageNum));
           canvas.width = viewport.width;
           canvas.height = viewport.height;
           canvas.style.width = '100%';
@@ -106,8 +115,15 @@ export function VectorDocViewer({ document, zoomLevel = 1 }: VectorDocViewerProp
     return () => { cancelled = true; };
   }, [document, zoomLevel]);
 
+  // Reacciona ante el cambio de activeTab ejecutando scroll suave en el contenedor
+  useEffect(() => {
+    if (!loading && activeTab && containerRef.current) {
+      scrollToPdfAnchor(wrapperRef.current || containerRef.current, activeTab, sections, preset!);
+    }
+  }, [activeTab, loading, sections, preset]);
+
   return (
-    <div style={{ width: '100%', height: '100%', overflowY: 'auto', overflowX: 'hidden' }}>
+    <div ref={wrapperRef} style={{ width: '100%', height: '100%', overflowY: 'auto', overflowX: 'hidden' }}>
       {loading && (
         <div style={{ padding: 32, textAlign: 'center', color: colorSystem.neutral.textMuted, fontSize: 13, fontWeight: 700 }}>
           Generando vista vectorial…

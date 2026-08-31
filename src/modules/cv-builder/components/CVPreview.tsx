@@ -7,7 +7,7 @@ import { buildCardDataFromCV, BusinessCardData } from '../../../shared/core/pdf-
 import { VectorDocViewer } from '../../../shared/core/pdf-engine/VectorDocViewer';
 import { ErrorBoundary } from '../../../shared/core/ui/ErrorBoundary';
 
-export default function CVPreview({ cvData, setCvData: _setCvData, activeTab: _activeTab, zoomLevel = 0.85 }: { cvData?: any; setCvData?: any; activeTab?: string; zoomLevel?: number }) {
+export default function CVPreview({ cvData, setCvData: _setCvData, activeTab, zoomLevel = 0.85 }: { cvData?: any; setCvData?: any; activeTab?: string; zoomLevel?: number }) {
   // Suscripción reactiva con useSyncExternalStore para re-renderizado automático sin F5 al cambiar plantillas
   const presetsVersion = useSyncExternalStore(subscribeToPresetChanges, getPresetsSnapshot, getPresetsSnapshot);
 
@@ -83,6 +83,9 @@ export default function CVPreview({ cvData, setCvData: _setCvData, activeTab: _a
             key={`${activePreset.id}_v${presetsVersion}`} 
             document={renderedDocument} 
             zoomLevel={zoomLevel}
+            activeTab={activeTab}
+            sections={sections}
+            preset={activePreset}
           />
         </ErrorBoundary>
       </div>

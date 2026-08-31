@@ -1,0 +1,7 @@
+# Directivas de rastreo para Googlebot y buscadores web
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+Sitemap: https://leecv.app/sitemap.xml
