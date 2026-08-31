@@ -22,6 +22,8 @@ interface RecordFormSectionProps {
    * render, cero código nuevo por cada sección personalizada que se cree.
    */
   customFields?: string[];
+  manualAdjustment?: React.ReactNode;
+  renderTrailingSlot?: (sectionKey: string) => React.ReactNode;
 }
 
 export function RecordFormSection({
@@ -34,7 +36,9 @@ export function RecordFormSection({
   fieldName,
   itemTitlePrefix,
   helpText,
-  customFields
+  customFields,
+  manualAdjustment,
+  renderTrailingSlot
 }: RecordFormSectionProps) {
   const schema = BUILTIN_RECORD_KINDS[kindKey] || BUILTIN_RECORD_KINDS['education'];
   const fieldList = customFields && customFields.length > 0 ? customFields : (schema.defaultFields || ['tituloOGrado', 'institucion']);
@@ -60,6 +64,8 @@ export function RecordFormSection({
         fieldName={fieldName}
         designKey={kindKey}
         itemTitlePrefix={itemTitlePrefix}
+        manualAdjustment={manualAdjustment}
+        renderTrailingSlot={renderTrailingSlot}
         renderItem={(item: any, idx: number, updateField: (field: string, val: any) => void) => (
           <div className="space-y-3">
             {fieldList.map((fieldId: string) => {

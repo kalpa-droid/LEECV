@@ -57,6 +57,16 @@ for (const entry of SECTION_CATALOG) {
   }
 }
 
+// Verificación de enrutamiento dinámico para secciones personalizadas (customSections)
+totalChecks++;
+const hasCustomSectionsDynamicRouting = editorPanelContent.includes('s.id === activeTab') && editorPanelContent.includes('<RecordFormSection');
+if (hasCustomSectionsDynamicRouting) {
+  console.log(`  ✓ Cobertura Formulario [Secciones Personalizadas / Custom] -> Enrutamiento dinámico (cs.id === activeTab) OK.`);
+} else {
+  console.error(`❌ FALLO DE COBERTURA [Secciones Personalizadas / Custom]: Falta enrutador dinámico en EditorPanel.tsx`);
+  failedChecks++;
+}
+
 console.log('\n════════════════════════════════════════════════════════════');
 if (failedChecks > 0) {
   console.error(`❌ PRUEBA ANTI-REGRESIÓN FALLIDA: ${failedChecks} de ${totalChecks} secciones del catálogo no tienen formulario en EditorPanel.tsx.`);

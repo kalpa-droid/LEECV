@@ -1,5 +1,5 @@
 import { hashBlob } from '../utils/hashBlob';
-import { idbStorage } from '../../../modules/cv-builder/services/storageIndexedDB';
+import { idbStorage } from './storageIndexedDB';
 
 export interface BinaryAsset {
   filename: string;

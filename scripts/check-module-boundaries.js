@@ -53,17 +53,25 @@ function checkFile(fullPath, currentModule = null) {
   const file = path.basename(fullPath);
   const content = fs.readFileSync(fullPath, 'utf8');
 
-  // 1. Verificación de Fronteras de Módulos (solo aplica si está dentro de /modules/)
-  if (currentModule) {
-    const importMatches = content.match(/from\s+['"]([^'"]+)['"]/g) || [];
-    for (const match of importMatches) {
-      const importPath = match.replace(/from\s+['"]/, '').replace(/['"]$/, '');
-      if (importPath.includes('/modules/')) {
-        const targetModule = importPath.split('/modules/')[1]?.split('/')[0];
-        if (targetModule && targetModule !== currentModule) {
-          console.error(`❌ Boundary Violation: [${currentModule}] imports [${targetModule}] in ${path.relative(process.cwd(), fullPath)}`);
-          violationsCount++;
-        }
+  // 1. Verificación de Fronteras de Módulos (aplica a /modules/ y a /shared/)
+  const isSharedFile = fullPath.includes('/src/shared/');
+  const importMatches = content.match(/from\s+['"]([^'"]+)['"]/g) || [];
+
+  for (const match of importMatches) {
+    const importPath = match.replace(/from\s+['"]/, '').replace(/['"]$/, '');
+
+    // /shared/ NUNCA debe importar desde /modules/
+    if (isSharedFile && importPath.includes('/modules/')) {
+      console.error(`❌ Shared Boundary Violation: Shared file [${path.relative(process.cwd(), fullPath)}] imports from module [${importPath}]`);
+      violationsCount++;
+    }
+
+    // Un módulo de /modules/ no debe importar desde OTRO módulo de /modules/
+    if (currentModule && importPath.includes('/modules/')) {
+      const targetModule = importPath.split('/modules/')[1]?.split('/')[0];
+      if (targetModule && targetModule !== currentModule) {
+        console.error(`❌ Boundary Violation: [${currentModule}] imports [${targetModule}] in ${path.relative(process.cwd(), fullPath)}`);
+        violationsCount++;
       }
     }
   }

@@ -1,6 +1,6 @@
 import { splitCvDataForDrive } from './driveDocumentPackager';
 import { uploadToGoogleDrive, addFolderAsParent, getOrCreateCvFolderInDrive } from './googleDriveBackend';
-import { idbStorage } from '../../../modules/cv-builder/services/storageIndexedDB';
+import { idbStorage } from './storageIndexedDB';
 
 const DRIVE_GLOBAL_HASH_KEY = 'drive_asset_hashes_global';
 const DRIVE_PER_CV_HASH_PREFIX = 'drive_asset_hashes_';

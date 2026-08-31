@@ -2,7 +2,6 @@ import React from 'react';
 import { Plus, Trash2, Copy } from 'lucide-react';
 import { useConfirm } from './ConfirmDialog';
 import { elevationSystem, radius } from '../uiDesignSystem';
-import { SectionManualAdjustment } from '../../../modules/cv-builder/components/editor/SectionManualAdjustment';
 
 const getNestedValue = (obj: any, path: string) => {
   if (!path) return undefined;
@@ -57,6 +56,8 @@ export function RepeatableSection({
   getItemName = (item: any, idx: number) => item?.title || item?.degree || item?.role || item?.course || item?.level || item?.institution || `Ítem #${idx + 1}`,
   designKey = undefined,
   onDeleteSection = undefined,
+  manualAdjustment = undefined,
+  renderTrailingSlot = undefined,
   renderItem
 }: any) {
   const { confirm } = useConfirm();
@@ -228,10 +229,10 @@ export function RepeatableSection({
         </div>
       )}
 
-      {/* Manual Adjustment Footer */}
-      {isVisible && sectionKey && (
+      {/* Manual Adjustment / Trailing Slot Footer */}
+      {isVisible && (manualAdjustment || renderTrailingSlot) && (
         <div className="pt-2">
-          <SectionManualAdjustment sectionId={sectionKey} cvData={cvData} setCvData={setCvData} />
+          {manualAdjustment || (sectionKey && renderTrailingSlot?.(sectionKey))}
         </div>
       )}
     </div>

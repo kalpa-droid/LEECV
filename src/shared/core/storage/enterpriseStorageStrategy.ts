@@ -1,4 +1,4 @@
-import { idbStorage } from '../../../modules/cv-builder/services/storageIndexedDB';
+import { idbStorage } from './storageIndexedDB';
 import { hashBlob } from '../utils/hashBlob';
 
 export interface EnterpriseAssetRef {

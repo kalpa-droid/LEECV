@@ -156,30 +156,32 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData }: Sectio
           </div>
         )}
 
-        {/* Botones de Ordenación Vertical (Subir / Bajar) */}
-        <div className="flex items-center gap-1">
-          <span className="text-[10px] font-bold text-[var(--color-neutral-text-secondary)] mr-1">
-            {currentPos !== undefined ? `Pos: #${currentPos}` : 'Orden:'}
-          </span>
-          <button
-            type="button"
-            onClick={() => handleMove('up')}
-            disabled={currentIndex <= 0}
-            className={`p-1.5 rounded-[${radius.control}] bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer`}
-            title="Subir sección en la columna activa"
-          >
-            <ArrowUp className="w-3.5 h-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => handleMove('down')}
-            disabled={currentIndex === -1 || currentIndex >= activeOrderList.length - 1}
-            className={`p-1.5 rounded-[${radius.control}] bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer`}
-            title="Bajar sección en la columna activa"
-          >
-            <ArrowDown className="w-3.5 h-3.5" />
-          </button>
-        </div>
+        {/* Botones de Ordenación Vertical (Subir / Bajar) - Solo si la sección está en el orden activo */}
+        {assignableToColumns && currentIndex !== -1 && (
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] font-bold text-[var(--color-neutral-text-secondary)] mr-1">
+              {currentPos !== undefined ? `Pos: #${currentPos}` : 'Orden:'}
+            </span>
+            <button
+              type="button"
+              onClick={() => handleMove('up')}
+              disabled={currentIndex <= 0}
+              className={`p-1.5 rounded-[${radius.control}] bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer`}
+              title="Subir sección en la columna activa"
+            >
+              <ArrowUp className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => handleMove('down')}
+              disabled={currentIndex === -1 || currentIndex >= activeOrderList.length - 1}
+              className={`p-1.5 rounded-[${radius.control}] bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer`}
+              title="Bajar sección en la columna activa"
+            >
+              <ArrowDown className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Salto de Página Forzado */}
