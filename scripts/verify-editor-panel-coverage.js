@@ -14,7 +14,7 @@ import { SECTION_CATALOG } from '../src/shared/core/sectionRegistry.js';
 console.log('🔍 Iniciando auditoría anti-regresión de cobertura de formularios en EditorPanel...\n');
 
 const editorPanelPath = path.resolve(process.cwd(), 'src/modules/cv-builder/components/EditorPanel.tsx');
-const personalInfoPath = path.resolve(process.cwd(), 'src/modules/cv-builder/components/PersonalInfoSection.tsx');
+const personalInfoPath = path.resolve(process.cwd(), 'src/modules/cv-builder/components/editor/PersonalInfoSection.tsx');
 
 if (!fs.existsSync(editorPanelPath)) {
   console.error(`❌ ERROR CRÍTICO: No se encontró el archivo ${editorPanelPath}`);
@@ -27,29 +27,28 @@ const personalInfoContent = fs.existsSync(personalInfoPath) ? fs.readFileSync(pe
 let totalChecks = 0;
 let failedChecks = 0;
 
-// Lista de IDs de catálogo que están absorbidos en la pestaña 'personales' dentro de PersonalInfoSection
-const PERSONAL_TAB_ABSORBED = new Set(['contacto', 'datos-personales', 'frase', 'personales']);
+// ÚNICAS secciones del catálogo cuyo formulario está embebido/absorbido en PersonalInfoSection.tsx
+const PERSONAL_TAB_ABSORBED = new Set(['contacto', 'datos-personales', 'frase']);
 
 for (const entry of SECTION_CATALOG) {
   totalChecks++;
   const sectionId = entry.id;
-  const tabId = entry.tabId || entry.id;
 
-  if (PERSONAL_TAB_ABSORBED.has(sectionId) || PERSONAL_TAB_ABSORBED.has(tabId)) {
-    // Para la pestaña personal, verificamos que EditorPanel maneje 'personales'
+  if (PERSONAL_TAB_ABSORBED.has(sectionId)) {
+    // Para la pestaña personal, verificamos que EditorPanel maneje 'personales' y PersonalInfoSection tenga los campos
     const hasPersonalTabInEditor = editorPanelContent.includes("activeTab === 'personales'");
-    if (hasPersonalTabInEditor) {
+    const hasFieldInPersonalInfo = personalInfoContent.includes('updatePersonalInfo') || personalInfoContent.includes('cvData.personalInfo');
+    if (hasPersonalTabInEditor && hasFieldInPersonalInfo) {
       console.log(`  ✓ Cobertura Formulario [Sección: ${sectionId}] -> Absorbida en pestaña 'personales' OK.`);
     } else {
       console.error(`❌ FALLO DE COBERTURA [Sección: ${sectionId}]: Falta manejador para activeTab === 'personales' en EditorPanel.tsx`);
       failedChecks++;
     }
   } else {
-    // Para secciones independientes, buscamos match en EditorPanel de activeTab === 'id' o activeTab === 'tabId'
+    // Para secciones independientes, buscamos match exacto en EditorPanel de activeTab === 'sectionId'
     const matchesSectionId = editorPanelContent.includes(`activeTab === '${sectionId}'`) || editorPanelContent.includes(`activeTab === "${sectionId}"`);
-    const matchesTabId = editorPanelContent.includes(`activeTab === '${tabId}'`) || editorPanelContent.includes(`activeTab === "${tabId}"`);
 
-    if (matchesSectionId || matchesTabId) {
+    if (matchesSectionId) {
       console.log(`  ✓ Cobertura Formulario [Sección: ${sectionId}] -> Enrutamiento activeTab OK.`);
     } else {
       console.error(`❌ FALLO DE COBERTURA [Sección: ${sectionId}]: No se encontró bloque de formulario para activeTab === '${sectionId}' en EditorPanel.tsx`);

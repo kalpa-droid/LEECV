@@ -14,11 +14,13 @@ import {
   FolderOpen,
   Save,
   Calendar,
-  FileText
+  FileText,
+  Globe
 } from 'lucide-react';
 import { fontOptions } from '../../../data/fontOptions';
 import { getColumnAssignableSections } from '../../../shared/core/sectionRegistry';
 import { getAllPresets, PRESET_COLORS, PRESET_TYPOGRAPHY, PRESET_COLUMNS } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
+import { getAllCvFormats, getCvFormat, getFormatDefaultVisibility } from '../../../shared/core/formats/cvFormatRegistry';
 import { FIELD_CATALOG } from '../../../shared/core/pdf-engine/layers/records/fieldCatalog';
 import { PAGE_SIZES } from '../../../shared/core/pdf-engine/pageSizes';
 import { getSavedCVsList, loadCVById, deleteCVById, saveCV } from '../services/cvStorageService';
@@ -1374,6 +1376,55 @@ export default function EditorPanel({
                     </option>
                   ))}
                 </select>
+              </div>
+            </PanelSection>
+
+            {/* Formato Global & Estándares Internacionales (ATS, US Resume, Europass, Tech, LATAM) */}
+            <PanelSection icon={<Globe className="w-4 h-4 text-[var(--color-accent-base)]" />} title="Estándar & Formato Global (Internacional)">
+              <div className="space-y-2">
+                {getAllCvFormats().map((format) => {
+                  const isSelected = (cvData?.activeFormatId || 'ats-one-column') === format.id;
+                  return (
+                    <button
+                      key={format.id}
+                      type="button"
+                      onClick={() => {
+                        const fmt = getCvFormat(format.id);
+                        const newVis = getFormatDefaultVisibility(format.id);
+                        setCvData((prev: any) => ({
+                          ...prev,
+                          activeFormatId: format.id,
+                          columnLayoutPresetId: fmt.columnLayoutPresetId,
+                          sectionVisibility: {
+                            ...(prev?.sectionVisibility || {}),
+                            ...newVis
+                          }
+                        }));
+                        showSuccess(`Formato "${fmt.name}" aplicado correctamente.`);
+                      }}
+                      className={`w-full p-3 rounded-[${radius.card}] border text-left transition flex flex-col gap-1.5 cursor-pointer ${
+                        isSelected
+                          ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
+                          : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-[var(--color-neutral-text-primary)] flex items-center gap-1.5">
+                          {format.name}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase bg-white border border-[var(--color-neutral-border-strong)] text-[var(--color-neutral-text-secondary)]">
+                            {format.columnLayoutPresetId === 'full-width' ? '1 Columna' : '2 Columnas'}
+                          </span>
+                          {isSelected && <Check className="w-4 h-4 text-[var(--color-accent-base)] flex-shrink-0" />}
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-[var(--color-neutral-text-secondary)] leading-relaxed">
+                        {format.description}
+                      </p>
+                    </button>
+                  );
+                })}
               </div>
             </PanelSection>
 

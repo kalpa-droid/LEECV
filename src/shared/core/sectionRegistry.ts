@@ -45,7 +45,7 @@ export const SECTION_CATALOG: SectionCatalogEntry[] = [
   { id: 'formacion', label: 'Formación Académica', tabId: 'formacion', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['degree'], assignableToColumns: true, shortLabel: 'Formación' },
   { id: 'profesion', label: 'Títulos Profesionales', tabId: 'profesion', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['title'], assignableToColumns: true, shortLabel: 'Profesión' },
   { id: 'habilidades', label: 'Habilidades Técnicas', tabId: 'habilidades', dataType: 'record_list', defaultSectorRole: 'sidebar', assignableToColumns: true, shortLabel: 'Habilidades' },
-  { id: 'competencias', label: 'Competencias Clave', tabId: 'personales', dataType: 'record_list', defaultSectorRole: 'sidebar', assignableToColumns: true, shortLabel: 'Competencias' },
+  { id: 'competencias', label: 'Competencias Clave', tabId: 'competencias', dataType: 'record_list', defaultSectorRole: 'sidebar', assignableToColumns: true, shortLabel: 'Competencias' },
   { id: 'idiomas', label: 'Idiomas', tabId: 'idiomas', dataType: 'record_list', defaultSectorRole: 'sidebar', assignableToColumns: true, shortLabel: 'Idiomas' },
   { id: 'proyectos', label: 'Proyectos', tabId: 'proyectos', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['title'], assignableToColumns: true, shortLabel: 'Proyectos' },
   { id: 'publicaciones', label: 'Publicaciones', tabId: 'publicaciones', dataType: 'record_list', defaultSectorRole: 'main', assignableToColumns: true, shortLabel: 'Publicaciones' },

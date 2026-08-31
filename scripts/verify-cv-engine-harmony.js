@@ -579,9 +579,21 @@ const formatRegistryPath = path.join(ROOT, 'src/shared/core/formats/cvFormatRegi
 if (fs.existsSync(formatRegistryPath)) {
   const fmtContent = fs.readFileSync(formatRegistryPath, 'utf-8');
   check(
-    'cvFormatRegistry.ts implementa getCvFormat y define los 5 formatos globales',
-    fmtContent.includes('getCvFormat') && fmtContent.includes('ats-one-column') && fmtContent.includes('us-resume'),
-    'cvFormatRegistry.ts no exporta getCvFormat o le faltan formatos'
+    'cvFormatRegistry.ts implementa getCvFormat, getAllCvFormats, getFormatDefaultVisibility y los 5 formatos globales',
+    fmtContent.includes('getCvFormat') && fmtContent.includes('getAllCvFormats') && fmtContent.includes('getFormatDefaultVisibility') &&
+    fmtContent.includes("'ats-one-column'") && fmtContent.includes("'us-resume'") && fmtContent.includes("'europass'") &&
+    fmtContent.includes("'tech-portfolio'") && fmtContent.includes("'latam-clasico'"),
+    'cvFormatRegistry.ts no define los 5 formatos o le faltan exportaciones'
+  );
+}
+
+const editorPanelPath = path.join(ROOT, 'src/modules/cv-builder/components/EditorPanel.tsx');
+if (fs.existsSync(editorPanelPath)) {
+  const editorContent = fs.readFileSync(editorPanelPath, 'utf-8');
+  check(
+    'EditorPanel.tsx consume el Selector de Formatos Globales (getAllCvFormats & getFormatDefaultVisibility)',
+    editorContent.includes('getAllCvFormats()') && editorContent.includes('getFormatDefaultVisibility') && editorContent.includes('Estándar & Formato Global'),
+    'EditorPanel.tsx no consume el Selector de Formatos Globales'
   );
 }
 
@@ -598,10 +610,13 @@ if (fs.existsSync(fixedObjectsPath)) {
 const sectionRegPath = path.join(ROOT, 'src/shared/core/sectionRegistry.ts');
 if (fs.existsSync(sectionRegPath)) {
   const regContent = fs.readFileSync(sectionRegPath, 'utf-8');
+  const hasCompetenciasTabIdFix = /id:\s*'competencias',\s*label:\s*'Competencias Clave',\s*tabId:\s*'competencias'/.test(regContent);
+  const matches18Sections = regContent.includes("'resumen'") && regContent.includes("'habilidades'") && regContent.includes("'idiomas'") && regContent.includes("'proyectos'") && regContent.includes("'publicaciones'") && regContent.includes("'referencias'");
+
   check(
-    'sectionRegistry.ts contiene las 18 secciones universales en SECTION_CATALOG',
-    regContent.includes("'resumen'") && regContent.includes("'habilidades'") && regContent.includes("'idiomas'") && regContent.includes("'proyectos'"),
-    'sectionRegistry.ts no contiene las 18 secciones universales'
+    'sectionRegistry.ts contiene las 18 secciones universales y competencias tiene tabId "competencias"',
+    matches18Sections && hasCompetenciasTabIdFix,
+    'sectionRegistry.ts no contiene 18 secciones o competencias mantiene tabId engañoso'
   );
 }
 
