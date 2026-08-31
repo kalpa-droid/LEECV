@@ -365,6 +365,9 @@ export default function EditorPanel({
               onChange={(e: any) => setCvData((prev: any) => ({ ...prev, summary: e.target.value }))}
               placeholder="Ej: Profesional con más de 7 años de experiencia liderando proyectos corporativos, optimización de procesos y gestión de equipos multidisciplinarios..."
             />
+            <div className="pt-2 border-t border-[var(--color-neutral-border)]">
+              <SectionManualAdjustment sectionId="resumen" cvData={cvData} setCvData={setCvData} />
+            </div>
           </div>
         )}
 
@@ -766,6 +769,9 @@ export default function EditorPanel({
               }}
               rawImageSrc={rawCertSrc}
             />
+            <div className="pt-2 border-t border-[var(--color-neutral-border)]">
+              <SectionManualAdjustment sectionId="certificados" cvData={cvData} setCvData={setCvData} />
+            </div>
               </>
             )}
           </div>
@@ -900,6 +906,9 @@ export default function EditorPanel({
                   placeholder="Ej: Salta, Argentina"
                 />
               </div>
+            </div>
+            <div className="pt-2 border-t border-[var(--color-neutral-border)]">
+              <SectionManualAdjustment sectionId="firma" cvData={cvData} setCvData={setCvData} />
             </div>
               </>
             )}

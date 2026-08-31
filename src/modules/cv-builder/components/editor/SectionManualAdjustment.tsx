@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ArrowUp, ArrowDown, Columns, Scissors, Check } from 'lucide-react';
 import { SECTION_CATALOG } from '../../../../shared/core/sectionRegistry';
 import { colorSystem, radius, elevationSystem } from '../../../../shared/core/uiDesignSystem';
@@ -9,10 +9,27 @@ interface SectionManualAdjustmentProps {
   setCvData: React.Dispatch<React.SetStateAction<any>>;
 }
 
+const MOUNTED_MANUAL_ADJUSTMENTS = new Set<string>();
+
+export function getMountedManualAdjustments(): Set<string> {
+  return MOUNTED_MANUAL_ADJUSTMENTS;
+}
+
 const DEFAULT_SECUNDARIA = ['contacto', 'personales', 'frase', 'informatica', 'competencias', 'ecologia'];
 const DEFAULT_PRIMARIA = ['personales', 'formacion', 'profesion', 'experiencia', 'cursos', 'ecologia'];
 
 export function SectionManualAdjustment({ sectionId, cvData, setCvData }: SectionManualAdjustmentProps) {
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      MOUNTED_MANUAL_ADJUSTMENTS.add(sectionId);
+    }
+    return () => {
+      if (import.meta.env.DEV) {
+        MOUNTED_MANUAL_ADJUSTMENTS.delete(sectionId);
+      }
+    };
+  }, [sectionId]);
+
   if (!cvData || !setCvData) return null;
 
   const catalogEntry = SECTION_CATALOG.find((s) => s.id === sectionId);
@@ -148,7 +165,7 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData }: Sectio
             type="button"
             onClick={() => handleMove('up')}
             disabled={currentIndex <= 0}
-            className="p-1.5 rounded-[${radius.control}] bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer"
+            className={`p-1.5 rounded-[${radius.control}] bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer`}
             title="Subir sección en la columna activa"
           >
             <ArrowUp className="w-3.5 h-3.5" />
@@ -157,7 +174,7 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData }: Sectio
             type="button"
             onClick={() => handleMove('down')}
             disabled={currentIndex === -1 || currentIndex >= activeOrderList.length - 1}
-            className="p-1.5 rounded-[${radius.control}] bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer"
+            className={`p-1.5 rounded-[${radius.control}] bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer`}
             title="Bajar sección en la columna activa"
           >
             <ArrowDown className="w-3.5 h-3.5" />

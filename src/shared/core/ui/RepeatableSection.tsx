@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus, Trash2, Copy } from 'lucide-react';
 import { useConfirm } from './ConfirmDialog';
 import { elevationSystem, radius } from '../uiDesignSystem';
+import { SectionManualAdjustment } from '../../../modules/cv-builder/components/editor/SectionManualAdjustment';
 
 const getNestedValue = (obj: any, path: string) => {
   if (!path) return undefined;
@@ -141,8 +142,8 @@ export function RepeatableSection({
             onClick={handleToggleVisibility}
             className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 ${elevationSystem.raised} cursor-pointer ${
               isVisible
-                ? 'bg-[var(--color-secondary-base)] text-white hover:bg-[var(--color-secondary-hover)]'
-                : 'bg-[var(--color-neutral-text-muted)] text-white hover:opacity-80'
+                ? 'bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] hover:bg-[var(--color-secondary-hover)]'
+                : 'bg-[var(--color-neutral-text-muted)] text-[var(--color-neutral-surface)] hover:opacity-80'
             }`}
           >
             <span>{isVisible ? 'ACTIVADA' : 'DESACTIVADA'}</span>
@@ -152,7 +153,7 @@ export function RepeatableSection({
             <button
               type="button"
               onClick={handleAddItem}
-              className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white ${elevationSystem.raised} transition cursor-pointer`}
+              className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-[var(--color-accent-on-base)] ${elevationSystem.raised} transition cursor-pointer`}
             >
               <Plus className="w-3.5 h-3.5" />
               <span>{addLabel}</span>
@@ -224,6 +225,13 @@ export function RepeatableSection({
               {renderItem(item, idx, (field: string, value: any) => handleUpdateItemField(idx, field, value))}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Manual Adjustment Footer */}
+      {isVisible && sectionKey && (
+        <div className="pt-2">
+          <SectionManualAdjustment sectionId={sectionKey} cvData={cvData} setCvData={setCvData} />
         </div>
       )}
     </div>

@@ -254,6 +254,22 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
                     : 'Al escanear el QR desde un celular, agregará tu contacto directamente a la agenda.'}
                 </p>
               </div>
+
+              {/* Ajuste Manual de Datos Personales */}
+              <div className="pt-2 border-t border-[var(--color-neutral-border)]">
+                <span className="text-[10px] font-bold text-[var(--color-neutral-text-secondary)] uppercase block mb-1">
+                  Ajuste Manual: Datos Personales
+                </span>
+                <SectionManualAdjustment sectionId="datos-personales" cvData={cvData} setCvData={setCvData} />
+              </div>
+
+              {/* Ajuste Manual: Titular Profesional */}
+              <div className="pt-2 border-t border-[var(--color-neutral-border)]">
+                <span className="text-[10px] font-bold text-[var(--color-neutral-text-secondary)] uppercase block mb-1">
+                  Ajuste Manual: Titular Profesional
+                </span>
+                <SectionManualAdjustment sectionId="frase" cvData={cvData} setCvData={setCvData} />
+              </div>
             </div>
           </PanelSection>
         </div>

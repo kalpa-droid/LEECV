@@ -87,3 +87,8 @@ export function getColumnAssignableSections(customSections: any[] = []): Section
 export function getRecordListSections(customSections: any[] = []): SectionCatalogEntry[] {
   return getFullSectionCatalog(customSections).filter(s => s.dataType === 'record_list');
 }
+
+export function getSectionsRequiringManualAdjustment(customSections: any[] = []): SectionCatalogEntry[] {
+  return getFullSectionCatalog(customSections);
+}
+
