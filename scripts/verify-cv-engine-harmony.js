@@ -572,6 +572,39 @@ if (fs.existsSync(canvaDockPath)) {
   );
 }
 
+// ─── 16. Plan v12: Motor de Formatos Globales, Fallback 1-Columna y 18 Secciones Universales ───
+console.log('\n── 16. Plan v12: Formatos Globales, Fallback 1-Columna y 18 Secciones Universales ──');
+
+const formatRegistryPath = path.join(ROOT, 'src/shared/core/formats/cvFormatRegistry.ts');
+if (fs.existsSync(formatRegistryPath)) {
+  const fmtContent = fs.readFileSync(formatRegistryPath, 'utf-8');
+  check(
+    'cvFormatRegistry.ts implementa getCvFormat y define los 5 formatos globales',
+    fmtContent.includes('getCvFormat') && fmtContent.includes('ats-one-column') && fmtContent.includes('us-resume'),
+    'cvFormatRegistry.ts no exporta getCvFormat o le faltan formatos'
+  );
+}
+
+const fixedObjectsPath = path.join(ROOT, 'src/shared/core/pdf-engine/layers/fixedObjects/placeFixedObjects.ts');
+if (fs.existsSync(fixedObjectsPath)) {
+  const fixedContent = fs.readFileSync(fixedObjectsPath, 'utf-8');
+  check(
+    'placeFixedObjects.ts implementa remapeo de fallback para objetos fijos huérfanos en layouts 1-columna',
+    fixedContent.includes('availableSectorIds') && fixedContent.includes('isPrimaryFallbackSector'),
+    'placeFixedObjects.ts no contiene la red de seguridad de fallback'
+  );
+}
+
+const sectionRegPath = path.join(ROOT, 'src/shared/core/sectionRegistry.ts');
+if (fs.existsSync(sectionRegPath)) {
+  const regContent = fs.readFileSync(sectionRegPath, 'utf-8');
+  check(
+    'sectionRegistry.ts contiene las 18 secciones universales en SECTION_CATALOG',
+    regContent.includes("'resumen'") && regContent.includes("'habilidades'") && regContent.includes("'idiomas'") && regContent.includes("'proyectos'"),
+    'sectionRegistry.ts no contiene las 18 secciones universales'
+  );
+}
+
 // ─── Resultado final ───
 console.log(`\n${'═'.repeat(60)}`);
 if (failed === 0) {

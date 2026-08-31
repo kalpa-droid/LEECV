@@ -88,6 +88,38 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
     });
   }
 
+  // Resumen Profesional (Main)
+  if (cvData.summary) {
+    sections.push({
+      id: 'resumen',
+      titleText: getSectionLabel('resumen'),
+      records: [
+        {
+          id: 'rec-summary',
+          kind: 'quote-text',
+          targetSectorRole: 'main',
+          fields: { text: cvData.summary }
+        }
+      ]
+    });
+  }
+
+  // Habilidades Técnicas / Hard Skills (Sidebar)
+  if (Array.isArray(cvData.hardSkills) && cvData.hardSkills.length > 0) {
+    sections.push({
+      id: 'habilidades',
+      titleText: getSectionLabel('habilidades'),
+      records: cvData.hardSkills.map((sk: any, idx: number) => ({
+        id: `rec-hardskill-${idx}`,
+        kind: 'skill',
+        targetSectorRole: 'sidebar',
+        fields: {
+          name: typeof sk === 'string' ? sk : sk.name || sk.title || ''
+        }
+      }))
+    });
+  }
+
   // Competencias Clave (Sidebar)
   const skillList = Array.isArray(skills) && skills.length > 0
     ? skills
@@ -105,6 +137,84 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
       }
     }))
   });
+
+  // Idiomas & Nivel (Sidebar)
+  if (Array.isArray(cvData.languages) && cvData.languages.length > 0) {
+    sections.push({
+      id: 'idiomas',
+      titleText: getSectionLabel('idiomas'),
+      records: cvData.languages.map((lang: any, idx: number) => ({
+        id: `rec-lang-${idx}`,
+        kind: 'languages',
+        targetSectorRole: 'sidebar',
+        fields: {
+          ...lang,
+          idioma: lang.idioma || lang.language || lang.title || lang.name || '',
+          nivel: lang.nivel || lang.level || ''
+        }
+      }))
+    });
+  }
+
+  // Proyectos Destacados (Main)
+  if (Array.isArray(cvData.projects) && cvData.projects.length > 0) {
+    sections.push({
+      id: 'proyectos',
+      titleText: getSectionLabel('proyectos'),
+      records: cvData.projects.map((proj: any, idx: number) => ({
+        id: `rec-proj-${idx}`,
+        kind: 'projects',
+        targetSectorRole: 'main',
+        fields: {
+          ...proj,
+          title: proj.title || proj.name || proj.tituloOGrado || '',
+          institution: proj.institution || proj.institucion || '',
+          year: (proj.year || proj.periodo || '').toString(),
+          details: proj.details || proj.description || proj.descripcion || ''
+        }
+      }))
+    });
+  }
+
+  // Publicaciones & Patentes (Main)
+  if (Array.isArray(cvData.publications) && cvData.publications.length > 0) {
+    sections.push({
+      id: 'publicaciones',
+      titleText: getSectionLabel('publicaciones'),
+      records: cvData.publications.map((pub: any, idx: number) => ({
+        id: `rec-pub-${idx}`,
+        kind: 'publications',
+        targetSectorRole: 'main',
+        fields: {
+          ...pub,
+          title: pub.title || pub.tituloOGrado || '',
+          autor: pub.autor || pub.author || '',
+          institution: pub.institution || pub.institucion || '',
+          year: (pub.year || pub.periodo || '').toString()
+        }
+      }))
+    });
+  }
+
+  // Referencias Laborales (Main)
+  if (Array.isArray(cvData.references) && cvData.references.length > 0) {
+    sections.push({
+      id: 'referencias',
+      titleText: getSectionLabel('referencias'),
+      records: cvData.references.map((ref: any, idx: number) => ({
+        id: `rec-ref-${idx}`,
+        kind: 'references',
+        targetSectorRole: 'main',
+        fields: {
+          ...ref,
+          personaReferencia: ref.personaReferencia || ref.name || ref.persona || '',
+          cargo: ref.cargo || ref.role || '',
+          institution: ref.institution || ref.company || ref.institucion || '',
+          contactoReferencia: ref.contactoReferencia || ref.contact || ref.phone || ref.email || ''
+        }
+      }))
+    });
+  }
 
   // Informática (Sidebar)
   if (Array.isArray(informatics) && informatics.length > 0) {

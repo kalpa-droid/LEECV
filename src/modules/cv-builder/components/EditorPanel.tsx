@@ -32,7 +32,7 @@ import { RepeatableSection } from '../../../shared/core/ui/RepeatableSection';
 import { RecordFormSection } from '../../../shared/core/ui/RecordFormSection';
 import { Field } from '../../../shared/core/ui/Field';
 
-import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
+import { colorSystem, typeScale, elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 
 export default function EditorPanel({ 
   cvData, 
@@ -341,6 +341,126 @@ export default function EditorPanel({
                 placeholder="Ej: Pedagogía Dialógica, Alfabetización Digital, Liderazgo..."
               />
             )}
+          />
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB: RESUMEN PROFESIONAL */}
+        {/* ========================================================================= */}
+        {activeTab === 'resumen' && (
+          <div className="space-y-4 bg-white p-4 rounded-[12px] border border-[var(--color-neutral-border)]">
+            <h3 className={`${typeScale.sectionTitle} uppercase tracking-wide`} style={{ color: colorSystem.neutral.textPrimary }}>
+              Resumen Profesional / Extracto (Elevator Pitch)
+            </h3>
+            <Field
+              id="summary"
+              as="textarea"
+              rows={5}
+              label="Extracto o Perfil Profesional"
+              value={cvData.summary || ''}
+              onChange={(e: any) => setCvData((prev: any) => ({ ...prev, summary: e.target.value }))}
+              placeholder="Ej: Profesional con más de 7 años de experiencia liderando proyectos corporativos, optimización de procesos y gestión de equipos multidisciplinarios..."
+            />
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB: HABILIDADES TÉCNICAS (HARD SKILLS) */}
+        {/* ========================================================================= */}
+        {activeTab === 'habilidades' && (
+          <RepeatableSection
+            sectionKey="habilidades"
+            sectionTitle="Habilidades Técnicas (Hard Skills)"
+            addLabel="Agregar Habilidad Técnica"
+            cvData={cvData}
+            setCvData={setCvData}
+            fieldName="hardSkills"
+            emptyItem="Nueva Habilidad Técnica"
+            itemTitlePrefix="Habilidad"
+            getItemName={(item: any, idx: number) => typeof item === 'string' ? item : (item?.name || item?.title || `Habilidad #${idx + 1}`)}
+            renderItem={(item: any, idx: number) => (
+              <Field
+                label={`Habilidad Técnica #${idx + 1}`}
+                value={typeof item === 'string' ? item : (item?.name || '')}
+                onChange={(e: any) => {
+                  const val = e.target.value;
+                  setCvData((prev: any) => {
+                    const current = [...(Array.isArray(prev.hardSkills) ? prev.hardSkills : [])];
+                    current[idx] = val;
+                    return { ...prev, hardSkills: current };
+                  });
+                }}
+                placeholder="Ej: Python, React, Docker, AutoCAD, SQL, Modelado Financiero, AWS..."
+              />
+            )}
+          />
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB: IDIOMAS & NIVEL CEFR */}
+        {/* ========================================================================= */}
+        {activeTab === 'idiomas' && (
+          <RecordFormSection
+            sectionKey="idiomas"
+            sectionTitle="Idiomas & Nivel de Dominio"
+            kindKey="languages"
+            addLabel="Agregar Idioma"
+            cvData={cvData}
+            setCvData={setCvData}
+            fieldName="languages"
+            itemTitlePrefix="Idioma"
+            helpText="Indica los idiomas que dominas y tu nivel aproximado (A1, A2, B1, B2, C1, C2 o Nativo)."
+          />
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB: PROYECTOS DESTACADOS */}
+        {/* ========================================================================= */}
+        {activeTab === 'proyectos' && (
+          <RecordFormSection
+            sectionKey="proyectos"
+            sectionTitle="Proyectos Destacados & Portafolio"
+            kindKey="projects"
+            addLabel="Agregar Proyecto"
+            cvData={cvData}
+            setCvData={setCvData}
+            fieldName="projects"
+            itemTitlePrefix="Proyecto"
+            helpText="Destaca aplicaciones, desarrollos, iniciativas o portafolios relevantes para tu puesto."
+          />
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB: PUBLICACIONES & PATENTES */}
+        {/* ========================================================================= */}
+        {activeTab === 'publicaciones' && (
+          <RecordFormSection
+            sectionKey="publicaciones"
+            sectionTitle="Publicaciones & Investigaciones"
+            kindKey="publications"
+            addLabel="Agregar Publicación"
+            cvData={cvData}
+            setCvData={setCvData}
+            fieldName="publications"
+            itemTitlePrefix="Publicación"
+            helpText="Artículos científicos, libros, ponencias o patentes que hayas publicado."
+          />
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB: REFERENCIAS LABORALES */}
+        {/* ========================================================================= */}
+        {activeTab === 'referencias' && (
+          <RecordFormSection
+            sectionKey="referencias"
+            sectionTitle="Referencias Laborales & Comprobables"
+            kindKey="references"
+            addLabel="Agregar Referencia"
+            cvData={cvData}
+            setCvData={setCvData}
+            fieldName="references"
+            itemTitlePrefix="Referencia"
+            helpText="Contactos de ex-supervisores o colegas que puedan certificar tu desempeño profesional."
           />
         )}
 

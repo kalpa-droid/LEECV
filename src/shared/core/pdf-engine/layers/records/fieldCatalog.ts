@@ -167,6 +167,14 @@ export const FIELD_CATALOG: Record<string, FieldDefinition> = {
     pdfRole: 'extra',
     designHint: {}
   },
+  idioma: {
+    id: 'idioma',
+    label: 'Idioma',
+    placeholder: 'Ej: Inglés, Portugués, Francés, Alemán',
+    type: 'text',
+    pdfRole: 'title',
+    designHint: {}
+  },
   personaReferencia: {
     id: 'personaReferencia',
     label: 'Nombre de la Referencia',
@@ -226,5 +234,25 @@ export const BUILTIN_RECORD_KINDS: Record<string, RecordKindSchema> = {
     kind: 'course',
     label: 'Proyectos Ecológicos & Sustentables',
     defaultFields: ['tituloOGrado', 'institucion', 'periodo', 'descripcion']
+  },
+  languages: {
+    kind: 'languages',
+    label: 'Idiomas & Nivel de Dominio',
+    defaultFields: ['idioma', 'nivel', 'institucion', 'descripcion']
+  },
+  projects: {
+    kind: 'projects',
+    label: 'Proyectos Destacados',
+    defaultFields: ['tituloOGrado', 'institucion', 'periodo', 'url', 'descripcion']
+  },
+  publications: {
+    kind: 'publications',
+    label: 'Publicaciones & Patentes',
+    defaultFields: ['tituloOGrado', 'autor', 'institucion', 'periodo', 'url', 'descripcion']
+  },
+  references: {
+    kind: 'references',
+    label: 'Referencias Laborales',
+    defaultFields: ['personaReferencia', 'cargo', 'institucion', 'contactoReferencia']
   }
 };

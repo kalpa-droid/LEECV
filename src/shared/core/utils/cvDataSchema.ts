@@ -51,7 +51,13 @@ export function sanitizeCvData(rawCvData: any = {}) {
     },
 
     roles: Array.isArray(data.roles) ? data.roles : [],
+    summary: data.summary || '',
     skills: Array.isArray(data.skills) ? data.skills : (Array.isArray(data.competencias) ? data.competencias : []),
+    hardSkills: Array.isArray(data.hardSkills) ? data.hardSkills : [],
+    languages: Array.isArray(data.languages) ? data.languages : [],
+    references: Array.isArray(data.references) ? data.references : [],
+    projects: Array.isArray(data.projects) ? data.projects : [],
+    publications: Array.isArray(data.publications) ? data.publications : [],
     education: Array.isArray(data.education) ? data.education : [],
     profession: Array.isArray(data.profession) ? data.profession : (Array.isArray(data.professions) ? data.professions : []),
     experience: Array.isArray(data.experience) ? data.experience : [],
@@ -94,35 +100,51 @@ export function sanitizeCvData(rawCvData: any = {}) {
 
     sectionVisibility: {
       personales: data.sectionVisibility?.personales !== false,
+      resumen: data.sectionVisibility?.resumen !== false,
       formacion: data.sectionVisibility?.formacion !== false,
       profesion: data.sectionVisibility?.profesion !== false,
       experiencia: data.sectionVisibility?.experiencia !== false,
+      habilidades: data.sectionVisibility?.habilidades !== false,
+      competencias: data.sectionVisibility?.competencias !== false,
+      idiomas: data.sectionVisibility?.idiomas !== false,
+      proyectos: data.sectionVisibility?.proyectos !== false,
+      publicaciones: data.sectionVisibility?.publicaciones !== false,
+      referencias: data.sectionVisibility?.referencias !== false,
       cursos: data.sectionVisibility?.cursos !== false,
       informatica: data.sectionVisibility?.informatica !== false,
       ecologia: data.sectionVisibility?.ecologia !== false,
       certificados: data.sectionVisibility?.certificados !== false,
-      firma: data.sectionVisibility?.firma !== false
+      firma: data.sectionVisibility?.firma !== false,
+      ...(typeof data.sectionVisibility === 'object' && data.sectionVisibility !== null ? data.sectionVisibility : {})
     },
 
     layout: {
-      columnAssignments: data.layout?.columnAssignments || {
+      columnAssignments: {
         personales: 'secundaria',
+        resumen: 'primaria',
         formacion: 'primaria',
         profesion: 'primaria',
         experiencia: 'primaria',
+        habilidades: 'secundaria',
+        competencias: 'secundaria',
+        idiomas: 'secundaria',
+        proyectos: 'primaria',
+        publicaciones: 'primaria',
+        referencias: 'primaria',
         cursos: 'primaria',
         informatica: 'secundaria',
         ecologia: 'secundaria',
         certificados: 'primaria',
-        firma: 'primaria'
+        firma: 'primaria',
+        ...(data.layout?.columnAssignments || {})
       },
       sectionOrders: {
         secundaria: Array.isArray(data.layout?.sectionOrders?.secundaria)
           ? [...new Set(data.layout.sectionOrders.secundaria)]
-          : ['personales', 'informatica', 'ecologia'],
+          : ['personales', 'habilidades', 'competencias', 'idiomas', 'informatica', 'ecologia'],
         primaria: Array.isArray(data.layout?.sectionOrders?.primaria)
           ? [...new Set(data.layout.sectionOrders.primaria)]
-          : ['personales', 'formacion', 'profesion', 'experiencia', 'cursos', 'ecologia']
+          : ['personales', 'resumen', 'formacion', 'profesion', 'experiencia', 'proyectos', 'publicaciones', 'referencias', 'cursos', 'ecologia']
       },
       sectionPageBreaks: (typeof data.layout?.sectionPageBreaks === 'object' && data.layout?.sectionPageBreaks !== null)
         ? data.layout.sectionPageBreaks

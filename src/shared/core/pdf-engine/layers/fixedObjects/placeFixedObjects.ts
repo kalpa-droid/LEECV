@@ -37,8 +37,17 @@ export function placeFixedObjects(
   sectors: ResolvedSector[],
   fixedObjects: FixedObjectDefinition[]
 ): SectorWithFlowSpace[] {
+  const availableSectorIds = new Set(sectors.map((s) => s.id));
+
   return sectors.map((sector) => {
-    const objectsInSector = fixedObjects.filter((obj) => obj.sectorId === sector.id);
+    // Si el sectorId declarado no existe en la maqueta actual (ej: 'sidebar' en un layout 1-columna 'full-width'),
+    // remapeamos los objetos huérfanos al primer sector disponible (habitualmente 'main').
+    const isPrimaryFallbackSector = sector.id === 'main' || sector === sectors[0];
+    const objectsInSector = fixedObjects.filter((obj) => {
+      if (obj.sectorId === sector.id) return true;
+      if (!availableSectorIds.has(obj.sectorId) && isPrimaryFallbackSector) return true;
+      return false;
+    });
 
     let topConsumedPt = 0;
     let bottomConsumedPt = 0;
