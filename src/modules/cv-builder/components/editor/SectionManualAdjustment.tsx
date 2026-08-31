@@ -121,7 +121,7 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData }: Sectio
   };
 
   return (
-    <div className={`p-2.5 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] space-y-2 text-xs`}>
+    <div data-section-id={sectionId} className={`p-2.5 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] space-y-2 text-xs`}>
       <div className="flex items-center justify-between gap-2 flex-wrap">
         {/* Asignación de Columna (Izquierda / Derecha) */}
         {assignableToColumns && (

@@ -103,10 +103,14 @@ catalog.forEach((sec) => {
 
     const hasPageBreakControl = html.includes('Salto de página en PDF') || html.includes('Salto de p&aacute;gina en PDF');
     const hasColumnControl = html.includes('Columna:') || html.includes('Izquierda') || html.includes('Derecha');
+    const hasMatchingSectionIdAttr = html.includes(`data-section-id="${sec.id}"`);
 
-    if (sec.assignableToColumns) {
+    if (!hasMatchingSectionIdAttr) {
+      console.error(`  ❌ Sección '${sec.id}' (${sec.label}) -> DESCALCE DE ATRIBUTO DOM: data-section-id="${sec.id}" no coincide en el HTML renderizado.`);
+      failedChecks++;
+    } else if (sec.assignableToColumns) {
       if (hasPageBreakControl && hasColumnControl) {
-        console.log(`  ✓ Sección '${sec.id}' (${sec.label}) -> Controles de Columna + Salto de Página renderizados en DOM OK.`);
+        console.log(`  ✓ Sección '${sec.id}' (${sec.label}) -> Controles (data-section-id="${sec.id}" + Columna + Salto de Página) OK en DOM.`);
         passedChecks++;
       } else {
         console.error(`  ❌ Sección '${sec.id}' (${sec.label}) -> FALTA control de ajuste manual en DOM renderizado (hasColumn=${hasColumnControl}, hasBreak=${hasPageBreakControl}).`);
@@ -115,7 +119,7 @@ catalog.forEach((sec) => {
     } else {
       // Para secciones fijas (firma, certificados), debe haber salto de página pero NO selector de columna
       if (hasPageBreakControl && !hasColumnControl) {
-        console.log(`  ✓ Sección fija '${sec.id}' (${sec.label}) -> Salto de página renderizado OK (Columna oculta correctamente).`);
+        console.log(`  ✓ Sección fija '${sec.id}' (${sec.label}) -> Controles (data-section-id="${sec.id}" + Salto de página) OK en DOM (Columna oculta).`);
         passedChecks++;
       } else {
         console.error(`  ❌ Sección fija '${sec.id}' (${sec.label}) -> Fallo en renderizado DOM de sección fija (hasColumn=${hasColumnControl}, hasBreak=${hasPageBreakControl}).`);
