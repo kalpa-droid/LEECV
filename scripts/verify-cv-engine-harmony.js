@@ -444,7 +444,7 @@ if (fs.existsSync(migrationPath)) {
   const migContent = fs.readFileSync(migrationPath, 'utf-8');
   check(
     'cvMigrationEngine.ts define CURRENT_SCHEMA_VERSION y exporta migrateCvData',
-    migContent.includes('CURRENT_SCHEMA_VERSION = 1') && migContent.includes('export function migrateCvData'),
+    migContent.includes('CURRENT_SCHEMA_VERSION =') && migContent.includes('export function migrateCvData'),
     'cvMigrationEngine.ts no exporta migrateCvData'
   );
 }

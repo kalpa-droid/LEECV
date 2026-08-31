@@ -175,23 +175,7 @@ export function RepeatableSection({
         </div>
       </div>
 
-      {isVisible && designKey && (
-        <div className={`p-2.5 ui-bg-card ui-border ui-text-primary rounded-[${radius.card}] border mb-3 flex items-center justify-between text-xs`}>
-          <span className="font-bold">Estilo de Contenedores ({sectionTitle})</span>
-          <select
-            value={cvData.recordCardDesigns?.[designKey] || 'accent-card'}
-            onChange={(e) => setCvData((prev: any) => ({
-              ...prev,
-              recordCardDesigns: { ...(prev.recordCardDesigns || {}), [designKey]: e.target.value }
-            }))}
-            className={`text-xs p-1.5 rounded-[${radius.control}] ui-bg-card ui-border ui-text-primary font-bold outline-none cursor-pointer`}
-          >
-            <option value="accent-card">🎨 Borde Acento</option>
-            <option value="primary-card">🔷 Borde Primario</option>
-            <option value="neutral-card">⚪ Borde Neutro</option>
-          </select>
-        </div>
-      )}
+
 
       {/* Item List Rendering */}
       {isVisible && (

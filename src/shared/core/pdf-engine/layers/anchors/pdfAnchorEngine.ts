@@ -21,18 +21,26 @@ export interface PdfAnchorTarget {
 export const SECTION_TAB_MAPPING: Record<string, string[]> = {
   personales: ['datos-personales', 'contacto', 'nombre-y-cargo'],
   contacto: ['contacto', 'datos-personales'],
+  redes: ['redes'],
   frase: ['frase', 'quote-text', 'marca-y-eslogan'],
   experiencia: ['experiencia', 'profesion'],
   formacion: ['formacion', 'education', 'cursos'],
   competencias: ['competencias', 'skills', 'informatica'],
+  habilidades: ['habilidades', 'hardSkills'],
+  idiomas: ['idiomas', 'languages'],
+  proyectos: ['proyectos', 'projects'],
+  publicaciones: ['publicaciones', 'publications'],
+  referencias: ['referencias', 'references'],
   cursos: ['cursos', 'coursesAndCertificates'],
+  informatica: ['informatica'],
   ecologia: ['ecologia'],
   firma: ['firma']
 };
 
 /**
  * Resuelve determinísticamente el número de página y ratio de desplazamiento
- * para cualquier pestaña o ID de sección recibido.
+ * para cualquier pestaña o ID de sección recibido, posicionando la vista hacia
+ * el último registro o campo visible de dicha sección.
  */
 export function resolveSectionAnchor(
   activeTab: string | undefined,
@@ -79,12 +87,13 @@ export function resolveSectionAnchor(
   const totalInSector = isSidebar ? totalSidebar : totalMain;
 
   const validIndex = matchedIndex >= 0 ? matchedIndex : 0;
-  const verticalRatio = Math.min(0.9, (validIndex / totalInSector) * 0.85);
+  // Posicionamiento preciso al último registro de la sección (+0.8 del span de la sección)
+  const verticalRatio = Math.min(0.95, ((validIndex + 0.8) / totalInSector) * 0.85);
 
   return {
     tabId: normalizedTab,
     sectionId: possibleSectionIds[0],
-    pageIndex: 1, // La primera versión ancla dentro de la vista
+    pageIndex: 1,
     verticalRatio
   };
 }

@@ -14,7 +14,7 @@
 
 import { sanitizeCvData } from '../utils/cvDataSchema';
 
-export const CURRENT_SCHEMA_VERSION = 1;
+export const CURRENT_SCHEMA_VERSION = 2;
 
 export function migrateCvData(rawCvData: any): any {
   if (!rawCvData || typeof rawCvData !== 'object') {
@@ -46,8 +46,36 @@ export function migrateCvData(rawCvData: any): any {
     currentVersion = 1;
   }
 
-  // Futuras versiones (ej. v1 -> v2) se encadenan aquí de forma secuencial:
-  // if (currentVersion < 2) { ... currentVersion = 2; }
+  // Migration v1 -> v2: Migración de email y website de personalInfo hacia sección universal redes
+  if (currentVersion < 2) {
+    migrated.schemaVersion = 2;
+    if (!Array.isArray(migrated.redes)) {
+      migrated.redes = [];
+    }
+
+    const emailVal = migrated.personalInfo?.email;
+    const websiteVal = migrated.personalInfo?.website;
+
+    if (emailVal && !migrated.redes.some((r: any) => r?.plataforma === 'Email' || r?.url === emailVal)) {
+      migrated.redes.push({
+        id: `red_${Date.now()}_email`,
+        plataforma: 'Email',
+        usuario: emailVal,
+        url: emailVal.includes('@') ? `mailto:${emailVal}` : emailVal
+      });
+    }
+
+    if (websiteVal && !migrated.redes.some((r: any) => r?.plataforma === 'Sitio Web / Portafolio' || r?.url === websiteVal)) {
+      migrated.redes.push({
+        id: `red_${Date.now()}_web`,
+        plataforma: 'Sitio Web / Portafolio',
+        usuario: websiteVal,
+        url: websiteVal.startsWith('http') ? websiteVal : `https://${websiteVal}`
+      });
+    }
+
+    currentVersion = 2;
+  }
 
   // Retornar objeto desinfectado garantizado
   return sanitizeCvData(migrated);

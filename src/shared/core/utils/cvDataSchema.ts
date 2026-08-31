@@ -56,6 +56,8 @@ export function sanitizeCvData(rawCvData: any = {}) {
     skills: Array.isArray(data.skills) ? data.skills : (Array.isArray(data.competencias) ? data.competencias : []),
     hardSkills: Array.isArray(data.hardSkills) ? data.hardSkills : [],
     languages: Array.isArray(data.languages) ? data.languages : [],
+    socialNetworks: Array.isArray(data.socialNetworks) ? data.socialNetworks : [],
+    redes: Array.isArray(data.redes) ? data.redes : [],
     references: Array.isArray(data.references) ? data.references : [],
     projects: Array.isArray(data.projects) ? data.projects : [],
     publications: Array.isArray(data.publications) ? data.publications : [],
@@ -101,6 +103,7 @@ export function sanitizeCvData(rawCvData: any = {}) {
 
     sectionVisibility: {
       personales: data.sectionVisibility?.personales !== false,
+      redes: data.sectionVisibility?.redes !== false,
       resumen: data.sectionVisibility?.resumen !== false,
       formacion: data.sectionVisibility?.formacion !== false,
       profesion: data.sectionVisibility?.profesion !== false,
@@ -122,6 +125,7 @@ export function sanitizeCvData(rawCvData: any = {}) {
     layout: {
       columnAssignments: {
         personales: 'secundaria',
+        redes: 'secundaria',
         resumen: 'primaria',
         formacion: 'primaria',
         profesion: 'primaria',

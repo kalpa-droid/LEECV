@@ -101,7 +101,7 @@ catalog.forEach((sec) => {
       );
     }
 
-    const hasPageBreakControl = html.includes('Salto de página en PDF') || html.includes('Salto de p&aacute;gina en PDF');
+    const hasPageBreakControl = html.includes('Salto de página') || html.includes('Salto de p&aacute;gina');
     const hasColumnControl = html.includes('Columna:') || html.includes('Izquierda') || html.includes('Derecha');
     const hasMatchingSectionIdAttr = html.includes(`data-section-id="${sec.id}"`);
 

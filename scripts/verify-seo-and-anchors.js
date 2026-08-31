@@ -6,7 +6,7 @@
 import fs from 'fs';
 import path from 'path';
 import { generateWebApplicationSchema, CENTRAL_SEO_CONFIG } from '../src/shared/core/seo/seoIndexingEngine.js';
-import { resolveSectionAnchor, SECTION_TAB_MAPPING } from '../src/shared/core/pdf-engine/layers/anchors/pdfAnchorEngine.js';
+import { resolveSectionAnchor } from '../src/shared/core/pdf-engine/layers/anchors/pdfAnchorEngine.js';
 import { getAllPresets } from '../src/shared/core/pdf-engine/layers/presets/presetRegistry.js';
 
 console.log('🔍 Iniciando auditoría profunda de SEO, Indexación Google y Motor de Anclaje PDF...\n');

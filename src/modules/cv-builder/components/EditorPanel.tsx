@@ -29,6 +29,7 @@ import PersonalInfoSection from './editor/PersonalInfoSection';
 import { PanelSection } from './editor/PanelSection';
 import { SectionManualAdjustment } from './editor/SectionManualAdjustment';
 import { applyPresetLevel } from '../../../shared/core/pdf-engine/layers/presets/presetHierarchyEngine';
+import { activateSection } from '../../../shared/core/sections/sectionActivationEngine';
 
 import { useToast } from '../../../shared/core/ui/Toast';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
@@ -313,6 +314,63 @@ export default function EditorPanel({
           <PersonalInfoSection 
             onOpenPhotoCropper={onOpenPhotoCropper}
             registeredItems={registeredItems}
+          />
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 1.2: REDES SOCIALES & ENLACES */}
+        {/* ========================================================================= */}
+        {activeTab === 'redes' && (
+          <RepeatableSection
+            sectionKey="redes"
+            sectionTitle="Redes Sociales & Enlaces"
+            addLabel="Agregar Red / Enlace"
+            cvData={cvData}
+            setCvData={setCvData}
+            fieldName="redes"
+            emptyItem={{ plataforma: 'LinkedIn', usuario: '', url: '' }}
+            itemTitlePrefix="Red Social / Enlace"
+            getItemName={(item: any, idx: number) => item?.plataforma || item?.usuario || item?.url || `Red #${idx + 1}`}
+            renderItem={(item: any, idx: number, updateField: (field: string, val: any) => void) => (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-[var(--color-neutral-text-secondary)] mb-1">Plataforma / Red</label>
+                    <select
+                      value={item.plataforma || 'LinkedIn'}
+                      onChange={(e) => updateField('plataforma', e.target.value)}
+                      className="w-full text-xs p-2 rounded-[10px] bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer"
+                    >
+                      <option value="LinkedIn">LinkedIn</option>
+                      <option value="GitHub / GitLab">GitHub / GitLab</option>
+                      <option value="Sitio Web / Portafolio">Sitio Web / Portafolio</option>
+                      <option value="Email">Email</option>
+                      <option value="WhatsApp Business">WhatsApp Business</option>
+                      <option value="X / Twitter">X / Twitter</option>
+                      <option value="Instagram">Instagram</option>
+                      <option value="Facebook">Facebook</option>
+                      <option value="YouTube">YouTube</option>
+                      <option value="TikTok">TikTok</option>
+                      <option value="Behance / Dribbble">Behance / Dribbble</option>
+                      <option value="Otra Red / Enlace">Otra Red / Enlace</option>
+                    </select>
+                  </div>
+                  <Field
+                    label="Nombre de Usuario / Leyenda"
+                    value={item.usuario || ''}
+                    onChange={(e: any) => updateField('usuario', e.target.value)}
+                    placeholder="Ej: @usuario o Mi Perfil"
+                  />
+                </div>
+                <Field
+                  label="URL Completa / Enlace Web"
+                  value={item.url || ''}
+                  onChange={(e: any) => updateField('url', e.target.value)}
+                  placeholder="Ej: https://linkedin.com/in/usuario"
+                />
+              </div>
+            )}
+            manualAdjustment={<SectionManualAdjustment sectionId="redes" cvData={cvData} setCvData={setCvData} />}
           />
         )}
 

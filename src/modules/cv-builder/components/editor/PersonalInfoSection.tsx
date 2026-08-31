@@ -174,21 +174,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
                 placeholder="Ej: 387-155121515"
               />
 
-              <Field
-                id="email"
-                label="Correo Electrónico"
-                value={cvData.personalInfo?.email || ''}
-                onChange={(e: any) => updatePersonalInfo('email', e.target.value)}
-                placeholder="Ej: Monicadanielaburgos@yahoo.com.ar"
-              />
 
-              <Field
-                id="website"
-                label="Sitio Web Personal / Portafolio"
-                value={cvData.personalInfo?.website || ''}
-                onChange={(e: any) => updatePersonalInfo('website', e.target.value)}
-                placeholder="Ej: https://mi-portafolio.com"
-              />
 
               <div className="grid grid-cols-2 gap-3">
                 <Field

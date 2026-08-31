@@ -25,7 +25,7 @@ export const CV_FORMAT_REGISTRY: Record<string, CvFormatDefinition> = {
     name: 'ATS 1 Columna (Corporativo Global)',
     description: 'Estructura lineal de 1 sola columna en flujo continuo. Máxima compatibilidad con sistemas ATS de selección corporativa.',
     columnLayoutPresetId: 'full-width',
-    defaultVisibleSections: ['contacto', 'resumen', 'experiencia', 'formacion', 'habilidades', 'idiomas', 'certificados'],
+    defaultVisibleSections: ['contacto', 'redes', 'resumen', 'experiencia', 'formacion', 'habilidades', 'idiomas', 'certificados'],
     hiddenPersonalFields: [],
     recommendedPresetIds: ['cv-clasico', 'minimal-editorial']
   },
@@ -35,7 +35,7 @@ export const CV_FORMAT_REGISTRY: Record<string, CvFormatDefinition> = {
     name: 'US Resume (EE.UU. / Canadá)',
     description: 'Estándar norteamericano con cumplimiento estricto de leyes de no discriminación (sin foto, edad ni estado civil).',
     columnLayoutPresetId: 'full-width',
-    defaultVisibleSections: ['contacto', 'resumen', 'experiencia', 'habilidades', 'formacion', 'proyectos'],
+    defaultVisibleSections: ['contacto', 'redes', 'resumen', 'experiencia', 'habilidades', 'formacion', 'proyectos'],
     hiddenPersonalFields: ['profilePhoto', 'birthDate', 'estadoCivil', 'dni', 'cuit', 'nacionalidad'],
     recommendedPresetIds: ['minimal-editorial', 'cv-clasico']
   },
@@ -45,7 +45,7 @@ export const CV_FORMAT_REGISTRY: Record<string, CvFormatDefinition> = {
     name: 'Europass (Estándar Europeo)',
     description: 'Estructura europea unificada con énfasis en Formación, Experiencia e Idiomas clasificados por marco CEFR (A1-C2).',
     columnLayoutPresetId: 'sidebar-left',
-    defaultVisibleSections: ['contacto', 'datos-personales', 'resumen', 'experiencia', 'formacion', 'idiomas', 'habilidades'],
+    defaultVisibleSections: ['contacto', 'datos-personales', 'redes', 'resumen', 'experiencia', 'formacion', 'idiomas', 'habilidades'],
     hiddenPersonalFields: [],
     recommendedPresetIds: ['modern-corporate', 'cv-clasico']
   },
@@ -55,7 +55,7 @@ export const CV_FORMAT_REGISTRY: Record<string, CvFormatDefinition> = {
     name: 'Tech & Software Portfolio',
     description: 'Orientado a desarrolladores, ingenieros y perfiles tecnológicos. Prioriza Proyectos, Habilidades Técnicas y Repositorios.',
     columnLayoutPresetId: 'sidebar-left',
-    defaultVisibleSections: ['contacto', 'resumen', 'proyectos', 'habilidades', 'experiencia', 'formacion', 'publicaciones'],
+    defaultVisibleSections: ['contacto', 'redes', 'resumen', 'proyectos', 'habilidades', 'experiencia', 'formacion', 'publicaciones'],
     hiddenPersonalFields: [],
     recommendedPresetIds: ['creative-sustentable', 'modern-corporate']
   },
@@ -65,7 +65,7 @@ export const CV_FORMAT_REGISTRY: Record<string, CvFormatDefinition> = {
     name: 'LATAM Ejecutivo / Tradicional',
     description: 'Formato clásico de 2 columnas ampliamente utilizado en América Latina con foto de perfil y datos completos.',
     columnLayoutPresetId: 'sidebar-left',
-    defaultVisibleSections: ['contacto', 'datos-personales', 'frase', 'experiencia', 'formacion', 'profesion', 'competencias', 'cursos', 'ecologia', 'firma'],
+    defaultVisibleSections: ['contacto', 'datos-personales', 'frase', 'redes', 'experiencia', 'formacion', 'profesion', 'competencias', 'cursos', 'ecologia', 'firma'],
     hiddenPersonalFields: [],
     recommendedPresetIds: ['cv-clasico', 'modern-corporate']
   }
@@ -87,7 +87,7 @@ export function getFormatDefaultVisibility(formatId: string): Record<string, boo
   const visibleSet = new Set(format.defaultVisibleSections);
   const result: Record<string, boolean> = {};
 
-  ['contacto', 'datos-personales', 'frase', 'resumen', 'experiencia', 'formacion', 'profesion', 'habilidades', 'competencias', 'idiomas', 'proyectos', 'publicaciones', 'referencias', 'cursos', 'informatica', 'ecologia', 'certificados', 'firma'].forEach((secId) => {
+  ['contacto', 'datos-personales', 'frase', 'redes', 'resumen', 'experiencia', 'formacion', 'profesion', 'habilidades', 'competencias', 'idiomas', 'proyectos', 'publicaciones', 'referencias', 'cursos', 'informatica', 'ecologia', 'certificados', 'firma'].forEach((secId) => {
     result[secId] = visibleSet.has(secId);
   });
 

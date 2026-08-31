@@ -1,10 +1,11 @@
 import React, { useMemo, useRef } from 'react';
 import { 
-  Palette, Menu, X, Plus, Sparkles, ChevronDown, ChevronRight
+  Palette, Menu, X, Plus, Sparkles
 } from 'lucide-react';
 import { DomSectionIcon } from '../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
 import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { resolveActiveDockSections, DOCK_SPECIAL_TABS } from '../../../shared/core/sections/activeSectionsDockEngine';
+import { activateSection } from '../../../shared/core/sections/sectionActivationEngine';
 
 export interface CanvaIconDockProps {
   cvData?: any;
@@ -28,7 +29,7 @@ const personalTab = DOCK_SPECIAL_TABS.personal;
 
 export default function CanvaIconDock({ 
   cvData,
-  setCvData: _setCvData,
+  setCvData,
   activeTab, 
   setActiveTab, 
   isPanelOpen, 
@@ -40,8 +41,13 @@ export default function CanvaIconDock({
   // Motor dinámico único: reemplaza listas fijas y customSections.map
   const dockSections = useMemo(() => resolveActiveDockSections(cvData), [cvData]);
 
-  const handleTabClick = (tabId: string) => {
-    if (activeTab === tabId && isPanelOpen) {
+  const handleTabClick = (tabId: string, isDisabled?: boolean) => {
+    if (isDisabled && cvData && setCvData) {
+      const { updatedCvData } = activateSection(cvData, tabId);
+      setCvData(updatedCvData);
+    }
+
+    if (activeTab === tabId && isPanelOpen && !isDisabled) {
       setIsPanelOpen(false);
     } else {
       setActiveTab(tabId);
@@ -187,38 +193,39 @@ export default function CanvaIconDock({
           {/* 7..N. SECCIONES DINÁMICAS (En 2 Columnas) */}
           {dockSections.map((sec) => {
             const isActive = activeTab === sec.id && isPanelOpen;
+            const isDisabled = sec.isDisabled === true;
             return (
               <button
                 key={sec.id}
                 type="button"
-                onClick={() => handleTabClick(sec.id)}
+                onClick={() => handleTabClick(sec.id, isDisabled)}
                 className={`w-9 h-9 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer ${
-                  isActive
-                    ? sec.isCustom
-                      ? `bg-[var(--color-accent-purple)] text-white ${elevationSystem.floating} shadow-[var(--color-accent-purple)]/30 scale-105`
-                      : `bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.floating} shadow-[var(--color-secondary-base)]/30 scale-105`
-                    : sec.isCustom
-                      ? 'bg-[var(--ui-dock-hover)] text-[var(--color-secondary-bright)] border border-[var(--color-secondary-base)]/40 hover:bg-[var(--color-secondary-muted)]'
-                      : 'text-[var(--ui-dock-text-muted)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--ui-dock-hover)]'
+                  isDisabled
+                    ? 'opacity-40 hover:opacity-80 border border-dashed border-[var(--ui-dock-border)] bg-transparent'
+                    : isActive
+                      ? sec.isCustom
+                        ? `bg-[var(--color-accent-purple)] text-white ${elevationSystem.floating} shadow-[var(--color-accent-purple)]/30 scale-105`
+                        : `bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.floating} shadow-[var(--color-secondary-base)]/30 scale-105`
+                      : sec.isCustom
+                        ? 'bg-[var(--ui-dock-hover)] text-[var(--color-secondary-bright)] border border-[var(--color-secondary-base)]/40 hover:bg-[var(--color-secondary-muted)]'
+                        : 'text-[var(--ui-dock-text-muted)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--ui-dock-hover)]'
                 }`}
-                title={sec.label}
+                title={isDisabled ? `${sec.label} (Desactivada - Clic para Activar)` : sec.label}
               >
                 <DomSectionIcon
                   iconId={sec.iconId}
                   className="w-4.5 h-4.5"
-                  color={sec.isCustom ? (isActive ? '#FFFFFF' : 'var(--color-secondary-bright)') : (isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)')}
+                  color={isDisabled ? 'var(--ui-dock-text-muted)' : sec.isCustom ? (isActive ? '#FFFFFF' : 'var(--color-secondary-bright)') : (isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)')}
                 />
+                {isDisabled && (
+                  <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-[var(--color-status-warning-text)] border border-[var(--ui-bg-dock)]" title="Desactivada" />
+                )}
                 <span className={`absolute left-24 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
-                  {sec.label}
+                  {isDisabled ? `${sec.label} (Clic para activar)` : sec.label}
                 </span>
               </button>
             );
           })}
-        </div>
-
-        {/* Indicador sutil de scroll */}
-        <div className="pt-2 pb-1 flex flex-col items-center justify-center text-[var(--color-secondary-bright)] animate-bounce opacity-70 hover:opacity-100 transition cursor-pointer shrink-0 mt-auto" title="Desliza para ver más secciones">
-          <ChevronDown className="w-3.5 h-3.5 stroke-[2.5]" />
         </div>
       </aside>
 
@@ -230,13 +237,13 @@ export default function CanvaIconDock({
             e.currentTarget.scrollLeft += (e.deltaY || e.deltaX);
           }
         }}
-        className={`md:hidden fixed bottom-0 left-0 right-0 z-[999] bg-[var(--ui-bg-dock)] border-t border-[var(--ui-dock-border)] p-1.5 grid grid-rows-2 grid-flow-col gap-1.5 overflow-x-auto no-scrollbar ${elevationSystem.overlay} select-none h-[76px] items-center`}
+        className={`md:hidden fixed bottom-0 left-0 right-0 z-[999] bg-[var(--ui-bg-dock)] border-t border-[var(--ui-dock-border)] p-1 grid grid-rows-2 grid-flow-col gap-1 overflow-x-auto no-scrollbar ${elevationSystem.overlay} select-none h-[76px] items-center`}
       >
         {/* 1. BOTÓN MENÚ (Doble Fila / Ocupa 2 líneas en Celular) */}
         <button
           type="button"
           onClick={() => setIsPanelOpen(!isPanelOpen)}
-          className={`row-span-2 h-full w-11 rounded-[8px] flex items-center justify-center shrink-0 transition cursor-pointer active:scale-95 border ${
+          className={`row-span-2 h-full w-[42px] rounded-[8px] flex items-center justify-center shrink-0 transition cursor-pointer active:scale-95 border ${
             isPanelOpen
               ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--color-accent-base)] ${elevationSystem.raised}`
               : 'bg-[var(--ui-bg-panel)] text-[var(--ui-dock-text-muted)] border-[var(--ui-border)]'
@@ -250,7 +257,7 @@ export default function CanvaIconDock({
         <button
           type="button"
           onClick={() => handleTabClick(addSectionTab.id)}
-          className={`row-span-2 h-full w-11 rounded-[8px] flex items-center justify-center shrink-0 cursor-pointer border transition ${
+          className={`row-span-2 h-full w-[42px] rounded-[8px] flex items-center justify-center shrink-0 cursor-pointer border transition ${
             activeTab === addSectionTab.id && isPanelOpen
               ? 'bg-[var(--color-status-success-base)] border-[var(--color-status-success-base)] text-[var(--color-status-success-on-base)]'
               : 'bg-[var(--ui-bg-panel)] border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-bright)]'
@@ -269,7 +276,7 @@ export default function CanvaIconDock({
               key={tab.id}
               type="button"
               onClick={() => handleTabClick(tab.id)}
-              className={`row-span-2 h-full w-11 rounded-[8px] flex items-center justify-center shrink-0 transition cursor-pointer border ${
+              className={`row-span-2 h-full w-[42px] rounded-[8px] flex items-center justify-center shrink-0 transition cursor-pointer border ${
                 isActive
                   ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--color-accent-base)] ${elevationSystem.raised}`
                   : 'bg-[var(--ui-bg-panel)] text-[var(--ui-dock-text-muted)] border-[var(--ui-border)]'
@@ -288,7 +295,7 @@ export default function CanvaIconDock({
             <button
               type="button"
               onClick={() => handleTabClick(portadaTab.id)}
-              className={`w-8 h-8 rounded-[6px] flex items-center justify-center shrink-0 cursor-pointer border transition ${
+              className={`w-7.5 h-7.5 rounded-[6px] flex items-center justify-center shrink-0 cursor-pointer border transition ${
                 isActive
                   ? 'bg-[var(--color-accent-base)] border-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
                   : 'bg-[var(--ui-bg-panel)] border-[var(--ui-border)] text-[var(--color-secondary-bright)]'
@@ -304,7 +311,7 @@ export default function CanvaIconDock({
         <button
           type="button"
           onClick={onOpenAtsCheck}
-          className="w-8 h-8 rounded-[6px] flex items-center justify-center shrink-0 border bg-[var(--ui-bg-panel)] border-[var(--color-status-warning-text)]/80 text-[var(--color-status-warning-text)] active:scale-95 cursor-pointer"
+          className="w-7.5 h-7.5 rounded-[6px] flex items-center justify-center shrink-0 border bg-[var(--ui-bg-panel)] border-[var(--color-status-warning-text)]/80 text-[var(--color-status-warning-text)] active:scale-95 cursor-pointer"
           title="Auditoría ATS"
         >
           <Sparkles className="w-4 h-4 text-[var(--color-status-warning-text)]" />
@@ -317,7 +324,7 @@ export default function CanvaIconDock({
             <button
               type="button"
               onClick={() => handleTabClick(personalTab.id)}
-              className={`w-8 h-8 rounded-[6px] flex items-center justify-center shrink-0 transition cursor-pointer border ${
+              className={`w-7.5 h-7.5 rounded-[6px] flex items-center justify-center shrink-0 transition cursor-pointer border ${
                 isActive
                   ? `bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.raised}`
                   : 'bg-[var(--ui-bg-panel)] text-[var(--color-secondary-bright)] border-[var(--color-secondary-base)]/30'
@@ -332,35 +339,36 @@ export default function CanvaIconDock({
         {/* 7..N. SECCIONES DINÁMICAS (En 2 Filas Horizontales) */}
         {dockSections.map((sec) => {
           const isActive = activeTab === sec.id && isPanelOpen;
+          const isDisabled = sec.isDisabled === true;
           return (
             <button
               key={sec.id}
               type="button"
-              onClick={() => handleTabClick(sec.id)}
-              className={`w-8 h-8 rounded-[6px] flex items-center justify-center shrink-0 transition cursor-pointer border ${
-                isActive
-                  ? sec.isCustom
-                    ? `bg-[var(--color-accent-purple)] text-white ${elevationSystem.raised}`
-                    : `bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.raised}`
-                  : sec.isCustom
-                    ? 'bg-[var(--ui-bg-panel)] text-[var(--color-accent-purple-bright)] border-[var(--color-accent-purple)]/30'
-                    : 'bg-[var(--ui-bg-panel)] text-[var(--color-secondary-bright)] border-[var(--color-secondary-base)]/30'
+              onClick={() => handleTabClick(sec.id, isDisabled)}
+              className={`w-7.5 h-7.5 rounded-[6px] flex items-center justify-center shrink-0 transition cursor-pointer border relative ${
+                isDisabled
+                  ? 'opacity-40 border-dashed border-[var(--ui-border)] bg-transparent'
+                  : isActive
+                    ? sec.isCustom
+                      ? `bg-[var(--color-accent-purple)] text-white ${elevationSystem.raised}`
+                      : `bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.raised}`
+                    : sec.isCustom
+                      ? 'bg-[var(--ui-bg-panel)] text-[var(--color-accent-purple-bright)] border-[var(--color-accent-purple)]/30'
+                      : 'bg-[var(--ui-bg-panel)] text-[var(--color-secondary-bright)] border-[var(--color-secondary-base)]/30'
               }`}
-              title={sec.label}
+              title={isDisabled ? `${sec.label} (Desactivada - Clic para Activar)` : sec.label}
             >
               <DomSectionIcon
                 iconId={sec.iconId}
                 className="w-4 h-4"
-                color={sec.isCustom ? (isActive ? '#FFFFFF' : 'var(--color-accent-purple-bright)') : (isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)')}
+                color={isDisabled ? 'var(--ui-dock-text-muted)' : sec.isCustom ? (isActive ? '#FFFFFF' : 'var(--color-accent-purple-bright)') : (isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)')}
               />
+              {isDisabled && (
+                <span className="absolute top-0 right-0 w-1.5 h-1.5 rounded-full bg-[var(--color-status-warning-text)]" />
+              )}
             </button>
           );
         })}
-
-        {/* FLECHA SUTIL Y ELEGANTE EN MÓVIL */}
-        <div className="shrink-0 px-1 flex items-center justify-center text-[var(--color-accent-amber-bright)] animate-pulse opacity-90" title="Desliza horizontalmente para ver más secciones">
-          <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
-        </div>
       </nav>
     </>
   );

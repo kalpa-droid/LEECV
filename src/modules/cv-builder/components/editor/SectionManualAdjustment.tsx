@@ -7,6 +7,7 @@ interface SectionManualAdjustmentProps {
   sectionId: string;
   cvData: any;
   setCvData: React.Dispatch<React.SetStateAction<any>>;
+  designKey?: string;
 }
 
 const MOUNTED_MANUAL_ADJUSTMENTS = new Set<string>();
@@ -15,10 +16,10 @@ export function getMountedManualAdjustments(): Set<string> {
   return MOUNTED_MANUAL_ADJUSTMENTS;
 }
 
-const DEFAULT_SECUNDARIA = ['contacto', 'personales', 'frase', 'informatica', 'competencias', 'ecologia'];
+const DEFAULT_SECUNDARIA = ['contacto', 'personales', 'frase', 'redes', 'informatica', 'competencias', 'ecologia'];
 const DEFAULT_PRIMARIA = ['personales', 'formacion', 'profesion', 'experiencia', 'cursos', 'ecologia'];
 
-export function SectionManualAdjustment({ sectionId, cvData, setCvData }: SectionManualAdjustmentProps) {
+export function SectionManualAdjustment({ sectionId, cvData, setCvData, designKey }: SectionManualAdjustmentProps) {
   useEffect(() => {
     if (import.meta.env.DEV) {
       MOUNTED_MANUAL_ADJUSTMENTS.add(sectionId);
@@ -31,6 +32,9 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData }: Sectio
   }, [sectionId]);
 
   if (!cvData || !setCvData) return null;
+
+  const activeDesignKey = designKey || sectionId;
+  const currentCardDesign = cvData.recordCardDesigns?.[activeDesignKey] || 'accent-card';
 
   const catalogEntry = getSection(sectionId, cvData.customSections || []);
   const assignableToColumns = catalogEntry ? catalogEntry.assignableToColumns !== false : true;
@@ -120,6 +124,16 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData }: Sectio
     }));
   };
 
+  const handleSetCardDesign = (designValue: string) => {
+    setCvData((prev: any) => ({
+      ...prev,
+      recordCardDesigns: {
+        ...(prev.recordCardDesigns || {}),
+        [activeDesignKey]: designValue
+      }
+    }));
+  };
+
   return (
     <div data-section-id={sectionId} className={`p-2.5 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] space-y-2 text-xs`}>
       <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -156,7 +170,7 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData }: Sectio
           </div>
         )}
 
-        {/* Botones de Ordenación Vertical (Subir / Bajar) - Solo si la sección está en el orden activo */}
+        {/* Botones de Ordenación Vertical (Subir / Bajar) */}
         {assignableToColumns && currentIndex !== -1 && (
           <div className="flex items-center gap-1">
             <span className="text-[10px] font-bold text-[var(--color-neutral-text-secondary)] mr-1">
@@ -184,8 +198,8 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData }: Sectio
         )}
       </div>
 
-      {/* Salto de Página Forzado */}
-      <div className="pt-1.5 border-t border-[var(--color-neutral-border)]/60 flex items-center justify-between">
+      {/* Salto de Página Forzado & Selector de Estilo de Contenedor Unificado */}
+      <div className="pt-1.5 border-t border-[var(--color-neutral-border)]/60 flex items-center justify-between gap-1 flex-wrap">
         <button
           type="button"
           onClick={handleTogglePageBreak}
@@ -197,14 +211,27 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData }: Sectio
           title="Forzar un salto de página nativo en PDF antes de iniciar esta sección"
         >
           <Scissors className="w-3 h-3" />
-          <span>Salto de página en PDF</span>
+          <span>Salto de página</span>
           {hasPageBreak && <Check className={`w-3 h-3 ml-0.5 ${hasPageBreak ? 'text-white' : 'text-[var(--color-neutral-text-secondary)]'}`} />}
         </button>
-        {hasPageBreak && (
-          <span className="text-[10px] font-bold text-[var(--color-accent-purple-bright)]">
-            Activo (Inicia en nueva hoja)
-          </span>
-        )}
+
+        {/* 🎨 Selector de Estilo de Contenedores / Borde Unificado */}
+        <div className="flex items-center gap-1">
+          <select
+            value={currentCardDesign}
+            onChange={(e) => handleSetCardDesign(e.target.value)}
+            className={`text-[10px] px-2 py-1 rounded-[${radius.control}] bg-[var(--color-neutral-surface-muted)] border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer`}
+            title="Estilo de Contenedores y Bordes de la Sección"
+          >
+            <option value="accent-card">🎨 Borde Acento + Fondo</option>
+            <option value="accent-outline">🎨 Borde Acento (Sin Fondo)</option>
+            <option value="primary-card">🔷 Borde Primario + Fondo</option>
+            <option value="primary-outline">🔷 Borde Primario (Sin Fondo)</option>
+            <option value="neutral-card">⚪ Borde Neutro + Fondo</option>
+            <option value="neutral-outline">⚪ Borde Neutro (Sin Fondo)</option>
+            <option value="clean">✨ Limpio (Sin Borde)</option>
+          </select>
+        </div>
       </div>
     </div>
   );

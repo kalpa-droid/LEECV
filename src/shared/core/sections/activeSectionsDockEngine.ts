@@ -29,6 +29,8 @@ export interface DockSectionItem {
   iconId: string;
   isCustom: boolean;
   tabId: string;
+  isUniversal?: boolean;
+  isDisabled?: boolean;
 }
 
 /**
@@ -52,23 +54,29 @@ export function resolveActiveDockSections(cvData: any): DockSectionItem[] {
   const customSections = cvData?.customSections || [];
   const visibility = cvData?.sectionVisibility || {};
 
-  const customItems: DockSectionItem[] = customSections.map((cs: any) => ({
-    id: cs.id,
-    label: cs.titleText || 'Nueva Sección',
-    iconId: cs.iconId || 'custom',
-    isCustom: true,
-    tabId: 'custom'
-  }));
+  const customItems: DockSectionItem[] = customSections
+    .filter((cs: any) => visibility[cs.id] !== false)
+    .map((cs: any) => ({
+      id: cs.id,
+      label: cs.titleText || 'Nueva Sección',
+      iconId: cs.iconId || 'custom',
+      isCustom: true,
+      tabId: 'custom',
+      isUniversal: false,
+      isDisabled: false
+    }));
 
   const catalogItems: DockSectionItem[] = SECTION_CATALOG
     .filter((entry) => !ABSORBED_INTO_PERSONAL_TAB.has(entry.id))
-    .filter((entry) => visibility[entry.id] !== false)
+    .filter((entry) => entry.isUniversal || visibility[entry.id] !== false)
     .map((entry) => ({
       id: entry.id,
       label: entry.shortLabel || entry.label,
       iconId: entry.id,
       isCustom: false,
-      tabId: entry.tabId
+      tabId: entry.tabId,
+      isUniversal: !!entry.isUniversal,
+      isDisabled: visibility[entry.id] === false
     }));
 
   // Personalizadas primero (igual que antes: quedan pegadas al botón "+"),
