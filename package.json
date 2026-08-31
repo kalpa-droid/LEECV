@@ -23,7 +23,8 @@
     "verify:coverage": "npx tsx scripts/verify-editor-panel-coverage.js",
     "check-interpolation": "node scripts/check-broken-template-interpolation.js",
     "verify:manual-adjustment": "node scripts/verify-manual-adjustment-coverage.js",
-    "check-all": "npm run typecheck && npm run typecheck:api && npm run lint && npm run check-interpolation && npm run verify:manual-adjustment && npm run check-ui-tokens:selftest && npm run check-ui-tokens && npm run check-token-usage && npm run check-contrast:selftest && npm run check-contrast && npm run check-modal-contrast && npm run check-pdf-engine-usage && npm run check-pdf-contrast && npm run verify-cv-harmony && npm run verify-pdf-smoke && npm run verify:seo && npm run verify:coverage && npx tsx scripts/check-module-boundaries.js && npm run build",
+    "verify:manual-adjustment-dom": "npx tsx scripts/verify-manual-adjustment-dom-render.js",
+    "check-all": "npm run typecheck && npm run typecheck:api && npm run lint && npm run check-interpolation && npm run verify:manual-adjustment && npm run verify:manual-adjustment-dom && npm run check-ui-tokens:selftest && npm run check-ui-tokens && npm run check-token-usage && npm run check-contrast:selftest && npm run check-contrast && npm run check-modal-contrast && npm run check-pdf-engine-usage && npm run check-pdf-contrast && npm run verify-cv-harmony && npm run verify-pdf-smoke && npm run verify:seo && npm run verify:coverage && npx tsx scripts/check-module-boundaries.js && npm run build",
     "preview": "vite preview",
     "prepare": "husky"
   },

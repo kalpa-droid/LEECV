@@ -40,13 +40,14 @@ function extractJsxSectionBindings(filePath) {
   
   const boundIds = new Set();
   let hasDynamicCustomSectionSlot = false;
+  const errors = [];
 
   function visit(node) {
     if (ts.isJsxSelfClosingElement(node) || ts.isJsxOpeningElement(node)) {
       const tagName = node.tagName.getText(sourceFile);
       const attrs = node.attributes.properties;
       
-      const hasSlot = attrs.some(attr => 
+      const slotAttr = attrs.find(attr => 
         ts.isJsxAttribute(attr) && ['manualAdjustment', 'renderTrailingSlot'].includes(attr.name.getText(sourceFile))
       );
 
@@ -56,13 +57,27 @@ function extractJsxSectionBindings(filePath) {
           boundIds.add(idAttr.initializer.text);
         }
       } else if (['RecordFormSection', 'RepeatableSection'].includes(tagName)) {
-        if (hasSlot) {
-          const keyAttr = attrs.find(attr => ts.isJsxAttribute(attr) && attr.name.getText(sourceFile) === 'sectionKey');
-          if (keyAttr && keyAttr.initializer) {
-            if (ts.isStringLiteral(keyAttr.initializer)) {
-              boundIds.add(keyAttr.initializer.text);
-            } else if (keyAttr.initializer.getText(sourceFile).includes('cs.id')) {
-              hasDynamicCustomSectionSlot = true;
+        if (slotAttr && slotAttr.initializer) {
+          const slotText = slotAttr.initializer.getText(sourceFile);
+          
+          // Ensure slot is not null or undefined
+          if (slotText === '{null}' || slotText === 'null' || slotText === '{undefined}') {
+            errors.push(`Nodo ${tagName} tiene prop de slot nula o inválida: ${slotText}`);
+          } else {
+            const keyAttr = attrs.find(attr => ts.isJsxAttribute(attr) && attr.name.getText(sourceFile) === 'sectionKey');
+            if (keyAttr && keyAttr.initializer) {
+              if (ts.isStringLiteral(keyAttr.initializer)) {
+                const outerKey = keyAttr.initializer.text;
+                // If slot contains SectionManualAdjustment, verify inner sectionId matches outer key
+                const innerMatch = slotText.match(/sectionId=["']([^"']+)["']/);
+                if (innerMatch && innerMatch[1] !== outerKey) {
+                  errors.push(`Descalce en ${tagName}: sectionKey '${outerKey}' no coincide con inner sectionId '${innerMatch[1]}'`);
+                } else {
+                  boundIds.add(outerKey);
+                }
+              } else if (keyAttr.initializer.getText(sourceFile).includes('cs.id')) {
+                hasDynamicCustomSectionSlot = true;
+              }
             }
           }
         }
@@ -72,7 +87,7 @@ function extractJsxSectionBindings(filePath) {
   }
 
   visit(sourceFile);
-  return { boundIds, hasDynamicCustomSectionSlot };
+  return { boundIds, hasDynamicCustomSectionSlot, errors };
 }
 
 const editorResult = extractJsxSectionBindings(editorPanelPath);
@@ -104,6 +119,14 @@ if (hasCustomSlot) {
 } else {
   console.log(`  ❌ Secciones Personalizadas Dinámicas (cs.id) -> FALTA slot de ajuste manual.`);
   missingSections.push('customSections-dynamic');
+}
+
+const allErrors = [...editorResult.errors, ...personalResult.errors];
+
+if (allErrors.length > 0) {
+  console.error(`\n🚨 SE ENCONTRARON ERRORES DE DESCALCE O PROPS NULAS EN AST:`);
+  allErrors.forEach(err => console.error(`   - ${err}`));
+  process.exit(1);
 }
 
 if (missingSections.length > 0) {

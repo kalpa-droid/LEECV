@@ -1,7 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-let rawUrl: string = import.meta.env.VITE_SUPABASE_URL || '';
-const rawKey: string = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+let rawUrl: string = import.meta?.env?.VITE_SUPABASE_URL || '';
+const rawKey: string = import.meta?.env?.VITE_SUPABASE_ANON_KEY || '';
 
 if (rawUrl && !rawUrl.startsWith('http://') && !rawUrl.startsWith('https://')) {
   if (rawUrl.includes('.')) {

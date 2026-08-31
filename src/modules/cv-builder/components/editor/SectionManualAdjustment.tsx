@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { ArrowUp, ArrowDown, Columns, Scissors, Check } from 'lucide-react';
-import { SECTION_CATALOG } from '../../../../shared/core/sectionRegistry';
+import { getSection } from '../../../../shared/core/sectionRegistry';
 import { colorSystem, radius, elevationSystem } from '../../../../shared/core/uiDesignSystem';
 
 interface SectionManualAdjustmentProps {
@@ -32,7 +32,7 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData }: Sectio
 
   if (!cvData || !setCvData) return null;
 
-  const catalogEntry = SECTION_CATALOG.find((s) => s.id === sectionId);
+  const catalogEntry = getSection(sectionId, cvData.customSections || []);
   const assignableToColumns = catalogEntry ? catalogEntry.assignableToColumns !== false : true;
 
   const assignments = cvData.layout?.columnAssignments || {};
