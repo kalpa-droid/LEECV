@@ -32,6 +32,15 @@ export interface DockSectionItem {
 }
 
 /**
+ * Pestañas especiales fijos del Dock Gobernados por el Motor.
+ */
+export const DOCK_SPECIAL_TABS = {
+  addSection: { id: 'nueva_seccion', label: 'Sección', iconId: 'custom' },
+  portada: { id: 'portada', label: 'Portada', iconId: 'portada' },
+  personal: { id: 'personales', label: 'Personal', iconId: 'personales' }
+};
+
+/**
  * IDs de SECTION_CATALOG que ya están cubiertos por el botón fijo
  * "Personal" del dock (datos de contacto, datos personales y frase viven
  * todos dentro de esa misma pestaña agregada) — no generan un botón propio,

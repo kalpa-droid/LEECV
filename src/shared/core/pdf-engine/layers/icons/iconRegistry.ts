@@ -104,6 +104,15 @@ export const ICON_REGISTRY: Record<string, IconDefinition> = {
       'M18 13l-1.5-7.5L2 2l3.5 14.5L13 18'
     ]
   },
+  portada: {
+    id: 'portada',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M12 2L2 7l10 5 10-5-10-5z',
+      'M2 17l10 5 10-5',
+      'M2 12l10 5 10-5'
+    ]
+  },
   frase: {
     id: 'frase',
     viewBox: '0 0 24 24',

@@ -1,10 +1,10 @@
 import React, { useMemo, useRef } from 'react';
 import { 
-  Palette, Layout, Layers, Menu, X, Plus, ChevronDown, ChevronRight
+  Palette, Layout, Menu, X, Plus, ChevronDown, ChevronRight
 } from 'lucide-react';
 import { DomSectionIcon } from '../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
-import { getNextUiTheme, UI_THEME_META, elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
-import { resolveActiveDockSections } from '../../../shared/core/sections/activeSectionsDockEngine';
+import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
+import { resolveActiveDockSections, DOCK_SPECIAL_TABS } from '../../../shared/core/sections/activeSectionsDockEngine';
 
 export interface CanvaIconDockProps {
   cvData?: any;
@@ -15,22 +15,20 @@ export interface CanvaIconDockProps {
   setIsPanelOpen: (open: boolean) => void;
 }
 
-// 1. Pestañas de Estilo y Maquetación (Icono de Portada cambiado a Layers para no confundir con ATS)
+// 1. Pestañas de Estilo y Maquetación (Diseño y Columnas)
 const styleTabs = [
   { id: 'diseno', label: 'Diseño', icon: Palette },
-  { id: 'portada', label: 'Portada', icon: Layers },
   { id: 'paneles', label: 'Columnas', icon: Layout },
 ];
 
-// 2. Botón Especial: Sección (SIEMPRE PRIMERO ARRIBA)
-const addSectionTab = { id: 'nueva_seccion', label: 'Sección', iconId: 'custom' };
-
-// 3. Pestaña "Personal" — agrega contacto/datos-personales/frase en una sola vista
-const personalTab = { id: 'personales', label: 'Personal', iconId: 'personales' };
+// 2. Pestañas de Sección Especiales Gobernadas por el Motor (activeSectionsDockEngine.ts)
+const addSectionTab = DOCK_SPECIAL_TABS.addSection;
+const portadaTab = DOCK_SPECIAL_TABS.portada;
+const personalTab = DOCK_SPECIAL_TABS.personal;
 
 export default function CanvaIconDock({ 
   cvData,
-  setCvData,
+  setCvData: _setCvData,
   activeTab, 
   setActiveTab, 
   isPanelOpen, 
@@ -75,7 +73,7 @@ export default function CanvaIconDock({
 
         <div className="w-7 h-px bg-[var(--ui-dock-separator)] mb-1.5" />
 
-        {/* Style & Layout Group: Los 3 primeros botones compactos y bien juntos (SOLO icono) */}
+        {/* Style & Layout Group: Botones de Estilo (SOLO icono) */}
         <div className="flex flex-col items-center gap-1 mb-1.5">
           {styleTabs.map((tab) => {
             const Icon = tab.icon;
@@ -134,7 +132,34 @@ export default function CanvaIconDock({
             );
           })()}
 
-          {/* 2. Personal (pestaña agregada de contacto) */}
+          {/* 2. BOTÓN PORTADA: Ubicado inmediatamente después del botón Sección + */}
+          {(() => {
+            const isActive = activeTab === portadaTab.id && isPanelOpen;
+            return (
+              <button
+                key={portadaTab.id}
+                type="button"
+                onClick={() => handleTabClick(portadaTab.id)}
+                className={`w-11 h-9 rounded-[${radius.modal}] flex flex-col items-center justify-center transition group relative cursor-pointer border ${
+                  isActive
+                    ? `bg-[var(--color-accent-base)] border-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.floating} shadow-[var(--color-accent-base)]/30 scale-105`
+                    : 'bg-[var(--ui-dock-hover)] border-[var(--ui-dock-border)] text-[var(--color-secondary-bright)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--color-secondary-muted)]'
+                }`}
+                title="Diseñador & Configuración de Portada Profesional (Portada)"
+              >
+                <DomSectionIcon iconId="portada" className="w-3.5 h-3.5" color={isActive ? 'var(--color-accent-on-base)' : 'var(--color-secondary-bright)'} />
+                <span className={`text-[8px] font-extrabold tracking-tighter mt-0.5 leading-none ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--ui-dock-text-muted)]'}`}>
+                  {portadaTab.label}
+                </span>
+
+                <span className={`absolute left-14 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
+                  Portada Profesional
+                </span>
+              </button>
+            );
+          })()}
+
+          {/* 3. Personal (pestaña agregada de contacto) */}
           {(() => {
             const isActive = activeTab === personalTab.id && isPanelOpen;
             return (
@@ -158,7 +183,7 @@ export default function CanvaIconDock({
             );
           })()}
 
-          {/* 3. Secciones dinámicas generadas por activeSectionsDockEngine */}
+          {/* 4. Secciones dinámicas generadas por activeSectionsDockEngine */}
           {dockSections.map((sec) => {
             const isActive = activeTab === sec.id && isPanelOpen;
             return (
@@ -225,7 +250,7 @@ export default function CanvaIconDock({
 
         <div className="w-px h-5 bg-[var(--ui-dock-border)] shrink-0" />
 
-        {/* LOS TRES PRIMEROS BOTONES EN MÓVIL TAMBIÉN SON SOLO ICONOS SIN TEXTO */}
+        {/* BOTONES DE ESTILO EN MÓVIL (Diseño y Columnas) */}
         {styleTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id && isPanelOpen;
@@ -259,6 +284,26 @@ export default function CanvaIconDock({
           <Plus className={`w-3.5 h-3.5 ${activeTab === addSectionTab.id && isPanelOpen ? 'text-[var(--color-status-success-on-base)]' : ''}`} />
           <span className="mt-0.5 leading-none">{addSectionTab.label}</span>
         </button>
+
+        {/* Botón Portada ubicado inmediatamente después del botón Sección + en Mobile */}
+        {(() => {
+          const isActive = activeTab === portadaTab.id && isPanelOpen;
+          return (
+            <button
+              type="button"
+              onClick={() => handleTabClick(portadaTab.id)}
+              className={`px-2 py-1 rounded-[${radius.card}] font-black text-[9px] shrink-0 flex flex-col items-center justify-center cursor-pointer border transition ${
+                isActive
+                  ? 'bg-[var(--color-accent-base)] border-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
+                  : 'bg-[var(--ui-bg-panel)] border-[var(--ui-border)] text-[var(--color-secondary-bright)] hover:bg-[var(--ui-bg-card)]'
+              }`}
+              title="Portada Profesional"
+            >
+              <DomSectionIcon iconId="portada" className="w-3.5 h-3.5" color={isActive ? 'var(--color-accent-on-base)' : 'var(--color-secondary-bright)'} />
+              <span className="mt-0.5 leading-none">{portadaTab.label}</span>
+            </button>
+          );
+        })()}
 
         <div className="w-px h-5 bg-[var(--ui-dock-border)] shrink-0" />
 
