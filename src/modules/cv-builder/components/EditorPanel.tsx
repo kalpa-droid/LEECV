@@ -345,6 +345,7 @@ export default function EditorPanel({
                 placeholder="Ej: Pedagogía Dialógica, Alfabetización Digital, Liderazgo..."
               />
             )}
+            manualAdjustment={<SectionManualAdjustment sectionId="competencias" cvData={cvData} setCvData={setCvData} />}
           />
         )}
 
@@ -400,6 +401,7 @@ export default function EditorPanel({
                 placeholder="Ej: Python, React, Docker, AutoCAD, SQL, Modelado Financiero, AWS..."
               />
             )}
+            manualAdjustment={<SectionManualAdjustment sectionId="habilidades" cvData={cvData} setCvData={setCvData} />}
           />
         )}
 
@@ -417,6 +419,7 @@ export default function EditorPanel({
             fieldName="languages"
             itemTitlePrefix="Idioma"
             helpText="Indica los idiomas que dominas y tu nivel aproximado (A1, A2, B1, B2, C1, C2 o Nativo)."
+            manualAdjustment={<SectionManualAdjustment sectionId="idiomas" cvData={cvData} setCvData={setCvData} />}
           />
         )}
 
@@ -434,6 +437,7 @@ export default function EditorPanel({
             fieldName="projects"
             itemTitlePrefix="Proyecto"
             helpText="Destaca aplicaciones, desarrollos, iniciativas o portafolios relevantes para tu puesto."
+            manualAdjustment={<SectionManualAdjustment sectionId="proyectos" cvData={cvData} setCvData={setCvData} />}
           />
         )}
 
@@ -451,6 +455,7 @@ export default function EditorPanel({
             fieldName="publications"
             itemTitlePrefix="Publicación"
             helpText="Artículos científicos, libros, ponencias o patentes que hayas publicado."
+            manualAdjustment={<SectionManualAdjustment sectionId="publicaciones" cvData={cvData} setCvData={setCvData} />}
           />
         )}
 
@@ -468,6 +473,7 @@ export default function EditorPanel({
             fieldName="references"
             itemTitlePrefix="Referencia"
             helpText="Contactos de ex-supervisores o colegas que puedan certificar tu desempeño profesional."
+            manualAdjustment={<SectionManualAdjustment sectionId="referencias" cvData={cvData} setCvData={setCvData} />}
           />
         )}
 
@@ -488,6 +494,7 @@ export default function EditorPanel({
             fieldName="education"
             itemTitlePrefix="Estudio / Formación"
             helpText="Formación Académica refiere al nivel educativo alcanzado (Secundario, Terciario, Universitario, Posgrado)."
+            manualAdjustment={<SectionManualAdjustment sectionId="formacion" cvData={cvData} setCvData={setCvData} />}
           />
         )}
 
@@ -505,6 +512,7 @@ export default function EditorPanel({
             fieldName="profession"
             itemTitlePrefix="Título Profesional"
             helpText="Títulos Profesionales incluye carreras o títulos habilitantes para ejercer. Puedes añadir el campo opcional Resolución N° / Disposición legal que avala tu titulación."
+            manualAdjustment={<SectionManualAdjustment sectionId="profesion" cvData={cvData} setCvData={setCvData} />}
           />
         )}
 
@@ -522,6 +530,7 @@ export default function EditorPanel({
             fieldName="experience"
             itemTitlePrefix="Experiencia Laboral"
             helpText="Experiencia Laboral detalla puestos desempeñados, instituciones o empresas y tareas clave realizadas."
+            manualAdjustment={<SectionManualAdjustment sectionId="experiencia" cvData={cvData} setCvData={setCvData} />}
           />
         )}
 
@@ -539,6 +548,7 @@ export default function EditorPanel({
             fieldName="coursesAndCertificates"
             itemTitlePrefix="Curso / Capacitación"
             helpText="Cursos y Capacitaciones incluye talleres, simposios, diplomaturas y certificaciones de formación continua."
+            manualAdjustment={<SectionManualAdjustment sectionId="cursos" cvData={cvData} setCvData={setCvData} />}
           />
         )}
 
@@ -556,6 +566,7 @@ export default function EditorPanel({
             fieldName="informatics"
             itemTitlePrefix="Curso Informático"
             helpText="Informática y TICs incluye cursos, herramientas de computación, lenguajes y software profesional."
+            manualAdjustment={<SectionManualAdjustment sectionId="informatica" cvData={cvData} setCvData={setCvData} />}
           />
         )}
 
@@ -573,6 +584,7 @@ export default function EditorPanel({
             fieldName="ecology"
             itemTitlePrefix="Proyecto Ecológico"
             helpText="Registra iniciativas comunitarias, talleres sobre medio ambiente, huertas orgánicas, proyectos rurales, voluntariados y acciones sociales de impacto sustentable."
+            manualAdjustment={<SectionManualAdjustment sectionId="ecologia" cvData={cvData} setCvData={setCvData} />}
           />
         )}
 
@@ -968,6 +980,7 @@ export default function EditorPanel({
                   })}
                 </div>
               )}
+              manualAdjustment={<SectionManualAdjustment sectionId={cs.id} cvData={cvData} setCvData={setCvData} />}
             />
           );
         })()}

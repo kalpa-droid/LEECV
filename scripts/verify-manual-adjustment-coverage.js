@@ -33,37 +33,53 @@ const registryContent = fs.readFileSync(sectionRegistryPath, 'utf-8');
 const catalogMatches = [...registryContent.matchAll(/\{\s*id:\s*'([^']+)'/g)];
 const expectedSectionIds = catalogMatches.map(m => m[1]);
 
-// 3. Helper to parse AST and find JSX attributes for sectionId and sectionKey
+// 3. Helper to parse AST and find JSX elements with VERIFIED manualAdjustment slot
 function extractJsxSectionBindings(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
   const sourceFile = ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   
   const boundIds = new Set();
+  let hasDynamicCustomSectionSlot = false;
 
   function visit(node) {
     if (ts.isJsxSelfClosingElement(node) || ts.isJsxOpeningElement(node)) {
       const tagName = node.tagName.getText(sourceFile);
-      if (['SectionManualAdjustment', 'RecordFormSection', 'RepeatableSection'].includes(tagName)) {
-        node.attributes.properties.forEach(attr => {
-          if (ts.isJsxAttribute(attr) && ['sectionId', 'sectionKey'].includes(attr.name.getText(sourceFile))) {
-            if (attr.initializer && ts.isStringLiteral(attr.initializer)) {
-              boundIds.add(attr.initializer.text);
+      const attrs = node.attributes.properties;
+      
+      const hasSlot = attrs.some(attr => 
+        ts.isJsxAttribute(attr) && ['manualAdjustment', 'renderTrailingSlot'].includes(attr.name.getText(sourceFile))
+      );
+
+      if (tagName === 'SectionManualAdjustment') {
+        const idAttr = attrs.find(attr => ts.isJsxAttribute(attr) && attr.name.getText(sourceFile) === 'sectionId');
+        if (idAttr && idAttr.initializer && ts.isStringLiteral(idAttr.initializer)) {
+          boundIds.add(idAttr.initializer.text);
+        }
+      } else if (['RecordFormSection', 'RepeatableSection'].includes(tagName)) {
+        if (hasSlot) {
+          const keyAttr = attrs.find(attr => ts.isJsxAttribute(attr) && attr.name.getText(sourceFile) === 'sectionKey');
+          if (keyAttr && keyAttr.initializer) {
+            if (ts.isStringLiteral(keyAttr.initializer)) {
+              boundIds.add(keyAttr.initializer.text);
+            } else if (keyAttr.initializer.getText(sourceFile).includes('cs.id')) {
+              hasDynamicCustomSectionSlot = true;
             }
           }
-        });
+        }
       }
     }
     ts.forEachChild(node, visit);
   }
 
   visit(sourceFile);
-  return boundIds;
+  return { boundIds, hasDynamicCustomSectionSlot };
 }
 
-const editorBoundIds = extractJsxSectionBindings(editorPanelPath);
-const personalBoundIds = extractJsxSectionBindings(personalInfoPath);
+const editorResult = extractJsxSectionBindings(editorPanelPath);
+const personalResult = extractJsxSectionBindings(personalInfoPath);
 
-const allBoundIds = new Set([...editorBoundIds, ...personalBoundIds]);
+const allBoundIds = new Set([...editorResult.boundIds, ...personalResult.boundIds]);
+const hasCustomSlot = editorResult.hasDynamicCustomSectionSlot || personalResult.hasDynamicCustomSectionSlot;
 
 let missingSections = [];
 
@@ -77,17 +93,24 @@ console.log(`\n── Cobertura Estructural AST (${expectedSectionIds.length} se
 
 expectedSectionIds.forEach(id => {
   if (allBoundIds.has(id)) {
-    console.log(`  ✓ Sección '${id}' -> Nodo AST JSX verificado OK.`);
+    console.log(`  ✓ Sección '${id}' -> Nodo AST JSX con prop de ajuste manual verificado OK.`);
   } else {
-    console.log(`  ❌ Sección '${id}' -> FALTA vínculo AST JSX.`);
+    console.log(`  ❌ Sección '${id}' -> FALTA prop de ajuste manual en nodo AST JSX.`);
   }
 });
 
+if (hasCustomSlot) {
+  console.log(`  ✓ Secciones Personalizadas Dinámicas (cs.id) -> Slot de ajuste manual verificado OK.`);
+} else {
+  console.log(`  ❌ Secciones Personalizadas Dinámicas (cs.id) -> FALTA slot de ajuste manual.`);
+  missingSections.push('customSections-dynamic');
+}
+
 if (missingSections.length > 0) {
-  console.error(`\n❌ VERIFICACIÓN AST FALLIDA: ${missingSections.length} secciones no tienen vinculación de AST JSX:`);
+  console.error(`\n❌ VERIFICACIÓN AST FALLIDA: ${missingSections.length} secciones no tienen slot de ajuste manual en el árbol AST JSX:`);
   missingSections.forEach(id => console.error(`   - ${id}`));
   process.exit(1);
 }
 
 console.log(`\n════════════════════════════════════════════════════════════`);
-console.log(`✅ VERIFICACIÓN AST EXITOSA: Las ${expectedSectionIds.length}/${expectedSectionIds.length} secciones del catálogo tienen binding JSX real en el árbol AST.`);
+console.log(`✅ VERIFICACIÓN AST EXITOSA: Las ${expectedSectionIds.length}/${expectedSectionIds.length} secciones fijas + secciones custom tienen prop manualAdjustment/renderTrailingSlot real en el árbol AST JSX.`);

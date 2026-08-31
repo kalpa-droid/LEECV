@@ -60,9 +60,13 @@ function checkFile(fullPath, currentModule = null) {
   for (const match of importMatches) {
     const importPath = match.replace(/from\s+['"]/, '').replace(/['"]$/, '');
 
-    // /shared/ NUNCA debe importar desde /modules/
+    // /shared/ NUNCA debe importar desde /modules/.
+    // Explicación arquitectónica: Los componentes primitivos reutilizables en /shared/core/ (ej: RepeatableSection, RecordFormSection)
+    // jamás deben depender de componentes de dominio específicos de un módulo (ej: SectionManualAdjustment en /modules/cv-builder/).
+    // Si un componente en /shared/ necesita renderizar algo específico de un módulo, debe aceptar una prop de slot o render prop
+    // (ej: manualAdjustment?: React.ReactNode o renderTrailingSlot?: (key) => React.ReactNode) y ser la invocación en /modules/ la que inyecte el elemento.
     if (isSharedFile && importPath.includes('/modules/')) {
-      console.error(`❌ Shared Boundary Violation: Shared file [${path.relative(process.cwd(), fullPath)}] imports from module [${importPath}]`);
+      console.error(`❌ Shared Boundary Violation: Shared file [${path.relative(process.cwd(), fullPath)}] imports from module [${importPath}]. Usar patrón de slot/renderProp (ej: manualAdjustment o renderTrailingSlot).`);
       violationsCount++;
     }
 
