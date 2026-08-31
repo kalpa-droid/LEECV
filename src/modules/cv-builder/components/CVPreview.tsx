@@ -5,6 +5,7 @@ import { getPreset, resolveActivePreset, subscribeToPresetChanges, getPresetsSna
 import { cvDataToContentSections } from '../../../shared/core/pdf-engine/layers/records/cvDataAdapter';
 import { buildCardDataFromCV, BusinessCardData } from '../../../shared/core/pdf-engine/layers/records/cardDataAdapter';
 import { VectorDocViewer } from '../../../shared/core/pdf-engine/VectorDocViewer';
+import { ErrorBoundary } from '../../../shared/core/ui/ErrorBoundary';
 
 export default function CVPreview({ cvData, setCvData: _setCvData, activeTab: _activeTab, zoomLevel = 0.85 }: { cvData?: any; setCvData?: any; activeTab?: string; zoomLevel?: number }) {
   // Suscripción reactiva con useSyncExternalStore para re-renderizado automático sin F5 al cambiar plantillas
@@ -73,11 +74,17 @@ export default function CVPreview({ cvData, setCvData: _setCvData, activeTab: _a
         className="w-full max-w-5xl my-2 no-print transition-transform duration-150 ease-out"
         style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top center' }}
       >
-        <VectorDocViewer 
-          key={`${activePreset.id}_v${presetsVersion}`} 
-          document={renderedDocument} 
-          zoomLevel={zoomLevel}
-        />
+        <ErrorBoundary 
+          compact 
+          title="Inconveniente en la vista previa" 
+          subtitle="Ocurrió un problema al procesar la plantilla del PDF. Tu información guardada no se ve afectada."
+        >
+          <VectorDocViewer 
+            key={`${activePreset.id}_v${presetsVersion}`} 
+            document={renderedDocument} 
+            zoomLevel={zoomLevel}
+          />
+        </ErrorBoundary>
       </div>
     </div>
   );

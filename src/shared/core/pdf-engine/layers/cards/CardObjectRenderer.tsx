@@ -110,11 +110,11 @@ export function CardObjectRenderer({
     cardContainer: {
       padding: spatialLayout.containerStyle.padding,
       marginBottom: spatialLayout.containerStyle.marginBottom,
-      borderLeftWidth: decStyles?.cardContainerStyle.borderWidthPt ?? design.borderWidthPt,
-      borderLeftColor: decStyles?.cardContainerStyle.borderColor ?? resolvedAccent.leftRuleColor ?? borderColor,
+      borderLeftWidth: decStyles?.cardContainerStyle?.borderWidthPt ?? design.borderWidthPt,
+      borderLeftColor: decStyles?.cardContainerStyle?.borderColor ?? resolvedAccent.leftRuleColor ?? borderColor,
       borderLeftStyle: 'solid',
       backgroundColor: cardBgColor,
-      borderRadius: decStyles?.cardContainerStyle.borderRadiusPt ?? design.borderRadiusPt,
+      borderRadius: decStyles?.cardContainerStyle?.borderRadiusPt ?? design.borderRadiusPt,
     },
     headerRow: {
       flexDirection: 'row',

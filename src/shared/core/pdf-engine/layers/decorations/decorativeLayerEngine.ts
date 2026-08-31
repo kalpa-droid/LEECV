@@ -33,20 +33,25 @@ export interface ResolvedDecorativeStyles {
   headerIconStyle: 'filled' | 'outlined' | 'minimal';
 }
 
+export const DEFAULT_DECORATIVE_POLICY = {
+  cardBorders: true,
+  sectionDividers: true,
+  backgroundShapes: false,
+  shadowEffects: false,
+  cornerOrnaments: 'none' as const,
+  watermarkType: 'none' as const,
+  headerIconStyle: 'filled' as const
+};
+
 export function resolveDecorativeStyles(
   preset: Preset,
   cardKind: 'primary-card' | 'secondary-card' | 'accent-card' | 'neutral-card' = 'neutral-card',
   rolesColor?: ResolvedThemeRoles,
   sectorRole: 'sidebar' | 'main' = 'main'
 ): ResolvedDecorativeStyles {
-  const policy = preset.decorativeElementPolicy || {
-    cardBorders: true,
-    sectionDividers: true,
-    backgroundShapes: true,
-    shadowEffects: false,
-    cornerOrnaments: 'none',
-    watermarkType: 'none',
-    headerIconStyle: 'filled'
+  const policy = {
+    ...DEFAULT_DECORATIVE_POLICY,
+    ...preset.decorativeElementPolicy
   };
 
   const palette = preset.palette;

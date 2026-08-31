@@ -448,7 +448,11 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     if (found?.degree) featuredBadges.push(found.degree);
   }
   if (featuredBadges.length === 0 && Array.isArray(roles) && roles.length > 0) {
-    roles.forEach(r => { if (r) featuredBadges.push(r); });
+    roles.forEach(r => {
+      if (!r) return;
+      const label = typeof r === 'string' ? r : (r.title || r.role || r.degree || r.name || '');
+      if (label && typeof label === 'string') featuredBadges.push(label);
+    });
   }
   if (featuredBadges.length === 0 && personalInfo?.titlePrefix) {
     featuredBadges.push(personalInfo.titlePrefix);

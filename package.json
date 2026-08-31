@@ -18,7 +18,8 @@
     "check-pdf-engine-usage": "node scripts/check-pdf-engine-usage.js",
     "check-pdf-contrast": "npx tsx scripts/check-pdf-contrast.js",
     "verify-cv-harmony": "node scripts/verify-cv-engine-harmony.js",
-    "check-all": "npm run typecheck && npm run typecheck:api && npm run lint && npm run check-ui-tokens:selftest && npm run check-ui-tokens && npm run check-token-usage && npm run check-contrast:selftest && npm run check-contrast && npm run check-modal-contrast && npm run check-pdf-engine-usage && npm run check-pdf-contrast && npm run verify-cv-harmony && npx tsx scripts/check-module-boundaries.js && npm run build",
+    "verify-pdf-smoke": "npx tsx scripts/verify-pdf-render-smoke.js",
+    "check-all": "npm run typecheck && npm run typecheck:api && npm run lint && npm run check-ui-tokens:selftest && npm run check-ui-tokens && npm run check-token-usage && npm run check-contrast:selftest && npm run check-contrast && npm run check-modal-contrast && npm run check-pdf-engine-usage && npm run check-pdf-contrast && npm run verify-cv-harmony && npm run verify-pdf-smoke && npx tsx scripts/check-module-boundaries.js && npm run build",
     "preview": "vite preview",
     "prepare": "husky"
   },

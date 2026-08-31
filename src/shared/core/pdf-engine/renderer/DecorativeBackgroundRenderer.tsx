@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Svg, Path, G, Text as PdfText } from '@react-pdf/renderer';
+import { View, Svg, Path, G, Text } from '@react-pdf/renderer';
 
 interface DecorativeBackgroundRendererProps {
   backgroundShapeEnabled?: boolean;
@@ -45,15 +45,22 @@ export function DecorativeBackgroundRenderer({
 
       {/* Watermark (Marca de Agua sutil de fondo) */}
       {watermark === 'subtle-brand' && (
-        <View style={{ position: 'absolute', top: '45%', left: '35%', opacity: 0.035, transform: 'rotate(-25deg)' }}>
-          <Svg width={220} height={80} viewBox="0 0 220 80">
-            <G fill={color}>
-              <Path d="M10 10 H210 V70 H10 Z" fill="none" stroke={color} strokeWidth={3} />
-              <PdfText x={25} y={48} style={{ fontSize: 24, fontFamily: 'Helvetica-Bold', fill: color }}>
-                LEECV • CV
-              </PdfText>
-            </G>
-          </Svg>
+        <View
+          style={{
+            position: 'absolute',
+            top: '45%',
+            left: '30%',
+            opacity: 0.035,
+            paddingHorizontal: 16,
+            paddingVertical: 8,
+            borderWidth: 2,
+            borderColor: color,
+            borderRadius: 4,
+          }}
+        >
+          <Text style={{ fontSize: 22, fontFamily: 'Helvetica-Bold', color: color, textTransform: 'uppercase', letterSpacing: 2 }}>
+            LEECV • CV
+          </Text>
         </View>
       )}
 
