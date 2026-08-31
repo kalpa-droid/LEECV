@@ -15,10 +15,9 @@ export interface CanvaIconDockProps {
   setIsPanelOpen: (open: boolean) => void;
 }
 
-// 1. Pestañas de Estilo y Maquetación (Diseño y Columnas)
+// 1. Pestañas de Estilo (Diseño)
 const styleTabs = [
-  { id: 'diseno', label: 'Diseño', icon: Palette },
-  { id: 'paneles', label: 'Columnas', icon: Layout },
+  { id: 'diseno', label: 'Diseño', icon: Palette }
 ];
 
 // 2. Pestañas de Sección Especiales Gobernadas por el Motor (activeSectionsDockEngine.ts)
@@ -68,12 +67,12 @@ export default function CanvaIconDock({
           }`}
           title={isPanelOpen ? 'Cerrar Panel Editor' : 'Abrir Panel Editor'}
         >
-          <Menu className="w-4 h-4" />
+          <Menu className="w-4.5 h-4.5" />
         </button>
 
         <div className="w-7 h-px bg-[var(--ui-dock-separator)] mb-1.5" />
 
-        {/* Style & Layout Group: Botones de Estilo (SOLO icono) */}
+        {/* Style Group: Botones de Estilo (SOLO icono) */}
         <div className="flex flex-col items-center gap-1 mb-1.5">
           {styleTabs.map((tab) => {
             const Icon = tab.icon;
@@ -83,14 +82,14 @@ export default function CanvaIconDock({
                 key={tab.id}
                 type="button"
                 onClick={() => handleTabClick(tab.id)}
-                className={`w-9 h-9 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer ${
+                className={`w-10 h-10 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer ${
                   isActive
                     ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.floating} shadow-[var(--color-accent-base)]/30 scale-105`
                     : 'text-[var(--ui-dock-text-muted)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--ui-dock-hover)]'
                 }`}
                 title={tab.label}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
+                <Icon className={`w-5 h-5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
                 
                 {/* Tooltip flotante al pasar el cursor en escritorio */}
                 <span className={`absolute left-14 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
@@ -103,8 +102,8 @@ export default function CanvaIconDock({
 
         <div className="w-7 h-px bg-[var(--ui-dock-separator)] mb-1.5" />
 
-        {/* Content Sections Group: Interlineado compacto entre todos los botones */}
-        <div className="flex flex-col items-center gap-1 flex-1 w-full px-1">
+        {/* Content Sections Group: Íconos nítidos sin texto saturado */}
+        <div className="flex flex-col items-center gap-1.5 flex-1 w-full px-1">
           {/* 1. BOTÓN SIEMPRE PRIMERO ARRIBA: Sección + */}
           {(() => {
             const isActive = activeTab === addSectionTab.id && isPanelOpen;
@@ -113,17 +112,14 @@ export default function CanvaIconDock({
                 key={addSectionTab.id}
                 type="button"
                 onClick={() => handleTabClick(addSectionTab.id)}
-                className={`w-11 h-9 rounded-[${radius.modal}] flex flex-col items-center justify-center transition group relative cursor-pointer border ${
+                className={`w-10 h-10 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer border ${
                   isActive
                     ? `bg-[var(--color-status-success-base)] border-[var(--color-status-success-base)] text-[var(--color-status-success-on-base)] ${elevationSystem.raised} scale-105`
                     : 'bg-[var(--ui-dock-hover)] border-[var(--color-status-success-base)]/80 text-[var(--color-status-success-bright)] hover:bg-[var(--color-status-success-muted)]'
                 }`}
-                title="Catálogo y Creador de Secciones (Sección)"
+                title="Catálogo & Creador de Secciones"
               >
-                <Plus className={`w-3.5 h-3.5 ${isActive ? 'text-[var(--color-status-success-on-base)]' : 'text-[var(--color-status-success-text)]'}`} />
-                <span className={`text-[8px] font-black tracking-tighter uppercase mt-0.5 leading-none ${isActive ? 'text-[var(--color-status-success-on-base)]' : 'text-[var(--color-status-success-text)]'}`}>
-                  {addSectionTab.label}
-                </span>
+                <Plus className={`w-5 h-5 ${isActive ? 'text-[var(--color-status-success-on-base)]' : 'text-[var(--color-status-success-text)]'}`} />
 
                 <span className={`absolute left-14 bg-[var(--ui-bg-dock)] text-[var(--color-status-success-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--color-status-success-base)]/30`}>
                   Catálogo & Creador de Secciones
@@ -132,7 +128,7 @@ export default function CanvaIconDock({
             );
           })()}
 
-          {/* 2. BOTÓN PORTADA: Ubicado inmediatamente después del botón Sección + */}
+          {/* 2. BOTÓN PORTADA */}
           {(() => {
             const isActive = activeTab === portadaTab.id && isPanelOpen;
             return (
@@ -140,17 +136,14 @@ export default function CanvaIconDock({
                 key={portadaTab.id}
                 type="button"
                 onClick={() => handleTabClick(portadaTab.id)}
-                className={`w-11 h-9 rounded-[${radius.modal}] flex flex-col items-center justify-center transition group relative cursor-pointer border ${
+                className={`w-10 h-10 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer border ${
                   isActive
                     ? `bg-[var(--color-accent-base)] border-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.floating} shadow-[var(--color-accent-base)]/30 scale-105`
                     : 'bg-[var(--ui-dock-hover)] border-[var(--ui-dock-border)] text-[var(--color-secondary-bright)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--color-secondary-muted)]'
                 }`}
-                title="Diseñador & Configuración de Portada Profesional (Portada)"
+                title="Portada Profesional"
               >
-                <DomSectionIcon iconId="portada" className="w-3.5 h-3.5" color={isActive ? 'var(--color-accent-on-base)' : 'var(--color-secondary-bright)'} />
-                <span className={`text-[8px] font-extrabold tracking-tighter mt-0.5 leading-none ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--ui-dock-text-muted)]'}`}>
-                  {portadaTab.label}
-                </span>
+                <DomSectionIcon iconId="portada" className="w-5 h-5" color={isActive ? 'var(--color-accent-on-base)' : 'var(--color-secondary-bright)'} />
 
                 <span className={`absolute left-14 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
                   Portada Profesional
@@ -159,7 +152,7 @@ export default function CanvaIconDock({
             );
           })()}
 
-          {/* 3. Personal (pestaña agregada de contacto) */}
+          {/* 3. Personal */}
           {(() => {
             const isActive = activeTab === personalTab.id && isPanelOpen;
             return (
@@ -167,15 +160,15 @@ export default function CanvaIconDock({
                 key={personalTab.id}
                 type="button"
                 onClick={() => handleTabClick(personalTab.id)}
-                className={`w-11 h-9 rounded-[${radius.modal}] flex flex-col items-center justify-center transition group relative cursor-pointer ${
+                className={`w-10 h-10 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer ${
                   isActive
                     ? `bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.floating} shadow-[var(--color-secondary-base)]/30 scale-105`
                     : 'text-[var(--ui-dock-text-muted)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--ui-dock-hover)]'
                 }`}
                 title={personalTab.label}
               >
-                <DomSectionIcon iconId={personalTab.iconId} className="w-3.5 h-3.5" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
-                <span className={`text-[8px] font-extrabold tracking-tighter mt-0.5 leading-none ${isActive ? 'text-[var(--color-secondary-on-base)]' : 'text-[var(--ui-dock-text-muted)]'}`}>{personalTab.label}</span>
+                <DomSectionIcon iconId={personalTab.iconId} className="w-5 h-5" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
+
                 <span className={`absolute left-14 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
                   {personalTab.label}
                 </span>
@@ -191,7 +184,7 @@ export default function CanvaIconDock({
                 key={sec.id}
                 type="button"
                 onClick={() => handleTabClick(sec.id)}
-                className={`w-11 h-9 rounded-[${radius.modal}] flex flex-col items-center justify-center transition group relative cursor-pointer ${
+                className={`w-10 h-10 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer ${
                   isActive
                     ? sec.isCustom
                       ? `bg-[var(--color-accent-purple)] text-white ${elevationSystem.floating} shadow-[var(--color-accent-purple)]/30 scale-105`
@@ -204,12 +197,9 @@ export default function CanvaIconDock({
               >
                 <DomSectionIcon
                   iconId={sec.iconId}
-                  className="w-3.5 h-3.5"
+                  className="w-5 h-5"
                   color={sec.isCustom ? (isActive ? '#FFFFFF' : 'var(--color-secondary-bright)') : (isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)')}
                 />
-                <span className={`text-[8px] font-extrabold tracking-tighter mt-0.5 leading-none truncate max-w-[42px] ${isActive ? 'text-[var(--ui-dock-text)]' : 'text-[var(--ui-dock-text-muted)]'}`}>
-                  {sec.isCustom ? sec.label.substring(0, 6) : sec.label}
-                </span>
 
                 <span className={`absolute left-14 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
                   {sec.label}

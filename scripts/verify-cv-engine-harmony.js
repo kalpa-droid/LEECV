@@ -649,6 +649,38 @@ if (fs.existsSync(sectionRegPath)) {
   );
 }
 
+const iconRegistryPath = path.join(ROOT, 'src/shared/core/pdf-engine/layers/icons/iconRegistry.ts');
+if (fs.existsSync(iconRegistryPath)) {
+  const iconContent = fs.readFileSync(iconRegistryPath, 'utf-8');
+  const portadaMatch = iconContent.includes("portada:");
+  const competenciasMatch = iconContent.includes("competencias:");
+  check(
+    'iconRegistry.ts define íconos únicos sin duplicación entre portada y competencias',
+    portadaMatch && competenciasMatch && !iconContent.includes("paths: [\n      'M12 2L2 7l10 5 10-5-10-5z',\n      'M2 17l10 5 10-5',\n      'M2 12l10 5 10-5'\n    ]\n  },\n  competencias"),
+    'portada y competencias comparten el mismo path SVG'
+  );
+}
+
+const presetHierarchyPath = path.join(ROOT, 'src/shared/core/pdf-engine/layers/presets/presetHierarchyEngine.ts');
+if (fs.existsSync(presetHierarchyPath)) {
+  const presetContent = fs.readFileSync(presetHierarchyPath, 'utf-8');
+  check(
+    'presetHierarchyEngine.ts gobierna la jerarquía de 3 niveles con applyPresetLevel',
+    presetContent.includes('applyPresetLevel') && presetContent.includes("level === 'format'") && presetContent.includes("level === 'preset'"),
+    'presetHierarchyEngine.ts no exporta la función unificada de jerarquía applyPresetLevel'
+  );
+}
+
+const dockPath = path.join(ROOT, 'src/modules/cv-builder/components/CanvaIconDock.tsx');
+if (fs.existsSync(dockPath)) {
+  const dockContent = fs.readFileSync(dockPath, 'utf-8');
+  check(
+    'CanvaIconDock.tsx elimina la pestaña obsoleta de paneles (Columnas)',
+    !dockContent.includes("id: 'paneles'"),
+    'CanvaIconDock.tsx mantiene la pestaña de paneles'
+  );
+}
+
 // ─── Resultado final ───
 console.log(`\n${'═'.repeat(60)}`);
 if (failed === 0) {

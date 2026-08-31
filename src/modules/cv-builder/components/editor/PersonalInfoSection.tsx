@@ -3,6 +3,7 @@ import { User, Camera, QrCode } from 'lucide-react';
 import { useCVContext } from '../../../../context/CVContext';
 import { Field } from '../../../../shared/core/ui/Field';
 import { PanelSection } from './PanelSection';
+import { SectionManualAdjustment } from './SectionManualAdjustment';
 import { colorSystem, typeScale, button, elevationSystem } from '../../../../shared/core/uiDesignSystem';
 
 export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhotoCropper: () => void; registeredItems?: any[] }) {
@@ -28,8 +29,8 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
           onClick={() => toggleSectionVisibility('personales')}
           className={`px-3 py-1 rounded-full text-[11px] font-medium transition flex items-center gap-1.5 ${elevationSystem.raised} cursor-pointer ${
             isVisible
-              ? 'bg-[var(--color-secondary-base)] text-white hover:bg-[var(--color-secondary-hover)]'
-              : 'bg-[var(--color-neutral-text-muted)] text-white hover:opacity-80'
+              ? 'bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] hover:bg-[var(--color-secondary-hover)]'
+              : 'bg-[var(--color-neutral-text-muted)] text-[var(--color-neutral-surface)] hover:opacity-80'
           }`}
         >
           <span>{isVisible ? 'ACTIVADA' : 'DESACTIVADA'}</span>
@@ -38,7 +39,11 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
 
       {isVisible && (
         <div className="space-y-4">
-          <PanelSection icon={<User className="w-4 h-4 text-[var(--ui-secondary)]" />} title="Información de Contacto">
+          <PanelSection 
+            icon={<User className="w-4 h-4 text-[var(--ui-secondary)]" />} 
+            title="Información de Contacto"
+            manualAdjustment={<SectionManualAdjustment sectionId="contacto" cvData={cvData} setCvData={setCvData} />}
+          >
             <div className="space-y-3 pt-1">
               {/* Tarjeta Foto de Perfil */}
               <div

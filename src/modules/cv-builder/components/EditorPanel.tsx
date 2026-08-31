@@ -27,6 +27,8 @@ import { getSavedCVsList, loadCVById, deleteCVById, saveCV } from '../services/c
 import CertCropperModal from './CertCropperModal';
 import PersonalInfoSection from './editor/PersonalInfoSection';
 import { PanelSection } from './editor/PanelSection';
+import { SectionManualAdjustment } from './editor/SectionManualAdjustment';
+import { applyPresetLevel } from '../../../shared/core/pdf-engine/layers/presets/presetHierarchyEngine';
 
 import { useToast } from '../../../shared/core/ui/Toast';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
@@ -276,8 +278,8 @@ export default function EditorPanel({
             }}
             className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 ${elevationSystem.raised} cursor-pointer ${
               isVisible
-                ? 'bg-[var(--color-secondary-base)] text-white hover:bg-[var(--color-secondary-hover)]'
-                : 'bg-[var(--color-neutral-text-muted)] text-white hover:opacity-80'
+                ? 'bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] hover:bg-[var(--color-secondary-hover)]'
+                : 'bg-[var(--color-neutral-text-muted)] text-[var(--color-neutral-surface)] hover:opacity-80'
             }`}
           >
             <span>{isVisible ? 'ACTIVADA' : 'DESACTIVADA'}</span>
@@ -287,7 +289,7 @@ export default function EditorPanel({
             <button
               type="button"
               onClick={onAddAction}
-              className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white ${elevationSystem.raised} transition cursor-pointer`}
+              className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-[var(--color-accent-on-base)] ${elevationSystem.raised} transition cursor-pointer`}
             >
               <Plus className="w-3.5 h-3.5" />
               <span>{addLabel}</span>
@@ -613,7 +615,7 @@ export default function EditorPanel({
                 }}
                 className={`p-2.5 rounded-[${radius.card}] border-2 flex items-center justify-center gap-1.5 font-black text-xs transition ${
                   certMode === 'upload'
-                    ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-base)] text-white ${elevationSystem.raised}'
+                    ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.raised}'
                     : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-surface-warm)]'
                 }`}
               >
@@ -629,7 +631,7 @@ export default function EditorPanel({
                 }}
                 className={`p-2.5 rounded-[${radius.card}] border-2 flex items-center justify-center gap-1.5 font-black text-xs transition ${
                   certMode === 'camera'
-                    ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-base)] text-white ${elevationSystem.raised}'
+                    ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.raised}'
                     : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-surface-warm)]'
                 }`}
               >
@@ -643,7 +645,7 @@ export default function EditorPanel({
                 <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
                 <button
                   onClick={capturePhoto}
-                  className={`absolute bottom-3 flex items-center gap-1.5 px-5 py-2 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white font-black text-xs rounded-full ${elevationSystem.floating} transition`}
+                  className={`absolute bottom-3 flex items-center gap-1.5 px-5 py-2 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-[var(--color-accent-on-base)] font-black text-xs rounded-full ${elevationSystem.floating} transition`}
                 >
                   <Camera className="w-4 h-4" /> Capturar Foto
                 </button>
@@ -806,7 +808,7 @@ export default function EditorPanel({
 
               <button
                 onClick={onOpenSignature}
-                className={`w-full flex items-center justify-center gap-2 py-2.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white text-xs font-black rounded-[${radius.card}] ${elevationSystem.raised} transition cursor-pointer`}
+                className={`w-full flex items-center justify-center gap-2 py-2.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-[var(--color-accent-on-base)] text-xs font-black rounded-[${radius.card}] ${elevationSystem.raised} transition cursor-pointer`}
               >
                 <PenTool className="w-4 h-4" /> Abrir Tablero de Firma (Dibujar / Subir)
               </button>
@@ -1105,7 +1107,7 @@ export default function EditorPanel({
                           <p className="text-[10px] text-[var(--color-neutral-text-secondary)] font-medium leading-tight">{presetSec.desc}</p>
                         </div>
                         <span className={`text-[10px] font-black mt-2 self-end px-2 py-0.5 rounded ${
-                          isAlreadyAdded ? 'bg-[var(--color-secondary-base)] text-white' : 'bg-[var(--color-accent-base)] text-white'
+                          isAlreadyAdded ? 'bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)]' : 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
                         }`}>
                           {isAlreadyAdded ? '✓ Activa (Editar)' : '+ Incorporar'}
                         </span>
@@ -1129,7 +1131,7 @@ export default function EditorPanel({
                         Crear sección personalizada seleccionando campos a medida.
                       </p>
                     </div>
-                    <span className="text-[10px] font-black mt-2 self-end px-2 py-0.5 rounded bg-[var(--color-accent-base)] text-white">
+                    <span className="text-[10px] font-black mt-2 self-end px-2 py-0.5 rounded bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]">
                       ↓ Ir a Creador
                     </span>
                   </button>
@@ -1219,7 +1221,7 @@ export default function EditorPanel({
                     showSuccess(`Sección '${newSection.titleText}' creada exitosamente.`);
                     if (typeof setActiveTab === 'function') setActiveTab(newId);
                   }}
-                  className={`w-full flex items-center justify-center gap-2 py-2.5 bg-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-hover)] text-white text-xs font-black rounded-[${radius.card}] ${elevationSystem.raised} transition cursor-pointer`}
+                  className={`w-full flex items-center justify-center gap-2 py-2.5 bg-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-hover)] text-[var(--color-secondary-on-base)] text-xs font-black rounded-[${radius.card}] ${elevationSystem.raised} transition cursor-pointer`}
                 >
                   <Plus className="w-4 h-4" /> Crear e Integrar Sección al CV
                 </button>
@@ -1380,7 +1382,7 @@ export default function EditorPanel({
             </PanelSection>
 
             {/* Formato Global & Estándares Internacionales (ATS, US Resume, Europass, Tech, LATAM) */}
-            <PanelSection icon={<Globe className="w-4 h-4 text-[var(--color-accent-base)]" />} title="Estándar & Formato Global (Internacional)">
+            <PanelSection icon={<Globe className="w-4 h-4 text-[var(--color-accent-text)]" />} title="Estándar & Formato Global (Internacional)">
               <div className="space-y-2">
                 {getAllCvFormats().map((format) => {
                   const isSelected = (cvData?.activeFormatId || 'ats-one-column') === format.id;
@@ -1390,20 +1392,7 @@ export default function EditorPanel({
                       type="button"
                       onClick={() => {
                         const fmt = getCvFormat(format.id);
-                        const newVis = getFormatDefaultVisibility(format.id);
-                        const recPreset = fmt.recommendedPresetIds?.[0] || 'cv-clasico';
-                        setCvData((prev: any) => ({
-                          ...prev,
-                          activeFormatId: format.id,
-                          columnLayoutPresetId: fmt.columnLayoutPresetId,
-                          activePresetId: fmt.recommendedPresetIds?.includes(prev?.activePresetId)
-                            ? prev.activePresetId
-                            : recPreset,
-                          sectionVisibility: {
-                            ...(prev?.sectionVisibility || {}),
-                            ...newVis
-                          }
-                        }));
+                        setCvData((prev: any) => applyPresetLevel(prev, 'format', { formatId: format.id }));
                         showSuccess(`Formato "${fmt.name}" aplicado correctamente.`);
                       }}
                       className={`w-full p-3 rounded-[${radius.card}] border text-left transition flex flex-col gap-1.5 cursor-pointer ${
@@ -1458,7 +1447,7 @@ export default function EditorPanel({
                   return (
                     <button
                       key={key}
-                      onClick={() => setCvData((prev: any) => ({ ...prev, columnLayoutPresetId: key }))}
+                      onClick={() => setCvData((prev: any) => applyPresetLevel(prev, 'override', { columnLayoutPresetId: key }))}
                       className={`p-3 rounded-[${radius.card}] border text-left transition flex items-center justify-between gap-3 cursor-pointer ${
                         isSelected
                           ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
@@ -1481,7 +1470,7 @@ export default function EditorPanel({
                   return (
                     <button
                       key={key}
-                      onClick={() => setCvData((prev: any) => ({ ...prev, colorPresetId: key }))}
+                      onClick={() => setCvData((prev: any) => applyPresetLevel(prev, 'override', { colorPresetId: key }))}
                       className={`p-2.5 rounded-[${radius.card}] border text-left transition flex flex-col justify-between cursor-pointer ${
                         isSelected
                           ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
@@ -1511,7 +1500,7 @@ export default function EditorPanel({
                   return (
                     <button
                       key={key}
-                      onClick={() => setCvData((prev: any) => ({ ...prev, typographyPresetId: key }))}
+                      onClick={() => setCvData((prev: any) => applyPresetLevel(prev, 'override', { typographyPresetId: key }))}
                       className={`p-2.5 rounded-[${radius.card}] border text-left transition flex items-center justify-between cursor-pointer ${
                         isSelected
                           ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
@@ -1530,25 +1519,27 @@ export default function EditorPanel({
             <PanelSection icon={<Sparkles className="w-4 h-4" />} title="Plantilla base predefinida">
               <div className="grid grid-cols-2 gap-2">
                 {getAllPresets().filter(p => p.id !== 'tarjeta-personal').map((preset) => {
-                  const isSelected = (cvData?.activePresetId || 'cv-clasico') === preset.id && !cvData?.colorPresetId && !cvData?.typographyPresetId && !cvData?.columnLayoutPresetId;
+                  const isSelected = (cvData?.activePresetId || 'cv-clasico') === preset.id;
+                  const hasOverrides = !!(cvData?.colorPresetId || cvData?.typographyPresetId || cvData?.columnLayoutPresetId);
                   return (
                     <button
                       key={preset.id}
-                      onClick={() => setCvData((prev: any) => ({
-                        ...prev,
-                        activePresetId: preset.id,
-                        colorPresetId: undefined,
-                        typographyPresetId: undefined,
-                        columnLayoutPresetId: undefined
-                      }))}
+                      onClick={() => setCvData((prev: any) => applyPresetLevel(prev, 'preset', { presetId: preset.id }))}
                       className={`p-2.5 rounded-[${radius.card}] border text-left transition flex flex-col justify-between cursor-pointer ${
                         isSelected
                           ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
                           : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]'
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[11px] font-bold text-[var(--color-neutral-text-primary)] truncate pr-1">{preset.name}</span>
+                      <div className="flex items-center justify-between mb-1.5 gap-1">
+                        <div className="flex items-center gap-1 min-w-0 pr-1">
+                          <span className="text-[11px] font-bold text-[var(--color-neutral-text-primary)] truncate">{preset.name}</span>
+                          {isSelected && hasOverrides && (
+                            <span className="text-[9px] px-1 py-0.2 rounded bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] font-black flex-shrink-0">
+                              + personalizado
+                            </span>
+                          )}
+                        </div>
                         {isSelected && <Check className="w-3.5 h-3.5 text-[var(--ui-text-primary)] flex-shrink-0" />}
                       </div>
                       <div className="flex gap-1.5 items-center">
@@ -1665,212 +1656,6 @@ export default function EditorPanel({
                       </div>
                     ))
                   )}
-                </div>
-              </div>
-            </PanelSection>
-          </div>
-        )}
-
-        {/* ========================================================================= */}
-        {/* TAB: COLUMNAS (PANELES) */}
-        {/* ========================================================================= */}
-        {activeTab === 'paneles' && (
-          <div className="space-y-6">
-            <PanelSection 
-              icon={<Columns3 className="w-4 h-4" />} 
-              title="Columnas"
-            >
-              <div className="space-y-3 pt-2">
-                <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] flex items-center justify-between">
-                  <span>Ubicación, Ordenamiento y Saltos de Página</span>
-                </label>
-                  <div className="space-y-2">
-                    {getColumnAssignableSections(cvData.customSections).map((sec) => {
-                      const assignments = cvData.layout?.columnAssignments || {};
-                      const currentVal = typeof assignments[sec.id] === 'string'
-                        ? assignments[sec.id]
-                        : (sec.defaultSectorRole === 'sidebar' ? 'secundaria' : 'primaria');
-
-                      const defaultSecundaria = ["contacto", "personales", "frase", "informatica", "competencias", "ecologia"];
-                      const defaultPrimaria = ["personales", "formacion", "profesion", "experiencia", "cursos", "ecologia"];
-
-                      const secOrder = cvData.layout?.sectionOrders?.secundaria || defaultSecundaria;
-                      const primOrder = cvData.layout?.sectionOrders?.primaria || defaultPrimaria;
-
-                      const setColumn = (targetVal: string) => {
-                        setCvData((prev: any) => {
-                          const newAssignments = {
-                            ...(prev.layout?.columnAssignments || {}),
-                            [sec.id]: targetVal
-                          };
-
-                          let newSecOrder = [...(prev.layout?.sectionOrders?.secundaria || defaultSecundaria)];
-                          let newPrimOrder = [...(prev.layout?.sectionOrders?.primaria || defaultPrimaria)];
-
-                          if (targetVal === 'secundaria') {
-                            if (!newSecOrder.includes(sec.id)) newSecOrder.push(sec.id);
-                            newPrimOrder = newPrimOrder.filter(id => id !== sec.id);
-                          } else if (targetVal === 'primaria') {
-                            if (!newPrimOrder.includes(sec.id)) newPrimOrder.push(sec.id);
-                            newSecOrder = newSecOrder.filter(id => id !== sec.id);
-                          }
-
-                          return {
-                            ...prev,
-                            layout: {
-                              ...prev.layout,
-                              columnAssignments: newAssignments,
-                              sectionOrders: {
-                                secundaria: newSecOrder,
-                                primaria: newPrimOrder
-                              }
-                            }
-                          };
-                        });
-                      };
-
-                      const moveSection = (colName: string, direction: string) => {
-                        setCvData((prev: any) => {
-                          const curOrders = prev.layout?.sectionOrders?.[colName] || (
-                            colName === 'secundaria' ? defaultSecundaria : defaultPrimaria
-                          );
-
-                          const idx = curOrders.indexOf(sec.id);
-                          if (idx === -1) return prev;
-                          const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
-                          if (targetIdx < 0 || targetIdx >= curOrders.length) return prev;
-
-                          const newOrder = [...curOrders];
-                          const [moved] = newOrder.splice(idx, 1);
-                          newOrder.splice(targetIdx, 0, moved);
-
-                          return {
-                            ...prev,
-                            layout: {
-                              ...prev.layout,
-                              sectionOrders: {
-                                ...(prev.layout?.sectionOrders || {}),
-                                [colName]: newOrder
-                              }
-                            }
-                          };
-                        });
-                      };
-
-                      const secPos = secOrder.indexOf(sec.id) + 1;
-                      const primPos = primOrder.indexOf(sec.id) + 1;
-
-                      return (
-                        <div key={sec.id} className={`p-2 bg-[var(--ui-bg-card)] rounded-[${radius.card}] border border-[var(--color-neutral-border)] text-xs space-y-1.5 ${elevationSystem.raised}`}>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-extrabold text-[var(--color-neutral-text-primary)]">{sec.label}</span>
-                              {secPos > 0 && currentVal === 'secundaria' && (
-                                <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] font-black">
-                                  Sec #{secPos}
-                                </span>
-                              )}
-                              {primPos > 0 && currentVal === 'primaria' && (
-                                <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[var(--color-secondary-muted)] text-[var(--color-secondary-text)] font-black">
-                                  Prim #{primPos}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <button
-                                type="button"
-                                onClick={() => setColumn('secundaria')}
-                                className={currentVal === 'secundaria'
-                                  ? `px-2 py-1 rounded-[${radius.control}] text-[10px] font-black transition cursor-pointer bg-[var(--color-accent-hover)] text-white ${elevationSystem.raised}` : `px-2 py-1 rounded-[${radius.control}] text-[10px] font-black transition cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50`}
-                              >
-                                Secundaria (Izquierda)
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setColumn('primaria')}
-                                className={currentVal === 'primaria'
-                                  ? `px-2 py-1 rounded-[${radius.control}] text-[10px] font-black transition cursor-pointer bg-[var(--color-accent-purple-hover)] text-white ${elevationSystem.raised}` : `px-2 py-1 rounded-[${radius.control}] text-[10px] font-black transition cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50`}
-                              >
-                                Primaria (Derecha)
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between gap-2 text-[10px] text-[var(--ui-text-secondary)] pt-1 border-t border-[var(--ui-border)]">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const hasBreak = !!cvData.layout?.sectionPageBreaks?.[sec.id];
-                                setCvData((prev: any) => ({
-                                  ...prev,
-                                  layout: {
-                                    ...(prev.layout || {}),
-                                    sectionPageBreaks: {
-                                      ...(prev.layout?.sectionPageBreaks || {}),
-                                      [sec.id]: !hasBreak
-                                    }
-                                  }
-                                }));
-                              }}
-                              className={`px-2 py-0.5 rounded text-[10px] font-extrabold transition cursor-pointer flex items-center gap-1 ${
-                                cvData.layout?.sectionPageBreaks?.[sec.id]
-                                  ? `bg-[var(--color-accent-purple)] text-white ${elevationSystem.raised}`
-                                  : 'bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-secondary)] hover:bg-[var(--color-neutral-border)]'
-                              }`}
-                              title="Forzar salto de página nativo antes de esta sección"
-                            >
-                              📄 Salto pág: {cvData.layout?.sectionPageBreaks?.[sec.id] ? 'ACTIVADO' : 'OFF'}
-                            </button>
-
-                            <div className="flex items-center gap-2">
-                              {currentVal === 'secundaria' && (
-                                <div className={`flex items-center gap-1 bg-[var(--color-accent-muted)] px-2 py-0.5 rounded-[${radius.control}] border border-[var(--color-accent-base)]/30`}>
-                                  <span className="font-bold text-[var(--color-accent-text)]">Sec:</span>
-                                  <button
-                                    type="button"
-                                    onClick={() => moveSection('secundaria', 'up')}
-                                    disabled={secOrder.indexOf(sec.id) <= 0}
-                                    className="px-1 py-0.5 hover:opacity-80 rounded font-black disabled:opacity-30 cursor-pointer"
-                                  >
-                                    ⬆
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => moveSection('secundaria', 'down')}
-                                    disabled={secOrder.indexOf(sec.id) === -1 || secOrder.indexOf(sec.id) >= secOrder.length - 1}
-                                    className="px-1 py-0.5 hover:opacity-80 rounded font-black disabled:opacity-30 cursor-pointer"
-                                  >
-                                    ⬇
-                                  </button>
-                                </div>
-                              )}
-
-                              {currentVal === 'primaria' && (
-                                <div className={`flex items-center gap-1 bg-[var(--color-secondary-muted)] px-2 py-0.5 rounded-[${radius.control}] border border-[var(--color-secondary-base)]/30`}>
-                                  <span className="font-bold text-[var(--color-secondary-text)]">Prim:</span>
-                                  <button
-                                    type="button"
-                                    onClick={() => moveSection('primaria', 'up')}
-                                    disabled={primOrder.indexOf(sec.id) <= 0}
-                                    className="px-1 py-0.5 hover:opacity-80 rounded font-black disabled:opacity-30 cursor-pointer"
-                                  >
-                                    ⬆
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => moveSection('primaria', 'down')}
-                                    disabled={primOrder.indexOf(sec.id) === -1 || primOrder.indexOf(sec.id) >= primOrder.length - 1}
-                                    className="px-1 py-0.5 hover:opacity-80 rounded font-black disabled:opacity-30 cursor-pointer"
-                                  >
-                                    ⬇
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
                   </div>
                 </div>
               </PanelSection>

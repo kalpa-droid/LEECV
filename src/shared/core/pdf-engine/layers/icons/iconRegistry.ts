@@ -125,9 +125,9 @@ export const ICON_REGISTRY: Record<string, IconDefinition> = {
     id: 'competencias',
     viewBox: '0 0 24 24',
     paths: [
-      'M12 2L2 7l10 5 10-5-10-5z',
-      'M2 17l10 5 10-5',
-      'M2 12l10 5 10-5'
+      'M12 22a10 10 0 1 0-10-10 10 10 0 0 0 10 10z',
+      'M12 18a6 6 0 1 0-6-6 6 6 0 0 0 6 6z',
+      'M12 14a2 2 0 1 0-2-2 2 2 0 0 0 2 2z'
     ]
   },
   publicaciones: {
