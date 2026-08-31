@@ -99,11 +99,11 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
     });
   }
 
-  // Resumen Profesional (Main)
+  // Resumen Profesional (Main - Sin título impreso en PDF, siempre debajo del nombre)
   if (cvData.summary) {
     sections.push({
       id: 'resumen',
-      titleText: getSectionLabel('resumen'),
+      titleText: '',
       records: [
         {
           id: 'rec-summary',
@@ -112,6 +112,24 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
           fields: { text: cvData.summary }
         }
       ]
+    });
+  }
+
+  // Redes Sociales & Enlaces (Sidebar)
+  if (Array.isArray(cvData.redes) && cvData.redes.length > 0) {
+    sections.push({
+      id: 'redes',
+      titleText: getSectionLabel('redes'),
+      records: cvData.redes.map((r: any, idx: number) => ({
+        id: `rec-redes-${idx}`,
+        kind: 'social-link',
+        targetSectorRole: 'sidebar',
+        fields: {
+          label: r.usuario ? `${r.plataforma || 'Red'}: ${r.usuario}` : r.plataforma || r.url || '',
+          url: r.url || '',
+          icon: r.plataforma === 'LinkedIn' ? '💼' : r.plataforma === 'Email' ? '✉️' : r.plataforma?.includes('GitHub') ? '💻' : '🌐'
+        }
+      }))
     });
   }
 
@@ -356,6 +374,23 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
     });
   }
 
+
+  // Certificados Escaneados (Main)
+  if (Array.isArray(cvData.certificatesScanned) && cvData.certificatesScanned.length > 0) {
+    sections.push({
+      id: 'certificados',
+      titleText: getSectionLabel('certificados'),
+      records: cvData.certificatesScanned.map((cert: any, idx: number) => ({
+        id: `rec-cert-${idx}`,
+        kind: 'course',
+        targetSectorRole: 'main',
+        fields: {
+          title: cert.title || `Certificado #${idx + 1}`,
+          dataUrl: cert.dataUrl || ''
+        }
+      }))
+    });
+  }
 
   // Secciones Personalizadas Dinámicas (customSections)
   if (Array.isArray(cvData.customSections)) {
