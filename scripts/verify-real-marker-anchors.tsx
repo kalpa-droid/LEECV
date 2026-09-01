@@ -9,13 +9,16 @@
 
 import React from 'react';
 import { pdf } from '@react-pdf/renderer';
-import * as pdfjsLib from 'pdfjs-dist';
+import path from 'path';
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { TemplateRenderer } from '../src/shared/core/pdf-engine/renderer/TemplateRenderer.js';
 import { cvDataToContentSections } from '../src/shared/core/pdf-engine/layers/records/cvDataAdapter.js';
 import { getAllPresets } from '../src/shared/core/pdf-engine/layers/presets/presetRegistry.js';
 import { resolveSectionAnchor } from '../src/shared/core/pdf-engine/layers/anchors/pdfAnchorEngine.js';
 
 console.log('🔍 Iniciando verificación anti-regresión del Motor de Marcadores Reales (PDF.js Ground Truth)...\n');
+
+const standardFontDataUrl = path.resolve(process.cwd(), 'node_modules/pdfjs-dist/standard_fonts') + '/';
 
 /**
  * Genera un CV de prueba denso y sintético con 12 experiencias y descripciones extensas
@@ -133,7 +136,10 @@ async function runRealMarkerVerification() {
 
   const blob = await pdf(documentElement).toBlob();
   const arrayBuffer = await blob.arrayBuffer();
-  const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const pdfDoc = await pdfjsLib.getDocument({
+    data: arrayBuffer,
+    standardFontDataUrl: standardFontDataUrl
+  }).promise;
 
   const anchorMap: Record<string, { startPage: number; startYRatio: number; endPage: number; endYRatio: number }> = {};
   for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
