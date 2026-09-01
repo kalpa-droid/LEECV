@@ -53,6 +53,9 @@ export default function CanvaIconDock({
       setActiveTab(tabId);
       setIsPanelOpen(true);
     }
+
+    // Disparar evento global de desplazamiento para enfocar la sección en el PDF
+    window.dispatchEvent(new CustomEvent('pdf-anchor-scroll', { detail: { tabId } }));
   };
 
   return (

@@ -183,24 +183,24 @@ export function scrollToPdfAnchor(
 
   // Encontrar el contenedor ascendente real con scroll (si el contenedor directo es estático)
   let scrollableParent: HTMLElement = container;
-  while (scrollableParent && scrollableParent !== document.body) {
+  while (scrollableParent && scrollableParent.parentElement && scrollableParent !== document.body) {
     const style = window.getComputedStyle(scrollableParent);
     if (['auto', 'scroll'].includes(style.overflowY) || scrollableParent.scrollHeight > scrollableParent.clientHeight) {
       break;
     }
-    if (scrollableParent.parentElement) {
-      scrollableParent = scrollableParent.parentElement;
-    } else {
-      break;
-    }
+    scrollableParent = scrollableParent.parentElement;
   }
 
-  const canvasTop = targetCanvas.offsetTop;
-  const canvasHeight = targetCanvas.offsetHeight;
-  const targetScrollTop = canvasTop + (canvasHeight * anchor.verticalRatio);
+  // Calcular la posición real en píxeles de pantalla usando getBoundingClientRect para soportar zoom/scale
+  const parentRect = scrollableParent.getBoundingClientRect();
+  const canvasRect = targetCanvas.getBoundingClientRect();
+
+  const currentScrollTop = scrollableParent.scrollTop;
+  const canvasTopRelativeToContainer = canvasRect.top - parentRect.top;
+  const targetScrollTop = currentScrollTop + canvasTopRelativeToContainer + (canvasRect.height * anchor.verticalRatio);
 
   scrollableParent.scrollTo({
-    top: Math.max(0, targetScrollTop - 40),
+    top: Math.max(0, targetScrollTop - 20),
     behavior: 'smooth'
   });
 

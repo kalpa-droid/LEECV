@@ -102,6 +102,11 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
           container.innerHTML = '';
           container.appendChild(fragment);
           setLoading(false);
+          if (activeTab) {
+            requestAnimationFrame(() => {
+              scrollToPdfAnchor(wrapperRef.current || containerRef.current, activeTab, sections, preset!, layoutOverrides);
+            });
+          }
         }
       } catch (err) {
         console.error('Error renderizando el PDF vectorial:', err);
@@ -123,6 +128,20 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
       scrollToPdfAnchor(wrapperRef.current || containerRef.current, activeTab, sections, preset!, layoutOverrides);
     }
   }, [activeTab, loading, sections, preset, layoutOverrides]);
+
+  // Escuchar eventos globales pdf-anchor-scroll (disparados al presionar botones de muelle/panel incluso si activeTab no varió)
+  useEffect(() => {
+    const handleAnchorEvent = (e: Event) => {
+      const customEvt = e as CustomEvent;
+      const targetTab = customEvt.detail?.tabId || activeTab;
+      if (!loading && targetTab && (wrapperRef.current || containerRef.current)) {
+        scrollToPdfAnchor(wrapperRef.current || containerRef.current, targetTab, sections, preset!, layoutOverrides);
+      }
+    };
+
+    window.addEventListener('pdf-anchor-scroll', handleAnchorEvent);
+    return () => window.removeEventListener('pdf-anchor-scroll', handleAnchorEvent);
+  }, [loading, activeTab, sections, preset, layoutOverrides]);
 
   return (
     <div ref={wrapperRef} style={{ width: '100%', height: '100%', overflowY: 'auto', overflowX: 'hidden' }}>
