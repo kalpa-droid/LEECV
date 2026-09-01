@@ -41,6 +41,15 @@ export const SECTION_TAB_MAPPING: Record<string, string[]> = {
   firma: ['firma']
 };
 
+export interface PdfAnchorMapTarget {
+  startPage: number;
+  startYRatio: number;
+  endPage: number;
+  endYRatio: number;
+}
+
+export type PdfAnchorMap = Record<string, PdfAnchorMapTarget>;
+
 /**
  * Resuelve determinísticamente el número de página y ratio de desplazamiento
  * para cualquier pestaña o ID de sección recibido, posicionando la vista hacia
@@ -50,10 +59,27 @@ export function resolveSectionAnchor(
   activeTab: string | undefined,
   sections: ContentSection[],
   preset: Preset,
-  layoutOverrides?: CvLayoutOverrides
+  layoutOverrides?: CvLayoutOverrides,
+  anchorMap?: PdfAnchorMap
 ): PdfAnchorTarget {
   const normalizedTab = (activeTab || 'personales').toLowerCase().trim();
   const possibleSectionIds = SECTION_TAB_MAPPING[normalizedTab] || [normalizedTab];
+
+  // 0. Si existe el mapa de marcadores reales de PDF.js, usar la VERDAD DE TERRENO O(1)
+  if (anchorMap && Object.keys(anchorMap).length > 0) {
+    const candidateKeys = [normalizedTab, ...(SECTION_TAB_MAPPING[normalizedTab] || [])];
+    for (const key of candidateKeys) {
+      const realAnchor = anchorMap[key];
+      if (realAnchor) {
+        return {
+          tabId: normalizedTab,
+          sectionId: key,
+          pageIndex: realAnchor.endPage,
+          verticalRatio: realAnchor.endYRatio
+        };
+      }
+    }
+  }
 
   // 1. Si es la pestaña personal/header o datos de contacto en primera página
   if (normalizedTab === 'personales') {
@@ -167,11 +193,12 @@ export function scrollToPdfAnchor(
   activeTab: string | undefined,
   sections: ContentSection[],
   preset: Preset,
-  layoutOverrides?: CvLayoutOverrides
+  layoutOverrides?: CvLayoutOverrides,
+  anchorMap?: PdfAnchorMap
 ): void {
   if (!container || !activeTab) return;
 
-  const anchor = resolveSectionAnchor(activeTab, sections, preset, layoutOverrides);
+  const anchor = resolveSectionAnchor(activeTab, sections, preset, layoutOverrides, anchorMap);
   const canvasElements = container.querySelectorAll('canvas');
 
   if (canvasElements.length === 0) return;

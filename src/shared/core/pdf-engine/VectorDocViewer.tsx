@@ -70,12 +70,48 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
         const fragment = window.document.createDocumentFragment();
         const containerWidth = container.clientWidth || 800;
         const devicePixelRatio = window.devicePixelRatio || 1;
+        const newAnchorMap: Record<string, { startPage: number; startYRatio: number; endPage: number; endYRatio: number }> = {};
 
         for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
           if (cancelled || renderTokenRef.current !== myToken) return;
           const page = await pdfDoc.getPage(pageNum);
 
           const unscaledViewport = page.getViewport({ scale: 1 });
+          const pageHeightPt = unscaledViewport.height;
+
+          // Extraer marcadores de texto reales embedidos por @react-pdf/renderer
+          try {
+            const textContent = await page.getTextContent();
+            for (const item of textContent.items as any[]) {
+              if (typeof item.str === 'string' && item.str.includes('ANCHOR_')) {
+                const str = item.str.trim();
+                const yPdf = Array.isArray(item.transform) ? item.transform[5] : 0;
+                const yFromTopPt = Math.max(0, pageHeightPt - yPdf);
+                const ratio = Math.min(0.98, Math.max(0, yFromTopPt / pageHeightPt));
+
+                if (str.startsWith('ANCHOR_START:')) {
+                  const secId = str.replace('ANCHOR_START:', '').trim();
+                  if (!newAnchorMap[secId]) {
+                    newAnchorMap[secId] = { startPage: pageNum, startYRatio: ratio, endPage: pageNum, endYRatio: ratio };
+                  } else {
+                    newAnchorMap[secId].startPage = pageNum;
+                    newAnchorMap[secId].startYRatio = ratio;
+                  }
+                } else if (str.startsWith('ANCHOR_END:')) {
+                  const secId = str.replace('ANCHOR_END:', '').trim();
+                  if (!newAnchorMap[secId]) {
+                    newAnchorMap[secId] = { startPage: pageNum, startYRatio: ratio, endPage: pageNum, endYRatio: ratio };
+                  } else {
+                    newAnchorMap[secId].endPage = pageNum;
+                    newAnchorMap[secId].endYRatio = ratio;
+                  }
+                }
+              }
+            }
+          } catch (_e) {
+            // Silencioso: si falla la extracción de texto, la función cae en el heurístico
+          }
+
           const baseScale = containerWidth / unscaledViewport.width;
           const viewport = page.getViewport({ scale: baseScale * zoomLevel * devicePixelRatio });
 
@@ -101,10 +137,11 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
         if (!cancelled && renderTokenRef.current === myToken) {
           container.innerHTML = '';
           container.appendChild(fragment);
+          anchorMapRef.current = newAnchorMap;
           setLoading(false);
           if (activeTab) {
             requestAnimationFrame(() => {
-              scrollToPdfAnchor(wrapperRef.current || containerRef.current, activeTab, sections, preset!, layoutOverrides);
+              scrollToPdfAnchor(wrapperRef.current || containerRef.current, activeTab, sections, preset!, layoutOverrides, anchorMapRef.current);
             });
           }
         }
@@ -122,10 +159,12 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
     return () => { cancelled = true; };
   }, [document, zoomLevel]);
 
+  const anchorMapRef = useRef<Record<string, { startPage: number; startYRatio: number; endPage: number; endYRatio: number }>>({});
+
   // Reacciona ante el cambio de activeTab ejecutando scroll suave en el contenedor
   useEffect(() => {
     if (!loading && activeTab && containerRef.current) {
-      scrollToPdfAnchor(wrapperRef.current || containerRef.current, activeTab, sections, preset!, layoutOverrides);
+      scrollToPdfAnchor(wrapperRef.current || containerRef.current, activeTab, sections, preset!, layoutOverrides, anchorMapRef.current);
     }
   }, [activeTab, loading, sections, preset, layoutOverrides]);
 
@@ -135,7 +174,7 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
       const customEvt = e as CustomEvent;
       const targetTab = customEvt.detail?.tabId || activeTab;
       if (!loading && targetTab && (wrapperRef.current || containerRef.current)) {
-        scrollToPdfAnchor(wrapperRef.current || containerRef.current, targetTab, sections, preset!, layoutOverrides);
+        scrollToPdfAnchor(wrapperRef.current || containerRef.current, targetTab, sections, preset!, layoutOverrides, anchorMapRef.current);
       }
     };
 

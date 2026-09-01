@@ -50,7 +50,16 @@ export default function EditorPanel({
   onOpenSignature
 }: any) {
   const { showSuccess, showError, showWarning } = useToast();
-  const { confirm } = useConfirm(); 
+  const { confirm } = useConfirm();
+
+  const changeActiveTab = (tabId: string) => {
+    if (typeof setActiveTab === 'function') {
+      setActiveTab(tabId);
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('pdf-anchor-scroll', { detail: { tabId } }));
+    }
+  };
 
   const hasDesignOverrides = !!(cvData?.colorPresetId || cvData?.typographyPresetId || cvData?.columnLayoutPresetId);
 
@@ -1017,9 +1026,7 @@ export default function EditorPanel({
                       ...prev,
                       customSections: (prev.customSections || []).filter((s: any) => s.id !== cs.id)
                     }));
-                    if (typeof setActiveTab === 'function') {
-                      setActiveTab('personales');
-                    }
+                    changeActiveTab('personales');
                     showSuccess(`Sección '${cs.titleText}' eliminada.`);
                   }
                 });
@@ -1144,13 +1151,13 @@ export default function EditorPanel({
                               ecology: Array.isArray(prev.ecology) && prev.ecology.length > 0 ? prev.ecology : [{}],
                               customSections: (prev.customSections || []).filter((s: any) => s.id !== 'ecologia')
                             }));
-                            if (typeof setActiveTab === 'function') setActiveTab('ecologia');
+                            changeActiveTab('ecologia');
                             showSuccess("Sección 'Proyectos Sustentables & Ecológicos' activada.");
                             return;
                           }
 
                           if (isAlreadyAdded) {
-                            if (typeof setActiveTab === 'function') setActiveTab(presetSec.id);
+                            changeActiveTab(presetSec.id);
                             return;
                           }
                           const newSection = {
@@ -1178,7 +1185,7 @@ export default function EditorPanel({
                           }));
 
                           showSuccess(`Sección '${presetSec.titleText}' incorporada.`);
-                          if (typeof setActiveTab === 'function') setActiveTab(presetSec.id);
+                          changeActiveTab(presetSec.id);
                         }}
                         className={`p-2.5 rounded-[${radius.card}] border text-left flex flex-col justify-between transition cursor-pointer ${
                           isAlreadyAdded
@@ -1303,7 +1310,7 @@ export default function EditorPanel({
 
                     setNewSectionTitle('');
                     showSuccess(`Sección '${newSection.titleText}' creada exitosamente.`);
-                    if (typeof setActiveTab === 'function') setActiveTab(newId);
+                    changeActiveTab(newId);
                   }}
                   className={`w-full flex items-center justify-center gap-2 py-2.5 bg-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-hover)] text-[var(--color-secondary-on-base)] text-xs font-black rounded-[${radius.card}] ${elevationSystem.raised} transition cursor-pointer`}
                 >
@@ -1326,7 +1333,7 @@ export default function EditorPanel({
                       <button
                         type="button"
                         onClick={() => {
-                          if (typeof setActiveTab === 'function') setActiveTab(cs.id);
+                          changeActiveTab(cs.id);
                         }}
                         className={`px-3 py-1 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-bold text-xs rounded-[${radius.card}] shadow transition cursor-pointer`}
                       >
