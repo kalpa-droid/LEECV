@@ -13,6 +13,14 @@ export interface UiHintItem {
 }
 
 export const UI_GLOSSARY = {
+  labels: {
+    documentStatus: 'Estado del documento',
+    customized: 'Personalizado',
+    paperFormat: 'Formato de Papel',
+    threeLevelCascade: 'Nivel 1: Preset Regional ➔ Nivel 2: Plantilla Base ➔ Nivel 3: Ajustes Personalizados',
+    draftStatus: 'Borrador (En Edición)',
+    officialStatus: 'CV Oficial'
+  },
   hints: {
     draftDot: {
       id: 'draftDot',

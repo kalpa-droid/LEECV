@@ -1,4 +1,4 @@
-import { getCvFormat, getFormatDefaultVisibility } from '../../../formats/cvFormatRegistry';
+import { getCvFormat, getFormatDefaultVisibility, resolveActiveFormatId } from '../../../formats/cvFormatRegistry';
 
 export type PresetLevel = 'format' | 'preset' | 'override';
 
@@ -46,23 +46,36 @@ export function applyPresetLevel(cvData: any, level: PresetLevel, payload: Apply
   }
 
   if (level === 'preset' && payload.presetId) {
-    return {
+    const updated = {
       ...cvData,
       activePresetId: payload.presetId,
+      activeFormatId: undefined,
       colorPresetId: undefined,
       typographyPresetId: undefined,
       columnLayoutPresetId: undefined
     };
+    return {
+      ...updated,
+      activeFormatId: resolveActiveFormatId(updated)
+    };
   }
 
   if (level === 'override') {
-    return {
+    const updated = {
       ...cvData,
       colorPresetId: payload.colorPresetId !== undefined ? payload.colorPresetId : cvData?.colorPresetId,
       typographyPresetId: payload.typographyPresetId !== undefined ? payload.typographyPresetId : cvData?.typographyPresetId,
       columnLayoutPresetId: payload.columnLayoutPresetId !== undefined ? payload.columnLayoutPresetId : cvData?.columnLayoutPresetId
     };
+    if (payload.columnLayoutPresetId !== undefined) {
+      updated.activeFormatId = undefined;
+    }
+    return {
+      ...updated,
+      activeFormatId: resolveActiveFormatId(updated)
+    };
   }
 
   return cvData;
 }
+

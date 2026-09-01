@@ -625,7 +625,7 @@ if (fs.existsSync(schemaPath)) {
   const schemaContent = fs.readFileSync(schemaPath, 'utf-8');
   check(
     'cvDataSchema.ts incluye activeFormatId en la lista blanca de sanitización para persistencia',
-    schemaContent.includes('activeFormatId: data.activeFormatId || undefined'),
+    schemaContent.includes('activeFormatId: resolveActiveFormatId(data)'),
     'cvDataSchema.ts descarta activeFormatId al guardar/cargar CV'
   );
 }
@@ -634,8 +634,8 @@ const cvAdapterPath = path.join(ROOT, 'src/shared/core/pdf-engine/layers/records
 if (fs.existsSync(cvAdapterPath)) {
   const adapterContent = fs.readFileSync(cvAdapterPath, 'utf-8');
   check(
-    'cvDataAdapter.ts conecta activeFormatId con getCvFormat para reordenamiento de secciones y filtrado de datos personales',
-    adapterContent.includes('getCvFormat') && adapterContent.includes('hiddenFieldsSet') && adapterContent.includes('formatOrderMap'),
+    'cvDataAdapter.ts conecta activeFormatId con resolveActiveFormat para reordenamiento de secciones y filtrado de datos personales',
+    (adapterContent.includes('resolveActiveFormat') || adapterContent.includes('getCvFormat')) && adapterContent.includes('hiddenFieldsSet') && adapterContent.includes('formatOrderMap'),
     'cvDataAdapter.ts no consume el motor de formatos globales para reordenar secciones o filtrar datos personales'
   );
 }

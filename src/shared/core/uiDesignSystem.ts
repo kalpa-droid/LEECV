@@ -383,6 +383,8 @@ export function getActiveUiTheme(themeId?: string) {
  */
 export function applyUiTheme(themeId?: string): void {
   if (typeof document === 'undefined') return;
+  document.documentElement.setAttribute('data-ui-theme', themeId || 'default');
+
   const theme = getActiveUiTheme(themeId);
   const root = document.documentElement;
 
@@ -398,7 +400,5 @@ export function applyUiTheme(themeId?: string): void {
   root.style.setProperty('--ui-page-border', theme.pageBorder);
   root.style.setProperty('--ui-accent', theme.accent);
   root.style.setProperty('--ui-secondary', theme.secondary);
-
-  root.setAttribute('data-ui-theme', theme.id);
 }
 

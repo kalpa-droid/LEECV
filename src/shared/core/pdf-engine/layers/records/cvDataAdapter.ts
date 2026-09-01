@@ -1,6 +1,6 @@
 import { ContentSection } from './recordTypes';
 import { getSectionLabel } from '../../../sectionRegistry';
-import { getCvFormat } from '../../../formats/cvFormatRegistry';
+import { resolveActiveFormat } from '../../../formats/cvFormatRegistry';
 
 const sortByYearDesc = (items: any[]) => {
   if (!Array.isArray(items)) return [];
@@ -29,7 +29,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
     signature = {}
   } = cvData;
 
-  const activeFormat = cvData?.activeFormatId ? getCvFormat(cvData.activeFormatId) : null;
+  const activeFormat = resolveActiveFormat(cvData);
   const hiddenFieldsSet = new Set(activeFormat?.hiddenPersonalFields || []);
 
   const sortedCourses = sortByYearDesc(coursesAndCertificates);

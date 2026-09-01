@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+html, body, #root {
+  height: 100%;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden !important;
+}
+
 @layer utilities {
   /* Hide scrollbar */
   .scrollbar-none::-webkit-scrollbar,

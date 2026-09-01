@@ -93,3 +93,36 @@ export function getFormatDefaultVisibility(formatId: string): Record<string, boo
 
   return result;
 }
+
+/**
+ * NÚCLEO — RESUELVE EL FORMATO GLOBAL ACTIVO (cvFormatRegistry.ts)
+ * 
+ * Si el documento contiene un `activeFormatId` explícito y válido, lo respeta.
+ * Si proviene de un JSON/borrador guardado previo que carecía de este campo,
+ * infiere el formato global correspondiente basándose en la maquetación efectiva del preset.
+ */
+export function resolveActiveFormatId(cvData: any): string {
+  if (cvData?.activeFormatId && CV_FORMAT_REGISTRY[cvData.activeFormatId]) {
+    return cvData.activeFormatId;
+  }
+
+  const effectiveLayout = cvData?.columnLayoutPresetId;
+  if (effectiveLayout === 'full-width') {
+    return 'ats-one-column';
+  }
+  if (effectiveLayout === 'sidebar-left' || effectiveLayout === 'sidebar-right') {
+    return 'latam-clasico';
+  }
+
+  const presetId = cvData?.activePresetId || 'cv-clasico';
+  if (presetId === 'minimal-editorial' || presetId === 'tarjeta-personal') {
+    return 'ats-one-column';
+  }
+
+  return 'latam-clasico';
+}
+
+export function resolveActiveFormat(cvData: any): CvFormatDefinition {
+  return getCvFormat(resolveActiveFormatId(cvData));
+}
+

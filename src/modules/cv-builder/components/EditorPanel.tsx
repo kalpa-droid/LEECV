@@ -9,18 +9,19 @@ import {
   RotateCw,
   Check,
   Sparkles,
-    Layout,
+  Layout,
   Columns3,
   FolderOpen,
   Save,
   Calendar,
   FileText,
-  Globe
+  Globe,
+  X
 } from 'lucide-react';
 import { fontOptions } from '../../../data/fontOptions';
 import { getColumnAssignableSections } from '../../../shared/core/sectionRegistry';
 import { getAllPresets, PRESET_COLORS, PRESET_TYPOGRAPHY, PRESET_COLUMNS, getColumnLayoutPresetName } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
-import { getAllCvFormats, getCvFormat, getFormatDefaultVisibility } from '../../../shared/core/formats/cvFormatRegistry';
+import { getAllCvFormats, getCvFormat, getFormatDefaultVisibility, resolveActiveFormatId, resolveActiveFormat } from '../../../shared/core/formats/cvFormatRegistry';
 import { FIELD_CATALOG } from '../../../shared/core/pdf-engine/layers/records/fieldCatalog';
 import { PAGE_SIZES } from '../../../shared/core/pdf-engine/pageSizes';
 import { getSavedCVsList, loadCVById, deleteCVById, saveCV } from '../services/cvStorageService';
@@ -36,6 +37,7 @@ import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { RepeatableSection } from '../../../shared/core/ui/RepeatableSection';
 import { RecordFormSection } from '../../../shared/core/ui/RecordFormSection';
 import { Field } from '../../../shared/core/ui/Field';
+import { UI_GLOSSARY } from '../../../shared/core/ui/uiTextGlossary';
 
 import { colorSystem, typeScale, elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 
@@ -49,6 +51,8 @@ export default function EditorPanel({
 }: any) {
   const { showSuccess, showError, showWarning } = useToast();
   const { confirm } = useConfirm(); 
+
+  const hasDesignOverrides = !!(cvData?.colorPresetId || cvData?.typographyPresetId || cvData?.columnLayoutPresetId);
 
   // Local states for Certificate Tab inside EditorPanel
   const [certMode, setCertMode] = useState('upload'); // 'upload' | 'camera'
@@ -1426,46 +1430,79 @@ export default function EditorPanel({
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 11: DISEÑO & FORMATO PAPEL & ADORNOS DE PORTADA */}        {/* ========================================================================= */}
         {/* TAB: DISEÑO */}
         {/* ========================================================================= */}
         {activeTab === 'diseno' && (
           <div className="space-y-6">
-
-            {/* Formato de Papel */}
-            <PanelSection icon={<Layout className="w-4 h-4" />} title="Formato de página">
-              <div className={`p-3 bg-[var(--ui-bg-card)] rounded-[${radius.card}] border border-[var(--color-neutral-border)]`}>
-                <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] mb-1.5">
-                  Tamaño de Hoja / Formato de Papel
-                </label>
-                <select
-                  value={cvData.layout?.paperSize || 'a4'}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setCvData((prev: any) => ({
-                      ...prev,
-                      layout: {
-                        ...prev.layout,
-                        paperSize: val
-                      }
-                    }));
-                  }}
-                  className={`w-full text-xs p-2.5 rounded-[${radius.card}] border border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer`}
-                >
-                  {Object.values(PAGE_SIZES).map((size) => (
-                    <option key={size.id} value={size.id}>
-                      📄 {size.label}
-                    </option>
-                  ))}
-                </select>
+            {/* Encabezado explicativo de Cascada de 3 Niveles */}
+            <div className="p-3 bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[var(--radius-card)] text-xs text-[var(--color-neutral-text-secondary)] font-medium flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[var(--color-accent-amber-bright)] flex-shrink-0" />
+                <span className="font-bold text-[var(--color-neutral-text-primary)]">
+                  {UI_GLOSSARY.labels.threeLevelCascade}
+                </span>
               </div>
-            </PanelSection>
+              {hasDesignOverrides && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCvData((prev: any) => ({
+                        ...prev,
+                        colorPresetId: undefined,
+                        typographyPresetId: undefined,
+                        columnLayoutPresetId: undefined
+                      }));
+                      showSuccess('Ajustes personalizados reseteados a la plantilla base.');
+                    }}
+                    className="px-2 py-0.5 rounded bg-[var(--color-status-danger-muted)] text-[var(--color-status-danger-text)] font-black text-[10px] flex items-center gap-1 hover:opacity-80 transition cursor-pointer"
+                    title="Resetear ajustes personalizados"
+                  >
+                    <span>{UI_GLOSSARY.labels.customized}</span>
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Formato de Papel */}
+              <PanelSection icon={<Layout className="w-4 h-4" />} title={UI_GLOSSARY.labels.paperFormat}>
+                <div className={`p-3 bg-[var(--ui-bg-card)] rounded-[${radius.card}] border border-[var(--color-neutral-border)]`}>
+                  <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] mb-1.5">
+                    Tamaño de Hoja / Formato de Papel
+                  </label>
+                  <select
+                    value={cvData.layout?.paperSize || 'a4'}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setCvData((prev: any) => ({
+                        ...prev,
+                        layout: {
+                          ...prev.layout,
+                          paperSize: val
+                        }
+                      }));
+                    }}
+                    className={`w-full text-xs p-2.5 rounded-[${radius.card}] border border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer`}
+                  >
+                    {Object.values(PAGE_SIZES).filter((size) => {
+                      const isBusinessCard = cvData?.activePresetId === 'tarjeta-personal';
+                      if (isBusinessCard) {
+                        return size.category === 'tarjeta' && ['tarjeta_estandar', 'tarjeta_europea', 'tarjeta_cuadrada', 'tarjeta_mini'].includes(size.id);
+                      }
+                      return size.category === 'documento' && ['a4', 'carta', 'legal', 'oficio'].includes(size.id);
+                    }).map((size) => (
+                      <option key={size.id} value={size.id}>
+                        📄 {size.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </PanelSection>
 
             {/* Formato Global & Estándares Internacionales (ATS, US Resume, Europass, Tech, LATAM) */}
             <PanelSection icon={<Globe className="w-4 h-4 text-[var(--color-accent-text)]" />} title="Estándar & Formato Global (Internacional)">
               <div className="space-y-2">
                 {getAllCvFormats().map((format) => {
-                  const isSelected = (cvData?.activeFormatId || 'ats-one-column') === format.id;
+                  const isSelected = resolveActiveFormatId(cvData) === format.id;
                   return (
                     <button
                       key={format.id}
@@ -1524,7 +1561,7 @@ export default function EditorPanel({
               <div className="space-y-3">
                 <div className="grid grid-cols-1 gap-2">
                   {Object.entries(PRESET_COLUMNS).map(([key]) => {
-                    const activeFormat = getCvFormat(cvData?.activeFormatId);
+                    const activeFormat = resolveActiveFormat(cvData);
                     const isSingleColumnFormat = activeFormat?.columnLayoutPresetId === 'full-width';
                     const isSelected = cvData?.columnLayoutPresetId === key || (!cvData?.columnLayoutPresetId && key === 'sidebar-left');
                     const sidebarPercent = Math.min(42, Math.max(32, cvData?.layout?.sidebarWidthPercent ?? 40));

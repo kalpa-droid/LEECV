@@ -69,9 +69,18 @@ export function resolveSectionAnchor(
 
   for (const s of sectionOrder) {
     if (s.sectorRole === 'main') {
-      mainSectionIds = s.sectionIds || [];
+      mainSectionIds = [...(s.sectionIds || [])];
     } else if (s.sectorRole === 'sidebar') {
-      sidebarSectionIds = s.sectionIds || [];
+      sidebarSectionIds = [...(s.sectionIds || [])];
+    }
+  }
+
+  // Incorporar cualquier sección dinámicamente presente en 'sections' que no esté en el preset base
+  if (Array.isArray(sections)) {
+    for (const sec of sections) {
+      if (sec.id && !mainSectionIds.includes(sec.id) && !sidebarSectionIds.includes(sec.id)) {
+        mainSectionIds.push(sec.id);
+      }
     }
   }
 
@@ -89,13 +98,31 @@ export function resolveSectionAnchor(
   const totalInSector = isSidebar ? totalSidebar : totalMain;
 
   const validIndex = matchedIndex >= 0 ? matchedIndex : 0;
-  // Posicionamiento preciso al último registro de la sección (+0.8 del span de la sección)
-  const verticalRatio = Math.min(0.95, ((validIndex + 0.8) / totalInSector) * 0.85);
+  const targetSectorIds = isSidebar ? sidebarSectionIds : mainSectionIds;
+
+  const USEFUL_PAGE_HEIGHT_PT = 680;
+  let accumulatedPt = 0;
+
+  for (let i = 0; i < validIndex; i++) {
+    const secId = targetSectorIds[i];
+    const secObj = (sections || []).find(s => s.id === secId);
+    const recCount = secObj?.records?.length || 1;
+    accumulatedPt += 35 + (recCount * 50);
+  }
+
+  const currentSecId = targetSectorIds[validIndex] || possibleSectionIds[0];
+  const currentSecObj = (sections || []).find(s => s.id === currentSecId);
+  const currentRecCount = currentSecObj?.records?.length || 1;
+  const currentSecHeightPt = 35 + (currentRecCount * 50);
+
+  const targetPointPt = accumulatedPt + (currentSecHeightPt * 0.8);
+  const pageIndex = Math.max(1, Math.floor(targetPointPt / USEFUL_PAGE_HEIGHT_PT) + 1);
+  const verticalRatio = Math.min(0.95, (targetPointPt % USEFUL_PAGE_HEIGHT_PT) / USEFUL_PAGE_HEIGHT_PT);
 
   return {
     tabId: normalizedTab,
     sectionId: possibleSectionIds[0],
-    pageIndex: 1,
+    pageIndex,
     verticalRatio
   };
 }

@@ -137,7 +137,10 @@ export default function SavedCVsModal({
       size="2xl"
       footer={
         <div className="w-full flex items-center justify-between gap-2 text-xs text-[var(--ui-text-secondary)]">
-          <span>Almacenamiento Local (IndexedDB / LocalStorage)</span>
+          <div className="flex items-center gap-2">
+            <span>Almacenamiento Local (IndexedDB / LocalStorage)</span>
+            <InfoHint hintId="draftDot" variant="tap" />
+          </div>
           <button
             onClick={onClose}
             className={`px-4 py-1.5 bg-[var(--ui-btn-neutral-bg)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-btn-neutral-text)] border border-[var(--ui-btn-neutral-border)] font-bold rounded-[${radius.card}] transition cursor-pointer`}
@@ -191,16 +194,6 @@ export default function SavedCVsModal({
           </button>
         </div>
 
-        {/* Explanation Banner */}
-        <div className="px-4 py-2.5 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[var(--radius-card)] text-[11px] text-[var(--ui-text-secondary)] leading-snug flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[var(--color-accent-amber-bright)] flex-shrink-0" />
-            <span>
-              <strong>Estado:</strong> <span className="text-[var(--color-accent-amber-bright)] font-bold"> 🟠 Borrador (En Edición)</span> pasa a <span className="text-[var(--color-status-success-bright)] font-bold"> 🟢 CV Oficial</span> al exportar.
-            </span>
-          </div>
-          <InfoHint hintId="draftDot" variant="tap" />
-        </div>
 
         {/* Body List */}
         <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
