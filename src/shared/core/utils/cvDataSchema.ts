@@ -10,6 +10,8 @@ export function sanitizeCvData(rawCvData: any = {}) {
     id: data.id || `cv_${Date.now()}`,
     schemaVersion: typeof data.schemaVersion === 'number' ? data.schemaVersion : 1,
     title: data.title || 'Mi Currículum Vitae',
+    versionLabel: data.versionLabel || data.version_label || undefined,
+    version_label: data.version_label || data.versionLabel || undefined,
     updatedAt: data.updatedAt || new Date().toISOString(),
     showCoverPage: data.showCoverPage !== false,
     // Nombre canónico único para "qué plantilla/preset visual está eligiendo el usuario".

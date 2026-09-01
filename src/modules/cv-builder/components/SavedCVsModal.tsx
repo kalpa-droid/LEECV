@@ -6,11 +6,13 @@ import {
   FileText,
   Cloud,
   Sparkles,
-  Download
+  Download,
+  Copy
 } from 'lucide-react';
-import { getSavedCVsList, loadCVById, deleteCVById, checkStorageStatus } from '../services/cvStorageService';
+import { getSavedCVsList, loadCVById, deleteCVById, saveCVAs, checkStorageStatus } from '../services/cvStorageService';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { useToast } from '../../../shared/core/ui/Toast';
+import { InfoHint } from '../../../shared/core/ui/InfoHint';
 import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { Modal } from '../../../shared/core/ui/Modal';
 import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
@@ -72,6 +74,33 @@ export default function SavedCVsModal({
       {
         context: 'Apertura de Documento',
         errorMessage: 'No se pudo abrir el documento seleccionado.',
+        notify: (msg) => showError(msg)
+      }
+    );
+  };
+
+  const handleDuplicate = async (id: string, title: string) => {
+    await withErrorHandling(
+      async () => {
+        const loadedData = await loadCVById(id);
+        if (loadedData) {
+          const cloneLabel = loadedData.version_label ? `${loadedData.version_label} (Copia)` : 'Copia Borrador';
+          const clonedData = {
+            ...loadedData,
+            title: `${loadedData.title || title} (Copia)`
+          };
+          const res = await saveCVAs(clonedData, cloneLabel);
+          if (res?.success) {
+            showSuccess(`Borrador "${title}" duplicado correctamente.`);
+            fetchList();
+          } else {
+            showError('No se pudo duplicar el borrador.');
+          }
+        }
+      },
+      {
+        context: 'Duplicación de Borrador',
+        errorMessage: 'Error al duplicar el documento.',
         notify: (msg) => showError(msg)
       }
     );
@@ -163,11 +192,14 @@ export default function SavedCVsModal({
         </div>
 
         {/* Explanation Banner */}
-        <div className={`px-4 py-2.5 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.card}] text-[11px] text-[var(--ui-text-secondary)] leading-snug flex items-center gap-2`}>
-          <Sparkles className="w-4 h-4 text-[var(--color-accent-amber-bright)] flex-shrink-0" />
-          <span>
-            <strong>Estado:</strong> <span className="text-[var(--color-accent-amber-bright)] font-bold"> 🟠 Borrador (En Edición)</span> pasa a <span className="text-[var(--color-status-success-bright)] font-bold"> 🟢 CV Oficial</span> al exportar tu documento.
-          </span>
+        <div className="px-4 py-2.5 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[var(--radius-card)] text-[11px] text-[var(--ui-text-secondary)] leading-snug flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[var(--color-accent-amber-bright)] flex-shrink-0" />
+            <span>
+              <strong>Estado:</strong> <span className="text-[var(--color-accent-amber-bright)] font-bold"> 🟠 Borrador (En Edición)</span> pasa a <span className="text-[var(--color-status-success-bright)] font-bold"> 🟢 CV Oficial</span> al exportar.
+            </span>
+          </div>
+          <InfoHint hintId="draftDot" variant="tap" />
         </div>
 
         {/* Body List */}
@@ -241,6 +273,14 @@ export default function SavedCVsModal({
                     >
                       <FolderOpen className="w-3.5 h-3.5" />
                       <span>Abrir</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleDuplicate(item.id, item.candidate_name || item.title)}
+                      className={`p-2 text-[var(--color-secondary-bright)] hover:text-[var(--color-secondary-text)] hover:bg-[var(--color-secondary-muted)] rounded-[${radius.card}] transition border border-transparent hover:border-[var(--color-secondary-base)]/40 cursor-pointer`}
+                      title="Duplicar / Clonar este Borrador"
+                    >
+                      <Copy className="w-4 h-4" />
                     </button>
 
                     <button
