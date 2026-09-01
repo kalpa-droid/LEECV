@@ -100,20 +100,40 @@ export function resolveSectionAnchor(
   const validIndex = matchedIndex >= 0 ? matchedIndex : 0;
   const targetSectorIds = isSidebar ? sidebarSectionIds : mainSectionIds;
 
+  const CHARS_PER_LINE_MAIN = 68;   // ancho útil típico de la columna principal
+  const CHARS_PER_LINE_SIDEBAR = 28; // columna angosta, menos caracteres por línea
+  const LINE_HEIGHT_PT = 12.5;
+  const CARD_PADDING_PT = 26; // padding + margen entre tarjetas
+
+  const estimateRecordHeightPt = (rec: any, isSidebarSector: boolean): number => {
+    const f = rec?.fields || {};
+    const charsPerLine = isSidebarSector ? CHARS_PER_LINE_SIDEBAR : CHARS_PER_LINE_MAIN;
+    // encabezado: título + subtítulo, ~2 líneas siempre
+    let lines = 2;
+    // descripción real: el campo puede venir con nombre viejo o canónico
+    const descText = String(f.details || f.descripcion || f.description || '');
+    if (descText) lines += Math.ceil(descText.length / charsPerLine);
+    return CARD_PADDING_PT + lines * LINE_HEIGHT_PT;
+  };
+
+  const estimateSectionHeightPt = (secObj: any, isSidebarSector: boolean): number => {
+    const records = secObj?.records || [];
+    if (records.length === 0) return 35;
+    return 35 + records.reduce((sum: number, r: any) => sum + estimateRecordHeightPt(r, isSidebarSector), 0);
+  };
+
   const USEFUL_PAGE_HEIGHT_PT = 680;
   let accumulatedPt = 0;
 
   for (let i = 0; i < validIndex; i++) {
     const secId = targetSectorIds[i];
     const secObj = (sections || []).find(s => s.id === secId);
-    const recCount = secObj?.records?.length || 1;
-    accumulatedPt += 35 + (recCount * 50);
+    accumulatedPt += estimateSectionHeightPt(secObj, isSidebar);
   }
 
   const currentSecId = targetSectorIds[validIndex] || possibleSectionIds[0];
   const currentSecObj = (sections || []).find(s => s.id === currentSecId);
-  const currentRecCount = currentSecObj?.records?.length || 1;
-  const currentSecHeightPt = 35 + (currentRecCount * 50);
+  const currentSecHeightPt = estimateSectionHeightPt(currentSecObj, isSidebar);
 
   const targetPointPt = accumulatedPt + (currentSecHeightPt * 0.8);
   const pageIndex = Math.max(1, Math.floor(targetPointPt / USEFUL_PAGE_HEIGHT_PT) + 1);
@@ -149,11 +169,25 @@ export function scrollToPdfAnchor(
 
   if (!targetCanvas) return;
 
+  // Encontrar el contenedor ascendente real con scroll (si el contenedor directo es estático)
+  let scrollableParent: HTMLElement = container;
+  while (scrollableParent && scrollableParent !== document.body) {
+    const style = window.getComputedStyle(scrollableParent);
+    if (['auto', 'scroll'].includes(style.overflowY) || scrollableParent.scrollHeight > scrollableParent.clientHeight) {
+      break;
+    }
+    if (scrollableParent.parentElement) {
+      scrollableParent = scrollableParent.parentElement;
+    } else {
+      break;
+    }
+  }
+
   const canvasTop = targetCanvas.offsetTop;
   const canvasHeight = targetCanvas.offsetHeight;
   const targetScrollTop = canvasTop + (canvasHeight * anchor.verticalRatio);
 
-  container.scrollTo({
+  scrollableParent.scrollTo({
     top: Math.max(0, targetScrollTop - 40),
     behavior: 'smooth'
   });
