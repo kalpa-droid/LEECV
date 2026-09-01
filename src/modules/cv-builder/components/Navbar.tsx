@@ -1,9 +1,8 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { 
   FolderOpen, 
   Save, 
   User, 
-  Sparkles, 
   Download, 
   CopyPlus, 
   FileArchive, 
@@ -17,9 +16,6 @@ import {
 } from 'lucide-react';
 import { elevationSystem, radius, UI_THEME_META } from '../../../shared/core/uiDesignSystem';
 import { ZoomControls } from '../../../shared/core/ui/ZoomControls';
-import { resolveActivePreset } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
-import { cvDataToContentSections } from '../../../shared/core/pdf-engine/layers/records/cvDataAdapter';
-import { runAtsPreflightCheck } from '../../../shared/core/pdf-engine/layers/ats/atsPreflightCheck';
 
 export interface NavbarProps {
   currentCvData: any;
@@ -46,13 +42,13 @@ export interface NavbarProps {
 
 export default function Navbar({ 
   currentCvData,
-  setCvData,
+  setCvData: _setCvData,
   onOpenSavedCVsModal,
   onSaveCVClick,
   onOpenSaveAsModal,
   onOpenJsonDownloadModal,
   onPrint,
-  onOpenAtsCheck,
+  onOpenAtsCheck: _onOpenAtsCheck,
   onOpenPricing,
   onOpenAgencyPanel,
   onOpenShareAppModal,
@@ -74,19 +70,6 @@ export default function Navbar({
 
   const currentThemeId = currentCvData?.uiTheme || 'day';
   const themeMeta = UI_THEME_META[currentThemeId] || UI_THEME_META.default;
-
-  // Cálculo en tiempo real del puntaje de optimización ATS (reactivo a la edición)
-  const atsScore = useMemo(() => {
-    if (!currentCvData) return 0;
-    try {
-      const preset = resolveActivePreset(currentCvData);
-      const sections = cvDataToContentSections(currentCvData);
-      const res = runAtsPreflightCheck(preset, sections, currentCvData?.personalInfo);
-      return res.score || 0;
-    } catch {
-      return 0;
-    }
-  }, [currentCvData]);
 
   // Cierre de desplegables al hacer clic fuera
   useEffect(() => {

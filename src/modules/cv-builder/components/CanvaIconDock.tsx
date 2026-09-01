@@ -217,6 +217,9 @@ export default function CanvaIconDock({
                   className="w-4.5 h-4.5"
                   color={isDisabled ? 'var(--ui-dock-text-muted)' : sec.isCustom ? (isActive ? '#FFFFFF' : 'var(--color-secondary-bright)') : (isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)')}
                 />
+                {sec.hasContent && !isDisabled && (
+                  <span className="absolute top-0.5 left-0.5 w-1.5 h-1.5 rounded-full bg-[var(--color-status-success-bright)] border border-[var(--ui-bg-dock)]" title="Sección con datos cargados" />
+                )}
                 {isDisabled && (
                   <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-[var(--color-status-warning-text)] border border-[var(--ui-bg-dock)]" title="Desactivada" />
                 )}
@@ -363,8 +366,11 @@ export default function CanvaIconDock({
                 className="w-4 h-4"
                 color={isDisabled ? 'var(--ui-dock-text-muted)' : sec.isCustom ? (isActive ? '#FFFFFF' : 'var(--color-accent-purple-bright)') : (isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)')}
               />
+              {sec.hasContent && !isDisabled && (
+                <span className="absolute top-0 left-0 w-1.5 h-1.5 rounded-full bg-[var(--color-status-success-bright)]" title="Sección con datos cargados" />
+              )}
               {isDisabled && (
-                <span className="absolute top-0 right-0 w-1.5 h-1.5 rounded-full bg-[var(--color-status-warning-text)]" />
+                <span className="absolute top-0 right-0 w-1.5 h-1.5 rounded-full bg-[var(--color-status-warning-text)]" title="Desactivada" />
               )}
             </button>
           );

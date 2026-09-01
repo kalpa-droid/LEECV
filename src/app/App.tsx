@@ -56,14 +56,24 @@ function AppContent() {
   const [isPublicView, setIsPublicView] = useState(false);
   const [publicSlug, setPublicSlug] = useState<string | undefined>(undefined);
 
-  const currentUiThemeId = cvData?.uiTheme || 'day';
-
-  // Aplicación unificada e instantánea del tema de interfaz
-  useEffect(() => {
+  const [globalUiTheme, setGlobalUiTheme] = useState<string>(() => {
     if (typeof window !== 'undefined') {
-      applyUiTheme(currentUiThemeId);
+      return localStorage.getItem('cv_ui_theme_preference') || 'day';
     }
-  }, [currentUiThemeId]);
+    return 'day';
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && globalUiTheme) {
+      applyUiTheme(globalUiTheme);
+      localStorage.setItem('cv_ui_theme_preference', globalUiTheme);
+    }
+  }, [globalUiTheme]);
+
+  const cycleUITheme = () => {
+    const nextTheme = getNextUiTheme(globalUiTheme);
+    setGlobalUiTheme(nextTheme);
+  };
 
   useEffect(() => {
     syncPresetsFromStorage().catch(err => console.warn('Error sincronizando presets iniciales:', err));
@@ -189,6 +199,9 @@ function AppContent() {
         cvData?.version_label
       );
       setTabs(updated);
+      if (cvData) {
+        saveCV().catch(err => console.warn('Error al auto-guardar nuevo borrador:', err));
+      }
     } else {
       setTabs(getOpenTabs());
     }
@@ -313,20 +326,7 @@ function AppContent() {
     setIsPdfCheckoutOpen(true);
   };
 
-  const cycleUITheme = () => {
-    const current = cvData?.uiTheme || 'default';
-    const nextTheme = getNextUiTheme(current);
-    if (typeof document !== 'undefined') {
-      document.documentElement.setAttribute('data-ui-theme', nextTheme);
-    }
-    setCvData((prev: any) => ({ ...prev, uiTheme: nextTheme }));
-  };
 
-  useEffect(() => {
-    if (typeof document !== 'undefined') {
-      document.documentElement.setAttribute('data-ui-theme', cvData?.uiTheme || 'default');
-    }
-  }, [cvData?.uiTheme]);
 
   const toggleDocumentPresetMode = () => {
     const isCard = cvData?.activePresetId === 'tarjeta-personal';
@@ -426,7 +426,7 @@ function AppContent() {
     <div className="h-screen h-[100dvh] bg-[var(--color-neutral-text-primary)] text-white flex flex-col font-sans overflow-hidden selection:bg-[var(--color-accent-base)] selection:text-white relative">
       <div className="md:pl-24">
         <Navbar 
-          currentCvData={cvData}
+          currentCvData={{ ...cvData, uiTheme: globalUiTheme }}
           setCvData={setCvData}
           onOpenSavedCVsModal={() => setIsSavedCVsOpen(true)}
           onSaveCVClick={handleSaveCVClick}

@@ -39,10 +39,10 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
 
       {isVisible && (
         <div className="space-y-4">
+          {/* 1. Contacto & Redes */}
           <PanelSection 
             icon={<User className="w-4 h-4 text-[var(--ui-secondary)]" />} 
-            title="Información de Contacto"
-            manualAdjustment={<SectionManualAdjustment sectionId="contacto" cvData={cvData} setCvData={setCvData} />}
+            title="Contacto & Redes"
           >
             <div className="space-y-3 pt-1">
               {/* Tarjeta Foto de Perfil */}
@@ -77,31 +77,76 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
                 </div>
               </div>
 
-              {/* Abreviaturas / Título Honorífico */}
               <Field
-                id="titlePrefix"
-                label="Abreviaturas / Título Honorífico (ej: Lic. / Prof. / Dr. / MP)"
-                value={cvData.personalInfo?.titlePrefix || ''}
-                onChange={(e: any) => {
-                  const prefix = e.target.value;
-                  const given = cvData.personalInfo?.givenNames || '';
-                  const sur = cvData.personalInfo?.surname || '';
-                  const computed = `${prefix ? prefix + ' ' : ''}${given} ${sur}`.trim();
-                  updatePersonalInfo('titlePrefix', prefix);
-                  updatePersonalInfo('fullName', computed);
+                id="phone"
+                label="Teléfono Celular / WhatsApp"
+                value={cvData.personalInfo?.phone || ''}
+                onChange={(e: any) => updatePersonalInfo('phone', e.target.value)}
+                placeholder="Ej: 387-155121515"
+              />
+
+
+
+              <Field
+                id="address"
+                label="Domicilio y Barrio"
+                value={cvData.personalInfo?.address || ''}
+                onChange={(e: any) => updatePersonalInfo('address', e.target.value)}
+                placeholder="Ej: Manzana 751A Casa 11 - Ciudad Valdivia"
+              />
+
+              <Field
+                id="cityProvince"
+                label="Ciudad / Provincia / País"
+                value={cvData.personalInfo?.cityProvince || ''}
+                onChange={(e: any) => updatePersonalInfo('cityProvince', e.target.value)}
+                placeholder="Ej: Salta, Salta, Argentina"
+              />
+
+              {/* Configuración del Código QR Smart */}
+              <div
+                className="p-3.5 rounded-[12px] border space-y-2"
+                style={{
+                  backgroundColor: colorSystem.secondary.muted,
+                  borderColor: colorSystem.neutral.border
                 }}
-                placeholder="Ej: Lic. / Prof. / Dr. / Ing. / MP 1402"
-              />
+              >
+                <label className={`${typeScale.fieldLabel} flex items-center justify-between`} style={{ color: colorSystem.neutral.textPrimary }}>
+                  <span className="flex items-center gap-1.5">
+                    <QrCode className="w-3.5 h-3.5" style={{ color: colorSystem.secondary.base }} /> Configuración del Código QR
+                  </span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-white border border-[var(--color-neutral-border-strong)]" style={{ color: colorSystem.secondary.text }}>
+                    Smart QR
+                  </span>
+                </label>
+                <select
+                  value={cvData.qrMode || 'vcard'}
+                  onChange={(e) => setCvData((prev: any) => ({ ...prev, qrMode: e.target.value }))}
+                  className={`w-full rounded-[10px] border px-3 py-2 text-[12px] text-[var(--color-neutral-text-primary)] bg-white outline-none cursor-pointer border-[var(--color-neutral-border)]`}
+                >
+                  <option value="vcard">📱 vCard: Guardar contacto en agenda del celular</option>
+                  <option value="public_link">🌐 Perfil Web: Abrir mi CV público en línea</option>
+                </select>
+                <p className={typeScale.helper} style={{ color: colorSystem.neutral.textSecondary }}>
+                  {cvData.qrMode === 'public_link'
+                    ? 'Al escanear el QR desde un celular, abrirá tu página web de CV público sin descargas.'
+                    : 'Al escanear el QR desde un celular, agregará tu contacto directamente a la agenda.'}
+                </p>
+              </div>
 
-              {/* Titular Profesional */}
-              <Field
-                id="quote"
-                label="Titular Profesional (una línea, debajo de tu nombre)"
-                value={cvData.personalInfo?.quote || ''}
-                onChange={(e: any) => updatePersonalInfo('quote', e.target.value)}
-                placeholder="Ej: Profesora de Lengua y Literatura | Referente en Innovación Educativa"
-              />
+              {/* Ajuste Manual: Contacto */}
+              <div className="pt-2 border-t border-[var(--color-neutral-border)]">
+                <SectionManualAdjustment sectionId="contacto" cvData={cvData} setCvData={setCvData} />
+              </div>
+            </div>
+          </PanelSection>
 
+          {/* 2. Datos Personales */}
+          <PanelSection 
+            icon={<User className="w-4 h-4 text-[var(--ui-secondary)]" />} 
+            title="Datos Personales"
+          >
+            <div className="space-y-3 pt-1">
               <div className="grid grid-cols-2 gap-3">
                 <Field
                   id="surname"
@@ -158,24 +203,6 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
                 placeholder="Ej: 4 de febrero de 1982"
               />
 
-              <Field
-                id="address"
-                label="Domicilio y Barrio"
-                value={cvData.personalInfo?.address || ''}
-                onChange={(e: any) => updatePersonalInfo('address', e.target.value)}
-                placeholder="Ej: Manzana 751A Casa 11 - Ciudad Valdivia"
-              />
-
-              <Field
-                id="phone"
-                label="Teléfono Celular / WhatsApp"
-                value={cvData.personalInfo?.phone || ''}
-                onChange={(e: any) => updatePersonalInfo('phone', e.target.value)}
-                placeholder="Ej: 387-155121515"
-              />
-
-
-
               <div className="grid grid-cols-2 gap-3">
                 <Field
                   id="nacionalidad"
@@ -210,58 +237,44 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
                 />
               </div>
 
-              {/* Configuración del Código QR Smart */}
-              <div
-                className="p-3.5 rounded-[12px] border space-y-2"
-                style={{
-                  backgroundColor: colorSystem.secondary.muted,
-                  borderColor: colorSystem.neutral.border
-                }}
-              >
-                <label className={`${typeScale.fieldLabel} flex items-center justify-between`} style={{ color: colorSystem.neutral.textPrimary }}>
-                  <span className="flex items-center gap-1.5">
-                    <QrCode className="w-3.5 h-3.5" style={{ color: colorSystem.secondary.base }} /> Configuración del Código QR
-                  </span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-white border border-[var(--color-neutral-border-strong)]" style={{ color: colorSystem.secondary.text }}>
-                    Smart QR
-                  </span>
-                </label>
-                <select
-                  value={cvData.qrMode || 'vcard'}
-                  onChange={(e) => setCvData((prev: any) => ({ ...prev, qrMode: e.target.value }))}
-                  className={`w-full rounded-[10px] border px-3 py-2 text-[12px] text-[var(--color-neutral-text-primary)] bg-white outline-none cursor-pointer border-[var(--color-neutral-border)]`}
-                >
-                  <option value="vcard">📱 vCard: Guardar contacto en agenda del celular</option>
-                  <option value="public_link">🌐 Perfil Web: Abrir mi CV público en línea</option>
-                </select>
-                <p className={typeScale.helper} style={{ color: colorSystem.neutral.textSecondary }}>
-                  {cvData.qrMode === 'public_link'
-                    ? 'Al escanear el QR desde un celular, abrirá tu página web de CV público sin descargas.'
-                    : 'Al escanear el QR desde un celular, agregará tu contacto directamente a la agenda.'}
-                </p>
-              </div>
-
-              {/* Ajuste Manual: Contacto & Redes */}
+              {/* Ajuste Manual: Datos Personales */}
               <div className="pt-2 border-t border-[var(--color-neutral-border)]">
-                <span className="text-[10px] font-bold text-[var(--color-neutral-text-secondary)] uppercase block mb-1">
-                  Ajuste Manual: Contacto & Redes
-                </span>
-                <SectionManualAdjustment sectionId="contacto" cvData={cvData} setCvData={setCvData} />
-              </div>
-
-              {/* Ajuste Manual de Datos Personales */}
-              <div className="pt-2 border-t border-[var(--color-neutral-border)]">
-                <span className="text-[10px] font-bold text-[var(--color-neutral-text-secondary)] uppercase block mb-1">
-                  Ajuste Manual: Datos Personales
-                </span>
                 <SectionManualAdjustment sectionId="datos-personales" cvData={cvData} setCvData={setCvData} />
               </div>
+            </div>
+          </PanelSection>
+
+          {/* 3. Titular Profesional & Frase */}
+          <PanelSection 
+            icon={<User className="w-4 h-4 text-[var(--ui-secondary)]" />} 
+            title="Titular Profesional & Título Honorífico"
+          >
+            <div className="space-y-3 pt-1">
+              <Field
+                id="titlePrefix"
+                label="Abreviaturas / Título Honorífico (ej: Lic. / Prof. / Dr. / MP)"
+                value={cvData.personalInfo?.titlePrefix || ''}
+                onChange={(e: any) => {
+                  const prefix = e.target.value;
+                  const given = cvData.personalInfo?.givenNames || '';
+                  const sur = cvData.personalInfo?.surname || '';
+                  const computed = `${prefix ? prefix + ' ' : ''}${given} ${sur}`.trim();
+                  updatePersonalInfo('titlePrefix', prefix);
+                  updatePersonalInfo('fullName', computed);
+                }}
+                placeholder="Ej: Lic. / Prof. / Dr. / Ing. / MP 1402"
+              />
+
+              <Field
+                id="quote"
+                label="Titular Profesional (una línea, debajo de tu nombre)"
+                value={cvData.personalInfo?.quote || ''}
+                onChange={(e: any) => updatePersonalInfo('quote', e.target.value)}
+                placeholder="Ej: Profesora de Lengua y Literatura | Referente en Innovación Educativa"
+              />
 
               {/* Ajuste Manual: Titular Profesional */}
               <div className="pt-2 border-t border-[var(--color-neutral-border)]">
-                <span className="text-[10px] font-bold text-[var(--color-neutral-text-secondary)] uppercase block mb-1">
-                  Ajuste Manual: Titular Profesional
-                </span>
                 <SectionManualAdjustment sectionId="frase" cvData={cvData} setCvData={setCvData} />
               </div>
             </div>
