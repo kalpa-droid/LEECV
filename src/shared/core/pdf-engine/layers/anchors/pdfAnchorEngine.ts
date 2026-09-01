@@ -24,17 +24,20 @@ export const SECTION_TAB_MAPPING: Record<string, string[]> = {
   contacto: ['contacto', 'datos-personales'],
   redes: ['redes'],
   frase: ['frase', 'quote-text', 'marca-y-eslogan'],
-  experiencia: ['experiencia', 'profesion'],
-  formacion: ['formacion', 'education', 'cursos'],
-  competencias: ['competencias', 'skills', 'informatica'],
+  resumen: ['resumen'],
+  experiencia: ['experiencia'],
+  profesion: ['profesion'],
+  formacion: ['formacion', 'education'],
+  cursos: ['cursos', 'coursesAndCertificates'],
+  competencias: ['competencias', 'skills'],
   habilidades: ['habilidades', 'hardSkills'],
   idiomas: ['idiomas', 'languages'],
   proyectos: ['proyectos', 'projects'],
   publicaciones: ['publicaciones', 'publications'],
   referencias: ['referencias', 'references'],
-  cursos: ['cursos', 'coursesAndCertificates'],
   informatica: ['informatica'],
   ecologia: ['ecologia'],
+  certificados: ['certificados'],
   firma: ['firma']
 };
 
@@ -84,20 +87,29 @@ export function resolveSectionAnchor(
     }
   }
 
-  // Buscar coincidencia en la columna principal primero, luego en sidebar
-  let matchedIndex = mainSectionIds.findIndex(id => possibleSectionIds.includes(id));
+  // 3. Coincidencia exacta primero; si no existe directa en el maquetador, recurrir a alias de SECTION_TAB_MAPPING
+  let matchedIndex = mainSectionIds.indexOf(normalizedTab);
   let isSidebar = false;
 
   if (matchedIndex === -1) {
-    matchedIndex = sidebarSectionIds.findIndex(id => possibleSectionIds.includes(id));
-    isSidebar = true;
+    matchedIndex = sidebarSectionIds.indexOf(normalizedTab);
+    if (matchedIndex !== -1) {
+      isSidebar = true;
+    }
   }
 
-  const totalMain = Math.max(1, mainSectionIds.length);
-  const totalSidebar = Math.max(1, sidebarSectionIds.length);
-  const totalInSector = isSidebar ? totalSidebar : totalMain;
+  // Si no hubo coincidencia exacta por ID, buscar por alias secundarios
+  if (matchedIndex === -1) {
+    matchedIndex = mainSectionIds.findIndex(id => possibleSectionIds.includes(id));
+    if (matchedIndex === -1) {
+      matchedIndex = sidebarSectionIds.findIndex(id => possibleSectionIds.includes(id));
+      if (matchedIndex !== -1) {
+        isSidebar = true;
+      }
+    }
+  }
 
-  const validIndex = matchedIndex >= 0 ? matchedIndex : 0;
+  const validIndex = Math.max(0, matchedIndex);
   const targetSectorIds = isSidebar ? sidebarSectionIds : mainSectionIds;
 
   const CHARS_PER_LINE_MAIN = 68;   // ancho útil típico de la columna principal
@@ -110,8 +122,8 @@ export function resolveSectionAnchor(
     const charsPerLine = isSidebarSector ? CHARS_PER_LINE_SIDEBAR : CHARS_PER_LINE_MAIN;
     // encabezado: título + subtítulo, ~2 líneas siempre
     let lines = 2;
-    // descripción real: el campo puede venir con nombre viejo o canónico
-    const descText = String(f.details || f.descripcion || f.description || '');
+    // descripción real: evaluar campos canónicos y variantes
+    const descText = String(f.details || f.descripcion || f.description || f.degree || f.role || f.title || f.quote || f.text || '');
     if (descText) lines += Math.ceil(descText.length / charsPerLine);
     return CARD_PADDING_PT + lines * LINE_HEIGHT_PT;
   };
@@ -135,7 +147,7 @@ export function resolveSectionAnchor(
   const currentSecObj = (sections || []).find(s => s.id === currentSecId);
   const currentSecHeightPt = estimateSectionHeightPt(currentSecObj, isSidebar);
 
-  const targetPointPt = accumulatedPt + (currentSecHeightPt * 0.8);
+  const targetPointPt = accumulatedPt + (currentSecHeightPt * 0.85);
   const pageIndex = Math.max(1, Math.floor(targetPointPt / USEFUL_PAGE_HEIGHT_PT) + 1);
   const verticalRatio = Math.min(0.95, (targetPointPt % USEFUL_PAGE_HEIGHT_PT) / USEFUL_PAGE_HEIGHT_PT);
 
