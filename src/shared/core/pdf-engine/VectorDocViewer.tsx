@@ -46,6 +46,8 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const renderTokenRef = useRef(0);
+  const anchorMapRef = useRef<Record<string, { startPage: number; startYRatio: number; endPage: number; endYRatio: number }>>({});
+  const pendingScrollTabRef = useRef<string | undefined>(activeTab);
 
   useEffect(() => {
     const myToken = ++renderTokenRef.current;
@@ -139,9 +141,10 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
           container.appendChild(fragment);
           anchorMapRef.current = newAnchorMap;
           setLoading(false);
-          if (activeTab) {
+          const finalTarget = pendingScrollTabRef.current || activeTab;
+          if (finalTarget) {
             requestAnimationFrame(() => {
-              scrollToPdfAnchor(wrapperRef.current || containerRef.current, activeTab, sections, preset!, layoutOverrides, anchorMapRef.current);
+              scrollToPdfAnchor(wrapperRef.current || containerRef.current, finalTarget, sections, preset!, layoutOverrides, anchorMapRef.current);
             });
           }
         }
@@ -159,10 +162,9 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
     return () => { cancelled = true; };
   }, [document, zoomLevel]);
 
-  const anchorMapRef = useRef<Record<string, { startPage: number; startYRatio: number; endPage: number; endYRatio: number }>>({});
-
   // Reacciona ante el cambio de activeTab ejecutando scroll suave en el contenedor
   useEffect(() => {
+    pendingScrollTabRef.current = activeTab;
     if (!loading && activeTab && containerRef.current) {
       scrollToPdfAnchor(wrapperRef.current || containerRef.current, activeTab, sections, preset!, layoutOverrides, anchorMapRef.current);
     }
@@ -173,6 +175,7 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
     const handleAnchorEvent = (e: Event) => {
       const customEvt = e as CustomEvent;
       const targetTab = customEvt.detail?.tabId || activeTab;
+      pendingScrollTabRef.current = targetTab;
       if (!loading && targetTab && (wrapperRef.current || containerRef.current)) {
         scrollToPdfAnchor(wrapperRef.current || containerRef.current, targetTab, sections, preset!, layoutOverrides, anchorMapRef.current);
       }
