@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { fontOptions } from '../../../data/fontOptions';
 import { getColumnAssignableSections } from '../../../shared/core/sectionRegistry';
-import { getAllPresets, PRESET_COLORS, PRESET_TYPOGRAPHY, PRESET_COLUMNS } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
+import { getAllPresets, PRESET_COLORS, PRESET_TYPOGRAPHY, PRESET_COLUMNS, getColumnLayoutPresetName } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { getAllCvFormats, getCvFormat, getFormatDefaultVisibility } from '../../../shared/core/formats/cvFormatRegistry';
 import { FIELD_CATALOG } from '../../../shared/core/pdf-engine/layers/records/fieldCatalog';
 import { PAGE_SIZES } from '../../../shared/core/pdf-engine/pageSizes';
@@ -1519,26 +1519,69 @@ export default function EditorPanel({
               </div>
             </PanelSection>
 
-            {/* Estructura de Columnas (Layout) */}
-            <PanelSection icon={<Columns3 className="w-4 h-4" />} title="Disposición de columnas (Layout)">
-              <div className="grid grid-cols-1 gap-2">
-                {Object.entries(PRESET_COLUMNS).map(([key, layout]) => {
-                  const isSelected = cvData?.columnLayoutPresetId === key || (!cvData?.columnLayoutPresetId && key === 'sidebar-left');
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => setCvData((prev: any) => applyPresetLevel(prev, 'override', { columnLayoutPresetId: key }))}
-                      className={`p-3 rounded-[${radius.card}] border text-left transition flex items-center justify-between gap-3 cursor-pointer ${
-                        isSelected
-                          ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
-                          : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]'
-                      }`}
-                    >
-                      <span className="text-xs font-black text-[var(--color-neutral-text-primary)]">{layout.name}</span>
-                      {isSelected && <Check className="w-4 h-4 text-[var(--ui-text-primary)] flex-shrink-0" />}
-                    </button>
-                  );
-                })}
+            {/* Estructura de Columnas (Layout) y Tirador de Ancho */}
+            <PanelSection icon={<Columns3 className="w-4 h-4" />} title="Disposición de columnas y Ancho">
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 gap-2">
+                  {Object.entries(PRESET_COLUMNS).map(([key]) => {
+                    const activeFormat = getCvFormat(cvData?.activeFormatId);
+                    const isSingleColumnFormat = activeFormat?.columnLayoutPresetId === 'full-width';
+                    const isSelected = cvData?.columnLayoutPresetId === key || (!cvData?.columnLayoutPresetId && key === 'sidebar-left');
+                    const sidebarPercent = Math.min(42, Math.max(32, cvData?.layout?.sidebarWidthPercent ?? 40));
+                    const displayName = getColumnLayoutPresetName(key, sidebarPercent);
+
+                    return (
+                      <button
+                        key={key}
+                        disabled={isSingleColumnFormat && key !== 'full-width'}
+                        onClick={() => setCvData((prev: any) => applyPresetLevel(prev, 'override', { columnLayoutPresetId: key }))}
+                        className={`p-3 rounded-[var(--radius-card)] border text-left transition flex items-center justify-between gap-3 ${
+                          isSingleColumnFormat && key !== 'full-width'
+                            ? 'opacity-40 cursor-not-allowed bg-[var(--ui-bg-panel)] border-[var(--color-neutral-border)]'
+                            : isSelected
+                              ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 cursor-pointer'
+                              : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)] cursor-pointer'
+                        }`}
+                      >
+                        <span className="text-xs font-black text-[var(--color-neutral-text-primary)]">{displayName}</span>
+                        {isSelected && <Check className="w-4 h-4 text-[var(--ui-text-primary)] flex-shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Tirador del Ancho de Sidebar (32% - 42%) */}
+                {cvData?.columnLayoutPresetId !== 'full-width' && (
+                  <div className="p-3 bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[var(--radius-card)] space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold text-[var(--color-neutral-text-primary)]">
+                      <span>Ancho de Barra Lateral</span>
+                      <span className="text-[var(--color-secondary-bright)]">{Math.min(42, Math.max(32, cvData?.layout?.sidebarWidthPercent ?? 40))}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={32}
+                      max={42}
+                      step={1}
+                      value={Math.min(42, Math.max(32, cvData?.layout?.sidebarWidthPercent ?? 40))}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        setCvData((prev: any) => ({
+                          ...prev,
+                          layout: {
+                            ...(prev.layout || {}),
+                            sidebarWidthPercent: val
+                          }
+                        }));
+                      }}
+                      className="w-full h-1.5 bg-[var(--ui-bg-panel)] rounded-lg appearance-none cursor-pointer accent-[var(--color-secondary-base)]"
+                    />
+                    <div className="flex justify-between text-[10px] text-[var(--color-neutral-text-secondary)] font-medium">
+                      <span>Mínimo (32%)</span>
+                      <span>Predeterminado (40%)</span>
+                      <span>Máximo (42%)</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </PanelSection>
 

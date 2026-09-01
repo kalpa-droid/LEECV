@@ -7,6 +7,7 @@
 
 import { ContentSection } from '../records/recordTypes';
 import { Preset } from '../presets/presetSchema';
+import { resolveEffectivePresetSectionOrder, CvLayoutOverrides } from '../sectors/layoutResolutionEngine';
 
 export interface PdfAnchorTarget {
   tabId: string;
@@ -45,7 +46,8 @@ export const SECTION_TAB_MAPPING: Record<string, string[]> = {
 export function resolveSectionAnchor(
   activeTab: string | undefined,
   sections: ContentSection[],
-  preset: Preset
+  preset: Preset,
+  layoutOverrides?: CvLayoutOverrides
 ): PdfAnchorTarget {
   const normalizedTab = (activeTab || 'personales').toLowerCase().trim();
   const possibleSectionIds = SECTION_TAB_MAPPING[normalizedTab] || [normalizedTab];
@@ -60,8 +62,8 @@ export function resolveSectionAnchor(
     };
   }
 
-  // 2. Buscar posición en la lista de secciones efectivas
-  const sectionOrder = preset?.sectionOrder || [];
+  // 2. Buscar posición en la lista de secciones efectivas resolviendo preferencia de usuario
+  const sectionOrder = resolveEffectivePresetSectionOrder(preset, layoutOverrides);
   let mainSectionIds: string[] = [];
   let sidebarSectionIds: string[] = [];
 
@@ -105,11 +107,12 @@ export function scrollToPdfAnchor(
   container: HTMLElement | null,
   activeTab: string | undefined,
   sections: ContentSection[],
-  preset: Preset
+  preset: Preset,
+  layoutOverrides?: CvLayoutOverrides
 ): void {
   if (!container || !activeTab) return;
 
-  const anchor = resolveSectionAnchor(activeTab, sections, preset);
+  const anchor = resolveSectionAnchor(activeTab, sections, preset, layoutOverrides);
   const canvasElements = container.querySelectorAll('canvas');
 
   if (canvasElements.length === 0) return;

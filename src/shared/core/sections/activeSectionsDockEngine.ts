@@ -31,6 +31,7 @@ export interface DockSectionItem {
   tabId: string;
   isUniversal?: boolean;
   isDisabled?: boolean;
+  hasContent?: boolean;
 }
 
 /**
@@ -50,6 +51,56 @@ export const DOCK_SPECIAL_TABS = {
  */
 const ABSORBED_INTO_PERSONAL_TAB = new Set(['contacto', 'datos-personales', 'frase']);
 
+export function checkSectionHasContent(cvData: any, sectionId: string): boolean {
+  if (!cvData) return false;
+  const p = cvData.personalInfo || {};
+
+  switch (sectionId) {
+    case 'personales':
+    case 'contacto':
+    case 'datos-personales':
+      return !!(p.phone || p.email || p.address || p.dni || p.givenNames || p.surname);
+    case 'resumen':
+      return !!String(cvData.summary || '').trim();
+    case 'frase':
+      return !!String(p.quote || '').trim();
+    case 'redes':
+      return Array.isArray(cvData.redes) && cvData.redes.length > 0;
+    case 'experiencia':
+      return Array.isArray(cvData.experience) && cvData.experience.length > 0;
+    case 'formacion':
+      return Array.isArray(cvData.education) && cvData.education.length > 0;
+    case 'profesion':
+      return Array.isArray(cvData.profession) && cvData.profession.length > 0;
+    case 'habilidades':
+      return Array.isArray(cvData.hardSkills) && cvData.hardSkills.length > 0;
+    case 'competencias':
+      return Array.isArray(cvData.skills) && cvData.skills.length > 0;
+    case 'idiomas':
+      return Array.isArray(cvData.languages) && cvData.languages.length > 0;
+    case 'proyectos':
+      return Array.isArray(cvData.projects) && cvData.projects.length > 0;
+    case 'publicaciones':
+      return Array.isArray(cvData.publications) && cvData.publications.length > 0;
+    case 'referencias':
+      return Array.isArray(cvData.references) && cvData.references.length > 0;
+    case 'cursos':
+      return Array.isArray(cvData.coursesAndCertificates) && cvData.coursesAndCertificates.length > 0;
+    case 'informatica':
+      return Array.isArray(cvData.informatics) && cvData.informatics.length > 0;
+    case 'ecologia':
+      return Array.isArray(cvData.ecology) ? cvData.ecology.length > 0 : !!cvData.ecology;
+    case 'certificados':
+      return Array.isArray(cvData.certificatesScanned) && cvData.certificatesScanned.length > 0;
+    case 'firma':
+      return !!(cvData.signature?.dataUrl || cvData.signature?.signerName);
+    default: {
+      const customSec = Array.isArray(cvData.customSections) ? cvData.customSections.find((cs: any) => cs.id === sectionId) : null;
+      return Array.isArray(customSec?.records) && customSec.records.length > 0;
+    }
+  }
+}
+
 export function resolveActiveDockSections(cvData: any): DockSectionItem[] {
   const customSections = cvData?.customSections || [];
   const visibility = cvData?.sectionVisibility || {};
@@ -63,12 +114,12 @@ export function resolveActiveDockSections(cvData: any): DockSectionItem[] {
       isCustom: true,
       tabId: 'custom',
       isUniversal: false,
-      isDisabled: false
+      isDisabled: false,
+      hasContent: checkSectionHasContent(cvData, cs.id)
     }));
 
   const catalogItems: DockSectionItem[] = SECTION_CATALOG
     .filter((entry) => !ABSORBED_INTO_PERSONAL_TAB.has(entry.id))
-    .filter((entry) => entry.isUniversal || visibility[entry.id] !== false)
     .map((entry) => ({
       id: entry.id,
       label: entry.shortLabel || entry.label,
@@ -76,10 +127,9 @@ export function resolveActiveDockSections(cvData: any): DockSectionItem[] {
       isCustom: false,
       tabId: entry.tabId,
       isUniversal: !!entry.isUniversal,
-      isDisabled: visibility[entry.id] === false
+      isDisabled: visibility[entry.id] === false,
+      hasContent: checkSectionHasContent(cvData, entry.id)
     }));
 
-  // Personalizadas primero (igual que antes: quedan pegadas al botón "+"),
-  // después las del catálogo estándar en su orden declarado.
   return [...customItems, ...catalogItems];
 }

@@ -21,7 +21,7 @@ import { createSubColumnGrid } from '../layers/subColumns/resolveSubColumns';
 import { resolveUnifiedTextSpec } from '../layers/typography/unifiedTextHierarchyEngine';
 import { resolveSubtleCardBackground } from '../layers/colors/surfaceAwareColorEngine';
 import { initPdfFonts, sanitizeFontFamily } from '../layers/typography/pdfFontRegistry';
-import { resolveEffectivePresetSectionOrder, CvLayoutOverrides } from '../layers/sectors/layoutResolutionEngine';
+import { resolveEffectivePresetSectionOrder, resolveEffectivePresetSectors, CvLayoutOverrides } from '../layers/sectors/layoutResolutionEngine';
 import { getCvFormat } from '../../formats/cvFormatRegistry';
 import { getContainerStyle } from '../../styles/containerStyleEngine';
 
@@ -122,8 +122,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   const sidebarType = getTypographyColorBinding(sidebarRolesColor, sidebarRolesColor.primary);
   const mainType = getTypographyColorBinding(mainRolesColor, mainRolesColor.background);
 
-  // En modo embedded el "lienzo" es el objeto (ej. la tarjeta), no una hoja
-  // física — nunca se consulta getPageSize() para ese caso.
+  const activePageSizeId = layoutOverrides?.pageSizeId || preset.pageSizeId;
   const pageDef: PageSize = embedded && canvasWidthMm && canvasHeightMm
     ? {
         id: 'embedded',
@@ -135,12 +134,13 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
         widthPt: canvasWidthMm * MM_TO_PT_LOCAL,
         heightPt: canvasHeightMm * MM_TO_PT_LOCAL,
       }
-    : getPageSize(preset.pageSizeId);
+    : getPageSize(activePageSizeId);
   const marginDef = MARGIN_PRESETS[preset.marginPresetId] || MARGIN_PRESETS.documento_estandar;
   const usable = resolveMargins(pageDef, marginDef); // Capa 3: solo para saber CUÁNTO margen aplicar al contenido
-  const resolvedSectors = resolveSectors({ widthPt: pageDef.widthPt, heightPt: pageDef.heightPt }, preset.sectors); // Capa 2: geometría sobre la hoja FÍSICA completa, sin margen
+  const effectiveSectors = resolveEffectivePresetSectors(preset, layoutOverrides);
+  const resolvedSectors = resolveSectors({ widthPt: pageDef.widthPt, heightPt: pageDef.heightPt }, effectiveSectors); // Capa 2: geometría sobre la hoja FÍSICA completa, sin margen
   const sectorsWithFlow = placeFixedObjects(resolvedSectors, preset.fixedObjects);
-  const pdfPaperSize = preset.pageSizeId === 'carta' ? 'LETTER' : preset.pageSizeId === 'legal' ? 'LEGAL' : 'A4';
+  const pdfPaperSize = activePageSizeId === 'carta' ? 'LETTER' : activePageSizeId === 'legal' ? 'LEGAL' : 'A4';
 
   const sidebarCardBg = resolveSubtleCardBackground('sidebar', sidebarRolesColor);
   const mainCardBg = resolveSubtleCardBackground('main', mainRolesColor);

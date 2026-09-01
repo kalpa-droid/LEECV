@@ -87,6 +87,7 @@ export default function CVPreview({ cvData, setCvData: _setCvData, activeTab, zo
             activeTab={activeTab}
             sections={sections}
             preset={activePreset}
+            layoutOverrides={debouncedCvData?.layout}
           />
         </ErrorBoundary>
       </div>

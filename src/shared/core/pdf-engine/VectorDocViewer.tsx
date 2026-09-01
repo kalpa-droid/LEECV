@@ -5,6 +5,7 @@ import { colorSystem } from '../uiDesignSystem';
 import { scrollToPdfAnchor } from './layers/anchors/pdfAnchorEngine';
 import { ContentSection } from './layers/records/recordTypes';
 import { Preset } from './layers/presets/presetSchema';
+import { CvLayoutOverrides } from './layers/sectors/layoutResolutionEngine';
 // Vite: importa el worker como URL de asset — funciona igual en build de producción.
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
@@ -19,6 +20,7 @@ interface VectorDocViewerProps {
   activeTab?: string;
   sections?: ContentSection[];
   preset?: Preset;
+  layoutOverrides?: CvLayoutOverrides;
 }
 
 /**
@@ -38,7 +40,7 @@ interface VectorDocViewerProps {
  * literalmente, el mismo PDF que el usuario termina descargando — cero
  * posibilidad de que preview y descarga difieran.
  */
-export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections = [], preset }: VectorDocViewerProps) {
+export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections = [], preset, layoutOverrides }: VectorDocViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -118,9 +120,9 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
   // Reacciona ante el cambio de activeTab ejecutando scroll suave en el contenedor
   useEffect(() => {
     if (!loading && activeTab && containerRef.current) {
-      scrollToPdfAnchor(wrapperRef.current || containerRef.current, activeTab, sections, preset!);
+      scrollToPdfAnchor(wrapperRef.current || containerRef.current, activeTab, sections, preset!, layoutOverrides);
     }
-  }, [activeTab, loading, sections, preset]);
+  }, [activeTab, loading, sections, preset, layoutOverrides]);
 
   return (
     <div ref={wrapperRef} style={{ width: '100%', height: '100%', overflowY: 'auto', overflowX: 'hidden' }}>

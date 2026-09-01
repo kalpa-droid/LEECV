@@ -11,6 +11,8 @@
 import { Preset, PresetSectionOrder } from '../presets/presetSchema';
 
 export interface CvLayoutOverrides {
+  pageSizeId?: string;
+  sidebarWidthPercent?: number;
   columnAssignments?: Record<string, 'primaria' | 'secundaria' | string>;
   sectionOrders?: {
     primaria?: string[];
@@ -67,4 +69,23 @@ export function resolveEffectivePresetSectionOrder(
     { sectorRole: 'sidebar', sectionIds: [...new Set(sidebarIds)] },
     { sectorRole: 'main', sectionIds: [...new Set(mainIds)] }
   ];
+}
+
+export function resolveEffectivePresetSectors(
+  preset: Preset,
+  layoutOverrides?: CvLayoutOverrides & { sidebarWidthPercent?: number }
+) {
+  if (!layoutOverrides?.sidebarWidthPercent || !Array.isArray(preset.sectors)) {
+    return preset.sectors;
+  }
+  const clamped = Math.min(42, Math.max(32, layoutOverrides.sidebarWidthPercent));
+  return preset.sectors.map((s) => {
+    if (s.role === 'sidebar') {
+      return { ...s, widthPercent: clamped };
+    }
+    if (s.role === 'main') {
+      return { ...s, widthPercent: 100 - clamped };
+    }
+    return s;
+  });
 }

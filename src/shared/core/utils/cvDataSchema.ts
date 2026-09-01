@@ -125,6 +125,7 @@ export function sanitizeCvData(rawCvData: any = {}) {
     },
 
     layout: {
+      sidebarWidthPercent: Math.min(42, Math.max(32, typeof data.layout?.sidebarWidthPercent === 'number' ? data.layout.sidebarWidthPercent : 40)),
       columnAssignments: {
         personales: 'secundaria',
         redes: 'secundaria',

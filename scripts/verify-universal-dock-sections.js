@@ -44,9 +44,9 @@ if (!formatContent.includes("'redes'")) {
   process.exit(1);
 }
 
-// Assert 4: activeSectionsDockEngine respects entry.isUniversal and does not filter it out on false visibility
-if (!activeDockContent.includes('entry.isUniversal || visibility[entry.id] !== false')) {
-  console.error('❌ activeSectionsDockEngine.ts filtra las secciones universales cuando visibility es false');
+// Assert 4: activeSectionsDockEngine preserves catalog entries with isDisabled flag
+if (!activeDockContent.includes('isDisabled: visibility[entry.id] === false')) {
+  console.error('❌ activeSectionsDockEngine.ts no asigna la bandera isDisabled correctamente');
   process.exit(1);
 }
 

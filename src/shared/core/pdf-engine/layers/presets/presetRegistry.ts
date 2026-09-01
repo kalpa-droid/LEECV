@@ -6,9 +6,9 @@ import { creativeSustentablePreset } from './presets/creative-sustentable';
 import { tarjetaPersonalPreset } from './presets/tarjeta-personal';
 
 import { composePreset } from './presetCompositionEngine';
-import { PRESET_COLORS, PRESET_TYPOGRAPHY, PRESET_COLUMNS } from './presetCompositionInstances';
+import { PRESET_COLORS, PRESET_TYPOGRAPHY, PRESET_COLUMNS, getColumnLayoutPresetName } from './presetCompositionInstances';
 
-export { PRESET_COLORS, PRESET_TYPOGRAPHY, PRESET_COLUMNS };
+export { PRESET_COLORS, PRESET_TYPOGRAPHY, PRESET_COLUMNS, getColumnLayoutPresetName };
 
 export function resolveActivePreset(cvData: any): Preset {
   const basePreset = getPreset(cvData?.activePresetId || 'cv-clasico');
