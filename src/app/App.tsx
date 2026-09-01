@@ -22,6 +22,7 @@ import WizardModal from '../modules/cv-builder/components/WizardModal';
 import SavedCVsModal from '../modules/cv-builder/components/SavedCVsModal';
 import { ZoomControls } from '../shared/core/ui/ZoomControls';
 import SaveModal from '../modules/cv-builder/components/SaveModal';
+import SaveAsVersionModal from '../modules/cv-builder/components/SaveAsVersionModal';
 import CloudStatusModal from '../modules/cv-builder/components/CloudStatusModal';
 import PricingModal from '../modules/payments/PricingModal';
 import PdfCheckoutModal from '../modules/cv-builder/components/modals/PdfCheckoutModal';
@@ -172,6 +173,7 @@ function AppContent() {
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [isSavedCVsOpen, setIsSavedCVsOpen] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [isSaveAsModalOpen, setIsSaveAsModalOpen] = useState(false);
   const [initialSaveAsOpen, setInitialSaveAsOpen] = useState(false);
   const [isEmailSaveModalOpen, setIsEmailSaveModalOpen] = useState(false);
   const [isShareAppModalOpen, setIsShareAppModalOpen] = useState(false);
@@ -430,10 +432,7 @@ function AppContent() {
           setCvData={setCvData}
           onOpenSavedCVsModal={() => setIsSavedCVsOpen(true)}
           onSaveCVClick={handleSaveCVClick}
-          onOpenSaveAsModal={() => {
-            setInitialSaveAsOpen(true);
-            setIsSaveModalOpen(true);
-          }}
+          onOpenSaveAsModal={() => setIsSaveAsModalOpen(true)}
           onOpenJsonDownloadModal={() => setIsDownloadModalOpen(true)}
           onPrint={handleExportPDFClick}
           onOpenAtsCheck={handleOpenAtsCheck}
@@ -574,6 +573,15 @@ function AppContent() {
             onOpenCloudStatus={() => setIsCloudModalOpen(true)}
             isSaving={isSaving}
             initialSaveAsOpen={initialSaveAsOpen}
+          />
+        )}
+
+        {isSaveAsModalOpen && (
+          <SaveAsVersionModal
+            isOpen={isSaveAsModalOpen}
+            onClose={() => setIsSaveAsModalOpen(false)}
+            onSaveAs={handleSaveCVAsClick}
+            isSaving={isSaving}
           />
         )}
 

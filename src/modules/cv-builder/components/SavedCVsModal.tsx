@@ -151,19 +151,19 @@ export default function SavedCVsModal({
       }
     >
       <div className={`space-y-4 p-4 bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] rounded-[${radius.modal}]`}>
-        {/* Action Header: 2 Options Bar */}
+        {/* Action Header: Apertura e Importación */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <label className={`p-3 rounded-[${radius.modal}] bg-[var(--color-secondary-muted)] hover:bg-[var(--color-secondary-muted)]/80 border border-[var(--color-secondary-base)]/30 hover:border-[var(--color-secondary-base)]/60 transition cursor-pointer flex items-center gap-3 group`}>
-            <div className={`p-2 rounded-[${radius.card}] bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/40 text-[var(--color-secondary-text)] group-hover:scale-110 transition flex-shrink-0`}>
+          <label className={`p-3 rounded-[${radius.modal}] bg-[var(--color-secondary-muted)]/50 hover:bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 hover:border-[var(--color-secondary-base)]/60 transition cursor-pointer flex items-center gap-3 group`}>
+            <div className={`p-2 rounded-[${radius.card}] bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] group-hover:scale-110 transition flex-shrink-0`}>
               <Download className="w-4 h-4" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-black text-xs text-[var(--ui-text-primary)]">Cargar Copia (.JSON)</p>
-              <p className="text-[10px] text-[var(--color-secondary-text)] truncate">Restaurar respaldo local</p>
+              <p className="font-black text-xs text-[var(--ui-text-primary)]">Importar Respaldo (.JSON / .ZIP)</p>
+              <p className="text-[10px] text-[var(--color-secondary-text)] truncate">Restaurar borrador desde tu PC</p>
             </div>
             <input 
               type="file" 
-              accept=".json" 
+              accept=".json,.zip" 
               className="hidden" 
               onChange={async (e) => {
                 if (onImportJson) {
@@ -184,12 +184,12 @@ export default function SavedCVsModal({
             }}
             className={`p-3 rounded-[${radius.modal}] bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-dock-hover)] border border-[var(--ui-border)] transition cursor-pointer flex items-center gap-3 text-left group`}
           >
-            <div className={`p-2 rounded-[${radius.card}] bg-[var(--ui-dock-hover)] text-[var(--ui-text-primary)] group-hover:scale-110 transition flex-shrink-0`}>
+            <div className={`p-2 rounded-[${radius.card}] bg-[var(--ui-dock-hover)] text-[var(--color-secondary-bright)] group-hover:scale-110 transition flex-shrink-0`}>
               <Cloud className="w-4 h-4" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-black text-xs text-[var(--ui-text-primary)]">Google Drive / Nube</p>
-              <p className="text-[10px] text-[var(--ui-text-secondary)] truncate">Estado de sincronización</p>
+              <p className="font-black text-xs text-[var(--ui-text-primary)]">Nube & Google Drive</p>
+              <p className="text-[10px] text-[var(--ui-text-secondary)] truncate">Sincronización remota</p>
             </div>
           </button>
         </div>
