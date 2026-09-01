@@ -1,4 +1,3 @@
-import fs from 'fs';
 import React from 'react';
 import { pdf } from '@react-pdf/renderer';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
@@ -6,15 +5,20 @@ import { TemplateRenderer } from '../src/shared/core/pdf-engine/renderer/Templat
 import { cvDataToContentSections } from '../src/shared/core/pdf-engine/layers/records/cvDataAdapter';
 import { cvClasicoPreset } from '../src/shared/core/pdf-engine/layers/presets/presets/cv-clasico';
 
-const raw = JSON.parse(fs.readFileSync('/home/mappo/Kalpagrafica/Proyectos/LEECV_MÓNICA_DANIELA_BURGOS_v2.json', 'utf8'));
-const sections = cvDataToContentSections(raw.cvData);
+const sampleCvData = {
+  id: 'inspect_test',
+  personalInfo: { fullName: 'Juan Pérez', email: 'juan@example.com' },
+  experience: [{ role: 'Desarrollador', institution: 'Empresa X', year: '2024', details: 'Detalles del trabajo...' }]
+};
+
+const sections = cvDataToContentSections(sampleCvData);
 
 async function inspectPdfPages() {
   const doc = React.createElement(TemplateRenderer, {
     preset: cvClasicoPreset,
     sections: sections,
-    personalInfo: raw.cvData.personalInfo || {},
-    showCoverPage: true
+    personalInfo: sampleCvData.personalInfo || {},
+    showCoverPage: false
   });
   
   const buffer = await pdf(doc).toBuffer();
