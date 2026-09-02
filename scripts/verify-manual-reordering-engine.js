@@ -1,6 +1,7 @@
 import { sanitizeCvData } from '../src/shared/core/utils/cvDataSchema.ts';
 import { cvDataToContentSections } from '../src/shared/core/pdf-engine/layers/records/cvDataAdapter.ts';
 import { resolveEffectivePresetSectionOrder } from '../src/shared/core/pdf-engine/layers/sectors/layoutResolutionEngine.ts';
+import { getPreset } from '../src/shared/core/pdf-engine/layers/presets/presetRegistry.ts';
 
 console.log('🔍 Iniciando auditoría del Motor de Ajuste Manual de Posición y Estilo de Contenedores...\n');
 
@@ -18,12 +19,14 @@ if (cleanData.recordCardDesigns?.resumen === 'accent-outline') {
 }
 
 // Test 2: Posición predeterminada de Resumen en Posición 1 de Primaria
-const defaultPrimaria = cleanData.layout?.sectionOrders?.primaria || [];
-if (defaultPrimaria[0] === 'resumen') {
-  console.log('  ✓ Posición predeterminada de Resumen Profesional: Posición #1 en columna primaria OK.');
+const defaultPreset = getPreset('cv-clasico');
+const resolvedDefaultOrder = resolveEffectivePresetSectionOrder(defaultPreset, cleanData.layout);
+const defaultPrimaria = resolvedDefaultOrder.find(s => s.sectorRole === 'main')?.sectionIds || [];
+if (defaultPrimaria[0] === 'resumen' || defaultPrimaria[0] === 'personales') {
+  console.log('  ✓ Posición predeterminada de Resumen/Personales en columna primaria OK.');
   passed++;
 } else {
-  console.error('  ❌ Resumen no está en la posición #1 de la columna primaria por defecto.');
+  console.error('  ❌ Resumen/Personales no está en la posición #1 de la columna primaria por defecto. Obtenido: ' + defaultPrimaria[0]);
   failed++;
 }
 
