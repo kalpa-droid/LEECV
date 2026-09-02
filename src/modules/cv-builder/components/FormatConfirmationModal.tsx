@@ -1,0 +1,288 @@
+/**
+ * COMPONENTE — MODAL DE CONFIRMACIÓN DE FORMATO GLOBAL (FormatConfirmationModal.tsx)
+ * 
+ * Permite al usuario elegir cómo aplicar un formato de CV (Curaduría Recomendada,
+ * Solo Reordenar o Formato Completo con las 20 secciones visibles), garantizando
+ * y notificando de forma transparente que NINGÚN DATO se borra jamás del JSON.
+ */
+
+import React, { useState } from 'react';
+import { colorSystem, radius } from '../../../shared/core/uiDesignSystem';
+import { FileText, Layout, Layers, ShieldCheck, CheckCircle, X } from 'lucide-react';
+
+export type FormatApplicationMode = 'curated' | 'reorder-only' | 'full-20-sections';
+
+export interface FormatConfirmationModalProps {
+  isOpen: boolean;
+  formatName: string;
+  onClose: () => void;
+  onConfirm: (mode: FormatApplicationMode) => void;
+}
+
+export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = ({
+  isOpen,
+  formatName,
+  onClose,
+  onConfirm
+}) => {
+  const [selectedMode, setSelectedMode] = useState<FormatApplicationMode>('curated');
+
+  if (!isOpen) return null;
+
+  const handleApply = () => {
+    onConfirm(selectedMode);
+    onClose();
+  };
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: 'rgba(15, 23, 42, 0.75)',
+        backdropFilter: 'blur(4px)',
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px'
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          width: '100%',
+          maxWidth: '540px',
+          backgroundColor: colorSystem.neutral.surface,
+          borderRadius: radius.modal,
+          boxShadow: 'var(--shadow-overlay)',
+          border: `1px solid ${colorSystem.neutral.border}`,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Encabezado Modal */}
+        <div
+          style={{
+            padding: '20px 24px',
+            borderBottom: `1px solid ${colorSystem.neutral.border}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: colorSystem.neutral.surfaceMuted
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: radius.control,
+                background: `${colorSystem.accent.base}15`,
+                color: colorSystem.accent.base,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <Layout size={22} />
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: colorSystem.neutral.textPrimary }}>
+                Aplicar Formato: {formatName}
+              </h3>
+              <p style={{ margin: 0, fontSize: '13px', color: colorSystem.neutral.textSecondary }}>
+                Selecciona la modalidad de aplicación deseada
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: colorSystem.neutral.textSecondary,
+              padding: '6px',
+              borderRadius: radius.control,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Contenido Modal */}
+        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Mensaje de Confianza e Integridad de Datos */}
+          <div
+            style={{
+              padding: '14px 16px',
+              borderRadius: radius.control,
+              background: `${colorSystem.status.success.base}12`,
+              border: `1px solid ${colorSystem.status.success.base}35`,
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '12px'
+            }}
+          >
+            <ShieldCheck size={20} style={{ color: colorSystem.status.success.base, flexShrink: 0, marginTop: '2px' }} />
+            <div style={{ fontSize: '13px', lineHeight: 1.45, color: colorSystem.neutral.textPrimary }}>
+              <strong>Tus datos jamás se borran:</strong> El archivo JSON y tus respaldos conservan el 100% de tus datos. Cambiar de formato solo ajusta el diseño visual y la curaduría para exportación.
+            </div>
+          </div>
+
+          {/* Opciones de Aplicación */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {/* Opción 1: Curaduría Recomendada */}
+            <div
+              onClick={() => setSelectedMode('curated')}
+              style={{
+                padding: '16px',
+                borderRadius: radius.card,
+                border: `2px solid ${selectedMode === 'curated' ? colorSystem.accent.base : colorSystem.neutral.border}`,
+                backgroundColor: selectedMode === 'curated' ? `${colorSystem.accent.base}08` : colorSystem.neutral.surface,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '14px',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <div style={{ marginTop: '2px', color: selectedMode === 'curated' ? colorSystem.accent.base : colorSystem.neutral.textSecondary }}>
+                {selectedMode === 'curated' ? <CheckCircle size={20} /> : <FileText size={20} />}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '14px', fontWeight: 700, color: colorSystem.neutral.textPrimary }}>
+                    Curaduría Recomendada (Recomendado)
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      background: colorSystem.accent.base,
+                      color: colorSystem.accent.text
+                    }}
+                  >
+                    Estándar
+                  </span>
+                </div>
+                <p style={{ margin: '4px 0 0 0', fontSize: '12.5px', color: colorSystem.neutral.textSecondary, lineHeight: 1.4 }}>
+                  Aplica la estructura, orden de columnas y visibilidad de secciones optimizada específicamente para este formato y mercado.
+                </p>
+              </div>
+            </div>
+
+            {/* Opción 2: Solo Reordenar Columnas */}
+            <div
+              onClick={() => setSelectedMode('reorder-only')}
+              style={{
+                padding: '16px',
+                borderRadius: radius.card,
+                border: `2px solid ${selectedMode === 'reorder-only' ? colorSystem.accent.base : colorSystem.neutral.border}`,
+                backgroundColor: selectedMode === 'reorder-only' ? `${colorSystem.accent.base}08` : colorSystem.neutral.surface,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '14px',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <div style={{ marginTop: '2px', color: selectedMode === 'reorder-only' ? colorSystem.accent.base : colorSystem.neutral.textSecondary }}>
+                {selectedMode === 'reorder-only' ? <CheckCircle size={20} /> : <Layout size={20} />}
+              </div>
+              <div style={{ flex: 1 }}>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: colorSystem.neutral.textPrimary }}>
+                  Solo Reordenar Columnas y Prioridad
+                </span>
+                <p style={{ margin: '4px 0 0 0', fontSize: '12.5px', color: colorSystem.neutral.textSecondary, lineHeight: 1.4 }}>
+                  Organiza las columnas y la prioridad visual del nuevo formato sin alterar la visibilidad de tus secciones personalizadas actuales.
+                </p>
+              </div>
+            </div>
+
+            {/* Opción 3: Formato Completo (20 Secciones) */}
+            <div
+              onClick={() => setSelectedMode('full-20-sections')}
+              style={{
+                padding: '16px',
+                borderRadius: radius.card,
+                border: `2px solid ${selectedMode === 'full-20-sections' ? colorSystem.accent.base : colorSystem.neutral.border}`,
+                backgroundColor: selectedMode === 'full-20-sections' ? `${colorSystem.accent.base}08` : colorSystem.neutral.surface,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '14px',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <div style={{ marginTop: '2px', color: selectedMode === 'full-20-sections' ? colorSystem.accent.base : colorSystem.neutral.textSecondary }}>
+                {selectedMode === 'full-20-sections' ? <CheckCircle size={20} /> : <Layers size={20} />}
+              </div>
+              <div style={{ flex: 1 }}>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: colorSystem.neutral.textPrimary }}>
+                  Formato Completo (Ver las 20 Secciones Sin Filtros)
+                </span>
+                <p style={{ margin: '4px 0 0 0', fontSize: '12.5px', color: colorSystem.neutral.textSecondary, lineHeight: 1.4 }}>
+                  Mantiene visibles todas tus secciones y campos personales sin ocultar nada, aplicando la tipografía y colores del nuevo formato.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Acciones de Footer */}
+        <div
+          style={{
+            padding: '16px 24px',
+            borderTop: `1px solid ${colorSystem.neutral.border}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            gap: '12px',
+            background: colorSystem.neutral.surfaceMuted
+          }}
+        >
+          <button
+            onClick={onClose}
+            style={{
+              padding: '10px 18px',
+              borderRadius: radius.control,
+              border: `1px solid ${colorSystem.neutral.border}`,
+              background: colorSystem.neutral.surface,
+              color: colorSystem.neutral.textPrimary,
+              fontSize: '13px',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleApply}
+            style={{
+              padding: '10px 22px',
+              borderRadius: radius.control,
+              border: 'none',
+              background: colorSystem.accent.base,
+              color: colorSystem.accent.text,
+              fontSize: '13px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: 'var(--shadow-raised)'
+            }}
+          >
+            Aplicar Formato
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

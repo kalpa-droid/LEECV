@@ -8,6 +8,7 @@ export interface ApplyPresetPayload {
   colorPresetId?: string;
   typographyPresetId?: string;
   columnLayoutPresetId?: string;
+  applicationMode?: 'curated' | 'reorder-only' | 'full-20-sections';
 }
 
 /**
@@ -26,9 +27,26 @@ export function applyPresetLevel(cvData: any, level: PresetLevel, payload: Apply
 
   if (level === 'format' && payload.formatId) {
     const fmt = getCvFormat(payload.formatId);
-    const newVis = getFormatDefaultVisibility(payload.formatId);
     const recPreset = fmt.recommendedPresetIds?.[0] || 'cv-clasico';
     const activePresetCompatible = fmt.recommendedPresetIds?.includes(cvData?.activePresetId);
+
+    let resolvedVis: Record<string, boolean> = { ...(cvData?.sectionVisibility || {}) };
+    const mode = payload.applicationMode || 'curated';
+
+    if (mode === 'curated') {
+      const newVis = getFormatDefaultVisibility(payload.formatId);
+      resolvedVis = { ...resolvedVis, ...newVis };
+    } else if (mode === 'full-20-sections') {
+      const allSections = [
+        'contacto', 'datosPersonales', 'frase', 'redes', 'resumen', 'experiencia',
+        'formacion', 'profesion', 'habilidades', 'competencias', 'idiomas',
+        'proyectos', 'publicaciones', 'referencias', 'cursos', 'informatica',
+        'ecologia', 'certificados', 'firma'
+      ];
+      for (const secKey of allSections) {
+        resolvedVis[secKey] = true;
+      }
+    }
 
     return {
       ...cvData,
@@ -38,10 +56,7 @@ export function applyPresetLevel(cvData: any, level: PresetLevel, payload: Apply
       // Limpiar overrides manuales de color y tipografía al cambiar de formato global
       colorPresetId: undefined,
       typographyPresetId: undefined,
-      sectionVisibility: {
-        ...(cvData?.sectionVisibility || {}),
-        ...newVis
-      }
+      sectionVisibility: resolvedVis
     };
   }
 

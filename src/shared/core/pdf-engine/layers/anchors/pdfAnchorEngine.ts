@@ -8,6 +8,8 @@
 import { ContentSection } from '../records/recordTypes';
 import { Preset } from '../presets/presetSchema';
 import { resolveEffectivePresetSectionOrder, CvLayoutOverrides } from '../sectors/layoutResolutionEngine';
+import { getPageSize } from '../page/pageSizes';
+import { MARGIN_PRESETS, resolveMargins } from '../margins/marginPresets';
 
 export interface PdfAnchorTarget {
   tabId: string;
@@ -168,7 +170,10 @@ export function resolveSectionAnchor(
     return 35 + records.reduce((sum: number, r: any) => sum + estimateRecordHeightPt(r, isSidebarSector), 0);
   };
 
-  const USEFUL_PAGE_HEIGHT_PT = 680;
+  const pageDef = getPageSize(preset?.pageSizeId || 'a4');
+  const marginDef = MARGIN_PRESETS[preset?.marginPresetId || 'normal'] || MARGIN_PRESETS.normal;
+  const usableArea = resolveMargins(pageDef, marginDef);
+  const USEFUL_PAGE_HEIGHT_PT = usableArea?.heightPt || 680;
   let accumulatedPt = 0;
 
   for (let i = 0; i < validIndex; i++) {

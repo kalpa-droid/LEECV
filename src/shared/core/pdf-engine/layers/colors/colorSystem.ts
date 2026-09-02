@@ -180,50 +180,61 @@ export interface HarmonyPalette {
 }
 
 /**
- * MOTOR DE ARMONÍA CROMÁTICA
- * Dado un color primario base y un esquema de armonía ('complementario', 'analogo', 'triadico', 'monocromo'),
- * calcula científicamente los colores secundario y acento rotando el matiz (Hue) en HSL y validando contraste WCAG.
+ * NOTA DE ARQUITECTURA (SISTEMA DE COLOR):
+ * Esta función provee compatibilidad para esquemas en español ('complementario', 'analogo', 'triadico', 'monocromo').
+ * La ÚNICA FUENTE DE VERDAD oficial para el motor de composición de presets y producción es
+ * `generateHarmoniousPalette` en `paletteHarmonyEngine.ts` (OKLCH + WCAG 2.1 AA).
  */
 export function generateHarmonyPalette(
   colorBase: string,
   scheme: HarmonyScheme = 'complementario',
   backgroundInput: string = '#ffffff'
 ): HarmonyPalette {
-  const [h, s, l] = hexToHSL(colorBase);
-  let secH = h;
-  let accH = h;
-  let secL = l;
-  let accL = l;
+  const oklch = hexToOKLCH(colorBase || '#1e293b');
+  const { l, c, h } = oklch;
+
+  let secondaryH = h;
+  let secondaryL = l;
+  let secondaryC = c;
+
+  let accentH = h;
+  let accentL = l;
+  let accentC = c;
 
   switch (scheme) {
     case 'complementario':
-      secH = (h + 180) % 360;
-      accH = (h + 30) % 360;
+      secondaryH = (h + 180) % 360;
+      accentH = (h + 180) % 360;
+      accentL = Math.min(0.9, Math.max(0.3, l + 0.15));
       break;
     case 'analogo':
-      secH = (h + 30) % 360;
-      accH = (h - 30 + 360) % 360;
+      secondaryH = (h + 30) % 360;
+      accentH = (h + 330) % 360;
       break;
     case 'triadico':
-      secH = (h + 120) % 360;
-      accH = (h + 240) % 360;
+      secondaryH = (h + 120) % 360;
+      accentH = (h + 240) % 360;
       break;
     case 'monocromo':
-      secL = Math.max(0.15, l * 0.65);
-      accL = Math.min(0.85, l * 1.35);
+      secondaryL = Math.max(0.15, l - 0.2);
+      secondaryC = Math.max(0.02, c - 0.05);
+      accentL = Math.min(0.85, l + 0.25);
+      accentC = Math.min(0.35, c + 0.05);
       break;
   }
 
-  const primary = colorBase;
-  const secondary = hslToHex(secH, Math.max(0.2, s), secL);
-  const accent = hslToHex(accH, Math.max(0.3, s), accL);
+  const primaryHex = oklchToHex(l, c, h);
+  const secondaryHex = oklchToHex(secondaryL, secondaryC, secondaryH);
+  const accentHex = oklchToHex(accentL, accentC, accentH);
+
   const background = backgroundInput;
-  const text = getContrastTextColor(background);
+  const contrastAgainstBg = getContrastRatio(background, '#ffffff');
+  const text = contrastAgainstBg >= 4.5 ? '#ffffff' : '#0f172a';
 
   return {
-    primary,
-    secondary,
-    accent,
+    primary: primaryHex,
+    secondary: secondaryHex,
+    accent: accentHex,
     background,
     text
   };

@@ -175,6 +175,17 @@ export function resolveUnifiedTextSpec(
     }
   }
 
+  // 3. Verificación y Auto-Ajuste Final de Contraste WCAG 2.1 AA (>= 4.5:1 / 3.0:1)
+  const minRequiredRatio = level === 'title' || level === 'accent' ? 3.0 : 4.5;
+  const currentRatio = getContrastRatio(cleanSurface, colorHex);
+
+  if (currentRatio < minRequiredRatio) {
+    // Si el contraste es insuficiente sobre el fondo dado, ajustar automáticamente el color
+    // a blanco puro o slate muy oscuro según la luminancia del fondo para garantizar legibilidad WCAG
+    colorHex = isDarkSurface ? '#ffffff' : '#0f172a';
+    opacity = 1.0;
+  }
+
   return {
     role: level,
     fontSizePt,

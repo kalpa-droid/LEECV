@@ -9,9 +9,9 @@ import { ColorPreset, TypographyPreset, ColumnLayoutPreset } from './presetSchem
 import { generateHarmoniousPalette } from '../colors/paletteHarmonyEngine';
 
 /**
- * Paletas de Color Curadas y Armónicas
+ * Paletas de Color Curadas y Armónicas (19 paletas: 7 originales + 12 nuevas)
  */
-export const PRESET_COLORS: Record<'sobrio' | 'joven' | 'clasico' | 'elegante' | 'marino' | 'borgona' | 'amatista', ColorPreset> = {
+export const PRESET_COLORS: Record<string, ColorPreset> = {
   sobrio: {
     id: 'color-sobrio',
     name: 'Sobrio Pizarra',
@@ -60,6 +60,93 @@ export const PRESET_COLORS: Record<'sobrio' | 'joven' | 'clasico' | 'elegante' |
     seedHex: '#3B1C5A',
     harmonyScheme: 'analogous',
     palette: generateHarmoniousPalette('#3B1C5A', 'analogous')
+  },
+  // 4 JÓVENES / VIBRANTES
+  'neon-coral': {
+    id: 'color-neon-coral',
+    name: 'Coral Neón',
+    seedHex: '#FF6B6B',
+    harmonyScheme: 'split-complementary',
+    palette: generateHarmoniousPalette('#FF6B6B', 'split-complementary')
+  },
+  'menta-esmeralda': {
+    id: 'color-menta-esmeralda',
+    name: 'Menta Esmeralda',
+    seedHex: '#00B894',
+    harmonyScheme: 'analogous',
+    palette: generateHarmoniousPalette('#00B894', 'analogous')
+  },
+  'cyber-indigo': {
+    id: 'color-cyber-indigo',
+    name: 'Cyber Índigo',
+    seedHex: '#6C5CE7',
+    harmonyScheme: 'triadic',
+    palette: generateHarmoniousPalette('#6C5CE7', 'triadic')
+  },
+  'amber-solar': {
+    id: 'color-amber-solar',
+    name: 'Ámbar Solar',
+    seedHex: '#FDCB6E',
+    harmonyScheme: 'split-complementary',
+    palette: generateHarmoniousPalette('#FDCB6E', 'split-complementary')
+  },
+  // 4 EJECUTIVAS / CORPORATIVAS
+  'navy-consul': {
+    id: 'color-navy-consul',
+    name: 'Navy Cónsul',
+    seedHex: '#0C2440',
+    harmonyScheme: 'monochromatic',
+    palette: generateHarmoniousPalette('#0C2440', 'monochromatic')
+  },
+  'marron-tabaco': {
+    id: 'color-marron-tabaco',
+    name: 'Marrón Tabaco',
+    seedHex: '#4A2E1B',
+    harmonyScheme: 'analogous',
+    palette: generateHarmoniousPalette('#4A2E1B', 'analogous')
+  },
+  'gris-granito': {
+    id: 'color-gris-granito',
+    name: 'Gris Granito',
+    seedHex: '#34495E',
+    harmonyScheme: 'monochromatic',
+    palette: generateHarmoniousPalette('#34495E', 'monochromatic')
+  },
+  'verde-oliva': {
+    id: 'color-verde-oliva',
+    name: 'Verde Oliva Real',
+    seedHex: '#2D4030',
+    harmonyScheme: 'analogous',
+    palette: generateHarmoniousPalette('#2D4030', 'analogous')
+  },
+  // 4 MINIMALISTAS (Barra clara + Tarjetas blancas)
+  'lino-suave': {
+    id: 'color-lino-suave',
+    name: 'Lino Suave',
+    seedHex: '#F5F2EB',
+    harmonyScheme: 'monochromatic',
+    palette: generateHarmoniousPalette('#F5F2EB', 'monochromatic')
+  },
+  'hielo-nordico': {
+    id: 'color-hielo-nordico',
+    name: 'Hielo Nórdico',
+    seedHex: '#EBF3F5',
+    harmonyScheme: 'analogous',
+    palette: generateHarmoniousPalette('#EBF3F5', 'analogous')
+  },
+  'marfil-minimal': {
+    id: 'color-marfil-minimal',
+    name: 'Marfil Minimal',
+    seedHex: '#FDFBF7',
+    harmonyScheme: 'monochromatic',
+    palette: generateHarmoniousPalette('#FDFBF7', 'monochromatic')
+  },
+  'cuarzo-rosa': {
+    id: 'color-cuarzo-rosa',
+    name: 'Cuarzo Rosa',
+    seedHex: '#F7EFF2',
+    harmonyScheme: 'analogous',
+    palette: generateHarmoniousPalette('#F7EFF2', 'analogous')
   }
 };
 
@@ -70,6 +157,7 @@ export const PRESET_TYPOGRAPHY: Record<'editorial' | 'moderna' | 'clasica' | 'co
   editorial: {
     id: 'typo-editorial',
     name: 'Editorial Serif',
+    typographyHarmonyScheme: 'goldenRatio',
     typography: {
       title: 22,
       sectionHeading: 13,
@@ -89,6 +177,7 @@ export const PRESET_TYPOGRAPHY: Record<'editorial' | 'moderna' | 'clasica' | 'co
   moderna: {
     id: 'typo-moderna',
     name: 'Moderna limpia',
+    typographyHarmonyScheme: 'perfectFourth',
     typography: {
       title: 20,
       sectionHeading: 12,
@@ -108,6 +197,7 @@ export const PRESET_TYPOGRAPHY: Record<'editorial' | 'moderna' | 'clasica' | 'co
   clasica: {
     id: 'typo-clasica',
     name: 'Clásica Tradicional',
+    typographyHarmonyScheme: 'majorThird',
     typography: {
       title: 24,
       sectionHeading: 14,
@@ -127,6 +217,7 @@ export const PRESET_TYPOGRAPHY: Record<'editorial' | 'moderna' | 'clasica' | 'co
   condensada: {
     id: 'typo-condensada',
     name: 'Condensada Alta Densidad',
+    typographyHarmonyScheme: 'minorThird',
     typography: {
       title: 18,
       sectionHeading: 11,

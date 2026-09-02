@@ -33,6 +33,7 @@ export interface ColorPreset {
 export interface TypographyPreset {
   id: string;
   name: string;
+  typographyHarmonyScheme?: 'minorThird' | 'majorThird' | 'perfectFourth' | 'goldenRatio';
   typography: TypographyScale;
 }
 

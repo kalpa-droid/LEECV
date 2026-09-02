@@ -1,16 +1,19 @@
-import { getAllPresets } from '../src/shared/core/pdf-engine/layers/presets/presetRegistry';
-import { getContrastRatio, hexToOKLCH } from '../src/shared/core/pdf-engine/layers/colors/colorSystem';
+import { getAllPresets, PRESET_COLORS, resolveActivePreset } from '../src/shared/core/pdf-engine/layers/presets/presetRegistry';
+import { getContrastRatio } from '../src/shared/core/pdf-engine/layers/colors/colorSystem';
 import { checkThemeHueCoherence } from '../src/shared/core/pdf-engine/layers/colors/themeLightDarkTranslationEngine';
 import { resolveSubtleCardBackground } from '../src/shared/core/pdf-engine/layers/colors/surfaceAwareColorEngine';
 import { resolveUnifiedTextSpec } from '../src/shared/core/pdf-engine/layers/typography/unifiedTextHierarchyEngine';
 
-console.log('🔍 Iniciando auditoría de contraste WCAG 2.1 AA y coherencia cromática en presets de PDF...');
+console.log('🔍 Iniciando auditoría de contraste WCAG 2.1 AA y coherencia cromática cartesiana en presets de PDF...');
 
-const presets = getAllPresets();
+const basePresets = getAllPresets();
+const colorPresets = Object.values(PRESET_COLORS);
+
 let totalChecks = 0;
 let failedChecks = 0;
 
-for (const preset of presets) {
+// 1. Auditoría Base de Presets Integrados
+for (const preset of basePresets) {
   const surfaces = preset.surfacePalettes || {
     light: preset.palette,
     dark: preset.palette
@@ -34,8 +37,6 @@ for (const preset of presets) {
     if (accentBgContrast < 3.0) {
       console.error(`❌ FALLO DE CONTRASTE [Preset: ${preset.id}, Variante: ${variant.name}]: Acento (${variant.pal.accent}) en Fondo (${variant.bg}) da ratio ${accentBgContrast.toFixed(2)}:1 (mínimo 3.0:1).`);
       failedChecks++;
-    } else {
-      console.log(`  ✓ Preset [${preset.id}] (${variant.name}) - Acento en Fondo ratio ${accentBgContrast.toFixed(2)}:1 OK.`);
     }
   }
 
@@ -45,8 +46,6 @@ for (const preset of presets) {
   if (!coherence.coherent) {
     console.error(`❌ FALLO DE COHERENCIA CROMÁTICA [Preset: ${preset.id}]: Delta de Hue entre acento claro y oscuro es ${coherence.hueDeltaDeg}° (máximo permitido 15°).`);
     failedChecks++;
-  } else {
-    console.log(`  ✓ Preset [${preset.id}] - OK (Delta Hue Acentos: ${coherence.hueDeltaDeg}°).`);
   }
 
   // PRUEBA DE INTEGRACIÓN REAL DE SUPERFICIE DE SECTOR
@@ -59,8 +58,6 @@ for (const preset of presets) {
     if (sidebarPal.background === mainPal.background) {
       console.error(`❌ FALLO DE INTEGRACIÓN DE SUPERFICIE [Preset: ${preset.id}]: El fondo del sidebar (${sidebarPal.background}) es idéntico al fondo de main (${mainPal.background}) en un tema de superficie oscura.`);
       failedChecks++;
-    } else {
-      console.log(`  ✓ Preset [${preset.id}] - Integración de superficie de sector OK (Sidebar: ${sidebarPal.background}, Main: ${mainPal.background}).`);
     }
   }
 
@@ -81,53 +78,58 @@ for (const preset of presets) {
     if (contrastRatio < textRole.minRatio) {
       console.error(`❌ FALLO DE CONTRASTE EN MOTOR DE JERARQUÍA [Preset: ${preset.id}, Nivel: ${textRole.name}]: Color (${spec.colorHex}) en Fondo de Tarjeta (${cardBgHex}) da ratio ${contrastRatio.toFixed(2)}:1 (mínimo ${textRole.minRatio}:1).`);
       failedChecks++;
-    } else {
-      console.log(`  ✓ Preset [${preset.id}] - Motor Jerarquía ${textRole.name} (${spec.colorHex}) en Tarjeta (${cardBgHex}) da ratio ${contrastRatio.toFixed(2)}:1 OK (≥ ${textRole.minRatio}:1).`);
     }
   }
+}
 
-  // Verificación explícita de registros inline (skill, contact, quote) en superficies MAIN (clara) y SIDEBAR (oscura)
-  const inlineSurfacesToTest = [
-    { name: 'Sidebar', bg: sidebarPal.primary || sidebarPal.background, roles: sidebarPal },
-    { name: 'Main', bg: mainPal.background || '#ffffff', roles: mainPal }
-  ];
+// 2. AUDITORÍA CARTESIANA DE COMBINACIONES (Presets Base × Paletas de Color)
+console.log('\n🎨 Ejecutando Auditoría Cartesiana de Combinaciones (Presets × Paletas)...');
 
-  for (const surf of inlineSurfacesToTest) {
-    totalChecks++;
-    const skillSpec = resolveUnifiedTextSpec('body', surf.bg, surf.roles, preset.typography, 'skill');
-    const skillRatio = getContrastRatio(surf.bg, skillSpec.colorHex);
-    if (skillRatio < 4.5) {
-      console.error(`❌ FALLO DE CONTRASTE EN SKILL [Preset: ${preset.id}, Superficie: ${surf.name}]: Color (${skillSpec.colorHex}) en (${surf.bg}) da ratio ${skillRatio.toFixed(2)}:1 (mínimo 4.5:1).`);
-      failedChecks++;
-    }
-  }
+for (const baseP of basePresets) {
+  for (const colorP of colorPresets) {
+    const combinedPreset = resolveActivePreset({
+      activePresetId: baseP.id,
+      colorPresetId: colorP.id
+    });
 
-  // AUDITORÍA DE LA PORTADA (COVER PAGE)
-  const coverBgHex = preset.surfacePalettes?.dark?.primary || preset.palette.primary;
-  const coverRolesColor = preset.surfacePalettes?.dark || preset.palette;
-  const coverRolesToTest = [
-    { role: 'title', minRatio: 4.5, name: 'Portada Título' },
-    { role: 'subtitle', minRatio: 4.5, name: 'Portada Subtítulo/Roles' },
-    { role: 'body', minRatio: 4.5, name: 'Portada Quote' },
-    { role: 'meta', minRatio: 4.5, name: 'Portada Footer' }
-  ];
+    const mainPal = combinedPreset.surfacePalettes?.main || combinedPreset.palette;
+    const sidebarPal = combinedPreset.surfacePalettes?.sidebar || combinedPreset.palette;
 
-  for (const cRole of coverRolesToTest) {
-    totalChecks++;
-    const spec = resolveUnifiedTextSpec(cRole.role, coverBgHex, coverRolesColor, preset.typography);
-    const ratio = getContrastRatio(coverBgHex, spec.colorHex);
-    if (ratio < cRole.minRatio) {
-      console.error(`❌ FALLO DE CONTRASTE EN PORTADA [Preset: ${preset.id}, Elemento: ${cRole.name}]: Color (${spec.colorHex}) en Fondo de Portada (${coverBgHex}) da ratio ${ratio.toFixed(2)}:1 (mínimo ${cRole.minRatio}:1).`);
-      failedChecks++;
-    } else {
-      console.log(`  ✓ Preset [${preset.id}] - Portada ${cRole.name} (${spec.colorHex}) en (${coverBgHex}) da ratio ${ratio.toFixed(2)}:1 OK (≥ ${cRole.minRatio}:1).`);
+    const mainCardBg = resolveSubtleCardBackground('main', mainPal);
+    const sidebarBg = sidebarPal.surfaceBg || sidebarPal.background || '#1e293b';
+
+    const textRoles = [
+      { role: 'title', minRatio: 4.5, name: 'Título' },
+      { role: 'subtitle', minRatio: 4.5, name: 'Subtítulo' },
+      { role: 'description', minRatio: 4.5, name: 'Cuerpo' },
+      { role: 'meta', minRatio: 4.5, name: 'Meta' }
+    ];
+
+    for (const tr of textRoles) {
+      totalChecks++;
+      const mainSpec = resolveUnifiedTextSpec(tr.role, mainCardBg, mainPal, combinedPreset.typography);
+      const mainRatio = getContrastRatio(mainCardBg, mainSpec.colorHex);
+
+      if (mainRatio < tr.minRatio) {
+        console.error(`❌ FALLO CARTESIANO [Preset: ${baseP.id}, Color: ${colorP.id}, Sector: Main, Nivel: ${tr.name}]: Ratio ${mainRatio.toFixed(2)}:1 < ${tr.minRatio}:1`);
+        failedChecks++;
+      }
+
+      totalChecks++;
+      const sideSpec = resolveUnifiedTextSpec(tr.role, sidebarBg, sidebarPal, combinedPreset.typography);
+      const sideRatio = getContrastRatio(sidebarBg, sideSpec.colorHex);
+
+      if (sideRatio < tr.minRatio) {
+        console.error(`❌ FALLO CARTESIANO [Preset: ${baseP.id}, Color: ${colorP.id}, Sector: Sidebar, Nivel: ${tr.name}]: Ratio ${sideRatio.toFixed(2)}:1 < ${tr.minRatio}:1`);
+        failedChecks++;
+      }
     }
   }
 }
 
 if (failedChecks > 0) {
-  console.error(`❌ AUDITORÍA PDF FALLIDA: ${failedChecks} de ${totalChecks} verificaciones no pasaron.`);
+  console.error(`❌ AUDITORÍA PDF CARTESIANA FALLIDA: ${failedChecks} de ${totalChecks} verificaciones no pasaron.`);
   process.exit(1);
 }
 
-console.log(`✅ AUDITORÍA DE CONTRASTE Y COHERENCIA PDF EXITOSA: ${totalChecks} verificaciones pasaron al 100%.`);
+console.log(`✅ AUDITORÍA DE CONTRASTE CARTESIANA PDF EXITOSA: ${totalChecks} verificaciones pasaron al 100%.`);

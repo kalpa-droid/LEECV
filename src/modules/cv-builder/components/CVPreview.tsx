@@ -71,6 +71,18 @@ export default function CVPreview({ cvData, setCvData: _setCvData, activeTab, zo
       className="w-full min-h-full flex flex-col items-center print-wrapper relative"
       style={dynamicThemeStyle}
     >
+      {debouncedCvData?.colorPresetId && (
+        <div 
+          className="no-print mb-2 px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-sm"
+          style={{
+            backgroundColor: 'var(--color-status-success-muted)',
+            color: 'var(--color-status-success-text)',
+            border: '1px solid var(--color-status-success-text)'
+          }}
+        >
+          <span>✨</span> Combinación optimizada para legibilidad y contraste WCAG 2.1 AA
+        </div>
+      )}
       <div 
         className="w-full max-w-5xl my-2 no-print transition-transform duration-150 ease-out"
         style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top center' }}
