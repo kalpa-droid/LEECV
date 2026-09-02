@@ -5,6 +5,7 @@ import { radius, elevationSystem } from '../../../../shared/core/uiDesignSystem'
 import { applyRelativeSectionPosition, SectorRoleType } from '../../../../shared/core/pdf-engine/layers/sectors/sectionOrderEngine';
 import { resolveEffectivePresetSectionOrder } from '../../../../shared/core/pdf-engine/layers/sectors/layoutResolutionEngine';
 import { resolveActivePreset } from '../../../../shared/core/pdf-engine/layers/presets/presetRegistry';
+import { SectionPositionControl } from '../../../../shared/core/ui/SectionPositionControl';
 
 interface SectionManualAdjustmentProps {
   sectionId: string;
@@ -215,25 +216,7 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData, designKe
 
       {/* Selector Fino "Después de: [Sección X]" */}
       {assignableToColumns && (
-        <div className="flex items-center gap-1.5 pt-1.5 border-t border-[var(--color-neutral-border)]/60">
-          <span className="text-[10px] font-bold text-[var(--color-neutral-text-secondary)] flex items-center gap-1 whitespace-nowrap">
-            <ArrowDownUp className="w-3 h-3 text-[var(--color-secondary-bright)]" /> Ubicación:
-          </span>
-          <select
-            value={currentAfterSelectValue}
-            onChange={handleAfterSelectChange}
-            className={`w-full text-[10px] px-2 py-1 rounded-[${radius.control}] bg-[var(--color-neutral-surface-muted)] border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer`}
-            title="Ubicar de forma relativa esta sección después de otra sección del mismo sector"
-          >
-            <option value="start">↑ Al principio de la columna</option>
-            {eligibleAfterSections.map((secId) => (
-              <option key={secId} value={`after:${secId}`}>
-                ↓ Después de: {getSectionTitle(secId)}
-              </option>
-            ))}
-            <option value="end">↓ Al final de la columna</option>
-          </select>
-        </div>
+        <SectionPositionControl sectionKey={cleanSecId} cvData={cvData} setCvData={setCvData} />
       )}
 
       {/* Salto de Página Forzado & Selector de Estilo de Contenedor Unificado */}

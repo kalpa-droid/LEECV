@@ -38,7 +38,7 @@ export function applyPresetLevel(cvData: any, level: PresetLevel, payload: Apply
       resolvedVis = { ...resolvedVis, ...newVis };
     } else if (mode === 'full-20-sections') {
       const allSections = [
-        'contacto', 'datosPersonales', 'frase', 'redes', 'resumen', 'experiencia',
+        'contacto', 'datos-personales', 'frase', 'redes', 'resumen', 'experiencia',
         'formacion', 'profesion', 'habilidades', 'competencias', 'idiomas',
         'proyectos', 'publicaciones', 'referencias', 'cursos', 'informatica',
         'ecologia', 'certificados', 'firma'
