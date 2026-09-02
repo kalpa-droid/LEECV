@@ -375,22 +375,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   }
 
 
-  // Certificados Escaneados (Main)
-  if (Array.isArray(cvData.certificatesScanned) && cvData.certificatesScanned.length > 0) {
-    sections.push({
-      id: 'certificados',
-      titleText: getSectionLabel('certificados'),
-      records: cvData.certificatesScanned.map((cert: any, idx: number) => ({
-        id: `rec-cert-${idx}`,
-        kind: 'course',
-        targetSectorRole: 'main',
-        fields: {
-          title: cert.title || `Certificado #${idx + 1}`,
-          dataUrl: cert.dataUrl || ''
-        }
-      }))
-    });
-  }
+
 
   // Secciones Personalizadas Dinámicas (customSections)
   if (Array.isArray(cvData.customSections)) {
