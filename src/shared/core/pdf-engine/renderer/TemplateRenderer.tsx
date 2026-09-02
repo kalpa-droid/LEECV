@@ -7,7 +7,7 @@ import { resolveSectors } from '../layers/sectors/resolveSectors';
 import { placeFixedObjects } from '../layers/fixedObjects/placeFixedObjects';
 import { ContentSection, ContentRecord } from '../layers/records/recordTypes';
 import { getPresentContactFields } from '../layers/records/sharedFields';
-import { resolveThemeRoles, getTypographyColorBinding, ResolvedThemeRoles } from '../layers/colors/colorSystem';
+import { resolveThemeRoles, getTypographyColorBinding, ResolvedThemeRoles, getContrastRatio } from '../layers/colors/colorSystem';
 import { resolvePageTextStyle, buildPageTextTemplate } from '../layers/pageText/pageTextObjects';
 import { CardObjectRenderer } from '../layers/cards/CardObjectRenderer';
 import { SectionBannerCard } from '../layers/cards/SectionBannerCard';
@@ -773,7 +773,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                     <Image src={personalInfo.profilePhoto} style={styles.profilePhoto} />
                   ) : (
                     <View style={styles.profilePhotoPlaceholder}>
-                      <Text style={{ fontSize: 20, fontFamily: 'Helvetica-Bold', color: getContrastRatio(surfaceBgHex, '#ffffff') >= 4.5 ? '#ffffff' : (sectorRolesColor.primary || '#0f172a') }}>
+                      <Text style={{ fontSize: 20, fontFamily: 'Helvetica-Bold', color: getContrastRatio(isSidebar ? sectorRolesColor.primary : sectorRolesColor.background, '#ffffff') >= 4.5 ? '#ffffff' : (sectorRolesColor.primary || '#0f172a') }}>
                         {`${(personalInfo?.givenNames || 'C')[0]}${(personalInfo?.surname || 'V')[0]}`}
                       </Text>
                     </View>
