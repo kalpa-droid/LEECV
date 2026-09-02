@@ -14,7 +14,7 @@ export const creativeSustentablePreset: Preset = {
     { id: 'foto-perfil', sectorId: 'sidebar', type: 'photo', anchor: 'top', heightPt: 130 },
   ],
   sectionOrder: [
-    { sectorRole: 'sidebar', sectionIds: ['contacto', 'datos-personales', 'ecologia', 'competencias'] },
+    { sectorRole: 'sidebar', sectionIds: ['datos-personales', 'contacto', 'ecologia', 'competencias'] },
     { sectorRole: 'main', sectionIds: ['formacion', 'experiencia', 'profesion', 'cursos', 'firma'] },
   ],
   palette: {

@@ -19,7 +19,8 @@ export const colorSystem = {
     hover: '#E0184C',
     hoverBrand: '#E31555',
     muted: 'var(--color-accent-muted)',
-    text: 'var(--color-accent-text)'
+    text: 'var(--color-accent-text)',
+    onBase: 'var(--color-accent-on-base)'
   },
   secondary: {
     base: '#00A8A0',

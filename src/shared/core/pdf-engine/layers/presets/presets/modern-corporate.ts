@@ -17,7 +17,7 @@ export const modernCorporatePreset: Preset = {
     { id: 'foto-perfil', sectorId: 'sidebar', type: 'photo', anchor: 'top', heightPt: 140 },
   ],
   sectionOrder: [
-    { sectorRole: 'sidebar', sectionIds: ['contacto', 'datos-personales', 'competencias', 'informatica'] },
+    { sectorRole: 'sidebar', sectionIds: ['datos-personales', 'contacto', 'competencias', 'informatica'] },
     { sectorRole: 'main', sectionIds: ['formacion', 'experiencia', 'cursos', 'firma'] },
   ],
   palette: {

@@ -53,6 +53,7 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
         style={{
           width: '100%',
           maxWidth: '540px',
+          maxHeight: 'calc(100vh - 32px)',
           backgroundColor: colorSystem.neutral.surface,
           borderRadius: radius.modal,
           boxShadow: 'var(--shadow-overlay)',
@@ -66,12 +67,13 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
         {/* Encabezado Modal */}
         <div
           style={{
-            padding: '20px 24px',
+            padding: '16px 20px',
             borderBottom: `1px solid ${colorSystem.neutral.border}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: colorSystem.neutral.surfaceMuted
+            background: colorSystem.neutral.surfaceMuted,
+            flexShrink: 0
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -84,16 +86,17 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
                 color: colorSystem.accent.base,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                flexShrink: 0
               }}
             >
               <Layout size={22} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: colorSystem.neutral.textPrimary }}>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: colorSystem.neutral.textPrimary }}>
                 Aplicar Formato: {formatName}
               </h3>
-              <p style={{ margin: 0, fontSize: '13px', color: colorSystem.neutral.textSecondary }}>
+              <p style={{ margin: 0, fontSize: '12.5px', color: colorSystem.neutral.textSecondary }}>
                 Selecciona la modalidad de aplicación deseada
               </p>
             </div>
@@ -117,39 +120,39 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
         </div>
 
         {/* Contenido Modal */}
-        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto', flex: 1 }}>
           {/* Mensaje de Confianza e Integridad de Datos */}
           <div
             style={{
-              padding: '14px 16px',
+              padding: '12px 14px',
               borderRadius: radius.control,
               background: `${colorSystem.status.success.base}12`,
               border: `1px solid ${colorSystem.status.success.base}35`,
               display: 'flex',
               alignItems: 'flex-start',
-              gap: '12px'
+              gap: '10px'
             }}
           >
-            <ShieldCheck size={20} style={{ color: colorSystem.status.success.base, flexShrink: 0, marginTop: '2px' }} />
-            <div style={{ fontSize: '13px', lineHeight: 1.45, color: colorSystem.neutral.textPrimary }}>
+            <ShieldCheck size={18} style={{ color: colorSystem.status.success.base, flexShrink: 0, marginTop: '2px' }} />
+            <div style={{ fontSize: '12.5px', lineHeight: 1.4, color: colorSystem.neutral.textPrimary }}>
               <strong>Tus datos jamás se borran:</strong> El archivo JSON y tus respaldos conservan el 100% de tus datos. Cambiar de formato solo ajusta el diseño visual y la curaduría para exportación.
             </div>
           </div>
 
           {/* Opciones de Aplicación */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {/* Opción 1: Curaduría Recomendada */}
             <div
               onClick={() => setSelectedMode('curated')}
               style={{
-                padding: '16px',
+                padding: '14px',
                 borderRadius: radius.card,
                 border: `2px solid ${selectedMode === 'curated' ? colorSystem.accent.base : colorSystem.neutral.border}`,
                 backgroundColor: selectedMode === 'curated' ? `${colorSystem.accent.base}08` : colorSystem.neutral.surface,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'flex-start',
-                gap: '14px',
+                gap: '12px',
                 transition: 'all 0.2s ease'
               }}
             >
@@ -158,23 +161,23 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '14px', fontWeight: 700, color: colorSystem.neutral.textPrimary }}>
+                  <span style={{ fontSize: '13.5px', fontWeight: 700, color: colorSystem.neutral.textPrimary }}>
                     Curaduría Recomendada (Recomendado)
                   </span>
                   <span
                     style={{
-                      fontSize: '11px',
+                      fontSize: '10.5px',
                       fontWeight: 800,
                       padding: '2px 8px',
                       borderRadius: '4px',
                       background: colorSystem.accent.base,
-                      color: colorSystem.accent.text
+                      color: colorSystem.accent.onBase
                     }}
                   >
                     Estándar
                   </span>
                 </div>
-                <p style={{ margin: '4px 0 0 0', fontSize: '12.5px', color: colorSystem.neutral.textSecondary, lineHeight: 1.4 }}>
+                <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: colorSystem.neutral.textSecondary, lineHeight: 1.4 }}>
                   Aplica la estructura, orden de columnas y visibilidad de secciones optimizada específicamente para este formato y mercado.
                 </p>
               </div>
@@ -184,14 +187,14 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
             <div
               onClick={() => setSelectedMode('reorder-only')}
               style={{
-                padding: '16px',
+                padding: '14px',
                 borderRadius: radius.card,
                 border: `2px solid ${selectedMode === 'reorder-only' ? colorSystem.accent.base : colorSystem.neutral.border}`,
                 backgroundColor: selectedMode === 'reorder-only' ? `${colorSystem.accent.base}08` : colorSystem.neutral.surface,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'flex-start',
-                gap: '14px',
+                gap: '12px',
                 transition: 'all 0.2s ease'
               }}
             >
@@ -199,10 +202,10 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
                 {selectedMode === 'reorder-only' ? <CheckCircle size={20} /> : <Layout size={20} />}
               </div>
               <div style={{ flex: 1 }}>
-                <span style={{ fontSize: '14px', fontWeight: 700, color: colorSystem.neutral.textPrimary }}>
+                <span style={{ fontSize: '13.5px', fontWeight: 700, color: colorSystem.neutral.textPrimary }}>
                   Solo Reordenar Columnas y Prioridad
                 </span>
-                <p style={{ margin: '4px 0 0 0', fontSize: '12.5px', color: colorSystem.neutral.textSecondary, lineHeight: 1.4 }}>
+                <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: colorSystem.neutral.textSecondary, lineHeight: 1.4 }}>
                   Organiza las columnas y la prioridad visual del nuevo formato sin alterar la visibilidad de tus secciones personalizadas actuales.
                 </p>
               </div>
@@ -212,14 +215,14 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
             <div
               onClick={() => setSelectedMode('full-20-sections')}
               style={{
-                padding: '16px',
+                padding: '14px',
                 borderRadius: radius.card,
                 border: `2px solid ${selectedMode === 'full-20-sections' ? colorSystem.accent.base : colorSystem.neutral.border}`,
                 backgroundColor: selectedMode === 'full-20-sections' ? `${colorSystem.accent.base}08` : colorSystem.neutral.surface,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'flex-start',
-                gap: '14px',
+                gap: '12px',
                 transition: 'all 0.2s ease'
               }}
             >
@@ -227,10 +230,10 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
                 {selectedMode === 'full-20-sections' ? <CheckCircle size={20} /> : <Layers size={20} />}
               </div>
               <div style={{ flex: 1 }}>
-                <span style={{ fontSize: '14px', fontWeight: 700, color: colorSystem.neutral.textPrimary }}>
+                <span style={{ fontSize: '13.5px', fontWeight: 700, color: colorSystem.neutral.textPrimary }}>
                   Formato Completo (Ver las 20 Secciones Sin Filtros)
                 </span>
-                <p style={{ margin: '4px 0 0 0', fontSize: '12.5px', color: colorSystem.neutral.textSecondary, lineHeight: 1.4 }}>
+                <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: colorSystem.neutral.textSecondary, lineHeight: 1.4 }}>
                   Mantiene visibles todas tus secciones y campos personales sin ocultar nada, aplicando la tipografía y colores del nuevo formato.
                 </p>
               </div>
@@ -241,19 +244,20 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
         {/* Acciones de Footer */}
         <div
           style={{
-            padding: '16px 24px',
+            padding: '14px 20px',
             borderTop: `1px solid ${colorSystem.neutral.border}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'flex-end',
             gap: '12px',
-            background: colorSystem.neutral.surfaceMuted
+            background: colorSystem.neutral.surfaceMuted,
+            flexShrink: 0
           }}
         >
           <button
             onClick={onClose}
             style={{
-              padding: '10px 18px',
+              padding: '9px 16px',
               borderRadius: radius.control,
               border: `1px solid ${colorSystem.neutral.border}`,
               background: colorSystem.neutral.surface,
@@ -268,11 +272,11 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
           <button
             onClick={handleApply}
             style={{
-              padding: '10px 22px',
+              padding: '9px 20px',
               borderRadius: radius.control,
               border: 'none',
               background: colorSystem.accent.base,
-              color: colorSystem.accent.text,
+              color: colorSystem.accent.onBase,
               fontSize: '13px',
               fontWeight: 700,
               cursor: 'pointer',

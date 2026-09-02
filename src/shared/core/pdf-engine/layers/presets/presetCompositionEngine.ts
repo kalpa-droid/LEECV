@@ -9,6 +9,7 @@
  */
 
 import { Preset, ColorPreset, TypographyPreset, ColumnLayoutPreset } from './presetSchema';
+import { hexToOKLCH } from '../colors/colorSystem';
 import { generateHarmoniousPalette, HarmonyScheme } from '../colors/paletteHarmonyEngine';
 import { RecordScaleRatios } from '../typography/typographyHierarchyEngine';
 import { translateThemeToSurfaces } from '../colors/themeLightDarkTranslationEngine';
@@ -50,10 +51,17 @@ export function composePreset(seed: PresetSeed): Preset {
   const translatedSurfaces = translateThemeToSurfaces(targetColorPreset);
   const generatedPalette = targetColorPreset.palette || translatedSurfaces.light;
 
-  const defaultSectorSurfaceMode = seed.sectorSurfaceMode || seed.basePreset.sectorSurfaceMode || {
-    sidebar: 'dark',
-    main: 'light'
-  };
+  const isLightPaletteSeed = Boolean(
+    seed.colorPreset?.id?.includes('lino') ||
+    seed.colorPreset?.id?.includes('hielo') ||
+    seed.colorPreset?.id?.includes('marfil') ||
+    seed.colorPreset?.id?.includes('cuarzo') ||
+    hexToOKLCH(seedHex).l > 0.82
+  );
+
+  const defaultSectorSurfaceMode = isLightPaletteSeed
+    ? { sidebar: 'light', main: 'light' }
+    : (seed.sectorSurfaceMode || seed.basePreset.sectorSurfaceMode || { sidebar: 'dark', main: 'light' });
 
   const baseTypo = seed.typographyPreset?.typography || seed.basePreset.typography;
   const harmoniousTypo = seed.typographyHarmonyScheme

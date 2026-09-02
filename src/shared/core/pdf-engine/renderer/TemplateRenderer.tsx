@@ -798,9 +798,9 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                   <Text style={styles.headerName}>
                     {personalInfo.surname || ''} <Text style={styles.headerNameHighlight}>{personalInfo.givenNames || ''}</Text>
                   </Text>
-                  {personalInfo.profession && (
-                    <Text style={{ fontSize: headerSubtitleSpec.fontSizePt, fontFamily: headerSubtitleSpec.fontFamily, color: headerSubtitleSpec.colorHex, opacity: headerSubtitleSpec.opacity, marginTop: -6, marginBottom: 4 }}>
-                      {personalInfo.profession}
+                  {(personalInfo.quote || personalInfo.profession) && (
+                    <Text style={{ fontSize: headerSubtitleSpec.fontSizePt, fontFamily: headerSubtitleSpec.fontFamily, color: headerSubtitleSpec.colorHex, opacity: headerSubtitleSpec.opacity, marginTop: -4, marginBottom: 6 }}>
+                      {personalInfo.quote || personalInfo.profession}
                     </Text>
                   )}
                   {interactiveAnchors && (

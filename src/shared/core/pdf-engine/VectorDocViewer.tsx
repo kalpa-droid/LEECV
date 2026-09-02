@@ -54,6 +54,12 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
     let cancelled = false;
 
     async function renderPdf() {
+      // Capturar la posición de scroll actual relativa antes de que se limpie el contenedor
+      const scrollElem = wrapperRef.current?.parentElement || wrapperRef.current || containerRef.current;
+      const prevScrollTop = scrollElem?.scrollTop || 0;
+      const prevScrollHeight = scrollElem?.scrollHeight || 1;
+      const relativeScrollRatio = prevScrollTop > 0 && prevScrollHeight > 0 ? prevScrollTop / prevScrollHeight : 0;
+
       setLoading(true);
       setError(null);
       try {
@@ -147,12 +153,17 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
           container.appendChild(fragment);
           anchorMapRef.current = newAnchorMap;
           setLoading(false);
-          const finalTarget = pendingScrollTabRef.current || activeTab;
-          if (finalTarget) {
-            requestAnimationFrame(() => {
-              scrollToPdfAnchor(wrapperRef.current || containerRef.current, finalTarget, sections, preset!, layoutOverrides, anchorMapRef.current);
-            });
-          }
+          
+          requestAnimationFrame(() => {
+            const targetContainer = wrapperRef.current?.parentElement || wrapperRef.current || containerRef.current;
+            if (relativeScrollRatio > 0 && targetContainer) {
+              targetContainer.scrollTop = Math.round(relativeScrollRatio * targetContainer.scrollHeight);
+            }
+            const finalTarget = pendingScrollTabRef.current || activeTab;
+            if (finalTarget && relativeScrollRatio === 0) {
+              scrollToPdfAnchor(targetContainer, finalTarget, sections, preset!, layoutOverrides, anchorMapRef.current);
+            }
+          });
         }
       } catch (err) {
         console.error('Error renderizando el PDF vectorial:', err);
