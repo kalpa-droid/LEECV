@@ -424,7 +424,6 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   });
 
   // Priorizar el orden manual configurado por el usuario en cvData.layout.sectionOrders (primaria/secundaria)
-  // sobre el orden genérico del formato global.
   const userPrimOrder = cvData?.layout?.sectionOrders?.primaria;
   const userSecOrder = cvData?.layout?.sectionOrders?.secundaria;
   const hasUserCustomOrder = (Array.isArray(userPrimOrder) && userPrimOrder.length > 0) || (Array.isArray(userSecOrder) && userSecOrder.length > 0);
@@ -446,17 +445,6 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
     orderedSections = [...sections].sort((a, b) => {
       const posA = userOrderMap.has(a.id) ? userOrderMap.get(a.id)! : 999;
       const posB = userOrderMap.has(b.id) ? userOrderMap.get(b.id)! : 999;
-      return posA - posB;
-    });
-  } else if (activeFormat && Array.isArray(activeFormat.defaultVisibleSections) && activeFormat.defaultVisibleSections.length > 0) {
-    const formatOrderMap = new Map<string, number>();
-    activeFormat.defaultVisibleSections.forEach((secId, idx) => {
-      formatOrderMap.set(secId, idx);
-    });
-
-    orderedSections = [...sections].sort((a, b) => {
-      const posA = formatOrderMap.has(a.id) ? formatOrderMap.get(a.id)! : 999;
-      const posB = formatOrderMap.has(b.id) ? formatOrderMap.get(b.id)! : 999;
       return posA - posB;
     });
   }

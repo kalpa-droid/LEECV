@@ -763,6 +763,22 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
           return false;
         });
 
+        // Garantizar que las secciones dentro del sector respeten estrictamente el orden declarado por el preset/override
+        sectorSections.sort((a, b) => {
+          const baseA = a.id.replace(/-cont$/, '');
+          const baseB = b.id.replace(/-cont$/, '');
+
+          let idxA = sectorSectionIds.indexOf(baseA);
+          if (idxA === -1) idxA = sectorSectionIds.indexOf(a.id);
+          if (idxA === -1) idxA = 999;
+
+          let idxB = sectorSectionIds.indexOf(baseB);
+          if (idxB === -1) idxB = sectorSectionIds.indexOf(b.id);
+          if (idxB === -1) idxB = 999;
+
+          return idxA - idxB;
+        });
+
         return (
           <View key={sFlow.sector.id} style={[surfaceStyle, widthStyle, { position: 'relative' }] as any}>
             <View style={contentStyle}>
