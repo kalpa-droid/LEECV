@@ -27,6 +27,7 @@ import { PAGE_SIZES } from '../../../shared/core/pdf-engine/layers/page/pageSize
 import { getSavedCVsList, loadCVById, deleteCVById, saveCV } from '../services/cvStorageService';
 import CertCropperModal from './CertCropperModal';
 import { FormatConfirmationModal, FormatApplicationMode } from './FormatConfirmationModal';
+import { COVER_PRESETS } from '../../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
 import PersonalInfoSection from './editor/PersonalInfoSection';
 import { PanelSection } from './editor/PanelSection';
 import { SectionManualAdjustment } from './editor/SectionManualAdjustment';
@@ -1754,6 +1755,61 @@ export default function EditorPanel({
                   <span>{cvData.showCoverPage !== false ? 'ACTIVADA' : 'DESACTIVADA'}</span>
                 </button>
               </div>
+
+              {cvData.showCoverPage !== false && (
+                <div className={`p-4 bg-[var(--ui-bg-card)] rounded-[${radius.card}] border border-[var(--color-neutral-border)] space-y-3`}>
+                  <div>
+                    <h4 className="text-xs font-black text-[var(--color-neutral-text-primary)] uppercase tracking-wider mb-1">
+                      Selecciona el Preset de Diseño de Portada *
+                    </h4>
+                    <p className="text-[11px] font-bold text-[var(--color-neutral-text-secondary)]">
+                      Elige el estilo visual y arquetipo de composición para la portada de presentación (Página 1).
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                    {COVER_PRESETS.map((presetItem) => {
+                      const isActive = (cvData.coverStyle || 'monica-classic') === presetItem.id;
+                      return (
+                        <div
+                          key={presetItem.id}
+                          onClick={() => setCvData((prev: any) => ({ ...prev, coverStyle: presetItem.id }))}
+                          className={`p-3 rounded-[12px] border-2 cursor-pointer transition flex flex-col justify-between ${
+                            isActive
+                              ? 'bg-[var(--ui-bg-card)] border-[var(--color-accent-base)] ring-2 ring-[var(--color-accent-rose-muted)] shadow-md'
+                              : 'bg-[var(--color-neutral-surface)] border-[var(--color-neutral-border)] hover:border-[var(--color-neutral-border-strong)]'
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider" style={{ backgroundColor: presetItem.badgeColor, color: 'var(--color-accent-on-base)' }}>
+                                {presetItem.badgeLabel}
+                              </span>
+                              {isActive && (
+                                <span className="flex items-center gap-1 text-[10px] font-black text-[var(--color-accent-on-base)] bg-[var(--color-accent-base)] px-2.5 py-0.5 rounded-full shadow-sm">
+                                  <Check className="w-3 h-3" /> ACTIVO
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs font-black text-[var(--color-neutral-text-primary)]">
+                              {presetItem.name}
+                            </p>
+                            <p className="text-[10px] font-bold text-[var(--color-neutral-text-secondary)] mb-1.5">
+                              {presetItem.subtitle}
+                            </p>
+                            <p className="text-[10px] text-[var(--color-neutral-text-secondary)] line-clamp-2 leading-relaxed">
+                              {presetItem.description}
+                            </p>
+                          </div>
+                          <div className="mt-2 pt-2 border-t border-[var(--color-neutral-border)] flex items-center justify-between text-[9px] font-bold text-[var(--color-neutral-text-muted)]">
+                            <span>{presetItem.scanPattern}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
 
               {/* Registros Destacados en Portada (Solo Títulos, con botón Agregar/Eliminar) */}
