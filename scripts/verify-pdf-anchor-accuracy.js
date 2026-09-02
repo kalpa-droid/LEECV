@@ -11,7 +11,7 @@ console.log('🔍 Verificando precisión de anclaje de desplazamiento en visor P
 try {
   execSync(`npx tsx scripts/_test_pdf_anchor_exec.ts`, { cwd: ROOT, stdio: 'inherit' });
   console.log('✅ Verificación de anclaje PDF multipágina superada con éxito.');
-} catch (err) {
+} catch (_err) {
   console.error('❌ Verificación de anclaje PDF falló.');
   process.exit(1);
 }

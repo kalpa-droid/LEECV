@@ -107,6 +107,7 @@ async function run2DSpatialAnchorVerification() {
       professions={[]}
       userFontFamily={cvData.theme?.fontFamily}
       layoutOverrides={cvData.layout}
+      interactiveAnchors={true}
     />
   );
 
