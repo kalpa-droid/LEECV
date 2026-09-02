@@ -1572,78 +1572,87 @@ export default function EditorPanel({
 
             {/* Estructura de Columnas (Layout) y Tirador de Ancho */}
             <PanelSection icon={<Columns3 className="w-4 h-4" />} title="Disposición de columnas y Ancho">
-              <div className="space-y-3">
-                <div className="grid grid-cols-1 gap-2">
-                  {Object.entries(PRESET_COLUMNS).map(([key]) => {
-                    const activeFormat = resolveActiveFormat(cvData);
-                    const isSingleColumnFormat = activeFormat?.columnLayoutPresetId === 'full-width';
-                    const isSelected = cvData?.columnLayoutPresetId === key || (!cvData?.columnLayoutPresetId && key === 'sidebar-left');
-                    const sidebarPercent = Math.min(42, Math.max(32, cvData?.layout?.sidebarWidthPercent ?? 40));
-                    const displayName = getColumnLayoutPresetName(key, sidebarPercent);
+              {(() => {
+                const activePresetObj = resolveActivePreset(cvData);
+                const activeLayoutKey = cvData?.columnLayoutPresetId || (activePresetObj.columnLayoutPresetId?.replace('layout-', '') || 'sidebar-left');
+                const sidebarPercent = Math.min(42, Math.max(32, cvData?.layout?.sidebarWidthPercent ?? 40));
 
-                    return (
-                      <button
-                        key={key}
-                        disabled={isSingleColumnFormat && key !== 'full-width'}
-                      onClick={() => {
-                        triggerPresetTransition(displayName, 'layout');
-                        setCvData((prev: any) => applyPresetLevel(prev, 'override', { columnLayoutPresetId: key }));
-                      }}
-                        className={`p-3 rounded-[var(--radius-card)] border text-left transition flex items-center justify-between gap-3 ${
-                          isSingleColumnFormat && key !== 'full-width'
-                            ? 'opacity-40 cursor-not-allowed bg-[var(--ui-bg-panel)] border-[var(--color-neutral-border)]'
-                            : isSelected
-                              ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 cursor-pointer'
-                              : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)] cursor-pointer'
-                        }`}
-                      >
-                        <span className="text-xs font-black text-[var(--color-neutral-text-primary)]">{displayName}</span>
-                        {isSelected && <Check className="w-4 h-4 text-[var(--ui-text-primary)] flex-shrink-0" />}
-                      </button>
-                    );
-                  })}
-                </div>
+                return (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 gap-2">
+                      {Object.entries(PRESET_COLUMNS).map(([key]) => {
+                        const activeFormat = resolveActiveFormat(cvData);
+                        const isSingleColumnFormat = activeFormat?.columnLayoutPresetId === 'full-width';
+                        const isSelected = activeLayoutKey === key;
+                        const displayName = getColumnLayoutPresetName(key, sidebarPercent);
 
-                {/* Tirador del Ancho de Sidebar (32% - 42%) */}
-                {cvData?.columnLayoutPresetId !== 'full-width' && (
-                  <div className="p-3 bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[var(--radius-card)] space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold text-[var(--color-neutral-text-primary)]">
-                      <span>Ancho de Barra Lateral</span>
-                      <span className="text-[var(--color-secondary-bright)]">{Math.min(42, Math.max(32, cvData?.layout?.sidebarWidthPercent ?? 40))}%</span>
+                        return (
+                          <button
+                            key={key}
+                            disabled={isSingleColumnFormat && key !== 'full-width'}
+                            onClick={() => {
+                              triggerPresetTransition(displayName, 'layout');
+                              setCvData((prev: any) => applyPresetLevel(prev, 'override', { columnLayoutPresetId: key }));
+                            }}
+                            className={`p-3 rounded-[var(--radius-card)] border text-left transition flex items-center justify-between gap-3 ${
+                              isSingleColumnFormat && key !== 'full-width'
+                                ? 'opacity-40 cursor-not-allowed bg-[var(--ui-bg-panel)] border-[var(--color-neutral-border)]'
+                                : isSelected
+                                  ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 cursor-pointer'
+                                  : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)] cursor-pointer'
+                            }`}
+                          >
+                            <span className="text-xs font-black text-[var(--color-neutral-text-primary)]">{displayName}</span>
+                            {isSelected && <Check className="w-4 h-4 text-[var(--ui-text-primary)] flex-shrink-0" />}
+                          </button>
+                        );
+                      })}
                     </div>
-                    <input
-                      type="range"
-                      min={32}
-                      max={42}
-                      step={1}
-                      value={Math.min(42, Math.max(32, cvData?.layout?.sidebarWidthPercent ?? 40))}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value, 10);
-                        setCvData((prev: any) => ({
-                          ...prev,
-                          layout: {
-                            ...(prev.layout || {}),
-                            sidebarWidthPercent: val
-                          }
-                        }));
-                      }}
-                      className="w-full h-1.5 bg-[var(--ui-bg-panel)] rounded-lg appearance-none cursor-pointer accent-[var(--color-secondary-base)]"
-                    />
-                    <div className="flex justify-between text-[10px] text-[var(--color-neutral-text-secondary)] font-medium">
-                      <span>Mínimo (32%)</span>
-                      <span>Predeterminado (40%)</span>
-                      <span>Máximo (42%)</span>
-                    </div>
+
+                    {/* Tirador del Ancho de Sidebar (32% - 42%) */}
+                    {activeLayoutKey !== 'full-width' && (
+                      <div className="p-3 bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[var(--radius-card)] space-y-2">
+                        <div className="flex items-center justify-between text-xs font-bold text-[var(--color-neutral-text-primary)]">
+                          <span>Ancho de Barra Lateral</span>
+                          <span className="text-[var(--color-secondary-bright)]">{sidebarPercent}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min={32}
+                          max={42}
+                          step={1}
+                          value={sidebarPercent}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            setCvData((prev: any) => ({
+                              ...prev,
+                              layout: {
+                                ...(prev.layout || {}),
+                                sidebarWidthPercent: val
+                              }
+                            }));
+                          }}
+                          className="w-full h-1.5 bg-[var(--ui-bg-panel)] rounded-lg appearance-none cursor-pointer accent-[var(--color-secondary-base)]"
+                        />
+                        <div className="flex justify-between text-[10px] text-[var(--color-neutral-text-secondary)] font-medium">
+                          <span>Mínimo (32%)</span>
+                          <span>Predeterminado (40%)</span>
+                          <span>Máximo (42%)</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                );
+              })()}
             </PanelSection>
 
             {/* Armonía Cromática */}
             <PanelSection icon={<Palette className="w-4 h-4" />} title="Paleta de color armónica">
               <div className="grid grid-cols-2 gap-2">
                 {Object.entries(PRESET_COLORS).map(([key, colorPreset]) => {
-                  const isSelected = cvData?.colorPresetId === key;
+                  const activePresetObj = resolveActivePreset(cvData);
+                  const activeColorKey = cvData?.colorPresetId || activePresetObj.colorPresetId || 'clasico';
+                  const isSelected = activeColorKey === key;
                   return (
                     <button
                       key={key}
@@ -1676,7 +1685,9 @@ export default function EditorPanel({
             <PanelSection icon={<FileText className="w-4 h-4" />} title="Escala tipográfica armónica">
               <div className="grid grid-cols-2 gap-2">
                 {Object.entries(PRESET_TYPOGRAPHY).map(([key, typoPreset]) => {
-                  const isSelected = cvData?.typographyPresetId === key;
+                  const activePresetObj = resolveActivePreset(cvData);
+                  const activeTypoKey = cvData?.typographyPresetId || activePresetObj.typographyPresetId || 'clasica';
+                  const isSelected = activeTypoKey === key;
                   return (
                     <button
                       key={key}
