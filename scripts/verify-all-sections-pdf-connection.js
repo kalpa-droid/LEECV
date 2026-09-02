@@ -71,8 +71,8 @@ if (resumenSec && resumenSec.titleText === '' && resumenSec.records.length > 0) 
   failed++;
 }
 
-// Assert 2: Secciones Universales y Catálogo Fijo mapeadas en cvDataAdapter
-SECTION_CATALOG.forEach((catSec) => {
+// Assert 2: Secciones Universales y Catálogo Fijo mapeadas en cvDataAdapter (certificados se renderiza como anexo de página completa al final)
+SECTION_CATALOG.filter(s => s.id !== 'certificados').forEach((catSec) => {
   const found = renderedSections.find(s => s.id === catSec.id);
   if (found && found.records.length > 0) {
     console.log(`  ✓ Sección '${catSec.id}' (${catSec.label}) -> Mapeada a ContentSection en PDF render OK.`);
