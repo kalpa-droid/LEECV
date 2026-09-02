@@ -192,7 +192,7 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
   }, [loading, activeTab, sections, preset, layoutOverrides]);
 
   return (
-    <div ref={wrapperRef} style={{ width: '100%', height: '100%', overflowY: 'auto', overflowX: 'hidden' }}>
+    <div ref={wrapperRef} style={{ width: '100%', height: '100%', overflowX: 'hidden' }}>
       {loading && (
         <div style={{ padding: 32, textAlign: 'center', color: colorSystem.neutral.textMuted, fontSize: 13, fontWeight: 700 }}>
           Generando vista vectorial…

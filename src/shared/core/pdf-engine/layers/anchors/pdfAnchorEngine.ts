@@ -218,11 +218,21 @@ export function scrollToPdfAnchor(
 
   if (!targetCanvas) return;
 
-  // Encontrar el contenedor ascendente real con scroll (si el contenedor directo es estático)
+  // Encontrar el contenedor ascendente real con scroll (si el contenedor directo es estático).
+  // Antes bastaba con que la propiedad CSS overflow-y fuera 'auto' para frenar la
+  // búsqueda ahí — pero un wrapper que declara overflow:auto SIN que su contenido
+  // realmente exceda su alto (clientHeight === scrollHeight, como el wrapperRef de
+  // VectorDocViewer.tsx) no tiene scroll real: scrollTo() ahí no mueve nada, y el
+  // contenedor de verdad (el panel de App.tsx) queda inmóvil. Ahora se exige overflow
+  // real (con margen de 10px para evitar falsos negativos por redondeo).
   let scrollableParent: HTMLElement = container;
   while (scrollableParent && scrollableParent.parentElement && scrollableParent !== document.body) {
     const style = window.getComputedStyle(scrollableParent);
-    if (['auto', 'scroll'].includes(style.overflowY) || ['auto', 'scroll'].includes(style.overflowX) || scrollableParent.scrollHeight > scrollableParent.clientHeight) {
+    const hasOverflowStyle = ['auto', 'scroll'].includes(style.overflowY) || ['auto', 'scroll'].includes(style.overflowX);
+    const isActuallyScrollable =
+      scrollableParent.scrollHeight > scrollableParent.clientHeight + 10 ||
+      scrollableParent.scrollWidth > scrollableParent.clientWidth + 10;
+    if (hasOverflowStyle && isActuallyScrollable) {
       break;
     }
     scrollableParent = scrollableParent.parentElement;
