@@ -65,7 +65,7 @@ export const CV_FORMAT_REGISTRY: Record<string, CvFormatDefinition> = {
     name: 'LATAM Ejecutivo / Tradicional',
     description: 'Formato clásico de 2 columnas ampliamente utilizado en América Latina con foto de perfil y datos completos.',
     columnLayoutPresetId: 'sidebar-left',
-    defaultVisibleSections: ['contacto', 'datos-personales', 'frase', 'redes', 'experiencia', 'formacion', 'profesion', 'competencias', 'cursos', 'ecologia', 'firma'],
+    defaultVisibleSections: ['contacto', 'datos-personales', 'resumen', 'redes', 'experiencia', 'formacion', 'profesion', 'competencias', 'cursos', 'ecologia', 'firma'],
     hiddenPersonalFields: [],
     recommendedPresetIds: ['cv-clasico', 'modern-corporate']
   }

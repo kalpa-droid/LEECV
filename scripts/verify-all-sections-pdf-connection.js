@@ -30,6 +30,7 @@ const mockCvData = {
     nacionalidad: 'Argentina',
     quote: 'Educadora e Investigadora'
   },
+  frase: 'Cita inspiradora de prueba',
   summary: 'Profesional altamente calificada con experiencia en gestión educativa y coordinación pedagógica.',
   redes: [{ plataforma: 'LinkedIn', usuario: 'monicaburgos', url: 'https://linkedin.com/in/monicaburgos' }],
   hardSkills: ['Metodologías Ágiles'],
