@@ -447,6 +447,17 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
       const posB = userOrderMap.has(b.id) ? userOrderMap.get(b.id)! : 999;
       return posA - posB;
     });
+  } else if (activeFormat && Array.isArray(activeFormat.defaultVisibleSections) && activeFormat.defaultVisibleSections.length > 0) {
+    const formatOrderMap = new Map<string, number>();
+    activeFormat.defaultVisibleSections.forEach((secId, idx) => {
+      formatOrderMap.set(secId, idx);
+    });
+
+    orderedSections = [...sections].sort((a, b) => {
+      const posA = formatOrderMap.has(a.id) ? formatOrderMap.get(a.id)! : 999;
+      const posB = formatOrderMap.has(b.id) ? formatOrderMap.get(b.id)! : 999;
+      return posA - posB;
+    });
   }
 
   // Mapear saltos de página configurados por el usuario
