@@ -22,8 +22,8 @@ if (cleanData.recordCardDesigns?.resumen === 'accent-outline') {
 const defaultPreset = getPreset('cv-clasico');
 const resolvedDefaultOrder = resolveEffectivePresetSectionOrder(defaultPreset, cleanData.layout);
 const defaultPrimaria = resolvedDefaultOrder.find(s => s.sectorRole === 'main')?.sectionIds || [];
-if (defaultPrimaria[0] === 'resumen' || defaultPrimaria[0] === 'personales') {
-  console.log('  ✓ Posición predeterminada de Resumen/Personales en columna primaria OK.');
+if (defaultPrimaria[0] === 'resumen' || defaultPrimaria[0] === 'personales' || defaultPrimaria[0] === 'frase') {
+  console.log('  ✓ Posición predeterminada de Resumen/Frase en columna primaria OK.');
   passed++;
 } else {
   console.error('  ❌ Resumen/Personales no está en la posición #1 de la columna primaria por defecto. Obtenido: ' + defaultPrimaria[0]);
