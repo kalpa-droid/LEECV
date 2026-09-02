@@ -26,6 +26,7 @@ import { FIELD_CATALOG } from '../../../shared/core/pdf-engine/layers/records/fi
 import { PAGE_SIZES } from '../../../shared/core/pdf-engine/layers/page/pageSizes';
 import { getSavedCVsList, loadCVById, deleteCVById, saveCV } from '../services/cvStorageService';
 import CertCropperModal from './CertCropperModal';
+import { FormatConfirmationModal, FormatApplicationMode } from './FormatConfirmationModal';
 import PersonalInfoSection from './editor/PersonalInfoSection';
 import { PanelSection } from './editor/PanelSection';
 import { SectionManualAdjustment } from './editor/SectionManualAdjustment';
@@ -79,6 +80,10 @@ export default function EditorPanel({
   // States for Custom Sections Creator
   const [newSectionTitle, setNewSectionTitle] = useState('');
   const [selectedFields, setSelectedFields] = useState<string[]>(['tituloOGrado', 'institucion']);
+
+  // State for Format Confirmation Modal
+  const [pendingFormatId, setPendingFormatId] = useState<string | null>(null);
+  const [isFormatModalOpen, setIsFormatModalOpen] = useState(false);
 
   const refreshSavedList = async () => {
     try {
@@ -1515,9 +1520,9 @@ export default function EditorPanel({
                       key={format.id}
                       type="button"
                       onClick={() => {
-                        const fmt = getCvFormat(format.id);
-                        setCvData((prev: any) => applyPresetLevel(prev, 'format', { formatId: format.id }));
-                        showSuccess(`Formato "${fmt.name}" aplicado correctamente.`);
+                        if (isSelected) return;
+                        setPendingFormatId(format.id);
+                        setIsFormatModalOpen(true);
                       }}
                       className={`w-full p-3 rounded-[${radius.card}] border text-left transition flex flex-col gap-1.5 cursor-pointer ${
                         isSelected
@@ -1827,6 +1832,23 @@ export default function EditorPanel({
                 </div>
               </PanelSection>
           </div>
+        {/* Format Confirmation Modal */}
+        {isFormatModalOpen && pendingFormatId && (
+          <FormatConfirmationModal
+            isOpen={isFormatModalOpen}
+            formatName={getCvFormat(pendingFormatId)?.name || pendingFormatId}
+            onClose={() => {
+              setIsFormatModalOpen(false);
+              setPendingFormatId(null);
+            }}
+            onConfirm={(mode: FormatApplicationMode) => {
+              const fmt = getCvFormat(pendingFormatId);
+              setCvData((prev: any) => applyPresetLevel(prev, 'format', { formatId: pendingFormatId, applicationMode: mode }));
+              showSuccess(`Formato "${fmt.name}" aplicado correctamente.`);
+              setIsFormatModalOpen(false);
+              setPendingFormatId(null);
+            }}
+          />
         )}
 
       </div>
