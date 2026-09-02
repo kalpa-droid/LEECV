@@ -23,7 +23,7 @@ export const CoverOrnamentRenderer: React.FC<CoverOrnamentRendererProps> = ({
   // 1. CANON CLÁSICO: Filigrana & Esquinas Áureas (classic-filigree)
   if (kind === 'classic-filigree') {
     return (
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity }} pointerEvents="none">
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity }}>
         {/* Esquina Superior Izquierda */}
         <View style={{ position: 'absolute', top: 16, left: 16 }}>
           <Svg width={36} height={36} viewBox="0 0 36 36">
@@ -62,7 +62,7 @@ export const CoverOrnamentRenderer: React.FC<CoverOrnamentRendererProps> = ({
   // 2. BENTO GRID: Marcos Angulares L-Shape en Esquinas (bento-corners)
   if (kind === 'bento-corners') {
     return (
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity }} pointerEvents="none">
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity }}>
         {/* Superior Izquierda L */}
         <View style={{ position: 'absolute', top: 20, left: 20 }}>
           <Svg width={24} height={24} viewBox="0 0 24 24">
@@ -97,9 +97,9 @@ export const CoverOrnamentRenderer: React.FC<CoverOrnamentRendererProps> = ({
   }
 
   // 3. MINIMAL EDITORIAL: Barra Vertical de Acento & Punto de Edición (minimal-bar)
-  if (kind === 'minimal-editorial') {
+  if (kind === 'minimal-bar') {
     return (
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity }} pointerEvents="none">
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity }}>
         {/* Barra Lateral Fina de Acento */}
         <View style={{ position: 'absolute', top: 40, left: 24, bottom: 40 }}>
           <Svg width={6} height={heightPt - 80} viewBox={`0 0 6 ${heightPt - 80}`}>
@@ -114,7 +114,7 @@ export const CoverOrnamentRenderer: React.FC<CoverOrnamentRendererProps> = ({
   // 4. CREATIVE SUSTENTABLE: Hojas Botánicas Vectoriales (organic-leaf)
   if (kind === 'organic-leaf') {
     return (
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity }} pointerEvents="none">
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity }}>
         {/* Esquina Superior Derecha - Ramas Botánicas */}
         <View style={{ position: 'absolute', top: 16, right: 16 }}>
           <Svg width={48} height={48} viewBox="0 0 48 48">
@@ -144,7 +144,7 @@ export const CoverOrnamentRenderer: React.FC<CoverOrnamentRendererProps> = ({
   // 5. BOLD IMPACT: Insignia Ejecutiva & Estrella Geométrica (bold-star-badge)
   if (kind === 'bold-star-badge') {
     return (
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity }} pointerEvents="none">
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity }}>
         {/* Esquina Superior Derecha - Estrella / Escudo Ejecutiva */}
         <View style={{ position: 'absolute', top: 20, right: 24 }}>
           <Svg width={32} height={32} viewBox="0 0 32 32">
@@ -171,9 +171,9 @@ export const CoverOrnamentRenderer: React.FC<CoverOrnamentRendererProps> = ({
   }
 
   // 6. MAGAZINE EXECUTIVE: Cabecera Masthead Doble Línea (magazine-masthead-lines)
-  if (kind === 'magazine-executive') {
+  if (kind === 'magazine-masthead-lines') {
     return (
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity }} pointerEvents="none">
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity }}>
         {/* Franja Doble de Imprenta Superior */}
         <View style={{ position: 'absolute', top: 20, left: 24, right: 24 }}>
           <Svg width={widthPt - 48} height={8} viewBox={`0 0 ${widthPt - 48} 8`}>
