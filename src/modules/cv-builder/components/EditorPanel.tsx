@@ -33,6 +33,7 @@ import { PanelSection } from './editor/PanelSection';
 import { SectionManualAdjustment } from './editor/SectionManualAdjustment';
 import { applyPresetLevel } from '../../../shared/core/pdf-engine/layers/presets/presetHierarchyEngine';
 import { activateSection } from '../../../shared/core/sections/sectionActivationEngine';
+import { triggerPresetTransition } from '../../../shared/core/pdf-engine/layers/presets/presetTransitionEngine';
 
 import { useToast } from '../../../shared/core/ui/Toast';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
@@ -1584,7 +1585,10 @@ export default function EditorPanel({
                       <button
                         key={key}
                         disabled={isSingleColumnFormat && key !== 'full-width'}
-                        onClick={() => setCvData((prev: any) => applyPresetLevel(prev, 'override', { columnLayoutPresetId: key }))}
+                      onClick={() => {
+                        triggerPresetTransition(displayName, 'layout');
+                        setCvData((prev: any) => applyPresetLevel(prev, 'override', { columnLayoutPresetId: key }));
+                      }}
                         className={`p-3 rounded-[var(--radius-card)] border text-left transition flex items-center justify-between gap-3 ${
                           isSingleColumnFormat && key !== 'full-width'
                             ? 'opacity-40 cursor-not-allowed bg-[var(--ui-bg-panel)] border-[var(--color-neutral-border)]'
@@ -1643,7 +1647,10 @@ export default function EditorPanel({
                   return (
                     <button
                       key={key}
-                      onClick={() => setCvData((prev: any) => applyPresetLevel(prev, 'override', { colorPresetId: key }))}
+                      onClick={() => {
+                        triggerPresetTransition(colorPreset.name, 'color');
+                        setCvData((prev: any) => applyPresetLevel(prev, 'override', { colorPresetId: key }));
+                      }}
                       className={`p-2.5 rounded-[${radius.card}] border text-left transition flex flex-col justify-between cursor-pointer ${
                         isSelected
                           ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
@@ -1673,7 +1680,10 @@ export default function EditorPanel({
                   return (
                     <button
                       key={key}
-                      onClick={() => setCvData((prev: any) => applyPresetLevel(prev, 'override', { typographyPresetId: key }))}
+                      onClick={() => {
+                        triggerPresetTransition(typoPreset.name, 'typography');
+                        setCvData((prev: any) => applyPresetLevel(prev, 'override', { typographyPresetId: key }));
+                      }}
                       className={`p-2.5 rounded-[${radius.card}] border text-left transition flex items-center justify-between cursor-pointer ${
                         isSelected
                           ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
@@ -1697,7 +1707,10 @@ export default function EditorPanel({
                   return (
                     <button
                       key={preset.id}
-                      onClick={() => setCvData((prev: any) => applyPresetLevel(prev, 'preset', { presetId: preset.id }))}
+                      onClick={() => {
+                        triggerPresetTransition(preset.name, 'preset');
+                        setCvData((prev: any) => applyPresetLevel(prev, 'preset', { presetId: preset.id }));
+                      }}
                       className={`p-2.5 rounded-[${radius.card}] border text-left transition flex flex-col justify-between cursor-pointer ${
                         isSelected
                           ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
@@ -1850,7 +1863,10 @@ export default function EditorPanel({
                         return (
                           <div
                             key={presetItem.id}
-                            onClick={() => setCvData((prev: any) => ({ ...prev, coverStyle: presetItem.id }))}
+                            onClick={() => {
+                              triggerPresetTransition(presetItem.name, 'cover');
+                              setCvData((prev: any) => ({ ...prev, coverStyle: presetItem.id }));
+                            }}
                             className={`p-3 rounded-[12px] border-2 cursor-pointer transition flex flex-col justify-between ${
                               isActive
                                 ? 'bg-[var(--ui-bg-card)] border-[var(--color-accent-base)] ring-2 ring-[var(--color-accent-rose-muted)] shadow-md'
@@ -1903,8 +1919,9 @@ export default function EditorPanel({
             }}
             onConfirm={(mode: FormatApplicationMode) => {
               const fmt = getCvFormat(pendingFormatId);
+              triggerPresetTransition(fmt?.name || pendingFormatId, 'format');
               setCvData((prev: any) => applyPresetLevel(prev, 'format', { formatId: pendingFormatId, applicationMode: mode }));
-              showSuccess(`Formato "${fmt.name}" aplicado correctamente.`);
+              showSuccess(`Formato "${fmt?.name || pendingFormatId}" aplicado correctamente.`);
               setIsFormatModalOpen(false);
               setPendingFormatId(null);
             }}

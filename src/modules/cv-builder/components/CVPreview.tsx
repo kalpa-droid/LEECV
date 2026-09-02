@@ -6,8 +6,13 @@ import { cvDataToContentSections } from '../../../shared/core/pdf-engine/layers/
 import { buildCardDataFromCV, BusinessCardData } from '../../../shared/core/pdf-engine/layers/records/cardDataAdapter';
 import { VectorDocViewer } from '../../../shared/core/pdf-engine/VectorDocViewer';
 import { ErrorBoundary } from '../../../shared/core/ui/ErrorBoundary';
+import { usePresetTransition } from '../../../shared/core/pdf-engine/layers/presets/presetTransitionEngine';
+import { PresetTransitionOverlay } from '../../../shared/core/ui/PresetTransitionOverlay';
 
 export default function CVPreview({ cvData, setCvData: _setCvData, activeTab, zoomLevel = 0.85 }: { cvData?: any; setCvData?: any; activeTab?: string; zoomLevel?: number }) {
+  // Motor de transición de presets con animación de Pluma Antigua / Lápiz Rotatorio
+  const transitionState = usePresetTransition(cvData);
+
   // Suscripción reactiva con useSyncExternalStore para re-renderizado automático sin F5 al cambiar plantillas
   const presetsVersion = useSyncExternalStore(subscribeToPresetChanges, getPresetsSnapshot, getPresetsSnapshot);
 
@@ -73,6 +78,13 @@ export default function CVPreview({ cvData, setCvData: _setCvData, activeTab, zo
       className="w-full min-h-full flex flex-col items-center print-wrapper relative"
       style={dynamicThemeStyle}
     >
+      {/* Capa de Transición de Preset con Pluma Antigua / Lápiz Rotatorio */}
+      <PresetTransitionOverlay 
+        isApplying={transitionState.isApplying} 
+        presetName={transitionState.presetName}
+        presetType={transitionState.presetType}
+      />
+
       <div 
         className="w-full max-w-5xl my-2 no-print transition-transform duration-150 ease-out"
         style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top center' }}

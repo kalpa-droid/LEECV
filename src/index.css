@@ -645,3 +645,17 @@ html, body, #root {
   background-color: var(--ui-bg-card);
   border-color: var(--ui-border);
 }
+
+/* Animación de Escritura / Oscilación de Pluma Antigua */
+@keyframes quillWrite {
+  0% { transform: rotate(0deg) translateY(0); }
+  25% { transform: rotate(-10deg) translateY(-2px); }
+  50% { transform: rotate(6deg) translateY(1px); }
+  75% { transform: rotate(-6deg) translateY(-1px); }
+  100% { transform: rotate(0deg) translateY(0); }
+}
+
+.animate-quill-write {
+  animation: quillWrite 2.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
