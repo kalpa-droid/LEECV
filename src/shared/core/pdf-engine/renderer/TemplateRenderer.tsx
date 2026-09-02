@@ -13,7 +13,7 @@ import { CardObjectRenderer } from '../layers/cards/CardObjectRenderer';
 import { SectionBannerCard } from '../layers/cards/SectionBannerCard';
 import { buildStructuredRecordLayout } from '../layers/records/recordLayoutEngine';
 import { processPageOverflow } from '../layers/overflow/pageOverflowEngine';
-import { OrnamentRenderer } from './OrnamentRenderer';
+import { CoverOrnamentRenderer } from './CoverOrnamentRenderer';
 import { DecorativeBackgroundRenderer } from './DecorativeBackgroundRenderer';
 import { resolveDecorativeStyles } from '../layers/decorations/decorativeLayerEngine';
 import { flattenPresetForATS } from '../layers/ats/atsFlatteningEngine';
@@ -765,7 +765,6 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
 
         return (
           <View key={sFlow.sector.id} style={[surfaceStyle, widthStyle, { position: 'relative' }] as any}>
-            <OrnamentRenderer ornamentKind={decStyles.cornerOrnament} color={sectorRolesColor.accent} />
             <View style={contentStyle}>
               {/* SPACER FIJO DE MARGEN SUPERIOR PARA EVITAR EL BUG DE PAGINACIÓN DE REACT-PDF (#430/#733) */}
               <View fixed style={{ height: usable.margins.topPt || 14 }} />
@@ -911,7 +910,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
             watermark={decStyles.watermark}
             color={coverRolesColor.accent}
           />
-          <OrnamentRenderer ornamentKind={decStyles.cornerOrnament} color={coverRolesColor.accent} />
+          <CoverOrnamentRenderer coverStyle={styleId} rolesColor={coverRolesColor} />
 
           <View style={styles.coverHeaderBlock}>
             {!hidePhoto && (
@@ -985,6 +984,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       return (
         <Page size={pdfPaperSize} style={[styles.coverPage, { backgroundColor: coverBgHex, padding: 24 }]}>
           <DecorativeBackgroundRenderer backgroundShapeEnabled={decStyles.backgroundShapeEnabled} watermark={decStyles.watermark} color={coverRolesColor.accent} />
+          <CoverOrnamentRenderer coverStyle={styleId} rolesColor={coverRolesColor} />
           <View style={{ width: '100%', flex: 1, justifyContent: 'space-between', gap: 12 }}>
             <View style={{ backgroundColor: coverSubtleBoxBg, borderRadius: 12, padding: 18, borderWidth: 1, borderColor: coverRolesColor.accent, flexDirection: 'row', alignItems: 'center', gap: 16 }}>
               {!hidePhoto && (
@@ -1062,6 +1062,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     if (styleId === 'minimal-editorial') {
       return (
         <Page size={pdfPaperSize} style={[styles.coverPage, { backgroundColor: coverBgHex, padding: 40, alignItems: 'flex-start', justifyContent: 'space-between' }]}>
+          <CoverOrnamentRenderer coverStyle={styleId} rolesColor={coverRolesColor} />
           <View style={{ width: '100%', marginTop: 20 }}>
             <Text style={{ fontSize: 9, fontFamily: coverFontBold, color: coverRolesColor.accent, letterSpacing: 2, marginBottom: 12 }}>
               PORTAFOLIO PROFESIONAL
@@ -1106,7 +1107,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       return (
         <Page size={pdfPaperSize} style={[styles.coverPage, { backgroundColor: coverBgHex }]}>
           <DecorativeBackgroundRenderer backgroundShapeEnabled={true} watermark="ecologia" color={coverRolesColor.accent} />
-          <OrnamentRenderer ornamentKind="organic-leaf" color={coverRolesColor.accent} />
+          <CoverOrnamentRenderer coverStyle={styleId} rolesColor={coverRolesColor} />
 
           <View style={styles.coverHeaderBlock}>
             {!hidePhoto && (
@@ -1180,6 +1181,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       return (
         <Page size={pdfPaperSize} style={[styles.coverPage, { backgroundColor: coverBgHex, padding: 32 }]}>
           <DecorativeBackgroundRenderer backgroundShapeEnabled={true} watermark="subtle-brand" color={coverRolesColor.accent} />
+          <CoverOrnamentRenderer coverStyle={styleId} rolesColor={coverRolesColor} />
           
           <View style={{ width: '100%', flex: 1, justifyContent: 'space-between' }}>
             <View style={{ alignItems: 'center', marginTop: 10 }}>
@@ -1241,6 +1243,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     return (
       <Page size={pdfPaperSize} style={[styles.coverPage, { backgroundColor: coverBgHex, padding: 0 }]}>
         <DecorativeBackgroundRenderer backgroundShapeEnabled={decStyles.backgroundShapeEnabled} watermark={decStyles.watermark} color={coverRolesColor.accent} />
+        <CoverOrnamentRenderer coverStyle={styleId} rolesColor={coverRolesColor} />
         
         <View style={{ width: '100%', backgroundColor: coverSubtleBoxBg, paddingVertical: 14, paddingHorizontal: 24, borderBottomWidth: 3, borderBottomColor: coverRolesColor.accent, alignItems: 'center' }}>
           <Text style={{ fontSize: 10, fontFamily: coverFontBold, color: coverRolesColor.accent, letterSpacing: 4, marginBottom: 2 }}>
