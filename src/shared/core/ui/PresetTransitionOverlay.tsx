@@ -29,7 +29,7 @@ export const PresetTransitionOverlay: React.FC<PresetTransitionOverlayProps> = (
 
   return (
     <div 
-      className={`absolute inset-0 z-40 flex items-center justify-center bg-black/25 backdrop-blur-[4px] transition-all duration-200 animate-fadeIn pointer-events-none ${className}`}
+      className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-[6px] transition-all duration-200 animate-fadeIn pointer-events-none ${className}`}
     >
       <div 
         className={`px-6 py-5 rounded-[${radius.modal}] bg-[var(--ui-bg-card)] border-2 border-[var(--color-secondary-bright)]/40 ${elevationSystem.floating} shadow-2xl flex flex-col items-center gap-3 text-center max-w-xs sm:max-w-sm pointer-events-auto`}
