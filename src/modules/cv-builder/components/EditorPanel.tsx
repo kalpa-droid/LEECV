@@ -1758,7 +1758,11 @@ export default function EditorPanel({
                 </span>
                 <button
                   type="button"
-                  onClick={() => setCvData((prev: any) => ({ ...prev, showCoverPage: prev.showCoverPage === undefined ? false : !prev.showCoverPage }))}
+                  onClick={() => {
+                    const willEnable = cvData.showCoverPage === false;
+                    triggerPresetTransition(willEnable ? 'Portada Activada' : 'Portada Desactivada', 'cover');
+                    setCvData((prev: any) => ({ ...prev, showCoverPage: !prev.showCoverPage }));
+                  }}
                   className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 ${elevationSystem.raised} cursor-pointer ${
                     cvData.showCoverPage !== false
                       ? 'bg-[var(--color-accent-purple-hover)] text-white hover:opacity-90'

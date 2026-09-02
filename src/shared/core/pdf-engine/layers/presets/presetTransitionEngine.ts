@@ -10,6 +10,7 @@
  */
 
 import { useState, useEffect, useRef, useSyncExternalStore } from 'react';
+import { COVER_PRESETS_CATALOG } from './coverPresetCatalog';
 
 export interface PresetTransitionState {
   isApplying: boolean;
@@ -35,7 +36,7 @@ function notify() {
 /**
  * Dispara una transición de preset explícita con tiempo de permanencia mínimo.
  */
-export function triggerPresetTransition(presetName: string, presetType: string = 'preset', minDurationMs: number = 750) {
+export function triggerPresetTransition(presetName: string, presetType: string = 'preset', minDurationMs: number = 1000) {
   if (timerId) {
     clearTimeout(timerId);
   }
@@ -109,6 +110,7 @@ export function usePresetTransition(cvData?: any): PresetTransitionState {
     typographyPresetId?: string;
     columnLayoutPresetId?: string;
     coverStyle?: string;
+    showCoverPage?: boolean;
     activeFormatId?: string;
   }>({});
 
@@ -121,6 +123,7 @@ export function usePresetTransition(cvData?: any): PresetTransitionState {
       typographyPresetId: cvData.typographyPresetId,
       columnLayoutPresetId: cvData.columnLayoutPresetId,
       coverStyle: cvData.coverStyle,
+      showCoverPage: cvData.showCoverPage,
       activeFormatId: cvData.activeFormatId
     };
 
@@ -135,24 +138,28 @@ export function usePresetTransition(cvData?: any): PresetTransitionState {
       if (currentPresets.activePresetId !== prev.activePresetId && currentPresets.activePresetId) {
         changedName = `Plantilla Base: ${currentPresets.activePresetId}`;
       } else if (currentPresets.colorPresetId !== prev.colorPresetId && currentPresets.colorPresetId) {
-        changedName = `Paleta de Color: ${currentPresets.colorPresetId}`;
+        changedName = `Paleta de Color`;
         changedType = 'color';
       } else if (currentPresets.typographyPresetId !== prev.typographyPresetId && currentPresets.typographyPresetId) {
-        changedName = `Estilo Tipográfico: ${currentPresets.typographyPresetId}`;
+        changedName = `Estilo Tipográfico`;
         changedType = 'typography';
       } else if (currentPresets.columnLayoutPresetId !== prev.columnLayoutPresetId && currentPresets.columnLayoutPresetId) {
         changedName = `Disposición de Columnas`;
         changedType = 'layout';
       } else if (currentPresets.coverStyle !== prev.coverStyle && currentPresets.coverStyle) {
-        changedName = `Portada: ${currentPresets.coverStyle}`;
+        const foundCatalog = COVER_PRESETS_CATALOG.find(p => p.id === currentPresets.coverStyle);
+        changedName = foundCatalog ? foundCatalog.name : `Portada: ${currentPresets.coverStyle}`;
+        changedType = 'cover';
+      } else if (currentPresets.showCoverPage !== prev.showCoverPage && currentPresets.showCoverPage !== undefined) {
+        changedName = currentPresets.showCoverPage !== false ? 'Portada Activada' : 'Portada Desactivada';
         changedType = 'cover';
       } else if (currentPresets.activeFormatId !== prev.activeFormatId && currentPresets.activeFormatId) {
-        changedName = `Formato: ${currentPresets.activeFormatId}`;
+        changedName = `Formato de Exportación`;
         changedType = 'format';
       }
 
-      if (changedName) {
-        triggerPresetTransition(changedName, changedType, 800);
+      if (changedName && !currentState.isApplying) {
+        triggerPresetTransition(changedName, changedType, 1000);
       }
     }
 
@@ -163,6 +170,7 @@ export function usePresetTransition(cvData?: any): PresetTransitionState {
     cvData?.typographyPresetId,
     cvData?.columnLayoutPresetId,
     cvData?.coverStyle,
+    cvData?.showCoverPage,
     cvData?.activeFormatId
   ]);
 
