@@ -92,3 +92,5 @@ export const COVER_PRESETS_CATALOG: CoverPresetDefinition[] = [
 export function getCoverPresetById(id: string): CoverPresetDefinition {
   return COVER_PRESETS_CATALOG.find(p => p.id === id) || COVER_PRESETS_CATALOG[0];
 }
+
+export const COVER_PRESETS = COVER_PRESETS_CATALOG;
