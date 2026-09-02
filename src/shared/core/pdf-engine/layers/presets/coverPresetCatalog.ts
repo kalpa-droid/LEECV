@@ -23,7 +23,8 @@ export interface CoverPresetDefinition {
   archetypeReportRef: string;
   scanPattern: string;
   badgeLabel: string;
-  badgeColor: string;
+  badgeBg: string;
+  badgeTextColor: string;
 }
 
 export const COVER_PRESETS_CATALOG: CoverPresetDefinition[] = [
@@ -35,7 +36,8 @@ export const COVER_PRESETS_CATALOG: CoverPresetDefinition[] = [
     archetypeReportRef: 'Canon de Van de Graaf & Cánones Medievales',
     scanPattern: 'Diagrama de Gutenberg (Foco en Área Óptica Primaria)',
     badgeLabel: 'CLÁSICO',
-    badgeColor: 'var(--color-primary-base)'
+    badgeBg: 'var(--color-accent-amber)',
+    badgeTextColor: 'var(--color-accent-on-base)'
   },
   {
     id: 'modern-corporate',
@@ -45,7 +47,8 @@ export const COVER_PRESETS_CATALOG: CoverPresetDefinition[] = [
     archetypeReportRef: 'Estilo Suizo & Bento Grid B2B',
     scanPattern: 'Patrón de Escaneo Z & F',
     badgeLabel: 'BENTO',
-    badgeColor: 'var(--color-accent-base)'
+    badgeBg: 'var(--color-accent-base)',
+    badgeTextColor: 'var(--color-accent-on-base)'
   },
   {
     id: 'minimal-editorial',
@@ -55,7 +58,8 @@ export const COVER_PRESETS_CATALOG: CoverPresetDefinition[] = [
     archetypeReportRef: 'Minimalismo Reduccionista & Carga Cognitiva',
     scanPattern: 'Reducción de Carga Extrínseca (Ley de Hick)',
     badgeLabel: 'MINIMAL',
-    badgeColor: 'var(--color-secondary-base)'
+    badgeBg: 'var(--color-secondary-base)',
+    badgeTextColor: 'var(--color-secondary-on-base)'
   },
   {
     id: 'creative-sustentable',
@@ -65,7 +69,8 @@ export const COVER_PRESETS_CATALOG: CoverPresetDefinition[] = [
     archetypeReportRef: 'Artesanal & Psicología Cromática Vegetal',
     scanPattern: 'Movimiento Orgánico & Respiración Visual',
     badgeLabel: 'SUSTENTABLE',
-    badgeColor: 'var(--color-status-success-bright)'
+    badgeBg: 'var(--color-status-success-base)',
+    badgeTextColor: 'var(--color-status-success-on-base)'
   },
   {
     id: 'bold-impact',
@@ -75,7 +80,8 @@ export const COVER_PRESETS_CATALOG: CoverPresetDefinition[] = [
     archetypeReportRef: 'Bold Typography & Visual Gravity',
     scanPattern: 'Gravedad Visual de Alto Impacto Directo',
     badgeLabel: 'EJECUTIVO',
-    badgeColor: 'var(--color-status-danger-base)'
+    badgeBg: 'var(--color-status-danger-base)',
+    badgeTextColor: 'var(--ui-btn-outline-bg)'
   },
   {
     id: 'magazine-executive',
@@ -85,7 +91,8 @@ export const COVER_PRESETS_CATALOG: CoverPresetDefinition[] = [
     archetypeReportRef: 'Anatomía de Portada de Revista (Magazine Layout)',
     scanPattern: 'Contraste Jerárquico por Oposición Directa',
     badgeLabel: 'MASTHEAD',
-    badgeColor: 'var(--color-accent-purple-bright)'
+    badgeBg: 'var(--color-accent-purple-bright)',
+    badgeTextColor: 'var(--ui-btn-outline-bg)'
   }
 ];
 

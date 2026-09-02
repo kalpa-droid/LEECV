@@ -1876,7 +1876,7 @@ export default function EditorPanel({
                             <div>
                               <div className="flex items-center justify-between mb-1.5">
                                 {/* check-contrast-ignore-next-line */}
-                                <span className="text-[10px] font-black text-[var(--color-accent-on-base)] px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs" style={{ backgroundColor: presetItem.badgeColor }}>
+                                <span className="text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs" style={{ backgroundColor: presetItem.badgeBg, color: presetItem.badgeTextColor }}>
                                   {presetItem.badgeLabel}
                                 </span>
                                 {isActive && (
