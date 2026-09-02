@@ -177,13 +177,15 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   const coverFontBold = sanitizeFontFamily(preset.typography.fontFamily, true, false);
   const coverFontItalic = sanitizeFontFamily(preset.typography.fontFamily, false, true);
 
-  const coverBadgeTextSpec = resolveUnifiedTextSpec('accent', coverBgHex, coverRolesColor, preset.typography, 'cover-badge');
+  const coverSubtleBoxBg = resolveSubtleCardBackground(isCoverLight ? 'main' : 'sidebar', coverRolesColor);
+
+  const coverBadgeTextSpec = resolveUnifiedTextSpec('accent', coverSubtleBoxBg, coverRolesColor, preset.typography, 'cover-badge');
   const coverTitleTextSpec = resolveUnifiedTextSpec('title', coverBgHex, coverRolesColor, preset.typography, 'cover-title');
   const coverNameTextSpec = resolveUnifiedTextSpec('title', coverBgHex, coverRolesColor, preset.typography, 'cover-name');
-  const coverRoleTextSpec = resolveUnifiedTextSpec('subtitle', coverBgHex, coverRolesColor, preset.typography, 'cover-role');
-  const coverQuoteTextSpec = resolveUnifiedTextSpec('body', coverBgHex, coverRolesColor, preset.typography, 'cover-quote');
-  const coverFooterMainSpec = resolveUnifiedTextSpec('subtitle', coverBgHex, coverRolesColor, preset.typography, 'cover-footer-main');
-  const coverFooterSubSpec = resolveUnifiedTextSpec('meta', coverBgHex, coverRolesColor, preset.typography, 'cover-footer-sub');
+  const coverRoleTextSpec = resolveUnifiedTextSpec('subtitle', coverSubtleBoxBg, coverRolesColor, preset.typography, 'cover-role');
+  const coverQuoteTextSpec = resolveUnifiedTextSpec('body', coverSubtleBoxBg, coverRolesColor, preset.typography, 'cover-quote');
+  const coverFooterMainSpec = resolveUnifiedTextSpec('subtitle', coverSubtleBoxBg, coverRolesColor, preset.typography, 'cover-footer-main');
+  const coverFooterSubSpec = resolveUnifiedTextSpec('meta', coverSubtleBoxBg, coverRolesColor, preset.typography, 'cover-footer-sub');
 
   const styles = StyleSheet.create({
     page: {
@@ -917,15 +919,15 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
               personalInfo?.profilePhoto ? (
                 <Image src={personalInfo.profilePhoto} style={[styles.coverPhoto, { borderColor: coverRolesColor.accent }]} />
               ) : (
-                <View style={[styles.coverPhotoPlaceholder, { borderColor: coverRolesColor.accent, backgroundColor: resolveSubtleCardBackground('sidebar', coverRolesColor) }]}>
-                  <Text style={{ fontSize: 24, fontFamily: coverFontBold, color: coverTitleTextSpec.colorHex }}>
+                <View style={[styles.coverPhotoPlaceholder, { borderColor: coverRolesColor.accent, backgroundColor: coverSubtleBoxBg }]}>
+                  <Text style={{ fontSize: 24, fontFamily: coverFontBold, color: getContrastRatio(coverSubtleBoxBg, '#ffffff') >= 4.5 ? '#ffffff' : (coverRolesColor.primary || '#0f172a') }}>
                     {`${(personalInfo?.givenNames || 'C')[0]}${(personalInfo?.surname || 'V')[0]}`}
                   </Text>
                 </View>
               )
             )}
 
-            <View style={[styles.coverBadgeContainer, { backgroundColor: resolveSubtleCardBackground('sidebar', coverRolesColor) }]}>
+            <View style={[styles.coverBadgeContainer, { backgroundColor: coverSubtleBoxBg }]}>
               <Text style={[styles.coverBadgeText, { color: coverBadgeTextSpec.colorHex, fontFamily: coverFontBold, fontSize: preset.typography.cover?.badge || 8 }]}>
                 PORTAFOLIO PROFESIONAL
               </Text>
@@ -941,7 +943,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
             {featuredBadges.length > 0 && (
               <View style={styles.coverRolesRow}>
                 {featuredBadges.map((badge, idx) => (
-                  <View key={idx} style={[styles.coverRoleBadge, { borderColor: coverRolesColor.accent, backgroundColor: resolveSubtleCardBackground('sidebar', coverRolesColor) }]}>
+                  <View key={idx} style={[styles.coverRoleBadge, { borderColor: coverRolesColor.accent, backgroundColor: coverSubtleBoxBg }]}>
                     <Text style={[styles.coverRoleText, { color: coverRoleTextSpec.colorHex, fontFamily: coverFontBold, fontSize: preset.typography.cover?.role || 9 }]}>{badge}</Text>
                   </View>
                 ))}
@@ -949,7 +951,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
             )}
 
             {personalInfo.quote && (
-              <View style={[styles.coverQuoteBox, { borderLeftWidth: 3, borderLeftColor: coverRolesColor.accent, backgroundColor: resolveSubtleCardBackground('sidebar', coverRolesColor) }]}>
+              <View style={[styles.coverQuoteBox, { borderLeftWidth: 3, borderLeftColor: coverRolesColor.accent, backgroundColor: coverSubtleBoxBg }]}>
                 <Text style={[styles.coverQuoteText, { color: coverQuoteTextSpec.colorHex, fontFamily: coverFontItalic, fontSize: preset.typography.cover?.quote || 10 }]}>
                   {personalInfo.quote}
                 </Text>
@@ -957,7 +959,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
             )}
           </View>
 
-          <View style={[styles.coverFooterBar, { backgroundColor: resolveSubtleCardBackground('sidebar', coverRolesColor), borderColor: coverRolesColor.accent }]}>
+          <View style={[styles.coverFooterBar, { backgroundColor: coverSubtleBoxBg, borderColor: coverRolesColor.accent }]}>
             <View>
               <Text style={[styles.coverFooterSub, { color: coverFooterSubSpec.colorHex, fontFamily: coverFontRegular, fontSize: preset.typography.cover?.footerSub || 8 }]}>
                 DNI: {personalInfo.dni || '---'} | CUIT: {personalInfo.cuit || '---'}
