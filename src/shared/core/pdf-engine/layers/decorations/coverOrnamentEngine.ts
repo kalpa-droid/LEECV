@@ -15,6 +15,8 @@
 import { CoverStyleId } from '../presets/coverPresetCatalog';
 import { ResolvedThemeRoles } from '../colors/colorSystem';
 
+export type { CoverStyleId };
+
 export type CoverOrnamentKind =
   | 'classic-filigree'
   | 'bento-corners'
