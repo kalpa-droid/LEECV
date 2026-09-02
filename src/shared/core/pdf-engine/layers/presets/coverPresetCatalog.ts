@@ -65,7 +65,7 @@ export const COVER_PRESETS_CATALOG: CoverPresetDefinition[] = [
     archetypeReportRef: 'Artesanal & Psicología Cromática Vegetal',
     scanPattern: 'Movimiento Orgánico & Respiración Visual',
     badgeLabel: 'SUSTENTABLE',
-    badgeColor: '#15803d'
+    badgeColor: 'var(--color-status-success-bright)'
   },
   {
     id: 'bold-impact',
@@ -75,7 +75,7 @@ export const COVER_PRESETS_CATALOG: CoverPresetDefinition[] = [
     archetypeReportRef: 'Bold Typography & Visual Gravity',
     scanPattern: 'Gravedad Visual de Alto Impacto Directo',
     badgeLabel: 'EJECUTIVO',
-    badgeColor: '#b91c1c'
+    badgeColor: 'var(--color-status-danger-base)'
   },
   {
     id: 'magazine-executive',
@@ -85,7 +85,7 @@ export const COVER_PRESETS_CATALOG: CoverPresetDefinition[] = [
     archetypeReportRef: 'Anatomía de Portada de Revista (Magazine Layout)',
     scanPattern: 'Contraste Jerárquico por Oposición Directa',
     badgeLabel: 'MASTHEAD',
-    badgeColor: '#6b21a8'
+    badgeColor: 'var(--color-accent-purple-bright)'
   }
 ];
 

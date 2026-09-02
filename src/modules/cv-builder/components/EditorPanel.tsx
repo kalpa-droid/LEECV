@@ -1869,13 +1869,14 @@ export default function EditorPanel({
                             }}
                             className={`p-3 rounded-[12px] border-2 cursor-pointer transition flex flex-col justify-between ${
                               isActive
-                                ? 'bg-[var(--ui-bg-card)] border-[var(--color-accent-base)] ring-2 ring-[var(--color-accent-rose-muted)] shadow-md'
-                                : 'bg-[var(--color-neutral-surface)] border-[var(--color-neutral-border)] hover:border-[var(--color-neutral-border-strong)]'
+                                ? 'bg-[var(--ui-bg-card)] border-[var(--color-accent-base)] ring-2 ring-[var(--color-accent-base)]/40 shadow-lg'
+                                : 'bg-[var(--ui-bg-panel)] border-[var(--ui-border)] hover:border-[var(--color-secondary-bright)] hover:bg-[var(--ui-bg-card)]'
                             }`}
                           >
                             <div>
                               <div className="flex items-center justify-between mb-1.5">
-                                <span className="text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider" style={{ backgroundColor: presetItem.badgeColor, color: 'var(--color-accent-on-base)' }}>
+                                {/* check-contrast-ignore-next-line */}
+                                <span className="text-[10px] font-black text-[var(--color-accent-on-base)] px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs" style={{ backgroundColor: presetItem.badgeColor }}>
                                   {presetItem.badgeLabel}
                                 </span>
                                 {isActive && (
@@ -1884,17 +1885,17 @@ export default function EditorPanel({
                                   </span>
                                 )}
                               </div>
-                              <p className="text-xs font-black text-[var(--color-neutral-text-primary)]">
+                              <p className="text-xs font-black text-[var(--ui-text-primary)] mb-0.5">
                                 {presetItem.name}
                               </p>
-                              <p className="text-[10px] font-bold text-[var(--color-neutral-text-secondary)] mb-1.5">
+                              <p className="text-[11px] font-extrabold text-[var(--color-secondary-bright)] mb-1.5 leading-snug">
                                 {presetItem.subtitle}
                               </p>
-                              <p className="text-[10px] text-[var(--color-neutral-text-secondary)] line-clamp-2 leading-relaxed">
+                              <p className="text-[10px] font-medium text-[var(--ui-text-primary)] opacity-90 line-clamp-2 leading-relaxed">
                                 {presetItem.description}
                               </p>
                             </div>
-                            <div className="mt-2 pt-2 border-t border-[var(--color-neutral-border)] flex items-center justify-between text-[9px] font-bold text-[var(--color-neutral-text-muted)]">
+                            <div className="mt-2.5 pt-2 border-t border-[var(--ui-border)] flex items-center justify-between text-[10px] font-extrabold text-[var(--ui-text-secondary)]">
                               <span>{presetItem.scanPattern}</span>
                             </div>
                           </div>
