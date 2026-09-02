@@ -131,6 +131,7 @@ async function runRealMarkerVerification() {
       professions={cvData.profession || []}
       userFontFamily={cvData.theme?.fontFamily}
       layoutOverrides={cvData.layout}
+      interactiveAnchors={true}
     />
   );
 

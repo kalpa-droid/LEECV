@@ -62,6 +62,7 @@ export default function CVPreview({ cvData, setCvData: _setCvData, activeTab, zo
         userFontFamily={debouncedCvData?.theme?.fontFamily}
         layoutOverrides={debouncedCvData?.layout}
         customRecordCardDesigns={debouncedCvData?.recordCardDesigns}
+        interactiveAnchors={true}
       />
     );
   }, [activePreset, sections, cardData, debouncedCvData]);

@@ -23,7 +23,7 @@ import { getColumnAssignableSections } from '../../../shared/core/sectionRegistr
 import { getAllPresets, PRESET_COLORS, PRESET_TYPOGRAPHY, PRESET_COLUMNS, getColumnLayoutPresetName } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { getAllCvFormats, getCvFormat, getFormatDefaultVisibility, resolveActiveFormatId, resolveActiveFormat } from '../../../shared/core/formats/cvFormatRegistry';
 import { FIELD_CATALOG } from '../../../shared/core/pdf-engine/layers/records/fieldCatalog';
-import { PAGE_SIZES } from '../../../shared/core/pdf-engine/pageSizes';
+import { PAGE_SIZES } from '../../../shared/core/pdf-engine/layers/page/pageSizes';
 import { getSavedCVsList, loadCVById, deleteCVById, saveCV } from '../services/cvStorageService';
 import CertCropperModal from './CertCropperModal';
 import PersonalInfoSection from './editor/PersonalInfoSection';

@@ -62,6 +62,18 @@ export interface TemplateRendererProps {
   layoutOverrides?: CvLayoutOverrides;
   customRecordCardDesigns?: Record<string, string | undefined>;
   /**
+   * Marcadores de texto invisibles (ANCHOR_START:x / ANCHOR_END:x) que el
+   * visor interactivo (VectorDocViewer) lee con page.getTextContent() de
+   * PDF.js para saber a qué coordenada real hacer scroll al tocar una
+   * pestaña. SOLO deben existir en la vista previa en pantalla — son texto
+   * real en la capa de texto del PDF (invisibles al ojo por fontSize:1 +
+   * opacity:0.001, pero NO invisibles para un parser de ATS, que lee la
+   * capa de texto igual que PDF.js). Default false a propósito: cualquier
+   * exportador que use TemplateRenderer sin pasar este prop explícitamente
+   * genera un PDF limpio, no al revés.
+   */
+  interactiveAnchors?: boolean;
+  /**
    * Modo embebido: devuelve solo el contenido (sin Document/Page propios,
    * sin portada, sin páginas de certificados) para insertarlo dentro de un
    * slot de otra hoja ya armada — el caso de una tarjeta dentro de un A4.
@@ -94,7 +106,8 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   embedded = false,
   canvasWidthMm,
   canvasHeightMm,
-  customRecordCardDesigns
+  customRecordCardDesigns,
+  interactiveAnchors = false
 }) => {
   const rawFontFamily = userFontFamily || personalInfo?.fontFamily || basePreset.typography.fontFamily;
   const activeFontFamily = sanitizeFontFamily(rawFontFamily);
@@ -750,8 +763,12 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
               <View fixed style={{ height: usable.margins.topPt || 14 }} />
               {isSidebar && isFirstPage && !hidePhoto && (
                 <View style={styles.sidebarHeader}>
-                  <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>ANCHOR_START:personales</Text>
-                  <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>ANCHOR_START:datos-personales</Text>
+                  {interactiveAnchors && (
+                    <>
+                      <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>ANCHOR_START:personales</Text>
+                      <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>ANCHOR_START:datos-personales</Text>
+                    </>
+                  )}
                   {personalInfo?.profilePhoto ? (
                     <Image src={personalInfo.profilePhoto} style={styles.profilePhoto} />
                   ) : (
@@ -761,15 +778,23 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                       </Text>
                     </View>
                   )}
-                  <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>ANCHOR_END:personales</Text>
-                  <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>ANCHOR_END:datos-personales</Text>
+                  {interactiveAnchors && (
+                    <>
+                      <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>ANCHOR_END:personales</Text>
+                      <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>ANCHOR_END:datos-personales</Text>
+                    </>
+                  )}
                 </View>
               )}
 
               {!isSidebar && isFirstPage && (
                 <View style={{ marginBottom: 12 }}>
-                  <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>ANCHOR_START:personales</Text>
-                  <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>ANCHOR_START:datos-personales</Text>
+                  {interactiveAnchors && (
+                    <>
+                      <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>ANCHOR_START:personales</Text>
+                      <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>ANCHOR_START:datos-personales</Text>
+                    </>
+                  )}
                   <Text style={styles.headerName}>
                     {personalInfo.surname || ''} <Text style={styles.headerNameHighlight}>{personalInfo.givenNames || ''}</Text>
                   </Text>
@@ -778,8 +803,12 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                       {personalInfo.profession}
                     </Text>
                   )}
-                  <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>ANCHOR_END:personales</Text>
-                  <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>ANCHOR_END:datos-personales</Text>
+                  {interactiveAnchors && (
+                    <>
+                      <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>ANCHOR_END:personales</Text>
+                      <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>ANCHOR_END:datos-personales</Text>
+                    </>
+                  )}
                 </View>
               )}
 
@@ -792,7 +821,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                   // Sidebar: la sección completa es un bloque atómico (wrap={false})
                   return (
                     <View key={sec.id} break={sec.breakBefore || false} wrap={false} style={sectionStyle as any}>
-                      <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>{`ANCHOR_START:${baseSecId}`}</Text>
+                      {interactiveAnchors && <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>{`ANCHOR_START:${baseSecId}`}</Text>}
                       {sec.titleText && !isFirma && (
                         <SectionBannerCard
                           preset={preset}
@@ -805,7 +834,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                         />
                       )}
                       {sec.records.map(rec => renderRecord(rec, isSidebar, sectorRolesColor))}
-                      <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>{`ANCHOR_END:${baseSecId}`}</Text>
+                      {interactiveAnchors && <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>{`ANCHOR_END:${baseSecId}`}</Text>}
                     </View>
                   );
                 }
@@ -813,7 +842,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                 // Main Sector: Banner + primer registro son atómicos para evitar título huérfano
                 return (
                   <View key={sec.id} break={sec.breakBefore || false} style={sectionStyle as any}>
-                    <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>{`ANCHOR_START:${baseSecId}`}</Text>
+                    {interactiveAnchors && <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>{`ANCHOR_START:${baseSecId}`}</Text>}
                     {sec.records.length > 0 ? (
                       <>
                         <View wrap={false}>
@@ -851,7 +880,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                         </View>
                       )
                     )}
-                    <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>{`ANCHOR_END:${baseSecId}`}</Text>
+                    {interactiveAnchors && <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>{`ANCHOR_END:${baseSecId}`}</Text>}
                   </View>
                 );
               })}
