@@ -59,7 +59,7 @@ export function composePreset(seed: PresetSeed): Preset {
     hexToOKLCH(seedHex).l > 0.82
   );
 
-  const defaultSectorSurfaceMode = isLightPaletteSeed
+  const defaultSectorSurfaceMode: { sidebar: 'light' | 'dark'; main: 'light' | 'dark' } = isLightPaletteSeed
     ? { sidebar: 'light', main: 'light' }
     : (seed.sectorSurfaceMode || seed.basePreset.sectorSurfaceMode || { sidebar: 'dark', main: 'light' });
 
