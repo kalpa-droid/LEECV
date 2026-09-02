@@ -84,8 +84,9 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
     });
   }
 
-  // Frase / Lema Personal
-  if (personalInfo.quote) {
+  // Frase / Lema Personal (Solo si existe un texto de cita explícito diferente al Titular Profesional)
+  // NOTA: personalInfo.quote es el Titular Profesional que se renderiza nativamente en el Header (debajo del nombre) y Portadas.
+  if (cvData.frase && typeof cvData.frase === 'string' && cvData.frase.trim() !== (personalInfo.quote || '').trim()) {
     sections.push({
       id: 'frase',
       titleText: '',
@@ -94,17 +95,17 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
           id: 'rec-frase',
           kind: 'quote-text',
           targetSectorRole: 'main',
-          fields: { text: personalInfo.quote }
+          fields: { text: cvData.frase }
         }
       ]
     });
   }
 
-  // Resumen Profesional (Main - Sin título impreso en PDF, siempre debajo del nombre)
+  // Resumen Profesional / Extracto (Main - Posición predeterminada #1 en columna principal)
   if (cvData.summary) {
     sections.push({
       id: 'resumen',
-      titleText: '',
+      titleText: getSectionLabel('resumen') || 'RESUMEN PROFESIONAL',
       records: [
         {
           id: 'rec-summary',

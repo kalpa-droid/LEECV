@@ -17,7 +17,7 @@ export const minimalEditorialPreset: Preset = {
   ],
   sectionOrder: [
     { sectorRole: 'sidebar', sectionIds: ['contacto', 'datos-personales', 'competencias', 'informatica'] },
-    { sectorRole: 'main', sectionIds: ['formacion', 'experiencia', 'cursos', 'firma'] },
+    { sectorRole: 'main', sectionIds: ['resumen', 'experiencia', 'formacion', 'cursos', 'firma'] },
   ],
   palette: {
     primary: '#f4f1ec',

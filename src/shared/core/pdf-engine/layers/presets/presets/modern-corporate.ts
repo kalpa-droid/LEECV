@@ -18,7 +18,7 @@ export const modernCorporatePreset: Preset = {
   ],
   sectionOrder: [
     { sectorRole: 'sidebar', sectionIds: ['datos-personales', 'contacto', 'competencias', 'informatica'] },
-    { sectorRole: 'main', sectionIds: ['formacion', 'experiencia', 'cursos', 'firma'] },
+    { sectorRole: 'main', sectionIds: ['resumen', 'experiencia', 'formacion', 'cursos', 'firma'] },
   ],
   palette: {
     primary: '#0f2942',

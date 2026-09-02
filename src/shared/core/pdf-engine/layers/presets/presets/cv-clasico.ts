@@ -14,8 +14,8 @@ export const cvClasicoPreset: Preset = {
     { id: 'foto-perfil', sectorId: 'sidebar', type: 'photo', anchor: 'top', heightPt: 130 },
   ],
   sectionOrder: [
-    { sectorRole: 'sidebar', sectionIds: ['datos-personales', 'contacto', 'frase', 'competencias', 'informatica'] },
-    { sectorRole: 'main', sectionIds: ['formacion', 'experiencia', 'cursos', 'firma'] },
+    { sectorRole: 'sidebar', sectionIds: ['datos-personales', 'contacto', 'competencias', 'informatica'] },
+    { sectorRole: 'main', sectionIds: ['resumen', 'experiencia', 'formacion', 'cursos', 'firma'] },
   ],
   palette: {
     primary: '#ab5ba1',
