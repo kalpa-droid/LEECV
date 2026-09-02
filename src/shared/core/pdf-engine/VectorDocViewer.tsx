@@ -46,7 +46,7 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const renderTokenRef = useRef(0);
-  const anchorMapRef = useRef<Record<string, { startPage: number; startYRatio: number; endPage: number; endYRatio: number }>>({});
+  const anchorMapRef = useRef<Record<string, { startPage: number; startXRatio: number; startYRatio: number; endPage: number; endXRatio: number; endYRatio: number }>>({});
   const pendingScrollTabRef = useRef<string | undefined>(activeTab);
 
   useEffect(() => {
@@ -72,13 +72,14 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
         const fragment = window.document.createDocumentFragment();
         const containerWidth = container.clientWidth || 800;
         const devicePixelRatio = window.devicePixelRatio || 1;
-        const newAnchorMap: Record<string, { startPage: number; startYRatio: number; endPage: number; endYRatio: number }> = {};
+        const newAnchorMap: Record<string, { startPage: number; startXRatio: number; startYRatio: number; endPage: number; endXRatio: number; endYRatio: number }> = {};
 
         for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
           if (cancelled || renderTokenRef.current !== myToken) return;
           const page = await pdfDoc.getPage(pageNum);
 
           const unscaledViewport = page.getViewport({ scale: 1 });
+          const pageWidthPt = unscaledViewport.width;
           const pageHeightPt = unscaledViewport.height;
 
           // Extraer marcadores de texto reales embedidos por @react-pdf/renderer
@@ -87,25 +88,30 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
             for (const item of textContent.items as any[]) {
               if (typeof item.str === 'string' && item.str.includes('ANCHOR_')) {
                 const str = item.str.trim();
+                const xPdf = Array.isArray(item.transform) ? item.transform[4] : 0;
                 const yPdf = Array.isArray(item.transform) ? item.transform[5] : 0;
+                
+                const xRatio = Math.min(0.98, Math.max(0, xPdf / pageWidthPt));
                 const yFromTopPt = Math.max(0, pageHeightPt - yPdf);
-                const ratio = Math.min(0.98, Math.max(0, yFromTopPt / pageHeightPt));
+                const yRatio = Math.min(0.98, Math.max(0, yFromTopPt / pageHeightPt));
 
                 if (str.startsWith('ANCHOR_START:')) {
                   const secId = str.replace('ANCHOR_START:', '').trim();
                   if (!newAnchorMap[secId]) {
-                    newAnchorMap[secId] = { startPage: pageNum, startYRatio: ratio, endPage: pageNum, endYRatio: ratio };
+                    newAnchorMap[secId] = { startPage: pageNum, startXRatio: xRatio, startYRatio: yRatio, endPage: pageNum, endXRatio: xRatio, endYRatio: yRatio };
                   } else {
                     newAnchorMap[secId].startPage = pageNum;
-                    newAnchorMap[secId].startYRatio = ratio;
+                    newAnchorMap[secId].startXRatio = xRatio;
+                    newAnchorMap[secId].startYRatio = yRatio;
                   }
                 } else if (str.startsWith('ANCHOR_END:')) {
                   const secId = str.replace('ANCHOR_END:', '').trim();
                   if (!newAnchorMap[secId]) {
-                    newAnchorMap[secId] = { startPage: pageNum, startYRatio: ratio, endPage: pageNum, endYRatio: ratio };
+                    newAnchorMap[secId] = { startPage: pageNum, startXRatio: xRatio, startYRatio: yRatio, endPage: pageNum, endXRatio: xRatio, endYRatio: yRatio };
                   } else {
                     newAnchorMap[secId].endPage = pageNum;
-                    newAnchorMap[secId].endYRatio = ratio;
+                    newAnchorMap[secId].endXRatio = xRatio;
+                    newAnchorMap[secId].endYRatio = yRatio;
                   }
                 }
               }

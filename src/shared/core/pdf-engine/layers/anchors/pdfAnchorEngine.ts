@@ -14,6 +14,8 @@ export interface PdfAnchorTarget {
   sectionId: string;
   pageIndex: number; // 1-based page number
   verticalRatio: number; // 0.0 (top) to 1.0 (bottom) of the target page
+  horizontalRatio?: number; // 0.0 (left) to 1.0 (right) of the target page
+  hasRecords?: boolean;
 }
 
 /**
@@ -43,17 +45,19 @@ export const SECTION_TAB_MAPPING: Record<string, string[]> = {
 
 export interface PdfAnchorMapTarget {
   startPage: number;
+  startXRatio?: number;
   startYRatio: number;
   endPage: number;
+  endXRatio?: number;
   endYRatio: number;
 }
 
 export type PdfAnchorMap = Record<string, PdfAnchorMapTarget>;
 
 /**
- * Resuelve determinísticamente el número de página y ratio de desplazamiento
+ * Resuelve determinísticamente el número de página y ratio de desplazamiento 2D
  * para cualquier pestaña o ID de sección recibido, posicionando la vista hacia
- * el último registro o campo visible de dicha sección.
+ * el último registro o campo visible de dicha sección (o título si está vacía).
  */
 export function resolveSectionAnchor(
   activeTab: string | undefined,
@@ -75,7 +79,9 @@ export function resolveSectionAnchor(
           tabId: normalizedTab,
           sectionId: key,
           pageIndex: realAnchor.endPage,
-          verticalRatio: realAnchor.endYRatio
+          verticalRatio: realAnchor.endYRatio,
+          horizontalRatio: realAnchor.endXRatio ?? realAnchor.startXRatio ?? 0.1,
+          hasRecords: realAnchor.startPage !== realAnchor.endPage || Math.abs(realAnchor.endYRatio - realAnchor.startYRatio) > 0.02
         };
       }
     }
@@ -87,7 +93,9 @@ export function resolveSectionAnchor(
       tabId: normalizedTab,
       sectionId: 'datos-personales',
       pageIndex: 1,
-      verticalRatio: 0.0
+      verticalRatio: 0.0,
+      horizontalRatio: 0.0,
+      hasRecords: true
     };
   }
 
@@ -181,12 +189,14 @@ export function resolveSectionAnchor(
     tabId: normalizedTab,
     sectionId: possibleSectionIds[0],
     pageIndex,
-    verticalRatio
+    verticalRatio,
+    horizontalRatio: isSidebar ? 0.2 : 0.7,
+    hasRecords: Boolean(currentSecObj?.records && currentSecObj.records.length > 0)
   };
 }
 
 /**
- * Ejecuta el desplazamiento suave (smooth scroll) dentro del contenedor HTML del visor PDF.
+ * Ejecuta el desplazamiento suave (smooth scroll) 2D dentro del contenedor HTML del visor PDF.
  */
 export function scrollToPdfAnchor(
   container: HTMLElement | null,
@@ -212,7 +222,7 @@ export function scrollToPdfAnchor(
   let scrollableParent: HTMLElement = container;
   while (scrollableParent && scrollableParent.parentElement && scrollableParent !== document.body) {
     const style = window.getComputedStyle(scrollableParent);
-    if (['auto', 'scroll'].includes(style.overflowY) || scrollableParent.scrollHeight > scrollableParent.clientHeight) {
+    if (['auto', 'scroll'].includes(style.overflowY) || ['auto', 'scroll'].includes(style.overflowX) || scrollableParent.scrollHeight > scrollableParent.clientHeight) {
       break;
     }
     scrollableParent = scrollableParent.parentElement;
@@ -223,11 +233,26 @@ export function scrollToPdfAnchor(
   const canvasRect = targetCanvas.getBoundingClientRect();
 
   const currentScrollTop = scrollableParent.scrollTop;
+  const currentScrollLeft = scrollableParent.scrollLeft;
+
   const canvasTopRelativeToContainer = canvasRect.top - parentRect.top;
-  const targetScrollTop = currentScrollTop + canvasTopRelativeToContainer + (canvasRect.height * anchor.verticalRatio);
+  const canvasLeftRelativeToContainer = canvasRect.left - parentRect.left;
+
+  const viewportHeight = scrollableParent.clientHeight || window.innerHeight || 800;
+  const viewportWidth = scrollableParent.clientWidth || window.innerWidth || 1200;
+
+  // Centrado Vertical 2D: Posiciona la coordenada Y objetivo cerca del centro-superior (~45% del viewport)
+  const absoluteY = currentScrollTop + canvasTopRelativeToContainer + (canvasRect.height * anchor.verticalRatio);
+  const targetScrollTop = absoluteY - (viewportHeight * 0.45);
+
+  // Centrado Horizontal 2D: Centra la vista sobre el margen de la columna objetivo (izquierda o derecha)
+  const targetXRatio = anchor.horizontalRatio ?? 0.1;
+  const absoluteX = currentScrollLeft + canvasLeftRelativeToContainer + (canvasRect.width * targetXRatio);
+  const targetScrollLeft = absoluteX - (viewportWidth * 0.50);
 
   scrollableParent.scrollTo({
-    top: Math.max(0, targetScrollTop - 20),
+    top: Math.max(0, targetScrollTop),
+    left: Math.max(0, targetScrollLeft),
     behavior: 'smooth'
   });
 

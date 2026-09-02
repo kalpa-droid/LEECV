@@ -395,11 +395,11 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   // Secciones Personalizadas Dinámicas (customSections)
   if (Array.isArray(cvData.customSections)) {
     cvData.customSections.forEach((cs: any) => {
-      if (Array.isArray(cs.records) && cs.records.length > 0) {
+      if (cs && cs.id) {
         sections.push({
           id: cs.id,
           titleText: (cs.titleText || 'NUEVA SECCIÓN').toUpperCase(),
-          records: cs.records.map((r: any, idx: number) => ({
+          records: Array.isArray(cs.records) ? cs.records.map((r: any, idx: number) => ({
             id: `rec-${cs.id}-${idx}`,
             kind: 'custom',
             targetSectorRole: 'main',
@@ -407,7 +407,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
               ...r,
               _fields: cs.fields || ['tituloOGrado', 'institucion']
             }
-          }))
+          })) : []
         });
       }
     });
