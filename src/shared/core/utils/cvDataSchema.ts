@@ -1,5 +1,33 @@
 import { resolveActiveFormatId } from '../formats/cvFormatRegistry';
 
+/**
+ * Resuelve de forma única y canónica el nombre completo con prefijo/abreviatura honorífica
+ * (ej. "Lic. Mónica Burgos" / "Dr. Carlos Rossi" / "Prof. Juan Pérez")
+ */
+export function resolveDisplayName(personalInfo?: any): string {
+  if (!personalInfo) return 'Postulante';
+
+  const rawPrefix = (personalInfo.titlePrefix || '').trim();
+  const prefix = rawPrefix ? `${rawPrefix} ` : '';
+  const given = (personalInfo.givenNames || '').trim();
+  const surname = (personalInfo.surname || '').trim();
+
+  const partsName = `${prefix}${given} ${surname}`.trim();
+  if (partsName && (given || surname)) {
+    return partsName;
+  }
+
+  const rawFull = (personalInfo.fullName || '').trim();
+  if (rawFull) {
+    if (rawPrefix && !rawFull.toLowerCase().startsWith(rawPrefix.toLowerCase())) {
+      return `${rawPrefix} ${rawFull}`.trim();
+    }
+    return rawFull;
+  }
+
+  return 'Postulante';
+}
+
 export function sanitizeCvData(rawCvData: any = {}) {
   const data: any = typeof rawCvData === 'object' && rawCvData !== null ? rawCvData : {};
 

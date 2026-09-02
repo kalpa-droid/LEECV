@@ -24,6 +24,7 @@ import { initPdfFonts, sanitizeFontFamily } from '../layers/typography/pdfFontRe
 import { resolveEffectivePresetSectionOrder, resolveEffectivePresetSectors, CvLayoutOverrides } from '../layers/sectors/layoutResolutionEngine';
 import { getCvFormat } from '../../formats/cvFormatRegistry';
 import { getContainerStyle } from '../../styles/containerStyleEngine';
+import { resolveDisplayName } from '../../utils/cvDataSchema';
 
 function sanitizeSvgDataUrl(dataUrl?: string): string | undefined {
   if (!dataUrl || typeof dataUrl !== 'string') return dataUrl;
@@ -951,7 +952,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
               CURRICULUM VITAE
             </Text>
             <Text style={[styles.coverName, { color: coverNameTextSpec.colorHex, opacity: coverNameTextSpec.opacity, fontFamily: coverFontBold, fontSize: preset.typography.cover?.name || 26 }]}>
-              {personalInfo.fullName || `${personalInfo.surname || ''} ${personalInfo.givenNames || ''}`.trim() || 'Postulante'}
+              {resolveDisplayName(personalInfo)}
             </Text>
 
             {featuredBadges.length > 0 && (
@@ -1019,7 +1020,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                   <Text style={{ fontSize: 7, fontFamily: coverFontBold, color: '#ffffff', letterSpacing: 1 }}>PORTAFOLIO BENTO</Text>
                 </View>
                 <Text style={{ fontSize: preset.typography.cover?.name || 24, fontFamily: coverFontBold, color: coverNameTextSpec.colorHex, marginBottom: 4 }}>
-                  {personalInfo.fullName || `${personalInfo.surname || ''} ${personalInfo.givenNames || ''}`.trim() || 'Postulante'}
+                  {resolveDisplayName(personalInfo)}
                 </Text>
                 <Text style={{ fontSize: 10, fontFamily: coverFontRegular, color: coverFooterMainSpec.colorHex, opacity: 0.9 }}>
                   {personalInfo.quote || 'Currículum Vitae & Trayectoria Profesional'}
@@ -1084,7 +1085,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
               PORTAFOLIO PROFESIONAL
             </Text>
             <Text style={{ fontSize: Math.max(30, (preset.typography.cover?.name || 26) + 4), fontFamily: coverFontBold, color: coverNameTextSpec.colorHex, letterSpacing: -0.5, marginBottom: 10, textAlign: 'left' }}>
-              {personalInfo.fullName || `${personalInfo.surname || ''} ${personalInfo.givenNames || ''}`.trim() || 'Postulante'}
+              {resolveDisplayName(personalInfo)}
             </Text>
 
             <View style={{ width: 60, height: 3, backgroundColor: coverRolesColor.accent, marginBottom: 14 }} />
@@ -1148,7 +1149,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
               CURRICULUM VITAE SUSTENTABLE
             </Text>
             <Text style={[styles.coverName, { color: coverNameTextSpec.colorHex, fontFamily: coverFontBold, fontSize: preset.typography.cover?.name || 26 }]}>
-              {personalInfo.fullName || `${personalInfo.surname || ''} ${personalInfo.givenNames || ''}`.trim() || 'Postulante'}
+              {resolveDisplayName(personalInfo)}
             </Text>
 
             {featuredBadges.length > 0 && (
@@ -1220,7 +1221,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
               </View>
 
               <Text style={{ fontSize: Math.max(32, (preset.typography.cover?.name || 26) + 6), fontFamily: coverFontBold, color: coverNameTextSpec.colorHex, textAlign: 'center', marginBottom: 8, letterSpacing: -0.5 }}>
-                {personalInfo.fullName || `${personalInfo.surname || ''} ${personalInfo.givenNames || ''}`.trim() || 'Postulante'}
+                {resolveDisplayName(personalInfo)}
               </Text>
 
               <View style={{ width: '100%', height: 4, backgroundColor: coverRolesColor.accent, marginVertical: 10 }} />
@@ -1285,7 +1286,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
             )}
 
             <Text style={[styles.coverName, { fontSize: preset.typography.cover?.name || 28, color: coverNameTextSpec.colorHex, marginTop: 8 }]}>
-              {personalInfo.fullName || `${personalInfo.surname || ''} ${personalInfo.givenNames || ''}`.trim() || 'Postulante'}
+              {resolveDisplayName(personalInfo)}
             </Text>
 
             {featuredBadges.length > 0 && (

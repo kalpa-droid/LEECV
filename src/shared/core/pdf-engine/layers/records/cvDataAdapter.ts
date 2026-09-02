@@ -1,6 +1,7 @@
 import { ContentSection } from './recordTypes';
 import { getSectionLabel } from '../../../sectionRegistry';
 import { resolveActiveFormat } from '../../../formats/cvFormatRegistry';
+import { resolveDisplayName } from '../../../utils/cvDataSchema';
 
 const sortByYearDesc = (items: any[]) => {
   if (!Array.isArray(items)) return [];
@@ -399,8 +400,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   }
 
   // Firma Digital (Main)
-  const titlePrefix = personalInfo?.titlePrefix ? `${personalInfo.titlePrefix} ` : '';
-  const autoSignerName = `${titlePrefix}${personalInfo?.givenNames || ''} ${personalInfo?.surname || ''}`.trim() || personalInfo?.fullName || '';
+  const autoSignerName = resolveDisplayName(personalInfo);
   const selectedRole = signature?.signerRole || (sortedProfession?.[0]?.degree || education?.[0]?.degree || '');
   const todayISO = new Date().toISOString().split('T')[0];
   const sigDate = signature?.date || todayISO;
