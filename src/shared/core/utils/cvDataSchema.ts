@@ -152,10 +152,10 @@ export function sanitizeCvData(rawCvData: any = {}) {
       sectionOrders: {
         secundaria: Array.isArray(data.layout?.sectionOrders?.secundaria)
           ? [...new Set(data.layout.sectionOrders.secundaria)]
-          : ['contacto', 'datos-personales', 'frase', 'redes', 'habilidades', 'competencias', 'idiomas', 'informatica', 'ecologia'],
+          : undefined,
         primaria: Array.isArray(data.layout?.sectionOrders?.primaria)
           ? [...new Set(data.layout.sectionOrders.primaria)]
-          : ['resumen', 'personales', 'formacion', 'profesion', 'experiencia', 'proyectos', 'publicaciones', 'referencias', 'cursos', 'ecologia', 'certificados', 'firma']
+          : undefined
       },
       sectionPageBreaks: (typeof data.layout?.sectionPageBreaks === 'object' && data.layout?.sectionPageBreaks !== null)
         ? data.layout.sectionPageBreaks

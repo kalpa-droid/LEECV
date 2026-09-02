@@ -4,6 +4,7 @@ import { Field } from './Field';
 import { FIELD_CATALOG, BUILTIN_RECORD_KINDS } from '../pdf-engine/layers/records/fieldCatalog';
 import { Info } from 'lucide-react';
 import { radius } from '../uiDesignSystem';
+import { SectionPositionControl } from './SectionPositionControl';
 
 interface RecordFormSectionProps {
   sectionKey: string;
@@ -64,7 +65,7 @@ export function RecordFormSection({
         fieldName={fieldName}
         designKey={kindKey}
         itemTitlePrefix={itemTitlePrefix}
-        manualAdjustment={manualAdjustment}
+        manualAdjustment={manualAdjustment || <SectionPositionControl sectionKey={sectionKey} cvData={cvData} setCvData={setCvData} />}
         renderTrailingSlot={renderTrailingSlot}
         renderItem={(item: any, idx: number, updateField: (field: string, val: any) => void) => (
           <div className="space-y-3">

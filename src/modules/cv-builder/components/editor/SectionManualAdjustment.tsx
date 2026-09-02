@@ -1,7 +1,10 @@
 import React, { useEffect } from 'react';
-import { ArrowUp, ArrowDown, Columns, Scissors, Check } from 'lucide-react';
-import { getSection } from '../../../../shared/core/sectionRegistry';
-import { colorSystem, radius, elevationSystem } from '../../../../shared/core/uiDesignSystem';
+import { ArrowUp, ArrowDown, Columns, Scissors, Check, ArrowDownUp } from 'lucide-react';
+import { getSection, getSectionLabel } from '../../../../shared/core/sectionRegistry';
+import { radius, elevationSystem } from '../../../../shared/core/uiDesignSystem';
+import { applyRelativeSectionPosition, SectorRoleType } from '../../../../shared/core/pdf-engine/layers/sectors/sectionOrderEngine';
+import { resolveEffectivePresetSectionOrder } from '../../../../shared/core/pdf-engine/layers/sectors/layoutResolutionEngine';
+import { resolveActivePreset } from '../../../../shared/core/pdf-engine/layers/presets/presetRegistry';
 
 interface SectionManualAdjustmentProps {
   sectionId: string;
@@ -15,9 +18,6 @@ const MOUNTED_MANUAL_ADJUSTMENTS = new Set<string>();
 export function getMountedManualAdjustments(): Set<string> {
   return MOUNTED_MANUAL_ADJUSTMENTS;
 }
-
-const DEFAULT_SECUNDARIA = ['contacto', 'datos-personales', 'frase', 'redes', 'habilidades', 'competencias', 'idiomas', 'informatica', 'ecologia'];
-const DEFAULT_PRIMARIA = ['resumen', 'personales', 'formacion', 'profesion', 'experiencia', 'proyectos', 'publicaciones', 'referencias', 'cursos', 'ecologia', 'certificados', 'firma'];
 
 export function SectionManualAdjustment({ sectionId, cvData, setCvData, designKey }: SectionManualAdjustmentProps) {
   useEffect(() => {
@@ -33,85 +33,95 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData, designKe
 
   if (!cvData || !setCvData) return null;
 
-  const activeDesignKey = designKey || sectionId;
+  const cleanSecId = sectionId.replace(/-cont$/, '');
+  const activeDesignKey = designKey || cleanSecId;
   const currentCardDesign = cvData.recordCardDesigns?.[activeDesignKey] || (activeDesignKey === 'resumen' ? 'accent-outline' : 'accent-card');
 
-  const catalogEntry = getSection(sectionId, cvData.customSections || []);
+  const catalogEntry = getSection(cleanSecId, cvData.customSections || []);
   const assignableToColumns = catalogEntry ? catalogEntry.assignableToColumns !== false : true;
 
-  const assignments = cvData.layout?.columnAssignments || {};
-  const currentColumn = typeof assignments[sectionId] === 'string'
-    ? assignments[sectionId]
-    : (catalogEntry?.defaultSectorRole === 'sidebar' ? 'secundaria' : 'primaria');
+  const activePreset = resolveActivePreset(cvData);
+  const effectiveSectionOrders = resolveEffectivePresetSectionOrder(activePreset, cvData?.layout);
 
-  const secOrder: string[] = cvData.layout?.sectionOrders?.secundaria || DEFAULT_SECUNDARIA;
-  const primOrder: string[] = cvData.layout?.sectionOrders?.primaria || DEFAULT_PRIMARIA;
+  const sidebarOrderObj = effectiveSectionOrders.find(s => s.sectorRole === 'sidebar');
+  const mainOrderObj = effectiveSectionOrders.find(s => s.sectorRole === 'main');
 
-  const activeOrderList = currentColumn === 'secundaria' ? secOrder : primOrder;
-  const currentIndex = activeOrderList.indexOf(sectionId);
+  const sidebarIds = sidebarOrderObj?.sectionIds || [];
+  const mainIds = mainOrderObj?.sectionIds || [];
+
+  const currentSector: SectorRoleType = sidebarIds.includes(cleanSecId) ? 'secundaria' : 'primaria';
+  const sameSectorIds = currentSector === 'secundaria' ? sidebarIds : mainIds;
+  const eligibleAfterSections = sameSectorIds.filter(id => id !== cleanSecId);
+
+  const currentIndex = sameSectorIds.indexOf(cleanSecId);
   const currentPos = currentIndex !== -1 ? currentIndex + 1 : undefined;
 
-  const hasPageBreak = !!(cvData.layout?.sectionPageBreaks?.[sectionId] || cvData.sectionPageBreaks?.[sectionId]);
+  let currentAfterId = '';
+  if (currentIndex > 0) {
+    currentAfterId = sameSectorIds[currentIndex - 1];
+  }
 
-  const handleSetColumn = (targetVal: 'secundaria' | 'primaria') => {
-    setCvData((prev: any) => {
-      const newAssignments = {
-        ...(prev.layout?.columnAssignments || {}),
-        [sectionId]: targetVal
-      };
+  const getSectionTitle = (id: string) => {
+    return getSectionLabel(id, cvData?.customSections || []);
+  };
 
-      let newSecOrder = [...(prev.layout?.sectionOrders?.secundaria || DEFAULT_SECUNDARIA)];
-      let newPrimOrder = [...(prev.layout?.sectionOrders?.primaria || DEFAULT_PRIMARIA)];
+  const hasPageBreak = !!(cvData.layout?.sectionPageBreaks?.[cleanSecId] || cvData.sectionPageBreaks?.[cleanSecId]);
 
-      if (targetVal === 'secundaria') {
-        if (!newSecOrder.includes(sectionId)) newSecOrder.push(sectionId);
-        newPrimOrder = newPrimOrder.filter((id) => id !== sectionId);
-      } else {
-        if (!newPrimOrder.includes(sectionId)) newPrimOrder.push(sectionId);
-        newSecOrder = newSecOrder.filter((id) => id !== sectionId);
-      }
-
-      return {
-        ...prev,
-        layout: {
-          ...prev.layout,
-          columnAssignments: newAssignments,
-          sectionOrders: {
-            secundaria: newSecOrder,
-            primaria: newPrimOrder
-          }
-        }
-      };
-    });
+  const handleSetColumn = (targetVal: SectorRoleType) => {
+    setCvData((prev: any) => applyRelativeSectionPosition(prev, {
+      sectionId: cleanSecId,
+      targetSector: targetVal,
+      positionMode: 'end'
+    }));
   };
 
   const handleMove = (direction: 'up' | 'down') => {
-    setCvData((prev: any) => {
-      const colName = currentColumn;
-      const curOrders = [...(prev.layout?.sectionOrders?.[colName] || (colName === 'secundaria' ? DEFAULT_SECUNDARIA : DEFAULT_PRIMARIA))];
-      let idx = curOrders.indexOf(sectionId);
-      if (idx === -1) {
-        curOrders.push(sectionId);
-        idx = curOrders.length - 1;
-      }
+    const targetIdx = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIdx < 0 || targetIdx >= sameSectorIds.length) return;
 
-      const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
-      if (targetIdx < 0 || targetIdx >= curOrders.length) return prev;
+    const targetAfterId = direction === 'up'
+      ? (targetIdx > 0 ? sameSectorIds[targetIdx - 1] : undefined)
+      : sameSectorIds[targetIdx];
 
-      const [moved] = curOrders.splice(idx, 1);
-      curOrders.splice(targetIdx, 0, moved);
+    if (direction === 'up' && targetIdx === 0) {
+      setCvData((prev: any) => applyRelativeSectionPosition(prev, {
+        sectionId: cleanSecId,
+        targetSector: currentSector,
+        positionMode: 'start'
+      }));
+    } else if (targetAfterId) {
+      setCvData((prev: any) => applyRelativeSectionPosition(prev, {
+        sectionId: cleanSecId,
+        targetSector: currentSector,
+        positionMode: 'after',
+        targetAfterId
+      }));
+    }
+  };
 
-      return {
-        ...prev,
-        layout: {
-          ...prev.layout,
-          sectionOrders: {
-            ...(prev.layout?.sectionOrders || {}),
-            [colName]: curOrders
-          }
-        }
-      };
-    });
+  const handleAfterSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    if (val === 'start') {
+      setCvData((prev: any) => applyRelativeSectionPosition(prev, {
+        sectionId: cleanSecId,
+        targetSector: currentSector,
+        positionMode: 'start'
+      }));
+    } else if (val === 'end') {
+      setCvData((prev: any) => applyRelativeSectionPosition(prev, {
+        sectionId: cleanSecId,
+        targetSector: currentSector,
+        positionMode: 'end'
+      }));
+    } else if (val.startsWith('after:')) {
+      const targetAfterId = val.replace('after:', '');
+      setCvData((prev: any) => applyRelativeSectionPosition(prev, {
+        sectionId: cleanSecId,
+        targetSector: currentSector,
+        positionMode: 'after',
+        targetAfterId
+      }));
+    }
   };
 
   const handleTogglePageBreak = () => {
@@ -121,7 +131,7 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData, designKe
         ...(prev.layout || {}),
         sectionPageBreaks: {
           ...(prev.layout?.sectionPageBreaks || {}),
-          [sectionId]: !hasPageBreak
+          [cleanSecId]: !hasPageBreak
         }
       }
     }));
@@ -137,8 +147,10 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData, designKe
     }));
   };
 
+  const currentAfterSelectValue = currentIndex === 0 ? 'start' : (currentAfterId ? `after:${currentAfterId}` : 'end');
+
   return (
-    <div data-section-id={sectionId} className={`p-2.5 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] space-y-2 text-xs`}>
+    <div data-section-id={cleanSecId} className={`p-2.5 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] space-y-2 text-xs`}>
       <div className="flex items-center justify-between gap-2 flex-wrap">
         {/* Asignación de Columna (Izquierda / Derecha) */}
         {assignableToColumns && (
@@ -150,7 +162,7 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData, designKe
               type="button"
               onClick={() => handleSetColumn('secundaria')}
               className={`px-2 py-1 rounded-[${radius.control}] text-[10px] font-extrabold transition cursor-pointer ${
-                currentColumn === 'secundaria'
+                currentSector === 'secundaria'
                   ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.raised}`
                   : 'bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-secondary)] hover:bg-[var(--color-neutral-border)]/60'
               }`}
@@ -162,7 +174,7 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData, designKe
               type="button"
               onClick={() => handleSetColumn('primaria')}
               className={`px-2 py-1 rounded-[${radius.control}] text-[10px] font-extrabold transition cursor-pointer ${
-                currentColumn === 'primaria'
+                currentSector === 'primaria'
                   ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.raised}`
                   : 'bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-secondary)] hover:bg-[var(--color-neutral-border)]/60'
               }`}
@@ -191,7 +203,7 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData, designKe
             <button
               type="button"
               onClick={() => handleMove('down')}
-              disabled={currentIndex === -1 || currentIndex >= activeOrderList.length - 1}
+              disabled={currentIndex === -1 || currentIndex >= sameSectorIds.length - 1}
               className={`p-1.5 rounded-[${radius.control}] bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer`}
               title="Bajar sección en la columna activa"
             >
@@ -200,6 +212,29 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData, designKe
           </div>
         )}
       </div>
+
+      {/* Selector Fino "Después de: [Sección X]" */}
+      {assignableToColumns && (
+        <div className="flex items-center gap-1.5 pt-1.5 border-t border-[var(--color-neutral-border)]/60">
+          <span className="text-[10px] font-bold text-[var(--color-neutral-text-secondary)] flex items-center gap-1 whitespace-nowrap">
+            <ArrowDownUp className="w-3 h-3 text-[var(--color-secondary-bright)]" /> Ubicación:
+          </span>
+          <select
+            value={currentAfterSelectValue}
+            onChange={handleAfterSelectChange}
+            className={`w-full text-[10px] px-2 py-1 rounded-[${radius.control}] bg-[var(--color-neutral-surface-muted)] border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer`}
+            title="Ubicar de forma relativa esta sección después de otra sección del mismo sector"
+          >
+            <option value="start">↑ Al principio de la columna</option>
+            {eligibleAfterSections.map((secId) => (
+              <option key={secId} value={`after:${secId}`}>
+                ↓ Después de: {getSectionTitle(secId)}
+              </option>
+            ))}
+            <option value="end">↓ Al final de la columna</option>
+          </select>
+        </div>
+      )}
 
       {/* Salto de Página Forzado & Selector de Estilo de Contenedor Unificado */}
       <div className="pt-1.5 border-t border-[var(--color-neutral-border)]/60 flex items-center justify-between gap-1 flex-wrap">
@@ -239,3 +274,4 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData, designKe
     </div>
   );
 }
+
