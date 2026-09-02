@@ -546,8 +546,8 @@ const saveModalPath = path.join(ROOT, 'src/modules/cv-builder/components/SaveMod
 if (fs.existsSync(saveModalPath)) {
   const saveContent = fs.readFileSync(saveModalPath, 'utf-8');
   check(
-    'SaveModal.tsx usa la leyenda exacta "Guardar como copia para Puesto"',
-    saveContent.includes('Guardar como copia para Puesto'),
+    'SaveModal.tsx usa la leyenda exacta "Guardar una copia para..."',
+    saveContent.includes('Guardar una copia para...'),
     'SaveModal.tsx no contiene la leyenda actualizada'
   );
 }

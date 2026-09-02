@@ -49,7 +49,7 @@ export default function SaveAsVersionModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Guardar como copia para Puesto"
+      title="Guardar una copia para..."
       icon={<CopyPlus className="w-5 h-5 text-[var(--color-secondary-bright)]" />}
       size="md"
       footer={

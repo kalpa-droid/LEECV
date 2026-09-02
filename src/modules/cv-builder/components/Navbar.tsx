@@ -184,7 +184,7 @@ export default function Navbar({
                   <span>{isSaving ? 'Guardando...' : 'Guardar Cambios (Sobrescribir)'}</span>
                 </button>
 
-                {/* 2. Guardar como copia para Puesto */}
+                {/* 2. Guardar una copia para... */}
                 <button
                   type="button"
                   onClick={() => {
@@ -194,7 +194,7 @@ export default function Navbar({
                   className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
                 >
                   <CopyPlus className="w-4 h-4 text-[var(--color-secondary-bright)]" />
-                  <span>Guardar como copia para Puesto</span>
+                  <span>Guardar una copia para...</span>
                 </button>
 
                 {/* 3. Descargar Copia Portátil (.JSON / .ZIP) */}

@@ -26,7 +26,7 @@ export const TOP_BAR_ACTIONS: TopBarAction[] = [
 
   // Píldora de Menú de Acciones (Iconos 📁💾)
   { id: 'save-overwrite', label: 'Guardar Cambios (Sobrescribir Activo)', location: 'action-menu' },
-  { id: 'save-as-copy', label: 'Guardar como copia para Puesto', location: 'action-menu' },
+  { id: 'save-as-copy', label: 'Guardar una copia para...', location: 'action-menu' },
   { id: 'export-portable', label: 'Descargar Copia Portátil (.JSON / .ZIP)', location: 'action-menu' },
   { id: 'export-pdf', label: 'Exportar en PDF', location: 'action-menu' },
 

@@ -28,7 +28,7 @@ export default function SaveModal({
 }: SaveModalProps) {
   const storageStatus = checkStorageStatus();
 
-  // State for "Guardar como copia para Puesto"
+  // State for "Guardar una copia para..."
   const [selectedCategory, setSelectedCategory] = useState<string>(JOB_POSITION_CATALOG[0].category);
   const [selectedPosition, setSelectedPosition] = useState<string>(JOB_POSITION_CATALOG[0].positions[0]);
   const [customPositionInput, setCustomPositionInput] = useState<string>('');
@@ -120,7 +120,7 @@ export default function SaveModal({
           </div>
         </button>
 
-        {/* Opción 2: Guardar como copia para Puesto */}
+        {/* Opción 2: Guardar una copia para... */}
         {onSaveAs && (
           <div className={`p-3.5 rounded-[${radius.modal}] bg-[var(--color-secondary-muted)]/50 border border-[var(--color-secondary-base)]/40 space-y-3`}>
             <button
@@ -133,7 +133,7 @@ export default function SaveModal({
               </div>
               <div className="space-y-0.5 min-w-0 flex-1">
                 <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-xs sm:text-sm text-[var(--ui-text-primary)]">Guardar como copia para Puesto</span>
+                  <span className="font-extrabold text-xs sm:text-sm text-[var(--ui-text-primary)]">Guardar una copia para...</span>
                   <span className="text-[10px] font-black px-2 py-0.5 rounded bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)]">
                     Copia Independiente
                   </span>
