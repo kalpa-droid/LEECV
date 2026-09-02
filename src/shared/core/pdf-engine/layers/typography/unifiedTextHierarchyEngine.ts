@@ -112,15 +112,17 @@ export function resolveUnifiedTextSpec(
   const cleanSurface = surfaceBgHex && surfaceBgHex.startsWith('#') ? surfaceBgHex : '#ffffff';
   const luminance = calculatePerceivedLuminance(cleanSurface);
   
-  // Una superficie es oscura si su luminancia es <= 105 (donde el texto blanco #ffffff garantiza ratio WCAG >= 4.5:1).
-  // Si la luminancia es > 105 (superficie media o clara), se usa la matriz HSL entintada para contraste garantizado.
-  const isDarkSurface = luminance <= 105;
+  // Determinación Matemática de Superficie: Una superficie requiere texto claro (blanco #ffffff)
+  // si el ratio de contraste de #ffffff es mayor o igual al de texto oscuro (#0f172a) o si la luminancia es <= 130.
+  const whiteRatio = getContrastRatio(cleanSurface, '#ffffff');
+  const darkRatio = getContrastRatio(cleanSurface, '#0f172a');
+  const isDarkSurface = whiteRatio >= darkRatio || luminance <= 130;
 
   let colorHex = '#000000';
   let opacity = 1.0;
 
   if (isDarkSurface) {
-    // Escenario B: Rectángulo en Fondo Oscuro (Base Blanco Puro con Opacidades)
+    // Escenario B: Rectángulo en Fondo Oscuro / Medio (Base Blanco Puro con Opacidades)
     switch (level) {
       case 'title':
         colorHex = '#ffffff';
@@ -175,14 +177,14 @@ export function resolveUnifiedTextSpec(
     }
   }
 
-  // 3. Verificación y Auto-Ajuste Final de Contraste WCAG 2.1 AA (>= 4.5:1 / 3.0:1)
-  const minRequiredRatio = level === 'title' || level === 'accent' ? 3.0 : 4.5;
+  // 3. Verificación y Auto-Ajuste Final de Contraste WCAG 2.1 AA (>= 4.5:1)
+  const minRequiredRatio = 4.5;
   const currentRatio = getContrastRatio(cleanSurface, colorHex);
 
   if (currentRatio < minRequiredRatio) {
     // Si el contraste es insuficiente sobre el fondo dado, ajustar automáticamente el color
-    // a blanco puro o slate muy oscuro según la luminancia del fondo para garantizar legibilidad WCAG
-    colorHex = isDarkSurface ? '#ffffff' : '#0f172a';
+    // a blanco puro o slate muy oscuro según la ventaja matemática de contraste
+    colorHex = whiteRatio >= darkRatio ? '#ffffff' : '#0f172a';
     opacity = 1.0;
   }
 

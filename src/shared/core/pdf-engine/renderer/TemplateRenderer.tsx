@@ -773,7 +773,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                     <Image src={personalInfo.profilePhoto} style={styles.profilePhoto} />
                   ) : (
                     <View style={styles.profilePhotoPlaceholder}>
-                      <Text style={{ fontSize: 20, fontFamily: 'Helvetica-Bold', color: '#ffffff' }}>
+                      <Text style={{ fontSize: 20, fontFamily: 'Helvetica-Bold', color: getContrastRatio(surfaceBgHex, '#ffffff') >= 4.5 ? '#ffffff' : (sectorRolesColor.primary || '#0f172a') }}>
                         {`${(personalInfo?.givenNames || 'C')[0]}${(personalInfo?.surname || 'V')[0]}`}
                       </Text>
                     </View>
