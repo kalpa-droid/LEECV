@@ -38,9 +38,16 @@ export function SectionBannerCard({
   const decStyles = preset ? resolveDecorativeStyles(preset, designId as any, rolesColor, isSidebar ? 'sidebar' : 'main') : null;
   const iconStyle = decStyles?.headerIconStyle || 'filled';
 
-  const containerBgHex = surfaceBgColor || (isSidebar ? rolesColor.primary : rolesColor.background);
-  const textSpec = resolveUnifiedTextSpec('title', containerBgHex, rolesColor, typography, 'section-banner');
-  const typographyBinding = getTypographyColorBinding(rolesColor, containerBgHex);
+  const bannerBgColor = !isSidebar && (design.backgroundColorRole && design.backgroundColorRole !== 'transparent')
+    ? (rolesColor[design.backgroundColorRole as keyof ResolvedThemeRoles] as string || rolesColor.primary)
+    : 'transparent';
+
+  const effectiveSurfaceHex = (bannerBgColor && bannerBgColor !== 'transparent')
+    ? bannerBgColor
+    : (surfaceBgColor || (isSidebar ? rolesColor.primary : rolesColor.background));
+
+  const textSpec = resolveUnifiedTextSpec('title', effectiveSurfaceHex, rolesColor, typography, 'section-banner');
+  const typographyBinding = getTypographyColorBinding(rolesColor, effectiveSurfaceHex);
 
   const iconColor = iconStyle === 'minimal' 
     ? (rolesColor.accent || textSpec.colorHex) 
@@ -83,10 +90,6 @@ export function SectionBannerCard({
   }
 
   // Encabezado de Sección en Columna Principal (Main): Franja contenedora de objeto
-  const bannerBgColor = (design.backgroundColorRole && design.backgroundColorRole !== 'transparent')
-    ? (rolesColor[design.backgroundColorRole as keyof ResolvedThemeRoles] as string || rolesColor.primary)
-    : 'transparent';
-
   const isTransparentBanner = bannerBgColor === 'transparent';
   const cleanIconId = (iconId || '').replace(/-cont$/, '');
   const hasDivider = decStyles ? decStyles.dividerStyle.enabled : true;

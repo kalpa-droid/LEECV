@@ -124,6 +124,20 @@ for (const baseP of basePresets) {
         failedChecks++;
       }
     }
+
+    // AUDITORÍA DE BANNER DE SECCIÓN (SectionBannerCard) SOBRE CUALQUIER ROL DE COLOR DE FONDO
+    const bannerBgRoles = ['primary', 'accent', 'secondary', 'background', 'transparent'];
+    for (const bgRole of bannerBgRoles) {
+      totalChecks++;
+      const bannerBg = bgRole === 'transparent' ? mainPal.background : (mainPal[bgRole] || mainPal.primary);
+      const bannerSpec = resolveUnifiedTextSpec('title', bannerBg, mainPal, combinedPreset.typography, 'section-banner');
+      const bannerRatio = getContrastRatio(bannerBg, bannerSpec.colorHex);
+
+      if (bannerRatio < 3.0) {
+        console.error(`❌ FALLO BANNER DE SECCIÓN [Preset: ${baseP.id}, Color: ${colorP.id}, RolFondo: ${bgRole}]: Texto (${bannerSpec.colorHex}) en Fondo de Banner (${bannerBg}) da ratio ${bannerRatio.toFixed(2)}:1 < 3.0:1`);
+        failedChecks++;
+      }
+    }
   }
 }
 
