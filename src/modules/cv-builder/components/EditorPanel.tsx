@@ -1832,6 +1832,8 @@ export default function EditorPanel({
                 </div>
               </PanelSection>
           </div>
+        )}
+
         {/* Format Confirmation Modal */}
         {isFormatModalOpen && pendingFormatId && (
           <FormatConfirmationModal
@@ -1850,7 +1852,6 @@ export default function EditorPanel({
             }}
           />
         )}
-
       </div>
     </div>
   );
