@@ -31,6 +31,7 @@ export function sanitizeCvData(rawCvData: any = {}) {
       : {},
     coverFeaturedEducationId: data.coverFeaturedEducationId ?? null,
     coverFeaturedProfessionId: data.coverFeaturedProfessionId ?? null,
+    coverStyle: data.coverStyle || data.coverPresetId || undefined,
 
     personalInfo: {
       titlePrefix: data.personalInfo?.titlePrefix || '',

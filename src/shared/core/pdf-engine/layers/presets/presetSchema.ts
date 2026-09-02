@@ -119,8 +119,8 @@ export interface Preset {
   /** Diseño de Card que usan las franjas de título de sección (ej: 'primary-card', 'accent-card') */
   sectionBannerDesign?: string;
 
-  /** Estilo o arquetipo de portada (monica-classic, modern-corporate, minimal-editorial, creative-cardon) */
-  coverStyle?: 'monica-classic' | 'modern-corporate' | 'minimal-editorial' | 'creative-cardon';
+  /** Estilo o arquetipo de portada (monica-classic, modern-corporate, minimal-editorial, creative-sustentable, bold-impact, magazine-executive) */
+  coverStyle?: 'monica-classic' | 'modern-corporate' | 'minimal-editorial' | 'creative-cardon' | 'creative-sustentable' | 'bold-impact' | 'magazine-executive';
 
   /**
    * DORSO (doble faz) — opcional. Si un preset lo declara, es "de dos caras":

@@ -54,6 +54,7 @@ export default function CVPreview({ cvData, setCvData: _setCvData, activeTab, zo
         activeFormatId={debouncedCvData?.activeFormatId}
         certificatesScanned={debouncedCvData?.certificatesScanned || []}
         showCoverPage={debouncedCvData?.showCoverPage !== false}
+        coverStyle={debouncedCvData?.coverStyle}
         coverFeaturedEducationId={debouncedCvData?.coverFeaturedEducationId}
         coverFeaturedProfessionId={debouncedCvData?.coverFeaturedProfessionId}
         roles={debouncedCvData?.roles || []}

@@ -1,10 +1,11 @@
 import React from 'react';
-import { User, Camera, QrCode } from 'lucide-react';
+import { User, Camera, QrCode, FileText, Check } from 'lucide-react';
 import { useCVContext } from '../../../../context/CVContext';
 import { Field } from '../../../../shared/core/ui/Field';
 import { PanelSection } from './PanelSection';
 import { SectionManualAdjustment } from './SectionManualAdjustment';
 import { colorSystem, typeScale, button, elevationSystem } from '../../../../shared/core/uiDesignSystem';
+import { COVER_PRESETS_CATALOG } from '../../../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
 
 export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhotoCropper: () => void; registeredItems?: any[] }) {
   const { cvData, setCvData, updatePersonalInfo, toggleSectionVisibility } = useCVContext();
@@ -277,6 +278,85 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
               <div className="pt-2 border-t border-[var(--color-neutral-border)]">
                 <SectionManualAdjustment sectionId="frase" cvData={cvData} setCvData={setCvData} />
               </div>
+            </div>
+          </PanelSection>
+
+          {/* 4. Estilo & Presets de Portada (Página 1) */}
+          <PanelSection 
+            icon={<FileText className="w-4 h-4 text-[var(--ui-secondary)]" />} 
+            title="Diseño & Preset de Portada (Página 1)"
+          >
+            <div className="space-y-4 pt-1">
+              <div className="flex items-center justify-between p-3 rounded-[10px] bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)]">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wide text-[var(--color-neutral-text-primary)]">
+                    Incluir Portada de Presentación
+                  </p>
+                  <p className="text-[11px] font-medium text-[var(--color-neutral-text-secondary)]">
+                    Genera una página de entrada formal antes de las páginas de contenido.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCvData((prev: any) => ({ ...prev, showCoverPage: !prev.showCoverPage }))}
+                  className={`px-3 py-1 rounded-full text-[11px] font-black transition cursor-pointer ${
+                    cvData.showCoverPage !== false
+                      ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
+                      : 'bg-[var(--color-neutral-text-muted)] text-[var(--color-neutral-surface)]'
+                  }`}
+                >
+                  {cvData.showCoverPage !== false ? 'ACTIVADA' : 'DESACTIVADA'}
+                </button>
+              </div>
+
+              {cvData.showCoverPage !== false && (
+                <div className="space-y-2">
+                  <label className="block text-xs font-black uppercase tracking-wide text-[var(--color-neutral-text-primary)] mb-1">
+                    Selecciona el Preset de Diseño de Portada *
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {COVER_PRESETS_CATALOG.map((presetItem) => {
+                      const isActive = (cvData.coverStyle || 'monica-classic') === presetItem.id;
+                      return (
+                        <div
+                          key={presetItem.id}
+                          onClick={() => setCvData((prev: any) => ({ ...prev, coverStyle: presetItem.id }))}
+                          className={`p-3 rounded-[12px] border-2 cursor-pointer transition flex flex-col justify-between ${
+                            isActive
+                              ? 'bg-[var(--ui-bg-card)] border-[var(--color-accent-base)] ring-2 ring-[var(--color-accent-rose-muted)] shadow-md'
+                              : 'bg-[var(--color-neutral-surface)] border-[var(--color-neutral-border)] hover:border-[var(--color-neutral-border-strong)]'
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider" style={{ backgroundColor: presetItem.badgeColor, color: 'var(--color-accent-on-base)' }}>
+                                {presetItem.badgeLabel}
+                              </span>
+                              {isActive && (
+                                <span className="flex items-center gap-1 text-[10px] font-black text-[var(--color-accent-on-base)] bg-[var(--color-accent-base)] px-2.5 py-0.5 rounded-full shadow-sm">
+                                  <Check className="w-3 h-3" /> ACTIVO
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs font-black text-[var(--color-neutral-text-primary)]">
+                              {presetItem.name}
+                            </p>
+                            <p className="text-[10px] font-bold text-[var(--color-neutral-text-secondary)] mb-1.5">
+                              {presetItem.subtitle}
+                            </p>
+                            <p className="text-[10px] text-[var(--color-neutral-text-secondary)] line-clamp-2 leading-relaxed">
+                              {presetItem.description}
+                            </p>
+                          </div>
+                          <div className="mt-2 pt-2 border-t border-[var(--color-neutral-border)] flex items-center justify-between text-[9px] font-bold text-[var(--color-neutral-text-muted)]">
+                            <span>{presetItem.scanPattern}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </PanelSection>
         </div>

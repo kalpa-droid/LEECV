@@ -53,6 +53,7 @@ export interface TemplateRendererProps {
   activeFormatId?: string;
   certificatesScanned?: any[];
   showCoverPage?: boolean;
+  coverStyle?: string;
   coverFeaturedEducationId?: string;
   coverFeaturedProfessionId?: string;
   roles?: any[];
@@ -96,6 +97,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   activeFormatId,
   certificatesScanned = [],
   showCoverPage = false,
+  coverStyle,
   coverFeaturedEducationId,
   coverFeaturedProfessionId,
   roles = [],
@@ -897,15 +899,12 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     </View>
   );
 
-  // MODO EMBEBIDO: se devuelve solo el contenido, sin Document/Page propios
-  if (embedded) {
-    return buildDocumentBody(sections, true);
-  }
+  const renderCoverPageContent = () => {
+    const styleId = coverStyle || preset.coverStyle || 'monica-classic';
 
-  return (
-    <Document title={preset.name}>
-      {/* LAYER 0-4: COVER PAGE (PAGE 1) */}
-      {showCoverPage && (
+    // 1. CANON CLÁSICO & PROPORCIÓN ÁUREA (monica-classic)
+    if (styleId === 'monica-classic') {
+      return (
         <Page size={pdfPaperSize} style={[styles.coverPage, { backgroundColor: coverBgHex }]}>
           <DecorativeBackgroundRenderer
             backgroundShapeEnabled={decStyles.backgroundShapeEnabled}
@@ -978,7 +977,350 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
             </View>
           </View>
         </Page>
-      )}
+      );
+    }
+
+    // 2. BENTO GRID CORPORATIVO (modern-corporate)
+    if (styleId === 'modern-corporate') {
+      return (
+        <Page size={pdfPaperSize} style={[styles.coverPage, { backgroundColor: coverBgHex, padding: 24 }]}>
+          <DecorativeBackgroundRenderer backgroundShapeEnabled={decStyles.backgroundShapeEnabled} watermark={decStyles.watermark} color={coverRolesColor.accent} />
+          <View style={{ width: '100%', flex: 1, justifyContent: 'space-between', gap: 12 }}>
+            <View style={{ backgroundColor: coverSubtleBoxBg, borderRadius: 12, padding: 18, borderWidth: 1, borderColor: coverRolesColor.accent, flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+              {!hidePhoto && (
+                personalInfo?.profilePhoto ? (
+                  <Image src={personalInfo.profilePhoto} style={{ width: 90, height: 110, borderRadius: 8, borderWidth: 2, borderColor: coverRolesColor.accent, objectFit: 'cover' }} />
+                ) : (
+                  <View style={{ width: 90, height: 110, borderRadius: 8, borderWidth: 2, borderColor: coverRolesColor.accent, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ fontSize: 22, fontFamily: coverFontBold, color: coverNameTextSpec.colorHex }}>
+                      {`${(personalInfo?.givenNames || 'C')[0]}${(personalInfo?.surname || 'V')[0]}`}
+                    </Text>
+                  </View>
+                )
+              )}
+              <View style={{ flex: 1 }}>
+                <View style={{ alignSelf: 'flex-start', backgroundColor: coverRolesColor.accent, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginBottom: 6 }}>
+                  <Text style={{ fontSize: 7, fontFamily: coverFontBold, color: '#ffffff', letterSpacing: 1 }}>PORTAFOLIO BENTO</Text>
+                </View>
+                <Text style={{ fontSize: preset.typography.cover?.name || 24, fontFamily: coverFontBold, color: coverNameTextSpec.colorHex, marginBottom: 4 }}>
+                  {personalInfo.fullName || `${personalInfo.surname || ''} ${personalInfo.givenNames || ''}`.trim() || 'Postulante'}
+                </Text>
+                <Text style={{ fontSize: 10, fontFamily: coverFontRegular, color: coverFooterMainSpec.colorHex, opacity: 0.9 }}>
+                  {personalInfo.quote || 'Currículum Vitae & Trayectoria Profesional'}
+                </Text>
+              </View>
+            </View>
+
+            <View style={{ gap: 10 }}>
+              {featuredBadges.length > 0 && (
+                <View style={{ backgroundColor: coverSubtleBoxBg, borderRadius: 10, padding: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' }}>
+                  <Text style={{ fontSize: 8, fontFamily: coverFontBold, color: coverRolesColor.accent, letterSpacing: 1, marginBottom: 8 }}>TITULACIONES & ESPECIALIDADES</Text>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                    {featuredBadges.map((badge, idx) => (
+                      <View key={idx} style={{ backgroundColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: coverRolesColor.accent }}>
+                        <Text style={{ fontSize: 9, fontFamily: coverFontBold, color: coverRoleTextSpec.colorHex }}>{badge}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {personalInfo.quote && (
+                <View style={{ backgroundColor: coverSubtleBoxBg, borderRadius: 10, padding: 12, borderLeftWidth: 4, borderLeftColor: coverRolesColor.accent }}>
+                  <Text style={{ fontSize: 8, fontFamily: coverFontBold, color: coverRolesColor.accent, letterSpacing: 1, marginBottom: 4 }}>TITULAR PROFESIONAL</Text>
+                  <Text style={{ fontSize: 10, fontFamily: coverFontItalic, color: coverQuoteTextSpec.colorHex, lineHeight: 1.3 }}>
+                    "{personalInfo.quote}"
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            <View style={{ backgroundColor: coverSubtleBoxBg, borderRadius: 10, padding: 12, borderWidth: 1, borderColor: coverRolesColor.accent, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View>
+                <Text style={{ fontSize: 8, fontFamily: coverFontRegular, color: coverFooterSubSpec.colorHex }}>
+                  DNI: {personalInfo.dni || '---'} | CUIT: {personalInfo.cuit || '---'}
+                </Text>
+                <Text style={{ fontSize: 10, fontFamily: coverFontBold, color: coverFooterMainSpec.colorHex, marginTop: 2 }}>
+                  {personalInfo.cityProvince || 'Salta, Argentina'}
+                </Text>
+              </View>
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={{ fontSize: 8, fontFamily: coverFontBold, color: coverRolesColor.accent, letterSpacing: 1 }}>
+                  LEECV BENTO B2B
+                </Text>
+                <Text style={{ fontSize: 8, fontFamily: coverFontRegular, color: coverFooterSubSpec.colorHex }}>
+                  EDICIÓN {new Date().getFullYear()}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </Page>
+      );
+    }
+
+    // 3. MINIMALISTA RADICAL & ESPACIO NEGATIVO (minimal-editorial)
+    if (styleId === 'minimal-editorial') {
+      return (
+        <Page size={pdfPaperSize} style={[styles.coverPage, { backgroundColor: coverBgHex, padding: 40, alignItems: 'flex-start', justifyContent: 'space-between' }]}>
+          <View style={{ width: '100%', marginTop: 20 }}>
+            <Text style={{ fontSize: 9, fontFamily: coverFontBold, color: coverRolesColor.accent, letterSpacing: 2, marginBottom: 12 }}>
+              PORTAFOLIO PROFESIONAL
+            </Text>
+            <Text style={{ fontSize: Math.max(30, (preset.typography.cover?.name || 26) + 4), fontFamily: coverFontBold, color: coverNameTextSpec.colorHex, letterSpacing: -0.5, marginBottom: 10, textAlign: 'left' }}>
+              {personalInfo.fullName || `${personalInfo.surname || ''} ${personalInfo.givenNames || ''}`.trim() || 'Postulante'}
+            </Text>
+
+            <View style={{ width: 60, height: 3, backgroundColor: coverRolesColor.accent, marginBottom: 14 }} />
+
+            {personalInfo.quote && (
+              <Text style={{ fontSize: 11, fontFamily: coverFontItalic, color: coverQuoteTextSpec.colorHex, maxWidth: 420, lineHeight: 1.4, marginBottom: 16 }}>
+                {personalInfo.quote}
+              </Text>
+            )}
+
+            {featuredBadges.length > 0 && (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                {featuredBadges.map((badge, idx) => (
+                  <View key={idx} style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4, borderWidth: 1, borderColor: coverRolesColor.accent }}>
+                    <Text style={{ fontSize: 8, fontFamily: coverFontBold, color: coverRoleTextSpec.colorHex }}>{badge}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+
+          <View style={{ width: '100%', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.2)', paddingTop: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={{ fontSize: 8, fontFamily: coverFontRegular, color: coverFooterSubSpec.colorHex }}>
+              DNI {personalInfo.dni || '---'} | CUIT {personalInfo.cuit || '---'} | {personalInfo.cityProvince || 'Salta'}
+            </Text>
+            <Text style={{ fontSize: 8, fontFamily: coverFontBold, color: coverRolesColor.accent, letterSpacing: 1 }}>
+              LEECV MINIMALIST
+            </Text>
+          </View>
+        </Page>
+      );
+    }
+
+    // 4. ORGÁNICO & TEXTURAS BOTÁNICAS (creative-sustentable)
+    if (styleId === 'creative-sustentable') {
+      return (
+        <Page size={pdfPaperSize} style={[styles.coverPage, { backgroundColor: coverBgHex }]}>
+          <DecorativeBackgroundRenderer backgroundShapeEnabled={true} watermark="ecologia" color={coverRolesColor.accent} />
+          <OrnamentRenderer ornamentKind="organic-leaf" color={coverRolesColor.accent} />
+
+          <View style={styles.coverHeaderBlock}>
+            {!hidePhoto && (
+              personalInfo?.profilePhoto ? (
+                <Image src={personalInfo.profilePhoto} style={[styles.coverPhoto, { borderRadius: 20, borderColor: coverRolesColor.accent }]} />
+              ) : (
+                <View style={[styles.coverPhotoPlaceholder, { borderRadius: 20, borderColor: coverRolesColor.accent, backgroundColor: coverSubtleBoxBg }]}>
+                  <Text style={{ fontSize: 24, fontFamily: coverFontBold, color: coverNameTextSpec.colorHex }}>
+                    {`${(personalInfo?.givenNames || 'C')[0]}${(personalInfo?.surname || 'V')[0]}`}
+                  </Text>
+                </View>
+              )
+            )}
+
+            <View style={[styles.coverBadgeContainer, { backgroundColor: coverSubtleBoxBg, borderRadius: 16, paddingHorizontal: 12 }]}>
+              <Text style={[styles.coverBadgeText, { color: coverBadgeTextSpec.colorHex, fontFamily: coverFontBold, fontSize: 8 }]}>
+                🌿 DOCUMENTO SUSTENTABLE & ECOLÓGICO
+              </Text>
+            </View>
+
+            <Text style={[styles.coverTitle, { color: coverTitleTextSpec.colorHex, fontFamily: coverFontBold, fontSize: 12 }]}>
+              CURRICULUM VITAE SUSTENTABLE
+            </Text>
+            <Text style={[styles.coverName, { color: coverNameTextSpec.colorHex, fontFamily: coverFontBold, fontSize: preset.typography.cover?.name || 26 }]}>
+              {personalInfo.fullName || `${personalInfo.surname || ''} ${personalInfo.givenNames || ''}`.trim() || 'Postulante'}
+            </Text>
+
+            {featuredBadges.length > 0 && (
+              <View style={styles.coverRolesRow}>
+                {featuredBadges.map((badge, idx) => (
+                  <View key={idx} style={[styles.coverRoleBadge, { borderRadius: 12, borderColor: coverRolesColor.accent, backgroundColor: coverSubtleBoxBg }]}>
+                    <Text style={[styles.coverRoleText, { color: coverRoleTextSpec.colorHex, fontFamily: coverFontBold, fontSize: 9 }]}>{badge}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {personalInfo.quote && (
+              <View style={[styles.coverQuoteBox, { borderRadius: 12, borderLeftWidth: 3, borderLeftColor: coverRolesColor.accent, backgroundColor: coverSubtleBoxBg }]}>
+                <Text style={[styles.coverQuoteText, { color: coverQuoteTextSpec.colorHex, fontFamily: coverFontItalic, fontSize: 10 }]}>
+                  {personalInfo.quote}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          <View style={[styles.coverFooterBar, { backgroundColor: coverSubtleBoxBg, borderColor: coverRolesColor.accent }]}>
+            <View>
+              <Text style={[styles.coverFooterSub, { color: coverFooterSubSpec.colorHex, fontFamily: coverFontRegular, fontSize: 8 }]}>
+                DNI: {personalInfo.dni || '---'} | CUIT: {personalInfo.cuit || '---'}
+              </Text>
+              <Text style={[styles.coverFooterMain, { color: coverFooterMainSpec.colorHex, fontFamily: coverFontBold, fontSize: 10 }]}>
+                {personalInfo.cityProvince || 'Salta, Argentina'}
+              </Text>
+            </View>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={[styles.coverFooterSub, { color: coverFooterSubSpec.colorHex, fontFamily: coverFontRegular, fontSize: 8 }]}>
+                LEECV SUSTENTABLE | {new Date().getFullYear()}
+              </Text>
+              <Text style={[styles.coverFooterBadge, { color: coverRolesColor.accent, fontFamily: coverFontBold, fontSize: 8 }]}>
+                COMPROMISO AMBIENTAL
+              </Text>
+            </View>
+          </View>
+        </Page>
+      );
+    }
+
+    // 5. TIPOGRAFÍA AUDAZ & HEROICA (bold-impact)
+    if (styleId === 'bold-impact') {
+      return (
+        <Page size={pdfPaperSize} style={[styles.coverPage, { backgroundColor: coverBgHex, padding: 32 }]}>
+          <DecorativeBackgroundRenderer backgroundShapeEnabled={true} watermark="subtle-brand" color={coverRolesColor.accent} />
+          
+          <View style={{ width: '100%', flex: 1, justifyContent: 'space-between' }}>
+            <View style={{ alignItems: 'center', marginTop: 10 }}>
+              {!hidePhoto && (
+                personalInfo?.profilePhoto ? (
+                  <Image src={personalInfo.profilePhoto} style={[styles.coverPhoto, { width: 140, height: 175, borderWidth: 4, borderColor: coverRolesColor.accent }]} />
+                ) : (
+                  <View style={[styles.coverPhotoPlaceholder, { width: 140, height: 175, borderWidth: 4, borderColor: coverRolesColor.accent, backgroundColor: coverSubtleBoxBg }]}>
+                    <Text style={{ fontSize: 28, fontFamily: coverFontBold, color: coverNameTextSpec.colorHex }}>
+                      {`${(personalInfo?.givenNames || 'C')[0]}${(personalInfo?.surname || 'V')[0]}`}
+                    </Text>
+                  </View>
+                )
+              )}
+
+              <View style={{ backgroundColor: coverRolesColor.accent, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 4, marginBottom: 8 }}>
+                <Text style={{ fontSize: 9, fontFamily: coverFontBold, color: '#ffffff', letterSpacing: 2 }}>
+                  EJECUTIVO DE ALTO IMPACTO
+                </Text>
+              </View>
+
+              <Text style={{ fontSize: Math.max(32, (preset.typography.cover?.name || 26) + 6), fontFamily: coverFontBold, color: coverNameTextSpec.colorHex, textAlign: 'center', marginBottom: 8, letterSpacing: -0.5 }}>
+                {personalInfo.fullName || `${personalInfo.surname || ''} ${personalInfo.givenNames || ''}`.trim() || 'Postulante'}
+              </Text>
+
+              <View style={{ width: '100%', height: 4, backgroundColor: coverRolesColor.accent, marginVertical: 10 }} />
+
+              {personalInfo.quote && (
+                <Text style={{ fontSize: 11, fontFamily: coverFontBold, color: coverQuoteTextSpec.colorHex, textAlign: 'center', maxWidth: 440, lineHeight: 1.3, marginBottom: 12 }}>
+                  {personalInfo.quote}
+                </Text>
+              )}
+
+              {featuredBadges.length > 0 && (
+                <View style={styles.coverRolesRow}>
+                  {featuredBadges.map((badge, idx) => (
+                    <View key={idx} style={{ backgroundColor: coverRolesColor.accent, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 }}>
+                      <Text style={{ fontSize: 9, fontFamily: coverFontBold, color: '#ffffff' }}>{badge}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            <View style={{ width: '100%', backgroundColor: coverRolesColor.accent, padding: 10, borderRadius: 6, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={{ fontSize: 9, fontFamily: coverFontBold, color: '#ffffff' }}>
+                DNI: {personalInfo.dni || '---'} | CUIT: {personalInfo.cuit || '---'} | {personalInfo.cityProvince || 'Salta, Argentina'}
+              </Text>
+              <Text style={{ fontSize: 9, fontFamily: coverFontBold, color: '#ffffff', letterSpacing: 1 }}>
+                LEECV BOLD EXECUTIVE
+              </Text>
+            </View>
+          </View>
+        </Page>
+      );
+    }
+
+    // 6. CABECERA EDITORIAL & MASTHEAD (magazine-executive)
+    return (
+      <Page size={pdfPaperSize} style={[styles.coverPage, { backgroundColor: coverBgHex, padding: 0 }]}>
+        <DecorativeBackgroundRenderer backgroundShapeEnabled={decStyles.backgroundShapeEnabled} watermark={decStyles.watermark} color={coverRolesColor.accent} />
+        
+        <View style={{ width: '100%', backgroundColor: coverSubtleBoxBg, paddingVertical: 14, paddingHorizontal: 24, borderBottomWidth: 3, borderBottomColor: coverRolesColor.accent, alignItems: 'center' }}>
+          <Text style={{ fontSize: 10, fontFamily: coverFontBold, color: coverRolesColor.accent, letterSpacing: 4, marginBottom: 2 }}>
+            C U R R I C U L U M   V I T A E
+          </Text>
+          <Text style={{ fontSize: 7, fontFamily: coverFontRegular, color: coverFooterSubSpec.colorHex, letterSpacing: 2 }}>
+            EDICIÓN EJECUTIVA DE ALTA DIRECCIÓN & PORTAFOLIO
+          </Text>
+        </View>
+
+        <View style={{ flex: 1, width: '100%', padding: 30, justifyContent: 'space-between', alignItems: 'center' }}>
+          <View style={{ alignItems: 'center', marginTop: 10 }}>
+            {!hidePhoto && (
+              personalInfo?.profilePhoto ? (
+                <Image src={personalInfo.profilePhoto} style={[styles.coverPhoto, { borderColor: coverRolesColor.accent }]} />
+              ) : (
+                <View style={[styles.coverPhotoPlaceholder, { borderColor: coverRolesColor.accent, backgroundColor: coverSubtleBoxBg }]}>
+                  <Text style={{ fontSize: 24, fontFamily: coverFontBold, color: coverNameTextSpec.colorHex }}>
+                    {`${(personalInfo?.givenNames || 'C')[0]}${(personalInfo?.surname || 'V')[0]}`}
+                  </Text>
+                </View>
+              )
+            )}
+
+            <Text style={[styles.coverName, { fontSize: preset.typography.cover?.name || 28, color: coverNameTextSpec.colorHex, marginTop: 8 }]}>
+              {personalInfo.fullName || `${personalInfo.surname || ''} ${personalInfo.givenNames || ''}`.trim() || 'Postulante'}
+            </Text>
+
+            {featuredBadges.length > 0 && (
+              <View style={styles.coverRolesRow}>
+                {featuredBadges.map((badge, idx) => (
+                  <View key={idx} style={[styles.coverRoleBadge, { borderColor: coverRolesColor.accent, backgroundColor: coverSubtleBoxBg }]}>
+                    <Text style={[styles.coverRoleText, { color: coverRoleTextSpec.colorHex, fontFamily: coverFontBold, fontSize: 9 }]}>{badge}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {personalInfo.quote && (
+              <View style={[styles.coverQuoteBox, { backgroundColor: coverSubtleBoxBg, borderLeftWidth: 4, borderLeftColor: coverRolesColor.accent, padding: 12, marginTop: 10 }]}>
+                <Text style={{ fontSize: 8, fontFamily: coverFontBold, color: coverRolesColor.accent, letterSpacing: 1, marginBottom: 4 }}>CITA DE TRAYECTORIA</Text>
+                <Text style={[styles.coverQuoteText, { color: coverQuoteTextSpec.colorHex, fontFamily: coverFontItalic, fontSize: 10 }]}>
+                  {personalInfo.quote}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          <View style={[styles.coverFooterBar, { backgroundColor: coverSubtleBoxBg, borderColor: coverRolesColor.accent, width: '100%', marginHorizontal: 0 }]}>
+            <View>
+              <Text style={[styles.coverFooterSub, { color: coverFooterSubSpec.colorHex, fontFamily: coverFontRegular, fontSize: 8 }]}>
+                DNI: {personalInfo.dni || '---'} | CUIT: {personalInfo.cuit || '---'}
+              </Text>
+              <Text style={[styles.coverFooterMain, { color: coverFooterMainSpec.colorHex, fontFamily: coverFontBold, fontSize: 10 }]}>
+                {personalInfo.cityProvince || 'Salta, Argentina'}
+              </Text>
+            </View>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={[styles.coverFooterSub, { color: coverFooterSubSpec.colorHex, fontFamily: coverFontRegular, fontSize: 8 }]}>
+                LEECV MASTHEAD | AÑO {new Date().getFullYear()}
+              </Text>
+              <Text style={[styles.coverFooterBadge, { color: coverRolesColor.accent, fontFamily: coverFontBold, fontSize: 8 }]}>
+                EDICIÓN OFICIAL
+              </Text>
+            </View>
+          </View>
+        </View>
+      </Page>
+    );
+  };
+
+  // MODO EMBEBIDO: se devuelve solo el contenido, sin Document/Page propios
+  if (embedded) {
+    return buildDocumentBody(sections, true);
+  }
+
+  return (
+    <Document title={preset.name}>
+      {/* LAYER 0-4: COVER PAGE (PAGE 1) */}
+      {showCoverPage && renderCoverPageContent()}
 
       {/* LAYER 0-4: MAIN CV CONTENT PAGES CON FLUJO NATIVO REACT-PDF */}
       <Page size={pdfPaperSize} style={styles.page}>

@@ -33,6 +33,7 @@ export async function exportCVToPDF(cvData: any, presetInput?: Preset, atsMode?:
     personalInfo: cvData?.personalInfo || {},
     certificatesScanned: cvData?.certificatesScanned || [],
     showCoverPage: cvData?.showCoverPage !== false,
+    coverStyle: cvData?.coverStyle,
     coverFeaturedEducationId: cvData?.coverFeaturedEducationId,
     coverFeaturedProfessionId: cvData?.coverFeaturedProfessionId,
     roles: cvData?.roles || [],
