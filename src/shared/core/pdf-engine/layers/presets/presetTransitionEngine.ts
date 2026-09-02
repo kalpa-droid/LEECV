@@ -28,41 +28,75 @@ let currentState: PresetTransitionState = {
 
 const listeners = new Set<() => void>();
 let timerId: NodeJS.Timeout | null = null;
+let renderPending = false;
+let transitionStartTime = 0;
 
 function notify() {
   listeners.forEach((listener) => listener());
 }
 
 /**
- * Dispara una transición de preset explícita con tiempo de permanencia mínimo.
+ * Dispara una transición de preset explícita con tiempo de permanencia coordinado con la GPU/DOM.
  */
-export function triggerPresetTransition(presetName: string, presetType: string = 'preset', minDurationMs: number = 1000) {
+export function triggerPresetTransition(presetName: string, presetType: string = 'preset', minDurationMs: number = 1800) {
   if (timerId) {
     clearTimeout(timerId);
   }
+
+  renderPending = true;
+  transitionStartTime = Date.now();
 
   currentState = {
     isApplying: true,
     presetName: presetName || 'Personalizado',
     presetType,
-    timestamp: Date.now()
+    timestamp: transitionStartTime
   };
   notify();
 
   timerId = setTimeout(() => {
-    currentState = {
-      ...currentState,
-      isApplying: false
-    };
-    timerId = null;
-    notify();
+    // Si el renderizado del canvas en el DOM ya terminó, desvanecemos.
+    // Si aún está procesando, la función markRenderAsCompleted se encargará de cerrarlo.
+    if (!renderPending) {
+      currentState = {
+        ...currentState,
+        isApplying: false
+      };
+      timerId = null;
+      notify();
+    }
   }, minDurationMs);
+}
+
+/**
+ * Notifica al motor que el canvas vectorial del PDF se ha dibujado físicamente en los píxeles de pantalla.
+ */
+export function markRenderAsCompleted() {
+  renderPending = false;
+  const elapsed = Date.now() - transitionStartTime;
+  const minVisibleMs = 1200; // Asegura al menos 1.2s de pluma giratoria para una estética suave
+  const remainingMs = Math.max(50, minVisibleMs - elapsed);
+
+  setTimeout(() => {
+    if (currentState.isApplying) {
+      if (timerId) {
+        clearTimeout(timerId);
+        timerId = null;
+      }
+      currentState = {
+        ...currentState,
+        isApplying: false
+      };
+      notify();
+    }
+  }, remainingMs);
 }
 
 /**
  * Cancela inmediatamente cualquier transición activa.
  */
 export function cancelPresetTransition() {
+  renderPending = false;
   if (timerId) {
     clearTimeout(timerId);
     timerId = null;

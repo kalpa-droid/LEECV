@@ -6,6 +6,7 @@ import { scrollToPdfAnchor } from './layers/anchors/pdfAnchorEngine';
 import { ContentSection } from './layers/records/recordTypes';
 import { Preset } from './layers/presets/presetSchema';
 import { CvLayoutOverrides } from './layers/sectors/layoutResolutionEngine';
+import { markRenderAsCompleted } from './layers/presets/presetTransitionEngine';
 // Vite: importa el worker como URL de asset — funciona igual en build de producción.
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
@@ -155,6 +156,9 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
           setLoading(false);
           
           requestAnimationFrame(() => {
+            // Notificar al motor que los píxeles reales del PDF están en pantalla
+            markRenderAsCompleted();
+
             const targetContainer = wrapperRef.current?.parentElement || wrapperRef.current || containerRef.current;
             if (relativeScrollRatio > 0 && targetContainer) {
               targetContainer.scrollTop = Math.round(relativeScrollRatio * targetContainer.scrollHeight);
