@@ -242,10 +242,6 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
                 placeholder="Ej: Profesora de Lengua y Literatura | Referente en Innovación Educativa"
               />
 
-              {/* Ajuste Manual: Titular Profesional / Frase */}
-              <div className="pt-2 border-t border-[var(--color-neutral-border)]">
-                <SectionManualAdjustment sectionId="frase" cvData={cvData} setCvData={setCvData} />
-              </div>
             </div>
           </PanelSection>
         </div>
