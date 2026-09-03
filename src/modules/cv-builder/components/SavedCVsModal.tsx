@@ -138,7 +138,7 @@ export default function SavedCVsModal({
       footer={
         <div className="w-full flex items-center justify-between gap-2 text-xs text-[var(--ui-text-secondary)]">
           <div className="flex items-center gap-2">
-            <span>Almacenamiento Local (IndexedDB / LocalStorage)</span>
+            <span>Guardado automático en este dispositivo</span>
             <InfoHint hintId="draftDot" variant="tap" />
           </div>
           <button

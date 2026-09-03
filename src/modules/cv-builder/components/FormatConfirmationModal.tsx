@@ -129,19 +129,19 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
               background: `${colorSystem.status.success.base}12`,
               border: `1px solid ${colorSystem.status.success.base}35`,
               display: 'flex',
-              alignItems: 'flex-start',
+              alignItems: 'center',
               gap: '10px'
             }}
           >
-            <ShieldCheck size={18} style={{ color: colorSystem.status.success.base, flexShrink: 0, marginTop: '2px' }} />
-            <div style={{ fontSize: '12.5px', lineHeight: 1.4, color: colorSystem.neutral.textPrimary }}>
-              <strong>Tus datos jamás se borran:</strong> El archivo JSON y tus respaldos conservan el 100% de tus datos. Cambiar de formato solo ajusta el diseño visual y la curaduría para exportación.
+            <ShieldCheck size={18} style={{ color: colorSystem.status.success.base, flexShrink: 0 }} />
+            <div style={{ fontSize: '13px', fontWeight: 700, color: colorSystem.neutral.textPrimary }}>
+              Tus datos jamás se borran.
             </div>
           </div>
 
           {/* Opciones de Aplicación */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {/* Opción 1: Curaduría Recomendada */}
+            {/* Opción 1: Aplicar Plantilla Completa */}
             <div
               onClick={() => setSelectedMode('curated')}
               style={{
@@ -162,7 +162,7 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ fontSize: '13.5px', fontWeight: 700, color: colorSystem.neutral.textPrimary }}>
-                    Curaduría Recomendada (Recomendado)
+                    1. Aplicar Plantilla Completa
                   </span>
                   <span
                     style={{
@@ -174,16 +174,16 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
                       color: colorSystem.accent.onBase
                     }}
                   >
-                    Estándar
+                    Recomendado
                   </span>
                 </div>
                 <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: colorSystem.neutral.textSecondary, lineHeight: 1.4 }}>
-                  Aplica la estructura, orden de columnas y visibilidad de secciones optimizada específicamente para este formato y mercado.
+                  Se ordenan las secciones en las columnas y algunas podrían ocultarse para cumplir con este formato del mercado.
                 </p>
               </div>
             </div>
 
-            {/* Opción 2: Solo Reordenar Columnas */}
+            {/* Opción 2: Aplicar Orden de Plantilla */}
             <div
               onClick={() => setSelectedMode('reorder-only')}
               style={{
@@ -203,15 +203,15 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
               </div>
               <div style={{ flex: 1 }}>
                 <span style={{ fontSize: '13.5px', fontWeight: 700, color: colorSystem.neutral.textPrimary }}>
-                  Solo Reordenar Columnas y Prioridad
+                  2. Aplicar Orden de Plantilla
                 </span>
                 <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: colorSystem.neutral.textSecondary, lineHeight: 1.4 }}>
-                  Organiza las columnas y la prioridad visual del nuevo formato sin alterar la visibilidad de tus secciones personalizadas actuales.
+                  Se ordenan y priorizan las secciones en las columnas sin ocultarse.
                 </p>
               </div>
             </div>
 
-            {/* Opción 3: Formato Completo (20 Secciones) */}
+            {/* Opción 3: Aplicar Plantilla Sin Filtros */}
             <div
               onClick={() => setSelectedMode('full-20-sections')}
               style={{
@@ -231,7 +231,7 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
               </div>
               <div style={{ flex: 1 }}>
                 <span style={{ fontSize: '13.5px', fontWeight: 700, color: colorSystem.neutral.textPrimary }}>
-                  Formato Completo (Ver las 20 Secciones Sin Filtros)
+                  3. Aplicar Plantilla Sin Filtros
                 </span>
                 <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: colorSystem.neutral.textSecondary, lineHeight: 1.4 }}>
                   Mantiene visibles todas tus secciones y campos personales sin ocultar nada, aplicando la tipografía y colores del nuevo formato.
