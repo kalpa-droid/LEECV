@@ -144,29 +144,45 @@ function AppContent() {
 
   // Zoom and Responsive A4 Auto-Fit state
   const [zoomLevel, setZoomLevel] = useState(0.85);
+  const [isAutoFitMode, setIsAutoFitMode] = useState(true);
 
   const triggerAutoFit = React.useCallback(() => {
     if (typeof window !== 'undefined') {
       const isMobile = window.innerWidth < 768;
+      const padding = isMobile ? 16 : 48;
       const sidebarWidth = isMobile ? 0 : (isPanelOpen ? 500 : 96);
-      const availableWidth = window.innerWidth - sidebarWidth - 32;
+      const availableWidth = Math.max(280, window.innerWidth - sidebarWidth - padding);
       const a4WidthPx = 794;
       
-      const calculatedScale = Math.min(Math.max(availableWidth / a4WidthPx, 0.35), 1.0);
+      const calculatedScale = Math.min(Math.max(availableWidth / a4WidthPx, 0.25), 2.0);
       setZoomLevel(Number(calculatedScale.toFixed(2)));
     }
   }, [isPanelOpen]);
 
-  useEffect(() => {
+  const handleUserAutoFitClick = React.useCallback(() => {
+    setIsAutoFitMode(true);
     triggerAutoFit();
-    const timer = setTimeout(triggerAutoFit, 350);
-    const handleResize = () => triggerAutoFit();
-    window.addEventListener('resize', handleResize);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [isPanelOpen, triggerAutoFit]);
+  }, [triggerAutoFit]);
+
+  const handleZoomChange = React.useCallback((action: number | ((prev: number) => number)) => {
+    setIsAutoFitMode(false);
+    setZoomLevel(action);
+  }, []);
+
+  useEffect(() => {
+    if (isAutoFitMode) {
+      triggerAutoFit();
+      const timer = setTimeout(triggerAutoFit, 300);
+      const handleResize = () => triggerAutoFit();
+      window.addEventListener('resize', handleResize);
+      window.addEventListener('orientationchange', handleResize);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('resize', handleResize);
+        window.removeEventListener('orientationchange', handleResize);
+      };
+    }
+  }, [isPanelOpen, isAutoFitMode, triggerAutoFit]);
 
   const [isPhotoCropperOpen, setIsPhotoCropperOpen] = useState(false);
   const [isSignatureOpen, setIsSignatureOpen] = useState(false);
@@ -444,8 +460,9 @@ function AppContent() {
           userRole={currentProfile?.role || 'candidate'}
           isSaving={isSaving}
           zoomLevel={zoomLevel}
-          setZoomLevel={setZoomLevel}
-          triggerAutoFit={triggerAutoFit}
+          setZoomLevel={handleZoomChange}
+          triggerAutoFit={handleUserAutoFitClick}
+          isAutoFitMode={isAutoFitMode}
           cycleUITheme={cycleUITheme}
         />
       </div>

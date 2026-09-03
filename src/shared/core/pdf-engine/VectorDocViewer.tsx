@@ -128,7 +128,7 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
           }
 
           const baseScale = containerWidth / unscaledViewport.width;
-          const viewport = page.getViewport({ scale: baseScale * zoomLevel * devicePixelRatio });
+          const viewport = page.getViewport({ scale: baseScale * devicePixelRatio * Math.max(1, zoomLevel) });
 
           const canvas = window.document.createElement('canvas');
           canvas.setAttribute('data-page-number', String(pageNum));

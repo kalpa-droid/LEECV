@@ -86,8 +86,8 @@ export default function CVPreview({ cvData, setCvData: _setCvData, activeTab, zo
       />
 
       <div 
-        className="w-full max-w-5xl my-2 no-print transition-transform duration-150 ease-out"
-        style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top center' }}
+        className="w-[794px] max-w-full my-2 no-print transition-transform duration-150 ease-out origin-top mx-auto shrink-0"
+        style={{ transform: `scale(${zoomLevel})` }}
       >
         <ErrorBoundary 
           compact 

@@ -36,8 +36,9 @@ export interface NavbarProps {
   userRole?: string;
   isSaving?: boolean;
   zoomLevel: number;
-  setZoomLevel: React.Dispatch<React.SetStateAction<number>>;
+  setZoomLevel: (action: number | ((prev: number) => number)) => void;
   triggerAutoFit: () => void;
+  isAutoFitMode?: boolean;
   cycleUITheme: () => void;
 }
 
@@ -61,6 +62,7 @@ export default function Navbar({
   zoomLevel,
   setZoomLevel,
   triggerAutoFit,
+  isAutoFitMode = true,
   cycleUITheme
 }: NavbarProps) {
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
@@ -130,6 +132,7 @@ export default function Navbar({
               zoomLevel={zoomLevel}
               setZoomLevel={setZoomLevel}
               triggerAutoFit={triggerAutoFit}
+              isAutoFitMode={isAutoFitMode}
             />
             <UndoRedoControls />
           </div>

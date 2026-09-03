@@ -6,8 +6,9 @@ import { elevationSystem, radius } from '../uiDesignSystem';
 
 interface ZoomControlsProps {
   zoomLevel: number;
-  setZoomLevel: React.Dispatch<React.SetStateAction<number>>;
+  setZoomLevel: (action: number | ((prev: number) => number)) => void;
   triggerAutoFit: () => void;
+  isAutoFitMode?: boolean;
   className?: string;
   isMobile?: boolean;
   /** Tema activo actual (ej. 'day', 'dark', 'teal_ocean', 'ink'). Si se pasa
@@ -21,6 +22,7 @@ export function ZoomControls({
   zoomLevel,
   setZoomLevel,
   triggerAutoFit,
+  isAutoFitMode = false,
   className = '',
   isMobile = false,
   currentUiTheme,
@@ -33,7 +35,7 @@ export function ZoomControls({
     <div className={`flex items-center gap-1 bg-[var(--ui-bg-dock)] px-2 py-1 rounded-[${radius.card}] border border-[var(--ui-dock-border)] ${elevationSystem.raised} select-none ${className}`}>
       <button
         type="button"
-        onClick={() => setZoomLevel(prev => Math.max(0.3, parseFloat((prev - 0.1).toFixed(2))))}
+        onClick={() => setZoomLevel((prev: number) => Math.max(0.3, parseFloat((prev - 0.1).toFixed(2))))}
         className={`p-1 rounded-[${radius.control}] hover:bg-[var(--color-accent-base)] text-[var(--ui-dock-text)] hover:text-white transition cursor-pointer active:scale-95`}
         title="Alejar (-10%)"
       >
@@ -46,7 +48,7 @@ export function ZoomControls({
 
       <button
         type="button"
-        onClick={() => setZoomLevel(prev => Math.min(2.0, parseFloat((prev + 0.1).toFixed(2))))}
+        onClick={() => setZoomLevel((prev: number) => Math.min(2.0, parseFloat((prev + 0.1).toFixed(2))))}
         className={`p-1 rounded-[${radius.control}] hover:bg-[var(--color-accent-base)] text-[var(--ui-dock-text)] hover:text-white transition cursor-pointer active:scale-95`}
         title="Acercar (+10%)"
       >
@@ -56,8 +58,12 @@ export function ZoomControls({
       <button
         type="button"
         onClick={triggerAutoFit}
-        className={`p-1 rounded-[${radius.control}] bg-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-hover)] text-white transition flex items-center justify-center ${elevationSystem.raised} cursor-pointer ml-0.5 active:scale-95`}
-        title="Auto-encajar hoja a pantalla"
+        className={`p-1 rounded-[${radius.control}] transition flex items-center justify-center ${elevationSystem.raised} cursor-pointer ml-0.5 active:scale-95 ${
+          isAutoFitMode
+            ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ring-2 ring-[var(--color-accent-amber-bright)]/80'
+            : 'hover:bg-[var(--color-accent-base)] text-[var(--ui-dock-text)] hover:text-[var(--color-accent-on-base)]'
+        }`}
+        title="Auto-encajar hoja a pantalla (Modo Automático)"
       >
         <Maximize2 className={isMobile ? "w-3 h-3" : "w-3.5 h-3.5"} />
       </button>
