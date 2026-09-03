@@ -40,24 +40,26 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   const sections: ContentSection[] = [];
 
   // Contacto & Redes (Sidebar)
-  sections.push({
-    id: 'contacto',
-    titleText: getSectionLabel('contacto'),
-    records: [
-      {
-        id: 'rec-contact',
-        kind: 'contact-item',
-        targetSectorRole: 'sidebar',
-        fields: {
-          phone: personalInfo.phone || '',
-          email: personalInfo.email || '',
-          address: personalInfo.address || '',
-          cityProvince: personalInfo.cityProvince || '',
-          facebook: personalInfo.facebook || ''
+  if (cvData?.sectionVisibility?.contacto !== false) {
+    sections.push({
+      id: 'contacto',
+      titleText: getSectionLabel('contacto'),
+      records: [
+        {
+          id: 'rec-contact',
+          kind: 'contact-item',
+          targetSectorRole: 'sidebar',
+          fields: {
+            phone: personalInfo.phone || '',
+            email: personalInfo.email || '',
+            address: personalInfo.address || '',
+            cityProvince: personalInfo.cityProvince || '',
+            facebook: personalInfo.facebook || ''
+          }
         }
-      }
-    ]
-  });
+      ]
+    });
+  }
 
   // Datos Personales (Sidebar - Filtrados dinámicamente según hiddenPersonalFields del Formato Activo)
   const personalDetailsFields = {
@@ -69,7 +71,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   };
 
   const hasPersonalDetails = Object.values(personalDetailsFields).some((val) => !!val);
-  if (hasPersonalDetails) {
+  if (cvData?.sectionVisibility?.['datos-personales'] !== false && hasPersonalDetails) {
     sections.push({
       id: 'datos-personales',
       titleText: getSectionLabel('datos-personales'),
@@ -86,7 +88,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
 
   // Frase / Lema Personal / Cita (Solo si existe un texto de cita explícito cvData.frase)
   // NOTA: personalInfo.quote es el Titular Profesional que se ubica nativamente debajo del nombre en el Header.
-  if (cvData.frase && typeof cvData.frase === 'string' && cvData.frase.trim().length > 0) {
+  if (cvData?.sectionVisibility?.frase !== false && cvData?.frase && typeof cvData.frase === 'string' && cvData.frase.trim().length > 0) {
     sections.push({
       id: 'frase',
       titleText: '',

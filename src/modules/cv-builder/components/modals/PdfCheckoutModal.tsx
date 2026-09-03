@@ -8,6 +8,7 @@ import { Modal } from '../../../../shared/core/ui/Modal';
 
 import { isValidEmail } from '../../../../shared/core/utils/validationEngine';
 import { isProOrEnterprise as checkProOrEnterprise } from '../../../../shared/core/entitlements/useEntitlements';
+import { usePdfExportGate } from '../../../../shared/core/entitlements/usePdfExportGate';
 import { withErrorHandling } from '../../../../shared/core/utils/errorHandler';
 
 import { elevationSystem, radius } from '../../../../shared/core/uiDesignSystem';
@@ -24,7 +25,8 @@ export default function PdfCheckoutModal({
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const isProOrEnterprise = checkProOrEnterprise(currentProfile?.plan);
+  const { credits, unlimitedExports, refreshCredits } = usePdfExportGate();
+  const isProOrEnterprise = checkProOrEnterprise(currentProfile?.plan) || unlimitedExports;
 
   const handleMercadoPagoCheckout = async () => {
     if (!email || !isValidEmail(email)) {
@@ -85,6 +87,7 @@ export default function PdfCheckoutModal({
       );
       setIsProcessing(false);
       if (res.success && res.data?.ok && res.data.data?.success) {
+        refreshCredits();
         onConfirm();
         return;
       }
@@ -119,7 +122,7 @@ export default function PdfCheckoutModal({
               className={`px-4 py-2 bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-accent-on-base)] font-black text-xs rounded-[${radius.card}] ${elevationSystem.raised} transition flex items-center gap-2 cursor-pointer`}
             >
               <Check className="w-4 h-4" />
-              <span>{isProOrEnterprise ? 'Exportar PDF A4 Gratis (Plan Pro Activo)' : 'Tengo Créditos / Confirmar Exportación'}</span>
+              <span>{isProOrEnterprise ? 'Exportar PDF A4 Gratis (Plan Pro Activo)' : `Confirmar Exportación (Créditos: ${credits})`}</span>
             </button>
           )}
         </div>
@@ -167,7 +170,7 @@ export default function PdfCheckoutModal({
               <span className="font-extrabold text-[var(--color-accent-purple-text)]">{currentProfile.email}</span>
             </div>
             <span className={`px-2.5 py-1 rounded-[${radius.control}] bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-text)] text-[10px] font-black uppercase`}>
-              Plan {currentProfile.plan || 'Free'}
+              Plan {currentProfile.plan || 'Free'} {unlimitedExports ? '(Ilimitado)' : `(${credits} Créditos)`}
             </span>
           </div>
         )}
@@ -182,10 +185,10 @@ export default function PdfCheckoutModal({
           <button
             onClick={handleMercadoPagoCheckout}
             disabled={isProcessing}
-            className={`w-full p-3.5 bg-[image:var(--gradient-gold)] hover:opacity-95 text-[var(--color-accent-on-base)] font-black text-xs rounded-[${radius.modal}] ${elevationSystem.floating} transition flex items-center justify-between cursor-pointer border border-[var(--color-status-warning-base)]/50`}
+            className={`w-full p-3.5 bg-[var(--color-status-warning-muted)] hover:opacity-90 border border-[var(--color-status-warning-base)] text-[var(--color-status-warning-text)] font-black text-xs rounded-[${radius.modal}] ${elevationSystem.raised} transition flex items-center justify-between cursor-pointer`}
           >
             <div className="flex items-center gap-2.5">
-              <CreditCard className="w-5 h-5 text-[var(--color-accent-on-base)]" />
+              <CreditCard className="w-5 h-5 text-[var(--color-status-warning-text)]" />
               <div className="text-left">
                 <p className="leading-tight">Pagar 1 Exportación PDF A4 ($1.50 USD)</p>
                 <p className="text-[10px] opacity-80 font-bold">Mercado Pago, Tarjeta de Crédito / Débito, Transferencia</p>

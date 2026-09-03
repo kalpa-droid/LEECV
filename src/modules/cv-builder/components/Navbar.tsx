@@ -17,6 +17,7 @@ import {
 import { elevationSystem, radius, UI_THEME_META } from '../../../shared/core/uiDesignSystem';
 import { ZoomControls } from '../../../shared/core/ui/ZoomControls';
 import { UndoRedoControls } from '../../../shared/core/ui/UndoRedoControls';
+import { useEntitlements } from '../../../shared/core/entitlements/useEntitlements';
 
 export interface NavbarProps {
   currentCvData: any;
@@ -67,6 +68,7 @@ export default function Navbar({
 }: NavbarProps) {
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const { plan } = useEntitlements();
 
   const actionMenuRef = useRef<HTMLDivElement>(null);
   const accountMenuRef = useRef<HTMLDivElement>(null);
@@ -256,6 +258,15 @@ export default function Navbar({
             {isAccountMenuOpen && (
               <div className={`absolute right-0 mt-2 w-56 rounded-[${radius.modal}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.floating} p-1.5 z-50 space-y-1 animate-fadeIn`}>
                 
+                {/* Insignia del Plan Activo */}
+                <div className={`px-3 py-1.5 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] flex items-center justify-between`}>
+                  <span className="text-[10px] text-[var(--ui-text-secondary)] font-bold">Plan Activo:</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)]">
+                    {plan === 'enterprise' ? 'Enterprise (50GB)' : plan === 'pro' ? 'Plan Pro' : 'Plan Gratuito'}
+                  </span>
+                </div>
+
+                <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
                 {/* 1. Ingresar / Salir */}
                 {onAuthToggle && (
                   <button

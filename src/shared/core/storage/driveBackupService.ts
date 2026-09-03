@@ -1,5 +1,6 @@
 import { splitCvDataForDrive } from './driveDocumentPackager';
 import { uploadToGoogleDrive, addFolderAsParent, getOrCreateCvFolderInDrive } from './googleDriveBackend';
+import { uploadBackupAttachment } from './backupProvider';
 import { idbStorage } from './storageIndexedDB';
 
 const DRIVE_GLOBAL_HASH_KEY = 'drive_asset_hashes_global';
@@ -14,13 +15,11 @@ export interface DriveBackupResult {
 }
 
 /**
- * NÚCLEO — RESPALDO INCREMENTAL GLOBAL Y DEDUPLICADO EN GOOGLE DRIVE (driveBackupService.ts)
+ * NÚCLEO — RESPALDO INCREMENTAL GLOBAL Y DEDUPLICADO EN GOOGLE DRIVE Y LEECV CLOUD (driveBackupService.ts)
  * 
- * Sube datos.json y binarios a Google Drive en subcarpetas dedicadas. Reutiliza imágenes
- * ya existentes entre distintas versiones del CV mediante un índice global de hashes
- * y vinculación multi-parent (addParents).
+ * Sube datos.json y binarios a Google Drive o LEECV Cloud (Enterprise 50GB) según el plan activo.
  */
-export async function backupCvToGoogleDrive(cvData: any): Promise<DriveBackupResult> {
+export async function backupCvToGoogleDrive(cvData: any, userPlan: string = 'pro'): Promise<DriveBackupResult> {
   if (!cvData || !cvData.id) {
     return { success: false, driveSyncState: 'pending', error: 'CVData o ID inválido' };
   }
@@ -80,20 +79,21 @@ export async function backupCvToGoogleDrive(cvData: any): Promise<DriveBackupRes
         continue;
       }
 
-      const uploadRes = await uploadToGoogleDrive(asset.blob, `${cvId}_${asset.filename.replace('/', '_')}`, driveFolderId);
-      if (uploadRes.success && uploadRes.fileId) {
+      const uploadRes = await uploadBackupAttachment(asset.blob, `${cvId}_${asset.filename.replace('/', '_')}`, userPlan);
+      const assetId = (uploadRes as any)?.fileId || (uploadRes as any)?.path;
+      if (uploadRes.success && assetId) {
         uploadedFiles.push(asset.filename);
         updatedPerCvHashes[asset.filename] = asset.hash;
-        updatedGlobalHashes[asset.hash] = uploadRes.fileId;
+        updatedGlobalHashes[asset.hash] = assetId;
       } else {
-        console.warn(`Advertencia al subir binario a Drive [${asset.filename}]:`, uploadRes.error);
+        console.warn(`Advertencia al subir binario a almacenamiento [${asset.filename}]:`, uploadRes.error);
       }
     }
 
     // 4. Subir datos.json (siempre se actualiza al ser liviano)
     const jsonString = JSON.stringify(cleanCvData, null, 2);
     const jsonBlob = new Blob([jsonString], { type: 'application/json' });
-    const jsonUploadRes = await uploadToGoogleDrive(jsonBlob, `${cvId}_datos.json`, driveFolderId);
+    const jsonUploadRes = await uploadBackupAttachment(jsonBlob, `${cvId}_datos.json`, userPlan);
 
     if (!jsonUploadRes.success) {
       return {

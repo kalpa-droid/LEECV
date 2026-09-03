@@ -11,7 +11,20 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
 
   if (!cvData) return null;
 
-  const isVisible = cvData.sectionVisibility?.personales !== false;
+  const isVisible = cvData.sectionVisibility?.contacto !== false && cvData.sectionVisibility?.['datos-personales'] !== false;
+
+  const togglePersonalGroup = () => {
+    const nextState = !isVisible;
+    setCvData((prev) => ({
+      ...prev,
+      sectionVisibility: {
+        ...(prev.sectionVisibility || {}),
+        contacto: nextState,
+        'datos-personales': nextState,
+        frase: nextState
+      }
+    }));
+  };
 
   return (
     <div className="space-y-4">
@@ -26,7 +39,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
         </span>
         <button
           type="button"
-          onClick={() => toggleSectionVisibility('personales')}
+          onClick={togglePersonalGroup}
           className={`px-3 py-1 rounded-full text-[11px] font-medium transition flex items-center gap-1.5 ${elevationSystem.raised} cursor-pointer ${
             isVisible
               ? 'bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] hover:bg-[var(--color-secondary-hover)]'
