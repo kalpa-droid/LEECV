@@ -1,9 +1,9 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-key';
 
-if (!supabaseUrl || !supabaseServiceRoleKey) {
+if (!process.env.SUPABASE_URL && !process.env.VITE_SUPABASE_URL) {
   console.warn('⚠️ [API WARNING] Faltan variables de entorno SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY en el servidor.');
 }
 

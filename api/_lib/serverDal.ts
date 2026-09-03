@@ -205,5 +205,18 @@ export const serverDal = {
 
       if (error) throw new Error(`Error actualizando reclamo manual: ${error.message}`);
     }
+  },
+
+  publishedCvs: {
+    async getBySlugOrId(slug: string): Promise<any | null> {
+      const { data, error } = await supabaseAdmin
+        .from('published_cvs')
+        .select('*')
+        .or(`slug.eq.${slug},id.eq.${slug}`)
+        .maybeSingle();
+
+      if (error || !data) return null;
+      return data;
+    }
   }
 };

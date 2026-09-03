@@ -53,6 +53,16 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
           }
 
           setCvData(data);
+
+          // Actualización de título y metadatos en el navegador para usuarios reales (UX)
+          const name = data?.personalInfo?.fullName || 'Profesional';
+          const title = data?.personalInfo?.title || data?.personalInfo?.profession || 'Currículum Vitae';
+          document.title = `Currículum de ${name} — ${title} | LEECV`;
+
+          const metaDesc = document.querySelector('meta[name="description"]');
+          if (metaDesc && data?.summary?.text) {
+            metaDesc.setAttribute('content', data.summary.text.slice(0, 160));
+          }
         },
         {
           context: 'Consulta de CV Público',
@@ -88,7 +98,7 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
         </p>
         <button
           onClick={() => { navigation.goTo('/'); }}
-          className={`px-5 py-2.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white font-black text-xs rounded-[${radius.card}] ${elevationSystem.floating} transition`}
+          className={`px-5 py-2.5 bg-[var(--color-secondary-base)] hover:opacity-90 text-[var(--color-secondary-on-base)] font-black text-xs rounded-[${radius.card}] ${elevationSystem.floating} transition`}
         >
           🏠 Ir a la Página Principal de LEECV
         </button>
@@ -115,7 +125,7 @@ export function PublicCVView({ slugInput }: PublicCVViewProps) {
 
         <button
           onClick={() => { navigation.goTo('/'); }}
-          className={`px-3.5 py-1.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-white text-xs font-black rounded-[${radius.card}] transition cursor-pointer ${elevationSystem.raised}`}
+          className={`px-3.5 py-1.5 bg-[var(--color-secondary-base)] hover:opacity-90 text-[var(--color-secondary-on-base)] text-xs font-black rounded-[${radius.card}] transition cursor-pointer ${elevationSystem.raised}`}
         >
           ✏️ Crear mi propio CV
         </button>

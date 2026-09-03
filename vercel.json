@@ -50,6 +50,17 @@
   ],
   "rewrites": [
     {
+      "source": "/(c|cv|public)/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(WhatsApp|facebookexternalhit|LinkedInBot|Twitterbot|Slackbot|TelegramBot|Discordbot).*"
+        }
+      ],
+      "destination": "/api/cv-meta?slug=:slug"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
