@@ -1668,7 +1668,7 @@ export default function EditorPanel({
 
             {/* Armonía Cromática */}
             <PanelSection icon={<Palette className="w-4 h-4" />} title="Paleta de color armónica">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-1.5">
                 {Object.entries(PRESET_COLORS).map(([key, colorPreset]) => {
                   const activePresetObj = resolveActivePreset(cvData);
                   const activeColorKey = cvData?.colorPresetId || activePresetObj.colorPresetId || 'clasico';
@@ -1680,20 +1680,20 @@ export default function EditorPanel({
                         triggerPresetTransition(colorPreset.name, 'color');
                         setCvData((prev: any) => applyPresetLevel(prev, 'override', { colorPresetId: key }));
                       }}
-                      className={`p-2.5 rounded-[${radius.card}] border text-left transition flex flex-col justify-between cursor-pointer ${
+                      className={`p-2 rounded-[${radius.card}] border text-left transition flex flex-col justify-between cursor-pointer ${
                         isSelected
                           ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
                           : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]'
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[11px] font-bold text-[var(--color-neutral-text-primary)] truncate pr-1">{colorPreset.name}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-[var(--ui-text-primary)] flex-shrink-0" />}
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] font-bold text-[var(--color-neutral-text-primary)] truncate pr-0.5" title={colorPreset.name}>{colorPreset.name}</span>
+                        {isSelected && <Check className="w-3 h-3 text-[var(--ui-text-primary)] flex-shrink-0" />}
                       </div>
-                      <div className="flex gap-1.5 items-center">
-                        <div className={`w-4 h-4 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: colorPreset.palette.primary }} />
-                        <div className={`w-4 h-4 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: colorPreset.palette.accent }} />
-                        <div className={`w-4 h-4 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: colorPreset.palette.secondary }} />
+                      <div className="flex gap-1 items-center">
+                        <div className={`w-3.5 h-3.5 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: colorPreset.palette.primary }} />
+                        <div className={`w-3.5 h-3.5 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: colorPreset.palette.accent }} />
+                        <div className={`w-3.5 h-3.5 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: colorPreset.palette.secondary }} />
                       </div>
                     </button>
                   );
