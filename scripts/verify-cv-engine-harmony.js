@@ -610,7 +610,7 @@ if (fs.existsSync(fixedObjectsPath)) {
 const sectionRegPath = path.join(ROOT, 'src/shared/core/sectionRegistry.ts');
 if (fs.existsSync(sectionRegPath)) {
   const regContent = fs.readFileSync(sectionRegPath, 'utf-8');
-  const hasCompetenciasTabIdFix = /id:\s*'competencias',\s*label:\s*'Competencias Clave',\s*tabId:\s*'competencias'/.test(regContent);
+  const hasCompetenciasTabIdFix = /id:\s*'competencias',\s*label:\s*'Competencias Clave[^']*',\s*tabId:\s*'competencias'/.test(regContent);
   const matches18Sections = regContent.includes("'resumen'") && regContent.includes("'habilidades'") && regContent.includes("'idiomas'") && regContent.includes("'proyectos'") && regContent.includes("'publicaciones'") && regContent.includes("'referencias'");
 
   check(
