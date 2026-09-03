@@ -49,29 +49,55 @@ export function CVProvider({ children }: { children: ReactNode }) {
 
   const [isSaving, setIsSaving] = useState(false);
 
-  // Undo / Redo History Stack (up to 30 snapshots)
-  const historyRef = useRef<CVData[]>([cvData]);
-  const historyIndexRef = useRef(0);
+  // Per-document Undo / Redo History Map (up to 30 snapshots per document ID)
+  const historyMapRef = useRef<Map<string, { stack: CVData[]; index: number }>>(new Map());
   const [, setHistoryState] = useState(0); // Trigger re-render for UI buttons
+
+  const getDocId = useCallback((data: CVData) => data?.id || 'default_cv_doc', []);
 
   const setCvData = useCallback((action: CVData | ((prev: CVData) => CVData)) => {
     setCvDataState((prev) => {
       const nextData = typeof action === 'function' ? action(prev) : action;
       if (!nextData) return prev;
 
-      // Append to history if data changed
-      const currentHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
-      if (JSON.stringify(currentHistory[currentHistory.length - 1]) !== JSON.stringify(nextData)) {
-        currentHistory.push(nextData);
-        if (currentHistory.length > 30) currentHistory.shift();
-        historyRef.current = currentHistory;
-        historyIndexRef.current = currentHistory.length - 1;
+      const prevId = getDocId(prev);
+      const nextId = getDocId(nextData);
+
+      // Save previous document's history state if not existing
+      if (!historyMapRef.current.has(prevId)) {
+        historyMapRef.current.set(prevId, { stack: [prev], index: 0 });
+      }
+
+      // Document switch / load detection: switch to next document's history stack
+      if (prevId !== nextId) {
+        if (!historyMapRef.current.has(nextId)) {
+          historyMapRef.current.set(nextId, { stack: [nextData], index: 0 });
+        }
+        setHistoryState(n => n + 1);
+        return nextData;
+      }
+
+      // Same document: append to history if content changed
+      let entry = historyMapRef.current.get(nextId);
+      if (!entry) {
+        entry = { stack: [nextData], index: 0 };
+        historyMapRef.current.set(nextId, entry);
+      }
+
+      const currentStack = entry.stack.slice(0, entry.index + 1);
+      const lastItem = currentStack[currentStack.length - 1];
+
+      if (JSON.stringify(lastItem) !== JSON.stringify(nextData)) {
+        currentStack.push(nextData);
+        if (currentStack.length > 30) currentStack.shift();
+        entry.stack = currentStack;
+        entry.index = currentStack.length - 1;
         setHistoryState(n => n + 1);
       }
 
       return nextData;
     });
-  }, []);
+  }, [getDocId]);
 
   // Save to localStorage automatically on every change (Debounced 500ms)
   useEffect(() => {
@@ -88,25 +114,30 @@ export function CVProvider({ children }: { children: ReactNode }) {
   }, [cvData]);
 
   const undo = useCallback(() => {
-    if (historyIndexRef.current > 0) {
-      historyIndexRef.current -= 1;
-      const prev = historyRef.current[historyIndexRef.current];
+    const activeId = getDocId(cvData);
+    const entry = historyMapRef.current.get(activeId);
+    if (entry && entry.index > 0) {
+      entry.index -= 1;
+      const prev = entry.stack[entry.index];
       setCvDataState(prev);
       setHistoryState(n => n + 1);
     }
-  }, []);
+  }, [cvData, getDocId]);
 
   const redo = useCallback(() => {
-    if (historyIndexRef.current < historyRef.current.length - 1) {
-      historyIndexRef.current += 1;
-      const next = historyRef.current[historyIndexRef.current];
+    const activeId = getDocId(cvData);
+    const entry = historyMapRef.current.get(activeId);
+    if (entry && entry.index < entry.stack.length - 1) {
+      entry.index += 1;
+      const next = entry.stack[entry.index];
       setCvDataState(next);
       setHistoryState(n => n + 1);
     }
-  }, []);
+  }, [cvData, getDocId]);
 
-  const canUndo = historyIndexRef.current > 0;
-  const canRedo = historyIndexRef.current < historyRef.current.length - 1;
+  const activeEntry = historyMapRef.current.get(getDocId(cvData));
+  const canUndo = activeEntry ? activeEntry.index > 0 : false;
+  const canRedo = activeEntry ? activeEntry.index < activeEntry.stack.length - 1 : false;
 
   // Atajos de teclado globales para Deshacer (Ctrl+Z / Cmd+Z) y Rehacer (Ctrl+Y / Cmd+Y / Cmd+Shift+Z)
   useEffect(() => {
@@ -208,6 +239,8 @@ export function CVProvider({ children }: { children: ReactNode }) {
 
   const resetToBlankCV = () => {
     const blank = sanitizeCvData(blankCVTemplate);
+    const blankId = getDocId(blank);
+    historyMapRef.current.set(blankId, { stack: [blank], index: 0 });
     setCvData(blank);
     if (typeof window !== 'undefined') {
       try {
@@ -220,6 +253,10 @@ export function CVProvider({ children }: { children: ReactNode }) {
 
   const loadCVData = (newCVData: CVData) => {
     if (newCVData && typeof newCVData === 'object') {
+      const docId = getDocId(newCVData);
+      if (!historyMapRef.current.has(docId)) {
+        historyMapRef.current.set(docId, { stack: [newCVData], index: 0 });
+      }
       setCvData(newCVData);
     }
   };
