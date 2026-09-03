@@ -217,21 +217,12 @@ export function CVProvider({ children }: { children: ReactNode }) {
 
   const toggleSectionVisibility = (sectionKey: string) => {
     setCvData((prev) => {
-      const order = prev?.layout?.sectionOrder || [];
-      const isCurrentlyVisible = order.includes(sectionKey);
-      
-      let nextOrder: string[];
-      if (isCurrentlyVisible) {
-        nextOrder = order.filter((k: string) => k !== sectionKey);
-      } else {
-        nextOrder = [...order, sectionKey];
-      }
-
+      const currentVis = prev?.sectionVisibility?.[sectionKey] !== false;
       return {
         ...prev,
-        layout: {
-          ...prev.layout,
-          sectionOrder: nextOrder
+        sectionVisibility: {
+          ...(prev.sectionVisibility || {}),
+          [sectionKey]: !currentVis
         }
       };
     });
