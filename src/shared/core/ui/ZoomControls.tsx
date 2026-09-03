@@ -1,5 +1,5 @@
 import React from 'react';
-import { ZoomIn, ZoomOut, Smartphone } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import { UI_THEME_META } from '../uiDesignSystem';
 
 import { elevationSystem, radius } from '../uiDesignSystem';
@@ -40,7 +40,7 @@ export function ZoomControls({
         <ZoomOut className={isMobile ? "w-3 h-3" : "w-3.5 h-3.5"} />
       </button>
 
-      <span className="px-2 text-[var(--color-accent-amber-bright)] text-xs font-black min-w-10 text-center">
+      <span className="px-1 text-[var(--color-accent-amber-bright)] text-xs font-black min-w-9 text-center">
         {Math.round(zoomLevel * 100)}%
       </span>
 
@@ -56,11 +56,10 @@ export function ZoomControls({
       <button
         type="button"
         onClick={triggerAutoFit}
-        className={`px-2 py-0.5 rounded-[${radius.control}] bg-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-hover)] text-white text-[10px] font-black transition flex items-center gap-1 ${elevationSystem.raised} cursor-pointer ml-1 active:scale-95`}
-        title="Auto-encajar el diseño al tamaño de pantalla"
+        className={`p-1 rounded-[${radius.control}] bg-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-hover)] text-white transition flex items-center justify-center ${elevationSystem.raised} cursor-pointer ml-0.5 active:scale-95`}
+        title="Auto-encajar hoja a pantalla"
       >
-        <Smartphone className="w-3 h-3" />
-        <span>Encajar</span>
+        <Maximize2 className={isMobile ? "w-3 h-3" : "w-3.5 h-3.5"} />
       </button>
 
       {themeMeta && ThemeIcon && onCycleTheme && (

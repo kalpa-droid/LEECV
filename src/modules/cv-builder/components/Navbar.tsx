@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { elevationSystem, radius, UI_THEME_META } from '../../../shared/core/uiDesignSystem';
 import { ZoomControls } from '../../../shared/core/ui/ZoomControls';
+import { UndoRedoControls } from '../../../shared/core/ui/UndoRedoControls';
 
 export interface NavbarProps {
   currentCvData: any;
@@ -123,13 +124,14 @@ export default function Navbar({
 
           <div className="w-px h-5 bg-[var(--ui-border)] mx-0.5" />
 
-          {/* Controles de Zoom (Visibles tanto en Escritorio como en Celular) */}
-          <div className="shrink-0">
+          {/* Controles de Zoom y Deshacer/Rehacer (Visibles en Escritorio y Celular) */}
+          <div className="shrink-0 flex items-center gap-1.5">
             <ZoomControls
               zoomLevel={zoomLevel}
               setZoomLevel={setZoomLevel}
               triggerAutoFit={triggerAutoFit}
             />
+            <UndoRedoControls />
           </div>
         </div>
 

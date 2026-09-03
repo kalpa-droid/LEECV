@@ -97,7 +97,7 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
                 Aplicar Formato: {formatName}
               </h3>
               <p style={{ margin: 0, fontSize: '12.5px', color: colorSystem.neutral.textSecondary }}>
-                Selecciona la modalidad de aplicación deseada
+                Aplica tu modalidad deseada, puedes volver y aplicar otra plantilla.
               </p>
             </div>
           </div>
