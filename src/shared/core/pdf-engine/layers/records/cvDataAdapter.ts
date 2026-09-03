@@ -152,22 +152,20 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   }
 
   // Competencias Clave (Sidebar)
-  const skillList = Array.isArray(skills) && skills.length > 0
-    ? skills
-    : ["Pedagogía Dialógica", "Comunidades de Aprendizaje", "Alfabetización Digital", "Educación Inclusiva"];
-
-  sections.push({
-    id: 'competencias',
-    titleText: getSectionLabel('competencias'),
-    records: skillList.map((sk: any, idx: number) => ({
-      id: `rec-skill-${idx}`,
-      kind: 'skill',
-      targetSectorRole: 'sidebar',
-      fields: {
-        name: typeof sk === 'string' ? sk : sk.name || sk.title || ''
-      }
-    }))
-  });
+  if (Array.isArray(skills) && skills.length > 0) {
+    sections.push({
+      id: 'competencias',
+      titleText: getSectionLabel('competencias'),
+      records: skills.map((sk: any, idx: number) => ({
+        id: `rec-skill-${idx}`,
+        kind: 'skill',
+        targetSectorRole: 'sidebar',
+        fields: {
+          name: typeof sk === 'string' ? sk : sk.name || sk.title || ''
+        }
+      }))
+    });
+  }
 
   // Idiomas & Nivel (Sidebar)
   if (Array.isArray(cvData.languages) && cvData.languages.length > 0) {
