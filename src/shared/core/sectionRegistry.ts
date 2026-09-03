@@ -48,7 +48,7 @@ export const SECTION_CATALOG: SectionCatalogEntry[] = [
   { id: 'formacion', label: 'Formación Académica', tabId: 'formacion', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['degree'], assignableToColumns: true, shortLabel: 'Formación', isUniversal: true },
   { id: 'profesion', label: 'Títulos Profesionales', tabId: 'profesion', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['title'], assignableToColumns: true, shortLabel: 'Profesión', isUniversal: true },
   { id: 'habilidades', label: 'Habilidades Técnicas', tabId: 'habilidades', dataType: 'record_list', defaultSectorRole: 'sidebar', assignableToColumns: true, shortLabel: 'Habilidades', isUniversal: true },
-  { id: 'competencias', label: 'Competencias Clave', tabId: 'competencias', dataType: 'record_list', defaultSectorRole: 'sidebar', assignableToColumns: true, shortLabel: 'Competencias', isUniversal: true },
+  { id: 'competencias', label: 'Competencias Clave (Soft Skills)', tabId: 'competencias', dataType: 'record_list', defaultSectorRole: 'sidebar', assignableToColumns: true, shortLabel: 'Competencias', isUniversal: true },
   { id: 'idiomas', label: 'Idiomas', tabId: 'idiomas', dataType: 'record_list', defaultSectorRole: 'sidebar', assignableToColumns: true, shortLabel: 'Idiomas', isUniversal: true },
   { id: 'proyectos', label: 'Proyectos', tabId: 'proyectos', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['title'], assignableToColumns: true, shortLabel: 'Proyectos', isUniversal: true },
   { id: 'publicaciones', label: 'Publicaciones', tabId: 'publicaciones', dataType: 'record_list', defaultSectorRole: 'main', assignableToColumns: true, shortLabel: 'Publicaciones', isUniversal: true },

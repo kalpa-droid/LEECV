@@ -39,10 +39,41 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
 
       {isVisible && (
         <div className="space-y-4">
-          {/* 1. Contacto & Redes */}
+          {/* 1. Titular Profesional & Título Honorífico */}
           <PanelSection 
             icon={<User className="w-4 h-4 text-[var(--ui-secondary)]" />} 
-            title="Contacto & Redes"
+            title="Titular Profesional & Título Honorífico"
+          >
+            <div className="space-y-3 pt-1">
+              <Field
+                id="titlePrefix"
+                label="Abreviaturas / Título Honorífico (ej: Lic. / Prof. / Dr. / MP)"
+                value={cvData.personalInfo?.titlePrefix || ''}
+                onChange={(e: any) => {
+                  const prefix = e.target.value;
+                  const given = cvData.personalInfo?.givenNames || '';
+                  const sur = cvData.personalInfo?.surname || '';
+                  const computed = `${prefix ? prefix + ' ' : ''}${given} ${sur}`.trim();
+                  updatePersonalInfo('titlePrefix', prefix);
+                  updatePersonalInfo('fullName', computed);
+                }}
+                placeholder="Ej: Lic. / Prof. / Dr. / Ing. / MP 1402"
+              />
+
+              <Field
+                id="quote"
+                label="Titular Profesional (una línea, debajo de tu nombre)"
+                value={cvData.personalInfo?.quote || ''}
+                onChange={(e: any) => updatePersonalInfo('quote', e.target.value)}
+                placeholder="Ej: Profesora de Lengua y Literatura | Referente en Innovación Educativa"
+              />
+            </div>
+          </PanelSection>
+
+          {/* 2. Datos Personales & Contacto (Unificado) */}
+          <PanelSection 
+            icon={<User className="w-4 h-4 text-[var(--ui-secondary)]" />} 
+            title="Datos Personales & Contacto"
           >
             <div className="space-y-3 pt-1">
               {/* Tarjeta Foto de Perfil */}
@@ -77,45 +108,6 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
                 </div>
               </div>
 
-              <Field
-                id="phone"
-                label="Teléfono Celular / WhatsApp"
-                value={cvData.personalInfo?.phone || ''}
-                onChange={(e: any) => updatePersonalInfo('phone', e.target.value)}
-                placeholder="Ej: 387-155121515"
-              />
-
-
-
-              <Field
-                id="address"
-                label="Domicilio y Barrio"
-                value={cvData.personalInfo?.address || ''}
-                onChange={(e: any) => updatePersonalInfo('address', e.target.value)}
-                placeholder="Ej: Manzana 751A Casa 11 - Ciudad Valdivia"
-              />
-
-              <Field
-                id="cityProvince"
-                label="Ciudad / Provincia / País"
-                value={cvData.personalInfo?.cityProvince || ''}
-                onChange={(e: any) => updatePersonalInfo('cityProvince', e.target.value)}
-                placeholder="Ej: Salta, Salta, Argentina"
-              />
-
-              {/* Ajuste Manual: Contacto */}
-              <div className="pt-2 border-t border-[var(--color-neutral-border)]">
-                <SectionManualAdjustment sectionId="contacto" cvData={cvData} setCvData={setCvData} />
-              </div>
-            </div>
-          </PanelSection>
-
-          {/* 2. Datos Personales */}
-          <PanelSection 
-            icon={<User className="w-4 h-4 text-[var(--ui-secondary)]" />} 
-            title="Datos Personales"
-          >
-            <div className="space-y-3 pt-1">
               <div className="grid grid-cols-2 gap-3">
                 <Field
                   id="surname"
@@ -146,6 +138,30 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
                   placeholder="Ej: Mónica Daniela"
                 />
               </div>
+
+              <Field
+                id="phone"
+                label="Teléfono Celular / WhatsApp"
+                value={cvData.personalInfo?.phone || ''}
+                onChange={(e: any) => updatePersonalInfo('phone', e.target.value)}
+                placeholder="Ej: 387-155121515"
+              />
+
+              <Field
+                id="address"
+                label="Domicilio y Barrio"
+                value={cvData.personalInfo?.address || ''}
+                onChange={(e: any) => updatePersonalInfo('address', e.target.value)}
+                placeholder="Ej: Manzana 751A Casa 11 - Ciudad Valdivia"
+              />
+
+              <Field
+                id="cityProvince"
+                label="Ciudad / Provincia / País"
+                value={cvData.personalInfo?.cityProvince || ''}
+                onChange={(e: any) => updatePersonalInfo('cityProvince', e.target.value)}
+                placeholder="Ej: Salta, Salta, Argentina"
+              />
 
               <div className="grid grid-cols-2 gap-3">
                 <Field
@@ -206,42 +222,11 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
                 />
               </div>
 
-              {/* Ajuste Manual: Datos Personales */}
-              <div className="pt-2 border-t border-[var(--color-neutral-border)]">
+              {/* Ajuste Manual: Contacto y Datos Personales */}
+              <div className="pt-2 border-t border-[var(--color-neutral-border)] space-y-2">
+                <SectionManualAdjustment sectionId="contacto" cvData={cvData} setCvData={setCvData} />
                 <SectionManualAdjustment sectionId="datos-personales" cvData={cvData} setCvData={setCvData} />
               </div>
-            </div>
-          </PanelSection>
-
-          {/* 3. Titular Profesional & Frase */}
-          <PanelSection 
-            icon={<User className="w-4 h-4 text-[var(--ui-secondary)]" />} 
-            title="Titular Profesional & Título Honorífico"
-          >
-            <div className="space-y-3 pt-1">
-              <Field
-                id="titlePrefix"
-                label="Abreviaturas / Título Honorífico (ej: Lic. / Prof. / Dr. / MP)"
-                value={cvData.personalInfo?.titlePrefix || ''}
-                onChange={(e: any) => {
-                  const prefix = e.target.value;
-                  const given = cvData.personalInfo?.givenNames || '';
-                  const sur = cvData.personalInfo?.surname || '';
-                  const computed = `${prefix ? prefix + ' ' : ''}${given} ${sur}`.trim();
-                  updatePersonalInfo('titlePrefix', prefix);
-                  updatePersonalInfo('fullName', computed);
-                }}
-                placeholder="Ej: Lic. / Prof. / Dr. / Ing. / MP 1402"
-              />
-
-              <Field
-                id="quote"
-                label="Titular Profesional (una línea, debajo de tu nombre)"
-                value={cvData.personalInfo?.quote || ''}
-                onChange={(e: any) => updatePersonalInfo('quote', e.target.value)}
-                placeholder="Ej: Profesora de Lengua y Literatura | Referente en Innovación Educativa"
-              />
-
             </div>
           </PanelSection>
         </div>
