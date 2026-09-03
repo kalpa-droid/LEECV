@@ -1,21 +1,24 @@
 {
-  "short_name": "CV Premium",
-  "name": "CVPREMIUM - Generador y Diseñador de CV Editorial A4",
+  "short_name": "LEECV",
+  "name": "LEECV — Creador de Currículum Vitae Profesional en PDF A4",
+  "description": "Crea tu Currículum Vitae profesional en PDF A4 nativo, editable e imprimible con plantillas ejecutivas y compatibilidad ATS.",
   "icons": [
     {
-      "src": "pwa-192x192.png",
+      "src": "/pwa-192x192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
-      "src": "pwa-512x512.png",
+      "src": "/pwa-512x512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
   "start_url": "/",
-  "background_color": "#ab5ba1",
-  "theme_color": "#ab5ba1",
+  "background_color": "#0F172A",
+  "theme_color": "#6353fc",
   "display": "standalone",
   "orientation": "portrait"
 }

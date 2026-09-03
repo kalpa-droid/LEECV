@@ -45,6 +45,7 @@ import ShareAppModal from '../modules/cv-builder/components/modals/ShareAppModal
 import { loadCVById, saveCV } from '../shared/core/storage/documentStorageService';
 import { runWithSafeSave } from '../shared/core/storage/safeNavigationEngine';
 import { signInWithGoogle, logout } from '../modules/auth/authService';
+import { PwaInstallBanner } from '../shared/core/ui/PwaInstallBanner';
 
 function AppContent() {
   const { cvData, setCvData, resetToBlankCV, saveCV, saveCVAs } = useCVContext();
@@ -775,6 +776,9 @@ function AppContent() {
           </div>
         </div>
       </footer>
+
+      {/* Banner de Instalación PWA con Persistencia */}
+      <PwaInstallBanner />
     </div>
   );
 }
