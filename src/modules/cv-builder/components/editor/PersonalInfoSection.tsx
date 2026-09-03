@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Camera, QrCode } from 'lucide-react';
+import { User, Camera } from 'lucide-react';
 import { useCVContext } from '../../../../context/CVContext';
 import { Field } from '../../../../shared/core/ui/Field';
 import { PanelSection } from './PanelSection';
@@ -102,37 +102,6 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
                 onChange={(e: any) => updatePersonalInfo('cityProvince', e.target.value)}
                 placeholder="Ej: Salta, Salta, Argentina"
               />
-
-              {/* Configuración del Código QR Smart */}
-              <div
-                className="p-3.5 rounded-[12px] border space-y-2"
-                style={{
-                  backgroundColor: colorSystem.secondary.muted,
-                  borderColor: colorSystem.neutral.border
-                }}
-              >
-                <label className={`${typeScale.fieldLabel} flex items-center justify-between`} style={{ color: colorSystem.neutral.textPrimary }}>
-                  <span className="flex items-center gap-1.5">
-                    <QrCode className="w-3.5 h-3.5" style={{ color: colorSystem.secondary.base }} /> Configuración del Código QR
-                  </span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-white border border-[var(--color-neutral-border-strong)]" style={{ color: colorSystem.secondary.text }}>
-                    Smart QR
-                  </span>
-                </label>
-                <select
-                  value={cvData.qrMode || 'vcard'}
-                  onChange={(e) => setCvData((prev: any) => ({ ...prev, qrMode: e.target.value }))}
-                  className={`w-full rounded-[10px] border px-3 py-2 text-[12px] text-[var(--color-neutral-text-primary)] bg-white outline-none cursor-pointer border-[var(--color-neutral-border)]`}
-                >
-                  <option value="vcard">📱 vCard: Guardar contacto en agenda del celular</option>
-                  <option value="public_link">🌐 Perfil Web: Abrir mi CV público en línea</option>
-                </select>
-                <p className={typeScale.helper} style={{ color: colorSystem.neutral.textSecondary }}>
-                  {cvData.qrMode === 'public_link'
-                    ? 'Al escanear el QR desde un celular, abrirá tu página web de CV público sin descargas.'
-                    : 'Al escanear el QR desde un celular, agregará tu contacto directamente a la agenda.'}
-                </p>
-              </div>
 
               {/* Ajuste Manual: Contacto */}
               <div className="pt-2 border-t border-[var(--color-neutral-border)]">
