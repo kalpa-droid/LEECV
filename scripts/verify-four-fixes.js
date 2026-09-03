@@ -19,16 +19,16 @@ const personalInfoContent = fs.readFileSync(personalInfoPath, 'utf-8');
 const appContent = fs.readFileSync(appPath, 'utf-8');
 const dockContent = fs.readFileSync(dockPath, 'utf-8');
 
-// Assert 1: PersonalInfoSection se dividió en 3 PanelSections con 1 solo manualAdjustment cada una
+// Assert 1: PersonalInfoSection dividida en PanelSections con ajustes manuales para contacto y datos-personales (frase anclada a header sin ajuste de columna)
 const contactoMatch = (personalInfoContent.match(/sectionId="contacto"/g) || []).length;
 const datosMatch = (personalInfoContent.match(/sectionId="datos-personales"/g) || []).length;
 const fraseMatch = (personalInfoContent.match(/sectionId="frase"/g) || []).length;
 
-if (contactoMatch === 1 && datosMatch === 1 && fraseMatch === 1) {
-  console.log('  ✓ Arreglo 1: PersonalInfoSection dividida en 3 PanelSections con exactamente 1 ajuste manual por sección OK.');
+if (contactoMatch === 1 && datosMatch === 1 && fraseMatch === 0) {
+  console.log('  ✓ Arreglo 1: PersonalInfoSection dividida en PanelSections con ajustes manuales para contacto y datos-personales OK.');
   passed++;
 } else {
-  console.error(`  ❌ Arreglo 1 falló: conteos de ajuste manual no únicos (contacto: ${contactoMatch}, datos-personales: ${datosMatch}, frase: ${fraseMatch})`);
+  console.error(`  ❌ Arreglo 1 falló: conteos de ajuste manual no esperados (contacto: ${contactoMatch}, datos-personales: ${datosMatch}, frase: ${fraseMatch})`);
   failed++;
 }
 
