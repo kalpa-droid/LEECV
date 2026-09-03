@@ -31,7 +31,7 @@ if (!hasSlotRender) {
 // 2. Parse sectionRegistry.ts to extract catalog section IDs
 const registryContent = fs.readFileSync(sectionRegistryPath, 'utf-8');
 const catalogMatches = [...registryContent.matchAll(/\{\s*id:\s*'([^']+)'/g)];
-const expectedSectionIds = catalogMatches.map(m => m[1]).filter(id => id !== 'frase');
+const expectedSectionIds = catalogMatches.map(m => m[1]).filter(id => id !== 'frase' && id !== 'contacto');
 
 // 3. Helper to parse AST and find JSX elements with VERIFIED manualAdjustment slot
 function extractJsxSectionBindings(filePath) {

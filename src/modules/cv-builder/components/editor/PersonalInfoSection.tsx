@@ -222,9 +222,8 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
                 />
               </div>
 
-              {/* Ajuste Manual: Contacto y Datos Personales */}
-              <div className="pt-2 border-t border-[var(--color-neutral-border)] space-y-2">
-                <SectionManualAdjustment sectionId="contacto" cvData={cvData} setCvData={setCvData} />
+              {/* Ajuste Manual: Datos Personales & Contacto */}
+              <div className="pt-2 border-t border-[var(--color-neutral-border)]">
                 <SectionManualAdjustment sectionId="datos-personales" cvData={cvData} setCvData={setCvData} />
               </div>
             </div>

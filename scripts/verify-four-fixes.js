@@ -19,16 +19,16 @@ const personalInfoContent = fs.readFileSync(personalInfoPath, 'utf-8');
 const appContent = fs.readFileSync(appPath, 'utf-8');
 const dockContent = fs.readFileSync(dockPath, 'utf-8');
 
-// Assert 1: PersonalInfoSection dividida en PanelSections con ajustes manuales para contacto y datos-personales (frase anclada a header sin ajuste de columna)
-const contactoMatch = (personalInfoContent.match(/sectionId="contacto"/g) || []).length;
+// Assert 1: PersonalInfoSection unificada con 1 solo control de ajuste manual para datos-personales (contacto y frase anclados)
 const datosMatch = (personalInfoContent.match(/sectionId="datos-personales"/g) || []).length;
+const contactoMatch = (personalInfoContent.match(/sectionId="contacto"/g) || []).length;
 const fraseMatch = (personalInfoContent.match(/sectionId="frase"/g) || []).length;
 
-if (contactoMatch === 1 && datosMatch === 1 && fraseMatch === 0) {
-  console.log('  ✓ Arreglo 1: PersonalInfoSection dividida en PanelSections con ajustes manuales para contacto y datos-personales OK.');
+if (datosMatch === 1 && contactoMatch === 0 && fraseMatch === 0) {
+  console.log('  ✓ Arreglo 1: PersonalInfoSection unificada con exactamente 1 ajuste manual para datos-personales OK.');
   passed++;
 } else {
-  console.error(`  ❌ Arreglo 1 falló: conteos de ajuste manual no esperados (contacto: ${contactoMatch}, datos-personales: ${datosMatch}, frase: ${fraseMatch})`);
+  console.error(`  ❌ Arreglo 1 falló: conteos de ajuste manual no esperados (datos-personales: ${datosMatch}, contacto: ${contactoMatch}, frase: ${fraseMatch})`);
   failed++;
 }
 

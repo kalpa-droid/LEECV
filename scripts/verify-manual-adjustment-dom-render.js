@@ -76,7 +76,7 @@ let failedChecks = 0;
 
 console.log(`── Evaluando Render DOM/JSX en 1 a 1 para ${catalog.length} secciones ──`);
 
-catalog.filter(sec => sec.id !== 'frase').forEach((sec) => {
+catalog.filter(sec => sec.id !== 'frase' && sec.id !== 'contacto').forEach((sec) => {
   let html = '';
   try {
     if (['contacto', 'datos-personales', 'frase'].includes(sec.id)) {
