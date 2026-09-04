@@ -253,7 +253,7 @@ export const zIndex = {
 /**
  * MATRIZ DE TEMAS DE LA INTERFAZ (UI Theme Matrix - Día, Noche, Océano)
  */
-export const uiThemePresets = {
+const uiThemePresets = {
   day: {
     id: 'day',
     name: 'Editorial Warm (Día / Cálido)',

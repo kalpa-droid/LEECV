@@ -2,7 +2,7 @@ import { mercadoPagoProvider } from './mercadopago.js';
 import { paypalProvider } from './paypal.js';
 import { lemonSqueezyProvider } from './lemonsqueezy.js';
 import type { PaymentProvider, ProviderStatus } from './types.js';
-import type { ProviderId } from '../../../src/shared/core/payments/paymentProviderCatalog.js';
+import type { ProviderId } from '../../../src/shared/core/payments/paymentProviderCatalog.ts';
 
 export const PROVIDER_REGISTRY: Record<ProviderId, PaymentProvider> = {
   mercadopago: mercadoPagoProvider,

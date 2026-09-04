@@ -1,4 +1,4 @@
-import type { ProviderId } from '../../../src/shared/core/payments/paymentProviderCatalog.js';
+import type { ProviderId } from '../../../src/shared/core/payments/paymentProviderCatalog.ts';
 
 export interface CheckoutSessionResult {
   checkoutUrl: string;
