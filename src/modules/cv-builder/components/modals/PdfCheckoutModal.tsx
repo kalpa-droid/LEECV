@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { iniciarPagoMercadoPago } from '../../../payments/paymentService';
+import { iniciarPagoMercadoPago, iniciarPagoPayPal } from '../../../payments/paymentService';
 import { signInWithGoogle } from '../../../auth/authService';
 import {} from '../../../../shared/core/lib/supabaseClient';
 import { apiClient } from '../../../../shared/core/utils/apiClient';
@@ -47,6 +47,29 @@ export default function PdfCheckoutModal({
     );
     if (!res.success) {
       setErrorMsg(res.error?.message || 'Error al conectar con Mercado Pago');
+      setIsProcessing(false);
+    }
+  };
+
+  const handlePayPalCheckout = async (plan: 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' = 'single_pdf') => {
+    if (!email || !isValidEmail(email)) {
+      setErrorMsg('Ingresá un correo electrónico válido para recibir tu comprobante');
+      return;
+    }
+
+    setIsProcessing(true);
+    setErrorMsg('');
+    const res = await withErrorHandling(
+      async () => {
+        await iniciarPagoPayPal(plan);
+      },
+      {
+        context: `Pago PayPal (${plan})`,
+        errorMessage: 'Error al conectar con PayPal'
+      }
+    );
+    if (!res.success) {
+      setErrorMsg(res.error?.message || 'Error al conectar con PayPal');
       setIsProcessing(false);
     }
   };
@@ -181,21 +204,39 @@ export default function PdfCheckoutModal({
             2. Elige tu Opción de Pago o Descarga
           </span>
 
-          {/* Option A: Mercado Pago ($1 USD) */}
+          {/* Option A: Mercado Pago ($1.50 USD) */}
           <button
             onClick={handleMercadoPagoCheckout}
             disabled={isProcessing}
-            className={`w-full p-3.5 bg-[var(--color-status-warning-muted)] hover:opacity-90 border border-[var(--color-status-warning-base)] text-[var(--color-status-warning-text)] font-black text-xs rounded-[${radius.modal}] ${elevationSystem.raised} transition flex items-center justify-between cursor-pointer`}
+            className={`w-full p-3 bg-[var(--color-status-warning-muted)] hover:opacity-90 border border-[var(--color-status-warning-base)] text-[var(--color-status-warning-text)] font-black text-xs rounded-[${radius.modal}] ${elevationSystem.raised} transition flex items-center justify-between cursor-pointer`}
           >
             <div className="flex items-center gap-2.5">
               <CreditCard className="w-5 h-5 text-[var(--color-status-warning-text)]" />
               <div className="text-left">
-                <p className="leading-tight">Pagar 1 Exportación PDF A4 ($1.50 USD)</p>
-                <p className="text-[10px] opacity-80 font-bold">Mercado Pago, Tarjeta de Crédito / Débito, Transferencia</p>
+                <p className="leading-tight">Pagar 1 Exportación con Mercado Pago ($1.50 USD)</p>
+                <p className="text-[10px] opacity-80 font-bold">Tarjeta de Crédito / Débito, Mercado Pago, Transferencia</p>
               </div>
             </div>
             <span className={`px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] rounded-[${radius.control}] text-[10px] font-black`}>
               ~$1,800 ARS
+            </span>
+          </button>
+
+          {/* Option A2: PayPal ($1.50 USD) */}
+          <button
+            onClick={() => handlePayPalCheckout('single_pdf')}
+            disabled={isProcessing}
+            className={`w-full p-3 bg-[var(--color-secondary-muted)] hover:opacity-90 border border-[var(--color-secondary-base)]/30 text-[var(--color-secondary-text)] font-extrabold text-xs rounded-[${radius.modal}] ${elevationSystem.raised} transition flex items-center justify-between cursor-pointer`}
+          >
+            <div className="flex items-center gap-2.5">
+              <CreditCard className="w-5 h-5 text-[var(--color-secondary-text)]" />
+              <div className="text-left">
+                <p className="leading-tight">Pagar 1 Exportación con PayPal ($1.50 USD)</p>
+                <p className="text-[10px] opacity-80 font-bold">Tarjeta Internacional, Saldo PayPal</p>
+              </div>
+            </div>
+            <span className={`px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] rounded-[${radius.control}] text-[10px] font-black`}>
+              $1.50 USD
             </span>
           </button>
 

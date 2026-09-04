@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Check, Crown, Zap, Shield, Sparkles, Cloud, Smartphone, User, LogOut, HardDrive, LogIn } from 'lucide-react';
-import { iniciarPagoMercadoPago, iniciarPagoLemonSqueezy } from './paymentService';
+import { iniciarPagoMercadoPago, iniciarPagoLemonSqueezy, iniciarPagoPayPal } from './paymentService';
 import { useToast } from '../../shared/core/ui/Toast';
 import { Modal } from '../../shared/core/ui/Modal';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
@@ -37,12 +37,14 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
     );
   }
 
-  async function handleSelectPlan(planId: 'pro' | 'enterprise', gateway: 'mercadopago' | 'lemonsqueezy') {
+  async function handleSelectPlan(planId: 'pro' | 'enterprise', gateway: 'mercadopago' | 'paypal' | 'lemonsqueezy') {
     setLoadingGateway(gateway);
     await withErrorHandling(
       async () => {
         if (gateway === 'mercadopago') {
           await iniciarPagoMercadoPago(planId);
+        } else if (gateway === 'paypal') {
+          await iniciarPagoPayPal(planId);
         } else {
           await iniciarPagoLemonSqueezy(planId);
         }
@@ -201,11 +203,18 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
                 <span>🇦🇷 Suscribirse con Mercado Pago</span>
               </button>
               <button
+                onClick={() => handleSelectPlan('pro', 'paypal')}
+                disabled={loadingGateway !== null}
+                className={`w-full py-2 bg-[var(--color-secondary-muted)] hover:opacity-90 text-[var(--color-secondary-text)] border border-[var(--color-secondary-base)]/30 text-xs font-black rounded-[${radius.card}] transition flex items-center justify-center gap-1.5 cursor-pointer`}
+              >
+                <span>💳 Pagar con PayPal (USD)</span>
+              </button>
+              <button
                 onClick={() => handleSelectPlan('pro', 'lemonsqueezy')}
                 disabled={loadingGateway !== null}
                 className={`w-full py-2 bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] text-[11px] font-bold rounded-[${radius.card}] transition flex items-center justify-center gap-1.5 border border-[var(--color-accent-purple)]/30 cursor-pointer`}
               >
-                <span>🌎 Suscribirse Internacional (USD)</span>
+                <span>🌎 Suscribirse con Lemon Squeezy (USD)</span>
               </button>
             </div>
           </div>
@@ -247,7 +256,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
             <button
               onClick={() => handleSelectPlan('enterprise', 'lemonsqueezy')}
               disabled={loadingGateway !== null}
-              className={`w-full py-2.5 bg-[image:var(--gradient-gold)] hover:opacity-95 text-[var(--color-accent-on-base)] text-xs font-black rounded-[${radius.card}] ${elevationSystem.floating} transition cursor-pointer`}
+              className={`w-full py-2.5 bg-[var(--color-status-warning-base)] hover:opacity-95 text-[var(--color-accent-on-base)] text-xs font-black rounded-[${radius.card}] ${elevationSystem.floating} transition cursor-pointer`}
             >
               Activar Plan Enterprise Cloud
             </button>

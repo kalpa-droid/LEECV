@@ -47,6 +47,8 @@ import { runWithSafeSave } from '../shared/core/storage/safeNavigationEngine';
 import { signInWithGoogle, logout } from '../modules/auth/authService';
 import { PwaInstallBanner } from '../shared/core/ui/PwaInstallBanner';
 
+import { procesarRetornoPago } from '../modules/payments/paymentService';
+
 function AppContent() {
   const { cvData, setCvData, resetToBlankCV, saveCV, saveCVAs } = useCVContext();
   const { showSuccess, showError, showInfo } = useToast();
@@ -80,6 +82,20 @@ function AppContent() {
   useEffect(() => {
     syncPresetsFromStorage().catch(err => console.warn('Error sincronizando presets iniciales:', err));
     getCurrentProfile().then(p => setCurrentProfile(p)).catch(() => {});
+
+    procesarRetornoPago()
+      .then((res) => {
+        if (res?.status === 'paypal_captured') {
+          showSuccess('¡Pago procesado con éxito vía PayPal! Tu suscripción o créditos han sido activados.');
+          getCurrentProfile().then(p => setCurrentProfile(p)).catch(() => {});
+        } else if (res?.status === 'payment_success') {
+          showSuccess('¡Pago confirmado! Tu cuenta ha sido actualizada.');
+          getCurrentProfile().then(p => setCurrentProfile(p)).catch(() => {});
+        }
+      })
+      .catch((err) => {
+        showError(err?.message || 'Inconveniente al procesar el retorno del pago.');
+      });
 
     if (typeof window !== 'undefined') {
       const pathname = navigation.getPathname();

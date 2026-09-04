@@ -65,8 +65,51 @@ export async function iniciarPagoMercadoPago(plan: 'single_pdf' | 'credits_pack_
   return iniciarPago('mercadopago', plan);
 }
 
+export async function iniciarPagoPayPal(plan: 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' | 'pro' | 'enterprise' = 'pro') {
+  return iniciarPago('paypal', plan);
+}
+
 export async function iniciarPagoLemonSqueezy(plan: 'pro' | 'enterprise' = 'pro') {
   return iniciarPago('lemonsqueezy', plan);
+}
+
+/**
+ * Llama al endpoint backend para capturar una orden de PayPal previamente aprobada.
+ */
+export async function capturarOrdenPayPal(orderId: string) {
+  const { ok, data, error } = await apiClient.post<{ status?: string }>('/api/capture-paypal-order', { orderId });
+  if (!ok) {
+    throw new Error(error || 'No se pudo capturar el pago con PayPal');
+  }
+  return data;
+}
+
+/**
+ * Escucha los parámetros de retorno del navegador tras un pago (ej. ?pago=exitoso&token=<order_id>).
+ */
+export async function procesarRetornoPago(): Promise<{ status: 'paypal_captured' | 'payment_success' | 'none'; orderId?: string } | null> {
+  const params = navigation.getSearchParams();
+  const token = params.get('token');
+  const pagoStatus = params.get('pago');
+
+  if (token && (pagoStatus === 'exitoso' || !pagoStatus)) {
+    try {
+      await capturarOrdenPayPal(token);
+      navigation.cleanQueryParams();
+      return { status: 'paypal_captured', orderId: token };
+    } catch (err) {
+      console.error('Error al capturar orden PayPal en retorno:', err);
+      navigation.cleanQueryParams();
+      throw err;
+    }
+  }
+
+  if (pagoStatus === 'exitoso') {
+    navigation.cleanQueryParams();
+    return { status: 'payment_success' };
+  }
+
+  return null;
 }
 
 export async function enviarComprobanteManual({
