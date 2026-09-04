@@ -206,7 +206,12 @@ async function runRealMarkerVerification() {
   console.log(`✅ VERIFICACIÓN DE MARCADORES REALES PDF EXITOSA: ${passedCount}/${testTabs.length} pestañas leídas con verdad de terreno 100%.`);
 }
 
-runRealMarkerVerification().catch(err => {
-  console.error('❌ Excepción en verificación de marcadores reales:', err);
-  process.exit(1);
-});
+runRealMarkerVerification()
+  .then(() => {
+    process.exit(0);
+  })
+  .catch(err => {
+    console.error('❌ Excepción en verificación de marcadores reales:', err);
+    process.exit(1);
+  });
+
