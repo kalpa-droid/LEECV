@@ -123,12 +123,21 @@ export const serverDal = {
       plan?: string;
       details?: any;
     }): Promise<void> {
+      const recordToInsert: Record<string, any> = {
+        provider: data.provider,
+        external_id: data.external_id || '',
+        plan: data.plan || 'single_pdf',
+        created_at: new Date().toISOString(),
+      };
+      if (data.user_id) recordToInsert.user_id = data.user_id;
+      if (data.user_email) recordToInsert.user_email = data.user_email;
+      if (data.amount !== undefined && data.amount !== null) recordToInsert.amount = data.amount;
+      if (data.payment_id) recordToInsert.payment_id = data.payment_id;
+      if (data.details) recordToInsert.details = data.details;
+
       const { error } = await supabaseAdmin
         .from('processed_payments')
-        .insert({
-          ...data,
-          created_at: new Date().toISOString()
-        });
+        .insert(recordToInsert);
 
       if (error) {
         const errObj: any = new Error(`Error registrando pago procesado: ${error.message}`);
