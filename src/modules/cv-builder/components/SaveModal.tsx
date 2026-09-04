@@ -10,7 +10,7 @@ export interface SaveModalProps {
   onClose: () => void;
   onSaveStorage: () => void;
   onExportJson: () => void;
-  onOpenCloudStatus?: () => void;
+  onOpenCloudStatus: () => void;
   isSaving?: boolean;
   onSaveAs?: (versionLabel: string) => void;
   initialSaveAsOpen?: boolean;
@@ -70,18 +70,16 @@ export default function SaveModal({
           <div className="flex items-center gap-2">
             <Cloud className="w-4 h-4 text-[var(--ui-accent-purple)]" />
             <span className="text-xs font-bold text-[var(--ui-text-primary)]">{storageStatus.label}</span>
-            {onOpenCloudStatus && (
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  onOpenCloudStatus();
-                }}
-                className="ml-2 text-[10px] font-extrabold text-[var(--color-secondary-bright)] hover:underline cursor-pointer"
-              >
-                ⚙️ Estado de Nube & Drive
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onOpenCloudStatus();
+              }}
+              className="ml-2 text-[10px] font-extrabold text-[var(--color-secondary-bright)] hover:underline cursor-pointer"
+            >
+              ⚙️ Estado de Nube & Drive
+            </button>
           </div>
           <button
             type="button"
@@ -125,9 +123,7 @@ export default function SaveModal({
           type="button"
           onClick={() => {
             onClose();
-            if (onOpenCloudStatus) {
-              onOpenCloudStatus();
-            }
+            onOpenCloudStatus();
           }}
           className={`w-full text-left p-3.5 rounded-[${radius.modal}] bg-[var(--color-status-success-muted)] hover:bg-[var(--color-status-success-muted)]/80 border border-[var(--color-status-success-base)]/40 transition group flex items-start gap-3 cursor-pointer`}
         >

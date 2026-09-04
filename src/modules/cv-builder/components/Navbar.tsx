@@ -33,7 +33,7 @@ export interface NavbarProps {
   onOpenAgencyPanel?: () => void;
   onOpenShareAppModal: () => void;
   onOpenPrivacy?: () => void;
-  onOpenCloudStatus?: () => void;
+  onOpenCloudStatus: () => void;
   onAuthToggle?: () => void;
   isLoggedIn?: boolean;
   userRole?: string;
@@ -146,18 +146,16 @@ export default function Navbar({
         {/* CLUSTER DERECHO: Píldoras Ovaladas de Menús (Publicar 🌐 | Acciones 📁💾 | Cuenta 👤🔑) */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
 
-          {/* Botón Directo Publicar CV Web */}
-          {onOpenCloudStatus && (
-            <button
-              type="button"
-              onClick={onOpenCloudStatus}
-              className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-status-success-on-base)] font-extrabold text-xs transition ${elevationSystem.raised} cursor-pointer active:scale-95`}
-              title="Publicar CV en la Web (Link Público / Slug)"
-            >
-              <Globe className="w-4 h-4" />
-              <span>Publicar Web</span>
-            </button>
-          )}
+          {/* Botón Directo Publicar CV Web (Incondicional en Móvil y Escritorio) */}
+          <button
+            type="button"
+            onClick={onOpenCloudStatus}
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-status-success-on-base)] font-extrabold text-xs transition ${elevationSystem.raised} cursor-pointer active:scale-95 shrink-0`}
+            title="Publicar CV en la Web (Link Público / Slug)"
+          >
+            <Globe className="w-4 h-4 shrink-0" />
+            <span className="inline">Publicar Web</span>
+          </button>
 
           {/* PÍLDORA 1: MENÚ DE ACCIONES (Iconos de Abrir 📁 y Guardar 💾) */}
           <div className="relative" ref={actionMenuRef}>
@@ -225,9 +223,7 @@ export default function Navbar({
                   type="button"
                   onClick={() => {
                     setIsActionMenuOpen(false);
-                    if (onOpenCloudStatus) {
-                      onOpenCloudStatus();
-                    }
+                    onOpenCloudStatus();
                   }}
                   className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
                 >

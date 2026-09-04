@@ -23,7 +23,7 @@ export interface SavedCVsModalProps {
   onClose: () => void;
   onSelectCV: (cvData: any) => void;
   onImportJson?: (e: any) => Promise<void>;
-  onOpenCloudStatus?: () => void;
+  onOpenCloudStatus: () => void;
 }
 
 export default function SavedCVsModal({ 
@@ -177,10 +177,8 @@ export default function SavedCVsModal({
           <button
             type="button"
             onClick={() => {
-              if (onOpenCloudStatus) {
-                onClose();
-                onOpenCloudStatus();
-              }
+              onClose();
+              onOpenCloudStatus();
             }}
             className={`p-3 rounded-[${radius.modal}] bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-dock-hover)] border border-[var(--ui-border)] transition cursor-pointer flex items-center gap-3 text-left group`}
           >
