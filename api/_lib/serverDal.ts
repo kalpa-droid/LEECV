@@ -57,19 +57,13 @@ export const serverDal = {
     },
 
     async grantCredits(userId: string, amount: number): Promise<{ credits: number }> {
-      const { data: existing } = await supabaseAdmin
-        .from('pdf_export_credits')
-        .select('credits')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      const newCredits = (existing?.credits || 0) + amount;
-      const { error } = await supabaseAdmin
-        .from('pdf_export_credits')
-        .upsert({ user_id: userId, credits: newCredits, updated_at: new Date().toISOString() });
+      const { data, error } = await supabaseAdmin.rpc('grant_pdf_credits', {
+        p_user_id: userId,
+        p_amount: amount,
+      });
 
       if (error) throw new Error(`Error acreditando exportaciones PDF: ${error.message}`);
-      return { credits: newCredits };
+      return { credits: Number(data || 0) };
     }
   },
 
@@ -136,7 +130,11 @@ export const serverDal = {
           created_at: new Date().toISOString()
         });
 
-      if (error) throw new Error(`Error registrando pago procesado: ${error.message}`);
+      if (error) {
+        const errObj: any = new Error(`Error registrando pago procesado: ${error.message}`);
+        errObj.code = error.code;
+        throw errObj;
+      }
     }
   },
 

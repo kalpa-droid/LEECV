@@ -8,7 +8,7 @@ export const navigation = {
   /**
    * Obtiene la URL de origen actual (origin) o devuelve un fallback de servidor.
    */
-  getOrigin(defaultOrigin: string = 'https://leecv.vercel.app'): string {
+  getOrigin(defaultOrigin: string = 'https://leecv.app'): string {
     if (typeof window !== 'undefined' && window.location?.origin) {
       return window.location.origin;
     }

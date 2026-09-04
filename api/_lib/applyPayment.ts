@@ -18,12 +18,27 @@ export async function applyPayment(_supabaseAdmin: SupabaseClient, payment: Paym
     throw new Error('applyPayment requiere userId o email para identificar al usuario');
   }
 
-  // Check idempotency if externalId is provided
+  // 1. Intentar registrar el pago primero para garantizar idempotencia atómica vía UNIQUE constraint
   if (externalId && metodoPago) {
-    const alreadyProcessed = await serverDal.processedPayments.checkIdempotency(metodoPago, externalId);
-    if (alreadyProcessed) {
-      console.log(`[applyPayment] Transacción duplicada omitida (${metodoPago}: ${externalId})`);
-      return { type: 'already_processed', message: 'Payment already recorded' };
+    try {
+      await serverDal.processedPayments.record({
+        provider: metodoPago,
+        external_id: externalId,
+        user_id: userId || undefined,
+        plan,
+        amount: amount || undefined
+      });
+    } catch (err: any) {
+      if (
+        err.code === '23505' || 
+        String(err?.message).includes('unique constraint') || 
+        String(err?.message).includes('duplicate key') ||
+        String(err?.message).includes('unq_provider_external_id')
+      ) {
+        console.log(`[applyPayment] Transacción duplicada omitida (${metodoPago}: ${externalId})`);
+        return { type: 'already_processed', message: 'Payment already recorded' };
+      }
+      throw err;
     }
   }
 
@@ -42,20 +57,6 @@ export async function applyPayment(_supabaseAdmin: SupabaseClient, payment: Paym
     result = await activateSubscription({ userId: userId || undefined, email: email || undefined, plan, metodoPago });
   } else {
     throw new Error(`Plan desconocido en applyPayment: ${plan}`);
-  }
-
-  // Record payment in processed_payments for idempotency
-  if (externalId && metodoPago) {
-    try {
-      await serverDal.processedPayments.record({
-        provider: metodoPago,
-        external_id: externalId,
-        user_id: userId || undefined,
-        plan
-      });
-    } catch (err: any) {
-      console.warn('Could not record idempotency log:', err);
-    }
   }
 
   // Registro único de auditoría + fuente para el panel de admin ("avisos de pago").

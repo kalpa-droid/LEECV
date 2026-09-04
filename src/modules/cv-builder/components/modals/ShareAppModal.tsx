@@ -14,7 +14,7 @@ export default function ShareAppModal({ isOpen, onClose }: ShareAppModalProps) {
   const { showSuccess } = useToast();
   const [copied, setCopied] = React.useState(false);
 
-  const appUrl = navigation.getOrigin() || 'https://leecv.com';
+  const appUrl = navigation.getOrigin() || 'https://leecv.app';
   const shareTitle = 'LEECV — Generador de Currículums Vitae A4 y Tarjetas Profesionales';
   const shareText = 'Crea tu Currículum Vitae profesional A4 listo para imprimir y optimizado para sistemas ATS en minutos con LEECV.';
 

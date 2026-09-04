@@ -52,31 +52,45 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Fallback a metadatos genéricos elegantes si hay error de DB
     }
 
+    function escapeHtml(str: string): string {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    const safeFullName = escapeHtml(fullName);
+    const safeTitle = escapeHtml(title);
+    const safeDescription = escapeHtml(description);
+    const safeSlug = escapeHtml(slug);
+
     const html = `<!doctype html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Currículum de ${fullName} — ${title} | LEECV</title>
-  <meta name="description" content="${description}" />
+  <title>Currículum de ${safeFullName} — ${safeTitle} | LEECV</title>
+  <meta name="description" content="${safeDescription}" />
   <meta property="og:site_name" content="LEECV — Creador de CV Profesional" />
-  <meta property="og:title" content="Currículum de ${fullName} — ${title}" />
-  <meta property="og:description" content="${description}" />
+  <meta property="og:title" content="Currículum de ${safeFullName} — ${safeTitle}" />
+  <meta property="og:description" content="${safeDescription}" />
   <meta property="og:type" content="profile" />
-  <meta property="og:url" content="https://leecv.app/cv/${slug}" />
+  <meta property="og:url" content="https://leecv.app/cv/${safeSlug}" />
   <meta property="og:image" content="https://leecv.app/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:type" content="image/png" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Currículum de ${fullName} — ${title}" />
-  <meta name="twitter:description" content="${description}" />
+  <meta name="twitter:title" content="Currículum de ${safeFullName} — ${safeTitle}" />
+  <meta name="twitter:description" content="${safeDescription}" />
   <meta name="twitter:image" content="https://leecv.app/og-image.png" />
-  <link rel="canonical" href="https://leecv.app/cv/${slug}" />
+  <link rel="canonical" href="https://leecv.app/cv/${safeSlug}" />
 </head>
 <body>
-  <h1>Currículum de ${fullName} — ${title}</h1>
-  <p>${description}</p>
-  <p><a href="https://leecv.app/cv/${slug}">Ver Currículum Interactivo en LEECV</a></p>
+  <h1>Currículum de ${safeFullName} — ${safeTitle}</h1>
+  <p>${safeDescription}</p>
+  <p><a href="https://leecv.app/cv/${safeSlug}">Ver Currículum Interactivo en LEECV</a></p>
 </body>
 </html>`;
 

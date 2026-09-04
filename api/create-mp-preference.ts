@@ -22,19 +22,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { plan = 'single_pdf' } = req.body || {};
 
   const PLAN_PRICES_ARS: Record<string, number> = {
-    single_pdf: Number(process.env.MP_PRECIO_PDF_ARS || 1200),
+    single_pdf: Number(process.env.MP_PRECIO_PDF_ARS || 1800),
+    credits_pack_5: Number(process.env.MP_PRECIO_PACK5_ARS || 7500),
+    credits_pack_10: Number(process.env.MP_PRECIO_PACK10_ARS || 12000),
     pro: Number(process.env.MP_PRECIO_PRO_ARS || 22800),
-    enterprise: Number(process.env.MP_PRECIO_ENTERPRISE_ARS || 34800)
+    enterprise: Number(process.env.MP_PRECIO_ENTERPRISE_ARS || 34800),
   };
 
   const PLAN_TITLES: Record<string, string> = {
     single_pdf: 'LEECV - 1 Crédito de Exportación PDF A4',
+    credits_pack_5: 'LEECV - Pack 5 Créditos de Exportación PDF',
+    credits_pack_10: 'LEECV - Pack 10 Créditos de Exportación PDF',
     pro: 'LEECV Pro - Suscripción Agencia Mensual',
-    enterprise: 'LEECV Enterprise - Suscripción Agencia Cloud Mensual'
+    enterprise: 'LEECV Enterprise - Suscripción Agencia Cloud Mensual',
   };
 
-  const price = PLAN_PRICES_ARS[plan] || PLAN_PRICES_ARS.single_pdf;
-  const title = PLAN_TITLES[plan] || PLAN_TITLES.single_pdf;
+  const price = PLAN_PRICES_ARS[plan];
+  if (!price) return errorResponse(res, 400, `Plan desconocido: ${plan}`);
+  const title = PLAN_TITLES[plan] || 'LEECV - Exportación PDF';
 
   try {
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
