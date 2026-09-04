@@ -98,7 +98,9 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(function(err) {
+          navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then((reg) => {
+            reg.update();
+          }).catch(function(err) {
             console.warn('Registro de SW omitido o fallido:', err);
           });
         });

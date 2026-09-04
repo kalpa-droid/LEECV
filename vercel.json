@@ -26,6 +26,19 @@
       ]
     },
     {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate, s-maxage=0"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        }
+      ]
+    },
+    {
       "source": "/(.*)\\.(html|json)",
       "headers": [
         {
@@ -46,6 +59,12 @@
           "value": "public, max-age=31536000, immutable"
         }
       ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/downgrade-expired-plans",
+      "schedule": "0 0 * * *"
     }
   ],
   "rewrites": [

@@ -67,7 +67,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
       size="4xl"
       footer={
         <div className="w-full p-2 text-center text-[11px] text-[var(--ui-text-secondary)]">
-          🔒 Todos los pagos están procesados con encriptación SSL de 256 bits a través de Mercado Pago y Stripe / Lemon Squeezy. Puedes cancelar en cualquier momento.
+          🔒 Todos los pagos están procesados con encriptación SSL de 256 bits a través de Mercado Pago, PayPal y Lemon Squeezy. Acceso instantáneo y transparente sin cargos ocultos.
         </div>
       }
     >

@@ -31,12 +31,15 @@ export function useEntitlements() {
         if (user) {
           const { data } = await supabase
             .from('profiles')
-            .select('plan')
+            .select('plan, premium_vence')
             .eq('id', user.id)
             .single();
 
-          if (data?.plan && PLAN_FEATURES[data.plan]) {
-            setPlan(data.plan);
+          const isExpired = !!(data?.premium_vence && new Date(data.premium_vence) < new Date());
+          const effectivePlan = isExpired ? 'free' : (data?.plan || 'free');
+
+          if (PLAN_FEATURES[effectivePlan]) {
+            setPlan(effectivePlan);
           }
         }
       } catch (err) {
