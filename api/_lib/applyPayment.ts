@@ -18,15 +18,23 @@ export async function applyPayment(_supabaseAdmin: SupabaseClient, payment: Paym
     throw new Error('applyPayment requiere userId o email para identificar al usuario');
   }
 
+  let resolvedUserId = userId;
+  if (!resolvedUserId && email) {
+    const p = await serverDal.profiles.getByEmail(email);
+    if (p?.id) resolvedUserId = p.id;
+  }
+
   // 1. Intentar registrar el pago primero para garantizar idempotencia atómica vía UNIQUE constraint
   if (externalId && metodoPago) {
     try {
       await serverDal.processedPayments.record({
         provider: metodoPago,
         external_id: externalId,
-        user_id: userId || undefined,
+        user_id: resolvedUserId || undefined,
+        user_email: email || undefined,
         plan,
-        amount: amount || undefined
+        amount: amount || undefined,
+        currency: currency || undefined,
       });
     } catch (err: any) {
       if (
@@ -51,7 +59,7 @@ export async function applyPayment(_supabaseAdmin: SupabaseClient, payment: Paym
   let result;
 
   if (CREDIT_PACKS[plan]) {
-    const res = await serverDal.pdfExportCredits.grantCredits(userId || '', CREDIT_PACKS[plan]);
+    const res = await serverDal.pdfExportCredits.grantCredits(resolvedUserId || '', CREDIT_PACKS[plan]);
     result = { type: 'credits', credits: res.credits };
   } else if (plan === 'pro' || plan === 'enterprise') {
     result = await activateSubscription({ userId: userId || undefined, email: email || undefined, plan, metodoPago });

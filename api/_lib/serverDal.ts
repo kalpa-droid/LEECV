@@ -13,6 +13,17 @@ export const serverDal = {
       return data.role || null;
     },
 
+    async getByEmail(email: string): Promise<{ id: string } | null> {
+      const { data, error } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (error || !data) return null;
+      return { id: data.id };
+    },
+
     async updateDriveStatus(
       userId: string, 
       patch: { drive_connected: boolean; drive_email?: string | null; drive_avatar?: string | null; drive_quota_percent?: number | null }
@@ -118,6 +129,7 @@ export const serverDal = {
       provider: string;
       external_id?: string;
       amount?: number;
+      currency?: string;
       user_id?: string;
       user_email?: string;
       plan?: string;
@@ -132,6 +144,7 @@ export const serverDal = {
       if (data.user_id) recordToInsert.user_id = data.user_id;
       if (data.user_email) recordToInsert.user_email = data.user_email;
       if (data.amount !== undefined && data.amount !== null) recordToInsert.amount = data.amount;
+      if (data.currency) recordToInsert.currency = data.currency;
       if (data.payment_id) recordToInsert.payment_id = data.payment_id;
       if (data.details) recordToInsert.details = data.details;
 

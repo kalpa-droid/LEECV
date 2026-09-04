@@ -4,12 +4,14 @@ import {
   setUserPlan,
   getBasicStats,
   listPendingClaims, reviewManualClaim,
-  listAdminNotifications, markNotificationRead
+  listAdminNotifications, markNotificationRead,
+  getIntegrationsStatus
 } from './adminService';
 import { getCurrentProfile, logout } from '../auth/authService';
 import AdminLogin from './AdminLogin';
 import { StorageDriveTab } from './components/StorageDriveTab';
 import { TemplateManagementTab } from './components/TemplateManagementTab';
+import { ProcessedPaymentsTab } from './components/ProcessedPaymentsTab';
 import { useToast } from '../../shared/core/ui/Toast';
 import { useConfirm } from '../../shared/core/ui/ConfirmDialog';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
@@ -17,28 +19,83 @@ import { elevationSystem, radius } from '../../shared/core/uiDesignSystem';
 
 import { 
   Users, Crown, LogOut, RefreshCw, CreditCard, HardDrive, 
-  ShieldCheck, CheckCircle2, AlertCircle, Sparkles, 
-  Search, ChevronLeft, ChevronRight, Bell, Check, Layout as LayoutIcon 
+  ShieldCheck, CheckCircle2, AlertCircle, AlertTriangle, XCircle, Sparkles, 
+  Search, ChevronLeft, ChevronRight, Bell, Check, Layout as LayoutIcon, Clock 
 } from 'lucide-react';
+
+function renderGatewayCard(name: string, currency: string, data: any) {
+  const status = data?.status || 'checking';
+  const label = data?.label || 'Comprobando estado...';
+
+  const isSuccess = status === 'active';
+  const isWarning = status === 'missing_vars';
+  const isDanger = status === 'invalid_credentials' || status === 'error' || status === 'webhook_not_found';
+
+  const Icon = isSuccess ? CheckCircle2 : isWarning ? AlertTriangle : isDanger ? XCircle : Clock;
+
+  return (
+    <div className={`p-3.5 rounded-[${radius.card}] border flex flex-col justify-between space-y-2 ${
+      isSuccess
+        ? 'bg-[var(--color-status-success-muted)] border-[var(--color-status-success-base)]/30 text-[var(--color-status-success-text)]'
+        : isWarning
+        ? 'bg-[var(--color-status-warning-muted)] border-[var(--color-status-warning-base)]/30 text-[var(--color-status-warning-text)]'
+        : isDanger
+        ? 'bg-[var(--color-status-danger-muted)] border-[var(--color-status-danger-base)]/30 text-[var(--color-status-danger-text)]'
+        : 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)]'
+    }`}>
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <p className="text-xs font-black">{name} ({currency})</p>
+          <p className="text-[10px] font-bold opacity-90 leading-snug">{label}</p>
+        </div>
+        <Icon className="w-4 h-4 shrink-0" />
+      </div>
+      {data?.missingVars && data.missingVars.length > 0 && (
+        <p className="text-[9px] font-mono text-[var(--color-status-warning-text)] bg-[var(--ui-bg-card)] px-1.5 py-0.5 rounded border border-[var(--color-status-warning-base)]/20">
+          Falta: {data.missingVars.join(', ')}
+        </p>
+      )}
+    </div>
+  );
+}
 
 export default function AdminDashboard() {
   const { showError, showSuccess } = useToast();
   const { confirm } = useConfirm();
 
-  const [adminTab, setAdminTab] = useState<'users' | 'storage' | 'templates'>('users');
+  const [adminTab, setAdminTab] = useState<'users' | 'payments' | 'storage' | 'templates'>('users');
   const [profile, setProfile] = useState<any>(undefined);
   const [users, setUsers] = useState<any[]>([]);
   const [stats, setStats] = useState({ totalUsers: 0, proUsers: 0, enterpriseUsers: 0, activeSubscriptions: 0 });
   const [loadingData, setLoadingData] = useState(false);
   const [claims, setClaims] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [integrations, setIntegrations] = useState<any>(null);
+  const [loadingIntegrations, setLoadingIntegrations] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 50;
 
+  async function fetchIntegrations(forcePing = false) {
+    setLoadingIntegrations(true);
+    await withErrorHandling(
+      async () => {
+        const status = await getIntegrationsStatus(forcePing);
+        setIntegrations(status);
+      },
+      {
+        context: 'Diagnóstico de Pasarelas',
+        errorMessage: 'Error al consultar estado de pasarelas.',
+        notify: (msg) => showError(msg),
+      }
+    );
+    setLoadingIntegrations(false);
+  }
+
   async function loadEverything() {
     setLoadingData(true);
+    fetchIntegrations(false);
     await withErrorHandling(
       async () => {
         const [userList, s, claimList, notifList] = await Promise.all([
@@ -174,14 +231,14 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-[var(--color-neutral-surface-cream)] text-[var(--color-neutral-text-primary)] font-sans">
       {/* Encabezado */}
-      <header className={`bg-[var(--color-neutral-text-primary)] text-white px-6 py-4 flex items-center justify-between ${elevationSystem.floating} border-b border-[var(--color-neutral-border)]/20`}>
+      <header className={`bg-[var(--ui-preview-bg)] text-white px-6 py-4 flex items-center justify-between ${elevationSystem.floating} border-b border-[var(--color-neutral-border)]/20`}>
         <div className="flex items-center gap-3">
           <div className={`w-9 h-9 rounded-[${radius.card}] bg-[var(--color-accent-base)] flex items-center justify-center font-black text-xs`}>
             LEE
           </div>
           <div>
             <h1 className="font-black text-base sm:text-lg tracking-wide">🛠️ Panel de Administración Suprema — LEECV</h1>
-            <p className="text-[10px] text-white/70">Control de Licencias, Pagos Automáticos, Webhooks & Reclamos</p>
+            <p className="text-[10px] text-[var(--color-neutral-surface)]/80">Control de Licencias, Pagos Automáticos, Webhooks & Reclamos</p>
           </div>
         </div>
         <button
@@ -232,7 +289,7 @@ export default function AdminDashboard() {
           <button
             onClick={() => setAdminTab('users')}
             className={adminTab === 'users'
-              ? `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-text-primary)] text-white ${elevationSystem.raised}` : `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50`}
+              ? `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.raised}` : `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50`}
           >
             <Users className="w-4 h-4" />
             <span>Usuarios & Licencias</span>
@@ -241,24 +298,35 @@ export default function AdminDashboard() {
           <button
             onClick={() => setAdminTab('templates')}
             className={adminTab === 'templates'
-              ? `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-text-primary)] text-white ${elevationSystem.raised}` : `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50`}
+              ? `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.raised}` : `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50`}
           >
-            <LayoutIcon className="w-4 h-4 text-white" />
-            <span>Gestión de Plantillas y Presets (Capa 5)</span>
+            <LayoutIcon className="w-4 h-4" />
+            <span>Gestión de Plantillas y Presets</span>
+          </button>
+
+          <button
+            onClick={() => setAdminTab('payments')}
+            className={adminTab === 'payments'
+              ? `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.raised}` : `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50`}
+          >
+            <CreditCard className="w-4 h-4" />
+            <span>Historial de Pagos</span>
           </button>
 
           <button
             onClick={() => setAdminTab('storage')}
             className={adminTab === 'storage'
-              ? `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-text-primary)] text-white ${elevationSystem.raised}` : `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50`}
+              ? `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.raised}` : `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50`}
           >
-            <HardDrive className="w-4 h-4 text-white" />
+            <HardDrive className="w-4 h-4" />
             <span>Almacenamiento, Servidores & Drive</span>
           </button>
         </div>
 
         {adminTab === 'templates' ? (
           <TemplateManagementTab />
+        ) : adminTab === 'payments' ? (
+          <ProcessedPaymentsTab />
         ) : adminTab === 'storage' ? (
           <StorageDriveTab />
         ) : (
@@ -272,7 +340,7 @@ export default function AdminDashboard() {
                 <div className="relative">
                   <Bell className="w-5 h-5 text-[var(--color-accent-text)]" />
                   {unreadNotifCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[var(--color-accent-base)] text-white font-black text-[9px] rounded-full flex items-center justify-center animate-pulse">
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-black text-[9px] rounded-full flex items-center justify-center animate-pulse">
                       {unreadNotifCount}
                     </span>
                   )}
@@ -280,7 +348,7 @@ export default function AdminDashboard() {
                 <h2 className="font-extrabold text-sm text-[var(--color-neutral-text-primary)]">🔔 Eventos & Notificaciones de Pagos / Sistema</h2>
               </div>
               {unreadNotifCount > 0 && (
-                <span className="px-2.5 py-0.5 rounded-full bg-[var(--color-accent-base)] text-white text-xs font-black">
+                <span className="px-2.5 py-0.5 rounded-full bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-xs font-black">
                   {unreadNotifCount} nueva{unreadNotifCount > 1 ? 's' : ''}
                 </span>
               )}
@@ -321,7 +389,7 @@ export default function AdminDashboard() {
                 <AlertCircle className="w-5 h-5 text-[var(--color-status-warning-text)]" />
                 <h2 className="font-extrabold text-sm text-[var(--color-status-warning-text)]">📩 Reclamos de Activación y Comprobantes Pendientes</h2>
               </div>
-              <span className="px-2.5 py-0.5 rounded-full bg-[var(--color-status-warning-base)] text-white text-xs font-black">
+              <span className="px-2.5 py-0.5 rounded-full bg-[var(--color-status-warning-base)] text-[var(--color-accent-on-base)] text-xs font-black">
                 {claims.length} Pendiente{claims.length > 1 ? 's' : ''}
               </span>
             </div>
@@ -338,13 +406,13 @@ export default function AdminDashboard() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleReviewClaim(claim, true)}
-                      className={`px-3 py-1.5 bg-[var(--color-status-success-base)] hover:opacity-90 text-white font-extrabold rounded-[${radius.card}] transition ${elevationSystem.raised} cursor-pointer`}
+                      className={`px-3 py-1.5 bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-status-success-on-base)] font-extrabold rounded-[${radius.card}] transition ${elevationSystem.raised} cursor-pointer`}
                     >
                       ✅ Aprobar y Activar
                     </button>
                     <button
                       onClick={() => handleReviewClaim(claim, false)}
-                      className={`px-3 py-1.5 bg-[var(--color-status-danger-base)] hover:opacity-90 text-white font-extrabold rounded-[${radius.card}] transition ${elevationSystem.raised} cursor-pointer`}
+                      className={`px-3 py-1.5 bg-[var(--color-status-danger-base)] hover:opacity-90 text-black font-extrabold rounded-[${radius.card}] transition ${elevationSystem.raised} cursor-pointer`}
                     >
                       ❌ Rechazar
                     </button>
@@ -355,42 +423,35 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Estado de Integraciones de Cobro Automático */}
+        {/* Diagnóstico Real de Pasarelas & Webhooks */}
         <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] space-y-3`}>
-          <div className="flex items-center justify-between border-b border-[var(--color-neutral-border)] pb-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-[var(--color-neutral-border)] pb-3 gap-2">
             <div className="flex items-center gap-2">
               <CreditCard className="w-5 h-5 text-[var(--color-secondary-text)]" />
-              <h2 className="font-extrabold text-sm text-[var(--color-neutral-text-primary)]">Pasarelas & Webhooks de Cobro Unificado</h2>
+              <div>
+                <h2 className="font-extrabold text-sm text-[var(--color-neutral-text-primary)]">Diagnóstico de Pasarelas & Webhooks en Tiempo Real</h2>
+                <p className="text-[10px] text-[var(--color-neutral-text-secondary)] font-medium">
+                  {integrations?.lastCheckedAt
+                    ? `Última comprobación: ${new Date(integrations.lastCheckedAt).toLocaleTimeString('es-AR')}`
+                    : 'Comprobación en vivo del estado de API keys y webhooks'}
+                </p>
+              </div>
             </div>
-            <span className="text-[11px] text-[var(--color-status-success-text)] font-bold flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5" /> Core applyPayment.js Activo
-            </span>
+
+            <button
+              onClick={() => fetchIntegrations(true)}
+              disabled={loadingIntegrations}
+              className={`px-3 py-1.5 text-xs font-bold bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] rounded-[${radius.card}] border border-[var(--color-neutral-border)] flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50`}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loadingIntegrations ? 'animate-spin' : ''}`} />
+              <span>{loadingIntegrations ? 'Verificando...' : 'Re-comprobar'}</span>
+            </button>
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-            <div className={`p-3.5 rounded-[${radius.card}] border border-[var(--color-status-success-base)]/30 bg-[var(--color-status-success-muted)] flex items-center justify-between`}>
-              <div>
-                <p className="text-xs font-black text-[var(--color-status-success-text)]">Mercado Pago (ARS)</p>
-                <p className="text-[10px] text-[var(--color-status-success-text)] font-bold">Cobros Webhook Automáticos</p>
-              </div>
-              <CheckCircle2 className="w-4 h-4 text-[var(--color-status-success-text)]" />
-            </div>
-
-            <div className={`p-3.5 rounded-[${radius.card}] border border-[var(--color-secondary-base)]/30 bg-[var(--color-secondary-muted)] flex items-center justify-between`}>
-              <div>
-                <p className="text-xs font-black text-[var(--color-secondary-text)]">PayPal (USD)</p>
-                <p className="text-[10px] text-[var(--color-secondary-text)] font-bold">Firma Webhook Verificada</p>
-              </div>
-              <CheckCircle2 className="w-4 h-4 text-[var(--color-secondary-text)]" />
-            </div>
-
-            <div className={`p-3.5 rounded-[${radius.card}] border border-[var(--color-accent-purple)]/30 bg-[var(--color-accent-purple-light)] flex items-center justify-between`}>
-              <div>
-                <p className="text-xs font-black text-[var(--color-accent-purple-text)]">Lemon Squeezy (USD)</p>
-                <p className="text-[10px] text-[var(--color-accent-purple-text)] font-bold">Suscripciones Globales</p>
-              </div>
-              <CheckCircle2 className="w-4 h-4 text-[var(--color-accent-purple-text)]" />
-            </div>
+            {renderGatewayCard('Mercado Pago', 'ARS', integrations?.mercadopago)}
+            {renderGatewayCard('PayPal', 'USD', integrations?.paypal)}
+            {renderGatewayCard('Lemon Squeezy', 'USD', integrations?.lemonsqueezy)}
           </div>
         </div>
 

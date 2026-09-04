@@ -90,6 +90,25 @@ export async function listOrganizationsStorage(): Promise<Organization[]> {
   return await dal.organizations.list();
 }
 
+export async function getIntegrationsStatus(forcePing = false) {
+  const query = forcePing ? '?forcePing=true' : '';
+  const { ok, data, error } = await apiClient.get(`/api/admin/integrations-status${query}`);
+  if (!ok) throw new Error(error || 'Error al obtener estado de pasarelas');
+  return data;
+}
+
+export async function listProcessedPayments({ page = 0, limit = 50, provider = 'all', q = '' } = {}) {
+  const params = new URLSearchParams();
+  params.set('page', String(page));
+  params.set('limit', String(limit));
+  if (provider) params.set('provider', provider);
+  if (q) params.set('q', q);
+
+  const { ok, data, error } = await apiClient.get(`/api/admin/list-processed-payments?${params.toString()}`);
+  if (!ok) throw new Error(error || 'Error al consultar historial de pagos');
+  return data;
+}
+
 export async function logAdminAction(actionType: string, targetUserId: string | null = null, details: object = {}): Promise<void> {
   try {
     const userRes = supabase ? await supabase.auth.getUser() : { data: { user: null } };
