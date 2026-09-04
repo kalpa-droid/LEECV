@@ -113,17 +113,10 @@ export const serverDal = {
   },
 
   processedPayments: {
-    async checkIdempotency(provider: string, externalId: string): Promise<boolean> {
-      const { data } = await supabaseAdmin
-        .from('processed_payments')
-        .select('id')
-        .eq('provider', provider)
-        .eq('external_id', externalId)
-        .maybeSingle();
-
-      return !!data;
-    },
-
+    // Nota: la idempotencia ya no se chequea con un SELECT previo (checkIdempotency,
+    // removida) — applyPayment.ts inserta primero y usa el error de violación del
+    // UNIQUE(provider, external_id) como señal atómica de "ya procesado", cerrando
+    // la ventana de carrera que un SELECT-antes-de-INSERT dejaba abierta.
     async record(data: {
       payment_id?: string;
       provider: string;
