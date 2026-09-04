@@ -63,11 +63,59 @@
   ],
   "crons": [
     {
-      "path": "/api/cron/downgrade-expired-plans",
+      "path": "/api/cron-downgrade",
       "schedule": "0 0 * * *"
     }
   ],
   "rewrites": [
+    {
+      "source": "/api/mercadopago-webhook",
+      "destination": "/api/webhooks?provider=mercadopago"
+    },
+    {
+      "source": "/api/paypal-webhook",
+      "destination": "/api/webhooks?provider=paypal"
+    },
+    {
+      "source": "/api/lemonsqueezy-webhook",
+      "destination": "/api/webhooks?provider=lemonsqueezy"
+    },
+    {
+      "source": "/api/create-paypal-order",
+      "destination": "/api/paypal-order?action=create"
+    },
+    {
+      "source": "/api/capture-paypal-order",
+      "destination": "/api/paypal-order?action=capture"
+    },
+    {
+      "source": "/api/admin/integrations-status",
+      "destination": "/api/admin-api?action=integrations-status"
+    },
+    {
+      "source": "/api/admin/list-processed-payments",
+      "destination": "/api/admin-api?action=list-processed-payments"
+    },
+    {
+      "source": "/api/approve-manual-claim",
+      "destination": "/api/admin-api?action=approve-manual-claim"
+    },
+    {
+      "source": "/api/drive/connect",
+      "destination": "/api/drive-api?action=connect"
+    },
+    {
+      "source": "/api/drive/disconnect",
+      "destination": "/api/drive-api?action=disconnect"
+    },
+    {
+      "source": "/api/drive/get-access-token",
+      "destination": "/api/drive-api?action=get-access-token"
+    },
+    {
+      "source": "/api/cron/downgrade-expired-plans",
+      "destination": "/api/cron-downgrade"
+    },
     {
       "source": "/(c|cv|public)/:slug",
       "has": [

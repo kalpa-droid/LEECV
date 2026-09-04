@@ -1,13 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabaseAdmin } from '../_lib/supabaseAdmin.js';
-import { errorResponse, successResponse } from '../_lib/apiResponse.js';
+import { supabaseAdmin } from './_lib/supabaseAdmin.js';
+import { errorResponse, successResponse } from './_lib/apiResponse.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const cronSecret = process.env.CRON_SECRET;
   const authHeader = req.headers['authorization'];
   const isVercelCron = req.headers['x-vercel-cron'] === '1';
 
-  // Si CRON_SECRET está configurado, validar que coincida el header Bearer o el header x-vercel-cron
   if (cronSecret && authHeader !== `Bearer ${cronSecret}` && !isVercelCron) {
     return errorResponse(res, 401, 'No autorizado para ejecutar el cron de degradación de suscripciones.');
   }
@@ -30,7 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return successResponse(res, {
       message: `Degradación ejecutada con éxito. Perfiles actualizados a 'free': ${degradedCount}`,
       degradedCount,
-      timestamp: nowIso
+      timestamp: nowIso,
     });
   } catch (err: any) {
     return errorResponse(res, 500, `Excepción en cron de degradación: ${err.message}`);

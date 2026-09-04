@@ -41,7 +41,7 @@ export const mercadoPagoProvider: PaymentProvider = {
     }
   },
 
-  verifyWebhook: async ({ req }: WebhookVerifyContext): Promise<boolean> => {
+  verifyWebhook: async ({ req, parsedBody }: WebhookVerifyContext): Promise<boolean> => {
     const secret = process.env.MP_WEBHOOK_SECRET;
     if (!secret) {
       console.warn('[MercadoPago Webhook]: MP_WEBHOOK_SECRET no está configurado');
@@ -55,7 +55,7 @@ export const mercadoPagoProvider: PaymentProvider = {
     const xRequestId = req.headers['x-request-id'] as string | undefined;
     if (!xSignature || !xRequestId) return false;
 
-    const dataId = (req.query?.['data.id'] as string) || req.body?.data?.id;
+    const dataId = (req.query?.['data.id'] as string) || parsedBody?.data?.id || req.body?.data?.id;
     if (!dataId) return false;
 
     const parts = Object.fromEntries(
