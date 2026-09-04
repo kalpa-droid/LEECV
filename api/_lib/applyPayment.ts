@@ -1,14 +1,17 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { serverDal } from './serverDal.js';
 
+export type PlanType = 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' | 'pro' | 'enterprise';
+
 export interface PaymentDetails {
   userId?: string | null;
   email?: string | null;
-  plan: 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' | 'pro' | 'enterprise';
+  plan: PlanType;
   metodoPago: 'mercadopago' | 'paypal' | 'lemonsqueezy' | 'manual';
   externalId?: string | null;
   amount?: number | null;
   currency?: string | null;
+  details?: any;
 }
 
 export async function applyPayment(_supabaseAdmin: SupabaseClient, payment: PaymentDetails) {

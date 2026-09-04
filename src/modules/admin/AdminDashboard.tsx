@@ -16,6 +16,7 @@ import { useToast } from '../../shared/core/ui/Toast';
 import { useConfirm } from '../../shared/core/ui/ConfirmDialog';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
 import { elevationSystem, radius } from '../../shared/core/uiDesignSystem';
+import { PAYMENT_PROVIDER_CATALOG, getPaymentProviderBadge } from '../../shared/core/payments/paymentProviderCatalog';
 
 import { 
   Users, Crown, LogOut, RefreshCw, CreditCard, HardDrive, 
@@ -449,9 +450,11 @@ export default function AdminDashboard() {
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-            {renderGatewayCard('Mercado Pago', 'ARS', integrations?.mercadopago)}
-            {renderGatewayCard('PayPal', 'USD', integrations?.paypal)}
-            {renderGatewayCard('Lemon Squeezy', 'USD', integrations?.lemonsqueezy)}
+            {PAYMENT_PROVIDER_CATALOG.map((p) => (
+              <React.Fragment key={p.id}>
+                {renderGatewayCard(p.name, p.defaultCurrency, integrations?.[p.id])}
+              </React.Fragment>
+            ))}
           </div>
         </div>
 
@@ -497,25 +500,17 @@ export default function AdminDashboard() {
                     {u.created_at ? new Date(u.created_at).toLocaleDateString('es-AR') : '-'}
                   </td>
                   <td className="px-5 py-3">
-                    {u.metodo_pago === 'mercadopago' ? (
-                      <span className="px-2 py-0.5 rounded-full bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)] border border-[var(--color-status-success-base)]/30 font-bold text-[10px]">
-                        🌐 Mercado Pago Automático
-                      </span>
-                    ) : u.metodo_pago === 'paypal' ? (
-                      <span className="px-2 py-0.5 rounded-full bg-[var(--color-secondary-muted)] text-[var(--color-secondary-text)] border border-[var(--color-secondary-base)]/30 font-bold text-[10px]">
-                        💳 PayPal Automático
-                      </span>
-                    ) : u.metodo_pago === 'lemonsqueezy' ? (
-                      <span className="px-2 py-0.5 rounded-full bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)] border border-[var(--color-accent-purple)]/30 font-bold text-[10px]">
-                        🌎 Lemon Squeezy USD
-                      </span>
-                    ) : u.metodo_pago === 'manual' ? (
-                      <span className="px-2 py-0.5 rounded-full bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)] border border-[var(--color-status-warning-base)]/30 font-bold text-[10px]">
-                        🏦 Transferencia / Manual
-                      </span>
-                    ) : (
-                      <span className="text-[var(--color-neutral-text-secondary)] font-bold">Gratuito</span>
-                    )}
+                    {(() => {
+                      if (!u.metodo_pago) {
+                        return <span className="text-[var(--color-neutral-text-secondary)] font-bold">Gratuito</span>;
+                      }
+                      const badge = getPaymentProviderBadge(u.metodo_pago);
+                      return (
+                        <span className={`px-2 py-0.5 rounded-full border font-bold text-[10px] ${badge.className}`}>
+                          {badge.emoji} {badge.label}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td className="px-5 py-3">
                     {u.premium_activo

@@ -5,14 +5,25 @@ import { errorResponse, successResponse } from './apiResponse.js';
 
 export interface WebhookConfig {
   provider: 'mercadopago' | 'paypal' | 'lemonsqueezy';
-  verifySignature?: (req: VercelRequest) => Promise<boolean> | boolean;
-  extractPaymentDetails: (req: VercelRequest) => Promise<PaymentDetails | null> | PaymentDetails | null;
+  rawBody?: boolean;
+  verifySignature?: (ctx: { req: VercelRequest; rawBody?: string; parsedBody: any }) => Promise<boolean> | boolean;
+  extractPaymentDetails: (ctx: { req: VercelRequest; rawBody?: string; parsedBody: any }) => Promise<PaymentDetails | null> | PaymentDetails | null;
+}
+
+async function readRawBody(req: VercelRequest): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', (chunk) => (data += chunk));
+    req.on('end', () => resolve(data));
+    req.on('error', reject);
+  });
 }
 
 /**
  * MOTOR CANÓNICO DE WEBHOOKS (createWebhookHandler)
  * 
  * Abstracta la verificación de firma, extracción de metadata e invocación idempotente de applyPayment.
+ * Soporta `rawBody: true` para pasarelas como Lemon Squeezy que requieren verificar firmas byte-exactas.
  */
 export function createWebhookHandler(config: WebhookConfig) {
   return async (req: VercelRequest, res: VercelResponse) => {
@@ -20,9 +31,23 @@ export function createWebhookHandler(config: WebhookConfig) {
       return errorResponse(res, 405, 'Método HTTP no permitido');
     }
 
+    let rawBody: string | undefined;
+    let parsedBody: any = req.body;
+
+    if (config.rawBody) {
+      try {
+        rawBody = await readRawBody(req);
+        parsedBody = JSON.parse(rawBody);
+      } catch {
+        return errorResponse(res, 400, 'JSON inválido en el body del webhook');
+      }
+    }
+
+    const ctx = { req, rawBody, parsedBody };
+
     if (config.verifySignature) {
       try {
-        const isValid = await config.verifySignature(req);
+        const isValid = await config.verifySignature(ctx);
         if (!isValid) {
           return errorResponse(res, 401, 'Firma de webhook inválida');
         }
@@ -32,7 +57,7 @@ export function createWebhookHandler(config: WebhookConfig) {
     }
 
     try {
-      const paymentDetails = await config.extractPaymentDetails(req);
+      const paymentDetails = await config.extractPaymentDetails(ctx);
       if (!paymentDetails) {
         return successResponse(res, { status: 'ignored', message: 'Evento no procesable u omitido intencionalmente' });
       }

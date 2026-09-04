@@ -10,7 +10,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const auth = await requireAuth(req, res);
   if (!auth) return;
 
-  const rateOk = await requireRateLimit(req, res, `user:${auth.user.id}:mp-preference`, {
+  const rateOk = await requireRateLimit(req, res, `user:${auth.user.id}:paypal-order`, {
     maxRequests: 10,
     windowSeconds: 60,
   });
@@ -18,13 +18,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const userId = auth.user.id;
   const email = auth.user.email || '';
-  const { plan = 'single_pdf' } = req.body || {};
+  const { plan = 'pro' } = req.body || {};
 
   try {
-    const result = await createCheckoutForProvider('mercadopago', plan, userId, email);
+    const result = await createCheckoutForProvider('paypal', plan, userId, email);
     return successResponse(res, { checkoutUrl: result.checkoutUrl });
   } catch (err: any) {
-    console.error('Error creando preferencia MP:', err);
-    return errorResponse(res, 500, err?.message || 'No se pudo crear la preferencia de pago');
+    console.error('Error creando orden PayPal:', err);
+    return errorResponse(res, 500, err?.message || 'No se pudo crear la orden de pago con PayPal');
   }
 }

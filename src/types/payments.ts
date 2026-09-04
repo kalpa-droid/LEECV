@@ -1,5 +1,7 @@
+import type { ProviderId } from '../shared/core/payments/paymentProviderCatalog';
+
 export type PaymentStatus = 'pendiente' | 'aprobado' | 'rechazado';
-export type PaymentGateway = 'mercadopago' | 'lemonsqueezy' | 'payoneer' | 'transferencia' | 'manual';
+export type PaymentGateway = ProviderId | 'transferencia' | 'manual';
 
 export interface PaymentClaim {
   id: string;

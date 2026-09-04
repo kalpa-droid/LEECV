@@ -3,6 +3,7 @@ import { listProcessedPayments } from '../adminService';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
 import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
+import { PAYMENT_PROVIDER_CATALOG, getPaymentProviderBadge, getPaymentProviderDefaultCurrency } from '../../../shared/core/payments/paymentProviderCatalog';
 import { CreditCard, Search, RefreshCw, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 
 export function ProcessedPaymentsTab() {
@@ -64,9 +65,9 @@ export function ProcessedPaymentsTab() {
                 className="bg-transparent text-xs font-bold text-[var(--color-neutral-text-primary)] outline-none cursor-pointer"
               >
                 <option value="all">Todos los Proveedores</option>
-                <option value="mercadopago">Mercado Pago</option>
-                <option value="paypal">PayPal</option>
-                <option value="lemonsqueezy">Lemon Squeezy</option>
+                {PAYMENT_PROVIDER_CATALOG.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
                 <option value="manual">Manual / Transferencia</option>
               </select>
             </div>
@@ -121,23 +122,14 @@ export function ProcessedPaymentsTab() {
                       {p.created_at || p.processed_at ? new Date(p.created_at || p.processed_at).toLocaleString('es-AR') : '-'}
                     </td>
                     <td className="px-5 py-3 whitespace-nowrap">
-                      {p.provider === 'mercadopago' ? (
-                        <span className="px-2 py-0.5 rounded-full bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)] border border-[var(--color-status-success-base)]/30 font-bold text-[10px]">
-                          Mercado Pago
-                        </span>
-                      ) : p.provider === 'paypal' ? (
-                        <span className="px-2 py-0.5 rounded-full bg-[var(--color-secondary-muted)] text-[var(--color-secondary-text)] border border-[var(--color-secondary-base)]/30 font-bold text-[10px]">
-                          PayPal
-                        </span>
-                      ) : p.provider === 'lemonsqueezy' ? (
-                        <span className="px-2 py-0.5 rounded-full bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)] border border-[var(--color-accent-purple)]/30 font-bold text-[10px]">
-                          Lemon Squeezy
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-full bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)] border border-[var(--color-status-warning-base)]/30 font-bold text-[10px]">
-                          Manual / Transferencia
-                        </span>
-                      )}
+                      {(() => {
+                        const badge = getPaymentProviderBadge(p.provider);
+                        return (
+                          <span className={`px-2 py-0.5 rounded-full border font-bold text-[10px] ${badge.className}`}>
+                            {badge.label}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="px-5 py-3 font-mono text-[11px] text-[var(--color-neutral-text-primary)]">
                       {p.external_id || '-'}
@@ -152,7 +144,7 @@ export function ProcessedPaymentsTab() {
                     </td>
                     <td className="px-5 py-3 text-right font-black text-[var(--color-neutral-text-primary)] whitespace-nowrap">
                       {p.amount !== undefined && p.amount !== null
-                        ? `${p.currency || (p.provider === 'mercadopago' ? 'ARS' : 'USD')} $${p.amount}`
+                        ? `${p.currency || getPaymentProviderDefaultCurrency(p.provider)} $${p.amount}`
                         : '-'}
                     </td>
                   </tr>
