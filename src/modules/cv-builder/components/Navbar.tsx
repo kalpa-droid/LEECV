@@ -12,7 +12,8 @@ import {
   Building2, 
   Share2,
   Palette,
-  ShieldCheck
+  ShieldCheck,
+  Globe
 } from 'lucide-react';
 import { elevationSystem, radius, UI_THEME_META } from '../../../shared/core/uiDesignSystem';
 import { ZoomControls } from '../../../shared/core/ui/ZoomControls';
@@ -32,6 +33,7 @@ export interface NavbarProps {
   onOpenAgencyPanel?: () => void;
   onOpenShareAppModal: () => void;
   onOpenPrivacy?: () => void;
+  onOpenCloudStatus?: () => void;
   onAuthToggle?: () => void;
   isLoggedIn?: boolean;
   userRole?: string;
@@ -56,6 +58,7 @@ export default function Navbar({
   onOpenAgencyPanel,
   onOpenShareAppModal,
   onOpenPrivacy,
+  onOpenCloudStatus,
   onAuthToggle,
   isLoggedIn = false,
   userRole = 'candidate',
@@ -152,7 +155,7 @@ export default function Navbar({
                 setIsAccountMenuOpen(false);
               }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-bg-card)] border-2 border-[var(--ui-border)] transition ${elevationSystem.raised} cursor-pointer active:scale-95 text-[var(--ui-text-primary)]`}
-              title="Menú de Guardado y Exportación (Abrir / Guardar / PDF / Portátil)"
+              title="Menú de Guardado y Exportación (Abrir / Guardar / Publicar / PDF / Portátil)"
             >
               <FolderOpen className="w-4 h-4 text-[var(--color-secondary-bright)]" />
               <Save className="w-4 h-4 text-[var(--color-accent-purple-bright)]" />
@@ -204,7 +207,22 @@ export default function Navbar({
                   <span>Guardar una copia para...</span>
                 </button>
 
-                {/* 3. Descargar Copia Portátil (.JSON / .ZIP) */}
+                {/* 3. Publicar CV en la Web */}
+                {onOpenCloudStatus && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsActionMenuOpen(false);
+                      onOpenCloudStatus();
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
+                  >
+                    <Globe className="w-4 h-4 text-[var(--color-status-success-bright)]" />
+                    <span>Publicar CV en la Web (Link Público)</span>
+                  </button>
+                )}
+
+                {/* 4. Descargar Copia Portátil (.JSON / .ZIP) */}
                 <button
                   type="button"
                   onClick={() => {
@@ -219,7 +237,7 @@ export default function Navbar({
 
                 <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
 
-                {/* 4. Exportar en PDF */}
+                {/* 5. Exportar en PDF */}
                 <button
                   type="button"
                   onClick={() => {

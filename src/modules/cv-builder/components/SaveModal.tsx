@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Download, Cloud, ShieldCheck, CopyPlus, Tag, Briefcase, FileArchive } from 'lucide-react';
+import { Save, Download, Cloud, ShieldCheck, CopyPlus, Tag, Briefcase, FileArchive, Globe } from 'lucide-react';
 import { checkStorageStatus } from '../services/cvStorageService';
 import { Modal } from '../../../shared/core/ui/Modal';
 import { radius } from '../../../shared/core/uiDesignSystem';
@@ -119,6 +119,33 @@ export default function SaveModal({
             </p>
           </div>
         </button>
+
+        {/* Opción 2: Publicar CV en la Web (Link Público) */}
+        {onOpenCloudStatus && (
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              onOpenCloudStatus();
+            }}
+            className={`w-full text-left p-3.5 rounded-[${radius.modal}] bg-[var(--color-status-success-muted)] hover:bg-[var(--color-status-success-muted)]/80 border border-[var(--color-status-success-base)]/40 transition group flex items-start gap-3 cursor-pointer`}
+          >
+            <div className={`p-2.5 rounded-[${radius.card}] bg-[var(--color-status-success-base)] text-[var(--color-status-success-on-base)] group-hover:scale-110 transition flex-shrink-0`}>
+              <Globe className="w-5 h-5" />
+            </div>
+            <div className="space-y-0.5 min-w-0 flex-1">
+              <div className="flex items-center justify-between">
+                <span className="font-extrabold text-xs sm:text-sm text-[var(--ui-text-primary)]">Publicar CV en la Web (Link Público)</span>
+                <span className="text-[10px] font-black px-2 py-0.5 rounded bg-[var(--color-status-success-base)] text-[var(--color-status-success-on-base)]">
+                  🌐 Tu CV en Internet
+                </span>
+              </div>
+              <p className="text-[11px] text-[var(--ui-text-secondary)]">
+                Genera un enlace web público único (/c/tu-slug) para compartir tu currículum online.
+              </p>
+            </div>
+          </button>
+        )}
 
         {/* Opción 2: Guardar una copia para... */}
         {onSaveAs && (

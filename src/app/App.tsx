@@ -474,6 +474,7 @@ function AppContent() {
           onOpenPricing={() => setIsPricingModalOpen(true)}
           onOpenShareAppModal={() => setIsShareAppModalOpen(true)}
           onOpenPrivacy={() => setIsPrivacyModalOpen(true)}
+          onOpenCloudStatus={() => setIsCloudModalOpen(true)}
           onAuthToggle={handleAuthToggle}
           isLoggedIn={!!currentProfile}
           userRole={currentProfile?.role || 'candidate'}
