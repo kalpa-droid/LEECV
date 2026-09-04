@@ -1,6 +1,7 @@
 import type { VercelRequest } from '@vercel/node';
-import type { ProviderId } from '../../../src/shared/core/payments/paymentProviderCatalog.ts';
 import type { PaymentDetails } from '../applyPayment.js';
+
+export type ProviderId = 'mercadopago' | 'paypal' | 'lemonsqueezy';
 
 export type ProviderStatusCode = 'active' | 'missing_vars' | 'invalid_credentials' | 'webhook_not_found' | 'error';
 
