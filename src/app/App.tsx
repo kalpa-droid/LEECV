@@ -212,6 +212,7 @@ function AppContent() {
   const [isShareAppModalOpen, setIsShareAppModalOpen] = useState(false);
   const [isCloudModalOpen, setIsCloudModalOpen] = useState(false);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+  const [pdfCheckoutPurpose, setPdfCheckoutPurpose] = useState<'export' | 'publish'>('export');
   const [, setPdfProgress] = useState(0);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isPdfComplete, setIsPdfComplete] = useState(false);
@@ -358,6 +359,7 @@ function AppContent() {
       return;
     }
 
+    setPdfCheckoutPurpose('export');
     setIsPdfCheckoutOpen(true);
   };
 
@@ -633,6 +635,10 @@ function AppContent() {
             onForceSave={handleSaveCVClick}
             isSaving={isSaving}
             cvData={cvData}
+            onOpenPdfCheckout={() => {
+              setPdfCheckoutPurpose('publish');
+              setIsPdfCheckoutOpen(true);
+            }}
           />
         )}
 
@@ -644,6 +650,7 @@ function AppContent() {
             currentProfile={currentProfile}
             onOpenPricing={() => setIsPricingModalOpen(true)}
             onExportJson={() => exportCVToJson(cvData)}
+            purpose={pdfCheckoutPurpose}
           />
         )}
 

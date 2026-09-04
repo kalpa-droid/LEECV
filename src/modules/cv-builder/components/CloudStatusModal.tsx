@@ -19,6 +19,7 @@ export interface CloudStatusModalProps {
   onForceSave: () => void;
   isSaving: boolean;
   cvData?: any;
+  onOpenPdfCheckout?: () => void;
 }
 
 export default function CloudStatusModal({
@@ -26,7 +27,8 @@ export default function CloudStatusModal({
   onClose,
   onForceSave,
   isSaving,
-  cvData
+  cvData,
+  onOpenPdfCheckout
 }: CloudStatusModalProps) {
   const { showSuccess, showInfo } = useToast();
   const [profile, setProfile] = useState<any>(null);
@@ -59,7 +61,11 @@ export default function CloudStatusModal({
         showSuccess(`¡CV publicado en la web! 🌐 ${res.publicUrl}`);
         navigation.openExternal(res.publicUrl);
       } else if (res.needsPayment) {
-        showInfo('La activación del link público en la web requiere el desbloqueo único de $1 USD.');
+        showInfo(res.message || 'La activación del link público requiere créditos.');
+        if (onOpenPdfCheckout) {
+          onClose();
+          onOpenPdfCheckout();
+        }
       } else {
         throw new Error(res.error || res.message || 'No se pudo publicar el CV.');
       }

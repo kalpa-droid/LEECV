@@ -42,9 +42,17 @@ export async function iniciarPago(providerId: ProviderId, plan: 'single_pdf' | '
     }
 
     case 'lemonsqueezy': {
-      const base = import.meta.env.VITE_LEMONSQUEEZY_CHECKOUT_URL;
+      const urlMap: Record<string, string | undefined> = {
+        single_pdf: import.meta.env.VITE_LEMONSQUEEZY_URL_PDF1 || import.meta.env.VITE_LEMONSQUEEZY_URL_SINGLE_PDF,
+        credits_pack_5: import.meta.env.VITE_LEMONSQUEEZY_URL_PACK5,
+        credits_pack_10: import.meta.env.VITE_LEMONSQUEEZY_URL_PACK10,
+        pro: import.meta.env.VITE_LEMONSQUEEZY_URL_PRO,
+        enterprise: import.meta.env.VITE_LEMONSQUEEZY_URL_ENTERPRISE,
+      };
+
+      const base = urlMap[plan] || import.meta.env.VITE_LEMONSQUEEZY_CHECKOUT_URL;
       if (!base) {
-        throw new Error('No está configurada VITE_LEMONSQUEEZY_CHECKOUT_URL');
+        throw new Error('No está configurada la URL de checkout de Lemon Squeezy para este plan');
       }
       const { data: { user } } = await supabase?.auth.getUser() || { data: { user: null } };
       const url = new URL(base);

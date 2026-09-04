@@ -19,7 +19,9 @@ export const UI_GLOSSARY = {
     paperFormat: 'Formato de Papel',
     threeLevelCascade: 'Nivel 1: Preset Regional ➔ Nivel 2: Plantilla Base ➔ Nivel 3: Ajustes Personalizados',
     draftStatus: 'Borrador (En Edición)',
-    officialStatus: 'CV Oficial'
+    officialStatus: 'CV Oficial',
+    publishTitle: 'Publicar CV en la Web',
+    publishCreditNotice: 'Publicar tu CV en la web consume 1 crédito de exportación PDF (el mismo pool que usás para descargar). Comprá créditos o suscribite a Pro para publicar sin límite.'
   },
   hints: {
     draftDot: {

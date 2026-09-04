@@ -12,6 +12,7 @@ import { usePdfExportGate } from '../../../../shared/core/entitlements/usePdfExp
 import { withErrorHandling } from '../../../../shared/core/utils/errorHandler';
 
 import { elevationSystem, radius } from '../../../../shared/core/uiDesignSystem';
+import { UI_GLOSSARY } from '../../../../shared/core/ui/uiTextGlossary';
 
 export default function PdfCheckoutModal({ 
   isOpen, 
@@ -19,7 +20,8 @@ export default function PdfCheckoutModal({
   onConfirm,
   currentProfile,
   onOpenPricing,
-  onExportJson
+  onExportJson,
+  purpose = 'export'
 }: any) {
   const [email, setEmail] = useState(currentProfile?.email || '');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -127,8 +129,8 @@ export default function PdfCheckoutModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Exportar Documento PDF A4 Nativo"
-      icon={<span className="text-xl">📄</span>}
+      title={purpose === 'publish' ? UI_GLOSSARY.labels.publishTitle : 'Exportar Documento PDF A4 Nativo'}
+      icon={<span className="text-xl">{purpose === 'publish' ? '🌐' : '📄'}</span>}
       size="lg"
       footer={
         <div className="w-full flex items-center justify-between gap-2">
@@ -138,7 +140,7 @@ export default function PdfCheckoutModal({
           >
             Volver al Editor
           </button>
-          {(isProOrEnterprise || currentProfile) && (
+          {(isProOrEnterprise || currentProfile) && purpose === 'export' && (
             <button
               onClick={handleConfirmExport}
               disabled={isProcessing}

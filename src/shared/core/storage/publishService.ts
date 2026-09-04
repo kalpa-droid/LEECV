@@ -3,6 +3,7 @@ import { uploadToGoogleDrive } from './googleDriveBackend';
 import { apiClient } from '../utils/apiClient';
 import { isProOrEnterprise } from '../entitlements/useEntitlements';
 import { navigation } from '../utils/navigation';
+import { UI_GLOSSARY } from '../ui/uiTextGlossary';
 
 export interface PublishResult {
   success: boolean;
@@ -81,27 +82,28 @@ export async function publishCV(cvData: any): Promise<PublishResult> {
     .eq('id', userId)
     .single();
 
-  let isUnlocked = isProOrEnterprise(profile?.plan);
-  if (!isUnlocked) {
-    const { data: unlock } = await supabase
-      .from('publish_unlocks')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('cv_id', cvId)
-      .maybeSingle();
+  // 2. Verificar si este CV ya estaba publicado antes (actualización 100% gratuita)
+  const { data: existingPublished } = await supabase
+    .from('published_cvs')
+    .select('id, slug')
+    .eq('user_id', userId)
+    .eq('cv_id', cvId)
+    .maybeSingle();
 
-    if (unlock) {
-      isUnlocked = true;
+  if (!existingPublished) {
+    // Alta nueva: aplica el mismo gate que la exportación de PDF
+    const unlimitedExports = isProOrEnterprise(profile?.plan);
+    if (!unlimitedExports) {
+      const { data: gotCredit, error } = await supabase.rpc('consume_pdf_credit', { p_user_id: userId });
+      if (error || !gotCredit) {
+        return {
+          success: false,
+          needsPayment: true,
+          price: 1.5,
+          message: UI_GLOSSARY.labels.publishCreditNotice
+        };
+      }
     }
-  }
-
-  if (!isUnlocked) {
-    return {
-      success: false,
-      needsPayment: true,
-      price: 1,
-      message: 'La activación del link web público requiere un pago único de $1 USD por este CV (actualizaciones futuras ilimitadas gratis).'
-    };
   }
 
   // 3. Subir el archivo JSON al Google Drive del usuario
