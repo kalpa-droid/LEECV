@@ -60,6 +60,10 @@ export async function iniciarPago(providerId: ProviderId, plan: 'single_pdf' | '
         url.searchParams.set('checkout[custom][user_id]', user.id);
       }
       url.searchParams.set('checkout[custom][plan]', plan);
+      if (typeof navigator !== 'undefined' && navigator.language) {
+        const userLang = navigator.language.slice(0, 2).toLowerCase();
+        url.searchParams.set('locale', userLang);
+      }
       navigation.goTo(url.toString());
       return;
     }
