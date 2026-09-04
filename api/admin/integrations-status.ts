@@ -122,7 +122,7 @@ async function pingPayPal(): Promise<ProviderStatus> {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${authHeader}`,
-        'Content-Type': 'application/x-www-form-request-body',
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: 'grant_type=client_credentials',
       signal: controller.signal,

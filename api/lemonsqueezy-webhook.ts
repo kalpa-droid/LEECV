@@ -40,13 +40,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     (userId || email)
   ) {
     try {
+      const totalCents = event.data?.attributes?.total;
       await applyPayment(supabaseAdmin, {
         userId,
         email,
         plan,
         metodoPago: 'lemonsqueezy',
         externalId: String(event.data?.id),
-        amount: event.data?.attributes?.total,
+        // Lemon Squeezy expresa los montos monetarios en centavos (igual que Stripe),
+        // no en unidades — sin esta división, el ledger queda 100x inflado.
+        amount: typeof totalCents === 'number' ? totalCents / 100 : undefined,
+        currency: event.data?.attributes?.currency || 'USD',
       });
     } catch (err: any) {
       console.error('Error activando plan (Lemon Squeezy):', err);
