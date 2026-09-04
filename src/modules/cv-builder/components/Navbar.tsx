@@ -143,8 +143,21 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* CLUSTER DERECHO: Píldoras Ovaladas de Menús (Acciones 📁💾 | Cuenta 👤🔑) */}
+        {/* CLUSTER DERECHO: Píldoras Ovaladas de Menús (Publicar 🌐 | Acciones 📁💾 | Cuenta 👤🔑) */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+
+          {/* Botón Directo Publicar CV Web */}
+          {onOpenCloudStatus && (
+            <button
+              type="button"
+              onClick={onOpenCloudStatus}
+              className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-status-success-on-base)] font-extrabold text-xs transition ${elevationSystem.raised} cursor-pointer active:scale-95`}
+              title="Publicar CV en la Web (Link Público / Slug)"
+            >
+              <Globe className="w-4 h-4" />
+              <span>Publicar Web</span>
+            </button>
+          )}
 
           {/* PÍLDORA 1: MENÚ DE ACCIONES (Iconos de Abrir 📁 y Guardar 💾) */}
           <div className="relative" ref={actionMenuRef}>
@@ -208,19 +221,19 @@ export default function Navbar({
                 </button>
 
                 {/* 3. Publicar CV en la Web */}
-                {onOpenCloudStatus && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsActionMenuOpen(false);
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsActionMenuOpen(false);
+                    if (onOpenCloudStatus) {
                       onOpenCloudStatus();
-                    }}
-                    className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
-                  >
-                    <Globe className="w-4 h-4 text-[var(--color-status-success-bright)]" />
-                    <span>Publicar CV en la Web (Link Público)</span>
-                  </button>
-                )}
+                    }
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
+                >
+                  <Globe className="w-4 h-4 text-[var(--color-status-success-bright)]" />
+                  <span>Publicar CV en la Web (Link Público)</span>
+                </button>
 
                 {/* 4. Descargar Copia Portátil (.JSON / .ZIP) */}
                 <button
