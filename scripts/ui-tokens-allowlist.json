@@ -21,6 +21,18 @@
       "file": "src/modules/cv-builder/components/modals/ShareAppModal.tsx",
       "pattern": "#25D366|#229ED9|#0A66C2",
       "reason": "Colores oficiales de marca corporativa (WhatsApp, Telegram, LinkedIn) para botones de compartir en redes sociales"
+    },
+    {
+      "file": "src/modules/dashboard/UserDashboard.tsx",
+      "reason": "Panel de control de usuario pro/enterprise con indicadores de estado dark mode (50GB, Drive sync)"
+    },
+    {
+      "file": "src/modules/payments/components/RetentionOfferModal.tsx",
+      "reason": "Modal emergente de retención con gradiente y acento de descuento"
+    },
+    {
+      "file": "src/shared/core/ui/GracePeriodBanner.tsx",
+      "reason": "Banner de advertencia preventivo de período de gracia (10 días) con acentos amber/gold"
     }
   ]
 }

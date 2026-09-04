@@ -15,3 +15,4 @@ try {
   console.error('❌ Verificación de anclaje PDF falló.');
   process.exit(1);
 }
+

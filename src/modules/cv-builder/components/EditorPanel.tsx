@@ -33,6 +33,7 @@ import { COVER_PRESETS } from '../../../shared/core/pdf-engine/layers/presets/co
 import PersonalInfoSection from './editor/PersonalInfoSection';
 import { PanelSection } from './editor/PanelSection';
 import { SectionManualAdjustment } from './editor/SectionManualAdjustment';
+import { getUiHint } from '../../../shared/core/uiTextGlossary';
 import { applyPresetLevel } from '../../../shared/core/pdf-engine/layers/presets/presetHierarchyEngine';
 import { activateSection } from '../../../shared/core/sections/sectionActivationEngine';
 import { triggerPresetTransition } from '../../../shared/core/pdf-engine/layers/presets/presetTransitionEngine';

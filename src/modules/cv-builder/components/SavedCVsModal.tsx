@@ -191,8 +191,6 @@ export default function SavedCVsModal({
             </div>
           </button>
         </div>
-
-
         {/* Body List */}
         <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
           {isLoading ? (

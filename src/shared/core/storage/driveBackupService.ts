@@ -111,6 +111,25 @@ export async function backupCvToGoogleDrive(cvData: any, userPlan: string = 'pro
     await idbStorage.setItem(perCvStorageKey, updatedPerCvHashes);
     await idbStorage.setItem(DRIVE_GLOBAL_HASH_KEY, updatedGlobalHashes);
 
+    // 6. Actualizar puntero de backup en Supabase public.cvs
+    const primaryFileId = jsonUploadRes.fileId || driveFolderId || null;
+    if (primaryFileId) {
+      try {
+        const { supabase } = await import('../lib/supabaseClient');
+        if (supabase) {
+          await supabase
+            .from('cvs')
+            .update({
+              drive_file_id: primaryFileId,
+              drive_synced_at: new Date().toISOString(),
+            })
+            .eq('id', cvId);
+        }
+      } catch (dbErr) {
+        console.warn('Advertencia al guardar drive_file_id en Supabase:', dbErr);
+      }
+    }
+
     return {
       success: true,
       driveSyncState: 'synced',
@@ -124,5 +143,49 @@ export async function backupCvToGoogleDrive(cvData: any, userPlan: string = 'pro
       driveSyncState: 'pending',
       error: err.message || String(err)
     };
+  }
+}
+
+/**
+ * Liberar un CV de Google Drive (elimina archivo real en Google Drive y remueve punteros en Supabase)
+ */
+export async function deleteBackupFromDrive(cvId: string, driveFileId?: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    // 1. Eliminar de Google Drive si existe driveFileId
+    if (driveFileId) {
+      try {
+        const res = await fetch(`/api/drive-api?action=delete-file&fileId=${encodeURIComponent(driveFileId)}`, {
+          method: 'POST',
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.warn('Advertencia borrando archivo en Drive API:', errData);
+        }
+      } catch (driveApiErr) {
+        console.warn('Excepción llamando a /api/drive-api delete-file:', driveApiErr);
+      }
+    }
+
+    // 2. Limpiar puntero en Supabase public.cvs
+    const { supabase } = await import('../lib/supabaseClient');
+    if (supabase) {
+      await supabase
+        .from('cvs')
+        .update({
+          drive_file_id: null,
+          drive_synced_at: null,
+        })
+        .eq('id', cvId);
+    }
+
+    // 3. Limpiar local cache en IndexedDB
+    try {
+      await idbStorage.removeItem(`${DRIVE_PER_CV_HASH_PREFIX}${cvId}`);
+    } catch {}
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('Error liberando backup de Drive:', err);
+    return { success: false, error: err.message || 'Error al liberar backup' };
   }
 }

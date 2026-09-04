@@ -5,14 +5,14 @@ import { requireRateLimit } from './_lib/rateLimiter.js';
 import { serverDal } from './_lib/serverDal.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') return errorResponse(res, 405, 'Método no permitido');
-
   const auth = await requireAuth(req, res);
   if (!auth) return;
 
   const action = (req.query.action as string) || req.body?.action || 'connect';
 
   if (action === 'connect') {
+    if (req.method !== 'POST') return errorResponse(res, 405, 'Método no permitido');
+
     const rateOk = await requireRateLimit(req, res, `user:${auth.user.id}:drive-connect`, {
       maxRequests: 15,
       windowSeconds: 60,
@@ -34,6 +34,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (action === 'disconnect') {
+    if (req.method !== 'POST') return errorResponse(res, 405, 'Método no permitido');
+
     const rateOk = await requireRateLimit(req, res, `user:${auth.user.id}:drive-disconnect`, {
       maxRequests: 15,
       windowSeconds: 60,
@@ -73,6 +75,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (action === 'get-access-token') {
+    if (req.method !== 'POST') return errorResponse(res, 405, 'Método no permitido');
+
     const rateOk = await requireRateLimit(req, res, `user:${auth.user.id}:drive-token`, {
       maxRequests: 15,
       windowSeconds: 60,
@@ -115,5 +119,63 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
-  return errorResponse(res, 400, 'Acción no válida');
+  if (action === 'delete-file') {
+    if (req.method !== 'POST' && req.method !== 'DELETE') {
+      return errorResponse(res, 405, 'Método no permitido');
+    }
+
+    const rateOk = await requireRateLimit(req, res, `user:${auth.user.id}:drive-delete-file`, {
+      maxRequests: 30,
+      windowSeconds: 60,
+    });
+    if (!rateOk) return;
+
+    const fileId = (req.query.fileId as string) || req.body?.fileId;
+    if (!fileId || typeof fileId !== 'string') {
+      return errorResponse(res, 400, 'fileId es requerido');
+    }
+
+    try {
+      const tokenRow = await serverDal.driveTokens.getByUserId(auth.user.id);
+      if (!tokenRow || !tokenRow.refresh_token) {
+        return errorResponse(res, 404, 'Google Drive no está conectado');
+      }
+
+      const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: process.env.GOOGLE_CLIENT_ID || '',
+          client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
+          refresh_token: tokenRow.refresh_token,
+          grant_type: 'refresh_token',
+        }),
+      });
+
+      const tokenData: any = await tokenRes.json();
+      if (!tokenRes.ok || !tokenData.access_token) {
+        return errorResponse(res, 401, 'No se pudo obtener access token de Google');
+      }
+
+      const deleteRes = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${tokenData.access_token}`,
+        },
+      });
+
+      if (!deleteRes.ok && deleteRes.status !== 404) {
+        const errBody = await deleteRes.text();
+        console.error('Error al eliminar archivo en Google Drive:', errBody);
+        return errorResponse(res, deleteRes.status, 'Error al eliminar el archivo en Google Drive');
+      }
+
+      return successResponse(res, { success: true, deletedFileId: fileId });
+    } catch (err: any) {
+      console.error('Excepción al eliminar archivo en Drive:', err);
+      return errorResponse(res, 500, err?.message || 'Error interno al eliminar archivo');
+    }
+  }
+
+  return errorResponse(res, 400, 'Acción no especificada o no soportada');
 }

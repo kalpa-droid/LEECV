@@ -36,6 +36,18 @@ export const UI_GLOSSARY = {
     canonical: 'Guardar',
     forbidden: ['Almacenar'],
   },
+  personalizado: {
+    canonical: 'Personalizado',
+    forbidden: ['Modificado a mano'],
+  },
+  cascadaDiseno: {
+    canonical: 'Nivel 1: Preset Regional ➔ Nivel 2: Plantilla Base ➔ Nivel 3: Ajustes Personalizados',
+    forbidden: [],
+  }
 } as const;
 
 export type GlossaryKey = keyof typeof UI_GLOSSARY;
+
+export function getUiHint(key: GlossaryKey): string {
+  return UI_GLOSSARY[key]?.canonical || '';
+}

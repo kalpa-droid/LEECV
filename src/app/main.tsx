@@ -7,9 +7,12 @@ import { navigation } from '../shared/core/utils/navigation';
 
 const App = lazy(() => import('./App'));
 const AdminDashboard = lazy(() => import('../modules/admin/AdminDashboard'));
+const UserDashboard = lazy(() => import('../modules/dashboard/UserDashboard').then(m => ({ default: m.UserDashboard })));
 
-const isAdminRoute = navigation.getPathname().startsWith('/admin');
-const RootComponent = isAdminRoute ? AdminDashboard : App;
+const pathname = navigation.getPathname();
+const isAdminRoute = pathname.startsWith('/admin');
+const isDashboardRoute = pathname.startsWith('/dashboard');
+const RootComponent = isAdminRoute ? AdminDashboard : isDashboardRoute ? UserDashboard : App;
 
 const rootElement = document.getElementById('root');
 if (rootElement) {

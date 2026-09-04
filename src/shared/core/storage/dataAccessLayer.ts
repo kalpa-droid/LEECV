@@ -140,12 +140,26 @@ export const dal = {
   },
 
   retentionOffers: {
-    async insert(payload: { user_id: string; plan_at_offer: string; discount_percent: number; valid_until: string }): Promise<boolean> {
+    async insert(payload: { user_id: string; plan_at_offer?: string; discount_percent: number; valid_until: string; notes?: string }): Promise<boolean> {
       if (!supabase) return false;
       const res = await safeSupabaseCall(() =>
         supabase.from('retention_offers').insert(payload)
       );
       return res.success;
+    },
+
+    async getActiveForUser(userId: string): Promise<any | null> {
+      if (!supabase) return null;
+      const res = await safeSupabaseCall(() =>
+        supabase
+          .from('retention_offers')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('status', 'pendiente')
+          .gt('valid_until', new Date().toISOString())
+          .maybeSingle()
+      );
+      return res.data || null;
     }
   },
 
@@ -207,7 +221,7 @@ export const dal = {
       const res = await safeSupabaseCall(() =>
         supabase
           .from('cvs')
-          .select('id, title, candidate_name, dni, updated_at')
+          .select('id, title, candidate_name, dni, updated_at, drive_file_id, drive_synced_at')
           .eq('user_id', userId)
           .order('updated_at', { ascending: false })
       );

@@ -132,3 +132,43 @@ export function importCVFromZipFile(file: File): Promise<CVData> {
   });
 }
 
+export async function exportAllCVsToZip(cvList: any[], candidateName: string = 'Usuario'): Promise<void> {
+  if (!cvList || cvList.length === 0) return;
+
+  const zip = new JSZip();
+  const manifest = {
+    exportedAt: new Date().toISOString(),
+    totalCVs: cvList.length,
+    candidateName,
+  };
+
+  zip.file('manifest.json', JSON.stringify(manifest, null, 2));
+
+  const rootFolder = zip.folder('cvs');
+  for (let i = 0; i < cvList.length; i++) {
+    const item = cvList[i];
+    const cvData = item.cv_data || item;
+    const title = (item.title || cvData?.personalInfo?.fullName || `CV_${i + 1}`).replace(/[^\w\s-]/gi, '_');
+
+    if (cvData) {
+      const { cleanCvData, binaryAssets } = await splitCvDataForDrive(cvData);
+      const cvSubfolder = rootFolder?.folder(title);
+
+      if (cvSubfolder) {
+        cvSubfolder.file('datos.json', JSON.stringify(cleanCvData, null, 2));
+        if (binaryAssets && binaryAssets.length > 0) {
+          const imgSubfolder = cvSubfolder.folder('imagenes');
+          binaryAssets.forEach(asset => {
+            imgSubfolder?.file(asset.filename.replace(/^certificados\//, ''), asset.blob);
+          });
+        }
+      }
+    }
+  }
+
+  const zipContent = await zip.generateAsync({ type: 'blob' });
+  const fileName = `LEECV_backup_completo_${candidateName.replace(/\s+/g, '_')}.zip`;
+  downloadBlob(zipContent, fileName);
+}
+
+

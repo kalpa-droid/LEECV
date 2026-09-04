@@ -384,11 +384,11 @@ export function getActiveUiTheme(themeId?: string) {
  */
 export function applyUiTheme(themeId?: string): void {
   if (typeof document === 'undefined') return;
-  document.documentElement.setAttribute('data-ui-theme', themeId || 'default');
+  const normalizedId = (!themeId || themeId === 'day') ? 'default' : (themeId === 'night' ? 'dark' : themeId);
+  const root = document.documentElement;
+  root.setAttribute('data-ui-theme', normalizedId);
 
   const theme = getActiveUiTheme(themeId);
-  const root = document.documentElement;
-
   root.style.setProperty('--ui-bg-panel', theme.bgPanel);
   root.style.setProperty('--ui-bg-card', theme.bgCard);
   root.style.setProperty('--ui-bg-header', theme.bgHeader);
@@ -402,4 +402,3 @@ export function applyUiTheme(themeId?: string): void {
   root.style.setProperty('--ui-accent', theme.accent);
   root.style.setProperty('--ui-secondary', theme.secondary);
 }
-

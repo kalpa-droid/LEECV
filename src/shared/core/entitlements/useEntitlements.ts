@@ -17,6 +17,8 @@ export function isAdminRole(role?: string | null): boolean {
 
 export function useEntitlements() {
   const [plan, setPlan] = useState('free');
+  const [inGracePeriod, setInGracePeriod] = useState(false);
+  const [graceEndsAt, setGraceEndsAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,15 +33,21 @@ export function useEntitlements() {
         if (user) {
           const { data } = await supabase
             .from('profiles')
-            .select('plan, premium_vence')
+            .select('plan, premium_vence, grace_period_ends_at')
             .eq('id', user.id)
             .single();
 
-          const isExpired = !!(data?.premium_vence && new Date(data.premium_vence) < new Date());
-          const effectivePlan = isExpired ? 'free' : (data?.plan || 'free');
+          if (data) {
+            const now = new Date();
+            const isPastDue = !!(data.premium_vence && new Date(data.premium_vence) < now);
+            const inGrace = isPastDue && !!(data.grace_period_ends_at && new Date(data.grace_period_ends_at) > now);
+            const effectivePlan = (isPastDue && !inGrace) ? 'free' : (data.plan || 'free');
 
-          if (PLAN_FEATURES[effectivePlan]) {
-            setPlan(effectivePlan);
+            if (PLAN_FEATURES[effectivePlan]) {
+              setPlan(effectivePlan);
+            }
+            setInGracePeriod(inGrace);
+            setGraceEndsAt(data.grace_period_ends_at || null);
           }
         }
       } catch (err) {
@@ -60,6 +68,9 @@ export function useEntitlements() {
     loading,
     features,
     isPremium,
+    inGracePeriod,
+    graceEndsAt,
+    canEmergencyExport: inGracePeriod || isPremium,
     unlimitedExports: features.unlimitedExports,
     candidateManagement: features.candidateManagement,
     cloudStorageGB: features.cloudStorageGB

@@ -32,7 +32,7 @@
     "verify:container-style": "node scripts/verify-container-style-engine.js",
     "verify:social-universal": "node scripts/verify-social-section-universal.js",
     "verify:modal-density": "node scripts/verify-modal-text-density.js",
-    "verify:pdf-anchor-accuracy": "node scripts/verify-pdf-anchor-accuracy.js",
+    "verify:pdf-anchor-accuracy": "npx tsx scripts/verify-pdf-anchor-accuracy.js",
     "verify:mobile-dock-fit": "node scripts/verify-mobile-dock-fit.js",
     "verify:sections-pdf-connection": "npx tsx scripts/verify-all-sections-pdf-connection.js",
     "verify:manual-reordering": "npx tsx scripts/verify-manual-reordering-engine.js",
