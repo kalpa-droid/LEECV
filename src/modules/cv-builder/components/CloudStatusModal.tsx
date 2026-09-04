@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Cloud, RefreshCw, HardDrive, ShieldCheck, LogIn, Globe, LogOut } from 'lucide-react';
-import { checkStorageStatus } from '../services/cvStorageService';
+import { RefreshCw, LogIn, Globe, LogOut } from 'lucide-react';
 import { checkGoogleDriveQuota } from '../services/googleDriveQuotaService';
 import { getCurrentProfile, signInWithGoogle, logout } from '../../auth/authService';
 import { publishCV } from '../../../shared/core/storage/publishService';
@@ -109,22 +108,14 @@ export default function CloudStatusModal({
     };
   }, [isOpen]);
 
-  const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
-  const storageStatus = checkStorageStatus();
 
-  let currentColor = 'yellow';
-  if (!isOnline) {
-    currentColor = 'red';
-  } else if (storageStatus.isCloud) {
-    currentColor = 'green';
-  }
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Estado de Sincronización & Nube"
-      icon={<Cloud className="w-6 h-6 text-[var(--ui-accent-purple)] animate-pulse" />}
+      title="Publicar en la Web"
+      icon={<Globe className="w-6 h-6 text-[var(--color-status-success-bright)] animate-pulse" />}
       size="lg"
       footer={
         <div className="w-full flex items-center justify-between gap-2">
@@ -163,26 +154,23 @@ export default function CloudStatusModal({
       <div className={`space-y-4 text-xs bg-[var(--ui-bg-panel)] p-4 rounded-[${radius.modal}] text-[var(--ui-text-primary)]`}>
         {/* Main Active Status Card */}
         <div className={`p-3.5 rounded-[${radius.modal}] border flex items-center gap-3 ${
-          currentColor === 'green'
+          profile?.drive_connected
             ? 'bg-[var(--ui-bg-card)] border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-bright)]'
-            : currentColor === 'yellow'
-            ? 'bg-[var(--ui-bg-card)] border-[var(--color-status-warning-base)]/40 text-[var(--color-accent-amber-bright)]'
-            : 'bg-[var(--ui-bg-card)] border-[var(--color-status-danger-base)]/40 text-[var(--color-status-danger-bright)]'
+            : 'bg-[var(--ui-bg-card)] border-[var(--color-accent-amber)]/40 text-[var(--color-accent-amber-bright)]'
         }`}>
-          <Cloud className={`w-6 h-6 flex-shrink-0 ${
-            currentColor === 'green' ? 'text-[var(--color-status-success-bright)]' : currentColor === 'yellow' ? 'text-[var(--color-accent-amber-bright)]' : 'text-[var(--color-status-danger-bright)]'
-          }`} />
-
+          {profile?.drive_connected ? (
+            <Globe className="w-6 h-6 flex-shrink-0 text-[var(--color-status-success-bright)]" />
+          ) : (
+            <LogIn className="w-6 h-6 flex-shrink-0 text-[var(--color-accent-amber-bright)]" />
+          )}
           <div className="space-y-0.5">
             <h4 className="font-extrabold text-xs text-[var(--ui-text-primary)]">
-              {currentColor === 'green' && 'Nube Supabase Conectada'}
-              {currentColor === 'yellow' && 'Guardado Local Activo (WebP)'}
-              {currentColor === 'red' && 'Sin Conexión a Internet'}
+              {profile?.drive_connected ? 'Cuenta vinculada ✅' : 'Vinculá tu correo para publicar'}
             </h4>
             <p className="text-[11px] text-[var(--ui-text-secondary)]">
-              {currentColor === 'green' && 'Guardado y sincronizado automáticamente en la nube de Supabase.'}
-              {currentColor === 'yellow' && 'Guardado automático en tu equipo. Sin pérdida ante cortes de luz.'}
-              {currentColor === 'red' && 'Modo sin conexión. Los cambios quedan protegidos en tu equipo.'}
+              {profile?.drive_connected
+                ? 'Tu cuenta de Google está conectada. Puedes publicar y respaldar tu CV.'
+                : 'Conectá tu cuenta de Google para publicar tu currículum en la web con un link público.'}
             </p>
           </div>
         </div>
@@ -191,8 +179,8 @@ export default function CloudStatusModal({
         <div className={`p-4 rounded-[${radius.modal}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] space-y-3`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <HardDrive className="w-4 h-4 text-[var(--color-secondary-bright)]" />
-              <span className="font-extrabold text-[var(--ui-text-primary)] text-xs">Google Drive Backup</span>
+              <LogIn className="w-4 h-4 text-[var(--color-secondary-bright)]" />
+              <span className="font-extrabold text-[var(--ui-text-primary)] text-xs">Vincular Cuenta de Google</span>
             </div>
             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
               profile?.drive_connected
@@ -261,36 +249,6 @@ export default function CloudStatusModal({
           )}
         </div>
 
-        {/* Storage Architecture Overview */}
-        <div className="space-y-2 border-t border-[var(--ui-border)] pt-3">
-          <h4 className="font-extrabold text-[var(--ui-text-secondary)] text-[11px] uppercase tracking-wider">Capas de Protección de Datos:</h4>
-          
-          <div className="space-y-2">
-            <div className={`flex items-center gap-3 p-2.5 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)]`}>
-              <ShieldCheck className="w-5 h-5 text-[var(--color-status-success-bright)] flex-shrink-0" />
-              <div>
-                <span className="font-black text-[var(--color-status-success-bright)]">IndexedDB + WebP:</span>
-                <span className="text-[var(--ui-text-secondary)] ml-1.5">Almacenamiento ilimitado en tu navegador local.</span>
-              </div>
-            </div>
-
-            <div className={`flex items-center gap-3 p-2.5 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)]`}>
-              <Cloud className="w-5 h-5 text-[var(--color-accent-purple-bright)] flex-shrink-0" />
-              <div>
-                <span className="font-black text-[var(--color-accent-purple-bright)]">Nube Supabase:</span>
-                <span className="text-[var(--ui-text-secondary)] ml-1.5">Sincronización multi-dispositivo cifrada.</span>
-              </div>
-            </div>
-
-            <div className={`flex items-center gap-3 p-2.5 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)]`}>
-              <HardDrive className="w-5 h-5 text-[var(--color-secondary-bright)] flex-shrink-0" />
-              <div>
-                <span className="font-black text-[var(--color-secondary-bright)]">Google Drive API:</span>
-                <span className="text-[var(--ui-text-secondary)] ml-1.5">Copia de respaldo personal en tu cuenta de Google.</span>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </Modal>
   );

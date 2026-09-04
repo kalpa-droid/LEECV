@@ -118,31 +118,6 @@ export default function SaveModal({
           </div>
         </button>
 
-        {/* Opción 2: Publicar CV en la Web (Link Público) */}
-        <button
-          type="button"
-          onClick={() => {
-            onClose();
-            onOpenCloudStatus();
-          }}
-          className={`w-full text-left p-3.5 rounded-[${radius.modal}] bg-[var(--color-status-success-muted)] hover:bg-[var(--color-status-success-muted)]/80 border border-[var(--color-status-success-base)]/40 transition group flex items-start gap-3 cursor-pointer`}
-        >
-          <div className={`p-2.5 rounded-[${radius.card}] bg-[var(--color-status-success-base)] text-[var(--color-status-success-on-base)] group-hover:scale-110 transition flex-shrink-0`}>
-            <Globe className="w-5 h-5" />
-          </div>
-          <div className="space-y-0.5 min-w-0 flex-1">
-            <div className="flex items-center justify-between">
-              <span className="font-extrabold text-xs sm:text-sm text-[var(--ui-text-primary)]">Publicar CV en la Web (Link Público)</span>
-              <span className="text-[10px] font-black px-2 py-0.5 rounded bg-[var(--color-status-success-base)] text-[var(--color-status-success-on-base)]">
-                🌐 Tu CV en Internet
-              </span>
-            </div>
-            <p className="text-[11px] text-[var(--ui-text-secondary)]">
-              Genera un enlace web público único (/c/tu-slug) para compartir tu currículum online.
-            </p>
-          </div>
-        </button>
-
         {/* Opción 2: Guardar una copia para... */}
         {onSaveAs && (
           <div className={`p-3.5 rounded-[${radius.modal}] bg-[var(--color-secondary-muted)]/50 border border-[var(--color-secondary-base)]/40 space-y-3`}>
@@ -260,6 +235,31 @@ export default function SaveModal({
             </div>
             <p className="text-[11px] text-[var(--ui-text-secondary)]">
               Elige descargar un archivo .JSON liviano o un paquete .ZIP completo para llevar tu CV en pendrive o enviar por email a otra computadora.
+            </p>
+          </div>
+        </button>
+
+        {/* Opción 4: Publicar en la Web (Link Público) */}
+        <button
+          type="button"
+          onClick={() => {
+            onClose();
+            onOpenCloudStatus();
+          }}
+          className={`w-full text-left p-3.5 rounded-[${radius.modal}] bg-[var(--color-status-success-base)] hover:opacity-90 border border-[var(--color-status-success-base)] transition group flex items-start gap-3 cursor-pointer`}
+        >
+          <div className={`p-2.5 rounded-[${radius.card}] bg-[var(--color-status-success-base)] border border-[var(--color-status-success-on-base)]/20 text-[var(--color-status-success-on-base)] group-hover:scale-110 transition flex-shrink-0`}>
+            <Globe className="w-5 h-5" />
+          </div>
+          <div className="space-y-0.5 min-w-0 flex-1">
+            <div className="flex items-center justify-between">
+              <span className="font-black text-xs sm:text-sm text-[var(--color-status-success-on-base)]">Publicar en la Web (Link Público)</span>
+              <span className="text-[10px] font-black px-2 py-0.5 rounded bg-[var(--color-status-success-base)] border border-[var(--color-status-success-on-base)]/20 text-[var(--color-status-success-on-base)]">
+                🌐 Link Público
+              </span>
+            </div>
+            <p className="text-[11px] text-[var(--color-status-success-on-base)] opacity-80">
+              Genera un enlace web público único para compartir tu currículum online.
             </p>
           </div>
         </button>
