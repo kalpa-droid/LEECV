@@ -1,4 +1,4 @@
-const CACHE_NAME = 'leecv-pwa-v1';
+const CACHE_NAME = 'leecv-pwa-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -42,10 +42,31 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  const isHtmlNavigation = event.request.mode === 'navigate' || event.request.headers.get('accept')?.includes('text/html');
+
+  if (isHtmlNavigation) {
+    // Network-First para navegación HTML: siempre obtiene la última versión en vivo cuando hay conexión
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match(event.request).then((cached) => cached || caches.match('/index.html'));
+        })
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
-        // Stale-while-revalidate en segundo plano
         fetch(event.request).then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             caches.open(CACHE_NAME).then((cache) => {
