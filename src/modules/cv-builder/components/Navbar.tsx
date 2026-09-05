@@ -153,10 +153,10 @@ export default function Navbar({
           <button
             type="button"
             onClick={onOpenCloudStatus}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-status-success-on-base)] transition ${elevationSystem.raised} cursor-pointer active:scale-95 font-black text-xs`}
+            className={`flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-full bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-status-success-on-base)] transition ${elevationSystem.raised} cursor-pointer active:scale-95 font-black text-xs shrink-0`}
             title="Publicar CV en la Web (Link Público)"
           >
-            <Globe className="w-4 h-4" />
+            <Globe className="w-4 h-4 flex-shrink-0" />
             <span className="hidden sm:inline">Publicar</span>
           </button>
 
