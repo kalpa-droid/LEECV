@@ -1,3 +1,19 @@
+import * as Sentry from '@sentry/react';
+
+const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN || 'https://07397621802ace3caec0e33e5da05b39@o4512035779182592.ingest.us.sentry.io/4512035795501056';
+
+if (typeof window !== 'undefined' && SENTRY_DSN) {
+  try {
+    Sentry.init({
+      dsn: SENTRY_DSN,
+      integrations: [Sentry.browserTracingIntegration()],
+      tracesSampleRate: 0.2,
+    });
+  } catch (err) {
+    console.warn('[MONITORING] Error inicializando Sentry:', err);
+  }
+}
+
 /**
  * Módulo de Monitoreo de Errores y Excepciones (Sentry / Centralized Error Logger)
  *
@@ -24,31 +40,25 @@ export function reportException(error: unknown, metadata: MonitoringContext = {}
     timestamp: new Date().toISOString()
   });
 
-  // 2. Integración condicional con Sentry si está disponible en window o globalThis
-  if (typeof window !== 'undefined' && (window as any).Sentry) {
-    try {
-      (window as any).Sentry.withScope((scope: any) => {
-        if (metadata.context) scope.setTag('context', metadata.context);
-        if (metadata.provider) scope.setTag('provider', metadata.provider);
-        if (metadata.userEmail) scope.setUser({ email: metadata.userEmail, id: metadata.userId });
-        if (metadata.extra) scope.setExtras(metadata.extra);
-        (window as any).Sentry.captureException(errObj);
-      });
-    } catch (e) {
-      console.warn('[MONITORING] Falló la transmisión a Sentry client-side:', e);
-    }
-  }
-
-  // 3. Fallback para entornos Node Serverless
-  if (typeof globalThis !== 'undefined' && (globalThis as any).Sentry) {
-    try {
-      (globalThis as any).Sentry.captureException(errObj);
-    } catch (e) {
-      console.warn('[MONITORING] Falló la transmisión a Sentry server-side:', e);
-    }
+  // 2. Transmisión a Sentry via @sentry/react
+  try {
+    Sentry.withScope((scope) => {
+      if (metadata.context) scope.setTag('context', metadata.context);
+      if (metadata.provider) scope.setTag('provider', metadata.provider);
+      if (metadata.userEmail) scope.setUser({ email: metadata.userEmail, id: metadata.userId });
+      if (metadata.extra) scope.setExtras(metadata.extra);
+      Sentry.captureException(errObj);
+    });
+  } catch (e) {
+    console.warn('[MONITORING] Falló la transmisión a Sentry:', e);
   }
 }
 
 export function reportMessage(message: string, level: 'info' | 'warning' | 'error' = 'info', metadata: MonitoringContext = {}) {
   console.log(`[MONITORING ${level.toUpperCase()}] [${metadata.context || 'General'}]: ${message}`, metadata);
+  try {
+    Sentry.captureMessage(message, level);
+  } catch {
+    // Silent fallback
+  }
 }
