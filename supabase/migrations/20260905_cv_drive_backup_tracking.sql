@@ -18,3 +18,16 @@ ALTER TABLE public.profiles
 --    tanto el NOT NULL de plan_at_offer como una columna notes que no existía)
 ALTER TABLE public.retention_offers
   ADD COLUMN IF NOT EXISTS notes TEXT;
+
+-- 4. Bucket real de LEECV Cloud (Enterprise 50GB) — no existía en ninguna
+--    migración versionada; leecvCloudBackend.ts ya asumía que 'certificates'
+--    existía y devolvía datos de cuota hardcodeados en vez de consultarlo.
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('certificates', 'certificates', false)
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "Cada usuario gestiona sus propios archivos en LEECV Cloud" ON storage.objects;
+CREATE POLICY "Cada usuario gestiona sus propios archivos en LEECV Cloud"
+  ON storage.objects FOR ALL
+  USING (bucket_id = 'certificates' AND (storage.foldername(name))[1] = auth.uid()::text)
+  WITH CHECK (bucket_id = 'certificates' AND (storage.foldername(name))[1] = auth.uid()::text);

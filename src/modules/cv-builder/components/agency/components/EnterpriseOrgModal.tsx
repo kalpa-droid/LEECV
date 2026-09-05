@@ -14,6 +14,7 @@ import { elevationSystem, radius } from '../../../../../shared/core/uiDesignSyst
 import { Organization, OrgMember, OrgRole } from '../../../../../types/organization';
 import { Modal } from '../../../../../shared/core/ui/Modal';
 import { isValidEmail, validateFieldValue } from '../../../../../shared/core/utils/validationEngine';
+import { getLEECVCloudUsage } from '../../../../../shared/core/storage/leecvCloudBackend';
 
 interface EnterpriseOrgModalProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
   const [inviteRole, setInviteRole] = useState<OrgRole>('editor');
   const [invitationTokenInput, setInvitationTokenInput] = useState('');
   const [activeTab, setActiveTab] = useState<'team' | 'invite' | 'accept'>('team');
+  const [cloudUsage, setCloudUsage] = useState<{ usedGB: number; totalGB: number; percentUsed: number } | null>(null);
 
   async function loadOrgData() {
     const res = await withErrorHandling(
@@ -47,6 +49,10 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
 
   useEffect(() => {
     if (isOpen) loadOrgData();
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen) getLEECVCloudUsage().then(setCloudUsage);
   }, [isOpen]);
 
   async function handleSendInvite(e: FormEvent) {
@@ -140,13 +146,23 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
               <HardDrive className="w-5 h-5 text-[var(--color-secondary-bright)]" />
               <div>
                 <p className="text-[10px] text-[var(--ui-text-secondary)] font-bold uppercase tracking-wider">Almacenamiento Cloud</p>
-                <p className="text-sm font-black text-[var(--color-secondary-bright)]">50 GB LEECV Cloud</p>
+                <p className="text-sm font-black text-[var(--color-secondary-bright)]">
+                  {cloudUsage ? `${cloudUsage.usedGB} GB / 50 GB` : 'Consultando...'}
+                </p>
               </div>
             </div>
             <span className="text-[10px] px-2 py-0.5 rounded bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)] border border-[var(--color-status-success-base)]/30 font-bold">
               Exclusivo Enterprise
             </span>
           </div>
+          {cloudUsage && (
+            <div className="w-full bg-[var(--ui-bg-card)] rounded-full h-1.5 overflow-hidden border border-[var(--ui-border)]">
+              <div
+                className="bg-[var(--color-secondary-bright)] h-full transition-all"
+                style={{ width: `${cloudUsage.percentUsed}%` }}
+              />
+            </div>
+          )}
         </div>
 
         {/* Tab Navigation */}

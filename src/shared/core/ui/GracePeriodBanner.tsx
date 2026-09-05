@@ -64,7 +64,7 @@ export const GracePeriodBanner: React.FC<GracePeriodBannerProps> = ({
         <div>
           <div className="flex items-center gap-2">
             <h4 className="font-semibold text-amber-200 text-sm">
-              Período de Gracia Activo — Descarga de Emergencia Disponible
+              No detectamos tu renovación — seguís con acceso completo
             </h4>
             {timeLeftStr && (
               <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-mono bg-amber-900/60 text-amber-200 border border-amber-500/40">
@@ -74,7 +74,7 @@ export const GracePeriodBanner: React.FC<GracePeriodBannerProps> = ({
             )}
           </div>
           <p className="text-xs text-amber-100/90 mt-1 max-w-2xl leading-relaxed">
-            Tu suscripción Pro/Enterprise ha vencido. Cuentas con 10 días para descargar un respaldo completo en .ZIP de tus CVs guardados antes de que tu cuenta pase definitivamente a plan gratuito.
+            Tu plan Pro/Enterprise sigue 100% activo mientras regularizás el pago. Si no se acredita antes de que termine el plazo, pasarás a plan gratuito — por las dudas, podés descargar un respaldo completo ahora.
           </p>
         </div>
       </div>

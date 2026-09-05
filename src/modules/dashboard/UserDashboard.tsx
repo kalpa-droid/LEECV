@@ -8,6 +8,7 @@ import { supabase } from '../../shared/core/lib/supabaseClient';
 import { dal } from '../../shared/core/storage/dataAccessLayer';
 import { useEntitlements } from '../../shared/core/entitlements/useEntitlements';
 import { backupCvToGoogleDrive, deleteBackupFromDrive } from '../../shared/core/storage/driveBackupService';
+import { getLEECVCloudUsage } from '../../shared/core/storage/leecvCloudBackend';
 import { exportAllCVsToZip, exportCVToZip } from '../../shared/core/utils/jsonImporterExporter';
 import { GracePeriodBanner } from '../../shared/core/ui/GracePeriodBanner';
 import { RetentionOfferModal } from '../payments/components/RetentionOfferModal';
@@ -32,6 +33,14 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isRetentionModalOpen, setIsRetentionModalOpen] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [cloudUsage, setCloudUsage] = useState<{ usedGB: number; totalGB: number; percentUsed: number } | null>(null);
+
+  // Cuota real de LEECV Cloud — solo aplica a Enterprise, se consulta aparte de
+  // la lista de CVs porque requiere listar el bucket de Storage, no la tabla `cvs`.
+  useEffect(() => {
+    if (plan !== 'enterprise') return;
+    getLEECVCloudUsage().then(setCloudUsage);
+  }, [plan]);
 
   // Cargar perfil y lista de CVs
   const loadDashboardData = async () => {
@@ -299,16 +308,29 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 LEECV Cloud
               </span>
               <span className="text-xs font-semibold text-purple-400">
-                {plan === 'enterprise' ? '50 GB Ilimitado' : 'Plan Base Pro/Free'}
+                {plan === 'enterprise' ? '50 GB' : 'Solo Enterprise'}
               </span>
             </div>
-            <div>
-              <div className="text-2xl font-extrabold text-white tracking-tight">{totalCount} CVs</div>
-              <p className="text-[11px] text-slate-400 mt-0.5">Almacenados en la nube segura de LEECV.</p>
-            </div>
-            <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-              <div className="bg-purple-500 h-full rounded-full" style={{ width: `${Math.min(totalCount * 2, 100)}%` }} />
-            </div>
+            {plan === 'enterprise' ? (
+              <>
+                <div>
+                  <div className="text-2xl font-extrabold text-white tracking-tight">
+                    {cloudUsage ? `${cloudUsage.usedGB} GB` : '…'}
+                    <span className="text-sm font-medium text-slate-400"> / 50 GB</span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    {cloudUsage ? `${cloudUsage.percentUsed}% usado — actualizado ahora` : 'Consultando uso real...'}
+                  </p>
+                </div>
+                <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div className="bg-purple-500 h-full rounded-full transition-all" style={{ width: `${cloudUsage?.percentUsed || 0}%` }} />
+                </div>
+              </>
+            ) : (
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Los 50GB de nube propia (sin usar tu Drive personal) están disponibles en el plan Enterprise.
+              </p>
+            )}
           </div>
 
           {/* TARJETA 2: GOOGLE DRIVE BACKUP */}
