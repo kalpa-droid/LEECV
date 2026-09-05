@@ -3,6 +3,7 @@ import { requireAuth, isAdmin } from './_lib/authMiddleware.js';
 import { errorResponse, successResponse } from './_lib/apiResponse.js';
 import { requireRateLimit } from './_lib/rateLimiter.js';
 import { serverDal } from './_lib/serverDal.js';
+import { captureBackendException } from './_lib/sentryBackend.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const auth = await requireAuth(req, res);
@@ -29,6 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return successResponse(res, { success: true });
     } catch (err: any) {
       console.error('Error conectando Google Drive:', err);
+      await captureBackendException(err, 'drive-api:connect');
       return errorResponse(res, 500, 'No se pudo guardar la conexión con Drive');
     }
   }
@@ -70,6 +72,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return successResponse(res, { success: true });
     } catch (err: any) {
       console.error('Error desconectando Drive:', err);
+      await captureBackendException(err, 'drive-api:disconnect');
       return errorResponse(res, 500, 'No se pudo desconectar Drive');
     }
   }
@@ -115,6 +118,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return successResponse(res, { accessToken: data.access_token, expiresIn: data.expires_in });
     } catch (err: any) {
       console.error('Error refrescando token de Drive:', err);
+      await captureBackendException(err, 'drive-api:get-access-token');
       return errorResponse(res, 500, 'No se pudo obtener un token de Drive');
     }
   }
@@ -189,6 +193,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return successResponse(res, { success: true, deletedFileId: fileId });
     } catch (err: any) {
       console.error('Excepción al eliminar archivo en Drive:', err);
+      await captureBackendException(err, 'drive-api:delete-file');
       return errorResponse(res, 500, err?.message || 'Error interno al eliminar archivo');
     }
   }

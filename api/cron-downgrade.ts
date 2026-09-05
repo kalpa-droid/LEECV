@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabaseAdmin } from './_lib/supabaseAdmin.js';
 import { errorResponse, successResponse } from './_lib/apiResponse.js';
+import { captureBackendException } from './_lib/sentryBackend.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET' && req.method !== 'POST') {
@@ -105,6 +106,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (err: any) {
     console.error('Excepción en cron-downgrade:', err);
+    await captureBackendException(err, 'cron-downgrade');
     return errorResponse(res, 500, err?.message || 'Error procesando vencimientos');
   }
 }

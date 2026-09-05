@@ -3,6 +3,7 @@ import { supabaseAdmin } from './_lib/supabaseAdmin.js';
 import { requireAuth } from './_lib/authMiddleware.js';
 import { errorResponse, successResponse } from './_lib/apiResponse.js';
 import { requireRateLimit } from './_lib/rateLimiter.js';
+import { captureBackendException } from './_lib/sentryBackend.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return errorResponse(res, 405, 'Method not allowed');
@@ -25,6 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return successResponse(res, { success: Boolean(allowed) });
   } catch (err: any) {
     console.error('Error consumiendo crédito PDF:', err);
+    await captureBackendException(err, 'consume-pdf-credit', { userId: auth.user.id });
     return errorResponse(res, 500, 'Error al verificar créditos');
   }
 }

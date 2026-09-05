@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabaseAdmin } from './supabaseAdmin.js';
 import { applyPayment, PaymentDetails } from './applyPayment.js';
 import { errorResponse, successResponse } from './apiResponse.js';
+import { captureBackendException } from './sentryBackend.js';
 
 export interface WebhookConfig {
   provider: 'mercadopago' | 'paypal' | 'lemonsqueezy';
@@ -38,7 +39,8 @@ export function createWebhookHandler(config: WebhookConfig) {
       try {
         rawBody = await readRawBody(req);
         parsedBody = JSON.parse(rawBody);
-      } catch {
+      } catch (err: any) {
+        await captureBackendException(err, `webhook_json_parse:${config.provider}`);
         return errorResponse(res, 400, 'JSON inválido en el body del webhook');
       }
     }
@@ -50,10 +52,12 @@ export function createWebhookHandler(config: WebhookConfig) {
         const isValid = await config.verifySignature(ctx);
         if (!isValid) {
           console.error(`[CRITICAL WEBHOOK ALERT - ${config.provider}]: Firma de webhook rechazada / inválida`);
+          await captureBackendException(new Error(`Firma de webhook rechazada (${config.provider})`), `webhook_invalid_signature:${config.provider}`);
           return errorResponse(res, 401, 'Firma de webhook inválida');
         }
       } catch (err: any) {
         console.error(`[CRITICAL WEBHOOK ALERT - ${config.provider}]: Error en validación de firma:`, err);
+        await captureBackendException(err, `webhook_verify_exception:${config.provider}`);
         return errorResponse(res, 401, `Error en validación de firma: ${err?.message || err}`);
       }
     }
@@ -68,6 +72,7 @@ export function createWebhookHandler(config: WebhookConfig) {
       return successResponse(res, { status: 'processed', result });
     } catch (err: any) {
       console.error(`[CRITICAL WEBHOOK ERROR - ${config.provider}]:`, err?.message || err, err?.stack);
+      await captureBackendException(err, `webhook_execution_failure:${config.provider}`, { parsedBody });
       return errorResponse(res, 500, err?.message || 'Inconveniente procesando webhook');
     }
   };

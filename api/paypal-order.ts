@@ -3,6 +3,7 @@ import { requireAuth } from './_lib/authMiddleware.js';
 import { errorResponse, successResponse } from './_lib/apiResponse.js';
 import { requireRateLimit } from './_lib/rateLimiter.js';
 import { createCheckoutForProvider } from './_lib/paymentProviders/checkoutInitiators.js';
+import { captureBackendException } from './_lib/sentryBackend.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return errorResponse(res, 405, 'Método HTTP no permitido');
@@ -28,6 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return successResponse(res, { checkoutUrl: result.checkoutUrl });
     } catch (err: any) {
       console.error('Error creando orden PayPal:', err);
+      await captureBackendException(err, 'paypal-order:create', { userId, plan });
       return errorResponse(res, 500, err?.message || 'No se pudo crear la orden de pago con PayPal');
     }
   }

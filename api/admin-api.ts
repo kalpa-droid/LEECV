@@ -8,6 +8,7 @@ import { supabaseAdmin } from './_lib/supabaseAdmin.js';
 import { validateBody } from './_lib/validateBody.js';
 import { serverDal } from './_lib/serverDal.js';
 import { applyPayment } from './_lib/applyPayment.js';
+import { captureBackendException } from './_lib/sentryBackend.js';
 
 let cachedStatus: { data: Record<string, ProviderStatus>; timestamp: number } | null = null;
 const CACHE_TTL_MS = 5 * 60 * 1000;
@@ -92,9 +93,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     } catch (err: any) {
       console.error('[CRITICAL ADMIN API ERROR - list-processed-payments]:', err?.message || err, err?.stack);
-      if (typeof globalThis !== 'undefined' && (globalThis as any).Sentry) {
-        try { (globalThis as any).Sentry.captureException(err); } catch {}
-      }
+      await captureBackendException(err, 'admin-api:list-processed-payments');
       return errorResponse(res, 500, 'Error al consultar el historial de pagos');
     }
   }
@@ -134,9 +133,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return successResponse(res, { success: true });
     } catch (err: any) {
       console.error('[CRITICAL ADMIN API ERROR - approve-manual-claim]:', err?.message || err, err?.stack);
-      if (typeof globalThis !== 'undefined' && (globalThis as any).Sentry) {
-        try { (globalThis as any).Sentry.captureException(err); } catch {}
-      }
+      await captureBackendException(err, 'admin-api:approve-manual-claim');
       return errorResponse(res, 500, 'Error interno');
     }
   }
