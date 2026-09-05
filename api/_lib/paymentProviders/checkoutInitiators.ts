@@ -1,4 +1,5 @@
 import type { ProviderId } from './types.js';
+import { getPrice } from './pricingCatalog.js';
 
 export interface CheckoutSessionResult {
   checkoutUrl: string;
@@ -13,11 +14,11 @@ export async function createCheckoutForProvider(
   switch (providerId) {
     case 'mercadopago': {
       const PLAN_PRICES_ARS: Record<string, number> = {
-        single_pdf: Number(process.env.MP_PRECIO_PDF_ARS || 1800),
-        credits_pack_5: Number(process.env.MP_PRECIO_PACK5_ARS || 7500),
-        credits_pack_10: Number(process.env.MP_PRECIO_PACK10_ARS || 12000),
-        pro: Number(process.env.MP_PRECIO_PRO_ARS || 22800),
-        enterprise: Number(process.env.MP_PRECIO_ENTERPRISE_ARS || 34800),
+        single_pdf: Number(process.env.MP_PRECIO_PDF_ARS || getPrice('single_pdf')?.ars),
+        credits_pack_5: Number(process.env.MP_PRECIO_PACK5_ARS || getPrice('credits_pack_5')?.ars),
+        credits_pack_10: Number(process.env.MP_PRECIO_PACK10_ARS || getPrice('credits_pack_10')?.ars),
+        pro: Number(process.env.MP_PRECIO_PRO_ARS || getPrice('pro')?.ars),
+        enterprise: Number(process.env.MP_PRECIO_ENTERPRISE_ARS || getPrice('enterprise')?.ars),
       };
 
       const PLAN_TITLES: Record<string, string> = {
@@ -66,11 +67,11 @@ export async function createCheckoutForProvider(
 
     case 'paypal': {
       const PLAN_PRICES_USD: Record<string, string> = {
-        single_pdf: process.env.PAYPAL_PRECIO_PDF_USD || '2.00',
-        credits_pack_5: process.env.PAYPAL_PRECIO_PACK5_USD || '8.00',
-        credits_pack_10: process.env.PAYPAL_PRECIO_PACK10_USD || '14.00',
-        pro: process.env.PAYPAL_PRECIO_PRO_USD || '24.00',
-        enterprise: process.env.PAYPAL_PRECIO_ENTERPRISE_USD || '49.00',
+        single_pdf: process.env.PAYPAL_PRECIO_PDF_USD || String(getPrice('single_pdf')?.usd),
+        credits_pack_5: process.env.PAYPAL_PRECIO_PACK5_USD || String(getPrice('credits_pack_5')?.usd),
+        credits_pack_10: process.env.PAYPAL_PRECIO_PACK10_USD || String(getPrice('credits_pack_10')?.usd),
+        pro: process.env.PAYPAL_PRECIO_PRO_USD || String(getPrice('pro')?.usd),
+        enterprise: process.env.PAYPAL_PRECIO_ENTERPRISE_USD || String(getPrice('enterprise')?.usd),
       };
 
       const priceStr = PLAN_PRICES_USD[plan];

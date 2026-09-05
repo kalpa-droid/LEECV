@@ -13,6 +13,7 @@ import { withErrorHandling } from '../../../../shared/core/utils/errorHandler';
 
 import { elevationSystem, radius } from '../../../../shared/core/uiDesignSystem';
 import { UI_GLOSSARY } from '../../../../shared/core/ui/uiTextGlossary';
+import { formatPrice, formatPricePerMonth } from '../../../../shared/core/payments/pricingCatalog';
 
 export default function PdfCheckoutModal({ 
   isOpen, 
@@ -122,7 +123,7 @@ export default function PdfCheckoutModal({
       }
     }
 
-    setErrorMsg('No tienes créditos de exportación activos. Selecciona Mercado Pago para adquirir 1 crédito ($1 USD) o inicia sesión.');
+    setErrorMsg(`No tienes créditos de exportación activos. Selecciona Mercado Pago para adquirir 1 crédito (${formatPrice('single_pdf', 'usd')}) o inicia sesión.`);
   };
 
   return (
@@ -206,7 +207,7 @@ export default function PdfCheckoutModal({
             2. Elige tu Opción de Pago o Descarga
           </span>
 
-          {/* Option A: Mercado Pago ($1.50 USD) */}
+          {/* Option A: Mercado Pago */}
           <button
             onClick={handleMercadoPagoCheckout}
             disabled={isProcessing}
@@ -215,16 +216,16 @@ export default function PdfCheckoutModal({
             <div className="flex items-center gap-2.5">
               <CreditCard className="w-5 h-5 text-[var(--color-status-warning-text)]" />
               <div className="text-left">
-                <p className="leading-tight">Pagar 1 Exportación con Mercado Pago ($1.50 USD)</p>
+                <p className="leading-tight">Pagar 1 Exportación con Mercado Pago</p>
                 <p className="text-[10px] opacity-80 font-bold">Tarjeta de Crédito / Débito, Mercado Pago, Transferencia</p>
               </div>
             </div>
             <span className={`px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] rounded-[${radius.control}] text-[10px] font-black`}>
-              ~$1,800 ARS
+              {formatPrice('single_pdf', 'ars')}
             </span>
           </button>
 
-          {/* Option A2: PayPal ($1.50 USD) */}
+          {/* Option A2: PayPal */}
           <button
             onClick={() => handlePayPalCheckout('single_pdf')}
             disabled={isProcessing}
@@ -233,12 +234,12 @@ export default function PdfCheckoutModal({
             <div className="flex items-center gap-2.5">
               <CreditCard className="w-5 h-5 text-[var(--color-secondary-text)]" />
               <div className="text-left">
-                <p className="leading-tight">Pagar 1 Exportación con PayPal ($1.50 USD)</p>
+                <p className="leading-tight">Pagar 1 Exportación con PayPal</p>
                 <p className="text-[10px] opacity-80 font-bold">Tarjeta Internacional, Saldo PayPal</p>
               </div>
             </div>
             <span className={`px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] rounded-[${radius.control}] text-[10px] font-black`}>
-              $1.50 USD
+              {formatPrice('single_pdf', 'usd')}
             </span>
           </button>
 
@@ -249,25 +250,25 @@ export default function PdfCheckoutModal({
               disabled={isProcessing}
               className={`p-2.5 bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-panel)] border border-[var(--color-status-warning-base)]/30 text-[var(--color-status-warning-text)] font-extrabold text-[11px] rounded-[${radius.card}] transition cursor-pointer text-center`}
             >
-              Pack 5 créditos — $5 USD
+              Pack 5 créditos — {formatPrice('credits_pack_5', 'usd')}
             </button>
             <button
               onClick={() => handlePackCheckout('credits_pack_10')}
               disabled={isProcessing}
               className={`p-2.5 bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-panel)] border border-[var(--color-status-warning-base)]/30 text-[var(--color-status-warning-text)] font-extrabold text-[11px] rounded-[${radius.card}] transition cursor-pointer text-center`}
             >
-              Pack 10 créditos — $8 USD
+              Pack 10 créditos — {formatPrice('credits_pack_10', 'usd')}
             </button>
           </div>
 
-          {/* Option B: Upgrade to Pro ($19/mo) */}
+          {/* Option B: Upgrade to Pro */}
           <button
             onClick={() => { onClose(); if (onOpenPricing) onOpenPricing(); }}
             className={`w-full p-3 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-extrabold text-xs rounded-[${radius.modal}] transition flex items-center justify-between cursor-pointer ${elevationSystem.raised}`}
           >
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
-              <span>Suscribirse a Plan Pro ($19 USD/mes) — Exportaciones Ilimitadas</span>
+              <span>Suscribirse a Plan Pro ({formatPricePerMonth('pro', 'usd')}) — Exportaciones Ilimitadas</span>
             </div>
             <span className="text-[10px] font-black">Ver Planes &rarr;</span>
           </button>

@@ -7,6 +7,7 @@ import { withErrorHandling } from '../../shared/core/utils/errorHandler';
 import { logout, signInWithGoogle } from '../auth/authService';
 
 import { elevationSystem, radius } from '../../shared/core/uiDesignSystem';
+import { formatPrice, formatPricePerMonth } from '../../shared/core/payments/pricingCatalog';
 
 export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
   const { showError, showSuccess } = useToast();
@@ -100,7 +101,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
               className={`px-3.5 py-2 rounded-[${radius.card}] bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-extrabold text-xs transition ${elevationSystem.raised} cursor-pointer flex items-center gap-1.5`}
             >
               <Crown className="w-4 h-4" />
-              <span>Mejorar a Plan Agencia ($19/mes)</span>
+              <span>Mejorar a Plan Agencia ({formatPricePerMonth('pro', 'usd')})</span>
             </button>
           </div>
         </div>
@@ -144,7 +145,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-[var(--ui-success)] flex-shrink-0" />
-                  <span>PDF A4 Nativo de Alta Calidad ($1 USD)</span>
+                  <span>PDF A4 Nativo de Alta Calidad ({formatPrice('single_pdf', 'usd')})</span>
                 </li>
               </ul>
             </div>
@@ -171,13 +172,13 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
                 <p className="text-[11px] text-[var(--ui-text-secondary)]">Para Reclutadores y Consultoras</p>
               </div>
               <div className="py-2">
-                <span className="text-3xl font-black text-[var(--ui-text-primary)]">$19 USD</span>
+                <span className="text-3xl font-black text-[var(--ui-text-primary)]">{formatPrice('pro', 'usd')}</span>
                 <span className="text-xs text-[var(--ui-text-secondary)] font-medium"> / mes</span>
               </div>
               <ul className="space-y-2 text-xs text-[var(--ui-text-primary)]">
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-[var(--ui-accent-purple)] flex-shrink-0" />
-                  <strong>PDFs A4 ILIMITADOS (Sin pagar $1/PDF)</strong>
+                  <strong>PDFs A4 ILIMITADOS (Sin pagar {formatPrice('single_pdf', 'usd')}/PDF)</strong>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-[var(--ui-accent-purple)] flex-shrink-0" />
@@ -230,7 +231,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
                 <p className="text-[11px] text-[var(--ui-text-secondary)]">Sin depender de tu Google Drive</p>
               </div>
               <div className="py-2">
-                <span className="text-2xl font-black text-[var(--ui-text-primary)]">$29 USD</span>
+                <span className="text-2xl font-black text-[var(--ui-text-primary)]">{formatPrice('enterprise', 'usd')}</span>
                 <span className="text-xs text-[var(--ui-text-secondary)] font-medium"> / mes</span>
               </div>
               <ul className="space-y-2 text-xs text-[var(--ui-text-secondary)]">
@@ -253,13 +254,29 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
               </ul>
             </div>
 
-            <button
-              onClick={() => handleSelectPlan('enterprise', 'lemonsqueezy')}
-              disabled={loadingGateway !== null}
-              className={`w-full py-2.5 bg-[var(--color-status-warning-base)] hover:opacity-95 text-[var(--color-accent-on-base)] text-xs font-black rounded-[${radius.card}] ${elevationSystem.floating} transition cursor-pointer`}
-            >
-              Activar Plan Enterprise Cloud
-            </button>
+            <div className="space-y-2">
+              <button
+                onClick={() => handleSelectPlan('enterprise', 'mercadopago')}
+                disabled={loadingGateway !== null}
+                className={`w-full py-2.5 bg-[var(--color-status-warning-base)] hover:opacity-95 text-[var(--color-accent-on-base)] text-xs font-black rounded-[${radius.card}] ${elevationSystem.floating} transition cursor-pointer flex items-center justify-center gap-1.5`}
+              >
+                <span>🇦🇷 Activar con Mercado Pago</span>
+              </button>
+              <button
+                onClick={() => handleSelectPlan('enterprise', 'paypal')}
+                disabled={loadingGateway !== null}
+                className={`w-full py-2 bg-[var(--color-secondary-muted)] hover:opacity-90 text-[var(--color-secondary-text)] border border-[var(--color-secondary-base)]/30 text-xs font-black rounded-[${radius.card}] transition flex items-center justify-center gap-1.5 cursor-pointer`}
+              >
+                <span>💳 Pagar con PayPal (USD)</span>
+              </button>
+              <button
+                onClick={() => handleSelectPlan('enterprise', 'lemonsqueezy')}
+                disabled={loadingGateway !== null}
+                className={`w-full py-2 bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] text-[11px] font-bold rounded-[${radius.card}] transition flex items-center justify-center gap-1.5 border border-[var(--color-status-warning-base)]/30 cursor-pointer`}
+              >
+                <span>🌎 Suscribirse con Lemon Squeezy (USD)</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
