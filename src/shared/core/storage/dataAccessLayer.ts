@@ -140,7 +140,7 @@ export const dal = {
   },
 
   retentionOffers: {
-    async insert(payload: { user_id: string; plan_at_offer?: string; discount_percent: number; valid_until: string; notes?: string }): Promise<boolean> {
+    async insert(payload: { user_id: string; plan_at_offer: string; discount_percent: number; valid_until: string; notes?: string }): Promise<boolean> {
       if (!supabase) return false;
       const res = await safeSupabaseCall(() =>
         supabase.from('retention_offers').insert(payload)

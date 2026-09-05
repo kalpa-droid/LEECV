@@ -12,3 +12,9 @@ CREATE INDEX IF NOT EXISTS idx_cvs_drive_file_id ON public.cvs(drive_file_id) WH
 -- 2. Fecha límite del período de gracia (10 días tras vencimiento)
 ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS grace_period_ends_at TIMESTAMPTZ;
+
+-- 3. Columna faltante que cron-downgrade.ts ya intentaba escribir (causaba fallo
+--    silencioso en cada inserción de oferta automática de retención, por violar
+--    tanto el NOT NULL de plan_at_offer como una columna notes que no existía)
+ALTER TABLE public.retention_offers
+  ADD COLUMN IF NOT EXISTS notes TEXT;

@@ -231,5 +231,30 @@ export const serverDal = {
       if (error || !data) return null;
       return data;
     }
+  },
+
+  cvs: {
+    // Confirma que `fileId` es realmente el drive_file_id de un CV que pertenece
+    // a `userId`, antes de autorizar un borrado en Google Drive.
+    async findByDriveFileIdAndUser(fileId: string, userId: string): Promise<{ id: string } | null> {
+      const { data, error } = await supabaseAdmin
+        .from('cvs')
+        .select('id')
+        .eq('drive_file_id', fileId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error || !data) return null;
+      return data;
+    },
+
+    async clearDriveBackup(cvId: string): Promise<void> {
+      const { error } = await supabaseAdmin
+        .from('cvs')
+        .update({ drive_file_id: null, drive_synced_at: null })
+        .eq('id', cvId);
+
+      if (error) throw new Error(`Error limpiando puntero de Drive: ${error.message}`);
+    }
   }
 };

@@ -29,6 +29,10 @@ import PdfCheckoutModal from '../modules/cv-builder/components/modals/PdfCheckou
 import JsonDownloadModal from '../modules/cv-builder/components/modals/JsonDownloadModal';
 import PdfProgressModal from '../modules/cv-builder/components/modals/PdfProgressModal';
 import PrivacyModal from '../modules/cv-builder/components/PrivacyModal';
+import { GracePeriodBanner } from '../shared/core/ui/GracePeriodBanner';
+import { RetentionOfferModal } from '../modules/payments/components/RetentionOfferModal';
+import { useEntitlements } from '../shared/core/entitlements/useEntitlements';
+import { dal } from '../shared/core/storage/dataAccessLayer';
 
 import { CVProvider, useCVContext } from '../context/CVContext';
 import { ToastProvider, useToast } from '../shared/core/ui/Toast';
@@ -54,6 +58,16 @@ function AppContent() {
   const { showSuccess, showError, showInfo } = useToast();
   const { confirm } = useConfirm();
   const [currentProfile, setCurrentProfile] = useState<any>(null);
+  const { inGracePeriod, graceEndsAt } = useEntitlements();
+  const [graceCvList, setGraceCvList] = useState<any[]>([]);
+  const [isRetentionModalOpen, setIsRetentionModalOpen] = useState(false);
+
+  // Solo se consulta la lista de CVs cuando el usuario está en período de gracia —
+  // evita una query extra para el resto de los usuarios en cada carga de la app.
+  useEffect(() => {
+    if (!inGracePeriod || !currentProfile?.id) return;
+    dal.cvs.listByUser(currentProfile.id).then(setGraceCvList).catch(() => {});
+  }, [inGracePeriod, currentProfile?.id]);
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
 
@@ -462,6 +476,23 @@ function AppContent() {
   return (
     <div className="h-screen h-[100dvh] bg-[var(--color-neutral-text-primary)] text-white flex flex-col font-sans overflow-hidden selection:bg-[var(--color-accent-base)] selection:text-white relative">
       <div className="md:pl-24">
+        {inGracePeriod && currentProfile?.id && (
+          <div className="px-3 pt-3 md:px-6 md:pt-4">
+            <GracePeriodBanner
+              graceEndsAt={graceEndsAt}
+              cvList={graceCvList}
+              userName={currentProfile?.email || 'Usuario'}
+              onOpenRetentionModal={() => setIsRetentionModalOpen(true)}
+            />
+          </div>
+        )}
+        {currentProfile?.id && (
+          <RetentionOfferModal
+            isOpen={isRetentionModalOpen}
+            onClose={() => setIsRetentionModalOpen(false)}
+            userId={currentProfile.id}
+          />
+        )}
         <Navbar 
           currentCvData={{ ...cvData, uiTheme: globalUiTheme }}
           setCvData={setCvData}

@@ -150,35 +150,25 @@ export async function backupCvToGoogleDrive(cvData: any, userPlan: string = 'pro
  * Liberar un CV de Google Drive (elimina archivo real en Google Drive y remueve punteros en Supabase)
  */
 export async function deleteBackupFromDrive(cvId: string, driveFileId?: string): Promise<{ success: boolean; error?: string }> {
+  if (!driveFileId) {
+    return { success: false, error: 'Este CV no tiene un archivo de Drive asociado' };
+  }
+
   try {
-    // 1. Eliminar de Google Drive si existe driveFileId
-    if (driveFileId) {
-      try {
-        const res = await fetch(`/api/drive-api?action=delete-file&fileId=${encodeURIComponent(driveFileId)}`, {
-          method: 'POST',
-        });
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          console.warn('Advertencia borrando archivo en Drive API:', errData);
-        }
-      } catch (driveApiErr) {
-        console.warn('Excepción llamando a /api/drive-api delete-file:', driveApiErr);
-      }
+    // El servidor verifica ownership, borra en Google Drive y limpia el puntero
+    // en `cvs` en una sola operación atómica — ver api/drive-api.ts. Si el borrado
+    // real en Drive falla, el servidor NO limpia el puntero, así que confiamos
+    // en `res.ok` en vez de asumir éxito de este lado.
+    const res = await fetch(`/api/drive-api?action=delete-file&fileId=${encodeURIComponent(driveFileId)}`, {
+      method: 'POST',
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      return { success: false, error: errData?.message || 'No se pudo liberar el archivo en Google Drive' };
     }
 
-    // 2. Limpiar puntero en Supabase public.cvs
-    const { supabase } = await import('../lib/supabaseClient');
-    if (supabase) {
-      await supabase
-        .from('cvs')
-        .update({
-          drive_file_id: null,
-          drive_synced_at: null,
-        })
-        .eq('id', cvId);
-    }
-
-    // 3. Limpiar local cache en IndexedDB
+    // Cache local de deduplicación — solo se limpia si el borrado remoto fue real
     try {
       await idbStorage.removeItem(`${DRIVE_PER_CV_HASH_PREFIX}${cvId}`);
     } catch {}

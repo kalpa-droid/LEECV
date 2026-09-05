@@ -105,7 +105,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
         const fullCv = await dal.cvs.getById(id);
         if (fullCv) {
           fullCv.id = id;
-          const res = await backupCvToGoogleDrive(fullCv);
+          const res = await backupCvToGoogleDrive(fullCv, plan);
           if (res.success) successCount++;
         }
       } catch (err) {
@@ -165,7 +165,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
       const fullCv = await dal.cvs.getById(cv.id);
       if (fullCv) {
         fullCv.id = cv.id;
-        const res = await backupCvToGoogleDrive(fullCv);
+        const res = await backupCvToGoogleDrive(fullCv, plan);
         if (res.success) {
           setStatusMessage({ text: `CV "${cv.title || 'Sin título'}" respaldado en Google Drive.`, type: 'success' });
           loadDashboardData();

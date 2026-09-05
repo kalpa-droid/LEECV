@@ -58,13 +58,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             .maybeSingle();
 
           if (!existingOffer) {
-            await supabaseAdmin.from('retention_offers').insert({
+            const { error: offerErr } = await supabaseAdmin.from('retention_offers').insert({
               user_id: profile.id,
+              plan_at_offer: profile.plan,
               discount_percent: 20,
               valid_until: tenDaysFromNow,
               status: 'pendiente',
               notes: 'Oferta automática al iniciar período de gracia (20% OFF)',
             });
+            if (offerErr) {
+              console.error(`Error creando oferta de retención para ${profile.id}:`, offerErr);
+            }
           }
         }
       }

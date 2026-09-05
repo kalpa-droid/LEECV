@@ -136,6 +136,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
+      // Verificación de ownership server-side: el fileId debe corresponder a un
+      // CV que realmente pertenece al usuario autenticado. Sin este chequeo, el
+      // endpoint solo confiaba en el alcance OAuth 'drive.file' de Google como
+      // única barrera contra borrar un archivo que no le corresponde a este CV.
+      const ownedCv = await serverDal.cvs.findByDriveFileIdAndUser(fileId, auth.user.id);
+      if (!ownedCv) {
+        return errorResponse(res, 403, 'Este archivo no corresponde a un CV de tu cuenta');
+      }
+
       const tokenRow = await serverDal.driveTokens.getByUserId(auth.user.id);
       if (!tokenRow || !tokenRow.refresh_token) {
         return errorResponse(res, 404, 'Google Drive no está conectado');
@@ -167,8 +176,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!deleteRes.ok && deleteRes.status !== 404) {
         const errBody = await deleteRes.text();
         console.error('Error al eliminar archivo en Google Drive:', errBody);
+        // No se toca el puntero en `cvs` si el borrado real en Drive falló — así
+        // el estado en la base nunca dice "liberado" mientras el archivo sigue
+        // ocupando espacio real en el Drive del usuario.
         return errorResponse(res, deleteRes.status, 'Error al eliminar el archivo en Google Drive');
       }
+
+      // Solo se limpia el puntero en la misma operación atómica que confirmó el
+      // borrado real (o un 404 = ya no existía, igual de válido para limpiar).
+      await serverDal.cvs.clearDriveBackup(ownedCv.id);
 
       return successResponse(res, { success: true, deletedFileId: fileId });
     } catch (err: any) {
