@@ -43,11 +43,11 @@ export async function iniciarPago(providerId: ProviderId, plan: 'single_pdf' | '
 
     case 'lemonsqueezy': {
       const urlMap: Record<string, string | undefined> = {
-        single_pdf: import.meta.env.VITE_LEMONSQUEEZY_URL_PDF1 || import.meta.env.VITE_LEMONSQUEEZY_URL_SINGLE_PDF,
+        single_pdf: import.meta.env.VITE_LEMONSQUEEZY_URL_PDF1 || import.meta.env.VITE_LEMONSQUEEZY_URL_SINGLE_PDF || 'https://leecv-26.lemonsqueezy.com/checkout/buy/8ddd3fca-c0f8-493f-8f44-05389e74a0e9',
         credits_pack_5: import.meta.env.VITE_LEMONSQUEEZY_URL_PACK5,
         credits_pack_10: import.meta.env.VITE_LEMONSQUEEZY_URL_PACK10,
-        pro: import.meta.env.VITE_LEMONSQUEEZY_URL_PRO,
-        enterprise: import.meta.env.VITE_LEMONSQUEEZY_URL_ENTERPRISE,
+        pro: import.meta.env.VITE_LEMONSQUEEZY_URL_PRO || 'https://leecv-26.lemonsqueezy.com/checkout/buy/6b4b732a-d1ec-48de-89f0-02a3d02be613',
+        enterprise: import.meta.env.VITE_LEMONSQUEEZY_URL_ENTERPRISE || 'https://leecv-26.lemonsqueezy.com/checkout/buy/d8968d41-e826-43a8-a057-bf51e8add5e3',
       };
 
       const base = urlMap[plan] || import.meta.env.VITE_LEMONSQUEEZY_CHECKOUT_URL;
