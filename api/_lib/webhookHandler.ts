@@ -49,9 +49,11 @@ export function createWebhookHandler(config: WebhookConfig) {
       try {
         const isValid = await config.verifySignature(ctx);
         if (!isValid) {
+          console.error(`[CRITICAL WEBHOOK ALERT - ${config.provider}]: Firma de webhook rechazada / inválida`);
           return errorResponse(res, 401, 'Firma de webhook inválida');
         }
       } catch (err: any) {
+        console.error(`[CRITICAL WEBHOOK ALERT - ${config.provider}]: Error en validación de firma:`, err);
         return errorResponse(res, 401, `Error en validación de firma: ${err?.message || err}`);
       }
     }
@@ -65,7 +67,7 @@ export function createWebhookHandler(config: WebhookConfig) {
       const result = await applyPayment(supabaseAdmin, paymentDetails);
       return successResponse(res, { status: 'processed', result });
     } catch (err: any) {
-      console.error(`[Webhook Error - ${config.provider}]:`, err?.message || err);
+      console.error(`[CRITICAL WEBHOOK ERROR - ${config.provider}]:`, err?.message || err, err?.stack);
       return errorResponse(res, 500, err?.message || 'Inconveniente procesando webhook');
     }
   };

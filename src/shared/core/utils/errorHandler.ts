@@ -38,6 +38,11 @@ export async function withErrorHandling<T>(
   } catch (err: any) {
     const displayMessage = errorMessage || err?.message || 'Ocurrió un error al procesar la solicitud.';
     console.warn(`⚠️ [ErrorHandler - ${context}]:`, err);
+    try {
+      import('./monitoring').then(({ reportException }) => {
+        reportException(err, { context });
+      }).catch(() => {});
+    } catch {}
     if (notify) {
       notify(displayMessage, 'error');
     }

@@ -40,6 +40,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     console.error('CRITICAL APP ERROR:', error, errorInfo);
 
+    try {
+      import('../utils/monitoring').then(({ reportException }) => {
+        reportException(error, { context: 'ErrorBoundary', extra: { componentStack: errorInfo.componentStack } });
+      }).catch(() => {});
+    } catch {}
+
     const isChunkLoadError = error?.message && (
       /failed to fetch dynamically imported module/i.test(error.message) ||
       /importing a module script failed/i.test(error.message) ||

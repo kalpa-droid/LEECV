@@ -830,6 +830,13 @@ function AppContent() {
             <ChevronRight className="w-4 h-4 stroke-[2.5]" />
           </div>
         </div>
+
+        {/* Enlaces Legales Públicos en el Footer */}
+        <div className="hidden sm:flex items-center gap-3 text-[10px] text-[var(--ui-dock-text-muted)] shrink-0 pr-2">
+          <a href="/privacidad" target="_blank" rel="noreferrer" className="hover:text-[var(--ui-dock-text)] hover:underline">Privacidad</a>
+          <a href="/terminos" target="_blank" rel="noreferrer" className="hover:text-[var(--ui-dock-text)] hover:underline">Términos</a>
+          <a href="/reembolsos" target="_blank" rel="noreferrer" className="hover:text-[var(--ui-dock-text)] hover:underline">Reembolsos</a>
+        </div>
       </footer>
 
       {/* Banner de Instalación PWA con Persistencia */}

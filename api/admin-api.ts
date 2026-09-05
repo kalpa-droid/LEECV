@@ -91,7 +91,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         pageSize: limit,
       });
     } catch (err: any) {
-      console.error('Error listando pagos procesados:', err);
+      console.error('[CRITICAL ADMIN API ERROR - list-processed-payments]:', err?.message || err, err?.stack);
+      if (typeof globalThis !== 'undefined' && (globalThis as any).Sentry) {
+        try { (globalThis as any).Sentry.captureException(err); } catch {}
+      }
       return errorResponse(res, 500, 'Error al consultar el historial de pagos');
     }
   }
@@ -130,7 +133,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       return successResponse(res, { success: true });
     } catch (err: any) {
-      console.error('Error aprobando comprobante manual:', err);
+      console.error('[CRITICAL ADMIN API ERROR - approve-manual-claim]:', err?.message || err, err?.stack);
+      if (typeof globalThis !== 'undefined' && (globalThis as any).Sentry) {
+        try { (globalThis as any).Sentry.captureException(err); } catch {}
+      }
       return errorResponse(res, 500, 'Error interno');
     }
   }
