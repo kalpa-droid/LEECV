@@ -12,8 +12,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const authHeader = req.headers['authorization'];
   const isVercelCron = req.headers['x-vercel-cron'] === '1';
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}` && !isVercelCron) {
-    return errorResponse(res, 401, 'No autorizado para ejecutar cron');
+  if (!isVercelCron) {
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+      return errorResponse(res, 401, 'No autorizado para ejecutar cron');
+    }
   }
 
   try {

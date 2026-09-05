@@ -76,11 +76,15 @@ export async function publishCV(cvData: any): Promise<PublishResult> {
     'Postulante';
 
   // 1. Consultar perfil del usuario
-  const { data: profile } = await supabase
+  const { data: profile, error: profileErr } = await supabase
     .from('profiles')
-    .select('plan, subscription_status')
+    .select('plan')
     .eq('id', userId)
     .single();
+
+  if (profileErr) {
+    console.error('Error obteniendo perfil para publicar CV:', profileErr);
+  }
 
   // 2. Verificar si este CV ya estaba publicado antes (actualización 100% gratuita)
   const { data: existingPublished } = await supabase
