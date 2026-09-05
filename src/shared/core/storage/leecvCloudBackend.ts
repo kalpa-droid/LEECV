@@ -27,7 +27,12 @@ export async function uploadToLEECVCloud(fileBlob: Blob, filePath: string) {
     return { success: true, provider: 'leecv_cloud', path: data.path, fileId: data.path };
   } catch (err: any) {
     console.error('Error subiendo a LEECV Cloud Storage:', err);
-    return { success: false, error: err?.message || String(err) };
+    const isQuotaExceeded = err?.code === '23514' || String(err?.message || '').includes('Cuota');
+    return {
+      success: false,
+      error: err?.message || String(err),
+      isQuotaExceeded
+    };
   }
 }
 
