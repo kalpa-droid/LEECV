@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import type { PaymentProvider, ProviderStatus, WebhookVerifyContext } from './types.js';
 import type { PaymentDetails, PlanType } from '../applyPayment.js';
+import { captureBackendException } from '../sentryBackend.js';
 
 export const lemonSqueezyProvider: PaymentProvider = {
   id: 'lemonsqueezy',
@@ -98,6 +99,11 @@ export const lemonSqueezyProvider: PaymentProvider = {
 
     if (!plan) {
       console.warn(`[LEMON SQUEEZY WEBHOOK] Variante o plan no reconocido (variant_id: ${rawVariantId}, custom_plan: ${customPlan}). Evento omitido.`);
+      await captureBackendException(
+        new Error(`Lemon Squeezy: pago recibido con variant_id "${rawVariantId}" no mapeado a ningún plan`),
+        'lemonsqueezy_unrecognized_variant',
+        { rawVariantId, customPlan, orderId: event.data?.id, email }
+      );
       return null;
     }
 
