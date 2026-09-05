@@ -146,7 +146,19 @@ export default function Navbar({
         {/* CLUSTER DERECHO: Píldoras Ovaladas de Menús (Publicar 🌐 | Acciones 📁💾 | Cuenta 👤🔑) */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
 
-
+          {/* PÍLDORA 0: PUBLICAR EN LA WEB — acceso directo de un solo clic, sin depender de que
+              el usuario encuentre el ítem dentro del menú de Acciones. Reutiliza los mismos
+              tokens de color (--color-status-success-base/on-base) que el ítem del dropdown,
+              así no introduce un par nuevo que check-contrast.js tenga que auditar de cero. */}
+          <button
+            type="button"
+            onClick={onOpenCloudStatus}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-status-success-on-base)] transition ${elevationSystem.raised} cursor-pointer active:scale-95 font-black text-xs`}
+            title="Publicar CV en la Web (Link Público)"
+          >
+            <Globe className="w-4 h-4" />
+            <span className="hidden sm:inline">Publicar</span>
+          </button>
 
           {/* PÍLDORA 1: MENÚ DE ACCIONES (Iconos de Abrir 📁 y Guardar 💾) */}
           <div className="relative" ref={actionMenuRef}>

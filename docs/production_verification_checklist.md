@@ -7,7 +7,7 @@ Este documento contiene la guía paso a paso para la verificación end-to-end an
 ## 1. Verificación de Pasarelas de Pago (E2E)
 
 ### A. Mercado Pago
-- [ ] Configurar credenciales en Vercel Environment Variables: `MERCADOPAGO_ACCESS_TOKEN`, `MERCADOPAGO_WEBHOOK_SECRET`.
+- [ ] Configurar credenciales en Vercel Environment Variables: `MP_ACCESS_TOKEN`, `MP_WEBHOOK_SECRET`.
 - [ ] Configurar URL de webhook en el panel de Mercado Pago: `https://leecv.app/api/webhooks?provider=mercadopago`.
 - [ ] Probar compra con usuario de prueba (Sandbox):
   - [ ] Seleccionar Pack de Créditos o Suscripción Pro.
