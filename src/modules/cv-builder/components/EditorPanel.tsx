@@ -1474,7 +1474,7 @@ export default function EditorPanel({
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[var(--color-accent-amber-bright)] flex-shrink-0" />
                 <span className="font-bold text-[var(--color-neutral-text-primary)]">
-                  {UI_GLOSSARY.labels.threeLevelCascade}
+                  {getUiHint('cascadaDiseno')}
                 </span>
               </div>
               {hasDesignOverrides && (

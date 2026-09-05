@@ -112,7 +112,7 @@ export async function backupCvToGoogleDrive(cvData: any, userPlan: string = 'pro
     await idbStorage.setItem(DRIVE_GLOBAL_HASH_KEY, updatedGlobalHashes);
 
     // 6. Actualizar puntero de backup en Supabase public.cvs
-    const primaryFileId = jsonUploadRes.fileId || driveFolderId || null;
+    const primaryFileId = (jsonUploadRes as any).fileId || driveFolderId || null;
     if (primaryFileId) {
       try {
         const { supabase } = await import('../lib/supabaseClient');
