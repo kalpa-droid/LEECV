@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../shared/core/lib/supabaseClient';
 import { dal } from '../../shared/core/storage/dataAccessLayer';
-import { useEntitlements } from '../../shared/core/entitlements/useEntitlements';
+import { useEntitlements, getPlanLabel, getPlanBadgeClass, PLAN_FEATURES } from '../../shared/core/entitlements/useEntitlements';
 import { backupCvToGoogleDrive, deleteBackupFromDrive } from '../../shared/core/storage/driveBackupService';
 import { getLEECVCloudUsage } from '../../shared/core/storage/leecvCloudBackend';
 import { exportAllCVsToZip, exportCVToZip } from '../../shared/core/utils/jsonImporterExporter';
@@ -244,7 +244,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   inGracePeriod ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' :
                   'bg-slate-800 text-slate-400'
                 }`}>
-                  Plan {inGracePeriod ? 'Gracia (10d)' : plan}
+                  {inGracePeriod ? 'Gracia (10d)' : getPlanLabel(plan)}
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-1">
@@ -308,7 +308,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 LEECV Cloud
               </span>
               <span className="text-xs font-semibold text-purple-400">
-                {plan === 'enterprise' ? '50 GB' : 'Solo Enterprise'}
+                {plan === 'enterprise' ? `${PLAN_FEATURES.enterprise.cloudStorageGB} GB` : 'Solo Enterprise'}
               </span>
             </div>
             {plan === 'enterprise' ? (
@@ -316,7 +316,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 <div>
                   <div className="text-2xl font-extrabold text-white tracking-tight">
                     {cloudUsage ? `${cloudUsage.usedGB} GB` : '…'}
-                    <span className="text-sm font-medium text-slate-400"> / 50 GB</span>
+                    <span className="text-sm font-medium text-slate-400"> / {PLAN_FEATURES.enterprise.cloudStorageGB} GB</span>
                   </div>
                   <p className="text-[11px] text-slate-400 mt-0.5">
                     {cloudUsage ? `${cloudUsage.percentUsed}% usado — actualizado ahora` : 'Consultando uso real...'}
@@ -328,7 +328,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               </>
             ) : (
               <p className="text-[11px] text-slate-400 mt-0.5">
-                Los 50GB de nube propia (sin usar tu Drive personal) están disponibles en el plan Enterprise.
+                Los {PLAN_FEATURES.enterprise.cloudStorageGB}GB de nube propia (sin usar tu Drive personal) están disponibles en el plan Enterprise.
               </p>
             )}
           </div>

@@ -18,7 +18,7 @@ import {
 import { elevationSystem, radius, UI_THEME_META } from '../../../shared/core/uiDesignSystem';
 import { ZoomControls } from '../../../shared/core/ui/ZoomControls';
 import { UndoRedoControls } from '../../../shared/core/ui/UndoRedoControls';
-import { useEntitlements } from '../../../shared/core/entitlements/useEntitlements';
+import { useEntitlements, getPlanLabel, PLAN_FEATURES } from '../../../shared/core/entitlements/useEntitlements';
 
 export interface NavbarProps {
   currentCvData: any;
@@ -294,7 +294,7 @@ export default function Navbar({
                 <div className={`px-3 py-1.5 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] flex items-center justify-between`}>
                   <span className="text-[10px] text-[var(--ui-text-secondary)] font-bold">Plan Activo:</span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)]">
-                    {plan === 'enterprise' ? 'Enterprise (50GB)' : plan === 'pro' ? 'Plan Pro' : 'Plan Gratuito'}
+                    {plan === 'enterprise' ? `Enterprise (${PLAN_FEATURES.enterprise.cloudStorageGB}GB)` : getPlanLabel(plan)}
                   </span>
                 </div>
 

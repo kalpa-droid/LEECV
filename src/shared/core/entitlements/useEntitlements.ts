@@ -2,10 +2,18 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 export const PLAN_FEATURES = {
-  free:       { unlimitedExports: false, candidateManagement: false, cloudStorageGB: 0 },
-  pro:        { unlimitedExports: true,  candidateManagement: true,  cloudStorageGB: 0 },  // Drive propio
-  enterprise: { unlimitedExports: true,  candidateManagement: true,  cloudStorageGB: 50 }, // LEECV Cloud
+  free:       { unlimitedExports: false, candidateManagement: false, cloudStorageGB: 0,  label: 'Plan Gratuito', badgeClass: 'bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)] border-[var(--ui-border)]' },
+  pro:        { unlimitedExports: true,  candidateManagement: true,  cloudStorageGB: 0,  label: 'Plan Pro',      badgeClass: 'bg-[var(--color-secondary-muted)] text-[var(--color-secondary-text)] border-[var(--color-secondary-base)]/30' },
+  enterprise: { unlimitedExports: true,  candidateManagement: true,  cloudStorageGB: 50, label: 'Enterprise',    badgeClass: 'bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)] border-[var(--color-accent-purple)]/30' },
 };
+
+export function getPlanLabel(plan?: string | null): string {
+  return PLAN_FEATURES[plan as keyof typeof PLAN_FEATURES]?.label ?? PLAN_FEATURES.free.label;
+}
+
+export function getPlanBadgeClass(plan?: string | null): string {
+  return PLAN_FEATURES[plan as keyof typeof PLAN_FEATURES]?.badgeClass ?? PLAN_FEATURES.free.badgeClass;
+}
 
 export function isProOrEnterprise(plan?: string | null): boolean {
   return plan === 'pro' || plan === 'enterprise';

@@ -8,6 +8,7 @@ import { logout, signInWithGoogle } from '../auth/authService';
 
 import { elevationSystem, radius } from '../../shared/core/uiDesignSystem';
 import { formatPrice, formatPricePerMonth } from '../../shared/core/payments/pricingCatalog';
+import { getPlanLabel } from '../../shared/core/entitlements/useEntitlements';
 
 export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
   const { showError, showSuccess } = useToast();
@@ -85,7 +86,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
                   {currentProfile?.email || 'Sesión Activa en LEECV'}
                 </span>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)] border border-[var(--color-status-warning-base)]/30 uppercase">
-                  {currentProfile?.role === 'admin' ? 'Administrador' : currentProfile?.role === 'enterprise' ? 'Empresa' : currentProfile?.role === 'pro' ? 'Pro' : 'Plan Gratuito'}
+                  {currentProfile?.role === 'admin' ? 'Administrador' : getPlanLabel(currentProfile?.plan)}
                 </span>
               </div>
               <p className="text-[11px] text-[var(--ui-text-secondary)] flex items-center gap-1.5 mt-0.5">
