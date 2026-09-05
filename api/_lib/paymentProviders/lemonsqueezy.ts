@@ -68,12 +68,38 @@ export const lemonSqueezyProvider: PaymentProvider = {
 
     const email = event.data?.attributes?.user_email || event.data?.attributes?.customer_email;
     const userId = event.meta?.custom_data?.user_id;
-    const rawPlan = event.meta?.custom_data?.plan || 'pro';
 
     if (!userId && !email) return null;
 
+    // Mapa de variantes numéricas de Lemon Squeezy a PlanType de LEECV
+    const variantIdMap: Record<string, PlanType> = {};
+    if (process.env.LS_VARIANT_SINGLE_PDF) variantIdMap[process.env.LS_VARIANT_SINGLE_PDF] = 'single_pdf';
+    if (process.env.LS_VARIANT_PACK5) variantIdMap[process.env.LS_VARIANT_PACK5] = 'credits_pack_5';
+    if (process.env.LS_VARIANT_PACK10) variantIdMap[process.env.LS_VARIANT_PACK10] = 'credits_pack_10';
+    if (process.env.LS_VARIANT_PRO) variantIdMap[process.env.LS_VARIANT_PRO] = 'pro';
+    if (process.env.LS_VARIANT_ENTERPRISE) variantIdMap[process.env.LS_VARIANT_ENTERPRISE] = 'enterprise';
+
+    // order_created trae la variante en first_order_item; suscripciones en attributes.variant_id
+    const rawVariantId = String(
+      event.data?.attributes?.first_order_item?.variant_id ??
+      event.data?.attributes?.variant_id ??
+      ''
+    );
+
     const validPlans: PlanType[] = ['single_pdf', 'credits_pack_5', 'credits_pack_10', 'pro', 'enterprise'];
-    const plan: PlanType = validPlans.includes(rawPlan as any) ? (rawPlan as PlanType) : 'pro';
+    const customPlan = event.meta?.custom_data?.plan;
+
+    // 1. Prioridad a la variante real recibida de Lemon Squeezy
+    // 2. Fallback a custom_data.plan si es un plan válido
+    // 3. Si ninguno se reconoce, NO asignar 'pro' por defecto -> retornar null para evitar regalar suscripciones por error
+    const plan: PlanType | undefined =
+      variantIdMap[rawVariantId] ||
+      (validPlans.includes(customPlan as any) ? (customPlan as PlanType) : undefined);
+
+    if (!plan) {
+      console.warn(`[LEMON SQUEEZY WEBHOOK] Variante o plan no reconocido (variant_id: ${rawVariantId}, custom_plan: ${customPlan}). Evento omitido.`);
+      return null;
+    }
 
     // Lemon Squeezy expresa el monto total en centavos (ej: 22800 = $228.00)
     const rawTotal = event.data?.attributes?.total;

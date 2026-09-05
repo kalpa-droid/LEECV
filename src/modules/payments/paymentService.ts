@@ -81,7 +81,7 @@ export async function iniciarPagoPayPal(plan: 'single_pdf' | 'credits_pack_5' | 
   return iniciarPago('paypal', plan);
 }
 
-export async function iniciarPagoLemonSqueezy(plan: 'pro' | 'enterprise' = 'pro') {
+export async function iniciarPagoLemonSqueezy(plan: 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' | 'pro' | 'enterprise' = 'pro') {
   return iniciarPago('lemonsqueezy', plan);
 }
 

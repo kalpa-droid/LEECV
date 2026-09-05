@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { iniciarPagoMercadoPago, iniciarPagoPayPal } from '../../../payments/paymentService';
+import { iniciarPagoMercadoPago, iniciarPagoPayPal, iniciarPagoLemonSqueezy } from '../../../payments/paymentService';
 import { signInWithGoogle } from '../../../auth/authService';
 import {} from '../../../../shared/core/lib/supabaseClient';
 import { apiClient } from '../../../../shared/core/utils/apiClient';
@@ -73,6 +73,29 @@ export default function PdfCheckoutModal({
     );
     if (!res.success) {
       setErrorMsg(res.error?.message || 'Error al conectar con PayPal');
+      setIsProcessing(false);
+    }
+  };
+
+  const handleLemonSqueezyCheckout = async (plan: 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' = 'single_pdf') => {
+    if (!email || !isValidEmail(email)) {
+      setErrorMsg('Ingresá un correo electrónico válido para recibir tu comprobante');
+      return;
+    }
+
+    setIsProcessing(true);
+    setErrorMsg('');
+    const res = await withErrorHandling(
+      async () => {
+        await iniciarPagoLemonSqueezy(plan);
+      },
+      {
+        context: `Pago Lemon Squeezy (${plan})`,
+        errorMessage: 'Error al conectar con Lemon Squeezy'
+      }
+    );
+    if (!res.success) {
+      setErrorMsg(res.error?.message || 'Error al conectar con Lemon Squeezy');
       setIsProcessing(false);
     }
   };
@@ -236,6 +259,24 @@ export default function PdfCheckoutModal({
               <div className="text-left">
                 <p className="leading-tight">Pagar 1 Exportación con PayPal</p>
                 <p className="text-[10px] opacity-80 font-bold">Tarjeta Internacional, Saldo PayPal</p>
+              </div>
+            </div>
+            <span className={`px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] rounded-[${radius.control}] text-[10px] font-black`}>
+              {formatPrice('single_pdf', 'usd')}
+            </span>
+          </button>
+
+          {/* Option A3: Lemon Squeezy */}
+          <button
+            onClick={() => handleLemonSqueezyCheckout('single_pdf')}
+            disabled={isProcessing}
+            className={`w-full p-3 bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] font-extrabold text-xs rounded-[${radius.modal}] ${elevationSystem.raised} transition flex items-center justify-between cursor-pointer`}
+          >
+            <div className="flex items-center gap-2.5">
+              <CreditCard className="w-5 h-5 text-[var(--ui-text-primary)]" />
+              <div className="text-left">
+                <p className="leading-tight">Pagar Créditos con Lemon Squeezy</p>
+                <p className="text-[10px] opacity-80 font-bold">Tarjeta Internacional (Selección de pack en checkout)</p>
               </div>
             </div>
             <span className={`px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] rounded-[${radius.control}] text-[10px] font-black`}>

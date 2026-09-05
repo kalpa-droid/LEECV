@@ -19,6 +19,10 @@ export function isProOrEnterprise(plan?: string | null): boolean {
   return plan === 'pro' || plan === 'enterprise';
 }
 
+export function isEnterprise(plan?: string | null): boolean {
+  return plan === 'enterprise';
+}
+
 export function isAdminRole(role?: string | null): boolean {
   return role === 'admin';
 }

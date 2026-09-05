@@ -201,7 +201,7 @@ export const dal = {
     async upsert(payload: any): Promise<boolean> {
       if (!supabase) return false;
       const res = await safeSupabaseCall(() =>
-        supabase.from('published_cvs').upsert(payload, { onConflict: 'slug' })
+        supabase.from('published_cvs').upsert(payload, { onConflict: 'cv_id' })
       );
       return res.success;
     },

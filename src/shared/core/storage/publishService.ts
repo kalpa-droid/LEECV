@@ -4,6 +4,8 @@ import { apiClient } from '../utils/apiClient';
 import { isProOrEnterprise } from '../entitlements/useEntitlements';
 import { navigation } from '../utils/navigation';
 import { UI_GLOSSARY } from '../ui/uiTextGlossary';
+import { dal } from './dataAccessLayer';
+import { getPrice } from '../payments/pricingCatalog';
 
 export interface PublishResult {
   success: boolean;
@@ -53,7 +55,7 @@ export function generateSlug(candidateName: string): string {
 /**
  * Publica o actualiza el CV en línea.
  * - Pro / Enterprise: Publicación ilimitada sin costo extra.
- * - Nivel 1 (Gratuito): Requiere 1 pago único de activación por CV ($1 USD / ARS equivalente).
+ * - Nivel 1 (Gratuito): Requiere 1 crédito de exportación por alta de CV ($2.00 USD / $1.900 ARS).
  *   Una vez activado ese CV, todas sus actualizaciones futuras son 100% GRATIS.
  */
 export async function publishCV(cvData: any): Promise<PublishResult> {
@@ -103,7 +105,7 @@ export async function publishCV(cvData: any): Promise<PublishResult> {
         return {
           success: false,
           needsPayment: true,
-          price: 1.5,
+          price: getPrice('single_pdf').usd,
           message: UI_GLOSSARY.labels.publishCreditNotice
         };
       }
@@ -129,25 +131,20 @@ export async function publishCV(cvData: any): Promise<PublishResult> {
     console.warn('Continuando publicacion con permisos por defecto en Drive');
   }
 
-  // 5. Registrar / actualizar el puntero en la tabla published_cvs
-  let slug = cvData.publicSlug;
-  if (!slug) {
-    slug = generateSlug(candidateName);
-  }
+  // 5. Registrar / actualizar el puntero en la tabla published_cvs a través del DAL
+  const slug = existingPublished?.slug || cvData.publicSlug || generateSlug(candidateName);
 
-  const { error: dbErr } = await supabase
-    .from('published_cvs')
-    .upsert({
-      user_id: userId,
-      cv_id: cvId,
-      slug,
-      drive_file_id: driveRes.fileId,
-      is_active: true,
-      updated_at: new Date().toISOString()
-    }, { onConflict: 'cv_id' });
+  const wroteOk = await dal.publishedCvs.upsert({
+    user_id: userId,
+    cv_id: cvId,
+    slug,
+    drive_file_id: driveRes.fileId,
+    is_active: true,
+    updated_at: new Date().toISOString()
+  });
 
-  if (dbErr) {
-    console.error('Error registrando puntero de publicación:', dbErr);
+  if (!wroteOk) {
+    return { success: false, error: 'No se pudo registrar la publicación. Por favor probá de nuevo.' };
   }
 
   const origin = navigation.getOrigin();
