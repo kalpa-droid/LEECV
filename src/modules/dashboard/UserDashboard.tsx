@@ -7,6 +7,7 @@ import {
 import { supabase } from '../../shared/core/lib/supabaseClient';
 import { dal } from '../../shared/core/storage/dataAccessLayer';
 import { useEntitlements, getPlanLabel, getPlanBadgeClass, PLAN_FEATURES } from '../../shared/core/entitlements/useEntitlements';
+import { usePdfExportGate } from '../../shared/core/entitlements/usePdfExportGate';
 import { backupCvToGoogleDrive, deleteBackupFromDrive } from '../../shared/core/storage/driveBackupService';
 import { getLEECVCloudUsage } from '../../shared/core/storage/leecvCloudBackend';
 import { exportAllCVsToZip, exportCVToZip } from '../../shared/core/utils/jsonImporterExporter';
@@ -24,6 +25,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
   onNavigateToCv,
 }) => {
   const { plan, isPremium, inGracePeriod, graceEndsAt, cloudStorageGB } = useEntitlements();
+  const { credits } = usePdfExportGate();
   const [cvList, setCvList] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -300,19 +302,19 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
         {/* TARJETAS DE MEDIDORES Y ALMACENAMIENTO */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-          {/* TARJETA 1: LEECV CLOUD 50GB */}
+          {/* TARJETA 1: LEECV CLOUD / CRÉDITOS DISPONIBLES */}
           <div className={`rounded-xl p-5 border ${glassmorphism.card} bg-slate-900/60 border-slate-800 space-y-3`}>
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
-                <Cloud className="w-4 h-4 text-purple-400" />
-                LEECV Cloud
-              </span>
-              <span className="text-xs font-semibold text-purple-400">
-                {plan === 'enterprise' ? `${PLAN_FEATURES.enterprise.cloudStorageGB} GB` : 'Solo Enterprise'}
-              </span>
-            </div>
             {plan === 'enterprise' ? (
               <>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
+                    <Cloud className="w-4 h-4 text-purple-400" />
+                    LEECV Cloud
+                  </span>
+                  <span className="text-xs font-semibold text-purple-400">
+                    {PLAN_FEATURES.enterprise.cloudStorageGB} GB
+                  </span>
+                </div>
                 <div>
                   <div className="text-2xl font-extrabold text-white tracking-tight">
                     {cloudUsage ? `${cloudUsage.usedGB} GB` : '…'}
@@ -327,9 +329,27 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 </div>
               </>
             ) : (
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                Los {PLAN_FEATURES.enterprise.cloudStorageGB}GB de nube propia (sin usar tu Drive personal) están disponibles en el plan Enterprise.
-              </p>
+              <>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-emerald-400" />
+                    Créditos de Exportación
+                  </span>
+                  <span className="text-xs font-semibold text-emerald-400">
+                    {credits} Disponibles
+                  </span>
+                </div>
+                <div>
+                  <div className="text-2xl font-extrabold text-white tracking-tight">
+                    {credits} {credits === 1 ? 'Crédito' : 'Créditos'}
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    {credits > 0
+                      ? 'Tenés créditos activos para exportar PDFs A4 o publicar tu CV sin límite de tiempo.'
+                      : 'Sin créditos activos. Podés comprar un paquete o suscribirte a Pro/Enterprise.'}
+                  </p>
+                </div>
+              </>
             )}
           </div>
 

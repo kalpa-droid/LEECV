@@ -10,7 +10,7 @@ import {
 import { getCurrentProfile, logout } from '../auth/authService';
 import AdminLogin from './AdminLogin';
 import { StorageDriveTab } from './components/StorageDriveTab';
-import { TemplateManagementTab } from './components/TemplateManagementTab';
+import { SentryReportsTab } from './components/SentryReportsTab';
 import { ProcessedPaymentsTab } from './components/ProcessedPaymentsTab';
 import { useToast } from '../../shared/core/ui/Toast';
 import { useConfirm } from '../../shared/core/ui/ConfirmDialog';
@@ -64,7 +64,7 @@ export default function AdminDashboard() {
   const { showError, showSuccess } = useToast();
   const { confirm } = useConfirm();
 
-  const [adminTab, setAdminTab] = useState<'users' | 'payments' | 'storage' | 'templates'>('users');
+  const [adminTab, setAdminTab] = useState<'users' | 'payments' | 'storage' | 'sentry'>('users');
   const [profile, setProfile] = useState<any>(undefined);
   const [users, setUsers] = useState<any[]>([]);
   const [stats, setStats] = useState({ totalUsers: 0, proUsers: 0, enterpriseUsers: 0, activeSubscriptions: 0 });
@@ -297,12 +297,12 @@ export default function AdminDashboard() {
           </button>
 
           <button
-            onClick={() => setAdminTab('templates')}
-            className={adminTab === 'templates'
+            onClick={() => setAdminTab('sentry')}
+            className={adminTab === 'sentry'
               ? `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.raised}` : `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50`}
           >
-            <LayoutIcon className="w-4 h-4" />
-            <span>Gestión de Plantillas y Presets</span>
+            <ShieldCheck className="w-4 h-4 text-[var(--color-accent-purple-text)]" />
+            <span>Monitoreo & Telemetría Sentry</span>
           </button>
 
           <button
@@ -324,8 +324,8 @@ export default function AdminDashboard() {
           </button>
         </div>
 
-        {adminTab === 'templates' ? (
-          <TemplateManagementTab />
+        {adminTab === 'sentry' ? (
+          <SentryReportsTab />
         ) : adminTab === 'payments' ? (
           <ProcessedPaymentsTab />
         ) : adminTab === 'storage' ? (

@@ -13,12 +13,14 @@ import {
   Share2,
   Palette,
   ShieldCheck,
-  Globe
+  Globe,
+  LayoutDashboard
 } from 'lucide-react';
 import { elevationSystem, radius, UI_THEME_META } from '../../../shared/core/uiDesignSystem';
 import { ZoomControls } from '../../../shared/core/ui/ZoomControls';
 import { UndoRedoControls } from '../../../shared/core/ui/UndoRedoControls';
 import { useEntitlements, getPlanLabel, PLAN_FEATURES } from '../../../shared/core/entitlements/useEntitlements';
+import { navigation } from '../../../shared/core/utils/navigation';
 
 export interface NavbarProps {
   currentCvData: any;
@@ -323,7 +325,20 @@ export default function Navbar({
                   </button>
                 )}
 
-                {/* 2. Planes */}
+                {/* 2. Mi Panel de Gestión */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAccountMenuOpen(false);
+                    navigation.goTo('/dashboard');
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
+                >
+                  <LayoutDashboard className="w-4 h-4 text-[var(--color-secondary-text)]" />
+                  <span>Mi Panel de Gestión</span>
+                </button>
+
+                {/* 3. Planes */}
                 {onOpenPricing && (
                   <button
                     type="button"
