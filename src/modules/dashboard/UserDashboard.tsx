@@ -613,4 +613,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
         onClose={() => setIsRetentionModalOpen(false)}
         userId={userProfile?.id || ''}
       />
-};
+    </div>
+  );
+}

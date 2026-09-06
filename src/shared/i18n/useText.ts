@@ -3,6 +3,8 @@ import { navbarCatalog } from './catalog/navbar';
 import { pricingCatalog } from './catalog/pricing';
 import { checkoutCatalog } from './catalog/checkout';
 import { dashboardCatalog } from './catalog/dashboard';
+import { agencyCatalog } from './catalog/agency';
+import { bannersCatalog } from './catalog/banners';
 
 export const textCatalog = {
   common: commonCatalog,
@@ -10,6 +12,8 @@ export const textCatalog = {
   pricing: pricingCatalog,
   checkout: checkoutCatalog,
   dashboard: dashboardCatalog,
+  agency: agencyCatalog,
+  banners: bannersCatalog,
 };
 
 export type TextCatalog = typeof textCatalog;

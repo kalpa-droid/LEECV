@@ -1,0 +1,138 @@
+[
+  {
+    "type": "notification-literal",
+    "text": "Por favor ingresa un correo electrónico válido para invitar.",
+    "line": 61,
+    "context": "showError"
+  },
+  {
+    "type": "confirm-literal",
+    "text": "Esta persona perderá el acceso a la organización y los candidatos compartidos.",
+    "line": 77,
+    "context": "message"
+  },
+  {
+    "type": "confirm-literal",
+    "text": "Remover Integrante",
+    "line": 77,
+    "context": "confirmText"
+  },
+  {
+    "type": "jsx-text",
+    "text": "Organización id:",
+    "line": 118
+  },
+  {
+    "type": "jsx-text",
+    "text": "Cerrar",
+    "line": 120
+  },
+  {
+    "type": "jsx-text",
+    "text": "Miembros de Equipo",
+    "line": 132
+  },
+  {
+    "type": "jsx-text",
+    "text": "Miembros",
+    "line": 133
+  },
+  {
+    "type": "jsx-text",
+    "text": "Almacenamiento Cloud",
+    "line": 148
+  },
+  {
+    "type": "jsx-text",
+    "text": "Exclusivo Enterprise",
+    "line": 155
+  },
+  {
+    "type": "jsx-text",
+    "text": "Integrantes (",
+    "line": 178
+  },
+  {
+    "type": "jsx-text",
+    "text": "Invitar Miembro",
+    "line": 188
+  },
+  {
+    "type": "jsx-text",
+    "text": "Aceptar Invitación",
+    "line": 198
+  },
+  {
+    "type": "jsx-text",
+    "text": "No hay otros miembros invitados aún.",
+    "line": 209
+  },
+  {
+    "type": "jsx-text",
+    "text": "Utiliza la pestaña \"Invitar Miembro\" para sumar colaboradores a tu equipo.",
+    "line": 210
+  },
+  {
+    "type": "jsx-text",
+    "text": "Token de invitación:",
+    "line": 230
+  },
+  {
+    "type": "jsx-attribute",
+    "text": "Remover integrante",
+    "line": 240,
+    "context": "title"
+  },
+  {
+    "type": "jsx-text",
+    "text": "Email del Colaborador",
+    "line": 255
+  },
+  {
+    "type": "jsx-attribute",
+    "text": "ejemplo@empresa.com",
+    "line": 259,
+    "context": "placeholder"
+  },
+  {
+    "type": "jsx-text",
+    "text": "Rol en el Equipo",
+    "line": 267
+  },
+  {
+    "type": "jsx-text",
+    "text": "Editor (Puede crear y editar candidatos)",
+    "line": 273
+  },
+  {
+    "type": "jsx-text",
+    "text": "Administrador (Puede editar e invitar otros usuarios)",
+    "line": 274
+  },
+  {
+    "type": "jsx-text",
+    "text": "Enviar Invitación al Equipo",
+    "line": 282
+  },
+  {
+    "type": "jsx-text",
+    "text": "Si te enviaron un token de invitación para unirte a una organización Enterprise, pégalo a continuación para activar tu acceso.",
+    "line": 292
+  },
+  {
+    "type": "jsx-text",
+    "text": "Token de Invitación",
+    "line": 297
+  },
+  {
+    "type": "jsx-attribute",
+    "text": "Pega el token aquí...",
+    "line": 301,
+    "context": "placeholder"
+  },
+  {
+    "type": "jsx-text",
+    "text": "Unirse a la Organización",
+    "line": 317
+  }
+]
