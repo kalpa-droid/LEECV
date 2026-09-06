@@ -5,6 +5,9 @@ import EditorPanel from '../modules/cv-builder/components/EditorPanel';
 const CVPreview = lazy(() => import('../modules/cv-builder/components/CVPreview'));
 import { FileText, CreditCard, Palette, Plus, X, Sparkles, ChevronRight } from 'lucide-react';
 import { getOpenTabs, addOpenTab, removeOpenTab, OpenTabItem } from '../shared/core/storage/documentTabEngine';
+import { LandingPage } from '../modules/landing/LandingPage';
+import { BookStudio } from '../modules/book-studio/BookStudio';
+import { BlogModule } from '../modules/blog/BlogModule';
 
 import { getCurrentProfile, capturarConexionDriveSiCorresponde } from '../modules/auth/authService';
 import { supabase } from '../shared/core/lib/supabaseClient';
@@ -53,8 +56,14 @@ import { PwaInstallBanner } from '../shared/core/ui/PwaInstallBanner';
 
 import { procesarRetornoPago } from '../modules/payments/paymentService';
 
-function AppContent() {
+function AppContent({ initialPreset }: { initialPreset?: string }) {
   const { cvData, setCvData, resetToBlankCV, saveCV, saveCVAs } = useCVContext();
+
+  useEffect(() => {
+    if (initialPreset && cvData && cvData.activePresetId !== initialPreset) {
+      setCvData((prev: any) => ({ ...prev, activePresetId: initialPreset }));
+    }
+  }, [initialPreset, cvData?.id]);
   const { showSuccess, showError, showInfo } = useToast();
   const { confirm } = useConfirm();
   const [currentProfile, setCurrentProfile] = useState<any>(null);
@@ -851,11 +860,46 @@ function AppContent() {
 }
 
 export default function App() {
+  const [currentRoute, setCurrentRoute] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      if (path === '/crear-cv' || path === '/crear-tarjeta' || path === '/crear-libro' || path === '/blog') {
+        return path;
+      }
+    }
+    return '/';
+  });
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (typeof window !== 'undefined') {
+        setCurrentRoute(window.location.pathname);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigateTo = (route: string) => {
+    if (typeof window !== 'undefined') {
+      window.history.pushState({}, '', route);
+    }
+    setCurrentRoute(route);
+  };
+
   return (
     <ToastProvider>
       <ConfirmProvider>
         <CVProvider>
-          <AppContent />
+          {currentRoute === '/crear-libro' ? (
+            <BookStudio onBackToHome={() => navigateTo('/')} />
+          ) : currentRoute === '/blog' ? (
+            <BlogModule onNavigateHome={() => navigateTo('/')} onNavigateProduct={(r) => navigateTo(r)} />
+          ) : currentRoute === '/' ? (
+            <LandingPage onNavigate={(r) => navigateTo(r)} />
+          ) : (
+            <AppContent initialPreset={currentRoute === '/crear-tarjeta' ? 'tarjeta-personal' : 'cv-clasico'} />
+          )}
         </CVProvider>
       </ConfirmProvider>
     </ToastProvider>

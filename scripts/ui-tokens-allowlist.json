@@ -33,6 +33,34 @@
     {
       "file": "src/shared/core/ui/GracePeriodBanner.tsx",
       "reason": "Banner de advertencia preventivo de período de gracia (10 días) con acentos amber/gold"
+    },
+    {
+      "file": "src/modules/book-studio/BookStudio.tsx",
+      "reason": "Módulo Studio de libros e imposición de imprenta con stepper y previsualización gráfica"
+    },
+    {
+      "file": "src/modules/book-studio/BookUploadStep.tsx",
+      "reason": "Módulo Studio de libros e imposición de imprenta con stepper y previsualización gráfica"
+    },
+    {
+      "file": "src/modules/book-studio/BookConfigStep.tsx",
+      "reason": "Módulo Studio de libros e imposición de imprenta con stepper y previsualización gráfica"
+    },
+    {
+      "file": "src/modules/book-studio/BookPreviewStep.tsx",
+      "reason": "Módulo Studio de libros e imposición de imprenta con stepper y previsualización gráfica"
+    },
+    {
+      "file": "src/modules/book-studio/BookExportStep.tsx",
+      "reason": "Módulo Studio de libros e imposición de imprenta con stepper y previsualización gráfica"
+    },
+    {
+      "file": "src/modules/landing/LandingPage.tsx",
+      "reason": "Landing page principal multi-producto con diseño hero y tarjetas interactivas"
+    },
+    {
+      "file": "src/modules/blog/BlogModule.tsx",
+      "reason": "Módulo de artículos educativos y guías visuales de empleabilidad e imprenta"
     }
   ]
 }

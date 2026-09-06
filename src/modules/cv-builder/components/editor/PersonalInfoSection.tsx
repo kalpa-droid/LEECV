@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Camera } from 'lucide-react';
+import { User, Camera, Phone } from 'lucide-react';
 import { useCVContext } from '../../../../context/CVContext';
 import { Field } from '../../../../shared/core/ui/Field';
 import { PanelSection } from './PanelSection';
@@ -7,7 +7,7 @@ import { SectionManualAdjustment } from './SectionManualAdjustment';
 import { colorSystem, typeScale, button, elevationSystem } from '../../../../shared/core/uiDesignSystem';
 
 export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhotoCropper: () => void; registeredItems?: any[] }) {
-  const { cvData, setCvData, updatePersonalInfo, toggleSectionVisibility } = useCVContext();
+  const { cvData, setCvData, updatePersonalInfo } = useCVContext();
 
   if (!cvData) return null;
 
@@ -83,10 +83,10 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
             </div>
           </PanelSection>
 
-          {/* 2. Datos Personales & Contacto (Unificado) */}
+          {/* 2. Datos Personales */}
           <PanelSection 
             icon={<User className="w-4 h-4 text-[var(--ui-secondary)]" />} 
-            title="Datos Personales & Contacto"
+            title="Datos Personales"
           >
             <div className="space-y-3 pt-1">
               {/* Tarjeta Foto de Perfil */}
@@ -152,30 +152,6 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
                 />
               </div>
 
-              <Field
-                id="phone"
-                label="Teléfono Celular / WhatsApp"
-                value={cvData.personalInfo?.phone || ''}
-                onChange={(e: any) => updatePersonalInfo('phone', e.target.value)}
-                placeholder="Ej: 387-155121515"
-              />
-
-              <Field
-                id="address"
-                label="Domicilio y Barrio"
-                value={cvData.personalInfo?.address || ''}
-                onChange={(e: any) => updatePersonalInfo('address', e.target.value)}
-                placeholder="Ej: Manzana 751A Casa 11 - Ciudad Valdivia"
-              />
-
-              <Field
-                id="cityProvince"
-                label="Ciudad / Provincia / País"
-                value={cvData.personalInfo?.cityProvince || ''}
-                onChange={(e: any) => updatePersonalInfo('cityProvince', e.target.value)}
-                placeholder="Ej: Salta, Salta, Argentina"
-              />
-
               <div className="grid grid-cols-2 gap-3">
                 <Field
                   id="dni"
@@ -235,9 +211,46 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
                 />
               </div>
 
-              {/* Ajuste Manual: Datos Personales & Contacto */}
+              {/* Ajuste Manual: Datos Personales */}
               <div className="pt-2 border-t border-[var(--color-neutral-border)]">
                 <SectionManualAdjustment sectionId="datos-personales" cvData={cvData} setCvData={setCvData} />
+              </div>
+            </div>
+          </PanelSection>
+
+          {/* 3. Contacto */}
+          <PanelSection 
+            icon={<Phone className="w-4 h-4 text-[var(--ui-secondary)]" />} 
+            title="Contacto"
+          >
+            <div className="space-y-3 pt-1">
+              <Field
+                id="phone"
+                label="Teléfono Celular / WhatsApp"
+                value={cvData.personalInfo?.phone || ''}
+                onChange={(e: any) => updatePersonalInfo('phone', e.target.value)}
+                placeholder="Ej: 387-155121515"
+              />
+
+              <Field
+                id="address"
+                label="Domicilio y Barrio"
+                value={cvData.personalInfo?.address || ''}
+                onChange={(e: any) => updatePersonalInfo('address', e.target.value)}
+                placeholder="Ej: Manzana 751A Casa 11 - Ciudad Valdivia"
+              />
+
+              <Field
+                id="cityProvince"
+                label="Ciudad / Provincia / País"
+                value={cvData.personalInfo?.cityProvince || ''}
+                onChange={(e: any) => updatePersonalInfo('cityProvince', e.target.value)}
+                placeholder="Ej: Salta, Salta, Argentina"
+              />
+
+              {/* Ajuste Manual: Contacto */}
+              <div className="pt-2 border-t border-[var(--color-neutral-border)]">
+                <SectionManualAdjustment sectionId="contacto" cvData={cvData} setCvData={setCvData} />
               </div>
             </div>
           </PanelSection>
