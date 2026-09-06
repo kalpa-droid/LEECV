@@ -1,0 +1,103 @@
+[
+  {
+    "type": "jsx-text",
+    "text": "Volver al Editor",
+    "line": 165
+  },
+  {
+    "type": "jsx-text",
+    "text": "1. Registra tu Correo o Cuenta",
+    "line": 193
+  },
+  {
+    "type": "jsx-text",
+    "text": "Ingresar con Google",
+    "line": 199
+  },
+  {
+    "type": "jsx-text",
+    "text": "Ingresa tu correo para enviarte la factura y vincular tus respaldos en la nube:",
+    "line": 204
+  },
+  {
+    "type": "jsx-attribute",
+    "text": "tu.email@ejemplo.com",
+    "line": 211,
+    "context": "placeholder"
+  },
+  {
+    "type": "jsx-text",
+    "text": "Cuenta Activa:",
+    "line": 218
+  },
+  {
+    "type": "jsx-text",
+    "text": "Plan",
+    "line": 222
+  },
+  {
+    "type": "jsx-text",
+    "text": "2. Elige tu Opción de Pago o Descarga",
+    "line": 230
+  },
+  {
+    "type": "jsx-text",
+    "text": "Pagar 1 Exportación con Mercado Pago",
+    "line": 242
+  },
+  {
+    "type": "jsx-text",
+    "text": "Tarjeta de Crédito / Débito, Mercado Pago, Transferencia",
+    "line": 243
+  },
+  {
+    "type": "jsx-text",
+    "text": "Pagar 1 Exportación con PayPal",
+    "line": 260
+  },
+  {
+    "type": "jsx-text",
+    "text": "Tarjeta Internacional, Saldo PayPal",
+    "line": 261
+  },
+  {
+    "type": "jsx-text",
+    "text": "Pagar Créditos con Lemon Squeezy",
+    "line": 278
+  },
+  {
+    "type": "jsx-text",
+    "text": "Tarjeta Internacional (Selección de pack en checkout)",
+    "line": 279
+  },
+  {
+    "type": "jsx-text",
+    "text": "Pack 5 créditos —",
+    "line": 294
+  },
+  {
+    "type": "jsx-text",
+    "text": "Pack 10 créditos —",
+    "line": 301
+  },
+  {
+    "type": "jsx-text",
+    "text": "Suscribirse a Plan Pro (",
+    "line": 312
+  },
+  {
+    "type": "jsx-text",
+    "text": ") — Exportaciones Ilimitadas",
+    "line": 312
+  },
+  {
+    "type": "jsx-text",
+    "text": "Ver Planes &rarr;",
+    "line": 314
+  },
+  {
+    "type": "jsx-text",
+    "text": "Descargar Copia de Respaldo .JSON Gratis en tu Equipo",
+    "line": 323
+  }
+]
