@@ -1,0 +1,12 @@
+# Cualquier Pull Request que toque los NÚCLEOS COMPARTIDOS del proyecto
+# (motor de proveedores de pago, catálogo de precios, motor de PDF/tarjetas,
+# entitlements) requiere tu revisión antes de poder mergearse a main —
+# independientemente de qué agente o herramienta haya abierto la PR.
+# Esto es lo que cierra el riesgo de que una sesión "parchee" o duplique
+# lógica en vez de reusar el motor ya existente: check-all detecta muchos
+# casos ya conocidos (tokens de UI, sync de precios, límites de módulos),
+# pero un patrón de duplicación nuevo que nadie anticipó todavía solo lo
+# agarra un humano mirando el diff.
+
+/src/shared/core/ @kalpa-droid
+/api/_lib/ @kalpa-droid
