@@ -5,9 +5,9 @@ import EditorPanel from '../modules/cv-builder/components/EditorPanel';
 const CVPreview = lazy(() => import('../modules/cv-builder/components/CVPreview'));
 import { FileText, CreditCard, Palette, Plus, X, Sparkles, ChevronRight } from 'lucide-react';
 import { getOpenTabs, addOpenTab, removeOpenTab, OpenTabItem } from '../shared/core/storage/documentTabEngine';
-import { LandingPage } from '../modules/landing/LandingPage';
-import { BookStudio } from '../modules/book-studio/BookStudio';
-import { BlogModule } from '../modules/blog/BlogModule';
+const LandingPage = lazy(() => import('../modules/landing/LandingPage').then(m => ({ default: m.LandingPage })));
+const BookStudio = lazy(() => import('../modules/book-studio/BookStudio').then(m => ({ default: m.BookStudio })));
+const BlogModule = lazy(() => import('../modules/blog/BlogModule').then(m => ({ default: m.BlogModule })));
 
 import { getCurrentProfile, capturarConexionDriveSiCorresponde } from '../modules/auth/authService';
 import { supabase } from '../shared/core/lib/supabaseClient';
@@ -892,11 +892,17 @@ export default function App() {
       <ConfirmProvider>
         <CVProvider>
           {currentRoute === '/crear-libro' ? (
-            <BookStudio onBackToHome={() => navigateTo('/')} />
+            <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Creador de Libros...</div>}>
+              <BookStudio onBackToHome={() => navigateTo('/')} />
+            </Suspense>
           ) : currentRoute === '/blog' ? (
-            <BlogModule onNavigateHome={() => navigateTo('/')} onNavigateProduct={(r) => navigateTo(r)} />
+            <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Blog...</div>}>
+              <BlogModule onNavigateHome={() => navigateTo('/')} onNavigateProduct={(r) => navigateTo(r)} />
+            </Suspense>
           ) : currentRoute === '/' ? (
-            <LandingPage onNavigate={(r) => navigateTo(r)} />
+            <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando LEECV...</div>}>
+              <LandingPage onNavigate={(r) => navigateTo(r)} />
+            </Suspense>
           ) : (
             <AppContent initialPreset={currentRoute === '/crear-tarjeta' ? 'tarjeta-personal' : 'cv-clasico'} />
           )}
