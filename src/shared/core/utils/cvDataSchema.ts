@@ -57,6 +57,13 @@ export function sanitizeCvData(rawCvData: any = {}) {
     manualOverrides: (typeof data.manualOverrides === 'object' && data.manualOverrides !== null)
       ? data.manualOverrides
       : {},
+    cardOverrides: (typeof data.cardOverrides === 'object' && data.cardOverrides !== null)
+      ? data.cardOverrides
+      : {},
+    qrMode: data.qrMode || 'vcard',
+    cardSize: data.cardSize || 'tarjeta_estandar',
+    showBusinessCard: data.showBusinessCard !== false,
+    sourceCvTabId: data.sourceCvTabId || undefined,
     coverFeaturedEducationId: data.coverFeaturedEducationId ?? null,
     coverFeaturedProfessionId: data.coverFeaturedProfessionId ?? null,
     coverStyle: data.coverStyle || data.coverPresetId || undefined,

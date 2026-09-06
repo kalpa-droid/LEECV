@@ -146,7 +146,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-[var(--ui-success)] flex-shrink-0" />
-                  <span>PDF A4 Nativo de Alta Calidad ({formatPrice('single_pdf', 'usd')})</span>
+                  <span>1 Exportación PDF (CV, Tarjeta Personal o Libro) ({formatPrice('single_pdf', 'usd')})</span>
                 </li>
               </ul>
             </div>

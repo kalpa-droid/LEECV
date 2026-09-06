@@ -473,6 +473,8 @@ function AppContent() {
     );
   }
 
+  const activeDocType: 'cv' | 'business_card' | 'book' = cvData?.activePresetId === 'tarjeta-personal' ? 'business_card' : 'cv';
+
   return (
     <div className="h-screen h-[100dvh] bg-[var(--color-neutral-text-primary)] text-white flex flex-col font-sans overflow-hidden selection:bg-[var(--color-accent-base)] selection:text-white relative">
       <div className="md:pl-24">
@@ -531,6 +533,7 @@ function AppContent() {
           isPanelOpen={isPanelOpen}
           setIsPanelOpen={setIsPanelOpen}
           onOpenAtsCheck={handleOpenAtsCheck}
+          docType={activeDocType}
         />
 
         <div 
@@ -545,6 +548,7 @@ function AppContent() {
             setCvData={setCvData} 
             activeTab={activeTab}
             setActiveTab={setActiveTab}
+            docType={activeDocType}
             onOpenPhotoCropper={() => setIsPhotoCropperOpen(true)}
             onOpenSignature={() => setIsSignatureOpen(true)}
             onOpenSavedCVs={() => setIsSavedCVsOpen(true)}

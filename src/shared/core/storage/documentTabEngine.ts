@@ -11,6 +11,7 @@ export interface OpenTabItem {
   title: string;
   versionLabel?: string;
   isDirty?: boolean;
+  docType?: 'cv' | 'business_card' | 'book';
 }
 
 const OPEN_TABS_STORAGE_KEY = 'cv_open_tabs';
@@ -21,7 +22,7 @@ export function getOpenTabs(): OpenTabItem[] {
     const raw = localStorage.getItem(OPEN_TABS_STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed.map(t => ({ ...t, docType: t.docType || 'cv' })) : [];
   } catch (err) {
     console.warn('Error leyendo cv_open_tabs:', err);
     return [];
@@ -37,23 +38,25 @@ export function saveOpenTabs(tabs: OpenTabItem[]): void {
   }
 }
 
-export function addOpenTab(cvId: string, title: string, versionLabel?: string): OpenTabItem[] {
+export function addOpenTab(cvId: string, title: string, versionLabel?: string, docType: 'cv' | 'business_card' | 'book' = 'cv'): OpenTabItem[] {
   if (!cvId) return getOpenTabs();
   const current = getOpenTabs();
   const existingIdx = current.findIndex(t => t.cvId === cvId);
-  const cleanTitle = title || 'Mi Currículum Vitae';
+  const cleanTitle = title || (docType === 'business_card' ? 'Mi Tarjeta Personal' : docType === 'book' ? 'Mi Libro / Folleto' : 'Mi Currículum Vitae');
 
   if (existingIdx >= 0) {
     current[existingIdx] = {
       ...current[existingIdx],
       title: cleanTitle,
-      versionLabel: versionLabel || current[existingIdx].versionLabel
+      versionLabel: versionLabel || current[existingIdx].versionLabel,
+      docType: docType || current[existingIdx].docType || 'cv'
     };
   } else {
     current.push({
       cvId,
       title: cleanTitle,
-      versionLabel
+      versionLabel,
+      docType
     });
   }
 

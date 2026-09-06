@@ -144,10 +144,10 @@ export function getPreset(id: string): Preset {
 }
 
 /**
- * Devuelve la lista completa de plantillas activas registradas.
+ * Devuelve la lista completa de plantillas de CV activas registradas (excluye tarjetas).
  */
 export function getAllPresets(): Preset[] {
-  return Array.from(PRESET_MAP.values());
+  return Array.from(PRESET_MAP.values()).filter(p => p.pageCategory !== 'tarjeta');
 }
 
 /**
