@@ -94,6 +94,20 @@ export const glassmorphism = {
 // 2. JERARQUÍA TIPOGRÁFICA — una escala fija, 6 niveles, sin excepciones
 // ============================================================
 
+export const displayScale = {
+  hero: 'text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.1]',
+  sectionHeading: 'text-3xl sm:text-4xl font-extrabold tracking-tight',
+  cardTitle: 'text-xl sm:text-2xl font-bold',
+  lead: 'text-lg sm:text-xl font-normal leading-relaxed',
+  eyebrow: 'text-xs font-semibold tracking-wider uppercase',
+} as const;
+
+export const marketingCard = {
+  base: `rounded-[20px] p-8 border transition-all duration-300 cursor-pointer text-left flex flex-col justify-between var(--shadow-floating) hover:-translate-y-1`,
+  idle: `bg-[var(--ui-bg-card)] border-[var(--ui-border)] hover:border-[var(--color-accent-base)]/50 hover:shadow-[var(--shadow-overlay)]`,
+  iconWrap: `p-4 rounded-[16px] w-fit bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] group-hover:scale-110 transition-transform`,
+} as const;
+
 export const typeScale = {
   // Nivel 1: título de pestaña activa (aparece 1 vez por pantalla)
   pageTitle: 'text-[15px] font-semibold',
@@ -133,7 +147,7 @@ export const typeScale = {
  */
 export const button = {
   base: 'rounded-[10px] font-medium text-[13px] px-4 py-2.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed',
-  primary: `bg-[image:var(--gradient-brand)] text-white hover:opacity-95 active:scale-[0.98] shadow-md`,
+  primary: `bg-[image:var(--gradient-brand)] text-[var(--color-accent-on-base)] hover:opacity-95 active:scale-[0.98] shadow-md`,
   secondary: `bg-[var(--ui-btn-outline-bg)] border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] hover:border-[var(--color-neutral-border-strong)] active:scale-[0.98]`,
   ghost: `bg-transparent text-[var(--color-neutral-text-secondary)] hover:text-[var(--color-neutral-text-primary)]`,
   danger: `bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/30 text-[var(--color-status-danger-text)] hover:bg-[var(--color-status-danger-muted)]`,

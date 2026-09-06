@@ -9,4 +9,5 @@
 # agarra un humano mirando el diff.
 
 /src/shared/core/ @kalpa-droid
+/src/shared/i18n/ @kalpa-droid
 /api/_lib/ @kalpa-droid

@@ -5,6 +5,7 @@ import { BookUploadStep } from './BookUploadStep';
 import { BookConfigStep } from './BookConfigStep';
 import { BookPreviewStep } from './BookPreviewStep';
 import { BookExportStep } from './BookExportStep';
+import { elevationSystem, radius } from '../../shared/core/uiDesignSystem';
 
 interface BookStudioProps {
   onBackToHome?: () => void;
@@ -49,31 +50,31 @@ export const BookStudio: React.FC<BookStudioProps> = ({ onBackToHome }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 selection:bg-emerald-500 selection:text-white pb-20">
+    <div className="min-h-screen bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] pb-20 transition-colors duration-300">
       {/* Navbar Superior */}
-      <header className="sticky top-0 z-30 bg-slate-900/80 backdrop-blur-md border-b border-slate-800">
+      <header className="sticky top-0 z-30 bg-[var(--ui-bg-panel)]/80 backdrop-blur-md border-b border-[var(--ui-border)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {onBackToHome && (
               <button
                 onClick={onBackToHome}
-                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                className="p-2 rounded-xl text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-card)] transition-colors cursor-pointer"
                 title="Volver a Inicio"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
             )}
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-xl text-slate-950 font-black">
+              <div className={`p-2 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] rounded-[${radius.card}] font-black ${elevationSystem.raised}`}>
                 <BookOpen className="w-5 h-5" />
               </div>
-              <span className="font-extrabold text-lg text-white tracking-tight">
-                Studio Libros & Folletos <span className="text-emerald-400 text-xs font-normal">Imprenta Pro</span>
+              <span className="font-extrabold text-lg text-[var(--ui-text-primary)] tracking-tight">
+                Studio Libros & Folletos <span className="text-[var(--color-accent-text)] text-xs font-normal">Imprenta Pro</span>
               </span>
             </div>
           </div>
 
-          <div className="text-xs font-semibold px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-full">
+          <div className="text-xs font-semibold px-3 py-1 bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/30 text-[var(--color-accent-text)] rounded-full">
             PDF para Caballete / Imprenta
           </div>
         </div>
@@ -83,9 +84,9 @@ export const BookStudio: React.FC<BookStudioProps> = ({ onBackToHome }) => {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between relative">
           {/* Línea conectora */}
-          <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-800 -translate-y-1/2 z-0" />
+          <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-[var(--ui-border)] -translate-y-1/2 z-0" />
           <div
-            className="absolute top-1/2 left-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-400 -translate-y-1/2 z-0 transition-all duration-500"
+            className="absolute top-1/2 left-0 h-0.5 bg-[var(--color-accent-base)] -translate-y-1/2 z-0 transition-all duration-500"
             style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
           />
 
@@ -95,21 +96,21 @@ export const BookStudio: React.FC<BookStudioProps> = ({ onBackToHome }) => {
             const isCurrent = currentStep === step.number;
 
             return (
-              <div key={step.number} className="relative z-10 flex flex-col items-center gap-2">
+              <div key={step.number} className="relative z-10 flex flex-col items-center gap-2 bg-[var(--ui-bg-panel)] px-2">
                 <div
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold transition-all duration-300 ${
+                  className={`w-12 h-12 rounded-[16px] flex items-center justify-center font-bold transition-all duration-300 ${
                     isCompleted
-                      ? 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/25 scale-100'
+                      ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] shadow-lg scale-100'
                       : isCurrent
-                      ? 'bg-slate-800 border-2 border-emerald-400 text-emerald-400 shadow-lg shadow-emerald-400/20 scale-110'
-                      : 'bg-slate-800/80 border border-slate-700 text-slate-500'
+                      ? 'bg-[var(--ui-bg-card)] border-2 border-[var(--color-accent-base)] text-[var(--color-accent-text)] shadow-lg scale-110'
+                      : 'bg-[var(--ui-bg-card)] border border-[var(--ui-border)] text-[var(--ui-text-secondary)]'
                   }`}
                 >
                   {isCompleted ? <Check className="w-6 h-6 stroke-[3]" /> : <Icon className="w-5 h-5" />}
                 </div>
                 <span
                   className={`text-xs font-bold tracking-tight hidden sm:block ${
-                    isCurrent ? 'text-emerald-400' : isCompleted ? 'text-slate-300' : 'text-slate-500'
+                    isCurrent ? 'text-[var(--color-accent-text)]' : isCompleted ? 'text-[var(--ui-text-primary)]' : 'text-[var(--ui-text-secondary)]'
                   }`}
                 >
                   {step.title}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Newspaper, ArrowLeft, Clock, User, Tag, Sparkles, BookOpen, FileText, CreditCard } from 'lucide-react';
+import { Newspaper, ArrowLeft, Clock, User, FileText, BookOpen } from 'lucide-react';
+import { displayScale, elevationSystem, radius, button } from '../../shared/core/uiDesignSystem';
 
 interface Article {
   slug: string;
@@ -75,20 +76,20 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ onNavigateHome, onNaviga
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-white flex flex-col font-sans">
+    <div className="min-h-screen bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] flex flex-col font-sans transition-colors duration-300">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800">
+      <header className="sticky top-0 z-30 bg-[var(--ui-bg-panel)]/80 backdrop-blur-xl border-b border-[var(--ui-border)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer" onClick={onNavigateHome}>
-            <button className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+            <button className="p-2 rounded-xl text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-card)] transition-colors cursor-pointer">
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-xl text-slate-950 font-black">
+              <div className={`p-2 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] rounded-[${radius.card}] font-black ${elevationSystem.raised}`}>
                 <Newspaper className="w-5 h-5" />
               </div>
-              <span className="font-extrabold text-lg text-white tracking-tight">
-                Blog & Recursos <span className="text-emerald-400 text-xs font-normal">LEECV</span>
+              <span className="font-extrabold text-lg text-[var(--ui-text-primary)] tracking-tight">
+                Blog & Recursos <span className="text-[var(--color-accent-text)] text-xs font-normal">LEECV</span>
               </span>
             </div>
           </div>
@@ -99,18 +100,18 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ onNavigateHome, onNaviga
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-1 w-full">
         {selectedArticle ? (
           /* Vista de Artículo Individual */
-          <article className="space-y-8 animate-fade-in max-w-3xl mx-auto">
+          <article className="space-y-8 max-w-3xl mx-auto">
             <button
               onClick={() => setSelectedArticle(null)}
-              className="flex items-center gap-2 text-sm font-semibold text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer"
+              className="flex items-center gap-2 text-sm font-semibold text-[var(--color-accent-text)] hover:text-[var(--color-accent-base)] transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Volver a la lista de artículos</span>
             </button>
 
             <div className="space-y-4">
-              <div className="flex items-center gap-3 text-xs font-semibold text-slate-400">
-                <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-full border border-emerald-500/20">
+              <div className="flex items-center gap-3 text-xs font-semibold text-[var(--ui-text-secondary)]">
+                <span className="px-3 py-1 bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] rounded-full border border-[var(--color-accent-base)]/20">
                   {selectedArticle.category}
                 </span>
                 <span>•</span>
@@ -119,36 +120,38 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ onNavigateHome, onNaviga
                 <span>{selectedArticle.date}</span>
               </div>
 
-              <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight">
+              <h1 className={`${displayScale.sectionHeading} text-[var(--ui-text-primary)]`}>
                 {selectedArticle.title}
               </h1>
 
-              <div className="flex items-center gap-2 text-xs text-slate-400 pt-2 border-b border-slate-800 pb-6">
-                <User className="w-4 h-4 text-emerald-400" />
+              <div className="flex items-center gap-2 text-xs text-[var(--ui-text-secondary)] pt-2 border-b border-[var(--ui-border)] pb-6">
+                <User className="w-4 h-4 text-[var(--color-accent-text)]" />
                 <span>Por {selectedArticle.author}</span>
               </div>
             </div>
 
-            <div className="space-y-6 text-slate-300 text-base leading-relaxed">
+            <div className="space-y-6 text-[var(--ui-text-secondary)] text-base leading-relaxed">
               {selectedArticle.content.map((paragraph, idx) => (
                 <p key={idx}>{paragraph}</p>
               ))}
             </div>
 
             {/* CTA al final del artículo */}
-            <div className="mt-12 p-8 bg-slate-900 rounded-3xl border border-slate-800 text-center space-y-4">
-              <h3 className="text-xl font-bold text-white">¿Listo para aplicar estas técnicas?</h3>
+            <div className={`mt-12 p-8 bg-[var(--ui-bg-card)] rounded-[24px] border border-[var(--ui-border)] ${elevationSystem.floating} text-center space-y-4`}>
+              <h3 className={`${displayScale.cardTitle} text-[var(--ui-text-primary)]`}>
+                ¿Listo para aplicar estas técnicas?
+              </h3>
               <div className="flex flex-wrap justify-center gap-4 pt-2">
                 <button
                   onClick={() => onNavigateProduct('/crear-cv')}
-                  className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-slate-950 font-bold rounded-xl hover:bg-emerald-400 transition-all cursor-pointer"
+                  className={`${button.base} ${button.primary} flex items-center gap-2 px-6 py-3 text-sm`}
                 >
                   <FileText className="w-4 h-4" />
                   <span>Crear CV Profesional</span>
                 </button>
                 <button
                   onClick={() => onNavigateProduct('/crear-libro')}
-                  className="flex items-center gap-2 px-6 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 transition-all cursor-pointer"
+                  className={`${button.base} ${button.secondary} flex items-center gap-2 px-6 py-3 text-sm`}
                 >
                   <BookOpen className="w-4 h-4" />
                   <span>Imponer Libro PDF</span>
@@ -158,12 +161,12 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ onNavigateHome, onNaviga
           </article>
         ) : (
           /* Lista de Artículos */
-          <div className="space-y-10 animate-fade-in">
+          <div className="space-y-10">
             <div className="text-center space-y-3">
-              <h1 className="text-4xl font-extrabold text-white tracking-tight">
+              <h1 className={`${displayScale.sectionHeading} text-[var(--ui-text-primary)]`}>
                 Recursos Educativos & Guías de Impresión
               </h1>
-              <p className="text-slate-400 max-w-2xl mx-auto text-sm">
+              <p className={`${displayScale.lead} text-[var(--ui-text-secondary)] max-w-2xl mx-auto`}>
                 Aprende las mejores prácticas de estructuración de currículums, diseño de tarjetas y preparación de documentos PDF para imprenta.
               </p>
             </div>
@@ -173,10 +176,10 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ onNavigateHome, onNaviga
                 <div
                   key={art.slug}
                   onClick={() => setSelectedArticle(art)}
-                  className="group bg-slate-900/80 rounded-3xl p-8 border border-slate-800 hover:border-emerald-500/40 transition-all cursor-pointer space-y-4 hover:-translate-y-0.5"
+                  className={`group bg-[var(--ui-bg-card)] rounded-[24px] p-8 border border-[var(--ui-border)] hover:border-[var(--color-accent-base)]/50 ${elevationSystem.raised} transition-all cursor-pointer space-y-4 hover:-translate-y-0.5`}
                 >
-                  <div className="flex items-center gap-3 text-xs font-semibold text-slate-400">
-                    <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-full border border-emerald-500/20">
+                  <div className="flex items-center gap-3 text-xs font-semibold text-[var(--ui-text-secondary)]">
+                    <span className="px-3 py-1 bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] rounded-full border border-[var(--color-accent-base)]/20">
                       {art.category}
                     </span>
                     <span>•</span>
@@ -186,15 +189,15 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ onNavigateHome, onNaviga
                     </span>
                   </div>
 
-                  <h2 className="text-2xl font-bold text-white group-hover:text-emerald-400 transition-colors">
+                  <h2 className={`${displayScale.cardTitle} text-[var(--ui-text-primary)] group-hover:text-[var(--color-accent-base)] transition-colors`}>
                     {art.title}
                   </h2>
 
-                  <p className="text-slate-400 text-sm leading-relaxed">
+                  <p className="text-[var(--ui-text-secondary)] text-sm leading-relaxed">
                     {art.summary}
                   </p>
 
-                  <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs pt-2">
+                  <div className="flex items-center gap-2 text-[var(--color-accent-text)] font-bold text-xs pt-2">
                     <span>Leer artículo completo</span>
                     <ArrowLeft className="w-4 h-4 rotate-180 group-hover:translate-x-1 transition-transform" />
                   </div>
@@ -206,7 +209,7 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ onNavigateHome, onNaviga
       </main>
 
       {/* Footer */}
-      <footer className="bg-slate-950 border-t border-slate-900 py-8 text-center text-xs text-slate-500">
+      <footer className="bg-[var(--ui-bg-panel)] border-t border-[var(--ui-border)] py-8 text-center text-xs text-[var(--ui-text-secondary)]">
         <p>© 2026 LEECV Studio. Todos los derechos reservados.</p>
       </footer>
     </div>
