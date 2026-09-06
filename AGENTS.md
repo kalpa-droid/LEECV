@@ -73,11 +73,34 @@ termina muerto y confunde a quien lo encuentra después. Si dudás si ya existe,
 
 ## Regla 6 — Protocolo obligatorio de fin de sesión de Agentes de IA
 
-Ninguna sesión de agente puede dar por finalizada su tarea ni reportar "pusheado a producción" sin ejecutar previamente:
+**`main` está protegido por un GitHub Ruleset (activo desde 2026-09-06).**
+Ningún push directo a `main` es posible, de ningún agente, con o sin
+`--no-verify` — GitHub lo rechaza en el servidor (`GH013: Repository rule
+violations`). Esto ya no es una convención de texto, es mecánico.
 
-```bash
-git fetch origin && git log origin/main -1 --format="%H %s"
-```
+El flujo obligatorio para CUALQUIER cambio, de cualquier sesión de agente:
 
-Se debe verificar que el hash del commit remoto de `origin/main` coincida exactamente con la modificación realizada. Adicionalmente, se debe registrar la intervención en el archivo `SESSION_LOG.md`.
+1. Crear una rama descriptiva (`git checkout -b feat/lo-que-sea`), nunca
+   trabajar directo sobre `main`.
+2. `git push origin <rama>`.
+3. Abrir un Pull Request contra `main` (vía la UI de GitHub, o vía la API
+   `POST /repos/kalpa-droid/LEECV/pulls` con el token que corresponda).
+4. Esperar a que el check `check-all` corra en GitHub Actions y quede en
+   verde — no alcanza con que `npm run check-all` haya pasado en local.
+5. Si la PR toca `src/shared/core/` o `api/_lib/` (los núcleos
+   compartidos: motor de pagos, catálogo de precios, motor de PDF/tarjetas,
+   entitlements), el `CODEOWNERS` exige que **el dueño del repo apruebe la
+   PR** antes de poder mergear — es la salvaguarda contra parches o
+   duplicación de lógica que ya vive en un núcleo existente, para los
+   casos que `check-all` todavía no sabe detectar automáticamente.
+6. Recién con el check en verde (y la aprobación si aplica) se puede
+   mergear.
+7. Después de mergear: ejecutar `git fetch origin && git log origin/main -1
+   --format="%H %s"`, confirmar que el hash coincide con lo recién
+   mergeado, y registrar la intervención en `SESSION_LOG.md`.
+
+Ninguna sesión puede reportar "pusheado a producción" sin haber completado
+los 7 pasos. Un push directo rechazado por GitHub (paso 2 sobre `main`
+directamente) no es un error a resolver reintentando — es la señal de que
+hay que abrir una rama y una PR en su lugar.
 
