@@ -70,3 +70,14 @@ termina muerto y confunde a quien lo encuentra después. Si dudás si ya existe,
 ## Regla 5 — Limitaciones conocidas de scripts de auditoría
 
 - **`scripts/check-contrast.js`**: No resuelve gradientes `bg-[image:var(--gradient-X)]`, sólo fondos de color sólido (`bg-[var(--color-X)]`). Al usar un gradiente para el fondo de un botón u objeto interactivo (ej. `--gradient-gold`), verificar manualmente que el color del texto sobre el gradiente cumpla la relación de contraste WCAG 2.1 AA (mínimo 4.5:1).
+
+## Regla 6 — Protocolo obligatorio de fin de sesión de Agentes de IA
+
+Ninguna sesión de agente puede dar por finalizada su tarea ni reportar "pusheado a producción" sin ejecutar previamente:
+
+```bash
+git fetch origin && git log origin/main -1 --format="%H %s"
+```
+
+Se debe verificar que el hash del commit remoto de `origin/main` coincida exactamente con la modificación realizada. Adicionalmente, se debe registrar la intervención en el archivo `SESSION_LOG.md`.
+
