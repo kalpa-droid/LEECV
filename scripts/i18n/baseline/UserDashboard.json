@@ -1,0 +1,186 @@
+[
+  {
+    "type": "jsx-attribute",
+    "text": "Volver a la aplicación",
+    "line": 233,
+    "context": "title"
+  },
+  {
+    "type": "jsx-text",
+    "text": "Panel de Almacenamiento y Gestión",
+    "line": 241
+  },
+  {
+    "type": "jsx-text",
+    "text": "— Control granular de respaldos en nube y Google Drive.",
+    "line": 253
+  },
+  {
+    "type": "jsx-text",
+    "text": "Oferta 20% OFF",
+    "line": 265
+  },
+  {
+    "type": "jsx-text",
+    "text": "Ir al Editor",
+    "line": 274
+  },
+  {
+    "type": "jsx-text",
+    "text": "LEECV Cloud",
+    "line": 312
+  },
+  {
+    "type": "jsx-text",
+    "text": "GB",
+    "line": 315
+  },
+  {
+    "type": "jsx-text",
+    "text": "GB",
+    "line": 321
+  },
+  {
+    "type": "jsx-text",
+    "text": "Créditos de Exportación",
+    "line": 336
+  },
+  {
+    "type": "jsx-text",
+    "text": "Disponibles",
+    "line": 339
+  },
+  {
+    "type": "jsx-text",
+    "text": "Google Drive Backup",
+    "line": 361
+  },
+  {
+    "type": "jsx-text",
+    "text": "Respaldados",
+    "line": 364
+  },
+  {
+    "type": "jsx-text",
+    "text": "CVs sincronizados en el Drive personal.",
+    "line": 371
+  },
+  {
+    "type": "jsx-text",
+    "text": "Exportación Masiva (.ZIP)",
+    "line": 383
+  },
+  {
+    "type": "jsx-text",
+    "text": "Genera un archivo empaquetado con todos tus CVs estructurados y sus imágenes anexas.",
+    "line": 386
+  },
+  {
+    "type": "jsx-text",
+    "text": "Descargar Todo en ZIP",
+    "line": 395
+  },
+  {
+    "type": "jsx-attribute",
+    "text": "Buscar por título, candidato o DNI...",
+    "line": 411,
+    "context": "placeholder"
+  },
+  {
+    "type": "jsx-text",
+    "text": "Todos (",
+    "line": 426
+  },
+  {
+    "type": "jsx-text",
+    "text": "No respaldados (",
+    "line": 434
+  },
+  {
+    "type": "jsx-text",
+    "text": "En Google Drive (",
+    "line": 442
+  },
+  {
+    "type": "jsx-text",
+    "text": "Respaldar en Google Drive",
+    "line": 459
+  },
+  {
+    "type": "jsx-text",
+    "text": "Liberar de Google Drive",
+    "line": 467
+  },
+  {
+    "type": "jsx-text",
+    "text": "Descargar (.ZIP)",
+    "line": 475
+  },
+  {
+    "type": "jsx-text",
+    "text": "Título / Postulante",
+    "line": 495
+  },
+  {
+    "type": "jsx-text",
+    "text": "Última Modificación",
+    "line": 496
+  },
+  {
+    "type": "jsx-text",
+    "text": "Estado de Respaldo",
+    "line": 497
+  },
+  {
+    "type": "jsx-text",
+    "text": "Acciones",
+    "line": 498
+  },
+  {
+    "type": "jsx-text",
+    "text": "Cargando lista de documentos...",
+    "line": 506
+  },
+  {
+    "type": "jsx-text",
+    "text": "No se encontraron currículums en este filtro.",
+    "line": 512
+  },
+  {
+    "type": "jsx-text",
+    "text": "Google Drive Sync",
+    "line": 556
+  },
+  {
+    "type": "jsx-text",
+    "text": "Solo LEECV Cloud",
+    "line": 561
+  },
+  {
+    "type": "jsx-attribute",
+    "text": "Liberar de Google Drive (mantener en Cloud)",
+    "line": 572,
+    "context": "title"
+  },
+  {
+    "type": "jsx-text",
+    "text": "Liberar de Drive",
+    "line": 574
+  },
+  {
+    "type": "jsx-attribute",
+    "text": "Respaldar en Google Drive",
+    "line": 581,
+    "context": "title"
+  },
+  {
+    "type": "jsx-text",
+    "text": "Respaldar",
+    "line": 583
+  },
+  {
+    "type": "jsx-text",
+    "text": "Editar",
+    "line": 592
+  }
+]
