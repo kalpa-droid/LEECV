@@ -21,6 +21,7 @@ import { ZoomControls } from '../../../shared/core/ui/ZoomControls';
 import { UndoRedoControls } from '../../../shared/core/ui/UndoRedoControls';
 import { useEntitlements, getPlanLabel, PLAN_FEATURES } from '../../../shared/core/entitlements/useEntitlements';
 import { navigation } from '../../../shared/core/utils/navigation';
+import { useText } from '../../../shared/i18n/useText';
 
 export interface NavbarProps {
   currentCvData: any;
@@ -74,6 +75,7 @@ export default function Navbar({
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const { plan } = useEntitlements();
+  const t = useText();
 
   const actionMenuRef = useRef<HTMLDivElement>(null);
   const accountMenuRef = useRef<HTMLDivElement>(null);
@@ -109,10 +111,10 @@ export default function Navbar({
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <div className="flex items-center gap-1.5">
             <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-[${radius.control}] bg-[var(--color-accent-base)] flex items-center justify-center font-black text-xs ${elevationSystem.raised} text-[var(--color-accent-on-base)] border border-white/20`}>
-              LEE
+              {t.navbar.brandShort}
             </div>
             <h1 className="font-black text-sm sm:text-base tracking-wider text-[var(--ui-text-primary)] hidden sm:block">
-              LEECV
+              {t.navbar.appName}
             </h1>
           </div>
         </div>
@@ -148,21 +150,18 @@ export default function Navbar({
         {/* CLUSTER DERECHO: Píldoras Ovaladas de Menús (Publicar 🌐 | Acciones 📁💾 | Cuenta 👤🔑) */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
 
-          {/* PÍLDORA 0: PUBLICAR EN LA WEB — acceso directo de un solo clic, sin depender de que
-              el usuario encuentre el ítem dentro del menú de Acciones. Reutiliza los mismos
-              tokens de color (--color-status-success-base/on-base) que el ítem del dropdown,
-              así no introduce un par nuevo que check-contrast.js tenga que auditar de cero. */}
+          {/* PÍLDORA 0: PUBLICAR EN LA WEB */}
           <button
             type="button"
             onClick={onOpenCloudStatus}
             className={`flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-full bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-status-success-on-base)] transition ${elevationSystem.raised} cursor-pointer active:scale-95 font-black text-xs shrink-0`}
-            title="Publicar CV en la Web (Link Público)"
+            title={t.navbar.publishTitle}
           >
             <Globe className="w-4 h-4 flex-shrink-0" />
-            <span className="hidden sm:inline">Publicar</span>
+            <span className="hidden sm:inline">{t.navbar.publishButton}</span>
           </button>
 
-          {/* PÍLDORA 1: MENÚ DE ACCIONES (Iconos de Abrir 📁 y Guardar 💾) */}
+          {/* PÍLDORA 1: MENÚ DE ACCIONES */}
           <div className="relative" ref={actionMenuRef}>
             <button
               type="button"
@@ -171,7 +170,7 @@ export default function Navbar({
                 setIsAccountMenuOpen(false);
               }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-bg-card)] border-2 border-[var(--ui-border)] transition ${elevationSystem.raised} cursor-pointer active:scale-95 text-[var(--ui-text-primary)]`}
-              title="Menú de Guardado y Exportación (Abrir / Guardar / Publicar / PDF / Portátil)"
+              title={t.navbar.actionMenuTitle}
             >
               <FolderOpen className="w-4 h-4 text-[var(--color-secondary-bright)]" />
               <Save className="w-4 h-4 text-[var(--color-accent-purple-bright)]" />
@@ -191,7 +190,7 @@ export default function Navbar({
                   className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
                 >
                   <FolderOpen className="w-4 h-4 text-[var(--color-secondary-bright)]" />
-                  <span>Abrir Documento Guardado...</span>
+                  <span>{t.navbar.openSavedDocument}</span>
                 </button>
 
                 <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
@@ -207,7 +206,7 @@ export default function Navbar({
                   className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer disabled:opacity-50`}
                 >
                   <Save className="w-4 h-4 text-[var(--color-accent-purple-bright)]" />
-                  <span>{isSaving ? 'Guardando...' : 'Guardar Cambios (Sobrescribir)'}</span>
+                  <span>{isSaving ? t.navbar.saveChangesSaving : t.navbar.saveChangesOverwrite}</span>
                 </button>
 
                 {/* 2. Guardar una copia para... */}
@@ -220,10 +219,8 @@ export default function Navbar({
                   className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
                 >
                   <CopyPlus className="w-4 h-4 text-[var(--color-secondary-bright)]" />
-                  <span>Guardar una copia para...</span>
+                  <span>{t.navbar.saveCopyAs}</span>
                 </button>
-
-
 
                 {/* 4. Descargar Copia Portátil (.JSON / .ZIP) */}
                 <button
@@ -235,7 +232,7 @@ export default function Navbar({
                   className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
                 >
                   <FileArchive className="w-4 h-4 text-[var(--color-status-warning-bright)]" />
-                  <span>Descargar Copia Portátil (.JSON/.ZIP)</span>
+                  <span>{t.navbar.downloadPortableCopy}</span>
                 </button>
 
                 <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
@@ -250,7 +247,7 @@ export default function Navbar({
                   className={`w-full text-left px-3 py-2 rounded-[${radius.card}] bg-[var(--color-secondary-base)] hover:opacity-90 text-[var(--color-secondary-on-base)] text-xs font-black flex items-center gap-2 transition cursor-pointer`}
                 >
                   <Download className="w-4 h-4" />
-                  <span>Exportar en PDF</span>
+                  <span>{t.navbar.exportPdf}</span>
                 </button>
 
                 {/* 6. Publicar en la Web */}
@@ -263,13 +260,13 @@ export default function Navbar({
                   className={`w-full text-left px-3 py-2 rounded-[${radius.card}] bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-status-success-on-base)] text-xs font-black flex items-center gap-2 transition cursor-pointer`}
                 >
                   <Globe className="w-4 h-4" />
-                  <span>Publicar en la Web (Link Público)</span>
+                  <span>{t.navbar.publishWebPublicLink}</span>
                 </button>
               </div>
             )}
           </div>
 
-          {/* PÍLDORA 2: MENÚ DE CUENTA (Iconos de Usuario 👤 e Ingresar 🔑/LogOut) */}
+          {/* PÍLDORA 2: MENÚ DE CUENTA */}
           <div className="relative" ref={accountMenuRef}>
             <button
               type="button"
@@ -278,7 +275,7 @@ export default function Navbar({
                 setIsActionMenuOpen(false);
               }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--color-accent-amber)] bg-gradient-to-tr from-[var(--color-accent-orange)] to-[var(--color-accent-amber)] text-black border-2 border-[var(--ui-border)] transition ${elevationSystem.raised} cursor-pointer active:scale-95`}
-              title="Cuenta de Usuario / Suscripción / Compartir / Privacidad"
+              title={t.navbar.accountMenuTitle}
             >
               <User className="w-4 h-4 stroke-[2.5]" />
               {isLoggedIn ? (
@@ -294,7 +291,7 @@ export default function Navbar({
                 
                 {/* Insignia del Plan Activo */}
                 <div className={`px-3 py-1.5 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] flex items-center justify-between`}>
-                  <span className="text-[10px] text-[var(--ui-text-secondary)] font-bold">Plan Activo:</span>
+                  <span className="text-[10px] text-[var(--ui-text-secondary)] font-bold">{t.navbar.activePlan}</span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)]">
                     {plan === 'enterprise' ? `Enterprise (${PLAN_FEATURES.enterprise.cloudStorageGB}GB)` : getPlanLabel(plan)}
                   </span>
@@ -314,12 +311,12 @@ export default function Navbar({
                     {isLoggedIn ? (
                       <>
                         <LogOut className="w-4 h-4 text-[var(--color-status-danger-bright)]" />
-                        <span>Cerrar Sesión</span>
+                        <span>{t.navbar.logout}</span>
                       </>
                     ) : (
                       <>
                         <LogIn className="w-4 h-4 text-[var(--color-status-success-bright)]" />
-                        <span>Ingresar</span>
+                        <span>{t.navbar.login}</span>
                       </>
                     )}
                   </button>
@@ -335,7 +332,7 @@ export default function Navbar({
                   className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
                 >
                   <LayoutDashboard className="w-4 h-4 text-[var(--color-secondary-text)]" />
-                  <span>Mi Panel de Gestión</span>
+                  <span>{t.navbar.managementDashboard}</span>
                 </button>
 
                 {/* 3. Planes */}
@@ -349,7 +346,7 @@ export default function Navbar({
                     className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
                   >
                     <Gem className="w-4 h-4 text-[var(--color-accent-amber-bright)]" />
-                    <span>Planes & Suscripciones</span>
+                    <span>{t.navbar.plansAndSubscriptions}</span>
                   </button>
                 )}
 
@@ -364,7 +361,7 @@ export default function Navbar({
                     className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
                   >
                     <Building2 className="w-4 h-4 text-[var(--color-secondary-bright)]" />
-                    <span>Panel Agencia / Empresa</span>
+                    <span>{t.navbar.agencyEnterprisePanel}</span>
                   </button>
                 )}
 
@@ -378,7 +375,7 @@ export default function Navbar({
                   className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
                 >
                   <Share2 className="w-4 h-4 text-[var(--color-secondary-bright)]" />
-                  <span>📲 Compartir Aplicación</span>
+                  <span>{t.navbar.shareApp}</span>
                 </button>
 
                 <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
@@ -394,7 +391,7 @@ export default function Navbar({
                     className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer text-[var(--ui-text-secondary)]`}
                   >
                     <ShieldCheck className="w-4 h-4 text-[var(--color-status-success-bright)]" />
-                    <span>Política de Privacidad</span>
+                    <span>{t.navbar.privacyPolicy}</span>
                   </button>
                 )}
               </div>

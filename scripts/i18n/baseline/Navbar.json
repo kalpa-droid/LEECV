@@ -1,0 +1,100 @@
+[
+  {
+    "type": "jsx-text",
+    "text": "LEE",
+    "line": 112
+  },
+  {
+    "type": "jsx-text",
+    "text": "LEECV",
+    "line": 115
+  },
+  {
+    "type": "jsx-attribute",
+    "text": "Publicar CV en la Web (Link Público)",
+    "line": 159,
+    "context": "title"
+  },
+  {
+    "type": "jsx-text",
+    "text": "Publicar",
+    "line": 162
+  },
+  {
+    "type": "jsx-attribute",
+    "text": "Menú de Guardado y Exportación (Abrir / Guardar / Publicar / PDF / Portátil)",
+    "line": 174,
+    "context": "title"
+  },
+  {
+    "type": "jsx-text",
+    "text": "Abrir Documento Guardado...",
+    "line": 194
+  },
+  {
+    "type": "jsx-text",
+    "text": "Guardar una copia para...",
+    "line": 223
+  },
+  {
+    "type": "jsx-text",
+    "text": "Descargar Copia Portátil (.JSON/.ZIP)",
+    "line": 238
+  },
+  {
+    "type": "jsx-text",
+    "text": "Exportar en PDF",
+    "line": 253
+  },
+  {
+    "type": "jsx-text",
+    "text": "Publicar en la Web (Link Público)",
+    "line": 266
+  },
+  {
+    "type": "jsx-attribute",
+    "text": "Cuenta de Usuario / Suscripción / Compartir / Privacidad",
+    "line": 281,
+    "context": "title"
+  },
+  {
+    "type": "jsx-text",
+    "text": "Plan Activo:",
+    "line": 297
+  },
+  {
+    "type": "jsx-text",
+    "text": "Cerrar Sesión",
+    "line": 317
+  },
+  {
+    "type": "jsx-text",
+    "text": "Ingresar",
+    "line": 322
+  },
+  {
+    "type": "jsx-text",
+    "text": "Mi Panel de Gestión",
+    "line": 338
+  },
+  {
+    "type": "jsx-text",
+    "text": "Planes & Suscripciones",
+    "line": 352
+  },
+  {
+    "type": "jsx-text",
+    "text": "Panel Agencia / Empresa",
+    "line": 367
+  },
+  {
+    "type": "jsx-text",
+    "text": "📲 Compartir Aplicación",
+    "line": 381
+  },
+  {
+    "type": "jsx-text",
+    "text": "Política de Privacidad",
+    "line": 397
+  }
+]
