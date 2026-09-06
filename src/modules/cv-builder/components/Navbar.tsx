@@ -17,6 +17,7 @@ import {
   LayoutDashboard
 } from 'lucide-react';
 import { elevationSystem, radius, UI_THEME_META } from '../../../shared/core/uiDesignSystem';
+import { ThemeToggleButton } from '../../../shared/core/ui/ThemeToggleButton';
 import { ZoomControls } from '../../../shared/core/ui/ZoomControls';
 import { UndoRedoControls } from '../../../shared/core/ui/UndoRedoControls';
 import { useEntitlements, getPlanLabel, PLAN_FEATURES } from '../../../shared/core/entitlements/useEntitlements';
@@ -122,16 +123,7 @@ export default function Navbar({
         {/* CLUSTER CENTRO: Botón de Tema + Controles de Zoom (Visibles en PC y Móvil) */}
         <div className="flex items-center gap-1.5 justify-center flex-1 min-w-0">
           {/* Botón Selector de Tema Cromático */}
-          <button
-            type="button"
-            onClick={cycleUITheme}
-            className={`flex items-center gap-1 px-2 py-1 rounded-[${radius.card}] text-xs font-black text-[var(--ui-text-primary)] bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-bg-card)] border border-[var(--ui-border)] transition ${elevationSystem.raised} cursor-pointer whitespace-nowrap active:scale-95 shrink-0`}
-            title={`Tema actual: ${themeMeta.label}. Clic para alternar tema.`}
-          >
-            <Palette className="w-3.5 h-3.5 text-[var(--color-secondary-bright)] flex-shrink-0" />
-            <span className="hidden sm:inline">{themeMeta.shortLabel}</span>
-            <span className="text-xs leading-none">{themeMeta.emoji}</span>
-          </button>
+          <ThemeToggleButton currentThemeId={currentThemeId} onToggle={cycleUITheme} size="sm" />
 
           <div className="w-px h-5 bg-[var(--ui-border)] mx-0.5" />
 

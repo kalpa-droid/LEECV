@@ -8,6 +8,7 @@ import { bannersCatalog } from './catalog/banners';
 import { retentionCatalog } from './catalog/retention';
 import { validationCatalog } from './catalog/validation';
 import { modalsCatalog } from './catalog/modals';
+import { landingCatalog } from './catalog/landing';
 
 export const textCatalog = {
   common: commonCatalog,
@@ -20,6 +21,7 @@ export const textCatalog = {
   retention: retentionCatalog,
   validation: validationCatalog,
   modals: modalsCatalog,
+  landing: landingCatalog,
 };
 
 export type TextCatalog = typeof textCatalog;
