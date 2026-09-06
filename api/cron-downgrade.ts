@@ -8,15 +8,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return errorResponse(res, 405, 'Método no permitido');
   }
 
-  // Verificación de token secreto para Vercel Cron
+  // Verificación de token secreto para Vercel Cron.
+  // Nota: x-vercel-cron / x-vercel-cron-schedule NO son headers verificados por
+  // Vercel a nivel de plataforma — son headers HTTP normales que cualquier
+  // caller externo puede setear en su propio request. Según la documentación
+  // oficial de Vercel, son solo "corroboración"; el único límite de seguridad
+  // real es el Authorization: Bearer {CRON_SECRET} que Vercel agrega server-side.
   const cronSecret = process.env.CRON_SECRET;
   const authHeader = req.headers['authorization'];
-  const isVercelCron = req.headers['x-vercel-cron'] === '1';
 
-  if (!isVercelCron) {
-    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-      return errorResponse(res, 401, 'No autorizado para ejecutar cron');
-    }
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return errorResponse(res, 401, 'No autorizado para ejecutar cron');
   }
 
   try {
