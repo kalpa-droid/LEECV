@@ -1,0 +1,194 @@
+[
+  {
+    "type": "notification-literal",
+    "text": "Sesión cerrada correctamente. Puedes ingresar con otra cuenta.",
+    "line": 23,
+    "context": "showSuccess"
+  },
+  {
+    "type": "jsx-attribute",
+    "text": "Mi Cuenta & Suscripciones LEECV",
+    "line": 67,
+    "context": "title"
+  },
+  {
+    "type": "jsx-text",
+    "text": "🔒 Todos los pagos están procesados con encriptación SSL de 256 bits a través de Mercado Pago, PayPal y Lemon Squeezy. Acceso instantáneo y transparente sin cargos ocultos.",
+    "line": 72
+  },
+  {
+    "type": "jsx-text",
+    "text": "Google Drive:",
+    "line": 94
+  },
+  {
+    "type": "jsx-text",
+    "text": "Mejorar a Plan Agencia (",
+    "line": 105
+  },
+  {
+    "type": "jsx-text",
+    "text": "Elige el Plan Perfecto para tu Escala",
+    "line": 112
+  },
+  {
+    "type": "jsx-text",
+    "text": "Desde la creación gratuita de tu propio CV hasta la gestión masiva de candidatos para agencias con respaldo en la nube.",
+    "line": 114
+  },
+  {
+    "type": "jsx-text",
+    "text": "Usuario Individual",
+    "line": 127
+  },
+  {
+    "type": "jsx-text",
+    "text": "Para crear tu propio CV personal",
+    "line": 128
+  },
+  {
+    "type": "jsx-text",
+    "text": "Gratis",
+    "line": 131
+  },
+  {
+    "type": "jsx-text",
+    "text": "/ editor básico",
+    "line": 132
+  },
+  {
+    "type": "jsx-text",
+    "text": "Editor 100% Gratis en Navegador",
+    "line": 137
+  },
+  {
+    "type": "jsx-text",
+    "text": "Respaldo .JSON gratis en PC o en tu Google Drive",
+    "line": 141
+  },
+  {
+    "type": "jsx-text",
+    "text": "Guardado Local en IndexedDB del navegador",
+    "line": 145
+  },
+  {
+    "type": "jsx-text",
+    "text": "1 Exportación PDF (CV, Tarjeta Personal o Libro) (",
+    "line": 149
+  },
+  {
+    "type": "jsx-text",
+    "text": "Usar Editor Gratuito",
+    "line": 157
+  },
+  {
+    "type": "jsx-text",
+    "text": "Más Recomendado",
+    "line": 164
+  },
+  {
+    "type": "jsx-text",
+    "text": "Agencia Pro",
+    "line": 172
+  },
+  {
+    "type": "jsx-text",
+    "text": "Para Reclutadores y Consultoras",
+    "line": 173
+  },
+  {
+    "type": "jsx-text",
+    "text": "/ mes",
+    "line": 177
+  },
+  {
+    "type": "jsx-text",
+    "text": "PDFs A4 ILIMITADOS (Sin pagar",
+    "line": 182
+  },
+  {
+    "type": "jsx-text",
+    "text": "/PDF)",
+    "line": 182
+  },
+  {
+    "type": "jsx-text",
+    "text": "Panel Multi-Candidato en Supabase Cloud",
+    "line": 186
+  },
+  {
+    "type": "jsx-text",
+    "text": "Respaldo en tu propio Google Drive (15 GB)",
+    "line": 190
+  },
+  {
+    "type": "jsx-text",
+    "text": "Envío a WhatsApp & Telegram a 1-Clic",
+    "line": 194
+  },
+  {
+    "type": "jsx-text",
+    "text": "🇦🇷 Suscribirse con Mercado Pago",
+    "line": 205
+  },
+  {
+    "type": "jsx-text",
+    "text": "💳 Pagar con PayPal (USD)",
+    "line": 212
+  },
+  {
+    "type": "jsx-text",
+    "text": "🌎 Suscribirse con Lemon Squeezy (USD)",
+    "line": 219
+  },
+  {
+    "type": "jsx-text",
+    "text": "Enterprise + Cloud",
+    "line": 231
+  },
+  {
+    "type": "jsx-text",
+    "text": "Sin depender de tu Google Drive",
+    "line": 232
+  },
+  {
+    "type": "jsx-text",
+    "text": "/ mes",
+    "line": 236
+  },
+  {
+    "type": "jsx-text",
+    "text": "Todo lo del Plan Agencia Pro",
+    "line": 241
+  },
+  {
+    "type": "jsx-text",
+    "text": "+50 GB Almacenamiento LEECV Cloud",
+    "line": 245
+  },
+  {
+    "type": "jsx-text",
+    "text": "Soporte de Anexos Certificados en PDF",
+    "line": 249
+  },
+  {
+    "type": "jsx-text",
+    "text": "Alertas Preventivas de Espacio sin Falla",
+    "line": 253
+  },
+  {
+    "type": "jsx-text",
+    "text": "🇦🇷 Activar con Mercado Pago",
+    "line": 264
+  },
+  {
+    "type": "jsx-text",
+    "text": "💳 Pagar con PayPal (USD)",
+    "line": 271
+  },
+  {
+    "type": "jsx-text",
+    "text": "🌎 Suscribirse con Lemon Squeezy (USD)",
+    "line": 278
+  }
+]

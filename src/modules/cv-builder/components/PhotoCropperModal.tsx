@@ -5,7 +5,29 @@ import { useToast } from '../../../shared/core/ui/Toast';
 import { button, elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { Modal } from '../../../shared/core/ui/Modal';
 
-export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, currentPhoto }: any) {
+interface PhotoCropperModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSavePhoto: (dataUrl: string) => void;
+  currentPhoto?: string;
+  title?: string;
+  canvasWidth?: number;
+  canvasHeight?: number;
+  exportFormat?: 'image/jpeg' | 'image/png';
+  exportQuality?: number;
+}
+
+export default function PhotoCropperModal({ 
+  isOpen, 
+  onClose, 
+  onSavePhoto, 
+  currentPhoto,
+  title = 'Recortador de Foto de Perfil',
+  canvasWidth = 280,
+  canvasHeight = 360,
+  exportFormat = 'image/jpeg',
+  exportQuality = 0.95
+}: PhotoCropperModalProps) {
   const { showError } = useToast();
   const [imageSrc, setImageSrc] = useState(currentPhoto || '');
   const [zoom, setZoom] = useState(1);
@@ -88,7 +110,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
   const handleCropAndSave = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+    const croppedDataUrl = canvas.toDataURL(exportFormat, exportQuality);
     onSavePhoto(croppedDataUrl);
     onClose();
   };
@@ -97,7 +119,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Recortador de Foto de Perfil"
+      title={title}
       icon={<Camera className="w-5 h-5 text-[var(--ui-secondary)]" />}
       size="md"
       footer={
@@ -115,7 +137,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
             disabled={!imageSrc}
             className={`${button.primary} flex items-center gap-2`}
           >
-            <Check className="w-4 h-4" /> Guardar Foto Recortada
+            <Check className="w-4 h-4" /> Guardar Imagen Recortada
           </button>
         </div>
       }
@@ -129,7 +151,7 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
             <div className={`w-16 h-16 rounded-full bg-[var(--color-secondary-muted)] flex items-center justify-center text-[var(--color-secondary-text)] group-hover:scale-110 transition duration-300 mb-3`}>
               <Upload className="w-8 h-8" />
             </div>
-            <span className="font-semibold text-[var(--ui-text-primary)] text-xs">Haz clic para subir una foto</span>
+            <span className="font-semibold text-[var(--ui-text-primary)] text-xs">Haz clic para subir una imagen</span>
             <span className="text-[10px] text-[var(--ui-text-secondary)] mt-1">Formatos recomendados: JPG, PNG (Hasta 10MB)</span>
           </div>
         ) : (
@@ -138,8 +160,8 @@ export default function PhotoCropperModal({ isOpen, onClose, onSavePhoto, curren
             <div className={`relative border-4 border-[var(--color-secondary-base)] rounded-[${radius.card}] overflow-hidden ${elevationSystem.floating} bg-[var(--ui-bg-panel)] cursor-grab active:cursor-grabbing`}>
               <canvas 
                 ref={canvasRef}
-                width={280}
-                height={360}
+                width={canvasWidth}
+                height={canvasHeight}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}

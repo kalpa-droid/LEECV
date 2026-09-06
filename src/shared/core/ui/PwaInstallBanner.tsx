@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Download, X, Smartphone, Sparkles, CheckCircle2 } from 'lucide-react';
 import { elevationSystem, radius } from '../uiDesignSystem';
 import { useToast } from './Toast';
+import { t } from '../../i18n/useText';
 
 const STORAGE_KEY_INSTALLED = 'leecv_pwa_installed';
 const STORAGE_KEY_DISMISSED = 'leecv_pwa_dismissed';
@@ -54,7 +55,7 @@ export function PwaInstallBanner() {
   const handleInstallClick = async () => {
     if (!deferredPrompt) {
       // Fallback para navegadores que no soportan prompt programático (ej. iOS Safari)
-      showInfo('Para instalar en iOS: presiona "Compartir" en Safari y luego "Agregar a pantalla de inicio".');
+      showInfo(t.banners.pwaInstall.iosInstruction);
       localStorage.setItem(STORAGE_KEY_INSTALLED, 'true');
       setIsVisible(false);
       return;
@@ -83,7 +84,7 @@ export function PwaInstallBanner() {
 
   return (
     <aside 
-      aria-label="Instalación de Aplicación PWA LEECV"
+      aria-label={t.banners.pwaInstall.ariaLabel}
       className={`fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 bg-[var(--ui-bg-panel)] border-2 border-[var(--color-accent-purple-bright)]/40 text-[var(--ui-text-primary)] p-4 rounded-[${radius.modal}] ${elevationSystem.floating} backdrop-blur-xl animate-fadeIn`}
     >
       <div className="flex items-start justify-between gap-3 mb-2">
@@ -94,14 +95,14 @@ export function PwaInstallBanner() {
           <div>
             <div className="flex items-center gap-1.5">
               <h3 className="text-xs font-black tracking-tight text-[var(--ui-text-primary)]">
-                Instalar LEECV en tu Dispositivo
+                {t.banners.pwaInstall.title}
               </h3>
               <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)]">
-                PWA
+                {t.banners.pwaInstall.badge}
               </span>
             </div>
             <p className="text-[10px] text-[var(--ui-text-secondary)] font-medium leading-tight">
-              Accede al instante desde tu pantalla de inicio, sin descargas de tienda.
+              {t.banners.pwaInstall.sub}
             </p>
           </div>
         </div>
@@ -110,7 +111,7 @@ export function PwaInstallBanner() {
           type="button"
           onClick={handleDismissClick}
           className="p-1 text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] rounded-full hover:bg-[var(--ui-bg-card)] transition cursor-pointer"
-          title="No volver a preguntar"
+          title={t.banners.pwaInstall.dontAskTitle}
         >
           <X className="w-4 h-4" />
         </button>
@@ -119,11 +120,11 @@ export function PwaInstallBanner() {
       <ul className="text-[10px] text-[var(--ui-text-secondary)] space-y-1 mb-3 ml-1">
         <li className="flex items-center gap-1.5">
           <CheckCircle2 className="w-3.5 h-3.5 text-[var(--color-status-success-bright)] shrink-0" />
-          <span>Funciona como app nativa en Android, iPhone, Windows y Mac</span>
+          <span>{t.banners.pwaInstall.feature1}</span>
         </li>
         <li className="flex items-center gap-1.5">
           <CheckCircle2 className="w-3.5 h-3.5 text-[var(--color-status-success-bright)] shrink-0" />
-          <span>Acceso ultrarrápido a tus currículums sin gastar datos</span>
+          <span>{t.banners.pwaInstall.feature2}</span>
         </li>
       </ul>
 
@@ -133,7 +134,7 @@ export function PwaInstallBanner() {
           onClick={handleDismissClick}
           className="px-3 py-1.5 text-[11px] font-bold text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] rounded-full hover:bg-[var(--ui-bg-card)] transition cursor-pointer"
         >
-          No volver a mostrar
+          {t.banners.pwaInstall.dismissBtn}
         </button>
 
         <button
@@ -142,7 +143,7 @@ export function PwaInstallBanner() {
           className="px-4 py-1.5 bg-[var(--color-secondary-base)] hover:opacity-90 text-[var(--color-secondary-on-base)] font-black text-xs rounded-full transition cursor-pointer flex items-center gap-1.5 shadow-md active:scale-95"
         >
           <Download className="w-3.5 h-3.5" />
-          <span>Instalar App</span>
+          <span>{t.banners.pwaInstall.installBtn}</span>
         </button>
       </div>
     </aside>

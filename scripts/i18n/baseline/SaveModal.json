@@ -1,0 +1,98 @@
+[
+  {
+    "type": "jsx-attribute",
+    "text": "Guardar Documento",
+    "line": 65,
+    "context": "title"
+  },
+  {
+    "type": "jsx-text",
+    "text": "⚙️ Estado de Nube & Drive",
+    "line": 81
+  },
+  {
+    "type": "jsx-text",
+    "text": "Cerrar",
+    "line": 89
+  },
+  {
+    "type": "jsx-text",
+    "text": "Guardar Cambios (Sobrescribir Activo)",
+    "line": 110
+  },
+  {
+    "type": "jsx-text",
+    "text": "Actualiza el documento activo en tu Navegador, Supabase y Google Drive simultáneamente.",
+    "line": 116
+  },
+  {
+    "type": "jsx-text",
+    "text": "Guardar una copia para...",
+    "line": 134
+  },
+  {
+    "type": "jsx-text",
+    "text": "Copia Independiente",
+    "line": 136
+  },
+  {
+    "type": "jsx-text",
+    "text": "Crea una nueva copia con ID único etiquetada para un puesto específico (ej. \"Docencia\", \"Gerente\").",
+    "line": 140
+  },
+  {
+    "type": "jsx-text",
+    "text": "Categoría de Puesto:",
+    "line": 152
+  },
+  {
+    "type": "jsx-text",
+    "text": "Puesto sugerido:",
+    "line": 170
+  },
+  {
+    "type": "jsx-text",
+    "text": "O escribe un puesto / etiqueta personalizada:",
+    "line": 188
+  },
+  {
+    "type": "jsx-text",
+    "text": "Etiqueta resultante:",
+    "line": 201
+  },
+  {
+    "type": "jsx-text",
+    "text": "Guardar como copia para \"",
+    "line": 211
+  },
+  {
+    "type": "jsx-text",
+    "text": "Descargar Copia Portátil (.JSON / .ZIP)",
+    "line": 233
+  },
+  {
+    "type": "jsx-text",
+    "text": "Llevar a otra PC",
+    "line": 234
+  },
+  {
+    "type": "jsx-text",
+    "text": "Elige descargar un archivo .JSON liviano o un paquete .ZIP completo para llevar tu CV en pendrive o enviar por email a otra computadora.",
+    "line": 237
+  },
+  {
+    "type": "jsx-text",
+    "text": "Publicar en la Web (Link Público)",
+    "line": 256
+  },
+  {
+    "type": "jsx-text",
+    "text": "🌐 Link Público",
+    "line": 258
+  },
+  {
+    "type": "jsx-text",
+    "text": "Genera un enlace web público único para compartir tu currículum online.",
+    "line": 262
+  }
+]

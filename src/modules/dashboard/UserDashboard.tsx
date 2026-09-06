@@ -14,6 +14,7 @@ import { exportAllCVsToZip, exportCVToZip } from '../../shared/core/utils/jsonIm
 import { GracePeriodBanner } from '../../shared/core/ui/GracePeriodBanner';
 import { RetentionOfferModal } from '../payments/components/RetentionOfferModal';
 import { button, badge, glassmorphism, input } from '../../shared/core/uiDesignSystem';
+import { useText } from '../../shared/i18n/useText';
 
 interface UserDashboardProps {
   onBackToApp?: () => void;
@@ -26,6 +27,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 }) => {
   const { plan, isPremium, inGracePeriod, graceEndsAt, cloudStorageGB } = useEntitlements();
   const { credits } = usePdfExportGate();
+  const t = useText();
   const [cvList, setCvList] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -230,7 +232,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               <button
                 onClick={onBackToApp}
                 className={`${button.ghost} p-2 rounded-lg text-slate-400 hover:text-white`}
-                title="Volver a la aplicación"
+                title={t.dashboard.backToAppTitle}
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
@@ -238,7 +240,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold text-white tracking-tight">
-                  Panel de Almacenamiento y Gestión
+                  {t.dashboard.headerTitle}
                 </h1>
                 <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider ${
                   plan === 'enterprise' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' :
@@ -250,7 +252,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-1">
-                {userProfile?.email || 'Usuario LEECV'} — Control granular de respaldos en nube y Google Drive.
+                {userProfile?.email || 'Usuario LEECV'} {t.dashboard.headerSubtitle}
               </p>
             </div>
           </div>
@@ -262,7 +264,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 className={`${button.primary} text-xs py-2 px-3 bg-gradient-to-r from-emerald-500 to-teal-600 flex items-center gap-1.5`}
               >
                 <Sparkles className="w-4 h-4" />
-                Oferta 20% OFF
+                {t.dashboard.retentionOfferBadge}
               </button>
             )}
 
@@ -271,7 +273,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 onClick={onBackToApp}
                 className={`${button.secondary} text-xs py-2 px-3 border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800`}
               >
-                Ir al Editor
+                {t.dashboard.goToEditorBtn}
               </button>
             )}
           </div>
@@ -309,16 +311,16 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
                     <Cloud className="w-4 h-4 text-purple-400" />
-                    LEECV Cloud
+                    {t.dashboard.leecvCloudTitle}
                   </span>
                   <span className="text-xs font-semibold text-purple-400">
-                    {PLAN_FEATURES.enterprise.cloudStorageGB} GB
+                    {PLAN_FEATURES.enterprise.cloudStorageGB} {t.dashboard.gbUnit}
                   </span>
                 </div>
                 <div>
                   <div className="text-2xl font-extrabold text-white tracking-tight">
                     {cloudUsage ? `${cloudUsage.usedGB} GB` : '…'}
-                    <span className="text-sm font-medium text-slate-400"> / {PLAN_FEATURES.enterprise.cloudStorageGB} GB</span>
+                    <span className="text-sm font-medium text-slate-400"> / {PLAN_FEATURES.enterprise.cloudStorageGB} {t.dashboard.gbUnit}</span>
                   </div>
                   <p className="text-[11px] text-slate-400 mt-0.5">
                     {cloudUsage ? `${cloudUsage.percentUsed}% usado — actualizado ahora` : 'Consultando uso real...'}
@@ -333,10 +335,10 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
                     <Sparkles className="w-4 h-4 text-emerald-400" />
-                    Créditos de Exportación
+                    {t.dashboard.exportCreditsTitle}
                   </span>
                   <span className="text-xs font-semibold text-emerald-400">
-                    {credits} Disponibles
+                    {credits} {t.dashboard.availableCount}
                   </span>
                 </div>
                 <div>
@@ -358,17 +360,17 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
                 <HardDrive className="w-4 h-4 text-teal-400" />
-                Google Drive Backup
+                {t.dashboard.driveBackupTitle}
               </span>
               <span className="text-xs font-semibold text-teal-400">
-                {backedCount} / {totalCount} Respaldados
+                {backedCount} / {totalCount} {t.dashboard.backedUpStatus}
               </span>
             </div>
             <div>
               <div className="text-2xl font-extrabold text-white tracking-tight">
                 {Math.round((backedCount / (totalCount || 1)) * 100)}%
               </div>
-              <p className="text-[11px] text-slate-400 mt-0.5">CVs sincronizados en el Drive personal.</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">{t.dashboard.driveSyncDescription}</p>
             </div>
             <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
               <div className="bg-teal-400 h-full rounded-full" style={{ width: `${Math.round((backedCount / (totalCount || 1)) * 100)}%` }} />
@@ -380,10 +382,10 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
             <div>
               <span className="text-xs font-medium text-slate-400 flex items-center gap-1.5 mb-2">
                 <Download className="w-4 h-4 text-emerald-400" />
-                Exportación Masiva (.ZIP)
+                {t.dashboard.bulkExportTitle}
               </span>
               <p className="text-xs text-slate-300">
-                Genera un archivo empaquetado con todos tus CVs estructurados y sus imágenes anexas.
+                {t.dashboard.bulkExportDescription}
               </p>
             </div>
             <button
@@ -392,7 +394,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               className={`${button.secondary} text-xs py-2 mt-3 w-full border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 flex items-center justify-center gap-2`}
             >
               <Download className="w-3.5 h-3.5" />
-              Descargar Todo en ZIP
+              {t.dashboard.downloadAllZipBtn}
             </button>
           </div>
 
@@ -408,7 +410,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
               <input
                 type="text"
-                placeholder="Buscar por título, candidato o DNI..."
+                placeholder={t.dashboard.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={`${input.base} pl-9 text-xs py-2 bg-slate-950 border-slate-800 text-slate-200`}
@@ -423,7 +425,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   filterMode === 'all' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                Todos ({totalCount})
+                {t.dashboard.filterAll}{totalCount})
               </button>
               <button
                 onClick={() => setFilterMode('unbacked')}
@@ -431,7 +433,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   filterMode === 'unbacked' ? 'bg-slate-800 text-amber-400' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                No respaldados ({unbackedCount})
+                {t.dashboard.filterNotBackedUp}{unbackedCount})
               </button>
               <button
                 onClick={() => setFilterMode('backed')}
@@ -439,7 +441,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   filterMode === 'backed' ? 'bg-slate-800 text-teal-400' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                En Google Drive ({backedCount})
+                {t.dashboard.filterInDrive}{backedCount})
               </button>
             </div>
           </div>
@@ -456,7 +458,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   className={`${button.primary} text-xs py-1.5 px-3 bg-teal-600 hover:bg-teal-500 flex items-center gap-1.5`}
                 >
                   <HardDrive className="w-3.5 h-3.5" />
-                  Respaldar en Google Drive
+                  {t.dashboard.bulkActionBackupDrive}
                 </button>
 
                 <button
@@ -464,7 +466,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   className={`${button.secondary} text-xs py-1.5 px-3 border-teal-500/30 text-teal-300 hover:bg-teal-500/20 flex items-center gap-1.5`}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  Liberar de Google Drive
+                  {t.dashboard.bulkActionReleaseDrive}
                 </button>
 
                 <button
@@ -472,7 +474,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   className={`${button.secondary} text-xs py-1.5 px-3 border-slate-700 bg-slate-800 text-slate-200 flex items-center gap-1.5`}
                 >
                   <Download className="w-3.5 h-3.5" />
-                  Descargar (.ZIP)
+                  {t.dashboard.bulkActionDownloadZip}
                 </button>
               </div>
             </div>
@@ -492,10 +494,10 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                       )}
                     </button>
                   </th>
-                  <th className="p-3">Título / Postulante</th>
-                  <th className="p-3">Última Modificación</th>
-                  <th className="p-3">Estado de Respaldo</th>
-                  <th className="p-3 text-right">Acciones</th>
+                  <th className="p-3">{t.dashboard.tableColTitle}</th>
+                  <th className="p-3">{t.dashboard.tableColLastMod}</th>
+                  <th className="p-3">{t.dashboard.tableColBackupStatus}</th>
+                  <th className="p-3 text-right">{t.dashboard.tableColActions}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60 bg-slate-900/40">
@@ -503,13 +505,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   <tr>
                     <td colSpan={5} className="p-8 text-center text-slate-400">
                       <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-teal-400" />
-                      Cargando lista de documentos...
+                      {t.dashboard.loadingDocs}
                     </td>
                   </tr>
                 ) : filteredCvs.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="p-8 text-center text-slate-400">
-                      No se encontraron currículums en este filtro.
+                      {t.dashboard.emptyFilterResults}
                     </td>
                   </tr>
                 ) : (
@@ -553,12 +555,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                           {isBacked ? (
                             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-teal-500/20 text-teal-300 border border-teal-500/30">
                               <CheckCircle2 className="w-3 h-3 text-teal-400" />
-                              Google Drive Sync
+                              {t.dashboard.statusDriveSync}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-800 text-slate-400 border border-slate-700">
                               <Cloud className="w-3 h-3" />
-                              Solo LEECV Cloud
+                              {t.dashboard.statusOnlyCloud}
                             </span>
                           )}
                         </td>
@@ -569,18 +571,18 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                               onClick={() => handleSingleRelease(cv)}
                               disabled={isProcessing}
                               className="text-xs text-slate-400 hover:text-rose-400 p-1 rounded transition-colors"
-                              title="Liberar de Google Drive (mantener en Cloud)"
+                              title={t.dashboard.releaseFromDriveTitle}
                             >
-                              Liberar de Drive
+                              {t.dashboard.releaseFromDriveBtn}
                             </button>
                           ) : (
                             <button
                               onClick={() => handleSingleBackup(cv)}
                               disabled={isProcessing}
                               className="text-xs text-teal-400 hover:text-teal-300 font-medium p-1 rounded transition-colors"
-                              title="Respaldar en Google Drive"
+                              title={t.dashboard.backupToDriveTitle}
                             >
-                              Respaldar
+                              {t.dashboard.backupToDriveBtn}
                             </button>
                           )}
 
@@ -589,7 +591,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                               onClick={() => onNavigateToCv(cv.id)}
                               className="text-xs text-slate-300 hover:text-white p-1 rounded transition-colors underline"
                             >
-                              Editar
+                              {t.dashboard.editBtn}
                             </button>
                           )}
                         </td>
@@ -613,4 +615,4 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
       />
     </div>
   );
-};
+}

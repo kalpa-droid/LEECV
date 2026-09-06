@@ -1,0 +1,25 @@
+export const navbarCatalog = {
+  brandShort: "LEE",
+  appName: "LEECV",
+  publishTitle: "Publicar CV en la Web (Link Público)",
+  publishButton: "Publicar",
+  actionMenuTitle: "Menú de Guardado y Exportación (Abrir / Guardar / Publicar / PDF / Portátil)",
+  openSavedDocument: "Abrir Documento Guardado...",
+  saveChangesSaving: "Guardando...",
+  saveChangesOverwrite: "Guardar Cambios (Sobrescribir)",
+  saveCopyAs: "Guardar una copia para...",
+  downloadPortableCopy: "Descargar Copia Portátil (.JSON/.ZIP)",
+  exportPdf: "Exportar en PDF",
+  publishWebPublicLink: "Publicar en la Web (Link Público)",
+  accountMenuTitle: "Cuenta de Usuario / Suscripción / Compartir / Privacidad",
+  activePlan: "Plan Activo:",
+  logout: "Cerrar Sesión",
+  login: "Ingresar",
+  managementDashboard: "Mi Panel de Gestión",
+  plansAndSubscriptions: "Planes & Suscripciones",
+  agencyEnterprisePanel: "Panel Agencia / Empresa",
+  shareApp: "📲 Compartir Aplicación",
+  privacyPolicy: "Política de Privacidad",
+};
+
+export type NavbarCatalog = typeof navbarCatalog;

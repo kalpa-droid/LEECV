@@ -1,6 +1,7 @@
 import React from 'react';
 import { VintageQuillLoader } from './VintageQuillLoader';
 import { radius, elevationSystem } from '../uiDesignSystem';
+import { t } from '../../i18n/useText';
 
 interface PresetTransitionOverlayProps {
   isApplying: boolean;
@@ -41,7 +42,7 @@ export const PresetTransitionOverlay: React.FC<PresetTransitionOverlayProps> = (
         <div className="space-y-1 mt-1">
           <div className="flex items-center justify-center gap-1.5 text-xs font-black tracking-wide text-[var(--color-secondary-bright)] uppercase">
             <span className="inline-block w-2 h-2 rounded-full bg-[var(--color-secondary-bright)] animate-ping" />
-            <span>Aplicando Preset</span>
+            <span>{t.modals.presetTransition.titlePrefix}</span>
           </div>
 
           <h3 className="text-sm sm:text-base font-black text-[var(--ui-text-primary)] leading-tight px-2">
@@ -49,7 +50,7 @@ export const PresetTransitionOverlay: React.FC<PresetTransitionOverlayProps> = (
           </h3>
 
           <p className="text-[11px] font-bold text-[var(--ui-text-secondary)] opacity-85">
-            Renderizando maquetación ejecutiva...
+            {t.modals.presetTransition.sub}
           </p>
         </div>
 

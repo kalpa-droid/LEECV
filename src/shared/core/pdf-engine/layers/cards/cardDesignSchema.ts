@@ -13,6 +13,7 @@ export interface CardDesign {
   badgeSizeToken?: 'caption' | 'body' | 'itemTitle';
   accentTarget?: 'title' | 'meta-badge' | 'left-rule' | 'icon-only' | 'none';
   layoutTemplate?: RecordLayoutTemplate;
+  logoSlot?: { position: 'top-right' | 'top-left' | 'bottom-center'; sizeP: number };
 }
 
 export const CARD_DESIGNS: Record<string, CardDesign> = {

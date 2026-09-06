@@ -1,0 +1,13 @@
+[
+  {
+    "type": "jsx-attribute",
+    "text": "Impresión de Tarjetas de Presentación",
+    "line": 53,
+    "context": "title"
+  },
+  {
+    "type": "jsx-text",
+    "text": "Generando preview de imposición y QR...",
+    "line": 61
+  }
+]

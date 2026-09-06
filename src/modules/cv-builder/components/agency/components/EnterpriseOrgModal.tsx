@@ -15,6 +15,7 @@ import { Organization, OrgMember, OrgRole } from '../../../../../types/organizat
 import { Modal } from '../../../../../shared/core/ui/Modal';
 import { isValidEmail, validateFieldValue } from '../../../../../shared/core/utils/validationEngine';
 import { getLEECVCloudUsage } from '../../../../../shared/core/storage/leecvCloudBackend';
+import { t } from '../../../../../shared/i18n/useText';
 
 interface EnterpriseOrgModalProps {
   isOpen: boolean;
@@ -42,9 +43,9 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
           setMembers(m);
         }
       },
-      { context: 'Cargar organización', errorMessage: 'No se pudo cargar la información de tu organización' }
+      { context: 'Cargar organización', errorMessage: t.agency.enterpriseModal.loadOrgError }
     );
-    if (!res.success) showError(res.error?.message || 'No se pudo cargar la información de tu organización');
+    if (!res.success) showError(res.error?.message || t.agency.enterpriseModal.loadOrgError);
   }
 
   useEffect(() => {
@@ -58,14 +59,14 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
   async function handleSendInvite(e: FormEvent) {
     e.preventDefault();
     if (!inviteEmail || !isValidEmail(inviteEmail)) {
-      showError('Por favor ingresa un correo electrónico válido para invitar.');
+      showError(t.agency.enterpriseModal.invalidEmailError);
       return;
     }
     if (!org?.id) return;
 
     const res = await withErrorHandling(
       () => inviteMember(org.id!, inviteEmail, inviteRole),
-      { context: 'Enviar invitación', notify: (msg, type) => type === 'success' ? showSuccess(msg) : showError(msg), successMessage: `✅ Invitación enviada a ${inviteEmail}`, errorMessage: 'Error al enviar invitación' }
+      { context: 'Enviar invitación', notify: (msg, type) => type === 'success' ? showSuccess(msg) : showError(msg), successMessage: t.agency.enterpriseModal.inviteSuccess.replace('{email}', inviteEmail), errorMessage: t.agency.enterpriseModal.inviteError }
     );
     if (res.success) {
       setInviteEmail('');
@@ -75,14 +76,14 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
 
   async function handleRemoveMember(member: OrgMember) {
     confirm({
-      title: `¿Remover a ${member.invited_email}?`,
-      message: 'Esta persona perderá el acceso a la organización y los candidatos compartidos.',
-      confirmText: 'Remover Integrante',
+      title: t.agency.enterpriseModal.removeConfirmTitle.replace('{email}', member.invited_email),
+      message: t.agency.enterpriseModal.removeConfirmMessage,
+      confirmText: t.agency.enterpriseModal.removeConfirmBtn,
       variant: 'danger',
       onConfirm: async () => {
         const res = await withErrorHandling(
           () => removeMember(member.id),
-          { context: 'Remover integrante', notify: (msg, type) => type === 'success' ? showSuccess(msg) : showError(msg), successMessage: 'Integrante desvinculado.', errorMessage: 'Error desvinculando integrante' }
+          { context: 'Remover integrante', notify: (msg, type) => type === 'success' ? showSuccess(msg) : showError(msg), successMessage: t.agency.enterpriseModal.removeSuccess, errorMessage: t.agency.enterpriseModal.removeError }
         );
         if (res.success) loadOrgData();
       }
@@ -95,7 +96,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
 
     const res = await withErrorHandling(
       () => acceptInvitation(invitationTokenInput),
-      { context: 'Aceptar invitación', notify: (msg, type) => type === 'success' ? showSuccess(msg) : showError(msg), successMessage: '🎉 ¡Te has unido a la organización con éxito!', errorMessage: 'Token de invitación no válido' }
+      { context: 'Aceptar invitación', notify: (msg, type) => type === 'success' ? showSuccess(msg) : showError(msg), successMessage: t.agency.enterpriseModal.joinSuccess, errorMessage: t.agency.enterpriseModal.joinError }
     );
     if (res.success) {
       setInvitationTokenInput('');
@@ -110,14 +111,14 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={org?.name || 'Organización Enterprise'}
+      title={org?.name || t.agency.enterpriseModal.defaultTitle}
       icon={<Building className="w-5 h-5 text-[var(--ui-accent-purple)]" />}
       size="4xl"
       footer={
         <div className="w-full flex items-center justify-between text-xs text-[var(--ui-text-secondary)]">
-          <span>Organización id: <code className="text-[var(--ui-accent-purple)]">{org?.id || 'Enterprise'}</code></span>
+          <span>{t.agency.enterpriseModal.orgIdLabel} <code className="text-[var(--ui-accent-purple)]">{org?.id || 'Enterprise'}</code></span>
           <button onClick={onClose} className={`px-4 py-1.5 bg-[var(--ui-btn-neutral-bg)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-btn-neutral-text)] border border-[var(--ui-btn-neutral-border)] font-extrabold rounded-[${radius.card}] transition cursor-pointer`}>
-            Cerrar
+            {t.common.actions.close}
           </button>
         </div>
       }
@@ -129,8 +130,8 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
             <div className="flex items-center gap-3">
               <Users className="w-5 h-5 text-[var(--ui-text-primary)]" />
               <div>
-                <p className="text-[10px] text-[var(--ui-text-secondary)] font-bold uppercase tracking-wider">Miembros de Equipo</p>
-                <p className="text-sm font-black text-[var(--ui-text-primary)]">{activeCount} / {maxMembers} Miembros</p>
+                <p className="text-[10px] text-[var(--ui-text-secondary)] font-bold uppercase tracking-wider">{t.agency.enterpriseModal.membersTitle}</p>
+                <p className="text-sm font-black text-[var(--ui-text-primary)]">{activeCount} / {maxMembers} {t.agency.enterpriseModal.membersCountSuffix}</p>
               </div>
             </div>
             <div className="w-16 bg-[var(--ui-bg-card)] rounded-full h-2 overflow-hidden border border-[var(--ui-border)]">
@@ -145,14 +146,14 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
             <div className="flex items-center gap-3">
               <HardDrive className="w-5 h-5 text-[var(--color-secondary-bright)]" />
               <div>
-                <p className="text-[10px] text-[var(--ui-text-secondary)] font-bold uppercase tracking-wider">Almacenamiento Cloud</p>
+                <p className="text-[10px] text-[var(--ui-text-secondary)] font-bold uppercase tracking-wider">{t.agency.enterpriseModal.cloudStorageTitle}</p>
                 <p className="text-sm font-black text-[var(--color-secondary-bright)]">
-                  {cloudUsage ? `${cloudUsage.usedGB} GB / 50 GB` : 'Consultando...'}
+                  {cloudUsage ? `${cloudUsage.usedGB} GB / 50 GB` : t.agency.enterpriseModal.queryingCloud}
                 </p>
               </div>
             </div>
             <span className="text-[10px] px-2 py-0.5 rounded bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)] border border-[var(--color-status-success-base)]/30 font-bold">
-              Exclusivo Enterprise
+              {t.agency.enterpriseModal.exclusiveBadge}
             </span>
           </div>
           {cloudUsage && (
@@ -175,7 +176,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
                 : 'border-transparent text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]'
             }`}
           >
-            <Users className="w-3.5 h-3.5 text-[var(--ui-text-primary)]" /> Integrantes ({members.length})
+            <Users className="w-3.5 h-3.5 text-[var(--ui-text-primary)]" /> {t.agency.enterpriseModal.tabTeam}{members.length})
           </button>
           <button
             onClick={() => setActiveTab('invite')}
@@ -185,7 +186,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
                 : 'border-transparent text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]'
             }`}
           >
-            <UserPlus className={`w-3.5 h-3.5 text-[var(--ui-text-primary)]`} /> Invitar Miembro
+            <UserPlus className={`w-3.5 h-3.5 text-[var(--ui-text-primary)]`} /> {t.agency.enterpriseModal.tabInvite}
           </button>
           <button
             onClick={() => setActiveTab('accept')}
@@ -195,7 +196,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
                 : 'border-transparent text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]'
             }`}
           >
-            <Key className={`w-3.5 h-3.5 text-[var(--ui-text-primary)]`} /> Aceptar Invitación
+            <Key className={`w-3.5 h-3.5 text-[var(--ui-text-primary)]`} /> {t.agency.enterpriseModal.tabAccept}
           </button>
         </div>
 
@@ -206,8 +207,8 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
               {members.length === 0 ? (
                 <div className="text-center py-8 text-[var(--ui-text-secondary)] space-y-2">
                   <Users className="w-8 h-8 mx-auto opacity-50" />
-                  <p className="text-xs font-bold">No hay otros miembros invitados aún.</p>
-                  <p className="text-[11px] opacity-70">Utiliza la pestaña "Invitar Miembro" para sumar colaboradores a tu equipo.</p>
+                  <p className="text-xs font-bold">{t.agency.enterpriseModal.emptyMembersTitle}</p>
+                  <p className="text-[11px] opacity-70">{t.agency.enterpriseModal.emptyMembersSub}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -222,12 +223,12 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
                               ? 'bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)] border border-[var(--color-status-success-base)]/30' 
                               : 'bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)] border border-[var(--color-status-warning-base)]/30'
                           }`}>
-                            {member.status === 'active' ? '✅ Activo' : '⏳ Pendiente'}
+                            {member.status === 'active' ? t.agency.enterpriseModal.activeBadge : t.agency.enterpriseModal.pendingBadge}
                           </span>
                         </div>
                         {member.invitation_token && member.status === 'pending' && (
                           <p className="text-[10px] text-[var(--ui-text-secondary)] font-mono">
-                            Token de invitación: <code className="text-[var(--color-accent-purple-text)] bg-[var(--ui-bg-panel)] px-1 py-0.5 rounded border border-[var(--ui-border)]">{member.invitation_token}</code>
+                            {t.agency.enterpriseModal.tokenLabel} <code className="text-[var(--color-accent-purple-text)] bg-[var(--ui-bg-panel)] px-1 py-0.5 rounded border border-[var(--ui-border)]">{member.invitation_token}</code>
                           </p>
                         )}
                       </div>
@@ -237,7 +238,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
                         <button
                           onClick={() => handleRemoveMember(member)}
                           className={`p-1.5 rounded-[${radius.control}] bg-[var(--color-status-danger-muted)] hover:opacity-90 text-[var(--color-status-danger-text)] transition cursor-pointer`}
-                          title="Remover integrante"
+                          title={t.agency.enterpriseModal.removeTitle}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -252,11 +253,11 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
           {activeTab === 'invite' && (
             <form onSubmit={handleSendInvite} className="space-y-4 max-w-md mx-auto">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[var(--ui-text-secondary)]">Email del Colaborador</label>
+                <label className="text-xs font-bold text-[var(--ui-text-secondary)]">{t.agency.enterpriseModal.inviteEmailLabel}</label>
                 <input
                   type="email"
                   required
-                  placeholder="ejemplo@empresa.com"
+                  placeholder={t.agency.enterpriseModal.inviteEmailPlaceholder}
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   className={`w-full bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.card}] px-3.5 py-2.5 text-xs text-[var(--ui-text-primary)] outline-none focus:border-[var(--color-accent-purple)] transition`}
@@ -264,14 +265,14 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[var(--ui-text-secondary)]">Rol en el Equipo</label>
+                <label className="text-xs font-bold text-[var(--ui-text-secondary)]">{t.agency.enterpriseModal.inviteRoleLabel}</label>
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value as OrgRole)}
                   className={`w-full bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.card}] px-3.5 py-2.5 text-xs text-[var(--ui-text-primary)] outline-none focus:border-[var(--color-accent-purple)] transition cursor-pointer`}
                 >
-                  <option value="editor">Editor (Puede crear y editar candidatos)</option>
-                  <option value="admin">Administrador (Puede editar e invitar otros usuarios)</option>
+                  <option value="editor">{t.agency.enterpriseModal.roleEditor}</option>
+                  <option value="admin">{t.agency.enterpriseModal.roleAdmin}</option>
                 </select>
               </div>
 
@@ -279,7 +280,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
                 type="submit"
                 className={`w-full py-2.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-[var(--color-accent-on-base)] font-extrabold text-xs rounded-[${radius.card}] transition ${elevationSystem.floating} flex items-center justify-center gap-2 cursor-pointer`}
               >
-                <UserPlus className="w-4 h-4" /> Enviar Invitación al Equipo
+                <UserPlus className="w-4 h-4" /> {t.agency.enterpriseModal.sendInviteBtn}
               </button>
             </form>
           )}
@@ -289,16 +290,16 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
               <div className={`p-3 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 rounded-[${radius.card}] flex items-start gap-2.5 text-xs text-[var(--color-secondary-text)]`}>
                 <AlertCircle className="w-4 h-4 text-[var(--color-secondary-text)] flex-shrink-0 mt-0.5" />
                 <p className="text-[11px]">
-                  Si te enviaron un token de invitación para unirte a una organización Enterprise, pégalo a continuación para activar tu acceso.
+                  {t.agency.enterpriseModal.acceptInfo}
                 </p>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[var(--ui-text-secondary)]">Token de Invitación</label>
+                <label className="text-xs font-bold text-[var(--ui-text-secondary)]">{t.agency.enterpriseModal.acceptTokenLabel}</label>
                 <input
                   type="text"
                   required
-                  placeholder="Pega el token aquí..."
+                  placeholder={t.agency.enterpriseModal.acceptTokenPlaceholder}
                   value={invitationTokenInput}
                   onChange={(e) => setInvitationTokenInput(e.target.value)}
                   className={`w-full bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.card}] px-3.5 py-2.5 text-xs text-[var(--ui-text-primary)] font-mono outline-none focus:border-[var(--color-secondary-base)] transition`}
@@ -314,7 +315,7 @@ export default function EnterpriseOrgModal({ isOpen, onClose }: EnterpriseOrgMod
                 type="submit"
                 className={`w-full py-2.5 bg-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-hover-dark)] text-[var(--color-secondary-on-base)] font-extrabold text-xs rounded-[${radius.card}] transition ${elevationSystem.floating} flex items-center justify-center gap-2 cursor-pointer`}
               >
-                <Check className="w-4 h-4" /> Unirse a la Organización
+                <Check className="w-4 h-4" /> {t.agency.enterpriseModal.joinOrgBtn}
               </button>
             </form>
           )}

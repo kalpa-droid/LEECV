@@ -14,6 +14,7 @@ import { withErrorHandling } from '../../../../shared/core/utils/errorHandler';
 import { elevationSystem, radius } from '../../../../shared/core/uiDesignSystem';
 import { UI_GLOSSARY } from '../../../../shared/core/ui/uiTextGlossary';
 import { formatPrice, formatPricePerMonth } from '../../../../shared/core/payments/pricingCatalog';
+import { useText } from '../../../../shared/i18n/useText';
 
 export default function PdfCheckoutModal({ 
   isOpen, 
@@ -27,6 +28,7 @@ export default function PdfCheckoutModal({
   const [email, setEmail] = useState(currentProfile?.email || '');
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const t = useText();
 
   const { credits, unlimitedExports, refreshCredits } = usePdfExportGate();
   const isProOrEnterprise = checkProOrEnterprise(currentProfile?.plan) || unlimitedExports;
@@ -162,7 +164,7 @@ export default function PdfCheckoutModal({
             onClick={onClose}
             className="px-4 py-2 text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] text-xs font-bold transition cursor-pointer"
           >
-            Volver al Editor
+            {t.checkout.backToEditor}
           </button>
           {(isProOrEnterprise || currentProfile) && purpose === 'export' && (
             <button
@@ -190,36 +192,36 @@ export default function PdfCheckoutModal({
           <div className={`p-4 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.modal}] space-y-3`}>
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-[var(--ui-text-primary)] uppercase tracking-wide">
-                1. Registra tu Correo o Cuenta
+                {t.checkout.step1Title}
               </span>
               <button 
                 onClick={signInWithGoogle}
                 className={`px-2.5 py-1 bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] border border-[var(--ui-border)] rounded-[${radius.control}] text-[11px] font-extrabold flex items-center gap-1 transition cursor-pointer`}
               >
-                <LogIn className="w-3.5 h-3.5 text-[var(--ui-text-primary)]" /> Ingresar con Google
+                <LogIn className="w-3.5 h-3.5 text-[var(--ui-text-primary)]" /> {t.checkout.loginWithGoogle}
               </button>
             </div>
 
             <p className="text-[11px] text-[var(--ui-text-secondary)]">
-              Ingresa tu correo para enviarte la factura y vincular tus respaldos en la nube:
+              {t.checkout.emailPrompt}
             </p>
 
             <input 
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="tu.email@ejemplo.com"
+              placeholder={t.checkout.emailPlaceholder}
               className={`w-full text-xs p-2.5 rounded-[${radius.card}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] placeholder-[var(--ui-text-muted)] font-bold outline-none focus:border-[var(--color-accent-base)] transition`}
             />
           </div>
         ) : (
           <div className={`p-3 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.modal}] flex items-center justify-between text-xs`}>
             <div>
-              <span className="text-[var(--ui-text-secondary)] block text-[10px]">Cuenta Activa:</span>
+              <span className="text-[var(--ui-text-secondary)] block text-[10px]">{t.checkout.activeAccount}</span>
               <span className="font-extrabold text-[var(--color-accent-purple-text)]">{currentProfile.email}</span>
             </div>
             <span className={`px-2.5 py-1 rounded-[${radius.control}] bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-text)] text-[10px] font-black uppercase`}>
-              Plan {currentProfile.plan || 'Free'} {unlimitedExports ? '(Ilimitado)' : `(${credits} Créditos)`}
+              {t.checkout.planLabel} {currentProfile.plan || 'Free'} {unlimitedExports ? '(Ilimitado)' : `(${credits} Créditos)`}
             </span>
           </div>
         )}
@@ -227,7 +229,7 @@ export default function PdfCheckoutModal({
         {/* Payment Gateways & Options */}
         <div className="space-y-2.5">
           <span className="text-xs font-black text-[var(--color-status-warning-text)] uppercase tracking-wide block">
-            2. Elige tu Opción de Pago o Descarga
+            {t.checkout.step2Title}
           </span>
 
           {/* Option A: Mercado Pago */}
@@ -239,8 +241,8 @@ export default function PdfCheckoutModal({
             <div className="flex items-center gap-2.5">
               <CreditCard className="w-5 h-5 text-[var(--color-status-warning-text)]" />
               <div className="text-left">
-                <p className="leading-tight">Pagar 1 Exportación con Mercado Pago</p>
-                <p className="text-[10px] opacity-80 font-bold">Tarjeta de Crédito / Débito, Mercado Pago, Transferencia</p>
+                <p className="leading-tight">{t.checkout.payMercadoPagoTitle}</p>
+                <p className="text-[10px] opacity-80 font-bold">{t.checkout.payMercadoPagoDesc}</p>
               </div>
             </div>
             <span className={`px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] rounded-[${radius.control}] text-[10px] font-black`}>
@@ -257,8 +259,8 @@ export default function PdfCheckoutModal({
             <div className="flex items-center gap-2.5">
               <CreditCard className="w-5 h-5 text-[var(--color-secondary-text)]" />
               <div className="text-left">
-                <p className="leading-tight">Pagar 1 Exportación con PayPal</p>
-                <p className="text-[10px] opacity-80 font-bold">Tarjeta Internacional, Saldo PayPal</p>
+                <p className="leading-tight">{t.checkout.payPaypalTitle}</p>
+                <p className="text-[10px] opacity-80 font-bold">{t.checkout.payPaypalDesc}</p>
               </div>
             </div>
             <span className={`px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] rounded-[${radius.control}] text-[10px] font-black`}>
@@ -275,8 +277,8 @@ export default function PdfCheckoutModal({
             <div className="flex items-center gap-2.5">
               <CreditCard className="w-5 h-5 text-[var(--ui-text-primary)]" />
               <div className="text-left">
-                <p className="leading-tight">Pagar Créditos con Lemon Squeezy</p>
-                <p className="text-[10px] opacity-80 font-bold">Tarjeta Internacional (Selección de pack en checkout)</p>
+                <p className="leading-tight">{t.checkout.payLemonSqueezyTitle}</p>
+                <p className="text-[10px] opacity-80 font-bold">{t.checkout.payLemonSqueezyDesc}</p>
               </div>
             </div>
             <span className={`px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] rounded-[${radius.control}] text-[10px] font-black`}>
@@ -291,14 +293,14 @@ export default function PdfCheckoutModal({
               disabled={isProcessing}
               className={`p-2.5 bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-panel)] border border-[var(--color-status-warning-base)]/30 text-[var(--color-status-warning-text)] font-extrabold text-[11px] rounded-[${radius.card}] transition cursor-pointer text-center`}
             >
-              Pack 5 créditos — {formatPrice('credits_pack_5', 'usd')}
+              {t.checkout.pack5Credits} {formatPrice('credits_pack_5', 'usd')}
             </button>
             <button
               onClick={() => handlePackCheckout('credits_pack_10')}
               disabled={isProcessing}
               className={`p-2.5 bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-panel)] border border-[var(--color-status-warning-base)]/30 text-[var(--color-status-warning-text)] font-extrabold text-[11px] rounded-[${radius.card}] transition cursor-pointer text-center`}
             >
-              Pack 10 créditos — {formatPrice('credits_pack_10', 'usd')}
+              {t.checkout.pack10Credits} {formatPrice('credits_pack_10', 'usd')}
             </button>
           </div>
 
@@ -309,9 +311,9 @@ export default function PdfCheckoutModal({
           >
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
-              <span>Suscribirse a Plan Pro ({formatPricePerMonth('pro', 'usd')}) — Exportaciones Ilimitadas</span>
+              <span>{t.checkout.subscribeProPrefix}{formatPricePerMonth('pro', 'usd')}{t.checkout.subscribeProSuffix}</span>
             </div>
-            <span className="text-[10px] font-black">Ver Planes &rarr;</span>
+            <span className="text-[10px] font-black">{t.checkout.viewPlansArrow}</span>
           </button>
 
           {/* Option C: Free JSON Backup */}
@@ -320,7 +322,7 @@ export default function PdfCheckoutModal({
             className={`w-full p-2.5 bg-[var(--ui-btn-neutral-bg)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-btn-neutral-text)] border border-[var(--ui-btn-neutral-border)] text-xs font-bold rounded-[${radius.card}] transition flex items-center justify-center gap-2 cursor-pointer`}
           >
             <Download className="w-4 h-4 text-[var(--ui-btn-neutral-text)]" />
-            <span>Descargar Copia de Respaldo .JSON Gratis en tu Equipo</span>
+            <span>{t.checkout.downloadJsonFreeBtn}</span>
           </button>
         </div>
       </div>

@@ -24,8 +24,8 @@ const datosMatch = (personalInfoContent.match(/sectionId="datos-personales"/g) |
 const contactoMatch = (personalInfoContent.match(/sectionId="contacto"/g) || []).length;
 const fraseMatch = (personalInfoContent.match(/sectionId="frase"/g) || []).length;
 
-if (datosMatch === 1 && contactoMatch === 0 && fraseMatch === 0) {
-  console.log('  ✓ Arreglo 1: PersonalInfoSection unificada con exactamente 1 ajuste manual para datos-personales OK.');
+if (datosMatch === 1 && contactoMatch === 1 && fraseMatch === 0) {
+  console.log('  ✓ Arreglo 1: PersonalInfoSection y Contacto independientes con ajuste manual OK.');
   passed++;
 } else {
   console.error(`  ❌ Arreglo 1 falló: conteos de ajuste manual no esperados (datos-personales: ${datosMatch}, contacto: ${contactoMatch}, frase: ${fraseMatch})`);

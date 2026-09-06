@@ -6,6 +6,8 @@
  * de formato sin romper la experiencia local-first.
  */
 
+import { t } from '../../i18n/useText';
+
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const PHONE_REGEX = /^\+?[0-9\s\-()]{6,25}$/;
 
@@ -93,7 +95,7 @@ export function validateFieldValue(fieldName: string, value: string): FieldValid
     const valid = isValidEmail(value);
     return {
       isValid: valid,
-      helperMessage: valid ? undefined : 'Formato de correo inusual (ejemplo: usuario@correo.com)'
+      helperMessage: valid ? undefined : t.validation.emailHelper
     };
   }
 
@@ -101,7 +103,7 @@ export function validateFieldValue(fieldName: string, value: string): FieldValid
     const valid = isValidPhone(value);
     return {
       isValid: valid,
-      helperMessage: valid ? undefined : 'Verifica el número de teléfono ingresado'
+      helperMessage: valid ? undefined : t.validation.phoneHelper
     };
   }
 
@@ -109,7 +111,7 @@ export function validateFieldValue(fieldName: string, value: string): FieldValid
     const valid = isValidDni(value);
     return {
       isValid: valid,
-      helperMessage: valid ? undefined : 'Sugerencia: El DNI suele contener entre 7 y 8 números'
+      helperMessage: valid ? undefined : t.validation.dniHelper
     };
   }
 
@@ -117,7 +119,7 @@ export function validateFieldValue(fieldName: string, value: string): FieldValid
     const valid = isValidCuit(value);
     return {
       isValid: valid,
-      helperMessage: valid ? undefined : 'Sugerencia: El CUIT/CUIL consta de 11 dígitos verificados'
+      helperMessage: valid ? undefined : t.validation.cuitHelper
     };
   }
 
@@ -125,7 +127,7 @@ export function validateFieldValue(fieldName: string, value: string): FieldValid
     const valid = isValidUrl(value);
     return {
       isValid: valid,
-      helperMessage: valid ? undefined : 'Revisa que la dirección web o enlace sea correcta'
+      helperMessage: valid ? undefined : t.validation.urlHelper
     };
   }
 
@@ -133,7 +135,7 @@ export function validateFieldValue(fieldName: string, value: string): FieldValid
     const valid = /^[A-Za-z0-9_-]{16,64}$/.test(value.trim());
     return {
       isValid: valid,
-      helperMessage: valid ? undefined : 'El token no tiene el formato esperado (16-64 caracteres alfanuméricos)'
+      helperMessage: valid ? undefined : t.validation.tokenHelper
     };
   }
 
@@ -141,7 +143,7 @@ export function validateFieldValue(fieldName: string, value: string): FieldValid
     const valid = value.trim().length >= 2;
     return {
       isValid: valid,
-      helperMessage: valid ? undefined : 'Elegí un nombre un poco más descriptivo (al menos 2 caracteres)'
+      helperMessage: valid ? undefined : t.validation.nameHelper
     };
   }
 

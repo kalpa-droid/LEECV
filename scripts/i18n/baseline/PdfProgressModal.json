@@ -1,0 +1,27 @@
+[
+  {
+    "type": "jsx-text",
+    "text": "Aceptar",
+    "line": 20
+  },
+  {
+    "type": "jsx-text",
+    "text": "Generando Documento PDF A4...",
+    "line": 29
+  },
+  {
+    "type": "jsx-text",
+    "text": "Procesando páginas, imágenes y anexos. La descarga iniciará en unos instantes.",
+    "line": 31
+  },
+  {
+    "type": "jsx-text",
+    "text": "¡PDF Generado Exitosamente!",
+    "line": 39
+  },
+  {
+    "type": "jsx-text",
+    "text": "El archivo PDF A4 y la copia de respaldo .JSON se han descargado correctamente.",
+    "line": 41
+  }
+]

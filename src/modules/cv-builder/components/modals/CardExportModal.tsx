@@ -7,6 +7,7 @@ import { getPreset } from '../../../../shared/core/pdf-engine/layers/presets/pre
 import { Modal } from '../../../../shared/core/ui/Modal';
 import { useToast } from '../../../../shared/core/ui/Toast';
 import { withErrorHandling } from '../../../../shared/core/utils/errorHandler';
+import { t } from '../../../../shared/i18n/useText';
 
 interface CardExportModalProps {
   isOpen: boolean;
@@ -50,7 +51,7 @@ export function CardExportModal({ isOpen, onClose, cvData, presetId = 'tarjeta-p
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Impresión de Tarjetas de Presentación"
+      title={t.modals.cardExport.title}
       icon={<CreditCard className="w-5 h-5 text-[var(--ui-rose)]" />}
       size="lg"
     >
@@ -58,7 +59,7 @@ export function CardExportModal({ isOpen, onClose, cvData, presetId = 'tarjeta-p
         {loading || !cardData ? (
           <div className="py-12 flex flex-col items-center justify-center text-[var(--ui-text-secondary)] space-y-3">
             <div className="w-8 h-8 border-4 border-[var(--color-accent-base)] border-t-transparent rounded-full animate-spin" />
-            <p className="text-xs font-bold text-[var(--ui-text-primary)]">Generando preview de imposición y QR...</p>
+            <p className="text-xs font-bold text-[var(--ui-text-primary)]">{t.modals.cardExport.loadingPreview}</p>
           </div>
         ) : (
           <CardSheetExportSelector

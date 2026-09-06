@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Clock, Download, Sparkles, AlertTriangle } from 'lucide-react';
 import { button } from '../uiDesignSystem';
 import { exportAllCVsToZip } from '../utils/jsonImporterExporter';
+import { t } from '../../i18n/useText';
 
 interface GracePeriodBannerProps {
   graceEndsAt: string | null;
@@ -64,17 +65,17 @@ export const GracePeriodBanner: React.FC<GracePeriodBannerProps> = ({
         <div>
           <div className="flex items-center gap-2">
             <h4 className="font-semibold text-amber-200 text-sm">
-              No detectamos tu renovación — seguís con acceso completo
+              {t.banners.gracePeriod.title}
             </h4>
             {timeLeftStr && (
               <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-mono bg-amber-900/60 text-amber-200 border border-amber-500/40">
                 <Clock className="w-3 h-3" />
-                {timeLeftStr} restantes
+                {timeLeftStr} {t.banners.gracePeriod.timeLeftSuffix}
               </span>
             )}
           </div>
           <p className="text-xs text-amber-100/90 mt-1 max-w-2xl leading-relaxed">
-            Tu plan Pro/Enterprise sigue 100% activo mientras regularizás el pago. Si no se acredita antes de que termine el plazo, pasarás a plan gratuito — por las dudas, podés descargar un respaldo completo ahora.
+            {t.banners.gracePeriod.body}
           </p>
         </div>
       </div>
@@ -86,7 +87,7 @@ export const GracePeriodBanner: React.FC<GracePeriodBannerProps> = ({
           className={`${button.secondary} flex items-center justify-center gap-2 text-xs py-2 px-3 bg-amber-900/40 border-amber-500/40 text-amber-200 hover:bg-amber-800/60`}
         >
           <Download className="w-3.5 h-3.5" />
-          {isExporting ? 'Generando .ZIP...' : 'Descargar Todo (.ZIP)'}
+          {isExporting ? t.banners.gracePeriod.exportingZip : t.banners.gracePeriod.downloadZip}
         </button>
 
         {onOpenRetentionModal && (
@@ -95,7 +96,7 @@ export const GracePeriodBanner: React.FC<GracePeriodBannerProps> = ({
             className={`${button.primary} flex items-center justify-center gap-2 text-xs py-2 px-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:opacity-90 shadow-md`}
           >
             <Sparkles className="w-3.5 h-3.5" />
-            Renovar con 20% OFF
+            {t.banners.gracePeriod.renewDiscountBtn}
           </button>
         )}
       </div>

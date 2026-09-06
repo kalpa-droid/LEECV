@@ -1,0 +1,55 @@
+[
+  {
+    "type": "notification-literal",
+    "text": "Para instalar en iOS: presiona \"Compartir\" en Safari y luego \"Agregar a pantalla de inicio\".",
+    "line": 57,
+    "context": "showInfo"
+  },
+  {
+    "type": "jsx-attribute",
+    "text": "Instalación de Aplicación PWA LEECV",
+    "line": 86,
+    "context": "aria-label"
+  },
+  {
+    "type": "jsx-text",
+    "text": "Instalar LEECV en tu Dispositivo",
+    "line": 97
+  },
+  {
+    "type": "jsx-text",
+    "text": "PWA",
+    "line": 100
+  },
+  {
+    "type": "jsx-text",
+    "text": "Accede al instante desde tu pantalla de inicio, sin descargas de tienda.",
+    "line": 104
+  },
+  {
+    "type": "jsx-attribute",
+    "text": "No volver a preguntar",
+    "line": 113,
+    "context": "title"
+  },
+  {
+    "type": "jsx-text",
+    "text": "Funciona como app nativa en Android, iPhone, Windows y Mac",
+    "line": 122
+  },
+  {
+    "type": "jsx-text",
+    "text": "Acceso ultrarrápido a tus currículums sin gastar datos",
+    "line": 126
+  },
+  {
+    "type": "jsx-text",
+    "text": "No volver a mostrar",
+    "line": 136
+  },
+  {
+    "type": "jsx-text",
+    "text": "Instalar App",
+    "line": 145
+  }
+]

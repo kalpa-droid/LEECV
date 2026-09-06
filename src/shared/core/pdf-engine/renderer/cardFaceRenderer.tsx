@@ -33,6 +33,16 @@ export function CardFace({ preset, sectors, fixedObjects, sectionOrder, sections
   const renderRecord = (rec: ContentRecord) => {
     const f = rec.fields;
 
+    if (rec.kind === 'card-logo') {
+      return (
+        <View key={rec.id} style={{ marginBottom: 4, alignItems: 'flex-start' }}>
+          {f.logoDataUrl ? (
+            <Image src={String(f.logoDataUrl)} style={{ width: 44, height: 28, objectFit: 'contain' }} />
+          ) : null}
+        </View>
+      );
+    }
+
     if (rec.kind === 'card-heading') {
       return (
         <View key={rec.id} style={{ marginBottom: 3 }}>

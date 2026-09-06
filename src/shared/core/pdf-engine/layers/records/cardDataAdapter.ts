@@ -95,7 +95,24 @@ export async function buildCardDataFromCV(
 
 /** Capa 4 (frente): traduce los datos de la tarjeta a ContentSection[] para el sector 'main' */
 export function cardDataToFrontSections(card: BusinessCardData): ContentSection[] {
-  const sections: ContentSection[] = [
+  const sections: ContentSection[] = [];
+
+  if (card.logoDataUrl) {
+    sections.push({
+      id: 'logo-seccion',
+      titleText: '',
+      records: [
+        {
+          id: 'rec-logo',
+          kind: 'card-logo',
+          targetSectorRole: 'main',
+          fields: { logoDataUrl: card.logoDataUrl }
+        }
+      ]
+    });
+  }
+
+  sections.push(
     {
       id: 'nombre-y-cargo',
       titleText: '',
@@ -124,7 +141,7 @@ export function cardDataToFrontSections(card: BusinessCardData): ContentSection[
         }
       ]
     }
-  ];
+  );
 
   return sections;
 }

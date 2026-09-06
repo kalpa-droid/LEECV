@@ -1,0 +1,62 @@
+[
+  {
+    "type": "jsx-text",
+    "text": "Aplicar Formato:",
+    "line": 97
+  },
+  {
+    "type": "jsx-text",
+    "text": "Aplica tu modalidad deseada, puedes volver y aplicar otra plantilla.",
+    "line": 100
+  },
+  {
+    "type": "jsx-text",
+    "text": "Tus datos jamás se borran.",
+    "line": 138
+  },
+  {
+    "type": "jsx-text",
+    "text": "1. Aplicar Plantilla Completa",
+    "line": 165
+  },
+  {
+    "type": "jsx-text",
+    "text": "Recomendado",
+    "line": 177
+  },
+  {
+    "type": "jsx-text",
+    "text": "Se ordenan las secciones en las columnas y algunas podrían ocultarse para cumplir con este formato del mercado.",
+    "line": 181
+  },
+  {
+    "type": "jsx-text",
+    "text": "2. Aplicar Orden de Plantilla",
+    "line": 206
+  },
+  {
+    "type": "jsx-text",
+    "text": "Se ordenan y priorizan las secciones en las columnas sin ocultarse.",
+    "line": 209
+  },
+  {
+    "type": "jsx-text",
+    "text": "3. Aplicar Plantilla Sin Filtros",
+    "line": 234
+  },
+  {
+    "type": "jsx-text",
+    "text": "Mantiene visibles todas tus secciones y campos personales sin ocultar nada, aplicando la tipografía y colores del nuevo formato.",
+    "line": 237
+  },
+  {
+    "type": "jsx-text",
+    "text": "Cancelar",
+    "line": 270
+  },
+  {
+    "type": "jsx-text",
+    "text": "Aplicar Formato",
+    "line": 286
+  }
+]
