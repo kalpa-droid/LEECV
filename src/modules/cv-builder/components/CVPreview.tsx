@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo, useSyncExternalStore } from 'react';
-import { TemplateRenderer } from '../../../shared/core/pdf-engine/renderer/TemplateRenderer';
-import { CardSheetDocument } from '../../../shared/core/pdf-engine/renderer/CardSheetDocument';
+import React, { useState, useEffect, useMemo, useSyncExternalStore, lazy, Suspense } from 'react';
+const TemplateRenderer = lazy(() => import('../../../shared/core/pdf-engine/renderer/TemplateRenderer').then(m => ({ default: m.TemplateRenderer })));
+const CardSheetDocument = lazy(() => import('../../../shared/core/pdf-engine/renderer/CardSheetDocument').then(m => ({ default: m.CardSheetDocument })));
 import { getPreset, resolveActivePreset, subscribeToPresetChanges, getPresetsSnapshot } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { cvDataToContentSections } from '../../../shared/core/pdf-engine/layers/records/cvDataAdapter';
 import { buildCardDataFromCV, BusinessCardData } from '../../../shared/core/pdf-engine/layers/records/cardDataAdapter';
@@ -49,27 +49,33 @@ export default function CVPreview({ cvData, setCvData: _setCvData, activeTab, zo
 
   const renderedDocument = useMemo(() => {
     if (activePreset.pageCategory === 'tarjeta') {
-      return <CardSheetDocument card={cardData} preset={activePreset} />;
+      return (
+        <Suspense fallback={<div className="p-12 text-center text-sm opacity-60 animate-pulse">Cargando vista previa de tarjeta...</div>}>
+          <CardSheetDocument card={cardData} preset={activePreset} />
+        </Suspense>
+      );
     }
     return (
-      <TemplateRenderer
-        preset={activePreset}
-        sections={sections}
-        personalInfo={debouncedCvData?.personalInfo || {}}
-        activeFormatId={debouncedCvData?.activeFormatId}
-        certificatesScanned={debouncedCvData?.certificatesScanned || []}
-        showCoverPage={debouncedCvData?.showCoverPage !== false}
-        coverStyle={debouncedCvData?.coverStyle}
-        coverFeaturedEducationId={debouncedCvData?.coverFeaturedEducationId}
-        coverFeaturedProfessionId={debouncedCvData?.coverFeaturedProfessionId}
-        roles={debouncedCvData?.roles || []}
-        education={debouncedCvData?.education || []}
-        professions={debouncedCvData?.professions || []}
-        userFontFamily={debouncedCvData?.theme?.fontFamily}
-        layoutOverrides={debouncedCvData?.layout}
-        customRecordCardDesigns={debouncedCvData?.recordCardDesigns}
-        interactiveAnchors={true}
-      />
+      <Suspense fallback={<div className="p-12 text-center text-sm opacity-60 animate-pulse">Cargando vista previa del documento...</div>}>
+        <TemplateRenderer
+          preset={activePreset}
+          sections={sections}
+          personalInfo={debouncedCvData?.personalInfo || {}}
+          activeFormatId={debouncedCvData?.activeFormatId}
+          certificatesScanned={debouncedCvData?.certificatesScanned || []}
+          showCoverPage={debouncedCvData?.showCoverPage !== false}
+          coverStyle={debouncedCvData?.coverStyle}
+          coverFeaturedEducationId={debouncedCvData?.coverFeaturedEducationId}
+          coverFeaturedProfessionId={debouncedCvData?.coverFeaturedProfessionId}
+          roles={debouncedCvData?.roles || []}
+          education={debouncedCvData?.education || []}
+          professions={debouncedCvData?.professions || []}
+          userFontFamily={debouncedCvData?.theme?.fontFamily}
+          layoutOverrides={debouncedCvData?.layout}
+          customRecordCardDesigns={debouncedCvData?.recordCardDesigns}
+          interactiveAnchors={true}
+        />
+      </Suspense>
     );
   }, [activePreset, sections, cardData, debouncedCvData]);
 
