@@ -7,6 +7,8 @@ import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { resolveActiveDockSections, DOCK_SPECIAL_TABS } from '../../../shared/core/sections/activeSectionsDockEngine';
 import { activateSection } from '../../../shared/core/sections/sectionActivationEngine';
 
+import { CreditCard, BookOpen } from 'lucide-react';
+
 export interface CanvaIconDockProps {
   cvData?: any;
   setCvData?: React.Dispatch<React.SetStateAction<any>>;
@@ -15,12 +17,16 @@ export interface CanvaIconDockProps {
   isPanelOpen: boolean;
   setIsPanelOpen: (open: boolean) => void;
   onOpenAtsCheck?: () => void;
+  docType?: 'cv' | 'business_card' | 'book';
 }
 
 // 1. Pestañas de Estilo (Diseño)
 const styleTabs = [
   { id: 'diseno', label: 'Diseño', icon: Palette }
 ];
+
+// Pestaña especial de Tarjeta Personal
+const cardTab = { id: 'tarjeta_personal', label: 'Datos & Config de Tarjeta', icon: CreditCard };
 
 // 2. Pestañas de Sección Especiales Gobernadas por el Motor (activeSectionsDockEngine.ts)
 const addSectionTab = DOCK_SPECIAL_TABS.addSection;
@@ -34,12 +40,13 @@ export default function CanvaIconDock({
   setActiveTab, 
   isPanelOpen, 
   setIsPanelOpen,
-  onOpenAtsCheck
+  onOpenAtsCheck,
+  docType = 'cv'
 }: CanvaIconDockProps) {
   const mobileNavRef = useRef<HTMLDivElement>(null);
 
   // Motor dinámico único: reemplaza listas fijas y customSections.map
-  const dockSections = useMemo(() => resolveActiveDockSections(cvData), [cvData]);
+  const dockSections = useMemo(() => docType === 'cv' ? resolveActiveDockSections(cvData) : [], [cvData, docType]);
 
   const handleTabClick = (tabId: string, isDisabled?: boolean) => {
     if (isDisabled && cvData && setCvData) {
@@ -87,8 +94,8 @@ export default function CanvaIconDock({
             </span>
           </button>
 
-          {/* 2. BOTÓN AGREGAR SECCIÓN + (Doble Columna / Ocupa 2 líneas en PC) */}
-          {(() => {
+          {/* 2. BOTÓN AGREGAR SECCIÓN + (Solo para CVs) */}
+          {docType === 'cv' && (() => {
             const isActive = activeTab === addSectionTab.id && isPanelOpen;
             return (
               <button
@@ -105,6 +112,30 @@ export default function CanvaIconDock({
                 <Plus className={`w-5 h-5 ${isActive ? 'text-[var(--color-status-success-on-base)]' : 'text-[var(--color-status-success-text)]'}`} />
                 <span className={`absolute left-24 bg-[var(--ui-bg-dock)] text-[var(--color-status-success-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--color-status-success-base)]/30`}>
                   Catálogo & Creador de Secciones
+                </span>
+              </button>
+            );
+          })()}
+
+          {/* BOTÓN TARJETA PERSONAL (Solo para docType === 'business_card') */}
+          {docType === 'business_card' && (() => {
+            const isActive = activeTab === cardTab.id && isPanelOpen;
+            const CardIcon = cardTab.icon;
+            return (
+              <button
+                key={cardTab.id}
+                type="button"
+                onClick={() => handleTabClick(cardTab.id)}
+                className={`col-span-2 w-full h-10 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer border ${
+                  isActive
+                    ? `bg-[var(--color-accent-base)] border-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.floating} shadow-[var(--color-accent-base)]/30 scale-[1.02]`
+                    : 'bg-[var(--ui-dock-hover)] border-[var(--ui-dock-border)] text-[var(--color-secondary-bright)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--ui-dock-hover)]'
+                }`}
+                title={cardTab.label}
+              >
+                <CardIcon className={`w-5 h-5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
+                <span className={`absolute left-24 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
+                  {cardTab.label}
                 </span>
               </button>
             );
@@ -134,21 +165,23 @@ export default function CanvaIconDock({
             );
           })}
 
-          {/* 4. BOTÓN ATS (Columna 1 - Margen Izquierdo en PC) */}
-          <button
-            type="button"
-            onClick={onOpenAtsCheck}
-            className={`w-9 h-9 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer border bg-[var(--ui-dock-hover)] border-[var(--color-status-warning-text)]/80 text-[var(--color-status-warning-text)] hover:bg-[var(--color-accent-amber-muted)] hover:scale-105 active:scale-95`}
-            title="Auditoría Predictiva ATS"
-          >
-            <Sparkles className="w-4.5 h-4.5 text-[var(--color-status-warning-text)]" />
-            <span className={`absolute left-24 bg-[var(--ui-bg-dock)] text-[var(--color-status-warning-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--color-status-warning-text)]/40`}>
-              Auditoría ATS
-            </span>
-          </button>
+          {/* 4. BOTÓN ATS (Solo para CVs) */}
+          {docType === 'cv' && (
+            <button
+              type="button"
+              onClick={onOpenAtsCheck}
+              className={`w-9 h-9 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer border bg-[var(--ui-dock-hover)] border-[var(--color-status-warning-text)]/80 text-[var(--color-status-warning-text)] hover:bg-[var(--color-accent-amber-muted)] hover:scale-105 active:scale-95`}
+              title="Auditoría Predictiva ATS"
+            >
+              <Sparkles className="w-4.5 h-4.5 text-[var(--color-status-warning-text)]" />
+              <span className={`absolute left-24 bg-[var(--ui-bg-dock)] text-[var(--color-status-warning-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--color-status-warning-text)]/40`}>
+                Auditoría ATS
+              </span>
+            </button>
+          )}
 
-          {/* 5. BOTÓN PORTADA (Columna 2 en PC) */}
-          {(() => {
+          {/* 5. BOTÓN PORTADA (Solo para CVs) */}
+          {docType === 'cv' && (() => {
             const isActive = activeTab === portadaTab.id && isPanelOpen;
             return (
               <button
@@ -259,19 +292,41 @@ export default function CanvaIconDock({
           {isPanelOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
 
-        {/* 2. BOTÓN AGREGAR SECCIÓN + (Doble Fila / Ocupa 2 líneas en Celular) */}
-        <button
-          type="button"
-          onClick={() => handleTabClick(addSectionTab.id)}
-          className={`row-span-2 h-full w-[42px] rounded-[8px] flex items-center justify-center shrink-0 cursor-pointer border transition ${
-            activeTab === addSectionTab.id && isPanelOpen
-              ? 'bg-[var(--color-status-success-base)] border-[var(--color-status-success-base)] text-[var(--color-status-success-on-base)]'
-              : 'bg-[var(--ui-bg-panel)] border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-bright)]'
-          }`}
-          title="Agregar Sección +"
-        >
-          <Plus className={`w-5 h-5 ${activeTab === addSectionTab.id && isPanelOpen ? 'text-[var(--color-status-success-on-base)]' : ''}`} />
-        </button>
+        {/* 2. BOTÓN AGREGAR SECCIÓN + (Solo para CVs) */}
+        {docType === 'cv' && (
+          <button
+            type="button"
+            onClick={() => handleTabClick(addSectionTab.id)}
+            className={`row-span-2 h-full w-[42px] rounded-[8px] flex items-center justify-center shrink-0 cursor-pointer border transition ${
+              activeTab === addSectionTab.id && isPanelOpen
+                ? 'bg-[var(--color-status-success-base)] border-[var(--color-status-success-base)] text-[var(--color-status-success-on-base)]'
+                : 'bg-[var(--ui-bg-panel)] border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-bright)]'
+            }`}
+            title="Agregar Sección +"
+          >
+            <Plus className={`w-5 h-5 ${activeTab === addSectionTab.id && isPanelOpen ? 'text-[var(--color-status-success-on-base)]' : ''}`} />
+          </button>
+        )}
+
+        {/* BOTÓN TARJETA PERSONAL (Solo para docType === 'business_card') */}
+        {docType === 'business_card' && (() => {
+          const isActive = activeTab === cardTab.id && isPanelOpen;
+          const CardIcon = cardTab.icon;
+          return (
+            <button
+              type="button"
+              onClick={() => handleTabClick(cardTab.id)}
+              className={`row-span-2 h-full w-[42px] rounded-[8px] flex items-center justify-center shrink-0 transition cursor-pointer border ${
+                isActive
+                  ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--color-accent-base)] ${elevationSystem.raised}`
+                  : 'bg-[var(--ui-bg-panel)] text-[var(--ui-dock-text-muted)] border-[var(--ui-border)]'
+              }`}
+              title={cardTab.label}
+            >
+              <CardIcon className={`w-5 h-5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--ui-dock-text-muted)]'}`} />
+            </button>
+          );
+        })()}
 
         {/* 3. BOTÓN PALETA DE COLORES / DISEÑO (Doble Fila / Ocupa 2 líneas en Celular) */}
         {styleTabs.map((tab) => {
@@ -294,8 +349,8 @@ export default function CanvaIconDock({
           );
         })}
 
-        {/* 4. PORTADA (Fila 1 - Superior) */}
-        {(() => {
+        {/* 4. PORTADA (Solo para CVs) */}
+        {docType === 'cv' && (() => {
           const isActive = activeTab === portadaTab.id && isPanelOpen;
           return (
             <button
@@ -313,15 +368,17 @@ export default function CanvaIconDock({
           );
         })()}
 
-        {/* 5. BOTÓN ATS (Fila 2 - Inferior / Margen Pantalla en Celular) */}
-        <button
-          type="button"
-          onClick={onOpenAtsCheck}
-          className="w-7.5 h-7.5 rounded-[6px] flex items-center justify-center shrink-0 border bg-[var(--ui-bg-panel)] border-[var(--color-status-warning-text)]/80 text-[var(--color-status-warning-text)] active:scale-95 cursor-pointer"
-          title="Auditoría ATS"
-        >
-          <Sparkles className="w-4 h-4 text-[var(--color-status-warning-text)]" />
-        </button>
+        {/* 5. BOTÓN ATS (Solo para CVs) */}
+        {docType === 'cv' && (
+          <button
+            type="button"
+            onClick={onOpenAtsCheck}
+            className="w-7.5 h-7.5 rounded-[6px] flex items-center justify-center shrink-0 border bg-[var(--ui-bg-panel)] border-[var(--color-status-warning-text)]/80 text-[var(--color-status-warning-text)] active:scale-95 cursor-pointer"
+            title="Auditoría ATS"
+          >
+            <Sparkles className="w-4 h-4 text-[var(--color-status-warning-text)]" />
+          </button>
+        )}
 
         {/* 6. BOTÓN PERSONAL */}
         {(() => {

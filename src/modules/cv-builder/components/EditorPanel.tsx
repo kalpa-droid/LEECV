@@ -17,7 +17,10 @@ import {
   FileText,
   Globe,
   Info,
-  X
+  X,
+  CreditCard,
+  QrCode,
+  RefreshCw
 } from 'lucide-react';
 import { fontOptions } from '../../../data/fontOptions';
 import { getColumnAssignableSections } from '../../../shared/core/sectionRegistry';
@@ -27,6 +30,7 @@ import { FIELD_CATALOG } from '../../../shared/core/pdf-engine/layers/records/fi
 import { PAGE_SIZES } from '../../../shared/core/pdf-engine/layers/page/pageSizes';
 import { resolveDisplayName } from '../../../shared/core/utils/cvDataSchema';
 import { getSavedCVsList, loadCVById, deleteCVById, saveCV } from '../services/cvStorageService';
+import { getOpenTabs } from '../../../shared/core/storage/documentTabEngine';
 import CertCropperModal from './CertCropperModal';
 import { FormatConfirmationModal, FormatApplicationMode } from './FormatConfirmationModal';
 import { COVER_PRESETS } from '../../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
@@ -1942,6 +1946,229 @@ export default function EditorPanel({
                 </>
               )}
               </PanelSection>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB: TARJETA PERSONAL (PANEL DEDICADO DE TARJETA) */}
+        {/* ========================================================================= */}
+        {activeTab === 'tarjeta_personal' && (
+          <div className="space-y-6">
+            {/* 1. Detección & Selección de Pestañas de CV */}
+            {(() => {
+              const openTabsList = getOpenTabs();
+              const cvTabs = openTabsList.filter(t => !t.docType || t.docType === 'cv');
+
+              return (
+                <PanelSection icon={<CreditCard className="w-4 h-4 text-[var(--color-accent-text)]" />} title="Fuente de Datos del CV">
+                  <div className="p-3 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-3">
+                    {cvTabs.length === 0 ? (
+                      <div className="p-3 bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-text)]/40 rounded-[var(--radius-card)] text-xs text-[var(--color-status-warning-text)] leading-relaxed">
+                        <span className="font-bold block mb-1">⚠️ No hay ningún CV abierto en el editor</span>
+                        <span>Podés introducir los datos de tu tarjeta personal manualmente a continuación o abrir un CV para vincular sus datos.</span>
+                      </div>
+                    ) : cvTabs.length === 1 ? (
+                      <div className="p-3 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 rounded-[var(--radius-card)] text-xs text-[var(--color-secondary-text)] flex items-center justify-between">
+                        <span className="font-bold">📄 Vinculado a: "{cvTabs[0].title}"</span>
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)]">
+                          CV Único Abierto
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">
+                          Extraer registros desde pestaña de CV:
+                        </label>
+                        <select
+                          value={cvData?.sourceCvTabId || cvTabs[0].cvId}
+                          onChange={async (e) => {
+                            const tabId = e.target.value;
+                            const loaded = await loadCVById(tabId);
+                            if (loaded) {
+                              setCvData((prev: any) => ({
+                                ...prev,
+                                sourceCvTabId: tabId,
+                                personalInfo: loaded.personalInfo,
+                                roles: loaded.roles,
+                                profession: loaded.profession
+                              }));
+                              showSuccess(`Datos vinculados desde CV "${loaded.title || 'Seleccionado'}".`);
+                            }
+                          }}
+                          className="w-full text-xs p-2.5 rounded-[var(--radius-card)] border border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer"
+                        >
+                          {cvTabs.map((t) => (
+                            <option key={t.cvId} value={t.cvId}>
+                              📄 {t.title} {t.versionLabel ? `(${t.versionLabel})` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                </PanelSection>
+              );
+            })()}
+
+            {/* 2. Datos Frente de Tarjeta */}
+            <PanelSection icon={<PenTool className="w-4 h-4" />} title="Datos del Frente">
+              <div className="p-4 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-3">
+                {[
+                  { field: 'fullName', label: 'Nombre Completo', placeholder: 'Ej: Juan Pérez', cvFallback: `${cvData?.personalInfo?.surname || ''} ${cvData?.personalInfo?.givenNames || ''}`.trim() || cvData?.personalInfo?.fullName || '' },
+                  { field: 'role', label: 'Cargo / Profesión', placeholder: 'Ej: Diseñador UI/UX & Desarrollador', cvFallback: cvData?.roles?.[0] || cvData?.profession?.[0]?.degree || '' },
+                  { field: 'phone', label: 'Teléfono de Contacto', placeholder: 'Ej: +54 11 1234-5678', cvFallback: cvData?.personalInfo?.phone || '' },
+                  { field: 'email', label: 'Correo Electrónico', placeholder: 'Ej: juan@ejemplo.com', cvFallback: cvData?.personalInfo?.email || '' },
+                  { field: 'website', label: 'Sitio Web / Portafolio', placeholder: 'Ej: www.midominio.com', cvFallback: cvData?.personalInfo?.website || cvData?.personalInfo?.facebook || '' },
+                  { field: 'address', label: 'Ciudad / Dirección', placeholder: 'Ej: Buenos Aires, Argentina', cvFallback: cvData?.personalInfo?.cityProvince || cvData?.personalInfo?.address || '' }
+                ].map(({ field, label, placeholder, cvFallback }) => {
+                  const hasOverride = cvData?.cardOverrides?.[field] !== undefined;
+                  const currentValue = cvData?.cardOverrides?.[field] ?? cvFallback;
+
+                  return (
+                    <div key={field} className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">{label}</label>
+                        {hasOverride && cvFallback && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCvData((prev: any) => {
+                                const copy = { ...(prev?.cardOverrides || {}) };
+                                delete copy[field];
+                                return { ...prev, cardOverrides: copy };
+                              });
+                              showSuccess(`Valor restaurado del CV para ${label}.`);
+                            }}
+                            className="text-[10px] font-bold text-[var(--color-accent-text)] hover:underline flex items-center gap-1 cursor-pointer"
+                            title="Restaurar valor original del CV"
+                          >
+                            <RotateCw className="w-3 h-3" /> Restaurar del CV
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        value={currentValue}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setCvData((prev: any) => ({
+                            ...prev,
+                            cardOverrides: { ...(prev?.cardOverrides || {}), [field]: val }
+                          }));
+                        }}
+                        placeholder={placeholder}
+                        className="w-full text-xs p-2.5 rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none focus:border-[var(--color-accent-base)] transition"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </PanelSection>
+
+            {/* 3. Dorso de Tarjeta (Marca & Eslogan) */}
+            <PanelSection icon={<Sparkles className="w-4 h-4" />} title="Datos del Dorso (Marca & Eslogan)">
+              <div className="p-4 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-3">
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">Nombre de Marca / Empresa</label>
+                  <input
+                    type="text"
+                    value={cvData?.cardOverrides?.brandName ?? ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setCvData((prev: any) => ({
+                        ...prev,
+                        cardOverrides: { ...(prev?.cardOverrides || {}), brandName: val }
+                      }));
+                    }}
+                    placeholder="Ej: Pérez Studio / Mi Marca Personal"
+                    className="w-full text-xs p-2.5 rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">Eslogan / Frase Corta</label>
+                  <input
+                    type="text"
+                    value={cvData?.cardOverrides?.tagline ?? cvData?.personalInfo?.quote ?? ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setCvData((prev: any) => ({
+                        ...prev,
+                        cardOverrides: { ...(prev?.cardOverrides || {}), tagline: val }
+                      }));
+                    }}
+                    placeholder="Ej: Soluciones de Diseño de Alta Calidad"
+                    className="w-full text-xs p-2.5 rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none"
+                  />
+                </div>
+              </div>
+            </PanelSection>
+
+            {/* 4. Configuración del Código QR */}
+            <PanelSection icon={<QrCode className="w-4 h-4" />} title="Código QR Interactivo">
+              <div className="p-4 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-3">
+                <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">Modo del Código QR</label>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 p-2.5 rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] cursor-pointer hover:bg-[var(--color-neutral-surface-muted)] transition">
+                    <input
+                      type="radio"
+                      name="qrMode"
+                      value="vcard"
+                      checked={(cvData?.qrMode || 'vcard') === 'vcard'}
+                      onChange={() => {
+                        setCvData((prev: any) => ({ ...prev, qrMode: 'vcard' }));
+                      }}
+                      className="accent-[var(--color-accent-base)]"
+                    />
+                    <div className="text-xs">
+                      <span className="font-bold text-[var(--color-neutral-text-primary)] block">vCard (Guardar contacto en agenda)</span>
+                      <span className="text-[11px] text-[var(--color-neutral-text-secondary)]">Al escanear abre la agenda para guardar nombre, teléfono y mail.</span>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center gap-2 p-2.5 rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] cursor-pointer hover:bg-[var(--color-neutral-surface-muted)] transition">
+                    <input
+                      type="radio"
+                      name="qrMode"
+                      value="public_link"
+                      checked={cvData?.qrMode === 'public_link'}
+                      onChange={() => {
+                        setCvData((prev: any) => ({ ...prev, qrMode: 'public_link' }));
+                      }}
+                      className="accent-[var(--color-accent-base)]"
+                    />
+                    <div className="text-xs">
+                      <span className="font-bold text-[var(--color-neutral-text-primary)] block">Link Directo a Perfil Web</span>
+                      <span className="text-[11px] text-[var(--color-neutral-text-secondary)]">Al escanear abre la versión web publicada del CV.</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </PanelSection>
+
+            {/* 5. Tamaños de Tarjeta Mundiales */}
+            <PanelSection icon={<Layout className="w-4 h-4" />} title="Tamaño Físico de Tarjeta">
+              <div className="p-4 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-3">
+                <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">Seleccionar Formato Estándar</label>
+                <select
+                  value={cvData?.cardSize || 'tarjeta_estandar'}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setCvData((prev: any) => ({
+                      ...prev,
+                      cardSize: val,
+                      layout: { ...(prev?.layout || {}), paperSize: val }
+                    }));
+                  }}
+                  className="w-full text-xs p-2.5 rounded-[var(--radius-card)] border border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer"
+                >
+                  {Object.values(PAGE_SIZES).filter(s => s.category === 'tarjeta').map((s) => (
+                    <option key={s.id} value={s.id}>
+                      📇 {s.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </PanelSection>
           </div>
         )}
 
