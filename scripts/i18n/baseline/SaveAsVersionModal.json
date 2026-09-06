@@ -1,0 +1,43 @@
+[
+  {
+    "type": "jsx-attribute",
+    "text": "Guardar una copia para...",
+    "line": 52,
+    "context": "title"
+  },
+  {
+    "type": "jsx-text",
+    "text": "📋 Crea una versión independiente etiquetada",
+    "line": 58
+  },
+  {
+    "type": "jsx-text",
+    "text": "Cancelar",
+    "line": 66
+  },
+  {
+    "type": "jsx-text",
+    "text": "Esta función duplica tu currículum actual asignándole un ID nuevo y una etiqueta de puesto. Tu borrador original permanece intacto.",
+    "line": 83
+  },
+  {
+    "type": "jsx-text",
+    "text": "Categoría de Puesto:",
+    "line": 91
+  },
+  {
+    "type": "jsx-text",
+    "text": "Puesto sugerido:",
+    "line": 109
+  },
+  {
+    "type": "jsx-text",
+    "text": "O escribe un puesto / etiqueta personalizada:",
+    "line": 127
+  },
+  {
+    "type": "jsx-text",
+    "text": "Etiqueta de versión a asignar:",
+    "line": 140
+  }
+]

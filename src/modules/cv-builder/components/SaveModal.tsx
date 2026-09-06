@@ -4,6 +4,7 @@ import { checkStorageStatus } from '../services/cvStorageService';
 import { Modal } from '../../../shared/core/ui/Modal';
 import { radius } from '../../../shared/core/uiDesignSystem';
 import { JOB_POSITION_CATALOG } from '../../../shared/core/data/jobPositionCatalog';
+import { t } from '../../../shared/i18n/useText';
 
 export interface SaveModalProps {
   isOpen: boolean;
@@ -62,7 +63,7 @@ export default function SaveModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Guardar Documento"
+      title={t.modals.saveModal.title}
       icon={<Save className="w-5 h-5 text-[var(--ui-accent-purple)]" />}
       size="lg"
       footer={
@@ -78,7 +79,7 @@ export default function SaveModal({
               }}
               className="ml-2 text-[10px] font-extrabold text-[var(--color-secondary-bright)] hover:underline cursor-pointer"
             >
-              ⚙️ Estado de Nube & Drive
+              {t.modals.saveModal.cloudStatusBadge}
             </button>
           </div>
           <button
@@ -86,7 +87,7 @@ export default function SaveModal({
             onClick={onClose}
             className={`px-4 py-2 bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] border border-[var(--ui-border)] font-bold rounded-[${radius.card}] transition cursor-pointer`}
           >
-            Cerrar
+            {t.common.actions.close}
           </button>
         </div>
       }
@@ -107,13 +108,13 @@ export default function SaveModal({
           </div>
           <div className="space-y-0.5 min-w-0 flex-1">
             <div className="flex items-center justify-between">
-              <span className="font-extrabold text-xs sm:text-sm text-[var(--ui-text-primary)]">Guardar Cambios (Sobrescribir Activo)</span>
+              <span className="font-extrabold text-xs sm:text-sm text-[var(--ui-text-primary)]">{t.modals.saveModal.saveActiveTitle}</span>
               <span className="text-[10px] font-black px-2 py-0.5 rounded bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)] border border-[var(--color-accent-purple)]/50">
-                {isSaving ? 'Guardando...' : 'Sobrescribir Activo'}
+                {isSaving ? t.common.actions.loading : 'Sobrescribir Activo'}
               </span>
             </div>
             <p className="text-[11px] text-[var(--ui-text-secondary)]">
-              Actualiza el documento activo en tu Navegador, Supabase y Google Drive simultáneamente.
+              {t.modals.saveModal.saveActiveSub}
             </p>
           </div>
         </button>
@@ -131,13 +132,13 @@ export default function SaveModal({
               </div>
               <div className="space-y-0.5 min-w-0 flex-1">
                 <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-xs sm:text-sm text-[var(--ui-text-primary)]">Guardar una copia para...</span>
+                  <span className="font-extrabold text-xs sm:text-sm text-[var(--ui-text-primary)]">{t.modals.saveModal.saveCopyTitle}</span>
                   <span className="text-[10px] font-black px-2 py-0.5 rounded bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)]">
-                    Copia Independiente
+                    {t.modals.saveModal.saveCopyBadge}
                   </span>
                 </div>
                 <p className="text-[11px] text-[var(--ui-text-secondary)]">
-                  Crea una nueva copia con ID único etiquetada para un puesto específico (ej. "Docencia", "Gerente").
+                  {t.modals.saveModal.saveCopySub}
                 </p>
               </div>
             </button>
@@ -149,7 +150,7 @@ export default function SaveModal({
                   <div>
                     <label className="block text-[10px] font-extrabold text-[var(--ui-text-primary)] mb-1 flex items-center gap-1">
                       <Briefcase className="w-3 h-3 text-[var(--color-secondary-bright)]" />
-                      Categoría de Puesto:
+                      {t.modals.saveModal.categoryLabel}
                     </label>
                     <select
                       value={selectedCategory}
@@ -167,7 +168,7 @@ export default function SaveModal({
                   <div>
                     <label className="block text-[10px] font-extrabold text-[var(--ui-text-primary)] mb-1 flex items-center gap-1">
                       <Tag className="w-3 h-3 text-[var(--color-secondary-bright)]" />
-                      Puesto sugerido:
+                      {t.modals.saveModal.suggestedLabel}
                     </label>
                     <select
                       value={selectedPosition}
@@ -185,7 +186,7 @@ export default function SaveModal({
 
                 <div>
                   <label className="block text-[10px] font-extrabold text-[var(--ui-text-primary)] mb-1">
-                    O escribe un puesto / etiqueta personalizada:
+                    {t.modals.saveModal.customLabel}
                   </label>
                   <input
                     type="text"
@@ -198,7 +199,7 @@ export default function SaveModal({
 
                 <div className="flex items-center justify-between pt-1">
                   <span className="text-[10px] font-extrabold text-[var(--color-secondary-bright)]">
-                    Etiqueta resultante: <strong className="text-[var(--ui-text-primary)]">"{effectiveLabel}"</strong>
+                    {t.modals.saveModal.resultingTagLabel} <strong className="text-[var(--ui-text-primary)]">"{effectiveLabel}"</strong>
                   </span>
 
                   <button
@@ -208,7 +209,7 @@ export default function SaveModal({
                     className="px-4 py-2 bg-[var(--color-secondary-base)] hover:opacity-90 text-[var(--color-secondary-on-base)] font-black text-xs rounded transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                   >
                     <CopyPlus className="w-4 h-4" />
-                    <span>Guardar como copia para "{effectiveLabel}"</span>
+                    <span>{t.modals.saveModal.saveCopyBtnPrefix}{effectiveLabel}"</span>
                   </button>
                 </div>
               </div>
@@ -230,11 +231,11 @@ export default function SaveModal({
           </div>
           <div className="space-y-0.5 min-w-0 flex-1">
             <div className="flex items-center justify-between">
-              <span className="font-extrabold text-xs sm:text-sm text-[var(--ui-text-primary)]">Descargar Copia Portátil (.JSON / .ZIP)</span>
-              <span className="text-[10px] font-bold text-[var(--ui-text-secondary)]">Llevar a otra PC</span>
+              <span className="font-extrabold text-xs sm:text-sm text-[var(--ui-text-primary)]">{t.modals.saveModal.downloadPortableTitle}</span>
+              <span className="text-[10px] font-bold text-[var(--ui-text-secondary)]">{t.modals.saveModal.downloadPortableBadge}</span>
             </div>
             <p className="text-[11px] text-[var(--ui-text-secondary)]">
-              Elige descargar un archivo .JSON liviano o un paquete .ZIP completo para llevar tu CV en pendrive o enviar por email a otra computadora.
+              {t.modals.saveModal.downloadPortableSub}
             </p>
           </div>
         </button>
@@ -253,13 +254,13 @@ export default function SaveModal({
           </div>
           <div className="space-y-0.5 min-w-0 flex-1">
             <div className="flex items-center justify-between">
-              <span className="font-black text-xs sm:text-sm text-[var(--color-status-success-on-base)]">Publicar en la Web (Link Público)</span>
+              <span className="font-black text-xs sm:text-sm text-[var(--color-status-success-on-base)]">{t.modals.saveModal.publishWebTitle}</span>
               <span className="text-[10px] font-black px-2 py-0.5 rounded bg-[var(--color-status-success-base)] border border-[var(--color-status-success-on-base)]/20 text-[var(--color-status-success-on-base)]">
-                🌐 Link Público
+                {t.modals.saveModal.publishWebBadge}
               </span>
             </div>
             <p className="text-[11px] text-[var(--color-status-success-on-base)] opacity-80">
-              Genera un enlace web público único para compartir tu currículum online.
+              {t.modals.saveModal.publishWebSub}
             </p>
           </div>
         </button>
