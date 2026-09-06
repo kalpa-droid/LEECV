@@ -7,4 +7,18 @@ export const bannersCatalog = {
     downloadZip: 'Descargar Todo (.ZIP)',
     renewDiscountBtn: 'Renovar con 20% OFF',
   },
+  pwaInstall: {
+    iosInstruction: 'Para instalar en iOS: presiona "Compartir" en Safari y luego "Agregar a pantalla de inicio".',
+    ariaLabel: 'Instalación de Aplicación PWA LEECV',
+    title: 'Instalar LEECV en tu Dispositivo',
+    badge: 'PWA',
+    sub: 'Accede al instante desde tu pantalla de inicio, sin descargas de tienda.',
+    dontAskTitle: 'No volver a preguntar',
+    feature1: 'Funciona como app nativa en Android, iPhone, Windows y Mac',
+    feature2: 'Acceso ultrarrápido a tus currículums sin gastar datos',
+    dismissBtn: 'No volver a mostrar',
+    installBtn: 'Instalar App',
+  },
 };
+
+export type BannersCatalog = typeof bannersCatalog;

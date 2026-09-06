@@ -38,6 +38,23 @@ export const modalsCatalog = {
     publishWebBadge: '🌐 Link Público',
     publishWebSub: 'Genera un enlace web público único para compartir tu currículum online.',
   },
+  formatConfirmation: {
+    title: 'Aplicar Formato:',
+    subtitle: 'Aplica tu modalidad deseada, puedes volver y aplicar otra plantilla.',
+    noDataLoss: 'Tus datos jamás se borran.',
+    option1Title: '1. Aplicar Plantilla Completa',
+    recommended: 'Recomendado',
+    option1Sub: 'Se ordenan las secciones en las columnas y algunas podrían ocultarse para cumplir con este formato del mercado.',
+    option2Title: '2. Aplicar Orden de Plantilla',
+    option2Sub: 'Se ordenan y priorizan las secciones en las columnas sin ocultarse.',
+    option3Title: '3. Aplicar Plantilla Sin Filtros',
+    option3Sub: 'Mantiene visibles todas tus secciones y campos personales sin ocultar nada, aplicando la tipografía y colores del nuevo formato.',
+    applyBtn: 'Aplicar Formato',
+  },
+  presetTransition: {
+    titlePrefix: 'Aplicando Preset',
+    sub: 'Renderizando maquetación ejecutiva...',
+  },
 };
 
 export type ModalsCatalog = typeof modalsCatalog;

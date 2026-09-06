@@ -9,6 +9,7 @@
 import React, { useState } from 'react';
 import { colorSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { FileText, Layout, Layers, ShieldCheck, CheckCircle, X } from 'lucide-react';
+import { t } from '../../../shared/i18n/useText';
 
 export type FormatApplicationMode = 'curated' | 'reorder-only' | 'full-20-sections';
 
@@ -94,10 +95,10 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
             </div>
             <div>
               <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: colorSystem.neutral.textPrimary }}>
-                Aplicar Formato: {formatName}
+                {t.modals.formatConfirmation.title} {formatName}
               </h3>
               <p style={{ margin: 0, fontSize: '12.5px', color: colorSystem.neutral.textSecondary }}>
-                Aplica tu modalidad deseada, puedes volver y aplicar otra plantilla.
+                {t.modals.formatConfirmation.subtitle}
               </p>
             </div>
           </div>
@@ -135,7 +136,7 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
           >
             <ShieldCheck size={18} style={{ color: colorSystem.status.success.base, flexShrink: 0 }} />
             <div style={{ fontSize: '13px', fontWeight: 700, color: colorSystem.neutral.textPrimary }}>
-              Tus datos jamás se borran.
+              {t.modals.formatConfirmation.noDataLoss}
             </div>
           </div>
 
@@ -162,7 +163,7 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ fontSize: '13.5px', fontWeight: 700, color: colorSystem.neutral.textPrimary }}>
-                    1. Aplicar Plantilla Completa
+                    {t.modals.formatConfirmation.option1Title}
                   </span>
                   <span
                     style={{
@@ -174,11 +175,11 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
                       color: colorSystem.accent.onBase
                     }}
                   >
-                    Recomendado
+                    {t.modals.formatConfirmation.recommended}
                   </span>
                 </div>
                 <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: colorSystem.neutral.textSecondary, lineHeight: 1.4 }}>
-                  Se ordenan las secciones en las columnas y algunas podrían ocultarse para cumplir con este formato del mercado.
+                  {t.modals.formatConfirmation.option1Sub}
                 </p>
               </div>
             </div>
@@ -203,10 +204,10 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
               </div>
               <div style={{ flex: 1 }}>
                 <span style={{ fontSize: '13.5px', fontWeight: 700, color: colorSystem.neutral.textPrimary }}>
-                  2. Aplicar Orden de Plantilla
+                  {t.modals.formatConfirmation.option2Title}
                 </span>
                 <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: colorSystem.neutral.textSecondary, lineHeight: 1.4 }}>
-                  Se ordenan y priorizan las secciones en las columnas sin ocultarse.
+                  {t.modals.formatConfirmation.option2Sub}
                 </p>
               </div>
             </div>
@@ -231,10 +232,10 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
               </div>
               <div style={{ flex: 1 }}>
                 <span style={{ fontSize: '13.5px', fontWeight: 700, color: colorSystem.neutral.textPrimary }}>
-                  3. Aplicar Plantilla Sin Filtros
+                  {t.modals.formatConfirmation.option3Title}
                 </span>
                 <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: colorSystem.neutral.textSecondary, lineHeight: 1.4 }}>
-                  Mantiene visibles todas tus secciones y campos personales sin ocultar nada, aplicando la tipografía y colores del nuevo formato.
+                  {t.modals.formatConfirmation.option3Sub}
                 </p>
               </div>
             </div>
@@ -267,7 +268,7 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
               cursor: 'pointer'
             }}
           >
-            Cancelar
+            {t.common.actions.cancel}
           </button>
           <button
             onClick={handleApply}
@@ -283,7 +284,7 @@ export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = (
               boxShadow: 'var(--shadow-raised)'
             }}
           >
-            Aplicar Formato
+            {t.modals.formatConfirmation.applyBtn}
           </button>
         </div>
       </div>
