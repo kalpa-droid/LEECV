@@ -6,4 +6,4 @@ Este registro es append-only y centraliza las intervenciones de sesiones de agen
 |---|---|---|---|---|
 | 2026-09-06 | Gemini 3.6 Flash | Upgrade Node.js 24 en package.json & CI check-all | `dc26100` | Pushed origin/main |
 | 2026-09-06 | Gemini 3.6 Flash | Fix seguridad cron-downgrade (auth bypass removal) | `a6e87e4` | Pushed origin/main |
-| 2026-09-06 | Gemini 3.6 Flash | Add Vitest contract tests, PERF-1 lazy loading, sitemap & session log | `PENDING` | Local |
+| 2026-09-06 | Gemini 3.6 Flash | Add Vitest contract tests, PERF-1 lazy loading, sitemap & session log | `43306b9` | Pushed origin/main |
