@@ -5,6 +5,7 @@ import { checkoutCatalog } from './catalog/checkout';
 import { dashboardCatalog } from './catalog/dashboard';
 import { agencyCatalog } from './catalog/agency';
 import { bannersCatalog } from './catalog/banners';
+import { retentionCatalog } from './catalog/retention';
 
 export const textCatalog = {
   common: commonCatalog,
@@ -14,6 +15,7 @@ export const textCatalog = {
   dashboard: dashboardCatalog,
   agency: agencyCatalog,
   banners: bannersCatalog,
+  retention: retentionCatalog,
 };
 
 export type TextCatalog = typeof textCatalog;

@@ -1,0 +1,58 @@
+[
+  {
+    "type": "jsx-attribute",
+    "text": "Cerrar",
+    "line": 69,
+    "context": "aria-label"
+  },
+  {
+    "type": "jsx-text",
+    "text": "Oferta Especial de Retención",
+    "line": 77
+  },
+  {
+    "type": "jsx-text",
+    "text": "¡Mantén tus beneficios Pro con un",
+    "line": 82
+  },
+  {
+    "type": "jsx-text",
+    "text": "% OFF exclusivo!",
+    "line": 82
+  },
+  {
+    "type": "jsx-text",
+    "text": "Queremos que sigas creando y respaldando tus currículums sin interrupciones. Por estar en tu período de gracia, te ofrecemos un descuento especial en tu renovación.",
+    "line": 86
+  },
+  {
+    "type": "jsx-text",
+    "text": "Publicación Web y Exportaciones PDF Ilimitadas",
+    "line": 93
+  },
+  {
+    "type": "jsx-text",
+    "text": "Conserva tus enlaces públicos activos y actualiza tus plantillas en cualquier momento.",
+    "line": 94
+  },
+  {
+    "type": "jsx-text",
+    "text": "Respaldo Continuo en Google Drive & Cloud",
+    "line": 101
+  },
+  {
+    "type": "jsx-text",
+    "text": "Mantén la sincronización automática activa y protege todos tus datos.",
+    "line": 102
+  },
+  {
+    "type": "jsx-text",
+    "text": "Obtener",
+    "line": 112
+  },
+  {
+    "type": "jsx-text",
+    "text": "% OFF en Renovación",
+    "line": 112
+  }
+]
