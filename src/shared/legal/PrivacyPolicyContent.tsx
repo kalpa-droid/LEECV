@@ -37,7 +37,7 @@ export function PrivacyPolicyContent() {
 
       <h3 className="text-sm font-black text-[var(--ui-text-primary)]">4. Derechos del Usuario y Borrado de Cuenta</h3>
       <p>
-        Tienes el derecho inalienable de acceder, corregir o solicitar la eliminación total de tus datos personales, historial de currículums o revocar el acceso a tu Google Drive en cualquier momento directamente desde el panel o enviando una solicitud a soporte.
+        Tienes el derecho inalienable de acceder, corregir o solicitar la eliminación total de tus datos personales, historial de currículums o revocar el acceso a tu Google Drive en cualquier momento directamente desde el panel o enviando un correo a nuestro equipo de soporte a <a href="mailto:soporte@leecv.app" className="text-[var(--ui-text-primary)] underline font-bold">soporte@leecv.app</a>.
       </p>
     </div>
   );

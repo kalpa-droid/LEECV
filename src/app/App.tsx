@@ -833,6 +833,7 @@ function AppContent() {
 
         {/* Enlaces Legales Públicos en el Footer */}
         <div className="hidden sm:flex items-center gap-3 text-[10px] text-[var(--ui-dock-text-muted)] shrink-0 pr-2">
+          <a href="mailto:soporte@leecv.app" className="hover:text-[var(--ui-dock-text)] hover:underline font-bold text-[var(--ui-dock-text)]">Soporte</a>
           <a href="/privacidad" target="_blank" rel="noreferrer" className="hover:text-[var(--ui-dock-text)] hover:underline">Privacidad</a>
           <a href="/terminos" target="_blank" rel="noreferrer" className="hover:text-[var(--ui-dock-text)] hover:underline">Términos</a>
           <a href="/reembolsos" target="_blank" rel="noreferrer" className="hover:text-[var(--ui-dock-text)] hover:underline">Reembolsos</a>

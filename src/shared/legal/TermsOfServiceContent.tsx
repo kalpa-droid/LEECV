@@ -27,9 +27,9 @@ export function TermsOfServiceContent() {
         El usuario es el único responsable de la veracidad, exactitud y legalidad de los datos, certificados y contenidos ingresados en sus currículums y perfiles postulados.
       </p>
 
-      <h3 className="text-sm font-black text-[var(--ui-text-primary)]">4. Cancelaciones y Reembolsos</h3>
+      <h3 className="text-sm font-black text-[var(--ui-text-primary)]">4. Cancelaciones, Reembolsos y Soporte</h3>
       <p>
-        Las suscripciones mensuales pueden cancelarse en cualquier momento desde el panel de administración o mediante contacto directo. Los créditos no consumidos de paquetes (Pack 5 y Pack 10) permanecen disponibles en la cuenta del usuario sin fecha de caducidad. En caso de solicitar un reembolso de compras de paquetes de créditos no utilizados dentro de los primeros 14 días corridos tras la transacción, el usuario puede comunicarse con soporte para procesar la devolución mediante el mismo medio de pago utilizado.
+        Las suscripciones mensuales pueden cancelarse en cualquier momento desde el panel de administración o enviando un correo a <a href="mailto:soporte@leecv.app" className="text-[var(--ui-text-primary)] underline font-bold">soporte@leecv.app</a>. Los créditos no consumidos de paquetes (Pack 5 y Pack 10) permanecen disponibles en la cuenta del usuario sin fecha de caducidad. En caso de solicitar un reembolso de compras de paquetes de créditos no utilizados dentro de los primeros 14 días corridos tras la transacción, el usuario puede comunicarse con nuestro equipo en <a href="mailto:soporte@leecv.app" className="text-[var(--ui-text-primary)] underline font-bold">soporte@leecv.app</a> indicando el número de transacción para procesar la devolución mediante el mismo medio de pago utilizado.
       </p>
     </div>
   );

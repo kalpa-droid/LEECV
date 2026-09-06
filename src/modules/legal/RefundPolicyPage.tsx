@@ -58,9 +58,9 @@ export function RefundPolicyPage() {
               Las suscripciones mensuales Pro y Enterprise pueden cancelarse en cualquier momento desde el panel de usuario o comunicándose con soporte. La cancelación evita futuros cobros y mantiene el acceso a las funciones avanzadas y almacenamiento hasta la finalización del período contratado.
             </p>
 
-            <h3 className="text-sm font-black text-[var(--ui-text-primary)]">3. Solicitud de Reembolso</h3>
+            <h3 className="text-sm font-black text-[var(--ui-text-primary)]">3. Solicitud de Reembolso y Atención al Cliente</h3>
             <p>
-              Para solicitar una devolución o reembolso, por favor contáctanos con tu número de transacción o comprobante a través de los canales oficiales de soporte en la plataforma.
+              Para solicitar una devolución o reembolso, por favor contáctanos con tu número de transacción o comprobante escribiendo directamente a nuestro correo de soporte oficial: <a href="mailto:soporte@leecv.app" className="text-[var(--ui-text-primary)] underline font-bold">soporte@leecv.app</a>. Responderemos a tu solicitud en un plazo máximo de 24-48 horas hábiles.
             </p>
           </div>
 
