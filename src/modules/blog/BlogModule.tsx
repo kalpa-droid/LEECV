@@ -76,7 +76,7 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ onNavigateHome, onNaviga
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
 
   return (
-    <div className="min-h-screen bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] flex flex-col font-sans transition-colors duration-300">
+    <div className="h-[100dvh] overflow-y-auto bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] flex flex-col font-sans transition-colors duration-300">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-[var(--ui-bg-panel)]/80 backdrop-blur-xl border-b border-[var(--ui-border)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">

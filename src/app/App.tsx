@@ -17,6 +17,7 @@ import { applyUiTheme, getNextUiTheme, elevationSystem, radius } from '../shared
 
 const PublicCVView = lazy(() => import('../modules/cv-builder/components/PublicCVView').then(m => ({ default: m.PublicCVView })));
 const CardExportModal = lazy(() => import('../modules/cv-builder/components/modals/CardExportModal').then(m => ({ default: m.CardExportModal })));
+import { SeoMetaManager } from '../shared/core/seo/SeoMetaManager';
 
 // Direct Modals Imports (Prevents dynamic chunk fetch errors on updates)
 import PhotoCropperModal from '../modules/cv-builder/components/PhotoCropperModal';
@@ -892,19 +893,31 @@ export default function App() {
       <ConfirmProvider>
         <CVProvider>
           {currentRoute === '/crear-libro' ? (
-            <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Creador de Libros...</div>}>
-              <BookStudio onBackToHome={() => navigateTo('/')} />
-            </Suspense>
+            <>
+              <SeoMetaManager title="Mi Libro / Folleto — LEECV" noIndex />
+              <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Creador de Libros...</div>}>
+                <BookStudio onBackToHome={() => navigateTo('/')} />
+              </Suspense>
+            </>
           ) : currentRoute === '/blog' ? (
-            <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Blog...</div>}>
-              <BlogModule onNavigateHome={() => navigateTo('/')} onNavigateProduct={(r) => navigateTo(r)} />
-            </Suspense>
+            <>
+              <SeoMetaManager title="Blog & Recursos — LEECV" />
+              <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Blog...</div>}>
+                <BlogModule onNavigateHome={() => navigateTo('/')} onNavigateProduct={(r) => navigateTo(r)} />
+              </Suspense>
+            </>
           ) : currentRoute === '/' ? (
-            <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando LEECV...</div>}>
-              <LandingPage onNavigate={(r) => navigateTo(r)} />
-            </Suspense>
+            <>
+              <SeoMetaManager title="LEECV — CVs, Tarjetas y Libros en Calidad Imprenta" />
+              <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando LEECV...</div>}>
+                <LandingPage onNavigate={(r) => navigateTo(r)} />
+              </Suspense>
+            </>
           ) : (
-            <AppContent initialPreset={currentRoute === '/crear-tarjeta' ? 'tarjeta-personal' : 'cv-clasico'} />
+            <>
+              <SeoMetaManager title={currentRoute === '/crear-tarjeta' ? 'Mi Tarjeta Personal — LEECV' : 'Mi CV — LEECV'} noIndex />
+              <AppContent initialPreset={currentRoute === '/crear-tarjeta' ? 'tarjeta-personal' : 'cv-clasico'} />
+            </>
           )}
         </CVProvider>
       </ConfirmProvider>
