@@ -145,14 +145,14 @@ todavía. Es una pieza a medio terminar, no una nueva a inventar.
 
 ---
 
-## Orden de ejecución y verificación
+## Orden de ejecución y estado de verificación
 
-| Lote | Contenido | Toca `shared/core` | Requiere tu review |
-|---|---|---|---|
-| A | Fix de scroll en Landing/Blog | No | No |
-| B | Conectar `updatePageSeo` en `main.tsx` por ruta | No (usa un motor que ya existe) | No |
-| C | Tapa/contratapa del libro reusando `coverPresetCatalog.ts` | Sí | **Sí (CODEOWNERS)** |
-| D | Dock lateral de pasos del libro vía `CanvaIconDock` | Sí | **Sí (CODEOWNERS)** |
+| Lote | Contenido | Toca `shared/core` | Requiere tu review | Estado |
+|---|---|---|---|---|
+| A | Fix de scroll en Landing/Blog | No | No | ✅ Mergeado en `main` (`9b91cd3`) |
+| B | Conectar `updatePageSeo` en `main.tsx` por ruta | No | No | ✅ Mergeado en `main` (`9b91cd3`) |
+| C | Tapa/contratapa del libro reusando `coverPresetCatalog.ts` | Sí | **Sí (CODEOWNERS)** | ⏳ Subido en **PR #11** (esperando review) |
+| D | Dock lateral de pasos del libro vía `CanvaIconDock` | Sí | **Sí (CODEOWNERS)** | 🚀 Listo para iniciar |
 
 Verificación: `npm run check-all` completo en cada PR. Para el Lote A,
 probar manualmente con rueda del mouse y trackpad en `/` y `/blog` antes
