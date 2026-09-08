@@ -26,6 +26,7 @@ import { useText } from '../../../shared/i18n/useText';
 
 export interface NavbarProps {
   currentCvData: any;
+  docType?: 'cv' | 'business_card' | 'book';
   setCvData?: React.Dispatch<React.SetStateAction<any>>;
   onOpenSavedCVsModal: () => void;
   onSaveCVClick: () => void;
@@ -51,6 +52,7 @@ export interface NavbarProps {
 
 export default function Navbar({ 
   currentCvData,
+  docType = 'cv',
   setCvData: _setCvData,
   onOpenSavedCVsModal,
   onSaveCVClick,
@@ -143,15 +145,17 @@ export default function Navbar({
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
 
           {/* PÍLDORA 0: PUBLICAR EN LA WEB */}
-          <button
-            type="button"
-            onClick={onOpenCloudStatus}
-            className={`flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-full bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-status-success-on-base)] transition ${elevationSystem.raised} cursor-pointer active:scale-95 font-black text-xs shrink-0`}
-            title={t.navbar.publishTitle}
-          >
-            <Globe className="w-4 h-4 flex-shrink-0" />
-            <span className="hidden sm:inline">{t.navbar.publishButton}</span>
-          </button>
+          {docType === 'cv' && (
+            <button
+              type="button"
+              onClick={onOpenCloudStatus}
+              className={`flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-full bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-status-success-on-base)] transition ${elevationSystem.raised} cursor-pointer active:scale-95 font-black text-xs shrink-0`}
+              title={t.navbar.publishTitle}
+            >
+              <Globe className="w-4 h-4 flex-shrink-0" />
+              <span className="hidden sm:inline">{t.navbar.publishButton}</span>
+            </button>
+          )}
 
           {/* PÍLDORA 1: MENÚ DE ACCIONES */}
           <div className="relative" ref={actionMenuRef}>
@@ -243,17 +247,19 @@ export default function Navbar({
                 </button>
 
                 {/* 6. Publicar en la Web */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsActionMenuOpen(false);
-                    onOpenCloudStatus();
-                  }}
-                  className={`w-full text-left px-3 py-2 rounded-[${radius.card}] bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-status-success-on-base)] text-xs font-black flex items-center gap-2 transition cursor-pointer`}
-                >
-                  <Globe className="w-4 h-4" />
-                  <span>{t.navbar.publishWebPublicLink}</span>
-                </button>
+                {docType === 'cv' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsActionMenuOpen(false);
+                      onOpenCloudStatus();
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-[${radius.card}] bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-status-success-on-base)] text-xs font-black flex items-center gap-2 transition cursor-pointer`}
+                  >
+                    <Globe className="w-4 h-4" />
+                    <span>{t.navbar.publishWebPublicLink}</span>
+                  </button>
+                )}
               </div>
             )}
           </div>

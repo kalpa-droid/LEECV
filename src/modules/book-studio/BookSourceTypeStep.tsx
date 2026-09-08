@@ -1,23 +1,72 @@
-import React from 'react';
-import { Layers, BookOpen, Copy } from 'lucide-react';
+import React, { useState } from 'react';
+import { Layers, BookOpen, Copy, Upload, CheckCircle2 } from 'lucide-react';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
-import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
+import { radius } from '../../shared/core/uiDesignSystem';
 
 interface BookSourceTypeStepProps {
   options: BookImpositionOptions;
   setOptions: React.Dispatch<React.SetStateAction<BookImpositionOptions>>;
+  selectedFile: File | null;
+  setSelectedFile: (file: File | null) => void;
+  pdfPageCount: number;
+  setPdfPageCount: (count: number) => void;
 }
 
-export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({ options, setOptions }) => {
+export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
+  options,
+  setOptions,
+  selectedFile,
+  setSelectedFile,
+  pdfPageCount,
+  setPdfPageCount,
+}) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const [isLoadingFile, setIsLoadingFile] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleFileChange = async (file: File) => {
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      setErrorMsg('Por favor selecciona un archivo PDF válido.');
+      return;
+    }
+
+    setErrorMsg(null);
+    setIsLoadingFile(true);
+    setSelectedFile(file);
+
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdfjsLib = await import('pdfjs-dist');
+      if (pdfjsLib.GlobalWorkerOptions && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version || '4.10.38'}/pdf.worker.min.mjs`;
+      }
+      const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+      setPdfPageCount(pdf.numPages);
+    } catch (err) {
+      console.error(err);
+      setErrorMsg('No se pudo leer el archivo PDF. Verifica que no esté protegido o dañado.');
+    } finally {
+      setIsLoadingFile(false);
+    }
+  };
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileChange(e.dataTransfer.files[0]);
+    }
+  };
+
   return (
     <div className="space-y-6 text-[var(--ui-text-primary)]">
       <div className="space-y-1">
         <h2 className="text-xl font-bold tracking-tight text-[var(--ui-text-primary)] flex items-center gap-2">
           <Layers className="w-5 h-5 text-[var(--color-accent-base)]" />
-          <span>Tipo de Origen del PDF</span>
+          <span>Origen y Carga del PDF</span>
         </h2>
         <p className="text-xs text-[var(--ui-text-secondary)]">
-          Indica el formato de las páginas en tu archivo PDF original para que el motor las organice correctamente.
+          Indica el formato de origen de tu documento y carga el archivo PDF para comenzar la imposición.
         </p>
       </div>
 
@@ -73,6 +122,78 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({ options,
             </span>
           </div>
         </label>
+      </div>
+
+      {/* Zona de Drop Carga PDF */}
+      <div className="pt-2 border-t border-[var(--ui-border)] space-y-2">
+        <label className="text-xs font-bold text-[var(--ui-text-primary)] block">
+          Archivo PDF Fuente
+        </label>
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragging(true);
+          }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={onDrop}
+          className={`relative border-2 border-dashed rounded-[${radius.card}] p-6 text-center transition-all cursor-pointer ${
+            isDragging
+              ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-light)]/20 scale-[1.01]'
+              : selectedFile
+              ? 'border-[var(--color-accent-base)]/50 bg-[var(--color-accent-light)]/10'
+              : 'border-[var(--ui-border)] bg-[var(--ui-bg-surface)] hover:border-[var(--color-accent-base)]/50'
+          }`}
+        >
+          <input
+            type="file"
+            accept=".pdf"
+            onChange={(e) => e.target.files?.[0] && handleFileChange(e.target.files[0])}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          />
+
+          {isLoadingFile ? (
+            <div className="flex flex-col items-center justify-center space-y-2 py-2">
+              <div className="w-8 h-8 border-3 border-[var(--color-accent-base)] border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-xs text-[var(--ui-text-secondary)] font-medium">Analizando páginas del PDF...</p>
+            </div>
+          ) : selectedFile ? (
+            <div className="flex flex-col items-center justify-center space-y-1.5 py-1">
+              <CheckCircle2 className="w-10 h-10 text-[var(--color-accent-base)]" />
+              <div className="space-y-0.5">
+                <h3 className="text-xs font-bold text-[var(--ui-text-primary)]">{selectedFile.name}</h3>
+                <p className="text-[11px] text-[var(--ui-text-secondary)]">
+                  {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • {pdfPageCount} páginas detectadas
+                </p>
+              </div>
+              <button
+                type="button"
+                className="mt-1 text-[11px] font-semibold text-[var(--color-accent-base)] underline hover:opacity-80"
+              >
+                Reemplazar archivo PDF
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center space-y-2 py-2">
+              <div className="p-2.5 bg-[var(--color-accent-light)]/20 rounded-full text-[var(--color-accent-base)]">
+                <Upload className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-[var(--ui-text-primary)]">
+                  Arrastra tu PDF aquí o haz clic para examinar
+                </p>
+                <p className="text-[11px] text-[var(--ui-text-secondary)] mt-0.5">
+                  Soporta libros, folletos, revistas o fotocopias en PDF
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {errorMsg && (
+          <div className={`p-2.5 bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/30 rounded-[${radius.control}] text-[var(--color-status-danger-text)] text-xs font-medium text-center`}>
+            {errorMsg}
+          </div>
+        )}
       </div>
     </div>
   );

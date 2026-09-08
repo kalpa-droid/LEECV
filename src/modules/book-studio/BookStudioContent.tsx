@@ -3,8 +3,8 @@ import { AppShell } from '../../shared/core/ui/AppShell';
 import Navbar from '../cv-builder/components/Navbar';
 import CanvaIconDock from '../cv-builder/components/CanvaIconDock';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
-import { BookUploadStep } from './BookUploadStep';
 import { BookSourceTypeStep } from './BookSourceTypeStep';
+import { BookOrganizeStep } from './BookOrganizeStep';
 import { BookPaperStep } from './BookPaperStep';
 import { BookCoverStep } from './BookCoverStep';
 import { BookBackCoverStep } from './BookBackCoverStep';
@@ -35,11 +35,12 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   onNewBook,
   cycleUITheme,
 }) => {
-  const [activeStepTab, setActiveStepTab] = useState<string>('book_upload');
+  const [activeStepTab, setActiveStepTab] = useState<string>('book_source_type');
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [pdfPageCount, setPdfPageCount] = useState<number>(0);
-  const [bookId, setBookId] = useState<string | null>(activeTabId !== 'book' ? activeTabId : null);
+  const [bookId, setBookId] = useState<string | null>(activeTabId.startsWith('book-') ? activeTabId : null);
+  const [bookZoom, setBookZoom] = useState<number>(1);
 
   const [options, setOptions] = useState<BookImpositionOptions>({
     mode: 'normal',
@@ -99,6 +100,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
       isPanelOpen={isPanelOpen}
       navbarSlot={
         <Navbar
+          docType="book"
           currentCvData={{ uiTheme: 'day' }}
           onOpenSavedCVsModal={() => {}}
           onSaveCVClick={() => persistBookState(selectedFile, options)}
@@ -107,9 +109,9 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
           onPrint={() => setActiveStepTab('book_preview_export')}
           onOpenShareAppModal={() => {}}
           onOpenCloudStatus={() => {}}
-          zoomLevel={100}
-          setZoomLevel={() => {}}
-          triggerAutoFit={() => {}}
+          zoomLevel={bookZoom}
+          setZoomLevel={setBookZoom}
+          triggerAutoFit={() => setBookZoom(1)}
           cycleUITheme={cycleUITheme}
         />
       }
@@ -124,18 +126,20 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
       }
       panelSlot={
         <div className="p-4 space-y-6 overflow-y-auto max-h-full text-[var(--ui-text-primary)]">
-          {activeStepTab === 'book_upload' && (
-            <BookUploadStep
+          {activeStepTab === 'book_source_type' && (
+            <BookSourceTypeStep
+              options={options}
+              setOptions={handleOptionsChange}
               selectedFile={selectedFile}
               setSelectedFile={handleFileSelect}
               pdfPageCount={pdfPageCount}
               setPdfPageCount={setPdfPageCount}
-              onNext={() => setActiveStepTab('book_source_type')}
             />
           )}
 
-          {activeStepTab === 'book_source_type' && (
-            <BookSourceTypeStep
+          {activeStepTab === 'book_organize' && (
+            <BookOrganizeStep
+              pdfPageCount={pdfPageCount}
               options={options}
               setOptions={handleOptionsChange}
             />
@@ -183,9 +187,10 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
           {selectedFile ? (
             <BookPreviewStep
               options={options}
+              setOptions={handleOptionsChange}
               selectedFile={selectedFile}
               pdfPageCount={pdfPageCount}
-              onBack={() => setActiveStepTab('book_upload')}
+              zoomScale={bookZoom}
               onConfirm={() => setActiveStepTab('book_preview_export')}
             />
           ) : (
@@ -196,8 +201,8 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               </p>
               <button
                 type="button"
-                onClick={() => setActiveStepTab('book_upload')}
-                className="px-5 py-2.5 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold text-xs rounded-xl hover:opacity-90 transition"
+                onClick={() => setActiveStepTab('book_source_type')}
+                className="px-5 py-2.5 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold text-xs rounded-xl hover:opacity-90 transition cursor-pointer"
               >
                 Cargar PDF Ahora
               </button>

@@ -30,8 +30,8 @@ const cardTab = { id: 'tarjeta_personal', label: 'Datos & Config de Tarjeta', ic
 
 // Pestañas de Studio Libros (7 Paneles Independientes)
 const bookTabs = [
-  { id: 'book_upload', label: '1. Cargar PDF', icon: FileUp },
-  { id: 'book_source_type', label: '2. Origen', icon: Layers },
+  { id: 'book_source_type', label: '1. Origen', icon: Layers },
+  { id: 'book_organize', label: '2. Páginas', icon: Eye },
   { id: 'book_paper', label: '3. Imprenta', icon: Settings },
   { id: 'book_cover', label: '4. Tapa', icon: BookOpen },
   { id: 'book_back_cover', label: '5. Contratapa', icon: BookMarked },

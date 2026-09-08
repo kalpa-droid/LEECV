@@ -9,8 +9,14 @@ interface BookBackCoverStepProps {
 }
 
 export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, setOptions }) => {
-  const [backCoverType, setBackCoverType] = useState<'source' | 'custom' | 'none'>(
-    options.hasBackCover ? 'source' : options.customBackCover?.type === 'template' ? 'custom' : 'none'
+  const [backCoverType, setBackCoverType] = useState<'source' | 'custom' | 'upload' | 'none'>(
+    options.hasBackCover
+      ? 'source'
+      : options.customBackCover?.type === 'upload'
+      ? 'upload'
+      : options.customBackCover?.type === 'template'
+      ? 'custom'
+      : 'none'
   );
 
   const [backCoverData, setBackCoverData] = useState<BackCoverConfig>(
@@ -23,22 +29,38 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
     }
   );
 
-  const handleBackCoverTypeChange = (type: 'source' | 'custom' | 'none') => {
+  const handleBackCoverTypeChange = (type: 'source' | 'custom' | 'upload' | 'none') => {
     setBackCoverType(type);
     if (type === 'source') {
       setOptions((prev) => ({ ...prev, hasBackCover: true, customBackCover: null }));
     } else if (type === 'custom') {
-      setOptions((prev) => ({ ...prev, hasBackCover: false, customBackCover: backCoverData }));
+      const updated = { ...backCoverData, type: 'template' as const };
+      setOptions((prev) => ({ ...prev, hasBackCover: false, customBackCover: updated }));
+    } else if (type === 'upload') {
+      const updated = { ...backCoverData, type: 'upload' as const };
+      setOptions((prev) => ({ ...prev, hasBackCover: false, customBackCover: updated }));
     } else {
       setOptions((prev) => ({ ...prev, hasBackCover: false, customBackCover: null }));
     }
   };
 
   const updateBackCoverField = (field: keyof BackCoverConfig, value: string) => {
-    const updated = { ...backCoverData, type: 'template' as const, [field]: value };
+    const updated = { ...backCoverData, type: (backCoverType === 'upload' ? 'upload' : 'template') as any, [field]: value };
     setBackCoverData(updated);
-    if (backCoverType === 'custom') {
+    if (backCoverType === 'custom' || backCoverType === 'upload') {
       setOptions((prev) => ({ ...prev, customBackCover: updated }));
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string;
+        updateBackCoverField('imageUri', dataUrl);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -50,15 +72,15 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
           <span>Diseño de Contratapa</span>
         </h2>
         <p className="text-xs text-[var(--ui-text-secondary)]">
-          Configura si la cara posterior de tu libro usará la última página del PDF o una contratapa custom (sinopsis, ISBN).
+          Configura si la cara posterior de tu libro usará la última página del PDF, una contratapa custom o una imagen subida.
         </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <button
           type="button"
           onClick={() => handleBackCoverTypeChange('source')}
-          className={`p-3 rounded-[${radius.control}] border text-xs font-bold text-center transition-all ${
+          className={`p-2.5 rounded-[${radius.control}] border text-xs font-bold text-center transition-all cursor-pointer ${
             backCoverType === 'source'
               ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-light)]/20 text-[var(--ui-text-primary)] shadow-sm'
               : 'border-[var(--ui-border)] bg-[var(--ui-bg-surface)] text-[var(--ui-text-secondary)] hover:border-[var(--ui-dock-border)]'
@@ -70,7 +92,7 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
         <button
           type="button"
           onClick={() => handleBackCoverTypeChange('custom')}
-          className={`p-3 rounded-[${radius.control}] border text-xs font-bold text-center transition-all ${
+          className={`p-2.5 rounded-[${radius.control}] border text-xs font-bold text-center transition-all cursor-pointer ${
             backCoverType === 'custom'
               ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-light)]/20 text-[var(--ui-text-primary)] shadow-sm'
               : 'border-[var(--ui-border)] bg-[var(--ui-bg-surface)] text-[var(--ui-text-secondary)] hover:border-[var(--ui-dock-border)]'
@@ -81,8 +103,20 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
 
         <button
           type="button"
+          onClick={() => handleBackCoverTypeChange('upload')}
+          className={`p-2.5 rounded-[${radius.control}] border text-xs font-bold text-center transition-all cursor-pointer ${
+            backCoverType === 'upload'
+              ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-light)]/20 text-[var(--ui-text-primary)] shadow-sm'
+              : 'border-[var(--ui-border)] bg-[var(--ui-bg-surface)] text-[var(--ui-text-secondary)] hover:border-[var(--ui-dock-border)]'
+          }`}
+        >
+          Subir mi Contratapa
+        </button>
+
+        <button
+          type="button"
           onClick={() => handleBackCoverTypeChange('none')}
-          className={`p-3 rounded-[${radius.control}] border text-xs font-bold text-center transition-all ${
+          className={`p-2.5 rounded-[${radius.control}] border text-xs font-bold text-center transition-all cursor-pointer ${
             backCoverType === 'none'
               ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-light)]/20 text-[var(--ui-text-primary)] shadow-sm'
               : 'border-[var(--ui-border)] bg-[var(--ui-bg-surface)] text-[var(--ui-text-secondary)] hover:border-[var(--ui-dock-border)]'
@@ -91,6 +125,30 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
           Sin Contratapa
         </button>
       </div>
+
+      {backCoverType === 'upload' && (
+        <div className={`space-y-4 p-4 rounded-[${radius.card}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)]`}>
+          <div className="space-y-1">
+            <label className={typeScale.fieldLabel}>Archivo de Imagen de Contratapa (JPG o PNG)</label>
+            <p className="text-xs text-[var(--ui-text-secondary)]">
+              Sube una imagen diseñada para la contratapa de tu libro.
+            </p>
+          </div>
+
+          <input
+            type="file"
+            accept="image/jpeg,image/png"
+            onChange={handleImageUpload}
+            className={`w-full px-3 py-2 rounded-[${radius.control}] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-xs text-[var(--ui-text-primary)] cursor-pointer`}
+          />
+
+          {backCoverData.imageUri && (
+            <div className="relative w-full aspect-[1/1.4] max-w-[200px] mx-auto rounded-lg overflow-hidden border border-[var(--ui-border)] shadow-md">
+              <img src={backCoverData.imageUri} alt="Vista previa contratapa subida" className="w-full h-full object-cover" />
+            </div>
+          )}
+        </div>
+      )}
 
       {backCoverType === 'custom' && (
         <div className={`space-y-4 p-4 rounded-[${radius.card}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)]`}>
