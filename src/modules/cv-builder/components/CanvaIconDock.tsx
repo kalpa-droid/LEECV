@@ -7,7 +7,7 @@ import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { resolveActiveDockSections, DOCK_SPECIAL_TABS } from '../../../shared/core/sections/activeSectionsDockEngine';
 import { activateSection } from '../../../shared/core/sections/sectionActivationEngine';
 
-import { CreditCard, BookOpen } from 'lucide-react';
+import { CreditCard, BookOpen, FileUp, Settings, Eye, Printer } from 'lucide-react';
 
 export interface CanvaIconDockProps {
   cvData?: any;
@@ -27,6 +27,14 @@ const styleTabs = [
 
 // Pestaña especial de Tarjeta Personal
 const cardTab = { id: 'tarjeta_personal', label: 'Datos & Config de Tarjeta', icon: CreditCard };
+
+// Pestañas de Studio Libros
+const bookTabs = [
+  { id: 'book_upload', label: '1. Cargar PDF', icon: FileUp },
+  { id: 'book_config', label: '2. Tapas y Imprenta', icon: Settings },
+  { id: 'book_preview', label: '3. Previsualizar', icon: Eye },
+  { id: 'book_export', label: '4. Exportar PDF', icon: Printer }
+];
 
 // 2. Pestañas de Sección Especiales Gobernadas por el Motor (activeSectionsDockEngine.ts)
 const addSectionTab = DOCK_SPECIAL_TABS.addSection;
@@ -141,8 +149,32 @@ export default function CanvaIconDock({
             );
           })()}
 
+          {/* BOTONES LIBRO (Solo para docType === 'book') */}
+          {docType === 'book' && bookTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id && isPanelOpen;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => handleTabClick(tab.id)}
+                className={`col-span-2 w-full h-10 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer border ${
+                  isActive
+                    ? `bg-[var(--color-accent-base)] border-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.floating} shadow-[var(--color-accent-base)]/30 scale-[1.02]`
+                    : 'bg-[var(--ui-dock-hover)] border-[var(--ui-dock-border)] text-[var(--color-secondary-bright)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--ui-dock-hover)]'
+                }`}
+                title={tab.label}
+              >
+                <Icon className={`w-5 h-5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
+                <span className={`absolute left-24 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
+
           {/* 3. BOTÓN PALETA DE COLORES / DISEÑO (Doble Columna / Ocupa 2 líneas en PC) */}
-          {styleTabs.map((tab) => {
+          {docType !== 'book' && styleTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id && isPanelOpen;
             return (
@@ -204,7 +236,7 @@ export default function CanvaIconDock({
           })()}
 
           {/* 6. BOTÓN PERSONAL */}
-          {(() => {
+          {docType !== 'book' && (() => {
             const isActive = activeTab === personalTab.id && isPanelOpen;
             return (
               <button
@@ -328,8 +360,29 @@ export default function CanvaIconDock({
           );
         })()}
 
+        {/* BOTONES LIBRO (Solo para docType === 'book') */}
+        {docType === 'book' && bookTabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id && isPanelOpen;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => handleTabClick(tab.id)}
+              className={`row-span-2 h-full w-[42px] rounded-[8px] flex items-center justify-center shrink-0 transition cursor-pointer border ${
+                isActive
+                  ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--color-accent-base)] ${elevationSystem.raised}`
+                  : 'bg-[var(--ui-bg-panel)] text-[var(--ui-dock-text-muted)] border-[var(--ui-border)]'
+              }`}
+              title={tab.label}
+            >
+              <Icon className={`w-5 h-5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--ui-dock-text-muted)]'}`} />
+            </button>
+          );
+        })}
+
         {/* 3. BOTÓN PALETA DE COLORES / DISEÑO (Doble Fila / Ocupa 2 líneas en Celular) */}
-        {styleTabs.map((tab) => {
+        {docType !== 'book' && styleTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id && isPanelOpen;
           return (
