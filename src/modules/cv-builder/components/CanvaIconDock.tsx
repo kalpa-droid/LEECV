@@ -7,7 +7,7 @@ import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { resolveActiveDockSections, DOCK_SPECIAL_TABS } from '../../../shared/core/sections/activeSectionsDockEngine';
 import { activateSection } from '../../../shared/core/sections/sectionActivationEngine';
 
-import { CreditCard, BookOpen, FileUp, Settings, Eye, Printer, Layers, BookMarked, Sliders } from 'lucide-react';
+import { CreditCard, BookOpen, FileUp, Settings, Eye, Printer, Layers, BookMarked, Sliders, LayoutGrid, Hash } from 'lucide-react';
 
 export interface CanvaIconDockProps {
   cvData?: any;
@@ -28,15 +28,16 @@ const styleTabs = [
 // Pestaña especial de Tarjeta Personal
 const cardTab = { id: 'tarjeta_personal', label: 'Datos & Config de Tarjeta', icon: CreditCard };
 
-// Pestañas de Studio Libros (7 Paneles Independientes)
+// Pestañas de Studio Libros (8 Paneles Independientes)
 const bookTabs = [
-  { id: 'book_source_type', label: '1. Origen', icon: Layers },
-  { id: 'book_organize', label: '2. Páginas', icon: Eye },
-  { id: 'book_paper', label: '3. Imprenta', icon: Settings },
-  { id: 'book_cover', label: '4. Tapa', icon: BookOpen },
-  { id: 'book_back_cover', label: '5. Contratapa', icon: BookMarked },
-  { id: 'book_adjustments', label: '6. Retiros', icon: Sliders },
-  { id: 'book_preview_export', label: '7. Exportar', icon: Printer }
+  { id: 'book_source_type', stepNumber: 1, label: '1. Origen', icon: Layers },
+  { id: 'book_organize', stepNumber: 2, label: '2. Páginas', icon: LayoutGrid },
+  { id: 'book_foliado', stepNumber: 3, label: '3. Foliado', icon: Hash },
+  { id: 'book_paper', stepNumber: 4, label: '4. Imprenta', icon: Settings },
+  { id: 'book_cover', stepNumber: 5, label: '5. Tapa', icon: BookOpen },
+  { id: 'book_back_cover', stepNumber: 6, label: '6. Contratapa', icon: BookMarked },
+  { id: 'book_adjustments', stepNumber: 7, label: '7. Retiros', icon: Sliders },
+  { id: 'book_preview_export', stepNumber: 8, label: '8. Exportar', icon: Printer }
 ];
 
 // 2. Pestañas de Sección Especiales Gobernadas por el Motor (activeSectionsDockEngine.ts)
@@ -168,7 +169,16 @@ export default function CanvaIconDock({
                 }`}
                 title={tab.label}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
+                <div className="relative flex items-center justify-center">
+                  <Icon className={`w-5 h-5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
+                  <span className={`absolute -top-2.5 -right-3 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center border ${
+                    isActive
+                      ? 'bg-[var(--color-accent-on-base)] text-[var(--color-accent-base)] border-[var(--color-accent-base)]'
+                      : 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--ui-bg-dock)]'
+                  }`}>
+                    {tab.stepNumber}
+                  </span>
+                </div>
                 <span className={`absolute left-24 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
                   {tab.label}
                 </span>
@@ -379,7 +389,16 @@ export default function CanvaIconDock({
               }`}
               title={tab.label}
             >
-              <Icon className={`w-5 h-5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--ui-dock-text-muted)]'}`} />
+              <div className="relative flex items-center justify-center">
+                <Icon className={`w-5 h-5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--ui-dock-text-muted)]'}`} />
+                <span className={`absolute -top-2.5 -right-3 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center border ${
+                  isActive
+                    ? 'bg-[var(--color-accent-on-base)] text-[var(--color-accent-base)] border-[var(--color-accent-base)]'
+                    : 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--ui-bg-dock)]'
+                }`}>
+                  {tab.stepNumber}
+                </span>
+              </div>
             </button>
           );
         })}

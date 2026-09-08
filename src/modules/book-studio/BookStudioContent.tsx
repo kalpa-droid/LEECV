@@ -5,6 +5,7 @@ import CanvaIconDock from '../cv-builder/components/CanvaIconDock';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
 import { BookSourceTypeStep } from './BookSourceTypeStep';
 import { BookOrganizeStep } from './BookOrganizeStep';
+import { BookFoliadoStep } from './BookFoliadoStep';
 import { BookPaperStep } from './BookPaperStep';
 import { BookCoverStep } from './BookCoverStep';
 import { BookBackCoverStep } from './BookBackCoverStep';
@@ -142,6 +143,14 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
 
           {activeStepTab === 'book_organize' && (
             <BookOrganizeStep
+              pdfPageCount={pdfPageCount}
+              options={options}
+              setOptions={handleOptionsChange}
+            />
+          )}
+
+          {activeStepTab === 'book_foliado' && (
+            <BookFoliadoStep
               pdfPageCount={pdfPageCount}
               options={options}
               setOptions={handleOptionsChange}
