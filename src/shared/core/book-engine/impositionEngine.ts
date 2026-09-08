@@ -1,6 +1,7 @@
 import { PDFDocument, PageSizes } from 'pdf-lib';
 import * as pdfjsLib from 'pdfjs-dist';
 import { countBlanksBehindCover } from './impositionMath';
+import { getCoverPresetById } from '../pdf-engine/layers/presets/coverPresetCatalog';
 
 // Configuración de Worker de PDF.js
 if (typeof window !== 'undefined' && pdfjsLib.GlobalWorkerOptions) {
@@ -15,6 +16,8 @@ export interface CoverConfig {
   title?: string;
   author?: string;
   publisher?: string;
+  /** Preset del catálogo canónico de portadas (mismo que usa el CV) — ver coverPresetCatalog.ts. Si se define, sus colores gobiernan bgColor/textColor salvo que se sobreescriban explícitamente. */
+  coverStyle?: string;
   bgColor?: string;
   textColor?: string;
   bgImageUri?: string;
@@ -29,6 +32,8 @@ export interface BackCoverConfig {
   synopsis?: string;
   publisher?: string;
   isbn?: string;
+  /** Mismo preset canónico que la tapa — ver coverPresetCatalog.ts. */
+  coverStyle?: string;
   bgColor?: string;
   textColor?: string;
   bgImageUri?: string;
@@ -91,15 +96,23 @@ export async function crearCanvasTapaCustom(
       title = '',
       author = '',
       publisher = '',
-      bgColor = '#1a1a2e',
-      textColor = '#bafdc1',
+      coverStyle,
+      bgColor,
+      textColor,
       bgImageUri,
       fontFamily = 'Georgia, serif',
       fontSize = 95,
       lineHeightMultiplier = 1.25,
     } = coverConfig;
 
-    ctx.fillStyle = bgColor || '#1a1a2e';
+    // Mismo catálogo que gobierna la portada del CV (coverPresetCatalog.ts) —
+    // un preset elegido acá y uno elegido en el editor de CV comparten
+    // exactamente la misma identidad de color, no dos paletas parecidas.
+    const preset = coverStyle ? getCoverPresetById(coverStyle) : null;
+    const resolvedBgColor = bgColor || preset?.badgeBg || '#1a1a2e';
+    const resolvedTextColor = textColor || preset?.badgeTextColor || '#bafdc1';
+
+    ctx.fillStyle = resolvedBgColor;
     ctx.fillRect(0, 0, width, height);
 
     if (bgImageUri) {
@@ -117,7 +130,7 @@ export async function crearCanvasTapaCustom(
       ctx.globalAlpha = 1.0;
     }
 
-    ctx.fillStyle = textColor || '#bafdc1';
+    ctx.fillStyle = resolvedTextColor;
     ctx.textAlign = 'center';
 
     const sideMargin = Math.round(width * 0.135);
@@ -197,14 +210,19 @@ export async function crearCanvasContratapaCustom(
       synopsis = '',
       publisher = '',
       isbn = '',
-      bgColor = '#1a1a2e',
-      textColor = '#bafdc1',
+      coverStyle,
+      bgColor,
+      textColor,
       bgImageUri,
       fontFamily = 'Georgia, serif',
       fontSize = 50,
     } = backCoverConfig;
 
-    ctx.fillStyle = bgColor || '#1a1a2e';
+    const preset = coverStyle ? getCoverPresetById(coverStyle) : null;
+    const resolvedBgColor = bgColor || preset?.badgeBg || '#1a1a2e';
+    const resolvedTextColor = textColor || preset?.badgeTextColor || '#bafdc1';
+
+    ctx.fillStyle = resolvedBgColor;
     ctx.fillRect(0, 0, width, height);
 
     if (bgImageUri) {
@@ -222,7 +240,7 @@ export async function crearCanvasContratapaCustom(
       ctx.globalAlpha = 1.0;
     }
 
-    ctx.fillStyle = textColor || '#bafdc1';
+    ctx.fillStyle = resolvedTextColor;
     ctx.textAlign = 'center';
 
     const sideMargin = Math.round(width * 0.135);

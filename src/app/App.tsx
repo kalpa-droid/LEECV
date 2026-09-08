@@ -5,6 +5,7 @@ import EditorPanel from '../modules/cv-builder/components/EditorPanel';
 const CVPreview = lazy(() => import('../modules/cv-builder/components/CVPreview'));
 import { FileText, CreditCard, Palette, Plus, X, Sparkles, ChevronRight } from 'lucide-react';
 import { getOpenTabs, addOpenTab, removeOpenTab, OpenTabItem } from '../shared/core/storage/documentTabEngine';
+import { AppShell } from '../shared/core/ui/AppShell';
 const LandingPage = lazy(() => import('../modules/landing/LandingPage').then(m => ({ default: m.LandingPage })));
 const BookStudio = lazy(() => import('../modules/book-studio/BookStudio').then(m => ({ default: m.BookStudio })));
 const BlogModule = lazy(() => import('../modules/blog/BlogModule').then(m => ({ default: m.BlogModule })));
@@ -51,13 +52,19 @@ import { navigation } from '../shared/core/utils/navigation';
 import EmailSaveModal from '../modules/cv-builder/components/modals/EmailSaveModal';
 import ShareAppModal from '../modules/cv-builder/components/modals/ShareAppModal';
 import { loadCVById, saveCV } from '../shared/core/storage/documentStorageService';
+import { setPendingDocumentToOpen, getPendingDocumentToOpen, clearPendingDocumentToOpen } from '../shared/core/storage/pendingDocumentHandoff';
 import { runWithSafeSave } from '../shared/core/storage/safeNavigationEngine';
 import { signInWithGoogle, logout } from '../modules/auth/authService';
 import { PwaInstallBanner } from '../shared/core/ui/PwaInstallBanner';
 
 import { procesarRetornoPago } from '../modules/payments/paymentService';
 
-function AppContent({ initialPreset }: { initialPreset?: string }) {
+interface AppContentProps {
+  initialPreset?: string;
+  onNavigate?: (route: string) => void;
+}
+
+function AppContent({ initialPreset = 'cv-clasico', onNavigate }: AppContentProps) {
   const { cvData, setCvData, resetToBlankCV, saveCV, saveCVAs } = useCVContext();
 
   useEffect(() => {
@@ -181,6 +188,30 @@ function AppContent({ initialPreset }: { initialPreset?: string }) {
       }
     );
   };
+
+  const handleNavigateToDocumentTab = async (targetDocType: 'cv' | 'business_card' | 'book', targetId: string) => {
+    await runWithSafeSave(
+      saveCV,
+      async () => {
+        setPendingDocumentToOpen(targetId, targetDocType);
+        const targetRoute = targetDocType === 'book' ? '/crear-libro' : targetDocType === 'business_card' ? '/crear-tarjeta' : '/crear-cv';
+        if (onNavigate) {
+          onNavigate(targetRoute);
+        } else if (typeof window !== 'undefined') {
+          window.history.pushState({}, '', targetRoute);
+          window.dispatchEvent(new PopStateEvent('popstate'));
+        }
+      }
+    );
+  };
+
+  useEffect(() => {
+    const pending = getPendingDocumentToOpen();
+    if (pending && (pending.docType === 'cv' || pending.docType === 'business_card')) {
+      clearPendingDocumentToOpen();
+      handleSwitchDocumentTab(pending.id);
+    }
+  }, []);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
 
   // Zoom and Responsive A4 Auto-Fit state
@@ -486,25 +517,32 @@ function AppContent({ initialPreset }: { initialPreset?: string }) {
   const activeDocType: 'cv' | 'business_card' | 'book' = cvData?.activePresetId === 'tarjeta-personal' ? 'business_card' : 'cv';
 
   return (
-    <div className="h-screen h-[100dvh] bg-[var(--color-neutral-text-primary)] text-white flex flex-col font-sans overflow-hidden selection:bg-[var(--color-accent-base)] selection:text-white relative">
-      <div className="md:pl-24">
-        {inGracePeriod && currentProfile?.id && (
-          <div className="px-3 pt-3 md:px-6 md:pt-4">
-            <GracePeriodBanner
-              graceEndsAt={graceEndsAt}
-              cvList={graceCvList}
-              userName={currentProfile?.email || 'Usuario'}
-              onOpenRetentionModal={() => setIsRetentionModalOpen(true)}
+    <AppShell
+      docType={activeDocType}
+      isPanelOpen={isPanelOpen}
+      mobileTabState={mobileTabState}
+      bannerSlot={
+        <>
+          {inGracePeriod && currentProfile?.id && (
+            <div className="px-3 pt-3 md:px-6 md:pt-4">
+              <GracePeriodBanner
+                graceEndsAt={graceEndsAt}
+                cvList={graceCvList}
+                userName={currentProfile?.email || 'Usuario'}
+                onOpenRetentionModal={() => setIsRetentionModalOpen(true)}
+              />
+            </div>
+          )}
+          {currentProfile?.id && (
+            <RetentionOfferModal
+              isOpen={isRetentionModalOpen}
+              onClose={() => setIsRetentionModalOpen(false)}
+              userId={currentProfile.id}
             />
-          </div>
-        )}
-        {currentProfile?.id && (
-          <RetentionOfferModal
-            isOpen={isRetentionModalOpen}
-            onClose={() => setIsRetentionModalOpen(false)}
-            userId={currentProfile.id}
-          />
-        )}
+          )}
+        </>
+      }
+      navbarSlot={
         <Navbar 
           currentCvData={{ ...cvData, uiTheme: globalUiTheme }}
           setCvData={setCvData}
@@ -528,9 +566,8 @@ function AppContent({ initialPreset }: { initialPreset?: string }) {
           isAutoFitMode={isAutoFitMode}
           cycleUITheme={cycleUITheme}
         />
-      </div>
-
-      <main className="flex-1 flex overflow-hidden relative min-h-0 md:pl-24">
+      }
+      dockSlot={
         <CanvaIconDock 
           cvData={cvData}
           setCvData={setCvData}
@@ -545,318 +582,204 @@ function AppContent({ initialPreset }: { initialPreset?: string }) {
           onOpenAtsCheck={handleOpenAtsCheck}
           docType={activeDocType}
         />
-
-        <div 
-          className={`bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] transition-all duration-300 ease-in-out border-r border-[var(--ui-border)] z-20 flex flex-col h-full overflow-y-auto ${
-            isPanelOpen 
-              ? `w-full md:w-[460px] lg:w-[500px] opacity-100 ${elevationSystem.overlay}` 
-              : 'w-0 opacity-0 overflow-hidden hidden md:block'
-          } ${mobileTabState === 'preview' ? 'hidden md:flex' : 'flex'}`}
-        >
-          <EditorPanel 
-            cvData={cvData} 
-            setCvData={setCvData} 
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            docType={activeDocType}
-            onOpenPhotoCropper={() => setIsPhotoCropperOpen(true)}
-            onOpenSignature={() => setIsSignatureOpen(true)}
-            onOpenSavedCVs={() => setIsSavedCVsOpen(true)}
-          />
-        </div>
-
-        <div className={`flex-1 bg-[var(--ui-preview-bg)] h-full overflow-y-auto p-2 sm:p-4 justify-center items-start relative ${
-          mobileTabState === 'editor' && isPanelOpen ? 'hidden md:flex' : 'flex'
-        }`}>
-          <Suspense fallback={
-            <div className="w-full h-[600px] flex flex-col items-center justify-center p-8 text-white/60">
-              <div className="w-10 h-10 border-4 border-[var(--color-accent-purple)] border-t-transparent rounded-full animate-spin mb-4" />
-              <span className="text-xs font-bold uppercase tracking-wider text-[var(--ui-on-dark-purple)]">Cargando Visor Vectorial de Alta Resolución…</span>
-            </div>
-          }>
-            <CVPreview cvData={cvData} setCvData={setCvData} activeTab={activeTab} zoomLevel={zoomLevel} />
-          </Suspense>
-        </div>
-      </main>
-
-      <Suspense fallback={null}>
-        {isPricingModalOpen && (
-          <PricingModal 
-            isOpen={isPricingModalOpen} 
-            onClose={() => setIsPricingModalOpen(false)}
-            currentProfile={currentProfile}
-          />
-        )}
-
-        {isPhotoCropperOpen && (
-          <PhotoCropperModal 
-            isOpen={isPhotoCropperOpen}
-            onClose={() => setIsPhotoCropperOpen(false)}
-            currentPhoto={cvData?.personalInfo?.profilePhoto || ''}
-            onSavePhoto={(croppedUrl: string) => {
-              setCvData(prev => ({
-                ...prev,
-                personalInfo: { ...prev.personalInfo, profilePhoto: croppedUrl }
-              }));
-              setIsPhotoCropperOpen(false);
-            }}
-          />
-        )}
-
-        {isSignatureOpen && (
-          <SignatureModal 
-            isOpen={isSignatureOpen}
-            onClose={() => setIsSignatureOpen(false)}
-            currentSignature={cvData?.signature}
-            onSaveSignature={(sigData: any) => {
-              setCvData(prev => ({
-                ...prev,
-                signature: sigData
-              }));
-              setIsSignatureOpen(false);
-            }}
-          />
-        )}
-
-        {isWizardOpen && (
-          <WizardModal 
-            isOpen={isWizardOpen}
-            onClose={() => setIsWizardOpen(false)}
-            onOpenPhotoCropper={() => setIsPhotoCropperOpen(true)}
-            onOpenSignature={() => setIsSignatureOpen(true)}
-            cvData={cvData}
-            setCvData={setCvData}
-          />
-        )}
-
-        {isSavedCVsOpen && (
-          <SavedCVsModal 
-            isOpen={isSavedCVsOpen}
-            onClose={() => setIsSavedCVsOpen(false)}
-            onSelectCV={(selectedCV: any) => {
-              setCvData(selectedCV);
-              setIsSavedCVsOpen(false);
-            }}
-            onImportJson={handleImportJsonFile}
-            onOpenCloudStatus={() => setIsCloudModalOpen(true)}
-          />
-        )}
-
-        {isSaveModalOpen && (
-          <SaveModal 
-            isOpen={isSaveModalOpen}
-            onClose={() => {
-              setIsSaveModalOpen(false);
-              setInitialSaveAsOpen(false);
-            }}
-            onSaveStorage={handleSaveCVClick}
-            onSaveAs={handleSaveCVAsClick}
-            onExportJson={() => setIsDownloadModalOpen(true)}
-            onOpenCloudStatus={() => setIsCloudModalOpen(true)}
-            isSaving={isSaving}
-            initialSaveAsOpen={initialSaveAsOpen}
-          />
-        )}
-
-        {isSaveAsModalOpen && (
-          <SaveAsVersionModal
-            isOpen={isSaveAsModalOpen}
-            onClose={() => setIsSaveAsModalOpen(false)}
-            onSaveAs={handleSaveCVAsClick}
-            isSaving={isSaving}
-          />
-        )}
-
-        {isShareAppModalOpen && (
-          <ShareAppModal
-            isOpen={isShareAppModalOpen}
-            onClose={() => setIsShareAppModalOpen(false)}
-          />
-        )}
-
-        {isCloudModalOpen && (
-          <CloudStatusModal 
-            isOpen={isCloudModalOpen}
-            onClose={() => setIsCloudModalOpen(false)}
-            onForceSave={handleSaveCVClick}
-            isSaving={isSaving}
-            cvData={cvData}
-            onOpenPdfCheckout={() => {
-              setPdfCheckoutPurpose('publish');
-              setIsPdfCheckoutOpen(true);
-            }}
-          />
-        )}
-
-        {isPdfCheckoutOpen && (
-          <PdfCheckoutModal 
-            isOpen={isPdfCheckoutOpen}
-            onClose={() => setIsPdfCheckoutOpen(false)}
-            onConfirm={triggerPdfGeneration}
-            currentProfile={currentProfile}
-            onOpenPricing={() => setIsPricingModalOpen(true)}
-            onExportJson={() => exportCVToJson(cvData)}
-            purpose={pdfCheckoutPurpose}
-          />
-        )}
-
-        {isCardExportOpen && (
-          <Suspense fallback={null}>
-            <CardExportModal
-              isOpen={isCardExportOpen}
-              onClose={() => setIsCardExportOpen(false)}
-              cvData={cvData}
-              presetId={cvData?.activePresetId || 'tarjeta-personal'}
+      }
+      panelSlot={
+        <EditorPanel 
+          cvData={cvData} 
+          setCvData={setCvData} 
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          docType={activeDocType}
+          onOpenPhotoCropper={() => setIsPhotoCropperOpen(true)}
+          onOpenSignature={() => setIsSignatureOpen(true)}
+          onOpenSavedCVs={() => setIsSavedCVsOpen(true)}
+        />
+      }
+      mainSlot={
+        <Suspense fallback={
+          <div className="w-full h-[600px] flex flex-col items-center justify-center p-8 text-[var(--ui-text-secondary)]">
+            <div className="w-10 h-10 border-4 border-[var(--color-accent-base)] border-t-transparent rounded-full animate-spin mb-4" />
+            <span className="text-xs font-bold uppercase tracking-wider text-[var(--ui-text-primary)]">Cargando Visor Vectorial de Alta Resolución…</span>
+          </div>
+        }>
+          <CVPreview cvData={cvData} setCvData={setCvData} activeTab={activeTab} zoomLevel={zoomLevel} />
+        </Suspense>
+      }
+      tabsBarProps={{
+        tabs: tabs,
+        activeId: activeCvId,
+        onSwitch: handleSwitchDocumentTab,
+        onNavigateToDocument: handleNavigateToDocumentTab,
+        onAdd: handleNewCV,
+        onClose: handleCloseFooterTab
+      }}
+      modalsSlot={
+        <Suspense fallback={null}>
+          {isPricingModalOpen && (
+            <PricingModal 
+              isOpen={isPricingModalOpen} 
+              onClose={() => setIsPricingModalOpen(false)}
+              currentProfile={currentProfile}
             />
-          </Suspense>
-        )}
+          )}
 
-        {isDownloadModalOpen && (
-          <JsonDownloadModal 
-            isOpen={isDownloadModalOpen}
-            onClose={() => setIsDownloadModalOpen(false)}
-            cvData={cvData}
-          />
-        )}
+          {isPhotoCropperOpen && (
+            <PhotoCropperModal 
+              isOpen={isPhotoCropperOpen}
+              onClose={() => setIsPhotoCropperOpen(false)}
+              currentPhoto={cvData?.personalInfo?.profilePhoto || ''}
+              onSavePhoto={(croppedUrl: string) => {
+                setCvData(prev => ({
+                  ...prev,
+                  personalInfo: { ...prev.personalInfo, profilePhoto: croppedUrl }
+                }));
+                setIsPhotoCropperOpen(false);
+              }}
+            />
+          )}
 
-        {(isGeneratingPDF || isPdfComplete) && (
-          <PdfProgressModal 
-            isGenerating={isGeneratingPDF}
-            isComplete={isPdfComplete}
-            onClose={() => setIsPdfComplete(false)}
-          />
-        )}
+          {isSignatureOpen && (
+            <SignatureModal 
+              isOpen={isSignatureOpen}
+              onClose={() => setIsSignatureOpen(false)}
+              currentSignature={cvData?.signature}
+              onSaveSignature={(sigData: any) => {
+                setCvData(prev => ({
+                  ...prev,
+                  signature: sigData
+                }));
+                setIsSignatureOpen(false);
+              }}
+            />
+          )}
 
-        {isPrivacyModalOpen && (
-          <PrivacyModal
-            isOpen={isPrivacyModalOpen}
-            onClose={() => setIsPrivacyModalOpen(false)}
-          />
-        )}
+          {isWizardOpen && (
+            <WizardModal 
+              isOpen={isWizardOpen}
+              onClose={() => setIsWizardOpen(false)}
+              onOpenPhotoCropper={() => setIsPhotoCropperOpen(true)}
+              onOpenSignature={() => setIsSignatureOpen(true)}
+              cvData={cvData}
+              setCvData={setCvData}
+            />
+          )}
 
-        {isAtsModalOpen && atsResult && (
-          <AtsCheckModal
-            isOpen={isAtsModalOpen}
-            onClose={() => setIsAtsModalOpen(false)}
-            result={atsResult}
-            onExportAtsPdf={handleExportAtsPdf}
-          />
-        )}
-      </Suspense>
+          {isSavedCVsOpen && (
+            <SavedCVsModal 
+              isOpen={isSavedCVsOpen}
+              onClose={() => setIsSavedCVsOpen(false)}
+              onSelectCV={(selectedCV: any) => {
+                setCvData(selectedCV);
+                setIsSavedCVsOpen(false);
+              }}
+              onImportJson={handleImportJsonFile}
+              onOpenCloudStatus={() => setIsCloudModalOpen(true)}
+            />
+          )}
 
-      {/* BARRA INFERIOR / FOOTER: Fina (h-8), sin recorte en celulares y con pestañas de texto desplazable e icono inmóvil */}
-      <footer className="h-8 bg-[var(--ui-bg-panel)] border-t border-[var(--ui-border)] text-[var(--ui-text-primary)] px-2 sm:px-3 md:pl-28 flex items-center justify-between gap-1.5 shrink-0 no-print select-none text-[11px] font-sans z-40 mb-[76px] md:mb-0">
-        
-        {/* Pestañas de CVs Abiertos + Botón "+" (con desplazamiento por ruedita del mouse) */}
-        <div 
-          onWheel={(e) => {
-            if (e.currentTarget) {
-              e.currentTarget.scrollLeft += (e.deltaY || e.deltaX);
-            }
-          }}
-          className="flex items-center gap-1 overflow-x-auto no-scrollbar flex-1 py-0.5"
-        >
-          <div 
-            onWheel={(e) => {
-              if (e.currentTarget) {
-                e.currentTarget.scrollLeft += (e.deltaY || e.deltaX);
-              }
-            }}
-            className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-full"
-          >
-            {tabs.map((tab) => {
-              const isActive = tab.cvId === activeCvId;
-              return (
-                <div
-                  key={tab.cvId}
-                  onClick={() => {
-                    if (!isActive) handleSwitchDocumentTab(tab.cvId);
-                  }}
-                  className={`group flex items-center gap-1 px-2 py-0.5 h-6 rounded-[${radius.card}] text-[11px] font-bold transition cursor-pointer shrink-0 border ${
-                    isActive
-                      ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--color-accent-base)] ${elevationSystem.raised}`
-                      : 'bg-[var(--ui-bg-card)] text-[var(--ui-dock-text-muted)] border-[var(--ui-border)] hover:bg-[var(--ui-bg-panel)] hover:text-[var(--ui-dock-text)]'
-                  }`}
-                  title={tab.title}
-                >
-                  {/* ICONO INMÓVIL A LA IZQUIERDA */}
-                  <FileText className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
+          {isSaveModalOpen && (
+            <SaveModal 
+              isOpen={isSaveModalOpen}
+              onClose={() => {
+                setIsSaveModalOpen(false);
+                setInitialSaveAsOpen(false);
+              }}
+              onSaveStorage={handleSaveCVClick}
+              onSaveAs={handleSaveCVAsClick}
+              onExportJson={() => setIsDownloadModalOpen(true)}
+              onOpenCloudStatus={() => setIsCloudModalOpen(true)}
+              isSaving={isSaving}
+              initialSaveAsOpen={initialSaveAsOpen}
+            />
+          )}
 
-                  {/* CONTENEDOR DE TEXTO CON DESPLAZAMIENTO INTERNO */}
-                  <div 
-                    onWheel={(e) => {
-                      if (e.currentTarget) {
-                        e.stopPropagation();
-                        e.currentTarget.scrollLeft += (e.deltaY || e.deltaX);
-                      }
-                    }}
-                    className="overflow-x-auto no-scrollbar max-w-[85px] sm:max-w-[130px] flex items-center scroll-smooth"
-                  >
-                    <span
-                      ref={(el) => {
-                        if (!el) return;
-                        const parent = el.parentElement;
-                        if (!parent) return;
-                        const overflowsX = el.scrollWidth > parent.clientWidth + 2;
-                        el.classList.toggle('ui-tab-title-marquee', overflowsX);
-                      }}
-                      className="whitespace-nowrap leading-none block"
-                    >
-                      {tab.title}
-                    </span>
-                  </div>
+          {isSaveAsModalOpen && (
+            <SaveAsVersionModal
+              isOpen={isSaveAsModalOpen}
+              onClose={() => setIsSaveAsModalOpen(false)}
+              onSaveAs={handleSaveCVAsClick}
+              isSaving={isSaving}
+            />
+          )}
 
-                  {tab.versionLabel && (
-                    <span className={`text-[9px] px-1 py-0.2 rounded font-black uppercase tracking-tighter shrink-0 ${
-                      isActive
-                        ? 'bg-[var(--color-accent-on-base)] text-[var(--color-accent-base)]'
-                        : 'bg-[var(--ui-bg-panel)] text-[var(--color-secondary-bright)] border border-[var(--ui-border)]'
-                    }`}>
-                      {tab.versionLabel}
-                    </span>
-                  )}
+          {isShareAppModalOpen && (
+            <ShareAppModal
+              isOpen={isShareAppModalOpen}
+              onClose={() => setIsShareAppModalOpen(false)}
+            />
+          )}
 
-                  <button
-                    type="button"
-                    onClick={(e) => handleCloseFooterTab(e, tab.cvId, tab.title)}
-                    className="p-0.5 rounded transition cursor-pointer opacity-80 hover:opacity-100 shrink-0"
-                    title="Cerrar Pestaña"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+          {isCloudModalOpen && (
+            <CloudStatusModal 
+              isOpen={isCloudModalOpen}
+              onClose={() => setIsCloudModalOpen(false)}
+              onForceSave={handleSaveCVClick}
+              isSaving={isSaving}
+              cvData={cvData}
+              onOpenPdfCheckout={() => {
+                setPdfCheckoutPurpose('publish');
+                setIsPdfCheckoutOpen(true);
+              }}
+            />
+          )}
 
-          {/* Botón "+" (Agregar Pestaña / Nuevo Documento) */}
-          <button
-            type="button"
-            onClick={handleNewCV}
-            className={`p-1.5 rounded-full bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-panel)] text-[var(--color-status-success-bright)] transition cursor-pointer active:scale-95 shrink-0 ${elevationSystem.raised}`}
-            title="Crear Nuevo Documento (+)"
-          >
-            <Plus className="w-4 h-4 stroke-[3]" />
-          </button>
+          {isPdfCheckoutOpen && (
+            <PdfCheckoutModal 
+              isOpen={isPdfCheckoutOpen}
+              onClose={() => setIsPdfCheckoutOpen(false)}
+              onConfirm={triggerPdfGeneration}
+              currentProfile={currentProfile}
+              onOpenPricing={() => setIsPricingModalOpen(true)}
+              onExportJson={() => exportCVToJson(cvData)}
+              purpose={pdfCheckoutPurpose}
+            />
+          )}
 
-          {/* Flecha sutil y elegante que indica que hay más pestañas desplazables */}
-          <div className="flex items-center text-[var(--color-accent-amber-bright)] opacity-80 animate-pulse shrink-0 px-0.5 pointer-events-none" title="Pestañas de CV desplazables">
-            <ChevronRight className="w-4 h-4 stroke-[2.5]" />
-          </div>
-        </div>
+          {isCardExportOpen && (
+            <Suspense fallback={null}>
+              <CardExportModal
+                isOpen={isCardExportOpen}
+                onClose={() => setIsCardExportOpen(false)}
+                cvData={cvData}
+                presetId={cvData?.activePresetId || 'tarjeta-personal'}
+              />
+            </Suspense>
+          )}
 
-        {/* Enlaces Legales Públicos en el Footer */}
-        <div className="hidden sm:flex items-center gap-3 text-[10px] text-[var(--ui-dock-text-muted)] shrink-0 pr-2">
-          <a href="mailto:soporte@leecv.app" className="hover:text-[var(--ui-dock-text)] hover:underline font-bold text-[var(--ui-dock-text)]">Soporte</a>
-          <a href="/privacidad" target="_blank" rel="noreferrer" className="hover:text-[var(--ui-dock-text)] hover:underline">Privacidad</a>
-          <a href="/terminos" target="_blank" rel="noreferrer" className="hover:text-[var(--ui-dock-text)] hover:underline">Términos</a>
-          <a href="/reembolsos" target="_blank" rel="noreferrer" className="hover:text-[var(--ui-dock-text)] hover:underline">Reembolsos</a>
-        </div>
-      </footer>
+          {isDownloadModalOpen && (
+            <JsonDownloadModal 
+              isOpen={isDownloadModalOpen}
+              onClose={() => setIsDownloadModalOpen(false)}
+              cvData={cvData}
+            />
+          )}
 
-      {/* Banner de Instalación PWA con Persistencia */}
-      <PwaInstallBanner />
-    </div>
+          {(isGeneratingPDF || isPdfComplete) && (
+            <PdfProgressModal 
+              isGenerating={isGeneratingPDF}
+              isComplete={isPdfComplete}
+              onClose={() => setIsPdfComplete(false)}
+            />
+          )}
+
+          {isPrivacyModalOpen && (
+            <PrivacyModal
+              isOpen={isPrivacyModalOpen}
+              onClose={() => setIsPrivacyModalOpen(false)}
+            />
+          )}
+
+          {isAtsModalOpen && atsResult && (
+            <AtsCheckModal
+              isOpen={isAtsModalOpen}
+              onClose={() => setIsAtsModalOpen(false)}
+              result={atsResult}
+              onExportAtsPdf={handleExportAtsPdf}
+            />
+          )}
+        </Suspense>
+      }
+    />
   );
 }
 
@@ -916,7 +839,7 @@ export default function App() {
           ) : (
             <>
               <SeoMetaManager title={currentRoute === '/crear-tarjeta' ? 'Mi Tarjeta Personal — LEECV' : 'Mi CV — LEECV'} noIndex />
-              <AppContent initialPreset={currentRoute === '/crear-tarjeta' ? 'tarjeta-personal' : 'cv-clasico'} />
+              <AppContent initialPreset={currentRoute === '/crear-tarjeta' ? 'tarjeta-personal' : 'cv-clasico'} onNavigate={(r) => navigateTo(r)} />
             </>
           )}
         </CVProvider>

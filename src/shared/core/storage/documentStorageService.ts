@@ -287,3 +287,12 @@ export const getSavedCVsList = () => getSavedDocumentsList('cv');
 export const saveCV = (cvData: any) => saveDocument(cvData, 'cv');
 export const loadCVById = (id: string) => loadDocumentById(id, 'cv');
 export const deleteCVById = (id: string) => deleteDocumentById(id, 'cv');
+
+/**
+ * Convenience wrappers for Book-specific calls
+ */
+export const getSavedBooksList = () => getSavedDocumentsList('book');
+export const saveBook = (bookData: any) => saveDocument(bookData, 'book');
+export const loadBookById = (id: string) => loadDocumentById(id, 'book');
+export const deleteBookById = (id: string) => deleteDocumentById(id, 'book');
+

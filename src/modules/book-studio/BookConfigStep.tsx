@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Layout, FileText, ArrowLeft, ArrowRight, Image as ImageIcon, Palette } from 'lucide-react';
+import { Layout, FileText, ArrowLeft, ArrowRight, Image as ImageIcon, Palette, Check } from 'lucide-react';
 import { BookImpositionOptions, CoverConfig, BackCoverConfig } from '../../shared/core/book-engine/impositionEngine';
+import { COVER_PRESETS } from '../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
 
 interface BookConfigStepProps {
   options: BookImpositionOptions;
@@ -30,8 +31,7 @@ export const BookConfigStep: React.FC<BookConfigStepProps> = ({
       title: '',
       author: '',
       publisher: '',
-      bgColor: '#1a1a2e',
-      textColor: '#bafdc1',
+      coverStyle: 'monica-classic',
     }
   );
 
@@ -41,8 +41,7 @@ export const BookConfigStep: React.FC<BookConfigStepProps> = ({
       synopsis: '',
       publisher: '',
       isbn: '',
-      bgColor: '#1a1a2e',
-      textColor: '#bafdc1',
+      coverStyle: 'monica-classic',
     }
   );
 
@@ -73,6 +72,16 @@ export const BookConfigStep: React.FC<BookConfigStepProps> = ({
     setCoverData(updated);
     if (coverType === 'custom') {
       setOptions((prev) => ({ ...prev, customCover: updated }));
+    }
+    // La contratapa no tiene selector de estilo propio — hereda el de la
+    // tapa para que ambas caras del libro compartan la misma identidad
+    // visual, en vez de quedar con paletas independientes por accidente.
+    if (field === 'coverStyle') {
+      const updatedBack = { ...backCoverData, coverStyle: value };
+      setBackCoverData(updatedBack);
+      if (backCoverType === 'custom') {
+        setOptions((prev) => ({ ...prev, customBackCover: updatedBack }));
+      }
     }
   };
 
@@ -181,28 +190,35 @@ export const BookConfigStep: React.FC<BookConfigStepProps> = ({
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm"
                 />
               </div>
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                    Color Fondo
-                  </label>
-                  <input
-                    type="color"
-                    value={coverData.bgColor || '#1a1a2e'}
-                    onChange={(e) => updateCoverField('bgColor', e.target.value)}
-                    className="w-full h-9 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 cursor-pointer"
-                  />
-                </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                    Color Texto
-                  </label>
-                  <input
-                    type="color"
-                    value={coverData.textColor || '#bafdc1'}
-                    onChange={(e) => updateCoverField('textColor', e.target.value)}
-                    className="w-full h-9 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 cursor-pointer"
-                  />
+              <div className="sm:col-span-2 space-y-2">
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400">
+                  Estilo de Portada (mismo catálogo que el editor de CV)
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {COVER_PRESETS.map((presetItem) => {
+                    const isActive = (coverData.coverStyle || 'monica-classic') === presetItem.id;
+                    return (
+                      <div
+                        key={presetItem.id}
+                        onClick={() => updateCoverField('coverStyle', presetItem.id)}
+                        className={`p-3 rounded-xl border-2 cursor-pointer transition ${
+                          isActive
+                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30'
+                            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          {/* check-contrast-ignore-next-line */}
+                          <span className="text-[10px] font-black px-2 py-0.5 rounded-full uppercase" style={{ backgroundColor: presetItem.badgeBg, color: presetItem.badgeTextColor }}>
+                            {presetItem.badgeLabel}
+                          </span>
+                          {isActive && <Check className="w-4 h-4 text-emerald-600" />}
+                        </div>
+                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{presetItem.name}</p>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1">{presetItem.subtitle}</p>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>

@@ -194,6 +194,18 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
       'json_backup'
     ],
     defaultPaperSize: 'a4'
+  },
+  book: {
+    id: 'book',
+    name: 'Libro / Folleto',
+    description: 'Imposición tipográfica e imprenta editorial de libro, folleto o manual en cuadernillos.',
+    iconName: 'BookOpen',
+    capabilities: [
+      'theme',
+      'paper_size',
+      'json_backup'
+    ],
+    defaultPaperSize: 'a4'
   }
 };
 

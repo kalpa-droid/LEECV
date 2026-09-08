@@ -176,6 +176,11 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
           setError(detail);
           setLoading(false);
         }
+        // Aunque el render haya fallado, hay que avisarle al motor de transición
+        // de presets que ya terminamos de intentar — si no, el overlay "Aplicando
+        // preset..." queda esperando para siempre una señal que nunca llega,
+        // porque markRenderAsCompleted() solo se llamaba en el camino de éxito.
+        markRenderAsCompleted();
       }
     }
 
