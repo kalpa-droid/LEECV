@@ -159,6 +159,19 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
     });
   };
 
+  const pageSplitOffsets = options.pageSplitOffsets || {};
+  const isFotocopiaMode = options.mode === 'fotocopia';
+
+  const handleSplitOffsetChange = (pageNum: number, newOffset: number) => {
+    setOptions((prev) => ({
+      ...prev,
+      pageSplitOffsets: {
+        ...(prev.pageSplitOffsets || {}),
+        [pageNum]: newOffset,
+      },
+    }));
+  };
+
   const handleSaveReference = (refPdfPage: number, refBookPage: number, refPageSide: 'derecha' | 'izquierda') => {
     setOptions((prev) => ({
       ...prev,
@@ -260,10 +273,13 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
               isDeleted={deletedPagesSet.has(String(pageNum))}
               canMoveLeft={idx > 0}
               canMoveRight={idx < displayPages.length - 1}
+              splitOffset={pageSplitOffsets[pageNum] !== undefined ? pageSplitOffsets[pageNum] : 50}
+              isFotocopiaMode={isFotocopiaMode}
               onRotate={handleRotatePage}
               onToggleDelete={handleToggleDelete}
               onMoveLeft={(p) => handleMovePage(p, 'left')}
               onMoveRight={(p) => handleMovePage(p, 'right')}
+              onSplitOffsetChange={handleSplitOffsetChange}
               onOpenLightbox={(p) => setActiveLightboxPage(p)}
             />
           );
@@ -303,7 +319,9 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
           refPdfPage={options.refPdfPage}
           refBookPage={options.refBookPage}
           refPageSide={options.refPageSide}
+          splitOffset={pageSplitOffsets[activeLightboxPage] !== undefined ? pageSplitOffsets[activeLightboxPage] : 50}
           onSaveReferencePage={handleSaveReference}
+          onSaveSplitOffset={handleSplitOffsetChange}
         />
       )}
     </div>

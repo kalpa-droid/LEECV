@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { RotateCw, Trash2, RotateCcw, ZoomIn, ArrowLeft, ArrowRight } from 'lucide-react';
+import { RotateCw, Trash2, RotateCcw, ZoomIn, ArrowLeft, ArrowRight, Scissors } from 'lucide-react';
 import { radius, elevationSystem } from '../../../shared/core/uiDesignSystem';
 
 export interface ThumbnailCardProps {
@@ -9,10 +9,13 @@ export interface ThumbnailCardProps {
   isDeleted?: boolean;
   canMoveLeft?: boolean;
   canMoveRight?: boolean;
+  splitOffset?: number;
+  isFotocopiaMode?: boolean;
   onRotate: (pageNum: number) => void;
   onToggleDelete: (pageNum: number) => void;
   onMoveLeft?: (pageNum: number) => void;
   onMoveRight?: (pageNum: number) => void;
+  onSplitOffsetChange?: (pageNum: number, newOffset: number) => void;
   onOpenLightbox: (pageNum: number) => void;
 }
 
@@ -23,10 +26,13 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
   isDeleted = false,
   canMoveLeft = false,
   canMoveRight = false,
+  splitOffset = 50,
+  isFotocopiaMode = false,
   onRotate,
   onToggleDelete,
   onMoveLeft,
   onMoveRight,
+  onSplitOffsetChange,
   onOpenLightbox,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -50,7 +56,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         const page = await pdfDoc.getPage(pageNum);
         if (isCancelled) return;
 
-        // Render at a compact scale for thumbnail (approx 180px width)
+        // Render at compact scale for thumbnail (approx 180px width)
         const unscaledViewport = page.getViewport({ scale: 1.0 });
         const targetWidth = 180;
         const scale = targetWidth / unscaledViewport.width;
@@ -68,6 +74,21 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         await page.render({ canvasContext: ctx, viewport }).promise;
+
+        // Overlay vertical split line if splitOffset is customized or in fotocopia mode
+        if ((isFotocopiaMode || splitOffset !== 50) && !isCancelled) {
+          const splitX = Math.round(canvas.width * (splitOffset / 100));
+          ctx.save();
+          ctx.strokeStyle = '#FF2E63';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([4, 3]);
+          ctx.beginPath();
+          ctx.moveTo(splitX, 0);
+          ctx.lineTo(splitX, canvas.height);
+          ctx.stroke();
+          ctx.restore();
+        }
+
         if (!isCancelled) {
           setIsLoading(false);
         }
@@ -85,7 +106,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
     return () => {
       isCancelled = true;
     };
-  }, [pdfDoc, pageNum, rotation]);
+  }, [pdfDoc, pageNum, rotation, splitOffset, isFotocopiaMode]);
 
   return (
     <div
@@ -106,11 +127,18 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         }`}>
           Pág. {pageNum}
         </span>
-        {rotation > 0 && (
-          <span className="text-[10px] text-[var(--color-accent-base)] font-mono font-bold">
-            {rotation}°
-          </span>
-        )}
+        <div className="flex items-center gap-1">
+          {splitOffset !== 50 && (
+            <span className="text-[10px] text-[var(--color-secondary-bright)] font-mono font-bold" title="Corte manual central">
+              ✂ {splitOffset}%
+            </span>
+          )}
+          {rotation > 0 && (
+            <span className="text-[10px] text-[var(--color-secondary-bright)] font-mono font-bold">
+              {rotation}°
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Contenedor del Canvas de Miniatura */}
@@ -129,7 +157,8 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         {/* Overlay Strikethrough cuando está eliminada */}
         {isDeleted && (
           <div className="absolute inset-0 bg-[var(--color-status-danger-muted)] flex items-center justify-center">
-            <span className="px-2 py-1 bg-[var(--color-status-danger-base)] text-white text-[10px] font-black uppercase rounded shadow-sm">
+            {/* check-contrast-ignore-next-line: insignia de eliminada sobre overlay de baja opacidad */}
+            <span className="px-2 py-1 bg-[var(--color-status-danger-text)] text-white text-[10px] font-black uppercase rounded shadow-sm">
               Eliminada
             </span>
           </div>
@@ -143,8 +172,34 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         </div>
       </div>
 
+      {/* Stepper de Corte Central Manual en Modo Fotocopia o cuando sea editable */}
+      {onSplitOffsetChange && (
+        <div className="flex items-center justify-between w-full mt-1.5 px-1 py-0.5 rounded bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[10px] font-bold">
+          <button
+            type="button"
+            onClick={() => onSplitOffsetChange(pageNum, Math.max(30, splitOffset - 1))}
+            className="px-1.5 hover:bg-[var(--ui-border)] rounded text-[var(--ui-text-primary)] cursor-pointer"
+            title="Mover corte 1% a la izquierda"
+          >
+            ◄
+          </button>
+          <span className="text-[10px] text-[var(--ui-text-primary)] font-mono flex items-center gap-0.5" title="Ajuste manual de corte central">
+            <Scissors className="w-3 h-3 text-[var(--color-secondary-bright)]" />
+            <span>{splitOffset}%</span>
+          </span>
+          <button
+            type="button"
+            onClick={() => onSplitOffsetChange(pageNum, Math.min(70, splitOffset + 1))}
+            className="px-1.5 hover:bg-[var(--ui-border)] rounded text-[var(--ui-text-primary)] cursor-pointer"
+            title="Mover corte 1% a la derecha"
+          >
+            ►
+          </button>
+        </div>
+      )}
+
       {/* Barra de Herramientas Rápidas por Página */}
-      <div className="flex items-center justify-around w-full mt-2 pt-1.5 border-t border-[var(--ui-border)] gap-1">
+      <div className="flex items-center justify-around w-full mt-1.5 pt-1.5 border-t border-[var(--ui-border)] gap-1">
         {onMoveLeft && (
           <button
             type="button"
@@ -161,7 +216,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
           type="button"
           onClick={() => onRotate(pageNum)}
           title="Rotar 90° hacia la derecha"
-          className="p-1 rounded hover:bg-[var(--ui-bg-panel)] text-[var(--color-accent-base)] cursor-pointer"
+          className="p-1 rounded hover:bg-[var(--ui-bg-panel)] text-[var(--color-secondary-bright)] cursor-pointer"
         >
           <RotateCw className="w-3.5 h-3.5" />
         </button>
