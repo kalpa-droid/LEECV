@@ -1,14 +1,9 @@
 import { PDFDocument, PageSizes } from 'pdf-lib';
-import * as pdfjsLib from 'pdfjs-dist';
 import { countBlanksBehindCover } from './impositionMath';
 import { getCoverPresetById } from '../pdf-engine/layers/presets/coverPresetCatalog';
+import { ensurePdfjsWorkerConfigured } from '../pdf-engine/pdfjsWorkerSetup';
 
-// Configuración de Worker de PDF.js
-if (typeof window !== 'undefined' && pdfjsLib.GlobalWorkerOptions) {
-  if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version || '4.10.38'}/pdf.worker.min.mjs`;
-  }
-}
+const pdfjsLib = typeof window !== 'undefined' ? ensurePdfjsWorkerConfigured() : (null as any);
 
 export interface CoverConfig {
   type: 'upload' | 'template' | 'none';

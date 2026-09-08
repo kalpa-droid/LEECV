@@ -1,16 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { pdf } from '@react-pdf/renderer';
-import * as pdfjsLib from 'pdfjs-dist';
 import { colorSystem } from '../uiDesignSystem';
 import { scrollToPdfAnchor } from './layers/anchors/pdfAnchorEngine';
 import { ContentSection } from './layers/records/recordTypes';
 import { Preset } from './layers/presets/presetSchema';
 import { CvLayoutOverrides } from './layers/sectors/layoutResolutionEngine';
 import { markRenderAsCompleted } from './layers/presets/presetTransitionEngine';
-// Vite: importa el worker como URL de asset — funciona igual en build de producción.
-import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+import { ensurePdfjsWorkerConfigured } from './pdfjsWorkerSetup';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+const pdfjsLib = ensurePdfjsWorkerConfigured();
 
 interface VectorDocViewerProps {
   /** El documento de @react-pdf/renderer a renderizar, ej: <CvPdfDocument cvData={cvData} /> */
