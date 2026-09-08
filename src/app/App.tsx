@@ -61,10 +61,11 @@ import { procesarRetornoPago } from '../modules/payments/paymentService';
 
 interface AppContentProps {
   initialPreset?: string;
+  currentRoute?: string;
   onNavigate?: (route: string) => void;
 }
 
-function AppContent({ initialPreset = 'cv-clasico', onNavigate }: AppContentProps) {
+function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: AppContentProps) {
   const { cvData, setCvData, resetToBlankCV, saveCV, saveCVAs } = useCVContext();
 
   useEffect(() => {
@@ -514,6 +515,32 @@ function AppContent({ initialPreset = 'cv-clasico', onNavigate }: AppContentProp
     );
   }
 
+  if (currentRoute === '/crear-libro') {
+    return (
+      <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Creador de Libros...</div>}>
+        <BookStudio
+          onBackToHome={() => onNavigate?.('/')}
+          documentTabs={tabs}
+          activeTabId={activeCvId || 'book'}
+          onSelectTab={handleSwitchDocumentTab}
+          onCloseTab={(id) => {
+            const tab = tabs.find(t => t.cvId === id);
+            handleCloseFooterTab({ stopPropagation: () => {} } as any, id, tab?.title || 'Documento');
+          }}
+          onNavigateToDocument={(targetDocType, id) => handleNavigateToDocumentTab(targetDocType as 'cv' | 'business_card' | 'book', id)}
+          onNewCV={handleNewCV}
+          onNewBook={() => onNavigate?.('/crear-libro')}
+          cycleUITheme={() => {
+            const next = getNextUiTheme(globalUiTheme);
+            setGlobalUiTheme(next);
+            applyUiTheme(next);
+            if (typeof window !== 'undefined') localStorage.setItem('cv_ui_theme_preference', next);
+          }}
+        />
+      </Suspense>
+    );
+  }
+
   const activeDocType: 'cv' | 'business_card' | 'book' = cvData?.activePresetId === 'tarjeta-personal' ? 'business_card' : 'cv';
 
   return (
@@ -815,14 +842,7 @@ export default function App() {
     <ToastProvider>
       <ConfirmProvider>
         <CVProvider>
-          {currentRoute === '/crear-libro' ? (
-            <>
-              <SeoMetaManager title="Mi Libro / Folleto — LEECV" noIndex />
-              <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Creador de Libros...</div>}>
-                <BookStudio onBackToHome={() => navigateTo('/')} />
-              </Suspense>
-            </>
-          ) : currentRoute === '/blog' ? (
+          {currentRoute === '/blog' ? (
             <>
               <SeoMetaManager title="Blog & Recursos — LEECV" />
               <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Blog...</div>}>
@@ -838,8 +858,8 @@ export default function App() {
             </>
           ) : (
             <>
-              <SeoMetaManager title={currentRoute === '/crear-tarjeta' ? 'Mi Tarjeta Personal — LEECV' : 'Mi CV — LEECV'} noIndex />
-              <AppContent initialPreset={currentRoute === '/crear-tarjeta' ? 'tarjeta-personal' : 'cv-clasico'} onNavigate={(r) => navigateTo(r)} />
+              <SeoMetaManager title={currentRoute === '/crear-tarjeta' ? 'Mi Tarjeta Personal — LEECV' : currentRoute === '/crear-libro' ? 'Mi Libro / Folleto — LEECV' : 'Mi CV — LEECV'} noIndex />
+              <AppContent currentRoute={currentRoute} initialPreset={currentRoute === '/crear-tarjeta' ? 'tarjeta-personal' : 'cv-clasico'} onNavigate={(r) => navigateTo(r)} />
             </>
           )}
         </CVProvider>
