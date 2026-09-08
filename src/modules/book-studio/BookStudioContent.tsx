@@ -4,9 +4,13 @@ import Navbar from '../cv-builder/components/Navbar';
 import CanvaIconDock from '../cv-builder/components/CanvaIconDock';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
 import { BookUploadStep } from './BookUploadStep';
-import { BookConfigStep } from './BookConfigStep';
+import { BookSourceTypeStep } from './BookSourceTypeStep';
+import { BookPaperStep } from './BookPaperStep';
+import { BookCoverStep } from './BookCoverStep';
+import { BookBackCoverStep } from './BookBackCoverStep';
+import { BookAdjustmentsStep } from './BookAdjustmentsStep';
+import { BookPreviewExportStep } from './BookPreviewExportStep';
 import { BookPreviewStep } from './BookPreviewStep';
-import { BookExportStep } from './BookExportStep';
 import { saveBook } from '../../shared/core/storage/documentStorageService';
 import { addOpenTab, OpenTabItem } from '../../shared/core/storage/documentTabEngine';
 
@@ -89,12 +93,6 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
     });
   };
 
-  const handleReset = () => {
-    setActiveStepTab('book_upload');
-    setSelectedFile(null);
-    setPdfPageCount(0);
-  };
-
   return (
     <AppShell
       docType="book"
@@ -106,7 +104,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
           onSaveCVClick={() => persistBookState(selectedFile, options)}
           onOpenSaveAsModal={() => {}}
           onOpenJsonDownloadModal={() => {}}
-          onPrint={() => setActiveStepTab('book_export')}
+          onPrint={() => setActiveStepTab('book_preview_export')}
           onOpenShareAppModal={() => {}}
           onOpenCloudStatus={() => {}}
           zoomLevel={100}
@@ -128,44 +126,55 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
         <div className="p-4 space-y-6 overflow-y-auto max-h-full text-[var(--ui-text-primary)]">
           {activeStepTab === 'book_upload' && (
             <BookUploadStep
-              options={options}
-              setOptions={handleOptionsChange}
               selectedFile={selectedFile}
               setSelectedFile={handleFileSelect}
               pdfPageCount={pdfPageCount}
               setPdfPageCount={setPdfPageCount}
-              onNext={() => setActiveStepTab('book_config')}
+              onNext={() => setActiveStepTab('book_source_type')}
             />
           )}
 
-          {activeStepTab === 'book_config' && (
-            <BookConfigStep
+          {activeStepTab === 'book_source_type' && (
+            <BookSourceTypeStep
               options={options}
               setOptions={handleOptionsChange}
-              pdfPageCount={pdfPageCount}
-              onBack={() => setActiveStepTab('book_upload')}
-              onNext={() => setActiveStepTab('book_preview')}
             />
           )}
 
-          {activeStepTab === 'book_preview' && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-bold">Resumen de Previsualización</h3>
-              <p className="text-xs text-[var(--ui-text-secondary)]">
-                Revisa el montaje final antes de generar el PDF para imprenta.
-              </p>
-              <button
-                type="button"
-                onClick={() => setActiveStepTab('book_export')}
-                className="w-full py-2.5 rounded-xl font-bold bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] hover:opacity-90 transition"
-              >
-                Ir a Exportar PDF
-              </button>
-            </div>
+          {activeStepTab === 'book_paper' && (
+            <BookPaperStep
+              options={options}
+              setOptions={handleOptionsChange}
+            />
           )}
 
-          {activeStepTab === 'book_export' && selectedFile && (
-            <BookExportStep selectedFile={selectedFile} options={options} onReset={handleReset} />
+          {activeStepTab === 'book_cover' && (
+            <BookCoverStep
+              options={options}
+              setOptions={handleOptionsChange}
+            />
+          )}
+
+          {activeStepTab === 'book_back_cover' && (
+            <BookBackCoverStep
+              options={options}
+              setOptions={handleOptionsChange}
+            />
+          )}
+
+          {activeStepTab === 'book_adjustments' && (
+            <BookAdjustmentsStep
+              options={options}
+              setOptions={handleOptionsChange}
+            />
+          )}
+
+          {activeStepTab === 'book_preview_export' && (
+            <BookPreviewExportStep
+              options={options}
+              selectedFile={selectedFile}
+              pdfPageCount={pdfPageCount}
+            />
           )}
         </div>
       }
@@ -176,19 +185,19 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               options={options}
               selectedFile={selectedFile}
               pdfPageCount={pdfPageCount}
-              onBack={() => setActiveStepTab('book_config')}
-              onConfirm={() => setActiveStepTab('book_export')}
+              onBack={() => setActiveStepTab('book_upload')}
+              onConfirm={() => setActiveStepTab('book_preview_export')}
             />
           ) : (
-            <div className="text-center p-12 bg-[var(--ui-bg-card)] rounded-2xl border-2 border-dashed border-[var(--ui-border)] max-w-md">
-              <h3 className="text-lg font-bold mb-2">Ningún PDF cargado aún</h3>
-              <p className="text-sm text-[var(--ui-text-secondary)] mb-4">
-                Carga un archivo PDF en el panel lateral para comenzar el montaje en caballete o imprenta.
+            <div className="text-center p-10 bg-[var(--ui-bg-card)] rounded-2xl border-2 border-dashed border-[var(--ui-border)] max-w-md space-y-3">
+              <h3 className="text-base font-bold text-[var(--ui-text-primary)]">Ningún PDF cargado aún</h3>
+              <p className="text-xs text-[var(--ui-text-secondary)]">
+                Carga un archivo PDF en la pestaña lateral para comenzar el montaje en caballete o imprenta.
               </p>
               <button
                 type="button"
                 onClick={() => setActiveStepTab('book_upload')}
-                className="px-6 py-2.5 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold rounded-xl hover:opacity-90 transition"
+                className="px-5 py-2.5 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold text-xs rounded-xl hover:opacity-90 transition"
               >
                 Cargar PDF Ahora
               </button>

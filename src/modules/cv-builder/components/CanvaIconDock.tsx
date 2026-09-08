@@ -7,7 +7,7 @@ import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { resolveActiveDockSections, DOCK_SPECIAL_TABS } from '../../../shared/core/sections/activeSectionsDockEngine';
 import { activateSection } from '../../../shared/core/sections/sectionActivationEngine';
 
-import { CreditCard, BookOpen, FileUp, Settings, Eye, Printer } from 'lucide-react';
+import { CreditCard, BookOpen, FileUp, Settings, Eye, Printer, Layers, BookMarked, Sliders } from 'lucide-react';
 
 export interface CanvaIconDockProps {
   cvData?: any;
@@ -28,12 +28,15 @@ const styleTabs = [
 // Pestaña especial de Tarjeta Personal
 const cardTab = { id: 'tarjeta_personal', label: 'Datos & Config de Tarjeta', icon: CreditCard };
 
-// Pestañas de Studio Libros
+// Pestañas de Studio Libros (7 Paneles Independientes)
 const bookTabs = [
   { id: 'book_upload', label: '1. Cargar PDF', icon: FileUp },
-  { id: 'book_config', label: '2. Tapas y Imprenta', icon: Settings },
-  { id: 'book_preview', label: '3. Previsualizar', icon: Eye },
-  { id: 'book_export', label: '4. Exportar PDF', icon: Printer }
+  { id: 'book_source_type', label: '2. Origen', icon: Layers },
+  { id: 'book_paper', label: '3. Imprenta', icon: Settings },
+  { id: 'book_cover', label: '4. Tapa', icon: BookOpen },
+  { id: 'book_back_cover', label: '5. Contratapa', icon: BookMarked },
+  { id: 'book_adjustments', label: '6. Retiros', icon: Sliders },
+  { id: 'book_preview_export', label: '7. Exportar', icon: Printer }
 ];
 
 // 2. Pestañas de Sección Especiales Gobernadas por el Motor (activeSectionsDockEngine.ts)
