@@ -28,16 +28,15 @@ const styleTabs = [
 // Pestaña especial de Tarjeta Personal
 const cardTab = { id: 'tarjeta_personal', label: 'Datos & Config de Tarjeta', icon: CreditCard };
 
-// Pestañas de Studio Libros (8 Paneles Independientes)
+// Pestañas de Studio Libros (7 Paneles Consolidados)
 const bookTabs = [
   { id: 'book_source_type', stepNumber: 1, label: '1. Origen', icon: Layers },
   { id: 'book_organize', stepNumber: 2, label: '2. Páginas', icon: LayoutGrid },
   { id: 'book_foliado', stepNumber: 3, label: '3. Foliado', icon: Hash },
   { id: 'book_paper', stepNumber: 4, label: '4. Imprenta', icon: Settings },
-  { id: 'book_cover', stepNumber: 5, label: '5. Tapa', icon: BookOpen },
+  { id: 'book_cover', stepNumber: 5, label: '5. Tapa & Retiro', icon: BookOpen },
   { id: 'book_back_cover', stepNumber: 6, label: '6. Contratapa', icon: BookMarked },
-  { id: 'book_adjustments', stepNumber: 7, label: '7. Retiros', icon: Sliders },
-  { id: 'book_preview_export', stepNumber: 8, label: '8. Exportar', icon: Printer }
+  { id: 'book_preview_export', stepNumber: 7, label: '7. Exportar', icon: Printer }
 ];
 
 // 2. Pestañas de Sección Especiales Gobernadas por el Motor (activeSectionsDockEngine.ts)

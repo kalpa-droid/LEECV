@@ -224,6 +224,28 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
           </div>
         </div>
       )}
+
+      {/* Retiro de Tapa y Hoja en Blanco Posterior */}
+      <div className={`space-y-4 p-4 rounded-[${radius.card}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)]`}>
+        <h3 className="text-xs font-bold text-[var(--ui-text-primary)] uppercase tracking-wider block">
+          Ajustes de Retiro de Tapa
+        </h3>
+
+        <label className="flex items-center justify-between p-3 rounded-[${radius.control}] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] cursor-pointer hover:border-[var(--ui-dock-border)] transition-all">
+          <div className="space-y-0.5 pr-4">
+            <span className="font-bold block text-xs text-[var(--ui-text-primary)]">Hoja en blanco detrás de la Tapa</span>
+            <span className="text-[10px] text-[var(--ui-text-secondary)] block">
+              Deja la cara posterior (retiro) de la portada limpia sin texto del cuerpo.
+            </span>
+          </div>
+          <input
+            type="checkbox"
+            checked={options.blankBehindCover !== false}
+            onChange={(e) => setOptions((prev) => ({ ...prev, blankBehindCover: e.target.checked }))}
+            className="w-4 h-4 accent-[var(--color-accent-base)] rounded focus:ring-0 cursor-pointer"
+          />
+        </label>
+      </div>
     </div>
   );
 };

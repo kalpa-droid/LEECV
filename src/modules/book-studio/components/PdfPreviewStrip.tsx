@@ -3,7 +3,7 @@ import { ThumbnailCard } from './ThumbnailCard';
 import { LightboxModal } from './LightboxModal';
 import { BookImpositionOptions } from '../../../shared/core/book-engine/impositionEngine';
 import { radius } from '../../../shared/core/uiDesignSystem';
-import { RefreshCw, FileText } from 'lucide-react';
+import { RefreshCw, FileText, Trash2 } from 'lucide-react';
 import { ensurePdfjsWorkerConfigured } from '../../../shared/core/pdf-engine/pdfjsWorkerSetup';
 
 export interface PdfPreviewStripProps {
@@ -85,14 +85,27 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
     );
   }
 
-  // Derive order array (1...pdfPageCount or custom pageOrder)
+  // Derive order array (1...pdfPageCount or custom pageOrder containing numeric or blank IDs)
   const displayPages =
     options.pageOrder && options.pageOrder.length > 0
-      ? options.pageOrder.map((p) => Number(p)).filter((n) => !isNaN(n))
+      ? options.pageOrder
       : Array.from({ length: pdfPageCount }, (_, i) => i + 1);
 
-  const deletedPagesSet = new Set((options.deletedPages || []).map((p) => Number(p)));
+  const deletedPagesSet = new Set((options.deletedPages || []).map((p) => String(p)));
   const pageRotations = options.pageRotations || {};
+
+  const handleRemoveBlankPage = (itemKey: string | number) => {
+    setOptions((prev) => {
+      const currentOrder =
+        prev.pageOrder && prev.pageOrder.length > 0
+          ? [...prev.pageOrder]
+          : Array.from({ length: pdfPageCount }, (_, i) => i + 1);
+      return {
+        ...prev,
+        pageOrder: currentOrder.filter((p) => String(p) !== String(itemKey)),
+      };
+    });
+  };
 
   const handleRotatePage = (pageNum: number) => {
     setOptions((prev) => {
@@ -183,22 +196,100 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
           gridTemplateColumns: `repeat(auto-fill, minmax(${Math.max(140 * zoomScale, 110)}px, 1fr))`,
         }}
       >
-        {displayPages.map((pageNum, idx) => (
-          <ThumbnailCard
-            key={pageNum}
-            pageNum={pageNum}
-            pdfDoc={pdfDoc}
-            rotation={pageRotations[pageNum] || 0}
-            isDeleted={deletedPagesSet.has(pageNum)}
-            canMoveLeft={idx > 0}
-            canMoveRight={idx < displayPages.length - 1}
-            onRotate={handleRotatePage}
-            onToggleDelete={handleToggleDelete}
-            onMoveLeft={(p) => handleMovePage(p, 'left')}
-            onMoveRight={(p) => handleMovePage(p, 'right')}
-            onOpenLightbox={(p) => setActiveLightboxPage(p)}
-          />
-        ))}
+        {/* Tarjeta de Tapa / Portada */}
+        {(options.hasCover || options.customCover) && (
+          <div className="p-3 bg-[var(--ui-bg-surface)] border-2 border-[var(--color-accent-base)] rounded-xl flex flex-col items-center justify-between text-center min-h-[200px] space-y-2 relative shadow-md select-none">
+            <span className="px-2 py-0.5 rounded bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold text-[10px] uppercase tracking-wider">
+              Portada / Tapa
+            </span>
+            {options.customCover?.imageUri ? (
+              <img src={options.customCover.imageUri} alt="Tapa" className="w-full h-28 object-cover rounded border border-[var(--ui-border)]" />
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center p-2 rounded bg-[var(--ui-bg-card)] border border-[var(--ui-border)] w-full">
+                <span className="text-[11px] font-bold text-[var(--ui-text-primary)] line-clamp-2">
+                  {options.customCover?.title || 'Tapa del PDF'}
+                </span>
+                {options.customCover?.author && (
+                  <span className="text-[9px] text-[var(--ui-text-secondary)] mt-1">{options.customCover.author}</span>
+                )}
+              </div>
+            )}
+            {/* check-contrast-ignore-next-line: texto de pie sobre fondo ui-bg-surface */}
+            <span className="text-[9px] text-[var(--ui-text-primary)] font-semibold">
+              Retiro en blanco: {options.blankBehindCover !== false ? 'Sí' : 'No'}
+            </span>
+          </div>
+        )}
+
+        {/* Miniaturas de Páginas del Documento */}
+        {displayPages.map((item, idx) => {
+          const itemStr = String(item);
+          const isBlank = itemStr.startsWith('blank');
+
+          if (isBlank) {
+            return (
+              <div
+                key={itemStr}
+                className="p-3 bg-[var(--ui-bg-surface)] border-2 border-dashed border-[var(--ui-border)] rounded-xl flex flex-col items-center justify-between text-center min-h-[200px] space-y-2 relative select-none"
+              >
+                <span className="px-2 py-0.5 rounded bg-[var(--color-secondary-muted)] text-[var(--color-secondary-bright)] font-bold text-[10px]">
+                  HOJA EN BLANCO
+                </span>
+                <div className="flex-1 flex flex-col items-center justify-center text-[10px] text-[var(--ui-text-secondary)]">
+                  Página insertada en blanco
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveBlankPage(itemStr)}
+                  className="px-2 py-1 rounded bg-[var(--color-status-danger-muted)] text-[var(--color-status-danger-text)] text-[10px] font-bold flex items-center gap-1 hover:opacity-80 transition cursor-pointer"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  <span>Eliminar</span>
+                </button>
+              </div>
+            );
+          }
+
+          const pageNum = Number(item);
+          return (
+            <ThumbnailCard
+              key={pageNum}
+              pageNum={pageNum}
+              pdfDoc={pdfDoc}
+              rotation={pageRotations[pageNum] || 0}
+              isDeleted={deletedPagesSet.has(String(pageNum))}
+              canMoveLeft={idx > 0}
+              canMoveRight={idx < displayPages.length - 1}
+              onRotate={handleRotatePage}
+              onToggleDelete={handleToggleDelete}
+              onMoveLeft={(p) => handleMovePage(p, 'left')}
+              onMoveRight={(p) => handleMovePage(p, 'right')}
+              onOpenLightbox={(p) => setActiveLightboxPage(p)}
+            />
+          );
+        })}
+
+        {/* Tarjeta de Contratapa */}
+        {(options.hasBackCover || options.customBackCover) && (
+          <div className="p-3 bg-[var(--ui-bg-surface)] border-2 border-[var(--color-secondary-base)] rounded-xl flex flex-col items-center justify-between text-center min-h-[200px] space-y-2 relative shadow-md select-none">
+            <span className="px-2 py-0.5 rounded bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] font-bold text-[10px] uppercase tracking-wider">
+              Contratapa
+            </span>
+            {options.customBackCover?.imageUri ? (
+              <img src={options.customBackCover.imageUri} alt="Contratapa" className="w-full h-28 object-cover rounded border border-[var(--ui-border)]" />
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center p-2 rounded bg-[var(--ui-bg-card)] border border-[var(--ui-border)] w-full">
+                <span className="text-[11px] font-bold text-[var(--ui-text-primary)] line-clamp-2">
+                  {options.customBackCover?.synopsis || 'Última Pág. del PDF'}
+                </span>
+              </div>
+            )}
+            {/* check-contrast-ignore-next-line: texto de pie sobre fondo ui-bg-surface */}
+            <span className="text-[9px] text-[var(--ui-text-primary)] font-semibold">
+              Retiro en blanco: {options.blankInFrontBackCover !== false ? 'Sí' : 'No'}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Modal Lightbox */}

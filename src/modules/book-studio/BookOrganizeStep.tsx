@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, RotateCw, RotateCcw, RefreshCw, Trash2, CheckCircle2 } from 'lucide-react';
+import { LayoutGrid, RotateCw, RotateCcw, RefreshCw, Plus } from 'lucide-react';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
 import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
 
@@ -16,6 +16,21 @@ export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
 }) => {
   const deletedCount = (options.deletedPages || []).length;
   const rotatedCount = Object.values(options.pageRotations || {}).filter((r) => r > 0).length;
+
+  const handleAddBlankPage = () => {
+    setOptions((prev) => {
+      const currentOrder =
+        prev.pageOrder && prev.pageOrder.length > 0
+          ? [...prev.pageOrder]
+          : Array.from({ length: pdfPageCount }, (_, i) => i + 1);
+
+      const newBlankId = `blank_${Date.now()}`;
+      return {
+        ...prev,
+        pageOrder: [...currentOrder, newBlankId],
+      };
+    });
+  };
 
   const handleRotateEven180 = () => {
     setOptions((prev) => {
@@ -53,7 +68,7 @@ export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
     <div className="space-y-6 text-[var(--ui-text-primary)]">
       <div className="space-y-1">
         <h2 className="text-xl font-bold tracking-tight text-[var(--ui-text-primary)] flex items-center gap-2">
-          <Eye className="w-5 h-5 text-[var(--color-accent-base)]" />
+          <LayoutGrid className="w-5 h-5 text-[var(--color-secondary-bright)]" />
           <span>Acciones en Lote de Páginas</span>
         </h2>
         <p className="text-xs text-[var(--ui-text-secondary)]">
@@ -69,7 +84,7 @@ export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div className="p-2.5 rounded-lg bg-[var(--ui-bg-card)] border border-[var(--ui-border)]">
             <span className="text-[10px] text-[var(--ui-text-secondary)] block">Rotaciones Activas</span>
-            <span className="text-sm font-bold text-[var(--color-accent-base)] mt-0.5 block">
+            <span className="text-sm font-bold text-[var(--color-secondary-bright)] mt-0.5 block">
               {rotatedCount} páginas
             </span>
           </div>
@@ -94,10 +109,10 @@ export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
           className={`w-full p-3 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold text-left flex items-center justify-between transition cursor-pointer`}
         >
           <div className="flex items-center gap-2">
-            <RotateCw className="w-4 h-4 text-[var(--color-accent-base)]" />
+            <RotateCw className="w-4 h-4 text-[var(--color-secondary-bright)]" />
             <span>Rotar Páginas Pares 180°</span>
           </div>
-          <span className="text-[10px] text-[var(--ui-text-muted)] font-normal">Ideal para escaneos de reverso</span>
+          <span className="text-[10px] text-[var(--ui-text-secondary)] font-normal">Ideal para escaneos de reverso</span>
         </button>
 
         <button
@@ -106,21 +121,37 @@ export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
           className={`w-full p-3 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold text-left flex items-center justify-between transition cursor-pointer`}
         >
           <div className="flex items-center gap-2">
-            <RotateCcw className="w-4 h-4 text-[var(--color-accent-base)]" />
+            <RotateCcw className="w-4 h-4 text-[var(--color-secondary-bright)]" />
             <span>Rotar Páginas Impares 180°</span>
           </div>
-          <span className="text-[10px] text-[var(--ui-text-muted)] font-normal">Ideal para escaneos de anverso</span>
+          <span className="text-[10px] text-[var(--ui-text-secondary)] font-normal">Ideal para escaneos de anverso</span>
         </button>
 
         {rotatedCount > 0 && (
           <button
             type="button"
             onClick={handleResetRotations}
-            className="w-full py-2 px-3 text-xs font-semibold text-[var(--color-accent-base)] hover:underline text-center cursor-pointer"
+            className="w-full py-2 px-3 text-xs font-semibold text-[var(--color-secondary-bright)] hover:underline text-center cursor-pointer"
           >
             Restaurar todas las rotaciones a 0°
           </button>
         )}
+      </div>
+
+      {/* Inserción de Hojas en Blanco Sueltas */}
+      <div className="space-y-3 pt-2 border-t border-[var(--ui-border)]">
+        <h3 className="text-xs font-bold text-[var(--ui-text-primary)] uppercase tracking-wider block">
+          Inserción de Hojas
+        </h3>
+
+        <button
+          type="button"
+          onClick={handleAddBlankPage}
+          className={`w-full p-3 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer text-[var(--ui-text-primary)]`}
+        >
+          <Plus className="w-4 h-4 text-[var(--color-secondary-bright)]" />
+          <span>Insertar Hoja en Blanco Suelta</span>
+        </button>
       </div>
 
       {/* Restauración de Borrados y Orden */}
@@ -139,7 +170,7 @@ export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
             <span>Restaurar {deletedCount} páginas eliminadas</span>
           </button>
         ) : (
-          <p className="text-xs text-[var(--ui-text-muted)]">No hay páginas eliminadas en este documento.</p>
+          <p className="text-xs text-[var(--ui-text-secondary)]">No hay páginas eliminadas en este documento.</p>
         )}
 
         {(options.pageOrder || []).length > 0 && (

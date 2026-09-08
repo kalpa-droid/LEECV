@@ -9,7 +9,6 @@ import { BookFoliadoStep } from './BookFoliadoStep';
 import { BookPaperStep } from './BookPaperStep';
 import { BookCoverStep } from './BookCoverStep';
 import { BookBackCoverStep } from './BookBackCoverStep';
-import { BookAdjustmentsStep } from './BookAdjustmentsStep';
 import { BookPreviewExportStep } from './BookPreviewExportStep';
 import { BookPreviewStep } from './BookPreviewStep';
 import { saveBook } from '../../shared/core/storage/documentStorageService';
@@ -173,13 +172,6 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
 
           {activeStepTab === 'book_back_cover' && (
             <BookBackCoverStep
-              options={options}
-              setOptions={handleOptionsChange}
-            />
-          )}
-
-          {activeStepTab === 'book_adjustments' && (
-            <BookAdjustmentsStep
               options={options}
               setOptions={handleOptionsChange}
             />
