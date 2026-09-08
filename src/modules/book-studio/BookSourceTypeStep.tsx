@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Layers, BookOpen, Copy, Upload, CheckCircle2 } from 'lucide-react';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
+import { ensurePdfjsWorkerConfigured } from '../../shared/core/pdf-engine/pdfjsWorkerSetup';
 import { radius } from '../../shared/core/uiDesignSystem';
 
 interface BookSourceTypeStepProps {
@@ -36,10 +37,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
 
     try {
       const arrayBuffer = await file.arrayBuffer();
-      const pdfjsLib = await import('pdfjs-dist');
-      if (pdfjsLib.GlobalWorkerOptions && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version || '4.10.38'}/pdf.worker.min.mjs`;
-      }
+      const pdfjsLib = ensurePdfjsWorkerConfigured();
       const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
       setPdfPageCount(pdf.numPages);
     } catch (err) {
@@ -62,7 +60,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
     <div className="space-y-6 text-[var(--ui-text-primary)]">
       <div className="space-y-1">
         <h2 className="text-xl font-bold tracking-tight text-[var(--ui-text-primary)] flex items-center gap-2">
-          <Layers className="w-5 h-5 text-[var(--color-accent-base)]" />
+          <Layers className="w-5 h-5 text-[var(--color-accent-text)]" />
           <span>Origen y Carga del PDF</span>
         </h2>
         <p className="text-xs text-[var(--ui-text-secondary)]">
@@ -84,11 +82,11 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
             name="bookMode"
             checked={options.mode !== 'fotocopia'}
             onChange={() => {}}
-            className="mt-1 text-[var(--color-accent-base)]"
+            className="mt-1 text-[var(--color-accent-text)]"
           />
           <div className="ml-3 space-y-1">
             <span className="font-bold block text-sm text-[var(--ui-text-primary)] flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-[var(--color-accent-base)]" />
+              <BookOpen className="w-4 h-4 text-[var(--color-accent-text)]" />
               PDF Estándar (1 pág. por hoja)
             </span>
             <span className="text-xs text-[var(--ui-text-secondary)] block">
@@ -110,11 +108,11 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
             name="bookMode"
             checked={options.mode === 'fotocopia'}
             onChange={() => {}}
-            className="mt-1 text-[var(--color-accent-base)]"
+            className="mt-1 text-[var(--color-accent-text)]"
           />
           <div className="ml-3 space-y-1">
             <span className="font-bold block text-sm text-[var(--ui-text-primary)] flex items-center gap-2">
-              <Copy className="w-4 h-4 text-[var(--color-accent-base)]" />
+              <Copy className="w-4 h-4 text-[var(--color-accent-text)]" />
               Fotocopia / Escaneo (2 págs. por hoja)
             </span>
             <span className="text-xs text-[var(--ui-text-secondary)] block">
@@ -158,7 +156,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
             </div>
           ) : selectedFile ? (
             <div className="flex flex-col items-center justify-center space-y-1.5 py-1">
-              <CheckCircle2 className="w-10 h-10 text-[var(--color-accent-base)]" />
+              <CheckCircle2 className="w-10 h-10 text-[var(--color-accent-text)]" />
               <div className="space-y-0.5">
                 <h3 className="text-xs font-bold text-[var(--ui-text-primary)]">{selectedFile.name}</h3>
                 <p className="text-[11px] text-[var(--ui-text-secondary)]">
@@ -167,14 +165,14 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
               </div>
               <button
                 type="button"
-                className="mt-1 text-[11px] font-semibold text-[var(--color-accent-base)] underline hover:opacity-80"
+                className="mt-1 text-[11px] font-semibold text-[var(--color-accent-text)] underline hover:opacity-80"
               >
                 Reemplazar archivo PDF
               </button>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center space-y-2 py-2">
-              <div className="p-2.5 bg-[var(--color-accent-light)]/20 rounded-full text-[var(--color-accent-base)]">
+              <div className="p-2.5 bg-[var(--color-accent-light)]/20 rounded-full text-[var(--color-accent-text)]">
                 <Upload className="w-6 h-6" />
               </div>
               <div>

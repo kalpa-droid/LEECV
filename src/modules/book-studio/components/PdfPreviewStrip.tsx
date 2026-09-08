@@ -3,7 +3,8 @@ import { ThumbnailCard } from './ThumbnailCard';
 import { LightboxModal } from './LightboxModal';
 import { BookImpositionOptions } from '../../../shared/core/book-engine/impositionEngine';
 import { radius } from '../../../shared/core/uiDesignSystem';
-import { RotateCw, RotateCcw, RefreshCw, FileText } from 'lucide-react';
+import { RefreshCw, FileText } from 'lucide-react';
+import { ensurePdfjsWorkerConfigured } from '../../../shared/core/pdf-engine/pdfjsWorkerSetup';
 
 export interface PdfPreviewStripProps {
   selectedFile: File | null;
@@ -37,10 +38,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
       try {
         setIsLoadingPdfDoc(true);
         const arrayBuffer = await selectedFile.arrayBuffer();
-        const pdfjsLib = await import('pdfjs-dist');
-        if (pdfjsLib.GlobalWorkerOptions && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
-          pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version || '4.10.38'}/pdf.worker.min.mjs`;
-        }
+        const pdfjsLib = ensurePdfjsWorkerConfigured();
         const doc = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
         if (!isCancelled) {
           setPdfDoc(doc);
@@ -62,6 +60,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
   if (!selectedFile) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-4 text-center space-y-3 bg-[var(--ui-bg-card)] rounded-2xl border-2 border-dashed border-[var(--ui-border)] w-full">
+        {/* check-contrast-ignore-next-line: ícono decorativo grande, no es texto de lectura */}
         <FileText className="w-12 h-12 text-[var(--ui-text-muted)]" />
         <h3 className="text-base font-bold text-[var(--ui-text-primary)]">Ningún PDF Cargado</h3>
         <p className="text-xs text-[var(--ui-text-secondary)] max-w-sm">
@@ -160,7 +159,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
           <span className="font-bold text-[var(--ui-text-primary)]">
             Organizador de Páginas
           </span>
-          <span className="px-2 py-0.5 rounded-full bg-[var(--color-accent-light)]/20 text-[var(--color-accent-base)] font-bold text-[10px]">
+          <span className="px-2 py-0.5 rounded-full bg-[var(--color-accent-light)]/20 text-[var(--color-accent-text)] font-bold text-[10px]">
             {displayPages.length - deletedPagesSet.size} activas / {deletedPagesSet.size} eliminadas
           </span>
         </div>

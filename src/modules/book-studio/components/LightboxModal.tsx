@@ -109,7 +109,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
         {/* Lado Izquierdo: Renderizado de la Imagen en Alta Res de la Página */}
         <div className="flex-1 bg-[var(--ui-bg-panel)] p-6 flex flex-col items-center justify-center overflow-auto min-h-[320px] md:min-h-[480px]">
           {isLoading && (
-            <div className="flex flex-col items-center gap-2 text-white/70">
+            <div className="flex flex-col items-center gap-2 text-[var(--ui-text-secondary)]">
               <div className="w-8 h-8 border-3 border-[var(--color-accent-base)] border-t-transparent rounded-full animate-spin" />
               <span className="text-xs">Cargando vista previa en alta resolución...</span>
             </div>
