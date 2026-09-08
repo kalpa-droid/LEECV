@@ -39,15 +39,17 @@ if (!viewerContent.includes("overflowY: 'auto'")) {
   failedChecks++;
 }
 
-// 3. Verificación de la estructura en App.tsx
+// 3. Verificación de la estructura en AppShell.tsx / App.tsx
 totalChecks++;
+const appShellPath = path.resolve(process.cwd(), 'src/shared/core/ui/AppShell.tsx');
+const appShellContent = fs.existsSync(appShellPath) ? fs.readFileSync(appShellPath, 'utf8') : '';
 const appPath = path.resolve(process.cwd(), 'src/app/App.tsx');
 const appContent = fs.readFileSync(appPath, 'utf8');
 
-if (appContent.includes('overflow-y-auto') && appContent.includes('CVPreview')) {
-  console.log('  ✓ Aplicación Principal: App.tsx provee el contenedor de vista previa con overflow-y-auto.');
+if ((appContent.includes('overflow-y-auto') || appShellContent.includes('overflow-y-auto')) && (appContent.includes('CVPreview') || appShellContent.includes('mainSlot'))) {
+  console.log('  ✓ Aplicación Principal: AppShell.tsx / App.tsx provee el contenedor de vista previa con overflow-y-auto.');
 } else {
-  console.error('❌ FALLO APP: App.tsx no tiene el contenedor con overflow-y-auto.');
+  console.error('❌ FALLO APP: Ni App.tsx ni AppShell.tsx tienen el contenedor con overflow-y-auto.');
   failedChecks++;
 }
 
