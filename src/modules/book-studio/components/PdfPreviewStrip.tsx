@@ -12,6 +12,7 @@ export interface PdfPreviewStripProps {
   options: BookImpositionOptions;
   setOptions: React.Dispatch<React.SetStateAction<BookImpositionOptions>>;
   zoomScale?: number;
+  pdfDoc?: any;
 }
 
 export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
@@ -20,15 +21,18 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
   options,
   setOptions,
   zoomScale = 1.0,
+  pdfDoc: pdfDocProp,
 }) => {
-  const [pdfDoc, setPdfDoc] = useState<any>(null);
+  const [internalPdfDoc, setInternalPdfDoc] = useState<any>(null);
   const [isLoadingPdfDoc, setIsLoadingPdfDoc] = useState<boolean>(false);
   const [activeLightboxPage, setActiveLightboxPage] = useState<number | null>(null);
 
-  // Load PDF Document instance with pdfjs-dist
+  const pdfDoc = pdfDocProp || internalPdfDoc;
+
+  // Load PDF Document instance with pdfjs-dist if not passed via prop
   useEffect(() => {
-    if (!selectedFile) {
-      setPdfDoc(null);
+    if (pdfDocProp || !selectedFile) {
+      if (!pdfDocProp) setInternalPdfDoc(null);
       return;
     }
 
@@ -41,7 +45,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
         const pdfjsLib = ensurePdfjsWorkerConfigured();
         const doc = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
         if (!isCancelled) {
-          setPdfDoc(doc);
+          setInternalPdfDoc(doc);
           setIsLoadingPdfDoc(false);
         }
       } catch (err) {
@@ -55,7 +59,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
     return () => {
       isCancelled = true;
     };
-  }, [selectedFile]);
+  }, [selectedFile, pdfDocProp]);
 
   if (!selectedFile) {
     return (

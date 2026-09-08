@@ -11,6 +11,7 @@ interface BookPreviewStepProps {
   selectedFile: File | null;
   pdfPageCount: number;
   zoomScale?: number;
+  pdfDoc?: any;
   onConfirm: () => void;
 }
 
@@ -20,6 +21,7 @@ export const BookPreviewStep: React.FC<BookPreviewStepProps> = ({
   selectedFile,
   pdfPageCount,
   zoomScale = 1.0,
+  pdfDoc,
   onConfirm,
 }) => {
   const finalPageCount = calculateFinalBookPageCount(
@@ -84,6 +86,7 @@ export const BookPreviewStep: React.FC<BookPreviewStepProps> = ({
           options={options}
           setOptions={setOptions}
           zoomScale={zoomScale}
+          pdfDoc={pdfDoc}
         />
       </div>
     </div>

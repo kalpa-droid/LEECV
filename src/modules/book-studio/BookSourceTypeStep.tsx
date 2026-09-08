@@ -11,6 +11,7 @@ interface BookSourceTypeStepProps {
   setSelectedFile: (file: File | null) => void;
   pdfPageCount: number;
   setPdfPageCount: (count: number) => void;
+  onPdfLoaded?: (doc: any) => void;
 }
 
 export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
@@ -20,6 +21,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
   setSelectedFile,
   pdfPageCount,
   setPdfPageCount,
+  onPdfLoaded,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isLoadingFile, setIsLoadingFile] = useState(false);
@@ -40,6 +42,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
       const pdfjsLib = ensurePdfjsWorkerConfigured();
       const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
       setPdfPageCount(pdf.numPages);
+      onPdfLoaded?.(pdf);
     } catch (err) {
       console.error(err);
       setErrorMsg('No se pudo leer el archivo PDF. Verifica que no esté protegido o dañado.');

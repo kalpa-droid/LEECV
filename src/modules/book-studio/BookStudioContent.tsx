@@ -38,6 +38,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   const [activeStepTab, setActiveStepTab] = useState<string>('book_source_type');
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [pdfDoc, setPdfDoc] = useState<any>(null);
   const [pdfPageCount, setPdfPageCount] = useState<number>(0);
   const [bookId, setBookId] = useState<string | null>(activeTabId.startsWith('book-') ? activeTabId : null);
   const [bookZoom, setBookZoom] = useState<number>(1);
@@ -81,6 +82,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
 
   const handleFileSelect = (file: File | null) => {
     setSelectedFile(file);
+    if (!file) setPdfDoc(null);
     if (file) {
       persistBookState(file, options);
     }
@@ -134,6 +136,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               setSelectedFile={handleFileSelect}
               pdfPageCount={pdfPageCount}
               setPdfPageCount={setPdfPageCount}
+              onPdfLoaded={(doc) => setPdfDoc(doc)}
             />
           )}
 
@@ -191,6 +194,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               selectedFile={selectedFile}
               pdfPageCount={pdfPageCount}
               zoomScale={bookZoom}
+              pdfDoc={pdfDoc}
               onConfirm={() => setActiveStepTab('book_preview_export')}
             />
           ) : (

@@ -36,8 +36,13 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
   useEffect(() => {
     let isCancelled = false;
 
+    if (!pdfDoc) {
+      setIsLoading(false);
+      return;
+    }
+
     const renderPageThumbnail = async () => {
-      if (!pdfDoc || !canvasRef.current) return;
+      if (!canvasRef.current) return;
 
       try {
         setIsLoading(true);
