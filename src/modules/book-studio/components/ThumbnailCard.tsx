@@ -150,12 +150,24 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         onClick={() => onOpenLightbox(pageNum)}
         className="relative w-full aspect-[1/1.4] bg-[var(--ui-bg-panel)] rounded-md overflow-hidden flex items-center justify-center cursor-pointer border border-[var(--ui-border)]/50"
       >
-        {isLoading ? (
+        {/*
+          El <canvas> se renderiza SIEMPRE, incluso mientras isLoading es true.
+          Antes se sacaba del DOM condicionalmente (solo en el else de isLoading),
+          lo que dejaba canvasRef.current en null la primera vez que corría el
+          efecto de dibujo — esa función cortaba en su primer `if (!canvasRef.current)
+          return` sin nunca llegar a setIsLoading(false), y el spinner quedaba
+          para siempre (100% de los casos, no intermitente). Con el canvas
+          siempre montado, la referencia existe desde el primer render.
+        */}
+        <canvas
+          ref={canvasRef}
+          className={`max-w-full max-h-full object-contain shadow-xs transition-opacity ${isLoading || renderError ? 'opacity-0 absolute' : 'opacity-100'}`}
+        />
+        {isLoading && (
           <div className="w-5 h-5 border-2 border-[var(--color-accent-base)] border-t-transparent rounded-full animate-spin" />
-        ) : renderError ? (
+        )}
+        {!isLoading && renderError && (
           <span className="text-[10px] text-[var(--ui-text-secondary)]">Error Pág. {pageNum}</span>
-        ) : (
-          <canvas ref={canvasRef} className="max-w-full max-h-full object-contain shadow-xs" />
         )}
 
         {/* Overlay Strikethrough cuando está eliminada */}
