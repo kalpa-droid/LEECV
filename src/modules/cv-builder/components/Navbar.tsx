@@ -16,7 +16,7 @@ import {
   Globe,
   LayoutDashboard
 } from 'lucide-react';
-import { elevationSystem, radius, UI_THEME_META } from '../../../shared/core/uiDesignSystem';
+import { elevationSystem, radius, UI_THEME_META, buttonUnavailable } from '../../../shared/core/uiDesignSystem';
 import { ThemeToggleButton } from '../../../shared/core/ui/ThemeToggleButton';
 import { ZoomControls } from '../../../shared/core/ui/ZoomControls';
 import { UndoRedoControls } from '../../../shared/core/ui/UndoRedoControls';
@@ -144,13 +144,25 @@ export default function Navbar({
         {/* CLUSTER DERECHO: Píldoras Ovaladas de Menús (Publicar 🌐 | Acciones 📁💾 | Cuenta 👤🔑) */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
 
-          {/* PÍLDORA 0: PUBLICAR EN LA WEB */}
-          {docType === 'cv' && (
+          {/* PÍLDORA 0: PUBLICAR EN LA WEB — visible siempre (misma píldora en los 3
+              productos, para que el usuario aprenda un solo lugar), deshabilitada con
+              tooltip cuando el producto activo no publica documentos como link web. */}
+          {docType === 'cv' ? (
             <button
               type="button"
               onClick={onOpenCloudStatus}
               className={`flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-full bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-status-success-on-base)] transition ${elevationSystem.raised} cursor-pointer active:scale-95 font-black text-xs shrink-0`}
               title={t.navbar.publishTitle}
+            >
+              <Globe className="w-4 h-4 flex-shrink-0" />
+              <span className="hidden sm:inline">{t.navbar.publishButton}</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled
+              title={docType === 'business_card' ? 'Publicar en la Web es para CVs — las tarjetas se descargan listas para imprimir' : 'Publicar en la Web es para CVs — los libros se descargan listos para imprimir'}
+              className={`${buttonUnavailable} flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-full text-xs shrink-0`}
             >
               <Globe className="w-4 h-4 flex-shrink-0" />
               <span className="hidden sm:inline">{t.navbar.publishButton}</span>
@@ -191,8 +203,12 @@ export default function Navbar({
 
                 <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
 
-                {/* 1. Guardar Cambios, Copias y Backup JSON (Solo para CVs) */}
-                {docType === 'cv' && (
+                {/* 1. Guardar Cambios, Copias y Backup JSON — visibles siempre, deshabilitadas
+                    con tooltip cuando el producto activo no es un CV (Tarjeta/Libro son
+                    herramientas de una sola pasada: se exportan, no se guardan como
+                    documento propio). Mismo patron buttonUnavailable que el resto de la
+                    app, no una excepcion nueva de "ocultar sin explicar". */}
+                {docType === 'cv' ? (
                   <>
                     <button
                       type="button"
@@ -233,6 +249,40 @@ export default function Navbar({
 
                     <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
                   </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      disabled
+                      title={docType === 'business_card' ? 'Las tarjetas se exportan en PDF, no se guardan como documento aparte' : 'Los libros se exportan en PDF, no se guardan como documento aparte'}
+                      className={`${buttonUnavailable} w-full text-left px-3 py-2 text-xs flex items-center gap-2`}
+                    >
+                      <Save className="w-4 h-4" />
+                      <span>{t.navbar.saveChangesOverwrite}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled
+                      title={docType === 'business_card' ? 'Las tarjetas se exportan en PDF, no se guardan como documento aparte' : 'Los libros se exportan en PDF, no se guardan como documento aparte'}
+                      className={`${buttonUnavailable} w-full text-left px-3 py-2 text-xs flex items-center gap-2`}
+                    >
+                      <CopyPlus className="w-4 h-4" />
+                      <span>{t.navbar.saveCopyAs}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled
+                      title={docType === 'business_card' ? 'Las tarjetas se exportan en PDF, no se guardan como documento aparte' : 'Los libros se exportan en PDF, no se guardan como documento aparte'}
+                      className={`${buttonUnavailable} w-full text-left px-3 py-2 text-xs flex items-center gap-2`}
+                    >
+                      <FileArchive className="w-4 h-4" />
+                      <span>{t.navbar.downloadPortableCopy}</span>
+                    </button>
+
+                    <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
+                  </>
                 )}
 
                 {/* 5. Exportar en PDF */}
@@ -248,8 +298,10 @@ export default function Navbar({
                   <span>{t.navbar.exportPdf}</span>
                 </button>
 
-                {/* 6. Publicar en la Web */}
-                {docType === 'cv' && (
+                {/* 6. Publicar en la Web — visible siempre, deshabilitado con tooltip para
+                    Tarjeta/Libro (mismo motivo y mismo patron que el bloque de guardado
+                    de arriba: no es que "no exista", es que no aplica a este producto). */}
+                {docType === 'cv' ? (
                   <button
                     type="button"
                     onClick={() => {
@@ -257,6 +309,16 @@ export default function Navbar({
                       onOpenCloudStatus();
                     }}
                     className={`w-full text-left px-3 py-2 rounded-[${radius.card}] bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-status-success-on-base)] text-xs font-black flex items-center gap-2 transition cursor-pointer`}
+                  >
+                    <Globe className="w-4 h-4" />
+                    <span>{t.navbar.publishWebPublicLink}</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    title={docType === 'business_card' ? 'Publicar en la Web es para CVs — las tarjetas se descargan listas para imprimir' : 'Publicar en la Web es para CVs — los libros se descargan listos para imprimir'}
+                    className={`${buttonUnavailable} w-full text-left px-3 py-2 text-xs flex items-center gap-2`}
                   >
                     <Globe className="w-4 h-4" />
                     <span>{t.navbar.publishWebPublicLink}</span>
