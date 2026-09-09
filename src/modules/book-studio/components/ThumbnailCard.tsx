@@ -58,9 +58,13 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
 
         // Render at compact scale for thumbnail (approx 180px width)
         const unscaledViewport = page.getViewport({ scale: 1.0 });
+        const isVertical = unscaledViewport.height > unscaledViewport.width;
+        const autoAngle = (isFotocopiaMode && isVertical) ? 90 : 0;
+        const totalAngle = (autoAngle + rotation) % 360;
+
         const targetWidth = 180;
         const scale = targetWidth / unscaledViewport.width;
-        const viewport = page.getViewport({ scale, rotation });
+        const viewport = page.getViewport({ scale, rotation: totalAngle });
 
         const canvas = canvasRef.current;
         if (!canvas) return;

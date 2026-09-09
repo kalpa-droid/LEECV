@@ -12,6 +12,7 @@ export interface LightboxModalProps {
   refBookPage?: number;
   refPageSide?: 'derecha' | 'izquierda';
   splitOffset?: number;
+  isFotocopiaMode?: boolean;
   onSaveReferencePage: (refPdfPage: number, refBookPage: number, refPageSide: 'derecha' | 'izquierda') => void;
   onSaveSplitOffset?: (pageNum: number, newOffset: number) => void;
 }
@@ -26,6 +27,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
   refBookPage = 0,
   refPageSide = 'derecha',
   splitOffset = 50,
+  isFotocopiaMode = false,
   onSaveReferencePage,
   onSaveSplitOffset,
 }) => {
@@ -45,6 +47,14 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
     setLocalSplitOffset(splitOffset);
   }, [isOpen, pageNum, refBookPage, refPageSide, splitOffset]);
 
+  // En modo Normal, el lado es 100% derivable del número de página impreso
+  // (impar=derecha, par=izquierda) — no hace falta preguntárselo al usuario
+  useEffect(() => {
+    if (!isFotocopiaMode) {
+      setInputPageSide(inputBookPage % 2 !== 0 ? 'derecha' : 'izquierda');
+    }
+  }, [inputBookPage, isFotocopiaMode]);
+
   useEffect(() => {
     if (!isOpen || !pdfDoc || !canvasRef.current) return;
 
@@ -57,9 +67,13 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
         if (isCancelled) return;
 
         const unscaledViewport = page.getViewport({ scale: 1.0 });
+        const isVertical = unscaledViewport.height > unscaledViewport.width;
+        const autoAngle = (isFotocopiaMode && isVertical) ? 90 : 0;
+        const totalAngle = (autoAngle + rotation) % 360;
+
         const targetWidth = 600; // High quality preview
         const scale = targetWidth / unscaledViewport.width;
-        const viewport = page.getViewport({ scale, rotation });
+        const viewport = page.getViewport({ scale, rotation: totalAngle });
 
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -74,8 +88,8 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
 
         await page.render({ canvasContext: ctx, viewport }).promise;
 
-        // Draw red dashed split line overlay at localSplitOffset
-        if (!isCancelled && ctx) {
+        // Draw red dashed split line overlay at localSplitOffset only in fotocopia mode
+        if (!isCancelled && ctx && isFotocopiaMode) {
           const splitX = Math.round(canvas.width * (localSplitOffset / 100));
           ctx.save();
           ctx.strokeStyle = '#FF2E63';
@@ -108,7 +122,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
     return () => {
       isCancelled = true;
     };
-  }, [isOpen, pdfDoc, pageNum, rotation, localSplitOffset]);
+  }, [isOpen, pdfDoc, pageNum, rotation, localSplitOffset, isFotocopiaMode]);
 
   if (!isOpen) return null;
 
@@ -182,31 +196,33 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
               </div>
             )}
 
-            {/* Ajuste de Corte Central Manual (splitOffset) */}
-            <div className={`p-3 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.card}] space-y-2`}>
-              <div className="flex items-center justify-between text-xs font-bold text-[var(--ui-text-primary)]">
-                <span className="flex items-center gap-1">
-                  <Scissors className="w-4 h-4 text-[var(--color-secondary-bright)]" />
-                  <span>Corte Central Manual</span>
-                </span>
-                <span className="font-mono text-[var(--color-secondary-bright)]">{localSplitOffset}%</span>
-              </div>
+            {/* Ajuste de Corte Central Manual (splitOffset) SOLO en modo Fotocopia */}
+            {isFotocopiaMode && (
+              <div className={`p-3 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.card}] space-y-2`}>
+                <div className="flex items-center justify-between text-xs font-bold text-[var(--ui-text-primary)]">
+                  <span className="flex items-center gap-1">
+                    <Scissors className="w-4 h-4 text-[var(--color-secondary-bright)]" />
+                    <span>Corte Central Manual</span>
+                  </span>
+                  <span className="font-mono text-[var(--color-secondary-bright)]">{localSplitOffset}%</span>
+                </div>
 
-              <input
-                type="range"
-                min={30}
-                max={70}
-                value={localSplitOffset}
-                onChange={(e) => handleSplitOffsetChangeLocal(parseInt(e.target.value, 10))}
-                className="w-full h-1.5 bg-[var(--ui-bg-panel)] rounded-lg appearance-none cursor-pointer accent-[var(--color-accent-base)]"
-              />
+                <input
+                  type="range"
+                  min={30}
+                  max={70}
+                  value={localSplitOffset}
+                  onChange={(e) => handleSplitOffsetChangeLocal(parseInt(e.target.value, 10))}
+                  className="w-full h-1.5 bg-[var(--ui-bg-panel)] rounded-lg appearance-none cursor-pointer accent-[var(--color-accent-base)]"
+                />
 
-              <div className="flex items-center justify-between text-[10px] text-[var(--ui-text-secondary)]">
-                <span>Izquierda 30%</span>
-                <span>Centro 50%</span>
-                <span>Derecha 70%</span>
+                <div className="flex items-center justify-between text-[10px] text-[var(--ui-text-secondary)]">
+                  <span>Izquierda 30%</span>
+                  <span>Centro 50%</span>
+                  <span>Derecha 70%</span>
+                </div>
               </div>
-            </div>
+            )}
 
             <form onSubmit={handleApplyReference} className="space-y-3.5 pt-1">
               <div className="space-y-1">
@@ -223,35 +239,42 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-[var(--ui-text-primary)] block">
-                  Ubicación Impresa
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setInputPageSide('derecha')}
-                    className={`py-2 px-3 text-xs font-bold rounded-[${radius.control}] border transition cursor-pointer ${
-                      inputPageSide === 'derecha'
-                        ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
-                        : 'border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-panel)]'
-                    }`}
-                  >
-                    Derecha (Impar)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setInputPageSide('izquierda')}
-                    className={`py-2 px-3 text-xs font-bold rounded-[${radius.control}] border transition cursor-pointer ${
-                      inputPageSide === 'izquierda'
-                        ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
-                        : 'border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-panel)]'
-                    }`}
-                  >
-                    Izquierda (Par)
-                  </button>
+              {isFotocopiaMode ? (
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-[var(--ui-text-primary)] block">
+                    Ubicación Impresa
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setInputPageSide('derecha')}
+                      className={`py-2 px-3 text-xs font-bold rounded-[${radius.control}] border transition cursor-pointer ${
+                        inputPageSide === 'derecha'
+                          ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
+                          : 'border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-panel)]'
+                      }`}
+                    >
+                      Derecha (Impar)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setInputPageSide('izquierda')}
+                      className={`py-2 px-3 text-xs font-bold rounded-[${radius.control}] border transition cursor-pointer ${
+                        inputPageSide === 'izquierda'
+                          ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
+                          : 'border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-panel)]'
+                      }`}
+                    >
+                      Izquierda (Par)
+                    </button>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <p className="text-[11px] text-[var(--ui-text-secondary)]">
+                  Se va a considerar del lado {inputPageSide === 'derecha' ? 'derecho' : 'izquierdo'}{' '}
+                  (según el número que escribiste arriba — {inputPageSide === 'derecha' ? 'impar' : 'par'}).
+                </p>
+              )}
 
               <button
                 type="submit"
@@ -263,10 +286,12 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
             </form>
           </div>
 
-          <div className="pt-3 border-t border-[var(--ui-border)] flex items-center gap-2 text-[11px] text-[var(--ui-text-secondary)]">
-            <AlertCircle className="w-3.5 h-3.5 shrink-0 text-[var(--color-secondary-bright)]" />
-            <span>La línea roja punteada ✂ indica por dónde cortará el motor.</span>
-          </div>
+          {isFotocopiaMode && (
+            <div className="pt-3 border-t border-[var(--ui-border)] flex items-center gap-2 text-[11px] text-[var(--ui-text-secondary)]">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0 text-[var(--color-secondary-bright)]" />
+              <span>La línea roja punteada ✂ indica por dónde cortará el motor.</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
