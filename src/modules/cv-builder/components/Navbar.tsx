@@ -20,6 +20,7 @@ import { elevationSystem, radius, UI_THEME_META, buttonUnavailable } from '../..
 import { ThemeToggleButton } from '../../../shared/core/ui/ThemeToggleButton';
 import { ZoomControls } from '../../../shared/core/ui/ZoomControls';
 import { UndoRedoControls } from '../../../shared/core/ui/UndoRedoControls';
+import { useIsMobile } from '../../../shared/core/ui/useIsMobile';
 import { useEntitlements, getPlanLabel, PLAN_FEATURES } from '../../../shared/core/entitlements/useEntitlements';
 import { navigation } from '../../../shared/core/utils/navigation';
 import { useText } from '../../../shared/i18n/useText';
@@ -75,6 +76,7 @@ export default function Navbar({
   isAutoFitMode = true,
   cycleUITheme
 }: NavbarProps) {
+  const isMobile = useIsMobile();
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const { plan } = useEntitlements();
@@ -130,14 +132,15 @@ export default function Navbar({
           <div className="w-px h-5 bg-[var(--ui-border)] mx-0.5" />
 
           {/* Controles de Zoom y Deshacer/Rehacer (Visibles en Escritorio y Celular) */}
-          <div className="shrink-0 flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 min-w-0">
             <ZoomControls
               zoomLevel={zoomLevel}
               setZoomLevel={setZoomLevel}
               triggerAutoFit={triggerAutoFit}
               isAutoFitMode={isAutoFitMode}
+              isMobile={isMobile}
             />
-            <UndoRedoControls />
+            <UndoRedoControls isMobile={isMobile} />
           </div>
         </div>
 
