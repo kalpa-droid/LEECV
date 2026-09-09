@@ -27,9 +27,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
   };
 
   return (
-    <div className="h-[100dvh] overflow-y-auto bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] flex flex-col font-sans transition-colors duration-300">
+    <div className="min-h-screen w-full overflow-y-auto bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] flex flex-col font-sans transition-colors duration-300">
       {/* Header / Navbar */}
-      <header className="sticky top-0 z-40 bg-[var(--ui-bg-panel)]/80 backdrop-blur-xl border-b border-[var(--ui-border)]">
+      <header className="sticky top-0 z-40 bg-[var(--ui-bg-panel)]/80 backdrop-blur-xl border-b border-[var(--ui-border)] shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => onNavigate('/')}>
             <div className={`p-2.5 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] rounded-[${radius.card}] font-black ${elevationSystem.raised}`}>
@@ -63,7 +63,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative pt-16 pb-20 md:pt-24 md:pb-28 overflow-hidden">
+      <section className="relative pt-12 pb-16 md:pt-20 md:pb-24 shrink-0">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[var(--color-accent-muted)] blur-[120px] rounded-full pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8 relative z-10">
@@ -108,7 +108,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
       </section>
 
       {/* Características Destacadas */}
-      <section className="py-16 bg-[var(--ui-bg-card)] border-y border-[var(--ui-border)]">
+      <section className="py-16 bg-[var(--ui-bg-card)] border-y border-[var(--ui-border)] shrink-0">
         <MarketingSection className="py-0 sm:py-0">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <FeatureCard

@@ -155,7 +155,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
         />
       }
       panelSlot={
-        <div className="p-4 space-y-6 overflow-y-auto max-h-full text-[var(--ui-text-primary)]">
+        <div className="p-4 pb-24 sm:pb-16 space-y-6 overflow-y-auto h-full max-h-full text-[var(--ui-text-primary)]">
           {activeStepTab === 'book_source_type' && (
             <BookSourceTypeStep
               options={options}

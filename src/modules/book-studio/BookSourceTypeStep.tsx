@@ -205,7 +205,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
           }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={onDrop}
-          className={`relative border-2 border-dashed rounded-[${radius.card}] p-6 text-center transition-all cursor-pointer ${
+          className={`relative border-2 border-dashed rounded-[${radius.card}] p-3 text-center transition-all cursor-pointer ${
             isDragging
               ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-light)]/20 scale-[1.01]'
               : selectedFile
@@ -222,36 +222,31 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
           />
 
           {isLoadingFile ? (
-            <div className="flex flex-col items-center justify-center space-y-2 py-2">
-              <div className="w-8 h-8 border-3 border-[var(--color-accent-base)] border-t-transparent rounded-full animate-spin" />
+            <div className="flex items-center justify-center gap-2 py-1">
+              <div className="w-4 h-4 border-2 border-[var(--color-accent-base)] border-t-transparent rounded-full animate-spin" />
               <p className="text-xs text-[var(--ui-text-secondary)] font-medium">Analizando páginas del PDF...</p>
             </div>
           ) : selectedFile ? (
-            <div className="flex flex-col items-center justify-center space-y-1.5 py-1">
-              <CheckCircle2 className="w-10 h-10 text-[var(--color-accent-text)]" />
-              <div className="space-y-0.5">
-                <h3 className="text-xs font-bold text-[var(--ui-text-primary)]">{selectedFile.name}</h3>
-                <p className="text-[11px] text-[var(--ui-text-secondary)]">
-                  {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • {pdfPageCount} páginas detectadas
-                </p>
+            <div className="flex items-center justify-between gap-2 px-1 py-0.5">
+              <div className="flex items-center gap-2 text-left min-w-0">
+                <CheckCircle2 className="w-5 h-5 text-[var(--color-accent-text)] shrink-0" />
+                <div className="min-w-0">
+                  <h3 className="text-xs font-bold text-[var(--ui-text-primary)] truncate">{selectedFile.name}</h3>
+                  <p className="text-[10px] text-[var(--ui-text-secondary)]">
+                    {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • {pdfPageCount} págs.
+                  </p>
+                </div>
               </div>
-              <button
-                type="button"
-                className="mt-1 text-[11px] font-semibold text-[var(--color-accent-text)] underline hover:opacity-80"
-              >
-                Reemplazar archivo PDF
-              </button>
+              <span className="text-[11px] font-bold text-[var(--color-accent-text)] underline shrink-0">
+                Cambiar PDF
+              </span>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center space-y-2 py-2">
-              <div className="p-2.5 bg-[var(--color-accent-light)]/20 rounded-full text-[var(--color-accent-text)]">
-                <Upload className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-[var(--ui-text-primary)]">
-                  Arrastra tu PDF aquí o haz clic para examinar
-                </p>
-              </div>
+            <div className="flex items-center justify-center gap-2 py-1.5 text-[var(--color-accent-text)]">
+              <Upload className="w-4.5 h-4.5 shrink-0" />
+              <span className="text-xs font-bold text-[var(--ui-text-primary)]">
+                Cargar o arrastrar archivo PDF aquí
+              </span>
             </div>
           )}
         </div>
