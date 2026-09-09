@@ -23,6 +23,7 @@ interface BookStudioContentProps {
   onNewCV?: () => void;
   onNewBook?: () => void;
   cycleUITheme: () => void;
+  onTabsChanged?: (tabs: OpenTabItem[]) => void;
 }
 
 export const BookStudioContent: React.FC<BookStudioContentProps> = ({
@@ -34,6 +35,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   onNewCV: _onNewCV,
   onNewBook,
   cycleUITheme,
+  onTabsChanged = () => {},
 }) => {
   const [activeStepTab, setActiveStepTab] = useState<string>('book_source_type');
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
@@ -68,8 +70,14 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
     const name = file ? file.name.replace(/\.[^/.]+$/, '') : 'Nuevo Libro';
     if (!bookId) {
       setBookId(id);
-      addOpenTab(id, name, undefined, 'book');
     }
+    // addOpenTab devuelve la lista de pestañas ya actualizada — antes se
+    // descartaba ese valor de retorno, así que localStorage quedaba
+    // correcto pero el estado de React de App.tsx (que es quien realmente
+    // pinta la barra de pestañas) nunca se enteraba del cambio y seguía
+    // mostrando lo último que vio del CV.
+    const updatedTabs = addOpenTab(id, name, undefined, 'book');
+    onTabsChanged(updatedTabs);
     saveBook({
       id,
       name,
