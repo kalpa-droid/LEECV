@@ -9,6 +9,7 @@ import { retentionCatalog } from './catalog/retention';
 import { validationCatalog } from './catalog/validation';
 import { modalsCatalog } from './catalog/modals';
 import { landingCatalog } from './catalog/landing';
+import { bookStudioCatalog } from './catalog/bookStudio';
 
 export const textCatalog = {
   common: commonCatalog,
@@ -22,6 +23,7 @@ export const textCatalog = {
   validation: validationCatalog,
   modals: modalsCatalog,
   landing: landingCatalog,
+  bookStudio: bookStudioCatalog,
 };
 
 export type TextCatalog = typeof textCatalog;

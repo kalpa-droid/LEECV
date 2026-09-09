@@ -2,6 +2,7 @@ import React from 'react';
 import { LayoutGrid, RotateCw, RotateCcw, RefreshCw, Plus } from 'lucide-react';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
 import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
+import { useText } from '../../shared/i18n/useText';
 
 interface BookOrganizeStepProps {
   pdfPageCount: number;
@@ -14,6 +15,7 @@ export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
   options,
   setOptions,
 }) => {
+  const t = useText();
   const deletedCount = (options.deletedPages || []).length;
   const rotatedCount = Object.values(options.pageRotations || {}).filter((r) => r > 0).length;
 
@@ -69,10 +71,10 @@ export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
       <div className="space-y-1">
         <h2 className="text-xl font-bold tracking-tight text-[var(--ui-text-primary)] flex items-center gap-2">
           <LayoutGrid className="w-5 h-5 text-[var(--color-secondary-bright)]" />
-          <span>Acciones en Lote de Páginas</span>
+          <span>{t.bookStudio.organizeStep.title}</span>
         </h2>
         <p className="text-xs text-[var(--ui-text-secondary)]">
-          Realiza rotaciones masivas, restaura páginas o ajusta la estructura global de tu documento.
+          {t.bookStudio.organizeStep.description}
         </p>
       </div>
 

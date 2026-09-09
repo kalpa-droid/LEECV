@@ -3,6 +3,7 @@ import { Layers, BookOpen, Copy, Upload, CheckCircle2 } from 'lucide-react';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
 import { ensurePdfjsWorkerConfigured } from '../../shared/core/pdf-engine/pdfjsWorkerSetup';
 import { radius } from '../../shared/core/uiDesignSystem';
+import { useText } from '../../shared/i18n/useText';
 
 interface BookSourceTypeStepProps {
   options: BookImpositionOptions;
@@ -23,6 +24,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
   setPdfPageCount,
   onPdfLoaded,
 }) => {
+  const t = useText();
   const [isDragging, setIsDragging] = useState(false);
   const [isLoadingFile, setIsLoadingFile] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -64,10 +66,10 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
       <div className="space-y-1">
         <h2 className="text-xl font-bold tracking-tight text-[var(--ui-text-primary)] flex items-center gap-2">
           <Layers className="w-5 h-5 text-[var(--color-accent-text)]" />
-          <span>Origen y Carga del PDF</span>
+          <span>{t.bookStudio.sourceStep.title}</span>
         </h2>
         <p className="text-xs text-[var(--ui-text-secondary)]">
-          Indica el formato de origen de tu documento y carga el archivo PDF para comenzar la imposición.
+          {t.bookStudio.sourceStep.description}
         </p>
       </div>
 

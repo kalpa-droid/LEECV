@@ -2,6 +2,7 @@ import React from 'react';
 import { Settings, FileText, Info } from 'lucide-react';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
 import { radius } from '../../shared/core/uiDesignSystem';
+import { useText } from '../../shared/i18n/useText';
 
 interface BookPaperStepProps {
   options: BookImpositionOptions;
@@ -9,20 +10,21 @@ interface BookPaperStepProps {
 }
 
 export const BookPaperStep: React.FC<BookPaperStepProps> = ({ options, setOptions }) => {
+  const t = useText();
   return (
     <div className="space-y-6 text-[var(--ui-text-primary)]">
       <div className="space-y-1">
         <h2 className="text-xl font-bold tracking-tight text-[var(--ui-text-primary)] flex items-center gap-2">
-          <Settings className="w-5 h-5 text-[var(--color-accent-base)]" />
-          <span>Papel Físico de Imprenta</span>
+          <Settings className="w-5 h-5 text-[var(--color-accent-text)]" />
+          <span>{t.bookStudio.paperStep.title}</span>
         </h2>
         <p className="text-xs text-[var(--ui-text-secondary)]">
-          Elige el tamaño del papel físico que vas a cargar en la impresora. Al doblar la hoja por la mitad, obtendrás tu libro final.
+          {t.bookStudio.paperStep.description}
         </p>
       </div>
 
       <div className={`p-3.5 bg-[var(--color-accent-light)]/20 border border-[var(--color-accent-base)]/30 rounded-[${radius.card}] flex items-start gap-3 text-xs text-[var(--ui-text-primary)]`}>
-        <Info className="w-4 h-4 text-[var(--color-accent-base)] shrink-0 mt-0.5" />
+        <Info className="w-4 h-4 text-[var(--color-accent-text)] shrink-0 mt-0.5" />
         <div>
           <span className="font-bold block">Relación de Tamaño Imprenta:</span>
           <span>Imprimís en hojas A4 ➔ tu libro final sale en tamaño A5. Imprimís en hojas A3 ➔ tu libro sale en A4.</span>
@@ -43,11 +45,11 @@ export const BookPaperStep: React.FC<BookPaperStepProps> = ({ options, setOption
             name="paperSize"
             checked={options.paperSize !== 'A3'}
             onChange={() => {}}
-            className="mt-1 text-[var(--color-accent-base)]"
+            className="mt-1 text-[var(--color-accent-text)]"
           />
           <div className="ml-3 space-y-1">
             <span className="font-bold block text-sm text-[var(--ui-text-primary)] flex items-center gap-2">
-              <FileText className="w-4 h-4 text-[var(--color-accent-base)]" />
+              <FileText className="w-4 h-4 text-[var(--color-accent-text)]" />
               Hoja A4 (Libro final A5)
             </span>
             <span className="text-xs text-[var(--ui-text-secondary)] block">
@@ -69,11 +71,11 @@ export const BookPaperStep: React.FC<BookPaperStepProps> = ({ options, setOption
             name="paperSize"
             checked={options.paperSize === 'A3'}
             onChange={() => {}}
-            className="mt-1 text-[var(--color-accent-base)]"
+            className="mt-1 text-[var(--color-accent-text)]"
           />
           <div className="ml-3 space-y-1">
             <span className="font-bold block text-sm text-[var(--ui-text-primary)] flex items-center gap-2">
-              <FileText className="w-4 h-4 text-[var(--color-accent-base)]" />
+              <FileText className="w-4 h-4 text-[var(--color-accent-text)]" />
               Hoja A3 (Libro final A4)
             </span>
             <span className="text-xs text-[var(--ui-text-secondary)] block">

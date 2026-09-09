@@ -2,6 +2,7 @@ import React from 'react';
 import { Hash, CheckCircle2, Info, RefreshCw } from 'lucide-react';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
 import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
+import { useText } from '../../shared/i18n/useText';
 
 interface BookFoliadoStepProps {
   pdfPageCount: number;
@@ -14,6 +15,7 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
   options,
   setOptions,
 }) => {
+  const t = useText();
   const refPdfPage = options.refPdfPage || 0;
   const refBookPage = options.refBookPage || 0;
   const refPageSide = options.refPageSide || 'derecha';
@@ -48,10 +50,10 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
       <div className="space-y-1">
         <h2 className="text-xl font-bold tracking-tight text-[var(--ui-text-primary)] flex items-center gap-2">
           <Hash className="w-5 h-5 text-[var(--color-secondary-bright)]" />
-          <span>Foliado de Referencia</span>
+          <span>{t.bookStudio.foliadoStep.title}</span>
         </h2>
         <p className="text-xs text-[var(--ui-text-secondary)]">
-          Calibra la numeración real del libro impreso para que las páginas impares queden automáticamente a la derecha al doblar el pliego.
+          {t.bookStudio.foliadoStep.description}
         </p>
       </div>
 

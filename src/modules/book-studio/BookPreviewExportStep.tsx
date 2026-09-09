@@ -3,6 +3,7 @@ import { BookOpen, CheckCircle2, AlertTriangle, Printer, Sparkles, Download, Ale
 import { BookImpositionOptions, processBookImposition } from '../../shared/core/book-engine/impositionEngine';
 import { calculateFinalBookPageCount } from '../../shared/core/book-engine/bookPageCount';
 import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
+import { useText } from '../../shared/i18n/useText';
 
 interface BookPreviewExportStepProps {
   options: BookImpositionOptions;
@@ -15,6 +16,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   selectedFile,
   pdfPageCount,
 }) => {
+  const t = useText();
   const [isProcessing, setIsProcessing] = useState(false);
   const [progressPercent, setProgressPercent] = useState(0);
   const [statusMessage, setStatusMessage] = useState('');
@@ -87,11 +89,11 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
     <div className="space-y-6 text-[var(--ui-text-primary)]">
       <div className="space-y-1">
         <h2 className="text-xl font-bold tracking-tight text-[var(--ui-text-primary)] flex items-center gap-2">
-          <Printer className="w-5 h-5 text-[var(--color-accent-base)]" />
-          <span>Previsualización y Exportación</span>
+          <Printer className="w-5 h-5 text-[var(--color-accent-text)]" />
+          <span>{t.bookStudio.previewExportStep.title}</span>
         </h2>
         <p className="text-xs text-[var(--ui-text-secondary)]">
-          Revisa las métricas finales de armado de pliegos y exporta tu PDF en formato caballete imprenta.
+          {t.bookStudio.previewExportStep.description}
         </p>
       </div>
 
@@ -99,7 +101,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
       <div className={`p-5 rounded-[${radius.card}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)] space-y-4 ${elevationSystem.raised}`}>
         <div className="flex items-center justify-between border-b border-[var(--ui-border)] pb-3">
           <div className="flex items-center gap-3">
-            <div className={`p-2.5 bg-[var(--color-accent-light)]/20 rounded-[${radius.control}] text-[var(--color-accent-base)]`}>
+            <div className={`p-2.5 bg-[var(--color-accent-light)]/20 rounded-[${radius.control}] text-[var(--color-accent-text)]`}>
               <BookOpen className="w-6 h-6" />
             </div>
             <div>
@@ -109,7 +111,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
               </p>
             </div>
           </div>
-          <span className="px-3 py-1 rounded-full bg-[var(--color-accent-light)]/20 text-[var(--color-accent-base)] font-bold text-[10px] uppercase">
+          <span className="px-3 py-1 rounded-full bg-[var(--color-accent-light)]/20 text-[var(--color-accent-text)] font-bold text-[10px] uppercase">
             Listo
           </span>
         </div>
@@ -129,7 +131,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
             <span className="text-[10px] font-semibold text-[var(--ui-text-secondary)] block uppercase">
               Págs. Libro (Mult. 4)
             </span>
-            <span className="text-xl font-bold text-[var(--color-accent-base)] mt-0.5 block">
+            <span className="text-xl font-bold text-[var(--color-secondary-bright)] mt-0.5 block">
               {finalPageCount}
             </span>
           </div>
@@ -138,8 +140,8 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
             <span className="text-[10px] font-semibold text-[var(--ui-text-secondary)] block uppercase">
               Pliegos Físicos
             </span>
-            <span className="text-xl font-bold text-[var(--color-accent-base)] mt-0.5 block">
-              {totalSheetsToPrint} <span className="text-xs font-normal text-[var(--ui-text-muted)]">hojas</span>
+            <span className="text-xl font-bold text-[var(--color-secondary-bright)] mt-0.5 block">
+              {totalSheetsToPrint} <span className="text-xs font-normal text-[var(--ui-text-secondary)]">hojas</span>
             </span>
           </div>
         </div>
@@ -147,11 +149,11 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
         {/* Detalle de Tapas */}
         <div className="space-y-1.5 pt-1 text-xs">
           <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
-            <CheckCircle2 className="w-3.5 h-3.5 text-[var(--color-accent-base)] shrink-0" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-[var(--color-secondary-bright)] shrink-0" />
             <span>Tapa: <strong>{hasCover ? (options.customCover ? 'Tapa Custom con Preset' : 'Página 1 del PDF') : 'Sin Tapa'}</strong></span>
           </div>
           <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
-            <CheckCircle2 className="w-3.5 h-3.5 text-[var(--color-accent-base)] shrink-0" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-[var(--color-secondary-bright)] shrink-0" />
             <span>Contratapa: <strong>{hasBackCover ? (options.customBackCover ? 'Contratapa Custom' : 'Última pág. del PDF') : 'Sin Contratapa'}</strong></span>
           </div>
         </div>
@@ -212,7 +214,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
               <a
                 href={pdfBlobUrl}
                 download={`${selectedFile.name.replace(/\.pdf$/i, '')}_IMPRESION_LIBRO.pdf`}
-                className={`flex-1 py-2 px-4 rounded-[${radius.control}] text-xs font-bold border border-[var(--color-accent-base)] text-[var(--color-accent-base)] flex items-center justify-center gap-1.5`}
+                className={`flex-1 py-2 px-4 rounded-[${radius.control}] text-xs font-bold border border-[var(--color-accent-text)] text-[var(--color-accent-text)] flex items-center justify-center gap-1.5`}
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Volver a Descargar</span>

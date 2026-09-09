@@ -3,6 +3,7 @@ import { BookOpen, Check, Palette } from 'lucide-react';
 import { BookImpositionOptions, CoverConfig } from '../../shared/core/book-engine/impositionEngine';
 import { COVER_PRESETS } from '../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
 import { radius, typeScale } from '../../shared/core/uiDesignSystem';
+import { useText } from '../../shared/i18n/useText';
 
 interface BookCoverStepProps {
   options: BookImpositionOptions;
@@ -10,6 +11,7 @@ interface BookCoverStepProps {
 }
 
 export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOptions }) => {
+  const t = useText();
   const [coverType, setCoverType] = useState<'source' | 'custom' | 'upload' | 'none'>(
     options.hasCover
       ? 'source'
@@ -69,11 +71,11 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
     <div className="space-y-6 text-[var(--ui-text-primary)]">
       <div className="space-y-1">
         <h2 className="text-xl font-bold tracking-tight text-[var(--ui-text-primary)] flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-[var(--color-accent-base)]" />
-          <span>Diseño de Tapa (Portada)</span>
+          <BookOpen className="w-5 h-5 text-[var(--color-accent-text)]" />
+          <span>{t.bookStudio.coverStep.title}</span>
         </h2>
         <p className="text-xs text-[var(--ui-text-secondary)]">
-          Configura si el primer pliego de tu libro usará la página 1 de tu PDF, un Preset Tipográfico o una imagen propia subida.
+          {t.bookStudio.coverStep.description}
         </p>
       </div>
 
@@ -156,7 +158,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
           {/* Selector de Presets de Portada (mismo catálogo del CV) */}
           <div className="space-y-2">
             <label className={`${typeScale.fieldLabel} flex items-center gap-1.5`}>
-              <Palette className="w-3.5 h-3.5 text-[var(--color-accent-base)]" />
+              <Palette className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
               Estilo Visual de Tapa (Catálogo de Portadas)
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -180,7 +182,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
                       />
                       <span className="truncate">{preset.name}</span>
                     </div>
-                    {isSelected && <Check className="w-4 h-4 text-[var(--color-accent-base)] shrink-0" />}
+                    {isSelected && <Check className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />}
                   </button>
                 );
               })}

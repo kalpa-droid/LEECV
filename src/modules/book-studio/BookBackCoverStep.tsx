@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BookMarked } from 'lucide-react';
 import { BookImpositionOptions, BackCoverConfig } from '../../shared/core/book-engine/impositionEngine';
 import { radius, typeScale } from '../../shared/core/uiDesignSystem';
+import { useText } from '../../shared/i18n/useText';
 
 interface BookBackCoverStepProps {
   options: BookImpositionOptions;
@@ -9,6 +10,7 @@ interface BookBackCoverStepProps {
 }
 
 export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, setOptions }) => {
+  const t = useText();
   const [backCoverType, setBackCoverType] = useState<'source' | 'custom' | 'upload' | 'none'>(
     options.hasBackCover
       ? 'source'
@@ -68,11 +70,11 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
     <div className="space-y-6 text-[var(--ui-text-primary)]">
       <div className="space-y-1">
         <h2 className="text-xl font-bold tracking-tight text-[var(--ui-text-primary)] flex items-center gap-2">
-          <BookMarked className="w-5 h-5 text-[var(--color-accent-base)]" />
-          <span>Diseño de Contratapa</span>
+          <BookMarked className="w-5 h-5 text-[var(--color-accent-text)]" />
+          <span>{t.bookStudio.backCoverStep.title}</span>
         </h2>
         <p className="text-xs text-[var(--ui-text-secondary)]">
-          Configura si la cara posterior de tu libro usará la última página del PDF, una contratapa custom o una imagen subida.
+          {t.bookStudio.backCoverStep.description}
         </p>
       </div>
 
