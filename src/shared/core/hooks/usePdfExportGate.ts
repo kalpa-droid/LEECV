@@ -10,14 +10,16 @@ export function usePdfExportGate() {
     setGateError(null);
     try {
       if (!supabase) {
+        setGateError('No se pudo conectar con el servicio de autenticación.');
         setIsGating(false);
-        return true;
+        return false;
       }
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        setGateError('Necesitás iniciar sesión para exportar.');
         setIsGating(false);
-        return true;
+        return false;
       }
 
       const { data: profile } = await supabase.from('profiles').select('plan').eq('id', user.id).single();
@@ -33,21 +35,22 @@ export function usePdfExportGate() {
 
       if (error) {
         const { data: fallbackRemaining, error: fallbackError } = await supabase.rpc('consume_pdf_credit', {
-          user_id: user.id,
+          p_user_id: user.id,
         });
 
         if (fallbackError) {
           console.warn('[usePdfExportGate] Credit RPC warning:', fallbackError.message);
+          setGateError('No pudimos verificar tus créditos. Por favor intenta de nuevo.');
           setIsGating(false);
-          return true;
+          return false;
         }
 
-        if (fallbackRemaining === null || fallbackRemaining === undefined) {
+        if (fallbackRemaining === null || fallbackRemaining === undefined || fallbackRemaining === false) {
           setGateError('No tenés suficientes créditos para exportar el documento. Por favor adquiere créditos o pasa al plan PRO.');
           setIsGating(false);
           return false;
         }
-      } else if (remainingCredits === null) {
+      } else if (remainingCredits === null || remainingCredits === undefined) {
         const creditsNeeded = Math.ceil(pageCount / 10);
         setGateError(`Necesitás ${creditsNeeded} crédito(s) para exportar este documento (${pageCount} páginas). Adquiere créditos o pasa a PRO.`);
         setIsGating(false);
@@ -58,8 +61,9 @@ export function usePdfExportGate() {
       return true;
     } catch (err) {
       console.error('[usePdfExportGate] Exception while verifying credits:', err);
+      setGateError('No pudimos verificar tus créditos. Por favor intenta de nuevo.');
       setIsGating(false);
-      return true;
+      return false;
     }
   };
 
