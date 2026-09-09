@@ -6,11 +6,11 @@ import { BookImpositionOptions } from '../../shared/core/book-engine/impositionE
 import { BookSourceTypeStep } from './BookSourceTypeStep';
 import { BookOrganizeStep } from './BookOrganizeStep';
 import { BookFoliadoStep } from './BookFoliadoStep';
-import { BookPaperStep } from './BookPaperStep';
 import { BookCoverStep } from './BookCoverStep';
 import { BookBackCoverStep } from './BookBackCoverStep';
 import { BookPreviewExportStep } from './BookPreviewExportStep';
 import { BookPreviewStep } from './BookPreviewStep';
+import { getNextBookStepId, getPrevBookStepId } from '../../shared/core/book-engine/bookStepSequence';
 import { saveBook } from '../../shared/core/storage/documentStorageService';
 import { addOpenTab, OpenTabItem } from '../../shared/core/storage/documentTabEngine';
 
@@ -109,35 +109,11 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   };
 
   const handleNavigateNextStep = (currentStep: string) => {
-    const sequence = [
-      'book_source_type',
-      'book_organize',
-      'book_foliado',
-      'book_paper',
-      'book_cover',
-      'book_back_cover',
-      'book_preview_export',
-    ];
-    const currentIndex = sequence.indexOf(currentStep);
-    if (currentIndex >= 0 && currentIndex < sequence.length - 1) {
-      setActiveStepTab(sequence[currentIndex + 1]);
-    }
+    setActiveStepTab(getNextBookStepId(currentStep));
   };
 
   const handleNavigatePrevStep = (currentStep: string) => {
-    const sequence = [
-      'book_source_type',
-      'book_organize',
-      'book_foliado',
-      'book_paper',
-      'book_cover',
-      'book_back_cover',
-      'book_preview_export',
-    ];
-    const currentIndex = sequence.indexOf(currentStep);
-    if (currentIndex > 0) {
-      setActiveStepTab(sequence[currentIndex - 1]);
-    }
+    setActiveStepTab(getPrevBookStepId(currentStep));
   };
 
   const handleTriggerFileInput = () => {
@@ -203,25 +179,6 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
             />
           )}
 
-          {activeStepTab === 'book_foliado' && (
-            <BookFoliadoStep
-              pdfPageCount={pdfPageCount}
-              options={options}
-              setOptions={handleOptionsChange}
-              onNextStep={() => handleNavigateNextStep('book_foliado')}
-              onPrevStep={() => handleNavigatePrevStep('book_foliado')}
-            />
-          )}
-
-          {activeStepTab === 'book_paper' && (
-            <BookPaperStep
-              options={options}
-              setOptions={handleOptionsChange}
-              onNextStep={() => handleNavigateNextStep('book_paper')}
-              onPrevStep={() => handleNavigatePrevStep('book_paper')}
-            />
-          )}
-
           {activeStepTab === 'book_cover' && (
             <BookCoverStep
               options={options}
@@ -237,6 +194,16 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               setOptions={handleOptionsChange}
               onNextStep={() => handleNavigateNextStep('book_back_cover')}
               onPrevStep={() => handleNavigatePrevStep('book_back_cover')}
+            />
+          )}
+
+          {activeStepTab === 'book_foliado' && (
+            <BookFoliadoStep
+              pdfPageCount={pdfPageCount}
+              options={options}
+              setOptions={handleOptionsChange}
+              onNextStep={() => handleNavigateNextStep('book_foliado')}
+              onPrevStep={() => handleNavigatePrevStep('book_foliado')}
             />
           )}
 

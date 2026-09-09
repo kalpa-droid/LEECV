@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Layers, BookOpen, Copy, Upload, CheckCircle2, ChevronRight } from 'lucide-react';
+import { Layers, BookOpen, Copy, Upload, CheckCircle2, ChevronRight, FileText, Info } from 'lucide-react';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
 import { ensurePdfjsWorkerConfigured } from '../../shared/core/pdf-engine/pdfjsWorkerSetup';
-import { radius } from '../../shared/core/uiDesignSystem';
+import { button, selectableCard, radius } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 
 interface BookSourceTypeStepProps {
@@ -86,68 +86,135 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
       <div className="space-y-1">
         <h2 className="text-xl font-bold tracking-tight text-[var(--ui-text-primary)] flex items-center gap-2">
           <Layers className="w-5 h-5 text-[var(--color-accent-text)]" />
-          <span>{t.bookStudio.sourceStep.title}</span>
+          <span>1. Origen del Archivo & Imprenta</span>
         </h2>
         <p className="text-xs text-[var(--ui-text-secondary)]">
-          {t.bookStudio.sourceStep.description}
+          Configura la estructura de tu documento PDF y la hoja de salida para la imprenta.
         </p>
       </div>
 
-      <div className="space-y-3">
-        <label
-          onClick={() => setOptions((prev) => ({ ...prev, mode: 'normal' }))}
-          className={`flex items-start p-4 rounded-[${radius.card}] border-2 cursor-pointer transition-all ${
-            options.mode !== 'fotocopia'
-              ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-light)]/10 shadow-sm'
-              : 'border-[var(--ui-border)] bg-[var(--ui-bg-surface)] hover:border-[var(--ui-dock-border)]'
-          }`}
-        >
-          <input
-            type="radio"
-            name="bookMode"
-            checked={options.mode !== 'fotocopia'}
-            onChange={() => {}}
-            className="mt-1 text-[var(--color-accent-text)]"
-          />
-          <div className="ml-3 space-y-1">
-            <span className="font-bold block text-sm text-[var(--ui-text-primary)] flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-[var(--color-accent-text)]" />
-              PDF Estándar (1 pág. por hoja)
-            </span>
-            <span className="text-xs text-[var(--ui-text-secondary)] block">
-              Ideal para documentos digitales creados en Word, Canva o InDesign exportados directamente a PDF.
-            </span>
-          </div>
+      {/* 1. Selección de Modo de Documento */}
+      <div className="space-y-2">
+        <label className="text-xs font-bold text-[var(--ui-text-primary)] block">
+          Formato del Documento PDF
         </label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div
+            onClick={() => setOptions((prev) => ({ ...prev, mode: 'normal' }))}
+            className={`${selectableCard.base} ${
+              options.mode !== 'fotocopia' ? selectableCard.selected : selectableCard.unselected
+            } p-4 flex items-start space-x-3`}
+          >
+            <input
+              type="radio"
+              name="bookMode"
+              checked={options.mode !== 'fotocopia'}
+              onChange={() => {}}
+              className="mt-1 text-[var(--color-accent-text)] cursor-pointer"
+            />
+            <div className="space-y-1">
+              <span className="font-bold block text-sm text-[var(--ui-text-primary)] flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
+                PDF Estándar (1 pág/hoja)
+              </span>
+              <span className="text-xs text-[var(--ui-text-secondary)] block leading-normal">
+                Ideal para documentos creados en Word, Canva o InDesign exportados directamente.
+              </span>
+            </div>
+          </div>
 
-        <label
-          onClick={() => setOptions((prev) => ({ ...prev, mode: 'fotocopia' }))}
-          className={`flex items-start p-4 rounded-[${radius.card}] border-2 cursor-pointer transition-all ${
-            options.mode === 'fotocopia'
-              ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-light)]/10 shadow-sm'
-              : 'border-[var(--ui-border)] bg-[var(--ui-bg-surface)] hover:border-[var(--ui-dock-border)]'
-          }`}
-        >
-          <input
-            type="radio"
-            name="bookMode"
-            checked={options.mode === 'fotocopia'}
-            onChange={() => {}}
-            className="mt-1 text-[var(--color-accent-text)]"
-          />
-          <div className="ml-3 space-y-1">
-            <span className="font-bold block text-sm text-[var(--ui-text-primary)] flex items-center gap-2">
-              <Copy className="w-4 h-4 text-[var(--color-accent-text)]" />
-              Fotocopia / Escaneo (2 págs. por hoja)
-            </span>
-            <span className="text-xs text-[var(--ui-text-secondary)] block">
-              Para PDF con 2 páginas escaneadas lado a lado en cada hoja. El motor las dividirá automáticamente al centro.
-            </span>
+          <div
+            onClick={() => setOptions((prev) => ({ ...prev, mode: 'fotocopia' }))}
+            className={`${selectableCard.base} ${
+              options.mode === 'fotocopia' ? selectableCard.selected : selectableCard.unselected
+            } p-4 flex items-start space-x-3`}
+          >
+            <input
+              type="radio"
+              name="bookMode"
+              checked={options.mode === 'fotocopia'}
+              onChange={() => {}}
+              className="mt-1 text-[var(--color-accent-text)] cursor-pointer"
+            />
+            <div className="space-y-1">
+              <span className="font-bold block text-sm text-[var(--ui-text-primary)] flex items-center gap-2">
+                <Copy className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
+                Fotocopia / Escaneo (2 págs/hoja)
+              </span>
+              <span className="text-xs text-[var(--ui-text-secondary)] block leading-normal">
+                Para PDFs con 2 páginas escaneadas lado a lado. Se dividen al centro automáticamente.
+              </span>
+            </div>
           </div>
-        </label>
+        </div>
       </div>
 
-      {/* Zona de Drop Carga PDF */}
+      {/* 2. Selección de Tamaño de Papel Imprenta */}
+      <div className="space-y-2 pt-2 border-t border-[var(--ui-border)]">
+        <label className="text-xs font-bold text-[var(--ui-text-primary)] block">
+          Tamaño de Hoja de Imprenta
+        </label>
+        
+        <div className="p-3 bg-[var(--color-accent-light)]/20 border border-[var(--color-accent-base)]/30 rounded-[10px] flex items-start gap-2.5 text-xs text-[var(--ui-text-primary)] mb-2">
+          <Info className="w-4 h-4 text-[var(--color-accent-text)] shrink-0 mt-0.5" />
+          <div>
+            <span className="font-bold block">Relación de Tamaño:</span>
+            <span>Hoja A4 ➔ Libro final A5 (148 x 210 mm). Hoja A3 ➔ Libro final A4 (210 x 297 mm).</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div
+            onClick={() => setOptions((prev) => ({ ...prev, paperSize: 'A4' }))}
+            className={`${selectableCard.base} ${
+              options.paperSize !== 'A3' ? selectableCard.selected : selectableCard.unselected
+            } p-4 flex items-start space-x-3`}
+          >
+            <input
+              type="radio"
+              name="paperSize"
+              checked={options.paperSize !== 'A3'}
+              onChange={() => {}}
+              className="mt-1 text-[var(--color-accent-text)] cursor-pointer"
+            />
+            <div className="space-y-1">
+              <span className="font-bold block text-sm text-[var(--ui-text-primary)] flex items-center gap-2">
+                <FileText className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
+                Hoja A4 (Libro Final A5)
+              </span>
+              <span className="text-xs text-[var(--ui-text-secondary)] block leading-normal">
+                Imprime en hojas A4 y dobla al medio. Formato estándar o de bolsillo A5.
+              </span>
+            </div>
+          </div>
+
+          <div
+            onClick={() => setOptions((prev) => ({ ...prev, paperSize: 'A3' }))}
+            className={`${selectableCard.base} ${
+              options.paperSize === 'A3' ? selectableCard.selected : selectableCard.unselected
+            } p-4 flex items-start space-x-3`}
+          >
+            <input
+              type="radio"
+              name="paperSize"
+              checked={options.paperSize === 'A3'}
+              onChange={() => {}}
+              className="mt-1 text-[var(--color-accent-text)] cursor-pointer"
+            />
+            <div className="space-y-1">
+              <span className="font-bold block text-sm text-[var(--ui-text-primary)] flex items-center gap-2">
+                <FileText className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
+                Hoja A3 (Libro Final A4)
+              </span>
+              <span className="text-xs text-[var(--ui-text-secondary)] block leading-normal">
+                Imprime en hojas grandes A3 y dobla al medio. Formato grande A4.
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Carga de Archivo PDF */}
       <div className="pt-2 border-t border-[var(--ui-border)] space-y-2">
         <label className="text-xs font-bold text-[var(--ui-text-primary)] block">
           Archivo PDF Fuente
@@ -177,7 +244,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
 
           {isLoadingFile ? (
             <div className="flex flex-col items-center justify-center space-y-2 py-2">
-              <div className="w-8 h-8 border-3 border-[var(--color-accent-base)] border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-8 h-8 border-3 border-[var(--color-accent-base)] border-t-transparent rounded-full animate-spin" />
               <p className="text-xs text-[var(--ui-text-secondary)] font-medium">Analizando páginas del PDF...</p>
             </div>
           ) : selectedFile ? (
@@ -220,12 +287,16 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
         )}
       </div>
 
+      {/* 4. Barra Inferior de Navegación Responsive */}
       {onNextStep && (
-        <div className="pt-4 border-t border-[var(--ui-border)] flex justify-end">
+        <div className="pt-4 border-t border-[var(--ui-border)] flex flex-col sm:flex-row items-center justify-between gap-3">
+          <span className="text-xs text-[var(--ui-text-secondary)] font-medium text-center sm:text-left">
+            {selectedFile ? 'PDF listo para organizar páginas' : 'Siguiente paso: Organización de Páginas'}
+          </span>
           <button
             type="button"
             onClick={onNextStep}
-            className={`py-2 px-4 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold text-[var(--color-accent-text)] transition flex items-center gap-1.5 cursor-pointer`}
+            className={`${button.base} ${button.primary} flex items-center justify-center gap-1.5 w-full sm:w-auto`}
           >
             <span>Siguiente: 2. Páginas</span>
             <ChevronRight className="w-4 h-4" />
@@ -235,3 +306,4 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
     </div>
   );
 };
+

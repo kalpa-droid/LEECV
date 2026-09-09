@@ -36,6 +36,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
   onOpenLightbox,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const renderTaskRef = useRef<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [renderError, setRenderError] = useState<boolean>(false);
 
@@ -53,6 +54,15 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
       try {
         setIsLoading(true);
         setRenderError(false);
+
+        if (renderTaskRef.current) {
+          try {
+            renderTaskRef.current.cancel();
+          } catch (e) {
+            // Ignore cancel error
+          }
+        }
+
         const page = await pdfDoc.getPage(pageNum);
         if (isCancelled) return;
 
@@ -77,7 +87,10 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        await page.render({ canvasContext: ctx, viewport }).promise;
+        const task = page.render({ canvasContext: ctx, viewport });
+        renderTaskRef.current = task;
+        await task.promise;
+        renderTaskRef.current = null;
 
         // Overlay vertical split line if splitOffset is customized or in fotocopia mode
         if ((isFotocopiaMode || splitOffset !== 50) && !isCancelled) {
@@ -96,7 +109,10 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         if (!isCancelled) {
           setIsLoading(false);
         }
-      } catch (err) {
+      } catch (err: any) {
+        if (err && (err.name === 'RenderingCancelledException' || err.message?.includes('cancelled'))) {
+          return; // Ignore intentional cancellation
+        }
         console.error(`Error rendering thumbnail page ${pageNum}:`, err);
         if (!isCancelled) {
           setRenderError(true);
@@ -109,6 +125,13 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
 
     return () => {
       isCancelled = true;
+      if (renderTaskRef.current) {
+        try {
+          renderTaskRef.current.cancel();
+        } catch (e) {
+          // Ignore
+        }
+      }
     };
   }, [pdfDoc, pageNum, rotation, splitOffset, isFotocopiaMode]);
 
@@ -231,7 +254,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         <button
           type="button"
           onClick={() => onRotate(pageNum)}
-          title={isFotocopiaMode ? 'Girar 180°' : 'Rotar 90° hacia la derecha'}
+          title="Girar 180°"
           className="p-1 rounded hover:bg-[var(--ui-bg-panel)] text-[var(--color-secondary-bright)] cursor-pointer"
         >
           <RotateCw className="w-3.5 h-3.5" />

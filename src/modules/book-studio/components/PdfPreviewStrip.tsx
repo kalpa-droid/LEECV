@@ -111,7 +111,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
   const handleRotatePage = (pageNum: number) => {
     setOptions((prev) => {
       const currentRot = prev.pageRotations?.[pageNum] || 0;
-      const step = prev.mode === 'fotocopia' ? 180 : 90;
+      const step = 180;
       const nextRot = (currentRot + step) % 360;
       return {
         ...prev,

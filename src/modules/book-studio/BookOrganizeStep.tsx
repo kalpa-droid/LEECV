@@ -1,7 +1,8 @@
 import React from 'react';
-import { LayoutGrid, RotateCw, RotateCcw, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutGrid, RotateCcw, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
-import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
+import { calculateFinalBookPageCount } from '../../shared/core/book-engine/bookPageCount';
+import { radius, elevationSystem, button } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 
 interface BookOrganizeStepProps {
@@ -23,31 +24,18 @@ export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
   const deletedCount = (options.deletedPages || []).length;
   const rotatedCount = Object.values(options.pageRotations || {}).filter((r) => r > 0).length;
 
+  const finalPageCount = calculateFinalBookPageCount(
+    pdfPageCount,
+    Boolean(options.customCover && options.customCover.type !== 'none'),
+    Boolean(options.customBackCover && options.customBackCover.type !== 'none')
+  );
+  const totalSheetsToPrint = finalPageCount / 2;
+
   const handleRotateAllLeft90 = () => {
     setOptions((prev) => {
       const nextRotations = { ...(prev.pageRotations || {}) };
       for (let i = 1; i <= pdfPageCount; i++) {
         nextRotations[i] = ((nextRotations[i] || 0) - 90 + 360) % 360;
-      }
-      return { ...prev, pageRotations: nextRotations };
-    });
-  };
-
-  const handleRotateAllRight90 = () => {
-    setOptions((prev) => {
-      const nextRotations = { ...(prev.pageRotations || {}) };
-      for (let i = 1; i <= pdfPageCount; i++) {
-        nextRotations[i] = ((nextRotations[i] || 0) + 90) % 360;
-      }
-      return { ...prev, pageRotations: nextRotations };
-    });
-  };
-
-  const handleRotateFlip180 = () => {
-    setOptions((prev) => {
-      const nextRotations = { ...(prev.pageRotations || {}) };
-      for (let i = 1; i <= pdfPageCount; i++) {
-        nextRotations[i] = ((nextRotations[i] || 0) + 180) % 360;
       }
       return { ...prev, pageRotations: nextRotations };
     });
@@ -77,64 +65,62 @@ export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
         </p>
       </div>
 
-      {/* Resumen Estructural */}
+      {/* Resumen Estructural Completo */}
       <div className={`p-4 rounded-[${radius.card}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)] space-y-3 ${elevationSystem.raised}`}>
         <h3 className="text-xs font-bold text-[var(--ui-text-primary)] uppercase tracking-wider block">
           Estado del Documento
         </h3>
-        <div className="grid grid-cols-2 gap-2 text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
           <div className="p-2.5 rounded-lg bg-[var(--ui-bg-card)] border border-[var(--ui-border)]">
-            <span className="text-[10px] text-[var(--ui-text-secondary)] block">Rotaciones Activas</span>
-            <span className="text-sm font-bold text-[var(--color-secondary-bright)] mt-0.5 block">
-              {rotatedCount} páginas
+            <span className="text-[10px] text-[var(--ui-text-secondary)] block uppercase">Págs. PDF</span>
+            <span className="text-base font-bold text-[var(--ui-text-primary)] mt-0.5 block">
+              {pdfPageCount}
             </span>
           </div>
           <div className="p-2.5 rounded-lg bg-[var(--ui-bg-card)] border border-[var(--ui-border)]">
-            <span className="text-[10px] text-[var(--ui-text-secondary)] block">Páginas Eliminadas</span>
-            <span className="text-sm font-bold text-[var(--color-status-danger-text)] mt-0.5 block">
-              {deletedCount} páginas
+            <span className="text-[10px] text-[var(--ui-text-secondary)] block uppercase">Págs. Libro</span>
+            <span className="text-base font-bold text-[var(--color-secondary-bright)] mt-0.5 block">
+              {finalPageCount}
+            </span>
+          </div>
+          <div className="p-2.5 rounded-lg bg-[var(--ui-bg-card)] border border-[var(--ui-border)]">
+            <span className="text-[10px] text-[var(--ui-text-secondary)] block uppercase">Pliegos</span>
+            <span className="text-base font-bold text-[var(--color-secondary-bright)] mt-0.5 block">
+              {totalSheetsToPrint}
+            </span>
+          </div>
+          <div className="p-2.5 rounded-lg bg-[var(--ui-bg-card)] border border-[var(--ui-border)]">
+            <span className="text-[10px] text-[var(--ui-text-secondary)] block uppercase">Rotaciones</span>
+            <span className="text-base font-bold text-[var(--color-secondary-bright)] mt-0.5 block">
+              {rotatedCount} págs.
+            </span>
+          </div>
+          <div className="p-2.5 rounded-lg bg-[var(--ui-bg-card)] border border-[var(--ui-border)] col-span-2 sm:col-span-1">
+            <span className="text-[10px] text-[var(--ui-text-secondary)] block uppercase">Eliminadas</span>
+            <span className="text-base font-bold text-[var(--color-status-danger-text)] mt-0.5 block">
+              {deletedCount} págs.
             </span>
           </div>
         </div>
       </div>
 
-      {/* Rotaciones Masivas */}
+      {/* Rotación Masiva Única */}
       <div className="space-y-3">
         <h3 className="text-xs font-bold text-[var(--ui-text-primary)] uppercase tracking-wider block">
-          Rotaciones de Lote
+          Rotación de Lote
         </h3>
 
-        {/* Botón global "Girar al otro lado" para Fotocopia y 90° */}
         <button
           type="button"
-          onClick={handleRotateFlip180}
-          className={`w-full p-3 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold text-left flex items-center justify-between transition cursor-pointer`}
+          onClick={handleRotateAllLeft90}
+          className={`${button.base} ${button.secondary} w-full flex items-center justify-between transition cursor-pointer text-xs`}
         >
           <div className="flex items-center gap-2">
-            <RotateCw className="w-4 h-4 text-[var(--color-secondary-bright)]" />
-            <span>Girar al otro lado (180°)</span>
+            <RotateCcw className="w-4 h-4 text-[var(--color-secondary-bright)]" />
+            <span>Girar documento -90° (↺)</span>
           </div>
-          <span className="text-[10px] text-[var(--ui-text-secondary)] font-normal">Voltear todo el lote</span>
+          <span className="text-[10px] text-[var(--ui-text-secondary)] font-normal">Corregir orientación global</span>
         </button>
-
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={handleRotateAllLeft90}
-            className={`p-2.5 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer text-[var(--ui-text-primary)]`}
-          >
-            <RotateCcw className="w-3.5 h-3.5 text-[var(--color-secondary-bright)]" />
-            <span>Girar -90° (↺)</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleRotateAllRight90}
-            className={`p-2.5 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer text-[var(--ui-text-primary)]`}
-          >
-            <RotateCw className="w-3.5 h-3.5 text-[var(--color-secondary-bright)]" />
-            <span>Girar +90° (↻)</span>
-          </button>
-        </div>
 
         {rotatedCount > 0 && (
           <button
@@ -157,7 +143,7 @@ export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
           <button
             type="button"
             onClick={handleRestoreAllDeleted}
-            className={`w-full p-3 rounded-[${radius.card}] bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/30 text-[var(--color-status-success-text)] text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer`}
+            className={`${button.base} ${button.secondary} w-full flex items-center justify-center gap-2 cursor-pointer text-xs`}
           >
             <RefreshCw className="w-4 h-4 text-[var(--color-status-success-bright)]" />
             <span>Restaurar {deletedCount} páginas eliminadas</span>
@@ -183,7 +169,7 @@ export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
           <button
             type="button"
             onClick={onPrevStep}
-            className={`py-2 px-4 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] transition flex items-center gap-1.5 cursor-pointer`}
+            className={`${button.base} ${button.ghost} flex items-center gap-1.5`}
           >
             <ChevronLeft className="w-4 h-4" />
             <span>Volver</span>
@@ -194,9 +180,9 @@ export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
           <button
             type="button"
             onClick={onNextStep}
-            className={`py-2 px-4 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold text-[var(--color-accent-text)] transition flex items-center gap-1.5 cursor-pointer`}
+            className={`${button.base} ${button.primary} flex items-center gap-1.5`}
           >
-            <span>Siguiente: 3. Foliado</span>
+            <span>Siguiente</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         )}

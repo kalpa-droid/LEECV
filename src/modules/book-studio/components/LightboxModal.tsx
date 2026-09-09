@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { X, Check, Bookmark, Scissors, AlertCircle } from 'lucide-react';
-import { radius, elevationSystem } from '../../../shared/core/uiDesignSystem';
+import { radius, elevationSystem, button, input } from '../../../shared/core/uiDesignSystem';
 
 export interface LightboxModalProps {
   isOpen: boolean;
@@ -47,13 +47,11 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
     setLocalSplitOffset(splitOffset);
   }, [isOpen, pageNum, refBookPage, refPageSide, splitOffset]);
 
-  // En modo Normal, el lado es 100% derivable del número de página impreso
-  // (impar=derecha, par=izquierda) — no hace falta preguntárselo al usuario
+  // El lado es 100% derivable del número de página impreso (impar=derecha, par=izquierda)
+  // incondicionalmente para todos los modos
   useEffect(() => {
-    if (!isFotocopiaMode) {
-      setInputPageSide(inputBookPage % 2 !== 0 ? 'derecha' : 'izquierda');
-    }
-  }, [inputBookPage, isFotocopiaMode]);
+    setInputPageSide(inputBookPage % 2 !== 0 ? 'derecha' : 'izquierda');
+  }, [inputBookPage]);
 
   useEffect(() => {
     if (!isOpen || !pdfDoc || !canvasRef.current) return;
@@ -173,7 +171,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
           />
         </div>
 
-        {/* Lado Derecho: Inspección y Ajuste de Corte Central */}
+        {/* Lado Derecho: Inspección, Ajuste de Corte y Formulario de Foliado */}
         <div className="w-full md:w-80 p-5 bg-[var(--ui-bg-panel)] border-t md:border-t-0 md:border-l border-[var(--ui-border)] flex flex-col justify-between space-y-4 overflow-y-auto">
           <div className="space-y-4">
             <div className="space-y-1">
@@ -182,16 +180,61 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
               </span>
               <h3 className="text-base font-bold text-[var(--ui-text-primary)] flex items-center gap-1.5 pt-1">
                 <Bookmark className="w-4 h-4 text-[var(--color-secondary-bright)]" />
-                <span>Inspección de Página</span>
+                <span>Inspección & Foliado</span>
               </h3>
               <p className="text-xs text-[var(--ui-text-secondary)] leading-relaxed">
-                Vista previa de alta resolución. {isFotocopiaMode ? 'Ajusta la posición del corte central para el pliego.' : ''}
+                Vista previa de alta resolución y calibración de número de página.
               </p>
             </div>
 
+            {/* Formulario de Calibración de Foliado de Referencia */}
+            <form onSubmit={handleApplyReference} className="space-y-3 pt-2 border-t border-[var(--ui-border)]">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[var(--ui-text-primary)] block">
+                  Número de Página Impreso
+                </label>
+                <p className="text-[11px] text-[var(--ui-text-secondary)]">
+                  Asigna el número de página visible en el libro original.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  value={inputBookPage}
+                  onChange={(e) => setInputBookPage(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                  className={`${input.base} ${input.focus} w-24 text-center font-bold text-sm`}
+                />
+                <div className="flex-1 px-2.5 py-2 rounded-[10px] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] text-xs font-semibold text-center">
+                  {inputPageSide === 'derecha' ? 'Derecha (Impar)' : 'Izquierda (Par)'}
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className={`${button.base} ${button.primary} w-full flex items-center justify-center gap-1.5 text-xs font-bold`}
+              >
+                <Bookmark className="w-3.5 h-3.5" />
+                <span>Guardar Referencia</span>
+              </button>
+
+              {isSavedNotice && (
+                <div className="p-2 bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-bright)]/30 rounded-[10px] text-[var(--color-status-success-text)] text-xs font-bold text-center animate-fadeIn">
+                  ✓ Guardado correctamente
+                </div>
+              )}
+
+              {isCurrentReference && (
+                <div className="p-2 bg-[var(--color-accent-light)]/20 border border-[var(--color-accent-base)]/30 rounded-[10px] text-[var(--color-accent-text)] text-[11px] font-semibold text-center">
+                  ★ Referencia activa del libro
+                </div>
+              )}
+            </form>
+
             {/* Ajuste de Corte Central Manual (splitOffset) SOLO en modo Fotocopia */}
             {isFotocopiaMode && (
-              <div className={`p-3 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.card}] space-y-2`}>
+              <div className={`p-3 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.card}] space-y-2 pt-3 border-t border-[var(--ui-border)]`}>
                 <div className="flex items-center justify-between text-xs font-bold text-[var(--ui-text-primary)]">
                   <span className="flex items-center gap-1">
                     <Scissors className="w-4 h-4 text-[var(--color-secondary-bright)]" />
@@ -228,10 +271,10 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className={`w-full py-2.5 px-4 rounded-[${radius.control}] font-bold text-xs bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] hover:opacity-90 transition flex items-center justify-center gap-1.5 cursor-pointer`}
+              className={`${button.base} ${button.secondary} w-full flex items-center justify-center gap-1.5 text-xs font-bold`}
             >
               <Check className="w-4 h-4" />
-              <span>Cerrar Inspección</span>
+              <span>Cerrar</span>
             </button>
           </div>
         </div>
@@ -239,3 +282,4 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
     </div>
   );
 };
+
