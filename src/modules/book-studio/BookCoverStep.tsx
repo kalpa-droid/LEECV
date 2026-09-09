@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { BookOpen, Check, Palette, ChevronLeft, ChevronRight } from 'lucide-react';
 import { BookImpositionOptions, CoverConfig } from '../../shared/core/book-engine/impositionEngine';
 import { COVER_PRESETS } from '../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
-import { radius, typeScale } from '../../shared/core/uiDesignSystem';
+import { radius, typeScale, button, selectableCard, input } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 
 interface BookCoverStepProps {
@@ -74,7 +74,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
       <div className="space-y-1">
         <h2 className="text-xl font-bold tracking-tight text-[var(--ui-text-primary)] flex items-center gap-2">
           <BookOpen className="w-5 h-5 text-[var(--color-accent-text)]" />
-          <span>{t.bookStudio.coverStep.title}</span>
+          <span>3. Tapa & Retiro</span>
         </h2>
         <p className="text-xs text-[var(--ui-text-secondary)]">
           {t.bookStudio.coverStep.description}
@@ -85,11 +85,9 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
         <button
           type="button"
           onClick={() => handleCoverTypeChange('source')}
-          className={`p-2.5 rounded-[${radius.control}] border text-xs font-bold text-center transition-all cursor-pointer ${
-            coverType === 'source'
-              ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-light)]/20 text-[var(--ui-text-primary)] shadow-sm'
-              : 'border-[var(--ui-border)] bg-[var(--ui-bg-surface)] text-[var(--ui-text-secondary)] hover:border-[var(--ui-dock-border)]'
-          }`}
+          className={`${selectableCard.base} ${
+            coverType === 'source' ? selectableCard.selected : selectableCard.unselected
+          } text-xs font-bold text-center py-2.5 px-2`}
         >
           Pág. 1 del PDF
         </button>
@@ -97,11 +95,9 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
         <button
           type="button"
           onClick={() => handleCoverTypeChange('custom')}
-          className={`p-2.5 rounded-[${radius.control}] border text-xs font-bold text-center transition-all cursor-pointer ${
-            coverType === 'custom'
-              ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-light)]/20 text-[var(--ui-text-primary)] shadow-sm'
-              : 'border-[var(--ui-border)] bg-[var(--ui-bg-surface)] text-[var(--ui-text-secondary)] hover:border-[var(--ui-dock-border)]'
-          }`}
+          className={`${selectableCard.base} ${
+            coverType === 'custom' ? selectableCard.selected : selectableCard.unselected
+          } text-xs font-bold text-center py-2.5 px-2`}
         >
           Tapa con Preset
         </button>
@@ -109,11 +105,9 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
         <button
           type="button"
           onClick={() => handleCoverTypeChange('upload')}
-          className={`p-2.5 rounded-[${radius.control}] border text-xs font-bold text-center transition-all cursor-pointer ${
-            coverType === 'upload'
-              ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-light)]/20 text-[var(--ui-text-primary)] shadow-sm'
-              : 'border-[var(--ui-border)] bg-[var(--ui-bg-surface)] text-[var(--ui-text-secondary)] hover:border-[var(--ui-dock-border)]'
-          }`}
+          className={`${selectableCard.base} ${
+            coverType === 'upload' ? selectableCard.selected : selectableCard.unselected
+          } text-xs font-bold text-center py-2.5 px-2`}
         >
           Subir mi Tapa
         </button>
@@ -121,11 +115,9 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
         <button
           type="button"
           onClick={() => handleCoverTypeChange('none')}
-          className={`p-2.5 rounded-[${radius.control}] border text-xs font-bold text-center transition-all cursor-pointer ${
-            coverType === 'none'
-              ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-light)]/20 text-[var(--ui-text-primary)] shadow-sm'
-              : 'border-[var(--ui-border)] bg-[var(--ui-bg-surface)] text-[var(--ui-text-secondary)] hover:border-[var(--ui-dock-border)]'
-          }`}
+          className={`${selectableCard.base} ${
+            coverType === 'none' ? selectableCard.selected : selectableCard.unselected
+          } text-xs font-bold text-center py-2.5 px-2`}
         >
           Sin Tapa Especial
         </button>
@@ -144,7 +136,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
             type="file"
             accept="image/jpeg,image/png"
             onChange={handleImageUpload}
-            className={`w-full px-3 py-2 rounded-[${radius.control}] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-xs text-[var(--ui-text-primary)] cursor-pointer`}
+            className={`${input.base} cursor-pointer`}
           />
 
           {coverData.imageUri && (
@@ -171,18 +163,16 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
                     key={preset.id}
                     type="button"
                     onClick={() => updateCoverField('coverStyle', preset.id)}
-                    className={`flex items-center justify-between p-2.5 rounded-[${radius.control}] border text-left text-xs transition-all ${
-                      isSelected
-                        ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-light)]/20 font-bold'
-                        : 'border-[var(--ui-border)] hover:border-[var(--ui-dock-border)]'
-                    }`}
+                    className={`${selectableCard.base} ${
+                      isSelected ? selectableCard.selected : selectableCard.unselected
+                    } flex items-center justify-between p-2.5 text-xs`}
                   >
                     <div className="flex items-center gap-2 overflow-hidden">
                       <div
                         className="w-4 h-4 rounded-full border border-black/20 shrink-0"
                         style={{ backgroundColor: preset.badgeBg }}
                       />
-                      <span className="truncate">{preset.name}</span>
+                      <span className="truncate font-medium">{preset.name}</span>
                     </div>
                     {isSelected && <Check className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />}
                   </button>
@@ -200,7 +190,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
                 value={coverData.title || ''}
                 onChange={(e) => updateCoverField('title', e.target.value)}
                 placeholder="Ej. Antología Poética 2026"
-                className={`w-full px-3 py-2 rounded-[${radius.control}] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-xs text-[var(--ui-text-primary)] focus:border-[var(--color-accent-base)] outline-none`}
+                className={`${input.base} ${input.focus}`}
               />
             </div>
 
@@ -211,7 +201,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
                 value={coverData.author || ''}
                 onChange={(e) => updateCoverField('author', e.target.value)}
                 placeholder="Ej. María Daniela Burgos"
-                className={`w-full px-3 py-2 rounded-[${radius.control}] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-xs text-[var(--ui-text-primary)] focus:border-[var(--color-accent-base)] outline-none`}
+                className={`${input.base} ${input.focus}`}
               />
             </div>
 
@@ -222,7 +212,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
                 value={coverData.publisher || ''}
                 onChange={(e) => updateCoverField('publisher', e.target.value)}
                 placeholder="Ej. Ediciones Kalpagráfica"
-                className={`w-full px-3 py-2 rounded-[${radius.control}] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-xs text-[var(--ui-text-primary)] focus:border-[var(--color-accent-base)] outline-none`}
+                className={`${input.base} ${input.focus}`}
               />
             </div>
           </div>
@@ -252,12 +242,12 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
       </div>
 
       {/* Navegación Bidireccional */}
-      <div className="pt-4 border-t border-[var(--ui-border)] flex items-center justify-between">
+      <div className="pt-4 border-t border-[var(--ui-border)] flex items-center justify-between gap-3">
         {onPrevStep ? (
           <button
             type="button"
             onClick={onPrevStep}
-            className={`py-2 px-4 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] transition flex items-center gap-1.5 cursor-pointer`}
+            className={`${button.base} ${button.secondary} flex items-center gap-1.5 text-xs font-bold`}
           >
             <ChevronLeft className="w-4 h-4" />
             <span>Volver</span>
@@ -268,9 +258,9 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
           <button
             type="button"
             onClick={onNextStep}
-            className={`py-2 px-4 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold text-[var(--color-accent-text)] transition flex items-center gap-1.5 cursor-pointer`}
+            className={`${button.base} ${button.primary} flex items-center gap-1.5 text-xs font-bold`}
           >
-            <span>Siguiente: 6. Contratapa</span>
+            <span>Siguiente: 4. Contratapa</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         )}
@@ -278,4 +268,5 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
     </div>
   );
 };
+
 
