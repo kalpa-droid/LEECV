@@ -154,6 +154,16 @@ export const button = {
 } as const;
 
 /**
+ * Estado "no disponible en este producto" — distinto del disabled generico
+ * de button.base (que es "espera un momento"). Este SIEMPRE se usa con un
+ * title/tooltip explicando por que, para que el usuario entienda que la
+ * accion existe en la app pero no aplica en esta pantalla, en vez de que
+ * desaparezca sin explicacion. Definido en docs/plan_topbar_productos.md
+ * (Lote C) — ver ahi la tabla de que accion aplica a que producto.
+ */
+export const buttonUnavailable = `${button.base} bg-transparent border border-dashed border-[var(--color-neutral-border)] text-[var(--color-neutral-text-muted)] opacity-60 cursor-not-allowed hover:opacity-60`;
+
+/**
  * TARJETA SELECCIONABLE — el patrón de "elegir 1 de N presets". Mismo
  * componente para presets de color, tipografía, layout, tamaño de tarjeta.
  */
