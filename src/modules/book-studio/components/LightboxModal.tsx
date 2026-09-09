@@ -183,7 +183,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
             )}
 
             {/* Ajuste de Corte Central Manual (splitOffset) */}
-            <div className="p-3 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.card}] space-y-2">
+            <div className={`p-3 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.card}] space-y-2`}>
               <div className="flex items-center justify-between text-xs font-bold text-[var(--ui-text-primary)]">
                 <span className="flex items-center gap-1">
                   <Scissors className="w-4 h-4 text-[var(--color-secondary-bright)]" />

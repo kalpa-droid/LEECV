@@ -190,7 +190,7 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
           Ajustes de Retiro de Contratapa
         </h3>
 
-        <label className="flex items-center justify-between p-3 rounded-[${radius.control}] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] cursor-pointer hover:border-[var(--ui-dock-border)] transition-all">
+        <label className={`flex items-center justify-between p-3 rounded-[${radius.control}] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] cursor-pointer hover:border-[var(--ui-dock-border)] transition-all`}>
           <div className="space-y-0.5 pr-4">
             <span className="font-bold block text-xs text-[var(--ui-text-primary)]">Hoja en blanco delante de la Contratapa</span>
             <span className="text-[10px] text-[var(--ui-text-secondary)] block">
