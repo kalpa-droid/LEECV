@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ThumbnailCard } from './ThumbnailCard';
 import { LightboxModal } from './LightboxModal';
+import { CoverPreviewThumbnail } from './CoverPreviewThumbnail';
 import { BookImpositionOptions } from '../../../shared/core/book-engine/impositionEngine';
 import { radius } from '../../../shared/core/uiDesignSystem';
 import { RefreshCw, FileText, Trash2 } from 'lucide-react';
@@ -217,10 +218,17 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
             </span>
             {options.customCover?.imageUri ? (
               <img src={options.customCover.imageUri} alt="Tapa" className="w-full h-28 object-cover rounded border border-[var(--ui-border)]" />
+            ) : options.customCover?.type === 'template' ? (
+              <CoverPreviewThumbnail
+                config={options.customCover}
+                kind="cover"
+                paperSize={options.paperSize}
+                className="w-full h-28 object-contain rounded border border-[var(--ui-border)]"
+              />
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center p-2 rounded bg-[var(--ui-bg-card)] border border-[var(--ui-border)] w-full">
                 <span className="text-[11px] font-bold text-[var(--ui-text-primary)] line-clamp-2">
-                  {options.customCover?.title || 'Tapa del PDF'}
+                  {options.customCover?.title || 'Tapa del PDF (Página 1)'}
                 </span>
                 {options.customCover?.author && (
                   <span className="text-[9px] text-[var(--ui-text-secondary)] mt-1">{options.customCover.author}</span>
@@ -293,10 +301,17 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
             </span>
             {options.customBackCover?.imageUri ? (
               <img src={options.customBackCover.imageUri} alt="Contratapa" className="w-full h-28 object-cover rounded border border-[var(--ui-border)]" />
+            ) : options.customBackCover?.type === 'template' ? (
+              <CoverPreviewThumbnail
+                config={options.customBackCover}
+                kind="backCover"
+                paperSize={options.paperSize}
+                className="w-full h-28 object-contain rounded border border-[var(--ui-border)]"
+              />
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center p-2 rounded bg-[var(--ui-bg-card)] border border-[var(--ui-border)] w-full">
                 <span className="text-[11px] font-bold text-[var(--ui-text-primary)] line-clamp-2">
-                  {options.customBackCover?.synopsis || 'Última Pág. del PDF'}
+                  {options.customBackCover?.synopsis || 'Contratapa del PDF'}
                 </span>
               </div>
             )}
