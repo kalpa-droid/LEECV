@@ -10,6 +10,7 @@ interface BookPreviewStepProps {
   zoomScale?: number;
   pdfDoc?: any;
   onConfirm: () => void;
+  activeStep?: string;
 }
 
 export const BookPreviewStep: React.FC<BookPreviewStepProps> = ({
@@ -19,6 +20,7 @@ export const BookPreviewStep: React.FC<BookPreviewStepProps> = ({
   pdfPageCount,
   zoomScale = 1.0,
   pdfDoc,
+  activeStep,
 }) => {
   return (
     <div className="w-full h-full flex flex-col space-y-4 overflow-y-auto p-4 text-[var(--ui-text-primary)]">
@@ -31,6 +33,7 @@ export const BookPreviewStep: React.FC<BookPreviewStepProps> = ({
           setOptions={setOptions}
           zoomScale={zoomScale}
           pdfDoc={pdfDoc}
+          activeStep={activeStep}
         />
       </div>
     </div>

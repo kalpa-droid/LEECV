@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layers, BookOpen, Copy, Upload, CheckCircle2, ChevronRight, FileText, Info } from 'lucide-react';
+import { BookOpen, Copy, Upload, CheckCircle2, ChevronRight, FileText } from 'lucide-react';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
 import { ensurePdfjsWorkerConfigured } from '../../shared/core/pdf-engine/pdfjsWorkerSetup';
 import { button, selectableCard, radius } from '../../shared/core/uiDesignSystem';
@@ -83,20 +83,10 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
 
   return (
     <div className="space-y-6 text-[var(--ui-text-primary)]">
-      <div className="space-y-1">
-        <h2 className="text-xl font-bold tracking-tight text-[var(--ui-text-primary)] flex items-center gap-2">
-          <Layers className="w-5 h-5 text-[var(--color-accent-text)]" />
-          <span>1. Origen del Archivo & Imprenta</span>
-        </h2>
-        <p className="text-xs text-[var(--ui-text-secondary)]">
-          Configura la estructura de tu documento PDF y la hoja de salida para la imprenta.
-        </p>
-      </div>
-
       {/* 1. Selección de Modo de Documento */}
       <div className="space-y-2">
         <label className="text-xs font-bold text-[var(--ui-text-primary)] block">
-          Formato del Documento PDF
+          1.a. Tu PDF es:
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div
@@ -152,16 +142,8 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
       {/* 2. Selección de Tamaño de Papel Imprenta */}
       <div className="space-y-2 pt-2 border-t border-[var(--ui-border)]">
         <label className="text-xs font-bold text-[var(--ui-text-primary)] block">
-          Tamaño de Hoja de Imprenta
+          1.b. El tamaño que imprimiré será:
         </label>
-        
-        <div className="p-3 bg-[var(--color-accent-light)]/20 border border-[var(--color-accent-base)]/30 rounded-[10px] flex items-start gap-2.5 text-xs text-[var(--ui-text-primary)] mb-2">
-          <Info className="w-4 h-4 text-[var(--color-accent-text)] shrink-0 mt-0.5" />
-          <div>
-            <span className="font-bold block">Relación de Tamaño:</span>
-            <span>Hoja A4 ➔ Libro final A5 (148 x 210 mm). Hoja A3 ➔ Libro final A4 (210 x 297 mm).</span>
-          </div>
-        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div
@@ -216,9 +198,6 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
 
       {/* 3. Carga de Archivo PDF */}
       <div className="pt-2 border-t border-[var(--ui-border)] space-y-2">
-        <label className="text-xs font-bold text-[var(--ui-text-primary)] block">
-          Archivo PDF Fuente
-        </label>
         <div
           onDragOver={(e) => {
             e.preventDefault();
@@ -272,9 +251,6 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
                 <p className="text-xs font-bold text-[var(--ui-text-primary)]">
                   Arrastra tu PDF aquí o haz clic para examinar
                 </p>
-                <p className="text-[11px] text-[var(--ui-text-secondary)] mt-0.5">
-                  Soporta libros, folletos, revistas o fotocopias en PDF
-                </p>
               </div>
             </div>
           )}
@@ -291,14 +267,20 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
       {onNextStep && (
         <div className="pt-4 border-t border-[var(--ui-border)] flex flex-col sm:flex-row items-center justify-between gap-3">
           <span className="text-xs text-[var(--ui-text-secondary)] font-medium text-center sm:text-left">
-            {selectedFile ? 'PDF listo para organizar páginas' : 'Siguiente paso: Organización de Páginas'}
+            {selectedFile
+              ? options.mode === 'fotocopia'
+                ? 'PDF listo para organizar páginas'
+                : 'PDF listo para configurar tapa'
+              : options.mode === 'fotocopia'
+              ? 'Siguiente paso: 2. Páginas'
+              : 'Siguiente paso: 3. Tapa'}
           </span>
           <button
             type="button"
             onClick={onNextStep}
             className={`${button.base} ${button.primary} flex items-center justify-center gap-1.5 w-full sm:w-auto`}
           >
-            <span>Siguiente: 2. Páginas</span>
+            <span>{options.mode === 'fotocopia' ? 'Siguiente: 2. Páginas' : 'Siguiente: 3. Tapa'}</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>

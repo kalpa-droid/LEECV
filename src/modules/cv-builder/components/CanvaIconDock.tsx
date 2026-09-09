@@ -18,6 +18,7 @@ export interface CanvaIconDockProps {
   setIsPanelOpen: (open: boolean) => void;
   onOpenAtsCheck?: () => void;
   docType?: 'cv' | 'business_card' | 'book';
+  bookMode?: string;
 }
 
 // 1. Pestañas de Estilo (Diseño)
@@ -39,15 +40,6 @@ const bookTabIcons: Record<string, any> = {
   book_preview_export: Printer,
 };
 
-// Pestañas de Studio Libros (6 Paneles Consolidados)
-const bookTabs = BOOK_STEP_SEQUENCE.map((step) => ({
-  id: step.id,
-  stepNumber: step.stepNumber,
-  label: step.label,
-  icon: bookTabIcons[step.id] || Layers,
-}));
-
-
 // 2. Pestañas de Sección Especiales Gobernadas por el Motor (activeSectionsDockEngine.ts)
 const addSectionTab = DOCK_SPECIAL_TABS.addSection;
 const portadaTab = DOCK_SPECIAL_TABS.portada;
@@ -61,12 +53,24 @@ export default function CanvaIconDock({
   isPanelOpen, 
   setIsPanelOpen,
   onOpenAtsCheck,
-  docType = 'cv'
+  docType = 'cv',
+  bookMode
 }: CanvaIconDockProps) {
   const mobileNavRef = useRef<HTMLDivElement>(null);
 
   // Motor dinámico único: reemplaza listas fijas y customSections.map
   const dockSections = useMemo(() => docType === 'cv' ? resolveActiveDockSections(cvData) : [], [cvData, docType]);
+
+  const activeBookTabs = useMemo(() => {
+    return BOOK_STEP_SEQUENCE
+      .filter((step) => !(bookMode !== 'fotocopia' && step.skipWhenNormal))
+      .map((step) => ({
+        id: step.id,
+        stepNumber: step.stepNumber,
+        label: step.label,
+        icon: bookTabIcons[step.id] || Layers,
+      }));
+  }, [bookMode]);
 
   const handleTabClick = (tabId: string, isDisabled?: boolean) => {
     if (isDisabled && cvData && setCvData) {
@@ -162,7 +166,7 @@ export default function CanvaIconDock({
           })()}
 
           {/* BOTONES LIBRO (Solo para docType === 'book') */}
-          {docType === 'book' && bookTabs.map((tab) => {
+          {docType === 'book' && activeBookTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id && isPanelOpen;
             return (
@@ -382,7 +386,7 @@ export default function CanvaIconDock({
         })()}
 
         {/* BOTONES LIBRO (Solo para docType === 'book') */}
-        {docType === 'book' && bookTabs.map((tab) => {
+        {docType === 'book' && activeBookTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id && isPanelOpen;
           return (

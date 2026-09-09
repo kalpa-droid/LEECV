@@ -14,6 +14,7 @@ export interface PdfPreviewStripProps {
   setOptions: React.Dispatch<React.SetStateAction<BookImpositionOptions>>;
   zoomScale?: number;
   pdfDoc?: any;
+  activeStep?: string;
 }
 
 export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
@@ -23,10 +24,12 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
   setOptions,
   zoomScale = 1.0,
   pdfDoc: pdfDocProp,
+  activeStep = '',
 }) => {
   const [internalPdfDoc, setInternalPdfDoc] = useState<any>(null);
   const [isLoadingPdfDoc, setIsLoadingPdfDoc] = useState<boolean>(false);
   const [activeLightboxPage, setActiveLightboxPage] = useState<number | null>(null);
+  const [showDeletedPages, setShowDeletedPages] = useState<boolean>(false);
 
   const pdfDoc = pdfDocProp || internalPdfDoc;
 
@@ -196,12 +199,24 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
           </span>
         </div>
 
-        {options.refBookPage ? (
-          <div className="flex items-center gap-1.5 text-[11px] text-[var(--color-status-success-bright)] font-semibold">
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Ref: Pág. {options.refPdfPage} PDF → Impresa {options.refBookPage} ({options.refPageSide})</span>
-          </div>
-        ) : null}
+        <div className="flex items-center gap-3">
+          {deletedPagesSet.size > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowDeletedPages(!showDeletedPages)}
+              className="px-2.5 py-1 rounded-lg bg-[var(--ui-bg-surface)] hover:bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-xs font-semibold text-[var(--ui-text-primary)] transition cursor-pointer flex items-center gap-1.5"
+            >
+              {showDeletedPages ? 'Ocultar eliminadas' : 'Ver páginas eliminadas'}
+            </button>
+          )}
+
+          {options.refBookPage ? (
+            <div className="flex items-center gap-1.5 text-[11px] text-[var(--color-status-success-bright)] font-semibold">
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Ref: Pág. {options.refPdfPage} PDF → Impresa {options.refBookPage} ({options.refPageSide})</span>
+            </div>
+          ) : null}
+        </div>
       </div>
 
       {/* Grilla de Miniaturas Responsive con Escala Zoom */}
@@ -331,16 +346,27 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
           onClose={() => setActiveLightboxPage(null)}
           pageNum={activeLightboxPage}
           pdfDoc={pdfDoc}
+          totalPages={pdfPageCount}
           rotation={pageRotations[activeLightboxPage] || 0}
           refPdfPage={options.refPdfPage}
           refBookPage={options.refBookPage}
           refPageSide={options.refPageSide}
           splitOffset={pageSplitOffsets[activeLightboxPage] !== undefined ? pageSplitOffsets[activeLightboxPage] : 50}
           isFotocopiaMode={isFotocopiaMode}
+          isDeleted={deletedPagesSet.has(String(activeLightboxPage))}
+          deletedPages={options.deletedPages}
+          showDeletedPages={showDeletedPages}
+          activeStep={activeStep}
           onSaveReferencePage={handleSaveReference}
           onSaveSplitOffset={isFotocopiaMode ? handleSplitOffsetChange : undefined}
+          onNavigate={(nextP) => setActiveLightboxPage(nextP)}
+          onRotate={handleRotatePage}
+          onToggleDelete={handleToggleDelete}
+          onMoveLeft={(p) => handleMovePage(p, 'left')}
+          onMoveRight={(p) => handleMovePage(p, 'right')}
         />
       )}
     </div>
   );
 };
+

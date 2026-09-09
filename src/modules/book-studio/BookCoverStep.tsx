@@ -74,14 +74,14 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
       <div className="space-y-1">
         <h2 className="text-xl font-bold tracking-tight text-[var(--ui-text-primary)] flex items-center gap-2">
           <BookOpen className="w-5 h-5 text-[var(--color-accent-text)]" />
-          <span>3. Tapa & Retiro</span>
+          <span>3. Tapa</span>
         </h2>
         <p className="text-xs text-[var(--ui-text-secondary)]">
           {t.bookStudio.coverStep.description}
         </p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <button
           type="button"
           onClick={() => handleCoverTypeChange('source')}
@@ -110,16 +110,6 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
           } text-xs font-bold text-center py-2.5 px-2`}
         >
           Subir mi Tapa
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleCoverTypeChange('none')}
-          className={`${selectableCard.base} ${
-            coverType === 'none' ? selectableCard.selected : selectableCard.unselected
-          } text-xs font-bold text-center py-2.5 px-2`}
-        >
-          Sin Tapa Especial
         </button>
       </div>
 
@@ -221,10 +211,6 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
 
       {/* Retiro de Tapa y Hoja en Blanco Posterior */}
       <div className={`space-y-4 p-4 rounded-[${radius.card}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)]`}>
-        <h3 className="text-xs font-bold text-[var(--ui-text-primary)] uppercase tracking-wider block">
-          Ajustes de Retiro de Tapa
-        </h3>
-
         <label className={`flex items-center justify-between p-3 rounded-[${radius.control}] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] cursor-pointer hover:border-[var(--ui-dock-border)] transition-all`}>
           <div className="space-y-0.5 pr-4">
             <span className="font-bold block text-xs text-[var(--ui-text-primary)]">Hoja en blanco detrás de la Tapa</span>

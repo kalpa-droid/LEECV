@@ -109,11 +109,11 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   };
 
   const handleNavigateNextStep = (currentStep: string) => {
-    setActiveStepTab(getNextBookStepId(currentStep));
+    setActiveStepTab(getNextBookStepId(currentStep, options.mode));
   };
 
   const handleNavigatePrevStep = (currentStep: string) => {
-    setActiveStepTab(getPrevBookStepId(currentStep));
+    setActiveStepTab(getPrevBookStepId(currentStep, options.mode));
   };
 
   const handleTriggerFileInput = () => {
@@ -147,6 +147,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
       dockSlot={
         <CanvaIconDock
           docType="book"
+          bookMode={options.mode}
           activeTab={activeStepTab}
           setActiveTab={setActiveStepTab}
           isPanelOpen={isPanelOpen}
@@ -228,6 +229,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               zoomScale={bookZoom}
               pdfDoc={pdfDoc}
               onConfirm={() => setActiveStepTab('book_preview_export')}
+              activeStep={activeStepTab}
             />
           ) : (
             <div className="text-center p-10 bg-[var(--ui-bg-card)] rounded-2xl border-2 border-dashed border-[var(--ui-border)] max-w-md space-y-3">
