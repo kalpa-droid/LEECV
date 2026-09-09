@@ -191,47 +191,49 @@ export default function Navbar({
 
                 <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
 
-                {/* 1. Guardar Cambios (Sobrescribir Activo) */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsActionMenuOpen(false);
-                    onSaveCVClick();
-                  }}
-                  disabled={isSaving}
-                  className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer disabled:opacity-50`}
-                >
-                  <Save className="w-4 h-4 text-[var(--color-accent-purple-bright)]" />
-                  <span>{isSaving ? t.navbar.saveChangesSaving : t.navbar.saveChangesOverwrite}</span>
-                </button>
+                {/* 1. Guardar Cambios, Copias y Backup JSON (Solo para CVs) */}
+                {docType === 'cv' && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsActionMenuOpen(false);
+                        onSaveCVClick();
+                      }}
+                      disabled={isSaving}
+                      className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer disabled:opacity-50`}
+                    >
+                      <Save className="w-4 h-4 text-[var(--color-accent-purple-bright)]" />
+                      <span>{isSaving ? t.navbar.saveChangesSaving : t.navbar.saveChangesOverwrite}</span>
+                    </button>
 
-                {/* 2. Guardar una copia para... */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsActionMenuOpen(false);
-                    onOpenSaveAsModal();
-                  }}
-                  className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
-                >
-                  <CopyPlus className="w-4 h-4 text-[var(--color-secondary-bright)]" />
-                  <span>{t.navbar.saveCopyAs}</span>
-                </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsActionMenuOpen(false);
+                        onOpenSaveAsModal();
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
+                    >
+                      <CopyPlus className="w-4 h-4 text-[var(--color-secondary-bright)]" />
+                      <span>{t.navbar.saveCopyAs}</span>
+                    </button>
 
-                {/* 4. Descargar Copia Portátil (.JSON / .ZIP) */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsActionMenuOpen(false);
-                    onOpenJsonDownloadModal();
-                  }}
-                  className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
-                >
-                  <FileArchive className="w-4 h-4 text-[var(--color-status-warning-bright)]" />
-                  <span>{t.navbar.downloadPortableCopy}</span>
-                </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsActionMenuOpen(false);
+                        onOpenJsonDownloadModal();
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
+                    >
+                      <FileArchive className="w-4 h-4 text-[var(--color-status-warning-bright)]" />
+                      <span>{t.navbar.downloadPortableCopy}</span>
+                    </button>
 
-                <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
+                    <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
+                  </>
+                )}
 
                 {/* 5. Exportar en PDF */}
                 <button

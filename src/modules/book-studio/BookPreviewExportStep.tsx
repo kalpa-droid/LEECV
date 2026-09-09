@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, CheckCircle2, AlertTriangle, Printer, Sparkles, Download, AlertCircle } from 'lucide-react';
+import { BookOpen, CheckCircle2, AlertTriangle, Printer, Sparkles, Download, AlertCircle, ChevronLeft } from 'lucide-react';
 import { BookImpositionOptions, processBookImposition } from '../../shared/core/book-engine/impositionEngine';
 import { calculateFinalBookPageCount } from '../../shared/core/book-engine/bookPageCount';
 import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
@@ -11,12 +11,14 @@ interface BookPreviewExportStepProps {
   options: BookImpositionOptions;
   selectedFile: File | null;
   pdfPageCount: number;
+  onPrevStep?: () => void;
 }
 
 export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   options,
   selectedFile,
   pdfPageCount,
+  onPrevStep,
 }) => {
   const t = useText();
   const { consumeCredits, isGating, gateError } = usePdfExportGate();
@@ -233,6 +235,21 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
           )}
         </div>
       )}
+
+      {/* Navegación Bidireccional */}
+      {onPrevStep && (
+        <div className="pt-4 border-t border-[var(--ui-border)] flex justify-start">
+          <button
+            type="button"
+            onClick={onPrevStep}
+            className={`py-2 px-4 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] transition flex items-center gap-1.5 cursor-pointer`}
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span>Volver</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };
+

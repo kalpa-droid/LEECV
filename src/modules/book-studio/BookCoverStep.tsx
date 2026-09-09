@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, Check, Palette, ChevronRight } from 'lucide-react';
+import { BookOpen, Check, Palette, ChevronLeft, ChevronRight } from 'lucide-react';
 import { BookImpositionOptions, CoverConfig } from '../../shared/core/book-engine/impositionEngine';
 import { COVER_PRESETS } from '../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
 import { radius, typeScale } from '../../shared/core/uiDesignSystem';
@@ -9,9 +9,10 @@ interface BookCoverStepProps {
   options: BookImpositionOptions;
   setOptions: React.Dispatch<React.SetStateAction<BookImpositionOptions>>;
   onNextStep?: () => void;
+  onPrevStep?: () => void;
 }
 
-export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOptions, onNextStep }) => {
+export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOptions, onNextStep, onPrevStep }) => {
   const t = useText();
   const [coverType, setCoverType] = useState<'source' | 'custom' | 'upload' | 'none'>(
     options.hasCover
@@ -250,8 +251,20 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
         </label>
       </div>
 
-      {onNextStep && (
-        <div className="pt-4 border-t border-[var(--ui-border)] flex justify-end">
+      {/* Navegación Bidireccional */}
+      <div className="pt-4 border-t border-[var(--ui-border)] flex items-center justify-between">
+        {onPrevStep ? (
+          <button
+            type="button"
+            onClick={onPrevStep}
+            className={`py-2 px-4 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] transition flex items-center gap-1.5 cursor-pointer`}
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span>Volver</span>
+          </button>
+        ) : <div />}
+
+        {onNextStep && (
           <button
             type="button"
             onClick={onNextStep}
@@ -260,8 +273,9 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
             <span>Siguiente: 6. Contratapa</span>
             <ChevronRight className="w-4 h-4" />
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
+

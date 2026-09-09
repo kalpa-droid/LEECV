@@ -1,5 +1,5 @@
-import React from 'react';
-import { Hash, CheckCircle2, Info, RefreshCw, ChevronRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { Hash, CheckCircle2, Info, RefreshCw, ChevronLeft, ChevronRight, AlertTriangle, X } from 'lucide-react';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
 import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
@@ -9,6 +9,7 @@ interface BookFoliadoStepProps {
   options: BookImpositionOptions;
   setOptions: React.Dispatch<React.SetStateAction<BookImpositionOptions>>;
   onNextStep?: () => void;
+  onPrevStep?: () => void;
 }
 
 export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
@@ -16,8 +17,11 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
   options,
   setOptions,
   onNextStep,
+  onPrevStep,
 }) => {
   const t = useText();
+  const [showWarningModal, setShowWarningModal] = useState(false);
+
   const refPdfPage = options.refPdfPage || 0;
   const refBookPage = options.refBookPage || 0;
   const refPageSide = options.refPageSide || 'derecha';
@@ -47,8 +51,16 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
     }));
   };
 
+  const handleNextClick = () => {
+    if (!isCalibrated) {
+      setShowWarningModal(true);
+    } else if (onNextStep) {
+      onNextStep();
+    }
+  };
+
   return (
-    <div className="space-y-6 text-[var(--ui-text-primary)]">
+    <div className="space-y-6 text-[var(--ui-text-primary)] relative">
       <div className="space-y-1">
         <h2 className="text-xl font-bold tracking-tight text-[var(--ui-text-primary)] flex items-center gap-2">
           <Hash className="w-5 h-5 text-[var(--color-secondary-bright)]" />
@@ -174,18 +186,78 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
         </div>
       )}
 
-      {onNextStep && (
-        <div className="pt-4 border-t border-[var(--ui-border)] flex justify-end">
+      {/* Navegación Bidireccional */}
+      <div className="pt-4 border-t border-[var(--ui-border)] flex items-center justify-between">
+        {onPrevStep ? (
           <button
             type="button"
-            onClick={onNextStep}
+            onClick={onPrevStep}
+            className={`py-2 px-4 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] transition flex items-center gap-1.5 cursor-pointer`}
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span>Volver</span>
+          </button>
+        ) : <div />}
+
+        {onNextStep && (
+          <button
+            type="button"
+            onClick={handleNextClick}
             className={`py-2 px-4 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold text-[var(--color-accent-text)] transition flex items-center gap-1.5 cursor-pointer`}
           >
             <span>Siguiente: 4. Imprenta</span>
             <ChevronRight className="w-4 h-4" />
           </button>
+        )}
+      </div>
+
+      {/* Modal de Advertencia de Calibración */}
+      {showWarningModal && (
+        <div className="fixed inset-0 z-[250] bg-black/70 flex items-center justify-center p-4 backdrop-blur-xs animate-fadeIn">
+          <div className={`w-full max-w-md bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.modal}] p-5 space-y-4 shadow-2xl relative text-[var(--ui-text-primary)]`}>
+            <button
+              type="button"
+              onClick={() => setShowWarningModal(false)}
+              className="absolute top-3 right-3 p-1 rounded-full text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] transition cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-full bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-bright)]">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm">¿Continuar sin foliado de referencia?</h3>
+                <p className="text-xs text-[var(--ui-text-secondary)] mt-0.5">
+                  No has especificado la página de referencia. El motor asumirá que la página 1 del PDF es el inicio directo del libro.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--ui-border)]">
+              <button
+                type="button"
+                onClick={() => setShowWarningModal(false)}
+                className={`px-3 py-2 rounded-[${radius.control}] border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-border)] text-xs font-bold transition cursor-pointer`}
+              >
+                Configurar Referencia
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowWarningModal(false);
+                  onNextStep?.();
+                }}
+                className={`px-3 py-2 rounded-[${radius.control}] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-xs font-bold hover:opacity-90 transition cursor-pointer`}
+              >
+                Continuar Sin Referencia
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
   );
 };
+

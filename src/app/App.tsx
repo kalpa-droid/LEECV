@@ -516,12 +516,13 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   }
 
   if (currentRoute === '/crear-libro') {
+    const activeBookTab = tabs.find(t => t.docType === 'book' || t.cvId.startsWith('book-')) || { cvId: 'book-main' };
     return (
       <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Creador de Libros...</div>}>
         <BookStudio
           onBackToHome={() => onNavigate?.('/')}
           documentTabs={tabs}
-          activeTabId={activeCvId || 'book'}
+          activeTabId={activeBookTab.cvId}
           onSelectTab={handleSwitchDocumentTab}
           onCloseTab={(id) => {
             const tab = tabs.find(t => t.cvId === id);

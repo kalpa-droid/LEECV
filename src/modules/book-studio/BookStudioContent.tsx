@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AppShell } from '../../shared/core/ui/AppShell';
 import Navbar from '../cv-builder/components/Navbar';
 import CanvaIconDock from '../cv-builder/components/CanvaIconDock';
@@ -42,8 +42,9 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [pdfDoc, setPdfDoc] = useState<any>(null);
   const [pdfPageCount, setPdfPageCount] = useState<number>(0);
-  const [bookId, setBookId] = useState<string | null>(activeTabId.startsWith('book-') ? activeTabId : null);
+  const [bookId, setBookId] = useState<string>(() => (activeTabId && activeTabId.startsWith('book-') ? activeTabId : 'book-main'));
   const [bookZoom, setBookZoom] = useState<number>(1);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [options, setOptions] = useState<BookImpositionOptions>({
     mode: 'normal',
@@ -65,17 +66,20 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
     blankInFrontBackCover: true,
   });
 
+  // Garantizar que la pestaña activa sea "Mi Libro / Folleto" desde la carga inicial
+  useEffect(() => {
+    const currentId = bookId || 'book-main';
+    const name = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, '') : 'Mi Libro / Folleto';
+    const updatedTabs = addOpenTab(currentId, name, undefined, 'book');
+    onTabsChanged(updatedTabs);
+  }, [bookId]);
+
   const persistBookState = (file: File | null, opts: BookImpositionOptions) => {
     const id = bookId || `book-${Date.now()}`;
-    const name = file ? file.name.replace(/\.[^/.]+$/, '') : 'Nuevo Libro';
+    const name = file ? file.name.replace(/\.[^/.]+$/, '') : 'Mi Libro / Folleto';
     if (!bookId) {
       setBookId(id);
     }
-    // addOpenTab devuelve la lista de pestañas ya actualizada — antes se
-    // descartaba ese valor de retorno, así que localStorage quedaba
-    // correcto pero el estado de React de App.tsx (que es quien realmente
-    // pinta la barra de pestañas) nunca se enteraba del cambio y seguía
-    // mostrando lo último que vio del CV.
     const updatedTabs = addOpenTab(id, name, undefined, 'book');
     onTabsChanged(updatedTabs);
     saveBook({
@@ -120,6 +124,29 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
     }
   };
 
+  const handleNavigatePrevStep = (currentStep: string) => {
+    const sequence = [
+      'book_source_type',
+      'book_organize',
+      'book_foliado',
+      'book_paper',
+      'book_cover',
+      'book_back_cover',
+      'book_preview_export',
+    ];
+    const currentIndex = sequence.indexOf(currentStep);
+    if (currentIndex > 0) {
+      setActiveStepTab(sequence[currentIndex - 1]);
+    }
+  };
+
+  const handleTriggerFileInput = () => {
+    setActiveStepTab('book_source_type');
+    setTimeout(() => {
+      fileInputRef.current?.click();
+    }, 100);
+  };
+
   return (
     <AppShell
       docType="book"
@@ -162,6 +189,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               setPdfPageCount={setPdfPageCount}
               onPdfLoaded={(doc) => setPdfDoc(doc)}
               onNextStep={() => handleNavigateNextStep('book_source_type')}
+              fileInputRef={fileInputRef}
             />
           )}
 
@@ -171,6 +199,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               options={options}
               setOptions={handleOptionsChange}
               onNextStep={() => handleNavigateNextStep('book_organize')}
+              onPrevStep={() => handleNavigatePrevStep('book_organize')}
             />
           )}
 
@@ -180,6 +209,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               options={options}
               setOptions={handleOptionsChange}
               onNextStep={() => handleNavigateNextStep('book_foliado')}
+              onPrevStep={() => handleNavigatePrevStep('book_foliado')}
             />
           )}
 
@@ -188,6 +218,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               options={options}
               setOptions={handleOptionsChange}
               onNextStep={() => handleNavigateNextStep('book_paper')}
+              onPrevStep={() => handleNavigatePrevStep('book_paper')}
             />
           )}
 
@@ -196,6 +227,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               options={options}
               setOptions={handleOptionsChange}
               onNextStep={() => handleNavigateNextStep('book_cover')}
+              onPrevStep={() => handleNavigatePrevStep('book_cover')}
             />
           )}
 
@@ -204,6 +236,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               options={options}
               setOptions={handleOptionsChange}
               onNextStep={() => handleNavigateNextStep('book_back_cover')}
+              onPrevStep={() => handleNavigatePrevStep('book_back_cover')}
             />
           )}
 
@@ -212,6 +245,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               options={options}
               selectedFile={selectedFile}
               pdfPageCount={pdfPageCount}
+              onPrevStep={() => handleNavigatePrevStep('book_preview_export')}
             />
           )}
         </div>
@@ -236,7 +270,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               </p>
               <button
                 type="button"
-                onClick={() => setActiveStepTab('book_source_type')}
+                onClick={handleTriggerFileInput}
                 className="px-5 py-2.5 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold text-xs rounded-xl hover:opacity-90 transition cursor-pointer"
               >
                 Cargar PDF Ahora

@@ -173,7 +173,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
           />
         </div>
 
-        {/* Lado Derecho: Formulario de Configuración y Corte Central */}
+        {/* Lado Derecho: Inspección y Ajuste de Corte Central */}
         <div className="w-full md:w-80 p-5 bg-[var(--ui-bg-panel)] border-t md:border-t-0 md:border-l border-[var(--ui-border)] flex flex-col justify-between space-y-4 overflow-y-auto">
           <div className="space-y-4">
             <div className="space-y-1">
@@ -182,19 +182,12 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
               </span>
               <h3 className="text-base font-bold text-[var(--ui-text-primary)] flex items-center gap-1.5 pt-1">
                 <Bookmark className="w-4 h-4 text-[var(--color-secondary-bright)]" />
-                <span>Página de Referencia & Corte</span>
+                <span>Inspección de Página</span>
               </h3>
               <p className="text-xs text-[var(--ui-text-secondary)] leading-relaxed">
-                Especifica la página impresa y ajusta la posición del corte central para escaneos dobles.
+                Vista previa de alta resolución. {isFotocopiaMode ? 'Ajusta la posición del corte central para el pliego.' : ''}
               </p>
             </div>
-
-            {isCurrentReference && (
-              <div className={`p-3 bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/30 rounded-[${radius.control}] flex items-center gap-2 text-xs text-[var(--color-status-success-text)] font-semibold`}>
-                <Check className="w-4 h-4 text-[var(--color-status-success-bright)] shrink-0" />
-                <span>Referencia activa (Pág. Impresa {refBookPage}, lado {refPageSide}).</span>
-              </div>
-            )}
 
             {/* Ajuste de Corte Central Manual (splitOffset) SOLO en modo Fotocopia */}
             {isFotocopiaMode && (
@@ -223,75 +216,24 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
                 </div>
               </div>
             )}
-
-            <form onSubmit={handleApplyReference} className="space-y-3.5 pt-1">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-[var(--ui-text-primary)] block">
-                  Número Impreso en esta Hoja
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  value={inputBookPage}
-                  onChange={(e) => setInputBookPage(parseInt(e.target.value, 10) || 1)}
-                  className={`w-full px-3 py-2 text-xs font-bold rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] focus:border-[var(--color-accent-base)] outline-hidden text-[var(--ui-text-primary)]`}
-                  placeholder="Ej: 15"
-                />
-              </div>
-
-              {isFotocopiaMode ? (
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-[var(--ui-text-primary)] block">
-                    Ubicación Impresa
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setInputPageSide('derecha')}
-                      className={`py-2 px-3 text-xs font-bold rounded-[${radius.control}] border transition cursor-pointer ${
-                        inputPageSide === 'derecha'
-                          ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
-                          : 'border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-panel)]'
-                      }`}
-                    >
-                      Derecha (Impar)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setInputPageSide('izquierda')}
-                      className={`py-2 px-3 text-xs font-bold rounded-[${radius.control}] border transition cursor-pointer ${
-                        inputPageSide === 'izquierda'
-                          ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
-                          : 'border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-panel)]'
-                      }`}
-                    >
-                      Izquierda (Par)
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-[11px] text-[var(--ui-text-secondary)]">
-                  Se va a considerar del lado {inputPageSide === 'derecha' ? 'derecho' : 'izquierdo'}{' '}
-                  (según el número que escribiste arriba — {inputPageSide === 'derecha' ? 'impar' : 'par'}).
-                </p>
-              )}
-
-              <button
-                type="submit"
-                className={`w-full py-2.5 px-4 rounded-[${radius.control}] font-bold text-xs bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] hover:opacity-90 transition flex items-center justify-center gap-1.5 cursor-pointer mt-2`}
-              >
-                <Check className="w-4 h-4" />
-                <span>{isSavedNotice ? '¡Ajustes Guardados!' : 'Guardar Ajustes de Página'}</span>
-              </button>
-            </form>
           </div>
 
-          {isFotocopiaMode && (
-            <div className="pt-3 border-t border-[var(--ui-border)] flex items-center gap-2 text-[11px] text-[var(--ui-text-secondary)]">
-              <AlertCircle className="w-3.5 h-3.5 shrink-0 text-[var(--color-secondary-bright)]" />
-              <span>La línea roja punteada ✂ indica por dónde cortará el motor.</span>
-            </div>
-          )}
+          <div className="space-y-2 pt-3 border-t border-[var(--ui-border)]">
+            {isFotocopiaMode && (
+              <div className="flex items-center gap-2 text-[11px] text-[var(--ui-text-secondary)]">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 text-[var(--color-secondary-bright)]" />
+                <span>La línea roja punteada ✂ indica por dónde cortará el motor.</span>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className={`w-full py-2.5 px-4 rounded-[${radius.control}] font-bold text-xs bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] hover:opacity-90 transition flex items-center justify-center gap-1.5 cursor-pointer`}
+            >
+              <Check className="w-4 h-4" />
+              <span>Cerrar Inspección</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

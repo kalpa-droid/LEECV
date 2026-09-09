@@ -231,7 +231,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         <button
           type="button"
           onClick={() => onRotate(pageNum)}
-          title="Rotar 90° hacia la derecha"
+          title={isFotocopiaMode ? 'Girar 180°' : 'Rotar 90° hacia la derecha'}
           className="p-1 rounded hover:bg-[var(--ui-bg-panel)] text-[var(--color-secondary-bright)] cursor-pointer"
         >
           <RotateCw className="w-3.5 h-3.5" />

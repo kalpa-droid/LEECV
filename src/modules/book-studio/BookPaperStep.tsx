@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings, FileText, Info, ChevronRight } from 'lucide-react';
+import { Settings, FileText, Info, ChevronLeft, ChevronRight } from 'lucide-react';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
 import { radius } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
@@ -8,9 +8,10 @@ interface BookPaperStepProps {
   options: BookImpositionOptions;
   setOptions: React.Dispatch<React.SetStateAction<BookImpositionOptions>>;
   onNextStep?: () => void;
+  onPrevStep?: () => void;
 }
 
-export const BookPaperStep: React.FC<BookPaperStepProps> = ({ options, setOptions, onNextStep }) => {
+export const BookPaperStep: React.FC<BookPaperStepProps> = ({ options, setOptions, onNextStep, onPrevStep }) => {
   const t = useText();
   return (
     <div className="space-y-6 text-[var(--ui-text-primary)]">
@@ -86,8 +87,20 @@ export const BookPaperStep: React.FC<BookPaperStepProps> = ({ options, setOption
         </label>
       </div>
 
-      {onNextStep && (
-        <div className="pt-4 border-t border-[var(--ui-border)] flex justify-end">
+      {/* Navegación Bidireccional */}
+      <div className="pt-4 border-t border-[var(--ui-border)] flex items-center justify-between">
+        {onPrevStep ? (
+          <button
+            type="button"
+            onClick={onPrevStep}
+            className={`py-2 px-4 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] transition flex items-center gap-1.5 cursor-pointer`}
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span>Volver</span>
+          </button>
+        ) : <div />}
+
+        {onNextStep && (
           <button
             type="button"
             onClick={onNextStep}
@@ -96,8 +109,9 @@ export const BookPaperStep: React.FC<BookPaperStepProps> = ({ options, setOption
             <span>Siguiente: 5. Tapa</span>
             <ChevronRight className="w-4 h-4" />
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
+

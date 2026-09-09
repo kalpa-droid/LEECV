@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookMarked, ChevronRight } from 'lucide-react';
+import { BookMarked, ChevronLeft, ChevronRight } from 'lucide-react';
 import { BookImpositionOptions, BackCoverConfig } from '../../shared/core/book-engine/impositionEngine';
 import { radius, typeScale } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
@@ -8,9 +8,10 @@ interface BookBackCoverStepProps {
   options: BookImpositionOptions;
   setOptions: React.Dispatch<React.SetStateAction<BookImpositionOptions>>;
   onNextStep?: () => void;
+  onPrevStep?: () => void;
 }
 
-export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, setOptions, onNextStep }) => {
+export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, setOptions, onNextStep, onPrevStep }) => {
   const t = useText();
   const [backCoverType, setBackCoverType] = useState<'source' | 'custom' | 'upload' | 'none'>(
     options.hasBackCover
@@ -207,8 +208,20 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
         </label>
       </div>
 
-      {onNextStep && (
-        <div className="pt-4 border-t border-[var(--ui-border)] flex justify-end">
+      {/* Navegación Bidireccional */}
+      <div className="pt-4 border-t border-[var(--ui-border)] flex items-center justify-between">
+        {onPrevStep ? (
+          <button
+            type="button"
+            onClick={onPrevStep}
+            className={`py-2 px-4 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] transition flex items-center gap-1.5 cursor-pointer`}
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span>Volver</span>
+          </button>
+        ) : <div />}
+
+        {onNextStep && (
           <button
             type="button"
             onClick={onNextStep}
@@ -217,8 +230,9 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
             <span>Siguiente: 7. Exportar</span>
             <ChevronRight className="w-4 h-4" />
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
+

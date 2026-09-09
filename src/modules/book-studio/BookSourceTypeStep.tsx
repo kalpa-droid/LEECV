@@ -14,6 +14,7 @@ interface BookSourceTypeStepProps {
   setPdfPageCount: (count: number) => void;
   onPdfLoaded?: (doc: any) => void;
   onNextStep?: () => void;
+  fileInputRef?: React.RefObject<HTMLInputElement | null>;
 }
 
 export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
@@ -25,6 +26,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
   setPdfPageCount,
   onPdfLoaded,
   onNextStep,
+  fileInputRef,
 }) => {
   const t = useText();
   const [isDragging, setIsDragging] = useState(false);
@@ -46,6 +48,22 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
       const pdfjsLib = ensurePdfjsWorkerConfigured();
       const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
       setPdfPageCount(pdf.numPages);
+
+      // Auto-detección: Si es modo fotocopia y la página viene vertical (alto > ancho), aplicar 90° global
+      try {
+        const firstPage = await pdf.getPage(1);
+        const vp = firstPage.getViewport({ scale: 1.0 });
+        if (options.mode === 'fotocopia' && vp.height > vp.width) {
+          const autoRotations: Record<number, number> = {};
+          for (let i = 1; i <= pdf.numPages; i++) {
+            autoRotations[i] = 90;
+          }
+          setOptions((prev) => ({ ...prev, pageRotations: autoRotations }));
+        }
+      } catch (e) {
+        console.warn('Auto-detection orientation check:', e);
+      }
+
       onPdfLoaded?.(pdf);
     } catch (err) {
       console.error(err);
@@ -150,6 +168,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
           }`}
         >
           <input
+            ref={fileInputRef}
             type="file"
             accept=".pdf"
             onChange={(e) => e.target.files?.[0] && handleFileChange(e.target.files[0])}
