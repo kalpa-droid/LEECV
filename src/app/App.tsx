@@ -528,6 +528,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
             handleCloseFooterTab({ stopPropagation: () => {} } as any, id, tab?.title || 'Documento');
           }}
           onNavigateToDocument={(targetDocType, id) => handleNavigateToDocumentTab(targetDocType as 'cv' | 'business_card' | 'book', id)}
+          onTabsChanged={(updated) => setTabs(updated)}
           onNewCV={handleNewCV}
           onNewBook={() => onNavigate?.('/crear-libro')}
           cycleUITheme={() => {

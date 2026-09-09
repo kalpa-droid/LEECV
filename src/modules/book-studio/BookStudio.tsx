@@ -11,6 +11,7 @@ interface BookStudioProps {
   onNewCV?: () => void;
   onNewBook?: () => void;
   cycleUITheme?: () => void;
+  onTabsChanged?: (tabs: any[]) => void;
 }
 
 export const BookStudio: React.FC<BookStudioProps> = ({
@@ -22,6 +23,7 @@ export const BookStudio: React.FC<BookStudioProps> = ({
   onNewCV,
   onNewBook,
   cycleUITheme = () => {},
+  onTabsChanged = () => {},
 }) => {
   return (
     <BookStudioContent
@@ -33,6 +35,7 @@ export const BookStudio: React.FC<BookStudioProps> = ({
       onNewCV={onNewCV}
       onNewBook={onNewBook}
       cycleUITheme={cycleUITheme}
+      onTabsChanged={onTabsChanged}
     />
   );
 };
