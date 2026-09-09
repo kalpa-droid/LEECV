@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutGrid, RotateCw, RotateCcw, RefreshCw, Plus } from 'lucide-react';
+import { LayoutGrid, RotateCw, RotateCcw, RefreshCw, Plus, ChevronRight } from 'lucide-react';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
 import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
@@ -8,12 +8,14 @@ interface BookOrganizeStepProps {
   pdfPageCount: number;
   options: BookImpositionOptions;
   setOptions: React.Dispatch<React.SetStateAction<BookImpositionOptions>>;
+  onNextStep?: () => void;
 }
 
 export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
   pdfPageCount,
   options,
   setOptions,
+  onNextStep,
 }) => {
   const t = useText();
   const deletedCount = (options.deletedPages || []).length;
@@ -49,6 +51,26 @@ export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
       const nextRotations = { ...(prev.pageRotations || {}) };
       for (let i = 1; i <= pdfPageCount; i += 2) {
         nextRotations[i] = ((nextRotations[i] || 0) + 180) % 360;
+      }
+      return { ...prev, pageRotations: nextRotations };
+    });
+  };
+
+  const handleRotateAllLeft90 = () => {
+    setOptions((prev) => {
+      const nextRotations = { ...(prev.pageRotations || {}) };
+      for (let i = 1; i <= pdfPageCount; i++) {
+        nextRotations[i] = ((nextRotations[i] || 0) - 90 + 360) % 360;
+      }
+      return { ...prev, pageRotations: nextRotations };
+    });
+  };
+
+  const handleRotateAllRight90 = () => {
+    setOptions((prev) => {
+      const nextRotations = { ...(prev.pageRotations || {}) };
+      for (let i = 1; i <= pdfPageCount; i++) {
+        nextRotations[i] = ((nextRotations[i] || 0) + 90) % 360;
       }
       return { ...prev, pageRotations: nextRotations };
     });
@@ -102,8 +124,28 @@ export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
       {/* Rotaciones Masivas */}
       <div className="space-y-3">
         <h3 className="text-xs font-bold text-[var(--ui-text-primary)] uppercase tracking-wider block">
-          Rotaciones Masivas
+          Rotaciones Masivas de Lote
         </h3>
+
+        {/* Rotación masiva de 90° para escaneos horizontales */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={handleRotateAllLeft90}
+            className={`p-2.5 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer text-[var(--ui-text-primary)]`}
+          >
+            <RotateCcw className="w-3.5 h-3.5 text-[var(--color-secondary-bright)]" />
+            <span>Girar Todo -90° (↺)</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleRotateAllRight90}
+            className={`p-2.5 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer text-[var(--ui-text-primary)]`}
+          >
+            <RotateCw className="w-3.5 h-3.5 text-[var(--color-secondary-bright)]" />
+            <span>Girar Todo +90° (↻)</span>
+          </button>
+        </div>
 
         <button
           type="button"
@@ -185,6 +227,19 @@ export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
           </button>
         )}
       </div>
+
+      {onNextStep && (
+        <div className="pt-4 border-t border-[var(--ui-border)] flex justify-end">
+          <button
+            type="button"
+            onClick={onNextStep}
+            className={`py-2 px-4 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold text-[var(--color-accent-text)] transition flex items-center gap-1.5 cursor-pointer`}
+          >
+            <span>Siguiente: 3. Foliado</span>
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

@@ -96,6 +96,22 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
     });
   };
 
+  const handleNavigateNextStep = (currentStep: string) => {
+    const sequence = [
+      'book_source_type',
+      'book_organize',
+      'book_foliado',
+      'book_paper',
+      'book_cover',
+      'book_back_cover',
+      'book_preview_export',
+    ];
+    const currentIndex = sequence.indexOf(currentStep);
+    if (currentIndex >= 0 && currentIndex < sequence.length - 1) {
+      setActiveStepTab(sequence[currentIndex + 1]);
+    }
+  };
+
   return (
     <AppShell
       docType="book"
@@ -137,6 +153,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               pdfPageCount={pdfPageCount}
               setPdfPageCount={setPdfPageCount}
               onPdfLoaded={(doc) => setPdfDoc(doc)}
+              onNextStep={() => handleNavigateNextStep('book_source_type')}
             />
           )}
 
@@ -145,6 +162,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               pdfPageCount={pdfPageCount}
               options={options}
               setOptions={handleOptionsChange}
+              onNextStep={() => handleNavigateNextStep('book_organize')}
             />
           )}
 
@@ -153,6 +171,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               pdfPageCount={pdfPageCount}
               options={options}
               setOptions={handleOptionsChange}
+              onNextStep={() => handleNavigateNextStep('book_foliado')}
             />
           )}
 
@@ -160,6 +179,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
             <BookPaperStep
               options={options}
               setOptions={handleOptionsChange}
+              onNextStep={() => handleNavigateNextStep('book_paper')}
             />
           )}
 
@@ -167,6 +187,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
             <BookCoverStep
               options={options}
               setOptions={handleOptionsChange}
+              onNextStep={() => handleNavigateNextStep('book_cover')}
             />
           )}
 
@@ -174,6 +195,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
             <BookBackCoverStep
               options={options}
               setOptions={handleOptionsChange}
+              onNextStep={() => handleNavigateNextStep('book_back_cover')}
             />
           )}
 

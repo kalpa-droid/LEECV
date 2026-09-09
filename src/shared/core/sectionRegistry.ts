@@ -39,7 +39,7 @@ export interface SectionCatalogEntry {
 }
 
 export const SECTION_CATALOG: SectionCatalogEntry[] = [
-  { id: 'contacto', label: 'Contacto & Redes', tabId: 'personales', dataType: 'single_text', defaultSectorRole: 'sidebar', assignableToColumns: true, isUniversal: true },
+  { id: 'contacto', label: 'Contacto', tabId: 'personales', dataType: 'single_text', defaultSectorRole: 'sidebar', assignableToColumns: true, isUniversal: true },
   { id: 'datos-personales', label: 'Datos Personales', tabId: 'personales', dataType: 'single_text', defaultSectorRole: 'sidebar', assignableToColumns: true, isUniversal: true },
   { id: 'frase', label: 'Titular Profesional', tabId: 'personales', dataType: 'single_text', defaultSectorRole: 'sidebar', coverDisplayFields: ['quote'], assignableToColumns: true, shortLabel: 'Titular', isUniversal: true },
   { id: 'redes', label: 'Redes Sociales & Enlaces', tabId: 'redes', dataType: 'record_list', defaultSectorRole: 'sidebar', coverDisplayFields: ['url'], assignableToColumns: true, shortLabel: 'Redes', isUniversal: true },

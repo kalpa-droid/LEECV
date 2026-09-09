@@ -5,6 +5,8 @@ import { calculateFinalBookPageCount } from '../../shared/core/book-engine/bookP
 import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 
+import { usePdfExportGate } from '../../shared/core/hooks/usePdfExportGate';
+
 interface BookPreviewExportStepProps {
   options: BookImpositionOptions;
   selectedFile: File | null;
@@ -17,6 +19,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   pdfPageCount,
 }) => {
   const t = useText();
+  const { consumeCredits, isGating, gateError } = usePdfExportGate();
   const [isProcessing, setIsProcessing] = useState(false);
   const [progressPercent, setProgressPercent] = useState(0);
   const [statusMessage, setStatusMessage] = useState('');
@@ -51,6 +54,12 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   const totalSheetsToPrint = finalPageCount / 2;
 
   const handleStartExport = async () => {
+    const allowed = await consumeCredits(finalPageCount);
+    if (!allowed) {
+      if (gateError) setErrorMsg(gateError);
+      return;
+    }
+
     try {
       setIsProcessing(true);
       setErrorMsg(null);
@@ -202,10 +211,11 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
           <button
             type="button"
             onClick={handleStartExport}
-            className={`w-full py-3.5 px-6 rounded-[${radius.control}] font-bold text-sm bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] hover:opacity-90 transition flex items-center justify-center gap-2 ${elevationSystem.floating}`}
+            disabled={isGating}
+            className={`w-full py-3.5 px-6 rounded-[${radius.control}] font-bold text-sm bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] hover:opacity-90 disabled:opacity-50 transition flex items-center justify-center gap-2 ${elevationSystem.floating}`}
           >
             <Printer className="w-4 h-4" />
-            <span>Generar y Descargar PDF ({totalSheetsToPrint} pliegos)</span>
+            <span>{isGating ? 'Verificando créditos...' : `Generar y Descargar PDF (${totalSheetsToPrint} pliegos)`}</span>
             <Sparkles className="w-4 h-4" />
           </button>
 

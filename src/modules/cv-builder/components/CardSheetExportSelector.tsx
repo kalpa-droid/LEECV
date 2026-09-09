@@ -9,6 +9,8 @@ import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
 
 import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 
+import { usePdfExportGate } from '../../../shared/core/hooks/usePdfExportGate';
+
 const CARD_SIZE_OPTIONS = [
   { id: 'tarjeta_estandar', label: 'Estándar AR/US (89 × 51 mm)' },
   { id: 'tarjeta_europea', label: 'Europea (85 × 54 mm)' },
@@ -27,6 +29,7 @@ interface CardSheetExportSelectorProps {
 
 export function CardSheetExportSelector({ preset, cardData, onExported }: CardSheetExportSelectorProps) {
   const { showError, showSuccess } = useToast();
+  const { consumeCredits, isGating, gateError } = usePdfExportGate();
   const [cardSizeId, setCardSizeId] = useState('tarjeta_estandar');
   const [customWidthMm, setCustomWidthMm] = useState(85);
   const [customHeightMm, setCustomHeightMm] = useState(55);
@@ -52,6 +55,9 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
   }, [trimSize, sheetSize, printerMode, preset.print]);
 
   const handleExport = async () => {
+    const allowed = await consumeCredits(1);
+    if (!allowed) return;
+
     setIsExporting(true);
     await withErrorHandling(
       async () => {
@@ -181,19 +187,26 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
           </div>
         ) : (
           <p className="text-xs font-bold text-[var(--color-secondary-bright)]">
-            Entran <span className="font-black text-white">{preview.totalPerSheet} tarjetas</span> por hoja
+            Entran <span className="font-black text-[var(--color-neutral-text-primary)]">{preview.totalPerSheet} tarjetas</span> por hoja
             ({preview.cols} columnas × {preview.rows} filas), con sangrado y marcas de corte incluidas.
           </p>
         )}
       </div>
 
+      {gateError && (
+        <div className={`p-3 bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-text)]/40 rounded-[${radius.card}] text-xs text-[var(--color-status-danger-text)] font-bold flex items-center gap-2`}>
+          <AlertTriangle className="w-4 h-4 text-[var(--color-status-danger-text)] flex-shrink-0" />
+          <span>{gateError}</span>
+        </div>
+      )}
+
       <button
         onClick={handleExport}
-        disabled={isExporting || preview.totalPerSheet === 0}
+        disabled={isExporting || isGating || preview.totalPerSheet === 0}
         className={`w-full p-3 bg-[var(--color-accent-purple)] hover:opacity-90 disabled:opacity-50 text-white font-extrabold text-sm rounded-[${radius.card}] flex items-center justify-center gap-2 transition cursor-pointer ${elevationSystem.raised}`}
       >
         <Download className="w-4 h-4" />
-        {isExporting ? 'Generando PDF...' : 'Exportar hoja de tarjetas (frente + dorso)'}
+        {isExporting ? 'Generando PDF...' : isGating ? 'Verificando créditos...' : 'Exportar hoja de tarjetas (frente + dorso)'}
       </button>
     </div>
   );

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Hash, CheckCircle2, Info, RefreshCw } from 'lucide-react';
+import { Hash, CheckCircle2, Info, RefreshCw, ChevronRight } from 'lucide-react';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
 import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
@@ -8,12 +8,14 @@ interface BookFoliadoStepProps {
   pdfPageCount: number;
   options: BookImpositionOptions;
   setOptions: React.Dispatch<React.SetStateAction<BookImpositionOptions>>;
+  onNextStep?: () => void;
 }
 
 export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
   pdfPageCount,
   options,
   setOptions,
+  onNextStep,
 }) => {
   const t = useText();
   const refPdfPage = options.refPdfPage || 0;
@@ -168,6 +170,19 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Desactivar Foliado de Referencia</span>
+          </button>
+        </div>
+      )}
+
+      {onNextStep && (
+        <div className="pt-4 border-t border-[var(--ui-border)] flex justify-end">
+          <button
+            type="button"
+            onClick={onNextStep}
+            className={`py-2 px-4 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold text-[var(--color-accent-text)] transition flex items-center gap-1.5 cursor-pointer`}
+          >
+            <span>Siguiente: 4. Imprenta</span>
+            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       )}

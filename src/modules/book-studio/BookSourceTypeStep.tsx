@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layers, BookOpen, Copy, Upload, CheckCircle2 } from 'lucide-react';
+import { Layers, BookOpen, Copy, Upload, CheckCircle2, ChevronRight } from 'lucide-react';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
 import { ensurePdfjsWorkerConfigured } from '../../shared/core/pdf-engine/pdfjsWorkerSetup';
 import { radius } from '../../shared/core/uiDesignSystem';
@@ -13,6 +13,7 @@ interface BookSourceTypeStepProps {
   pdfPageCount: number;
   setPdfPageCount: (count: number) => void;
   onPdfLoaded?: (doc: any) => void;
+  onNextStep?: () => void;
 }
 
 export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
@@ -23,6 +24,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
   pdfPageCount,
   setPdfPageCount,
   onPdfLoaded,
+  onNextStep,
 }) => {
   const t = useText();
   const [isDragging, setIsDragging] = useState(false);
@@ -198,6 +200,19 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
           </div>
         )}
       </div>
+
+      {onNextStep && (
+        <div className="pt-4 border-t border-[var(--ui-border)] flex justify-end">
+          <button
+            type="button"
+            onClick={onNextStep}
+            className={`py-2 px-4 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold text-[var(--color-accent-text)] transition flex items-center gap-1.5 cursor-pointer`}
+          >
+            <span>Siguiente: 2. Páginas</span>
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 };
