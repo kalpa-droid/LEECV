@@ -805,7 +805,7 @@ export default function EditorPanel({
                   {cvData.certificatesScanned.map((cert) => (
                     <div key={cert.id} className={`flex items-center gap-3 p-2.5 bg-[var(--ui-bg-card)] rounded-[${radius.card}] border-2 border-[var(--color-neutral-border)] ${elevationSystem.raised}`}>
                       <img 
-                        src={cert.imageUrl} 
+                        src={cert.dataUrl || cert.imageUrl} 
                         alt={cert.title} 
                         style={{ transform: `rotate(${cert.rotation || 0}deg)` }}
                         className={`w-12 h-14 object-cover rounded-[${radius.control}] border border-[var(--color-neutral-border)] flex-shrink-0`} 
@@ -874,6 +874,10 @@ export default function EditorPanel({
                   title: selectedItem.title,
                   institution: selectedItem.institution,
                   year: selectedItem.year,
+                  // dataUrl es el campo canónico: lo lee el renderer del PDF (TemplateRenderer.tsx)
+                  // y el empaquetador de assets para Drive (driveDocumentPackager.ts). imageUrl se
+                  // mantiene en paralelo solo por compatibilidad con la miniatura de este panel.
+                  dataUrl: croppedUrl,
                   imageUrl: croppedUrl,
                   rotation: 0
                 };

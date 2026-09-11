@@ -61,10 +61,10 @@ export const optimizeCVImagesToWebP = async (cvData) => {
     if (Array.isArray(copy.certificatesScanned)) {
       copy.certificatesScanned = await Promise.all(
         copy.certificatesScanned.map(async (cert) => {
-          const rawSrc = cert.imageUrl || cert.image;
+          const rawSrc = cert.dataUrl || cert.imageUrl || cert.image;
           if (rawSrc) {
             const webpImage = await compressToWebP(rawSrc, 900, 0.7);
-            return { ...cert, imageUrl: webpImage, image: webpImage };
+            return { ...cert, dataUrl: webpImage, imageUrl: webpImage, image: webpImage };
           }
           return cert;
         })

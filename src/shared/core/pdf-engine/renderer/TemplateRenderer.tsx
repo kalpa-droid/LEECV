@@ -1359,8 +1359,8 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       {certificatesScanned && certificatesScanned.map((cert: any, index: number) => (
         <Page key={`cert-${index}`} size={pdfPaperSize} style={styles.certPage}>
           <Text style={styles.certTitle}>CERTIFICADO ADJUNTO #{index + 1}: {cert.title || cert.name || 'Certificación'}</Text>
-          {cert.dataUrl || cert.url ? (
-            <Image src={cert.dataUrl || cert.url} style={styles.certImage} />
+          {cert.dataUrl || cert.imageUrl || cert.url ? (
+            <Image src={cert.dataUrl || cert.imageUrl || cert.url} style={styles.certImage} />
           ) : (
             <Text style={{ color: '#94a3b8' }}>[ Imagen de Certificado no disponible ]</Text>
           )}

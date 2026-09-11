@@ -47,6 +47,12 @@ export interface EducationItem {
   description?: string;
 }
 
+/**
+ * @deprecated No se usa en ningún lugar del código real (confirmado por grep en todo `src/`).
+ * El campo que sí se usa para certificados es `ScannedCertificate` / `CVData.certificatesScanned`,
+ * más abajo. Se deja declarado por compatibilidad con documentos muy antiguos que puedan traer
+ * esta forma, pero no crear certificados nuevos con esta interfaz.
+ */
 export interface CertificateItem {
   id: string;
   title: string;
@@ -55,6 +61,32 @@ export interface CertificateItem {
   url?: string;
   imagePreview?: string;
   rotationAngle?: number;
+}
+
+/**
+ * Certificado escaneado/adjunto — la forma real que usa el editor (`EditorPanel.tsx`), el
+ * renderer del PDF (`TemplateRenderer.tsx`) y el empaquetador de assets para Drive
+ * (`driveDocumentPackager.ts`). `dataUrl` es el campo canónico (base64 o `ref://`/`asset://`
+ * una vez guardado); `imageUrl` se mantiene en paralelo solo por compatibilidad con la vista
+ * previa del panel lateral.
+ */
+export interface ScannedCertificate {
+  id: string;
+  title: string;
+  institution?: string;
+  year?: string;
+  dataUrl?: string;
+  /** @deprecated usar `dataUrl`. Se mantiene sincronizado por compatibilidad, no escribir solo este campo. */
+  imageUrl?: string;
+  rotation?: number;
+}
+
+/** Firma digital del titular del CV — `EditorPanel.tsx`, pestaña "Firma Digital". */
+export interface SignatureData {
+  dataUrl?: string;
+  signerRole?: string;
+  date?: string;
+  signerCity?: string;
 }
 
 export interface LanguageItem {
@@ -107,7 +139,10 @@ export interface CVData {
   personalInfo?: PersonalInfo;
   experiences?: ExperienceItem[];
   education?: EducationItem[];
+  /** @deprecated ver nota en `CertificateItem`. Usar `certificatesScanned`. */
   certificates?: CertificateItem[];
+  certificatesScanned?: ScannedCertificate[];
+  signature?: SignatureData;
   languages?: LanguageItem[];
   skillGroups?: SkillGroup[];
   roles?: string[];
