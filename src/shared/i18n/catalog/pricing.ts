@@ -34,6 +34,8 @@ export const pricingCatalog = {
   enterpriseCertAnnexesFeature: "Soporte de Anexos Certificados en PDF",
   enterpriseSpaceAlertsFeature: "Alertas Preventivas de Espacio sin Falla",
   activateMercadoPagoArgentine: "🇦🇷 Activar con Mercado Pago",
+  currencyClarityNote: "🇦🇷 Con Mercado Pago pagás en pesos argentinos. Con PayPal o Lemon Squeezy pagás en dólares (USD) — elegí la que prefieras, mismo plan.",
+  paymentMethodsHeading: "Formas de pago",
 };
 
 export type PricingCatalog = typeof pricingCatalog;

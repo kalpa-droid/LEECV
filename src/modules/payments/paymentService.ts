@@ -2,6 +2,7 @@ import { supabase } from '../../shared/core/lib/supabaseClient';
 import { dal } from '../../shared/core/storage/dataAccessLayer';
 import { apiClient } from '../../shared/core/utils/apiClient';
 import { navigation } from '../../shared/core/utils/navigation';
+import { withErrorHandling } from '../../shared/core/utils/errorHandler';
 import { PaymentClaim, PaymentGateway } from '../../types/payments';
 import { ProviderId, getPaymentProvider } from '../../shared/core/payments/paymentProviderCatalog';
 
@@ -161,4 +162,35 @@ export async function enviarComprobanteManual({
   });
 
   return claim;
+}
+
+/**
+ * NÚCLEO ÚNICO para iniciar el pago de un plan desde cualquier lugar de
+ * la app (PricingModal, LandingPage, o cualquier pantalla futura). Antes
+ * cada lugar reescribía su propio try/catch alrededor de
+ * iniciarPagoMercadoPago/PayPal/LemonSqueezy — acá queda una sola vez,
+ * incluido el manejo de "no hay sesión iniciada" que ya lanzan esas 3
+ * funciones internamente.
+ */
+export async function selectPaidPlan(
+  planId: 'pro' | 'enterprise',
+  gateway: 'mercadopago' | 'paypal' | 'lemonsqueezy',
+  notify: (message: string) => void
+): Promise<void> {
+  await withErrorHandling(
+    async () => {
+      if (gateway === 'mercadopago') {
+        await iniciarPagoMercadoPago(planId);
+      } else if (gateway === 'paypal') {
+        await iniciarPagoPayPal(planId);
+      } else {
+        await iniciarPagoLemonSqueezy(planId);
+      }
+    },
+    {
+      context: 'Selección de Plan de Pago',
+      errorMessage: 'Inconveniente al conectar con la pasarela de pagos.',
+      notify,
+    }
+  );
 }

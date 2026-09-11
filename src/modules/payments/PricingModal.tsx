@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Check, Crown, Zap, Shield, Sparkles, Cloud, Smartphone, User, LogOut, HardDrive, LogIn } from 'lucide-react';
-import { iniciarPagoMercadoPago, iniciarPagoLemonSqueezy, iniciarPagoPayPal } from './paymentService';
+import { selectPaidPlan } from './paymentService';
 import { useToast } from '../../shared/core/ui/Toast';
 import { Modal } from '../../shared/core/ui/Modal';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
@@ -11,6 +11,7 @@ import { formatPrice, formatPricePerMonth } from '../../shared/core/payments/pri
 import { getPlanLabel } from '../../shared/core/entitlements/useEntitlements';
 import { useText } from '../../shared/i18n/useText';
 import { PlanFeatureCard } from '../../shared/core/ui/marketing/PlanFeatureCard';
+import { PlanPaymentButtons } from '../../shared/core/ui/marketing/PlanPaymentButtons';
 
 export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
   const { showError, showSuccess } = useToast();
@@ -44,22 +45,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
 
   async function handleSelectPlan(planId: 'pro' | 'enterprise', gateway: 'mercadopago' | 'paypal' | 'lemonsqueezy') {
     setLoadingGateway(gateway);
-    await withErrorHandling(
-      async () => {
-        if (gateway === 'mercadopago') {
-          await iniciarPagoMercadoPago(planId);
-        } else if (gateway === 'paypal') {
-          await iniciarPagoPayPal(planId);
-        } else {
-          await iniciarPagoLemonSqueezy(planId);
-        }
-      },
-      {
-        context: 'Selección de Plan de Pago',
-        errorMessage: 'Inconveniente al conectar con la pasarela de pagos.',
-        notify: (msg) => showError(msg)
-      }
-    );
+    await selectPaidPlan(planId, gateway, (msg) => showError(msg));
     setLoadingGateway(null);
   }
 
@@ -138,54 +124,23 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
             planId="pro"
             highlighted={true}
           >
-            <button
-              onClick={() => handleSelectPlan('pro', 'mercadopago')}
-              disabled={loadingGateway !== null}
-              className={`w-full py-2.5 bg-[var(--color-accent-purple)] hover:opacity-90 text-white text-xs font-black rounded-[${radius.card}] ${elevationSystem.raised} transition flex items-center justify-center gap-1.5 cursor-pointer`}
-            >
-              <span>{t.pricing.subscribeMercadoPagoArgentine}</span>
-            </button>
-            <button
-              onClick={() => handleSelectPlan('pro', 'paypal')}
-              disabled={loadingGateway !== null}
-              className={`w-full py-2 bg-[var(--color-secondary-muted)] hover:opacity-90 text-[var(--color-secondary-text)] border border-[var(--color-secondary-base)]/30 text-xs font-black rounded-[${radius.card}] transition flex items-center justify-center gap-1.5 cursor-pointer`}
-            >
-              <span>{t.pricing.payPaypalUsd}</span>
-            </button>
-            <button
-              onClick={() => handleSelectPlan('pro', 'lemonsqueezy')}
-              disabled={loadingGateway !== null}
-              className={`w-full py-2 bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] text-[11px] font-bold rounded-[${radius.card}] transition flex items-center justify-center gap-1.5 border border-[var(--color-accent-purple)]/30 cursor-pointer`}
-            >
-              <span>{t.pricing.subscribeLemonSqueezyUsd}</span>
-            </button>
+            <PlanPaymentButtons
+              planId="pro"
+              onSelectGateway={handleSelectPlan}
+              loadingGateway={loadingGateway}
+            />
           </PlanFeatureCard>
 
           {/* NIVEL 3: AGENCIA ENTERPRISE + LEECV CLOUD */}
           <PlanFeatureCard
             planId="enterprise"
           >
-            <button
-              onClick={() => handleSelectPlan('enterprise', 'mercadopago')}
-              disabled={loadingGateway !== null}
-              className={`w-full py-2.5 bg-[var(--color-status-warning-base)] hover:opacity-95 text-[var(--color-accent-on-base)] text-xs font-black rounded-[${radius.card}] ${elevationSystem.floating} transition cursor-pointer flex items-center justify-center gap-1.5`}
-            >
-              <span>{t.pricing.activateMercadoPagoArgentine}</span>
-            </button>
-            <button
-              onClick={() => handleSelectPlan('enterprise', 'paypal')}
-              disabled={loadingGateway !== null}
-              className={`w-full py-2 bg-[var(--color-secondary-muted)] hover:opacity-90 text-[var(--color-secondary-text)] border border-[var(--color-secondary-base)]/30 text-xs font-black rounded-[${radius.card}] transition flex items-center justify-center gap-1.5 cursor-pointer`}
-            >
-              <span>{t.pricing.payPaypalUsd}</span>
-            </button>
-            <button
-              onClick={() => handleSelectPlan('enterprise', 'lemonsqueezy')}
-              disabled={loadingGateway !== null}
-              className={`w-full py-2 bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] text-[11px] font-bold rounded-[${radius.card}] transition flex items-center justify-center gap-1.5 border border-[var(--color-status-warning-base)]/30 cursor-pointer`}
-            >
-              <span>{t.pricing.subscribeLemonSqueezyUsd}</span>
-            </button>
+            <PlanPaymentButtons
+              planId="enterprise"
+              onSelectGateway={handleSelectPlan}
+              loadingGateway={loadingGateway}
+              primaryButtonClass="bg-[var(--color-status-warning-base)] hover:opacity-95 text-[var(--color-accent-on-base)]"
+            />
           </PlanFeatureCard>
         </div>
       </div>

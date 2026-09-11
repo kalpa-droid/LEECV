@@ -11,7 +11,10 @@ import { Logo } from '../../shared/core/brand/Logo';
 import { HeroProductPreview } from '../../shared/core/ui/marketing/HeroProductPreview';
 import { ProductDetailBlock } from '../../shared/core/ui/marketing/ProductDetailBlock';
 import { PlanFeatureCard } from '../../shared/core/ui/marketing/PlanFeatureCard';
+import { PlanPaymentButtons } from '../../shared/core/ui/marketing/PlanPaymentButtons';
 import { FaqAccordion } from '../../shared/core/ui/marketing/FaqAccordion';
+import { selectPaidPlan } from '../payments/paymentService';
+import { useToast } from '../../shared/core/ui/Toast';
 
 interface LandingPageProps {
   onNavigate: (route: string) => void;
@@ -19,7 +22,15 @@ interface LandingPageProps {
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
   const t = useText();
+  const { showError } = useToast();
   const [currentTheme, setCurrentTheme] = useState<string>('day');
+  const [loadingGateway, setLoadingGateway] = useState<string | null>(null);
+
+  const handleSelectGateway = async (planId: 'pro' | 'enterprise', gateway: 'mercadopago' | 'paypal' | 'lemonsqueezy') => {
+    setLoadingGateway(gateway);
+    await selectPaidPlan(planId, gateway, (msg) => showError(msg));
+    setLoadingGateway(null);
+  };
 
   useEffect(() => {
     setCurrentTheme(getGlobalUiTheme());
@@ -208,8 +219,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-center">
           <PlanFeatureCard planId="free" onSelectPlan={() => onNavigate('/crear-cv')} />
-          <PlanFeatureCard planId="pro" highlighted onSelectPlan={() => onNavigate('/crear-cv')} />
-          <PlanFeatureCard planId="enterprise" onSelectPlan={() => onNavigate('/crear-cv')} />
+          <PlanFeatureCard planId="pro" highlighted>
+            <PlanPaymentButtons
+              planId="pro"
+              onSelectGateway={handleSelectGateway}
+              loadingGateway={loadingGateway}
+            />
+          </PlanFeatureCard>
+          <PlanFeatureCard planId="enterprise">
+            <PlanPaymentButtons
+              planId="enterprise"
+              onSelectGateway={handleSelectGateway}
+              loadingGateway={loadingGateway}
+              primaryButtonClass="bg-[var(--color-status-warning-base)] hover:opacity-95 text-[var(--color-accent-on-base)]"
+            />
+          </PlanFeatureCard>
         </div>
       </MarketingSection>
 
