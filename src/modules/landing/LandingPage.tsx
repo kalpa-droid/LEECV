@@ -33,7 +33,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
       <header className="sticky top-0 z-40 bg-[var(--ui-bg-panel)]/80 backdrop-blur-xl border-b border-[var(--ui-border)] shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => onNavigate('/')}>
-            <Logo layout="slogan" currentUiTheme={currentTheme} className="h-9 sm:h-10" />
+            <Logo layout="slogan" animatedRainbow currentUiTheme={currentTheme} className="h-9 sm:h-10" />
           </div>
 
           <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-[var(--ui-text-secondary)]">
@@ -64,7 +64,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 relative z-10">
           <div className="flex justify-center mb-1">
-            <Logo layout="master" forceVariant="violeta" className="h-14 sm:h-20" alt="LEECV Studio Suite" />
+            <Logo layout="master" animatedRainbow className="h-14 sm:h-20" alt="LEECV Studio Suite" />
           </div>
 
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/30 rounded-full text-[var(--color-accent-text)] font-semibold text-xs tracking-wider uppercase">
