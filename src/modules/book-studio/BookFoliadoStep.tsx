@@ -65,7 +65,7 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
             <div className="space-y-1 text-xs">
               <h3 className="font-bold text-sm">Número Calibrado</h3>
               <p>
-                Pág. PDF #{refPdfPage} ➔ Pág. Impresa #{refBookPage} ({refPageSide === 'derecha' ? 'Derecha / Impar' : 'Izquierda / Par'}).
+                Pág. PDF #{refPdfPage} ➔ Pág. Impresa #{refBookPage}.
               </p>
             </div>
           </div>

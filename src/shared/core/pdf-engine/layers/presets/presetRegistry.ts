@@ -10,6 +10,21 @@ import { PRESET_COLORS, PRESET_TYPOGRAPHY, PRESET_COLUMNS, getColumnLayoutPreset
 
 export { PRESET_COLORS, PRESET_TYPOGRAPHY, PRESET_COLUMNS, getColumnLayoutPresetName };
 
+/**
+ * Valida y normaliza un valor a formato Hex #RRGGBB, o retorna null.
+ * Rechaza var(), nombres CSS, strings vacíos — solo acepta #RGB o #RRGGBB.
+ */
+function parseCustomHex(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const hex = value.trim();
+  if (!/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(hex)) return null;
+  // Expandir #RGB → #RRGGBB
+  if (hex.length === 4) {
+    return `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`;
+  }
+  return hex;
+}
+
 export function resolveActivePreset(cvData: any): Preset {
   const basePreset = getPreset(cvData?.activePresetId || 'cv-clasico');
 
@@ -17,14 +32,26 @@ export function resolveActivePreset(cvData: any): Preset {
   const customTypo = cvData?.typographyPresetId ? (PRESET_TYPOGRAPHY as any)[cvData.typographyPresetId] : undefined;
   const customLayout = cvData?.columnLayoutPresetId ? (PRESET_COLUMNS as any)[cvData.columnLayoutPresetId] : undefined;
 
-  if (!customColor && !customTypo && !customLayout) {
+  // Tercer camino: Color Hex personalizado desde theme.primaryColor.
+  // Solo se activa si NO hay un colorPresetId válido del catálogo cerrado.
+  const customHex = !customColor ? parseCustomHex(cvData?.theme?.primaryColor) : null;
+
+  if (!customColor && !customHex && !customTypo && !customLayout) {
     return basePreset;
   }
 
+  // Si hay un Hex personalizado sin colorPresetId, construimos un ColorPreset efímero
+  const effectiveColor = customColor || (customHex ? {
+    id: `custom-${customHex.replace('#', '')}`,
+    name: 'Personalizado',
+    seedHex: customHex,
+    harmonyScheme: 'analogous' as const,
+  } : undefined);
+
   return composePreset({
-    seedHex: customColor?.seedHex || basePreset.paletteSeed?.seedHex || basePreset.palette.primary,
+    seedHex: effectiveColor?.seedHex || basePreset.paletteSeed?.seedHex || basePreset.palette.primary,
     basePreset,
-    colorPreset: customColor,
+    colorPreset: effectiveColor,
     typographyPreset: customTypo,
     columnLayoutPreset: customLayout,
     id: `${basePreset.id}-custom`,

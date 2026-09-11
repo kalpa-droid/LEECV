@@ -110,6 +110,7 @@ export interface ColumnAssignments {
 export interface CVLayout {
   paperSize?: 'a4' | 'letter';
   columnRatio?: string;
+  /** @deprecated No se usa en el renderizador. El color primario se gestiona via theme.primaryColor o colorPresetId. */
   primaryColor?: string;
   fontFamily?: string;
   fontSize?: string;
@@ -121,6 +122,13 @@ export interface CVLayout {
 
 export interface ThemeConfig {
   presetId?: string;
+  /**
+   * Color primario personalizado en formato Hex (#RRGGBB o #RGB).
+   * Si se define con un Hex válido y NO hay un `colorPresetId` del catálogo cerrado,
+   * `resolveActivePreset()` lo usa como seedHex para generar una paleta armónica
+   * completa en OKLCH con contraste WCAG 2.1 AA.
+   * Valores como `'var(...)'` o strings no-hex se ignoran silenciosamente.
+   */
   primaryColor?: string;
   secondaryColor?: string;
   accentColor?: string;

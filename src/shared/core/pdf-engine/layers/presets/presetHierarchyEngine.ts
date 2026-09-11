@@ -56,6 +56,7 @@ export function applyPresetLevel(cvData: any, level: PresetLevel, payload: Apply
       // Limpiar overrides manuales de color y tipografía al cambiar de formato global
       colorPresetId: undefined,
       typographyPresetId: undefined,
+      theme: { ...(cvData.theme || {}), primaryColor: undefined },
       sectionVisibility: resolvedVis
     };
   }
@@ -67,7 +68,8 @@ export function applyPresetLevel(cvData: any, level: PresetLevel, payload: Apply
       activeFormatId: undefined,
       colorPresetId: undefined,
       typographyPresetId: undefined,
-      columnLayoutPresetId: undefined
+      columnLayoutPresetId: undefined,
+      theme: { ...(cvData.theme || {}), primaryColor: undefined },
     };
     return {
       ...updated,

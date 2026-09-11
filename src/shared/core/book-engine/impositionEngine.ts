@@ -19,6 +19,7 @@ export interface CoverConfig {
   fontFamily?: string;
   fontSize?: number;
   lineHeightMultiplier?: number;
+  imageFit?: 'crop' | 'fit' | 'stretch';
 }
 
 export interface BackCoverConfig {
@@ -34,6 +35,7 @@ export interface BackCoverConfig {
   bgImageUri?: string;
   fontFamily?: string;
   fontSize?: number;
+  imageFit?: 'crop' | 'fit' | 'stretch';
 }
 
 export interface BookImpositionOptions {
@@ -82,10 +84,24 @@ export async function crearCanvasTapaCustom(
       img.onerror = () => res();
     });
 
-    const scale = Math.max(width / (img.width || width), height / (img.height || height));
-    const w = (img.width || width) * scale;
-    const h = (img.height || height) * scale;
-    ctx.drawImage(img, (width - w) / 2, (height - h) / 2, w, h);
+    const scaleX = width / (img.width || width);
+    const scaleY = height / (img.height || height);
+
+    if (coverConfig.imageFit === 'stretch') {
+      ctx.drawImage(img, 0, 0, width, height);
+    } else if (coverConfig.imageFit === 'fit') {
+      const scale = Math.min(scaleX, scaleY);
+      const w = (img.width || width) * scale;
+      const h = (img.height || height) * scale;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, (width - w) / 2, (height - h) / 2, w, h);
+    } else {
+      const scale = Math.max(scaleX, scaleY);
+      const w = (img.width || width) * scale;
+      const h = (img.height || height) * scale;
+      ctx.drawImage(img, (width - w) / 2, (height - h) / 2, w, h);
+    }
   } else if (coverConfig.type === 'template') {
     const {
       title = '',
@@ -196,10 +212,24 @@ export async function crearCanvasContratapaCustom(
       img.onerror = () => res();
     });
 
-    const scale = Math.max(width / (img.width || width), height / (img.height || height));
-    const w = (img.width || width) * scale;
-    const h = (img.height || height) * scale;
-    ctx.drawImage(img, (width - w) / 2, (height - h) / 2, w, h);
+    const scaleX = width / (img.width || width);
+    const scaleY = height / (img.height || height);
+
+    if (backCoverConfig.imageFit === 'stretch') {
+      ctx.drawImage(img, 0, 0, width, height);
+    } else if (backCoverConfig.imageFit === 'fit') {
+      const scale = Math.min(scaleX, scaleY);
+      const w = (img.width || width) * scale;
+      const h = (img.height || height) * scale;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, (width - w) / 2, (height - h) / 2, w, h);
+    } else {
+      const scale = Math.max(scaleX, scaleY);
+      const w = (img.width || width) * scale;
+      const h = (img.height || height) * scale;
+      ctx.drawImage(img, (width - w) / 2, (height - h) / 2, w, h);
+    }
   } else if (backCoverConfig.type === 'template') {
     const {
       synopsis = '',

@@ -25,6 +25,8 @@ interface BookStudioContentProps {
   onNewBook?: () => void;
   cycleUITheme: () => void;
   onTabsChanged?: (tabs: OpenTabItem[]) => void;
+  isLoggedIn?: boolean;
+  onAuthToggle?: () => void;
 }
 
 export const BookStudioContent: React.FC<BookStudioContentProps> = ({
@@ -38,6 +40,8 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   onNewBook,
   cycleUITheme,
   onTabsChanged = () => {},
+  isLoggedIn = false,
+  onAuthToggle = () => {},
 }) => {
   const [activeStepTab, setActiveStepTab] = useState<string>('book_source_type');
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
@@ -158,6 +162,8 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
           setZoomLevel={setBookZoom}
           triggerAutoFit={triggerBookAutoFit}
           cycleUITheme={cycleUITheme}
+          isLoggedIn={isLoggedIn}
+          onAuthToggle={onAuthToggle}
         />
       }
       dockSlot={
@@ -230,6 +236,8 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               selectedFile={selectedFile}
               pdfPageCount={pdfPageCount}
               onPrevStep={() => handleNavigatePrevStep('book_preview_export')}
+              isLoggedIn={isLoggedIn}
+              onAuthToggle={onAuthToggle}
             />
           )}
         </div>

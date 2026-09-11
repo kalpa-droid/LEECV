@@ -13,6 +13,8 @@ interface BookStudioProps {
   onNewBook?: () => void;
   cycleUITheme?: () => void;
   onTabsChanged?: (tabs: any[]) => void;
+  isLoggedIn?: boolean;
+  onAuthToggle?: () => void;
 }
 
 export const BookStudio: React.FC<BookStudioProps> = ({
@@ -26,6 +28,8 @@ export const BookStudio: React.FC<BookStudioProps> = ({
   onNewBook,
   cycleUITheme = () => {},
   onTabsChanged = () => {},
+  isLoggedIn = false,
+  onAuthToggle = () => {},
 }) => {
   return (
     <BookStudioContent
@@ -39,6 +43,8 @@ export const BookStudio: React.FC<BookStudioProps> = ({
       onNewBook={onNewBook}
       cycleUITheme={cycleUITheme}
       onTabsChanged={onTabsChanged}
+      isLoggedIn={isLoggedIn}
+      onAuthToggle={onAuthToggle}
     />
   );
 };

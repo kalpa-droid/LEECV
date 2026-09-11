@@ -233,16 +233,16 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
               Portada / Tapa
             </span>
             {options.customCover?.imageUri ? (
-              <img src={options.customCover.imageUri} alt="Tapa" className="w-full h-28 object-cover rounded border border-[var(--ui-border)]" />
+              <img src={options.customCover.imageUri} alt="Tapa" className={`w-full h-auto aspect-[1/1.41] rounded border border-[var(--ui-border)] ${options.customCover.imageFit === 'stretch' ? '' : options.customCover.imageFit === 'fit' ? 'object-contain bg-white' : 'object-cover'}`} />
             ) : options.customCover?.type === 'template' ? (
               <CoverPreviewThumbnail
                 config={options.customCover}
                 kind="cover"
                 paperSize={options.paperSize}
-                className="w-full h-28 object-contain rounded border border-[var(--ui-border)]"
+                className="w-full h-auto aspect-[1/1.41] object-contain rounded border border-[var(--ui-border)]"
               />
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center p-2 rounded bg-[var(--ui-bg-card)] border border-[var(--ui-border)] w-full">
+              <div className="flex-1 flex flex-col items-center justify-center p-2 rounded bg-[var(--ui-bg-card)] border border-[var(--ui-border)] w-full aspect-[1/1.41]">
                 <span className="text-[11px] font-bold text-[var(--ui-text-primary)] line-clamp-2">
                   {options.customCover?.title || 'Tapa del PDF (Página 1)'}
                 </span>
@@ -251,9 +251,20 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
                 )}
               </div>
             )}
-            {/* check-contrast-ignore-next-line: texto de pie sobre fondo ui-bg-surface */}
-            <span className="text-[9px] text-[var(--ui-text-primary)] font-semibold">
-              Retiro en blanco: {options.blankBehindCover !== false ? 'Sí' : 'No'}
+          </div>
+        )}
+
+        {/* Hoja en blanco inyectada detrás de la portada (Retiro de tapa) */}
+        {(options.hasCover || options.customCover) && options.blankBehindCover !== false && (
+          <div className="p-3 bg-[var(--ui-bg-surface)] border-2 border-dashed border-[var(--ui-border)] rounded-xl flex flex-col items-center justify-between text-center min-h-[200px] space-y-2 relative shadow-sm select-none opacity-80">
+            <span className="px-2 py-0.5 rounded bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] font-bold text-[10px] tracking-wider border border-[var(--ui-border)]">
+              HOJA EN BLANCO
+            </span>
+            <div className="flex-1 w-full aspect-[1/1.41] bg-white border border-dashed border-black/20 rounded opacity-50 flex items-center justify-center">
+              <span className="text-[10px] text-black/70 rotate-[-45deg] font-bold">Retiro Tapa</span>
+            </div>
+            <span className="text-[9px] text-[var(--ui-text-secondary)] font-semibold">
+              Retiro de Portada
             </span>
           </div>
         )}
@@ -309,6 +320,21 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
           );
         })}
 
+        {/* Hoja en blanco inyectada antes de la contratapa */}
+        {(options.hasBackCover || options.customBackCover) && options.blankInFrontBackCover !== false && (
+          <div className="p-3 bg-[var(--ui-bg-surface)] border-2 border-dashed border-[var(--ui-border)] rounded-xl flex flex-col items-center justify-between text-center min-h-[200px] space-y-2 relative shadow-sm select-none opacity-80">
+            <span className="px-2 py-0.5 rounded bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] font-bold text-[10px] tracking-wider border border-[var(--ui-border)]">
+              HOJA EN BLANCO
+            </span>
+            <div className="flex-1 w-full aspect-[1/1.41] bg-white border border-dashed border-black/20 rounded opacity-50 flex items-center justify-center">
+              <span className="text-[10px] text-black/70 rotate-[-45deg] font-bold">Retiro Contratapa</span>
+            </div>
+            <span className="text-[9px] text-[var(--ui-text-secondary)] font-semibold">
+              Retiro de Contratapa
+            </span>
+          </div>
+        )}
+
         {/* Tarjeta de Contratapa */}
         {(options.hasBackCover || options.customBackCover) && (
           <div className="p-3 bg-[var(--ui-bg-surface)] border-2 border-[var(--color-secondary-base)] rounded-xl flex flex-col items-center justify-between text-center min-h-[200px] space-y-2 relative shadow-md select-none">
@@ -316,25 +342,21 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
               Contratapa
             </span>
             {options.customBackCover?.imageUri ? (
-              <img src={options.customBackCover.imageUri} alt="Contratapa" className="w-full h-28 object-cover rounded border border-[var(--ui-border)]" />
+              <img src={options.customBackCover.imageUri} alt="Contratapa" className={`w-full h-auto aspect-[1/1.41] rounded border border-[var(--ui-border)] ${options.customBackCover.imageFit === 'stretch' ? '' : options.customBackCover.imageFit === 'fit' ? 'object-contain bg-white' : 'object-cover'}`} />
             ) : options.customBackCover?.type === 'template' ? (
               <CoverPreviewThumbnail
                 config={options.customBackCover}
                 kind="backCover"
                 paperSize={options.paperSize}
-                className="w-full h-28 object-contain rounded border border-[var(--ui-border)]"
+                className="w-full h-auto aspect-[1/1.41] object-contain rounded border border-[var(--ui-border)]"
               />
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center p-2 rounded bg-[var(--ui-bg-card)] border border-[var(--ui-border)] w-full">
+              <div className="flex-1 flex flex-col items-center justify-center p-2 rounded bg-[var(--ui-bg-card)] border border-[var(--ui-border)] w-full aspect-[1/1.41]">
                 <span className="text-[11px] font-bold text-[var(--ui-text-primary)] line-clamp-2">
                   {options.customBackCover?.synopsis || 'Contratapa del PDF'}
                 </span>
               </div>
             )}
-            {/* check-contrast-ignore-next-line: texto de pie sobre fondo ui-bg-surface */}
-            <span className="text-[9px] text-[var(--ui-text-primary)] font-semibold">
-              Retiro en blanco: {options.blankInFrontBackCover !== false ? 'Sí' : 'No'}
-            </span>
           </div>
         )}
       </div>

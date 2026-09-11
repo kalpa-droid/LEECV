@@ -130,8 +130,56 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
           />
 
           {coverData.imageUri && (
-            <div className="relative w-full aspect-[1/1.4] max-w-[200px] mx-auto rounded-lg overflow-hidden border border-[var(--ui-border)] shadow-md">
-              <img src={coverData.imageUri} alt="Vista previa tapa subida" className="w-full h-full object-cover" />
+            <div className="space-y-4">
+              <div className="relative w-full aspect-[1/1.41] max-w-[200px] mx-auto rounded-lg overflow-hidden border border-[var(--ui-border)] shadow-md bg-[var(--ui-bg-hover)]">
+                <img 
+                  src={coverData.imageUri} 
+                  alt="Vista previa tapa subida" 
+                  className={`w-full h-full ${
+                    coverData.imageFit === 'stretch' ? '' :
+                    coverData.imageFit === 'fit' ? 'object-contain' : 'object-cover'
+                  }`} 
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className={typeScale.fieldLabel}>Opciones de Ajuste de Imagen</label>
+                <div className="flex flex-col gap-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="coverImageFit"
+                      value="crop"
+                      checked={!coverData.imageFit || coverData.imageFit === 'crop'}
+                      onChange={() => updateCoverField('imageFit', 'crop')}
+                      className="accent-[var(--color-accent-base)]"
+                    />
+                    <span className="text-xs">Recortar para llenar (Cover)</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="coverImageFit"
+                      value="fit"
+                      checked={coverData.imageFit === 'fit'}
+                      onChange={() => updateCoverField('imageFit', 'fit')}
+                      className="accent-[var(--color-accent-base)]"
+                    />
+                    <span className="text-xs">Ajustar sin deformar (Contain)</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="coverImageFit"
+                      value="stretch"
+                      checked={coverData.imageFit === 'stretch'}
+                      onChange={() => updateCoverField('imageFit', 'stretch')}
+                      className="accent-[var(--color-accent-base)]"
+                    />
+                    <span className="text-xs">Estirar para llenar (Deformar)</span>
+                  </label>
+                </div>
+              </div>
             </div>
           )}
         </div>

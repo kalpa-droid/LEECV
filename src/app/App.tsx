@@ -540,6 +540,8 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
             applyUiTheme(next);
             if (typeof window !== 'undefined') localStorage.setItem('cv_ui_theme_preference', next);
           }}
+          isLoggedIn={!!currentProfile}
+          onAuthToggle={handleAuthToggle}
         />
       </Suspense>
     );

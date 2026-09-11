@@ -207,7 +207,7 @@ export function sanitizeCvData(rawCvData: any = {}) {
     // dejaba cvData.theme en undefined y rompía el panel de Color/Tipografía.
     theme: {
       presetId: data.theme?.presetId || 'navy-executive',
-      primaryColor: data.theme?.primaryColor || '#1e3a8a',
+      primaryColor: data.theme?.primaryColor,
       secondaryColor: data.theme?.secondaryColor || '#172554',
       accentColor: data.theme?.accentColor || '#d97706',
       textColor: data.theme?.textColor || '#0f172a',

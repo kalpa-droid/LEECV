@@ -1711,6 +1711,67 @@ export default function EditorPanel({
                   );
                 })}
               </div>
+
+              {/* ─── Color Personalizado Libre ─── */}
+              <div className="mt-3">
+                <label 
+                  className={`flex items-center gap-3 p-2.5 rounded-[${radius.card}] border transition-all cursor-pointer ${
+                    cvData.theme?.primaryColor && /^#[0-9A-Fa-f]{3,6}$/i.test(cvData.theme.primaryColor) && !cvData.colorPresetId
+                      ? `${selectableCard.selected} ring-1 ring-[var(--color-accent-base)] shadow-sm` 
+                      : `${selectableCard.unselected} hover:bg-[var(--ui-bg-hover)]`
+                  }`}
+                >
+                  <input
+                    id="custom-color-picker"
+                    type="color"
+                    value={
+                      cvData.theme?.primaryColor && /^#[0-9A-Fa-f]{6}$/i.test(cvData.theme.primaryColor)
+                        ? cvData.theme.primaryColor
+                        : '#1e3a8a'
+                    }
+                    onChange={(e) => {
+                      const hex = e.target.value;
+                      triggerPresetTransition('Personalizado', 'color');
+                      setCvData((prev: any) => ({
+                        ...prev,
+                        colorPresetId: undefined,
+                        theme: { ...(prev.theme || {}), primaryColor: hex }
+                      }));
+                    }}
+                    className="w-8 h-8 rounded-md border shadow-sm cursor-pointer"
+                    style={{
+                      borderColor: 'var(--ui-border)',
+                      padding: 0,
+                      backgroundColor: 'transparent'
+                    }}
+                  />
+                  <div className="flex-1 flex items-center justify-between">
+                    <span
+                      className={`${typeScale.fieldLabel} font-bold`}
+                      style={{ color: 'var(--ui-text-primary)' }}
+                    >
+                      Color libre
+                    </span>
+                    {cvData.theme?.primaryColor && /^#[0-9A-Fa-f]{3,6}$/i.test(cvData.theme.primaryColor) && !cvData.colorPresetId && (
+                      <button
+                        type="button"
+                        className="text-[10px] font-bold px-2 py-1 rounded bg-[var(--ui-bg-surface)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-hover)] transition-colors"
+                        style={{ color: 'var(--color-status-danger-text)' }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setCvData((prev: any) => ({
+                            ...prev,
+                            theme: { ...(prev.theme || {}), primaryColor: undefined }
+                          }));
+                        }}
+                      >
+                        Desactivar
+                      </button>
+                    )}
+                  </div>
+                </label>
+              </div>
             </PanelSection>
 
             {/* Escala Tipográfica */}
