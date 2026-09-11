@@ -1,6 +1,7 @@
 import React from 'react';
 import { DocumentTabsBar, DocumentTabsBarProps } from './DocumentTabsBar';
 import { PwaInstallBanner } from './PwaInstallBanner';
+import { elevationSystem } from '../uiDesignSystem';
 
 export interface AppShellProps {
   docType?: 'cv' | 'business_card' | 'book';
@@ -40,7 +41,7 @@ export const AppShell: React.FC<AppShellProps> = ({
         <div 
           className={`bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] transition-all duration-300 ease-in-out border-r border-[var(--ui-border)] z-20 flex flex-col h-full overflow-y-auto ${
             isPanelOpen 
-              ? 'w-full md:w-[460px] lg:w-[500px] opacity-100 shadow-xl' 
+              ? `w-full md:w-[460px] lg:w-[500px] opacity-100 ${elevationSystem.floating}` 
               : 'w-0 opacity-0 overflow-hidden hidden md:block'
           } ${mobileTabState === 'preview' ? 'hidden md:flex' : 'flex'}`}
         >

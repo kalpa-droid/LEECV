@@ -37,7 +37,7 @@ export const PlanPaymentButtons: React.FC<PlanPaymentButtonsProps> = ({
         disabled={isCurrentlyDisabled}
         className={`w-full ${
           compact ? 'py-1.5 px-3 text-[11px]' : 'py-2.5 px-4 text-xs'
-        } rounded-[${radius.card}] ${
+        } rounded-xl ${
           planId === 'enterprise'
             ? 'bg-[var(--color-status-warning-base)] hover:opacity-95 text-[var(--color-accent-on-base)]'
             : 'bg-[var(--color-accent-purple)] hover:opacity-90 text-white'
@@ -63,7 +63,7 @@ export const PlanPaymentButtons: React.FC<PlanPaymentButtonsProps> = ({
         disabled={isCurrentlyDisabled}
         className={`w-full ${
           compact ? 'py-1.5 px-3 text-[11px]' : 'py-2 px-4 text-xs'
-        } rounded-[${radius.card}] bg-[var(--color-secondary-muted)] hover:opacity-90 text-[var(--color-secondary-text)] border border-[var(--color-secondary-base)]/30 font-black transition cursor-pointer flex items-center justify-between gap-2 disabled:opacity-50`}
+        } rounded-xl bg-[var(--color-secondary-muted)] hover:opacity-90 text-[var(--color-secondary-text)] border border-[var(--color-secondary-base)]/30 font-black transition cursor-pointer flex items-center justify-between gap-2 disabled:opacity-50`}
       >
         <span className="flex items-center gap-1.5 truncate">
           {loadingGateway === 'paypal' ? (
@@ -85,7 +85,7 @@ export const PlanPaymentButtons: React.FC<PlanPaymentButtonsProps> = ({
         disabled={isCurrentlyDisabled}
         className={`w-full ${
           compact ? 'py-1.5 px-3 text-[10px]' : 'py-2 px-4 text-[11px]'
-        } rounded-[${radius.card}] bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] border border-[var(--ui-border)] font-bold transition cursor-pointer flex items-center justify-between gap-2 disabled:opacity-50`}
+        } rounded-xl bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] border border-[var(--ui-border)] font-bold transition cursor-pointer flex items-center justify-between gap-2 disabled:opacity-50`}
       >
         <span className="flex items-center gap-1.5 truncate">
           {loadingGateway === 'lemonsqueezy' ? (
