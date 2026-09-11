@@ -37,7 +37,7 @@ export const PlanPaymentButtons: React.FC<PlanPaymentButtonsProps> = ({
         disabled={isCurrentlyDisabled}
         className={`w-full ${
           compact ? 'py-1.5 px-3 text-[11px]' : 'py-2.5 px-4 text-xs'
-        } rounded-xl ${
+        } rounded-[${radius.card}] ${
           planId === 'enterprise'
             ? 'bg-[var(--color-status-warning-base)] hover:opacity-95 text-[var(--color-accent-on-base)]'
             : 'bg-[var(--color-accent-purple)] hover:opacity-90 text-white'
@@ -49,7 +49,7 @@ export const PlanPaymentButtons: React.FC<PlanPaymentButtonsProps> = ({
           ) : (
             <span>🇦🇷</span>
           )}
-          <span className="truncate">Mercado Pago</span>
+          <span className="truncate">{t.pricing.mercadoPagoLabel}</span>
         </span>
         <span className="text-[10px] font-extrabold opacity-95 shrink-0 bg-black/20 px-2 py-0.5 rounded-full">
           {priceArs}
@@ -63,7 +63,7 @@ export const PlanPaymentButtons: React.FC<PlanPaymentButtonsProps> = ({
         disabled={isCurrentlyDisabled}
         className={`w-full ${
           compact ? 'py-1.5 px-3 text-[11px]' : 'py-2 px-4 text-xs'
-        } rounded-xl bg-[var(--color-secondary-muted)] hover:opacity-90 text-[var(--color-secondary-text)] border border-[var(--color-secondary-base)]/30 font-black transition cursor-pointer flex items-center justify-between gap-2 disabled:opacity-50`}
+        } rounded-[${radius.card}] bg-[var(--color-secondary-muted)] hover:opacity-90 text-[var(--color-secondary-text)] border border-[var(--color-secondary-base)]/30 font-black transition cursor-pointer flex items-center justify-between gap-2 disabled:opacity-50`}
       >
         <span className="flex items-center gap-1.5 truncate">
           {loadingGateway === 'paypal' ? (
@@ -71,7 +71,7 @@ export const PlanPaymentButtons: React.FC<PlanPaymentButtonsProps> = ({
           ) : (
             <span>💳</span>
           )}
-          <span className="truncate">PayPal</span>
+          <span className="truncate">{t.pricing.payPalLabel}</span>
         </span>
         <span className="text-[10px] font-extrabold opacity-90 shrink-0 bg-black/10 px-2 py-0.5 rounded-full">
           {priceUsd}
@@ -85,7 +85,7 @@ export const PlanPaymentButtons: React.FC<PlanPaymentButtonsProps> = ({
         disabled={isCurrentlyDisabled}
         className={`w-full ${
           compact ? 'py-1.5 px-3 text-[10px]' : 'py-2 px-4 text-[11px]'
-        } rounded-xl bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] border border-[var(--ui-border)] font-bold transition cursor-pointer flex items-center justify-between gap-2 disabled:opacity-50`}
+        } rounded-[${radius.card}] bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] border border-[var(--ui-border)] font-bold transition cursor-pointer flex items-center justify-between gap-2 disabled:opacity-50`}
       >
         <span className="flex items-center gap-1.5 truncate">
           {loadingGateway === 'lemonsqueezy' ? (
@@ -93,7 +93,7 @@ export const PlanPaymentButtons: React.FC<PlanPaymentButtonsProps> = ({
           ) : (
             <span>🌎</span>
           )}
-          <span className="truncate">Lemon Squeezy</span>
+          <span className="truncate">{t.pricing.lemonSqueezyLabel}</span>
         </span>
         <span className="text-[10px] font-bold opacity-80 shrink-0 bg-[var(--ui-bg-card)] px-2 py-0.5 rounded-full border border-[var(--ui-border)]">
           {priceUsd}
@@ -102,7 +102,7 @@ export const PlanPaymentButtons: React.FC<PlanPaymentButtonsProps> = ({
 
       {showCurrencyNotice && (
         <p className="text-[10px] text-[var(--ui-text-secondary)] text-center leading-tight pt-1">
-          🇦🇷 <strong>ARS</strong> con Mercado Pago &bull; 💳/🌎 <strong>USD</strong> con PayPal o Lemon Squeezy
+          {t.pricing.currencyNoticeCompact}
         </p>
       )}
     </div>

@@ -37,6 +37,11 @@ export const pricingCatalog = {
   currencyExplanationNote: "🇦🇷 Con Mercado Pago pagás en Pesos Argentinos (ARS). 💳 Con PayPal o 🌎 Lemon Squeezy pagás en Dólares (USD). Todos los planes y paquetes de créditos pueden abonarse con cualquiera de las 3 pasarelas.",
   universalPaymentBadge: "Elegí tu medio de pago y moneda preferida",
   payWithAnyGateway: "Disponible con Mercado Pago, PayPal y Lemon Squeezy",
+  mercadoPagoLabel: "Mercado Pago",
+  payPalLabel: "PayPal",
+  lemonSqueezyLabel: "Lemon Squeezy",
+  currencyNoticeCompact: "🇦🇷 ARS con Mercado Pago • 💳/🌎 USD con PayPal o Lemon Squeezy",
 };
 
 export type PricingCatalog = typeof pricingCatalog;
+
