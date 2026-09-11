@@ -13,6 +13,8 @@ import { ProductDetailBlock } from '../../shared/core/ui/marketing/ProductDetail
 import { PlanFeatureCard } from '../../shared/core/ui/marketing/PlanFeatureCard';
 import { FaqAccordion } from '../../shared/core/ui/marketing/FaqAccordion';
 import { useToast } from '../../shared/core/ui/Toast';
+import { useIsMobile } from '../../shared/core/ui/useIsMobile';
+import { AccountMenuButton } from '../../shared/core/ui/AccountMenuButton';
 import { selectPaidPlan } from '../payments/paymentService';
 
 interface LandingPageProps {
@@ -21,6 +23,7 @@ interface LandingPageProps {
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
   const t = useText();
+  const isMobile = useIsMobile();
   const { showError } = useToast();
   const [currentTheme, setCurrentTheme] = useState<string>('day');
   const [loadingGateway, setLoadingGateway] = useState<string | null>(null);
@@ -53,32 +56,38 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
     <div className="h-[100dvh] w-full overflow-y-auto bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] flex flex-col font-sans transition-colors duration-300">
       {/* 1. Header sticky */}
       <header className="sticky top-0 z-40 bg-[var(--ui-bg-panel)]/80 backdrop-blur-xl border-b border-[var(--ui-border)] shrink-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => onNavigate('/')}>
-            <Logo layout="slogan" animatedRainbow currentUiTheme={currentTheme} className="h-9 sm:h-10" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-3 cursor-pointer shrink-0" onClick={() => onNavigate('/')}>
+            <Logo layout="slogan" animatedRainbow currentUiTheme={currentTheme} className="h-8 sm:h-10" />
           </div>
 
-          <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-[var(--ui-text-secondary)]">
-            <button onClick={() => onNavigate('/crear-cv')} className="hover:text-[var(--color-accent-base)] transition-colors cursor-pointer">
-              {t.landing.nav.cv}
+          <nav className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm font-semibold text-[var(--ui-text-secondary)]">
+            <button onClick={() => onNavigate('/crear-cv')} className="flex items-center gap-1 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer" title={t.landing.nav.cv}>
+              <FileText className="w-4 h-4" />
+              {!isMobile && <span>{t.landing.nav.cv}</span>}
             </button>
-            <button onClick={() => onNavigate('/crear-tarjeta')} className="hover:text-[var(--color-accent-base)] transition-colors cursor-pointer">
-              {t.landing.nav.tarjetas}
+            <button onClick={() => onNavigate('/crear-tarjeta')} className="flex items-center gap-1 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer" title={t.landing.nav.tarjetas}>
+              <CreditCard className="w-4 h-4" />
+              {!isMobile && <span>{t.landing.nav.tarjetas}</span>}
             </button>
-            <button onClick={() => onNavigate('/crear-libro')} className="hover:text-[var(--color-accent-base)] transition-colors cursor-pointer">
-              {t.landing.nav.libros}
+            <button onClick={() => onNavigate('/crear-libro')} className="flex items-center gap-1 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer" title={t.landing.nav.libros}>
+              <BookOpen className="w-4 h-4" />
+              {!isMobile && <span>{t.landing.nav.libros}</span>}
             </button>
-            <a href="#precios" className="hover:text-[var(--color-accent-base)] transition-colors cursor-pointer">
-              {t.landing.nav.precios}
-            </a>
-            <button onClick={() => onNavigate('/blog')} className="hover:text-[var(--color-accent-base)] transition-colors cursor-pointer">
-              {t.landing.nav.blog}
+            <button onClick={() => onNavigate('/blog')} className="flex items-center gap-1 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer" title={t.landing.nav.blog}>
+              <Newspaper className="w-4 h-4" />
+              {!isMobile && <span>{t.landing.nav.blog}</span>}
             </button>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 shrink-0">
             <ThemeToggleButton currentThemeId={currentTheme} onToggle={handleToggleTheme} size="md" />
-            <MarketingCTA label={t.landing.nav.cta} onClick={() => onNavigate('/crear-cv')} size="md" />
+            <AccountMenuButton
+              onLogin={() => onNavigate('/crear-cv')}
+              onOpenPricing={() => { document.getElementById('precios')?.scrollIntoView({ behavior: 'smooth' }); }}
+              onOpenSavedDocs={() => onNavigate('/dashboard')}
+              buttonText={isMobile ? undefined : t.landing.nav.cta}
+            />
           </div>
         </div>
       </header>
@@ -287,7 +296,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
       <footer className="mt-auto bg-[var(--ui-bg-panel)] border-t border-[var(--ui-border)] py-10 shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[var(--ui-text-secondary)]">
           <div className="flex flex-col items-center sm:items-start gap-2">
-            <Logo layout="isotipo" currentUiTheme={currentTheme} className="h-6" />
+            <Logo layout="isotipo" animatedRainbow={true} currentUiTheme={currentTheme} className="h-6" />
             <p>© 2026 LEECV Studio. {t.landing.footer.rights}</p>
           </div>
           <div className="flex items-center gap-6">

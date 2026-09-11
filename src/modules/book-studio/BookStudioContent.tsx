@@ -46,6 +46,20 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   const [pdfPageCount, setPdfPageCount] = useState<number>(0);
   const [bookId, setBookId] = useState<string>(() => (activeTabId && activeTabId.startsWith('book-') ? activeTabId : 'book-main'));
   const [bookZoom, setBookZoom] = useState<number>(1);
+  const triggerBookAutoFit = React.useCallback(() => {
+    if (typeof window !== 'undefined') {
+      const isMobile = window.innerWidth < 768;
+      const padding = isMobile ? 16 : 48;
+      const sidebarWidth = isMobile ? 0 : (isPanelOpen ? 450 : 96);
+      const availableWidth = Math.max(280, window.innerWidth - sidebarWidth - padding);
+      const idealScale = Math.min(Math.max(availableWidth / 480, 0.4), 1.6);
+      setBookZoom(Number(idealScale.toFixed(2)));
+    }
+  }, [isPanelOpen]);
+
+  useEffect(() => {
+    triggerBookAutoFit();
+  }, [triggerBookAutoFit]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [options, setOptions] = useState<BookImpositionOptions>({
@@ -142,7 +156,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
           onOpenCloudStatus={() => {}}
           zoomLevel={bookZoom}
           setZoomLevel={setBookZoom}
-          triggerAutoFit={() => setBookZoom(1)}
+          triggerAutoFit={triggerBookAutoFit}
           cycleUITheme={cycleUITheme}
         />
       }

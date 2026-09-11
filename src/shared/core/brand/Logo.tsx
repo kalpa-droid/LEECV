@@ -29,7 +29,7 @@ export const Logo: React.FC<LogoProps> = ({
       <div
         role="img"
         aria-label={alt}
-        className={`ui-topbar-rainbow inline-block ${className}`}
+        className={`brand-gradient-flow inline-block ${className}`}
         style={{
           WebkitMaskImage: `url("${maskSrc}")`,
           maskImage: `url("${maskSrc}")`,

@@ -549,6 +549,7 @@ html, body, #root {
   100% { transform: translateX(160%); }
 }
 
+.brand-gradient-flow,
 .ui-topbar-rainbow {
   position: relative;
   overflow: hidden;
@@ -567,6 +568,7 @@ html, body, #root {
   animation: uiRainbowFlow 4s linear infinite;
 }
 
+.brand-gradient-flow::after,
 .ui-topbar-rainbow::after {
   content: '';
   position: absolute;

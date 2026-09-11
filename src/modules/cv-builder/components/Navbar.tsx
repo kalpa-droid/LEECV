@@ -19,6 +19,7 @@ import {
 import { elevationSystem, radius, UI_THEME_META, buttonUnavailable } from '../../../shared/core/uiDesignSystem';
 import { ThemeToggleButton } from '../../../shared/core/ui/ThemeToggleButton';
 import { ZoomControls } from '../../../shared/core/ui/ZoomControls';
+import { AccountMenuButton } from '../../../shared/core/ui/AccountMenuButton';
 import { UndoRedoControls } from '../../../shared/core/ui/UndoRedoControls';
 import { useIsMobile } from '../../../shared/core/ui/useIsMobile';
 import { useEntitlements, getPlanLabel, PLAN_FEATURES } from '../../../shared/core/entitlements/useEntitlements';
@@ -107,9 +108,6 @@ export default function Navbar({
 
   return (
     <header className={`sticky top-0 z-40 bg-[var(--ui-bg-header)] border-b border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.overlay} no-print select-none`}>
-      {/* Festive Rainbow Accent Strip */}
-      <div className="ui-topbar-rainbow h-1 w-full" />
-      
       {/* Contenedor Principal: Respetando padding lateral de la barra vertical */}
       <div className="max-w-7xl mx-auto px-2 sm:px-4 h-12 sm:h-14 flex items-center justify-between gap-2 relative">
         
@@ -118,6 +116,7 @@ export default function Navbar({
           <Logo
             layout={isMobile ? 'isotipo' : 'horizontal'}
             currentUiTheme={currentThemeId}
+            animatedRainbow={true}
             className={isMobile ? 'h-7 w-7' : 'h-7 sm:h-8'}
           />
         </div>
@@ -330,139 +329,15 @@ export default function Navbar({
           </div>
 
           {/* PÍLDORA 2: MENÚ DE CUENTA */}
-          <div className="relative" ref={accountMenuRef}>
-            <button
-              type="button"
-              onClick={() => {
-                setIsAccountMenuOpen(!isAccountMenuOpen);
-                setIsActionMenuOpen(false);
-              }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--color-accent-amber)] bg-gradient-to-tr from-[var(--color-accent-orange)] to-[var(--color-accent-amber)] text-black border-2 border-[var(--ui-border)] transition ${elevationSystem.raised} cursor-pointer active:scale-95`}
-              title={t.navbar.accountMenuTitle}
-            >
-              <User className="w-4 h-4 stroke-[2.5]" />
-              {isLoggedIn ? (
-                <LogOut className="w-3.5 h-3.5 stroke-[2.5]" />
-              ) : (
-                <LogIn className="w-3.5 h-3.5 stroke-[2.5]" />
-              )}
-            </button>
-
-            {/* Dropdown de Cuenta */}
-            {isAccountMenuOpen && (
-              <div className={`absolute right-0 mt-2 w-56 rounded-[${radius.modal}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.floating} p-1.5 z-50 space-y-1 animate-fadeIn`}>
-                
-                {/* Insignia del Plan Activo */}
-                <div className={`px-3 py-1.5 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] flex items-center justify-between`}>
-                  <span className="text-[10px] text-[var(--ui-text-secondary)] font-bold">{t.navbar.activePlan}</span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)]">
-                    {plan === 'enterprise' ? `Enterprise (${PLAN_FEATURES.enterprise.cloudStorageGB}GB)` : getPlanLabel(plan)}
-                  </span>
-                </div>
-
-                <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
-                {/* 1. Ingresar / Salir */}
-                {onAuthToggle && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsAccountMenuOpen(false);
-                      onAuthToggle();
-                    }}
-                    className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
-                  >
-                    {isLoggedIn ? (
-                      <>
-                        <LogOut className="w-4 h-4 text-[var(--color-status-danger-bright)]" />
-                        <span>{t.navbar.logout}</span>
-                      </>
-                    ) : (
-                      <>
-                        <LogIn className="w-4 h-4 text-[var(--color-status-success-bright)]" />
-                        <span>{t.navbar.login}</span>
-                      </>
-                    )}
-                  </button>
-                )}
-
-                {/* 2. Mi Panel de Gestión */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsAccountMenuOpen(false);
-                    navigation.goTo('/dashboard');
-                  }}
-                  className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
-                >
-                  <LayoutDashboard className="w-4 h-4 text-[var(--color-secondary-text)]" />
-                  <span>{t.navbar.managementDashboard}</span>
-                </button>
-
-                {/* 3. Planes */}
-                {onOpenPricing && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsAccountMenuOpen(false);
-                      onOpenPricing();
-                    }}
-                    className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
-                  >
-                    <Gem className="w-4 h-4 text-[var(--color-accent-amber-bright)]" />
-                    <span>{t.navbar.plansAndSubscriptions}</span>
-                  </button>
-                )}
-
-                {/* 3. Panel (Para usuarios Agencia / Empresa) */}
-                {isAgencyUser && onOpenAgencyPanel && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsAccountMenuOpen(false);
-                      onOpenAgencyPanel();
-                    }}
-                    className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
-                  >
-                    <Building2 className="w-4 h-4 text-[var(--color-secondary-bright)]" />
-                    <span>{t.navbar.agencyEnterprisePanel}</span>
-                  </button>
-                )}
-
-                {/* 4. Compartir Aplicación */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsAccountMenuOpen(false);
-                    onOpenShareAppModal();
-                  }}
-                  className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
-                >
-                  <Share2 className="w-4 h-4 text-[var(--color-secondary-bright)]" />
-                  <span>{t.navbar.shareApp}</span>
-                </button>
-
-                <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
-
-                {/* 5. Política de Privacidad */}
-                {onOpenPrivacy && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsAccountMenuOpen(false);
-                      onOpenPrivacy();
-                    }}
-                    className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer text-[var(--ui-text-secondary)]`}
-                  >
-                    <ShieldCheck className="w-4 h-4 text-[var(--color-status-success-bright)]" />
-                    <span>{t.navbar.privacyPolicy}</span>
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-
+          <AccountMenuButton
+            isLoggedIn={isLoggedIn}
+            currentProfile={{ plan }}
+            onLogin={onAuthToggle}
+            onLogout={onAuthToggle}
+            onOpenPricing={onOpenPricing}
+            onOpenSavedDocs={onOpenSavedCVsModal}
+          />
         </div>
-
       </div>
     </header>
   );
