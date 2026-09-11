@@ -113,9 +113,13 @@ export default function Navbar({
       {/* Contenedor Principal: Respetando padding lateral de la barra vertical */}
       <div className="max-w-7xl mx-auto px-2 sm:px-4 h-12 sm:h-14 flex items-center justify-between gap-2 relative">
         
-        {/* CLUSTER IZQUIERDO: Logo LEECV */}
+        {/* CLUSTER IZQUIERDO: Logo LEECV (Isotipo compacto en celular, Horizontal completo en desktop) */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer" onClick={() => navigation.goTo('/')} title="Ir al inicio">
-          <Logo layout="horizontal" currentUiTheme={currentThemeId} className="h-7 sm:h-8" />
+          <Logo
+            layout={isMobile ? 'isotipo' : 'horizontal'}
+            currentUiTheme={currentThemeId}
+            className={isMobile ? 'h-7 w-7' : 'h-7 sm:h-8'}
+          />
         </div>
 
         {/* CLUSTER CENTRO: Botón de Tema + Controles de Zoom (Visibles en PC y Móvil) */}

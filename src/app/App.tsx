@@ -520,6 +520,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     return (
       <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Creador de Libros...</div>}>
         <BookStudio
+          currentUiTheme={globalUiTheme}
           onBackToHome={() => onNavigate?.('/')}
           documentTabs={tabs}
           activeTabId={activeBookTab.cvId}

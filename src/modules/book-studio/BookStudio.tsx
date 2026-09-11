@@ -2,6 +2,7 @@ import React from 'react';
 import { BookStudioContent } from './BookStudioContent';
 
 interface BookStudioProps {
+  currentUiTheme?: string;
   onBackToHome?: () => void;
   documentTabs?: any[];
   activeTabId?: string;
@@ -15,6 +16,7 @@ interface BookStudioProps {
 }
 
 export const BookStudio: React.FC<BookStudioProps> = ({
+  currentUiTheme = 'day',
   documentTabs = [{ id: 'book', title: 'Libro Principal', docType: 'book' }],
   activeTabId = 'book',
   onSelectTab = () => {},
@@ -27,6 +29,7 @@ export const BookStudio: React.FC<BookStudioProps> = ({
 }) => {
   return (
     <BookStudioContent
+      currentUiTheme={currentUiTheme}
       documentTabs={documentTabs}
       activeTabId={activeTabId}
       onSelectTab={onSelectTab}

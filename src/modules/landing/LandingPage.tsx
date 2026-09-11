@@ -59,10 +59,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative pt-12 pb-16 md:pt-20 md:pb-24 shrink-0">
+      <section className="relative pt-10 pb-16 md:pt-16 md:pb-24 shrink-0">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[var(--color-accent-muted)] blur-[120px] rounded-full pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 relative z-10">
+          <div className="flex justify-center mb-1">
+            <Logo layout="master" forceVariant="violeta" className="h-14 sm:h-20" alt="LEECV Studio Suite" />
+          </div>
+
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/30 rounded-full text-[var(--color-accent-text)] font-semibold text-xs tracking-wider uppercase">
             <Sparkles className="w-4 h-4" />
             <span>{t.landing.hero.eyebrow}</span>

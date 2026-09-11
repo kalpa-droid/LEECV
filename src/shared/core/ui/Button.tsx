@@ -27,8 +27,8 @@ export function Button({
   const baseStyles = `font-black rounded-[${radius.control}] transition-all flex items-center justify-center gap-1.5 ${elevationSystem.raised} cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95`;
 
   const variantStyles: Record<string, string> = {
-    primary: 'bg-[var(--color-accent-base)] text-white hover:bg-[var(--color-accent-hover)] border border-transparent',
-    secondary: 'bg-[var(--color-accent-base)] text-white hover:bg-[var(--color-accent-brand-hover)] border border-[var(--color-accent-brand-hover)]',
+    primary: 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] hover:bg-[var(--color-accent-hover)] border border-transparent',
+    secondary: 'bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] hover:opacity-90 border border-transparent',
     accent: 'bg-[var(--color-accent-amber)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-accent-amber-hover)] border border-[var(--color-accent-amber-hover)]',
     dark: 'bg-[var(--ui-btn-neutral-bg)] text-[var(--ui-btn-neutral-text)] hover:bg-[var(--ui-btn-neutral-hover)] border border-[var(--ui-btn-neutral-border)]',
     danger: 'bg-[var(--color-status-danger-muted)] text-[var(--color-status-danger-text)] border border-[var(--color-status-danger-base)]/30 hover:bg-[var(--color-status-danger-base)] hover:text-white',

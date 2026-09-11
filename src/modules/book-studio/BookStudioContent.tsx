@@ -15,6 +15,7 @@ import { saveBook } from '../../shared/core/storage/documentStorageService';
 import { addOpenTab, OpenTabItem } from '../../shared/core/storage/documentTabEngine';
 
 interface BookStudioContentProps {
+  currentUiTheme?: string;
   documentTabs: OpenTabItem[];
   activeTabId: string;
   onSelectTab: (id: string) => void;
@@ -27,6 +28,7 @@ interface BookStudioContentProps {
 }
 
 export const BookStudioContent: React.FC<BookStudioContentProps> = ({
+  currentUiTheme = 'day',
   documentTabs,
   activeTabId,
   onSelectTab,
@@ -130,7 +132,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
       navbarSlot={
         <Navbar
           docType="book"
-          currentCvData={{ uiTheme: 'day' }}
+          currentCvData={{ uiTheme: currentUiTheme }}
           onOpenSavedCVsModal={() => {}}
           onSaveCVClick={() => persistBookState(selectedFile, options)}
           onOpenSaveAsModal={() => {}}
