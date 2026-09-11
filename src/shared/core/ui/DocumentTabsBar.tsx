@@ -1,7 +1,8 @@
-import React from 'react';
-import { FileText, BookOpen, CreditCard, Plus, X, ChevronRight } from 'lucide-react';
+import React, { useRef } from 'react';
+import { FileText, BookOpen, CreditCard, Plus, X, ChevronRight, ChevronLeft } from 'lucide-react';
 import { OpenTabItem } from '../storage/documentTabEngine';
 import { elevationSystem, radius } from '../uiDesignSystem';
+import { useHorizontalScrollControls } from './useHorizontalScrollControls';
 
 export interface DocumentTabsBarProps {
   tabs: OpenTabItem[];
@@ -33,24 +34,34 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
     }
   };
 
+  const tabsScrollRef = useRef<HTMLDivElement>(null);
+  const { canScrollLeft, canScrollRight, scrollLeft: scrollTabsLeft, scrollRight: scrollTabsRight } =
+    useHorizontalScrollControls(tabsScrollRef, [tabs.length]);
+
   return (
     <footer className="h-8 bg-[var(--ui-bg-panel)] border-t border-[var(--ui-border)] text-[var(--ui-text-primary)] px-2 sm:px-3 md:pl-28 flex items-center justify-between gap-1.5 shrink-0 no-print select-none text-[11px] font-sans z-40 mb-[76px] md:mb-0">
-      {/* Pestañas de Documentos Abiertos + Botón "+" (con desplazamiento por ruedita del mouse) */}
-      <div 
-        onWheel={(e) => {
-          if (e.currentTarget) {
-            e.currentTarget.scrollLeft += (e.deltaY || e.deltaX);
-          }
-        }}
-        className="flex items-center gap-1 overflow-x-auto no-scrollbar flex-1 py-0.5"
-      >
-        <div 
+      {/* Pestañas de Documentos Abiertos + Botón "+" (con desplazamiento por flechas reales, rueda del mouse o swipe) */}
+      <div className="flex items-center gap-1 flex-1 min-w-0 py-0.5">
+        {/* Flecha izquierda: solo se muestra si hay pestañas ocultas a ese lado */}
+        {canScrollLeft && (
+          <button
+            type="button"
+            onClick={scrollTabsLeft}
+            className="shrink-0 p-0.5 rounded text-[var(--color-accent-amber-bright)] hover:bg-[var(--ui-bg-card)] transition cursor-pointer"
+            title="Ver pestañas anteriores"
+          >
+            <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+          </button>
+        )}
+
+        <div
+          ref={tabsScrollRef}
           onWheel={(e) => {
             if (e.currentTarget) {
               e.currentTarget.scrollLeft += (e.deltaY || e.deltaX);
             }
           }}
-          className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-full"
+          className="flex items-center gap-1 overflow-x-auto no-scrollbar min-w-0"
         >
           {tabs.map((tab) => {
             const isActive = tab.cvId === activeId;
@@ -138,10 +149,17 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
           <Plus className="w-4 h-4 stroke-[3]" />
         </button>
 
-        {/* Flecha sutil y elegante que indica que hay más pestañas desplazables */}
-        <div className="flex items-center text-[var(--color-accent-amber-bright)] opacity-80 animate-pulse shrink-0 px-0.5 pointer-events-none" title="Pestañas de documentos desplazables">
-          <ChevronRight className="w-4 h-4 stroke-[2.5]" />
-        </div>
+        {/* Flecha derecha: solo se muestra si hay pestañas ocultas a ese lado */}
+        {canScrollRight && (
+          <button
+            type="button"
+            onClick={scrollTabsRight}
+            className="shrink-0 p-0.5 rounded text-[var(--color-accent-amber-bright)] hover:bg-[var(--ui-bg-card)] transition cursor-pointer"
+            title="Ver pestañas siguientes"
+          >
+            <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+          </button>
+        )}
       </div>
 
       {/* Enlaces Legales Públicos en el Footer */}
