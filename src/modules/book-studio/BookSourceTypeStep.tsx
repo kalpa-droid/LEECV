@@ -35,7 +35,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
 
   const handleFileChange = async (file: File) => {
     if (!file.name.toLowerCase().endsWith('.pdf')) {
-      setErrorMsg('Por favor selecciona un archivo PDF válido.');
+      setErrorMsg(t.bookStudio.sourceStep.errorInvalidFile);
       return;
     }
 
@@ -67,7 +67,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
       onPdfLoaded?.(pdf);
     } catch (err) {
       console.error(err);
-      setErrorMsg('No se pudo leer el archivo PDF. Verifica que no esté protegido o dañado.');
+      setErrorMsg(t.bookStudio.sourceStep.errorReadFile);
     } finally {
       setIsLoadingFile(false);
     }
@@ -86,7 +86,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
       {/* 1. Selección de Modo de Documento */}
       <div className="space-y-2">
         <label className="text-xs font-bold text-[var(--ui-text-primary)] block">
-          1.a. Tu PDF es:
+          {t.bookStudio.sourceStep.modeQuestionLabel}
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div
@@ -105,10 +105,10 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
             <div className="space-y-1">
               <span className="font-bold block text-sm text-[var(--ui-text-primary)] flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
-                PDF Estándar (1 pág/hoja)
+                {t.bookStudio.sourceStep.modeStandardTitle}
               </span>
               <span className="text-xs text-[var(--ui-text-secondary)] block leading-normal">
-                Ideal para documentos creados en Word, Canva o InDesign exportados directamente.
+                {t.bookStudio.sourceStep.modeStandardDesc}
               </span>
             </div>
           </div>
@@ -129,10 +129,10 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
             <div className="space-y-1">
               <span className="font-bold block text-sm text-[var(--ui-text-primary)] flex items-center gap-2">
                 <Copy className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
-                Fotocopia / Escaneo (2 págs/hoja)
+                {t.bookStudio.sourceStep.modeFotocopiaTitle}
               </span>
               <span className="text-xs text-[var(--ui-text-secondary)] block leading-normal">
-                Para PDFs con 2 páginas escaneadas lado a lado. Se dividen al centro automáticamente.
+                {t.bookStudio.sourceStep.modeFotocopiaDesc}
               </span>
             </div>
           </div>
@@ -142,7 +142,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
       {/* 2. Selección de Tamaño de Papel Imprenta */}
       <div className="space-y-2 pt-2 border-t border-[var(--ui-border)]">
         <label className="text-xs font-bold text-[var(--ui-text-primary)] block">
-          1.b. El tamaño que imprimirás es:
+          {t.bookStudio.sourceStep.paperSizeQuestionLabel}
         </label>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -162,10 +162,10 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
             <div className="space-y-1">
               <span className="font-bold block text-sm text-[var(--ui-text-primary)] flex items-center gap-2">
                 <FileText className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
-                Hoja A4 (Libro Final A5)
+                {t.bookStudio.sourceStep.paperA4Title}
               </span>
               <span className="text-xs text-[var(--ui-text-secondary)] block leading-normal">
-                Imprime en hojas A4 y dobla al medio. Formato estándar o de bolsillo A5.
+                {t.bookStudio.sourceStep.paperA4Desc}
               </span>
             </div>
           </div>
@@ -186,10 +186,10 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
             <div className="space-y-1">
               <span className="font-bold block text-sm text-[var(--ui-text-primary)] flex items-center gap-2">
                 <FileText className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
-                Hoja A3 (Libro Final A4)
+                {t.bookStudio.sourceStep.paperA3Title}
               </span>
               <span className="text-xs text-[var(--ui-text-secondary)] block leading-normal">
-                Imprime en hojas grandes A3 y dobla al medio. Formato grande A4.
+                {t.bookStudio.sourceStep.paperA3Desc}
               </span>
             </div>
           </div>
@@ -224,7 +224,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
           {isLoadingFile ? (
             <div className="flex items-center justify-center gap-2 py-1">
               <div className="w-4 h-4 border-2 border-[var(--color-accent-base)] border-t-transparent rounded-full animate-spin" />
-              <p className="text-xs text-[var(--ui-text-secondary)] font-medium">Analizando páginas del PDF...</p>
+              <p className="text-xs text-[var(--ui-text-secondary)] font-medium">{t.bookStudio.sourceStep.loadingPdf}</p>
             </div>
           ) : selectedFile ? (
             <div className="flex items-center justify-between gap-2 px-1 py-0.5">
@@ -238,14 +238,14 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
                 </div>
               </div>
               <span className="text-[11px] font-bold text-[var(--color-accent-text)] underline shrink-0">
-                Cambiar PDF
+                {t.bookStudio.sourceStep.changePdf}
               </span>
             </div>
           ) : (
             <div className="flex items-center justify-center gap-2 py-1.5 text-[var(--color-accent-text)]">
               <Upload className="w-4.5 h-4.5 shrink-0" />
               <span className="text-xs font-bold text-[var(--ui-text-primary)]">
-                Cargar o arrastrar archivo PDF aquí
+                {t.bookStudio.sourceStep.dragDropLabel}
               </span>
             </div>
           )}
@@ -264,18 +264,18 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
           <span className="text-xs text-[var(--ui-text-secondary)] font-medium text-center sm:text-left">
             {selectedFile
               ? options.mode === 'fotocopia'
-                ? 'PDF listo para organizar páginas'
-                : 'PDF listo para configurar tapa'
+                ? t.bookStudio.sourceStep.readyForOrganize
+                : t.bookStudio.sourceStep.readyForCover
               : options.mode === 'fotocopia'
-              ? 'Siguiente paso: 2. Páginas'
-              : 'Siguiente paso: 3. Tapa'}
+              ? t.bookStudio.sourceStep.nextStepOrganize
+              : t.bookStudio.sourceStep.nextStepCover}
           </span>
           <button
             type="button"
             onClick={onNextStep}
             className={`${button.base} ${button.primary} flex items-center justify-center gap-1.5 w-full sm:w-auto`}
           >
-            <span>{options.mode === 'fotocopia' ? 'Siguiente: 2. Páginas' : 'Siguiente: 3. Tapa'}</span>
+            <span>{options.mode === 'fotocopia' ? t.bookStudio.sourceStep.nextStepOrganize : t.bookStudio.sourceStep.nextStepCover}</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
