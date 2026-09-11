@@ -14,7 +14,7 @@
 
 import { sanitizeCvData } from '../utils/cvDataSchema';
 
-export const CURRENT_SCHEMA_VERSION = 2;
+export const CURRENT_SCHEMA_VERSION = 3;
 
 export function migrateCvData(rawCvData: any): any {
   if (!rawCvData || typeof rawCvData !== 'object') {
@@ -75,6 +75,18 @@ export function migrateCvData(rawCvData: any): any {
     }
 
     currentVersion = 2;
+  }
+
+  // Migration v2 -> v3: Migración de experiences (plural) -> experience (singular) y skillGroups -> skills
+  if (currentVersion < 3) {
+    migrated.schemaVersion = 3;
+    if (Array.isArray(migrated.experiences) && !Array.isArray(migrated.experience)) {
+      migrated.experience = migrated.experiences;
+    }
+    if (Array.isArray(migrated.skillGroups) && (!Array.isArray(migrated.skills) || migrated.skills.length === 0)) {
+      migrated.skills = migrated.skillGroups.flatMap((g: any) => g.skills || []);
+    }
+    currentVersion = 3;
   }
 
   // Retornar objeto desinfectado garantizado

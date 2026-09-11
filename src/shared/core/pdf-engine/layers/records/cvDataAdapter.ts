@@ -2,6 +2,7 @@ import { ContentSection } from './recordTypes';
 import { getSectionLabel } from '../../../sectionRegistry';
 import { resolveActiveFormat } from '../../../formats/cvFormatRegistry';
 import { resolveDisplayName } from '../../../utils/cvDataSchema';
+import { resolveDateRange } from './dateRangeResolver';
 
 const sortByYearDesc = (items: any[]) => {
   if (!Array.isArray(items)) return [];
@@ -18,6 +19,8 @@ const sortByYearDesc = (items: any[]) => {
  */
 export function cvDataToContentSections(cvData: any): ContentSection[] {
   if (!cvData) return [];
+
+  const isVisible = (id: string) => cvData?.sectionVisibility?.[id] !== false;
 
   const {
     personalInfo = {},
@@ -40,7 +43,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   const sections: ContentSection[] = [];
 
   // Contacto & Redes (Sidebar)
-  if (cvData?.sectionVisibility?.contacto !== false) {
+  if (isVisible('contacto')) {
     sections.push({
       id: 'contacto',
       titleText: getSectionLabel('contacto'),
@@ -71,7 +74,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   };
 
   const hasPersonalDetails = Object.values(personalDetailsFields).some((val) => !!val);
-  if (cvData?.sectionVisibility?.['datos-personales'] !== false && hasPersonalDetails) {
+  if (isVisible('datos-personales') && hasPersonalDetails) {
     sections.push({
       id: 'datos-personales',
       titleText: getSectionLabel('datos-personales'),
@@ -87,8 +90,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   }
 
   // Frase / Lema Personal / Cita (Solo si existe un texto de cita explícito cvData.frase)
-  // NOTA: personalInfo.quote es el Titular Profesional que se ubica nativamente debajo del nombre en el Header.
-  if (cvData?.sectionVisibility?.frase !== false && cvData?.frase && typeof cvData.frase === 'string' && cvData.frase.trim().length > 0) {
+  if (isVisible('frase') && cvData?.frase && typeof cvData.frase === 'string' && cvData.frase.trim().length > 0) {
     sections.push({
       id: 'frase',
       titleText: '',
@@ -103,8 +105,8 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
     });
   }
 
-  // Resumen Profesional / Extracto (Main - Posición predeterminada #1 en columna principal, sin título impreso)
-  if (cvData.summary) {
+  // Resumen Profesional / Extracto (Main)
+  if (isVisible('resumen') && cvData.summary) {
     sections.push({
       id: 'resumen',
       titleText: '',
@@ -120,7 +122,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   }
 
   // Redes Sociales & Enlaces (Sidebar)
-  if (Array.isArray(cvData.redes) && cvData.redes.length > 0) {
+  if (isVisible('redes') && Array.isArray(cvData.redes) && cvData.redes.length > 0) {
     sections.push({
       id: 'redes',
       titleText: getSectionLabel('redes'),
@@ -138,7 +140,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   }
 
   // Habilidades Técnicas / Hard Skills (Sidebar)
-  if (Array.isArray(cvData.hardSkills) && cvData.hardSkills.length > 0) {
+  if (isVisible('habilidades') && Array.isArray(cvData.hardSkills) && cvData.hardSkills.length > 0) {
     sections.push({
       id: 'habilidades',
       titleText: getSectionLabel('habilidades'),
@@ -154,7 +156,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   }
 
   // Competencias Clave (Sidebar)
-  if (Array.isArray(skills) && skills.length > 0) {
+  if (isVisible('competencias') && Array.isArray(skills) && skills.length > 0) {
     sections.push({
       id: 'competencias',
       titleText: getSectionLabel('competencias'),
@@ -170,7 +172,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   }
 
   // Idiomas & Nivel (Sidebar)
-  if (Array.isArray(cvData.languages) && cvData.languages.length > 0) {
+  if (isVisible('idiomas') && Array.isArray(cvData.languages) && cvData.languages.length > 0) {
     sections.push({
       id: 'idiomas',
       titleText: getSectionLabel('idiomas'),
@@ -188,47 +190,53 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   }
 
   // Proyectos Destacados (Main)
-  if (Array.isArray(cvData.projects) && cvData.projects.length > 0) {
+  if (isVisible('proyectos') && Array.isArray(cvData.projects) && cvData.projects.length > 0) {
     sections.push({
       id: 'proyectos',
       titleText: getSectionLabel('proyectos'),
-      records: cvData.projects.map((proj: any, idx: number) => ({
-        id: `rec-proj-${idx}`,
-        kind: 'projects',
-        targetSectorRole: 'main',
-        fields: {
-          ...proj,
-          title: proj.title || proj.name || proj.tituloOGrado || '',
-          institution: proj.institution || proj.institucion || '',
-          year: (proj.year || proj.periodo || '').toString(),
-          details: proj.details || proj.description || proj.descripcion || ''
-        }
-      }))
+      records: cvData.projects.map((proj: any, idx: number) => {
+        const { startDate, endDate, ...projRest } = proj || {};
+        return {
+          id: `rec-proj-${idx}`,
+          kind: 'projects',
+          targetSectorRole: 'main',
+          fields: {
+            ...projRest,
+            title: proj.title || proj.name || proj.tituloOGrado || '',
+            institution: proj.institution || proj.institucion || '',
+            year: resolveDateRange(proj),
+            details: proj.details || proj.description || proj.descripcion || ''
+          }
+        };
+      })
     });
   }
 
   // Publicaciones & Patentes (Main)
-  if (Array.isArray(cvData.publications) && cvData.publications.length > 0) {
+  if (isVisible('publicaciones') && Array.isArray(cvData.publications) && cvData.publications.length > 0) {
     sections.push({
       id: 'publicaciones',
       titleText: getSectionLabel('publicaciones'),
-      records: cvData.publications.map((pub: any, idx: number) => ({
-        id: `rec-pub-${idx}`,
-        kind: 'publications',
-        targetSectorRole: 'main',
-        fields: {
-          ...pub,
-          title: pub.title || pub.tituloOGrado || '',
-          autor: pub.autor || pub.author || '',
-          institution: pub.institution || pub.institucion || '',
-          year: (pub.year || pub.periodo || '').toString()
-        }
-      }))
+      records: cvData.publications.map((pub: any, idx: number) => {
+        const { startDate, endDate, ...pubRest } = pub || {};
+        return {
+          id: `rec-pub-${idx}`,
+          kind: 'publications',
+          targetSectorRole: 'main',
+          fields: {
+            ...pubRest,
+            title: pub.title || pub.tituloOGrado || '',
+            autor: pub.autor || pub.author || '',
+            institution: pub.institution || pub.institucion || '',
+            year: resolveDateRange(pub)
+          }
+        };
+      })
     });
   }
 
   // Referencias Laborales (Main)
-  if (Array.isArray(cvData.references) && cvData.references.length > 0) {
+  if (isVisible('referencias') && Array.isArray(cvData.references) && cvData.references.length > 0) {
     sections.push({
       id: 'referencias',
       titleText: getSectionLabel('referencias'),
@@ -248,7 +256,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   }
 
   // Informática (Sidebar)
-  if (Array.isArray(informatics) && informatics.length > 0) {
+  if (isVisible('informatica') && Array.isArray(informatics) && informatics.length > 0) {
     sections.push({
       id: 'informatica',
       titleText: getSectionLabel('informatica'),
@@ -266,84 +274,97 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   }
 
   // Formación Académica (Main)
-  if (Array.isArray(education) && education.length > 0) {
+  if (isVisible('formacion') && Array.isArray(education) && education.length > 0) {
     sections.push({
       id: 'formacion',
       titleText: getSectionLabel('formacion'),
-      records: education.map((edu: any, idx: number) => ({
-        id: `rec-edu-${idx}`,
-        kind: 'education',
-        targetSectorRole: 'main',
-        fields: {
-          ...edu,
-          degree: edu.degree || edu.title || edu.tituloOGrado || '',
-          institution: edu.institution || edu.institucion || '',
-          level: edu.level || 'Superior',
-          year: (edu.year || edu.periodo || '').toString()
-        }
-      }))
+      records: education.map((edu: any, idx: number) => {
+        const { startDate, endDate, ...eduRest } = edu || {};
+        return {
+          id: `rec-edu-${idx}`,
+          kind: 'education',
+          targetSectorRole: 'main',
+          fields: {
+            ...eduRest,
+            degree: edu.degree || edu.title || edu.tituloOGrado || '',
+            institution: edu.institution || edu.institucion || '',
+            level: edu.level || 'Superior',
+            year: resolveDateRange(edu)
+          }
+        };
+      })
     });
   }
 
   // Títulos Profesionales (Main)
-  if (Array.isArray(sortedProfession) && sortedProfession.length > 0) {
+  if (isVisible('profesion') && Array.isArray(sortedProfession) && sortedProfession.length > 0) {
     sections.push({
       id: 'profesion',
       titleText: getSectionLabel('profesion'),
-      records: sortedProfession.map((prof: any, idx: number) => ({
-        id: `rec-prof-${idx}`,
-        kind: 'education',
-        targetSectorRole: 'main',
-        fields: {
-          ...prof,
-          degree: prof.degree || prof.title || prof.tituloOGrado || '',
-          institution: prof.institution || prof.institucion || '',
-          year: (prof.year || prof.periodo || '').toString()
-        }
-      }))
+      records: sortedProfession.map((prof: any, idx: number) => {
+        const { startDate, endDate, ...profRest } = prof || {};
+        return {
+          id: `rec-prof-${idx}`,
+          kind: 'education',
+          targetSectorRole: 'main',
+          fields: {
+            ...profRest,
+            degree: prof.degree || prof.title || prof.tituloOGrado || '',
+            institution: prof.institution || prof.institucion || '',
+            year: resolveDateRange(prof)
+          }
+        };
+      })
     });
   }
 
   // Experiencia Laboral (Main)
-  if (Array.isArray(sortedExperience) && sortedExperience.length > 0) {
+  if (isVisible('experiencia') && Array.isArray(sortedExperience) && sortedExperience.length > 0) {
     sections.push({
       id: 'experiencia',
       titleText: getSectionLabel('experiencia'),
-      records: sortedExperience.map((exp: any, idx: number) => ({
-        id: `rec-exp-${idx}`,
-        kind: 'experience',
-        targetSectorRole: 'main',
-        fields: {
-          ...exp,
-          role: exp.role || exp.cargo || exp.title || '',
-          institution: exp.institution || exp.company || exp.institucion || '',
-          year: (exp.year || exp.periodo || '').toString(),
-          details: exp.details || exp.description || exp.descripcion || ''
-        }
-      }))
+      records: sortedExperience.map((exp: any, idx: number) => {
+        const { startDate, endDate, ...expRest } = exp || {};
+        return {
+          id: `rec-exp-${idx}`,
+          kind: 'experience',
+          targetSectorRole: 'main',
+          fields: {
+            ...expRest,
+            role: exp.role || exp.cargo || exp.title || '',
+            institution: exp.institution || exp.company || exp.institucion || '',
+            year: resolveDateRange(exp),
+            details: exp.details || exp.description || exp.descripcion || ''
+          }
+        };
+      })
     });
   }
 
   // Cursos & Capacitaciones (Main)
-  if (Array.isArray(sortedCourses) && sortedCourses.length > 0) {
+  if (isVisible('cursos') && Array.isArray(sortedCourses) && sortedCourses.length > 0) {
     sections.push({
       id: 'cursos',
       titleText: getSectionLabel('cursos'),
-      records: sortedCourses.map((c: any, idx: number) => ({
-        id: `rec-course-${idx}`,
-        kind: 'course',
-        targetSectorRole: 'main',
-        fields: {
-          ...c,
-          title: c.title || c.name || c.course || c.tituloOGrado || '',
-          institution: c.institution || c.institucion || '',
-          hours: (() => {
-            const raw = String(c.hours || c.cargaHoraria || '').trim();
-            if (!raw) return '';
-            return /hs/i.test(raw) ? raw : `${raw} hs`;
-          })()
-        }
-      }))
+      records: sortedCourses.map((c: any, idx: number) => {
+        const { startDate, endDate, ...cRest } = c || {};
+        return {
+          id: `rec-course-${idx}`,
+          kind: 'course',
+          targetSectorRole: 'main',
+          fields: {
+            ...cRest,
+            title: c.title || c.name || c.course || c.tituloOGrado || '',
+            institution: c.institution || c.institucion || '',
+            year: resolveDateRange(c),
+            hours: (() => {
+              const raw = String(c.hours || c.cargaHoraria || '').trim();
+              if (!raw) return '';
+              return /hs/i.test(raw) ? raw : `${raw} hs`;
+            })()
+          }
+        };
+      })
     });
   }
 
@@ -357,32 +378,32 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
         ...(Array.isArray(cvData?.ecologia) ? cvData.ecologia : [])
       ];
 
-  if (ecologyItems.length > 0) {
+  if (isVisible('ecologia') && ecologyItems.length > 0) {
     sections.push({
       id: 'ecologia',
       titleText: getSectionLabel('ecologia'),
-      records: ecologyItems.map((eco: any, idx: number) => ({
-        id: `rec-eco-${idx}`,
-        kind: 'course',
-        targetSectorRole: 'main',
-        fields: {
-          ...eco,
-          title: eco.title || eco.tituloOGrado || eco.course || eco.name || '',
-          institution: eco.institution || eco.institucion || '',
-          year: (eco.year || eco.periodo || '').toString(),
-          details: eco.details || eco.description || eco.descripcion || ''
-        }
-      }))
+      records: ecologyItems.map((eco: any, idx: number) => {
+        const { startDate, endDate, ...ecoRest } = eco || {};
+        return {
+          id: `rec-eco-${idx}`,
+          kind: 'course',
+          targetSectorRole: 'main',
+          fields: {
+            ...ecoRest,
+            title: eco.title || eco.tituloOGrado || eco.course || eco.name || '',
+            institution: eco.institution || eco.institucion || '',
+            year: resolveDateRange(eco),
+            details: eco.details || eco.description || eco.descripcion || ''
+          }
+        };
+      })
     });
   }
-
-
-
 
   // Secciones Personalizadas Dinámicas (customSections)
   if (Array.isArray(cvData.customSections)) {
     cvData.customSections.forEach((cs: any) => {
-      if (cs && cs.id) {
+      if (cs && cs.id && isVisible(cs.id)) {
         sections.push({
           id: cs.id,
           titleText: (cs.titleText || 'NUEVA SECCIÓN').toUpperCase(),
@@ -401,28 +422,32 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   }
 
   // Firma Digital (Main)
+  // La firma se agrega siempre que exista signature.dataUrl, sin importar sectionVisibility.
+  // Decisión de producto: es la validación legal del documento, no debe poder ocultarse por una plantilla.
   const autoSignerName = resolveDisplayName(personalInfo);
   const selectedRole = signature?.signerRole || (sortedProfession?.[0]?.degree || education?.[0]?.degree || '');
   const todayISO = new Date().toISOString().split('T')[0];
   const sigDate = signature?.date || todayISO;
 
-  sections.push({
-    id: 'firma',
-    titleText: 'FIRMA REGISTRADA',
-    records: [
-      {
-        id: 'rec-sig',
-        kind: 'freeform',
-        targetSectorRole: 'main',
-        fields: {
-          signerName: autoSignerName,
-          signerRole: selectedRole,
-          date: sigDate,
-          dataUrl: signature?.dataUrl || ''
+  if (signature?.dataUrl) {
+    sections.push({
+      id: 'firma',
+      titleText: 'FIRMA REGISTRADA',
+      records: [
+        {
+          id: 'rec-sig',
+          kind: 'freeform',
+          targetSectorRole: 'main',
+          fields: {
+            signerName: autoSignerName,
+            signerRole: selectedRole,
+            date: sigDate,
+            dataUrl: signature.dataUrl
+          }
         }
-      }
-    ]
-  });
+      ]
+    });
+  }
 
   // Priorizar el orden manual configurado por el usuario en cvData.layout.sectionOrders (primaria/secundaria)
   const userPrimOrder = cvData?.layout?.sectionOrders?.primaria;

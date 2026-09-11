@@ -81,7 +81,10 @@ export function estimateRecordHeightPt(
   if (arranged.blockDescription) {
     const charsPerLine = isSidebar ? 45 : 85;
     let descLines = 0;
-    for (const line of arranged.blockDescription.split('\n')) {
+    const linesList = Array.isArray(arranged.blockDescription)
+      ? arranged.blockDescription
+      : arranged.blockDescription.split('\n');
+    for (const line of linesList) {
       descLines += Math.max(1, Math.ceil((line.length || 1) / charsPerLine));
     }
     descH += descLines * (scale.description * scale.lineHeightBody);

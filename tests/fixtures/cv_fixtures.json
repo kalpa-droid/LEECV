@@ -1,0 +1,191 @@
+{
+  "cv_clasico_sample": {
+    "id": "cv_fixture_01",
+    "schemaVersion": 3,
+    "activePresetId": "cv-clasico",
+    "personalInfo": {
+      "fullName": "Carlos Eduardo Mendoza",
+      "surname": "Mendoza",
+      "givenNames": "Carlos Eduardo",
+      "title": "Arquitecto de Software & Cloud Engineer",
+      "email": "carlos.mendoza@ejemplo.com",
+      "phone": "+54 11 4567 8900",
+      "dni": "34567890",
+      "cityProvince": "Buenos Aires, Argentina",
+      "profilePhoto": "data:image/webp;base64,UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEAD8D+JaQAA3AA/v12AAA=",
+      "summary": "Profesional senior con más de 10 años de experiencia en desarrollo de software distribuido y microservicios."
+    },
+    "experience": [
+      {
+        "id": "exp_1",
+        "role": "Líder Técnico de Arquitectura",
+        "institution": "Tech Solutions S.A.",
+        "year": "2021 - Presente",
+        "details": "Liderazgo de equipo de 8 desarrolladores y migración a microservicios en AWS.",
+        "bulletPoints": [
+          "Diseño de arquitectura reactiva orientada a eventos con Kafka.",
+          "Reducción de costos de infraestructura en un 35%.",
+          "Implementación de CI/CD automatizado en GitHub Actions."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "id": "edu_1",
+        "degree": "Ingeniero en Sistemas de Información",
+        "institution": "Universidad Tecnológica Nacional",
+        "year": "2012 - 2018",
+        "level": "Superior"
+      }
+    ],
+    "skills": ["TypeScript", "React", "Node.js", "Docker", "Kubernetes"],
+    "hardSkills": ["AWS Lambda", "GraphQL", "PostgreSQL", "TailwindCSS"],
+    "languages": [
+      { "id": "lang_1", "language": "Español", "proficiency": "Nativo" },
+      { "id": "lang_2", "language": "Inglés", "proficiency": "Avanzado (C1)" }
+    ],
+    "signature": {
+      "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+      "signerName": "Carlos Mendoza",
+      "signerRole": "Arquitecto de Software",
+      "date": "2026-09-11"
+    },
+    "sectionVisibility": {
+      "contacto": true,
+      "datos-personales": true,
+      "experiencia": true,
+      "formacion": true,
+      "habilidades": true,
+      "competencias": true,
+      "idiomas": true,
+      "firma": true
+    }
+  },
+  "cv_v2_legacy": {
+    "id": "cv_fixture_legacy_v2",
+    "schemaVersion": 2,
+    "activePresetId": "modern-corporate",
+    "personalInfo": {
+      "fullName": "Mariana Gómez",
+      "email": "mariana.gomez@empresa.com",
+      "website": "marianagomez.dev"
+    },
+    "experiences": [
+      {
+        "id": "legacy_exp_1",
+        "company": "Empresa Anterior SRL",
+        "role": "Desarrolladora Full Stack",
+        "startDate": "2018",
+        "endDate": "2021",
+        "description": "Desarrollo de interfaces de usuario y APIs RESTful."
+      }
+    ],
+    "skillGroups": [
+      {
+        "id": "sg_1",
+        "category": "Frontend",
+        "skills": ["Vue.js", "HTML5", "CSS3"]
+      },
+      {
+        "id": "sg_2",
+        "category": "Backend",
+        "skills": ["Python", "Django", "PostgreSQL"]
+      }
+    ]
+  },
+  "cv_dates_legacy": {
+    "id": "cv_fixture_dates",
+    "schemaVersion": 3,
+    "activePresetId": "minimal-editorial",
+    "personalInfo": {
+      "fullName": "Esteban Quito"
+    },
+    "experience": [
+      {
+        "id": "exp_dates_1",
+        "role": "Analista de Datos",
+        "institution": "DataCorp",
+        "startDate": "2019",
+        "current": true,
+        "description": "Análisis estadístico y modelos predictivos."
+      },
+      {
+        "id": "exp_dates_2",
+        "role": "Junior Data Analyst",
+        "institution": "InfoStats",
+        "startDate": "2017",
+        "endDate": "2019",
+        "description": "Limpieza y procesamiento de datos con Pandas."
+      }
+    ]
+  },
+  "cv_bullet_points": {
+    "id": "cv_fixture_bullets",
+    "schemaVersion": 3,
+    "activePresetId": "creative-sustentable",
+    "personalInfo": {
+      "fullName": "Lucía Fernández"
+    },
+    "experience": [
+      {
+        "id": "exp_bullets_1",
+        "role": "Gerente de Proyectos",
+        "institution": "BioInnovación",
+        "year": "2020 - 2025",
+        "bulletPoints": [
+          "Coordinación de 12 proyectos agroecológicos en la región NOA.",
+          "Obtención de certificación ISO 14001 para la planta principal.",
+          "Presentación de resultados en el Congreso AgroSur 2024."
+        ]
+      }
+    ]
+  },
+  "cv_boveda_assets": {
+    "id": "cv_fixture_boveda",
+    "schemaVersion": 3,
+    "personalInfo": {
+      "fullName": "Roberto Arlt",
+      "profilePhoto": "boveda://abc123hash.webp"
+    },
+    "certificatesScanned": [
+      {
+        "id": "cert_boveda_1",
+        "title": "Certificado de Postgrado",
+        "dataUrl": "boveda://def456hash.pdf"
+      }
+    ],
+    "signature": {
+      "dataUrl": "boveda://789xyzhash.png"
+    }
+  },
+  "cv_full_all_sections": {
+    "id": "cv_fixture_full",
+    "schemaVersion": 3,
+    "activePresetId": "cv-clasico",
+    "personalInfo": {
+      "fullName": "Dra. Sofía Rossi",
+      "email": "sofia.rossi@universidad.edu.ar",
+      "phone": "+54 387 1112223",
+      "dni": "28999888",
+      "cityProvince": "Salta, Argentina"
+    },
+    "experience": [{ "id": "e1", "role": "Investigadora", "institution": "CONICET", "year": "2015 - 2026" }],
+    "education": [{ "id": "ed1", "degree": "Doctora en Biología", "institution": "UNSa", "year": "2010 - 2015" }],
+    "profession": [{ "id": "p1", "degree": "Bióloga", "institution": "UNSa", "year": "2009" }],
+    "skills": ["Microbiología", "Genética"],
+    "hardSkills": ["PCR en Tiempo Real", "Sequencing"],
+    "languages": [{ "id": "l1", "language": "Español", "proficiency": "Nativo" }],
+    "projects": [{ "id": "pr1", "title": "Estudio de Suelos", "institution": "INTA", "year": "2022" }],
+    "publications": [{ "id": "pb1", "title": "Paper sobre Flora Nativa", "autor": "Rossi S.", "year": "2023" }],
+    "references": [{ "id": "ref1", "personaReferencia": "Dr. Juan Pérez", "cargo": "Director INTA" }],
+    "informatics": [{ "id": "inf1", "title": "Python para Bioinformática", "institution": "Coursera" }],
+    "coursesAndCertificates": [{ "id": "c1", "title": "Curso de Bioseguridad", "institution": "OMS", "year": "2024" }],
+    "ecology": [{ "id": "eco1", "title": "Preservación de Cuencas", "institution": "Fundación Vida", "year": "2025" }],
+    "certificatesScanned": [{ "id": "cs1", "title": "Título de Grado", "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" }],
+    "signature": {
+      "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+      "signerName": "Sofía Rossi",
+      "signerRole": "Doctora en Biología"
+    }
+  }
+}

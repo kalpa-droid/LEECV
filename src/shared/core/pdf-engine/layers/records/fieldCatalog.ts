@@ -135,6 +135,14 @@ export const FIELD_CATALOG: Record<string, FieldDefinition> = {
     pdfRole: 'description',
     designHint: {}
   },
+  logros: {
+    id: 'logros',
+    label: 'Logros / Puntos Destacados',
+    placeholder: 'Ej: Lideré un equipo de 6 personas',
+    type: 'textarea',
+    pdfRole: 'description',
+    designHint: {}
+  },
   plataforma: {
     id: 'plataforma',
     label: 'Red Social / Plataforma',

@@ -26,7 +26,7 @@ export interface ArrangedRecordLayout {
   inlineBadges: PlacedRecordElement[];
   inlineRightBadges: PlacedRecordElement[];
   extrasList: PlacedRecordElement[];
-  blockDescription: string | null;
+  blockDescription: string | string[] | null;
   totalFieldsCount: number;
 }
 

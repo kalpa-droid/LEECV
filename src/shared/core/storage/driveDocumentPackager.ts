@@ -179,16 +179,16 @@ export async function reconstructCvDataFromParts(
 
   async function resolveRefToDataUrl(refValue: string): Promise<string> {
     if (!refValue || typeof refValue !== 'string') return refValue;
-    if (!refValue.startsWith('ref://') && !refValue.startsWith('asset://')) {
+    if (!refValue.startsWith('ref://') && !refValue.startsWith('asset://') && !refValue.startsWith('boveda://')) {
       return refValue;
     }
 
-    const cleanRef = refValue.replace('ref://', '').replace('asset://', '');
+    const cleanRef = refValue.replace('ref://', '').replace('asset://', '').replace('boveda://', '').replace(/\.\w+$/, '');
     let asset = assetMap.get(refValue) || assetMap.get(cleanRef);
 
     if (!asset) {
       try {
-        asset = await idbStorage.getItem('cv_asset_' + cleanRef);
+        asset = await idbStorage.getItem('cv_asset_' + cleanRef) || await idbStorage.getItem('boveda_asset_' + cleanRef);
       } catch (err) {
         console.warn(`Error buscando asset local [${cleanRef}]:`, err);
       }

@@ -28,6 +28,18 @@ function openDB(): Promise<IDBDatabase> {
   });
 }
 
+const memoryStore = new Map<string, any>();
+
+function getLocalStorageSafely(): Storage | null {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    return window.localStorage;
+  }
+  if (typeof localStorage !== 'undefined' && localStorage) {
+    return localStorage;
+  }
+  return null;
+}
+
 export const idbStorage = {
   async getItem(key: string): Promise<any> {
     try {
@@ -39,13 +51,16 @@ export const idbStorage = {
         req.onsuccess = () => resolve(req.result ?? null);
         req.onerror = () => reject(req.error);
       });
-    } catch (err) {
-      console.warn('idbStorage.getItem fallback to localStorage:', err);
+    } catch {
       try {
-        const item = localStorage.getItem(key);
-        return item ? JSON.parse(item) : null;
+        const ls = getLocalStorageSafely();
+        if (ls) {
+          const item = ls.getItem(key);
+          return item ? JSON.parse(item) : null;
+        }
+        return memoryStore.get(key) ?? null;
       } catch {
-        return null;
+        return memoryStore.get(key) ?? null;
       }
     }
   },
@@ -60,14 +75,18 @@ export const idbStorage = {
         req.onsuccess = () => resolve(true);
         req.onerror = () => reject(req.error);
       });
-    } catch (err) {
-      console.warn('idbStorage.setItem fallback to localStorage:', err);
+    } catch {
       try {
-        localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+        const ls = getLocalStorageSafely();
+        if (ls) {
+          ls.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+        } else {
+          memoryStore.set(key, value);
+        }
         return true;
-      } catch (lerr) {
-        console.error('Error al guardar en localStorage fallback:', lerr);
-        return false;
+      } catch {
+        memoryStore.set(key, value);
+        return true;
       }
     }
   },
@@ -84,8 +103,14 @@ export const idbStorage = {
       });
     } catch {
       try {
-        localStorage.removeItem(key);
-      } catch {}
+        const ls = getLocalStorageSafely();
+        if (ls) {
+          ls.removeItem(key);
+        }
+        memoryStore.delete(key);
+      } catch {
+        memoryStore.delete(key);
+      }
     }
   },
 
@@ -101,9 +126,13 @@ export const idbStorage = {
       });
     } catch {
       try {
-        return Object.keys(localStorage);
+        const ls = getLocalStorageSafely();
+        if (ls) {
+          return Object.keys(ls);
+        }
+        return Array.from(memoryStore.keys());
       } catch {
-        return [];
+        return Array.from(memoryStore.keys());
       }
     }
   }

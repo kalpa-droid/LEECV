@@ -1,4 +1,6 @@
-import { getCvFormat, getFormatDefaultVisibility, resolveActiveFormatId } from '../../../formats/cvFormatRegistry';
+import { getCvFormat, resolveActiveFormatId } from '../../../formats/cvFormatRegistry';
+import { applyTemplateMode, TemplateApplicationMode } from './templateApplicationEngine';
+import { resolveActivePreset } from './presetRegistry';
 
 export type PresetLevel = 'format' | 'preset' | 'override';
 
@@ -8,19 +10,13 @@ export interface ApplyPresetPayload {
   colorPresetId?: string;
   typographyPresetId?: string;
   columnLayoutPresetId?: string;
+  /** @deprecated Usar `templateMode` con el motor canónico `templateApplicationEngine.ts` */
   applicationMode?: 'curated' | 'reorder-only' | 'full-20-sections';
+  templateMode?: TemplateApplicationMode;
 }
 
 /**
  * NÚCLEO — GOBERNANZA Y JERARQUÍA DE PRESETS Y FORMATOS (presetHierarchyEngine.ts)
- * 
- * Regula la cascada limpia de 3 niveles:
- * Level 1: Formato Global (activeFormatId) -> Define estándar regional/internacional,
- *          visibilidad de secciones y reset de overrides incompatibles.
- * Level 2: Plantilla Base Visual (activePresetId) -> Define el diseño visual (paleta + tipografía)
- *          y limpia overrides manuales para un estado puro.
- * Level 3: Overrides Manuales (colorPresetId, typographyPresetId, columnLayoutPresetId) ->
- *          Ajustes individuales del usuario sobre la plantilla base activa.
  */
 export function applyPresetLevel(cvData: any, level: PresetLevel, payload: ApplyPresetPayload): any {
   if (!cvData) return cvData;
@@ -29,35 +25,35 @@ export function applyPresetLevel(cvData: any, level: PresetLevel, payload: Apply
     const fmt = getCvFormat(payload.formatId);
     const recPreset = fmt.recommendedPresetIds?.[0] || 'cv-clasico';
     const activePresetCompatible = fmt.recommendedPresetIds?.includes(cvData?.activePresetId);
+    const targetPresetId = activePresetCompatible ? cvData.activePresetId : recPreset;
+    const activePreset = resolveActivePreset({ ...cvData, activePresetId: targetPresetId });
 
-    let resolvedVis: Record<string, boolean> = { ...(cvData?.sectionVisibility || {}) };
-    const mode = payload.applicationMode || 'curated';
+    const modeToApply: TemplateApplicationMode = payload.templateMode || 
+      (payload.applicationMode === 'reorder-only' ? 'template-order' : 'full-template');
 
-    if (mode === 'curated') {
-      const newVis = getFormatDefaultVisibility(payload.formatId);
-      resolvedVis = { ...resolvedVis, ...newVis };
-    } else if (mode === 'full-20-sections') {
-      const allSections = [
-        'contacto', 'datos-personales', 'frase', 'redes', 'resumen', 'experiencia',
-        'formacion', 'profesion', 'habilidades', 'competencias', 'idiomas',
-        'proyectos', 'publicaciones', 'referencias', 'cursos', 'informatica',
-        'ecologia', 'certificados', 'firma'
-      ];
-      for (const secKey of allSections) {
-        resolvedVis[secKey] = true;
-      }
-    }
+    const newPresentation = applyTemplateMode(
+      {
+        sectionVisibility: cvData?.sectionVisibility || {},
+        sectionOrders: cvData?.layout?.sectionOrders || { primaria: [], secundaria: [] }
+      },
+      fmt,
+      activePreset,
+      modeToApply
+    );
 
     return {
       ...cvData,
       activeFormatId: payload.formatId,
       columnLayoutPresetId: fmt.columnLayoutPresetId,
-      activePresetId: activePresetCompatible ? cvData.activePresetId : recPreset,
-      // Limpiar overrides manuales de color y tipografía al cambiar de formato global
+      activePresetId: targetPresetId,
       colorPresetId: undefined,
       typographyPresetId: undefined,
       theme: { ...(cvData.theme || {}), primaryColor: undefined },
-      sectionVisibility: resolvedVis
+      sectionVisibility: newPresentation.sectionVisibility,
+      layout: {
+        ...(cvData.layout || {}),
+        sectionOrders: newPresentation.sectionOrders
+      }
     };
   }
 

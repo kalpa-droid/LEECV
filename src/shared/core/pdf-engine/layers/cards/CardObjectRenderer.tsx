@@ -20,7 +20,7 @@ interface CardObjectRendererProps {
   dateOrBadge?: string;
   badges?: Array<{ id: string; label: string; value: string }>;
   extras?: Array<{ id: string; label: string; value: string; type?: string }>;
-  description?: string;
+  description?: string | string[];
   rolesColor: ResolvedThemeRoles;
   typography: TypographyScale;
   sectorRole?: 'sidebar' | 'main';
@@ -236,8 +236,20 @@ export function CardObjectRenderer({
         )}
       </View>
 
-      {/* Block Description */}
-      {arranged.blockDescription ? <Text style={styles.descText}>{arranged.blockDescription}</Text> : null}
+      {/* Block Description / Bullet Points */}
+      {arranged.blockDescription ? (
+        Array.isArray(arranged.blockDescription) ? (
+          <View style={{ marginTop: 3 }}>
+            {arranged.blockDescription.map((item, idx) => (
+              <Text key={idx} style={styles.descText}>
+                • {item}
+              </Text>
+            ))}
+          </View>
+        ) : (
+          <Text style={styles.descText}>{arranged.blockDescription}</Text>
+        )
+      ) : null}
     </View>
   );
 }

@@ -32,7 +32,8 @@ export interface StructuredRecordLayout {
   subheader: string | null;
   badges: RecordBadgeItem[];
   extras: RecordExtraItem[];
-  block: string | null;
+  block: string | string[] | null;
+  bulletList?: string[] | null;
   hasData: boolean;
 }
 
@@ -47,7 +48,7 @@ export function inferPdfRole(fieldId: string, val: string): 'title' | 'subtitle'
   if (/url|link|web|github|linkedin|email|site|sitio|adjunto|pdf/i.test(lowerId)) {
     return 'extra';
   }
-  if (/desc|block|detalle|resumen|summary|abstract|contenido|bio|quote|cita/i.test(lowerId)) {
+  if (/desc|block|detalle|resumen|summary|abstract|contenido|bio|quote|cita|bullet|logros|achievements/i.test(lowerId)) {
     return 'description';
   }
   if (/subtit|instituc|empresa|company|org|entidad|autor|editorial/i.test(lowerId)) {
@@ -99,6 +100,23 @@ export function buildStructuredRecordLayout(
       return;
     }
 
+    let canonicalKey = k;
+    if (k === 'degree' || k === 'title' || k === 'name' || k === 'course') canonicalKey = 'tituloOGrado';
+    else if (k === 'role') canonicalKey = 'cargo';
+    else if (k === 'institution' || k === 'company') canonicalKey = 'institucion';
+    else if (k === 'year') canonicalKey = 'periodo';
+    else if (k === 'hours') canonicalKey = 'cargaHoraria';
+    else if (k === 'details' || k === 'description') canonicalKey = 'descripcion';
+    else if (k === 'bulletPoints' || k === 'achievements' || k === 'logros') canonicalKey = 'logros';
+
+    if (Array.isArray(v) && canonicalKey === 'logros') {
+      const items = v.map((item: any) => String(item).trim()).filter(Boolean);
+      if (items.length > 0) {
+        normalizedRecord[canonicalKey] = items;
+      }
+      return;
+    }
+
     if (typeof v === 'object' && !Array.isArray(v)) {
       for (const [subK, subV] of Object.entries(v)) {
         processKeyValue(subK, subV);
@@ -107,14 +125,6 @@ export function buildStructuredRecordLayout(
     }
     const strVal = String(v).trim();
     if (!strVal || strVal === '[object Object]') return;
-
-    let canonicalKey = k;
-    if (k === 'degree' || k === 'title' || k === 'name' || k === 'course') canonicalKey = 'tituloOGrado';
-    else if (k === 'role') canonicalKey = 'cargo';
-    else if (k === 'institution' || k === 'company') canonicalKey = 'institucion';
-    else if (k === 'year') canonicalKey = 'periodo';
-    else if (k === 'hours') canonicalKey = 'cargaHoraria';
-    else if (k === 'details' || k === 'description') canonicalKey = 'descripcion';
 
     if (!normalizedRecord[canonicalKey]) {
       normalizedRecord[canonicalKey] = strVal;
@@ -129,7 +139,8 @@ export function buildStructuredRecordLayout(
   let subheader: string | null = null;
   const badges: RecordBadgeItem[] = [];
   const extras: RecordExtraItem[] = [];
-  let block: string | null = null;
+  let block: string | string[] | null = null;
+  let bulletList: string[] | null = null;
   let hasData = false;
 
   // Procesamos tanto los campos universales como cualquier campo personalizado
@@ -142,6 +153,19 @@ export function buildStructuredRecordLayout(
   for (const fieldId of allKeysToProcess) {
     const rawVal = normalizedRecord[fieldId];
     if (rawVal === undefined || rawVal === null) continue;
+
+    if (Array.isArray(rawVal)) {
+      if (rawVal.length === 0) continue;
+      hasData = true;
+      if (fieldId === 'logros') {
+        bulletList = rawVal;
+        if (!block) {
+          block = rawVal;
+        }
+      }
+      continue;
+    }
+
     const val = String(rawVal).trim();
     if (!val) continue;
 
@@ -191,6 +215,8 @@ export function buildStructuredRecordLayout(
       case 'description':
         if (!block) {
           block = val;
+        } else if (Array.isArray(block)) {
+          block = [...block, val];
         } else {
           block += `\n${val}`;
         }
@@ -214,6 +240,7 @@ export function buildStructuredRecordLayout(
     badges,
     extras,
     block,
+    bulletList,
     hasData
   };
 }

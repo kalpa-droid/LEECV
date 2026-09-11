@@ -145,6 +145,9 @@ export interface CVData {
   id?: string;
   title?: string;
   personalInfo?: PersonalInfo;
+  /** Campo canónico de experiencia laboral en singular */
+  experience?: ExperienceItem[];
+  /** @deprecated nombre incorrecto, no usado por el motor. Ver `experience`. */
   experiences?: ExperienceItem[];
   education?: EducationItem[];
   /** @deprecated ver nota en `CertificateItem`. Usar `certificatesScanned`. */
@@ -152,21 +155,45 @@ export interface CVData {
   certificatesScanned?: ScannedCertificate[];
   signature?: SignatureData;
   languages?: LanguageItem[];
+  /** Competencias clave / Habilidades blandas (array plano de strings o skill objects) */
+  skills?: (string | { name?: string; title?: string })[];
+  /** Habilidades técnicas / Hard skills (array plano) */
+  hardSkills?: (string | { name?: string; title?: string })[];
+  /** @deprecated no usado por el motor de render. Usar `skills` (Competencias) y/o `hardSkills` (Habilidades Técnicas). */
   skillGroups?: SkillGroup[];
   roles?: string[];
   layout?: CVLayout;
   /**
    * Único campo real que decide qué Preset visual se usa para renderizar el
    * documento (ver src/shared/core/pdf-engine/layers/presets/presetRegistry.ts).
-   * Antes existían 3 nombres para este mismo concepto (coverPreset, layoutStyle
-   * acá y layout.layoutStyle) y ninguno se conectaba de verdad al render.
    */
   activePresetId?: string;
+  activeFormatId?: string;
   colorPresetId?: string;
   typographyPresetId?: string;
   columnLayoutPresetId?: string;
+  coverStyle?: string;
+  showCoverPage?: boolean;
+  doc_type_id?: string;
+  schemaVersion?: number;
+  summary?: string;
+  frase?: string;
+  redes?: any[];
+  projects?: any[];
+  publications?: any[];
+  references?: any[];
+  informatics?: any[];
+  coursesAndCertificates?: any[];
+  profession?: any[];
+  ecology?: any;
+  ecologia?: any[];
+  customSections?: any[];
+  sectionVisibility?: Record<string, boolean>;
+  cardOverrides?: Record<string, any>;
+  sourceCvTabId?: string;
+  qrMode?: string;
+  version_label?: string;
   manualOverrides?: Record<string, { highlightColorOverride?: string }>;
   theme?: ThemeConfig;
   updatedAt?: string;
-  [key: string]: any;
 }
