@@ -5,7 +5,7 @@ import { calculateFinalBookPageCount } from '../../shared/core/book-engine/bookP
 import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 
-import { usePdfExportGate } from '../../shared/core/hooks/usePdfExportGate';
+import { usePageAwareCreditGate } from '../../shared/core/hooks/usePageAwareCreditGate';
 
 interface BookPreviewExportStepProps {
   options: BookImpositionOptions;
@@ -21,7 +21,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   onPrevStep,
 }) => {
   const t = useText();
-  const { consumeCredits, isGating, gateError } = usePdfExportGate();
+  const { consumeCredits, isGating, gateError } = usePageAwareCreditGate();
   const [isProcessing, setIsProcessing] = useState(false);
   const [progressPercent, setProgressPercent] = useState(0);
   const [statusMessage, setStatusMessage] = useState('');

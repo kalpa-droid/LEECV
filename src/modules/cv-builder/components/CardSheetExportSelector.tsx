@@ -9,7 +9,7 @@ import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
 
 import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 
-import { usePdfExportGate } from '../../../shared/core/hooks/usePdfExportGate';
+import { usePageAwareCreditGate } from '../../../shared/core/hooks/usePageAwareCreditGate';
 
 const CARD_SIZE_OPTIONS = [
   { id: 'tarjeta_estandar', label: 'Estándar AR/US (89 × 51 mm)' },
@@ -29,7 +29,7 @@ interface CardSheetExportSelectorProps {
 
 export function CardSheetExportSelector({ preset, cardData, onExported }: CardSheetExportSelectorProps) {
   const { showError, showSuccess } = useToast();
-  const { consumeCredits, isGating, gateError } = usePdfExportGate();
+  const { consumeCredits, isGating, gateError } = usePageAwareCreditGate();
   const [cardSizeId, setCardSizeId] = useState('tarjeta_estandar');
   const [customWidthMm, setCustomWidthMm] = useState(85);
   const [customHeightMm, setCustomHeightMm] = useState(55);

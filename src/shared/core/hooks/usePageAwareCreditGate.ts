@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
-export function usePdfExportGate() {
+export function usePageAwareCreditGate() {
   const [isGating, setIsGating] = useState(false);
   const [gateError, setGateError] = useState<string | null>(null);
 

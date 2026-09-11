@@ -222,16 +222,16 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
   const unbackedCount = totalCount - backedCount;
 
   return (
-    <div className="h-[100dvh] w-full overflow-y-auto bg-slate-950 text-slate-100 p-4 md:p-8 font-sans antialiased">
+    <div className="h-[100dvh] w-full overflow-y-auto bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] p-4 md:p-8 font-sans antialiased">
       <div className="max-w-7xl mx-auto space-y-6">
 
         {/* HEADER DEL DASHBOARD */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[var(--ui-border)]">
           <div className="flex items-center gap-3">
             {onBackToApp && (
               <button
                 onClick={onBackToApp}
-                className={`${button.ghost} p-2 rounded-lg text-slate-400 hover:text-white`}
+                className={`${button.ghost} p-2 rounded-lg text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]`}
                 title={t.dashboard.backToAppTitle}
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -239,19 +239,16 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
             )}
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-white tracking-tight">
+                <h1 className="text-2xl font-bold text-[var(--ui-text-primary)] tracking-tight">
                   {t.dashboard.headerTitle}
                 </h1>
                 <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider ${
-                  plan === 'enterprise' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' :
-                  plan === 'pro' ? 'bg-teal-500/20 text-teal-300 border border-teal-500/40' :
-                  inGracePeriod ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' :
-                  'bg-slate-800 text-slate-400'
+inGracePeriod ? 'bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)] border border-[var(--color-status-warning-base)]/40' : getPlanBadgeClass(plan)
                 }`}>
                   {inGracePeriod ? 'Gracia (10d)' : getPlanLabel(plan)}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-[var(--ui-text-secondary)] mt-1">
                 {userProfile?.email || 'Usuario LEECV'} {t.dashboard.headerSubtitle}
               </p>
             </div>
@@ -261,7 +258,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
             {inGracePeriod && (
               <button
                 onClick={() => setIsRetentionModalOpen(true)}
-                className={`${button.primary} text-xs py-2 px-3 bg-gradient-to-r from-emerald-500 to-teal-600 flex items-center gap-1.5`}
+                className={`${button.primary} text-xs py-2 px-3 bg-gradient-to-r from-[var(--color-status-success-bright)] to-[var(--color-status-success-base)] flex items-center gap-1.5`}
               >
                 <Sparkles className="w-4 h-4" />
                 {t.dashboard.retentionOfferBadge}
@@ -271,7 +268,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
             {onBackToApp && (
               <button
                 onClick={onBackToApp}
-                className={`${button.secondary} text-xs py-2 px-3 border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800`}
+                className={`${button.secondary} text-xs py-2 px-3 border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-secondary)] hover:bg-[var(--ui-bg-panel)]`}
               >
                 {t.dashboard.goToEditorBtn}
               </button>
@@ -292,12 +289,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
         {/* MENSAJES DE ESTADO PUNTUALES */}
         {statusMessage && (
           <div className={`p-3 rounded-lg text-xs font-medium border flex items-center justify-between ${
-            statusMessage.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
-            statusMessage.type === 'error' ? 'bg-rose-500/10 border-rose-500/30 text-rose-400' :
-            'bg-blue-500/10 border-blue-500/30 text-blue-400'
+            statusMessage.type === 'success' ? 'bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/30 text-[var(--color-status-success-text)]' :
+            statusMessage.type === 'error' ? 'bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/30 text-[var(--color-status-danger-text)]' :
+            'bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 text-[var(--color-secondary-text)]'
           }`}>
             <span>{statusMessage.text}</span>
-            <button onClick={() => setStatusMessage(null)} className="text-slate-400 hover:text-white">×</button>
+            <button onClick={() => setStatusMessage(null)} className="text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]">×</button>
           </div>
         )}
 
@@ -305,47 +302,47 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
           {/* TARJETA 1: LEECV CLOUD / CRÉDITOS DISPONIBLES */}
-          <div className={`rounded-xl p-5 border ${glassmorphism.card} bg-slate-900/60 border-slate-800 space-y-3`}>
+          <div className={`rounded-xl p-5 border ${glassmorphism.card} bg-[var(--ui-bg-card)] border-[var(--ui-border)] space-y-3`}>
             {plan === 'enterprise' ? (
               <>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
-                    <Cloud className="w-4 h-4 text-purple-400" />
+                  <span className="text-xs font-medium text-[var(--ui-text-secondary)] flex items-center gap-1.5">
+                    <Cloud className="w-4 h-4 text-[var(--color-accent-purple-text)]" />
                     {t.dashboard.leecvCloudTitle}
                   </span>
-                  <span className="text-xs font-semibold text-purple-400">
+                  <span className="text-xs font-semibold text-[var(--color-accent-purple-text)]">
                     {PLAN_FEATURES.enterprise.cloudStorageGB} {t.dashboard.gbUnit}
                   </span>
                 </div>
                 <div>
-                  <div className="text-2xl font-extrabold text-white tracking-tight">
+                  <div className="text-2xl font-extrabold text-[var(--ui-text-primary)] tracking-tight">
                     {cloudUsage ? `${cloudUsage.usedGB} GB` : '…'}
-                    <span className="text-sm font-medium text-slate-400"> / {PLAN_FEATURES.enterprise.cloudStorageGB} {t.dashboard.gbUnit}</span>
+                    <span className="text-sm font-medium text-[var(--ui-text-secondary)]"> / {PLAN_FEATURES.enterprise.cloudStorageGB} {t.dashboard.gbUnit}</span>
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
+                  <p className="text-[11px] text-[var(--ui-text-secondary)] mt-0.5">
                     {cloudUsage ? `${cloudUsage.percentUsed}% usado — actualizado ahora` : 'Consultando uso real...'}
                   </p>
                 </div>
-                <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                  <div className="bg-purple-500 h-full rounded-full transition-all" style={{ width: `${cloudUsage?.percentUsed || 0}%` }} />
+                <div className="w-full bg-[var(--ui-bg-panel)] rounded-full h-1.5 overflow-hidden">
+                  <div className="bg-[var(--color-accent-purple)] h-full rounded-full transition-all" style={{ width: `${cloudUsage?.percentUsed || 0}%` }} />
                 </div>
               </>
             ) : (
               <>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-emerald-400" />
+                  <span className="text-xs font-medium text-[var(--ui-text-secondary)] flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-[var(--color-status-success-text)]" />
                     {t.dashboard.exportCreditsTitle}
                   </span>
-                  <span className="text-xs font-semibold text-emerald-400">
+                  <span className="text-xs font-semibold text-[var(--color-status-success-text)]">
                     {credits} {t.dashboard.availableCount}
                   </span>
                 </div>
                 <div>
-                  <div className="text-2xl font-extrabold text-white tracking-tight">
+                  <div className="text-2xl font-extrabold text-[var(--ui-text-primary)] tracking-tight">
                     {credits} {credits === 1 ? 'Crédito' : 'Créditos'}
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
+                  <p className="text-[11px] text-[var(--ui-text-secondary)] mt-0.5">
                     {credits > 0
                       ? 'Tenés créditos activos para exportar PDFs A4 o publicar tu CV sin límite de tiempo.'
                       : 'Sin créditos activos. Podés comprar un paquete o suscribirte a Pro/Enterprise.'}
@@ -356,42 +353,42 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
           </div>
 
           {/* TARJETA 2: GOOGLE DRIVE BACKUP */}
-          <div className={`rounded-xl p-5 border ${glassmorphism.card} bg-slate-900/60 border-slate-800 space-y-3`}>
+          <div className={`rounded-xl p-5 border ${glassmorphism.card} bg-[var(--ui-bg-card)] border-[var(--ui-border)] space-y-3`}>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
-                <HardDrive className="w-4 h-4 text-teal-400" />
+              <span className="text-xs font-medium text-[var(--ui-text-secondary)] flex items-center gap-1.5">
+                <HardDrive className="w-4 h-4 text-[var(--color-secondary-text)]" />
                 {t.dashboard.driveBackupTitle}
               </span>
-              <span className="text-xs font-semibold text-teal-400">
+              <span className="text-xs font-semibold text-[var(--color-secondary-text)]">
                 {backedCount} / {totalCount} {t.dashboard.backedUpStatus}
               </span>
             </div>
             <div>
-              <div className="text-2xl font-extrabold text-white tracking-tight">
+              <div className="text-2xl font-extrabold text-[var(--ui-text-primary)] tracking-tight">
                 {Math.round((backedCount / (totalCount || 1)) * 100)}%
               </div>
-              <p className="text-[11px] text-slate-400 mt-0.5">{t.dashboard.driveSyncDescription}</p>
+              <p className="text-[11px] text-[var(--ui-text-secondary)] mt-0.5">{t.dashboard.driveSyncDescription}</p>
             </div>
-            <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-              <div className="bg-teal-400 h-full rounded-full" style={{ width: `${Math.round((backedCount / (totalCount || 1)) * 100)}%` }} />
+            <div className="w-full bg-[var(--ui-bg-panel)] rounded-full h-1.5 overflow-hidden">
+              <div className="bg-[var(--color-secondary-base)] h-full rounded-full" style={{ width: `${Math.round((backedCount / (totalCount || 1)) * 100)}%` }} />
             </div>
           </div>
 
           {/* TARJETA 3: DESCARGA MASIVA */}
-          <div className={`rounded-xl p-5 border ${glassmorphism.card} bg-slate-900/60 border-slate-800 flex flex-col justify-between`}>
+          <div className={`rounded-xl p-5 border ${glassmorphism.card} bg-[var(--ui-bg-card)] border-[var(--ui-border)] flex flex-col justify-between`}>
             <div>
-              <span className="text-xs font-medium text-slate-400 flex items-center gap-1.5 mb-2">
-                <Download className="w-4 h-4 text-emerald-400" />
+              <span className="text-xs font-medium text-[var(--ui-text-secondary)] flex items-center gap-1.5 mb-2">
+                <Download className="w-4 h-4 text-[var(--color-status-success-text)]" />
                 {t.dashboard.bulkExportTitle}
               </span>
-              <p className="text-xs text-slate-300">
+              <p className="text-xs text-[var(--ui-text-secondary)]">
                 {t.dashboard.bulkExportDescription}
               </p>
             </div>
             <button
               onClick={() => exportAllCVsToZip(cvList, userProfile?.email)}
               disabled={totalCount === 0}
-              className={`${button.secondary} text-xs py-2 mt-3 w-full border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 flex items-center justify-center gap-2`}
+              className={`${button.secondary} text-xs py-2 mt-3 w-full border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] hover:bg-[var(--ui-btn-neutral-hover)] flex items-center justify-center gap-2`}
             >
               <Download className="w-3.5 h-3.5" />
               {t.dashboard.downloadAllZipBtn}
@@ -401,28 +398,28 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
         </div>
 
         {/* TABLA Y HERRAMIENTAS DE GESTIÓN */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 space-y-4">
+        <div className="bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-xl p-5 space-y-4">
 
           {/* BARRA DE BÚSQUEDA Y FILTROS */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
             {/* BUSCADOR */}
             <div className="relative w-full sm:w-72">
-              <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+              <Search className="w-4 h-4 absolute left-3 top-3 text-[var(--ui-text-secondary)]" />
               <input
                 type="text"
                 placeholder={t.dashboard.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`${input.base} pl-9 text-xs py-2 bg-slate-950 border-slate-800 text-slate-200`}
+                className={`${input.base} pl-9 text-xs py-2 bg-[var(--ui-bg-panel)] border-[var(--ui-border)] text-[var(--ui-text-primary)]`}
               />
             </div>
 
             {/* PESTAÑAS DE FILTRADO POR ESTADO */}
-            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 w-full sm:w-auto overflow-x-auto">
+            <div className="flex items-center gap-1 bg-[var(--ui-bg-panel)] p-1 rounded-lg border border-[var(--ui-border)] w-full sm:w-auto overflow-x-auto">
               <button
                 onClick={() => setFilterMode('all')}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  filterMode === 'all' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-slate-200'
+                  filterMode === 'all' ? 'bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)]' : 'text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]'
                 }`}
               >
                 {t.dashboard.filterAll}{totalCount})
@@ -430,7 +427,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               <button
                 onClick={() => setFilterMode('unbacked')}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  filterMode === 'unbacked' ? 'bg-slate-800 text-amber-400' : 'text-slate-400 hover:text-slate-200'
+                  filterMode === 'unbacked' ? 'bg-[var(--ui-bg-panel)] text-[var(--color-status-warning-text)]' : 'text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]'
                 }`}
               >
                 {t.dashboard.filterNotBackedUp}{unbackedCount})
@@ -438,7 +435,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               <button
                 onClick={() => setFilterMode('backed')}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  filterMode === 'backed' ? 'bg-slate-800 text-teal-400' : 'text-slate-400 hover:text-slate-200'
+                  filterMode === 'backed' ? 'bg-[var(--ui-bg-panel)] text-[var(--color-secondary-text)]' : 'text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]'
                 }`}
               >
                 {t.dashboard.filterInDrive}{backedCount})
@@ -448,14 +445,14 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
           {/* BARRA DE ACCIONES MASIVAS (CUANDO HAY SELECCIÓN) */}
           {selectedCvIds.size > 0 && (
-            <div className="flex flex-wrap items-center justify-between gap-3 bg-teal-500/10 border border-teal-500/30 p-3 rounded-lg text-xs animate-fade-in">
-              <span className="font-medium text-teal-300">
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 p-3 rounded-lg text-xs animate-fade-in">
+              <span className="font-medium text-[var(--color-secondary-text)]">
                 {selectedCvIds.size} {selectedCvIds.size === 1 ? 'CV seleccionado' : 'CVs seleccionados'}
               </span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleBulkBackupToDrive}
-                  className={`${button.primary} text-xs py-1.5 px-3 bg-teal-600 hover:bg-teal-500 flex items-center gap-1.5`}
+                  className={`${button.primary} text-xs py-1.5 px-3 bg-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-hover-dark)] flex items-center gap-1.5`}
                 >
                   <HardDrive className="w-3.5 h-3.5" />
                   {t.dashboard.bulkActionBackupDrive}
@@ -463,7 +460,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
                 <button
                   onClick={handleBulkReleaseFromDrive}
-                  className={`${button.secondary} text-xs py-1.5 px-3 border-teal-500/30 text-teal-300 hover:bg-teal-500/20 flex items-center gap-1.5`}
+                  className={`${button.secondary} text-xs py-1.5 px-3 border-[var(--color-secondary-base)]/30 text-[var(--color-secondary-text)] hover:bg-[var(--color-secondary-hover-dark)]/20 flex items-center gap-1.5`}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   {t.dashboard.bulkActionReleaseDrive}
@@ -471,7 +468,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
                 <button
                   onClick={handleBulkDownloadZip}
-                  className={`${button.secondary} text-xs py-1.5 px-3 border-slate-700 bg-slate-800 text-slate-200 flex items-center gap-1.5`}
+                  className={`${button.secondary} text-xs py-1.5 px-3 border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] flex items-center gap-1.5`}
                 >
                   <Download className="w-3.5 h-3.5" />
                   {t.dashboard.bulkActionDownloadZip}
@@ -481,14 +478,14 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
           )}
 
           {/* TABLA DE CVS */}
-          <div className="overflow-x-auto rounded-lg border border-slate-800">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-950 text-slate-400 font-semibold border-b border-slate-800 uppercase tracking-wider">
+          <div className="overflow-x-auto rounded-lg border border-[var(--ui-border)]">
+            <table className="w-full text-left text-xs text-[var(--ui-text-secondary)]">
+              <thead className="bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)] font-semibold border-b border-[var(--ui-border)] uppercase tracking-wider">
                 <tr>
                   <th className="p-3 w-10 text-center">
-                    <button onClick={handleToggleSelectAll} className="text-slate-400 hover:text-white">
+                    <button onClick={handleToggleSelectAll} className="text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]">
                       {selectedCvIds.size > 0 && selectedCvIds.size === filteredCvs.length ? (
-                        <CheckSquare className="w-4 h-4 text-teal-400" />
+                        <CheckSquare className="w-4 h-4 text-[var(--color-secondary-text)]" />
                       ) : (
                         <Square className="w-4 h-4" />
                       )}
@@ -500,17 +497,17 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   <th className="p-3 text-right">{t.dashboard.tableColActions}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 bg-slate-900/40">
+              <tbody className="divide-y divide-slate-800/60 bg-[var(--ui-bg-panel)]">
                 {loading ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-slate-400">
-                      <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-teal-400" />
+                    <td colSpan={5} className="p-8 text-center text-[var(--ui-text-secondary)]">
+                      <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-[var(--color-secondary-text)]" />
                       {t.dashboard.loadingDocs}
                     </td>
                   </tr>
                 ) : filteredCvs.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-slate-400">
+                    <td colSpan={5} className="p-8 text-center text-[var(--ui-text-secondary)]">
                       {t.dashboard.emptyFilterResults}
                     </td>
                   </tr>
@@ -523,42 +520,42 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                     return (
                       <tr
                         key={cv.id}
-                        className={`hover:bg-slate-800/40 transition-colors ${isSelected ? 'bg-teal-500/5' : ''}`}
+                        className={`hover:hover:bg-[var(--ui-btn-neutral-hover)] transition-colors ${isSelected ? 'bg-[var(--color-secondary-muted)]' : ''}`}
                       >
                         <td className="p-3 text-center">
-                          <button onClick={() => handleToggleSelectOne(cv.id)} className="text-slate-400 hover:text-white">
+                          <button onClick={() => handleToggleSelectOne(cv.id)} className="text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]">
                             {isSelected ? (
-                              <CheckSquare className="w-4 h-4 text-teal-400" />
+                              <CheckSquare className="w-4 h-4 text-[var(--color-secondary-text)]" />
                             ) : (
                               <Square className="w-4 h-4" />
                             )}
                           </button>
                         </td>
 
-                        <td className="p-3 font-medium text-white">
+                        <td className="p-3 font-medium text-[var(--ui-text-primary)]">
                           <div className="flex items-center gap-2">
-                            <FileText className="w-4 h-4 text-slate-400 shrink-0" />
+                            <FileText className="w-4 h-4 text-[var(--ui-text-secondary)] shrink-0" />
                             <div>
                               <div>{cv.title || cv.candidate_name || 'Sin título'}</div>
                               {cv.candidate_name && cv.title && (
-                                <div className="text-[11px] text-slate-400">{cv.candidate_name} {cv.dni ? `• DNI: ${cv.dni}` : ''}</div>
+                                <div className="text-[11px] text-[var(--ui-text-secondary)]">{cv.candidate_name} {cv.dni ? `• DNI: ${cv.dni}` : ''}</div>
                               )}
                             </div>
                           </div>
                         </td>
 
-                        <td className="p-3 text-slate-400 font-mono text-[11px]">
+                        <td className="p-3 text-[var(--ui-text-secondary)] font-mono text-[11px]">
                           {cv.updated_at ? new Date(cv.updated_at).toLocaleDateString() : 'N/A'}
                         </td>
 
                         <td className="p-3">
                           {isBacked ? (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-teal-500/20 text-teal-300 border border-teal-500/30">
-                              <CheckCircle2 className="w-3 h-3 text-teal-400" />
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[var(--color-secondary-muted)] text-[var(--color-secondary-text)] border border-[var(--color-secondary-base)]/30">
+                              <CheckCircle2 className="w-3 h-3 text-[var(--color-secondary-text)]" />
                               {t.dashboard.statusDriveSync}
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-800 text-slate-400 border border-slate-700">
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)] border border-[var(--ui-border)]">
                               <Cloud className="w-3 h-3" />
                               {t.dashboard.statusOnlyCloud}
                             </span>
@@ -570,7 +567,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                             <button
                               onClick={() => handleSingleRelease(cv)}
                               disabled={isProcessing}
-                              className="text-xs text-slate-400 hover:text-rose-400 p-1 rounded transition-colors"
+                              className="text-xs text-[var(--ui-text-secondary)] hover:text-[var(--color-status-danger-text)] p-1 rounded transition-colors"
                               title={t.dashboard.releaseFromDriveTitle}
                             >
                               {t.dashboard.releaseFromDriveBtn}
@@ -579,7 +576,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                             <button
                               onClick={() => handleSingleBackup(cv)}
                               disabled={isProcessing}
-                              className="text-xs text-teal-400 hover:text-teal-300 font-medium p-1 rounded transition-colors"
+                              className="text-xs text-[var(--color-secondary-text)] hover:text-[var(--color-secondary-text)] font-medium p-1 rounded transition-colors"
                               title={t.dashboard.backupToDriveTitle}
                             >
                               {t.dashboard.backupToDriveBtn}
@@ -589,7 +586,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                           {onNavigateToCv && (
                             <button
                               onClick={() => onNavigateToCv(cv.id)}
-                              className="text-xs text-slate-300 hover:text-white p-1 rounded transition-colors underline"
+                              className="text-xs text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] p-1 rounded transition-colors underline"
                             >
                               {t.dashboard.editBtn}
                             </button>

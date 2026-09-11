@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { usePdfExportGate } from './usePdfExportGate';
+import { usePageAwareCreditGate } from './usePageAwareCreditGate';
 import { supabase } from '../lib/supabaseClient';
 
 vi.mock('react', () => ({
@@ -22,7 +22,7 @@ vi.mock('../lib/supabaseClient', () => ({
   },
 }));
 
-describe('usePdfExportGate', () => {
+describe('usePageAwareCreditGate', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -33,7 +33,7 @@ describe('usePdfExportGate', () => {
       error: null,
     } as any);
 
-    const gate = usePdfExportGate();
+    const gate = usePageAwareCreditGate();
     const allowed = await gate.consumeCredits(1);
 
     expect(allowed).toBe(false);
@@ -53,7 +53,7 @@ describe('usePdfExportGate', () => {
       }),
     } as any);
 
-    const gate = usePdfExportGate();
+    const gate = usePageAwareCreditGate();
     const allowed = await gate.consumeCredits(5);
 
     expect(allowed).toBe(true);
@@ -79,7 +79,7 @@ describe('usePdfExportGate', () => {
       error: null,
     } as any);
 
-    const gate = usePdfExportGate();
+    const gate = usePageAwareCreditGate();
     const allowed = await gate.consumeCredits(12); // needs 2 credits
 
     expect(allowed).toBe(true);
@@ -108,7 +108,7 @@ describe('usePdfExportGate', () => {
       error: null,
     } as any);
 
-    const gate = usePdfExportGate();
+    const gate = usePageAwareCreditGate();
     const allowed = await gate.consumeCredits(25); // needs 3 credits
 
     expect(allowed).toBe(false);
@@ -132,7 +132,7 @@ describe('usePdfExportGate', () => {
       .mockResolvedValueOnce({ data: null, error: { message: 'Function not found' } } as any)
       .mockResolvedValueOnce({ data: true, error: null } as any);
 
-    const gate = usePdfExportGate();
+    const gate = usePageAwareCreditGate();
     const allowed = await gate.consumeCredits(1);
 
     expect(allowed).toBe(true);
@@ -163,7 +163,7 @@ describe('usePdfExportGate', () => {
       .mockResolvedValueOnce({ data: null, error: { message: 'RPC Error 1' } } as any)
       .mockResolvedValueOnce({ data: null, error: { message: 'RPC Error 2' } } as any);
 
-    const gate = usePdfExportGate();
+    const gate = usePageAwareCreditGate();
     const allowed = await gate.consumeCredits(1);
 
     expect(allowed).toBe(false);
