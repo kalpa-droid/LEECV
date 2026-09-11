@@ -1717,8 +1717,8 @@ export default function EditorPanel({
                 <label 
                   className={`flex items-center gap-3 p-2.5 rounded-[${radius.card}] border transition-all cursor-pointer ${
                     cvData.theme?.primaryColor && /^#[0-9A-Fa-f]{3,6}$/i.test(cvData.theme.primaryColor) && !cvData.colorPresetId
-                      ? `${selectableCard.selected} ring-1 ring-[var(--color-accent-base)] shadow-sm` 
-                      : `${selectableCard.unselected} hover:bg-[var(--ui-bg-hover)]`
+                      ? `border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 shadow-sm` 
+                      : `border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]`
                   }`}
                 >
                   <input
