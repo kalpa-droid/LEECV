@@ -2,6 +2,7 @@ import { splitCvDataForDrive } from './driveDocumentPackager';
 import { uploadToGoogleDrive, addFolderAsParent, getOrCreateCvFolderInDrive } from './googleDriveBackend';
 import { uploadBackupAttachment } from './backupProvider';
 import { idbStorage } from './storageIndexedDB';
+import { reportSilentError } from '../utils/errorHandler';
 
 const DRIVE_GLOBAL_HASH_KEY = 'drive_asset_hashes_global';
 const DRIVE_PER_CV_HASH_PREFIX = 'drive_asset_hashes_';
@@ -40,7 +41,9 @@ export async function backupCvToGoogleDrive(cvData: any, userPlan: string = 'pro
 
       const pStored = await idbStorage.getItem(perCvStorageKey);
       if (pStored && typeof pStored === 'object') previousPerCvHashes = pStored;
-    } catch {}
+    } catch (err) {
+      reportSilentError(err, 'driveBackupService.backupCvToGoogleDrive.readHashes');
+    }
 
     // 2.5 Obtener el Folder ID real de Google Drive para la carpeta de este CV
     let driveFolderId: string | undefined = undefined;
@@ -49,6 +52,7 @@ export async function backupCvToGoogleDrive(cvData: any, userPlan: string = 'pro
       if (resolvedId) driveFolderId = resolvedId;
     } catch (err) {
       console.warn('Advertencia al obtener carpeta de Drive:', err);
+      reportSilentError(err, 'driveBackupService.backupCvToGoogleDrive.getFolder');
     }
 
     const uploadedFiles: string[] = [];
@@ -74,6 +78,7 @@ export async function backupCvToGoogleDrive(cvData: any, userPlan: string = 'pro
         if (driveFolderId) {
           addFolderAsParent(existingFileId, driveFolderId).catch(err => {
             console.warn(`Error en multi-parent Drive [${asset.filename}]:`, err);
+            reportSilentError(err, `driveBackupService.backupCvToGoogleDrive.multiParent[${asset.filename}]`);
           });
         }
         continue;
@@ -87,6 +92,7 @@ export async function backupCvToGoogleDrive(cvData: any, userPlan: string = 'pro
         updatedGlobalHashes[asset.hash] = assetId;
       } else {
         console.warn(`Advertencia al subir binario a almacenamiento [${asset.filename}]:`, uploadRes.error);
+        reportSilentError(uploadRes.error || 'upload failed', `driveBackupService.backupCvToGoogleDrive.uploadBinary[${asset.filename}]`);
       }
     }
 
@@ -96,6 +102,7 @@ export async function backupCvToGoogleDrive(cvData: any, userPlan: string = 'pro
     const jsonUploadRes = await uploadBackupAttachment(jsonBlob, `${cvId}_datos.json`, userPlan);
 
     if (!jsonUploadRes.success) {
+      reportSilentError(jsonUploadRes.error || 'datos.json upload failed', `driveBackupService.backupCvToGoogleDrive.uploadJson[${cvId}]`);
       return {
         success: false,
         driveSyncState: 'pending',
@@ -127,6 +134,7 @@ export async function backupCvToGoogleDrive(cvData: any, userPlan: string = 'pro
         }
       } catch (dbErr) {
         console.warn('Advertencia al guardar drive_file_id en Supabase:', dbErr);
+        reportSilentError(dbErr, `driveBackupService.backupCvToGoogleDrive.supabasePointer[${cvId}]`);
       }
     }
 
@@ -138,6 +146,7 @@ export async function backupCvToGoogleDrive(cvData: any, userPlan: string = 'pro
     };
   } catch (err: any) {
     console.error('Error en respaldo incremental a Google Drive:', err);
+    reportSilentError(err, `driveBackupService.backupCvToGoogleDrive.critical[${cvId}]`);
     return {
       success: false,
       driveSyncState: 'pending',
@@ -171,11 +180,14 @@ export async function deleteBackupFromDrive(cvId: string, driveFileId?: string):
     // Cache local de deduplicación — solo se limpia si el borrado remoto fue real
     try {
       await idbStorage.removeItem(`${DRIVE_PER_CV_HASH_PREFIX}${cvId}`);
-    } catch {}
+    } catch (err) {
+      reportSilentError(err, `driveBackupService.deleteBackupFromDrive.clearHashCache[${cvId}]`);
+    }
 
     return { success: true };
   } catch (err: any) {
     console.error('Error liberando backup de Drive:', err);
+    reportSilentError(err, `driveBackupService.deleteBackupFromDrive.critical[${cvId}]`);
     return { success: false, error: err.message || 'Error al liberar backup' };
   }
 }

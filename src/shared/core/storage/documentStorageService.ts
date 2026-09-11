@@ -8,6 +8,7 @@ import { getMonthNameEs } from '../utils/formatDate';
 import { backupCvToGoogleDrive } from './driveBackupService';
 import { dedupAssetsForLocalStorage, reconstructCvDataFromParts } from './driveDocumentPackager';
 import { migrateCvData } from './cvMigrationEngine';
+import { reportSilentError } from '../utils/errorHandler';
 
 export { supabase, checkStorageStatus };
 
@@ -37,6 +38,7 @@ export const getSavedDocumentsList = async (docTypeId: string = 'cv'): Promise<D
     }
   } catch (err) {
     console.warn('LocalStorage summary list read error:', err);
+    reportSilentError(err, 'documentStorageService.getSavedDocumentsList.localStorage');
   }
 
   // 2. Sync from Supabase in background
@@ -64,6 +66,7 @@ export const getSavedDocumentsList = async (docTypeId: string = 'cv'): Promise<D
       }
     } catch (err) {
       console.warn('Supabase listByUser sync error:', err);
+      reportSilentError(err, 'documentStorageService.getSavedDocumentsList.supabase');
     }
   }
 
@@ -139,6 +142,7 @@ const saveDocumentInternal = async (
       localStorage.setItem(storageKey, JSON.stringify(list));
     } catch (lerr) {
       console.warn('Advertencia summary list LocalStorage:', lerr);
+      reportSilentError(lerr, 'documentStorageService.saveDocumentInternal.localStorageSummary');
     }
 
     let syncState: 'local' | 'synced' | 'pending' = 'local';
@@ -162,6 +166,7 @@ const saveDocumentInternal = async (
         }
       } catch (err) {
         console.warn('Error conectando a Supabase:', err);
+        reportSilentError(err, 'documentStorageService.saveDocumentInternal.supabaseSync');
         syncState = 'pending';
       }
     }
@@ -174,6 +179,7 @@ const saveDocumentInternal = async (
         }
       }).catch(err => {
         console.warn('Advertencia en respaldo a Google Drive:', err);
+        reportSilentError(err, 'documentStorageService.saveDocumentInternal.driveBackup');
       });
     }
 
@@ -187,6 +193,7 @@ const saveDocumentInternal = async (
     };
   } catch (err) {
     console.error(`Error crítico al guardar documento [${docTypeId}]:`, err);
+    reportSilentError(err, `documentStorageService.saveDocumentInternal.critical[${docTypeId}]`);
     return { success: false, error: err };
   }
 };
@@ -223,6 +230,7 @@ export const loadDocumentById = async (id: string, docTypeId: string = 'cv'): Pr
     if (idbData) raw = idbData;
   } catch (err) {
     console.warn('idbStorage fetch error:', err);
+    reportSilentError(err, `documentStorageService.loadDocumentById.idb[${docTypeId}]`);
   }
 
   // 2. Check Supabase
@@ -232,6 +240,7 @@ export const loadDocumentById = async (id: string, docTypeId: string = 'cv'): Pr
       if (cvData) raw = cvData;
     } catch (err) {
       console.warn('Supabase fetch error:', err);
+      reportSilentError(err, `documentStorageService.loadDocumentById.supabase[${docTypeId}]`);
     }
   }
 
@@ -240,7 +249,9 @@ export const loadDocumentById = async (id: string, docTypeId: string = 'cv'): Pr
     try {
       const stored = localStorage.getItem(`doc_${docTypeId}_data_${id}`) || localStorage.getItem(`cv_data_${id}`);
       if (stored) raw = JSON.parse(stored);
-    } catch {}
+    } catch (err) {
+      reportSilentError(err, `documentStorageService.loadDocumentById.localStorageFallback[${docTypeId}]`);
+    }
   }
 
   if (!raw) return null;
@@ -269,6 +280,7 @@ export const deleteDocumentById = async (id: string, docTypeId: string = 'cv'): 
     localStorage.removeItem(`cv_data_${id}`);
   } catch (err) {
     console.error(`Error eliminando documento local [${docTypeId}]:`, err);
+    reportSilentError(err, `documentStorageService.deleteDocumentById.local[${docTypeId}]`);
   }
 
   if (supabase) {
@@ -276,6 +288,7 @@ export const deleteDocumentById = async (id: string, docTypeId: string = 'cv'): 
       await dal.cvs.delete(id);
     } catch (err) {
       console.warn('Error eliminando en Supabase:', err);
+      reportSilentError(err, `documentStorageService.deleteDocumentById.supabase[${docTypeId}]`);
     }
   }
 };

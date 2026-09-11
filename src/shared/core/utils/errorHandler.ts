@@ -23,6 +23,18 @@ export interface ErrorResult<T> {
  * Elimina la duplicación de bloques try/catch + console.error en servicios y componentes.
  * Ejecuta una función asíncrona de manera segura y estandariza el manejo de excepciones.
  */
+/**
+ * Reporta un error a Sentry sin envolver la función completa en `withErrorHandling`.
+ * Pensado para services (`documentStorageService.ts`, `driveBackupService.ts`) que ya tienen
+ * su propio try/catch con lógica de retorno específica (fallbacks, reintentos, etc.) y solo
+ * necesitan que el error también llegue al monitoreo, sin cambiar su forma de retorno.
+ */
+export function reportSilentError(err: unknown, context: string) {
+  import('./monitoring').then(({ reportException }) => {
+    reportException(err, { context });
+  }).catch(() => {});
+}
+
 export async function withErrorHandling<T>(
   asyncFn: () => Promise<T>,
   options: ErrorHandlerOptions = {}
