@@ -429,7 +429,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   const todayISO = new Date().toISOString().split('T')[0];
   const sigDate = signature?.date || todayISO;
 
-  if (signature?.dataUrl) {
+  if (signature?.dataUrl || signature?.signerName) {
     sections.push({
       id: 'firma',
       titleText: 'FIRMA REGISTRADA',
