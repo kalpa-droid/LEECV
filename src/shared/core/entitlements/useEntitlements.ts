@@ -2,9 +2,45 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 export const PLAN_FEATURES = {
-  free:       { unlimitedExports: false, candidateManagement: false, cloudStorageGB: 0,  label: 'Plan Gratuito', badgeClass: 'bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)] border-[var(--ui-border)]' },
-  pro:        { unlimitedExports: true,  candidateManagement: true,  cloudStorageGB: 0,  label: 'Plan Pro',      badgeClass: 'bg-[var(--color-secondary-muted)] text-[var(--color-secondary-text)] border-[var(--color-secondary-base)]/30' },
-  enterprise: { unlimitedExports: true,  candidateManagement: true,  cloudStorageGB: 50, label: 'Enterprise',    badgeClass: 'bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)] border-[var(--color-accent-purple)]/30' },
+  free: {
+    unlimitedExports: false,
+    candidateManagement: false,
+    cloudStorageGB: 0,
+    label: 'Plan Gratuito',
+    badgeClass: 'bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)] border-[var(--ui-border)]',
+    marketingBullets: [
+      'freeBrowserEditorFeature',
+      'freeJsonDriveBackupFeature',
+      'freeIndexedDbFeature',
+      'freePdfExportFeature',
+    ],
+  },
+  pro: {
+    unlimitedExports: true,
+    candidateManagement: true,
+    cloudStorageGB: 0,
+    label: 'Plan Pro',
+    badgeClass: 'bg-[var(--color-secondary-muted)] text-[var(--color-secondary-text)] border-[var(--color-secondary-base)]/30',
+    marketingBullets: [
+      'agencyPdfUnlimitedFeature',
+      'agencySupabaseCloudFeature',
+      'agencyDriveBackupFeature',
+      'agencyOneClickShareFeature',
+    ],
+  },
+  enterprise: {
+    unlimitedExports: true,
+    candidateManagement: true,
+    cloudStorageGB: 50,
+    label: 'Enterprise',
+    badgeClass: 'bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)] border-[var(--color-accent-purple)]/30',
+    marketingBullets: [
+      'enterpriseAllProFeature',
+      'enterpriseCloudStorageFeature',
+      'enterpriseCertAnnexesFeature',
+      'enterpriseSpaceAlertsFeature',
+    ],
+  },
 };
 
 export function getPlanLabel(plan?: string | null): string {
