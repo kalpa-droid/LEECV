@@ -24,7 +24,7 @@ export const Logo: React.FC<LogoProps> = ({
   alt = 'LEECV'
 }) => {
   if (animatedRainbow) {
-    const maskSrc = BRAND_ASSETS[layout]?.negro || BRAND_ASSETS.horizontal.negro;
+    const maskSrc = BRAND_ASSETS[layout]?.blanco || BRAND_ASSETS.horizontal.blanco;
     return (
       <div
         role="img"

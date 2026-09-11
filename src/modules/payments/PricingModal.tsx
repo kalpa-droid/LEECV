@@ -10,6 +10,7 @@ import { elevationSystem, radius } from '../../shared/core/uiDesignSystem';
 import { formatPrice, formatPricePerMonth } from '../../shared/core/payments/pricingCatalog';
 import { getPlanLabel } from '../../shared/core/entitlements/useEntitlements';
 import { useText } from '../../shared/i18n/useText';
+import { PlanFeatureCard } from '../../shared/core/ui/marketing/PlanFeatureCard';
 
 export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
   const { showError, showSuccess } = useToast();
@@ -120,167 +121,72 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
         {/* Tabla de 3 Niveles */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* NIVEL 1: USUARIO INDIVIDUAL */}
-          <div className={`bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.modal}] p-5 flex flex-col justify-between space-y-4 hover:border-[var(--ui-accent-purple)]/40 transition`}>
-            <div className="space-y-3">
-              <div className={`w-10 h-10 rounded-[${radius.card}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] flex items-center justify-center`}>
-                <Zap className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-black text-base text-[var(--ui-text-primary)]">{t.pricing.individualUserTitle}</h3>
-                <p className="text-[11px] text-[var(--ui-text-secondary)]">{t.pricing.individualUserSubtitle}</p>
-              </div>
-              <div className="py-2">
-                <span className="text-2xl font-black text-[var(--ui-text-primary)]">{t.pricing.freePriceLabel}</span>
-                <span className="text-xs text-[var(--ui-text-secondary)] font-medium">{t.pricing.basicEditorLabel}</span>
-              </div>
-              <ul className="space-y-2 text-xs text-[var(--ui-text-secondary)]">
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[var(--ui-success)] flex-shrink-0" />
-                  <span>{t.pricing.freeBrowserEditorFeature}</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[var(--ui-success)] flex-shrink-0" />
-                  <span>{t.pricing.freeJsonDriveBackupFeature}</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[var(--ui-success)] flex-shrink-0" />
-                  <span>{t.pricing.freeIndexedDbFeature}</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[var(--ui-success)] flex-shrink-0" />
-                  <span>{t.pricing.freePdfExportFeature}{formatPrice('single_pdf', 'usd')})</span>
-                </li>
-              </ul>
-            </div>
+          <PlanFeatureCard
+            planId="free"
+            ctaLabel={t.pricing.useFreeEditorBtn}
+          >
             <button
               onClick={onClose}
               className={`w-full py-2.5 bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] border border-[var(--ui-border)] text-xs font-black rounded-[${radius.card}] transition cursor-pointer`}
             >
               {t.pricing.useFreeEditorBtn}
             </button>
-          </div>
+          </PlanFeatureCard>
 
           {/* NIVEL 2: AGENCIA PRO (MÁS POPULAR) */}
-          <div className={`bg-[var(--ui-bg-card)] border-2 border-[var(--color-accent-purple)] rounded-[${radius.modal}] p-5 flex flex-col justify-between space-y-4 ${elevationSystem.overlay} relative transform hover:-translate-y-1 transition`}>
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--color-accent-purple)] text-white text-[10px] font-black uppercase px-3 py-0.5 rounded-full tracking-wider shadow">
-              {t.pricing.mostRecommendedBadge}
-            </div>
-
-            <div className="space-y-3">
-              <div className={`w-10 h-10 rounded-[${radius.card}] bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple-text)] flex items-center justify-center`}>
-                <Crown className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-black text-base text-[var(--ui-text-primary)]">{t.pricing.agencyProTitle}</h3>
-                <p className="text-[11px] text-[var(--ui-text-secondary)]">{t.pricing.agencyProSubtitle}</p>
-              </div>
-              <div className="py-2">
-                <span className="text-3xl font-black text-[var(--ui-text-primary)]">{formatPrice('pro', 'usd')}</span>
-                <span className="text-xs text-[var(--ui-text-secondary)] font-medium">{t.pricing.perMonthLabel}</span>
-              </div>
-              <ul className="space-y-2 text-xs text-[var(--ui-text-primary)]">
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[var(--ui-accent-purple)] flex-shrink-0" />
-                  <strong>{t.pricing.agencyPdfUnlimitedFeature} {formatPrice('single_pdf', 'usd')}{t.pricing.agencyPdfPerPdfSuffix}</strong>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[var(--ui-accent-purple)] flex-shrink-0" />
-                  <span>{t.pricing.agencySupabaseCloudFeature}</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[var(--ui-accent-purple)] flex-shrink-0" />
-                  <span>{t.pricing.agencyDriveBackupFeature}</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Smartphone className="w-4 h-4 text-[var(--ui-accent-purple)] flex-shrink-0" />
-                  <span>{t.pricing.agencyOneClickShareFeature}</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="space-y-2">
-              <button
-                onClick={() => handleSelectPlan('pro', 'mercadopago')}
-                disabled={loadingGateway !== null}
-                className={`w-full py-2.5 bg-[var(--color-accent-purple)] hover:opacity-90 text-white text-xs font-black rounded-[${radius.card}] ${elevationSystem.raised} transition flex items-center justify-center gap-1.5 cursor-pointer`}
-              >
-                <span>{t.pricing.subscribeMercadoPagoArgentine}</span>
-              </button>
-              <button
-                onClick={() => handleSelectPlan('pro', 'paypal')}
-                disabled={loadingGateway !== null}
-                className={`w-full py-2 bg-[var(--color-secondary-muted)] hover:opacity-90 text-[var(--color-secondary-text)] border border-[var(--color-secondary-base)]/30 text-xs font-black rounded-[${radius.card}] transition flex items-center justify-center gap-1.5 cursor-pointer`}
-              >
-                <span>{t.pricing.payPaypalUsd}</span>
-              </button>
-              <button
-                onClick={() => handleSelectPlan('pro', 'lemonsqueezy')}
-                disabled={loadingGateway !== null}
-                className={`w-full py-2 bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] text-[11px] font-bold rounded-[${radius.card}] transition flex items-center justify-center gap-1.5 border border-[var(--color-accent-purple)]/30 cursor-pointer`}
-              >
-                <span>{t.pricing.subscribeLemonSqueezyUsd}</span>
-              </button>
-            </div>
-          </div>
+          <PlanFeatureCard
+            planId="pro"
+            highlighted={true}
+          >
+            <button
+              onClick={() => handleSelectPlan('pro', 'mercadopago')}
+              disabled={loadingGateway !== null}
+              className={`w-full py-2.5 bg-[var(--color-accent-purple)] hover:opacity-90 text-white text-xs font-black rounded-[${radius.card}] ${elevationSystem.raised} transition flex items-center justify-center gap-1.5 cursor-pointer`}
+            >
+              <span>{t.pricing.subscribeMercadoPagoArgentine}</span>
+            </button>
+            <button
+              onClick={() => handleSelectPlan('pro', 'paypal')}
+              disabled={loadingGateway !== null}
+              className={`w-full py-2 bg-[var(--color-secondary-muted)] hover:opacity-90 text-[var(--color-secondary-text)] border border-[var(--color-secondary-base)]/30 text-xs font-black rounded-[${radius.card}] transition flex items-center justify-center gap-1.5 cursor-pointer`}
+            >
+              <span>{t.pricing.payPaypalUsd}</span>
+            </button>
+            <button
+              onClick={() => handleSelectPlan('pro', 'lemonsqueezy')}
+              disabled={loadingGateway !== null}
+              className={`w-full py-2 bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] text-[11px] font-bold rounded-[${radius.card}] transition flex items-center justify-center gap-1.5 border border-[var(--color-accent-purple)]/30 cursor-pointer`}
+            >
+              <span>{t.pricing.subscribeLemonSqueezyUsd}</span>
+            </button>
+          </PlanFeatureCard>
 
           {/* NIVEL 3: AGENCIA ENTERPRISE + LEECV CLOUD */}
-          <div className={`bg-[var(--ui-bg-card)] border border-[var(--color-status-warning-base)]/40 rounded-[${radius.modal}] p-5 flex flex-col justify-between space-y-4 hover:border-[var(--color-status-warning-base)]/70 transition`}>
-            <div className="space-y-3">
-              <div className={`w-10 h-10 rounded-[${radius.card}] bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/40 text-[var(--color-status-warning-text)] flex items-center justify-center`}>
-                <Cloud className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-black text-base text-[var(--ui-text-primary)]">{t.pricing.enterpriseCloudTitle}</h3>
-                <p className="text-[11px] text-[var(--ui-text-secondary)]">{t.pricing.enterpriseCloudSubtitle}</p>
-              </div>
-              <div className="py-2">
-                <span className="text-2xl font-black text-[var(--ui-text-primary)]">{formatPrice('enterprise', 'usd')}</span>
-                <span className="text-xs text-[var(--ui-text-secondary)] font-medium">{t.pricing.perMonthLabel}</span>
-              </div>
-              <ul className="space-y-2 text-[var(--ui-text-secondary)]">
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[var(--ui-warning)] flex-shrink-0" />
-                  <strong>{t.pricing.enterpriseAllProFeature}</strong>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[var(--ui-warning)] flex-shrink-0" />
-                  <span>{t.pricing.enterpriseCloudStorageFeature}</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[var(--ui-warning)] flex-shrink-0" />
-                  <span>{t.pricing.enterpriseCertAnnexesFeature}</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-[var(--ui-warning)] flex-shrink-0" />
-                  <span>{t.pricing.enterpriseSpaceAlertsFeature}</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="space-y-2">
-              <button
-                onClick={() => handleSelectPlan('enterprise', 'mercadopago')}
-                disabled={loadingGateway !== null}
-                className={`w-full py-2.5 bg-[var(--color-status-warning-base)] hover:opacity-95 text-[var(--color-accent-on-base)] text-xs font-black rounded-[${radius.card}] ${elevationSystem.floating} transition cursor-pointer flex items-center justify-center gap-1.5`}
-              >
-                <span>{t.pricing.activateMercadoPagoArgentine}</span>
-              </button>
-              <button
-                onClick={() => handleSelectPlan('enterprise', 'paypal')}
-                disabled={loadingGateway !== null}
-                className={`w-full py-2 bg-[var(--color-secondary-muted)] hover:opacity-90 text-[var(--color-secondary-text)] border border-[var(--color-secondary-base)]/30 text-xs font-black rounded-[${radius.card}] transition flex items-center justify-center gap-1.5 cursor-pointer`}
-              >
-                <span>{t.pricing.payPaypalUsd}</span>
-              </button>
-              <button
-                onClick={() => handleSelectPlan('enterprise', 'lemonsqueezy')}
-                disabled={loadingGateway !== null}
-                className={`w-full py-2 bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] text-[11px] font-bold rounded-[${radius.card}] transition flex items-center justify-center gap-1.5 border border-[var(--color-status-warning-base)]/30 cursor-pointer`}
-              >
-                <span>{t.pricing.subscribeLemonSqueezyUsd}</span>
-              </button>
-            </div>
-          </div>
+          <PlanFeatureCard
+            planId="enterprise"
+          >
+            <button
+              onClick={() => handleSelectPlan('enterprise', 'mercadopago')}
+              disabled={loadingGateway !== null}
+              className={`w-full py-2.5 bg-[var(--color-status-warning-base)] hover:opacity-95 text-[var(--color-accent-on-base)] text-xs font-black rounded-[${radius.card}] ${elevationSystem.floating} transition cursor-pointer flex items-center justify-center gap-1.5`}
+            >
+              <span>{t.pricing.activateMercadoPagoArgentine}</span>
+            </button>
+            <button
+              onClick={() => handleSelectPlan('enterprise', 'paypal')}
+              disabled={loadingGateway !== null}
+              className={`w-full py-2 bg-[var(--color-secondary-muted)] hover:opacity-90 text-[var(--color-secondary-text)] border border-[var(--color-secondary-base)]/30 text-xs font-black rounded-[${radius.card}] transition flex items-center justify-center gap-1.5 cursor-pointer`}
+            >
+              <span>{t.pricing.payPaypalUsd}</span>
+            </button>
+            <button
+              onClick={() => handleSelectPlan('enterprise', 'lemonsqueezy')}
+              disabled={loadingGateway !== null}
+              className={`w-full py-2 bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] text-[11px] font-bold rounded-[${radius.card}] transition flex items-center justify-center gap-1.5 border border-[var(--color-status-warning-base)]/30 cursor-pointer`}
+            >
+              <span>{t.pricing.subscribeLemonSqueezyUsd}</span>
+            </button>
+          </PlanFeatureCard>
         </div>
       </div>
     </Modal>

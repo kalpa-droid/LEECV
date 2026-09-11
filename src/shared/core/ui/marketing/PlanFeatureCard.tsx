@@ -10,6 +10,7 @@ export interface PlanFeatureCardProps {
   currency?: 'usd' | 'ars';
   ctaLabel?: string;
   onSelectPlan?: (planId: string) => void;
+  children?: React.ReactNode;
 }
 
 export const PlanFeatureCard: React.FC<PlanFeatureCardProps> = ({
@@ -18,6 +19,7 @@ export const PlanFeatureCard: React.FC<PlanFeatureCardProps> = ({
   currency = 'usd',
   ctaLabel,
   onSelectPlan,
+  children,
 }) => {
   const t = useText();
   const planInfo = PLAN_FEATURES[planId];
@@ -89,7 +91,11 @@ export const PlanFeatureCard: React.FC<PlanFeatureCardProps> = ({
         </ul>
       </div>
 
-      {onSelectPlan && (
+      {children ? (
+        <div className="space-y-2 mt-auto">
+          {children}
+        </div>
+      ) : onSelectPlan ? (
         <button
           type="button"
           onClick={() => onSelectPlan(planId)}
@@ -102,7 +108,7 @@ export const PlanFeatureCard: React.FC<PlanFeatureCardProps> = ({
           <Zap className="w-4 h-4" />
           <span>{ctaLabel || defaultCta}</span>
         </button>
-      )}
+      ) : null}
     </div>
   );
 };
