@@ -1,5 +1,5 @@
 import React from 'react';
-import { BRAND_ASSETS, THEME_TO_LOGO_VARIANT, LogoLayout, LogoVariant } from './brandAssets';
+import { BRAND_ASSETS, THEME_TO_LOGO_VARIANT, LOGO_ASPECT_RATIO, LogoLayout, LogoVariant } from './brandAssets';
 
 export interface LogoProps {
   layout?: LogoLayout;
@@ -39,6 +39,10 @@ export const Logo: React.FC<LogoProps> = ({
           maskRepeat: 'no-repeat',
           WebkitMaskPosition: 'center',
           maskPosition: 'center',
+          // El div no tiene contenido propio (a diferencia del <img> del otro branch) —
+          // sin aspectRatio, cualquier className que solo defina alto (sin ancho explícito)
+          // colapsa a 0px de ancho y la máscara no tiene área donde mostrarse.
+          aspectRatio: String(LOGO_ASPECT_RATIO[layout] ?? LOGO_ASPECT_RATIO.horizontal),
         }}
       />
     );

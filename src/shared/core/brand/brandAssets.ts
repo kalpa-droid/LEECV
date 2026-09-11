@@ -9,6 +9,22 @@ export type LogoLayout =
   | 'submarca_curriculo';
 
 /**
+ * Relación de aspecto real (ancho/alto) de cada layout, tomada del viewBox de sus SVG.
+ * Necesaria porque el modo `animatedRainbow` de Logo.tsx renderiza un <div> vacío enmascarado
+ * (no un <img>), que no tiene contenido propio para derivar su ancho — sin esto, cualquier
+ * className que solo defina alto (ej. "h-9 sm:h-10", sin ancho) colapsa a 0px de ancho y el
+ * logo queda invisible aunque la máscara y el color sean correctos.
+ */
+export const LOGO_ASPECT_RATIO: Record<LogoLayout, number> = {
+  master: 267.95099 / 100,
+  horizontal: 316.237 / 100,
+  isotipo: 100 / 97.873001,
+  texto: 229.869 / 100,
+  slogan: 171.173 / 100,
+  submarca_curriculo: 737.713 / 100,
+};
+
+/**
  * Mapeo de tema de interfaz (UI Theme) a la variante cromática de logo correspondiente.
  * Previene problemas de contraste sin importar qué tema elija el usuario.
  */
