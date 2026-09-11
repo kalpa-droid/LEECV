@@ -286,6 +286,10 @@ export default function PdfCheckoutModal({
             </span>
           </button>
 
+          <p className="text-[10px] text-[var(--ui-text-secondary)] text-center leading-tight py-1">
+            🇦🇷 <strong>ARS</strong> con Mercado Pago &bull; 💳/🌎 <strong>USD</strong> con PayPal o Lemon Squeezy
+          </p>
+
           {/* Packs de créditos */}
           <div className="grid grid-cols-2 gap-2">
             <button

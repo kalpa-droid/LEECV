@@ -137,56 +137,16 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
           <PlanFeatureCard
             planId="pro"
             highlighted={true}
-          >
-            <button
-              onClick={() => handleSelectPlan('pro', 'mercadopago')}
-              disabled={loadingGateway !== null}
-              className={`w-full py-2.5 bg-[var(--color-accent-purple)] hover:opacity-90 text-white text-xs font-black rounded-[${radius.card}] ${elevationSystem.raised} transition flex items-center justify-center gap-1.5 cursor-pointer`}
-            >
-              <span>{t.pricing.subscribeMercadoPagoArgentine}</span>
-            </button>
-            <button
-              onClick={() => handleSelectPlan('pro', 'paypal')}
-              disabled={loadingGateway !== null}
-              className={`w-full py-2 bg-[var(--color-secondary-muted)] hover:opacity-90 text-[var(--color-secondary-text)] border border-[var(--color-secondary-base)]/30 text-xs font-black rounded-[${radius.card}] transition flex items-center justify-center gap-1.5 cursor-pointer`}
-            >
-              <span>{t.pricing.payPaypalUsd}</span>
-            </button>
-            <button
-              onClick={() => handleSelectPlan('pro', 'lemonsqueezy')}
-              disabled={loadingGateway !== null}
-              className={`w-full py-2 bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] text-[11px] font-bold rounded-[${radius.card}] transition flex items-center justify-center gap-1.5 border border-[var(--color-accent-purple)]/30 cursor-pointer`}
-            >
-              <span>{t.pricing.subscribeLemonSqueezyUsd}</span>
-            </button>
-          </PlanFeatureCard>
+            onSelectGateway={(planId, gw) => handleSelectPlan(planId, gw)}
+            loadingGateway={loadingGateway}
+          />
 
           {/* NIVEL 3: AGENCIA ENTERPRISE + LEECV CLOUD */}
           <PlanFeatureCard
             planId="enterprise"
-          >
-            <button
-              onClick={() => handleSelectPlan('enterprise', 'mercadopago')}
-              disabled={loadingGateway !== null}
-              className={`w-full py-2.5 bg-[var(--color-status-warning-base)] hover:opacity-95 text-[var(--color-accent-on-base)] text-xs font-black rounded-[${radius.card}] ${elevationSystem.floating} transition cursor-pointer flex items-center justify-center gap-1.5`}
-            >
-              <span>{t.pricing.activateMercadoPagoArgentine}</span>
-            </button>
-            <button
-              onClick={() => handleSelectPlan('enterprise', 'paypal')}
-              disabled={loadingGateway !== null}
-              className={`w-full py-2 bg-[var(--color-secondary-muted)] hover:opacity-90 text-[var(--color-secondary-text)] border border-[var(--color-secondary-base)]/30 text-xs font-black rounded-[${radius.card}] transition flex items-center justify-center gap-1.5 cursor-pointer`}
-            >
-              <span>{t.pricing.payPaypalUsd}</span>
-            </button>
-            <button
-              onClick={() => handleSelectPlan('enterprise', 'lemonsqueezy')}
-              disabled={loadingGateway !== null}
-              className={`w-full py-2 bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] text-[11px] font-bold rounded-[${radius.card}] transition flex items-center justify-center gap-1.5 border border-[var(--color-status-warning-base)]/30 cursor-pointer`}
-            >
-              <span>{t.pricing.subscribeLemonSqueezyUsd}</span>
-            </button>
-          </PlanFeatureCard>
+            onSelectGateway={(planId, gw) => handleSelectPlan(planId, gw)}
+            loadingGateway={loadingGateway}
+          />
         </div>
       </div>
     </Modal>

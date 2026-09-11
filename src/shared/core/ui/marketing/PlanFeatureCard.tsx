@@ -3,6 +3,7 @@ import { Check, Sparkles, Zap } from 'lucide-react';
 import { formatPrice, formatPricePerMonth, PlanId } from '../../payments/pricingCatalog';
 import { PLAN_FEATURES } from '../../entitlements/useEntitlements';
 import { useText } from '../../../i18n/useText';
+import { PlanPaymentButtons } from './PlanPaymentButtons';
 
 export interface PlanFeatureCardProps {
   planId: 'free' | 'pro' | 'enterprise';
@@ -10,6 +11,8 @@ export interface PlanFeatureCardProps {
   currency?: 'usd' | 'ars';
   ctaLabel?: string;
   onSelectPlan?: (planId: string) => void;
+  onSelectGateway?: (planId: 'pro' | 'enterprise', gateway: 'mercadopago' | 'paypal' | 'lemonsqueezy') => void;
+  loadingGateway?: string | null;
   children?: React.ReactNode;
 }
 
@@ -19,30 +22,28 @@ export const PlanFeatureCard: React.FC<PlanFeatureCardProps> = ({
   currency = 'usd',
   ctaLabel,
   onSelectPlan,
+  onSelectGateway,
+  loadingGateway = null,
   children,
 }) => {
   const t = useText();
   const planInfo = PLAN_FEATURES[planId];
   const catalogPlanId: PlanId = planId === 'free' ? 'single_pdf' : planId;
 
-  const priceDisplay =
+  const mainPriceDisplay =
     planId === 'free'
       ? t.pricing.freePriceLabel
-      : formatPricePerMonth(catalogPlanId, currency);
+      : formatPricePerMonth(catalogPlanId, 'usd');
+
+  const altPriceDisplay =
+    planId === 'free'
+      ? null
+      : `o ${formatPricePerMonth(catalogPlanId, 'ars')}`;
 
   const priceSubtext =
     planId === 'free'
       ? t.pricing.basicEditorLabel
-      : currency === 'ars'
-      ? 'Facturado mensualmente'
-      : 'USD / Mes';
-
-  const defaultCta =
-    planId === 'free'
-      ? t.pricing.useFreeEditorBtn
-      : planId === 'pro'
-      ? t.pricing.subscribeLemonSqueezyUsd
-      : t.pricing.activateMercadoPagoArgentine;
+      : 'USD o ARS / Facturación mensual';
 
   const bullets = planInfo?.marketingBullets || [];
 
@@ -73,8 +74,13 @@ export const PlanFeatureCard: React.FC<PlanFeatureCardProps> = ({
 
         <div className="mt-4 mb-6">
           <div className="text-3xl font-extrabold text-[var(--ui-text-primary)] tracking-tight">
-            {priceDisplay}
+            {mainPriceDisplay}
           </div>
+          {altPriceDisplay && (
+            <div className="text-xs font-bold text-[var(--color-status-success-text)] mt-0.5">
+              {altPriceDisplay}
+            </div>
+          )}
           <p className="text-xs text-[var(--ui-text-secondary)] mt-1">{priceSubtext}</p>
         </div>
 
@@ -95,6 +101,12 @@ export const PlanFeatureCard: React.FC<PlanFeatureCardProps> = ({
         <div className="space-y-2 mt-auto">
           {children}
         </div>
+      ) : planId !== 'free' && onSelectGateway ? (
+        <PlanPaymentButtons
+          planId={planId}
+          onSelectGateway={(gw) => onSelectGateway(planId, gw)}
+          loadingGateway={loadingGateway}
+        />
       ) : onSelectPlan ? (
         <button
           type="button"
@@ -106,7 +118,7 @@ export const PlanFeatureCard: React.FC<PlanFeatureCardProps> = ({
           }`}
         >
           <Zap className="w-4 h-4" />
-          <span>{ctaLabel || defaultCta}</span>
+          <span>{ctaLabel || (planId === 'free' ? t.pricing.useFreeEditorBtn : 'Elegir Plan')}</span>
         </button>
       ) : null}
     </div>

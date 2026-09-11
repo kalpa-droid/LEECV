@@ -86,6 +86,26 @@ export async function iniciarPagoLemonSqueezy(plan: 'single_pdf' | 'credits_pack
 }
 
 /**
+ * Función centralizada para invocar la pasarela seleccionada desde cualquier lugar de la app.
+ */
+export async function selectPaidPlan(
+  plan: 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' | 'pro' | 'enterprise',
+  gateway: 'mercadopago' | 'paypal' | 'lemonsqueezy',
+  options?: { onError?: (errorMsg: string) => void }
+) {
+  try {
+    await iniciarPago(gateway, plan);
+  } catch (err: any) {
+    const msg = err?.message || 'Error al conectar con la pasarela de pagos';
+    if (options?.onError) {
+      options.onError(msg);
+    } else {
+      throw err;
+    }
+  }
+}
+
+/**
  * Llama al endpoint backend para capturar una orden de PayPal previamente aprobada.
  */
 export async function capturarOrdenPayPal(orderId: string) {
