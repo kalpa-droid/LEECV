@@ -142,7 +142,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
       {/* 2. Selección de Tamaño de Papel Imprenta */}
       <div className="space-y-2 pt-2 border-t border-[var(--ui-border)]">
         <label className="text-xs font-bold text-[var(--ui-text-primary)] block">
-          1.b. El tamaño que imprimiré será:
+          1.b. El tamaño que imprimirás es:
         </label>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

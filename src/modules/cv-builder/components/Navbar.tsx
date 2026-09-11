@@ -24,6 +24,7 @@ import { useIsMobile } from '../../../shared/core/ui/useIsMobile';
 import { useEntitlements, getPlanLabel, PLAN_FEATURES } from '../../../shared/core/entitlements/useEntitlements';
 import { navigation } from '../../../shared/core/utils/navigation';
 import { useText } from '../../../shared/i18n/useText';
+import { Logo } from '../../../shared/core/brand/Logo';
 
 export interface NavbarProps {
   currentCvData: any;
@@ -113,15 +114,8 @@ export default function Navbar({
       <div className="max-w-7xl mx-auto px-2 sm:px-4 h-12 sm:h-14 flex items-center justify-between gap-2 relative">
         
         {/* CLUSTER IZQUIERDO: Logo LEECV */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <div className="flex items-center gap-1.5">
-            <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-[${radius.control}] bg-[var(--color-accent-base)] flex items-center justify-center font-black text-xs ${elevationSystem.raised} text-[var(--color-accent-on-base)] border border-white/20`}>
-              {t.navbar.brandShort}
-            </div>
-            <h1 className="font-black text-sm sm:text-base tracking-wider text-[var(--ui-text-primary)] hidden sm:block">
-              {t.navbar.appName}
-            </h1>
-          </div>
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer" onClick={() => navigation.goTo('/')} title="Ir al inicio">
+          <Logo layout="horizontal" currentUiTheme={currentThemeId} className="h-7 sm:h-8" />
         </div>
 
         {/* CLUSTER CENTRO: Botón de Tema + Controles de Zoom (Visibles en PC y Móvil) */}

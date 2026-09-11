@@ -6,7 +6,7 @@ import { navigation } from '../../shared/core/utils/navigation';
 
 export function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] font-sans flex flex-col">
+    <div className="h-[100dvh] w-full overflow-y-auto bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] font-sans flex flex-col">
       {/* Header Público */}
       <header className={`bg-[var(--ui-bg-card)] border-b border-[var(--ui-border)] px-4 py-3 sticky top-0 z-30 ${elevationSystem.raised}`}>
         <div className="max-w-4xl mx-auto flex items-center justify-between">

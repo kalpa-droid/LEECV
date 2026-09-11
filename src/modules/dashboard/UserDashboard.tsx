@@ -222,7 +222,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
   const unbackedCount = totalCount - backedCount;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8 font-sans antialiased">
+    <div className="h-[100dvh] w-full overflow-y-auto bg-slate-950 text-slate-100 p-4 md:p-8 font-sans antialiased">
       <div className="max-w-7xl mx-auto space-y-6">
 
         {/* HEADER DEL DASHBOARD */}

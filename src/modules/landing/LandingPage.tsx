@@ -8,6 +8,7 @@ import { ProductCard } from '../../shared/core/ui/marketing/ProductCard';
 import { FeatureCard } from '../../shared/core/ui/marketing/FeatureCard';
 import { MarketingSection } from '../../shared/core/ui/marketing/MarketingSection';
 import { MarketingCTA } from '../../shared/core/ui/marketing/MarketingCTA';
+import { Logo } from '../../shared/core/brand/Logo';
 
 interface LandingPageProps {
   onNavigate: (route: string) => void;
@@ -27,17 +28,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
   };
 
   return (
-    <div className="min-h-screen w-full overflow-y-auto bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] flex flex-col font-sans transition-colors duration-300">
+    <div className="h-[100dvh] w-full overflow-y-auto bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] flex flex-col font-sans transition-colors duration-300">
       {/* Header / Navbar */}
       <header className="sticky top-0 z-40 bg-[var(--ui-bg-panel)]/80 backdrop-blur-xl border-b border-[var(--ui-border)] shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => onNavigate('/')}>
-            <div className={`p-2.5 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] rounded-[${radius.card}] font-black ${elevationSystem.raised}`}>
-              <Sparkles className="w-6 h-6" />
-            </div>
-            <span className="font-extrabold text-2xl tracking-tight text-[var(--ui-text-primary)]">
-              LEECV <span className="text-[var(--color-accent-text)] font-medium text-sm">Studio Suite</span>
-            </span>
+            <Logo layout="slogan" currentUiTheme={currentTheme} className="h-9 sm:h-10" />
           </div>
 
           <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-[var(--ui-text-secondary)]">
