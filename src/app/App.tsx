@@ -36,6 +36,7 @@ import PdfProgressModal from '../modules/cv-builder/components/modals/PdfProgres
 import PrivacyModal from '../modules/cv-builder/components/PrivacyModal';
 import { GracePeriodBanner } from '../shared/core/ui/GracePeriodBanner';
 import { RetentionOfferModal } from '../modules/payments/components/RetentionOfferModal';
+import { CookieConsentBanner } from '../shared/core/ui/CookieConsentBanner';
 import { useEntitlements } from '../shared/core/entitlements/useEntitlements';
 import { dal } from '../shared/core/storage/dataAccessLayer';
 
@@ -865,6 +866,7 @@ export default function App() {
               <AppContent currentRoute={currentRoute} initialPreset={currentRoute === '/crear-tarjeta' ? 'tarjeta-personal' : 'cv-clasico'} onNavigate={(r) => navigateTo(r)} />
             </>
           )}
+          <CookieConsentBanner />
         </CVProvider>
       </ConfirmProvider>
     </ToastProvider>
