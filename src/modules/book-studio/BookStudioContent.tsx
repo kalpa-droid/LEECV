@@ -13,6 +13,7 @@ import { BookPreviewStep } from './BookPreviewStep';
 import { getNextBookStepId, getPrevBookStepId } from '../../shared/core/book-engine/bookStepSequence';
 import { saveBook } from '../../shared/core/storage/documentStorageService';
 import { addOpenTab, generateDocumentId, OpenTabItem } from '../../shared/core/storage/documentTabEngine';
+import { radius } from '../../shared/core/uiDesignSystem';
 
 interface BookStudioContentProps {
   currentUiTheme?: string;
