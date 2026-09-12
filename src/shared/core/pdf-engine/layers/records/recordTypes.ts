@@ -33,6 +33,8 @@ export interface ContentRecord<K extends RecordKind = RecordKind> {
   /** Qué tipo de dato es — el preset lo usa para elegir cómo dibujarlo */
   kind: K;
   fields: Record<string, string | TextRun[]>;
+  /** Selección de etiqueta personalizada por campo para este registro puntual */
+  fieldLabelOverrides?: Record<string, string>;
   /** A qué sector va este registro (ej: 'sidebar' o 'main') — lo define el preset, no el dato en sí */
   targetSectorRole: 'sidebar' | 'main' | 'banner' | 'footer';
 }

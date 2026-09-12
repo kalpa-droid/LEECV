@@ -47,7 +47,7 @@ const cvCatalogCardRenderer: CvRecordRenderFn = (rec, ctx) => {
   const { isSidebarSector, sectorRolesColor, preset, customRecordCardDesigns } = ctx;
   const f = rec.fields;
   const designId = customRecordCardDesigns?.[rec.kind] || preset.recordCardDesigns?.[rec.kind] || preset.recordCardDesigns?.education || 'accent-card';
-  const layout = buildStructuredRecordLayout(f);
+  const layout = buildStructuredRecordLayout(rec);
 
   return (
     <CardObjectRenderer
@@ -182,7 +182,7 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
     const { isSidebarSector, sectorRolesColor, preset, customRecordCardDesigns } = ctx;
     const f = rec.fields;
     const designId = customRecordCardDesigns?.experience || preset.recordCardDesigns?.experience || 'primary-card';
-    const layout = buildStructuredRecordLayout(f);
+    const layout = buildStructuredRecordLayout(rec);
 
     return (
       <CardObjectRenderer
@@ -204,7 +204,7 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
   'course': (rec, ctx) => {
     const { isSidebarSector, sectorRolesColor, surfaceHex, preset, styles, customRecordCardDesigns, sidebarContactSpec } = ctx;
     const f = rec.fields;
-    const layout = buildStructuredRecordLayout(f);
+    const layout = buildStructuredRecordLayout(rec);
 
     if (isSidebarSector || rec.targetSectorRole === 'sidebar') {
       const titleSpec = resolveUnifiedTextSpec('subtitle', surfaceHex, sectorRolesColor, preset.typography, 'course-title');
@@ -309,7 +309,7 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
   'custom': (rec, ctx) => {
     const { preset, customRecordCardDesigns } = ctx;
     const f = rec.fields;
-    const layout = buildStructuredRecordLayout(f);
+    const layout = buildStructuredRecordLayout(rec);
 
     return (
       <CardObjectRenderer

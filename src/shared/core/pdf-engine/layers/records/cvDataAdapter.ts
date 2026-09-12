@@ -136,6 +136,7 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
       records: cvData.redes.map((r: any, idx: number) => ({
         id: `rec-redes-${idx}`,
         kind: 'social-link',
+        fieldLabelOverrides: r.fieldLabelOverrides,
         targetSectorRole: 'sidebar',
         fields: {
           label: r.usuario ? `${r.plataforma || 'Red'}: ${r.usuario}` : r.plataforma || r.url || '',
@@ -206,6 +207,7 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         return {
           id: `rec-proj-${idx}`,
           kind: 'projects',
+          fieldLabelOverrides: proj.fieldLabelOverrides,
           targetSectorRole: 'main',
           fields: {
             ...projRest,
@@ -229,6 +231,7 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         return {
           id: `rec-pub-${idx}`,
           kind: 'publications',
+          fieldLabelOverrides: pub.fieldLabelOverrides,
           targetSectorRole: 'main',
           fields: {
             ...pubRest,
@@ -250,6 +253,7 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
       records: cvData.references.map((ref: any, idx: number) => ({
         id: `rec-ref-${idx}`,
         kind: 'references',
+        fieldLabelOverrides: ref.fieldLabelOverrides,
         targetSectorRole: 'main',
         fields: {
           ...ref,
@@ -270,6 +274,7 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
       records: informatics.map((inf: any, idx: number) => ({
         id: `rec-inf-${idx}`,
         kind: 'course',
+        fieldLabelOverrides: inf.fieldLabelOverrides,
         targetSectorRole: 'sidebar',
         fields: {
           ...inf,
@@ -290,6 +295,7 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         return {
           id: `rec-edu-${idx}`,
           kind: 'education',
+          fieldLabelOverrides: edu.fieldLabelOverrides,
           targetSectorRole: 'main',
           fields: {
             ...eduRest,
@@ -313,6 +319,7 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         return {
           id: `rec-prof-${idx}`,
           kind: 'education',
+          fieldLabelOverrides: prof.fieldLabelOverrides,
           targetSectorRole: 'main',
           fields: {
             ...profRest,
@@ -335,6 +342,7 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         return {
           id: `rec-exp-${idx}`,
           kind: 'experience',
+          fieldLabelOverrides: exp.fieldLabelOverrides,
           targetSectorRole: 'main',
           fields: {
             ...expRest,
@@ -358,6 +366,7 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         return {
           id: `rec-course-${idx}`,
           kind: 'course',
+          fieldLabelOverrides: c.fieldLabelOverrides,
           targetSectorRole: 'main',
           fields: {
             ...cRest,
@@ -385,6 +394,7 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
           records: Array.isArray(cs.records) ? cs.records.map((r: any, idx: number) => ({
             id: `rec-${cs.id}-${idx}`,
             kind: 'custom',
+            fieldLabelOverrides: r.fieldLabelOverrides,
             targetSectorRole: 'main',
             fields: {
               ...r,

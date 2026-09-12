@@ -17,6 +17,7 @@ export interface FieldDefinition {
   id: string;
   label: string;
   pdfLabel?: string;
+  labelOptions?: string[];
   placeholder: string;
   type: 'text' | 'textarea' | 'url';
   pdfRole: 'title' | 'subtitle' | 'badge' | 'description' | 'extra';
@@ -156,6 +157,7 @@ export const FIELD_CATALOG: Record<string, FieldDefinition> = {
   usuario: {
     id: 'usuario',
     label: 'Usuario / Manija (@usuario)',
+    labelOptions: ['Usuario', 'Manija'],
     placeholder: 'Ej: @daniela.burgos o linkedin.com/in/daniela-burgos',
     type: 'text',
     pdfRole: 'subtitle',

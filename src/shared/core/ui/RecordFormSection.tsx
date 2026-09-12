@@ -3,6 +3,7 @@ import { RepeatableSection } from './RepeatableSection';
 import { Field } from './Field';
 import { FIELD_CATALOG, BUILTIN_RECORD_KINDS } from '../pdf-engine/layers/records/fieldCatalog';
 import { resolveLegacyFieldKey } from '../pdf-engine/layers/records/fieldAliasCatalog';
+import { getFieldLabelOptions } from '../pdf-engine/layers/records/fieldLabelOptions';
 import { Info } from 'lucide-react';
 import { radius } from '../uiDesignSystem';
 import { SectionPositionControl } from './SectionPositionControl';
@@ -76,13 +77,41 @@ export function RecordFormSection({
 
               // Translate legacy field names for backwards compatibility if needed
               const legacyKey = resolveLegacyFieldKey(fieldId, fieldName);
-
               const currentValue = item[fieldId] !== undefined ? item[fieldId] : (item[legacyKey] || '');
+
+              const labelOptions = getFieldLabelOptions(fDef);
+              const currentOverride = item.fieldLabelOverrides?.[fieldId] || labelOptions[0];
+
+              const labelElement = labelOptions.length > 1 ? (
+                <span className="inline-flex items-center gap-1.5 font-bold">
+                  <span>Etiqueta:</span>
+                  <select
+                    value={currentOverride}
+                    onChange={(e) => {
+                      const selectedVal = e.target.value;
+                      updateField('fieldLabelOverrides', {
+                        ...(item.fieldLabelOverrides || {}),
+                        [fieldId]: selectedVal
+                      });
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-[11px] font-bold py-0.5 px-1.5 rounded ui-bg-card ui-border ui-text-primary outline-none focus:ring-1 focus:ring-[var(--color-accent-base)] cursor-pointer"
+                  >
+                    {labelOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                </span>
+              ) : (
+                fDef.label
+              );
 
               return (
                 <Field
                   key={fieldId}
-                  label={fDef.label}
+                  label={labelElement}
                   value={currentValue}
                   onChange={(e: any) => {
                     const val = e.target.value;
