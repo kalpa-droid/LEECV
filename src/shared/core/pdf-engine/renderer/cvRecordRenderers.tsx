@@ -154,7 +154,13 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
     const { sectorRolesColor, surfaceHex, preset, styles } = ctx;
     const f = rec.fields;
     const itemSpec = resolveUnifiedTextSpec('body', surfaceHex, sectorRolesColor, preset.typography, 'skill');
-    const label = `${f.idioma || f.name || ''}${f.nivel ? ` (${f.nivel})` : ''}`;
+    const mainLabel = `${f.idioma || f.name || ''}${f.nivel ? ` (${f.nivel})` : ''}`;
+    const parts = [
+      mainLabel,
+      f.institucion ? String(f.institucion) : '',
+      f.descripcion ? String(f.descripcion) : ''
+    ].filter(Boolean);
+    const label = parts.join(' — ');
     return (
       <Text
         key={rec.id}
@@ -258,7 +264,7 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
     return (
       <View key={rec.id} style={{ marginBottom: 4 }} wrap={false}>
         <Text style={[styles.sidebarItemText, { color: linkSpec.colorHex, opacity: linkSpec.opacity }]}>
-          {String(f.icon || '🔗')} {String(f.label || '')}
+          • {String(f.label || '')}
         </Text>
         {f.url ? (
           <Text style={[styles.sidebarItemText, { fontSize: (linkSpec.fontSizePt || 9) - 1, opacity: 0.75 }]}>
