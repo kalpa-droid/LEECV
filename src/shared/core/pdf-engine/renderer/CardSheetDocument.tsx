@@ -6,7 +6,7 @@ import { MARGIN_PRESETS, resolveMargins, MarginPreset } from '../layers/margins/
 import { BLEED_PRESETS, resolveBleedBox } from '../layers/bleed/bleedSpec';
 import { IMPOSITION_PRESETS, resolveImposition, mirrorImpositionForBackSide, ImpositionResult } from '../layers/imposition/resolveImposition';
 import { CardFace } from './cardFaceRenderer';
-import { ContentSection } from '../layers/records/recordTypes';
+import { ContentSection, CardRecordKind } from '../layers/records/recordTypes';
 import { BusinessCardData, cardDataToFrontSections, cardDataToBackSections } from '../layers/records/cardDataAdapter';
 
 const MM_TO_PT = 2.8346;
@@ -57,7 +57,7 @@ export function CardSheetDocument({ card, preset }: CardSheetDocumentProps) {
 
   const pdfPaperSize = sheetPageSize.id === 'carta' ? 'LETTER' : sheetPageSize.id === 'legal' ? 'LEGAL' : sheetPageSize.id === 'afiche_a3' ? 'A3' : 'A4';
 
-  const renderSheet = (imposition: ImpositionResult, sections: ContentSection[], isBack = false) => (
+  const renderSheet = (imposition: ImpositionResult, sections: ContentSection<CardRecordKind>[], isBack = false) => (
     <Page size={pdfPaperSize} style={{ backgroundColor: '#ffffff' }}>
       {/* Tarjetas en grilla */}
       {imposition.cards.map((c) => (

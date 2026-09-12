@@ -4,7 +4,7 @@ import { Preset } from '../layers/presets/presetSchema';
 import { SectorDefinition, resolveSectors } from '../layers/sectors/resolveSectors';
 import { FixedObjectDefinition, placeFixedObjects } from '../layers/fixedObjects/placeFixedObjects';
 import { UsableArea } from '../layers/margins/marginPresets';
-import { ContentSection, ContentRecord } from '../layers/records/recordTypes';
+import { ContentSection, ContentRecord, CardRecordKind } from '../layers/records/recordTypes';
 import { getPresentContactFields } from '../layers/records/sharedFields';
 
 interface CardFaceProps {
@@ -12,13 +12,77 @@ interface CardFaceProps {
   sectors: SectorDefinition[];
   fixedObjects: FixedObjectDefinition[];
   sectionOrder: { sectorRole: string; sectionIds: string[] }[];
-  sections: ContentSection[];
+  sections: ContentSection<CardRecordKind>[];
   /** Tamaño total de la CELDA (bleed box) en pt — el fondo blanco llega hasta acá */
   outerWidthPt: number;
   outerHeightPt: number;
   /** Área de contenido segura (post sangrado + margen), donde vive el texto real */
   usable: UsableArea;
 }
+
+export interface CardRenderContext {
+  preset: Preset;
+}
+
+export type CardRecordRenderFn = (rec: ContentRecord<CardRecordKind>, ctx: CardRenderContext) => React.ReactNode;
+
+export const CARD_RECORD_RENDERERS: Record<CardRecordKind, CardRecordRenderFn> = {
+  'card-logo': (rec, { preset }) => {
+    const f = rec.fields;
+    return (
+      <View key={rec.id} style={{ marginBottom: 4, alignItems: 'flex-start' }}>
+        {f.logoDataUrl ? (
+          <Image src={String(f.logoDataUrl)} style={{ width: 44, height: 28, objectFit: 'contain' }} />
+        ) : null}
+      </View>
+    );
+  },
+  'card-heading': (rec, { preset }) => {
+    const f = rec.fields;
+    return (
+      <View key={rec.id} style={{ marginBottom: 3 }}>
+        <Text style={{ fontSize: preset.typography.title, fontFamily: 'Helvetica-Bold', color: preset.palette.text }}>
+          {String(f.fullName || '')}
+        </Text>
+        {f.role ? (
+          <Text style={{ fontSize: preset.typography.body, color: preset.palette.accent, marginTop: 2 }}>
+            {String(f.role)}
+          </Text>
+        ) : null}
+      </View>
+    );
+  },
+  'contact-item': (rec, { preset }) => {
+    return (
+      <View key={rec.id} style={{ marginTop: 6 }}>
+        {getPresentContactFields(rec, 'card').map((f, i, arr) => (
+          <Text
+            key={f.key}
+            style={{
+              fontSize: preset.typography.caption,
+              color: preset.palette.secondary,
+              marginBottom: i === arr.length - 1 ? 0 : 1
+            }}
+          >
+            {f.value}
+          </Text>
+        ))}
+      </View>
+    );
+  },
+
+  'qr': (rec, { preset }) => {
+    const f = rec.fields;
+    return (
+      <View key={rec.id} style={{ alignItems: 'center', marginTop: 4 }}>
+        {f.dataUrl || f.url ? (
+          <Image src={String(f.dataUrl || f.url)} style={{ width: 44, height: 44 }} />
+        ) : null}
+      </View>
+    );
+  },
+  'quote-text': () => null
+};
 
 /**
  * Dibuja UNA cara de una tarjeta (frente o dorso) reusando las mismas Capas 2
@@ -30,71 +94,11 @@ export function CardFace({ preset, sectors, fixedObjects, sectionOrder, sections
   const resolvedSectors = resolveSectors(usable, sectors);
   const sectorsWithFlow = placeFixedObjects(resolvedSectors, fixedObjects);
 
-  const renderRecord = (rec: ContentRecord) => {
-    const f = rec.fields;
-
-    if (rec.kind === 'card-logo') {
-      return (
-        <View key={rec.id} style={{ marginBottom: 4, alignItems: 'flex-start' }}>
-          {f.logoDataUrl ? (
-            <Image src={String(f.logoDataUrl)} style={{ width: 44, height: 28, objectFit: 'contain' }} />
-          ) : null}
-        </View>
-      );
+  const renderRecord = (rec: ContentRecord<CardRecordKind>) => {
+    const renderer = CARD_RECORD_RENDERERS[rec.kind];
+    if (renderer) {
+      return renderer(rec, { preset });
     }
-
-    if (rec.kind === 'card-heading') {
-      return (
-        <View key={rec.id} style={{ marginBottom: 3 }}>
-          <Text style={{ fontSize: preset.typography.title, fontFamily: 'Helvetica-Bold', color: preset.palette.text }}>
-            {String(f.fullName || '')}
-          </Text>
-          {f.role ? (
-            <Text style={{ fontSize: preset.typography.body, color: preset.palette.accent, marginTop: 2 }}>
-              {String(f.role)}
-            </Text>
-          ) : null}
-        </View>
-      );
-    }
-
-    if (rec.kind === 'contact-item') {
-      return (
-        <View key={rec.id} style={{ marginTop: 6 }}>
-          {getPresentContactFields(rec, 'card').map((f, i, arr) => (
-            <Text
-              key={f.key}
-              style={{
-                fontSize: preset.typography.caption,
-                color: preset.palette.secondary,
-                marginBottom: i === arr.length - 1 ? 0 : 1
-              }}
-            >
-              {f.value}
-            </Text>
-          ))}
-        </View>
-      );
-    }
-
-    if (rec.kind === 'social-link') {
-      return (
-        <Text key={rec.id} style={{ fontSize: preset.typography.caption, color: preset.palette.secondary, marginTop: 1 }}>
-          {String(f.label || f.url || '')}
-        </Text>
-      );
-    }
-
-    if (rec.kind === 'qr') {
-      return (
-        <View key={rec.id} style={{ alignItems: 'center', marginTop: 4 }}>
-          {f.dataUrl || f.url ? (
-            <Image src={String(f.dataUrl || f.url)} style={{ width: 44, height: 44 }} />
-          ) : null}
-        </View>
-      );
-    }
-
     return null;
   };
 

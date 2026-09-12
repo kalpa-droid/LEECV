@@ -1,4 +1,4 @@
-import { ContentSection, ContentRecord } from './recordTypes';
+import { ContentSection, ContentRecord, CardRecordKind } from './recordTypes';
 import { generateVCardQRCodeDataUrl } from './vcardGenerator';
 import { resolveActivePreset } from '../presets/presetRegistry';
 import { navigation } from '../../../utils/navigation';
@@ -94,8 +94,8 @@ export async function buildCardDataFromCV(
 }
 
 /** Capa 4 (frente): traduce los datos de la tarjeta a ContentSection[] para el sector 'main' */
-export function cardDataToFrontSections(card: BusinessCardData): ContentSection[] {
-  const sections: ContentSection[] = [];
+export function cardDataToFrontSections(card: BusinessCardData): ContentSection<CardRecordKind>[] {
+  const sections: ContentSection<CardRecordKind>[] = [];
 
   if (card.logoDataUrl) {
     sections.push({
@@ -147,8 +147,8 @@ export function cardDataToFrontSections(card: BusinessCardData): ContentSection[
 }
 
 /** Capa 4 (dorso): marca + eslogan corto + código QR vCard */
-export function cardDataToBackSections(card: BusinessCardData): ContentSection[] {
-  const records: ContentRecord[] = [
+export function cardDataToBackSections(card: BusinessCardData): ContentSection<CardRecordKind>[] {
+  const records: ContentRecord<CardRecordKind>[] = [
     {
       id: 'rec-brand',
       kind: 'card-heading',

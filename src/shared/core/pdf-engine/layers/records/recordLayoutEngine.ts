@@ -13,6 +13,7 @@
  */
 
 import { FIELD_CATALOG, FieldDefinition } from './fieldCatalog';
+import { FIELD_ALIASES } from './fieldAliasCatalog';
 
 export interface RecordBadgeItem {
   id: string;
@@ -100,14 +101,7 @@ export function buildStructuredRecordLayout(
       return;
     }
 
-    let canonicalKey = k;
-    if (k === 'degree' || k === 'title' || k === 'name' || k === 'course') canonicalKey = 'tituloOGrado';
-    else if (k === 'role') canonicalKey = 'cargo';
-    else if (k === 'institution' || k === 'company') canonicalKey = 'institucion';
-    else if (k === 'year') canonicalKey = 'periodo';
-    else if (k === 'hours') canonicalKey = 'cargaHoraria';
-    else if (k === 'details' || k === 'description') canonicalKey = 'descripcion';
-    else if (k === 'bulletPoints' || k === 'achievements' || k === 'logros') canonicalKey = 'logros';
+    const canonicalKey = FIELD_ALIASES[k] || k;
 
     if (Array.isArray(v) && canonicalKey === 'logros') {
       const items = v.map((item: any) => String(item).trim()).filter(Boolean);

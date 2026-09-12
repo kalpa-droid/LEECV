@@ -6,7 +6,7 @@ import { MARGIN_PRESETS, resolveMargins, MarginPreset } from './layers/margins/m
 import { BLEED_PRESETS, resolveBleedBox } from './layers/bleed/bleedSpec';
 import { IMPOSITION_PRESETS, resolveImposition, mirrorImpositionForBackSide, ImpositionResult } from './layers/imposition/resolveImposition';
 import { CardFace } from './renderer/cardFaceRenderer';
-import { ContentSection } from './layers/records/recordTypes';
+import { ContentSection, CardRecordKind } from './layers/records/recordTypes';
 import { BusinessCardData, cardDataToFrontSections, cardDataToBackSections } from './layers/records/cardDataAdapter';
 import { downloadBlob } from '../utils/downloadUtils';
 
@@ -17,7 +17,7 @@ interface RenderSheetProps {
   preset: Preset;
   sheetPageSize: PageSize;
   imposition: ImpositionResult;
-  sections: ContentSection[];
+  sections: ContentSection<CardRecordKind>[];
   sectors: Preset['sectors'];
   fixedObjects: Preset['fixedObjects'];
   sectionOrder: Preset['sectionOrder'];

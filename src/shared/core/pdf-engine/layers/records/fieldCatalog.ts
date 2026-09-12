@@ -206,10 +206,10 @@ export const FIELD_CATALOG: Record<string, FieldDefinition> = {
 export interface RecordKindSchema {
   kind: string;
   label: string;
-  defaultFields: string[];
+  defaultFields: readonly string[];
 }
 
-export const BUILTIN_RECORD_KINDS: Record<string, RecordKindSchema> = {
+export const BUILTIN_RECORD_KINDS = {
   education: {
     kind: 'education',
     label: 'Formación Académica',
@@ -236,7 +236,7 @@ export const BUILTIN_RECORD_KINDS: Record<string, RecordKindSchema> = {
     defaultFields: ['tituloOGrado', 'institucion', 'nivel', 'descripcion']
   },
   redes: {
-    kind: 'redes',
+    kind: 'social-link',
     label: 'Redes Sociales & Presencia Digital',
     defaultFields: ['plataforma', 'usuario', 'url']
   },
@@ -260,4 +260,6 @@ export const BUILTIN_RECORD_KINDS: Record<string, RecordKindSchema> = {
     label: 'Referencias Laborales',
     defaultFields: ['personaReferencia', 'cargo', 'institucion', 'contactoReferencia']
   }
-};
+} as const;
+
+export type CatalogDerivedKind = typeof BUILTIN_RECORD_KINDS[keyof typeof BUILTIN_RECORD_KINDS]['kind'];

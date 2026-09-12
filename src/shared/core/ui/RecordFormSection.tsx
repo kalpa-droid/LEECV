@@ -2,6 +2,7 @@ import React from 'react';
 import { RepeatableSection } from './RepeatableSection';
 import { Field } from './Field';
 import { FIELD_CATALOG, BUILTIN_RECORD_KINDS } from '../pdf-engine/layers/records/fieldCatalog';
+import { resolveLegacyFieldKey } from '../pdf-engine/layers/records/fieldAliasCatalog';
 import { Info } from 'lucide-react';
 import { radius } from '../uiDesignSystem';
 import { SectionPositionControl } from './SectionPositionControl';
@@ -74,20 +75,7 @@ export function RecordFormSection({
               if (!fDef) return null;
 
               // Translate legacy field names for backwards compatibility if needed
-              let legacyKey = fieldId;
-              if (fieldId === 'tituloOGrado') {
-                if (fieldName === 'experience') legacyKey = 'role';
-                else if (fieldName === 'coursesAndCertificates' || fieldName === 'informatics' || fieldName === 'ecology') legacyKey = 'title';
-                else legacyKey = 'degree';
-              } else if (fieldId === 'cargo') {
-                legacyKey = 'role';
-              } else if (fieldId === 'descripcion') {
-                legacyKey = (fieldName === 'experience' || fieldName === 'ecology') ? 'details' : 'description';
-              } else if (fieldId === 'periodo') {
-                legacyKey = 'year';
-              } else if (fieldId === 'cargaHoraria') {
-                legacyKey = 'hours';
-              }
+              const legacyKey = resolveLegacyFieldKey(fieldId, fieldName);
 
               const currentValue = item[fieldId] !== undefined ? item[fieldId] : (item[legacyKey] || '');
 

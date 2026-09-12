@@ -1,5 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { buildCardDataFromCV } from '../src/shared/core/pdf-engine/layers/records/cardDataAdapter';
+import { BUILTIN_RECORD_KINDS } from '../src/shared/core/pdf-engine/layers/records/fieldCatalog';
+import { FIELD_ALIASES, resolveLegacyFieldKey } from '../src/shared/core/pdf-engine/layers/records/fieldAliasCatalog';
+import { cvDataToContentSections } from '../src/shared/core/pdf-engine/layers/records/cvDataAdapter';
 
 vi.mock('../src/shared/core/pdf-engine/layers/records/vcardGenerator', () => ({
   generateVCardQRCodeDataUrl: vi.fn().mockResolvedValue('data:image/png;base64,fake_qr_data')
@@ -64,5 +67,29 @@ describe('cardDataAdapter Unit Tests', () => {
     expect(cardData.phone).toBe('');
     expect(cardData.website).toBe('');
     expect(cardData.address).toBe('');
+  });
+
+  it('debe tener social-link en BUILTIN_RECORD_KINDS.redes y alineado con cvDataAdapter', () => {
+    expect(BUILTIN_RECORD_KINDS.redes.kind).toBe('social-link');
+    const cvData = {
+      sectionVisibility: { redes: true },
+      redes: [{ plataforma: 'LinkedIn', usuario: 'test', url: 'https://linkedin.com/in/test' }]
+    };
+    const sections = cvDataToContentSections(cvData);
+    const redesSec = sections.find(s => s.id === 'redes');
+    expect(redesSec).toBeDefined();
+    expect(redesSec?.records[0].kind).toBe('social-link');
+  });
+
+  it('debe resolver los alias de nombres de campo con FIELD_ALIASES y resolveLegacyFieldKey', () => {
+    expect(FIELD_ALIASES.role).toBe('cargo');
+    expect(FIELD_ALIASES.institution).toBe('institucion');
+    expect(FIELD_ALIASES.year).toBe('periodo');
+    expect(FIELD_ALIASES.hours).toBe('cargaHoraria');
+    expect(FIELD_ALIASES.details).toBe('descripcion');
+
+    expect(resolveLegacyFieldKey('cargo', 'experience')).toBe('role');
+    expect(resolveLegacyFieldKey('periodo', 'experience')).toBe('year');
+    expect(resolveLegacyFieldKey('cargaHoraria', 'course')).toBe('hours');
   });
 });

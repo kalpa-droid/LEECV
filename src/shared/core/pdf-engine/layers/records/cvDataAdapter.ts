@@ -1,4 +1,4 @@
-import { ContentSection } from './recordTypes';
+import { ContentSection, CvRecordKind } from './recordTypes';
 import { getSectionLabel } from '../../../sectionRegistry';
 import { resolveActiveFormat } from '../../../formats/cvFormatRegistry';
 import { resolveDisplayName } from '../../../utils/cvDataSchema';
@@ -18,7 +18,7 @@ const sortByYearDesc = (items: any[]) => {
  * Translates raw cvData JSON into structured ContentSection[] records
  * for the 8-layer TemplateRenderer engine.
  */
-export function cvDataToContentSections(cvData: any): ContentSection[] {
+export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKind>[] {
   if (!cvData) return [];
 
   const isVisible = (id: string) => cvData?.sectionVisibility?.[id] !== false;
@@ -28,9 +28,10 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
     education = [],
     profession = [],
     experience = [],
-    informatics = [],
     coursesAndCertificates = [],
+    customSections = [],
     skills = [],
+    informatics = [],
     signature = {}
   } = cvData;
 
@@ -44,7 +45,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   const sortedProjects = sortByYearDesc(cvData.projects);
   const sortedPublications = sortByYearDesc(cvData.publications);
 
-  const sections: ContentSection[] = [];
+  const sections: ContentSection<CvRecordKind>[] = [];
 
   // Contacto & Redes (Sidebar)
   if (isVisible('contacto')) {

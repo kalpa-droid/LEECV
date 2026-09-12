@@ -7,25 +7,40 @@
  * cómo se ve.
  */
 
+import { CatalogDerivedKind } from './fieldCatalog';
+
 export interface TextRun {
   text: string;
   weight?: 'normal' | 'bold';
 }
 
+/** Kinds que sólo existen en la Tarjeta Personal — TemplateRenderer.tsx (CV) nunca los necesita. */
+export type CardOnlyRecordKind = 'card-heading' | 'card-logo';
+
+/** Kinds que sólo existen en el CV — no le corresponden a la Tarjeta. */
+export type CvOnlyRecordKind = CatalogDerivedKind | 'skill' | 'social-link' | 'freeform' | 'custom' | 'languages';
+
+/** Kinds que usan los dos productos. */
+export type SharedRecordKind = 'contact-item' | 'quote-text' | 'qr';
+
+export type RecordKind = CardOnlyRecordKind | CvOnlyRecordKind | SharedRecordKind;
+export type CvRecordKind = CvOnlyRecordKind | SharedRecordKind;
+export type CardRecordKind = CardOnlyRecordKind | SharedRecordKind;
+
 /** Un Record = una unidad de contenido que se puede repetir y fluir (ej: un trabajo, un curso, un dato) */
-export interface ContentRecord {
+export interface ContentRecord<K extends RecordKind = RecordKind> {
   id: string;
   /** Qué tipo de dato es — el preset lo usa para elegir cómo dibujarlo */
-  kind: 'experience' | 'education' | 'course' | 'contact-item' | 'skill' | 'social-link' | 'qr' | 'freeform' | 'card-heading' | 'quote-text' | 'card-logo' | 'custom' | 'projects' | 'publications' | 'references' | 'languages';
+  kind: K;
   fields: Record<string, string | TextRun[]>;
   /** A qué sector va este registro (ej: 'sidebar' o 'main') — lo define el preset, no el dato en sí */
   targetSectorRole: 'sidebar' | 'main' | 'banner' | 'footer';
 }
 
 /** Un grupo de registros del mismo tipo, con su título de sección (ej: "EXPERIENCIA LABORAL") */
-export interface ContentSection {
+export interface ContentSection<K extends RecordKind = RecordKind> {
   id: string;
   titleText: string;
-  records: ContentRecord[];
+  records: ContentRecord<K>[];
   breakBefore?: boolean;
 }
