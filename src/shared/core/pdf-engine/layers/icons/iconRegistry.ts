@@ -225,6 +225,38 @@ export const ICON_REGISTRY: Record<string, IconDefinition> = {
       'M8 22h8'
     ]
   },
+  'social-professional': {
+    id: 'social-professional',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M4 7h16v13H4z',
+      'M9 7V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v3'
+    ]
+  },
+  'social-code': {
+    id: 'social-code',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M8 6L2 12l6 6',
+      'M16 6l6 6-6 6'
+    ]
+  },
+  'social-email': {
+    id: 'social-email',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M4 4h16v16H4z',
+      'M4 4l8 8 8-8'
+    ]
+  },
+  'social-web': {
+    id: 'social-web',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71',
+      'M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'
+    ]
+  },
   custom: {
     id: 'custom',
     viewBox: '0 0 24 24',

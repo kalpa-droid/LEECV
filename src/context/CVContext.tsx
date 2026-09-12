@@ -17,6 +17,7 @@ interface CVContextType {
   saveCV: () => Promise<any>;
   saveCVAs: (versionLabel?: string) => Promise<any>;
   isSaving: boolean;
+  hasPendingChanges: boolean;
   undo: () => void;
   redo: () => void;
   canUndo: boolean;
@@ -48,6 +49,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
   });
 
   const [isSaving, setIsSaving] = useState(false);
+  const [hasPendingChanges, setHasPendingChanges] = useState(false);
 
   // Per-document Undo / Redo History Map (up to 30 snapshots per document ID)
   const historyMapRef = useRef<Map<string, { stack: CVData[]; index: number }>>(new Map());
@@ -56,6 +58,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
   const getDocId = useCallback((data: CVData) => data?.id || 'default_cv_doc', []);
 
   const setCvData = useCallback((action: CVData | ((prev: CVData) => CVData)) => {
+    setHasPendingChanges(true);
     setCvDataState((prev) => {
       const nextData = typeof action === 'function' ? action(prev) : action;
       if (!nextData) return prev;
@@ -107,7 +110,11 @@ export function CVProvider({ children }: { children: ReactNode }) {
           localStorage.setItem('cv_premium_data', JSON.stringify(cvData));
         } catch (e) {
           console.warn('Error guardando respaldo local:', e);
+        } finally {
+          setHasPendingChanges(false);
         }
+      } else {
+        setHasPendingChanges(false);
       }
     }, 500);
     return () => clearTimeout(timeout);
@@ -264,6 +271,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
       console.error('Error guardando en CVContext:', err);
       return { success: false, error: err };
     } finally {
+      setHasPendingChanges(false);
       setIsSaving(false);
     }
   };
@@ -280,6 +288,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
       console.error('Error en Guardar como en CVContext:', err);
       return { success: false, error: err };
     } finally {
+      setHasPendingChanges(false);
       setIsSaving(false);
     }
   };
@@ -298,6 +307,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
         saveCV,
         saveCVAs,
         isSaving,
+        hasPendingChanges,
         undo,
         redo,
         canUndo,

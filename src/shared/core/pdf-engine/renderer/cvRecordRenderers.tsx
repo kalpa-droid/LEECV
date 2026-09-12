@@ -9,6 +9,7 @@ import { getContainerStyle } from '../../styles/containerStyleEngine';
 import { resolveSubtleCardBackground } from '../layers/colors/surfaceAwareColorEngine';
 import { buildStructuredRecordLayout } from '../layers/records/recordLayoutEngine';
 import { CardObjectRenderer } from '../layers/cards/CardObjectRenderer';
+import { PdfSectionIcon } from '../layers/icons/PdfSectionIcon';
 
 function sanitizeSvgDataUrl(dataUrl?: string): string | undefined {
   if (!dataUrl || typeof dataUrl !== 'string') return dataUrl;
@@ -262,15 +263,18 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
     const f = rec.fields;
     const linkSpec = resolveUnifiedTextSpec('body', surfaceHex, sectorRolesColor, preset.typography, 'social-link');
     return (
-      <View key={rec.id} style={{ marginBottom: 4 }} wrap={false}>
-        <Text style={[styles.sidebarItemText, { color: linkSpec.colorHex, opacity: linkSpec.opacity }]}>
-          • {String(f.label || '')}
-        </Text>
-        {f.url ? (
-          <Text style={[styles.sidebarItemText, { fontSize: (linkSpec.fontSizePt || 9) - 1, opacity: 0.75 }]}>
-            {String(f.url)}
+      <View key={rec.id} style={{ marginBottom: 4, flexDirection: 'row', alignItems: 'center', gap: 5 }} wrap={false}>
+        <PdfSectionIcon iconId={String(f.icon || 'social-web')} color={linkSpec.colorHex} size={10} />
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.sidebarItemText, { color: linkSpec.colorHex, opacity: linkSpec.opacity, marginBottom: 0 }]}>
+            {String(f.label || '')}
           </Text>
-        ) : null}
+          {f.url ? (
+            <Text style={[styles.sidebarItemText, { fontSize: (linkSpec.fontSizePt || 9) - 1, opacity: 0.75, marginBottom: 0 }]}>
+              {String(f.url)}
+            </Text>
+          ) : null}
+        </View>
       </View>
     );
   },

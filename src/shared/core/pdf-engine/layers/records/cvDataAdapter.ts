@@ -141,7 +141,10 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         fields: {
           label: r.usuario ? `${r.plataforma || 'Red'}: ${r.usuario}` : r.plataforma || r.url || '',
           url: r.url || (r.plataforma === 'Email' && r.usuario ? `mailto:${r.usuario}` : ''),
-          icon: r.plataforma === 'LinkedIn' ? '💼' : r.plataforma === 'Email' ? '✉️' : r.plataforma?.includes('GitHub') ? '💻' : '🌐'
+          icon: r.plataforma === 'LinkedIn' ? 'social-professional'
+            : r.plataforma === 'Email' ? 'social-email'
+            : r.plataforma?.includes('GitHub') || r.plataforma?.includes('GitLab') ? 'social-code'
+            : 'social-web'
         }
       }))
     });

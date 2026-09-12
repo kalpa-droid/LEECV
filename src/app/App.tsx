@@ -57,6 +57,8 @@ import { setPendingDocumentToOpen, getPendingDocumentToOpen, clearPendingDocumen
 import { runWithSafeSave } from '../shared/core/storage/safeNavigationEngine';
 import { signInWithGoogle, logout } from '../modules/auth/authService';
 import { PwaInstallBanner } from '../shared/core/ui/PwaInstallBanner';
+import { initUpdateEngine, onUpdateReady } from '../shared/core/pwa/updateEngine';
+import { UpdateToast } from '../shared/core/ui/UpdateToast';
 
 import { procesarRetornoPago } from '../modules/payments/paymentService';
 
@@ -67,7 +69,8 @@ interface AppContentProps {
 }
 
 function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: AppContentProps) {
-  const { cvData, setCvData, resetToBlankCV, saveCV, saveCVAs } = useCVContext();
+  const { cvData, setCvData, resetToBlankCV, saveCV, saveCVAs, isSaving, hasPendingChanges } = useCVContext();
+  const [updateBannerVisible, setUpdateBannerVisible] = useState(false);
 
   useEffect(() => {
     if (initialPreset && cvData && cvData.activePresetId !== initialPreset) {
@@ -87,6 +90,21 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     if (!inGracePeriod || !currentProfile?.id) return;
     dal.cvs.listByUser(currentProfile.id).then(setGraceCvList).catch(() => {});
   }, [inGracePeriod, currentProfile?.id]);
+
+  useEffect(() => {
+    initUpdateEngine();
+    onUpdateReady(() => setUpdateBannerVisible(true));
+  }, []);
+
+  useEffect(() => {
+    if (!updateBannerVisible) return;
+    const timer = setTimeout(() => {
+      if (!isSaving && !hasPendingChanges) {
+        window.location.reload();
+      }
+    }, 5 * 60 * 1000);
+    return () => clearTimeout(timer);
+  }, [updateBannerVisible, isSaving, hasPendingChanges]);
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
 
@@ -273,7 +291,6 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const [, setPdfProgress] = useState(0);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isPdfComplete, setIsPdfComplete] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [mobileTabState, setMobileTabState] = useState('editor');
 
   const [isPdfCheckoutOpen, setIsPdfCheckoutOpen] = useState(false);
@@ -434,7 +451,6 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   };
 
   const handleSaveCVClick = async () => {
-    setIsSaving(true);
     try {
       const res = await saveCV();
       if (res?.success) {
@@ -445,13 +461,10 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     } catch (err) {
       console.error(err);
       showError('Inconveniente al guardar CV. Tus datos ingresados se mantienen intactos.');
-    } finally {
-      setIsSaving(false);
     }
   };
 
   const handleSaveCVAsClick = async (versionLabel: string) => {
-    setIsSaving(true);
     try {
       const res = await saveCVAs(versionLabel);
       if (res?.success) {
@@ -462,8 +475,6 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     } catch (err) {
       console.error(err);
       showError('Error al crear la nueva versión del documento.');
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -877,6 +888,12 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
               onExportAtsPdf={handleExportAtsPdf}
             />
           )}
+
+          <UpdateToast
+            isVisible={updateBannerVisible}
+            onUpdate={() => window.location.reload()}
+            onDismiss={() => setUpdateBannerVisible(false)}
+          />
         </Suspense>
       }
     />
