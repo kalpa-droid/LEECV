@@ -94,23 +94,31 @@ if (customSec && customSec.records.length > 0) {
   failed++;
 }
 
-// Assert 4: Cobertura estática de `kind` de registros en TemplateRenderer.tsx
+// Assert 4: Cobertura estática de `kind` de registros en TemplateRenderer.tsx y cvRecordRenderers.tsx
 const rendererPath = path.join(ROOT, 'src/shared/core/pdf-engine/renderer/TemplateRenderer.tsx');
-if (fs.existsSync(rendererPath)) {
-  const rendererCode = fs.readFileSync(rendererPath, 'utf8');
-  const handledKinds = new Set();
+const cvRenderersPath = path.join(ROOT, 'src/shared/core/pdf-engine/renderer/cvRecordRenderers.tsx');
 
-  const singleKindRegex = /rec\.kind\s*===\s*['"]([^'"]+)['"]/g;
-  let match;
-  while ((match = singleKindRegex.exec(rendererCode)) !== null) {
-    handledKinds.add(match[1]);
-  }
+const rendererCode = (fs.existsSync(rendererPath) ? fs.readFileSync(rendererPath, 'utf8') : '') +
+  '\n' + (fs.existsSync(cvRenderersPath) ? fs.readFileSync(cvRenderersPath, 'utf8') : '');
 
-  const arrayKindRegex = /\[([^\]]+)\]\.includes\(\s*rec\.kind\s*\)/g;
-  while ((match = arrayKindRegex.exec(rendererCode)) !== null) {
-    const kindsStr = match[1];
-    kindsStr.split(',').map(s => s.trim().replace(/['"]/g, '')).forEach(k => handledKinds.add(k));
-  }
+const handledKinds = new Set();
+
+const singleKindRegex = /rec\.kind\s*===\s*['"]([^'"]+)['"]/g;
+let match;
+while ((match = singleKindRegex.exec(rendererCode)) !== null) {
+  handledKinds.add(match[1]);
+}
+
+const arrayKindRegex = /\[([^\]]+)\]\.includes\(\s*rec\.kind\s*\)/g;
+while ((match = arrayKindRegex.exec(rendererCode)) !== null) {
+  const kindsStr = match[1];
+  kindsStr.split(',').map(s => s.trim().replace(/['"]/g, '')).forEach(k => handledKinds.add(k));
+}
+
+const objectKeyKindRegex = /['"]([^'"]+)['"]\s*:\s*(\(|cvCatalogCardRenderer)/g;
+while ((match = objectKeyKindRegex.exec(rendererCode)) !== null) {
+  handledKinds.add(match[1]);
+}
 
   const producedKinds = new Set();
   renderedSections.forEach(sec => {
@@ -128,7 +136,6 @@ if (fs.existsSync(rendererPath)) {
       failed++;
     }
   });
-}
 
 console.log('\n════════════════════════════════════════════════════════════');
 if (failed > 0) {
