@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
-import { blankCVTemplate } from '../data/initialCVData';
+import { blankCVTemplate, createBlankCVTemplate } from '../data/initialCVData';
 import { saveCV as saveCVStorage, saveCVAs as saveCVAsStorage } from '../modules/cv-builder/services/cvStorageService';
 import { sanitizeCvData } from '../shared/core/utils/cvDataSchema';
 import { navigation } from '../shared/core/utils/navigation';
@@ -12,7 +12,7 @@ interface CVContextType {
   updateTheme: (field: string, value: any) => void;
   applyThemePreset: (preset: any) => void;
   toggleSectionVisibility: (sectionKey: string) => void;
-  resetToBlankCV: () => void;
+  resetToBlankCV: (options?: { activePresetId?: string }) => void;
   loadCVData: (newCVData: CVData) => void;
   saveCV: () => Promise<any>;
   saveCVAs: (versionLabel?: string) => Promise<any>;
@@ -41,10 +41,10 @@ export function CVProvider({ children }: { children: ReactNode }) {
           return sanitizeCvData(parsed);
         }
       } catch {
-        return sanitizeCvData(blankCVTemplate);
+        return sanitizeCvData(createBlankCVTemplate());
       }
     }
-    return sanitizeCvData(blankCVTemplate);
+    return sanitizeCvData(createBlankCVTemplate());
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -228,8 +228,8 @@ export function CVProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const resetToBlankCV = () => {
-    const blank = sanitizeCvData(blankCVTemplate);
+  const resetToBlankCV = (options?: { activePresetId?: string }) => {
+    const blank = sanitizeCvData(createBlankCVTemplate(options));
     const blankId = getDocId(blank);
     historyMapRef.current.set(blankId, { stack: [blank], index: 0 });
     setCvData(blank);

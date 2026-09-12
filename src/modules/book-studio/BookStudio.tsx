@@ -10,6 +10,7 @@ interface BookStudioProps {
   onCloseTab?: (id: string) => void;
   onNavigateToDocument?: (id: string, targetDocType: 'cv' | 'business_card' | 'book') => void;
   onNewCV?: () => void;
+  onNewCard?: () => void;
   onNewBook?: () => void;
   cycleUITheme?: () => void;
   onTabsChanged?: (tabs: any[]) => void;
@@ -25,6 +26,7 @@ export const BookStudio: React.FC<BookStudioProps> = ({
   onCloseTab = () => {},
   onNavigateToDocument = () => {},
   onNewCV,
+  onNewCard,
   onNewBook,
   cycleUITheme = () => {},
   onTabsChanged = () => {},
@@ -40,6 +42,7 @@ export const BookStudio: React.FC<BookStudioProps> = ({
       onCloseTab={onCloseTab}
       onNavigateToDocument={onNavigateToDocument}
       onNewCV={onNewCV}
+      onNewCard={onNewCard}
       onNewBook={onNewBook}
       cycleUITheme={cycleUITheme}
       onTabsChanged={onTabsChanged}

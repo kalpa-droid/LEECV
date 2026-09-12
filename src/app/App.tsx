@@ -4,7 +4,7 @@ import CanvaIconDock from '../modules/cv-builder/components/CanvaIconDock';
 import EditorPanel from '../modules/cv-builder/components/EditorPanel';
 const CVPreview = lazy(() => import('../modules/cv-builder/components/CVPreview'));
 import { FileText, CreditCard, Palette, Plus, X, Sparkles, ChevronRight } from 'lucide-react';
-import { getOpenTabs, addOpenTab, removeOpenTab, OpenTabItem } from '../shared/core/storage/documentTabEngine';
+import { getOpenTabs, addOpenTab, removeOpenTab, closeDocumentEverywhere, generateDocumentId, OpenTabItem } from '../shared/core/storage/documentTabEngine';
 import { AppShell } from '../shared/core/ui/AppShell';
 const LandingPage = lazy(() => import('../modules/landing/LandingPage').then(m => ({ default: m.LandingPage })));
 const BookStudio = lazy(() => import('../modules/book-studio/BookStudio').then(m => ({ default: m.BookStudio })));
@@ -300,6 +300,19 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     }
   }, [activeCvId, cvData?.title, cvData?.version_label]);
 
+  const resolveNextActiveDocument = async (closedOrDeletedCvId: string, remaining: OpenTabItem[]) => {
+    setTabs(remaining);
+    if (closedOrDeletedCvId === activeCvId) {
+      if (remaining.length > 0) {
+        const lastTab = remaining[remaining.length - 1];
+        await handleSwitchDocumentTab(lastTab.cvId);
+      } else {
+        resetToBlankCV();
+        setActiveTab('personales');
+      }
+    }
+  };
+
   const handleCloseFooterTab = (e: React.MouseEvent, cvId: string, title: string) => {
     e.stopPropagation();
     confirm({
@@ -307,17 +320,8 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       message: `¿Deseas cerrar "${title}"? Tus datos guardados se mantendrán a salvo en tus archivos.`,
       confirmText: 'Cerrar Pestaña',
       onConfirm: async () => {
-        const remaining = removeOpenTab(cvId);
-        setTabs(remaining);
-
-        if (cvId === activeCvId) {
-          if (remaining.length > 0) {
-            const lastTab = remaining[remaining.length - 1];
-            await handleSwitchDocumentTab(lastTab.cvId);
-          } else {
-            handleNewCV();
-          }
-        }
+        const remaining = await closeDocumentEverywhere(cvId, { alsoDeleteFromStorage: false });
+        await resolveNextActiveDocument(cvId, remaining);
       }
     });
   };
@@ -464,7 +468,6 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   };
 
   const handleNewCV = async () => {
-
     confirm({
       title: '¿Iniciar nuevo currículum?',
       message: '¿Deseas iniciar un nuevo currículum en blanco? Se guardará un borrador automático de tu currículum actual.',
@@ -475,7 +478,66 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           () => {
             resetToBlankCV();
             setActiveTab('personales');
+            if (currentRoute !== '/crear-cv' && currentRoute !== '/') {
+              if (onNavigate) {
+                onNavigate('/crear-cv');
+              } else if (typeof window !== 'undefined') {
+                window.history.pushState({}, '', '/crear-cv');
+                window.dispatchEvent(new PopStateEvent('popstate'));
+              }
+            }
             showSuccess('Tu borrador anterior ha sido resguardado con éxito. Ahora estás editando un currículum en blanco.');
+          }
+        );
+      }
+    });
+  };
+
+  const handleNewCard = async () => {
+    confirm({
+      title: '¿Iniciar nueva Tarjeta Personal?',
+      message: '¿Deseas iniciar una tarjeta personal en blanco? Se guardará un borrador automático de tu documento actual.',
+      confirmText: 'Sí, crear tarjeta',
+      onConfirm: async () => {
+        await runWithSafeSave(
+          saveCV,
+          () => {
+            resetToBlankCV({ activePresetId: 'tarjeta-personal' });
+            setActiveTab('personales');
+            if (currentRoute !== '/crear-tarjeta') {
+              if (onNavigate) {
+                onNavigate('/crear-tarjeta');
+              } else if (typeof window !== 'undefined') {
+                window.history.pushState({}, '', '/crear-tarjeta');
+                window.dispatchEvent(new PopStateEvent('popstate'));
+              }
+            }
+            showSuccess('Tarjeta personal creada en blanco.');
+          }
+        );
+      }
+    });
+  };
+
+  const handleNewBook = async () => {
+    confirm({
+      title: '¿Iniciar nuevo Libro / Folleto?',
+      message: '¿Deseas iniciar la imposición de un nuevo libro? Se resguardará tu borrador actual.',
+      confirmText: 'Sí, crear libro',
+      onConfirm: async () => {
+        await runWithSafeSave(
+          saveCV,
+          () => {
+            const newBookId = generateDocumentId('book');
+            addOpenTab(newBookId, 'Mi Libro / Folleto', undefined, 'book');
+            setPendingDocumentToOpen(newBookId, 'book');
+            if (onNavigate) {
+              onNavigate('/crear-libro');
+            } else if (typeof window !== 'undefined') {
+              window.history.pushState({}, '', '/crear-libro');
+              window.dispatchEvent(new PopStateEvent('popstate'));
+            }
+            showSuccess('Nuevo libro / folleto listo para procesar.');
           }
         );
       }
@@ -533,7 +595,8 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           onNavigateToDocument={(targetDocType, id) => handleNavigateToDocumentTab(targetDocType as 'cv' | 'business_card' | 'book', id)}
           onTabsChanged={(updated) => setTabs(updated)}
           onNewCV={handleNewCV}
-          onNewBook={() => onNavigate?.('/crear-libro')}
+          onNewCard={handleNewCard}
+          onNewBook={handleNewBook}
           cycleUITheme={() => {
             const next = getNextUiTheme(globalUiTheme);
             setGlobalUiTheme(next);
@@ -644,6 +707,9 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         onSwitch: handleSwitchDocumentTab,
         onNavigateToDocument: handleNavigateToDocumentTab,
         onAdd: handleNewCV,
+        onNewCV: handleNewCV,
+        onNewCard: handleNewCard,
+        onNewBook: handleNewBook,
         onClose: handleCloseFooterTab
       }}
       modalsSlot={
@@ -707,6 +773,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
               }}
               onImportJson={handleImportJsonFile}
               onOpenCloudStatus={() => setIsCloudModalOpen(true)}
+              onDocumentClosed={(deletedId, remaining) => resolveNextActiveDocument(deletedId, remaining)}
             />
           )}
 

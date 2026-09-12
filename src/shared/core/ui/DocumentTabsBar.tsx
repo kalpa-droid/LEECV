@@ -1,7 +1,8 @@
 import React, { useRef } from 'react';
-import { FileText, BookOpen, CreditCard, Plus, X, ChevronRight, ChevronLeft } from 'lucide-react';
+import { FileText, BookOpen, CreditCard, X, ChevronRight, ChevronLeft } from 'lucide-react';
 import { OpenTabItem } from '../storage/documentTabEngine';
 import { elevationSystem, radius } from '../uiDesignSystem';
+import { NewDocumentMenu } from './NewDocumentMenu';
 import { useHorizontalScrollControls } from './useHorizontalScrollControls';
 
 export interface DocumentTabsBarProps {
@@ -11,6 +12,9 @@ export interface DocumentTabsBarProps {
   onSwitch: (id: string) => void;
   onNavigateToDocument?: (docType: 'cv' | 'business_card' | 'book', id: string) => void;
   onAdd: () => void;
+  onNewCV?: () => void;
+  onNewCard?: () => void;
+  onNewBook?: () => void;
   onClose: (e: React.MouseEvent, id: string, title: string) => void;
 }
 
@@ -21,6 +25,9 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
   onSwitch,
   onNavigateToDocument,
   onAdd,
+  onNewCV,
+  onNewCard,
+  onNewBook,
   onClose,
 }) => {
   const getTabIcon = (tabDocType?: string) => {
@@ -139,15 +146,12 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
           })}
         </div>
 
-        {/* Botón "+" (Agregar Pestaña / Nuevo Documento) */}
-        <button
-          type="button"
-          onClick={onAdd}
-          className={`p-1.5 rounded-full bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-panel)] text-[var(--color-status-success-bright)] transition cursor-pointer active:scale-95 shrink-0 ${elevationSystem.raised}`}
-          title="Crear Nuevo Documento (+)"
-        >
-          <Plus className="w-4 h-4 stroke-[3]" />
-        </button>
+        {/* Menu (+) Nuevo Documento (CV, Tarjeta, Libro) */}
+        <NewDocumentMenu
+          onSelectCV={onNewCV || onAdd}
+          onSelectCard={onNewCard || onAdd}
+          onSelectBook={onNewBook || onAdd}
+        />
 
         {/* Flecha derecha: solo se muestra si hay pestañas ocultas a ese lado */}
         {canScrollRight && (

@@ -70,3 +70,23 @@ export function removeOpenTab(cvId: string): OpenTabItem[] {
   saveOpenTabs(filtered);
   return filtered;
 }
+
+export function generateDocumentId(prefix: 'cv' | 'book' | 'card' = 'cv'): string {
+  const uuid = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  return `${prefix}_${uuid}`;
+}
+
+export async function closeDocumentEverywhere(
+  cvId: string,
+  opts: {
+    alsoDeleteFromStorage?: boolean;
+    deleteCVById?: (id: string) => Promise<void>;
+  } = {}
+): Promise<OpenTabItem[]> {
+  const remaining = removeOpenTab(cvId);
+  if (opts.alsoDeleteFromStorage && opts.deleteCVById) {
+    await opts.deleteCVById(cvId);
+  }
+  return remaining;
+}
+

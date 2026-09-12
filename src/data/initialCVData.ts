@@ -1,12 +1,6 @@
-/**
- * NÚCLEO — PLANTILLA EN BLANCO Y DATOS INICIALES (initialCVData.ts)
- *
- * Proporciona el estado inicial limpio para el nuevo currículum,
- * 100% integrado con el Catálogo Universal de Campos (FIELD_CATALOG).
- */
+import { generateDocumentId } from '../shared/core/storage/documentTabEngine';
 
-export const blankCVTemplate = {
-  id: "cv_nuevo",
+export const blankCVBase = {
   activePresetId: "cv-clasico",
   uiTheme: "day",
   showCoverPage: true,
@@ -84,4 +78,15 @@ export const blankCVTemplate = {
   }
 };
 
+export function createBlankCVTemplate(overrides?: Record<string, any>) {
+  const prefix = overrides?.activePresetId === 'tarjeta-personal' ? 'card' : 'cv';
+  return {
+    ...blankCVBase,
+    id: generateDocumentId(prefix),
+    ...overrides,
+  };
+}
+
+export const blankCVTemplate = createBlankCVTemplate();
 export const initialCVData = blankCVTemplate;
+

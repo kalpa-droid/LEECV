@@ -12,7 +12,7 @@ import { BookPreviewExportStep } from './BookPreviewExportStep';
 import { BookPreviewStep } from './BookPreviewStep';
 import { getNextBookStepId, getPrevBookStepId } from '../../shared/core/book-engine/bookStepSequence';
 import { saveBook } from '../../shared/core/storage/documentStorageService';
-import { addOpenTab, OpenTabItem } from '../../shared/core/storage/documentTabEngine';
+import { addOpenTab, generateDocumentId, OpenTabItem } from '../../shared/core/storage/documentTabEngine';
 
 interface BookStudioContentProps {
   currentUiTheme?: string;
@@ -22,6 +22,7 @@ interface BookStudioContentProps {
   onCloseTab: (id: string) => void;
   onNavigateToDocument: (targetDocType: 'cv' | 'business_card' | 'book', id: string) => void;
   onNewCV?: () => void;
+  onNewCard?: () => void;
   onNewBook?: () => void;
   cycleUITheme: () => void;
   onTabsChanged?: (tabs: OpenTabItem[]) => void;
@@ -37,6 +38,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   onCloseTab,
   onNavigateToDocument,
   onNewCV: _onNewCV,
+  onNewCard,
   onNewBook,
   cycleUITheme,
   onTabsChanged = () => {},
@@ -48,7 +50,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [pdfDoc, setPdfDoc] = useState<any>(null);
   const [pdfPageCount, setPdfPageCount] = useState<number>(0);
-  const [bookId, setBookId] = useState<string>(() => (activeTabId && activeTabId.startsWith('book-') ? activeTabId : 'book-main'));
+  const [bookId, setBookId] = useState<string>(() => (activeTabId && activeTabId.startsWith('book-') ? activeTabId : generateDocumentId('book')));
   const [bookZoom, setBookZoom] = useState<number>(1);
   const triggerBookAutoFit = React.useCallback(() => {
     if (typeof window !== 'undefined') {
@@ -88,14 +90,14 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
 
   // Garantizar que la pestaña activa sea "Mi Libro / Folleto" desde la carga inicial
   useEffect(() => {
-    const currentId = bookId || 'book-main';
+    const currentId = bookId || generateDocumentId('book');
     const name = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, '') : 'Mi Libro / Folleto';
     const updatedTabs = addOpenTab(currentId, name, undefined, 'book');
     onTabsChanged(updatedTabs);
   }, [bookId]);
 
   const persistBookState = (file: File | null, opts: BookImpositionOptions) => {
-    const id = bookId || `book-${Date.now()}`;
+    const id = bookId || generateDocumentId('book');
     const name = file ? file.name.replace(/\.[^/.]+$/, '') : 'Mi Libro / Folleto';
     if (!bookId) {
       setBookId(id);
@@ -279,6 +281,9 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
         onSwitch: onSelectTab,
         onNavigateToDocument: (targetType, id) => onNavigateToDocument(targetType, id),
         onAdd: onNewBook || (() => {}),
+        onNewCV: _onNewCV,
+        onNewCard: onNewCard,
+        onNewBook: onNewBook,
         onClose: (e, id) => onCloseTab(id),
       }}
     />

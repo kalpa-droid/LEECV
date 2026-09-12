@@ -10,6 +10,7 @@ import {
   Copy
 } from 'lucide-react';
 import { getSavedCVsList, loadCVById, deleteCVById, saveCVAs, checkStorageStatus } from '../services/cvStorageService';
+import { closeDocumentEverywhere, OpenTabItem } from '../../../shared/core/storage/documentTabEngine';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { InfoHint } from '../../../shared/core/ui/InfoHint';
@@ -24,6 +25,7 @@ export interface SavedCVsModalProps {
   onSelectCV: (cvData: any) => void;
   onImportJson?: (e: any) => Promise<void>;
   onOpenCloudStatus: () => void;
+  onDocumentClosed?: (deletedId: string, remainingTabs: OpenTabItem[]) => void;
 }
 
 export default function SavedCVsModal({ 
@@ -31,7 +33,8 @@ export default function SavedCVsModal({
   onClose, 
   onSelectCV,
   onImportJson,
-  onOpenCloudStatus
+  onOpenCloudStatus,
+  onDocumentClosed,
 }: SavedCVsModalProps) {
   const { confirm } = useConfirm();
   const { showSuccess, showError } = useToast();
@@ -114,9 +117,13 @@ export default function SavedCVsModal({
       onConfirm: async () => {
         await withErrorHandling(
           async () => {
-            await deleteCVById(id);
+            const remaining = await closeDocumentEverywhere(id, {
+              alsoDeleteFromStorage: true,
+              deleteCVById,
+            });
             showSuccess(`Documento "${title}" eliminado.`);
             fetchList();
+            onDocumentClosed?.(id, remaining);
           },
           {
             context: 'Eliminación de Documento',
