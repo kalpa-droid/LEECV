@@ -143,4 +143,60 @@ describe('Canonical Section Order Engine & Section Fixes', () => {
     expect(result.sectionOrders.secundaria).toContain('frase');
     expect(result.sectionOrders.primaria).not.toContain('frase');
   });
+
+  it('10. cvDataToContentSections ubica datos-personales antes de la firma al combinar primaria y secundaria', () => {
+    const cvData = {
+      personalInfo: { fullName: 'Juan Pérez', dni: '12345678' },
+      signature: { signerName: 'Juan Pérez', dataUrl: 'data:image/png;base64,123' },
+      layout: {
+        sectionOrders: {
+          primaria: ['resumen', 'experiencia', 'formacion', 'firma'],
+          secundaria: ['contacto', 'datos-personales', 'competencias']
+        }
+      }
+    };
+
+    const sections = cvDataToContentSections(cvData);
+    const personalIdx = sections.findIndex(s => s.id === 'datos-personales');
+    const signatureIdx = sections.findIndex(s => s.id === 'firma');
+
+    expect(personalIdx).toBeGreaterThan(-1);
+    expect(signatureIdx).toBeGreaterThan(-1);
+    expect(personalIdx).toBeLessThan(signatureIdx);
+    expect(signatureIdx).toBe(sections.length - 1);
+  });
+
+  it('11. firma es incondicionalmente la última sección terminal devuelta por cvDataToContentSections', () => {
+    const cvData = {
+      personalInfo: { fullName: 'Maria Silva' },
+      signature: { signerName: 'Maria Silva' },
+      layout: {
+        sectionOrders: {
+          primaria: ['firma', 'resumen', 'experiencia'],
+          secundaria: ['datos-personales', 'contacto']
+        }
+      }
+    };
+
+    const sections = cvDataToContentSections(cvData);
+    const lastSection = sections[sections.length - 1];
+    expect(lastSection.id).toBe('firma');
+  });
+
+  it('12. resolveEffectivePresetSectionOrder ancla firma al final del sector main y nunca en sidebar', () => {
+    const mockPreset: any = {
+      sectors: [{ id: 'sidebar', role: 'sidebar' }, { id: 'main', role: 'main' }],
+      sectionOrder: [
+        { sectorRole: 'sidebar', sectionIds: ['datos-personales', 'contacto', 'firma'] },
+        { sectorRole: 'main', sectionIds: ['resumen', 'experiencia'] }
+      ]
+    };
+
+    const effective = resolveEffectivePresetSectionOrder(mockPreset);
+    const sidebarSecs = effective.find(s => s.sectorRole === 'sidebar')?.sectionIds || [];
+    const mainSecs = effective.find(s => s.sectorRole === 'main')?.sectionIds || [];
+
+    expect(sidebarSecs).not.toContain('firma');
+    expect(mainSecs[mainSecs.length - 1]).toBe('firma');
+  });
 });

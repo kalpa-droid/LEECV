@@ -40,6 +40,11 @@ export function applyTemplateMode(
     return baseSidebarIds.includes(id) ? 'secundaria' : 'primaria';
   };
 
+  const ensureFirmaTerminalInPrimaria = (list: string[]) => {
+    if (!list.includes('firma')) return list;
+    return [...list.filter(id => id !== 'firma'), 'firma'];
+  };
+
   if (mode === 'full-template') {
     const visibility: Record<string, boolean> = {};
     for (const id of ALL_SECTION_IDS) {
@@ -49,7 +54,7 @@ export function applyTemplateMode(
     return {
       sectionVisibility: visibility,
       sectionOrders: {
-        primaria: visible.filter(id => columnOf(id) === 'primaria'),
+        primaria: ensureFirmaTerminalInPrimaria(visible.filter(id => columnOf(id) === 'primaria')),
         secundaria: visible.filter(id => columnOf(id) === 'secundaria'),
       },
     };
@@ -65,7 +70,7 @@ export function applyTemplateMode(
   return {
     sectionVisibility: { ...(current?.sectionVisibility || {}) },
     sectionOrders: {
-      primaria: fullOrder.filter(id => columnOf(id) === 'primaria'),
+      primaria: ensureFirmaTerminalInPrimaria(fullOrder.filter(id => columnOf(id) === 'primaria')),
       secundaria: fullOrder.filter(id => columnOf(id) === 'secundaria'),
     },
   };

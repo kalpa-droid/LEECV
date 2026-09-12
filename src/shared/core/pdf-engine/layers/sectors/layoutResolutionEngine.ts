@@ -86,16 +86,27 @@ export function resolveEffectivePresetSectionOrder(
   const finalSidebar = sortListByCanonical(sidebarIds, Array.isArray(userSecOrder) && userSecOrder.length > 0 ? userSecOrder : baseSidebar);
   const finalMain = sortListByCanonical(mainIds, Array.isArray(userPrimOrder) && userPrimOrder.length > 0 ? userPrimOrder : baseMain);
 
+  // Invariante de Motor: 'firma' pertenece exclusivamente al final de la columna principal (main / terminal)
+  let cleanedSidebar = finalSidebar.filter(id => id !== 'firma');
+  let cleanedMain = finalMain.filter(id => id !== 'firma');
+  if (finalSidebar.includes('firma') || finalMain.includes('firma')) {
+    cleanedMain.push('firma');
+  }
+
   if (!hasSidebarSector) {
-    const consolidatedMainIds = [...new Set([...finalSidebar, ...finalMain])];
+    let consolidatedMainIds = [...new Set([...cleanedSidebar, ...cleanedMain])];
+    if (consolidatedMainIds.includes('firma')) {
+      consolidatedMainIds = consolidatedMainIds.filter(id => id !== 'firma');
+      consolidatedMainIds.push('firma');
+    }
     return [
       { sectorRole: 'main', sectionIds: consolidatedMainIds }
     ];
   }
 
   return [
-    { sectorRole: 'sidebar', sectionIds: [...new Set(finalSidebar)] },
-    { sectorRole: 'main', sectionIds: [...new Set(finalMain)] }
+    { sectorRole: 'sidebar', sectionIds: [...new Set(cleanedSidebar)] },
+    { sectorRole: 'main', sectionIds: [...new Set(cleanedMain)] }
   ];
 }
 

@@ -435,8 +435,8 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
 
   if (hasUserCustomOrder) {
     const combinedUserOrder = [
-      ...(Array.isArray(userPrimOrder) ? userPrimOrder : []),
-      ...(Array.isArray(userSecOrder) ? userSecOrder : [])
+      ...(Array.isArray(userSecOrder) ? userSecOrder : []),
+      ...(Array.isArray(userPrimOrder) ? userPrimOrder : [])
     ];
     const userOrderMap = new Map<string, number>();
     combinedUserOrder.forEach((secId, idx) => {
@@ -467,6 +467,13 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
       const posB = canonicalOrderMap.get(b.id) ?? 999;
       return posA - posB;
     });
+  }
+
+  // Invariante de Motor: La sección de Firma Digital ('firma') es la sección terminal absoluta del CV
+  const sigIdx = orderedSections.findIndex(sec => sec.id === 'firma');
+  if (sigIdx !== -1 && sigIdx < orderedSections.length - 1) {
+    const [sigSec] = orderedSections.splice(sigIdx, 1);
+    orderedSections.push(sigSec);
   }
 
   // Mapear saltos de página configurados por el usuario
