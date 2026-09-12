@@ -1,5 +1,7 @@
 import { CvFormatDefinition } from '../../../formats/cvFormatRegistry';
 import { Preset } from './presetSchema';
+import { CANONICAL_SECTION_ORDER } from '../../../sections/canonicalSectionOrder';
+import { SECTION_CATALOG } from '../../../sectionRegistry';
 
 export type TemplateApplicationMode = 'full-template' | 'template-order' | 'no-filters';
 
@@ -8,13 +10,7 @@ export interface PresentationState {
   sectionOrders: { primaria: string[]; secundaria: string[] };
 }
 
-export const ALL_SECTION_IDS = [
-  'contacto', 'datos-personales', 'redes', 'resumen', 'experiencia',
-  'formacion', 'profesion', 'habilidades', 'competencias', 'idiomas',
-  'proyectos', 'publicaciones', 'referencias', 'cursos', 'informatica',
-  'ecologia', 'certificados'
-  // 'firma' excluida a propósito — Paso 1.5, nunca se reordena por acá.
-];
+export const ALL_SECTION_IDS = CANONICAL_SECTION_ORDER.filter(id => id !== 'firma');
 
 /**
  * NÚCLEO — MOTOR DE APLICACIÓN DE PLANTILLAS (templateApplicationEngine.ts)
@@ -37,11 +33,12 @@ export function applyTemplateMode(
 
   const defaultVisible = format?.defaultVisibleSections || ALL_SECTION_IDS;
 
-  // Columna base de cada sección según el preset visual ACTIVO — el
-  // formato no tiene esta información, solo el preset la tiene.
+  const hasSidebarSector = Array.isArray(activePreset?.sectors) && activePreset.sectors.some(s => s.role === 'sidebar');
   const baseSidebarIds = activePreset?.sectionOrder?.find(s => s.sectorRole === 'sidebar')?.sectionIds || [];
-  const columnOf = (id: string): 'primaria' | 'secundaria' =>
-    baseSidebarIds.includes(id) ? 'secundaria' : 'primaria';
+  const columnOf = (id: string): 'primaria' | 'secundaria' => {
+    if (!hasSidebarSector) return 'primaria';
+    return baseSidebarIds.includes(id) ? 'secundaria' : 'primaria';
+  };
 
   if (mode === 'full-template') {
     const visibility: Record<string, boolean> = {};

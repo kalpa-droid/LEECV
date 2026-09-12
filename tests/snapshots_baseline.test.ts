@@ -49,7 +49,7 @@ describe('FASE 0 — Snapshots Baseline', () => {
     const fullRes = applyTemplateMode(currentState, format, activePreset, 'full-template');
     expect(fullRes.sectionVisibility.contacto).toBe(true);
     expect(fullRes.sectionVisibility.experiencia).toBe(true);
-    expect(fullRes.sectionVisibility.ecologia).toBe(false);
+    expect(fullRes.sectionVisibility.referencias).toBe(false);
     expect(fullRes.sectionOrders.primaria).toContain('experiencia');
     expect(fullRes.sectionOrders.secundaria).toContain('contacto');
 

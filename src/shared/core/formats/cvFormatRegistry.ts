@@ -70,6 +70,16 @@ export const CV_FORMAT_REGISTRY: Record<string, CvFormatDefinition> = {
     defaultVisibleSections: ['contacto', 'datos-personales', 'resumen', 'redes', 'experiencia', 'formacion', 'profesion', 'competencias', 'cursos', 'firma'],
     hiddenPersonalFields: [],
     recommendedPresetIds: ['cv-clasico', 'modern-corporate']
+  },
+
+  'estandar-completo': {
+    id: 'estandar-completo',
+    name: 'Estándar Completo (Todas las Secciones)',
+    description: 'Formato tradicional sin restricciones regionales, con las 18 secciones disponibles activas por defecto. Punto de partida recomendado si no aplicás a un estándar internacional específico.',
+    columnLayoutPresetId: 'sidebar-left',
+    defaultVisibleSections: [...CANONICAL_SECTION_ORDER],
+    hiddenPersonalFields: [],
+    recommendedPresetIds: ['cv-clasico', 'modern-corporate', 'minimal-editorial', 'creative-sustentable']
   }
 };
 

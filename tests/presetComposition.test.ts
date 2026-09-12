@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { resolveActivePreset } from '../src/shared/core/pdf-engine/layers/presets/presetRegistry';
 import { applyPresetLevel } from '../src/shared/core/pdf-engine/layers/presets/presetHierarchyEngine';
+import { getAllCvFormats } from '../src/shared/core/formats/cvFormatRegistry';
+import { CANONICAL_SECTION_ORDER } from '../src/shared/core/sections/canonicalSectionOrder';
 
 describe('resolveActivePreset — Cascada de Color Personalizado', () => {
 
@@ -129,5 +131,23 @@ describe('applyPresetLevel — Limpieza de theme.primaryColor', () => {
     expect(updated.sectionVisibility.experiencia).toBe(true);
     expect(updated.sectionVisibility.contacto).toBe(true);
   });
-});
 
+  it('13. applyPresetLevel nivel "format" con estandar-completo activa las 18 secciones sin excluir frase', () => {
+    const cvData = { activePresetId: 'cv-clasico', sectionVisibility: {} };
+    const updated = applyPresetLevel(cvData, 'format', {
+      formatId: 'estandar-completo',
+      templateMode: 'full-template'
+    });
+
+    CANONICAL_SECTION_ORDER.filter(id => id !== 'firma').forEach((id) => {
+      expect(updated.sectionVisibility[id]).toBe(true);
+    });
+  });
+
+  it('14. getAllCvFormats() expone "estandar-completo" — el selector de UI no necesita cambios propios', () => {
+    const formats = getAllCvFormats();
+    const entry = formats.find((f) => f.id === 'estandar-completo');
+    expect(entry).toBeDefined();
+    expect(entry?.defaultVisibleSections).toHaveLength(18);
+  });
+});

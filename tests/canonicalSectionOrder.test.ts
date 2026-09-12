@@ -5,6 +5,7 @@ import { resolveEffectivePresetSectionOrder } from '../src/shared/core/pdf-engin
 import { applyRelativeSectionPosition } from '../src/shared/core/pdf-engine/layers/sectors/sectionOrderEngine';
 import { cvDataToContentSections } from '../src/shared/core/pdf-engine/layers/records/cvDataAdapter';
 import { migrateCvData } from '../src/shared/core/storage/cvMigrationEngine';
+import { ALL_SECTION_IDS, applyTemplateMode } from '../src/shared/core/pdf-engine/layers/presets/templateApplicationEngine';
 
 describe('Canonical Section Order Engine & Section Fixes', () => {
   it('1. CANONICAL_SECTION_ORDER contiene los 18 IDs estándar sin duplicados ni ecología', () => {
@@ -99,5 +100,47 @@ describe('Canonical Section Order Engine & Section Fixes', () => {
     expect(migrated.ecology).toBeUndefined();
     expect(migrated.projects).toHaveLength(1);
     expect(migrated.projects[0].title).toBe('Huerta Orgánica Comunitaria');
+  });
+
+  it('7. ALL_SECTION_IDS de templateApplicationEngine coincide con CANONICAL_SECTION_ORDER menos firma — no falta frase ni sobra ecologia', () => {
+    expect(ALL_SECTION_IDS).toContain('frase');
+    expect(ALL_SECTION_IDS).not.toContain('ecologia');
+    expect(ALL_SECTION_IDS).not.toContain('firma');
+    expect(ALL_SECTION_IDS).toHaveLength(CANONICAL_SECTION_ORDER.length - 1);
+  });
+
+  it('8. applyTemplateMode en modo full-template NO oculta "frase" cuando el formato la incluye', () => {
+    const format: any = { defaultVisibleSections: ['contacto', 'frase', 'resumen'], hiddenPersonalFields: [] };
+    const preset: any = { sectionOrder: [{ sectorRole: 'sidebar', sectionIds: ['contacto'] }] };
+
+    const result = applyTemplateMode(
+      { sectionVisibility: {}, sectionOrders: { primaria: [], secundaria: [] } },
+      format,
+      preset,
+      'full-template'
+    );
+
+    expect(result.sectionVisibility['frase']).toBe(true);
+    const apareceEnAlgunaColumna =
+      result.sectionOrders.primaria.includes('frase') || result.sectionOrders.secundaria.includes('frase');
+    expect(apareceEnAlgunaColumna).toBe(true);
+  });
+
+  it('9. applyTemplateMode clasifica la sección en "secundaria" si pertenece al sidebar del preset activo', () => {
+    const format: any = { defaultVisibleSections: ['frase'], hiddenPersonalFields: [] };
+    const preset: any = {
+      sectors: [{ id: 'sidebar', role: 'sidebar' }, { id: 'main', role: 'main' }],
+      sectionOrder: [{ sectorRole: 'sidebar', sectionIds: ['frase'] }]
+    };
+
+    const result = applyTemplateMode(
+      { sectionVisibility: {}, sectionOrders: { primaria: [], secundaria: [] } },
+      format,
+      preset,
+      'full-template'
+    );
+
+    expect(result.sectionOrders.secundaria).toContain('frase');
+    expect(result.sectionOrders.primaria).not.toContain('frase');
   });
 });
