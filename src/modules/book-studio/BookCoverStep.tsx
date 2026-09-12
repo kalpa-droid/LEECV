@@ -131,7 +131,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
 
           {coverData.imageUri && (
             <div className="space-y-4">
-              <div className="relative w-full aspect-[1/1.41] max-w-[200px] mx-auto rounded-lg overflow-hidden border border-[var(--ui-border)] shadow-md bg-[var(--ui-bg-hover)]">
+              <div className={`relative w-full aspect-[1/1.41] max-w-[200px] mx-auto rounded-[${radius.control}] overflow-hidden border border-[var(--ui-border)] shadow-[var(--shadow-raised)] bg-[var(--ui-bg-hover)]`}>
                 <img 
                   src={coverData.imageUri} 
                   alt="Vista previa tapa subida" 

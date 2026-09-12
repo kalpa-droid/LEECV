@@ -33,7 +33,7 @@ export const PresetTransitionOverlay: React.FC<PresetTransitionOverlayProps> = (
       className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-[6px] transition-all duration-200 animate-fadeIn pointer-events-none ${className}`}
     >
       <div 
-        className={`px-6 py-5 rounded-[${radius.modal}] bg-[var(--ui-bg-card)] border-2 border-[var(--color-secondary-bright)]/40 ${elevationSystem.floating} shadow-2xl flex flex-col items-center gap-3 text-center max-w-xs sm:max-w-sm pointer-events-auto`}
+        className={`px-6 py-5 rounded-[${radius.modal}] bg-[var(--ui-bg-card)] border-2 border-[var(--color-secondary-bright)]/40 ${elevationSystem.floating} flex flex-col items-center gap-3 text-center max-w-xs sm:max-w-sm pointer-events-auto`}
       >
         {/* Pluma Antigua Rotatoria de Caligrafía */}
         <VintageQuillLoader size={52} />

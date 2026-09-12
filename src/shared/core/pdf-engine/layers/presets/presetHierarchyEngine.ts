@@ -1,8 +1,10 @@
 import { getCvFormat, resolveActiveFormatId } from '../../../formats/cvFormatRegistry';
 import { applyTemplateMode, TemplateApplicationMode } from './templateApplicationEngine';
 import { resolveActivePreset } from './presetRegistry';
+import { CANONICAL_SECTION_ORDER } from '../../../sections/canonicalSectionOrder';
 
 export type PresetLevel = 'format' | 'preset' | 'override';
+
 
 export interface ApplyPresetPayload {
   formatId?: string;
@@ -58,6 +60,11 @@ export function applyPresetLevel(cvData: any, level: PresetLevel, payload: Apply
   }
 
   if (level === 'preset' && payload.presetId) {
+    const allVisible: Record<string, boolean> = {};
+    CANONICAL_SECTION_ORDER.forEach((id) => {
+      allVisible[id] = true;
+    });
+
     const updated = {
       ...cvData,
       activePresetId: payload.presetId,
@@ -65,6 +72,7 @@ export function applyPresetLevel(cvData: any, level: PresetLevel, payload: Apply
       colorPresetId: undefined,
       typographyPresetId: undefined,
       columnLayoutPresetId: undefined,
+      sectionVisibility: allVisible,
       theme: { ...(cvData.theme || {}), primaryColor: undefined },
     };
     return {

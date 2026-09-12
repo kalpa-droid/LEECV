@@ -197,7 +197,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         {isDeleted && (
           <div className="absolute inset-0 bg-[var(--color-status-danger-muted)] flex items-center justify-center">
             {/* check-contrast-ignore-next-line: insignia de eliminada sobre overlay de baja opacidad */}
-            <span className="px-2 py-1 bg-[var(--color-status-danger-text)] text-white text-[10px] font-black uppercase rounded shadow-sm">
+            <span className="px-2 py-1 bg-[var(--color-status-danger-text)] text-white text-[10px] font-black uppercase rounded shadow-[var(--shadow-raised)]">
               Eliminada
             </span>
           </div>
@@ -205,7 +205,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
 
         {/* Botón Lupa Hover */}
         <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <div className="p-2 bg-[var(--ui-bg-card)] rounded-full text-[var(--ui-text-primary)] shadow-md">
+          <div className="p-2 bg-[var(--ui-bg-card)] rounded-full text-[var(--ui-text-primary)] shadow-[var(--shadow-raised)]">
             <ZoomIn className="w-4 h-4" />
           </div>
         </div>

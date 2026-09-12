@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, Download, Sparkles, AlertTriangle } from 'lucide-react';
-import { button } from '../uiDesignSystem';
+import { button, radius } from '../uiDesignSystem';
 import { exportAllCVsToZip } from '../utils/jsonImporterExporter';
 import { t } from '../../i18n/useText';
 
@@ -57,24 +57,24 @@ export const GracePeriodBanner: React.FC<GracePeriodBannerProps> = ({
   };
 
   return (
-    <div className="w-full bg-amber-950/80 border border-amber-500/40 rounded-xl p-4 mb-6 backdrop-blur-md shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div className={`w-full bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/40 rounded-[${radius.card}] p-4 mb-6 backdrop-blur-md shadow-[var(--shadow-floating)] flex flex-col md:flex-row items-start md:items-center justify-between gap-4`}>
       <div className="flex items-start gap-3">
-        <div className="p-2.5 rounded-lg bg-amber-900/60 text-amber-200 shrink-0 mt-0.5">
+        <div className={`p-2.5 rounded-[${radius.control}] bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)] shrink-0 mt-0.5`}>
           <AlertTriangle className="w-5 h-5" />
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <h4 className="font-semibold text-amber-200 text-sm">
+            <h4 className="font-semibold text-[var(--color-status-warning-text)] text-sm">
               {t.banners.gracePeriod.title}
             </h4>
             {timeLeftStr && (
-              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-mono bg-amber-900/60 text-amber-200 border border-amber-500/40">
+              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-mono bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)] border border-[var(--color-status-warning-base)]/40">
                 <Clock className="w-3 h-3" />
                 {timeLeftStr} {t.banners.gracePeriod.timeLeftSuffix}
               </span>
             )}
           </div>
-          <p className="text-xs text-amber-100/90 mt-1 max-w-2xl leading-relaxed">
+          <p className="text-xs text-[var(--color-status-warning-text)] mt-1 max-w-2xl leading-relaxed opacity-90">
             {t.banners.gracePeriod.body}
           </p>
         </div>
@@ -84,7 +84,7 @@ export const GracePeriodBanner: React.FC<GracePeriodBannerProps> = ({
         <button
           onClick={handleExportZip}
           disabled={isExporting || cvList.length === 0}
-          className={`${button.secondary} flex items-center justify-center gap-2 text-xs py-2 px-3 bg-amber-900/40 border-amber-500/40 text-amber-200 hover:bg-amber-800/60`}
+          className={`${button.secondary} flex items-center justify-center gap-2 text-xs py-2 px-3 bg-[var(--color-status-warning-muted)] border-[var(--color-status-warning-base)]/40 text-[var(--color-status-warning-text)] hover:opacity-90`}
         >
           <Download className="w-3.5 h-3.5" />
           {isExporting ? t.banners.gracePeriod.exportingZip : t.banners.gracePeriod.downloadZip}
@@ -93,7 +93,7 @@ export const GracePeriodBanner: React.FC<GracePeriodBannerProps> = ({
         {onOpenRetentionModal && (
           <button
             onClick={onOpenRetentionModal}
-            className={`${button.primary} flex items-center justify-center gap-2 text-xs py-2 px-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:opacity-90 shadow-md`}
+            className={`${button.primary} flex items-center justify-center gap-2 text-xs py-2 px-3 hover:opacity-90 shadow-[var(--shadow-raised)]`}
           >
             <Sparkles className="w-3.5 h-3.5" />
             {t.banners.gracePeriod.renewDiscountBtn}
@@ -103,3 +103,4 @@ export const GracePeriodBanner: React.FC<GracePeriodBannerProps> = ({
     </div>
   );
 };
+

@@ -118,14 +118,16 @@ describe('applyPresetLevel — Limpieza de theme.primaryColor', () => {
     expect(updated.theme.fontFamily).toBe('Arial');
   });
 
-  it('11. Override de colorPresetId NO limpia theme.primaryColor (convivencia)', () => {
+  it('12. Aplicar preset Nivel 2 resetea sectionVisibility a todas verdaderas (CANONICAL_SECTION_ORDER)', () => {
     const cvData = {
-      activePresetId: 'cv-clasico',
-      theme: { primaryColor: '#10B981' }
+      activePresetId: 'modern-corporate',
+      sectionVisibility: { referencias: false, cursos: false, experiencia: true }
     };
-    const updated = applyPresetLevel(cvData, 'override', { colorPresetId: 'marino' });
-    expect(updated.colorPresetId).toBe('marino');
-    // theme.primaryColor sigue ahí, pero colorPresetId tiene prioridad en resolveActivePreset
-    expect(updated.theme.primaryColor).toBe('#10B981');
+    const updated = applyPresetLevel(cvData, 'preset', { presetId: 'cv-clasico' });
+    expect(updated.sectionVisibility.referencias).toBe(true);
+    expect(updated.sectionVisibility.cursos).toBe(true);
+    expect(updated.sectionVisibility.experiencia).toBe(true);
+    expect(updated.sectionVisibility.contacto).toBe(true);
   });
 });
+

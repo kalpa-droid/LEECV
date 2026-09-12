@@ -286,7 +286,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
         </p>
         <button
           onClick={() => onNavigate('/crear-cv')}
-          className="bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-transform shadow-xl cursor-pointer"
+          className={`bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] px-8 py-4 rounded-[${radius.card}] font-bold text-lg hover:scale-105 transition-transform shadow-[var(--shadow-floating)] cursor-pointer`}
         >
           {t.landing.nav.cta}
         </button>

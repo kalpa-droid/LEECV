@@ -139,7 +139,7 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
           />
 
           {backCoverData.imageUri && (
-            <div className="relative w-full aspect-[1/1.4] max-w-[200px] mx-auto rounded-lg overflow-hidden border border-[var(--ui-border)] shadow-md">
+            <div className={`relative w-full aspect-[1/1.4] max-w-[200px] mx-auto rounded-[${radius.control}] overflow-hidden border border-[var(--ui-border)] shadow-[var(--shadow-raised)]`}>
               <img src={backCoverData.imageUri} alt="Vista previa contratapa subida" className="w-full h-full object-cover" />
             </div>
           )}

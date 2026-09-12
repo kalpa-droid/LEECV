@@ -258,7 +258,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               activeStep={activeStepTab}
             />
           ) : (
-            <div className="text-center p-10 bg-[var(--ui-bg-card)] rounded-2xl border-2 border-dashed border-[var(--ui-border)] max-w-md space-y-3">
+            <div className={`text-center p-10 bg-[var(--ui-bg-card)] rounded-[${radius.modal}] border-2 border-dashed border-[var(--ui-border)] max-w-md space-y-3`}>
               <h3 className="text-base font-bold text-[var(--ui-text-primary)]">Ningún PDF cargado aún</h3>
               <p className="text-xs text-[var(--ui-text-secondary)]">
                 Carga un archivo PDF en la pestaña lateral para comenzar el montaje en caballete o imprenta.
@@ -266,7 +266,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               <button
                 type="button"
                 onClick={handleTriggerFileInput}
-                className="px-5 py-2.5 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold text-xs rounded-xl hover:opacity-90 transition cursor-pointer"
+                className={`px-5 py-2.5 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold text-xs rounded-[${radius.card}] hover:opacity-90 transition cursor-pointer`}
               >
                 Cargar PDF Ahora
               </button>

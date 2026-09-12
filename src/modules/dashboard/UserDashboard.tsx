@@ -13,7 +13,7 @@ import { getLEECVCloudUsage } from '../../shared/core/storage/leecvCloudBackend'
 import { exportAllCVsToZip, exportCVToZip } from '../../shared/core/utils/jsonImporterExporter';
 import { GracePeriodBanner } from '../../shared/core/ui/GracePeriodBanner';
 import { RetentionOfferModal } from '../payments/components/RetentionOfferModal';
-import { button, badge, glassmorphism, input } from '../../shared/core/uiDesignSystem';
+import { button, badge, glassmorphism, input, radius } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 
 interface UserDashboardProps {
@@ -231,7 +231,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
             {onBackToApp && (
               <button
                 onClick={onBackToApp}
-                className={`${button.ghost} p-2 rounded-lg text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]`}
+                className={`${button.ghost} p-2 rounded-[${radius.control}] text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]`}
                 title={t.dashboard.backToAppTitle}
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -288,7 +288,7 @@ inGracePeriod ? 'bg-[var(--color-status-warning-muted)] text-[var(--color-status
 
         {/* MENSAJES DE ESTADO PUNTUALES */}
         {statusMessage && (
-          <div className={`p-3 rounded-lg text-xs font-medium border flex items-center justify-between ${
+          <div className={`p-3 rounded-[${radius.card}] text-xs font-medium border flex items-center justify-between ${
             statusMessage.type === 'success' ? 'bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/30 text-[var(--color-status-success-text)]' :
             statusMessage.type === 'error' ? 'bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/30 text-[var(--color-status-danger-text)]' :
             'bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 text-[var(--color-secondary-text)]'
@@ -302,7 +302,7 @@ inGracePeriod ? 'bg-[var(--color-status-warning-muted)] text-[var(--color-status
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
           {/* TARJETA 1: LEECV CLOUD / CRÉDITOS DISPONIBLES */}
-          <div className={`rounded-xl p-5 border ${glassmorphism.card} bg-[var(--ui-bg-card)] border-[var(--ui-border)] space-y-3`}>
+          <div className={`rounded-[${radius.card}] p-5 border ${glassmorphism.card} bg-[var(--ui-bg-card)] border-[var(--ui-border)] space-y-3`}>
             {plan === 'enterprise' ? (
               <>
                 <div className="flex items-center justify-between">
@@ -353,7 +353,7 @@ inGracePeriod ? 'bg-[var(--color-status-warning-muted)] text-[var(--color-status
           </div>
 
           {/* TARJETA 2: GOOGLE DRIVE BACKUP */}
-          <div className={`rounded-xl p-5 border ${glassmorphism.card} bg-[var(--ui-bg-card)] border-[var(--ui-border)] space-y-3`}>
+          <div className={`rounded-[${radius.card}] p-5 border ${glassmorphism.card} bg-[var(--ui-bg-card)] border-[var(--ui-border)] space-y-3`}>
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-[var(--ui-text-secondary)] flex items-center gap-1.5">
                 <HardDrive className="w-4 h-4 text-[var(--color-secondary-text)]" />
@@ -375,7 +375,7 @@ inGracePeriod ? 'bg-[var(--color-status-warning-muted)] text-[var(--color-status
           </div>
 
           {/* TARJETA 3: DESCARGA MASIVA */}
-          <div className={`rounded-xl p-5 border ${glassmorphism.card} bg-[var(--ui-bg-card)] border-[var(--ui-border)] flex flex-col justify-between`}>
+          <div className={`rounded-[${radius.card}] p-5 border ${glassmorphism.card} bg-[var(--ui-bg-card)] border-[var(--ui-border)] flex flex-col justify-between`}>
             <div>
               <span className="text-xs font-medium text-[var(--ui-text-secondary)] flex items-center gap-1.5 mb-2">
                 <Download className="w-4 h-4 text-[var(--color-status-success-text)]" />
@@ -398,7 +398,7 @@ inGracePeriod ? 'bg-[var(--color-status-warning-muted)] text-[var(--color-status
         </div>
 
         {/* TABLA Y HERRAMIENTAS DE GESTIÓN */}
-        <div className="bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-xl p-5 space-y-4">
+        <div className={`bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.card}] p-5 space-y-4`}>
 
           {/* BARRA DE BÚSQUEDA Y FILTROS */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -415,7 +415,7 @@ inGracePeriod ? 'bg-[var(--color-status-warning-muted)] text-[var(--color-status
             </div>
 
             {/* PESTAÑAS DE FILTRADO POR ESTADO */}
-            <div className="flex items-center gap-1 bg-[var(--ui-bg-panel)] p-1 rounded-lg border border-[var(--ui-border)] w-full sm:w-auto overflow-x-auto">
+            <div className={`flex items-center gap-1 bg-[var(--ui-bg-panel)] p-1 rounded-[${radius.card}] border border-[var(--ui-border)] w-full sm:w-auto overflow-x-auto`}>
               <button
                 onClick={() => setFilterMode('all')}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
@@ -445,7 +445,7 @@ inGracePeriod ? 'bg-[var(--color-status-warning-muted)] text-[var(--color-status
 
           {/* BARRA DE ACCIONES MASIVAS (CUANDO HAY SELECCIÓN) */}
           {selectedCvIds.size > 0 && (
-            <div className="flex flex-wrap items-center justify-between gap-3 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 p-3 rounded-lg text-xs animate-fade-in">
+            <div className={`flex flex-wrap items-center justify-between gap-3 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 p-3 rounded-[${radius.card}] text-xs animate-fade-in`}>
               <span className="font-medium text-[var(--color-secondary-text)]">
                 {selectedCvIds.size} {selectedCvIds.size === 1 ? 'CV seleccionado' : 'CVs seleccionados'}
               </span>
@@ -478,7 +478,7 @@ inGracePeriod ? 'bg-[var(--color-status-warning-muted)] text-[var(--color-status
           )}
 
           {/* TABLA DE CVS */}
-          <div className="overflow-x-auto rounded-lg border border-[var(--ui-border)]">
+          <div className={`overflow-x-auto rounded-[${radius.card}] border border-[var(--ui-border)]`}>
             <table className="w-full text-left text-xs text-[var(--ui-text-secondary)]">
               <thead className="bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)] font-semibold border-b border-[var(--ui-border)] uppercase tracking-wider">
                 <tr>

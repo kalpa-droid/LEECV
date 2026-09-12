@@ -71,31 +71,31 @@ export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
           Estado del Documento
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-          <div className="p-2.5 rounded-lg bg-[var(--ui-bg-card)] border border-[var(--ui-border)]">
+          <div className={`p-2.5 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)]`}>
             <span className="text-[10px] text-[var(--ui-text-secondary)] block uppercase">Págs. PDF</span>
             <span className="text-base font-bold text-[var(--ui-text-primary)] mt-0.5 block">
               {pdfPageCount}
             </span>
           </div>
-          <div className="p-2.5 rounded-lg bg-[var(--ui-bg-card)] border border-[var(--ui-border)]">
+          <div className={`p-2.5 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)]`}>
             <span className="text-[10px] text-[var(--ui-text-secondary)] block uppercase">Págs. Libro</span>
             <span className="text-base font-bold text-[var(--color-secondary-bright)] mt-0.5 block">
               {finalPageCount}
             </span>
           </div>
-          <div className="p-2.5 rounded-lg bg-[var(--ui-bg-card)] border border-[var(--ui-border)]">
+          <div className={`p-2.5 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)]`}>
             <span className="text-[10px] text-[var(--ui-text-secondary)] block uppercase">Pliegos</span>
             <span className="text-base font-bold text-[var(--color-secondary-bright)] mt-0.5 block">
               {totalSheetsToPrint}
             </span>
           </div>
-          <div className="p-2.5 rounded-lg bg-[var(--ui-bg-card)] border border-[var(--ui-border)]">
+          <div className={`p-2.5 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)]`}>
             <span className="text-[10px] text-[var(--ui-text-secondary)] block uppercase">Rotaciones</span>
             <span className="text-base font-bold text-[var(--color-secondary-bright)] mt-0.5 block">
               {rotatedCount} págs.
             </span>
           </div>
-          <div className="p-2.5 rounded-lg bg-[var(--ui-bg-card)] border border-[var(--ui-border)] col-span-2 sm:col-span-1">
+          <div className={`p-2.5 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] col-span-2 sm:col-span-1`}>
             <span className="text-[10px] text-[var(--ui-text-secondary)] block uppercase">Eliminadas</span>
             <span className="text-base font-bold text-[var(--color-status-danger-text)] mt-0.5 block">
               {deletedCount} págs.

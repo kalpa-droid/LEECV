@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Sparkles, ShieldCheck, ArrowRight, Clock } from 'lucide-react';
 import { dal } from '../../../shared/core/storage/dataAccessLayer';
-import { button, glassmorphism } from '../../../shared/core/uiDesignSystem';
+import { button, glassmorphism, radius, elevationSystem } from '../../../shared/core/uiDesignSystem';
 import { t } from '../../../shared/i18n/useText';
 
 interface RetentionOfferModalProps {
@@ -59,14 +59,14 @@ export const RetentionOfferModal: React.FC<RetentionOfferModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm animate-fade-in">
-      <div className={`relative w-full max-w-lg rounded-2xl p-6 overflow-hidden ${glassmorphism.panel} border-[var(--color-secondary-base)]/40 shadow-2xl bg-[var(--ui-bg-card)]`}>
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in">
+      <div className={`relative w-full max-w-lg rounded-[${radius.modal}] p-6 overflow-hidden ${glassmorphism.panel} border-[var(--color-secondary-base)]/40 ${elevationSystem.overlay} bg-[var(--ui-bg-card)]`}>
         {/* Glow de fondo */}
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-[var(--color-secondary-base)]/20 rounded-full blur-3xl pointer-events-none" />
 
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] hover:bg-[var(--ui-border)]/20 transition-colors"
+          className={`absolute top-4 right-4 p-1.5 rounded-[${radius.control}] text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] hover:bg-[var(--ui-border)]/20 transition-colors`}
           aria-label={t.common.actions.close}
         >
           <X className="w-5 h-5" />
@@ -87,7 +87,7 @@ export const RetentionOfferModal: React.FC<RetentionOfferModalProps> = ({
           {t.retention.offerModal.body}
         </p>
 
-        <div className="space-y-3 mb-6 bg-[var(--ui-bg-panel)] rounded-xl p-4 border border-[var(--ui-border)]">
+        <div className={`space-y-3 mb-6 bg-[var(--ui-bg-panel)] rounded-[${radius.card}] p-4 border border-[var(--ui-border)]`}>
           <div className="flex items-start gap-3">
             <ShieldCheck className="w-5 h-5 text-[var(--color-secondary-text)] shrink-0 mt-0.5" />
             <div className="text-xs text-[var(--ui-text-secondary)]">
@@ -108,7 +108,7 @@ export const RetentionOfferModal: React.FC<RetentionOfferModalProps> = ({
         <div className="flex items-center gap-3">
           <button
             onClick={handleCheckout}
-            className={`${button.primary} w-full flex items-center justify-center gap-2 py-3 bg-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-hover)] font-semibold text-sm shadow-lg border-none`}
+            className={`${button.primary} w-full flex items-center justify-center gap-2 py-3 bg-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-hover)] font-semibold text-sm ${elevationSystem.floating} border-none`}
           >
             {t.retention.offerModal.buttonPrefix} {discountPercent}{t.retention.offerModal.buttonSuffix}
             <ArrowRight className="w-4 h-4" />

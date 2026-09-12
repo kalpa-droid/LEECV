@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check } from 'lucide-react';
 import { MarketingCTA } from './MarketingCTA';
+import { radius } from '../../uiDesignSystem';
 
 export interface ProductDetailBlockProps {
   reverse?: boolean;
@@ -29,8 +30,8 @@ export const ProductDetailBlock: React.FC<ProductDetailBlockProps> = ({
     >
       {/* Image Preview Container */}
       <div className="w-full lg:w-1/2">
-        <div className="relative rounded-2xl p-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] shadow-xl overflow-hidden group">
-          <div className="relative aspect-[16/10] w-full rounded-xl overflow-hidden bg-[var(--ui-bg-panel)]">
+        <div className={`relative rounded-[${radius.modal}] p-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] shadow-[var(--shadow-floating)] overflow-hidden group`}>
+          <div className={`relative aspect-[16/10] w-full rounded-[${radius.card}] overflow-hidden bg-[var(--ui-bg-panel)]`}>
             <img
               src={image}
               alt={title}

@@ -81,7 +81,7 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ onNavigateHome, onNaviga
       <header className="sticky top-0 z-30 bg-[var(--ui-bg-panel)]/80 backdrop-blur-xl border-b border-[var(--ui-border)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer" onClick={onNavigateHome}>
-            <button className="p-2 rounded-xl text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-card)] transition-colors cursor-pointer">
+            <button className={`p-2 rounded-[${radius.control}] text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-card)] transition-colors cursor-pointer`}>
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2">

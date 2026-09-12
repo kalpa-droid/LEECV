@@ -225,7 +225,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
             <button
               type="button"
               onClick={() => onNavigate(prevPage)}
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-10 px-3 py-2 rounded-xl bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold text-xs flex items-center gap-1 hover:opacity-90 transition cursor-pointer shadow-lg"
+              className={`absolute left-3 top-1/2 -translate-y-1/2 z-10 px-3 py-2 rounded-[${radius.control}] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold text-xs flex items-center gap-1 hover:opacity-90 transition cursor-pointer shadow-[var(--shadow-floating)]`}
               title={`Ir a página ${prevPage}`}
             >
               <ChevronLeft className="w-4 h-4" />
@@ -237,7 +237,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
             <button
               type="button"
               onClick={() => onNavigate(nextPage)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 px-3 py-2 rounded-xl bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold text-xs flex items-center gap-1 hover:opacity-90 transition cursor-pointer shadow-lg"
+              className={`absolute right-3 top-1/2 -translate-y-1/2 z-10 px-3 py-2 rounded-[${radius.control}] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold text-xs flex items-center gap-1 hover:opacity-90 transition cursor-pointer shadow-[var(--shadow-floating)]`}
               title={`Ir a página ${nextPage}`}
             >
               <span className="hidden sm:inline">Siguiente ({nextPage})</span>
@@ -254,13 +254,13 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
 
           <canvas
             ref={canvasRef}
-            className={`max-w-full max-h-[70vh] object-contain shadow-2xl rounded-sm ${
+            className={`max-w-full max-h-[70vh] object-contain shadow-[var(--shadow-overlay)] rounded-sm ${
               isLoading ? 'hidden' : 'block'
             } ${isDeleted ? 'opacity-50 grayscale' : ''}`}
           />
 
           {isDeleted && (
-            <div className="absolute top-4 left-4 px-3 py-1.5 rounded-lg bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/40 text-[var(--color-status-danger-text)] font-bold text-xs shadow-md">
+            <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-[${radius.control}] bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/40 text-[var(--color-status-danger-text)] font-bold text-xs shadow-[var(--shadow-raised)]`}>
               PÁGINA ELIMINADA
             </div>
           )}
@@ -405,7 +405,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
                     max={70}
                     value={localSplitOffset}
                     onChange={(e) => handleSplitOffsetChangeLocal(parseInt(e.target.value, 10))}
-                    className="w-full h-1.5 bg-[var(--ui-bg-panel)] rounded-lg appearance-none cursor-pointer accent-[var(--color-accent-base)]"
+                    className={`w-full h-1.5 bg-[var(--ui-bg-panel)] rounded-[${radius.control}] appearance-none cursor-pointer accent-[var(--color-accent-base)]`}
                   />
 
                   <div className="flex items-center justify-between text-[10px] text-[var(--ui-text-secondary)]">

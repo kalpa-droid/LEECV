@@ -51,12 +51,12 @@ export const PlanFeatureCard: React.FC<PlanFeatureCardProps> = ({
     <div
       className={`relative flex flex-col justify-between p-6 rounded-[16px] transition-all duration-200 ${
         highlighted
-          ? 'bg-[var(--ui-bg-panel)] border-2 border-[var(--color-accent-base)] shadow-2xl shadow-[var(--color-accent-base)]/10 scale-[1.02] z-10'
+          ? 'bg-[var(--ui-bg-panel)] border-2 border-[var(--color-accent-base)] shadow-[var(--shadow-overlay)] scale-[1.02] z-10'
           : 'bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--ui-border-strong)]'
       }`}
     >
       {highlighted && (
-        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-xs font-bold uppercase tracking-wider flex items-center gap-1 shadow-md">
+        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-xs font-bold uppercase tracking-wider flex items-center gap-1 shadow-[var(--shadow-raised)]">
           <Sparkles className="w-3.5 h-3.5" />
           <span>{t.pricing.mostRecommendedBadge}</span>
         </div>
@@ -113,7 +113,7 @@ export const PlanFeatureCard: React.FC<PlanFeatureCardProps> = ({
           onClick={() => onSelectPlan(planId)}
           className={`w-full py-3 px-4 rounded-[10px] font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 ${
             highlighted
-              ? 'bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-hover)] text-[var(--color-accent-on-base)] shadow-lg shadow-[var(--color-accent-base)]/25'
+              ? 'bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-hover)] text-[var(--color-accent-on-base)] shadow-[var(--shadow-floating)]'
               : 'bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-bg-card)] border border-[var(--ui-border)] text-[var(--ui-text-primary)]'
           }`}
         >

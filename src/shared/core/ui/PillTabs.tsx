@@ -31,7 +31,7 @@ export const PillTabs: React.FC<PillTabsProps> = ({
   return (
     <div
       role="tablist"
-      className={`inline-flex items-center p-1.5 rounded-[12px] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] shadow-sm ${className}`}
+      className={`inline-flex items-center p-1.5 rounded-[12px] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] shadow-[var(--shadow-raised)] ${className}`}
     >
       {tabs.map((tab) => {
         const isActive = tab.id === activeTabId;
@@ -46,7 +46,7 @@ export const PillTabs: React.FC<PillTabsProps> = ({
             onClick={() => onChange(tab.id)}
             className={`inline-flex items-center justify-center font-semibold rounded-[9px] transition-all cursor-pointer select-none ${sizeClasses} ${
               isActive
-                ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] border border-[var(--color-accent-base)]/30 shadow-md'
+                ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] border border-[var(--color-accent-base)]/30 shadow-[var(--shadow-raised)]'
                 : 'text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-card)]'
             }`}
           >

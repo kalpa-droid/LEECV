@@ -67,7 +67,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
 
   if (!selectedFile) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 px-4 text-center space-y-3 bg-[var(--ui-bg-card)] rounded-2xl border-2 border-dashed border-[var(--ui-border)] w-full">
+      <div className={`flex flex-col items-center justify-center py-16 px-4 text-center space-y-3 bg-[var(--ui-bg-card)] rounded-[${radius.modal}] border-2 border-dashed border-[var(--ui-border)] w-full`}>
         {/* check-contrast-ignore-next-line: ícono decorativo grande, no es texto de lectura */}
         <FileText className="w-12 h-12 text-[var(--ui-text-muted)]" />
         <h3 className="text-base font-bold text-[var(--ui-text-primary)]">Ningún PDF Cargado</h3>
@@ -204,7 +204,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
             <button
               type="button"
               onClick={() => setShowDeletedPages(!showDeletedPages)}
-              className="px-2.5 py-1 rounded-lg bg-[var(--ui-bg-surface)] hover:bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-xs font-semibold text-[var(--ui-text-primary)] transition cursor-pointer flex items-center gap-1.5"
+              className={`px-2.5 py-1 rounded-[${radius.control}] bg-[var(--ui-bg-surface)] hover:bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-xs font-semibold text-[var(--ui-text-primary)] transition cursor-pointer flex items-center gap-1.5`}
             >
               {showDeletedPages ? 'Ocultar eliminadas' : 'Ver páginas eliminadas'}
             </button>
@@ -228,7 +228,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
       >
         {/* Tarjeta de Tapa / Portada */}
         {(options.hasCover || options.customCover) && (
-          <div className="p-3 bg-[var(--ui-bg-surface)] border-2 border-[var(--color-accent-base)] rounded-xl flex flex-col items-center justify-between text-center min-h-[200px] space-y-2 relative shadow-md select-none">
+          <div className={`p-3 bg-[var(--ui-bg-surface)] border-2 border-[var(--color-accent-base)] rounded-[${radius.card}] flex flex-col items-center justify-between text-center min-h-[200px] space-y-2 relative shadow-[var(--shadow-raised)] select-none`}>
             <span className="px-2 py-0.5 rounded bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold text-[10px] uppercase tracking-wider">
               Portada / Tapa
             </span>
@@ -256,7 +256,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
 
         {/* Hoja en blanco inyectada detrás de la portada (Retiro de tapa) */}
         {(options.hasCover || options.customCover) && options.blankBehindCover !== false && (
-          <div className="p-3 bg-[var(--ui-bg-surface)] border-2 border-dashed border-[var(--ui-border)] rounded-xl flex flex-col items-center justify-between text-center min-h-[200px] space-y-2 relative shadow-sm select-none opacity-80">
+          <div className={`p-3 bg-[var(--ui-bg-surface)] border-2 border-dashed border-[var(--ui-border)] rounded-[${radius.card}] flex flex-col items-center justify-between text-center min-h-[200px] space-y-2 relative shadow-[var(--shadow-raised)] select-none opacity-80`}>
             <span className="px-2 py-0.5 rounded bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] font-bold text-[10px] tracking-wider border border-[var(--ui-border)]">
               HOJA EN BLANCO
             </span>
@@ -278,7 +278,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
             return (
               <div
                 key={itemStr}
-                className="p-3 bg-[var(--ui-bg-surface)] border-2 border-dashed border-[var(--ui-border)] rounded-xl flex flex-col items-center justify-between text-center min-h-[200px] space-y-2 relative select-none"
+                className={`p-3 bg-[var(--ui-bg-surface)] border-2 border-dashed border-[var(--ui-border)] rounded-[${radius.card}] flex flex-col items-center justify-between text-center min-h-[200px] space-y-2 relative select-none`}
               >
                 <span className="px-2 py-0.5 rounded bg-[var(--color-secondary-muted)] text-[var(--color-secondary-bright)] font-bold text-[10px]">
                   HOJA EN BLANCO
@@ -322,7 +322,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
 
         {/* Hoja en blanco inyectada antes de la contratapa */}
         {(options.hasBackCover || options.customBackCover) && options.blankInFrontBackCover !== false && (
-          <div className="p-3 bg-[var(--ui-bg-surface)] border-2 border-dashed border-[var(--ui-border)] rounded-xl flex flex-col items-center justify-between text-center min-h-[200px] space-y-2 relative shadow-sm select-none opacity-80">
+          <div className={`p-3 bg-[var(--ui-bg-surface)] border-2 border-dashed border-[var(--ui-border)] rounded-[${radius.card}] flex flex-col items-center justify-between text-center min-h-[200px] space-y-2 relative shadow-[var(--shadow-raised)] select-none opacity-80`}>
             <span className="px-2 py-0.5 rounded bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] font-bold text-[10px] tracking-wider border border-[var(--ui-border)]">
               HOJA EN BLANCO
             </span>
@@ -337,7 +337,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
 
         {/* Tarjeta de Contratapa */}
         {(options.hasBackCover || options.customBackCover) && (
-          <div className="p-3 bg-[var(--ui-bg-surface)] border-2 border-[var(--color-secondary-base)] rounded-xl flex flex-col items-center justify-between text-center min-h-[200px] space-y-2 relative shadow-md select-none">
+          <div className={`p-3 bg-[var(--ui-bg-surface)] border-2 border-[var(--color-secondary-base)] rounded-[${radius.card}] flex flex-col items-center justify-between text-center min-h-[200px] space-y-2 relative shadow-[var(--shadow-raised)] select-none`}>
             <span className="px-2 py-0.5 rounded bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] font-bold text-[10px] uppercase tracking-wider">
               Contratapa
             </span>

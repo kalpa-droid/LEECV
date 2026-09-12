@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Check, X } from 'lucide-react';
 import { setConsentStatus } from '../analytics/analyticsService';
-import { button } from '../uiDesignSystem';
+import { button, radius, elevationSystem } from '../uiDesignSystem';
 
 const CONSENT_KEY = 'leecv_cookie_consent';
 
@@ -36,9 +36,9 @@ export const CookieConsentBanner: React.FC = () => {
       aria-label="Consentimiento de cookies"
       className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:max-w-md z-50 animate-in fade-in slide-in-from-bottom-5 duration-300"
     >
-      <div className="bg-[var(--ui-bg-panel)] backdrop-blur-md border border-[var(--color-neutral-border)] shadow-2xl rounded-2xl p-4 text-[var(--color-neutral-text-primary)]">
+      <div className={`bg-[var(--ui-bg-panel)] backdrop-blur-md border border-[var(--color-neutral-border)] ${elevationSystem.overlay} rounded-[${radius.modal}] p-4 text-[var(--color-neutral-text-primary)]`}>
         <div className="flex items-start gap-3">
-          <div className="p-2 rounded-xl bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] shrink-0 mt-0.5">
+          <div className={`p-2 rounded-[${radius.card}] bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] shrink-0 mt-0.5`}>
             <Shield className="w-5 h-5" />
           </div>
 

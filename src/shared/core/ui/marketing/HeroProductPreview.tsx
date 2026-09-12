@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { PillTabs, PillTabItem } from '../PillTabs';
+import { displayScale, elevationSystem, radius } from '../../uiDesignSystem';
 import { FileText, CreditCard, BookOpen, ArrowRight } from 'lucide-react';
 
 export interface ProductPreviewItem {
@@ -39,8 +40,8 @@ export const HeroProductPreview: React.FC<HeroProductPreviewProps> = ({
       />
 
       {/* Preview Card Showcase */}
-      <div className="relative w-full max-w-4xl rounded-2xl p-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] shadow-2xl overflow-hidden group">
-        <div className="relative aspect-[16/9] w-full rounded-xl overflow-hidden bg-[var(--ui-bg-panel)] flex items-center justify-center">
+      <div className={`relative w-full max-w-4xl rounded-[${radius.modal}] p-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] shadow-[var(--shadow-overlay)] overflow-hidden group`}>
+        <div className={`relative aspect-[16/9] w-full rounded-[${radius.card}] overflow-hidden bg-[var(--ui-bg-panel)] flex items-center justify-center`}>
           <img
             src={activeProduct.image}
             alt={activeProduct.label}
@@ -64,7 +65,7 @@ export const HeroProductPreview: React.FC<HeroProductPreviewProps> = ({
             <button
               type="button"
               onClick={() => onSelectRoute(activeProduct.route)}
-              className="px-5 py-2.5 rounded-xl bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-hover)] text-[var(--color-accent-on-base)] font-bold text-sm shadow-lg shadow-[var(--color-accent-base)]/40 flex items-center gap-2 transition-all cursor-pointer hover:scale-105 active:scale-95"
+              className={`px-5 py-2.5 rounded-[${radius.card}] bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-hover)] text-[var(--color-accent-on-base)] font-bold text-sm shadow-[var(--shadow-floating)] flex items-center gap-2 transition-all cursor-pointer hover:scale-105 active:scale-95`}
             >
               <span>Crear el mío</span>
               <ArrowRight className="w-4 h-4" />

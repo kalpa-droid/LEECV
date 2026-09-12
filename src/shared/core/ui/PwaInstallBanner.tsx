@@ -89,7 +89,7 @@ export function PwaInstallBanner() {
     >
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-xl bg-[var(--color-primary-base)] flex items-center justify-center text-[var(--color-primary-on-base)] shrink-0 shadow-md">
+          <div className={`w-10 h-10 rounded-[${radius.card}] bg-[var(--color-primary-base)] flex items-center justify-center text-[var(--color-primary-on-base)] shrink-0 ${elevationSystem.raised}`}>
             <Smartphone className="w-5 h-5" />
           </div>
           <div>
@@ -140,7 +140,7 @@ export function PwaInstallBanner() {
         <button
           type="button"
           onClick={handleInstallClick}
-          className="px-4 py-1.5 bg-[var(--color-secondary-base)] hover:opacity-90 text-[var(--color-secondary-on-base)] font-black text-xs rounded-full transition cursor-pointer flex items-center gap-1.5 shadow-md active:scale-95"
+          className={`px-4 py-1.5 bg-[var(--color-secondary-base)] hover:opacity-90 text-[var(--color-secondary-on-base)] font-black text-xs rounded-full transition cursor-pointer flex items-center gap-1.5 ${elevationSystem.raised} active:scale-95`}
         >
           <Download className="w-3.5 h-3.5" />
           <span>{t.banners.pwaInstall.installBtn}</span>

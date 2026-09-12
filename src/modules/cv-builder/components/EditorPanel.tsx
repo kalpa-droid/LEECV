@@ -43,6 +43,8 @@ import { getUiHint } from '../../../shared/core/uiTextGlossary';
 import { applyPresetLevel } from '../../../shared/core/pdf-engine/layers/presets/presetHierarchyEngine';
 import { activateSection } from '../../../shared/core/sections/sectionActivationEngine';
 import { triggerPresetTransition } from '../../../shared/core/pdf-engine/layers/presets/presetTransitionEngine';
+import { getEffectiveCoverFeaturedItems } from '../../../shared/core/pdf-engine/layers/sectors/coverFeaturedEngine';
+
 
 import { useToast } from '../../../shared/core/ui/Toast';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
@@ -1626,7 +1628,7 @@ export default function EditorPanel({
                               }
                             }));
                           }}
-                          className="w-full h-1.5 bg-[var(--ui-bg-panel)] rounded-lg appearance-none cursor-pointer accent-[var(--color-secondary-base)]"
+                          className={`w-full h-1.5 bg-[var(--ui-bg-panel)] rounded-[${radius.control}] appearance-none cursor-pointer accent-[var(--color-secondary-base)]`}
                         />
                         <div className="flex justify-between text-[10px] text-[var(--color-neutral-text-secondary)] font-medium">
                           <span>Mínimo (32%)</span>
@@ -1679,7 +1681,7 @@ export default function EditorPanel({
                 <label 
                   className={`flex items-center gap-3 p-2.5 rounded-[${radius.card}] border transition-all cursor-pointer ${
                     cvData.theme?.primaryColor && /^#[0-9A-Fa-f]{3,6}$/i.test(cvData.theme.primaryColor) && !cvData.colorPresetId
-                      ? `border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 shadow-sm` 
+                      ? `border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 shadow-[var(--shadow-raised)]` 
                       : `border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]`
                   }`}
                 >
@@ -1700,7 +1702,7 @@ export default function EditorPanel({
                         theme: { ...(prev.theme || {}), primaryColor: hex }
                       }));
                     }}
-                    className="w-8 h-8 rounded-md border shadow-sm cursor-pointer"
+                    className="w-8 h-8 rounded-md border shadow-[var(--shadow-raised)] cursor-pointer"
                     style={{
                       borderColor: 'var(--ui-border)',
                       padding: 0,
@@ -1842,79 +1844,110 @@ export default function EditorPanel({
               {cvData.showCoverPage !== false && (
                 <>
                   {/* Registros Destacados en Portada (Solo Títulos, con botón Agregar/Eliminar) */}
-                  <div className={`p-3 bg-[var(--ui-bg-card)] rounded-[${radius.card}] border border-[var(--color-neutral-border)] space-y-3`}>
-                    <div className="flex items-center justify-between">
-                      <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">
-                        Registros Destacados en Portada ({cvData.roles?.length || 0})
-                      </label>
-                    </div>
-                    
-                    {/* Selector Desplegable para Agregar Registro Ingresado (Muestra SOLO el título) */}
-                    <div className="space-y-1.5">
-                      <label className="block text-[11px] font-medium text-[var(--color-neutral-text-secondary)]">
-                        Seleccionar título de registros cargados:
-                      </label>
-                      <select
-                        onChange={(e) => {
-                          const selectedTitle = e.target.value;
-                          if (selectedTitle) {
-                            if (!cvData.roles?.includes(selectedTitle)) {
-                              setCvData((prev: any) => ({
-                                ...prev,
-                                roles: [...(prev.roles || []), selectedTitle]
-                              }));
-                            } else {
-                              showWarning('Este título ya está agregado a la portada.');
-                            }
-                            e.target.value = '';
-                          }
-                        }}
-                        defaultValue=""
-                        className={`w-full text-xs p-2.5 rounded-[${radius.card}] border border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer`}
-                      >
-                        <option value="" disabled>-- Seleccionar título para destacar --</option>
-                        {[
-                          ...(cvData.education || []).map((e: any) => e.degree).filter(Boolean),
-                          ...(cvData.profession || []).map((p: any) => p.degree).filter(Boolean),
-                          ...(cvData.experience || []).map((x: any) => x.role).filter(Boolean),
-                          ...(cvData.coursesAndCertificates || []).map((c: any) => c.title || c.course).filter(Boolean),
-                          ...(cvData.customSections || []).flatMap((cs: any) => (cs.records || []).map((r: any) => r.tituloOGrado || r.cargo || r.title)).filter(Boolean)
-                        ].map((titleStr: string, idx: number) => (
-                          <option key={idx} value={titleStr}>
-                            {titleStr}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                  {(() => {
+                    const effectiveCoverItems = getEffectiveCoverFeaturedItems(cvData);
+                    return (
+                      <div className={`p-3 bg-[var(--ui-bg-card)] rounded-[${radius.card}] border border-[var(--color-neutral-border)] space-y-3`}>
+                        <div className="flex items-center justify-between">
+                          <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">
+                            Registros Destacados en Portada ({effectiveCoverItems.length})
+                          </label>
+                        </div>
+                        
+                        {/* Selector Desplegable para Agregar Registro Ingresado */}
+                        <div className="space-y-1.5">
+                          <label className="block text-[11px] font-medium text-[var(--color-neutral-text-secondary)]">
+                            Seleccionar título de registros cargados:
+                          </label>
+                          <select
+                            onChange={(e) => {
+                              const selectedTitle = e.target.value;
+                              if (selectedTitle) {
+                                if (!cvData.roles?.includes(selectedTitle)) {
+                                  setCvData((prev: any) => ({
+                                    ...prev,
+                                    roles: [...(prev.roles || []), selectedTitle]
+                                  }));
+                                } else {
+                                  showWarning('Este título ya está agregado a la portada.');
+                                }
+                                e.target.value = '';
+                              }
+                            }}
+                            defaultValue=""
+                            className={`w-full text-xs p-2.5 rounded-[${radius.card}] border border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer`}
+                          >
+                            <option value="" disabled>-- Seleccionar título para destacar --</option>
+                            {[
+                              ...(cvData.education || []).map((e: any) => e.degree).filter(Boolean),
+                              ...(cvData.profession || []).map((p: any) => p.degree).filter(Boolean),
+                              ...(cvData.experience || []).map((x: any) => x.role).filter(Boolean),
+                              ...(cvData.coursesAndCertificates || []).map((c: any) => c.title || c.course).filter(Boolean),
+                              ...(cvData.customSections || []).flatMap((cs: any) => (cs.records || []).map((r: any) => r.tituloOGrado || r.cargo || r.title)).filter(Boolean)
+                            ].map((titleStr: string, idx: number) => (
+                              <option key={idx} value={titleStr}>
+                                {titleStr}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
 
-                    {/* Lista de Registros Destacados con Botón de Eliminar */}
-                    <div className="space-y-1.5 pt-2">
-                      {(!cvData.roles || cvData.roles.length === 0) ? (
-                        <p className={`text-xs text-[var(--color-neutral-text-secondary)] italic text-center py-2 border border-dashed border-[var(--color-neutral-border)] rounded-[${radius.card}]`}>
-                          No hay registros destacados en la portada aún.
-                        </p>
-                      ) : (
-                        cvData.roles.map((role: string, idx: number) => (
-                          <div key={idx} className={`flex items-center justify-between p-2 bg-[var(--ui-bg-card)] rounded-[${radius.control}] border border-[var(--color-neutral-border)] text-xs`}>
-                            <span className="font-bold text-[var(--color-neutral-text-primary)]">{role}</span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setCvData((prev: any) => ({
-                                  ...prev,
-                                  roles: (prev.roles || []).filter((_: any, i: number) => i !== idx)
-                                }));
-                              }}
-                              className="p-1 text-[var(--color-status-danger-text)] hover:bg-[var(--color-status-danger-muted)] rounded transition cursor-pointer"
-                              title="Eliminar de portada"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        ))
-                      )}
+                        {/* Lista de Registros Destacados con Indicadores Claros */}
+                        <div className="space-y-1.5 pt-2">
+                          {effectiveCoverItems.length === 0 ? (
+                            <p className={`text-xs text-[var(--color-neutral-text-secondary)] italic text-center py-2 border border-dashed border-[var(--color-neutral-border)] rounded-[${radius.card}]`}>
+                              No hay registros ni títulos destacados en la portada aún.
+                            </p>
+                          ) : (
+                            effectiveCoverItems.map((item, idx) => (
+                              <div key={item.id || idx} className={`flex items-center justify-between p-2 bg-[var(--ui-bg-card)] rounded-[${radius.control}] border border-[var(--color-neutral-border)] text-xs`}>
+                                <div className="flex flex-col">
+                                  <span className="font-bold text-[var(--color-neutral-text-primary)]">{item.label}</span>
+                                  {item.isFallback && (
+                                    <span className="text-[10px] text-[var(--color-neutral-text-secondary)] italic">
+                                      (Por defecto desde Datos Personales)
+                                    </span>
+                                  )}
+                                  {!item.isFallback && item.source !== 'roles' && (
+                                    <span className="text-[10px] text-[var(--color-neutral-text-secondary)] italic">
+                                      ({item.source === 'education' ? 'Formación Destacada' : 'Profesión Destacada'})
+                                    </span>
+                                  )}
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (item.source === 'roles') {
+                                      // Remove from roles array
+                                      setCvData((prev: any) => ({
+                                        ...prev,
+                                        roles: (prev.roles || []).filter((_: any, i: number) => i !== idx)
+                                      }));
+                                    } else if (item.source === 'education') {
+                                      setCvData((prev: any) => ({ ...prev, coverFeaturedEducationId: undefined }));
+                                    } else if (item.source === 'profession') {
+                                      setCvData((prev: any) => ({ ...prev, coverFeaturedProfessionId: undefined }));
+                                    } else if (item.source === 'titlePrefix') {
+                                      // Override fallback by explicitly setting roles to empty array or setting titlePrefix
+                                      setCvData((prev: any) => ({
+                                        ...prev,
+                                        roles: [],
+                                        personalInfo: { ...(prev.personalInfo || {}), titlePrefix: '' }
+                                      }));
+                                    }
+                                  }}
+                                  className="p-1 text-[var(--color-status-danger-text)] hover:bg-[var(--color-status-danger-muted)] rounded transition cursor-pointer"
+                                  title="Quitar de portada"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            ))
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    );
+                  })()}
 
                   {/* Selector de Presets de Diseño de Portada */}
                   <div className={`p-4 bg-[var(--ui-bg-card)] rounded-[${radius.card}] border border-[var(--color-neutral-border)] space-y-3`}>
@@ -1939,7 +1972,7 @@ export default function EditorPanel({
                             }}
                             className={`p-3 rounded-[12px] border-2 cursor-pointer transition flex flex-col justify-between ${
                               isActive
-                                ? 'bg-[var(--ui-bg-card)] border-[var(--color-accent-base)] ring-2 ring-[var(--color-accent-base)]/40 shadow-lg'
+                                ? 'bg-[var(--ui-bg-card)] border-[var(--color-accent-base)] ring-2 ring-[var(--color-accent-base)]/40 shadow-[var(--shadow-floating)]'
                                 : 'bg-[var(--ui-bg-panel)] border-[var(--ui-border)] hover:border-[var(--color-secondary-bright)] hover:bg-[var(--ui-bg-card)]'
                             }`}
                           >
@@ -1950,7 +1983,7 @@ export default function EditorPanel({
                                   {presetItem.badgeLabel}
                                 </span>
                                 {isActive && (
-                                  <span className="flex items-center gap-1 text-[10px] font-black text-[var(--color-accent-on-base)] bg-[var(--color-accent-base)] px-2.5 py-0.5 rounded-full shadow-sm">
+                                  <span className="flex items-center gap-1 text-[10px] font-black text-[var(--color-accent-on-base)] bg-[var(--color-accent-base)] px-2.5 py-0.5 rounded-full shadow-[var(--shadow-raised)]">
                                     <Check className="w-3 h-3" /> ACTIVO
                                   </span>
                                 )}
@@ -2044,7 +2077,7 @@ export default function EditorPanel({
             <PanelSection icon={<Camera className="w-4 h-4 text-[var(--color-accent-text)]" />} title="Logotipo de Marca / Empresa (Opcional)">
               <div className="p-3 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-3">
                 <div className="flex items-center gap-4 p-3 rounded-[var(--radius-card)] bg-[var(--color-secondary-muted)] border border-[var(--color-neutral-border)]">
-                  <div className="w-16 h-12 rounded-[var(--radius-control)] overflow-hidden bg-[var(--color-neutral-surface)] flex items-center justify-center border border-[var(--color-neutral-border-strong)] shadow-sm">
+                  <div className={`w-16 h-12 rounded-[var(--radius-control)] overflow-hidden bg-[var(--color-neutral-surface)] flex items-center justify-center border border-[var(--color-neutral-border-strong)] shadow-[var(--shadow-raised)]`}>
                     {cvData?.cardOverrides?.logoDataUrl ? (
                       <img src={cvData.cardOverrides.logoDataUrl} alt="Logo" className="w-full h-full object-contain" />
                     ) : (

@@ -25,6 +25,8 @@ import { resolveEffectivePresetSectionOrder, resolveEffectivePresetSectors, CvLa
 import { getCvFormat } from '../../formats/cvFormatRegistry';
 import { getContainerStyle } from '../../styles/containerStyleEngine';
 import { resolveDisplayName } from '../../utils/cvDataSchema';
+import { getCoverFeaturedBadges } from '../layers/sectors/coverFeaturedEngine';
+
 
 function sanitizeSvgDataUrl(dataUrl?: string): string | undefined {
   if (!dataUrl || typeof dataUrl !== 'string') return dataUrl;
@@ -476,25 +478,15 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     }
   });
 
-  const featuredBadges: string[] = [];
-  if (education && coverFeaturedEducationId) {
-    const found = education.find((e: any, idx: number) => String(e.id || idx) === String(coverFeaturedEducationId));
-    if (found?.degree) featuredBadges.push(found.degree);
-  }
-  if (professions && coverFeaturedProfessionId) {
-    const found = professions.find((p: any, idx: number) => String(p.id || idx) === String(coverFeaturedProfessionId));
-    if (found?.degree) featuredBadges.push(found.degree);
-  }
-  if (featuredBadges.length === 0 && Array.isArray(roles) && roles.length > 0) {
-    roles.forEach(r => {
-      if (!r) return;
-      const label = typeof r === 'string' ? r : (r.title || r.role || r.degree || r.name || '');
-      if (label && typeof label === 'string') featuredBadges.push(label);
-    });
-  }
-  if (featuredBadges.length === 0 && personalInfo?.titlePrefix) {
-    featuredBadges.push(personalInfo.titlePrefix);
-  }
+  const featuredBadges = getCoverFeaturedBadges({
+    education,
+    profession: professions,
+    roles,
+    personalInfo,
+    coverFeaturedEducationId,
+    coverFeaturedProfessionId
+  });
+
 
   const renderRecord = (
     rec: ContentRecord, 
