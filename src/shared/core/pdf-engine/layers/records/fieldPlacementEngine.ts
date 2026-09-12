@@ -51,7 +51,7 @@ export function arrangeRecordFields(
 
     if (archetype === 'split-date-left' && idx === 0) {
       sideBadge = b.value;
-    } else if (hint?.position === 'inline-right') {
+    } else if (hint?.position === 'inline-right' && inlineRightBadges.length === 0) {
       inlineRightBadges.push({
         id: b.id,
         role: 'badge',

@@ -9,6 +9,8 @@
  * 5. LATAM Clásico / Ejecutivo (Tradicional 2 Columnas con Foto y Datos Personales)
  */
 
+import { CANONICAL_SECTION_ORDER } from '../sections/canonicalSectionOrder';
+
 export interface CvFormatDefinition {
   id: string;
   name: string;
@@ -65,7 +67,7 @@ export const CV_FORMAT_REGISTRY: Record<string, CvFormatDefinition> = {
     name: 'LATAM Ejecutivo / Tradicional',
     description: 'Formato clásico de 2 columnas ampliamente utilizado en América Latina con foto de perfil y datos completos.',
     columnLayoutPresetId: 'sidebar-left',
-    defaultVisibleSections: ['contacto', 'datos-personales', 'resumen', 'redes', 'experiencia', 'formacion', 'profesion', 'competencias', 'cursos', 'ecologia', 'firma'],
+    defaultVisibleSections: ['contacto', 'datos-personales', 'resumen', 'redes', 'experiencia', 'formacion', 'profesion', 'competencias', 'cursos', 'firma'],
     hiddenPersonalFields: [],
     recommendedPresetIds: ['cv-clasico', 'modern-corporate']
   }
@@ -87,7 +89,7 @@ export function getFormatDefaultVisibility(formatId: string): Record<string, boo
   const visibleSet = new Set(format.defaultVisibleSections);
   const result: Record<string, boolean> = {};
 
-  ['contacto', 'datos-personales', 'frase', 'redes', 'resumen', 'experiencia', 'formacion', 'profesion', 'habilidades', 'competencias', 'idiomas', 'proyectos', 'publicaciones', 'referencias', 'cursos', 'informatica', 'ecologia', 'certificados', 'firma'].forEach((secId) => {
+  CANONICAL_SECTION_ORDER.forEach((secId) => {
     result[secId] = visibleSet.has(secId);
   });
 

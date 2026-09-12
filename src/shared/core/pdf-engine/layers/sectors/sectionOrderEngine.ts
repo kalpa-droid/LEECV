@@ -7,6 +7,9 @@
  * - Garantiza la persistencia simétrica en `cvData.layout.sectionOrders` y `cvData.layout.columnAssignments`.
  */
 
+import { CANONICAL_SECTION_ORDER } from '../../../sections/canonicalSectionOrder';
+import { SECTION_CATALOG } from '../../../sectionRegistry';
+
 export type SectorRoleType = 'primaria' | 'secundaria';
 
 export interface RelativePositionOptions {
@@ -14,6 +17,27 @@ export interface RelativePositionOptions {
   targetSector: SectorRoleType;
   positionMode: 'start' | 'after' | 'end';
   targetAfterId?: string;
+}
+
+export function getCurrentlyVisibleSectionIdsForSector(cvData: any, sectorRole: SectorRoleType): string[] {
+  const targetRoleName = sectorRole === 'secundaria' ? 'sidebar' : 'main';
+  const customAssignments = cvData?.layout?.columnAssignments || {};
+  const visibility = cvData?.sectionVisibility || {};
+
+  return CANONICAL_SECTION_ORDER.filter(secId => {
+    if (visibility[secId] === false) return false;
+
+    const assignedRole = customAssignments[secId];
+    if (assignedRole) {
+      if (sectorRole === 'secundaria' && assignedRole !== 'secundaria') return false;
+      if (sectorRole === 'primaria' && assignedRole !== 'primaria') return false;
+    } else {
+      const catEntry = SECTION_CATALOG.find(s => s.id === secId);
+      const defaultRole = catEntry?.defaultSectorRole || 'main';
+      if (defaultRole !== targetRoleName) return false;
+    }
+    return true;
+  });
 }
 
 /**
@@ -63,12 +87,12 @@ export function applyRelativeSectionPosition(cvData: any, options: RelativePosit
   currentAssignments[cleanSecId] = targetSector;
 
   const currentOrders = cvData?.layout?.sectionOrders || {};
-  let targetList: string[] = Array.isArray(currentOrders[targetSector])
+  let targetList: string[] = Array.isArray(currentOrders[targetSector]) && currentOrders[targetSector].length > 0
     ? [...currentOrders[targetSector]]
-    : [];
-  let otherList: string[] = Array.isArray(currentOrders[otherSector])
+    : getCurrentlyVisibleSectionIdsForSector(cvData, targetSector);
+  let otherList: string[] = Array.isArray(currentOrders[otherSector]) && currentOrders[otherSector].length > 0
     ? [...currentOrders[otherSector]]
-    : [];
+    : getCurrentlyVisibleSectionIdsForSector(cvData, otherSector);
 
   // Remover de la otra columna si estaba presente
   otherList = otherList.filter(id => id !== cleanSecId);

@@ -172,9 +172,9 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
               <Field
                 id="birthDate"
                 label="Fecha de Nacimiento"
+                type="date"
                 value={cvData.personalInfo?.birthDate || ''}
                 onChange={(e: any) => updatePersonalInfo('birthDate', e.target.value)}
-                placeholder="Ej: 4 de febrero de 1982"
               />
 
               <div className="grid grid-cols-2 gap-3">

@@ -94,9 +94,45 @@ if (customSec && customSec.records.length > 0) {
   failed++;
 }
 
+// Assert 4: Cobertura estática de `kind` de registros en TemplateRenderer.tsx
+const rendererPath = path.join(ROOT, 'src/shared/core/pdf-engine/renderer/TemplateRenderer.tsx');
+if (fs.existsSync(rendererPath)) {
+  const rendererCode = fs.readFileSync(rendererPath, 'utf8');
+  const handledKinds = new Set();
+
+  const singleKindRegex = /rec\.kind\s*===\s*['"]([^'"]+)['"]/g;
+  let match;
+  while ((match = singleKindRegex.exec(rendererCode)) !== null) {
+    handledKinds.add(match[1]);
+  }
+
+  const arrayKindRegex = /\[([^\]]+)\]\.includes\(\s*rec\.kind\s*\)/g;
+  while ((match = arrayKindRegex.exec(rendererCode)) !== null) {
+    const kindsStr = match[1];
+    kindsStr.split(',').map(s => s.trim().replace(/['"]/g, '')).forEach(k => handledKinds.add(k));
+  }
+
+  const producedKinds = new Set();
+  renderedSections.forEach(sec => {
+    sec.records.forEach(rec => {
+      if (rec.kind) producedKinds.add(rec.kind);
+    });
+  });
+
+  producedKinds.forEach(kind => {
+    if (handledKinds.has(kind)) {
+      console.log(`  ✓ Kind de registro '${kind}' -> Cobertura de renderizado en TemplateRenderer.tsx OK.`);
+      passed++;
+    } else {
+      console.error(`  ❌ Kind de registro '${kind}' -> FALTA rama de renderizado en TemplateRenderer.tsx.`);
+      failed++;
+    }
+  });
+}
+
 console.log('\n════════════════════════════════════════════════════════════');
 if (failed > 0) {
-  console.error(`❌ AUDITORÍA DE CONEXIÓN PDF FALLIDA: ${failed} secciones no pasaron la verificación.`);
+  console.error(`❌ AUDITORÍA DE CONEXIÓN PDF FALLIDA: ${failed} verificaciones no pasaron.`);
   process.exit(1);
 } else {
   console.log(`✅ AUDITORÍA DE CONEXIÓN PDF EXITOSA: Las ${passed} verificaciones pasaron al 100%.`);

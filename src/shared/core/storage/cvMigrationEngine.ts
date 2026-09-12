@@ -77,7 +77,7 @@ export function migrateCvData(rawCvData: any): any {
     currentVersion = 2;
   }
 
-  // Migration v2 -> v3: Migración de experiences (plural) -> experience (singular) y skillGroups -> skills
+  // Migration v2 -> v3: Migración de experiences -> experience, skillGroups -> skills y fusión de ecology -> projects
   if (currentVersion < 3) {
     migrated.schemaVersion = 3;
     if (Array.isArray(migrated.experiences) && !Array.isArray(migrated.experience)) {
@@ -86,6 +86,33 @@ export function migrateCvData(rawCvData: any): any {
     if (Array.isArray(migrated.skillGroups) && (!Array.isArray(migrated.skills) || migrated.skills.length === 0)) {
       migrated.skills = migrated.skillGroups.flatMap((g: any) => g.skills || []);
     }
+
+    // Fusión de ecology / ecologia hacia projects
+    const ecologyItems = Array.isArray(migrated.ecology)
+      ? migrated.ecology
+      : [
+          ...(Array.isArray(migrated?.ecology?.rural) ? migrated.ecology.rural : []),
+          ...(Array.isArray(migrated?.ecology?.environmental) ? migrated.ecology.environmental : []),
+          ...(Array.isArray(migrated?.ecology?.community) ? migrated.ecology.community : []),
+          ...(Array.isArray(migrated?.ecologia) ? migrated.ecologia : [])
+        ];
+
+    if (ecologyItems.length > 0) {
+      if (!Array.isArray(migrated.projects)) {
+        migrated.projects = [];
+      }
+      ecologyItems.forEach((eco: any) => {
+        migrated.projects.push({
+          ...eco,
+          id: eco.id || `proj_eco_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          title: eco.title || eco.tituloOGrado || eco.course || eco.name || 'Proyecto Ecológico / Sustentable',
+          details: eco.details || eco.description || eco.descripcion || ''
+        });
+      });
+      delete migrated.ecology;
+      delete migrated.ecologia;
+    }
+
     currentVersion = 3;
   }
 

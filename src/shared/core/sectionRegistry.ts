@@ -12,6 +12,8 @@
  * acá, y aparece automáticamente en todos los selectores que la consultan.
  */
 
+import { CANONICAL_SECTION_ORDER } from './sections/canonicalSectionOrder';
+
 export type SectionDataType = 'single_text' | 'record_list';
 export type SectorRole = 'sidebar' | 'main';
 
@@ -38,27 +40,30 @@ export interface SectionCatalogEntry {
   isUniversal?: boolean;
 }
 
-export const SECTION_CATALOG: SectionCatalogEntry[] = [
+const RAW_SECTION_CATALOG: SectionCatalogEntry[] = [
   { id: 'contacto', label: 'Contacto', tabId: 'personales', dataType: 'single_text', defaultSectorRole: 'sidebar', assignableToColumns: true, isUniversal: true },
   { id: 'datos-personales', label: 'Datos Personales', tabId: 'personales', dataType: 'single_text', defaultSectorRole: 'sidebar', assignableToColumns: true, isUniversal: true },
   { id: 'frase', label: 'Titular Profesional', tabId: 'personales', dataType: 'single_text', defaultSectorRole: 'sidebar', coverDisplayFields: ['quote'], assignableToColumns: true, shortLabel: 'Titular', isUniversal: true },
-  { id: 'redes', label: 'Redes Sociales & Enlaces', tabId: 'redes', dataType: 'record_list', defaultSectorRole: 'sidebar', coverDisplayFields: ['url'], assignableToColumns: true, shortLabel: 'Redes', isUniversal: true },
   { id: 'resumen', label: 'Resumen Profesional', tabId: 'resumen', dataType: 'single_text', defaultSectorRole: 'main', assignableToColumns: true, shortLabel: 'Resumen', isUniversal: true },
   { id: 'experiencia', label: 'Experiencia Laboral', tabId: 'experiencia', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['role'], assignableToColumns: true, shortLabel: 'Experiencia', isUniversal: true },
   { id: 'formacion', label: 'Formación Académica', tabId: 'formacion', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['degree'], assignableToColumns: true, shortLabel: 'Formación', isUniversal: true },
   { id: 'profesion', label: 'Títulos Profesionales', tabId: 'profesion', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['title'], assignableToColumns: true, shortLabel: 'Profesión', isUniversal: true },
-  { id: 'habilidades', label: 'Habilidades Técnicas', tabId: 'habilidades', dataType: 'record_list', defaultSectorRole: 'sidebar', assignableToColumns: true, shortLabel: 'Habilidades', isUniversal: true },
-  { id: 'competencias', label: 'Competencias Clave (Soft Skills)', tabId: 'competencias', dataType: 'record_list', defaultSectorRole: 'sidebar', assignableToColumns: true, shortLabel: 'Competencias', isUniversal: true },
-  { id: 'idiomas', label: 'Idiomas', tabId: 'idiomas', dataType: 'record_list', defaultSectorRole: 'sidebar', assignableToColumns: true, shortLabel: 'Idiomas', isUniversal: true },
+  { id: 'cursos', label: 'Cursos & Capacitaciones', tabId: 'cursos', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['title'], assignableToColumns: true, shortLabel: 'Cursos', isUniversal: true },
+  { id: 'informatica', label: 'Informática & TICs', tabId: 'informatica', dataType: 'record_list', defaultSectorRole: 'sidebar', coverDisplayFields: ['title'], assignableToColumns: true, shortLabel: 'Informática', isUniversal: true },
   { id: 'proyectos', label: 'Proyectos', tabId: 'proyectos', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['title'], assignableToColumns: true, shortLabel: 'Proyectos', isUniversal: true },
   { id: 'publicaciones', label: 'Publicaciones', tabId: 'publicaciones', dataType: 'record_list', defaultSectorRole: 'main', assignableToColumns: true, shortLabel: 'Publicaciones', isUniversal: true },
   { id: 'referencias', label: 'Referencias', tabId: 'referencias', dataType: 'record_list', defaultSectorRole: 'main', assignableToColumns: true, shortLabel: 'Referencias', isUniversal: true },
-  { id: 'cursos', label: 'Cursos & Capacitaciones', tabId: 'cursos', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['title'], assignableToColumns: true, shortLabel: 'Cursos', isUniversal: true },
-  { id: 'informatica', label: 'Informática & TICs', tabId: 'informatica', dataType: 'record_list', defaultSectorRole: 'sidebar', coverDisplayFields: ['title'], assignableToColumns: true, shortLabel: 'Informática', isUniversal: true },
-  { id: 'ecologia', label: 'Compromiso Ecológico', tabId: 'ecologia', dataType: 'record_list', defaultSectorRole: 'main', assignableToColumns: true, shortLabel: 'Ecología', isUniversal: true },
+  { id: 'habilidades', label: 'Habilidades Técnicas', tabId: 'habilidades', dataType: 'record_list', defaultSectorRole: 'sidebar', assignableToColumns: true, shortLabel: 'Habilidades', isUniversal: true },
+  { id: 'competencias', label: 'Competencias Clave (Soft Skills)', tabId: 'competencias', dataType: 'record_list', defaultSectorRole: 'sidebar', assignableToColumns: true, shortLabel: 'Competencias', isUniversal: true },
+  { id: 'idiomas', label: 'Idiomas', tabId: 'idiomas', dataType: 'record_list', defaultSectorRole: 'sidebar', assignableToColumns: true, shortLabel: 'Idiomas', isUniversal: true },
+  { id: 'redes', label: 'Redes Sociales & Enlaces', tabId: 'redes', dataType: 'record_list', defaultSectorRole: 'sidebar', coverDisplayFields: ['url'], assignableToColumns: true, shortLabel: 'Redes', isUniversal: true },
   { id: 'certificados', label: 'Certificados Escaneados', tabId: 'certificados', dataType: 'record_list', defaultSectorRole: 'main', assignableToColumns: false, shortLabel: 'Certificados', isUniversal: true },
   { id: 'firma', label: 'Firma Digital', tabId: 'firma', dataType: 'single_text', defaultSectorRole: 'main', assignableToColumns: false, shortLabel: 'Firma', isUniversal: true },
 ];
+
+export const SECTION_CATALOG: SectionCatalogEntry[] = CANONICAL_SECTION_ORDER
+  .map(id => RAW_SECTION_CATALOG.find(s => s.id === id))
+  .filter((s): s is SectionCatalogEntry => s !== undefined);
 
 export function getFullSectionCatalog(customSections: any[] = []): SectionCatalogEntry[] {
   const customEntries: SectionCatalogEntry[] = (customSections || []).map((cs: any) => ({

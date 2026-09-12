@@ -562,8 +562,11 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       );
     }
 
-    if (rec.kind === 'skill') {
+    if (rec.kind === 'skill' || rec.kind === 'languages') {
       const itemSpec = resolveUnifiedTextSpec('body', surfaceHex, sectorRolesColor, preset.typography, 'skill');
+      const label = rec.kind === 'languages'
+        ? `${f.idioma || f.name || ''}${f.nivel ? ` (${f.nivel})` : ''}`
+        : String(f.name || '');
       return (
         <Text
           key={rec.id}
@@ -577,13 +580,13 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
             }
           ]}
         >
-          • {String(f.name || '')}
+          • {label}
         </Text>
       );
     }
 
-    if (rec.kind === 'education') {
-      const designId = customRecordCardDesigns?.education || preset.recordCardDesigns?.education || 'accent-card';
+    if (['education', 'projects', 'publications', 'references'].includes(rec.kind)) {
+      const designId = customRecordCardDesigns?.[rec.kind] || preset.recordCardDesigns?.[rec.kind] || preset.recordCardDesigns?.education || 'accent-card';
       const layout = buildStructuredRecordLayout(f);
 
       return (
@@ -591,8 +594,8 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
           key={rec.id}
           preset={preset}
           designId={designId}
-          title={layout.header || String(f.degree || '')}
-          subtitle={layout.subheader || String(f.institution || '')}
+          title={layout.header || String(f.degree || f.title || f.personaReferencia || '')}
+          subtitle={layout.subheader || String(f.institution || f.cargo || f.autor || '')}
           badges={layout.badges}
           extras={layout.extras}
           description={layout.block || undefined}
@@ -641,6 +644,16 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                 {layout.subheader}
               </Text>
             ) : null}
+            {layout.badges.length > 0 ? (
+              <Text style={[styles.sidebarItemText, { fontSize: (sidebarContactSpec.fontSizePt || 9) - 1, opacity: 0.75 }]}>
+                {layout.badges.map(b => b.value).join(' · ')}
+              </Text>
+            ) : null}
+            {layout.block ? (
+              <Text style={[styles.sidebarItemText, { fontSize: (sidebarContactSpec.fontSizePt || 9) - 1, opacity: 0.85 }]}>
+                {typeof layout.block === 'string' ? layout.block : layout.block.join(' · ')}
+              </Text>
+            ) : null}
           </View>
         );
       }
@@ -665,9 +678,16 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     if (rec.kind === 'social-link') {
       const linkSpec = resolveUnifiedTextSpec('body', surfaceHex, sectorRolesColor, preset.typography, 'social-link');
       return (
-        <Text key={rec.id} style={[styles.sidebarItemText, { color: linkSpec.colorHex, opacity: linkSpec.opacity }]}>
-          {String(f.icon || '🔗')} {String(f.label || f.url || '')}
-        </Text>
+        <View key={rec.id} style={{ marginBottom: 4 }} wrap={false}>
+          <Text style={[styles.sidebarItemText, { color: linkSpec.colorHex, opacity: linkSpec.opacity }]}>
+            {String(f.icon || '🔗')} {String(f.label || '')}
+          </Text>
+          {f.url ? (
+            <Text style={[styles.sidebarItemText, { fontSize: (linkSpec.fontSizePt || 9) - 1, opacity: 0.75 }]}>
+              {String(f.url)}
+            </Text>
+          ) : null}
+        </View>
       );
     }
 

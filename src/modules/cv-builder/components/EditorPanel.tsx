@@ -677,22 +677,7 @@ export default function EditorPanel({
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 7: ECOLOGÍA & PROYECTOS */}
-        {/* ========================================================================= */}
-        {activeTab === 'ecologia' && (
-          <RecordFormSection
-            sectionKey="ecologia"
-            sectionTitle="Proyectos Ecológicos & Sustentables"
-            kindKey="ecology"
-            addLabel="Agregar Proyecto"
-            cvData={cvData}
-            setCvData={setCvData}
-            fieldName="ecology"
-            itemTitlePrefix="Proyecto Ecológico"
-            helpText="Registra iniciativas comunitarias, talleres sobre medio ambiente, huertas orgánicas, proyectos rurales, voluntariados y acciones sociales de impacto sustentable."
-            manualAdjustment={<SectionManualAdjustment sectionId="ecologia" cvData={cvData} setCvData={setCvData} />}
-          />
-        )}
+
 
         {/* ========================================================================= */}
         {/* TAB 8: CERTIFICADOS ESCANEADOS (NUEVO FLUJO SIMPLIFICADO A4) */}
@@ -1108,13 +1093,6 @@ export default function EditorPanel({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                   {[
                     {
-                      id: 'ecologia',
-                      titleText: 'Proyectos Sustentables & Ecológicos',
-                      iconId: 'ecologia',
-                      desc: 'Huertas, medio ambiente, proyectos comunitarios.',
-                      fields: ['tituloOGrado', 'institucion', 'periodo', 'descripcion']
-                    },
-                    {
                       id: 'redes',
                       titleText: 'Redes Sociales & Presencia Digital',
                       iconId: 'redes',
@@ -1171,29 +1149,13 @@ export default function EditorPanel({
                       fields: ['tituloOGrado', 'institucion', 'periodo', 'url']
                     }
                   ].map((presetSec) => {
-                    const isAlreadyAdded = presetSec.id === 'ecologia'
-                      ? cvData.sectionVisibility?.ecologia !== false
-                      : (cvData.customSections || []).some((s: any) => s.id === presetSec.id);
+                    const isAlreadyAdded = (cvData.customSections || []).some((s: any) => s.id === presetSec.id);
 
                     return (
                       <button
                         key={presetSec.id}
                         type="button"
                         onClick={() => {
-                          if (presetSec.id === 'ecologia') {
-                            setCvData((prev: any) => ({
-                              ...prev,
-                              sectionVisibility: {
-                                ...(prev.sectionVisibility || {}),
-                                ecologia: true
-                              },
-                              ecology: Array.isArray(prev.ecology) && prev.ecology.length > 0 ? prev.ecology : [{}],
-                              customSections: (prev.customSections || []).filter((s: any) => s.id !== 'ecologia')
-                            }));
-                            changeActiveTab('ecologia');
-                            showSuccess("Sección 'Proyectos Sustentables & Ecológicos' activada.");
-                            return;
-                          }
 
                           if (isAlreadyAdded) {
                             changeActiveTab(presetSec.id);

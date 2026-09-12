@@ -9,6 +9,8 @@
  */
 
 import { Preset, PresetSectionOrder } from '../presets/presetSchema';
+import { CANONICAL_SECTION_ORDER } from '../../../sections/canonicalSectionOrder';
+import { SECTION_CATALOG } from '../../../sectionRegistry';
 
 export interface CvLayoutOverrides {
   pageSizeId?: string;
@@ -28,10 +30,6 @@ export function resolveEffectivePresetSectionOrder(
   const baseMain = preset.sectionOrder.find(s => s.sectorRole === 'main')?.sectionIds || [];
 
   const hasSidebarSector = Array.isArray(preset.sectors) && preset.sectors.some(s => s.role === 'sidebar');
-
-  if (!layoutOverrides && hasSidebarSector) {
-    return preset.sectionOrder;
-  }
 
   const userSecOrder = layoutOverrides?.sectionOrders?.secundaria;
   const userPrimOrder = layoutOverrides?.sectionOrders?.primaria;
@@ -58,16 +56,46 @@ export function resolveEffectivePresetSectionOrder(
     }
   });
 
+  // Completar secciones del orden canónico que no estén presentes en ningún sector
+  CANONICAL_SECTION_ORDER.forEach(secId => {
+    if (!sidebarIds.includes(secId) && !mainIds.includes(secId)) {
+      const catEntry = SECTION_CATALOG.find(s => s.id === secId);
+      const targetRole = catEntry?.defaultSectorRole || 'main';
+      if (targetRole === 'sidebar' && hasSidebarSector) {
+        sidebarIds.push(secId);
+      } else {
+        mainIds.push(secId);
+      }
+    }
+  });
+
+  const canonicalIndexMap = new Map(CANONICAL_SECTION_ORDER.map((id, idx) => [id, idx]));
+  const sortListByCanonical = (list: string[], baseList: string[]) => {
+    return [...list].sort((a, b) => {
+      const idxAInBase = baseList.indexOf(a);
+      const idxBInBase = baseList.indexOf(b);
+      if (idxAInBase !== -1 && idxBInBase !== -1) {
+        return idxAInBase - idxBInBase;
+      }
+      if (idxAInBase !== -1) return -1;
+      if (idxBInBase !== -1) return 1;
+      return (canonicalIndexMap.get(a) ?? 999) - (canonicalIndexMap.get(b) ?? 999);
+    });
+  };
+
+  const finalSidebar = sortListByCanonical(sidebarIds, Array.isArray(userSecOrder) && userSecOrder.length > 0 ? userSecOrder : baseSidebar);
+  const finalMain = sortListByCanonical(mainIds, Array.isArray(userPrimOrder) && userPrimOrder.length > 0 ? userPrimOrder : baseMain);
+
   if (!hasSidebarSector) {
-    const consolidatedMainIds = [...new Set([...sidebarIds, ...mainIds])];
+    const consolidatedMainIds = [...new Set([...finalSidebar, ...finalMain])];
     return [
       { sectorRole: 'main', sectionIds: consolidatedMainIds }
     ];
   }
 
   return [
-    { sectorRole: 'sidebar', sectionIds: [...new Set(sidebarIds)] },
-    { sectorRole: 'main', sectionIds: [...new Set(mainIds)] }
+    { sectorRole: 'sidebar', sectionIds: [...new Set(finalSidebar)] },
+    { sectorRole: 'main', sectionIds: [...new Set(finalMain)] }
   ];
 }
 

@@ -4,6 +4,7 @@ import { applyRelativeSectionPosition, SectorRoleType } from '../pdf-engine/laye
 import { resolveEffectivePresetSectionOrder } from '../pdf-engine/layers/sectors/layoutResolutionEngine';
 import { resolveActivePreset } from '../pdf-engine/layers/presets/presetRegistry';
 import { getSectionLabel } from '../sectionRegistry';
+import { cvDataToContentSections } from '../pdf-engine/layers/records/cvDataAdapter';
 
 interface SectionPositionControlProps {
   sectionKey: string;
@@ -18,15 +19,18 @@ export function SectionPositionControl({ sectionKey, cvData, setCvData }: Sectio
   const activePreset = resolveActivePreset(cvData);
   const effectiveSectionOrders = resolveEffectivePresetSectionOrder(activePreset, cvData?.layout);
 
+  const activeContentSections = cvDataToContentSections(cvData);
+  const populatedSectionIds = new Set(activeContentSections.map(s => s.id));
+
   const sidebarOrderObj = effectiveSectionOrders.find(s => s.sectorRole === 'sidebar');
   const mainOrderObj = effectiveSectionOrders.find(s => s.sectorRole === 'main');
 
-  const sidebarIds = sidebarOrderObj?.sectionIds || [];
-  const mainIds = mainOrderObj?.sectionIds || [];
+  const sidebarIds = (sidebarOrderObj?.sectionIds || []).filter(id => populatedSectionIds.has(id) || id === cleanSecId);
+  const mainIds = (mainOrderObj?.sectionIds || []).filter(id => populatedSectionIds.has(id) || id === cleanSecId);
 
   const currentSector: SectorRoleType = sidebarIds.includes(cleanSecId) ? 'secundaria' : 'primaria';
   const sameSectorIds = currentSector === 'secundaria' ? sidebarIds : mainIds;
-  const eligibleAfterSections = sameSectorIds.filter(id => id !== cleanSecId);
+  const eligibleAfterSections = sameSectorIds.filter(id => id !== cleanSecId && populatedSectionIds.has(id));
 
   // Determinar la posición actual relativa
   const currentIdx = sameSectorIds.indexOf(cleanSecId);

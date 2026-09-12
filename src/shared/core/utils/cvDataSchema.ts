@@ -119,17 +119,6 @@ export function sanitizeCvData(rawCvData: any = {}) {
           }))
       : [],
 
-    ecology: Array.isArray(data.ecology) && data.ecology.length > 0
-      ? [...data.ecology, ...customEcologyRecs]
-      : [
-          ...(Array.isArray(data.ecology) ? data.ecology : []),
-          ...(Array.isArray(data.ecology?.rural) ? data.ecology.rural : []),
-          ...(Array.isArray(data.ecology?.environmental) ? data.ecology.environmental : []),
-          ...(Array.isArray(data.ecology?.community) ? data.ecology.community : []),
-          ...(Array.isArray(data.ecologia) ? data.ecologia : []),
-          ...customEcologyRecs
-        ],
-
     signature: {
       type: data.signature?.type || 'drawn',
       dataUrl: data.signature?.dataUrl || '',
@@ -156,7 +145,6 @@ export function sanitizeCvData(rawCvData: any = {}) {
       referencias: data.sectionVisibility?.referencias !== false,
       cursos: data.sectionVisibility?.cursos !== false,
       informatica: data.sectionVisibility?.informatica !== false,
-      ecologia: data.sectionVisibility?.ecologia !== false,
       certificados: data.sectionVisibility?.certificados !== false,
       firma: data.sectionVisibility?.firma !== false,
       ...(typeof data.sectionVisibility === 'object' && data.sectionVisibility !== null ? data.sectionVisibility : {})
@@ -179,7 +167,6 @@ export function sanitizeCvData(rawCvData: any = {}) {
         referencias: 'primaria',
         cursos: 'primaria',
         informatica: 'secundaria',
-        ecologia: 'secundaria',
         certificados: 'primaria',
         firma: 'primaria',
         ...(data.layout?.columnAssignments || {})

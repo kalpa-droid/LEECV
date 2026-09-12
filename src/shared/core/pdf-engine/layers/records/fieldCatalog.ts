@@ -16,6 +16,7 @@ export interface FieldDesignHint {
 export interface FieldDefinition {
   id: string;
   label: string;
+  pdfLabel?: string;
   placeholder: string;
   type: 'text' | 'textarea' | 'url';
   pdfRole: 'title' | 'subtitle' | 'badge' | 'description' | 'extra';
@@ -77,7 +78,7 @@ export const FIELD_CATALOG: Record<string, FieldDefinition> = {
     placeholder: 'Ej: Promedio: 9.45 / Summa Cum Laude',
     type: 'text',
     pdfRole: 'badge',
-    designHint: { position: 'inline-right' }
+    designHint: {}
   },
   periodo: {
     id: 'periodo',
@@ -93,7 +94,7 @@ export const FIELD_CATALOG: Record<string, FieldDefinition> = {
     placeholder: 'Ej: 60 hs',
     type: 'text',
     pdfRole: 'badge',
-    designHint: { position: 'inline-right' }
+    designHint: {}
   },
   modalidad: {
     id: 'modalidad',
@@ -122,6 +123,7 @@ export const FIELD_CATALOG: Record<string, FieldDefinition> = {
   resolucion: {
     id: 'resolucion',
     label: 'Resolución N° / Disposición (Opcional)',
+    pdfLabel: 'Resolución N° / Disposición',
     placeholder: 'Ej: Res. Min. N° 1234/26',
     type: 'text',
     pdfRole: 'extra',
@@ -237,11 +239,6 @@ export const BUILTIN_RECORD_KINDS: Record<string, RecordKindSchema> = {
     kind: 'redes',
     label: 'Redes Sociales & Presencia Digital',
     defaultFields: ['plataforma', 'usuario', 'url']
-  },
-  ecology: {
-    kind: 'course',
-    label: 'Proyectos Ecológicos & Sustentables',
-    defaultFields: ['tituloOGrado', 'institucion', 'periodo', 'descripcion']
   },
   languages: {
     kind: 'languages',

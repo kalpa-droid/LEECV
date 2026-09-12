@@ -88,8 +88,6 @@ export function checkSectionHasContent(cvData: any, sectionId: string): boolean 
       return Array.isArray(cvData.coursesAndCertificates) && cvData.coursesAndCertificates.length > 0;
     case 'informatica':
       return Array.isArray(cvData.informatics) && cvData.informatics.length > 0;
-    case 'ecologia':
-      return Array.isArray(cvData.ecology) ? cvData.ecology.length > 0 : !!cvData.ecology;
     case 'certificados':
       return Array.isArray(cvData.certificatesScanned) && cvData.certificatesScanned.length > 0;
     case 'firma':

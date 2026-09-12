@@ -3,6 +3,7 @@ import { getSectionLabel } from '../../../sectionRegistry';
 import { resolveActiveFormat } from '../../../formats/cvFormatRegistry';
 import { resolveDisplayName } from '../../../utils/cvDataSchema';
 import { resolveDateRange } from './dateRangeResolver';
+import { CANONICAL_SECTION_ORDER } from '../../../sections/canonicalSectionOrder';
 
 const sortByYearDesc = (items: any[]) => {
   if (!Array.isArray(items)) return [];
@@ -36,9 +37,12 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   const activeFormat = resolveActiveFormat(cvData);
   const hiddenFieldsSet = new Set(activeFormat?.hiddenPersonalFields || []);
 
+  const sortedEducation = sortByYearDesc(education);
   const sortedCourses = sortByYearDesc(coursesAndCertificates);
   const sortedExperience = sortByYearDesc(experience);
   const sortedProfession = sortByYearDesc(profession);
+  const sortedProjects = sortByYearDesc(cvData.projects);
+  const sortedPublications = sortByYearDesc(cvData.publications);
 
   const sections: ContentSection[] = [];
 
@@ -70,7 +74,9 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
     cuit: hiddenFieldsSet.has('cuit') ? '' : personalInfo.cuit || '',
     birthDate: hiddenFieldsSet.has('birthDate') ? '' : personalInfo.birthDate || '',
     nacionalidad: hiddenFieldsSet.has('nacionalidad') ? '' : personalInfo.nacionalidad || '',
-    estadoCivil: hiddenFieldsSet.has('estadoCivil') ? '' : personalInfo.estadoCivil || ''
+    estadoCivil: hiddenFieldsSet.has('estadoCivil') ? '' : personalInfo.estadoCivil || '',
+    disponibilidad: hiddenFieldsSet.has('disponibilidad') ? '' : personalInfo.disponibilidad || '',
+    licenciaConducir: hiddenFieldsSet.has('licenciaConducir') ? '' : personalInfo.licenciaConducir || ''
   };
 
   const hasPersonalDetails = Object.values(personalDetailsFields).some((val) => !!val);
@@ -132,7 +138,7 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
         targetSectorRole: 'sidebar',
         fields: {
           label: r.usuario ? `${r.plataforma || 'Red'}: ${r.usuario}` : r.plataforma || r.url || '',
-          url: r.url || '',
+          url: r.url || (r.plataforma === 'Email' && r.usuario ? `mailto:${r.usuario}` : ''),
           icon: r.plataforma === 'LinkedIn' ? '💼' : r.plataforma === 'Email' ? '✉️' : r.plataforma?.includes('GitHub') ? '💻' : '🌐'
         }
       }))
@@ -190,11 +196,11 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   }
 
   // Proyectos Destacados (Main)
-  if (isVisible('proyectos') && Array.isArray(cvData.projects) && cvData.projects.length > 0) {
+  if (isVisible('proyectos') && Array.isArray(sortedProjects) && sortedProjects.length > 0) {
     sections.push({
       id: 'proyectos',
       titleText: getSectionLabel('proyectos'),
-      records: cvData.projects.map((proj: any, idx: number) => {
+      records: sortedProjects.map((proj: any, idx: number) => {
         const { startDate, endDate, ...projRest } = proj || {};
         return {
           id: `rec-proj-${idx}`,
@@ -213,11 +219,11 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   }
 
   // Publicaciones & Patentes (Main)
-  if (isVisible('publicaciones') && Array.isArray(cvData.publications) && cvData.publications.length > 0) {
+  if (isVisible('publicaciones') && Array.isArray(sortedPublications) && sortedPublications.length > 0) {
     sections.push({
       id: 'publicaciones',
       titleText: getSectionLabel('publicaciones'),
-      records: cvData.publications.map((pub: any, idx: number) => {
+      records: sortedPublications.map((pub: any, idx: number) => {
         const { startDate, endDate, ...pubRest } = pub || {};
         return {
           id: `rec-pub-${idx}`,
@@ -274,11 +280,11 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   }
 
   // Formación Académica (Main)
-  if (isVisible('formacion') && Array.isArray(education) && education.length > 0) {
+  if (isVisible('formacion') && Array.isArray(sortedEducation) && sortedEducation.length > 0) {
     sections.push({
       id: 'formacion',
       titleText: getSectionLabel('formacion'),
-      records: education.map((edu: any, idx: number) => {
+      records: sortedEducation.map((edu: any, idx: number) => {
         const { startDate, endDate, ...eduRest } = edu || {};
         return {
           id: `rec-edu-${idx}`,
@@ -368,38 +374,6 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
     });
   }
 
-  // Compromiso Ecológico & Proyectos Sustentables (Main)
-  const ecologyItems = Array.isArray(cvData?.ecology)
-    ? cvData.ecology
-    : [
-        ...(Array.isArray(cvData?.ecology?.rural) ? cvData.ecology.rural : []),
-        ...(Array.isArray(cvData?.ecology?.environmental) ? cvData.ecology.environmental : []),
-        ...(Array.isArray(cvData?.ecology?.community) ? cvData.ecology.community : []),
-        ...(Array.isArray(cvData?.ecologia) ? cvData.ecologia : [])
-      ];
-
-  if (isVisible('ecologia') && ecologyItems.length > 0) {
-    sections.push({
-      id: 'ecologia',
-      titleText: getSectionLabel('ecologia'),
-      records: ecologyItems.map((eco: any, idx: number) => {
-        const { startDate, endDate, ...ecoRest } = eco || {};
-        return {
-          id: `rec-eco-${idx}`,
-          kind: 'course',
-          targetSectorRole: 'main',
-          fields: {
-            ...ecoRest,
-            title: eco.title || eco.tituloOGrado || eco.course || eco.name || '',
-            institution: eco.institution || eco.institucion || '',
-            year: resolveDateRange(eco),
-            details: eco.details || eco.description || eco.descripcion || ''
-          }
-        };
-      })
-    });
-  }
-
   // Secciones Personalizadas Dinámicas (customSections)
   if (Array.isArray(cvData.customSections)) {
     cvData.customSections.forEach((cs: any) => {
@@ -422,10 +396,8 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
   }
 
   // Firma Digital (Main)
-  // La firma se agrega siempre que exista signature.dataUrl, sin importar sectionVisibility.
-  // Decisión de producto: es la validación legal del documento, no debe poder ocultarse por una plantilla.
   const autoSignerName = resolveDisplayName(personalInfo);
-  const selectedRole = signature?.signerRole || (sortedProfession?.[0]?.degree || education?.[0]?.degree || '');
+  const selectedRole = signature?.signerRole || (sortedProfession?.[0]?.degree || sortedEducation?.[0]?.degree || '');
   const todayISO = new Date().toISOString().split('T')[0];
   const sigDate = signature?.date || todayISO;
 
@@ -456,6 +428,11 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
 
   let orderedSections = sections;
 
+  const canonicalOrderMap = new Map<string, number>();
+  CANONICAL_SECTION_ORDER.forEach((secId, idx) => {
+    canonicalOrderMap.set(secId, idx);
+  });
+
   if (hasUserCustomOrder) {
     const combinedUserOrder = [
       ...(Array.isArray(userPrimOrder) ? userPrimOrder : []),
@@ -469,8 +446,8 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
     });
 
     orderedSections = [...sections].sort((a, b) => {
-      const posA = userOrderMap.has(a.id) ? userOrderMap.get(a.id)! : 999;
-      const posB = userOrderMap.has(b.id) ? userOrderMap.get(b.id)! : 999;
+      const posA = userOrderMap.has(a.id) ? userOrderMap.get(a.id)! : 1000 + (canonicalOrderMap.get(a.id) ?? 999);
+      const posB = userOrderMap.has(b.id) ? userOrderMap.get(b.id)! : 1000 + (canonicalOrderMap.get(b.id) ?? 999);
       return posA - posB;
     });
   } else if (activeFormat && Array.isArray(activeFormat.defaultVisibleSections) && activeFormat.defaultVisibleSections.length > 0) {
@@ -480,8 +457,14 @@ export function cvDataToContentSections(cvData: any): ContentSection[] {
     });
 
     orderedSections = [...sections].sort((a, b) => {
-      const posA = formatOrderMap.has(a.id) ? formatOrderMap.get(a.id)! : 999;
-      const posB = formatOrderMap.has(b.id) ? formatOrderMap.get(b.id)! : 999;
+      const posA = formatOrderMap.has(a.id) ? formatOrderMap.get(a.id)! : 1000 + (canonicalOrderMap.get(a.id) ?? 999);
+      const posB = formatOrderMap.has(b.id) ? formatOrderMap.get(b.id)! : 1000 + (canonicalOrderMap.get(b.id) ?? 999);
+      return posA - posB;
+    });
+  } else {
+    orderedSections = [...sections].sort((a, b) => {
+      const posA = canonicalOrderMap.get(a.id) ?? 999;
+      const posB = canonicalOrderMap.get(b.id) ?? 999;
       return posA - posB;
     });
   }

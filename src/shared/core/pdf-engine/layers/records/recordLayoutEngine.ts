@@ -173,7 +173,7 @@ export function buildStructuredRecordLayout(
     const def: FieldDefinition | undefined = FIELD_CATALOG[fieldId];
 
     const effectiveRole = def ? def.pdfRole : inferPdfRole(fieldId, val);
-    const fieldLabel = def ? def.label : fieldId;
+    const fieldLabel = def ? (def.pdfLabel || def.label) : fieldId;
     const fieldType = def ? def.type : (effectiveRole === 'extra' && /^https?:\/\//i.test(val) ? 'url' : 'text');
 
     switch (effectiveRole) {

@@ -181,7 +181,7 @@ export function RepeatableSection({
       {isVisible && (
         <div className="space-y-4">
           {items.map((item: any, idx: number) => (
-            <div key={idx} className={`p-3.5 ui-bg-card ui-border ui-text-primary rounded-[${radius.modal}] border-2 ${elevationSystem.raised} space-y-3`}>
+            <div key={item.id || item._id || idx} className={`p-3.5 ui-bg-card ui-border ui-text-primary rounded-[${radius.modal}] border-2 ${elevationSystem.raised} space-y-3`}>
               <div className="flex items-center justify-between pb-1 border-b border-[var(--color-neutral-border)]">
                 <span className="text-xs font-bold text-[var(--ui-secondary)]">
                   {itemTitlePrefix} #{idx + 1}
