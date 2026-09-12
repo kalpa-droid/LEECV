@@ -15,7 +15,7 @@ export interface PlacedRecordElement {
   role: 'title' | 'subtitle' | 'badge' | 'extra' | 'description';
   label?: string;
   value: string;
-  type?: 'text' | 'textarea' | 'url';
+  type?: 'text' | 'textarea' | 'url' | 'select';
 }
 
 export interface ArrangedRecordLayout {

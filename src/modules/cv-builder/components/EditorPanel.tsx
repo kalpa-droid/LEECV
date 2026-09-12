@@ -353,55 +353,16 @@ export default function EditorPanel({
         {/* TAB 1.2: REDES SOCIALES & ENLACES */}
         {/* ========================================================================= */}
         {activeTab === 'redes' && (
-          <RepeatableSection
+          <RecordFormSection
             sectionKey="redes"
             sectionTitle="Redes Sociales & Enlaces"
+            kindKey="redes"
             addLabel="Agregar Red / Enlace"
             cvData={cvData}
             setCvData={setCvData}
             fieldName="redes"
-            emptyItem={{ plataforma: 'LinkedIn', usuario: '', url: '' }}
             itemTitlePrefix="Red Social / Enlace"
-            getItemName={(item: any, idx: number) => item?.plataforma || item?.usuario || item?.url || `Red #${idx + 1}`}
-            renderItem={(item: any, idx: number, updateField: (field: string, val: any) => void) => (
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-[var(--color-neutral-text-secondary)] mb-1">Plataforma / Red</label>
-                    <select
-                      value={item.plataforma || 'LinkedIn'}
-                      onChange={(e) => updateField('plataforma', e.target.value)}
-                      className="w-full text-xs p-2 rounded-[10px] bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer"
-                    >
-                      <option value="LinkedIn">LinkedIn</option>
-                      <option value="GitHub / GitLab">GitHub / GitLab</option>
-                      <option value="Sitio Web / Portafolio">Sitio Web / Portafolio</option>
-                      <option value="Email">Email</option>
-                      <option value="WhatsApp Business">WhatsApp Business</option>
-                      <option value="X / Twitter">X / Twitter</option>
-                      <option value="Instagram">Instagram</option>
-                      <option value="Facebook">Facebook</option>
-                      <option value="YouTube">YouTube</option>
-                      <option value="TikTok">TikTok</option>
-                      <option value="Behance / Dribbble">Behance / Dribbble</option>
-                      <option value="Otra Red / Enlace">Otra Red / Enlace</option>
-                    </select>
-                  </div>
-                  <Field
-                    label="Nombre de Usuario / Leyenda"
-                    value={item.usuario || ''}
-                    onChange={(e: any) => updateField('usuario', e.target.value)}
-                    placeholder="Ej: @usuario o Mi Perfil"
-                  />
-                </div>
-                <Field
-                  label="URL Completa / Enlace Web"
-                  value={item.url || ''}
-                  onChange={(e: any) => updateField('url', e.target.value)}
-                  placeholder="Ej: https://linkedin.com/in/usuario"
-                />
-              </div>
-            )}
+            helpText="Agrega tus perfiles profesionales, sitio web o portafolio digital."
             manualAdjustment={<SectionManualAdjustment sectionId="redes" cvData={cvData} setCvData={setCvData} />}
           />
         )}
@@ -1024,61 +985,6 @@ export default function EditorPanel({
           </div>
         )}
 
-        {/* ========================================================================= */}
-        {/* VISTA 1 A 1 DE SECCIÓN PERSONALIZADA SELECCIONADA DESDE EL DOCK */}
-        {/* ========================================================================= */}
-        {(cvData.customSections || []).some((s: any) => s.id === activeTab && s.id !== 'ecologia') && (() => {
-          const csIdx = (cvData.customSections || []).findIndex((s: any) => s.id === activeTab);
-          const cs = cvData.customSections?.[csIdx];
-          if (!cs) return null;
-
-          return (
-            <RepeatableSection
-              key={cs.id}
-              sectionKey={cs.id}
-              sectionTitle={cs.titleText}
-              addLabel="Agregar Registro"
-              cvData={cvData}
-              setCvData={setCvData}
-              fieldName={`customSections.${csIdx}.records`}
-              itemTitlePrefix="Registro"
-              onDeleteSection={() => {
-                confirm({
-                  title: `¿Eliminar sección '${cs.titleText}'?`,
-                  message: 'Se eliminarán esta sección y todos sus registros.',
-                  confirmText: 'Eliminar Sección',
-                  onConfirm: () => {
-                    setCvData((prev: any) => ({
-                      ...prev,
-                      customSections: (prev.customSections || []).filter((s: any) => s.id !== cs.id)
-                    }));
-                    changeActiveTab('personales');
-                    showSuccess(`Sección '${cs.titleText}' eliminada.`);
-                  }
-                });
-              }}
-              renderItem={(rec: any, rIdx: number, updateField: (field: string, val: any) => void) => (
-                <div className="space-y-3">
-                  {(cs.fields || ['tituloOGrado', 'institucion']).map((fieldId: string) => {
-                    const fieldDef = FIELD_CATALOG[fieldId];
-                    if (!fieldDef) return null;
-                    return (
-                      <Field
-                        key={fieldId}
-                        label={fieldDef.label}
-                        value={rec[fieldId] || ''}
-                        onChange={(e: any) => updateField(fieldId, e.target.value)}
-                        placeholder={fieldDef.placeholder}
-                        isTextArea={fieldDef.type === 'textarea'}
-                      />
-                    );
-                  })}
-                </div>
-              )}
-              manualAdjustment={<SectionManualAdjustment sectionId={cs.id} cvData={cvData} setCvData={setCvData} />}
-            />
-          );
-        })()}
 
         {/* ========================================================================= */}
         {/* TAB: NUEVA SECCIÓN PERSONALIZADA (SECCIONES PREDISEÑADAS + SECCIÓN A MEDIDA) */}
@@ -1357,11 +1263,12 @@ export default function EditorPanel({
             quedaba en blanco. Un solo bloque genérico sirve para cualquier sección
             que la persona haya creado, sin importar cuántas tenga. */}
         {(() => {
-          const customIdx = (cvData.customSections || []).findIndex((cs: any) => cs.id === activeTab);
+          const customIdx = (cvData.customSections || []).findIndex((cs: any) => cs.id === activeTab && cs.id !== 'ecologia');
           if (customIdx === -1) return null;
           const cs = cvData.customSections[customIdx];
           return (
             <RecordFormSection
+              key={cs.id}
               sectionKey={cs.id}
               sectionTitle={cs.titleText}
               kindKey="custom"
@@ -1371,6 +1278,22 @@ export default function EditorPanel({
               setCvData={setCvData}
               fieldName={`customSections.${customIdx}.records`}
               itemTitlePrefix={cs.titleText}
+              onDeleteSection={() => {
+                confirm({
+                  title: `¿Eliminar sección '${cs.titleText}'?`,
+                  message: 'Se eliminarán esta sección y todos sus registros.',
+                  confirmText: 'Eliminar Sección',
+                  onConfirm: () => {
+                    setCvData((prev: any) => ({
+                      ...prev,
+                      customSections: (prev.customSections || []).filter((s: any) => s.id !== cs.id)
+                    }));
+                    changeActiveTab('personales');
+                    showSuccess(`Sección '${cs.titleText}' eliminada.`);
+                  }
+                });
+              }}
+              manualAdjustment={<SectionManualAdjustment sectionId={cs.id} cvData={cvData} setCvData={setCvData} />}
             />
           );
         })()}

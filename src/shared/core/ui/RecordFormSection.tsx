@@ -26,6 +26,7 @@ interface RecordFormSectionProps {
    */
   customFields?: string[];
   manualAdjustment?: React.ReactNode;
+  onDeleteSection?: () => void;
   renderTrailingSlot?: (sectionKey: string) => React.ReactNode;
 }
 
@@ -41,6 +42,7 @@ export function RecordFormSection({
   helpText,
   customFields,
   manualAdjustment,
+  onDeleteSection,
   renderTrailingSlot
 }: RecordFormSectionProps) {
   const schema = BUILTIN_RECORD_KINDS[kindKey] || BUILTIN_RECORD_KINDS['education'];
@@ -67,6 +69,7 @@ export function RecordFormSection({
         fieldName={fieldName}
         designKey={kindKey}
         itemTitlePrefix={itemTitlePrefix}
+        onDeleteSection={onDeleteSection}
         manualAdjustment={manualAdjustment || <SectionPositionControl sectionKey={sectionKey} cvData={cvData} setCvData={setCvData} />}
         renderTrailingSlot={renderTrailingSlot}
         renderItem={(item: any, idx: number, updateField: (field: string, val: any) => void) => (
@@ -107,6 +110,30 @@ export function RecordFormSection({
               ) : (
                 fDef.label
               );
+
+              if (fDef.type === 'select' && fDef.options && fDef.options.length > 0) {
+                return (
+                  <Field
+                    key={fieldId}
+                    label={labelElement}
+                    as="select"
+                    value={currentValue || fDef.options[0]}
+                    onChange={(e: any) => {
+                      const val = e.target.value;
+                      updateField(fieldId, val);
+                      if (legacyKey !== fieldId) {
+                        updateField(legacyKey, val);
+                      }
+                    }}
+                  >
+                    {fDef.options.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </Field>
+                );
+              }
 
               return (
                 <Field

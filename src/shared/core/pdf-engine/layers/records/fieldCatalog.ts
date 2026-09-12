@@ -19,7 +19,8 @@ export interface FieldDefinition {
   pdfLabel?: string;
   labelOptions?: string[];
   placeholder: string;
-  type: 'text' | 'textarea' | 'url';
+  type: 'text' | 'textarea' | 'url' | 'select';
+  options?: string[];
   pdfRole: 'title' | 'subtitle' | 'badge' | 'description' | 'extra';
   designHint: FieldDesignHint;
 }
@@ -148,9 +149,24 @@ export const FIELD_CATALOG: Record<string, FieldDefinition> = {
   },
   plataforma: {
     id: 'plataforma',
-    label: 'Red Social / Plataforma',
+    label: 'Plataforma / Red Social',
+    labelOptions: ['Plataforma'],
     placeholder: 'Ej: LinkedIn, GitHub, Behance, Portafolio, Instagram',
-    type: 'text',
+    type: 'select',
+    options: [
+      'LinkedIn',
+      'GitHub / GitLab',
+      'Sitio Web / Portafolio',
+      'Email',
+      'WhatsApp Business',
+      'X / Twitter',
+      'Instagram',
+      'Facebook',
+      'YouTube',
+      'TikTok',
+      'Behance / Dribbble',
+      'Otra Red / Enlace'
+    ],
     pdfRole: 'title',
     designHint: {}
   },

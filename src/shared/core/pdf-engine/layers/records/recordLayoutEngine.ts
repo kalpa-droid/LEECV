@@ -25,7 +25,7 @@ export interface RecordExtraItem {
   id: string;
   label: string;
   value: string;
-  type?: 'text' | 'textarea' | 'url';
+  type?: 'text' | 'textarea' | 'url' | 'select';
 }
 
 export interface StructuredRecordLayout {

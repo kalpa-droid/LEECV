@@ -165,6 +165,24 @@ function stripJsxExpressions(code) {
       }
     });
   }
+
+  // 5. Gobernanza de Secciones de Registro (EditorPanel.tsx)
+  // Toda sección de EditorPanel.tsx que use un registro catalogado DEBE usar RecordFormSection y NUNCA RepeatableSection directamente.
+  if (file === 'EditorPanel.tsx') {
+    const catalogRecordKinds = ['education', 'profession', 'experience', 'course', 'informatics', 'redes', 'languages', 'projects', 'publications', 'references'];
+    catalogRecordKinds.forEach((secKey) => {
+      const repeatableSecRegex = new RegExp(`<RepeatableSection[^>]*sectionKey=["']${secKey}["']`, 'g');
+      if (repeatableSecRegex.test(content)) {
+        console.error(`❌ Record Form Governance Error: [EditorPanel.tsx] la sección '${secKey}' usa RepeatableSection a mano en lugar del núcleo RecordFormSection.`);
+        uiGovernanceWarnings++;
+      }
+    });
+
+    if (/<RepeatableSection[^>]*fieldName=["']customSections\./.test(content)) {
+      console.error(`❌ Record Form Governance Error: [EditorPanel.tsx] las secciones personalizadas (customSections) usan RepeatableSection a mano en lugar del núcleo RecordFormSection.`);
+      uiGovernanceWarnings++;
+    }
+  }
 }
 
 function scanDir(dir, currentModule = null) {
