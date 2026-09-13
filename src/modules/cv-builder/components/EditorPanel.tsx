@@ -1433,7 +1433,7 @@ export default function EditorPanel({
 
             {/* Formato Global & Estándares Internacionales (ATS, US Resume, Europass, Tech, LATAM) */}
             <PanelSection icon={<Globe className="w-4 h-4 text-[var(--color-accent-text)]" />} title="Estándar & Formato Global (Internacional)">
-              <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-2">
                 {getAllCvFormats().map((format) => {
                   const isSelected = resolveActiveFormatId(cvData) === format.id;
                   return (
@@ -1445,24 +1445,24 @@ export default function EditorPanel({
                         setPendingFormatId(format.id);
                         setIsFormatModalOpen(true);
                       }}
-                      className={`w-full p-3 rounded-[${radius.card}] border text-left transition flex flex-col gap-1.5 cursor-pointer ${
+                      className={`w-full p-2.5 rounded-[${radius.card}] border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer ${
                         isSelected
                           ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
                           : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]'
                       }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-[var(--color-neutral-text-primary)] flex items-center gap-1.5">
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-xs font-black text-[var(--color-neutral-text-primary)] flex items-center gap-1.5 truncate">
                           {format.name}
                         </span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase bg-white border border-[var(--color-neutral-border-strong)] text-[var(--color-neutral-text-secondary)]">
-                            {format.columnLayoutPresetId === 'full-width' ? '1 Columna' : '2 Columnas'}
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase bg-white border border-[var(--color-neutral-border-strong)] text-[var(--color-neutral-text-secondary)]">
+                            {format.columnLayoutPresetId === 'full-width' ? '1 Col' : '2 Col'}
                           </span>
-                          {isSelected && <Check className="w-4 h-4 text-[var(--ui-text-primary)] flex-shrink-0" />}
+                          {isSelected && <Check className="w-3.5 h-3.5 text-[var(--ui-text-primary)] flex-shrink-0" />}
                         </div>
                       </div>
-                      <p className="text-[11px] text-[var(--color-neutral-text-secondary)] leading-relaxed">
+                      <p className="text-[10px] text-[var(--color-neutral-text-secondary)] leading-relaxed line-clamp-2">
                         {format.description}
                       </p>
                     </button>

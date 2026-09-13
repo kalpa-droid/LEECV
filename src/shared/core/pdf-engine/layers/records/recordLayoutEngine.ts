@@ -14,6 +14,7 @@
 
 import { FIELD_CATALOG, FieldDefinition } from './fieldCatalog';
 import { FIELD_ALIASES } from './fieldAliasCatalog';
+import { getFieldLabelOptions } from './fieldLabelOptions';
 
 export interface RecordBadgeItem {
   id: string;
@@ -73,8 +74,11 @@ export function inferPdfRole(fieldId: string, val: string): 'title' | 'subtitle'
   return 'extra';
 }
 
-const INTERNAL_FIELD_DENYLIST = new Set([
-  'id', 'kind', 'level', 'rol', '_meta', 'createdat', 'updatedat', 'fields', 'record'
+const FIELD_CONTAINER_KEYS = new Set(['fields', 'record']);
+
+const INTERNAL_METADATA_DENYLIST = new Set([
+  'id', 'kind', 'level', 'rol', '_meta', 'createdat', 'updatedat',
+  'targetsectorrole', 'fieldlabeloverrides', 'manualoverrides', 'sectionvisibility'
 ]);
 
 export function buildStructuredRecordLayout(
@@ -92,7 +96,11 @@ export function buildStructuredRecordLayout(
     if (v === undefined || v === null) return;
     const lowerKey = k.toLowerCase();
 
-    if (INTERNAL_FIELD_DENYLIST.has(lowerKey)) {
+    if (INTERNAL_METADATA_DENYLIST.has(lowerKey)) {
+      return;
+    }
+
+    if (FIELD_CONTAINER_KEYS.has(lowerKey)) {
       if (typeof v === 'object' && !Array.isArray(v)) {
         for (const [subK, subV] of Object.entries(v)) {
           processKeyValue(subK, subV);
