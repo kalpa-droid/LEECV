@@ -1433,7 +1433,7 @@ export default function EditorPanel({
 
             {/* Formato Global & Estándares Internacionales (ATS, US Resume, Europass, Tech, LATAM) */}
             <PanelSection icon={<Globe className="w-4 h-4 text-[var(--color-accent-text)]" />} title="Estándar & Formato Global (Internacional)">
-              <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-2">
                 {getAllCvFormats().map((format) => {
                   const isSelected = resolveActiveFormatId(cvData) === format.id;
                   return (
