@@ -1,7 +1,7 @@
 import React from 'react';
 import { exportCVToJson, exportCVToZip } from '../../../../shared/core/utils/jsonImporterExporter';
 import { Modal } from '../../../../shared/core/ui/Modal';
-import { elevationSystem, radius } from '../../../../shared/core/uiDesignSystem';
+import { button, elevationSystem, radius } from '../../../../shared/core/uiDesignSystem';
 import { FileText, FileArchive, Download } from 'lucide-react';
 
 export default function JsonDownloadModal({ isOpen, onClose, cvData }: any) {
@@ -20,7 +20,7 @@ export default function JsonDownloadModal({ isOpen, onClose, cvData }: any) {
           <button
             type="button"
             onClick={onClose}
-            className={`px-4 py-1.5 bg-[var(--ui-btn-neutral-bg)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] border border-[var(--ui-btn-neutral-border)] text-xs font-bold rounded-[${radius.card}] transition cursor-pointer`}
+            className={`${button.secondary} px-4 py-1.5 text-xs font-bold`}
           >
             Cerrar
           </button>

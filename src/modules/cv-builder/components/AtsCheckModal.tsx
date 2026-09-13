@@ -3,7 +3,7 @@ import { Modal } from '../../../shared/core/ui/Modal';
 import { CheckCircle2, AlertTriangle, AlertCircle, Sparkles, FileText, ArrowRight } from 'lucide-react';
 import { AtsPreflightResult } from '../../../shared/core/pdf-engine/layers/ats/atsPreflightCheck';
 
-import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
+import { button, elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 
 export interface AtsCheckModalProps {
   isOpen: boolean;
@@ -41,7 +41,7 @@ export function AtsCheckModal({
         <div className="w-full flex items-center justify-between gap-3">
           <button
             onClick={onClose}
-            className={`px-4 py-2 bg-[var(--ui-btn-neutral-bg)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-btn-neutral-text)] border border-[var(--ui-btn-neutral-border)] font-bold text-xs rounded-[${radius.card}] transition cursor-pointer`}
+            className={`${button.secondary} px-4 py-2 font-bold text-xs`}
           >
             Cerrar
           </button>
@@ -52,7 +52,7 @@ export function AtsCheckModal({
                 onClose();
                 onExportAtsPdf();
               }}
-              className={`px-4 py-2 bg-[var(--color-accent-amber)] hover:bg-[var(--color-accent-amber-hover)] text-[var(--color-accent-on-base)] font-black text-xs rounded-[${radius.card}] ${elevationSystem.raised} transition flex items-center gap-1.5 cursor-pointer`}
+              className={`${button.primary} px-4 py-2 font-black text-xs flex items-center gap-1.5`}
             >
               <FileText className="w-4 h-4" />
               <span>Exportar Versión ATS (1 Columna)</span>

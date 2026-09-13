@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal } from '../../../../shared/core/ui/Modal';
-import { radius } from '../../../../shared/core/uiDesignSystem';
+import { button, radius } from '../../../../shared/core/uiDesignSystem';
 import { t } from '../../../../shared/i18n/useText';
 
 export default function PdfProgressModal({ isGenerating, isComplete, onClose }: any) {
@@ -15,7 +15,7 @@ export default function PdfProgressModal({ isGenerating, isComplete, onClose }: 
         isComplete ? (
           <button
             onClick={onClose}
-            className={`w-full py-2 bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-accent-on-base)] text-xs font-bold rounded-[${radius.card}] transition cursor-pointer`}
+            className={`w-full py-2 ${button.success} text-xs font-bold`}
           >
             {t.common.actions.accept}
           </button>

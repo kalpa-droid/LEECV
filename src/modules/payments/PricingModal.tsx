@@ -6,7 +6,7 @@ import { Modal } from '../../shared/core/ui/Modal';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
 import { logout, signInWithGoogle } from '../auth/authService';
 
-import { elevationSystem, radius } from '../../shared/core/uiDesignSystem';
+import { button, elevationSystem, radius } from '../../shared/core/uiDesignSystem';
 import { formatPrice, formatPricePerMonth } from '../../shared/core/payments/pricingCatalog';
 import { getPlanLabel } from '../../shared/core/entitlements/useEntitlements';
 import { useText } from '../../shared/i18n/useText';
@@ -118,7 +118,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
           >
             <button
               onClick={onClose}
-              className={`w-full py-2.5 bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] border border-[var(--ui-border)] text-xs font-black rounded-[${radius.card}] transition cursor-pointer`}
+              className={`${button.secondary} w-full py-2.5 text-xs font-black`}
             >
               {t.pricing.useFreeEditorBtn}
             </button>

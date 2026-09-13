@@ -15,7 +15,7 @@ import { ProcessedPaymentsTab } from './components/ProcessedPaymentsTab';
 import { useToast } from '../../shared/core/ui/Toast';
 import { useConfirm } from '../../shared/core/ui/ConfirmDialog';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
-import { elevationSystem, radius } from '../../shared/core/uiDesignSystem';
+import { button, elevationSystem, radius } from '../../shared/core/uiDesignSystem';
 import { PAYMENT_PROVIDER_CATALOG, getPaymentProviderBadge } from '../../shared/core/payments/paymentProviderCatalog';
 
 import { 
@@ -244,7 +244,7 @@ export default function AdminDashboard() {
         </div>
         <button
           onClick={async () => { await logout(); setProfile(null); }}
-          className={`flex items-center gap-1.5 text-xs font-extrabold bg-[var(--color-accent-base)] px-3.5 py-2 rounded-[${radius.card}] hover:bg-[var(--color-accent-brand-hover)] transition ${elevationSystem.raised} cursor-pointer`}
+          className={`${button.primary} flex items-center gap-1.5 text-xs font-extrabold px-3.5 py-2`}
         >
           <LogOut className="w-3.5 h-3.5" /> Salir
         </button>
@@ -290,7 +290,8 @@ export default function AdminDashboard() {
           <button
             onClick={() => setAdminTab('users')}
             className={adminTab === 'users'
-              ? `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.raised}` : `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50`}
+              ? `${button.primary} px-4 py-2 text-xs font-black flex items-center gap-2`
+              : `${button.secondary} px-4 py-2 text-xs font-black flex items-center gap-2`}
           >
             <Users className="w-4 h-4" />
             <span>Usuarios & Licencias</span>
@@ -299,7 +300,8 @@ export default function AdminDashboard() {
           <button
             onClick={() => setAdminTab('sentry')}
             className={adminTab === 'sentry'
-              ? `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.raised}` : `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50`}
+              ? `${button.primary} px-4 py-2 text-xs font-black flex items-center gap-2`
+              : `${button.secondary} px-4 py-2 text-xs font-black flex items-center gap-2`}
           >
             <ShieldCheck className="w-4 h-4 text-[var(--color-accent-purple-text)]" />
             <span>Monitoreo & Telemetría Sentry</span>
@@ -308,7 +310,8 @@ export default function AdminDashboard() {
           <button
             onClick={() => setAdminTab('payments')}
             className={adminTab === 'payments'
-              ? `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.raised}` : `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50`}
+              ? `${button.primary} px-4 py-2 text-xs font-black flex items-center gap-2`
+              : `${button.secondary} px-4 py-2 text-xs font-black flex items-center gap-2`}
           >
             <CreditCard className="w-4 h-4" />
             <span>Historial de Pagos</span>
@@ -317,7 +320,8 @@ export default function AdminDashboard() {
           <button
             onClick={() => setAdminTab('storage')}
             className={adminTab === 'storage'
-              ? `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.raised}` : `px-4 py-2 text-xs font-black rounded-[${radius.card}] transition flex items-center gap-2 cursor-pointer bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-border)]/50`}
+              ? `${button.primary} px-4 py-2 text-xs font-black flex items-center gap-2`
+              : `${button.secondary} px-4 py-2 text-xs font-black flex items-center gap-2`}
           >
             <HardDrive className="w-4 h-4" />
             <span>Almacenamiento, Servidores & Drive</span>

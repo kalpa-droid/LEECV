@@ -1,7 +1,7 @@
 import React from 'react';
 import { Share2, Copy, Check, ExternalLink, Send, Mail, MessageSquare } from 'lucide-react';
 import { Modal } from '../../../../shared/core/ui/Modal';
-import { radius, elevationSystem } from '../../../../shared/core/uiDesignSystem';
+import { button, radius, elevationSystem } from '../../../../shared/core/uiDesignSystem';
 import { useToast } from '../../../../shared/core/ui/Toast';
 import { navigation } from '../../../../shared/core/utils/navigation';
 
@@ -85,7 +85,7 @@ export default function ShareAppModal({ isOpen, onClose }: ShareAppModalProps) {
           <button
             type="button"
             onClick={onClose}
-            className={`px-4 py-1.5 bg-[var(--ui-btn-neutral-bg)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] border border-[var(--ui-btn-neutral-border)] font-bold text-xs rounded-[${radius.card}] transition cursor-pointer`}
+            className={`${button.secondary} px-4 py-1.5 font-bold text-xs`}
           >
             Cerrar
           </button>
@@ -112,7 +112,7 @@ export default function ShareAppModal({ isOpen, onClose }: ShareAppModalProps) {
             <button
               type="button"
               onClick={handleCopyLink}
-              className={`px-3 py-2 rounded-[${radius.card}] bg-[var(--color-secondary-base)] hover:opacity-90 text-[var(--color-secondary-on-base)] font-bold text-xs flex items-center gap-1.5 ${elevationSystem.raised} transition cursor-pointer active:scale-95`}
+              className={`${button.primary} px-3 py-2 font-bold text-xs flex items-center gap-1.5 active:scale-95`}
             >
               {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               <span>{copied ? 'Copiado' : 'Copiar'}</span>
@@ -152,7 +152,7 @@ export default function ShareAppModal({ isOpen, onClose }: ShareAppModalProps) {
           <button
             type="button"
             onClick={handleNativeShare}
-            className={`w-full py-2.5 px-4 rounded-[${radius.card}] bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] font-extrabold text-xs flex items-center justify-center gap-2 transition cursor-pointer active:scale-95`}
+            className={`w-full py-2.5 px-4 ${button.secondary} font-extrabold text-xs flex items-center justify-center gap-2 active:scale-95`}
           >
             <Share2 className="w-4 h-4 text-[var(--color-secondary-bright)]" />
             <span>Compartir usando mi dispositivo...</span>

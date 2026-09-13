@@ -14,7 +14,7 @@ import { closeDocumentEverywhere, OpenTabItem } from '../../../shared/core/stora
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { InfoHint } from '../../../shared/core/ui/InfoHint';
-import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
+import { button, elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { Modal } from '../../../shared/core/ui/Modal';
 import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
 import {} from '../../../shared/core/utils/validationEngine';
@@ -150,7 +150,7 @@ export default function SavedCVsModal({
           </div>
           <button
             onClick={onClose}
-            className={`px-4 py-1.5 bg-[var(--ui-btn-neutral-bg)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-btn-neutral-text)] border border-[var(--ui-btn-neutral-border)] font-bold rounded-[${radius.card}] transition cursor-pointer`}
+            className={`${button.secondary} px-4 py-1.5 font-bold text-xs`}
           >
             Cerrar
           </button>
@@ -265,7 +265,7 @@ export default function SavedCVsModal({
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button
                       onClick={() => handleOpenCV(item.id)}
-                      className={`px-4 py-2 bg-[var(--color-secondary-base)] hover:opacity-90 text-[var(--color-secondary-on-base)] font-extrabold text-xs rounded-[${radius.card}] ${elevationSystem.raised} transition flex items-center gap-1.5 cursor-pointer`}
+                      className={`${button.primary} px-4 py-2 font-extrabold text-xs flex items-center gap-1.5`}
                     >
                       <FolderOpen className="w-3.5 h-3.5" />
                       <span>Abrir</span>
@@ -273,7 +273,7 @@ export default function SavedCVsModal({
 
                     <button
                       onClick={() => handleDuplicate(item.id, item.candidate_name || item.title)}
-                      className={`p-2 text-[var(--color-secondary-bright)] hover:text-[var(--color-secondary-text)] hover:bg-[var(--color-secondary-muted)] rounded-[${radius.card}] transition border border-transparent hover:border-[var(--color-secondary-base)]/40 cursor-pointer`}
+                      className={`${button.ghost} p-2 text-[var(--color-secondary-bright)] hover:text-[var(--color-secondary-text)]`}
                       title="Duplicar / Clonar este Borrador"
                     >
                       <Copy className="w-4 h-4" />
@@ -281,7 +281,7 @@ export default function SavedCVsModal({
 
                     <button
                       onClick={() => handleDelete(item.id, item.candidate_name || item.title)}
-                      className={`p-2 text-[var(--ui-text-secondary)] hover:text-[var(--color-status-danger-text)] hover:bg-[var(--color-status-danger-muted)] rounded-[${radius.card}] transition border border-transparent hover:border-[var(--color-status-danger-base)]/50 cursor-pointer`}
+                      className={`${button.danger} p-2`}
                       title="Eliminar este documento"
                     >
                       <Trash2 className="w-4 h-4" />

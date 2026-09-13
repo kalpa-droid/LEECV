@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Shield, FileText, Lock } from 'lucide-react';
-import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
+import { button, elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { Modal } from '../../../shared/core/ui/Modal';
 import { PrivacyPolicyContent } from '../../../shared/legal/PrivacyPolicyContent';
 import { TermsOfServiceContent } from '../../../shared/legal/TermsOfServiceContent';
@@ -25,7 +25,7 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
           <span className="text-[10px] text-[var(--ui-text-secondary)]">Última actualización: Septiembre 2026 — LEECV Inc.</span>
           <button
             onClick={onClose}
-            className={`px-4 py-1.5 bg-[var(--ui-text-primary)] text-[var(--ui-bg-card)] hover:opacity-90 font-extrabold text-xs rounded-[${radius.card}] transition cursor-pointer`}
+            className={`${button.primary} px-4 py-1.5 font-extrabold text-xs`}
           >
             Entendido
           </button>

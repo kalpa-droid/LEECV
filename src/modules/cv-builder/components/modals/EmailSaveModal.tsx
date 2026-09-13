@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Send, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { Modal } from '../../../../shared/core/ui/Modal';
-import { radius, elevationSystem } from '../../../../shared/core/uiDesignSystem';
+import { button, radius, elevationSystem } from '../../../../shared/core/uiDesignSystem';
 import { useToast } from '../../../../shared/core/ui/Toast';
 
 export interface EmailSaveModalProps {
@@ -70,7 +70,7 @@ export default function EmailSaveModal({ isOpen, onClose, cvData }: EmailSaveMod
           <button
             type="button"
             onClick={onClose}
-            className={`px-4 py-1.5 bg-[var(--ui-btn-neutral-bg)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] border border-[var(--ui-border)] font-bold text-xs rounded-[${radius.card}] transition cursor-pointer`}
+            className={`${button.secondary} px-4 py-1.5 font-bold text-xs`}
           >
             Cerrar
           </button>
@@ -115,7 +115,7 @@ export default function EmailSaveModal({ isOpen, onClose, cvData }: EmailSaveMod
             <button
               type="submit"
               disabled={isSending}
-              className={`w-full py-2.5 px-4 rounded-[${radius.card}] bg-[var(--color-secondary-base)] hover:opacity-90 text-[var(--color-secondary-on-base)] font-black text-xs flex items-center justify-center gap-2 ${elevationSystem.raised} transition cursor-pointer disabled:opacity-50 active:scale-95`}
+              className={`w-full py-2.5 px-4 ${button.primary} font-black text-xs flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95`}
             >
               <Send className={`w-4 h-4 ${isSending ? 'animate-bounce' : ''}`} />
               <span>{isSending ? 'Enviando respaldo...' : 'Enviar copia a mi correo'}</span>

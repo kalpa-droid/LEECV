@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { CopyPlus, Briefcase, Tag } from 'lucide-react';
 import { Modal } from '../../../shared/core/ui/Modal';
-import { radius } from '../../../shared/core/uiDesignSystem';
+import { button, radius } from '../../../shared/core/uiDesignSystem';
 import { JOB_POSITION_CATALOG } from '../../../shared/core/data/jobPositionCatalog';
 import { t } from '../../../shared/i18n/useText';
 
@@ -62,7 +62,7 @@ export default function SaveAsVersionModal({
             <button
               type="button"
               onClick={onClose}
-              className={`px-4 py-2 bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] border border-[var(--ui-border)] font-bold text-xs rounded-[${radius.card}] transition cursor-pointer`}
+              className={`${button.secondary} px-4 py-2 text-xs font-bold`}
             >
               {t.common.actions.cancel}
             </button>
@@ -70,7 +70,7 @@ export default function SaveAsVersionModal({
               type="button"
               onClick={handleExecuteSaveAs}
               disabled={isSaving || !effectiveLabel}
-              className={`px-4 py-2 bg-[var(--color-secondary-base)] hover:opacity-90 text-[var(--color-secondary-on-base)] font-black text-xs rounded-[${radius.card}] transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50`}
+              className={`${button.primary} px-4 py-2 text-xs font-black flex items-center gap-1.5 disabled:opacity-50`}
             >
               <CopyPlus className="w-4 h-4" />
               <span>{isSaving ? t.common.actions.loading : `${t.modals.saveModal.saveCopyBtnPrefix}${effectiveLabel}"`}</span>
