@@ -29,9 +29,9 @@ const styleTabs = [
 // Pestañas especializadas de Tarjeta Personal (7 botones independientes)
 const CARD_TABS_LARGE = [
   { id: 'diseno', label: 'Diseño & Paleta', icon: Palette },
-  { id: 'card_size', label: 'Tamaño & Sangrado', icon: Sliders },
 ] as const;
 const CARD_TABS_SMALL = [
+  { id: 'card_size', label: 'Tamaño & Sangrado', icon: Sliders },
   { id: 'card_extract', label: 'Extraer datos de CV', icon: FileUp },
   { id: 'card_logo', label: 'Logotipo', icon: CreditCard },
   { id: 'card_front', label: 'Datos Frente', icon: Settings },
@@ -231,7 +231,7 @@ export default function CanvaIconDock({
           })}
 
           {/* 3. BOTÓN PALETA DE COLORES / DISEÑO (Doble Columna / Ocupa 2 líneas en PC) */}
-          {docType !== 'book' && styleTabs.map((tab) => {
+          {docType === 'cv' && styleTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id && isPanelOpen;
             return (
@@ -450,7 +450,7 @@ export default function CanvaIconDock({
         })}
 
         {/* 3. BOTÓN PALETA DE COLORES / DISEÑO (Doble Fila / Ocupa 2 líneas en Celular) */}
-        {docType !== 'book' && styleTabs.map((tab) => {
+        {docType === 'cv' && styleTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id && isPanelOpen;
           return (
