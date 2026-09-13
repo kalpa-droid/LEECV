@@ -15,6 +15,13 @@ export interface OpenTabItem {
 }
 
 const OPEN_TABS_STORAGE_KEY = 'cv_open_tabs';
+export const TABS_CHANGED_EVENT = 'leecv-tabs-changed';
+
+function notifyTabsChanged(): void {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(TABS_CHANGED_EVENT));
+  }
+}
 
 export function getOpenTabs(): OpenTabItem[] {
   if (typeof window === 'undefined') return [];
@@ -61,6 +68,7 @@ export function addOpenTab(cvId: string, title: string, versionLabel?: string, d
   }
 
   saveOpenTabs(current);
+  notifyTabsChanged();
   return current;
 }
 
@@ -68,6 +76,7 @@ export function removeOpenTab(cvId: string): OpenTabItem[] {
   const current = getOpenTabs();
   const filtered = current.filter(t => t.cvId !== cvId);
   saveOpenTabs(filtered);
+  notifyTabsChanged();
   return filtered;
 }
 

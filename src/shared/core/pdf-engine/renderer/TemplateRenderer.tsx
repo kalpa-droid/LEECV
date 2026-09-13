@@ -141,7 +141,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   const sidebarType = getTypographyColorBinding(sidebarRolesColor, sidebarRolesColor.primary);
   const mainType = getTypographyColorBinding(mainRolesColor, mainRolesColor.background);
 
-  const activePageSizeId = layoutOverrides?.pageSizeId || preset.pageSizeId;
+  const activePageSizeId = layoutOverrides?.pageSizeId || layoutOverrides?.paperSize || preset.pageSizeId;
   const pageDef: PageSize = embedded && canvasWidthMm && canvasHeightMm
     ? {
         id: 'embedded',

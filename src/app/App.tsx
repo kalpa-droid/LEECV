@@ -4,7 +4,7 @@ import CanvaIconDock from '../modules/cv-builder/components/CanvaIconDock';
 import EditorPanel from '../modules/cv-builder/components/EditorPanel';
 const CVPreview = lazy(() => import('../modules/cv-builder/components/CVPreview'));
 import { FileText, CreditCard, Palette, Plus, X, Sparkles, ChevronRight } from 'lucide-react';
-import { getOpenTabs, addOpenTab, removeOpenTab, closeDocumentEverywhere, generateDocumentId, OpenTabItem } from '../shared/core/storage/documentTabEngine';
+import { getOpenTabs, addOpenTab, removeOpenTab, closeDocumentEverywhere, generateDocumentId, OpenTabItem, TABS_CHANGED_EVENT } from '../shared/core/storage/documentTabEngine';
 import { AppShell } from '../shared/core/ui/AppShell';
 const LandingPage = lazy(() => import('../modules/landing/LandingPage').then(m => ({ default: m.LandingPage })));
 const BookStudio = lazy(() => import('../modules/book-studio/BookStudio').then(m => ({ default: m.BookStudio })));
@@ -303,19 +303,28 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 
   useEffect(() => {
     if (activeCvId) {
-      const updated = addOpenTab(
+      const docTypeForTab: 'cv' | 'business_card' | 'book' = cvData?.activePresetId === 'tarjeta-personal' ? 'business_card' : 'cv';
+      addOpenTab(
         activeCvId,
-        cvData?.title || 'Mi Currículum Vitae',
-        cvData?.version_label
+        cvData?.title || (docTypeForTab === 'business_card' ? 'Mi Tarjeta Personal' : 'Mi Currículum Vitae'),
+        cvData?.version_label,
+        docTypeForTab
       );
-      setTabs(updated);
+      setTabs(getOpenTabs());
       if (cvData) {
         saveCV().catch(err => console.warn('Error al auto-guardar nuevo borrador:', err));
       }
     } else {
       setTabs(getOpenTabs());
     }
-  }, [activeCvId, cvData?.title, cvData?.version_label]);
+  }, [activeCvId, cvData?.title, cvData?.version_label, cvData?.activePresetId]);
+
+  // Bus de eventos: sincronizar pestañas cuando el motor de guardado actualiza títulos
+  useEffect(() => {
+    const syncTabsFromEngine = () => setTabs(getOpenTabs());
+    window.addEventListener(TABS_CHANGED_EVENT, syncTabsFromEngine);
+    return () => window.removeEventListener(TABS_CHANGED_EVENT, syncTabsFromEngine);
+  }, []);
 
   const resolveNextActiveDocument = async (closedOrDeletedCvId: string, remaining: OpenTabItem[]) => {
     setTabs(remaining);

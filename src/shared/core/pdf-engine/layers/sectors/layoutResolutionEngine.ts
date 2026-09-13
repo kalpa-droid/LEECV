@@ -14,6 +14,7 @@ import { SECTION_CATALOG } from '../../../sectionRegistry';
 
 export interface CvLayoutOverrides {
   pageSizeId?: string;
+  paperSize?: string;
   sidebarWidthPercent?: number;
   columnAssignments?: Record<string, 'primaria' | 'secundaria' | string>;
   sectionOrders?: {

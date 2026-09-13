@@ -161,6 +161,32 @@ export const PRESET_COLORS: Record<string, ColorPreset> = {
     seedHex: '#181818',
     harmonyScheme: 'monochromatic',
     palette: generateHarmoniousPalette('#181818', 'monochromatic')
+  },
+  'coral-turquesa': {
+    id: 'color-coral-turquesa',
+    name: 'Coral & Turquesa',
+    seedHex: '#FF6B6B',
+    palette: {
+      primary: '#FF6B6B',
+      secondary: '#4ECDC4',
+      accent: '#1A535C',
+      text: '#2C3E50',
+      textOnPrimary: '#FFFFFF',
+      background: '#F7F7F7'
+    }
+  },
+  'lavanda-oro': {
+    id: 'color-lavanda-oro',
+    name: 'Lavanda & Oro',
+    seedHex: '#6C5CE7',
+    palette: {
+      primary: '#6C5CE7',
+      secondary: '#FDCB6E',
+      accent: '#433681',
+      text: '#2D3436',
+      textOnPrimary: '#FFFFFF',
+      background: '#FEFEFE'
+    }
   }
 };
 

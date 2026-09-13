@@ -16,7 +16,7 @@ import {
   Globe,
   LayoutDashboard
 } from 'lucide-react';
-import { elevationSystem, radius, UI_THEME_META, buttonUnavailable } from '../../../shared/core/uiDesignSystem';
+import { elevationSystem, radius, UI_THEME_META, buttonUnavailable, button } from '../../../shared/core/uiDesignSystem';
 import { ThemeToggleButton } from '../../../shared/core/ui/ThemeToggleButton';
 import { ZoomControls } from '../../../shared/core/ui/ZoomControls';
 import { AccountMenuButton } from '../../../shared/core/ui/AccountMenuButton';
@@ -151,7 +151,7 @@ export default function Navbar({
             <button
               type="button"
               onClick={onOpenCloudStatus}
-              className={`flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-full bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-status-success-on-base)] transition ${elevationSystem.raised} cursor-pointer active:scale-95 font-black text-xs shrink-0`}
+              className={`flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-full transition cursor-pointer active:scale-95 font-black text-xs shrink-0 ${button.success}`}
               title={t.navbar.publishTitle}
             >
               <Globe className="w-4 h-4 flex-shrink-0" />
@@ -292,7 +292,7 @@ export default function Navbar({
                     setIsActionMenuOpen(false);
                     onPrint();
                   }}
-                  className={`w-full text-left px-3 py-2 rounded-[${radius.card}] bg-[var(--color-secondary-base)] hover:opacity-90 text-[var(--color-secondary-on-base)] text-xs font-black flex items-center gap-2 transition cursor-pointer`}
+                  className={`w-full text-left px-3 py-2 rounded-[${radius.card}] text-xs font-black flex items-center gap-2 transition cursor-pointer ${button.primary}`}
                 >
                   <Download className="w-4 h-4" />
                   <span>{t.navbar.exportPdf}</span>
@@ -308,7 +308,7 @@ export default function Navbar({
                       setIsActionMenuOpen(false);
                       onOpenCloudStatus();
                     }}
-                    className={`w-full text-left px-3 py-2 rounded-[${radius.card}] bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-status-success-on-base)] text-xs font-black flex items-center gap-2 transition cursor-pointer`}
+                    className={`w-full text-left px-3 py-2 rounded-[${radius.card}] text-xs font-black flex items-center gap-2 transition cursor-pointer ${button.success}`}
                   >
                     <Globe className="w-4 h-4" />
                     <span>{t.navbar.publishWebPublicLink}</span>

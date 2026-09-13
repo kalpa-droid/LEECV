@@ -26,8 +26,18 @@ const styleTabs = [
   { id: 'diseno', label: 'Diseño', icon: Palette }
 ];
 
-// Pestaña especial de Tarjeta Personal
-const cardTab = { id: 'tarjeta_personal', label: 'Datos & Config de Tarjeta', icon: CreditCard };
+// Pestañas especializadas de Tarjeta Personal (7 botones independientes)
+const CARD_TABS_LARGE = [
+  { id: 'diseno', label: 'Diseño & Paleta', icon: Palette },
+  { id: 'card_size', label: 'Tamaño & Sangrado', icon: Sliders },
+] as const;
+const CARD_TABS_SMALL = [
+  { id: 'card_extract', label: 'Extraer datos de CV', icon: FileUp },
+  { id: 'card_logo', label: 'Logotipo', icon: CreditCard },
+  { id: 'card_front', label: 'Datos Frente', icon: Settings },
+  { id: 'card_back', label: 'Datos Dorso', icon: BookMarked },
+  { id: 'card_qr', label: 'QR Interactivo', icon: Eye },
+] as const;
 
 import { BOOK_STEP_SEQUENCE } from '../../../shared/core/book-engine/bookStepSequence';
 
@@ -141,29 +151,51 @@ export default function CanvaIconDock({
             );
           })()}
 
-          {/* BOTÓN TARJETA PERSONAL (Solo para docType === 'business_card') */}
-          {docType === 'business_card' && (() => {
-            const isActive = activeTab === cardTab.id && isPanelOpen;
-            const CardIcon = cardTab.icon;
+          {/* BOTONES TARJETA PERSONAL — 2 Grandes + 5 Pequeños (Solo para docType === 'business_card') */}
+          {docType === 'business_card' && CARD_TABS_LARGE.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id && isPanelOpen;
             return (
               <button
-                key={cardTab.id}
+                key={tab.id}
                 type="button"
-                onClick={() => handleTabClick(cardTab.id)}
+                onClick={() => handleTabClick(tab.id)}
                 className={`col-span-2 w-full h-10 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer border ${
                   isActive
                     ? `bg-[var(--color-accent-base)] border-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.floating} shadow-[var(--color-accent-base)]/30 scale-[1.02]`
                     : 'bg-[var(--ui-dock-hover)] border-[var(--ui-dock-border)] text-[var(--color-secondary-bright)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--ui-dock-hover)]'
                 }`}
-                title={cardTab.label}
+                title={tab.label}
               >
-                <CardIcon className={`w-5 h-5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
+                <Icon className={`w-5 h-5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
                 <span className={`absolute left-24 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
-                  {cardTab.label}
+                  {tab.label}
                 </span>
               </button>
             );
-          })()}
+          })}
+          {docType === 'business_card' && CARD_TABS_SMALL.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id && isPanelOpen;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => handleTabClick(tab.id)}
+                className={`w-9 h-9 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer ${
+                  isActive
+                    ? `bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.floating} shadow-[var(--color-secondary-base)]/30 scale-105`
+                    : 'text-[var(--ui-dock-text-muted)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--ui-dock-hover)]'
+                }`}
+                title={tab.label}
+              >
+                <Icon className={`w-4.5 h-4.5 ${isActive ? 'text-[var(--color-secondary-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
+                <span className={`absolute left-24 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
 
           {/* BOTONES LIBRO (Solo para docType === 'book') */}
           {docType === 'book' && activeBookTabs.map((tab) => {
@@ -260,8 +292,8 @@ export default function CanvaIconDock({
             );
           })()}
 
-          {/* 6. BOTÓN PERSONAL */}
-          {docType !== 'book' && (() => {
+          {/* 6. BOTÓN PERSONAL (Solo para CVs) */}
+          {docType === 'cv' && (() => {
             const isActive = activeTab === personalTab.id && isPanelOpen;
             return (
               <button
@@ -365,25 +397,27 @@ export default function CanvaIconDock({
           </button>
         )}
 
-        {/* BOTÓN TARJETA PERSONAL (Solo para docType === 'business_card') */}
-        {docType === 'business_card' && (() => {
-          const isActive = activeTab === cardTab.id && isPanelOpen;
-          const CardIcon = cardTab.icon;
+        {/* BOTONES TARJETA PERSONAL — Mobile (Solo para docType === 'business_card') */}
+        {docType === 'business_card' && [...CARD_TABS_LARGE, ...CARD_TABS_SMALL].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id && isPanelOpen;
+          const isLarge = CARD_TABS_LARGE.some(lt => lt.id === tab.id);
           return (
             <button
+              key={tab.id}
               type="button"
-              onClick={() => handleTabClick(cardTab.id)}
-              className={`row-span-2 h-full w-[42px] rounded-[8px] flex items-center justify-center shrink-0 transition cursor-pointer border ${
+              onClick={() => handleTabClick(tab.id)}
+              className={`${isLarge ? 'row-span-2 h-full w-[42px]' : 'w-7.5 h-7.5'} rounded-[${isLarge ? '8px' : '6px'}] flex items-center justify-center shrink-0 transition cursor-pointer border ${
                 isActive
                   ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--color-accent-base)] ${elevationSystem.raised}`
                   : 'bg-[var(--ui-bg-panel)] text-[var(--ui-dock-text-muted)] border-[var(--ui-border)]'
               }`}
-              title={cardTab.label}
+              title={tab.label}
             >
-              <CardIcon className={`w-5 h-5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--ui-dock-text-muted)]'}`} />
+              <Icon className={`${isLarge ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--ui-dock-text-muted)]'}`} />
             </button>
           );
-        })()}
+        })}
 
         {/* BOTONES LIBRO (Solo para docType === 'book') */}
         {docType === 'book' && activeBookTabs.map((tab) => {
@@ -467,8 +501,8 @@ export default function CanvaIconDock({
           </button>
         )}
 
-        {/* 6. BOTÓN PERSONAL */}
-        {(() => {
+        {/* 6. BOTÓN PERSONAL (Solo para CVs) */}
+        {docType === 'cv' && (() => {
           const isActive = activeTab === personalTab.id && isPanelOpen;
           return (
             <button

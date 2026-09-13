@@ -14,7 +14,7 @@ import { getNextBookStepId, getPrevBookStepId } from '../../shared/core/book-eng
 import { saveBook } from '../../shared/core/storage/documentStorageService';
 import { addOpenTab, generateDocumentId, OpenTabItem } from '../../shared/core/storage/documentTabEngine';
 import { getPendingDocumentToOpen, clearPendingDocumentToOpen } from '../../shared/core/storage/pendingDocumentHandoff';
-import { radius } from '../../shared/core/uiDesignSystem';
+import { radius, button } from '../../shared/core/uiDesignSystem';
 
 interface BookStudioContentProps {
   currentUiTheme?: string;
@@ -275,7 +275,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               <button
                 type="button"
                 onClick={handleTriggerFileInput}
-                className={`px-5 py-2.5 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold text-xs rounded-[${radius.card}] hover:opacity-90 transition cursor-pointer`}
+                className={`px-5 py-2.5 font-bold text-xs rounded-[${radius.card}] transition cursor-pointer ${button.primary}`}
               >
                 Cargar PDF Ahora
               </button>

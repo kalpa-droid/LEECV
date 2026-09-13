@@ -81,7 +81,8 @@ export default function EditorPanel({
       cardSize: val.startsWith('tarjeta_') ? val : prev?.cardSize,
       layout: {
         ...(prev?.layout || {}),
-        paperSize: val
+        paperSize: val,
+        pageSizeId: val
       }
     }));
   };
@@ -333,7 +334,7 @@ export default function EditorPanel({
             <button
               type="button"
               onClick={onAddAction}
-              className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-[var(--color-accent-on-base)] ${elevationSystem.raised} transition cursor-pointer`}
+              className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black transition cursor-pointer ${button.primary}`}
             >
               <Plus className="w-3.5 h-3.5" />
               <span>{addLabel}</span>
@@ -725,7 +726,7 @@ export default function EditorPanel({
                 <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
                 <button
                   onClick={capturePhoto}
-                  className={`absolute bottom-3 flex items-center gap-1.5 px-5 py-2 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-[var(--color-accent-on-base)] font-black text-xs rounded-full ${elevationSystem.floating} transition`}
+                  className={`absolute bottom-3 flex items-center gap-1.5 px-5 py-2 font-black text-xs rounded-full transition ${button.primary}`}
                 >
                   <Camera className="w-4 h-4" /> Capturar Foto
                 </button>
@@ -895,7 +896,7 @@ export default function EditorPanel({
 
               <button
                 onClick={onOpenSignature}
-                className={`w-full flex items-center justify-center gap-2 py-2.5 bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-[var(--color-accent-on-base)] text-xs font-black rounded-[${radius.card}] ${elevationSystem.raised} transition cursor-pointer`}
+                className={`w-full flex items-center justify-center gap-2 py-2.5 text-xs font-black rounded-[${radius.card}] transition cursor-pointer ${button.primary}`}
               >
                 <PenTool className="w-4 h-4" /> Abrir Tablero de Firma (Dibujar / Subir)
               </button>
@@ -1255,7 +1256,7 @@ export default function EditorPanel({
                         onClick={() => {
                           changeActiveTab(cs.id);
                         }}
-                        className={`px-3 py-1 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-bold text-xs rounded-[${radius.card}] shadow transition cursor-pointer`}
+                        className={`px-3 py-1 font-bold text-xs rounded-[${radius.card}] transition cursor-pointer ${button.primary}`}
                       >
                         Editar Registros →
                       </button>
@@ -1322,7 +1323,7 @@ export default function EditorPanel({
               <button
                 onClick={handleSaveFromPanel}
                 disabled={isSavingFromPanel}
-                className={`px-3 py-1.5 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-bold text-xs rounded-[${radius.card}] shadow transition flex items-center gap-1 cursor-pointer`}
+                className={`px-3 py-1.5 font-bold text-xs rounded-[${radius.card}] transition flex items-center gap-1 cursor-pointer ${button.primary}`}
               >
                 <Save className="w-3.5 h-3.5" />
                 <span>{isSavingFromPanel ? 'Guardando...' : 'Guardar Actual'}</span>
@@ -1353,7 +1354,7 @@ export default function EditorPanel({
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       <button
                         onClick={() => handleOpenSavedFromPanel(item.id)}
-                        className={`px-3 py-1.5 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-black text-[11px] rounded-[${radius.control}] shadow transition flex items-center gap-1 cursor-pointer`}
+                        className={`px-3 py-1.5 font-black text-[11px] rounded-[${radius.control}] transition flex items-center gap-1 cursor-pointer ${button.primary}`}
                       >
                         <FolderOpen className="w-3.5 h-3.5" /> Abrir
                       </button>
@@ -1414,7 +1415,7 @@ export default function EditorPanel({
                     Tamaño de Hoja / Formato de Papel
                   </label>
                   <select
-                    value={cvData.layout?.paperSize || 'a4'}
+                    value={cvData.layout?.pageSizeId || cvData.layout?.paperSize || cvData.cardSize || 'a4'}
                     onChange={(e) => handlePaperSizeChange(e.target.value)}
                     className={`w-full text-xs p-2.5 rounded-[${radius.card}] border border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer`}
                   >
@@ -1902,34 +1903,12 @@ export default function EditorPanel({
         )}
 
         {/* ========================================================================= */}
-        {/* TAB: TARJETA PERSONAL (PANEL DEDICADO DE TARJETA) */}
+        {/* TABS DE TARJETA PERSONAL — 6 paneles independientes */}
         {/* ========================================================================= */}
-        {activeTab === 'tarjeta_personal' && (
-          <div className="space-y-6">
-            {/* Acciones Principales Prominentes de Tarjeta */}
-            <div className="grid grid-cols-2 gap-2.5">
-              <button
-                type="button"
-                onClick={() => changeActiveTab('diseno')}
-                className={`p-3 rounded-[var(--radius-card)] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold text-xs flex items-center justify-center gap-2 transition hover:opacity-95 cursor-pointer ${elevationSystem.raised}`}
-              >
-                <Palette className="w-4 h-4" />
-                Diseño & Paleta
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const el = document.getElementById('card-size-section');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className={`p-3 rounded-[var(--radius-card)] bg-[var(--ui-bg-card)] border border-[var(--color-secondary-base)] text-[var(--color-neutral-text-primary)] font-bold text-xs flex items-center justify-center gap-2 transition hover:bg-[var(--color-neutral-surface-muted)] cursor-pointer ${elevationSystem.raised}`}
-              >
-                <Layout className="w-4 h-4 text-[var(--color-secondary-bright)]" />
-                Tamaño & Sangrado
-              </button>
-            </div>
 
-            {/* 1. Detección & Selección de Pestañas de CV */}
+        {/* TAB: EXTRAER DATOS DE CV */}
+        {activeTab === 'card_extract' && (
+          <div className="space-y-6">
             {(() => {
               const openTabsList = getOpenTabs();
               const cvTabs = openTabsList.filter(t => !t.docType || t.docType === 'cv');
@@ -1940,14 +1919,30 @@ export default function EditorPanel({
                     {cvTabs.length === 0 ? (
                       <div className="p-3 bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-text)]/40 rounded-[var(--radius-card)] text-xs text-[var(--color-status-warning-text)] leading-relaxed">
                         <span className="font-bold block mb-1">⚠️ No hay ningún CV abierto en el editor</span>
-                        <span>Podés introducir los datos de tu tarjeta personal manualmente a continuación o abrir un CV para vincular sus datos.</span>
+                        <span>Podés introducir los datos de tu tarjeta personal manualmente o abrir un CV para vincular sus datos.</span>
                       </div>
                     ) : cvTabs.length === 1 ? (
                       <div className="p-3 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 rounded-[var(--radius-card)] text-xs text-[var(--color-secondary-text)] flex items-center justify-between">
                         <span className="font-bold">📄 Vinculado a: "{cvTabs[0].title}"</span>
-                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)]">
-                          CV Único Abierto
-                        </span>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const loaded = await loadCVById(cvTabs[0].cvId);
+                            if (loaded) {
+                              setCvData((prev: any) => ({
+                                ...prev,
+                                sourceCvTabId: cvTabs[0].cvId,
+                                personalInfo: loaded.personalInfo,
+                                roles: loaded.roles,
+                                profession: loaded.profession
+                              }));
+                              showSuccess(`Datos vinculados desde CV "${loaded.title || 'Seleccionado'}".`);
+                            }
+                          }}
+                          className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] cursor-pointer hover:opacity-90 transition"
+                        >
+                          Vincular
+                        </button>
                       </div>
                     ) : (
                       <div className="space-y-1.5">
@@ -1984,8 +1979,12 @@ export default function EditorPanel({
                 </PanelSection>
               );
             })()}
+          </div>
+        )}
 
-            {/* 2. Logotipo de Marca / Empresa */}
+        {/* TAB: LOGOTIPO */}
+        {activeTab === 'card_logo' && (
+          <div className="space-y-6">
             <PanelSection icon={<Camera className="w-4 h-4 text-[var(--color-accent-text)]" />} title="Logotipo de Marca / Empresa (Opcional)">
               <div className="p-3 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-3">
                 <div className="flex items-center gap-4 p-3 rounded-[var(--radius-card)] bg-[var(--color-secondary-muted)] border border-[var(--color-neutral-border)]">
@@ -2053,8 +2052,12 @@ export default function EditorPanel({
                 </div>
               </div>
             </PanelSection>
+          </div>
+        )}
 
-            {/* 3. Datos Frente de Tarjeta */}
+        {/* TAB: DATOS DEL FRENTE */}
+        {activeTab === 'card_front' && (
+          <div className="space-y-6">
             <PanelSection icon={<PenTool className="w-4 h-4" />} title="Datos del Frente">
               <div className="p-4 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-3">
                 {[
@@ -2108,8 +2111,12 @@ export default function EditorPanel({
                 })}
               </div>
             </PanelSection>
+          </div>
+        )}
 
-            {/* 3. Dorso de Tarjeta (Marca & Eslogan) */}
+        {/* TAB: DATOS DEL DORSO */}
+        {activeTab === 'card_back' && (
+          <div className="space-y-6">
             <PanelSection icon={<Sparkles className="w-4 h-4" />} title="Datos del Dorso (Marca & Eslogan)">
               <div className="p-4 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-3">
                 <div className="space-y-1">
@@ -2146,8 +2153,12 @@ export default function EditorPanel({
                 </div>
               </div>
             </PanelSection>
+          </div>
+        )}
 
-            {/* 4. Configuración del Código QR */}
+        {/* TAB: QR INTERACTIVO */}
+        {activeTab === 'card_qr' && (
+          <div className="space-y-6">
             <PanelSection icon={<QrCode className="w-4 h-4" />} title="Código QR Interactivo">
               <div className="p-4 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-3">
                 <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">Modo del Código QR</label>
@@ -2188,8 +2199,12 @@ export default function EditorPanel({
                 </div>
               </div>
             </PanelSection>
+          </div>
+        )}
 
-            {/* 5. Tamaños de Tarjeta Mundiales + Sangrado & Marcas */}
+        {/* TAB: TAMAÑO & SANGRADO */}
+        {activeTab === 'card_size' && (
+          <div className="space-y-6">
             <div id="card-size-section">
               <PanelSection icon={<Layout className="w-4 h-4" />} title="Tamaño Físico de Tarjeta + Sangrado + Marcas de Corte">
                 <div className="p-4 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-4">

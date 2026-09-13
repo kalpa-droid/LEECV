@@ -258,7 +258,7 @@ inGracePeriod ? 'bg-[var(--color-status-warning-muted)] text-[var(--color-status
             {inGracePeriod && (
               <button
                 onClick={() => setIsRetentionModalOpen(true)}
-                className={`${button.primary} text-xs py-2 px-3 bg-gradient-to-r from-[var(--color-status-success-bright)] to-[var(--color-status-success-base)] flex items-center gap-1.5`}
+                className={`${button.success} text-xs py-2 px-3 flex items-center gap-1.5`}
               >
                 <Sparkles className="w-4 h-4" />
                 {t.dashboard.retentionOfferBadge}
