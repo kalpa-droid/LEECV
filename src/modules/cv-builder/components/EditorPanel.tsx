@@ -20,12 +20,12 @@ import {
   X,
   CreditCard,
   QrCode,
-  RefreshCw
+  RefreshCw,
+  Target
 } from 'lucide-react';
 import { fontOptions } from '../../../data/fontOptions';
-import { getColumnAssignableSections } from '../../../shared/core/sectionRegistry';
-import { getAllPresets, PRESET_COLORS, PRESET_TYPOGRAPHY, PRESET_COLUMNS, getColumnLayoutPresetName, resolveActivePreset } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
-import { getAllCvFormats, getCvFormat, getFormatDefaultVisibility, resolveActiveFormatId, resolveActiveFormat } from '../../../shared/core/formats/cvFormatRegistry';
+import { getAllPresets, PRESET_COLORS, PRESET_TYPOGRAPHY, resolveActivePreset } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
+import { getAllCvFormats, getCvFormat, resolveActiveFormatId, resolveActiveFormat } from '../../../shared/core/formats/cvFormatRegistry';
 import { FIELD_CATALOG } from '../../../shared/core/pdf-engine/layers/records/fieldCatalog';
 import { PAGE_SIZES } from '../../../shared/core/pdf-engine/layers/page/pageSizes';
 import { resolveDisplayName } from '../../../shared/core/utils/cvDataSchema';
@@ -41,7 +41,6 @@ import { PanelSection } from './editor/PanelSection';
 import { SectionManualAdjustment } from './editor/SectionManualAdjustment';
 import { getUiHint } from '../../../shared/core/uiTextGlossary';
 import { applyPresetLevel } from '../../../shared/core/pdf-engine/layers/presets/presetHierarchyEngine';
-import { activateSection } from '../../../shared/core/sections/sectionActivationEngine';
 import { triggerPresetTransition } from '../../../shared/core/pdf-engine/layers/presets/presetTransitionEngine';
 import { getEffectiveCoverFeaturedItems } from '../../../shared/core/pdf-engine/layers/sectors/coverFeaturedEngine';
 
@@ -442,6 +441,66 @@ export default function EditorPanel({
               <SectionManualAdjustment sectionId="resumen" cvData={cvData} setCvData={setCvData} />
             </div>
           </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB: OBJETIVO PROFESIONAL */}
+        {/* ========================================================================= */}
+        {activeTab === 'objetivo' && (
+          <div className="space-y-3 p-3 bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[var(--radius-card)]">
+            <h3 className="text-sm font-black text-[var(--color-neutral-text-primary)] flex items-center gap-1.5">
+              <Target className="w-4 h-4 text-[var(--color-secondary-bright)]" />
+              Objetivo Profesional / Resumen Ejecutivo
+            </h3>
+            <Field
+              id="objective"
+              as="textarea"
+              rows={5}
+              label="Objetivo Profesional"
+              value={cvData.objective || ''}
+              onChange={(e: any) => setCvData((prev: any) => ({ ...prev, objective: e.target.value }))}
+              placeholder="Ej: Aspiración profesional y metas a corto y largo plazo..."
+            />
+            <div className="pt-2 border-t border-[var(--color-neutral-border)]">
+              <SectionManualAdjustment sectionId="objetivo" cvData={cvData} setCvData={setCvData} />
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB: LOGROS CUANTIFICABLES */}
+        {/* ========================================================================= */}
+        {activeTab === 'logros' && (
+          <RecordFormSection
+            sectionKey="logros"
+            sectionTitle="Logros Cuantificables & Métricas"
+            kindKey="achievements"
+            addLabel="Agregar Logro"
+            cvData={cvData}
+            setCvData={setCvData}
+            fieldName="achievements"
+            itemTitlePrefix="Logro"
+            helpText="Métricas, premios o resultados cuantificables alcanzados en tu trayectoria."
+            manualAdjustment={<SectionManualAdjustment sectionId="logros" cvData={cvData} setCvData={setCvData} />}
+          />
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB: PORTAFOLIO / TRABAJOS DESTACADOS */}
+        {/* ========================================================================= */}
+        {activeTab === 'portafolio' && (
+          <RecordFormSection
+            sectionKey="portafolio"
+            sectionTitle="Portafolio / Trabajos Destacados"
+            kindKey="portfolio"
+            addLabel="Agregar Trabajo al Portafolio"
+            cvData={cvData}
+            setCvData={setCvData}
+            fieldName="portfolio"
+            itemTitlePrefix="Trabajo"
+            helpText="Enlaces, descripciones e imágenes de tus mejores trabajos o proyectos."
+            manualAdjustment={<SectionManualAdjustment sectionId="portafolio" cvData={cvData} setCvData={setCvData} />}
+          />
         )}
 
         {/* ========================================================================= */}
