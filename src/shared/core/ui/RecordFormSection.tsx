@@ -2,6 +2,7 @@ import React from 'react';
 import { RepeatableSection } from './RepeatableSection';
 import { Field } from './Field';
 import { FIELD_CATALOG, BUILTIN_RECORD_KINDS } from '../pdf-engine/layers/records/fieldCatalog';
+import { elevationSystem } from '../uiDesignSystem';
 import { resolveLegacyFieldKey } from '../pdf-engine/layers/records/fieldAliasCatalog';
 import { getFieldLabelOptions } from '../pdf-engine/layers/records/fieldLabelOptions';
 import { Info } from 'lucide-react';
@@ -101,7 +102,7 @@ export function RecordFormSection({
                     });
                   }}
                   onClick={(e) => e.stopPropagation()}
-                  className="text-xs font-black py-1 px-2 rounded-md bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] outline-none focus:ring-2 focus:ring-[var(--color-accent-base)]/40 cursor-pointer shadow-sm transition"
+                  className={`text-xs font-black py-1 px-2 rounded-md bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] outline-none focus:ring-2 focus:ring-[var(--color-accent-base)]/40 cursor-pointer ${elevationSystem.raised} transition`}
                 >
                   {labelOptions.map((opt) => (
                     <option key={opt} value={opt}>
