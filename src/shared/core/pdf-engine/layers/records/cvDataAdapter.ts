@@ -112,6 +112,62 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
     });
   }
 
+  // Objetivo Profesional / Resumen Ejecutivo (Main)
+  if (isVisible('objetivo') && cvData.objective) {
+    sections.push({
+      id: 'objetivo',
+      titleText: getSectionLabel('objetivo'),
+      records: [
+        {
+          id: 'rec-objective',
+          kind: 'quote-text',
+          targetSectorRole: 'main',
+          fields: { text: cvData.objective }
+        }
+      ]
+    });
+  }
+
+  // Logros Cuantificables & Métricas (Main)
+  if (isVisible('logros') && Array.isArray(cvData.achievements) && cvData.achievements.length > 0) {
+    sections.push({
+      id: 'logros',
+      titleText: getSectionLabel('logros'),
+      records: cvData.achievements.map((ach: any, idx: number) => ({
+        id: `rec-ach-${idx}`,
+        kind: 'projects',
+        fieldLabelOverrides: ach.fieldLabelOverrides,
+        targetSectorRole: 'main',
+        fields: {
+          ...ach,
+          title: ach.title || ach.tituloOGrado || ach.name || '',
+          institution: ach.institution || ach.institucion || '',
+          details: ach.details || ach.description || ach.descripcion || ''
+        }
+      }))
+    });
+  }
+
+  // Portafolio / Trabajos Destacados (Main)
+  if (isVisible('portafolio') && Array.isArray(cvData.portfolio) && cvData.portfolio.length > 0) {
+    sections.push({
+      id: 'portafolio',
+      titleText: getSectionLabel('portafolio'),
+      records: cvData.portfolio.map((port: any, idx: number) => ({
+        id: `rec-port-${idx}`,
+        kind: 'projects',
+        fieldLabelOverrides: port.fieldLabelOverrides,
+        targetSectorRole: 'main',
+        fields: {
+          ...port,
+          title: port.title || port.tituloOGrado || port.name || '',
+          institution: port.institution || port.institucion || '',
+          details: port.details || port.description || port.descripcion || ''
+        }
+      }))
+    });
+  }
+
   // Resumen Profesional / Extracto (Main)
   if (isVisible('resumen') && cvData.summary) {
     sections.push({
