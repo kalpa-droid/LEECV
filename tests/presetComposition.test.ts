@@ -148,6 +148,6 @@ describe('applyPresetLevel — Limpieza de theme.primaryColor', () => {
     const formats = getAllCvFormats();
     const entry = formats.find((f) => f.id === 'estandar-completo');
     expect(entry).toBeDefined();
-    expect(entry?.defaultVisibleSections).toHaveLength(18);
+    expect(entry?.defaultVisibleSections).toHaveLength(CANONICAL_SECTION_ORDER.length);
   });
 });

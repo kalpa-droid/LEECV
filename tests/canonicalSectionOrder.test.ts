@@ -8,11 +8,11 @@ import { migrateCvData } from '../src/shared/core/storage/cvMigrationEngine';
 import { ALL_SECTION_IDS, applyTemplateMode } from '../src/shared/core/pdf-engine/layers/presets/templateApplicationEngine';
 
 describe('Canonical Section Order Engine & Section Fixes', () => {
-  it('1. CANONICAL_SECTION_ORDER contiene los 18 IDs estándar sin duplicados ni ecología', () => {
-    expect(CANONICAL_SECTION_ORDER).toHaveLength(18);
+  it('1. CANONICAL_SECTION_ORDER contiene los IDs estándar sin duplicados ni ecología', () => {
+    expect(CANONICAL_SECTION_ORDER).toHaveLength(21);
     expect(CANONICAL_SECTION_ORDER).not.toContain('ecologia');
     const unique = new Set(CANONICAL_SECTION_ORDER);
-    expect(unique.size).toBe(18);
+    expect(unique.size).toBe(21);
   });
 
   it('2. SECTION_CATALOG respeta el orden de CANONICAL_SECTION_ORDER y excluye ecología', () => {

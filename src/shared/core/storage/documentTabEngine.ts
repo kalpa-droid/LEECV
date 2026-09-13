@@ -18,7 +18,7 @@ const OPEN_TABS_STORAGE_KEY = 'cv_open_tabs';
 export const TABS_CHANGED_EVENT = 'leecv-tabs-changed';
 
 function notifyTabsChanged(): void {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
     window.dispatchEvent(new CustomEvent(TABS_CHANGED_EVENT));
   }
 }
