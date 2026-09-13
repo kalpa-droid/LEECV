@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { fontOptions } from '../../../data/fontOptions';
 import { getAllPresets, PRESET_COLORS, PRESET_TYPOGRAPHY, resolveActivePreset } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
-import { getAllCvFormats, getCvFormat, resolveActiveFormatId, resolveActiveFormat } from '../../../shared/core/formats/cvFormatRegistry';
+import { getAllCvFormats, getCvFormat, getFormatDefaultVisibility, resolveActiveFormatId, resolveActiveFormat } from '../../../shared/core/formats/cvFormatRegistry';
 import { FIELD_CATALOG } from '../../../shared/core/pdf-engine/layers/records/fieldCatalog';
 import { PAGE_SIZES } from '../../../shared/core/pdf-engine/layers/page/pageSizes';
 import { resolveDisplayName } from '../../../shared/core/utils/cvDataSchema';
