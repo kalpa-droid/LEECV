@@ -84,8 +84,13 @@ export function RecordFormSection({
 
               const labelOptions = getFieldLabelOptions(fDef);
               const currentOverride = item.fieldLabelOverrides?.[fieldId] || labelOptions[0];
+              // 'title' y 'description' nunca imprimen su label en el PDF (recordLayoutEngine.ts:
+              // 'title' pasa a ser el encabezado en crudo, 'description' se concatena en el bloque
+              // de texto libre) — mostrar el selector ahí sería elegir algo que no cambia nada
+              // visible, como pasaba con "Título / Grado / Nombre" en Curso / Capacitación.
+              const labelIsEverShownInPdf = fDef.pdfRole !== 'title' && fDef.pdfRole !== 'description';
 
-              const labelElement = labelOptions.length > 1 ? (
+              const labelElement = labelOptions.length > 1 && labelIsEverShownInPdf ? (
                 <select
                   value={currentOverride}
                   onChange={(e) => {

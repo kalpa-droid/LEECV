@@ -28,7 +28,9 @@ describe('fieldLabelOptions Unit Tests', () => {
   });
 
   it('4. debe aplicar la etiqueta elegida a nivel de registro puntual en buildStructuredRecordLayout', () => {
-    // Registro 1: sin selección de etiqueta -> toma por defecto la primera opción o pdfLabel
+    // Registro 1: sin selección de etiqueta -> toma por defecto la PRIMERA opción sola,
+    // nunca el label combinado sin separar (bug real reportado: un registro nuevo mostraba
+    // "Enlace / Portfolio / DOI" completo en el PDF en vez de solo "Enlace").
     const rec1 = {
       id: 'rec-redes-0',
       kind: 'social-link',
@@ -41,7 +43,7 @@ describe('fieldLabelOptions Unit Tests', () => {
     const layout1 = buildStructuredRecordLayout(rec1 as any);
     const extra1 = layout1.extras.find(e => e.id === 'url');
     expect(extra1).toBeDefined();
-    expect(extra1?.label).toBe('Enlace / Portfolio / DOI');
+    expect(extra1?.label).toBe('Enlace');
 
     // Registro 1 modificado: con selección de etiqueta "DOI"
     const rec1Custom = {
@@ -53,7 +55,8 @@ describe('fieldLabelOptions Unit Tests', () => {
     expect(extra1Custom).toBeDefined();
     expect(extra1Custom?.label).toBe('DOI');
 
-    // Registro 2: en el mismo dataset sin selección -> mantiene su etiqueta independiente ("Enlace / Portfolio / DOI")
+    // Registro 2: en el mismo dataset sin selección -> también toma la primera opción sola,
+    // independiente de lo que haya elegido el registro 1
     const rec2 = {
       id: 'rec-redes-1',
       kind: 'social-link',
@@ -66,7 +69,22 @@ describe('fieldLabelOptions Unit Tests', () => {
     const layout2 = buildStructuredRecordLayout(rec2 as any);
     const extra2 = layout2.extras.find(e => e.id === 'url');
     expect(extra2).toBeDefined();
-    expect(extra2?.label).toBe('Enlace / Portfolio / DOI');
+    expect(extra2?.label).toBe('Enlace');
+  });
+
+  it('6. caso real reportado — campo "resolucion" (Resolución N° / Disposición) sin elegir etiqueta muestra solo "Resolución N°", nunca el combinado ni el pdfLabel viejo', () => {
+    const rec = {
+      id: 'rec-titulo-0',
+      kind: 'titulos',
+      targetSectorRole: 'main',
+      fields: { resolucion: 'Res. Min. N° 1234/26' }
+    };
+    const layout = buildStructuredRecordLayout(rec as any);
+    const extra = layout.extras.find(e => e.id === 'resolucion');
+    expect(extra).toBeDefined();
+    expect(extra?.label).toBe('Resolución N°');
+    expect(extra?.label).not.toContain('/');
+    expect(extra?.label).not.toContain('Opcional');
   });
 
   it('5. debe propagar fieldLabelOverrides desde cvData a ContentSection y ContentRecord', () => {

@@ -16,7 +16,7 @@ export interface FieldDesignHint {
 export interface FieldDefinition {
   id: string;
   label: string;
-  pdfLabel?: string;
+  pdfLabel?: string; // @deprecated no se lee en ningún lado desde el fix de fieldLabel por defecto — ver recordLayoutEngine.ts
   labelOptions?: string[];
   placeholder: string;
   type: 'text' | 'textarea' | 'url' | 'select';
