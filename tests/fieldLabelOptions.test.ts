@@ -41,7 +41,7 @@ describe('fieldLabelOptions Unit Tests', () => {
     const layout1 = buildStructuredRecordLayout(rec1 as any);
     const extra1 = layout1.extras.find(e => e.id === 'url');
     expect(extra1).toBeDefined();
-    expect(extra1?.label).toBe('Enlace / Portfolio / DOI');
+    expect(extra1?.label).toBe('Enlace');
 
     // Registro 1 modificado: con selección de etiqueta "DOI"
     const rec1Custom = {
@@ -53,7 +53,7 @@ describe('fieldLabelOptions Unit Tests', () => {
     expect(extra1Custom).toBeDefined();
     expect(extra1Custom?.label).toBe('DOI');
 
-    // Registro 2: en el mismo dataset sin selección -> mantiene su etiqueta independiente ("Enlace / Portfolio / DOI")
+    // Registro 2: en el mismo dataset sin selección -> mantiene su propio default independiente ("Enlace", la primera opción)
     const rec2 = {
       id: 'rec-redes-1',
       kind: 'social-link',
@@ -66,7 +66,7 @@ describe('fieldLabelOptions Unit Tests', () => {
     const layout2 = buildStructuredRecordLayout(rec2 as any);
     const extra2 = layout2.extras.find(e => e.id === 'url');
     expect(extra2).toBeDefined();
-    expect(extra2?.label).toBe('Enlace / Portfolio / DOI');
+    expect(extra2?.label).toBe('Enlace');
   });
 
   it('5. debe propagar fieldLabelOverrides desde cvData a ContentSection y ContentRecord', () => {
@@ -92,5 +92,42 @@ describe('fieldLabelOptions Unit Tests', () => {
 
     const layout0 = buildStructuredRecordLayout(redesSec!.records[0]);
     expect(layout0.extras.find(e => e.id === 'url')?.label).toBe('DOI');
+  });
+
+  it('6. NO debe filtrar targetSectorRole ni fieldLabelOverrides como campos visibles (bug real visto en captura: "• targetSectorRole: main" en el PDF)', () => {
+    const rec = {
+      id: 'rec-1',
+      kind: 'education',
+      targetSectorRole: 'main',
+      fieldLabelOverrides: { nivel: 'Nivel' },
+      fields: {
+        tituloOGrado: 'Licenciado en Sistemas',
+        nivel: 'Superior',
+      },
+    };
+    const layout = buildStructuredRecordLayout(rec as any);
+    const allIds = [
+      ...layout.badges.map(b => b.id),
+      ...layout.extras.map(e => e.id),
+    ];
+    expect(allIds).not.toContain('targetsectorrole');
+    expect(allIds).not.toContain('targetSectorRole');
+    expect(allIds).not.toContain('fieldlabeloverrides');
+  });
+
+  it('7. resolucion no se parte en falsas opciones pese a tener "/" en su label (escape hatch labelOptions)', () => {
+    const resolucionDef = FIELD_CATALOG.resolucion;
+    expect(resolucionDef).toBeDefined();
+    const options = getFieldLabelOptions(resolucionDef);
+    expect(options).toEqual(['Resolución N° / Disposición']);
+
+    const rec = {
+      id: 'rec-2',
+      kind: 'course',
+      fields: { resolucion: 'Res. Min. N° 1234/26' },
+    };
+    const layout = buildStructuredRecordLayout(rec as any);
+    const extra = layout.extras.find(e => e.id === 'resolucion');
+    expect(extra?.label).toBe('Resolución N° / Disposición');
   });
 });

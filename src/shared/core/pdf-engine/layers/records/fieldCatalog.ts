@@ -126,6 +126,12 @@ export const FIELD_CATALOG: Record<string, FieldDefinition> = {
     id: 'resolucion',
     label: 'Resolución N° / Disposición (Opcional)',
     pdfLabel: 'Resolución N° / Disposición',
+    // El "/" de arriba no son opciones elegibles por el usuario (a
+    // diferencia de 'url' o 'nivel') — es un único rótulo compuesto con
+    // un pdfLabel que solo saca el "(Opcional)". Sin este labelOptions
+    // explícito, getFieldLabelOptions() lo partiría en 2 "opciones"
+    // sin sentido ("Resolución N°" / "Disposición (Opcional)").
+    labelOptions: ['Resolución N° / Disposición'],
     placeholder: 'Ej: Res. Min. N° 1234/26',
     type: 'text',
     pdfRole: 'extra',

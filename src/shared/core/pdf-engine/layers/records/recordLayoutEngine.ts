@@ -14,6 +14,7 @@
 
 import { FIELD_CATALOG, FieldDefinition } from './fieldCatalog';
 import { FIELD_ALIASES } from './fieldAliasCatalog';
+import { getFieldLabelOptions } from './fieldLabelOptions';
 
 export interface RecordBadgeItem {
   id: string;
@@ -74,7 +75,8 @@ export function inferPdfRole(fieldId: string, val: string): 'title' | 'subtitle'
 }
 
 const INTERNAL_FIELD_DENYLIST = new Set([
-  'id', 'kind', 'level', 'rol', '_meta', 'createdat', 'updatedat', 'fields', 'record'
+  'id', 'kind', 'level', 'rol', '_meta', 'createdat', 'updatedat', 'fields', 'record',
+  'targetsectorrole', 'fieldlabeloverrides',
 ]);
 
 export function buildStructuredRecordLayout(
@@ -167,8 +169,15 @@ export function buildStructuredRecordLayout(
     const def: FieldDefinition | undefined = FIELD_CATALOG[fieldId];
 
     const effectiveRole = def ? def.pdfRole : inferPdfRole(fieldId, val);
+    // Misma cadena de prioridad que usa el selector del editor
+    // (RecordFormSection.tsx: fieldLabelOverrides -> labelOptions[0]) —
+    // antes acá caía directo a def.label (el texto completo combinado,
+    // ej. "Nivel / Dominio") cuando no habia una eleccion explicita,
+    // mientras el editor ya mostraba solo "Nivel" por defecto. Esa
+    // divergencia era el bug real: el PDF nunca reflejaba lo elegido en
+    // el selector, ni siquiera el valor por defecto correcto.
     const fieldLabel = record.fieldLabelOverrides?.[fieldId]
-      || (def ? (def.pdfLabel || def.label) : fieldId);
+      || (def ? (getFieldLabelOptions(def)[0] || def.pdfLabel || def.label) : fieldId);
     const fieldType = def ? def.type : (effectiveRole === 'extra' && /^https?:\/\//i.test(val) ? 'url' : 'text');
 
     switch (effectiveRole) {
