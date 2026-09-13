@@ -92,6 +92,13 @@ export function buildStructuredRecordLayout(
     if (v === undefined || v === null) return;
     const lowerKey = k.toLowerCase();
 
+    // Caso especial: a diferencia de 'fields' (que SÍ debe recursar para
+    // aplanar los valores reales), 'fieldLabelOverrides' nunca debe
+    // recursar — sus sub-claves son IDs de campo mapeados a la etiqueta
+    // ELEGIDA (texto), no a un valor de dato. Cortar acá, sin procesar
+    // sub-claves, evita que "DOI"/"Enlace" pisen el valor real del campo.
+    if (lowerKey === 'fieldlabeloverrides') return;
+
     if (INTERNAL_FIELD_DENYLIST.has(lowerKey)) {
       if (typeof v === 'object' && !Array.isArray(v)) {
         for (const [subK, subV] of Object.entries(v)) {

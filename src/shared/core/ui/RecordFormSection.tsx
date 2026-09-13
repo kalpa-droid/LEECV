@@ -86,27 +86,24 @@ export function RecordFormSection({
               const currentOverride = item.fieldLabelOverrides?.[fieldId] || labelOptions[0];
 
               const labelElement = labelOptions.length > 1 ? (
-                <span className="inline-flex items-center gap-1.5 font-bold">
-                  <span>Etiqueta:</span>
-                  <select
-                    value={currentOverride}
-                    onChange={(e) => {
-                      const selectedVal = e.target.value;
-                      updateField('fieldLabelOverrides', {
-                        ...(item.fieldLabelOverrides || {}),
-                        [fieldId]: selectedVal
-                      });
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-[11px] font-bold py-0.5 px-1.5 rounded ui-bg-card ui-border ui-text-primary outline-none focus:ring-1 focus:ring-[var(--color-accent-base)] cursor-pointer"
-                  >
-                    {labelOptions.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
-                </span>
+                <select
+                  value={currentOverride}
+                  onChange={(e) => {
+                    const selectedVal = e.target.value;
+                    updateField('fieldLabelOverrides', {
+                      ...(item.fieldLabelOverrides || {}),
+                      [fieldId]: selectedVal
+                    });
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-[11px] font-bold py-0.5 px-1.5 rounded ui-bg-card ui-border ui-text-primary outline-none focus:ring-1 focus:ring-[var(--color-accent-base)] cursor-pointer"
+                >
+                  {labelOptions.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
               ) : (
                 fDef.label
               );
