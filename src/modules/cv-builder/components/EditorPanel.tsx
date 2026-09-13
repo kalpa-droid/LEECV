@@ -53,7 +53,7 @@ import { RecordFormSection } from '../../../shared/core/ui/RecordFormSection';
 import { Field } from '../../../shared/core/ui/Field';
 import { UI_GLOSSARY } from '../../../shared/core/ui/uiTextGlossary';
 
-import { colorSystem, typeScale, elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
+import { colorSystem, typeScale, elevationSystem, radius, button } from '../../../shared/core/uiDesignSystem';
 
 export default function EditorPanel({ 
   cvData, 

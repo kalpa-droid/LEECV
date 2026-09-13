@@ -1,13 +1,4 @@
 export const bookStudioCatalog = {
-  dock: {
-    step1: '1. Origen',
-    step2: '2. Páginas',
-    step3: '3. Foliado',
-    step4: '4. Imprenta',
-    step5: '5. Tapa',
-    step6: '6. Contratapa',
-    step7: '7. Exportar',
-  },
   sourceStep: {
     errorInvalidFile: 'Por favor selecciona un archivo PDF válido.',
     errorReadFile: 'No se pudo leer el archivo PDF. Verifica que no esté protegido o dañado.',

@@ -11,7 +11,7 @@ import { isProOrEnterprise as checkProOrEnterprise } from '../../../../shared/co
 import { usePdfExportGate } from '../../../../shared/core/entitlements/usePdfExportGate';
 import { withErrorHandling } from '../../../../shared/core/utils/errorHandler';
 
-import { elevationSystem, radius } from '../../../../shared/core/uiDesignSystem';
+import { elevationSystem, radius, button } from '../../../../shared/core/uiDesignSystem';
 import { UI_GLOSSARY } from '../../../../shared/core/ui/uiTextGlossary';
 import { formatPrice, formatPricePerMonth } from '../../../../shared/core/payments/pricingCatalog';
 import { useText } from '../../../../shared/i18n/useText';
@@ -162,7 +162,7 @@ export default function PdfCheckoutModal({
         <div className="w-full flex items-center justify-between gap-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] text-xs font-bold transition cursor-pointer"
+            className={button.ghost}
           >
             {t.checkout.backToEditor}
           </button>
@@ -170,7 +170,7 @@ export default function PdfCheckoutModal({
             <button
               onClick={handleConfirmExport}
               disabled={isProcessing}
-              className={`px-4 py-2 bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-accent-on-base)] font-black text-xs rounded-[${radius.card}] ${elevationSystem.raised} transition flex items-center gap-2 cursor-pointer`}
+              className={`${button.success} flex items-center gap-2`}
             >
               <Check className="w-4 h-4" />
               <span>{isProOrEnterprise ? 'Exportar PDF A4 Gratis (Plan Pro Activo)' : `Confirmar Exportación (Créditos: ${credits})`}</span>
@@ -196,7 +196,7 @@ export default function PdfCheckoutModal({
               </span>
               <button 
                 onClick={signInWithGoogle}
-                className={`px-2.5 py-1 bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] border border-[var(--ui-border)] rounded-[${radius.control}] text-[11px] font-extrabold flex items-center gap-1 transition cursor-pointer`}
+                className={`${button.secondary} text-[11px] py-1 px-2.5 flex items-center gap-1`}
               >
                 <LogIn className="w-3.5 h-3.5 text-[var(--ui-text-primary)]" /> {t.checkout.loginWithGoogle}
               </button>
@@ -236,10 +236,10 @@ export default function PdfCheckoutModal({
           <button
             onClick={handleMercadoPagoCheckout}
             disabled={isProcessing}
-            className={`w-full p-3 bg-[var(--color-status-warning-muted)] hover:opacity-90 border border-[var(--color-status-warning-base)] text-[var(--color-status-warning-text)] font-black text-xs rounded-[${radius.modal}] ${elevationSystem.raised} transition flex items-center justify-between cursor-pointer`}
+            className={`w-full p-3 ${button.providerBrand('mercadopago')} rounded-[${radius.modal}] transition flex items-center justify-between cursor-pointer`}
           >
             <div className="flex items-center gap-2.5">
-              <CreditCard className="w-5 h-5 text-[var(--color-status-warning-text)]" />
+              <CreditCard className="w-5 h-5" />
               <div className="text-left">
                 <p className="leading-tight">{t.checkout.payMercadoPagoTitle}</p>
                 <p className="text-[10px] opacity-80 font-bold">{t.checkout.payMercadoPagoDesc}</p>
@@ -254,7 +254,7 @@ export default function PdfCheckoutModal({
           <button
             onClick={() => handlePayPalCheckout('single_pdf')}
             disabled={isProcessing}
-            className={`w-full p-3 bg-[var(--color-secondary-muted)] hover:opacity-90 border border-[var(--color-secondary-base)]/30 text-[var(--color-secondary-text)] font-extrabold text-xs rounded-[${radius.modal}] ${elevationSystem.raised} transition flex items-center justify-between cursor-pointer`}
+            className={`w-full p-3 ${button.providerBrand('paypal')} rounded-[${radius.modal}] transition flex items-center justify-between cursor-pointer`}
           >
             <div className="flex items-center gap-2.5">
               <CreditCard className="w-5 h-5 text-[var(--color-secondary-text)]" />
@@ -272,10 +272,10 @@ export default function PdfCheckoutModal({
           <button
             onClick={() => handleLemonSqueezyCheckout('single_pdf')}
             disabled={isProcessing}
-            className={`w-full p-3 bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] font-extrabold text-xs rounded-[${radius.modal}] ${elevationSystem.raised} transition flex items-center justify-between cursor-pointer`}
+            className={`w-full p-3 ${button.providerBrand('lemonsqueezy')} rounded-[${radius.modal}] transition flex items-center justify-between cursor-pointer`}
           >
             <div className="flex items-center gap-2.5">
-              <CreditCard className="w-5 h-5 text-[var(--ui-text-primary)]" />
+              <CreditCard className="w-5 h-5 text-[var(--color-accent-purple-text)]" />
               <div className="text-left">
                 <p className="leading-tight">{t.checkout.payLemonSqueezyTitle}</p>
                 <p className="text-[10px] opacity-80 font-bold">{t.checkout.payLemonSqueezyDesc}</p>
@@ -295,14 +295,14 @@ export default function PdfCheckoutModal({
             <button
               onClick={() => handlePackCheckout('credits_pack_5')}
               disabled={isProcessing}
-              className={`p-2.5 bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-panel)] border border-[var(--color-status-warning-base)]/30 text-[var(--color-status-warning-text)] font-extrabold text-[11px] rounded-[${radius.card}] transition cursor-pointer text-center`}
+              className={`p-2.5 ${button.secondary} text-[11px] font-extrabold rounded-[${radius.card}] transition cursor-pointer text-center`}
             >
               {t.checkout.pack5Credits} {formatPrice('credits_pack_5', 'usd')}
             </button>
             <button
               onClick={() => handlePackCheckout('credits_pack_10')}
               disabled={isProcessing}
-              className={`p-2.5 bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-panel)] border border-[var(--color-status-warning-base)]/30 text-[var(--color-status-warning-text)] font-extrabold text-[11px] rounded-[${radius.card}] transition cursor-pointer text-center`}
+              className={`p-2.5 ${button.secondary} text-[11px] font-extrabold rounded-[${radius.card}] transition cursor-pointer text-center`}
             >
               {t.checkout.pack10Credits} {formatPrice('credits_pack_10', 'usd')}
             </button>
@@ -311,7 +311,7 @@ export default function PdfCheckoutModal({
           {/* Option B: Upgrade to Pro */}
           <button
             onClick={() => { onClose(); if (onOpenPricing) onOpenPricing(); }}
-            className={`w-full p-3 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-extrabold text-xs rounded-[${radius.modal}] transition flex items-center justify-between cursor-pointer ${elevationSystem.raised}`}
+            className={`w-full p-3 ${button.primary} rounded-[${radius.modal}] transition flex items-center justify-between cursor-pointer`}
           >
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
@@ -323,7 +323,7 @@ export default function PdfCheckoutModal({
           {/* Option C: Free JSON Backup */}
           <button
             onClick={() => { onClose(); if (onExportJson) onExportJson(); }}
-            className={`w-full p-2.5 bg-[var(--ui-btn-neutral-bg)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-btn-neutral-text)] border border-[var(--ui-btn-neutral-border)] text-xs font-bold rounded-[${radius.card}] transition flex items-center justify-center gap-2 cursor-pointer`}
+            className={`w-full p-2.5 ${button.secondary} text-xs font-bold rounded-[${radius.card}] transition flex items-center justify-center gap-2 cursor-pointer`}
           >
             <Download className="w-4 h-4 text-[var(--ui-btn-neutral-text)]" />
             <span>{t.checkout.downloadJsonFreeBtn}</span>

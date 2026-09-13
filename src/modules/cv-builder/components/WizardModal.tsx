@@ -17,7 +17,7 @@ import {
 import EditorPanel from './EditorPanel';
 import { Modal } from '../../../shared/core/ui/Modal';
 
-import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
+import { elevationSystem, radius, button } from '../../../shared/core/uiDesignSystem';
 
 export default function WizardModal({ 
   isOpen, 
@@ -74,7 +74,7 @@ export default function WizardModal({
           <button
             onClick={prevStep}
             disabled={currentStepIndex === 0}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-[${radius.card}] text-xs font-bold border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] disabled:opacity-40 transition cursor-pointer text-[var(--ui-text-primary)]`}
+            className={`${button.secondary} flex items-center gap-1.5`}
           >
             <ChevronLeft className="w-4 h-4" /> Anterior
           </button>
@@ -86,14 +86,14 @@ export default function WizardModal({
           {currentStepIndex < totalSteps - 1 ? (
             <button
               onClick={nextStep}
-              className={`flex items-center gap-1.5 px-6 py-2 rounded-[${radius.card}] bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-bold text-xs ${elevationSystem.raised} transition cursor-pointer`}
+              className={`${button.primary} flex items-center gap-1.5 px-6`}
             >
               Siguiente <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
             <button
               onClick={handleFinish}
-              className={`flex items-center gap-1.5 px-6 py-2 rounded-[${radius.card}] bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-black text-xs ${elevationSystem.floating} transition cursor-pointer`}
+              className={`${button.primary} flex items-center gap-1.5 px-6`}
             >
               <Check className="w-4 h-4" /> Finalizar y Ver CV
             </button>

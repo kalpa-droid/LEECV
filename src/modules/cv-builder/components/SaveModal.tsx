@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Save, Download, Cloud, ShieldCheck, CopyPlus, Tag, Briefcase, FileArchive, Globe } from 'lucide-react';
 import { checkStorageStatus } from '../services/cvStorageService';
 import { Modal } from '../../../shared/core/ui/Modal';
-import { radius } from '../../../shared/core/uiDesignSystem';
+import { radius, button } from '../../../shared/core/uiDesignSystem';
 import { JOB_POSITION_CATALOG } from '../../../shared/core/data/jobPositionCatalog';
 import { t } from '../../../shared/i18n/useText';
 
@@ -85,7 +85,7 @@ export default function SaveModal({
           <button
             type="button"
             onClick={onClose}
-            className={`px-4 py-2 bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] border border-[var(--ui-border)] font-bold rounded-[${radius.card}] transition cursor-pointer`}
+            className={button.secondary}
           >
             {t.common.actions.close}
           </button>
@@ -206,7 +206,7 @@ export default function SaveModal({
                     type="button"
                     onClick={handleExecuteSaveAs}
                     disabled={isSaving || !effectiveLabel}
-                    className="px-4 py-2 bg-[var(--color-secondary-base)] hover:opacity-90 text-[var(--color-secondary-on-base)] font-black text-xs rounded transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className={`${button.primary} flex items-center gap-1.5`}
                   >
                     <CopyPlus className="w-4 h-4" />
                     <span>{t.modals.saveModal.saveCopyBtnPrefix}{effectiveLabel}"</span>
