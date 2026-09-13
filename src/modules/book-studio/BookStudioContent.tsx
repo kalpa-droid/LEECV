@@ -13,6 +13,7 @@ import { BookPreviewStep } from './BookPreviewStep';
 import { getNextBookStepId, getPrevBookStepId } from '../../shared/core/book-engine/bookStepSequence';
 import { saveBook } from '../../shared/core/storage/documentStorageService';
 import { addOpenTab, generateDocumentId, OpenTabItem } from '../../shared/core/storage/documentTabEngine';
+import { getPendingDocumentToOpen, clearPendingDocumentToOpen } from '../../shared/core/storage/pendingDocumentHandoff';
 import { radius } from '../../shared/core/uiDesignSystem';
 
 interface BookStudioContentProps {
@@ -51,7 +52,14 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [pdfDoc, setPdfDoc] = useState<any>(null);
   const [pdfPageCount, setPdfPageCount] = useState<number>(0);
-  const [bookId, setBookId] = useState<string>(() => (activeTabId && activeTabId.startsWith('book-') ? activeTabId : generateDocumentId('book')));
+  const [bookId, setBookId] = useState<string>(() => {
+    const pending = getPendingDocumentToOpen();
+    if (pending && pending.docType === 'book') {
+      clearPendingDocumentToOpen();
+      return pending.id;
+    }
+    return activeTabId && activeTabId.startsWith('book-') ? activeTabId : generateDocumentId('book');
+  });
   const [bookZoom, setBookZoom] = useState<number>(1);
   const triggerBookAutoFit = React.useCallback(() => {
     if (typeof window !== 'undefined') {

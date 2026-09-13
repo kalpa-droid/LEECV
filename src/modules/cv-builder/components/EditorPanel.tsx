@@ -75,6 +75,17 @@ export default function EditorPanel({
     }
   };
 
+  const handlePaperSizeChange = (val: string) => {
+    setCvData((prev: any) => ({
+      ...prev,
+      cardSize: val.startsWith('tarjeta_') ? val : prev?.cardSize,
+      layout: {
+        ...(prev?.layout || {}),
+        paperSize: val
+      }
+    }));
+  };
+
   const hasDesignOverrides = !!(cvData?.colorPresetId || cvData?.typographyPresetId || cvData?.columnLayoutPresetId);
 
   // Local states for Certificate Tab inside EditorPanel
@@ -1404,16 +1415,7 @@ export default function EditorPanel({
                   </label>
                   <select
                     value={cvData.layout?.paperSize || 'a4'}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setCvData((prev: any) => ({
-                        ...prev,
-                        layout: {
-                          ...prev.layout,
-                          paperSize: val
-                        }
-                      }));
-                    }}
+                    onChange={(e) => handlePaperSizeChange(e.target.value)}
                     className={`w-full text-xs p-2.5 rounded-[${radius.card}] border border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer`}
                   >
                     {Object.values(PAGE_SIZES).filter((size) => {
@@ -1497,69 +1499,94 @@ export default function EditorPanel({
                 const sidebarPercent = Math.min(42, Math.max(32, cvData?.layout?.sidebarWidthPercent ?? 40));
 
                 return (
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-1 gap-2">
-                      {Object.entries(PRESET_COLUMNS).map(([key]) => {
+                  <div className="space-y-2.5">
+                    {/* Fila 1: Barra Izquierda (40%) / Barra Derecha (40%) */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {['sidebar-left', 'sidebar-right'].map((key) => {
                         const activeFormat = resolveActiveFormat(cvData);
                         const isSingleColumnFormat = activeFormat?.columnLayoutPresetId === 'full-width';
                         const isSelected = activeLayoutKey === key;
-                        const displayName = getColumnLayoutPresetName(key, sidebarPercent);
+                        const label = key === 'sidebar-left' ? 'Barra Izquierda (40%)' : 'Barra Derecha (40%)';
 
                         return (
                           <button
                             key={key}
-                            disabled={isSingleColumnFormat && key !== 'full-width'}
+                            disabled={isSingleColumnFormat}
                             onClick={() => {
-                              triggerPresetTransition(displayName, 'layout');
+                              triggerPresetTransition(label, 'layout');
                               setCvData((prev: any) => applyPresetLevel(prev, 'override', { columnLayoutPresetId: key }));
                             }}
-                            className={`p-3 rounded-[var(--radius-card)] border text-left transition flex items-center justify-between gap-3 ${
-                              isSingleColumnFormat && key !== 'full-width'
+                            className={`p-2.5 rounded-[var(--radius-card)] border text-left transition flex items-center justify-between gap-1.5 ${
+                              isSingleColumnFormat
                                 ? 'opacity-40 cursor-not-allowed bg-[var(--ui-bg-panel)] border-[var(--color-neutral-border)]'
                                 : isSelected
                                   ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 cursor-pointer'
                                   : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)] cursor-pointer'
                             }`}
                           >
-                            <span className="text-xs font-black text-[var(--color-neutral-text-primary)]">{displayName}</span>
-                            {isSelected && <Check className="w-4 h-4 text-[var(--ui-text-primary)] flex-shrink-0" />}
+                            <span className="text-[11px] font-black text-[var(--color-neutral-text-primary)] truncate">{label}</span>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-[var(--ui-text-primary)] flex-shrink-0" />}
                           </button>
                         );
                       })}
                     </div>
 
-                    {/* Tirador del Ancho de Sidebar (32% - 42%) */}
-                    {activeLayoutKey !== 'full-width' && (
-                      <div className="p-3 bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[var(--radius-card)] space-y-2">
-                        <div className="flex items-center justify-between text-xs font-bold text-[var(--color-neutral-text-primary)]">
-                          <span>Ancho de Barra Lateral</span>
-                          <span className="text-[var(--color-secondary-bright)]">{sidebarPercent}%</span>
+                    {/* Fila 2: Columna Única Completa (100%) / Ancho de Barra Lateral */}
+                    <div className="grid grid-cols-2 gap-2 items-center">
+                      {(() => {
+                        const key = 'full-width';
+                        const isSelected = activeLayoutKey === key;
+                        const label = 'Columna Única (100%)';
+                        return (
+                          <button
+                            key={key}
+                            onClick={() => {
+                              triggerPresetTransition(label, 'layout');
+                              setCvData((prev: any) => applyPresetLevel(prev, 'override', { columnLayoutPresetId: key }));
+                            }}
+                            className={`p-2.5 rounded-[var(--radius-card)] border text-left transition flex items-center justify-between gap-1.5 h-full ${
+                              isSelected
+                                ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 cursor-pointer'
+                                : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)] cursor-pointer'
+                            }`}
+                          >
+                            <span className="text-[11px] font-black text-[var(--color-neutral-text-primary)] truncate">{label}</span>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-[var(--ui-text-primary)] flex-shrink-0" />}
+                          </button>
+                        );
+                      })()}
+
+                      {activeLayoutKey !== 'full-width' ? (
+                        <div className="p-2 bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[var(--radius-card)] space-y-1">
+                          <div className="flex items-center justify-between text-[10px] font-bold text-[var(--color-neutral-text-primary)]">
+                            <span>Ancho Sidebar</span>
+                            <span className="text-[var(--color-secondary-bright)] font-black">{sidebarPercent}%</span>
+                          </div>
+                          <input
+                            type="range"
+                            min={32}
+                            max={42}
+                            step={1}
+                            value={sidebarPercent}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value, 10);
+                              setCvData((prev: any) => ({
+                                ...prev,
+                                layout: {
+                                  ...(prev.layout || {}),
+                                  sidebarWidthPercent: val
+                                }
+                              }));
+                            }}
+                            className={`w-full h-1 bg-[var(--ui-bg-panel)] rounded-[${radius.control}] appearance-none cursor-pointer accent-[var(--color-secondary-base)]`}
+                          />
                         </div>
-                        <input
-                          type="range"
-                          min={32}
-                          max={42}
-                          step={1}
-                          value={sidebarPercent}
-                          onChange={(e) => {
-                            const val = parseInt(e.target.value, 10);
-                            setCvData((prev: any) => ({
-                              ...prev,
-                              layout: {
-                                ...(prev.layout || {}),
-                                sidebarWidthPercent: val
-                              }
-                            }));
-                          }}
-                          className={`w-full h-1.5 bg-[var(--ui-bg-panel)] rounded-[${radius.control}] appearance-none cursor-pointer accent-[var(--color-secondary-base)]`}
-                        />
-                        <div className="flex justify-between text-[10px] text-[var(--color-neutral-text-secondary)] font-medium">
-                          <span>Mínimo (32%)</span>
-                          <span>Predeterminado (40%)</span>
-                          <span>Máximo (42%)</span>
+                      ) : (
+                        <div className="p-2 bg-[var(--ui-bg-panel)] border border-[var(--color-neutral-border)]/40 rounded-[var(--radius-card)] text-center text-[10px] font-medium text-[var(--color-neutral-text-secondary)]">
+                          Ancho fijo 100%
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 );
               })()}
@@ -1597,67 +1624,6 @@ export default function EditorPanel({
                     </button>
                   );
                 })}
-              </div>
-
-              {/* ─── Color Personalizado Libre ─── */}
-              <div className="mt-3">
-                <label 
-                  className={`flex items-center gap-3 p-2.5 rounded-[${radius.card}] border transition-all cursor-pointer ${
-                    cvData.theme?.primaryColor && /^#[0-9A-Fa-f]{3,6}$/i.test(cvData.theme.primaryColor) && !cvData.colorPresetId
-                      ? `border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 shadow-[var(--shadow-raised)]` 
-                      : `border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]`
-                  }`}
-                >
-                  <input
-                    id="custom-color-picker"
-                    type="color"
-                    value={
-                      cvData.theme?.primaryColor && /^#[0-9A-Fa-f]{6}$/i.test(cvData.theme.primaryColor)
-                        ? cvData.theme.primaryColor
-                        : '#1e3a8a'
-                    }
-                    onChange={(e) => {
-                      const hex = e.target.value;
-                      triggerPresetTransition('Personalizado', 'color');
-                      setCvData((prev: any) => ({
-                        ...prev,
-                        colorPresetId: undefined,
-                        theme: { ...(prev.theme || {}), primaryColor: hex }
-                      }));
-                    }}
-                    className="w-8 h-8 rounded-md border shadow-[var(--shadow-raised)] cursor-pointer"
-                    style={{
-                      borderColor: 'var(--ui-border)',
-                      padding: 0,
-                      backgroundColor: 'transparent'
-                    }}
-                  />
-                  <div className="flex-1 flex items-center justify-between">
-                    <span
-                      className={`${typeScale.fieldLabel} font-bold`}
-                      style={{ color: 'var(--ui-text-primary)' }}
-                    >
-                      Color libre
-                    </span>
-                    {cvData.theme?.primaryColor && /^#[0-9A-Fa-f]{3,6}$/i.test(cvData.theme.primaryColor) && !cvData.colorPresetId && (
-                      <button
-                        type="button"
-                        className="text-[10px] font-bold px-2 py-1 rounded bg-[var(--ui-bg-surface)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-hover)] transition-colors"
-                        style={{ color: 'var(--color-status-danger-text)' }}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setCvData((prev: any) => ({
-                            ...prev,
-                            theme: { ...(prev.theme || {}), primaryColor: undefined }
-                          }));
-                        }}
-                      >
-                        Desactivar
-                      </button>
-                    )}
-                  </div>
-                </label>
               </div>
             </PanelSection>
 
@@ -1940,6 +1906,29 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {activeTab === 'tarjeta_personal' && (
           <div className="space-y-6">
+            {/* Acciones Principales Prominentes de Tarjeta */}
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={() => changeActiveTab('diseno')}
+                className={`p-3 rounded-[var(--radius-card)] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold text-xs flex items-center justify-center gap-2 transition hover:opacity-95 cursor-pointer ${elevationSystem.raised}`}
+              >
+                <Palette className="w-4 h-4" />
+                Diseño & Paleta
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const el = document.getElementById('card-size-section');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className={`p-3 rounded-[var(--radius-card)] bg-[var(--ui-bg-card)] border border-[var(--color-secondary-base)] text-[var(--color-neutral-text-primary)] font-bold text-xs flex items-center justify-center gap-2 transition hover:bg-[var(--color-neutral-surface-muted)] cursor-pointer ${elevationSystem.raised}`}
+              >
+                <Layout className="w-4 h-4 text-[var(--color-secondary-bright)]" />
+                Tamaño & Sangrado
+              </button>
+            </div>
+
             {/* 1. Detección & Selección de Pestañas de CV */}
             {(() => {
               const openTabsList = getOpenTabs();
@@ -2200,30 +2189,53 @@ export default function EditorPanel({
               </div>
             </PanelSection>
 
-            {/* 5. Tamaños de Tarjeta Mundiales */}
-            <PanelSection icon={<Layout className="w-4 h-4" />} title="Tamaño Físico de Tarjeta">
-              <div className="p-4 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-3">
-                <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">Seleccionar Formato Estándar</label>
-                <select
-                  value={cvData?.cardSize || 'tarjeta_estandar'}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setCvData((prev: any) => ({
-                      ...prev,
-                      cardSize: val,
-                      layout: { ...(prev?.layout || {}), paperSize: val }
-                    }));
-                  }}
-                  className="w-full text-xs p-2.5 rounded-[var(--radius-card)] border border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer"
-                >
-                  {Object.values(PAGE_SIZES).filter(s => s.category === 'tarjeta').map((s) => (
-                    <option key={s.id} value={s.id}>
-                      📇 {s.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </PanelSection>
+            {/* 5. Tamaños de Tarjeta Mundiales + Sangrado & Marcas */}
+            <div id="card-size-section">
+              <PanelSection icon={<Layout className="w-4 h-4" />} title="Tamaño Físico de Tarjeta + Sangrado + Marcas de Corte">
+                <div className="p-4 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">Seleccionar Formato Estándar</label>
+                    <select
+                      value={cvData?.cardSize || 'tarjeta_estandar'}
+                      onChange={(e) => handlePaperSizeChange(e.target.value)}
+                      className="w-full text-xs p-2.5 rounded-[var(--radius-card)] border border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer"
+                    >
+                      {Object.values(PAGE_SIZES).filter(s => s.category === 'tarjeta').map((s) => (
+                        <option key={s.id} value={s.id}>
+                          📇 {s.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Slider de Sangrado para Imprenta Profesional (3-5mm) */}
+                  <div className="space-y-2 pt-3 border-t border-[var(--color-neutral-border)]">
+                    <div className="flex items-center justify-between text-xs font-bold text-[var(--color-neutral-text-primary)]">
+                      <span>Sangrado de Imprenta (Bleed)</span>
+                      <span className="text-[var(--color-secondary-bright)] font-black">{cvData?.cardBleedMm ?? 3} mm</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={3}
+                      max={5}
+                      step={1}
+                      value={cvData?.cardBleedMm ?? 3}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        setCvData((prev: any) => ({
+                          ...prev,
+                          cardBleedMm: val
+                        }));
+                      }}
+                      className="w-full h-1.5 bg-[var(--ui-bg-panel)] rounded-[var(--radius-control)] appearance-none cursor-pointer accent-[var(--color-secondary-base)]"
+                    />
+                    <span className="text-[10px] text-[var(--color-neutral-text-secondary)] leading-tight block">
+                      Estándar profesional: 3 mm habitual / 5 mm para guillotina con margen extendido.
+                    </span>
+                  </div>
+                </div>
+              </PanelSection>
+            </div>
           </div>
         )}
 

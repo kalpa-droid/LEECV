@@ -81,25 +81,28 @@ export function resolveImposition(sheet: PageSize, bleedBox: BleedBox, spec: Imp
       const trimX2 = trimX1 + bleedBox.trim.trimWidthMm;
       const trimY2 = trimY1 + bleedBox.trim.trimHeightMm;
 
-      // 4 esquinas x 2 marcas (una horizontal, una vertical) = 8 marcas por tarjeta,
-      // cada una empieza un poco AFUERA del borde de corte (CROP_MARK_GAP_MM) y se
-      // aleja hacia el gutter — así nunca pisan el diseño ni la zona de sangrado.
-      const corners = [
-        { cx: trimX1, cy: trimY1, dx: -1, dy: -1 },
-        { cx: trimX2, cy: trimY1, dx: 1, dy: -1 },
-        { cx: trimX1, cy: trimY2, dx: -1, dy: 1 },
-        { cx: trimX2, cy: trimY2, dx: 1, dy: 1 },
-      ];
-      corners.forEach(({ cx, cy, dx, dy }) => {
-        cropMarks.push({
-          x1: cx + dx * CROP_MARK_GAP_MM, y1: cy,
-          x2: cx + dx * (CROP_MARK_GAP_MM + CROP_MARK_LENGTH_MM), y2: cy
-        });
-        cropMarks.push({
-          x1: cx, y1: cy + dy * CROP_MARK_GAP_MM,
-          x2: cx, y2: cy + dy * (CROP_MARK_GAP_MM + CROP_MARK_LENGTH_MM)
-        });
-      });
+      // Generación de marcas de corte profesionales (de un solo lado por línea de corte compartida)
+      // Evita marcas dobles contiguas para que el operador de guillotina corte una sola vez por guía.
+
+      // Marcas Horizontales (Borde Izquierdo si col === 0, Borde Derecho si col === cols - 1)
+      if (col === 0) {
+        cropMarks.push({ x1: trimX1 - CROP_MARK_GAP_MM - CROP_MARK_LENGTH_MM, y1: trimY1, x2: trimX1 - CROP_MARK_GAP_MM, y2: trimY1 });
+        cropMarks.push({ x1: trimX1 - CROP_MARK_GAP_MM - CROP_MARK_LENGTH_MM, y1: trimY2, x2: trimX1 - CROP_MARK_GAP_MM, y2: trimY2 });
+      }
+      if (col === cols - 1) {
+        cropMarks.push({ x1: trimX2 + CROP_MARK_GAP_MM, y1: trimY1, x2: trimX2 + CROP_MARK_GAP_MM + CROP_MARK_LENGTH_MM, y2: trimY1 });
+        cropMarks.push({ x1: trimX2 + CROP_MARK_GAP_MM, y1: trimY2, x2: trimX2 + CROP_MARK_GAP_MM + CROP_MARK_LENGTH_MM, y2: trimY2 });
+      }
+
+      // Marcas Verticales (Borde Superior si row === 0, Borde Inferior si row === rows - 1)
+      if (row === 0) {
+        cropMarks.push({ x1: trimX1, y1: trimY1 - CROP_MARK_GAP_MM - CROP_MARK_LENGTH_MM, x2: trimX1, y2: trimY1 - CROP_MARK_GAP_MM });
+        cropMarks.push({ x1: trimX2, y1: trimY1 - CROP_MARK_GAP_MM - CROP_MARK_LENGTH_MM, x2: trimX2, y2: trimY1 - CROP_MARK_GAP_MM });
+      }
+      if (row === rows - 1) {
+        cropMarks.push({ x1: trimX1, y1: trimY2 + CROP_MARK_GAP_MM, x2: trimX1, y2: trimY2 + CROP_MARK_GAP_MM + CROP_MARK_LENGTH_MM });
+        cropMarks.push({ x1: trimX2, y1: trimY2 + CROP_MARK_GAP_MM, x2: trimX2, y2: trimY2 + CROP_MARK_GAP_MM + CROP_MARK_LENGTH_MM });
+      }
     }
   }
 

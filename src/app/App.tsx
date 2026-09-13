@@ -535,12 +535,12 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       title: '¿Iniciar nuevo Libro / Folleto?',
       message: '¿Deseas iniciar la imposición de un nuevo libro? Se resguardará tu borrador actual.',
       confirmText: 'Sí, crear libro',
+      variant: 'info',
       onConfirm: async () => {
         await runWithSafeSave(
           saveCV,
           () => {
             const newBookId = generateDocumentId('book');
-            addOpenTab(newBookId, 'Mi Libro / Folleto', undefined, 'book');
             setPendingDocumentToOpen(newBookId, 'book');
             if (onNavigate) {
               onNavigate('/crear-libro');

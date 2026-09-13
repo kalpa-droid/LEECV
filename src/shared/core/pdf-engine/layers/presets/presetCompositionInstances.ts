@@ -147,6 +147,20 @@ export const PRESET_COLORS: Record<string, ColorPreset> = {
     seedHex: '#F7EFF2',
     harmonyScheme: 'analogous',
     palette: generateHarmoniousPalette('#F7EFF2', 'analogous')
+  },
+  'terracota-calido': {
+    id: 'color-terracota-calido',
+    name: 'Terracota Cálido',
+    seedHex: '#C84B31',
+    harmonyScheme: 'split-complementary',
+    palette: generateHarmoniousPalette('#C84B31', 'split-complementary')
+  },
+  'carbon-monocromo': {
+    id: 'color-carbon-monocromo',
+    name: 'Carbón Monocromo',
+    seedHex: '#181818',
+    harmonyScheme: 'monochromatic',
+    palette: generateHarmoniousPalette('#181818', 'monochromatic')
   }
 };
 

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { AlertTriangle, Trash2 } from 'lucide-react';
+import { AlertTriangle, Trash2, BookOpen } from 'lucide-react';
 import { colorSystem, typeScale, button, elevationSystem, radius } from '../uiDesignSystem';
 import { Modal } from './Modal';
 
@@ -76,11 +76,25 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
           <div
             className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto ${elevationSystem.raised}`}
             style={{
-              backgroundColor: colorSystem.status.danger.muted,
-              color: colorSystem.status.danger.text
+              backgroundColor: dialogState.variant === 'danger'
+                ? colorSystem.status.danger.muted
+                : dialogState.variant === 'info'
+                  ? colorSystem.secondary.muted
+                  : colorSystem.status.warning.muted,
+              color: dialogState.variant === 'danger'
+                ? colorSystem.status.danger.text
+                : dialogState.variant === 'info'
+                  ? colorSystem.secondary.text
+                  : colorSystem.status.warning.text
             }}
           >
-            {dialogState.variant === 'danger' ? <Trash2 className="w-6 h-6" /> : <AlertTriangle className="w-6 h-6" />}
+            {dialogState.variant === 'danger' ? (
+              <Trash2 className="w-6 h-6" />
+            ) : dialogState.variant === 'info' ? (
+              <BookOpen className="w-6 h-6" />
+            ) : (
+              <AlertTriangle className="w-6 h-6" />
+            )}
           </div>
 
           <div className="space-y-1">

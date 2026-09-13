@@ -40,7 +40,7 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
       </button>
 
       {isOpen && (
-        <div className={`absolute left-0 bottom-full mb-2 w-56 rounded-[${radius.modal}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.floating} p-1.5 z-50 space-y-1 animate-fadeIn`}>
+        <div className={`absolute left-0 bottom-full mb-2 w-[calc(100vw-2rem)] max-w-56 rounded-[${radius.modal}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.floating} p-1.5 z-50 space-y-1 animate-fadeIn`}>
           <div className="px-2 py-1 text-[10px] font-black uppercase text-[var(--ui-text-secondary)] tracking-wider">
             ¿Qué querés crear?
           </div>

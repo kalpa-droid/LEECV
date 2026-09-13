@@ -71,6 +71,12 @@ export function removeOpenTab(cvId: string): OpenTabItem[] {
   return filtered;
 }
 
+export function syncTabTitleFromSave(cvId: string, newTitle: string, docType: 'cv' | 'business_card' | 'book' = 'cv'): OpenTabItem[] {
+  const current = getOpenTabs();
+  const existing = current.find(t => t.cvId === cvId);
+  return addOpenTab(cvId, newTitle, undefined, existing?.docType || docType);
+}
+
 export function generateDocumentId(prefix: 'cv' | 'book' | 'card' = 'cv'): string {
   const uuid = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
   return `${prefix}_${uuid}`;
