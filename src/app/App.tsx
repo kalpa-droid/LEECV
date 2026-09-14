@@ -69,7 +69,7 @@ interface AppContentProps {
 }
 
 function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: AppContentProps) {
-  const { cvData, setCvData, resetToBlankCV, saveCV, saveCVAs, isSaving, hasPendingChanges } = useCVContext();
+  const { cvData, setCvData, resetToBlankCV, saveCV, saveCVAs, isSaving, hasPendingChanges, isSwitchingDocument, setIsSwitchingDocument } = useCVContext();
   const [updateBannerVisible, setUpdateBannerVisible] = useState(false);
 
   useEffect(() => {
@@ -185,11 +185,11 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const prevCvIdRef = useRef(cvData?.id);
   useEffect(() => {
     if (cvData?.id && prevCvIdRef.current && prevCvIdRef.current !== cvData.id) {
-      const isCard = cvData?.activePresetId === 'tarjeta-personal' || cvData?.cardSize?.startsWith('tarjeta_');
+      const isCard = cvData?.activePresetId === 'tarjeta-personal' || (cvData as any)?.cardSize?.startsWith('tarjeta_');
       setActiveTab(isCard ? 'card_front' : 'personales');
     }
     prevCvIdRef.current = cvData?.id;
-  }, [cvData?.id, cvData?.activePresetId, cvData?.cardSize]);
+  }, [cvData?.id, cvData?.activePresetId, (cvData as any)?.cardSize]);
 
   const handleSwitchDocumentTab = async (targetCvId: string) => {
     if (!targetCvId || targetCvId === cvData?.id || isSwitchingDocument) return;
@@ -307,7 +307,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   useEffect(() => {
     if (isSwitchingDocument) return;
     if (activeCvId) {
-      const docTypeForTab: 'cv' | 'business_card' | 'book' = (cvData?.activePresetId === 'tarjeta-personal' || cvData?.cardSize?.startsWith('tarjeta_')) ? 'business_card' : 'cv';
+      const docTypeForTab: 'cv' | 'business_card' | 'book' = (cvData?.activePresetId === 'tarjeta-personal' || (cvData as any)?.cardSize?.startsWith('tarjeta_')) ? 'business_card' : 'cv';
       addOpenTab(
         activeCvId,
         cvData?.title || (docTypeForTab === 'business_card' ? 'Mi Tarjeta Personal' : 'Mi Currículum Vitae'),
@@ -318,7 +318,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     } else {
       setTabs(getOpenTabs());
     }
-  }, [activeCvId, cvData?.title, cvData?.version_label, cvData?.activePresetId, cvData?.cardSize, isSwitchingDocument]);
+  }, [activeCvId, cvData?.title, cvData?.version_label, cvData?.activePresetId, (cvData as any)?.cardSize, isSwitchingDocument]);
 
   // Bus de eventos: sincronizar pestañas cuando el motor de guardado actualiza títulos
   useEffect(() => {

@@ -65,6 +65,8 @@ export default function EditorPanel({
   const { showSuccess, showError, showWarning } = useToast();
   const { confirm } = useConfirm();
 
+  const isBusinessCard = cvData?.activePresetId === 'tarjeta-personal' || (cvData as any)?.cardSize?.startsWith('tarjeta_');
+
   const changeActiveTab = (tabId: string) => {
     if (typeof setActiveTab === 'function') {
       setActiveTab(tabId);
