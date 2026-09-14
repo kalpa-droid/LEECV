@@ -179,9 +179,9 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     : (preset.surfacePalettes?.dark || preset.palette);
   const coverBgHex = coverPalette.primary;
   const coverRolesColor = resolveThemeRoles(coverPalette);
-  const coverFontRegular = sanitizeFontFamily(preset.typography.fontFamily, false, false);
-  const coverFontBold = sanitizeFontFamily(preset.typography.fontFamily, true, false);
-  const coverFontItalic = sanitizeFontFamily(preset.typography.fontFamily, false, true);
+  const coverFontRegular = sanitizeFontFamily(rawFontFamily || preset.typography.fontFamily, false, false);
+  const coverFontBold = sanitizeFontFamily(rawFontFamily || preset.typography.fontFamily, true, false);
+  const coverFontItalic = sanitizeFontFamily(rawFontFamily || preset.typography.fontFamily, false, true);
 
   const coverSubtleBoxBg = resolveSubtleCardBackground(isCoverLight ? 'main' : 'sidebar', coverRolesColor);
 

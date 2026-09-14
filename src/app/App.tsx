@@ -176,37 +176,40 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     }
   }, []);
 
-  const [activeTab, setActiveTab] = useState('personales');
+  const [activeTab, setActiveTab] = useState(() => {
+    const isCard = initialPreset === 'tarjeta-personal';
+    return isCard ? 'card_front' : 'personales';
+  });
 
-  // Resetea activeTab a 'personales' cuando se abre o cambia a un documento distinto (cvData.id cambia)
+  // Resetea activeTab a 'personales' o 'card_front' cuando se abre o cambia a un documento distinto (cvData.id cambia)
   const prevCvIdRef = useRef(cvData?.id);
   useEffect(() => {
     if (cvData?.id && prevCvIdRef.current && prevCvIdRef.current !== cvData.id) {
-      setActiveTab('personales');
+      const isCard = cvData?.activePresetId === 'tarjeta-personal' || cvData?.cardSize?.startsWith('tarjeta_');
+      setActiveTab(isCard ? 'card_front' : 'personales');
     }
     prevCvIdRef.current = cvData?.id;
-  }, [cvData?.id]);
+  }, [cvData?.id, cvData?.activePresetId, cvData?.cardSize]);
 
   const handleSwitchDocumentTab = async (targetCvId: string) => {
-    if (!targetCvId || targetCvId === cvData?.id) return;
+    if (!targetCvId || targetCvId === cvData?.id || isSwitchingDocument) return;
 
-    await runWithSafeSave(
-      saveCV,
-      async () => {
-        try {
-          const loaded = await loadCVById(targetCvId);
-          if (loaded) {
-            setCvData(loaded);
-            showSuccess(`Conmutado a "${loaded.title || 'Documento'}"`);
-          } else {
-            showError('No se pudo cargar el documento de la pestaña seleccionada.');
-          }
-        } catch (err) {
-          console.error('Error al conmutar pestaña de documento:', err);
-          showError('Error al abrir la pestaña de documento.');
-        }
+    setIsSwitchingDocument(true);
+    try {
+      await saveCV();
+      const loaded = await loadCVById(targetCvId);
+      if (loaded) {
+        setCvData(loaded);
+        showSuccess(`Conmutado a "${loaded.title || 'Documento'}"`);
+      } else {
+        showError('No se pudo cargar el documento de la pestaña seleccionada.');
       }
-    );
+    } catch (err) {
+      console.error('Error al conmutar pestaña de documento:', err);
+      showError('Error al abrir la pestaña de documento.');
+    } finally {
+      setIsSwitchingDocument(false);
+    }
   };
 
   const handleNavigateToDocumentTab = async (targetDocType: 'cv' | 'business_card' | 'book', targetId: string) => {
@@ -302,8 +305,9 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const activeCvId = cvData?.id || '';
 
   useEffect(() => {
+    if (isSwitchingDocument) return;
     if (activeCvId) {
-      const docTypeForTab: 'cv' | 'business_card' | 'book' = cvData?.activePresetId === 'tarjeta-personal' ? 'business_card' : 'cv';
+      const docTypeForTab: 'cv' | 'business_card' | 'book' = (cvData?.activePresetId === 'tarjeta-personal' || cvData?.cardSize?.startsWith('tarjeta_')) ? 'business_card' : 'cv';
       addOpenTab(
         activeCvId,
         cvData?.title || (docTypeForTab === 'business_card' ? 'Mi Tarjeta Personal' : 'Mi Currículum Vitae'),
@@ -311,13 +315,10 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         docTypeForTab
       );
       setTabs(getOpenTabs());
-      if (cvData) {
-        saveCV().catch(err => console.warn('Error al auto-guardar nuevo borrador:', err));
-      }
     } else {
       setTabs(getOpenTabs());
     }
-  }, [activeCvId, cvData?.title, cvData?.version_label, cvData?.activePresetId]);
+  }, [activeCvId, cvData?.title, cvData?.version_label, cvData?.activePresetId, cvData?.cardSize, isSwitchingDocument]);
 
   // Bus de eventos: sincronizar pestañas cuando el motor de guardado actualiza títulos
   useEffect(() => {
@@ -346,8 +347,13 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       message: `¿Deseas cerrar "${title}"? Tus datos guardados se mantendrán a salvo en tus archivos.`,
       confirmText: 'Cerrar Pestaña',
       onConfirm: async () => {
-        const remaining = await closeDocumentEverywhere(cvId, { alsoDeleteFromStorage: false });
-        await resolveNextActiveDocument(cvId, remaining);
+        setIsSwitchingDocument(true);
+        try {
+          const remaining = await closeDocumentEverywhere(cvId, { alsoDeleteFromStorage: false });
+          await resolveNextActiveDocument(cvId, remaining);
+        } finally {
+          setIsSwitchingDocument(false);
+        }
       }
     });
   };

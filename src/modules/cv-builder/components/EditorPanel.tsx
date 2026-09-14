@@ -1494,44 +1494,46 @@ export default function EditorPanel({
               </PanelSection>
 
             {/* Formato Global & Estándares Internacionales (ATS, US Resume, Europass, Tech, LATAM) */}
-            <PanelSection icon={<Globe className="w-4 h-4 text-[var(--color-accent-text)]" />} title="Estándar & Formato Global (Internacional)">
-              <div className="grid grid-cols-2 gap-2">
-                {getAllCvFormats().map((format) => {
-                  const isSelected = resolveActiveFormatId(cvData) === format.id;
-                  return (
-                    <button
-                      key={format.id}
-                      type="button"
-                      onClick={() => {
-                        if (isSelected) return;
-                        setPendingFormatId(format.id);
-                        setIsFormatModalOpen(true);
-                      }}
-                      className={`w-full p-2.5 rounded-[${radius.card}] border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer ${
-                        isSelected
-                          ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
-                          : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="text-xs font-black text-[var(--color-neutral-text-primary)] flex items-center gap-1.5 truncate">
-                          {format.name}
-                        </span>
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase bg-white border border-[var(--color-neutral-border-strong)] text-[var(--color-neutral-text-secondary)]">
-                            {format.columnLayoutPresetId === 'full-width' ? '1 Col' : '2 Col'}
+            {!isBusinessCard && (
+              <PanelSection icon={<Globe className="w-4 h-4 text-[var(--color-accent-text)]" />} title="Estándar & Formato Global (Internacional)">
+                <div className="grid grid-cols-2 gap-2">
+                  {getAllCvFormats().map((format) => {
+                    const isSelected = resolveActiveFormatId(cvData) === format.id;
+                    return (
+                      <button
+                        key={format.id}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) return;
+                          setPendingFormatId(format.id);
+                          setIsFormatModalOpen(true);
+                        }}
+                        className={`w-full p-2.5 rounded-[${radius.card}] border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer ${
+                          isSelected
+                            ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
+                            : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="text-xs font-black text-[var(--color-neutral-text-primary)] flex items-center gap-1.5 truncate">
+                            {format.name}
                           </span>
-                          {isSelected && <Check className="w-3.5 h-3.5 text-[var(--ui-text-primary)] flex-shrink-0" />}
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase bg-white border border-[var(--color-neutral-border-strong)] text-[var(--color-neutral-text-secondary)]">
+                              {format.columnLayoutPresetId === 'full-width' ? '1 Col' : '2 Col'}
+                            </span>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-[var(--ui-text-primary)] flex-shrink-0" />}
+                          </div>
                         </div>
-                      </div>
-                      <p className="text-[10px] text-[var(--color-neutral-text-secondary)] leading-relaxed line-clamp-2">
-                        {format.description}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-            </PanelSection>
+                        <p className="text-[10px] text-[var(--color-neutral-text-secondary)] leading-relaxed line-clamp-2">
+                          {format.description}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </PanelSection>
+            )}
 
             {/* Tipografía Principal */}
             <PanelSection icon={<FileText className="w-4 h-4" />} title="Tipografía">
@@ -1552,105 +1554,107 @@ export default function EditorPanel({
             </PanelSection>
 
             {/* Estructura de Columnas (Layout) y Tirador de Ancho */}
-            <PanelSection icon={<Columns3 className="w-4 h-4" />} title="Disposición de columnas y Ancho">
-              {(() => {
-                const activePresetObj = resolveActivePreset(cvData);
-                const activeLayoutKey = cvData?.columnLayoutPresetId || (activePresetObj.columnLayoutPresetId?.replace('layout-', '') || 'sidebar-left');
-                const sidebarPercent = Math.min(42, Math.max(32, cvData?.layout?.sidebarWidthPercent ?? 40));
+            {!isBusinessCard && (
+              <PanelSection icon={<Columns3 className="w-4 h-4" />} title="Disposición de columnas y Ancho">
+                {(() => {
+                  const activePresetObj = resolveActivePreset(cvData);
+                  const activeLayoutKey = cvData?.columnLayoutPresetId || (activePresetObj.columnLayoutPresetId?.replace('layout-', '') || 'sidebar-left');
+                  const sidebarPercent = Math.min(42, Math.max(32, cvData?.layout?.sidebarWidthPercent ?? 40));
 
-                return (
-                  <div className="space-y-2.5">
-                    {/* Fila 1: Barra Izquierda (40%) / Barra Derecha (40%) */}
-                    <div className="grid grid-cols-2 gap-2">
-                      {['sidebar-left', 'sidebar-right'].map((key) => {
-                        const activeFormat = resolveActiveFormat(cvData);
-                        const isSingleColumnFormat = activeFormat?.columnLayoutPresetId === 'full-width';
-                        const isSelected = activeLayoutKey === key;
-                        const label = key === 'sidebar-left' ? 'Barra Izquierda (40%)' : 'Barra Derecha (40%)';
+                  return (
+                    <div className="space-y-2.5">
+                      {/* Fila 1: Barra Izquierda (40%) / Barra Derecha (40%) */}
+                      <div className="grid grid-cols-2 gap-2">
+                        {['sidebar-left', 'sidebar-right'].map((key) => {
+                          const activeFormat = resolveActiveFormat(cvData);
+                          const isSingleColumnFormat = activeFormat?.columnLayoutPresetId === 'full-width';
+                          const isSelected = activeLayoutKey === key;
+                          const label = key === 'sidebar-left' ? 'Barra Izquierda (40%)' : 'Barra Derecha (40%)';
 
-                        return (
-                          <button
-                            key={key}
-                            disabled={isSingleColumnFormat}
-                            onClick={() => {
-                              triggerPresetTransition(label, 'layout');
-                              setCvData((prev: any) => applyPresetLevel(prev, 'override', { columnLayoutPresetId: key }));
-                            }}
-                            className={`p-2.5 rounded-[var(--radius-card)] border text-left transition flex items-center justify-between gap-1.5 ${
-                              isSingleColumnFormat
-                                ? 'opacity-40 cursor-not-allowed bg-[var(--ui-bg-panel)] border-[var(--color-neutral-border)]'
-                                : isSelected
+                          return (
+                            <button
+                              key={key}
+                              disabled={isSingleColumnFormat}
+                              onClick={() => {
+                                triggerPresetTransition(label, 'layout');
+                                setCvData((prev: any) => applyPresetLevel(prev, 'override', { columnLayoutPresetId: key }));
+                              }}
+                              className={`p-2.5 rounded-[var(--radius-card)] border text-left transition flex items-center justify-between gap-1.5 ${
+                                isSingleColumnFormat
+                                  ? 'opacity-40 cursor-not-allowed bg-[var(--ui-bg-panel)] border-[var(--color-neutral-border)]'
+                                  : isSelected
+                                    ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 cursor-pointer'
+                                    : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)] cursor-pointer'
+                              }`}
+                            >
+                              <span className="text-[11px] font-black text-[var(--color-neutral-text-primary)] truncate">{label}</span>
+                              {isSelected && <Check className="w-3.5 h-3.5 text-[var(--ui-text-primary)] flex-shrink-0" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Fila 2: Columna Única Completa (100%) / Ancho de Barra Lateral */}
+                      <div className="grid grid-cols-2 gap-2 items-center">
+                        {(() => {
+                          const key = 'full-width';
+                          const isSelected = activeLayoutKey === key;
+                          const label = 'Columna Única (100%)';
+                          return (
+                            <button
+                              key={key}
+                              onClick={() => {
+                                triggerPresetTransition(label, 'layout');
+                                setCvData((prev: any) => applyPresetLevel(prev, 'override', { columnLayoutPresetId: key }));
+                              }}
+                              className={`p-2.5 rounded-[var(--radius-card)] border text-left transition flex items-center justify-between gap-1.5 h-full ${
+                                isSelected
                                   ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 cursor-pointer'
                                   : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)] cursor-pointer'
-                            }`}
-                          >
-                            <span className="text-[11px] font-black text-[var(--color-neutral-text-primary)] truncate">{label}</span>
-                            {isSelected && <Check className="w-3.5 h-3.5 text-[var(--ui-text-primary)] flex-shrink-0" />}
-                          </button>
-                        );
-                      })}
-                    </div>
+                              }`}
+                            >
+                              <span className="text-[11px] font-black text-[var(--color-neutral-text-primary)] truncate">{label}</span>
+                              {isSelected && <Check className="w-3.5 h-3.5 text-[var(--ui-text-primary)] flex-shrink-0" />}
+                            </button>
+                          );
+                        })()}
 
-                    {/* Fila 2: Columna Única Completa (100%) / Ancho de Barra Lateral */}
-                    <div className="grid grid-cols-2 gap-2 items-center">
-                      {(() => {
-                        const key = 'full-width';
-                        const isSelected = activeLayoutKey === key;
-                        const label = 'Columna Única (100%)';
-                        return (
-                          <button
-                            key={key}
-                            onClick={() => {
-                              triggerPresetTransition(label, 'layout');
-                              setCvData((prev: any) => applyPresetLevel(prev, 'override', { columnLayoutPresetId: key }));
-                            }}
-                            className={`p-2.5 rounded-[var(--radius-card)] border text-left transition flex items-center justify-between gap-1.5 h-full ${
-                              isSelected
-                                ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 cursor-pointer'
-                                : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)] cursor-pointer'
-                            }`}
-                          >
-                            <span className="text-[11px] font-black text-[var(--color-neutral-text-primary)] truncate">{label}</span>
-                            {isSelected && <Check className="w-3.5 h-3.5 text-[var(--ui-text-primary)] flex-shrink-0" />}
-                          </button>
-                        );
-                      })()}
-
-                      {activeLayoutKey !== 'full-width' ? (
-                        <div className="p-2 bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[var(--radius-card)] space-y-1">
-                          <div className="flex items-center justify-between text-[10px] font-bold text-[var(--color-neutral-text-primary)]">
-                            <span>Ancho Sidebar</span>
-                            <span className="text-[var(--color-secondary-bright)] font-black">{sidebarPercent}%</span>
+                        {activeLayoutKey !== 'full-width' ? (
+                          <div className="p-2 bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[var(--radius-card)] space-y-1">
+                            <div className="flex items-center justify-between text-[10px] font-bold text-[var(--color-neutral-text-primary)]">
+                              <span>Ancho Sidebar</span>
+                              <span className="text-[var(--color-secondary-bright)] font-black">{sidebarPercent}%</span>
+                            </div>
+                            <input
+                              type="range"
+                              min={32}
+                              max={42}
+                              step={1}
+                              value={sidebarPercent}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value, 10);
+                                setCvData((prev: any) => ({
+                                  ...prev,
+                                  layout: {
+                                    ...(prev.layout || {}),
+                                    sidebarWidthPercent: val
+                                  }
+                                }));
+                              }}
+                              className={`w-full h-1 bg-[var(--ui-bg-panel)] rounded-[${radius.control}] appearance-none cursor-pointer accent-[var(--color-secondary-base)]`}
+                            />
                           </div>
-                          <input
-                            type="range"
-                            min={32}
-                            max={42}
-                            step={1}
-                            value={sidebarPercent}
-                            onChange={(e) => {
-                              const val = parseInt(e.target.value, 10);
-                              setCvData((prev: any) => ({
-                                ...prev,
-                                layout: {
-                                  ...(prev.layout || {}),
-                                  sidebarWidthPercent: val
-                                }
-                              }));
-                            }}
-                            className={`w-full h-1 bg-[var(--ui-bg-panel)] rounded-[${radius.control}] appearance-none cursor-pointer accent-[var(--color-secondary-base)]`}
-                          />
-                        </div>
-                      ) : (
-                        <div className="p-2 bg-[var(--ui-bg-panel)] border border-[var(--color-neutral-border)]/40 rounded-[var(--radius-card)] text-center text-[10px] font-medium text-[var(--color-neutral-text-secondary)]">
-                          Ancho fijo 100%
-                        </div>
-                      )}
+                        ) : (
+                          <div className="p-2 bg-[var(--ui-bg-panel)] border border-[var(--color-neutral-border)]/40 rounded-[var(--radius-card)] text-center text-[10px] font-medium text-[var(--color-neutral-text-secondary)]">
+                            Ancho fijo 100%
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })()}
-            </PanelSection>
+                  );
+                })()}
+              </PanelSection>
+            )}
 
             {/* Armonía Cromática */}
             <PanelSection icon={<Palette className="w-4 h-4" />} title="Paleta de color armónica">
@@ -1716,45 +1720,47 @@ export default function EditorPanel({
             </PanelSection>
 
             {/* Plantilla Base Predefinida */}
-            <PanelSection icon={<Sparkles className="w-4 h-4" />} title="Plantilla base predefinida">
-              <div className="grid grid-cols-2 gap-2">
-                {getAllPresets().filter(p => p.id !== 'tarjeta-personal').map((preset) => {
-                  const isSelected = (cvData?.activePresetId || 'cv-clasico') === preset.id;
-                  const hasOverrides = !!(cvData?.colorPresetId || cvData?.typographyPresetId || cvData?.columnLayoutPresetId);
-                  return (
-                    <button
-                      key={preset.id}
-                      onClick={() => {
-                        triggerPresetTransition(preset.name, 'preset');
-                        setCvData((prev: any) => applyPresetLevel(prev, 'preset', { presetId: preset.id }));
-                      }}
-                      className={`p-2.5 rounded-[${radius.card}] border text-left transition flex flex-col justify-between cursor-pointer ${
-                        isSelected
-                          ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
-                          : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1.5 gap-1">
-                        <div className="flex items-center gap-1 min-w-0 pr-1">
-                          <span className="text-[11px] font-bold text-[var(--color-neutral-text-primary)] truncate">{preset.name}</span>
-                          {isSelected && hasOverrides && (
-                            <span className="text-[9px] px-1 py-0.2 rounded bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] font-black flex-shrink-0">
-                              + personalizado
-                            </span>
-                          )}
+            {!isBusinessCard && (
+              <PanelSection icon={<Sparkles className="w-4 h-4" />} title="Plantilla base predefinida">
+                <div className="grid grid-cols-2 gap-2">
+                  {getAllPresets().filter(p => p.id !== 'tarjeta-personal').map((preset) => {
+                    const isSelected = (cvData?.activePresetId || 'cv-clasico') === preset.id;
+                    const hasOverrides = !!(cvData?.colorPresetId || cvData?.typographyPresetId || cvData?.columnLayoutPresetId);
+                    return (
+                      <button
+                        key={preset.id}
+                        onClick={() => {
+                          triggerPresetTransition(preset.name, 'preset');
+                          setCvData((prev: any) => applyPresetLevel(prev, 'preset', { presetId: preset.id }));
+                        }}
+                        className={`p-2.5 rounded-[${radius.card}] border text-left transition flex flex-col justify-between cursor-pointer ${
+                          isSelected
+                            ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
+                            : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1.5 gap-1">
+                          <div className="flex items-center gap-1 min-w-0 pr-1">
+                            <span className="text-[11px] font-bold text-[var(--color-neutral-text-primary)] truncate">{preset.name}</span>
+                            {isSelected && hasOverrides && (
+                              <span className="text-[9px] px-1 py-0.2 rounded bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] font-black flex-shrink-0">
+                                + personalizado
+                              </span>
+                            )}
+                          </div>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-[var(--ui-text-primary)] flex-shrink-0" />}
                         </div>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-[var(--ui-text-primary)] flex-shrink-0" />}
-                      </div>
-                      <div className="flex gap-1.5 items-center">
-                        <div className={`w-4 h-4 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: preset.palette.primary }} />
-                        <div className={`w-4 h-4 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: preset.palette.accent }} />
-                        <div className={`w-4 h-4 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: preset.palette.secondary }} />
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </PanelSection>
+                        <div className="flex gap-1.5 items-center">
+                          <div className={`w-4 h-4 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: preset.palette.primary }} />
+                          <div className={`w-4 h-4 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: preset.palette.accent }} />
+                          <div className={`w-4 h-4 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: preset.palette.secondary }} />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </PanelSection>
+            )}
           </div>
         )}
 
@@ -2307,6 +2313,39 @@ export default function EditorPanel({
                       Estándar profesional: 3 mm habitual / 5 mm para guillotina con margen extendido.
                     </span>
                   </div>
+                </div>
+              </PanelSection>
+
+              {/* Plantilla Base Predefinida */}
+              <PanelSection icon={<Sparkles className="w-4 h-4" />} title="Plantilla base predefinida">
+                <div className="grid grid-cols-2 gap-2">
+                  {getAllPresets().map((preset) => {
+                    const isSelected = (cvData?.activePresetId || 'tarjeta-personal') === preset.id;
+                    return (
+                      <button
+                        key={preset.id}
+                        onClick={() => {
+                          triggerPresetTransition(preset.name, 'preset');
+                          setCvData((prev: any) => applyPresetLevel(prev, 'preset', { presetId: preset.id }));
+                        }}
+                        className={`p-2.5 rounded-[${radius.card}] border text-left transition flex flex-col justify-between cursor-pointer ${
+                          isSelected
+                            ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
+                            : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1.5 gap-1">
+                          <span className="text-[11px] font-bold text-[var(--color-neutral-text-primary)] truncate">{preset.name}</span>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-[var(--ui-text-primary)] flex-shrink-0" />}
+                        </div>
+                        <div className="flex gap-1.5 items-center">
+                          <div className={`w-4 h-4 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: preset.palette.primary }} />
+                          <div className={`w-4 h-4 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: preset.palette.accent }} />
+                          <div className={`w-4 h-4 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: preset.palette.secondary }} />
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </PanelSection>
             </div>

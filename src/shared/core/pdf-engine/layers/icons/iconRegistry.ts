@@ -257,15 +257,95 @@ export const ICON_REGISTRY: Record<string, IconDefinition> = {
       'M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'
     ]
   },
+  objetivo: {
+    id: 'objetivo',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M12 22a10 10 0 1 0-10-10 10 10 0 0 0 10 10z',
+      'M12 18a6 6 0 1 0-6-6 6 6 0 0 0 6 6z',
+      'M12 14a2 2 0 1 0-2-2 2 2 0 0 0 2 2z'
+    ]
+  },
+  logros: {
+    id: 'logros',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M6 9H4.5a2.5 2.5 0 0 1 0-5H6',
+      'M18 9h1.5a2.5 2.5 0 0 0 0-5H18',
+      'M4 22h16',
+      'M18 2H6v7a6 6 0 0 0 12 0V2z'
+    ]
+  },
+  portafolio: {
+    id: 'portafolio',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16',
+      'M2 18h20'
+    ]
+  },
+  card_size: {
+    id: 'card_size',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M4 21v-7', 'M4 10V3', 'M12 21v-9', 'M12 8V3', 'M20 21v-5', 'M20 12V3'
+    ]
+  },
+  card_extract: {
+    id: 'card_extract',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z',
+      'M12 12v6',
+      'M9 15l3-3 3 3'
+    ]
+  },
+  card_logo: {
+    id: 'card_logo',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M2 6h20v12H2z', 'M2 10h20'
+    ]
+  },
+  card_front: {
+    id: 'card_front',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2',
+      'M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'
+    ]
+  },
+  card_back: {
+    id: 'card_back',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20'
+    ]
+  },
+  card_qr: {
+    id: 'card_qr',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M3 3h6v6H3z', 'M15 3h6v6h-6z', 'M3 15h6v6H3z'
+    ]
+  },
+  fallback: {
+    id: 'fallback',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M12 12m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0'
+    ]
+  },
   custom: {
     id: 'custom',
     viewBox: '0 0 24 24',
     paths: [
-      'M12 5v14M5 12h14'
+      'M4 4h16v16H4z',
+      'M9 9h6v6H9z'
     ]
   }
 };
 
 export function getIcon(id: string): IconDefinition {
-  return ICON_REGISTRY[id] || ICON_REGISTRY['custom'];
+  return ICON_REGISTRY[id] || ICON_REGISTRY['fallback'] || ICON_REGISTRY['custom'];
 }

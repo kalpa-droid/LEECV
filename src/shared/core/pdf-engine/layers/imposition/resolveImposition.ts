@@ -46,7 +46,7 @@ export interface ImpositionResult {
   cropMarks: CropMark[];
 }
 
-const CROP_MARK_LENGTH_MM = 3;
+const CROP_MARK_LENGTH_MM = 5;
 const CROP_MARK_GAP_MM = 1; // separación entre la marca y el borde de corte real
 
 /** Capa 0 (hoja) + Capa 6 (bleed box) + Capa 7 (spec de imposición) → grilla resuelta */

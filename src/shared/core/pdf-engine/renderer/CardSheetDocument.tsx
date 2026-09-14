@@ -83,9 +83,9 @@ export function CardSheetDocument({ card, preset }: CardSheetDocumentProps) {
             position: 'absolute',
             left: mmToPt(Math.min(mark.x1, mark.x2)),
             top: mmToPt(Math.min(mark.y1, mark.y2)),
-            width: Math.max(0.5, mmToPt(Math.abs(mark.x2 - mark.x1))),
-            height: Math.max(0.5, mmToPt(Math.abs(mark.y2 - mark.y1))),
-            backgroundColor: '#999999'
+            width: Math.max(0.75, mmToPt(Math.abs(mark.x2 - mark.x1))),
+            height: Math.max(0.75, mmToPt(Math.abs(mark.y2 - mark.y1))),
+            backgroundColor: '#000000'
           }}
         />
       ))}

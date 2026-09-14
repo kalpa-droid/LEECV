@@ -18,6 +18,8 @@ interface CVContextType {
   saveCVAs: (versionLabel?: string) => Promise<any>;
   isSaving: boolean;
   hasPendingChanges: boolean;
+  isSwitchingDocument: boolean;
+  setIsSwitchingDocument: (switching: boolean) => void;
   undo: () => void;
   redo: () => void;
   canUndo: boolean;
@@ -50,6 +52,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
 
   const [isSaving, setIsSaving] = useState(false);
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
+  const [isSwitchingDocument, setIsSwitchingDocument] = useState(false);
 
   // Per-document Undo / Redo History Map (up to 30 snapshots per document ID)
   const historyMapRef = useRef<Map<string, { stack: CVData[]; index: number }>>(new Map());
@@ -104,6 +107,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
 
   // Save to localStorage automatically on every change (Debounced 500ms)
   useEffect(() => {
+    if (isSwitchingDocument) return;
     const timeout = setTimeout(() => {
       if (typeof window !== 'undefined' && cvData) {
         try {
@@ -118,7 +122,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
       }
     }, 500);
     return () => clearTimeout(timeout);
-  }, [cvData]);
+  }, [cvData, isSwitchingDocument]);
 
   const undo = useCallback(() => {
     const activeId = getDocId(cvData);
@@ -308,6 +312,8 @@ export function CVProvider({ children }: { children: ReactNode }) {
         saveCVAs,
         isSaving,
         hasPendingChanges,
+        isSwitchingDocument,
+        setIsSwitchingDocument,
         undo,
         redo,
         canUndo,

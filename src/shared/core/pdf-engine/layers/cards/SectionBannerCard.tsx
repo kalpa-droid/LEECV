@@ -71,6 +71,8 @@ export function SectionBannerCard({
         borderBottomColor: decStyles ? decStyles.dividerStyle.color : typographyBinding.border,
       },
       sidebarBanner: {
+        flex: 1,
+        flexWrap: 'wrap',
         fontSize: sidebarFontSize,
         fontFamily: textSpec.fontFamily,
         textTransform: 'uppercase',
@@ -111,6 +113,8 @@ export function SectionBannerCard({
       borderLeftColor: rolesColor[design.borderColorRole as keyof ResolvedThemeRoles] as string || rolesColor.accent,
     },
     bannerText: {
+      flex: 1,
+      flexWrap: 'wrap',
       fontSize: typography.sectionHeading,
       fontFamily: textSpec.fontFamily,
       textTransform: 'uppercase',
