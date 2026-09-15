@@ -254,20 +254,6 @@ export default function CanvaIconDock({
             );
           })}
 
-          {/* 4. BOTÓN ATS (Solo para CVs) */}
-          {docType === 'cv' && (
-            <button
-              type="button"
-              onClick={onOpenAtsCheck}
-              className={`w-9 h-9 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer border bg-[var(--ui-dock-hover)] border-[var(--color-status-warning-text)]/80 text-[var(--color-status-warning-text)] hover:bg-[var(--color-accent-amber-muted)] hover:scale-105 active:scale-95`}
-              title="Auditoría Predictiva ATS"
-            >
-              <Sparkles className="w-4.5 h-4.5 text-[var(--color-status-warning-text)]" />
-              <span className={`absolute left-24 bg-[var(--ui-bg-dock)] text-[var(--color-status-warning-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--color-status-warning-text)]/40`}>
-                Auditoría ATS
-              </span>
-            </button>
-          )}
 
           {/* 5. BOTÓN PORTADA (Solo para CVs) */}
           {docType === 'cv' && (() => {
@@ -489,17 +475,6 @@ export default function CanvaIconDock({
           );
         })()}
 
-        {/* 5. BOTÓN ATS (Solo para CVs) */}
-        {docType === 'cv' && (
-          <button
-            type="button"
-            onClick={onOpenAtsCheck}
-            className="w-7.5 h-7.5 rounded-[6px] flex items-center justify-center shrink-0 border bg-[var(--ui-bg-panel)] border-[var(--color-status-warning-text)]/80 text-[var(--color-status-warning-text)] active:scale-95 cursor-pointer"
-            title="Auditoría ATS"
-          >
-            <Sparkles className="w-4 h-4 text-[var(--color-status-warning-text)]" />
-          </button>
-        )}
 
         {/* 6. BOTÓN PERSONAL (Solo para CVs) */}
         {docType === 'cv' && (() => {

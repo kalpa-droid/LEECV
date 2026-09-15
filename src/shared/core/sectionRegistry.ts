@@ -38,6 +38,8 @@ export interface SectionCatalogEntry {
   shortLabel?: string;
   /** Si es una sección universal del catálogo global que siempre permanece en la UI */
   isUniversal?: boolean;
+  /** Si es un slot de sección personalizada configurable en el núcleo */
+  isCustomSlot?: boolean;
 }
 
 const RAW_SECTION_CATALOG: SectionCatalogEntry[] = [
@@ -47,7 +49,7 @@ const RAW_SECTION_CATALOG: SectionCatalogEntry[] = [
   { id: 'objetivo', label: 'Objetivo Profesional / Resumen Ejecutivo', tabId: 'objetivo', dataType: 'single_text', defaultSectorRole: 'main', assignableToColumns: true, shortLabel: 'Objetivo', isUniversal: true },
   { id: 'resumen', label: 'Resumen Profesional', tabId: 'resumen', dataType: 'single_text', defaultSectorRole: 'main', assignableToColumns: true, shortLabel: 'Resumen', isUniversal: true },
   { id: 'experiencia', label: 'Experiencia Laboral', tabId: 'experiencia', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['role'], assignableToColumns: true, shortLabel: 'Experiencia', isUniversal: true },
-  { id: 'logros', label: 'Logros Cuantificables y Métricas', tabId: 'logros', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['title'], assignableToColumns: true, shortLabel: 'Logros', isUniversal: true },
+  { id: 'logros', label: 'Logros Cuantificables y Métricas', tabId: 'logros', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['title'], assignableToColumns: true, shortLabel: 'Logros', isUniversal: false },
   { id: 'portafolio', label: 'Portafolio / Trabajos Destacados', tabId: 'portafolio', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['title'], assignableToColumns: true, shortLabel: 'Portafolio', isUniversal: true },
   { id: 'formacion', label: 'Formación Académica', tabId: 'formacion', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['degree'], assignableToColumns: true, shortLabel: 'Formación', isUniversal: true },
   { id: 'profesion', label: 'Títulos Profesionales', tabId: 'profesion', dataType: 'record_list', defaultSectorRole: 'main', coverDisplayFields: ['title'], assignableToColumns: true, shortLabel: 'Profesión', isUniversal: true },
@@ -60,6 +62,11 @@ const RAW_SECTION_CATALOG: SectionCatalogEntry[] = [
   { id: 'competencias', label: 'Competencias Clave (Soft Skills)', tabId: 'competencias', dataType: 'record_list', defaultSectorRole: 'sidebar', assignableToColumns: true, shortLabel: 'Competencias', isUniversal: true },
   { id: 'idiomas', label: 'Idiomas', tabId: 'idiomas', dataType: 'record_list', defaultSectorRole: 'sidebar', assignableToColumns: true, shortLabel: 'Idiomas', isUniversal: false },
   { id: 'redes', label: 'Redes Sociales & Enlaces', tabId: 'redes', dataType: 'record_list', defaultSectorRole: 'sidebar', coverDisplayFields: ['url'], assignableToColumns: true, shortLabel: 'Redes', isUniversal: false },
+  { id: 'personalizada-1', label: 'Sección Personalizada 1', tabId: 'personalizada-1', dataType: 'record_list', defaultSectorRole: 'main', assignableToColumns: true, shortLabel: 'Personalizada 1', isUniversal: false, isCustomSlot: true },
+  { id: 'personalizada-2', label: 'Sección Personalizada 2', tabId: 'personalizada-2', dataType: 'record_list', defaultSectorRole: 'main', assignableToColumns: true, shortLabel: 'Personalizada 2', isUniversal: false, isCustomSlot: true },
+  { id: 'personalizada-3', label: 'Sección Personalizada 3', tabId: 'personalizada-3', dataType: 'record_list', defaultSectorRole: 'main', assignableToColumns: true, shortLabel: 'Personalizada 3', isUniversal: false, isCustomSlot: true },
+  { id: 'personalizada-4', label: 'Sección Personalizada 4', tabId: 'personalizada-4', dataType: 'record_list', defaultSectorRole: 'main', assignableToColumns: true, shortLabel: 'Personalizada 4', isUniversal: false, isCustomSlot: true },
+  { id: 'personalizada-5', label: 'Sección Personalizada 5', tabId: 'personalizada-5', dataType: 'record_list', defaultSectorRole: 'main', assignableToColumns: true, shortLabel: 'Personalizada 5', isUniversal: false, isCustomSlot: true },
   { id: 'certificados', label: 'Certificados Escaneados', tabId: 'certificados', dataType: 'record_list', defaultSectorRole: 'main', assignableToColumns: false, shortLabel: 'Certificados', isUniversal: true },
   { id: 'firma', label: 'Firma Digital', tabId: 'firma', dataType: 'single_text', defaultSectorRole: 'main', assignableToColumns: false, shortLabel: 'Firma', isUniversal: true },
 ];

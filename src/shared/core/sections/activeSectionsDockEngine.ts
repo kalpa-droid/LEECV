@@ -94,7 +94,13 @@ export function checkSectionHasContent(cvData: any, sectionId: string): boolean 
       return !!(cvData.signature?.dataUrl || cvData.signature?.signerName);
     default: {
       const customSec = Array.isArray(cvData.customSections) ? cvData.customSections.find((cs: any) => cs.id === sectionId) : null;
-      return Array.isArray(customSec?.records) && customSec.records.length > 0;
+      if (customSec) return Array.isArray(customSec?.records) && customSec.records.length > 0;
+      if (sectionId.startsWith('personalizada-')) {
+        const slotNum = sectionId.split('-')[1];
+        const recs = cvData[sectionId] || cvData[`personalizada${slotNum}`];
+        return Array.isArray(recs) && recs.length > 0;
+      }
+      return false;
     }
   }
 }
@@ -118,16 +124,21 @@ export function resolveActiveDockSections(cvData: any): DockSectionItem[] {
 
   const catalogItems: DockSectionItem[] = SECTION_CATALOG
     .filter((entry) => !ABSORBED_INTO_PERSONAL_TAB.has(entry.id))
-    .map((entry) => ({
-      id: entry.id,
-      label: entry.shortLabel || entry.label,
-      iconId: entry.id,
-      isCustom: false,
-      tabId: entry.tabId,
-      isUniversal: !!entry.isUniversal,
-      isDisabled: visibility[entry.id] === false,
-      hasContent: checkSectionHasContent(cvData, entry.id)
-    }));
+    .filter((entry) => entry.isUniversal || checkSectionHasContent(cvData, entry.id) || visibility[entry.id] === true)
+    .map((entry) => {
+      const isCustomSlot = !!entry.isCustomSlot;
+      const customTitle = isCustomSlot ? (cvData?.sectionTitleOverrides?.[entry.id] || cvData?.[`title_${entry.id}`]) : null;
+      return {
+        id: entry.id,
+        label: customTitle || entry.shortLabel || entry.label,
+        iconId: entry.id,
+        isCustom: isCustomSlot,
+        tabId: entry.tabId,
+        isUniversal: !!entry.isUniversal,
+        isDisabled: visibility[entry.id] === false,
+        hasContent: checkSectionHasContent(cvData, entry.id)
+      };
+    });
 
   return [...customItems, ...catalogItems];
 }

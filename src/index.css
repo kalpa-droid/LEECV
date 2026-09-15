@@ -70,6 +70,7 @@ html, body, #root {
   --gradient-brand: linear-gradient(135deg, #FF2E63 0%, #8E44FF 100%);
   --gradient-gold: linear-gradient(135deg, #FFC93C 0%, #FF7A29 100%);
   --gradient-teal: linear-gradient(135deg, #00A8A0 0%, #008f88 100%);
+  --gradient-success: linear-gradient(135deg, #1D9E75 0%, #10B981 100%);
   /* Día: fondo claro → sombra oscura tradicional con brillo sutil */
   --shadow-raised: 0 2px 8px rgba(43,27,46,0.06);
   --shadow-floating: 0 8px 24px rgba(43,27,46,0.12);
@@ -192,6 +193,7 @@ html, body, #root {
   --gradient-brand: linear-gradient(135deg, #FF2E63 0%, #7126E0 100%);
   --gradient-gold: linear-gradient(135deg, #F0AE00 0%, #FF7A29 100%);
   --gradient-teal: linear-gradient(135deg, #008780 0%, #00655F 100%);
+  --gradient-success: linear-gradient(135deg, #1D9E75 0%, #10B981 100%);
 
   --color-secondary-muted: #0F2942;
   --color-secondary-text: #38BDF8;
@@ -262,6 +264,7 @@ html, body, #root {
   --gradient-brand: linear-gradient(135deg, #FF2E63 0%, #7126E0 100%);
   --gradient-gold: linear-gradient(135deg, #F0AE00 0%, #FF7A29 100%);
   --gradient-teal: linear-gradient(135deg, #008780 0%, #00655F 100%);
+  --gradient-success: linear-gradient(135deg, #1D9E75 0%, #10B981 100%);
 
   --color-secondary-muted: #152E4A;
   --color-secondary-text: #5EEAD4;
@@ -332,6 +335,7 @@ html, body, #root {
   --gradient-brand: linear-gradient(135deg, #FF2E63 0%, #7126E0 100%);
   --gradient-gold: linear-gradient(135deg, #F0AE00 0%, #FF7A29 100%);
   --gradient-teal: linear-gradient(135deg, #008780 0%, #00655F 100%);
+  --gradient-success: linear-gradient(135deg, #1D9E75 0%, #10B981 100%);
 
   --color-secondary-muted: #202D35;
   --color-secondary-text: #80B8B5;

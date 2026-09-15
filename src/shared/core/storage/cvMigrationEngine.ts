@@ -14,7 +14,7 @@
 
 import { sanitizeCvData } from '../utils/cvDataSchema';
 
-export const CURRENT_SCHEMA_VERSION = 3;
+export const CURRENT_SCHEMA_VERSION = 4;
 
 export function migrateCvData(rawCvData: any): any {
   if (!rawCvData || typeof rawCvData !== 'object') {
@@ -114,6 +114,39 @@ export function migrateCvData(rawCvData: any): any {
     }
 
     currentVersion = 3;
+  }
+
+  // Migration v3 -> v4: Migración de customSections dinámicos hacia slots de núcleo personalizada-1..5
+  if (currentVersion < 4) {
+    migrated.schemaVersion = 4;
+    if (Array.isArray(migrated.customSections)) {
+      if (migrated.customSections.length > 0) {
+        if (!migrated.sectionTitleOverrides || typeof migrated.sectionTitleOverrides !== 'object') {
+          migrated.sectionTitleOverrides = {};
+        }
+        if (!migrated.sectionFieldSelection || typeof migrated.sectionFieldSelection !== 'object') {
+          migrated.sectionFieldSelection = {};
+        }
+        if (!migrated.sectionVisibility || typeof migrated.sectionVisibility !== 'object') {
+          migrated.sectionVisibility = {};
+        }
+
+        const customSlots = ['personalizada-1', 'personalizada-2', 'personalizada-3', 'personalizada-4', 'personalizada-5'] as const;
+        migrated.customSections.slice(0, 5).forEach((cs: any, idx: number) => {
+          const slotId = customSlots[idx];
+          migrated[slotId] = Array.isArray(cs.records) ? cs.records : [{}];
+          migrated.sectionTitleOverrides[slotId] = cs.titleText || `Sección Personalizada ${idx + 1}`;
+          migrated.sectionFieldSelection[slotId] = Array.isArray(cs.fields) ? cs.fields : ['tituloOGrado', 'institucion', 'periodo', 'descripcion'];
+          migrated.sectionVisibility[slotId] = true;
+        });
+
+        if (migrated.customSections.length > 5) {
+          migrated._customSectionsOverflow = migrated.customSections.slice(5);
+        }
+      }
+      delete migrated.customSections;
+    }
+    currentVersion = 4;
   }
 
   // Retornar objeto desinfectado garantizado

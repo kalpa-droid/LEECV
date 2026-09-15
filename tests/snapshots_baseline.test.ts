@@ -29,7 +29,7 @@ describe('FASE 0 — Snapshots Baseline', () => {
 
   it('debe migrar v2 -> v3 correctamente poblando experience y skills', () => {
     const migrated = migrateCvData(fixtures.cv_v2_legacy);
-    expect(migrated.schemaVersion).toBe(3);
+    expect(migrated.schemaVersion).toBe(4);
     expect(migrated.experience).toBeDefined();
     expect(migrated.experience).toHaveLength(1);
     expect(migrated.experience[0].role).toBe('Desarrolladora Full Stack');
@@ -126,11 +126,11 @@ describe('FASE 0 — Snapshots Baseline', () => {
     expect(visibleSections.map(s => s.id)).toContain('experiencia');
   });
 
-  it('debe incluir la firma incondicionalmente siempre que exista signature.dataUrl', () => {
+  it('debe incluir la firma siempre que sectionVisibility.firma sea activo y exista signature.dataUrl', () => {
     const dataWithSig = {
       ...fixtures.cv_clasico_sample,
       sectionVisibility: {
-        firma: false
+        firma: true
       }
     };
     const sections = cvDataToContentSections(dataWithSig);

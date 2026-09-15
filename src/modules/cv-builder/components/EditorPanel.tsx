@@ -1130,44 +1130,70 @@ export default function EditorPanel({
                       fields: ['tituloOGrado', 'institucion', 'periodo', 'url']
                     }
                   ].map((presetSec) => {
-                    const isAlreadyAdded = (cvData.customSections || []).some((s: any) => s.id === presetSec.id);
+                    const isBuiltIn = ['redes', 'publicaciones', 'referencias', 'idiomas'].includes(presetSec.id);
+                    const isAlreadyAdded = isBuiltIn
+                      ? cvData?.sectionVisibility?.[presetSec.id] !== false
+                      : (['personalizada-1', 'personalizada-2', 'personalizada-3', 'personalizada-4', 'personalizada-5'] as const).some(
+                          (slotId) => cvData?.sectionTitleOverrides?.[slotId] === presetSec.titleText || cvData?.sectionVisibility?.[slotId] === true && cvData?.sectionTitleOverrides?.[slotId]
+                        );
 
                     return (
                       <button
                         key={presetSec.id}
                         type="button"
                         onClick={() => {
-
-                          if (isAlreadyAdded) {
+                          if (isBuiltIn) {
+                            setCvData((prev: any) => ({
+                              ...prev,
+                              sectionVisibility: {
+                                ...(prev.sectionVisibility || {}),
+                                [presetSec.id]: true
+                              }
+                            }));
+                            showSuccess(`Sección '${presetSec.titleText}' activada.`);
                             changeActiveTab(presetSec.id);
                             return;
                           }
-                          const newSection = {
-                            id: presetSec.id,
-                            titleText: presetSec.titleText,
-                            iconId: presetSec.iconId,
-                            fields: presetSec.fields,
-                            records: [{}]
-                          };
+
+                          if (isAlreadyAdded) {
+                            const existingSlot = (['personalizada-1', 'personalizada-2', 'personalizada-3', 'personalizada-4', 'personalizada-5'] as const).find(
+                              (slotId) => cvData?.sectionTitleOverrides?.[slotId] === presetSec.titleText
+                            );
+                            if (existingSlot) changeActiveTab(existingSlot);
+                            return;
+                          }
+
+                          const customSlots = ['personalizada-1', 'personalizada-2', 'personalizada-3', 'personalizada-4', 'personalizada-5'] as const;
+                          const freeSlot = customSlots.find(
+                            (slotId) => cvData?.sectionVisibility?.[slotId] !== true && (!cvData?.[slotId] || cvData[slotId].length === 0) && !cvData?.sectionTitleOverrides?.[slotId]
+                          );
+
+                          if (!freeSlot) {
+                            showWarning('Ya utilizaste los 5 slots de secciones personalizadas disponibles en tu plan. Puedes reutilizar una sección cambiando su nombre.');
+                            return;
+                          }
 
                           setCvData((prev: any) => ({
                             ...prev,
-                            customSections: [...(prev.customSections || []).filter((s: any) => s.id !== presetSec.id), newSection],
+                            sectionVisibility: { ...(prev.sectionVisibility || {}), [freeSlot]: true },
+                            sectionTitleOverrides: { ...(prev.sectionTitleOverrides || {}), [freeSlot]: presetSec.titleText },
+                            sectionFieldSelection: { ...(prev.sectionFieldSelection || {}), [freeSlot]: presetSec.fields },
+                            [freeSlot]: prev[freeSlot]?.length ? prev[freeSlot] : [{}],
                             layout: {
                               ...(prev.layout || {}),
                               columnAssignments: {
                                 ...(prev.layout?.columnAssignments || {}),
-                                [presetSec.id]: 'primaria'
+                                [freeSlot]: 'primaria'
                               },
                               sectionOrders: {
                                 ...(prev.layout?.sectionOrders || {}),
-                                primaria: [...(prev.layout?.sectionOrders?.primaria || []), presetSec.id]
+                                primaria: [...(prev.layout?.sectionOrders?.primaria || []), freeSlot]
                               }
                             }
                           }));
 
-                          showSuccess(`Sección '${presetSec.titleText}' incorporada.`);
-                          changeActiveTab(presetSec.id);
+                          showSuccess(`Sección '${presetSec.titleText}' incorporada en slot ${freeSlot}.`);
+                          changeActiveTab(freeSlot);
                         }}
                         className={`p-2.5 rounded-[${radius.card}] border text-left flex flex-col justify-between transition cursor-pointer ${
                           isAlreadyAdded
@@ -1265,34 +1291,39 @@ export default function EditorPanel({
                       showWarning('Por favor ingresa un nombre para la sección.');
                       return;
                     }
-                    const newId = `custom_${Date.now()}`;
-                    const newSection = {
-                      id: newId,
-                      titleText: newSectionTitle.trim(),
-                      iconId: 'custom',
-                      fields: [...selectedFields],
-                      records: [{}]
-                    };
+                    const customSlots = ['personalizada-1', 'personalizada-2', 'personalizada-3', 'personalizada-4', 'personalizada-5'] as const;
+                    const freeSlot = customSlots.find(
+                      (slotId) => cvData?.sectionVisibility?.[slotId] !== true && (!cvData?.[slotId] || cvData[slotId].length === 0) && !cvData?.sectionTitleOverrides?.[slotId]
+                    );
 
+                    if (!freeSlot) {
+                      showWarning('Ya usaste las 5 secciones personalizadas disponibles. Puedes reutilizar una sección existente cambiando su nombre.');
+                      return;
+                    }
+
+                    const titleText = newSectionTitle.trim();
                     setCvData((prev: any) => ({
                       ...prev,
-                      customSections: [...(prev.customSections || []), newSection],
+                      sectionVisibility: { ...(prev.sectionVisibility || {}), [freeSlot]: true },
+                      sectionTitleOverrides: { ...(prev.sectionTitleOverrides || {}), [freeSlot]: titleText },
+                      sectionFieldSelection: { ...(prev.sectionFieldSelection || {}), [freeSlot]: [...selectedFields] },
+                      [freeSlot]: prev[freeSlot]?.length ? prev[freeSlot] : [{}],
                       layout: {
                         ...(prev.layout || {}),
                         columnAssignments: {
                           ...(prev.layout?.columnAssignments || {}),
-                          [newId]: 'primaria'
+                          [freeSlot]: 'primaria'
                         },
                         sectionOrders: {
                           ...(prev.layout?.sectionOrders || {}),
-                          primaria: [...(prev.layout?.sectionOrders?.primaria || []), newId]
+                          primaria: [...(prev.layout?.sectionOrders?.primaria || []), freeSlot]
                         }
                       }
                     }));
 
                     setNewSectionTitle('');
-                    showSuccess(`Sección '${newSection.titleText}' creada exitosamente.`);
-                    changeActiveTab(newId);
+                    showSuccess(`Sección '${titleText}' creada exitosamente.`);
+                    changeActiveTab(freeSlot);
                   }}
                   className={`w-full flex items-center justify-center gap-2 py-2.5 bg-[var(--color-secondary-base)] hover:bg-[var(--color-secondary-hover)] text-[var(--color-secondary-on-base)] text-xs font-black rounded-[${radius.card}] ${elevationSystem.raised} transition cursor-pointer`}
                 >
@@ -1300,41 +1331,151 @@ export default function EditorPanel({
                 </button>
               </div>
 
-              {/* Secciones Personalizadas Creadas */}
-              {(cvData.customSections || []).length > 0 && (
-                <div className="space-y-4 pt-2">
-                  <h4 className="text-xs font-black text-[var(--color-neutral-text-primary)] uppercase border-b pb-1 border-[var(--color-neutral-border)]">
-                    Tus Secciones Personalizadas ({cvData.customSections.length})
-                  </h4>
+              {/* Secciones Personalizadas Activas (Slots del Núcleo) */}
+              {(() => {
+                const customSlots = ['personalizada-1', 'personalizada-2', 'personalizada-3', 'personalizada-4', 'personalizada-5'] as const;
+                const activeSlots = customSlots.filter(s => cvData?.sectionVisibility?.[s] === true || cvData?.sectionTitleOverrides?.[s]);
+                if (activeSlots.length === 0 && (!cvData?.customSections || cvData.customSections.length === 0)) return null;
 
-                  {cvData.customSections.map((cs: any) => (
-                    <div key={cs.id} className={`p-3 bg-[var(--color-neutral-surface-muted)] rounded-[${radius.modal}] border-2 border-[var(--color-neutral-border)] flex items-center justify-between`}>
-                      <span className="text-xs font-black text-[var(--ui-rose)] uppercase">
-                        {cs.titleText}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          changeActiveTab(cs.id);
-                        }}
-                        className={`px-3 py-1 font-bold text-xs rounded-[${radius.card}] transition cursor-pointer ${button.primary}`}
-                      >
-                        Editar Registros →
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+                return (
+                  <div className="space-y-4 pt-2">
+                    <h4 className="text-xs font-black text-[var(--color-neutral-text-primary)] uppercase border-b pb-1 border-[var(--color-neutral-border)]">
+                      Tus Secciones Personalizadas ({activeSlots.length + (cvData?.customSections?.length || 0)})
+                    </h4>
+
+                    {activeSlots.map((slotId) => (
+                      <div key={slotId} className={`p-3 bg-[var(--color-neutral-surface-muted)] rounded-[${radius.modal}] border-2 border-[var(--color-neutral-border)] flex items-center justify-between`}>
+                        <span className="text-xs font-black text-[var(--ui-rose)] uppercase">
+                          {cvData?.sectionTitleOverrides?.[slotId] || slotId}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => changeActiveTab(slotId)}
+                          className={`px-3 py-1 font-bold text-xs rounded-[${radius.card}] transition cursor-pointer ${button.primary}`}
+                        >
+                          Editar Registros →
+                        </button>
+                      </div>
+                    ))}
+
+                    {(cvData?.customSections || []).map((cs: any) => (
+                      <div key={cs.id} className={`p-3 bg-[var(--color-neutral-surface-muted)] rounded-[${radius.modal}] border-2 border-[var(--color-neutral-border)] flex items-center justify-between`}>
+                        <span className="text-xs font-black text-[var(--ui-rose)] uppercase">
+                          {cs.titleText}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => changeActiveTab(cs.id)}
+                          className={`px-3 py-1 font-bold text-xs rounded-[${radius.card}] transition cursor-pointer ${button.primary}`}
+                        >
+                          Editar Registros →
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </PanelSection>
           </div>
         )}
 
         {/* ========================================================================= */}
-        {/* PANEL DE EDICIÓN DE UNA SECCIÓN PERSONALIZADA (activeTab = id dinámico) */}
-        {/* Antes esto no existía: el botón del dock se activaba (setActiveTab(cs.id))
-            pero ninguna rama de EditorPanel coincidía con ese id, así que el panel
-            quedaba en blanco. Un solo bloque genérico sirve para cualquier sección
-            que la persona haya creado, sin importar cuántas tenga. */}
+        {/* PANEL DE EDICIÓN DE UN SLOT DE SECCIÓN PERSONALIZADA (activeTab = personalizada-N) */}
+        {/* ========================================================================= */}
+        {(() => {
+          if (!activeTab || !activeTab.startsWith('personalizada-')) return null;
+          const slotId = activeTab;
+          const titleText = cvData?.sectionTitleOverrides?.[slotId] || `Sección Personalizada (${slotId})`;
+          const activeFields = cvData?.sectionFieldSelection?.[slotId] || ['tituloOGrado', 'institucion', 'periodo', 'descripcion'];
+
+          return (
+            <div className="space-y-4">
+              <div className={`p-3.5 bg-[var(--ui-bg-card)] rounded-[${radius.modal}] border-2 border-[var(--color-neutral-border)] space-y-3 ${elevationSystem.raised}`}>
+                <Field
+                  label="Nombre de la Sección (así se ve en el PDF)"
+                  value={cvData?.sectionTitleOverrides?.[slotId] || ''}
+                  onChange={(e: any) => {
+                    const val = e.target.value;
+                    setCvData((prev: any) => ({
+                      ...prev,
+                      sectionTitleOverrides: {
+                        ...(prev.sectionTitleOverrides || {}),
+                        [slotId]: val
+                      }
+                    }));
+                  }}
+                  placeholder="Ej: Voluntariado & ONG"
+                />
+
+                <div>
+                  <p className="text-[11px] font-bold text-[var(--color-neutral-text-secondary)] mb-1.5">
+                    ¿Qué campos debe tener cada registro?
+                  </p>
+                  <div className={`grid grid-cols-2 gap-2 max-h-36 overflow-y-auto p-2 bg-[var(--color-neutral-surface-muted)] rounded-[${radius.card}] border border-[var(--color-neutral-border)]`}>
+                    {Object.values(FIELD_CATALOG).map((f) => {
+                      const isChecked = activeFields.includes(f.id);
+                      return (
+                        <label key={f.id} className="flex items-center gap-2 text-[11px] font-bold text-[var(--color-neutral-text-primary)] cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => {
+                              const updated = isChecked
+                                ? (activeFields.length > 1 ? activeFields.filter((id: string) => id !== f.id) : activeFields)
+                                : [...activeFields, f.id];
+                              setCvData((prev: any) => ({
+                                ...prev,
+                                sectionFieldSelection: {
+                                  ...(prev.sectionFieldSelection || {}),
+                                  [slotId]: updated
+                                }
+                              }));
+                            }}
+                            className="rounded border-[var(--color-neutral-border)] text-[var(--color-accent-text)]"
+                          />
+                          <span>{f.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <RecordFormSection
+                key={slotId}
+                sectionKey={slotId}
+                sectionTitle={titleText}
+                kindKey="custom"
+                customFields={activeFields}
+                addLabel={`Agregar Registro a ${titleText}`}
+                cvData={cvData}
+                setCvData={setCvData}
+                fieldName={slotId}
+                itemTitlePrefix={titleText}
+                onDeleteSection={() => {
+                  confirm({
+                    title: `¿Eliminar sección '${titleText}'?`,
+                    message: 'Se desactivará esta sección y se limpiarán sus registros.',
+                    confirmText: 'Eliminar Sección',
+                    onConfirm: () => {
+                      setCvData((prev: any) => ({
+                        ...prev,
+                        sectionVisibility: { ...(prev.sectionVisibility || {}), [slotId]: false },
+                        sectionTitleOverrides: { ...(prev.sectionTitleOverrides || {}), [slotId]: undefined },
+                        [slotId]: []
+                      }));
+                      changeActiveTab('personales');
+                      showSuccess(`Sección '${titleText}' eliminada.`);
+                    }
+                  });
+                }}
+                manualAdjustment={<SectionManualAdjustment sectionId={slotId} cvData={cvData} setCvData={setCvData} />}
+              />
+            </div>
+          );
+        })()}
+
+        {/* PANEL DE EDICIÓN DE UNA SECCIÓN PERSONALIZADA LEGADO (customSections[]) */}
         {(() => {
           const customIdx = (cvData.customSections || []).findIndex((cs: any) => cs.id === activeTab && cs.id !== 'ecologia');
           if (customIdx === -1) return null;
@@ -1498,7 +1639,7 @@ export default function EditorPanel({
             {/* Formato Global & Estándares Internacionales (ATS, US Resume, Europass, Tech, LATAM) */}
             {!isBusinessCard && (
               <PanelSection icon={<Globe className="w-4 h-4 text-[var(--color-accent-text)]" />} title="Estándar & Formato Global (Internacional)">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {getAllCvFormats().map((format) => {
                     const isSelected = resolveActiveFormatId(cvData) === format.id;
                     return (

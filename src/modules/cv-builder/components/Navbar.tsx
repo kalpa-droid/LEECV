@@ -14,7 +14,8 @@ import {
   Palette,
   ShieldCheck,
   Globe,
-  LayoutDashboard
+  LayoutDashboard,
+  Sparkles
 } from 'lucide-react';
 import { elevationSystem, radius, UI_THEME_META, buttonUnavailable, button } from '../../../shared/core/uiDesignSystem';
 import { ThemeToggleButton } from '../../../shared/core/ui/ThemeToggleButton';
@@ -62,7 +63,7 @@ export default function Navbar({
   onOpenSaveAsModal,
   onOpenJsonDownloadModal,
   onPrint,
-  onOpenAtsCheck: _onOpenAtsCheck,
+  onOpenAtsCheck,
   onOpenPricing,
   onOpenAgencyPanel,
   onOpenShareAppModal,
@@ -141,12 +142,23 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* CLUSTER DERECHO: Píldoras Ovaladas de Menús (Publicar 🌐 | Acciones 📁💾 | Cuenta 👤🔑) */}
+        {/* CLUSTER DERECHO: Píldoras Ovaladas de Menús (ATS ✨ | Publicar 🌐 | Acciones 📁💾 | Cuenta 👤🔑) */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
 
-          {/* PÍLDORA 0: PUBLICAR EN LA WEB — visible siempre (misma píldora en los 3
-              productos, para que el usuario aprenda un solo lugar), deshabilitada con
-              tooltip cuando el producto activo no publica documentos como link web. */}
+          {/* PÍLDORA ATS — visible en modo CV */}
+          {docType === 'cv' && typeof onOpenAtsCheck === 'function' && (
+            <button
+              type="button"
+              onClick={onOpenAtsCheck}
+              className="flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full border bg-[var(--ui-bg-panel)] border-[var(--color-status-warning-text)]/60 text-[var(--color-status-warning-text)] hover:bg-[var(--color-accent-amber-muted)] font-black text-xs shrink-0 transition active:scale-95 cursor-pointer"
+              title="Auditoría Predictiva ATS"
+            >
+              <Sparkles className="w-4 h-4 flex-shrink-0 text-[var(--color-status-warning-text)]" />
+              <span className="hidden sm:inline">ATS</span>
+            </button>
+          )}
+
+          {/* PÍLDORA 0: PUBLICAR EN LA WEB */}
           {docType === 'cv' ? (
             <button
               type="button"

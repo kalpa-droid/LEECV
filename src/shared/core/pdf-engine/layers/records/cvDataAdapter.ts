@@ -443,7 +443,30 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
     });
   }
 
-  // Secciones Personalizadas Dinámicas (customSections)
+  // Slots de Secciones Personalizadas del Núcleo (personalizada-1 .. personalizada-5)
+  (['personalizada-1', 'personalizada-2', 'personalizada-3', 'personalizada-4', 'personalizada-5'] as const).forEach((slotId, idx) => {
+    const rawRecords = cvData[slotId] || cvData[`personalizada${idx + 1}`];
+    if (isVisible(slotId) && Array.isArray(rawRecords) && rawRecords.length > 0) {
+      const customTitle = cvData.sectionTitleOverrides?.[slotId] || cvData[`title_${slotId}`] || getSectionLabel(slotId);
+      const activeFields = cvData.sectionFieldSelection?.[slotId] || ['tituloOGrado', 'institucion', 'periodo', 'descripcion'];
+      sections.push({
+        id: slotId,
+        titleText: String(customTitle).toUpperCase(),
+        records: rawRecords.map((r: any, rIdx: number) => ({
+          id: `rec-${slotId}-${rIdx}`,
+          kind: 'custom',
+          fieldLabelOverrides: r.fieldLabelOverrides,
+          targetSectorRole: 'main',
+          fields: {
+            ...r,
+            _fields: activeFields
+          }
+        }))
+      });
+    }
+  });
+
+  // Secciones Personalizadas Dinámicas (customSections - legado)
   if (Array.isArray(cvData.customSections)) {
     cvData.customSections.forEach((cs: any) => {
       if (cs && cs.id && isVisible(cs.id)) {
@@ -471,7 +494,7 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
   const todayISO = new Date().toISOString().split('T')[0];
   const sigDate = signature?.date || todayISO;
 
-  if (signature?.dataUrl || signature?.signerName) {
+  if (isVisible('firma') && (signature?.dataUrl || signature?.signerName)) {
     sections.push({
       id: 'firma',
       titleText: 'FIRMA REGISTRADA',

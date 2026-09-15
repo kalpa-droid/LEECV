@@ -108,7 +108,20 @@ export function sanitizeCvData(rawCvData: any = {}) {
     informatics: Array.isArray(data.informatics) ? data.informatics : [],
     certificatesScanned: Array.isArray(data.certificatesScanned) ? data.certificatesScanned : [],
 
-    customSections: Array.isArray(data.customSections)
+    sectionTitleOverrides: (typeof data.sectionTitleOverrides === 'object' && data.sectionTitleOverrides !== null)
+      ? data.sectionTitleOverrides
+      : {},
+    sectionFieldSelection: (typeof data.sectionFieldSelection === 'object' && data.sectionFieldSelection !== null)
+      ? data.sectionFieldSelection
+      : {},
+
+    'personalizada-1': Array.isArray(data['personalizada-1']) ? data['personalizada-1'] : (Array.isArray(data.personalizada1) ? data.personalizada1 : []),
+    'personalizada-2': Array.isArray(data['personalizada-2']) ? data['personalizada-2'] : (Array.isArray(data.personalizada2) ? data.personalizada2 : []),
+    'personalizada-3': Array.isArray(data['personalizada-3']) ? data['personalizada-3'] : (Array.isArray(data.personalizada3) ? data.personalizada3 : []),
+    'personalizada-4': Array.isArray(data['personalizada-4']) ? data['personalizada-4'] : (Array.isArray(data.personalizada4) ? data.personalizada4 : []),
+    'personalizada-5': Array.isArray(data['personalizada-5']) ? data['personalizada-5'] : (Array.isArray(data.personalizada5) ? data.personalizada5 : []),
+
+    customSections: (Array.isArray(data.customSections) && data.customSections.length > 0)
       ? data.customSections
           .filter((cs: any) => cs && cs.id !== 'ecologia')
           .map((cs: any) => ({
@@ -117,7 +130,7 @@ export function sanitizeCvData(rawCvData: any = {}) {
             fields: Array.isArray(cs.fields) ? cs.fields : ['tituloOGrado', 'institucion'],
             records: Array.isArray(cs.records) ? cs.records : []
           }))
-      : [],
+      : undefined,
 
     signature: {
       type: data.signature?.type || 'drawn',

@@ -9,10 +9,10 @@ import { ALL_SECTION_IDS, applyTemplateMode } from '../src/shared/core/pdf-engin
 
 describe('Canonical Section Order Engine & Section Fixes', () => {
   it('1. CANONICAL_SECTION_ORDER contiene los IDs estándar sin duplicados ni ecología', () => {
-    expect(CANONICAL_SECTION_ORDER).toHaveLength(21);
+    expect(CANONICAL_SECTION_ORDER).toHaveLength(26);
     expect(CANONICAL_SECTION_ORDER).not.toContain('ecologia');
     const unique = new Set(CANONICAL_SECTION_ORDER);
-    expect(unique.size).toBe(21);
+    expect(unique.size).toBe(26);
   });
 
   it('2. SECTION_CATALOG respeta el orden de CANONICAL_SECTION_ORDER y excluye ecología', () => {
@@ -96,7 +96,7 @@ describe('Canonical Section Order Engine & Section Fixes', () => {
     };
 
     const migrated = migrateCvData(legacyCv);
-    expect(migrated.schemaVersion).toBe(3);
+    expect(migrated.schemaVersion).toBe(4);
     expect(migrated.ecology).toBeUndefined();
     expect(migrated.projects).toHaveLength(1);
     expect(migrated.projects[0].title).toBe('Huerta Orgánica Comunitaria');

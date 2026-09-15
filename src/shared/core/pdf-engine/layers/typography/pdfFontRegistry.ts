@@ -52,11 +52,13 @@ export function sanitizeFontFamily(family?: string, isBold: boolean = false, isI
 
   const lower = family.toLowerCase();
 
-  if (lower.includes('times') || lower.includes('serif') && !lower.includes('sans')) {
-    if (isBold && isItalic) return 'Times-BoldItalic';
-    if (isBold) return 'Times-Bold';
-    if (isItalic) return 'Times-Italic';
-    return 'Times-Roman';
+  if (lower.includes('times') || (lower.includes('serif') && !lower.includes('sans'))) {
+    // Times-* no viene precargada en @react-pdf/font (sólo Helvetica) — hasta
+    // registrar archivos reales, cae a Helvetica en vez de romper el render.
+    if (isBold && isItalic) return 'Helvetica-BoldOblique';
+    if (isBold) return 'Helvetica-Bold';
+    if (isItalic) return 'Helvetica-Oblique';
+    return 'Helvetica';
   }
 
   if (lower.includes('courier') || lower.includes('mono')) {
