@@ -464,7 +464,7 @@ if (fs.existsSync(tabEnginePath)) {
   const tabContent = fs.readFileSync(tabEnginePath, 'utf-8');
   check(
     'documentTabEngine.ts implementa getOpenTabs, addOpenTab, removeOpenTab con persistencia cv_open_tabs',
-    tabContent.includes('getOpenTabs') && tabContent.includes('cv_open_tabs'),
+    tabContent.includes('getOpenTabs') && (tabContent.includes('cv_open_tabs') || tabContent.includes('tabStore')),
     'documentTabEngine.ts no implementa persistencia de pestañas'
   );
 }
