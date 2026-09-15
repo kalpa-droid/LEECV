@@ -52,7 +52,7 @@ import { navigation } from '../shared/core/utils/navigation';
 
 import EmailSaveModal from '../modules/cv-builder/components/modals/EmailSaveModal';
 import ShareAppModal from '../modules/cv-builder/components/modals/ShareAppModal';
-import { loadCVById, saveCV } from '../shared/core/storage/documentStorageService';
+import { loadCVById, loadDocumentById, saveCV } from '../shared/core/storage/documentStorageService';
 import { setPendingDocumentToOpen, getPendingDocumentToOpen, clearPendingDocumentToOpen } from '../shared/core/storage/pendingDocumentHandoff';
 import { runWithSafeSave } from '../shared/core/storage/safeNavigationEngine';
 import { signInWithGoogle, logout } from '../modules/auth/authService';
@@ -191,13 +191,13 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     prevCvIdRef.current = cvData?.id;
   }, [cvData?.id, cvData?.activePresetId, (cvData as any)?.cardSize]);
 
-  const handleSwitchDocumentTab = async (targetCvId: string) => {
+  const handleSwitchDocumentTab = async (targetCvId: string, targetDocType: string = 'cv') => {
     if (!targetCvId || targetCvId === cvData?.id || isSwitchingDocument) return;
 
     setIsSwitchingDocument(true);
     try {
       await saveCV();
-      const loaded = await loadCVById(targetCvId);
+      const loaded = await loadDocumentById(targetCvId, targetDocType);
       if (loaded) {
         setCvData(loaded);
         showSuccess(`Conmutado a "${loaded.title || 'Documento'}"`);
@@ -334,7 +334,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     if (closedOrDeletedCvId === activeCvId) {
       if (remaining.length > 0) {
         const lastTab = remaining[remaining.length - 1];
-        await handleSwitchDocumentTab(lastTab.cvId);
+        await handleSwitchDocumentTab(lastTab.cvId, lastTab.docType || 'cv');
       } else {
         resetToBlankCV();
         setActiveTab('personales');
@@ -647,7 +647,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
             const tab = tabs.find(t => t.cvId === id);
             handleCloseFooterTab({ stopPropagation: () => {} } as any, id, tab?.title || 'Documento');
           }}
-          onNavigateToDocument={(targetDocType, id) => handleNavigateToDocumentTab(targetDocType as 'cv' | 'business_card' | 'book', id)}
+          onNavigateToDocument={(targetDocType, id) => handleNavigateToDocumentTab(targetDocType, id)}
           onTabsChanged={(updated) => setTabs(updated)}
           onNewCV={handleNewCV}
           onNewCard={handleNewCard}
@@ -827,6 +827,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           {isSavedCVsOpen && (
             <SavedCVsModal 
               isOpen={isSavedCVsOpen}
+              docType={activeDocType}
               onClose={() => setIsSavedCVsOpen(false)}
               onSelectCV={(selectedCV: any) => {
                 setCvData(selectedCV);

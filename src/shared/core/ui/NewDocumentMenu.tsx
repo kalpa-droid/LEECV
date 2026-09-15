@@ -18,6 +18,7 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
   className = '',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [alignRight, setAlignRight] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,11 +31,20 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const handleToggle = () => {
+    if (!isOpen && menuRef.current) {
+      const rect = menuRef.current.getBoundingClientRect();
+      const spaceRight = window.innerWidth - rect.left;
+      setAlignRight(spaceRight < 270);
+    }
+    setIsOpen(!isOpen);
+  };
+
   return (
     <div className={`relative ${className}`} ref={menuRef}>
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggle}
         className={`p-1.5 rounded-full bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-panel)] text-[var(--color-status-success-bright)] transition cursor-pointer active:scale-95 shrink-0 ${elevationSystem.raised}`}
         title="Crear Nuevo Documento (+)"
       >
@@ -42,7 +52,7 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
       </button>
 
       {isOpen && (
-        <div className={`absolute left-0 bottom-full mb-2 w-[calc(100vw-2rem)] max-w-64 rounded-[${radius.modal}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.floating} p-1.5 z-50 space-y-1 animate-fadeIn`}>
+        <div className={`absolute ${alignRight ? 'right-0' : 'left-0'} bottom-full mb-2 w-[calc(100vw-2rem)] max-w-64 rounded-[${radius.modal}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.floating} p-1.5 z-50 space-y-1 animate-fadeIn`}>
           <div className="px-2 py-1 text-[10px] font-black uppercase text-[var(--ui-text-secondary)] tracking-wider">
             ¿Qué querés crear?
           </div>

@@ -3,7 +3,7 @@ import { dal } from './dataAccessLayer';
 import { optimizeCVImagesToWebP } from '../utils/imageCompressor';
 import { idbStorage } from './storageIndexedDB';
 import { SaveDocumentResult, DocumentRecord } from '../../../types/document';
-import { getDocumentTypeConfig } from '../capabilities/capabilityRegistry';
+import { getDocumentTypeConfig, hasCapability } from '../capabilities/capabilityRegistry';
 import { getMonthNameEs } from '../utils/formatDate';
 import { backupCvToGoogleDrive } from './driveBackupService';
 import { dedupAssetsForLocalStorage, reconstructCvDataFromParts } from './driveDocumentPackager';
@@ -174,7 +174,7 @@ const saveDocumentInternal = async (
     }
 
     // 4. Respaldo incremental en segundo plano a Google Drive
-    if (docTypeId === 'cv') {
+    if (hasCapability(docTypeId, 'cloud_backup')) {
       backupCvToGoogleDrive(fullDocObject).then(res => {
         if (res.success) {
           summaryRecord.driveSyncState = 'synced';

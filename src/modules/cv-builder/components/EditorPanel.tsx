@@ -59,13 +59,14 @@ export default function EditorPanel({
   setCvData, 
   activeTab,
   setActiveTab,
+  docType = 'cv',
   onOpenPhotoCropper, 
   onOpenSignature
 }: any) {
   const { showSuccess, showError, showWarning } = useToast();
   const { confirm } = useConfirm();
 
-  const isBusinessCard = cvData?.activePresetId === 'tarjeta-personal' || (cvData as any)?.cardSize?.startsWith('tarjeta_');
+  const isBusinessCard = docType === 'business_card';
 
   const changeActiveTab = (tabId: string) => {
     if (typeof setActiveTab === 'function') {
@@ -1622,8 +1623,8 @@ export default function EditorPanel({
                     className={`w-full text-xs p-2.5 rounded-[${radius.card}] border border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer`}
                   >
                     {Object.values(PAGE_SIZES).filter((size) => {
-                      const isBusinessCard = cvData?.activePresetId === 'tarjeta-personal';
-                      if (isBusinessCard) {
+                      const isCard = docType === 'business_card';
+                      if (isCard) {
                         return size.category === 'tarjeta' && ['tarjeta_estandar', 'tarjeta_europea', 'tarjeta_cuadrada', 'tarjeta_mini'].includes(size.id);
                       }
                       return size.category === 'documento' && ['a4', 'carta', 'legal', 'oficio'].includes(size.id);

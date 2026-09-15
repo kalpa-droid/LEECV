@@ -27,6 +27,7 @@ import { useEntitlements, getPlanLabel, PLAN_FEATURES } from '../../../shared/co
 import { navigation } from '../../../shared/core/utils/navigation';
 import { useText } from '../../../shared/i18n/useText';
 import { Logo } from '../../../shared/core/brand/Logo';
+import { hasCapability } from '../../../shared/core/capabilities/capabilityRegistry';
 
 export interface NavbarProps {
   currentCvData: any;
@@ -159,7 +160,7 @@ export default function Navbar({
           )}
 
           {/* PÍLDORA 0: PUBLICAR EN LA WEB */}
-          {docType === 'cv' ? (
+          {hasCapability(docType, 'web_publish') ? (
             <button
               type="button"
               onClick={onOpenCloudStatus}
@@ -173,7 +174,7 @@ export default function Navbar({
             <button
               type="button"
               disabled
-              title={docType === 'business_card' ? 'Publicar en la Web es para CVs — las tarjetas se descargan listas para imprimir' : 'Publicar en la Web es para CVs — los libros se descargan listos para imprimir'}
+              title="La Publicación en la Web es para documentos con respaldo en la nube — los libros se descargan listos para imprimir"
               className={`${buttonUnavailable} flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-full text-xs shrink-0`}
             >
               <Globe className="w-4 h-4 flex-shrink-0" />
@@ -215,12 +216,8 @@ export default function Navbar({
 
                 <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
 
-                {/* 1. Guardar Cambios, Copias y Backup JSON — visibles siempre, deshabilitadas
-                    con tooltip cuando el producto activo no es un CV (Tarjeta/Libro son
-                    herramientas de una sola pasada: se exportan, no se guardan como
-                    documento propio). Mismo patron buttonUnavailable que el resto de la
-                    app, no una excepcion nueva de "ocultar sin explicar". */}
-                {docType === 'cv' ? (
+                {/* 1. Guardar Cambios, Copias y Backup JSON */}
+                {hasCapability(docType, 'cloud_backup') ? (
                   <>
                     <button
                       type="button"

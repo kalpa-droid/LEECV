@@ -123,6 +123,20 @@ export const CAPABILITY_REGISTRY: Record<string, CapabilityConfig> = {
     category: 'utility',
     defaultData: {}
   },
+  cloud_backup: {
+    id: 'cloud_backup',
+    name: 'Respaldo en la Nube (Google Drive)',
+    description: 'Guarda el documento en la lista de borradores y sincroniza con Google Drive.',
+    category: 'utility',
+    defaultData: {}
+  },
+  web_publish: {
+    id: 'web_publish',
+    name: 'Publicación Web',
+    description: 'Genera una versión web interactiva pública con enlace compartible.',
+    category: 'utility',
+    defaultData: {}
+  },
   cover_letter_body: {
     id: 'cover_letter_body',
     name: 'Cuerpo de Carta de Presentación',
@@ -179,7 +193,9 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
       'courses',
       'scanned_certificates',
       'digital_signature',
-      'json_backup'
+      'json_backup',
+      'cloud_backup',
+      'web_publish'
     ],
     defaultPaperSize: 'a4',
     defaultActivePresetId: 'cv-clasico'
@@ -195,6 +211,8 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
       'personal_info',
       'digital_signature',
       'json_backup',
+      'cloud_backup',
+      'web_publish',
       'cover_letter_body',
       'job_target',
       'ai_generation'
@@ -212,7 +230,9 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
       'personal_info',
       'qr_code',
       'logo_upload',
-      'json_backup'
+      'json_backup',
+      'cloud_backup',
+      'web_publish'
     ]
   },
   portfolio: {
@@ -228,7 +248,9 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
       'profession',
       'scanned_certificates',
       'logo_upload',
-      'json_backup'
+      'json_backup',
+      'cloud_backup',
+      'web_publish'
     ],
     defaultPaperSize: 'a4'
   },

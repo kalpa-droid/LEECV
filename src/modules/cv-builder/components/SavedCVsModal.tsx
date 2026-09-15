@@ -9,7 +9,17 @@ import {
   Download,
   Copy
 } from 'lucide-react';
-import { getSavedCVsList, loadCVById, deleteCVById, saveCVAs, checkStorageStatus } from '../services/cvStorageService';
+import { 
+  getSavedCVsList, 
+  getSavedDocumentsList,
+  loadCVById, 
+  loadDocumentById,
+  deleteCVById, 
+  deleteDocumentById,
+  saveCVAs, 
+  saveDocumentAs,
+  checkStorageStatus 
+} from '../services/cvStorageService';
 import { closeDocumentEverywhere, OpenTabItem } from '../../../shared/core/storage/documentTabEngine';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { useToast } from '../../../shared/core/ui/Toast';
@@ -21,6 +31,7 @@ import {} from '../../../shared/core/utils/validationEngine';
 
 export interface SavedCVsModalProps {
   isOpen: boolean;
+  docType?: string;
   onClose: () => void;
   onSelectCV: (cvData: any) => void;
   onImportJson?: (e: any) => Promise<void>;
@@ -30,6 +41,7 @@ export interface SavedCVsModalProps {
 
 export default function SavedCVsModal({ 
   isOpen, 
+  docType = 'cv',
   onClose, 
   onSelectCV,
   onImportJson,
@@ -47,7 +59,7 @@ export default function SavedCVsModal({
     setIsLoading(true);
     await withErrorHandling(
       async () => {
-        const list = await getSavedCVsList();
+        const list = await getSavedDocumentsList(docType);
         setSavedList(list);
       },
       {
@@ -63,12 +75,12 @@ export default function SavedCVsModal({
     if (isOpen) {
       fetchList();
     }
-  }, [isOpen]);
+  }, [isOpen, docType]);
 
   const handleOpenCV = async (id: string) => {
     await withErrorHandling(
       async () => {
-        const loadedData = await loadCVById(id);
+        const loadedData = await loadDocumentById(id, docType);
         if (loadedData) {
           onSelectCV(loadedData);
           onClose();
@@ -85,14 +97,14 @@ export default function SavedCVsModal({
   const handleDuplicate = async (id: string, title: string) => {
     await withErrorHandling(
       async () => {
-        const loadedData = await loadCVById(id);
+        const loadedData = await loadDocumentById(id, docType);
         if (loadedData) {
           const cloneLabel = loadedData.version_label ? `${loadedData.version_label} (Copia)` : 'Copia Borrador';
           const clonedData = {
             ...loadedData,
             title: `${loadedData.title || title} (Copia)`
           };
-          const res = await saveCVAs(clonedData, cloneLabel);
+          const res = await saveDocumentAs(clonedData, cloneLabel, docType);
           if (res?.success) {
             showSuccess(`Borrador "${title}" duplicado correctamente.`);
             fetchList();
@@ -111,7 +123,7 @@ export default function SavedCVsModal({
 
   const handleDelete = async (id: string, title: string) => {
     confirm({
-      title: '¿Eliminar currículum guardado?',
+      title: '¿Eliminar documento guardado?',
       message: `¿Estás seguro de que deseas eliminar "${title}" de tus archivos guardados?`,
       confirmText: 'Eliminar',
       onConfirm: async () => {
@@ -119,7 +131,7 @@ export default function SavedCVsModal({
           async () => {
             const remaining = await closeDocumentEverywhere(id, {
               alsoDeleteFromStorage: true,
-              deleteCVById,
+              deleteCVById: (idToDelete) => deleteDocumentById(idToDelete, docType),
             });
             showSuccess(`Documento "${title}" eliminado.`);
             fetchList();

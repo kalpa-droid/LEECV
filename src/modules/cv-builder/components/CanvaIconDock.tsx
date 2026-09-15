@@ -90,6 +90,36 @@ export default function CanvaIconDock({
       }));
   }, [bookMode]);
 
+  const computedDockTabs = useMemo(() => {
+    if (docType === 'business_card') {
+      return [
+        ...CARD_TABS_LARGE.map(t => ({ ...t, isLarge: true })),
+        ...CARD_TABS_SMALL.map(t => ({ ...t, isLarge: false }))
+      ];
+    }
+    if (docType === 'book') {
+      return activeBookTabs.map(t => ({ ...t, isLarge: true }));
+    }
+    if (docType === 'cover_letter') {
+      return COVER_LETTER_TABS.map(t => ({ ...t, isLarge: true }));
+    }
+    return [
+      { ...addSectionTab, isAddSection: true, isLarge: true },
+      { ...styleTabs[0], isLarge: true },
+      { ...portadaTab, isLarge: true },
+      { ...personalTab, isLarge: true },
+      ...dockSections.map(sec => ({
+        id: sec.id,
+        label: sec.label,
+        iconId: sec.iconId,
+        isCustom: sec.isCustom,
+        hasContent: sec.hasContent,
+        isDisabled: sec.isDisabled,
+        isLarge: false
+      }))
+    ];
+  }, [docType, activeBookTabs, dockSections]);
+
   const handleTabClick = (tabId: string, isDisabled?: boolean) => {
     if (isDisabled && cvData && setCvData) {
       const { updatedCvData } = activateSection(cvData, tabId);
