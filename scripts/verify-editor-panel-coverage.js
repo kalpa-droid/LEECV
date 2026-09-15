@@ -46,7 +46,9 @@ for (const entry of SECTION_CATALOG) {
     }
   } else {
     // Para secciones independientes, buscamos match exacto en EditorPanel de activeTab === 'sectionId'
-    const matchesSectionId = editorPanelContent.includes(`activeTab === '${sectionId}'`) || editorPanelContent.includes(`activeTab === "${sectionId}"`);
+    const matchesSectionId = editorPanelContent.includes(`activeTab === '${sectionId}'`) ||
+      editorPanelContent.includes(`activeTab === "${sectionId}"`) ||
+      (sectionId.startsWith('personalizada-') && editorPanelContent.includes("activeTab.startsWith('personalizada-')"));
 
     if (matchesSectionId) {
       console.log(`  ✓ Cobertura Formulario [Sección: ${sectionId}] -> Enrutamiento activeTab OK.`);
