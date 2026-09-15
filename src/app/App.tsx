@@ -5,6 +5,7 @@ import EditorPanel from '../modules/cv-builder/components/EditorPanel';
 const CVPreview = lazy(() => import('../modules/cv-builder/components/CVPreview'));
 import { FileText, CreditCard, Palette, Plus, X, Sparkles, ChevronRight } from 'lucide-react';
 import { getOpenTabs, addOpenTab, removeOpenTab, closeDocumentEverywhere, generateDocumentId, OpenTabItem, TABS_CHANGED_EVENT } from '../shared/core/storage/documentTabEngine';
+import * as workspaceController from '../shared/core/documents/workspaceController';
 import { AppShell } from '../shared/core/ui/AppShell';
 const LandingPage = lazy(() => import('../modules/landing/LandingPage').then(m => ({ default: m.LandingPage })));
 const BookStudio = lazy(() => import('../modules/book-studio/BookStudio').then(m => ({ default: m.BookStudio })));
@@ -193,18 +194,23 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 
     setIsSwitchingDocument(true);
     try {
-      // skipSaveCurrent: true cuando este cambio de pestaña viene de CERRAR el documento
-      // actual (resolveNextActiveDocument) — guardarlo acá volvería a escribir su entrada
-      // en cv_open_tabs vía syncTabTitleFromSave() dentro de saveDocumentInternal, resucitando
-      // la pestaña que closeDocumentEverywhere() recién quitó. En el cambio normal de pestaña
-      // (click en otra pestaña sin cerrar la actual) sí corresponde guardar antes de salir.
-      if (!opts.skipSaveCurrent) {
-        await saveCV();
-      }
-      const loaded = await loadDocumentById(targetCvId, targetDocType);
-      if (loaded) {
-        setCvData(loaded);
-        showSuccess(`Conmutado a "${loaded.title || 'Documento'}"`);
+      const currentDocState: workspaceController.CurrentDocumentState | null = cvData ? {
+        id: cvData.id,
+        docType: inferDocumentTypeId(cvData),
+        data: cvData,
+        isDirty: hasPendingChanges
+      } : null;
+
+      const success = await workspaceController.switchToTab(
+        targetCvId,
+        currentDocState,
+        setCvData,
+        { saveCurrentIfDirty: !opts.skipSaveCurrent }
+      );
+
+      if (success) {
+        setTabs(getOpenTabs());
+        showSuccess('Pestaña conmutada exitosamente.');
       } else {
         showError('No se pudo cargar el documento de la pestaña seleccionada.');
       }
@@ -352,18 +358,14 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     return () => window.removeEventListener(TABS_CHANGED_EVENT, syncTabsFromEngine);
   }, []);
 
-  const resolveNextActiveDocument = async (closedOrDeletedCvId: string, remaining: OpenTabItem[]) => {
-    setTabs(remaining);
-    if (closedOrDeletedCvId === activeCvId) {
-      if (remaining.length > 0) {
-        const lastTab = remaining[remaining.length - 1];
-        await handleSwitchDocumentTab(lastTab.cvId, lastTab.docType || 'cv', { skipSaveCurrent: true });
-      } else {
-        resetToBlankCV();
-        setActiveTab('personales');
-      }
+  const goToLandingPage = React.useCallback(() => {
+    if (onNavigate) {
+      onNavigate('/');
+    } else if (typeof window !== 'undefined') {
+      window.history.pushState({}, '', '/');
+      window.dispatchEvent(new PopStateEvent('popstate'));
     }
-  };
+  }, [onNavigate]);
 
   const handleCloseFooterTab = (e: React.MouseEvent, cvId: string, title: string) => {
     e.stopPropagation();
@@ -374,8 +376,8 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       onConfirm: async () => {
         setIsSwitchingDocument(true);
         try {
-          const remaining = await closeDocumentEverywhere(cvId, { alsoDeleteFromStorage: false });
-          await resolveNextActiveDocument(cvId, remaining);
+          await workspaceController.closeTab(cvId, activeCvId, setCvData, goToLandingPage);
+          setTabs(getOpenTabs());
         } finally {
           setIsSwitchingDocument(false);
         }
@@ -858,7 +860,9 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
               }}
               onImportJson={handleImportJsonFile}
               onOpenCloudStatus={() => setIsCloudModalOpen(true)}
-              onDocumentClosed={(deletedId, remaining) => resolveNextActiveDocument(deletedId, remaining)}
+              onDocumentClosed={(deletedId) => {
+                workspaceController.closeTab(deletedId, activeCvId, setCvData, goToLandingPage).then(() => setTabs(getOpenTabs()));
+              }}
             />
           )}
 

@@ -6,6 +6,7 @@ import { navigation } from '../shared/core/utils/navigation';
 import { CVData } from '../types/cv';
 
 import { getDocTypeForRoute, inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
+import { setTabDirty } from '../shared/core/documents/tabStore';
 
 interface CVContextType {
   cvData: CVData;
@@ -286,6 +287,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
       console.error('Error guardando en CVContext:', err);
       return { success: false, error: err };
     } finally {
+      if (cvData?.id) setTabDirty(cvData.id, false);
       setHasPendingChanges(false);
       setIsSaving(false);
     }
@@ -303,6 +305,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
       console.error('Error en Guardar como en CVContext:', err);
       return { success: false, error: err };
     } finally {
+      if (cvData?.id) setTabDirty(cvData.id, false);
       setHasPendingChanges(false);
       setIsSaving(false);
     }

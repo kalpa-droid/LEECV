@@ -9,7 +9,6 @@ import { backupCvToGoogleDrive } from './driveBackupService';
 import { dedupAssetsForLocalStorage, reconstructCvDataFromParts } from './driveDocumentPackager';
 import { migrateCvData } from './cvMigrationEngine';
 import { reportSilentError } from '../utils/errorHandler';
-import { syncTabTitleFromSave } from './documentTabEngine';
 
 export { supabase, checkStorageStatus };
 
@@ -141,7 +140,6 @@ const saveDocumentInternal = async (
         list.unshift(summaryRecord);
       }
       localStorage.setItem(storageKey, JSON.stringify(list));
-      syncTabTitleFromSave(id, summaryRecord.title, docTypeId as any);
     } catch (lerr) {
       console.warn('Advertencia summary list LocalStorage:', lerr);
       reportSilentError(lerr, 'documentStorageService.saveDocumentInternal.localStorageSummary');

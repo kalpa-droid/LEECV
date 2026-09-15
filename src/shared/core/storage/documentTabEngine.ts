@@ -1,11 +1,11 @@
 /**
- * NÚCLEO — MOTOR DE PESTAÑAS MULTIDOCUMENTO (documentTabEngine.ts)
+ * NÚCLEO — CAPA DE COMPATIBILIDAD DE PESTAÑAS (documentTabEngine.ts)
  *
- * Mantiene y gestiona la lista liviana de documentos abiertos en sesión (cv_open_tabs)
- * en localStorage. Evita duplicar estados pesados cvData en RAM y garantiza
- * que el espacio de trabajo del usuario persista entre recargas.
+ * Mantiene la interfaz pública legacy consumida por componentes de UI
+ * mientras delega internamente a `tabStore.ts`.
  */
 
+import * as TabStore from '../documents/tabStore';
 import { getDefaultTitleForDocType } from '../capabilities/capabilityRegistry';
 
 export interface OpenTabItem {
@@ -16,76 +16,47 @@ export interface OpenTabItem {
   docType?: 'cv' | 'business_card' | 'book' | 'cover_letter';
 }
 
-const OPEN_TABS_STORAGE_KEY = 'cv_open_tabs';
-export const TABS_CHANGED_EVENT = 'leecv-tabs-changed';
-
-function notifyTabsChanged(): void {
-  if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
-    window.dispatchEvent(new CustomEvent(TABS_CHANGED_EVENT));
-  }
-}
+export const TABS_CHANGED_EVENT = TabStore.TABS_CHANGED_EVENT;
 
 export function getOpenTabs(): OpenTabItem[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(OPEN_TABS_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.map(t => ({ ...t, docType: t.docType || 'cv' })) : [];
-  } catch (err) {
-    console.warn('Error leyendo cv_open_tabs:', err);
-    return [];
-  }
+  return TabStore.getOpenTabs().map(t => ({
+    cvId: t.id,
+    title: t.title,
+    versionLabel: t.versionLabel,
+    isDirty: t.isDirty,
+    docType: t.docType
+  }));
 }
 
 export function saveOpenTabs(tabs: OpenTabItem[]): void {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(OPEN_TABS_STORAGE_KEY, JSON.stringify(tabs));
-  } catch (err) {
-    console.warn('Error guardando cv_open_tabs:', err);
-  }
+  // Mantiene compatibilidad con guardados directos de listas de pestañas
+  tabs.forEach(t => {
+    TabStore.openTab(t.cvId, t.docType || 'cv', t.title, t.versionLabel);
+  });
 }
 
-export function addOpenTab(cvId: string, title: string, versionLabel?: string, docType: 'cv' | 'business_card' | 'book' | 'cover_letter' = 'cv'): OpenTabItem[] {
-  if (!cvId) return getOpenTabs();
-  const current = getOpenTabs();
-  const existingIdx = current.findIndex(t => t.cvId === cvId);
-  const cleanTitle = title || getDefaultTitleForDocType(docType);
-
-  if (existingIdx >= 0) {
-    current[existingIdx] = {
-      ...current[existingIdx],
-      title: cleanTitle,
-      versionLabel: versionLabel || current[existingIdx].versionLabel,
-      docType: docType || current[existingIdx].docType || 'cv'
-    };
-  } else {
-    current.push({
-      cvId,
-      title: cleanTitle,
-      versionLabel,
-      docType
-    });
-  }
-
-  saveOpenTabs(current);
-  notifyTabsChanged();
-  return current;
+export function addOpenTab(
+  cvId: string,
+  title: string,
+  versionLabel?: string,
+  docType: 'cv' | 'business_card' | 'book' | 'cover_letter' = 'cv'
+): OpenTabItem[] {
+  TabStore.openTab(cvId, docType, title, versionLabel);
+  return getOpenTabs();
 }
 
 export function removeOpenTab(cvId: string): OpenTabItem[] {
-  const current = getOpenTabs();
-  const filtered = current.filter(t => t.cvId !== cvId);
-  saveOpenTabs(filtered);
-  notifyTabsChanged();
-  return filtered;
+  TabStore.closeTab(cvId);
+  return getOpenTabs();
 }
 
-export function syncTabTitleFromSave(cvId: string, newTitle: string, docType: 'cv' | 'business_card' | 'book' | 'cover_letter' = 'cv'): OpenTabItem[] {
-  const current = getOpenTabs();
-  const existing = current.find(t => t.cvId === cvId);
-  return addOpenTab(cvId, newTitle, undefined, existing?.docType || docType);
+export function syncTabTitleFromSave(
+  cvId: string,
+  newTitle: string,
+  docType: 'cv' | 'business_card' | 'book' | 'cover_letter' = 'cv'
+): OpenTabItem[] {
+  TabStore.openTab(cvId, docType, newTitle);
+  return getOpenTabs();
 }
 
 export function generateDocumentId(prefix: 'cv' | 'book' | 'card' | 'cover_letter' = 'cv'): string {
@@ -106,4 +77,3 @@ export async function closeDocumentEverywhere(
   }
   return remaining;
 }
-
