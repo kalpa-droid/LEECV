@@ -11,7 +11,7 @@ export interface OpenTabItem {
   title: string;
   versionLabel?: string;
   isDirty?: boolean;
-  docType?: 'cv' | 'business_card' | 'book';
+  docType?: 'cv' | 'business_card' | 'book' | 'cover_letter';
 }
 
 const OPEN_TABS_STORAGE_KEY = 'cv_open_tabs';
@@ -45,11 +45,16 @@ export function saveOpenTabs(tabs: OpenTabItem[]): void {
   }
 }
 
-export function addOpenTab(cvId: string, title: string, versionLabel?: string, docType: 'cv' | 'business_card' | 'book' = 'cv'): OpenTabItem[] {
+export function addOpenTab(cvId: string, title: string, versionLabel?: string, docType: 'cv' | 'business_card' | 'book' | 'cover_letter' = 'cv'): OpenTabItem[] {
   if (!cvId) return getOpenTabs();
   const current = getOpenTabs();
   const existingIdx = current.findIndex(t => t.cvId === cvId);
-  const cleanTitle = title || (docType === 'business_card' ? 'Mi Tarjeta Personal' : docType === 'book' ? 'Mi Libro / Folleto' : 'Mi Currículum Vitae');
+  const cleanTitle = title || (
+    docType === 'business_card' ? 'Mi Tarjeta Personal'
+      : docType === 'book' ? 'Mi Libro / Folleto'
+      : docType === 'cover_letter' ? 'Mi Carta de Presentación'
+      : 'Mi Currículum Vitae'
+  );
 
   if (existingIdx >= 0) {
     current[existingIdx] = {
@@ -80,7 +85,7 @@ export function removeOpenTab(cvId: string): OpenTabItem[] {
   return filtered;
 }
 
-export function syncTabTitleFromSave(cvId: string, newTitle: string, docType: 'cv' | 'business_card' | 'book' = 'cv'): OpenTabItem[] {
+export function syncTabTitleFromSave(cvId: string, newTitle: string, docType: 'cv' | 'business_card' | 'book' | 'cover_letter' = 'cv'): OpenTabItem[] {
   const current = getOpenTabs();
   const existing = current.find(t => t.cvId === cvId);
   return addOpenTab(cvId, newTitle, undefined, existing?.docType || docType);

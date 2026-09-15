@@ -8,10 +8,10 @@ const PENDING_DOC_KEY = 'leecv_pending_open_document';
 
 export interface PendingDocument {
   id: string;
-  docType: 'cv' | 'business_card' | 'book';
+  docType: 'cv' | 'business_card' | 'book' | 'cover_letter';
 }
 
-export function setPendingDocumentToOpen(id: string, docType: 'cv' | 'business_card' | 'book'): void {
+export function setPendingDocumentToOpen(id: string, docType: 'cv' | 'business_card' | 'book' | 'cover_letter'): void {
   if (typeof window === 'undefined') return;
   try {
     const payload: PendingDocument = { id, docType };
