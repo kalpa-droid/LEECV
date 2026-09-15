@@ -307,3 +307,63 @@ export function hasCapability(docTypeId: string = 'cv', capabilityId: string): b
   const config = getDocumentTypeConfig(docTypeId);
   return config.capabilities.includes(capabilityId);
 }
+
+/**
+ * Motor Declarativo de Mapeo Ruta <-> Tipo de Documento <-> Título por Defecto
+ */
+export function getDocTypeForRoute(route: string = '/'): 'cv' | 'business_card' | 'book' | 'cover_letter' {
+  const cleanRoute = (route || '/').toLowerCase().trim();
+  if (cleanRoute === '/crear-tarjeta' || cleanRoute.includes('tarjeta')) return 'business_card';
+  if (cleanRoute === '/crear-libro' || cleanRoute.includes('libro')) return 'book';
+  if (cleanRoute === '/crear-carta' || cleanRoute.includes('carta')) return 'cover_letter';
+  return 'cv';
+}
+
+export function getRouteForDocType(docTypeId: string = 'cv'): string {
+  switch (docTypeId) {
+    case 'business_card':
+      return '/crear-tarjeta';
+    case 'book':
+      return '/crear-libro';
+    case 'cover_letter':
+      return '/crear-carta';
+    case 'cv':
+    default:
+      return '/crear-cv';
+  }
+}
+
+export function getDefaultTitleForDocType(docTypeId: string = 'cv'): string {
+  switch (docTypeId) {
+    case 'business_card':
+      return 'Mi Tarjeta Personal';
+    case 'book':
+      return 'Mi Libro / Folleto';
+    case 'cover_letter':
+      return 'Mi Carta de Presentación';
+    case 'cv':
+    default:
+      return 'Mi Currículum Vitae';
+  }
+}
+
+export function inferDocumentTypeId(docData: any): 'cv' | 'business_card' | 'book' | 'cover_letter' {
+  if (!docData || typeof docData !== 'object') return 'cv';
+
+  const docTypeId = docData.doc_type_id || docData.docType;
+  if (docTypeId === 'business_card' || docTypeId === 'book' || docTypeId === 'cover_letter' || docTypeId === 'cv') {
+    return docTypeId;
+  }
+
+  const id = String(docData.id || '').toLowerCase();
+  if (id.startsWith('card_') || id.startsWith('doc_business_card_')) return 'business_card';
+  if (id.startsWith('book_') || id.startsWith('doc_book_')) return 'book';
+  if (id.startsWith('cover_letter_') || id.startsWith('doc_cover_letter_')) return 'cover_letter';
+
+  const presetId = String(docData.activePresetId || '').toLowerCase();
+  if (presetId === 'tarjeta-personal' || (docData.cardSize && String(docData.cardSize).startsWith('tarjeta_'))) return 'business_card';
+  if (presetId === 'carta-clasica' || presetId === 'carta-presentacion') return 'cover_letter';
+  if (docData.bookMode) return 'book';
+
+  return 'cv';
+}

@@ -1,4 +1,5 @@
 import { generateDocumentId } from '../shared/core/storage/documentTabEngine';
+import { getDefaultTitleForDocType, inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
 
 export const blankCVBase = {
   activePresetId: "cv-clasico",
@@ -78,19 +79,18 @@ export const blankCVBase = {
   }
 };
 
-const DEFAULT_TITLES: Record<string, string> = {
-  cv: 'Mi Currículum Vitae',
-  'tarjeta-personal': 'Mi Tarjeta Personal',
-};
-
 export function createBlankCVTemplate(overrides?: Record<string, any>) {
-  const presetId = overrides?.activePresetId;
-  const prefix = presetId === 'tarjeta-personal' ? 'card' : 'cv';
-  const defaultTitle = DEFAULT_TITLES[presetId as string] || 'Mi Currículum Vitae';
+  const merged = { ...blankCVBase, ...overrides };
+  const docType = inferDocumentTypeId(merged);
+  const prefix = docType === 'business_card' ? 'card' : docType === 'book' ? 'book' : docType === 'cover_letter' ? 'cover_letter' : 'cv';
+  const defaultTitle = getDefaultTitleForDocType(docType);
+
   return {
     ...blankCVBase,
-    id: generateDocumentId(prefix),
-    title: defaultTitle,
+    id: generateDocumentId(prefix as any),
+    title: overrides?.title || defaultTitle,
+    doc_type_id: docType,
+    docType: docType,
     ...overrides,
   };
 }

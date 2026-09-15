@@ -59,6 +59,7 @@ import { signInWithGoogle, logout } from '../modules/auth/authService';
 import { PwaInstallBanner } from '../shared/core/ui/PwaInstallBanner';
 import { initUpdateEngine, onUpdateReady } from '../shared/core/pwa/updateEngine';
 import { trackPageView } from '../shared/core/analytics/analyticsService';
+import { getDocTypeForRoute, getRouteForDocType, getDefaultTitleForDocType, inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
 import { UpdateToast } from '../shared/core/ui/UpdateToast';
 
 import { procesarRetornoPago } from '../modules/payments/paymentService';
@@ -73,11 +74,6 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const { cvData, setCvData, resetToBlankCV, saveCV, saveCVAs, isSaving, hasPendingChanges, isSwitchingDocument, setIsSwitchingDocument } = useCVContext();
   const [updateBannerVisible, setUpdateBannerVisible] = useState(false);
 
-  useEffect(() => {
-    if (initialPreset && cvData && cvData.activePresetId !== initialPreset) {
-      setCvData((prev: any) => ({ ...prev, activePresetId: initialPreset }));
-    }
-  }, [initialPreset, cvData?.id]);
   const { showSuccess, showError, showInfo } = useToast();
   const { confirm } = useConfirm();
   const [currentProfile, setCurrentProfile] = useState<any>(null);
@@ -225,7 +221,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       saveCV,
       async () => {
         setPendingDocumentToOpen(targetId, targetDocType);
-        const targetRoute = targetDocType === 'book' ? '/crear-libro' : targetDocType === 'business_card' ? '/crear-tarjeta' : targetDocType === 'cover_letter' ? '/crear-carta' : '/crear-cv';
+        const targetRoute = getRouteForDocType(targetDocType);
         if (onNavigate) {
           onNavigate(targetRoute);
         } else if (typeof window !== 'undefined') {
@@ -240,7 +236,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     const pending = getPendingDocumentToOpen();
     if (pending && (pending.docType === 'cv' || pending.docType === 'business_card' || pending.docType === 'cover_letter')) {
       clearPendingDocumentToOpen();
-      handleSwitchDocumentTab(pending.id);
+      handleSwitchDocumentTab(pending.id, pending.docType);
     }
   }, []);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
@@ -312,15 +308,14 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const [tabs, setTabs] = useState<OpenTabItem[]>([]);
   const activeCvId = cvData?.id || '';
 
+  // Sincronizador Núcleo 1: Asegura que la pestaña del documento activo en cvData se registre con su docType correcto
   useEffect(() => {
     if (isSwitchingDocument) return;
     if (activeCvId) {
-      const docTypeForTab: 'cv' | 'business_card' | 'book' | 'cover_letter' =
-        (cvData?.activePresetId === 'carta-presentacion' || (cvData as any)?.docType === 'cover_letter') ? 'cover_letter' :
-        (cvData?.activePresetId === 'tarjeta-personal' || (cvData as any)?.cardSize?.startsWith('tarjeta_')) ? 'business_card' : 'cv';
+      const docTypeForTab = inferDocumentTypeId(cvData);
       addOpenTab(
         activeCvId,
-        cvData?.title || (docTypeForTab === 'cover_letter' ? 'Carta de Presentación' : docTypeForTab === 'business_card' ? 'Mi Tarjeta Personal' : 'Mi Currículum Vitae'),
+        cvData?.title || getDefaultTitleForDocType(docTypeForTab),
         cvData?.version_label,
         docTypeForTab
       );
@@ -329,6 +324,26 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       setTabs(getOpenTabs());
     }
   }, [activeCvId, cvData?.title, cvData?.version_label, cvData?.activePresetId, (cvData as any)?.cardSize, isSwitchingDocument]);
+
+  // Sincronizador Núcleo 2: Sincroniza la URL actual con el tipo de documento activo en memoria
+  useEffect(() => {
+    if (isSwitchingDocument || !cvData) return;
+    const routeDocType = getDocTypeForRoute(currentRoute);
+    const activeDocType = inferDocumentTypeId(cvData);
+
+    if (routeDocType !== activeDocType) {
+      const openTabs = getOpenTabs();
+      const matchingTab = openTabs.find(t => (t.docType || 'cv') === routeDocType);
+      if (matchingTab) {
+        handleSwitchDocumentTab(matchingTab.cvId, routeDocType, { skipSaveCurrent: false });
+      } else {
+        const initialPresetId = routeDocType === 'business_card' ? 'tarjeta-personal'
+          : routeDocType === 'cover_letter' ? 'carta-clasica'
+          : 'cv-clasico';
+        resetToBlankCV({ activePresetId: initialPresetId });
+      }
+    }
+  }, [currentRoute, cvData?.id, isSwitchingDocument]);
 
   // Bus de eventos: sincronizar pestañas cuando el motor de guardado actualiza títulos
   useEffect(() => {
@@ -1011,8 +1026,8 @@ export default function App() {
             </>
           ) : (
             <>
-              <SeoMetaManager title={currentRoute === '/crear-carta' ? 'Carta de Presentación — LEECV' : currentRoute === '/crear-tarjeta' ? 'Mi Tarjeta Personal — LEECV' : currentRoute === '/crear-libro' ? 'Mi Libro / Folleto — LEECV' : 'Mi CV — LEECV'} noIndex />
-              <AppContent currentRoute={currentRoute} initialPreset={currentRoute === '/crear-tarjeta' ? 'tarjeta-personal' : 'cv-clasico'} onNavigate={(r) => navigateTo(r)} />
+              <SeoMetaManager title={`${getDefaultTitleForDocType(getDocTypeForRoute(currentRoute))} — LEECV`} noIndex />
+              <AppContent currentRoute={currentRoute} onNavigate={(r) => navigateTo(r)} />
             </>
           )}
           <CookieConsentBanner />

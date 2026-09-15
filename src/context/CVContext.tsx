@@ -5,6 +5,8 @@ import { sanitizeCvData } from '../shared/core/utils/cvDataSchema';
 import { navigation } from '../shared/core/utils/navigation';
 import { CVData } from '../types/cv';
 
+import { getDocTypeForRoute, inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
+
 interface CVContextType {
   cvData: CVData;
   setCvData: (action: CVData | ((prev: CVData) => CVData)) => void;
@@ -36,18 +38,26 @@ export function CVProvider({ children }: { children: ReactNode }) {
         navigation.cleanQueryParams();
       } catch {}
     }
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/';
+    const targetDocType = getDocTypeForRoute(currentPath);
+
     const saved = typeof window !== 'undefined' ? localStorage.getItem('cv_premium_data') : null;
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed === 'object') {
-          return sanitizeCvData(parsed);
+          const parsedDocType = inferDocumentTypeId(parsed);
+          if (parsedDocType === targetDocType) {
+            return sanitizeCvData(parsed);
+          }
         }
-      } catch {
-        return sanitizeCvData(createBlankCVTemplate());
-      }
+      } catch {}
     }
-    return sanitizeCvData(createBlankCVTemplate());
+
+    const initialPresetId = targetDocType === 'business_card' ? 'tarjeta-personal'
+      : targetDocType === 'cover_letter' ? 'carta-clasica'
+      : 'cv-clasico';
+    return sanitizeCvData(createBlankCVTemplate({ activePresetId: initialPresetId }));
   });
 
   const [isSaving, setIsSaving] = useState(false);

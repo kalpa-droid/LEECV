@@ -6,6 +6,8 @@
  * que el espacio de trabajo del usuario persista entre recargas.
  */
 
+import { getDefaultTitleForDocType } from '../capabilities/capabilityRegistry';
+
 export interface OpenTabItem {
   cvId: string;
   title: string;
@@ -49,12 +51,7 @@ export function addOpenTab(cvId: string, title: string, versionLabel?: string, d
   if (!cvId) return getOpenTabs();
   const current = getOpenTabs();
   const existingIdx = current.findIndex(t => t.cvId === cvId);
-  const cleanTitle = title || (
-    docType === 'business_card' ? 'Mi Tarjeta Personal'
-      : docType === 'book' ? 'Mi Libro / Folleto'
-      : docType === 'cover_letter' ? 'Mi Carta de Presentación'
-      : 'Mi Currículum Vitae'
-  );
+  const cleanTitle = title || getDefaultTitleForDocType(docType);
 
   if (existingIdx >= 0) {
     current[existingIdx] = {
