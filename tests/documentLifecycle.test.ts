@@ -62,4 +62,44 @@ describe('documentLifecycle (Gestión de Documentos & Pestañas)', () => {
     expect(remaining[0].cvId).toBe(idToKeep);
     expect(getOpenTabs().map(t => t.cvId)).not.toContain(idToDelete);
   });
+
+  it('REGRESIÓN — guardar el documento recién cerrado lo resucita en cv_open_tabs (mecanismo real del bug "cierro y no cierra"). Confirma por qué handleSwitchDocumentTab en App.tsx necesita saltear el guardado del documento saliente cuando el cambio de pestaña viene de un cierre, no de un click normal.', () => {
+    const closedId = generateDocumentId('cv');
+    const otherId = generateDocumentId('cv');
+
+    addOpenTab(closedId, 'Documento que se cierra');
+    addOpenTab(otherId, 'Otro documento');
+    expect(getOpenTabs().map(t => t.cvId)).toContain(closedId);
+
+    // Paso 1: se cierra la pestaña — se quita de cv_open_tabs (comportamiento correcto)
+    const afterClose = closeDocumentEverywhere(closedId, { alsoDeleteFromStorage: false });
+    return afterClose.then((remaining) => {
+      expect(remaining.map(t => t.cvId)).not.toContain(closedId);
+      expect(getOpenTabs().map(t => t.cvId)).not.toContain(closedId);
+
+      // Paso 2: si algo vuelve a guardar el documento que se acaba de cerrar (el bug real:
+      // handleSwitchDocumentTab llamaba a saveCV() sobre el documento saliente ANTES de
+      // cargar el siguiente), documentStorageService.ts llama a syncTabTitleFromSave(id, ...)
+      // como parte de cada guardado — y eso vuelve a agregar la pestaña que se acababa de
+      // quitar. Se simula acá ese efecto secundario directamente con addOpenTab (lo que
+      // syncTabTitleFromSave termina llamando) para probar el mecanismo, sin necesitar
+      // levantar todo App.tsx.
+      addOpenTab(closedId, 'Documento que se cierra'); // esto es lo que NO debe volver a pasar
+      expect(getOpenTabs().map(t => t.cvId)).toContain(closedId); // demuestra que el mecanismo de resurrección es real
+    });
+  });
+
+  it('REGRESIÓN estática — App.tsx: resolveNextActiveDocument debe pasar skipSaveCurrent:true al cambiar de pestaña tras un cierre, para no disparar el guardado que resucita la pestaña recién cerrada (ver test anterior)', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const appTsxPath = path.join(__dirname, '../src/app/App.tsx');
+    const content = fs.readFileSync(appTsxPath, 'utf-8');
+
+    const resolveFnMatch = content.match(/const resolveNextActiveDocument = async[\s\S]*?\n  };/);
+    expect(resolveFnMatch).toBeTruthy();
+    const resolveFnBody = resolveFnMatch![0];
+
+    expect(resolveFnBody).toContain('handleSwitchDocumentTab');
+    expect(resolveFnBody).toMatch(/handleSwitchDocumentTab\([^)]*skipSaveCurrent:\s*true[^)]*\)/);
+  });
 });

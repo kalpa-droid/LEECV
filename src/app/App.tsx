@@ -191,12 +191,19 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     prevCvIdRef.current = cvData?.id;
   }, [cvData?.id, cvData?.activePresetId, (cvData as any)?.cardSize]);
 
-  const handleSwitchDocumentTab = async (targetCvId: string, targetDocType: string = 'cv') => {
+  const handleSwitchDocumentTab = async (targetCvId: string, targetDocType: string = 'cv', opts: { skipSaveCurrent?: boolean } = {}) => {
     if (!targetCvId || targetCvId === cvData?.id || isSwitchingDocument) return;
 
     setIsSwitchingDocument(true);
     try {
-      await saveCV();
+      // skipSaveCurrent: true cuando este cambio de pestaña viene de CERRAR el documento
+      // actual (resolveNextActiveDocument) — guardarlo acá volvería a escribir su entrada
+      // en cv_open_tabs vía syncTabTitleFromSave() dentro de saveDocumentInternal, resucitando
+      // la pestaña que closeDocumentEverywhere() recién quitó. En el cambio normal de pestaña
+      // (click en otra pestaña sin cerrar la actual) sí corresponde guardar antes de salir.
+      if (!opts.skipSaveCurrent) {
+        await saveCV();
+      }
       const loaded = await loadDocumentById(targetCvId, targetDocType);
       if (loaded) {
         setCvData(loaded);
@@ -334,7 +341,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     if (closedOrDeletedCvId === activeCvId) {
       if (remaining.length > 0) {
         const lastTab = remaining[remaining.length - 1];
-        await handleSwitchDocumentTab(lastTab.cvId, lastTab.docType || 'cv');
+        await handleSwitchDocumentTab(lastTab.cvId, lastTab.docType || 'cv', { skipSaveCurrent: true });
       } else {
         resetToBlankCV();
         setActiveTab('personales');
