@@ -5,7 +5,7 @@ import {
   getBasicStats,
   listPendingClaims, reviewManualClaim,
   listAdminNotifications, markNotificationRead,
-  getIntegrationsStatus
+  getIntegrationsStatus, getAiProvidersStatus
 } from './adminService';
 import { getCurrentProfile, logout } from '../auth/authService';
 import AdminLogin from './AdminLogin';
@@ -72,6 +72,7 @@ export default function AdminDashboard() {
   const [claims, setClaims] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [integrations, setIntegrations] = useState<any>(null);
+  const [aiProviders, setAiProviders] = useState<any>(null);
   const [loadingIntegrations, setLoadingIntegrations] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(0);
@@ -82,12 +83,16 @@ export default function AdminDashboard() {
     setLoadingIntegrations(true);
     await withErrorHandling(
       async () => {
-        const status = await getIntegrationsStatus(forcePing);
+        const [status, aiStatus] = await Promise.all([
+          getIntegrationsStatus(forcePing),
+          getAiProvidersStatus()
+        ]);
         setIntegrations(status);
+        setAiProviders(aiStatus);
       },
       {
-        context: 'Diagnóstico de Pasarelas',
-        errorMessage: 'Error al consultar estado de pasarelas.',
+        context: 'Diagnóstico de Integraciones',
+        errorMessage: 'Error al consultar estado de integraciones.',
         notify: (msg) => showError(msg),
       }
     );
@@ -459,6 +464,18 @@ export default function AdminDashboard() {
                 {renderGatewayCard(p.name, p.defaultCurrency, integrations?.[p.id])}
               </React.Fragment>
             ))}
+          </div>
+
+          {/* Estado de Proveedores de IA Multi-motor */}
+          <div className="pt-3 border-t border-[var(--color-neutral-border)]/50 mt-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Sparkles className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
+              <p className="text-[11px] font-extrabold text-[var(--color-neutral-text-primary)]">Motores de Inteligencia Artificial (Créditos & Redacción)</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {renderGatewayCard('Groq Cloud (Llama 3 / Mixtral)', 'IA', aiProviders?.groq)}
+              {renderGatewayCard('Google AI Studio (Gemini 1.5)', 'IA', aiProviders?.gemini)}
+            </div>
           </div>
         </div>
 

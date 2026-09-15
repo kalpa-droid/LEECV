@@ -30,7 +30,7 @@ import { Logo } from '../../../shared/core/brand/Logo';
 
 export interface NavbarProps {
   currentCvData: any;
-  docType?: 'cv' | 'business_card' | 'book';
+  docType?: 'cv' | 'business_card' | 'book' | 'cover_letter';
   setCvData?: React.Dispatch<React.SetStateAction<any>>;
   onOpenSavedCVsModal: () => void;
   onSaveCVClick: () => void;

@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, FileText, CreditCard, BookOpen } from 'lucide-react';
+import { Plus, FileText, CreditCard, BookOpen, Mail } from 'lucide-react';
 import { radius, elevationSystem } from '../uiDesignSystem';
 
 export interface NewDocumentMenuProps {
   onSelectCV: () => void;
   onSelectCard: () => void;
   onSelectBook: () => void;
+  onSelectCoverLetter?: () => void;
   className?: string;
 }
 
@@ -13,6 +14,7 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
   onSelectCV,
   onSelectCard,
   onSelectBook,
+  onSelectCoverLetter,
   className = '',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -40,7 +42,7 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
       </button>
 
       {isOpen && (
-        <div className={`absolute left-0 bottom-full mb-2 w-[calc(100vw-2rem)] max-w-56 rounded-[${radius.modal}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.floating} p-1.5 z-50 space-y-1 animate-fadeIn`}>
+        <div className={`absolute left-0 bottom-full mb-2 w-[calc(100vw-2rem)] max-w-64 rounded-[${radius.modal}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.floating} p-1.5 z-50 space-y-1 animate-fadeIn`}>
           <div className="px-2 py-1 text-[10px] font-black uppercase text-[var(--ui-text-secondary)] tracking-wider">
             ¿Qué querés crear?
           </div>
@@ -95,6 +97,25 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
               <span className="block text-[10px] text-[var(--ui-text-secondary)]">Montaje A4 / A3</span>
             </div>
           </button>
+
+          {onSelectCoverLetter && (
+            <button
+              type="button"
+              onClick={() => {
+                setIsOpen(false);
+                onSelectCoverLetter();
+              }}
+              className="w-full text-left px-3 py-2 rounded-[10px] text-xs font-bold hover:bg-[var(--ui-btn-neutral-hover)] flex items-center gap-2.5 transition cursor-pointer group"
+            >
+              <div className={`p-1.5 rounded-[${radius.card}] bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] group-hover:scale-105 transition`}>
+                <Mail className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="block font-extrabold text-[var(--ui-text-primary)]">Nueva Carta de Presentación</span>
+                <span className="block text-[10px] text-[var(--ui-text-secondary)]">Redacción IA adaptada por vacante</span>
+              </div>
+            </button>
+          )}
         </div>
       )}
     </div>

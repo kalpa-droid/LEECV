@@ -1,6 +1,6 @@
 import React, { useMemo, useRef } from 'react';
 import { 
-  Palette, Menu, X, Plus, Sparkles
+  Palette, Menu, X, Plus, Sparkles, Database, Briefcase, FileText
 } from 'lucide-react';
 import { DomSectionIcon } from '../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
 import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
@@ -17,7 +17,7 @@ export interface CanvaIconDockProps {
   isPanelOpen: boolean;
   setIsPanelOpen: (open: boolean) => void;
   onOpenAtsCheck?: () => void;
-  docType?: 'cv' | 'business_card' | 'book';
+  docType?: 'cv' | 'business_card' | 'book' | 'cover_letter';
   bookMode?: string;
 }
 
@@ -37,6 +37,14 @@ const CARD_TABS_SMALL = [
   { id: 'card_front', label: 'Datos Frente', icon: Settings },
   { id: 'card_back', label: 'Datos Dorso', icon: BookMarked },
   { id: 'card_qr', label: 'QR Interactivo', icon: Eye },
+] as const;
+
+const COVER_LETTER_TABS = [
+  { id: 'source_data', label: '1. Origen de Datos', icon: Database },
+  { id: 'vacancy', label: '2. Vacante', icon: Briefcase },
+  { id: 'ai_generate', label: '3. Generar con IA', icon: Sparkles },
+  { id: 'content', label: '4. Contenido', icon: FileText },
+  { id: 'styling', label: '5. Diseño', icon: Palette },
 ] as const;
 
 import { BOOK_STEP_SEQUENCE } from '../../../shared/core/book-engine/bookStepSequence';
@@ -222,6 +230,32 @@ export default function CanvaIconDock({
                   }`}>
                     {tab.stepNumber}
                   </span>
+                </div>
+                <span className={`absolute left-24 bg-[var(--ui-bg-[var(--ui-bg-dock)])] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
+
+          {/* BOTONES CARTA DE PRESENTACIÓN (Solo para docType === 'cover_letter') */}
+          {docType === 'cover_letter' && COVER_LETTER_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id && isPanelOpen;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => handleTabClick(tab.id)}
+                className={`col-span-2 w-full h-10 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer border ${
+                  isActive
+                    ? `bg-[var(--color-accent-base)] border-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.floating} shadow-[var(--color-accent-base)]/30 scale-[1.02]`
+                    : 'bg-[var(--ui-dock-hover)] border-[var(--ui-dock-border)] text-[var(--color-secondary-bright)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--ui-dock-hover)]'
+                }`}
+                title={tab.label}
+              >
+                <div className="relative flex items-center justify-center">
+                  <Icon className={`w-5 h-5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
                 </div>
                 <span className={`absolute left-24 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
                   {tab.label}
@@ -431,6 +465,27 @@ export default function CanvaIconDock({
                   {tab.stepNumber}
                 </span>
               </div>
+            </button>
+          );
+        })}
+
+        {/* BOTONES CARTA DE PRESENTACIÓN — Mobile */}
+        {docType === 'cover_letter' && COVER_LETTER_TABS.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id && isPanelOpen;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => handleTabClick(tab.id)}
+              className={`row-span-2 h-full w-[42px] rounded-[8px] flex items-center justify-center shrink-0 transition cursor-pointer border ${
+                isActive
+                  ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--color-accent-base)] ${elevationSystem.raised}`
+                  : 'bg-[var(--ui-bg-panel)] text-[var(--ui-dock-text-muted)] border-[var(--ui-border)]'
+              }`}
+              title={tab.label}
+            >
+              <Icon className={`w-5 h-5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--ui-dock-text-muted)]'}`} />
             </button>
           );
         })}

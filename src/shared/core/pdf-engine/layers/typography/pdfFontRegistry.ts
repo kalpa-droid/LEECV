@@ -12,14 +12,6 @@ const VALID_PDF_FONTS = new Set([
   'Helvetica-Bold',
   'Helvetica-Oblique',
   'Helvetica-BoldOblique',
-  'Times-Roman',
-  'Times-Bold',
-  'Times-Italic',
-  'Times-BoldItalic',
-  'Courier',
-  'Courier-Bold',
-  'Courier-Oblique',
-  'Courier-BoldOblique'
 ]);
 
 let initialized = false;

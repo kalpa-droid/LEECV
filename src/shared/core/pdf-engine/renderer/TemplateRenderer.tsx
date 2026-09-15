@@ -327,8 +327,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     },
     signerDate: {
       fontSize: signerDateSpec.fontSizePt,
-      fontFamily: signerDateSpec.fontFamily,
-      fontStyle: 'italic',
+      fontFamily: sanitizeFontFamily(preset.typography.fontFamily, false, true),
       color: signerDateSpec.colorHex,
       opacity: signerDateSpec.opacity,
       marginTop: 2
@@ -445,7 +444,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     },
     coverQuoteText: {
       fontSize: preset.typography.cover?.quote || preset.typography.body,
-      fontStyle: 'italic',
+      fontFamily: coverFontItalic,
       color: '#ffffff',
       textAlign: 'center',
       lineHeight: preset.typography.lineHeightBody || 1.3

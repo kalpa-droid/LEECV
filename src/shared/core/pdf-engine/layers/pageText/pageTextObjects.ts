@@ -39,6 +39,7 @@ export function buildPageTextTemplate(template: string, pageNumber: number, tota
 
 import { resolveUnifiedTextSpec } from '../typography/unifiedTextHierarchyEngine';
 import { ResolvedThemeRoles } from '../colors/colorSystem';
+import { sanitizeFontFamily } from '../typography/pdfFontRegistry';
 
 export function resolvePageTextStyle(def: PageTextObjectDefinition, pageBgHex: string = '#ffffff', rolesColor?: ResolvedThemeRoles) {
   const edgeStyle: Record<string, number | string> = {};
@@ -59,8 +60,7 @@ export function resolvePageTextStyle(def: PageTextObjectDefinition, pageBgHex: s
   return {
     position: 'absolute' as const,
     fontSize: def.fontSizePt,
-    fontFamily: metaSpec?.fontFamily || 'Helvetica',
-    fontStyle: 'italic',
+    fontFamily: metaSpec?.fontFamily ? sanitizeFontFamily(metaSpec.fontFamily, false, true) : 'Helvetica-Oblique',
     color: metaSpec?.colorHex || def.color || '#94a3b8',
     opacity: metaSpec?.opacity || 0.50,
     ...edgeStyle,

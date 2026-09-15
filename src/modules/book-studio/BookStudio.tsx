@@ -8,7 +8,7 @@ interface BookStudioProps {
   activeTabId?: string;
   onSelectTab?: (id: string) => void;
   onCloseTab?: (id: string) => void;
-  onNavigateToDocument?: (id: string, targetDocType: 'cv' | 'business_card' | 'book') => void;
+  onNavigateToDocument?: (targetDocType: 'cv' | 'business_card' | 'book' | 'cover_letter', id: string) => void;
   onNewCV?: () => void;
   onNewCard?: () => void;
   onNewBook?: () => void;

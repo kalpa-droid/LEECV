@@ -165,7 +165,6 @@ export function CardObjectRenderer({
       fontSize: recordScale.recordExtra,
       fontFamily: sanitizeFontFamily(typography.fontFamily, false, true),
       color: subtitleSpec.colorHex,
-      fontStyle: 'italic',
     },
     subtitleText: {
       fontSize: subtitleSpec.fontSizePt,

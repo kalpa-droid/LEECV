@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { FileText, BookOpen, CreditCard, X, ChevronRight, ChevronLeft } from 'lucide-react';
+import { FileText, BookOpen, CreditCard, Mail, X, ChevronRight, ChevronLeft } from 'lucide-react';
 import { OpenTabItem } from '../storage/documentTabEngine';
 import { elevationSystem, radius } from '../uiDesignSystem';
 import { NewDocumentMenu } from './NewDocumentMenu';
@@ -8,13 +8,14 @@ import { useHorizontalScrollControls } from './useHorizontalScrollControls';
 export interface DocumentTabsBarProps {
   tabs: OpenTabItem[];
   activeId: string;
-  docType?: 'cv' | 'business_card' | 'book';
+  docType?: 'cv' | 'business_card' | 'book' | 'cover_letter';
   onSwitch: (id: string) => void;
-  onNavigateToDocument?: (docType: 'cv' | 'business_card' | 'book', id: string) => void;
+  onNavigateToDocument?: (docType: 'cv' | 'business_card' | 'book' | 'cover_letter', id: string) => void;
   onAdd: () => void;
   onNewCV?: () => void;
   onNewCard?: () => void;
   onNewBook?: () => void;
+  onNewCoverLetter?: () => void;
   onClose: (e: React.MouseEvent, id: string, title: string) => void;
 }
 
@@ -28,6 +29,7 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
   onNewCV,
   onNewCard,
   onNewBook,
+  onNewCoverLetter,
   onClose,
 }) => {
   const getTabIcon = (tabDocType?: string) => {
@@ -36,6 +38,8 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
         return BookOpen;
       case 'business_card':
         return CreditCard;
+      case 'cover_letter':
+        return Mail;
       default:
         return FileText;
     }
@@ -146,11 +150,12 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
           })}
         </div>
 
-        {/* Menu (+) Nuevo Documento (CV, Tarjeta, Libro) */}
+        {/* Menu (+) Nuevo Documento (CV, Tarjeta, Libro, Carta) */}
         <NewDocumentMenu
           onSelectCV={onNewCV || onAdd}
           onSelectCard={onNewCard || onAdd}
           onSelectBook={onNewBook || onAdd}
+          onSelectCoverLetter={onNewCoverLetter}
         />
 
         {/* Flecha derecha: solo se muestra si hay pestañas ocultas a ese lado */}

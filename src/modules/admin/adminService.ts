@@ -109,6 +109,25 @@ export async function listProcessedPayments({ page = 0, limit = 50, provider = '
   return data;
 }
 
+export async function getAiProvidersStatus() {
+  const env = (import.meta as any).env || {};
+  const hasGroqKey = !!env.VITE_GROQ_API_KEY || (typeof process !== 'undefined' && !!process.env?.GROQ_API_KEY);
+  const hasGeminiKey = !!env.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' && !!process.env?.GEMINI_API_KEY);
+
+  return {
+    groq: {
+      status: hasGroqKey ? 'active' : 'missing_vars',
+      label: hasGroqKey ? 'Groq Llama 3 / Mixtral API Online' : 'VITE_GROQ_API_KEY no configurada',
+      provider: 'Groq Cloud API'
+    },
+    gemini: {
+      status: hasGeminiKey ? 'active' : 'missing_vars',
+      label: hasGeminiKey ? 'Gemini 1.5 Pro / Flash API Online' : 'VITE_GEMINI_API_KEY no configurada',
+      provider: 'Google AI Studio API'
+    }
+  };
+}
+
 export async function logAdminAction(actionType: string, targetUserId: string | null = null, details: object = {}): Promise<void> {
   try {
     const userRes = supabase ? await supabase.auth.getUser() : { data: { user: null } };

@@ -212,12 +212,12 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     }
   };
 
-  const handleNavigateToDocumentTab = async (targetDocType: 'cv' | 'business_card' | 'book', targetId: string) => {
+  const handleNavigateToDocumentTab = async (targetDocType: 'cv' | 'business_card' | 'book' | 'cover_letter', targetId: string) => {
     await runWithSafeSave(
       saveCV,
       async () => {
         setPendingDocumentToOpen(targetId, targetDocType);
-        const targetRoute = targetDocType === 'book' ? '/crear-libro' : targetDocType === 'business_card' ? '/crear-tarjeta' : '/crear-cv';
+        const targetRoute = targetDocType === 'book' ? '/crear-libro' : targetDocType === 'business_card' ? '/crear-tarjeta' : targetDocType === 'cover_letter' ? '/crear-carta' : '/crear-cv';
         if (onNavigate) {
           onNavigate(targetRoute);
         } else if (typeof window !== 'undefined') {
@@ -230,7 +230,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 
   useEffect(() => {
     const pending = getPendingDocumentToOpen();
-    if (pending && (pending.docType === 'cv' || pending.docType === 'business_card')) {
+    if (pending && (pending.docType === 'cv' || pending.docType === 'business_card' || pending.docType === 'cover_letter')) {
       clearPendingDocumentToOpen();
       handleSwitchDocumentTab(pending.id);
     }
@@ -307,10 +307,12 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   useEffect(() => {
     if (isSwitchingDocument) return;
     if (activeCvId) {
-      const docTypeForTab: 'cv' | 'business_card' | 'book' = (cvData?.activePresetId === 'tarjeta-personal' || (cvData as any)?.cardSize?.startsWith('tarjeta_')) ? 'business_card' : 'cv';
+      const docTypeForTab: 'cv' | 'business_card' | 'book' | 'cover_letter' =
+        (cvData?.activePresetId === 'carta-presentacion' || (cvData as any)?.docType === 'cover_letter') ? 'cover_letter' :
+        (cvData?.activePresetId === 'tarjeta-personal' || (cvData as any)?.cardSize?.startsWith('tarjeta_')) ? 'business_card' : 'cv';
       addOpenTab(
         activeCvId,
-        cvData?.title || (docTypeForTab === 'business_card' ? 'Mi Tarjeta Personal' : 'Mi Currículum Vitae'),
+        cvData?.title || (docTypeForTab === 'cover_letter' ? 'Carta de Presentación' : docTypeForTab === 'business_card' ? 'Mi Tarjeta Personal' : 'Mi Currículum Vitae'),
         cvData?.version_label,
         docTypeForTab
       );
@@ -570,6 +572,33 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     });
   };
 
+  const handleNewCoverLetter = async () => {
+    confirm({
+      title: '¿Iniciar nueva Carta de Presentación?',
+      message: '¿Deseas iniciar una carta de presentación en blanco? Se resguardará tu borrador actual.',
+      confirmText: 'Sí, crear carta',
+      variant: 'info',
+      onConfirm: async () => {
+        await runWithSafeSave(
+          saveCV,
+          () => {
+            const newDocId = generateDocumentId('cover_letter');
+            setPendingDocumentToOpen(newDocId, 'cover_letter');
+            if (currentRoute !== '/crear-carta') {
+              if (onNavigate) {
+                onNavigate('/crear-carta');
+              } else if (typeof window !== 'undefined') {
+                window.history.pushState({}, '', '/crear-carta');
+                window.dispatchEvent(new PopStateEvent('popstate'));
+              }
+            }
+            showSuccess('Nueva carta de presentación lista para editar.');
+          }
+        );
+      }
+    });
+  };
+
   const handleImportJsonFile = async (e: any) => {
     const file = e.target?.files?.[0];
     if (file) {
@@ -636,7 +665,12 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     );
   }
 
-  const activeDocType: 'cv' | 'business_card' | 'book' = cvData?.activePresetId === 'tarjeta-personal' ? 'business_card' : 'cv';
+  const activeDocType: 'cv' | 'business_card' | 'book' | 'cover_letter' =
+    currentRoute === '/crear-carta' || cvData?.activePresetId === 'carta-presentacion' || (cvData as any)?.docType === 'cover_letter'
+      ? 'cover_letter'
+      : cvData?.activePresetId === 'tarjeta-personal'
+      ? 'business_card'
+      : 'cv';
 
   return (
     <AppShell
@@ -736,6 +770,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         onNewCV: handleNewCV,
         onNewCard: handleNewCard,
         onNewBook: handleNewBook,
+        onNewCoverLetter: handleNewCoverLetter,
         onClose: handleCloseFooterTab
       }}
       modalsSlot={
@@ -919,7 +954,7 @@ export default function App() {
   const [currentRoute, setCurrentRoute] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname;
-      if (path === '/crear-cv' || path === '/crear-tarjeta' || path === '/crear-libro' || path === '/blog') {
+      if (path === '/crear-cv' || path === '/crear-tarjeta' || path === '/crear-libro' || path === '/crear-carta' || path === '/blog') {
         return path;
       }
     }
@@ -963,7 +998,7 @@ export default function App() {
             </>
           ) : (
             <>
-              <SeoMetaManager title={currentRoute === '/crear-tarjeta' ? 'Mi Tarjeta Personal — LEECV' : currentRoute === '/crear-libro' ? 'Mi Libro / Folleto — LEECV' : 'Mi CV — LEECV'} noIndex />
+              <SeoMetaManager title={currentRoute === '/crear-carta' ? 'Carta de Presentación — LEECV' : currentRoute === '/crear-tarjeta' ? 'Mi Tarjeta Personal — LEECV' : currentRoute === '/crear-libro' ? 'Mi Libro / Folleto — LEECV' : 'Mi CV — LEECV'} noIndex />
               <AppContent currentRoute={currentRoute} initialPreset={currentRoute === '/crear-tarjeta' ? 'tarjeta-personal' : 'cv-clasico'} onNavigate={(r) => navigateTo(r)} />
             </>
           )}

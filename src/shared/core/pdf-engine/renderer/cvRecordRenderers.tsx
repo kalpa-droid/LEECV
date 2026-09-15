@@ -117,7 +117,6 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
           style={{
             fontSize: quoteSpec.fontSizePt,
             fontFamily: quoteSpec.fontFamily,
-            fontStyle: 'italic',
             color: quoteSpec.colorHex,
             opacity: quoteSpec.opacity,
             lineHeight: 1.35

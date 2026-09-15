@@ -91,7 +91,7 @@ export function syncTabTitleFromSave(cvId: string, newTitle: string, docType: 'c
   return addOpenTab(cvId, newTitle, undefined, existing?.docType || docType);
 }
 
-export function generateDocumentId(prefix: 'cv' | 'book' | 'card' = 'cv'): string {
+export function generateDocumentId(prefix: 'cv' | 'book' | 'card' | 'cover_letter' = 'cv'): string {
   const uuid = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
   return `${prefix}_${uuid}`;
 }

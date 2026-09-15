@@ -4,7 +4,7 @@ import { PwaInstallBanner } from './PwaInstallBanner';
 import { elevationSystem } from '../uiDesignSystem';
 
 export interface AppShellProps {
-  docType?: 'cv' | 'business_card' | 'book';
+  docType?: 'cv' | 'business_card' | 'book' | 'cover_letter';
   navbarSlot: React.ReactNode;
   dockSlot: React.ReactNode;
   panelSlot: React.ReactNode;
