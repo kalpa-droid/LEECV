@@ -34,12 +34,28 @@ export function sanitizeFontFamily(family?: string, isBold: boolean = false, isI
   initPdfFonts();
 
   if (!family || typeof family !== 'string') {
+    if (isBold && isItalic) return 'Helvetica-BoldOblique';
     return isBold ? 'Helvetica-Bold' : isItalic ? 'Helvetica-Oblique' : 'Helvetica';
   }
 
-  // Si ya es una fuente PDF válida con variante exacta
+  // Si ya es una fuente PDF válida Y coincide exactamente con la variante bold/italic pedida,
+  // se devuelve tal cual. Si coincide el nombre pero NO la variante (ej: family='Helvetica'
+  // pedido con isItalic=true), no hay que devolverla como está — hay que resolver la variante
+  // correcta de esa misma familia base, igual que si nunca hubiera llegado ya "válida".
   if (VALID_PDF_FONTS.has(family)) {
-    return family;
+    const familyWantsBoldItalic = /BoldOblique|BoldItalic/.test(family);
+    const familyWantsBold = /-Bold$/.test(family);
+    const familyWantsItalic = /Oblique$|Italic$/.test(family) && !familyWantsBoldItalic;
+    const requestMatchesFamily =
+      (isBold && isItalic && familyWantsBoldItalic) ||
+      (isBold && !isItalic && familyWantsBold) ||
+      (!isBold && isItalic && familyWantsItalic) ||
+      (!isBold && !isItalic && !familyWantsBold && !familyWantsItalic && !familyWantsBoldItalic);
+
+    if (requestMatchesFamily) return family;
+    // No coincide — se sigue resolviendo con la familia base (sin el sufijo de variante),
+    // como cualquier otro nombre de fuente no reconocido.
+    family = family.replace(/-Bold(Oblique|Italic)?$|-(Oblique|Italic)$/, '');
   }
 
   const lower = family.toLowerCase();
