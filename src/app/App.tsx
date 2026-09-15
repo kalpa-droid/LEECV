@@ -58,6 +58,7 @@ import { runWithSafeSave } from '../shared/core/storage/safeNavigationEngine';
 import { signInWithGoogle, logout } from '../modules/auth/authService';
 import { PwaInstallBanner } from '../shared/core/ui/PwaInstallBanner';
 import { initUpdateEngine, onUpdateReady } from '../shared/core/pwa/updateEngine';
+import { trackPageView } from '../shared/core/analytics/analyticsService';
 import { UpdateToast } from '../shared/core/ui/UpdateToast';
 
 import { procesarRetornoPago } from '../modules/payments/paymentService';
@@ -978,6 +979,10 @@ export default function App() {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+
+  useEffect(() => {
+    trackPageView(currentRoute);
+  }, [currentRoute]);
 
   const navigateTo = (route: string) => {
     if (typeof window !== 'undefined') {

@@ -22,7 +22,7 @@ describe('pdfFontRegistry — resolución de fuentes itálicas', () => {
     expect(sanitizeFontFamily('Helvetica', false, true)).toBe('Helvetica-Oblique');
     expect(sanitizeFontFamily('Helvetica', true, true)).toBe('Helvetica-BoldOblique');
     expect(sanitizeFontFamily('Times New Roman', false, true)).toBe('Helvetica-Oblique'); // Times no registrado aún, cae a Helvetica
-    expect(sanitizeFontFamily('Courier New', false, true)).toBe('Courier-Oblique');
+    expect(sanitizeFontFamily('Courier New', false, true)).toBe('Helvetica-Oblique'); // Courier no registrado aún, cae a Helvetica
   });
 
   it('2. resolveUnifiedTextSpec en nivel "meta" resuelve fontFamily a una variante itálica real', () => {

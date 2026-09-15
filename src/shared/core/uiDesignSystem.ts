@@ -154,7 +154,7 @@ export const button = {
   secondary: `bg-[var(--ui-btn-outline-bg)] border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] hover:border-[var(--color-neutral-border-strong)] active:scale-[0.98]`,
   ghost: `bg-transparent text-[var(--color-neutral-text-secondary)] hover:text-[var(--color-neutral-text-primary)]`,
   danger: `bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/30 text-[var(--color-status-danger-text)] hover:bg-[var(--color-status-danger-muted)]`,
-  success: `bg-[image:var(--gradient-success)] text-white hover:opacity-95 active:scale-[0.98] shadow-md`,
+  success: `bg-gradient-to-r from-emerald-600 to-teal-500 text-white hover:opacity-95 active:scale-[0.98] shadow-md`,
   warning: `bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/40 text-[var(--color-status-warning-text)] hover:bg-[var(--color-status-warning-base)]/20`,
   providerBrand: (provider: 'mercadopago' | 'paypal' | 'lemonsqueezy') => {
     switch (provider) {

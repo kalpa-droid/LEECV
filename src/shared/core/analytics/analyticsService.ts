@@ -47,6 +47,18 @@ export function initAnalytics(): void {
     `;
     document.head.appendChild(inlineScript);
   }
+
+  const posthogKey = import.meta.env.VITE_POSTHOG_KEY;
+  const posthogHost = import.meta.env.VITE_POSTHOG_HOST || 'https://app.posthog.com';
+  if (posthogKey && !document.getElementById('posthog-js-script')) {
+    const phScript = document.createElement('script');
+    phScript.id = 'posthog-js-script';
+    phScript.async = true;
+    phScript.src = `${posthogHost}/static/array.js`;
+    document.head.appendChild(phScript);
+    (window as any).posthog = (window as any).posthog || [];
+    (window as any).posthog.init && (window as any).posthog.init(posthogKey, { api_host: posthogHost, capture_pageview: false });
+  }
 }
 
 export function trackPageView(path: string, title?: string): void {
@@ -59,6 +71,14 @@ export function trackPageView(path: string, title?: string): void {
       page_title: title || document.title,
     });
   }
+
+  if (typeof (window as any).posthog?.capture === 'function') {
+    (window as any).posthog.capture('$pageview', {
+      $current_url: window.location.href,
+      $pathname: path,
+      title: title || document.title,
+    });
+  }
 }
 
 export function trackEvent(eventName: string, params: AnalyticsEventParams = {}): void {
@@ -67,5 +87,9 @@ export function trackEvent(eventName: string, params: AnalyticsEventParams = {})
   const gaId = import.meta.env.VITE_GA_MEASUREMENT_ID;
   if (gaId && typeof (window as any).gtag === 'function') {
     (window as any).gtag('event', eventName, params);
+  }
+
+  if (typeof (window as any).posthog?.capture === 'function') {
+    (window as any).posthog.capture(eventName, params);
   }
 }

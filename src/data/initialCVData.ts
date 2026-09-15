@@ -78,11 +78,19 @@ export const blankCVBase = {
   }
 };
 
+const DEFAULT_TITLES: Record<string, string> = {
+  cv: 'Mi Currículum Vitae',
+  'tarjeta-personal': 'Mi Tarjeta Personal',
+};
+
 export function createBlankCVTemplate(overrides?: Record<string, any>) {
-  const prefix = overrides?.activePresetId === 'tarjeta-personal' ? 'card' : 'cv';
+  const presetId = overrides?.activePresetId;
+  const prefix = presetId === 'tarjeta-personal' ? 'card' : 'cv';
+  const defaultTitle = DEFAULT_TITLES[presetId as string] || 'Mi Currículum Vitae';
   return {
     ...blankCVBase,
     id: generateDocumentId(prefix),
+    title: defaultTitle,
     ...overrides,
   };
 }

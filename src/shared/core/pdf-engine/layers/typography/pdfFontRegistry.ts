@@ -70,10 +70,11 @@ export function sanitizeFontFamily(family?: string, isBold: boolean = false, isI
   }
 
   if (lower.includes('courier') || lower.includes('mono')) {
-    if (isBold && isItalic) return 'Courier-BoldOblique';
-    if (isBold) return 'Courier-Bold';
-    if (isItalic) return 'Courier-Oblique';
-    return 'Courier';
+    // Courier-* tampoco viene precargada por defecto en @react-pdf/font en la web/Vite — cae a Helvetica
+    if (isBold && isItalic) return 'Helvetica-BoldOblique';
+    if (isBold) return 'Helvetica-Bold';
+    if (isItalic) return 'Helvetica-Oblique';
+    return 'Helvetica';
   }
 
   // Fallback seguro para sans-serif, cursive, o cualquier fuente no registrada

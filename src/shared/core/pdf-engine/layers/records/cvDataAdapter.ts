@@ -140,9 +140,9 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         targetSectorRole: 'main',
         fields: {
           ...ach,
-          title: ach.title || ach.tituloOGrado || ach.name || '',
-          institution: ach.institution || ach.institucion || '',
-          details: ach.details || ach.description || ach.descripcion || ''
+          title: ach.title || ach.tituloOGrado || ach.name || ach.logro || ach.achievement || '',
+          institution: ach.institution || ach.institucion || ach.empresa || ach.organizacion || '',
+          details: ach.details || ach.description || ach.descripcion || ach.metricas || ''
         }
       }))
     });
@@ -160,9 +160,9 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         targetSectorRole: 'main',
         fields: {
           ...port,
-          title: port.title || port.tituloOGrado || port.name || '',
-          institution: port.institution || port.institucion || '',
-          details: port.details || port.description || port.descripcion || ''
+          title: port.title || port.tituloOGrado || port.name || port.proyecto || '',
+          institution: port.institution || port.institucion || port.cliente || '',
+          details: port.details || port.description || port.descripcion || port.herramientas || ''
         }
       }))
     });

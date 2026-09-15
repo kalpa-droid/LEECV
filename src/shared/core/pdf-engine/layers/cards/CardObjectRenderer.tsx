@@ -236,19 +236,29 @@ export function CardObjectRenderer({
       </View>
 
       {/* Block Description / Bullet Points */}
-      {arranged.blockDescription ? (
-        Array.isArray(arranged.blockDescription) ? (
-          <View style={{ marginTop: 3 }}>
-            {arranged.blockDescription.map((item, idx) => (
-              <Text key={idx} style={styles.descText}>
-                • {item}
-              </Text>
-            ))}
-          </View>
-        ) : (
-          <Text style={styles.descText}>{arranged.blockDescription}</Text>
-        )
-      ) : null}
+      {arranged.blockDescription ? (() => {
+        const raw = arranged.blockDescription;
+        const lines = Array.isArray(raw)
+          ? raw
+          : typeof raw === 'string' && raw.includes('\n')
+            ? raw.split('\n').map((l) => l.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean)
+            : null;
+
+        if (lines && lines.length > 0) {
+          return (
+            <View style={{ marginTop: 3 }}>
+              {lines.map((item, idx) => (
+                <Text key={idx} style={styles.descText}>
+                  • {item}
+                </Text>
+              ))}
+            </View>
+          );
+        }
+
+        const singleText = Array.isArray(raw) ? raw.join(' ') : raw;
+        return <Text style={styles.descText}>{singleText}</Text>;
+      })() : null}
     </View>
   );
 }

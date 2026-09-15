@@ -255,11 +255,12 @@ export function CVProvider({ children }: { children: ReactNode }) {
 
   const loadCVData = (newCVData: CVData) => {
     if (newCVData && typeof newCVData === 'object') {
-      const docId = getDocId(newCVData);
+      const docWithId = newCVData.id ? newCVData : { ...newCVData, id: `cv_${Date.now()}` };
+      const docId = getDocId(docWithId);
       if (!historyMapRef.current.has(docId)) {
-        historyMapRef.current.set(docId, { stack: [newCVData], index: 0 });
+        historyMapRef.current.set(docId, { stack: [docWithId], index: 0 });
       }
-      setCvData(newCVData);
+      setCvData(docWithId);
     }
   };
 
