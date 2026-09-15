@@ -50,6 +50,11 @@ const mockCvData = {
   ecology: [{ title: 'Proyecto Huerta Comunitaria' }],
   certificatesScanned: [{ title: 'Título Universitario Escaneado' }],
   signature: { signerName: 'Mónica Burgos', signerRole: 'Directora' },
+  'personalizada-1': [{ tituloOGrado: 'Item P1' }],
+  'personalizada-2': [{ tituloOGrado: 'Item P2' }],
+  'personalizada-3': [{ tituloOGrado: 'Item P3' }],
+  'personalizada-4': [{ tituloOGrado: 'Item P4' }],
+  'personalizada-5': [{ tituloOGrado: 'Item P5' }],
   customSections: [
     {
       id: 'custom_section_test',

@@ -13,21 +13,24 @@ let failed = 0;
 const emptyCv = sanitizeCvData({});
 const dockItems = resolveActiveDockSections(emptyCv);
 
-const expectedCatalogCount = SECTION_CATALOG.filter(s => !['contacto', 'datos-personales', 'frase'].includes(s.id)).length;
-if (dockItems.length >= expectedCatalogCount) {
-  console.log(`  ✓ Regla de Muelle: Los ${dockItems.length} botones de catálogo están disponibles en el Dock sin importar presencia de datos iniciales OK.`);
+const universalCatalogCount = SECTION_CATALOG.filter(s => s.isUniversal && !['contacto', 'datos-personales', 'frase'].includes(s.id)).length;
+const activeCvData = sanitizeCvData({ sectionVisibility: { logros: true } });
+const activeDockItems = resolveActiveDockSections(activeCvData);
+
+if (dockItems.length >= universalCatalogCount && activeDockItems.some(i => i.id === 'logros')) {
+  console.log(`  ✓ Regla de Muelle: Se muestran las ${dockItems.length} secciones universales por defecto y las opcionales al activarse OK.`);
   passed++;
 } else {
-  console.error(`  ❌ Muelle incompleto: se esperaban al menos ${expectedCatalogCount} ítems en el Dock, se obtuvieron ${dockItems.length}`);
+  console.error(`  ❌ Muelle incompleto: se esperaban al menos ${universalCatalogCount} ítems universales en el Dock, se obtuvieron ${dockItems.length}`);
   failed++;
 }
 
 // Test 2: Sección de Redes Sociales (Punto 8)
 const redesCatalog = getSection('redes');
-const redesDockItem = dockItems.find(i => i.id === 'redes');
 const redesCvData = sanitizeCvData({
   redes: [{ plataforma: 'LinkedIn', usuario: 'testuser', url: 'https://linkedin.com/in/testuser' }]
 });
+const redesDockItem = resolveActiveDockSections(redesCvData).find(i => i.id === 'redes');
 const renderedRedes = cvDataToContentSections(redesCvData).find(s => s.id === 'redes');
 
 if (redesCatalog && redesDockItem && renderedRedes && renderedRedes.records.length > 0) {

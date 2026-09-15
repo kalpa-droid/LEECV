@@ -75,7 +75,7 @@ function extractJsxSectionBindings(filePath) {
                 } else {
                   boundIds.add(outerKey);
                 }
-              } else if (keyAttr.initializer.getText(sourceFile).includes('cs.id')) {
+              } else if (keyAttr.initializer.getText(sourceFile).includes('cs.id') || keyAttr.initializer.getText(sourceFile).includes('slotId')) {
                 hasDynamicCustomSectionSlot = true;
               }
             }
@@ -99,6 +99,9 @@ const hasCustomSlot = editorResult.hasDynamicCustomSectionSlot || personalResult
 let missingSections = [];
 
 expectedSectionIds.forEach(id => {
+  if (id.startsWith('personalizada-') && hasCustomSlot) {
+    allBoundIds.add(id);
+  }
   if (!allBoundIds.has(id)) {
     missingSections.push(id);
   }
