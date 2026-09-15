@@ -78,6 +78,64 @@ export const serverDal = {
     }
   },
 
+  aiCredits: {
+    async getByUserId(userId: string): Promise<{ credits: number }> {
+      const { data, error } = await supabaseAdmin
+        .from('user_credits')
+        .select('ai_credits')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error || !data) {
+        return { credits: 3 };
+      }
+      return { credits: Number(data.ai_credits ?? 3) };
+    },
+
+    async grantCredits(userId: string, amount: number): Promise<{ credits: number }> {
+      const { data, error } = await supabaseAdmin.rpc('grant_ai_credits', {
+        p_user_id: userId,
+        p_amount: amount,
+      });
+
+      if (error) {
+        const current = await this.getByUserId(userId);
+        const nextAmount = current.credits + amount;
+        await supabaseAdmin.from('user_credits').upsert({
+          user_id: userId,
+          ai_credits: nextAmount,
+          updated_at: new Date().toISOString()
+        });
+        return { credits: nextAmount };
+      }
+      return { credits: Number(data || 0) };
+    },
+
+    async consumeCredit(userId: string, amount: number = 1): Promise<{ success: boolean; remaining: number }> {
+      const current = await this.getByUserId(userId);
+      if (current.credits < amount) {
+        return { success: false, remaining: current.credits };
+      }
+
+      const { data, error } = await supabaseAdmin.rpc('consume_ai_credit', {
+        p_user_id: userId,
+        p_amount: amount
+      });
+
+      if (error) {
+        const nextAmount = Math.max(0, current.credits - amount);
+        await supabaseAdmin.from('user_credits').upsert({
+          user_id: userId,
+          ai_credits: nextAmount,
+          updated_at: new Date().toISOString()
+        });
+        return { success: true, remaining: nextAmount };
+      }
+
+      return { success: true, remaining: Number(data ?? (current.credits - amount)) };
+    }
+  },
+
   driveTokens: {
     async getByUserId(userId: string): Promise<any | null> {
       const { data, error } = await supabaseAdmin

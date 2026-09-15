@@ -67,6 +67,7 @@ export function useEntitlements() {
   const [plan, setPlan] = useState('free');
   const [inGracePeriod, setInGracePeriod] = useState(false);
   const [graceEndsAt, setGraceEndsAt] = useState<string | null>(null);
+  const [aiCredits, setAiCredits] = useState<number>(3);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -97,6 +98,21 @@ export function useEntitlements() {
             setInGracePeriod(inGrace);
             setGraceEndsAt(data.grace_period_ends_at || null);
           }
+
+          // Fetch AI credits from user_credits
+          try {
+            const { data: creditsData } = await supabase
+              .from('user_credits')
+              .select('ai_credits')
+              .eq('user_id', user.id)
+              .maybeSingle();
+
+            if (creditsData && typeof creditsData.ai_credits === 'number') {
+              setAiCredits(creditsData.ai_credits);
+            }
+          } catch (e) {
+            // Default 3 credits
+          }
         }
       } catch (err) {
         console.warn('Error obteniendo plan de usuario:', err);
@@ -118,6 +134,8 @@ export function useEntitlements() {
     isPremium,
     inGracePeriod,
     graceEndsAt,
+    aiCredits,
+    hasAiCredits: aiCredits > 0 || isPremium,
     canEmergencyExport: inGracePeriod || isPremium,
     unlimitedExports: features.unlimitedExports,
     candidateManagement: features.candidateManagement,

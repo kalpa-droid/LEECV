@@ -61,6 +61,14 @@
     {
       "file": "src/modules/blog/BlogModule.tsx",
       "reason": "Módulo de artículos educativos y guías visuales de empleabilidad e imprenta"
+    },
+    {
+      "file": "src/modules/cover-letter/components/CoverLetterDock.tsx",
+      "reason": "Muelle de cartas de presentación con distintivos cromáticos por categoría de vacante e IA"
+    },
+    {
+      "file": "src/modules/cover-letter/components/CoverLetterEditorPanel.tsx",
+      "reason": "Editor de cartas de presentación con selectores cromáticos de tono e indicadores de estado de generación"
     }
   ]
 }

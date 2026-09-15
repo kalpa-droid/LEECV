@@ -122,6 +122,40 @@ export const CAPABILITY_REGISTRY: Record<string, CapabilityConfig> = {
     description: 'Exportación e importación directa de datos en formato abierto .JSON.',
     category: 'utility',
     defaultData: {}
+  },
+  cover_letter_body: {
+    id: 'cover_letter_body',
+    name: 'Cuerpo de Carta de Presentación',
+    description: 'Estructura narrativa (gancho, evidencia, cierre, saludo y despedida).',
+    category: 'content',
+    defaultData: {
+      salutation: 'Estimado/a responsable de selección,',
+      hookParagraph: '',
+      evidenceParagraph: '',
+      closingParagraph: '',
+      signoff: 'Atentamente,'
+    }
+  },
+  job_target: {
+    id: 'job_target',
+    name: 'Datos de la Vacante',
+    description: 'Empresa, puesto objetivo, persona de contacto y descripción del empleo.',
+    category: 'content',
+    defaultData: {
+      companyName: '',
+      jobTitle: '',
+      recipientName: '',
+      jobDescription: ''
+    }
+  },
+  ai_generation: {
+    id: 'ai_generation',
+    name: 'Generación Asistida por IA',
+    description: 'Asistente de IA para redacción personalizada por vacante.',
+    category: 'utility',
+    defaultData: {
+      tone: 'professional'
+    }
   }
 };
 
@@ -149,6 +183,24 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
     ],
     defaultPaperSize: 'a4',
     defaultActivePresetId: 'cv-clasico'
+  },
+  cover_letter: {
+    id: 'cover_letter',
+    name: 'Carta de Presentación',
+    description: 'Carta personalizada por vacante, generada con IA desde tu CV y la descripción del puesto.',
+    iconName: 'Mail',
+    capabilities: [
+      'theme',
+      'paper_size',
+      'personal_info',
+      'digital_signature',
+      'json_backup',
+      'cover_letter_body',
+      'job_target',
+      'ai_generation'
+    ],
+    defaultPaperSize: 'a4',
+    defaultActivePresetId: 'carta-clasica'
   },
   business_card: {
     id: 'business_card',
