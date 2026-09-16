@@ -13,7 +13,7 @@ let failed = 0;
 
 const glossaryPath = path.join(ROOT, 'src/shared/core/uiTextGlossary.ts');
 const savedModalPath = path.join(ROOT, 'src/modules/cv-builder/components/SavedCVsModal.tsx');
-const editorPanelPath = path.join(ROOT, 'src/modules/cv-builder/components/EditorPanel.tsx');
+const editorPanelPath = path.join(ROOT, 'src/modules/cv-builder/components/editor/sections/DisenoSection.tsx');
 
 const glossaryContent = fs.readFileSync(glossaryPath, 'utf-8');
 const savedModalContent = fs.readFileSync(savedModalPath, 'utf-8');
@@ -39,10 +39,10 @@ if (!savedModalContent.includes('Explanation Banner') && !savedModalContent.incl
 
 // Assert 3: EditorPanel consume cascadaDiseno
 if (editorPanelContent.includes("getUiHint('cascadaDiseno')")) {
-  console.log('  ✓ EditorPanel: Consume el aviso de la cascada de 3 niveles desde el glosario OK.');
+  console.log('  ✓ DisenoSection: Consume el aviso de la cascada de 3 niveles desde el glosario OK.');
   passed++;
 } else {
-  console.error('  ❌ EditorPanel.tsx no consume getUiHint(\'cascadaDiseno\').');
+  console.error('  ❌ DisenoSection.tsx no consume getUiHint(\'cascadaDiseno\').');
   failed++;
 }
 
