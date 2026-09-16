@@ -1,0 +1,6 @@
+{
+  "name": "LEECV",
+  "description": "Creador de Currículum Vitae profesional en PDF A4 e imprimible en minutos con plantillas ejecutivas, diseño de tarjetas y exportación vectorial.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
