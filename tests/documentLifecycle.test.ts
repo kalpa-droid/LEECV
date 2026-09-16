@@ -2,11 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createBlankCVTemplate } from '../src/data/initialCVData';
 import { 
   generateDocumentId, 
-  addOpenTab, 
+  openTab, 
   getOpenTabs, 
-  closeDocumentEverywhere,
-  saveOpenTabs
-} from '../src/shared/core/storage/documentTabEngine';
+  closeTab
+} from '../src/shared/core/documents/tabStore';
 
 describe('documentLifecycle (Gestión de Documentos & Pestañas)', () => {
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('documentLifecycle (Gestión de Documentos & Pestañas)', () => {
     };
     vi.stubGlobal('window', { localStorage: localStorageMock });
     vi.stubGlobal('localStorage', localStorageMock);
-    saveOpenTabs([]);
+    localStorage.clear();
   });
 
   it('nunca reusa el mismo id entre dos CVs en blanco distintos', () => {
@@ -41,26 +40,20 @@ describe('documentLifecycle (Gestión de Documentos & Pestañas)', () => {
     expect(bookId.startsWith('book_')).toBe(true);
   });
 
-  it('closeDocumentEverywhere quita la pestaña de localStorage y ejecuta el borrado físico si se solicita', async () => {
+  it('closeTab quita la pestaña de localStorage sin afectar la persistencia de datos', async () => {
     const idToDelete = generateDocumentId('cv');
     const idToKeep = generateDocumentId('cv');
 
-    addOpenTab(idToDelete, 'Doc A Eliminar');
-    addOpenTab(idToKeep, 'Doc B Conservar');
+    openTab(idToDelete, 'cv', 'Doc A Eliminar');
+    openTab(idToKeep, 'cv', 'Doc B Conservar');
 
     expect(getOpenTabs().length).toBe(2);
 
-    const deleteMock = vi.fn().mockResolvedValue(undefined);
+    const remaining = closeTab(idToDelete);
 
-    const remaining = await closeDocumentEverywhere(idToDelete, {
-      alsoDeleteFromStorage: true,
-      deleteCVById: deleteMock,
-    });
-
-    expect(deleteMock).toHaveBeenCalledWith(idToDelete);
     expect(remaining.length).toBe(1);
-    expect(remaining[0].cvId).toBe(idToKeep);
-    expect(getOpenTabs().map(t => t.cvId)).not.toContain(idToDelete);
+    expect(remaining[0].id).toBe(idToKeep);
+    expect(getOpenTabs().map(t => t.id)).not.toContain(idToDelete);
   });
 
   it('ARQUITECTURA DE PESTAÑAS Y DESACOPLAMIENTO — workspaceController y tabStore gestionan el cierre sin banderas frágiles ni resucitar pestañas', async () => {

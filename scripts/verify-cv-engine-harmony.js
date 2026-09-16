@@ -459,13 +459,13 @@ if (fs.existsSync(localPackagerPath)) {
   );
 }
 
-const tabEnginePath = path.join(ROOT, 'src/shared/core/storage/documentTabEngine.ts');
-if (fs.existsSync(tabEnginePath)) {
-  const tabContent = fs.readFileSync(tabEnginePath, 'utf-8');
+const tabStorePath = path.join(ROOT, 'src/shared/core/documents/tabStore.ts');
+if (fs.existsSync(tabStorePath)) {
+  const tabContent = fs.readFileSync(tabStorePath, 'utf-8');
   check(
-    'documentTabEngine.ts implementa getOpenTabs, addOpenTab, removeOpenTab con persistencia cv_open_tabs',
-    tabContent.includes('getOpenTabs') && (tabContent.includes('cv_open_tabs') || tabContent.includes('tabStore')),
-    'documentTabEngine.ts no implementa persistencia de pestañas'
+    'tabStore.ts implementa getOpenTabs, openTab, closeTab con persistencia cv_open_tabs',
+    tabContent.includes('getOpenTabs') && tabContent.includes('cv_open_tabs'),
+    'tabStore.ts no implementa persistencia de pestañas'
   );
 }
 

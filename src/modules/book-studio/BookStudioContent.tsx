@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AppShell } from '../../shared/core/ui/AppShell';
 import Navbar from '../cv-builder/components/Navbar';
 import CanvaIconDock from '../cv-builder/components/CanvaIconDock';
-import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
+import { BookImpositionOptions, DEFAULT_BOOK_IMPOSITION_OPTIONS } from '../../shared/core/book-engine/impositionEngine';
 import { BookSourceTypeStep } from './BookSourceTypeStep';
 import { BookOrganizeStep } from './BookOrganizeStep';
 import { BookFoliadoStep } from './BookFoliadoStep';
@@ -12,13 +12,13 @@ import { BookPreviewExportStep } from './BookPreviewExportStep';
 import { BookPreviewStep } from './BookPreviewStep';
 import { getNextBookStepId, getPrevBookStepId } from '../../shared/core/book-engine/bookStepSequence';
 import { saveBook } from '../../shared/core/storage/documentStorageService';
-import { addOpenTab, generateDocumentId, OpenTabItem } from '../../shared/core/storage/documentTabEngine';
+import { openTab, generateDocumentId, OpenTab } from '../../shared/core/documents/tabStore';
 import { getPendingDocumentToOpen, clearPendingDocumentToOpen } from '../../shared/core/storage/pendingDocumentHandoff';
 import { radius, button } from '../../shared/core/uiDesignSystem';
 
 interface BookStudioContentProps {
   currentUiTheme?: string;
-  documentTabs: OpenTabItem[];
+  documentTabs: OpenTab[];
   activeTabId: string;
   onSelectTab: (id: string) => void;
   onCloseTab: (id: string) => void;
@@ -27,7 +27,7 @@ interface BookStudioContentProps {
   onNewCard?: () => void;
   onNewBook?: () => void;
   cycleUITheme: () => void;
-  onTabsChanged?: (tabs: OpenTabItem[]) => void;
+  onTabsChanged?: (tabs: OpenTab[]) => void;
   isLoggedIn?: boolean;
   onAuthToggle?: () => void;
 }
@@ -77,31 +77,13 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   }, [triggerBookAutoFit]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [options, setOptions] = useState<BookImpositionOptions>({
-    mode: 'normal',
-    paperSize: 'A4',
-    hasCover: false,
-    coverSide: 'derecha',
-    hasBackCover: false,
-    backCoverSide: 'izquierda',
-    refPdfPage: 0,
-    refBookPage: 0,
-    refPageSide: 'derecha',
-    pageRotations: {},
-    pageSplitOffsets: {},
-    customCover: null,
-    customBackCover: null,
-    deletedPages: [],
-    pageOrder: [],
-    blankBehindCover: true,
-    blankInFrontBackCover: true,
-  });
+  const [options, setOptions] = useState<BookImpositionOptions>(DEFAULT_BOOK_IMPOSITION_OPTIONS);
 
   // Garantizar que la pestaña activa sea "Mi Libro / Folleto" desde la carga inicial
   useEffect(() => {
     const currentId = bookId || generateDocumentId('book');
     const name = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, '') : 'Mi Libro / Folleto';
-    const updatedTabs = addOpenTab(currentId, name, undefined, 'book');
+    const updatedTabs = openTab(currentId, 'book', name);
     onTabsChanged(updatedTabs);
   }, [bookId]);
 
@@ -111,7 +93,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
     if (!bookId) {
       setBookId(id);
     }
-    const updatedTabs = addOpenTab(id, name, undefined, 'book');
+    const updatedTabs = openTab(id, 'book', name);
     onTabsChanged(updatedTabs);
     saveBook({
       id,

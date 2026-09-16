@@ -4,7 +4,7 @@ import CanvaIconDock from '../modules/cv-builder/components/CanvaIconDock';
 import EditorPanel from '../modules/cv-builder/components/EditorPanel';
 const CVPreview = lazy(() => import('../modules/cv-builder/components/CVPreview'));
 import { FileText, CreditCard, Palette, Plus, X, Sparkles, ChevronRight } from 'lucide-react';
-import { getOpenTabs, addOpenTab, removeOpenTab, closeDocumentEverywhere, generateDocumentId, OpenTabItem, TABS_CHANGED_EVENT } from '../shared/core/storage/documentTabEngine';
+import { getOpenTabs, openTab as addOpenTab, closeTab as removeOpenTab, generateDocumentId, OpenTab as OpenTabItem, TABS_CHANGED_EVENT } from '../shared/core/documents/tabStore';
 import * as workspaceController from '../shared/core/documents/workspaceController';
 import { AppShell } from '../shared/core/ui/AppShell';
 const LandingPage = lazy(() => import('../modules/landing/LandingPage').then(m => ({ default: m.LandingPage })));
@@ -321,9 +321,9 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       const docTypeForTab = inferDocumentTypeId(cvData);
       addOpenTab(
         activeCvId,
+        docTypeForTab as any,
         cvData?.title || getDefaultTitleForDocType(docTypeForTab),
-        cvData?.version_label,
-        docTypeForTab
+        cvData?.version_label
       );
       setTabs(getOpenTabs());
     } else {

@@ -59,6 +59,26 @@ export interface BookImpositionOptions {
   onProgress?: (message: string, percent: number) => void;
 }
 
+export const DEFAULT_BOOK_IMPOSITION_OPTIONS: BookImpositionOptions = {
+  mode: 'normal',
+  paperSize: 'A4',
+  hasCover: false,
+  coverSide: 'derecha',
+  hasBackCover: false,
+  backCoverSide: 'izquierda',
+  refPdfPage: 0,
+  refBookPage: 0,
+  refPageSide: 'derecha',
+  pageRotations: {},
+  pageSplitOffsets: {},
+  customCover: null,
+  customBackCover: null,
+  deletedPages: [],
+  pageOrder: [],
+  blankBehindCover: true,
+  blankInFrontBackCover: true,
+};
+
 export function getCoverCanvasSize(paperSize: 'A4' | 'A3' = 'A4'): { width: number; height: number } {
   return paperSize === 'A3' ? { width: 2480, height: 3508 } : { width: 1748, height: 2480 };
 }

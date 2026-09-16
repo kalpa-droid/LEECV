@@ -1,12 +1,12 @@
 import React, { useRef } from 'react';
 import { FileText, BookOpen, CreditCard, Mail, X, ChevronRight, ChevronLeft } from 'lucide-react';
-import { OpenTabItem } from '../storage/documentTabEngine';
+import { OpenTab } from '../documents/tabStore';
 import { elevationSystem, radius } from '../uiDesignSystem';
 import { NewDocumentMenu } from './NewDocumentMenu';
 import { useHorizontalScrollControls } from './useHorizontalScrollControls';
 
 export interface DocumentTabsBarProps {
-  tabs: OpenTabItem[];
+  tabs: (OpenTab | { cvId: string; title: string; docType?: any; versionLabel?: string })[];
   activeId: string;
   docType?: 'cv' | 'business_card' | 'book' | 'cover_letter';
   onSwitch: (id: string) => void;
@@ -75,21 +75,22 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
           className="flex items-center gap-1 overflow-x-auto no-scrollbar min-w-0"
         >
           {tabs.map((tab) => {
-            const isActive = tab.cvId === activeId;
+            const tabId = (tab as any).id || (tab as any).cvId;
+            const isActive = tabId === activeId;
             const targetDocType = tab.docType || 'cv';
             const Icon = getTabIcon(targetDocType);
 
             return (
               <div
-                key={tab.cvId}
+                key={tabId}
                 onClick={() => {
                   if (!isActive) {
                     if (targetDocType === docType) {
-                      onSwitch(tab.cvId);
+                      onSwitch(tabId);
                     } else if (onNavigateToDocument) {
-                      onNavigateToDocument(targetDocType as any, tab.cvId);
+                      onNavigateToDocument(targetDocType as any, tabId);
                     } else {
-                      onSwitch(tab.cvId);
+                      onSwitch(tabId);
                     }
                   }
                 }}
@@ -139,7 +140,7 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
 
                 <button
                   type="button"
-                  onClick={(e) => onClose(e, tab.cvId, tab.title)}
+                  onClick={(e) => onClose(e, tabId, tab.title)}
                   className="p-0.5 rounded transition cursor-pointer opacity-80 hover:opacity-100 shrink-0"
                   title="Cerrar Pestaña"
                 >

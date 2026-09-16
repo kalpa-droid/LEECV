@@ -1,4 +1,4 @@
-import { generateDocumentId } from '../shared/core/storage/documentTabEngine';
+import { generateDocumentId } from '../shared/core/documents/tabStore';
 import { getDefaultTitleForDocType, inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
 
 export const blankCVBase = {

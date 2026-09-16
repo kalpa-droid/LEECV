@@ -30,7 +30,7 @@ import { FIELD_CATALOG } from '../../../shared/core/pdf-engine/layers/records/fi
 import { PAGE_SIZES } from '../../../shared/core/pdf-engine/layers/page/pageSizes';
 import { resolveDisplayName } from '../../../shared/core/utils/cvDataSchema';
 import { getSavedCVsList, loadCVById, deleteCVById, saveCV } from '../services/cvStorageService';
-import { getOpenTabs } from '../../../shared/core/storage/documentTabEngine';
+import { getOpenTabs } from '../../../shared/core/documents/tabStore';
 import CertCropperModal from './CertCropperModal';
 import PhotoCropperModal from './PhotoCropperModal';
 import { extractDominantCornerColor } from '../../../shared/core/pdf-engine/utils/extractDominantEdgeColor';

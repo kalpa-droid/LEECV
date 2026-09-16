@@ -9,6 +9,7 @@ import { getDefaultTitleForDocType } from '../capabilities/capabilityRegistry';
 
 export interface OpenTab {
   id: string;
+  cvId?: string;
   docType: 'cv' | 'business_card' | 'book' | 'cover_letter';
   title: string;
   versionLabel?: string;
@@ -32,13 +33,17 @@ export function getOpenTabs(): OpenTab[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed.map((t: any) => ({
-      id: t.id || t.cvId,
-      docType: t.docType || 'cv',
-      title: t.title || getDefaultTitleForDocType(t.docType || 'cv'),
-      versionLabel: t.versionLabel,
-      isDirty: Boolean(t.isDirty)
-    }));
+    return parsed.map((t: any) => {
+      const id = t.id || t.cvId;
+      return {
+        id,
+        cvId: id,
+        docType: t.docType || 'cv',
+        title: t.title || getDefaultTitleForDocType(t.docType || 'cv'),
+        versionLabel: t.versionLabel,
+        isDirty: Boolean(t.isDirty)
+      };
+    });
   } catch (err) {
     console.warn('Error leyendo cv_open_tabs:', err);
     return [];
@@ -117,6 +122,11 @@ export function setActiveTabId(id: string | null): void {
   } else {
     localStorage.removeItem(ACTIVE_KEY);
   }
+}
+
+export function generateDocumentId(prefix: 'cv' | 'book' | 'card' | 'cover_letter' = 'cv'): string {
+  const uuid = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  return `${prefix}_${uuid}`;
 }
 
 export function onTabsChanged(listener: (tabs: OpenTab[]) => void): () => void {
