@@ -69,4 +69,32 @@ export const navigation = {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   },
+
+  /**
+   * Empuja una nueva ruta al historial sin recargar la página.
+   */
+  push(url: string): void {
+    if (typeof window !== 'undefined' && window.history?.pushState) {
+      window.history.pushState({}, '', url);
+    }
+  },
+
+  /**
+   * Recarga la página actual de manera canónica.
+   */
+  reload(): void {
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
+  },
+
+  /**
+   * Obtiene la URL completa actual (href).
+   */
+  getHref(): string {
+    if (typeof window !== 'undefined') {
+      return window.location.href;
+    }
+    return '';
+  },
 };

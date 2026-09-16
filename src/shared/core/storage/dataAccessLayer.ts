@@ -390,5 +390,15 @@ export const dal = {
       );
       return res.data || null;
     }
+  },
+
+  pdfExportCredits: {
+    async getByUserId(userId: string): Promise<{ credits: number } | null> {
+      if (!supabase) return null;
+      const res = await safeSupabaseCall(() =>
+        supabase.from('pdf_export_credits').select('credits').eq('user_id', userId).single()
+      );
+      return res.data || null;
+    }
   }
 };

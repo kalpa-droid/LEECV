@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { dal } from '../storage/dataAccessLayer';
 
 export function usePageAwareCreditGate() {
   const [isGating, setIsGating] = useState(false);
@@ -22,7 +23,7 @@ export function usePageAwareCreditGate() {
         return false;
       }
 
-      const { data: profile } = await supabase.from('profiles').select('plan').eq('id', user.id).single();
+      const profile = await dal.profiles.getById(user.id);
       if (profile?.plan === 'pro' || profile?.plan === 'enterprise') {
         setIsGating(false);
         return true;

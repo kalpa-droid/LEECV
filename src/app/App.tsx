@@ -98,7 +98,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     if (!updateBannerVisible) return;
     const timer = setTimeout(() => {
       if (!isSaving && !hasPendingChanges) {
-        window.location.reload();
+        navigation.reload();
       }
     }, 5 * 60 * 1000);
     return () => clearTimeout(timer);
@@ -969,7 +969,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 
           <UpdateToast
             isVisible={updateBannerVisible}
-            onUpdate={() => window.location.reload()}
+            onUpdate={() => navigation.reload()}
             onDismiss={() => setUpdateBannerVisible(false)}
           />
         </Suspense>
@@ -980,20 +980,16 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 
 export default function App() {
   const [currentRoute, setCurrentRoute] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      const path = window.location.pathname;
-      if (path === '/crear-cv' || path === '/crear-tarjeta' || path === '/crear-libro' || path === '/crear-carta' || path === '/blog') {
-        return path;
-      }
+    const path = navigation.getPathname();
+    if (path === '/crear-cv' || path === '/crear-tarjeta' || path === '/crear-libro' || path === '/crear-carta' || path === '/blog') {
+      return path;
     }
     return '/';
   });
 
   useEffect(() => {
     const handlePopState = () => {
-      if (typeof window !== 'undefined') {
-        setCurrentRoute(window.location.pathname);
-      }
+      setCurrentRoute(navigation.getPathname());
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -1004,9 +1000,7 @@ export default function App() {
   }, [currentRoute]);
 
   const navigateTo = (route: string) => {
-    if (typeof window !== 'undefined') {
-      window.history.pushState({}, '', route);
-    }
+    navigation.push(route);
     setCurrentRoute(route);
   };
 

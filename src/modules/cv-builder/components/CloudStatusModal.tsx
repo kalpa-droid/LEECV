@@ -42,9 +42,7 @@ export default function CloudStatusModal({
       async () => {
         await logout();
         showSuccess('Sesión cerrada correctamente. Puedes ingresar con otra cuenta.');
-        if (typeof window !== 'undefined') {
-          window.location.reload();
-        }
+        navigation.reload();
       },
       { context: 'Cerrar Sesión' }
     );

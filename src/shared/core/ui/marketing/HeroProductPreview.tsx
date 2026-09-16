@@ -46,8 +46,7 @@ export const HeroProductPreview: React.FC<HeroProductPreviewProps> = ({
             src={activeProduct.image}
             alt={activeProduct.label}
             loading="eager"
-            // @ts-ignore
-            fetchpriority="high"
+            fetchPriority="high"
             className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.01]"
           />
 
