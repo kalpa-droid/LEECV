@@ -1,3 +1,5 @@
+import { env } from '../config/env';
+
 /**
  * Servicio de Analítica Ligero para LEECV
  * Soporta Google Analytics 4 (GA4) y PostHog.
@@ -29,7 +31,7 @@ export function setConsentStatus(granted: boolean): void {
 export function initAnalytics(): void {
   if (typeof window === 'undefined' || !isConsentGranted()) return;
 
-  const gaId = import.meta.env.VITE_GA_MEASUREMENT_ID;
+  const gaId = env.GA_MEASUREMENT_ID;
   if (gaId && !document.getElementById('ga-gtag-script')) {
     const script = document.createElement('script');
     script.id = 'ga-gtag-script';
@@ -48,8 +50,8 @@ export function initAnalytics(): void {
     document.head.appendChild(inlineScript);
   }
 
-  const posthogKey = import.meta.env.VITE_POSTHOG_KEY;
-  const posthogHost = import.meta.env.VITE_POSTHOG_HOST || 'https://app.posthog.com';
+  const posthogKey = env.POSTHOG_KEY;
+  const posthogHost = env.POSTHOG_HOST;
   if (posthogKey && !document.getElementById('posthog-js-script')) {
     const phScript = document.createElement('script');
     phScript.id = 'posthog-js-script';
@@ -64,7 +66,7 @@ export function initAnalytics(): void {
 export function trackPageView(path: string, title?: string): void {
   if (!isConsentGranted() || typeof window === 'undefined') return;
 
-  const gaId = import.meta.env.VITE_GA_MEASUREMENT_ID;
+  const gaId = env.GA_MEASUREMENT_ID;
   if (gaId && typeof (window as any).gtag === 'function') {
     (window as any).gtag('event', 'page_view', {
       page_path: path,
@@ -84,7 +86,7 @@ export function trackPageView(path: string, title?: string): void {
 export function trackEvent(eventName: string, params: AnalyticsEventParams = {}): void {
   if (!isConsentGranted() || typeof window === 'undefined') return;
 
-  const gaId = import.meta.env.VITE_GA_MEASUREMENT_ID;
+  const gaId = env.GA_MEASUREMENT_ID;
   if (gaId && typeof (window as any).gtag === 'function') {
     (window as any).gtag('event', eventName, params);
   }

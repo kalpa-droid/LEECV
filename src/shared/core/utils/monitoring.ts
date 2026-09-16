@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/react';
+import { env } from '../config/env';
 
-const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN || 'https://ee85a68c26a11080f175541ed2c2a593@o4512035779182592.ingest.us.sentry.io/4512035802251264';
+const SENTRY_DSN = env.SENTRY_DSN;
 
 if (typeof window !== 'undefined' && SENTRY_DSN) {
   try {
