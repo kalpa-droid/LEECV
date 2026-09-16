@@ -587,13 +587,13 @@ if (fs.existsSync(formatRegistryPath)) {
   );
 }
 
-const editorPanelPath = path.join(ROOT, 'src/modules/cv-builder/components/EditorPanel.tsx');
+const editorPanelPath = path.join(ROOT, 'src/modules/cv-builder/components/editor/sections/DisenoSection.tsx');
 if (fs.existsSync(editorPanelPath)) {
   const editorContent = fs.readFileSync(editorPanelPath, 'utf-8');
   check(
-    'EditorPanel.tsx consume el Selector de Formatos Globales (getAllCvFormats & getFormatDefaultVisibility)',
+    'DisenoSection.tsx consume el Selector de Formatos Globales (getAllCvFormats & getFormatDefaultVisibility)',
     editorContent.includes('getAllCvFormats()') && editorContent.includes('getFormatDefaultVisibility') && editorContent.includes('Estándar & Formato Global'),
-    'EditorPanel.tsx no consume el Selector de Formatos Globales'
+    'DisenoSection.tsx no consume el Selector de Formatos Globales'
   );
 }
 
