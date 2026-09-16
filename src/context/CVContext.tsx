@@ -15,7 +15,7 @@ interface CVContextType {
   updateTheme: (field: string, value: any) => void;
   applyThemePreset: (preset: any) => void;
   toggleSectionVisibility: (sectionKey: string) => void;
-  resetToBlankCV: (options?: { activePresetId?: string }) => void;
+  resetToBlankCV: (options?: { activePresetId?: string }) => CVData;
   loadCVData: (newCVData: CVData) => void;
   saveCV: () => Promise<any>;
   saveCVAs: (versionLabel?: string) => Promise<any>;
@@ -262,6 +262,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
         console.warn('Error guardando plantilla en blanco:', e);
       }
     }
+    return blank;
   };
 
   const loadCVData = (newCVData: CVData) => {
