@@ -153,7 +153,7 @@ TONO DESEADO: ${tone.toUpperCase()}
   return (
     <div className="flex-1 bg-[var(--ui-bg-app)] overflow-y-auto p-6 text-[var(--ui-text-primary)]">
       {feedback && (
-        <div className={`mb-6 p-4 rounded-xl border flex items-center gap-3 text-xs ${
+        <div className={`mb-6 p-4 rounded-[12px] border flex items-center gap-3 text-xs ${
           feedback.type === 'success'
             ? 'bg-[var(--color-status-success-muted)] border-[var(--ui-border)] text-[var(--color-status-success-text)]'
             : 'bg-[var(--color-status-danger-muted)] border-[var(--ui-border)] text-[var(--color-status-danger-text)]'
@@ -172,7 +172,7 @@ TONO DESEADO: ${tone.toUpperCase()}
             </p>
           </div>
 
-          <div className="p-4 rounded-xl border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] space-y-4">
+          <div className="p-4 rounded-[12px] border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] space-y-4">
             <h4 className="text-xs font-semibold text-[var(--ui-text-primary)] flex items-center gap-2">
               <Upload className="w-4 h-4 text-[var(--ui-text-primary)]" />
               Importar copia de seguridad de LinkedIn (.zip)
@@ -180,7 +180,7 @@ TONO DESEADO: ${tone.toUpperCase()}
             <p className="text-xs text-[var(--ui-text-secondary)]">
               Obtén tu archivo ZIP en LinkedIn (Configuración &gt; Privacidad de datos &gt; Obtener una copia de tus datos).
             </p>
-            <label className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary-base)] text-white text-xs font-semibold rounded-lg cursor-pointer hover:opacity-90 transition-all">
+            <label className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary-base)] text-white text-xs font-semibold rounded-[10px] cursor-pointer hover:opacity-90 transition-all">
               <Upload className="w-3.5 h-3.5" />
               <span>{isImporting ? 'Procesando ZIP...' : 'Seleccionar archivo .zip'}</span>
               <input type="file" accept=".zip" onChange={handleLinkedinUpload} disabled={isImporting} className="hidden" />
@@ -195,7 +195,7 @@ TONO DESEADO: ${tone.toUpperCase()}
                 value={data.personalInfo?.fullName || ''}
                 onChange={(e) => onChangeData({ ...data, personalInfo: { ...(data.personalInfo || {}), fullName: e.target.value } })}
                 placeholder="Ej: Laura Mónica González"
-                className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-lg text-xs"
+                className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-[10px] text-xs"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -206,7 +206,7 @@ TONO DESEADO: ${tone.toUpperCase()}
                   value={data.personalInfo?.email || ''}
                   onChange={(e) => onChangeData({ ...data, personalInfo: { ...(data.personalInfo || {}), email: e.target.value } })}
                   placeholder="laura@ejemplo.com"
-                  className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-lg text-xs"
+                  className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-[10px] text-xs"
                 />
               </div>
               <div>
@@ -216,7 +216,7 @@ TONO DESEADO: ${tone.toUpperCase()}
                   value={data.personalInfo?.cityProvince || ''}
                   onChange={(e) => onChangeData({ ...data, personalInfo: { ...(data.personalInfo || {}), cityProvince: e.target.value } })}
                   placeholder="Córdoba, Argentina"
-                  className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-lg text-xs"
+                  className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-[10px] text-xs"
                 />
               </div>
             </div>
@@ -242,7 +242,7 @@ TONO DESEADO: ${tone.toUpperCase()}
                   value={data.jobTarget?.jobTitle || ''}
                   onChange={(e) => updateJobTarget('jobTitle', e.target.value)}
                   placeholder="Ej: Gerente de Operaciones Logísticas"
-                  className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-lg text-xs"
+                  className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-[10px] text-xs"
                 />
               </div>
               <div>
@@ -252,7 +252,7 @@ TONO DESEADO: ${tone.toUpperCase()}
                   value={data.jobTarget?.companyName || ''}
                   onChange={(e) => updateJobTarget('companyName', e.target.value)}
                   placeholder="Ej: Mercado Libre"
-                  className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-lg text-xs"
+                  className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-[10px] text-xs"
                 />
               </div>
             </div>
@@ -264,7 +264,7 @@ TONO DESEADO: ${tone.toUpperCase()}
                 value={data.jobTarget?.recipientName || ''}
                 onChange={(e) => updateJobTarget('recipientName', e.target.value)}
                 placeholder="Ej: Lic. Martín Soria (Responsable de Selección)"
-                className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-lg text-xs"
+                className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-[10px] text-xs"
               />
             </div>
 
@@ -275,7 +275,7 @@ TONO DESEADO: ${tone.toUpperCase()}
                 value={data.jobTarget?.jobDescription || ''}
                 onChange={(e) => updateJobTarget('jobDescription', e.target.value)}
                 placeholder="Pega aquí el texto completo del aviso de trabajo..."
-                className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-lg text-xs leading-relaxed"
+                className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-[10px] text-xs leading-relaxed"
               />
             </div>
           </div>
@@ -307,7 +307,7 @@ TONO DESEADO: ${tone.toUpperCase()}
                   key={t.id}
                   type="button"
                   onClick={() => setTone(t.id as any)}
-                  className={`p-3 rounded-xl border text-left transition-all ${
+                  className={`p-3 rounded-[12px] border text-left transition-all ${
                     tone === t.id
                       ? 'border-[var(--color-primary-base)] bg-[var(--color-primary-muted)] text-[var(--ui-text-primary)] font-medium'
                       : 'border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)] hover:border-[var(--ui-border-hover)]'
@@ -364,7 +364,7 @@ TONO DESEADO: ${tone.toUpperCase()}
                 value={data.body?.salutation || ''}
                 onChange={(e) => updateBody('salutation', e.target.value)}
                 placeholder="Estimado/a responsable de selección,"
-                className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-lg text-xs"
+                className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-[10px] text-xs"
               />
             </div>
 
@@ -375,7 +375,7 @@ TONO DESEADO: ${tone.toUpperCase()}
                 value={data.body?.hookParagraph || ''}
                 onChange={(e) => updateBody('hookParagraph', e.target.value)}
                 placeholder="Expresa tu motivación por el puesto..."
-                className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-lg text-xs leading-relaxed"
+                className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-[10px] text-xs leading-relaxed"
               />
             </div>
 
@@ -386,7 +386,7 @@ TONO DESEADO: ${tone.toUpperCase()}
                 value={data.body?.evidenceParagraph || ''}
                 onChange={(e) => updateBody('evidenceParagraph', e.target.value)}
                 placeholder="Detalla tu experiencia clave y encaje técnico..."
-                className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-lg text-xs leading-relaxed"
+                className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-[10px] text-xs leading-relaxed"
               />
             </div>
 
@@ -397,7 +397,7 @@ TONO DESEADO: ${tone.toUpperCase()}
                 value={data.body?.closingParagraph || ''}
                 onChange={(e) => updateBody('closingParagraph', e.target.value)}
                 placeholder="Solicita una entrevista de trabajo..."
-                className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-lg text-xs leading-relaxed"
+                className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-[10px] text-xs leading-relaxed"
               />
             </div>
 
@@ -408,7 +408,7 @@ TONO DESEADO: ${tone.toUpperCase()}
                 value={data.body?.signoff || ''}
                 onChange={(e) => updateBody('signoff', e.target.value)}
                 placeholder="Atentamente,"
-                className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-lg text-xs"
+                className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-[10px] text-xs"
               />
             </div>
           </div>
@@ -430,9 +430,9 @@ TONO DESEADO: ${tone.toUpperCase()}
                 key={p.id}
                 type="button"
                 onClick={() => onSelectPreset(p.id)}
-                className={`p-4 rounded-xl border text-left transition-all ${
+                className={`p-4 rounded-[12px] border text-left transition-all ${
                   presetId === p.id
-                    ? 'border-[var(--color-primary-base)] bg-[var(--color-primary-muted)] text-[var(--ui-text-primary)] shadow-sm'
+                    ? 'border-[var(--color-primary-base)] bg-[var(--color-primary-muted)] text-[var(--ui-text-primary)] shadow-[var(--shadow-raised)]'
                     : 'border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)] hover:border-[var(--ui-border-hover)]'
                 }`}
               >

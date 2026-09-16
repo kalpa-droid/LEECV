@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { dal } from '../storage/dataAccessLayer';
 import { useEntitlements } from './useEntitlements';
 
 /**
@@ -20,12 +21,8 @@ export function usePdfExportGate() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLoadingCredits(false); return; }
-      const { data } = await supabase
-        .from('pdf_export_credits')
-        .select('credits')
-        .eq('user_id', user.id)
-        .single();
-      setCredits(data?.credits || 0);
+      const creditRecord = await dal.pdfExportCredits.getByUserId(user.id);
+      setCredits(creditRecord?.credits || 0);
     } catch {
       setCredits(0);
     } finally {

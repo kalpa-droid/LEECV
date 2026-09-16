@@ -4,6 +4,7 @@ import { iniciarPagoMercadoPago, iniciarPagoLemonSqueezy, iniciarPagoPayPal } fr
 import { useToast } from '../../shared/core/ui/Toast';
 import { Modal } from '../../shared/core/ui/Modal';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
+import { navigation } from '../../shared/core/utils/navigation';
 import { logout, signInWithGoogle } from '../auth/authService';
 
 import { button, elevationSystem, radius } from '../../shared/core/uiDesignSystem';
@@ -24,9 +25,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
       async () => {
         await logout();
         showSuccess(t.pricing.sessionClosedSuccess);
-        if (typeof window !== 'undefined') {
-          window.location.reload();
-        }
+        navigation.reload();
       },
       { context: 'Cerrar Sesión' }
     );
