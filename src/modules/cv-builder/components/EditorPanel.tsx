@@ -31,12 +31,36 @@ import { PAGE_SIZES } from '../../../shared/core/pdf-engine/layers/page/pageSize
 import { resolveDisplayName } from '../../../shared/core/utils/cvDataSchema';
 import { getSavedCVsList, loadCVById, deleteCVById, saveCV } from '../services/cvStorageService';
 import { getOpenTabs } from '../../../shared/core/documents/tabStore';
-import CertCropperModal from './CertCropperModal';
+import { LogrosSection } from './editor/sections/LogrosSection';
+import { IdiomasSection } from './editor/sections/IdiomasSection';
+import { ProyectosSection } from './editor/sections/ProyectosSection';
+import { PublicacionesSection } from './editor/sections/PublicacionesSection';
+import { ReferenciasSection } from './editor/sections/ReferenciasSection';
+import { FormacionSection } from './editor/sections/FormacionSection';
+import { ProfesionSection } from './editor/sections/ProfesionSection';
+import { ExperienciaSection } from './editor/sections/ExperienciaSection';
+import { CursosSection } from './editor/sections/CursosSection';
+import { InformaticaSection } from './editor/sections/InformaticaSection';
+import { CertificadosSection } from './editor/sections/CertificadosSection';
+import { GuardadosSection } from './editor/sections/GuardadosSection';
+import { RedesSection } from './editor/sections/RedesSection';
+import { CompetenciasSection } from './editor/sections/CompetenciasSection';
+import { ResumenSection } from './editor/sections/ResumenSection';
+import { ObjetivoSection } from './editor/sections/ObjetivoSection';
+import { PortafolioSection } from './editor/sections/PortafolioSection';
+import { HabilidadesSection } from './editor/sections/HabilidadesSection';
+import { FirmaSection } from './editor/sections/FirmaSection';
 import PhotoCropperModal from './PhotoCropperModal';
 import { extractDominantCornerColor } from '../../../shared/core/pdf-engine/utils/extractDominantEdgeColor';
 import { FormatConfirmationModal, FormatApplicationMode } from './FormatConfirmationModal';
 import { COVER_PRESETS } from '../../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
 import PersonalInfoSection from './editor/PersonalInfoSection';
+import { CardExtractSection } from './editor/sections/CardExtractSection';
+import { CardLogoSection } from './editor/sections/CardLogoSection';
+import { CardFrontSection } from './editor/sections/CardFrontSection';
+import { CardBackSection } from './editor/sections/CardBackSection';
+import { CardQrSection } from './editor/sections/CardQrSection';
+import { CardSizeSection } from './editor/sections/CardSizeSection';
 import { PanelSection } from './editor/PanelSection';
 import { SectionManualAdjustment } from './editor/SectionManualAdjustment';
 import { getUiHint } from '../../../shared/core/uiTextGlossary';
@@ -91,15 +115,7 @@ export default function EditorPanel({
 
   const hasDesignOverrides = !!(cvData?.colorPresetId || cvData?.typographyPresetId || cvData?.columnLayoutPresetId);
 
-  // Local states for Certificate Tab inside EditorPanel
-  const [certMode, setCertMode] = useState('upload'); // 'upload' | 'camera'
-  const [selectedRegIdx, setSelectedRegIdx] = useState('');
-  const [isCameraActive, setIsCameraActive] = useState(false);
-  const [isCertCropperOpen, setIsCertCropperOpen] = useState(false);
-  const [isLogoCropperOpen, setIsLogoCropperOpen] = useState(false);
-  const [rawCertSrc, setRawCertSrc] = useState('');
-  const videoRef = useRef(null);
-  const fileInputRef = useRef(null);
+  // Local states for Certificate Tab moved to CertificadosSection
 
   // States for Guardados tab
   const [savedList, setSavedList] = useState([]);
@@ -198,90 +214,7 @@ export default function EditorPanel({
     });
   }
 
-  // Camera Handlers
-  const startCamera = async () => {
-    try {
-      setCertMode('camera');
-      setIsCameraActive(true);
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } 
-      });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch {
-      showError('No se pudo acceder a la cámara. Por favor verifica los permisos o sube una imagen.');
-      setCertMode('upload');
-      setIsCameraActive(false);
-    }
-  };
-
-  const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject;
-      stream.getTracks().forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-    }
-    setIsCameraActive(false);
-  };
-
-  // Auto-compress heavy images (e.g. 15MB phone photos) before opening cropper modal
-  const compressRawImageBeforeCropping = (dataUrl, callback) => {
-    const img = new Image();
-    img.onload = () => {
-      const maxDim = 1600;
-      let w = img.width;
-      let h = img.height;
-      if (w > maxDim || h > maxDim) {
-        if (w > h) {
-          h = Math.round((h * maxDim) / w);
-          w = maxDim;
-        } else {
-          w = Math.round((w * maxDim) / h);
-          h = maxDim;
-        }
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, w, h);
-      const lightweightDataUrl = canvas.toDataURL('image/jpeg', 0.85);
-      callback(lightweightDataUrl);
-    };
-    img.src = dataUrl;
-  };
-
-  const capturePhoto = () => {
-    const video = videoRef.current;
-    if (!video) return;
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth || 1280;
-    canvas.height = video.videoHeight || 720;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
-    stopCamera();
-    setCertMode('upload');
-    compressRawImageBeforeCropping(dataUrl, (compressedUrl) => {
-      setRawCertSrc(compressedUrl);
-      setIsCertCropperOpen(true);
-    });
-  };
-
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        compressRawImageBeforeCropping(evt.target.result, (compressedUrl) => {
-          setRawCertSrc(compressedUrl);
-          setIsCertCropperOpen(true);
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  // Camera Handlers moved to CertificadosSection
 
 
 
@@ -366,703 +299,63 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {/* TAB 1.2: REDES SOCIALES & ENLACES */}
         {/* ========================================================================= */}
-        {activeTab === 'redes' && (
-          <RecordFormSection
-            sectionKey="redes"
-            sectionTitle="Redes Sociales & Enlaces"
-            kindKey="redes"
-            addLabel="Agregar Red / Enlace"
-            cvData={cvData}
-            setCvData={setCvData}
-            fieldName="redes"
-            itemTitlePrefix="Red Social / Enlace"
-            helpText="Agrega tus perfiles profesionales, sitio web o portafolio digital."
-            manualAdjustment={<SectionManualAdjustment sectionId="redes" cvData={cvData} setCvData={setCvData} />}
-          />
-        )}
-
+        {/* TAB 1.2: REDES SOCIALES & ENLACES */}
         {/* ========================================================================= */}
         {/* TAB 1.5: COMPETENCIAS CLAVE */}
         {/* ========================================================================= */}
-        {activeTab === 'competencias' && (
-          <div className="space-y-3">
-            <div className={`p-3 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 rounded-[${radius.card}] text-xs text-[var(--color-secondary-text)] flex items-start gap-2 leading-relaxed`}>
-              <Info className="w-4 h-4 text-[var(--color-secondary-text)] flex-shrink-0 mt-0.5" />
-              <div>
-                <span className="font-bold block">💡 Ayuda Contextual — Competencias Clave (Soft Skills):</span>
-                <span>Incluye aptitudes interpersonales, liderazgo, trabajo en equipo, capacidad analítica, resolución de conflictos y competencias conductuales.</span>
-              </div>
-            </div>
-            <RepeatableSection
-              sectionKey="competencias"
-              sectionTitle="Competencias Clave (Soft Skills)"
-              addLabel="Agregar Competencia"
-              cvData={cvData}
-              setCvData={setCvData}
-              fieldName="skills"
-              emptyItem="Nueva Competencia"
-              itemTitlePrefix="Competencia"
-              getItemName={(item: any, idx: number) => typeof item === 'string' ? item : (item?.name || item?.title || `Competencia #${idx + 1}`)}
-              renderItem={(item: any, idx: number, updateField: (field: string, val: any) => void) => (
-                <Field
-                  label={`Competencia Clave #${idx + 1}`}
-                  value={typeof item === 'string' ? item : (item?.name || '')}
-                  onChange={(e: any) => {
-                    const val = e.target.value;
-                    setCvData((prev: any) => {
-                      const currentSkills = [...(Array.isArray(prev.skills) ? prev.skills : [])];
-                      currentSkills[idx] = val;
-                      return { ...prev, skills: currentSkills };
-                    });
-                  }}
-                  placeholder="Ej: Pedagogía Dialógica, Alfabetización Digital, Liderazgo de Equipos..."
-                />
-              )}
-              manualAdjustment={<SectionManualAdjustment sectionId="competencias" cvData={cvData} setCvData={setCvData} />}
-            />
-          </div>
-        )}
-
-        {/* ========================================================================= */}
         {/* TAB: RESUMEN PROFESIONAL */}
-        {/* ========================================================================= */}
-        {activeTab === 'resumen' && (
-          <div className="space-y-4 bg-white p-4 rounded-[12px] border border-[var(--color-neutral-border)]">
-            <h3 className={`${typeScale.sectionTitle} uppercase tracking-wide`} style={{ color: colorSystem.neutral.textPrimary }}>
-              Resumen Profesional / Extracto (Elevator Pitch)
-            </h3>
-            <Field
-              id="summary"
-              as="textarea"
-              rows={5}
-              label="Extracto o Perfil Profesional"
-              value={cvData.summary || ''}
-              onChange={(e: any) => setCvData((prev: any) => ({ ...prev, summary: e.target.value }))}
-              placeholder="Ej: Profesional con más de 7 años de experiencia liderando proyectos corporativos, optimización de procesos y gestión de equipos multidisciplinarios..."
-            />
-            <div className="pt-2 border-t border-[var(--color-neutral-border)]">
-              <SectionManualAdjustment sectionId="resumen" cvData={cvData} setCvData={setCvData} />
-            </div>
-          </div>
-        )}
-
         {/* ========================================================================= */}
         {/* TAB: OBJETIVO PROFESIONAL */}
         {/* ========================================================================= */}
-        {activeTab === 'objetivo' && (
-          <div className="space-y-3 p-3 bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[var(--radius-card)]">
-            <h3 className="text-sm font-black text-[var(--color-neutral-text-primary)] flex items-center gap-1.5">
-              <Target className="w-4 h-4 text-[var(--color-secondary-bright)]" />
-              Objetivo Profesional / Resumen Ejecutivo
-            </h3>
-            <Field
-              id="objective"
-              as="textarea"
-              rows={5}
-              label="Objetivo Profesional"
-              value={cvData.objective || ''}
-              onChange={(e: any) => setCvData((prev: any) => ({ ...prev, objective: e.target.value }))}
-              placeholder="Ej: Aspiración profesional y metas a corto y largo plazo..."
-            />
-            <div className="pt-2 border-t border-[var(--color-neutral-border)]">
-              <SectionManualAdjustment sectionId="objetivo" cvData={cvData} setCvData={setCvData} />
-            </div>
-          </div>
-        )}
+        {activeTab === 'objetivo' && <ObjetivoSection cvData={cvData} setCvData={setCvData} />}
 
-        {/* ========================================================================= */}
-        {/* TAB: LOGROS CUANTIFICABLES */}
-        {/* ========================================================================= */}
-        {activeTab === 'logros' && (
-          <RecordFormSection
-            sectionKey="logros"
-            sectionTitle="Logros Cuantificables & Métricas"
-            kindKey="achievements"
-            addLabel="Agregar Logro"
-            cvData={cvData}
-            setCvData={setCvData}
-            fieldName="achievements"
-            itemTitlePrefix="Logro"
-            helpText="Métricas, premios o resultados cuantificables alcanzados en tu trayectoria."
-            manualAdjustment={<SectionManualAdjustment sectionId="logros" cvData={cvData} setCvData={setCvData} />}
-          />
-        )}
+        {activeTab === 'logros' && <LogrosSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
         {/* TAB: PORTAFOLIO / TRABAJOS DESTACADOS */}
         {/* ========================================================================= */}
-        {activeTab === 'portafolio' && (
-          <RecordFormSection
-            sectionKey="portafolio"
-            sectionTitle="Portafolio / Trabajos Destacados"
-            kindKey="portfolio"
-            addLabel="Agregar Trabajo al Portafolio"
-            cvData={cvData}
-            setCvData={setCvData}
-            fieldName="portfolio"
-            itemTitlePrefix="Trabajo"
-            helpText="Enlaces, descripciones e imágenes de tus mejores trabajos o proyectos."
-            manualAdjustment={<SectionManualAdjustment sectionId="portafolio" cvData={cvData} setCvData={setCvData} />}
-          />
-        )}
-
+        {/* TAB: PORTAFOLIO / TRABAJOS DESTACADOS */}
         {/* ========================================================================= */}
         {/* TAB: HABILIDADES TÉCNICAS (HARD SKILLS) */}
         {/* ========================================================================= */}
-        {activeTab === 'habilidades' && (
-          <div className="space-y-3">
-            <div className={`p-3 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 rounded-[${radius.card}] text-xs text-[var(--color-secondary-text)] flex items-start gap-2 leading-relaxed`}>
-              <Info className="w-4 h-4 text-[var(--color-secondary-text)] flex-shrink-0 mt-0.5" />
-              <div>
-                <span className="font-bold block">💡 Ayuda Contextual — Habilidades Técnicas (Hard Skills):</span>
-                <span>Incluye conocimientos técnicos específicos, herramientas informáticas, tecnologías, lenguajes o metodologías aplicadas.</span>
-              </div>
-            </div>
-            <RepeatableSection
-              sectionKey="habilidades"
-              sectionTitle="Habilidades Técnicas (Hard Skills)"
-              addLabel="Agregar Habilidad Técnica"
-              cvData={cvData}
-              setCvData={setCvData}
-              fieldName="hardSkills"
-              emptyItem="Nueva Habilidad Técnica"
-              itemTitlePrefix="Habilidad"
-              getItemName={(item: any, idx: number) => typeof item === 'string' ? item : (item?.name || item?.title || `Habilidad #${idx + 1}`)}
-              renderItem={(item: any, idx: number) => (
-                <Field
-                  label={`Habilidad Técnica #${idx + 1}`}
-                  value={typeof item === 'string' ? item : (item?.name || '')}
-                  onChange={(e: any) => {
-                    const val = e.target.value;
-                    setCvData((prev: any) => {
-                      const current = [...(Array.isArray(prev.hardSkills) ? prev.hardSkills : [])];
-                      current[idx] = val;
-                      return { ...prev, hardSkills: current };
-                    });
-                  }}
-                  placeholder="Ej: Python, React, Docker, AutoCAD, SQL, Modelado Financiero, AWS..."
-                />
-              )}
-              manualAdjustment={<SectionManualAdjustment sectionId="habilidades" cvData={cvData} setCvData={setCvData} />}
-            />
-          </div>
-        )}
+        {activeTab === 'habilidades' && <HabilidadesSection cvData={cvData} setCvData={setCvData} />}
+
+        {activeTab === 'idiomas' && <IdiomasSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
-        {/* TAB: IDIOMAS & NIVEL CEFR */}
-        {/* ========================================================================= */}
-        {activeTab === 'idiomas' && (
-          <RecordFormSection
-            sectionKey="idiomas"
-            sectionTitle="Idiomas & Nivel de Dominio"
-            kindKey="languages"
-            addLabel="Agregar Idioma"
-            cvData={cvData}
-            setCvData={setCvData}
-            fieldName="languages"
-            itemTitlePrefix="Idioma"
-            helpText="Indica los idiomas que dominas y tu nivel aproximado (A1, A2, B1, B2, C1, C2 o Nativo)."
-            manualAdjustment={<SectionManualAdjustment sectionId="idiomas" cvData={cvData} setCvData={setCvData} />}
-          />
-        )}
+        {activeTab === 'proyectos' && <ProyectosSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
-        {/* TAB: PROYECTOS DESTACADOS */}
-        {/* ========================================================================= */}
-        {activeTab === 'proyectos' && (
-          <RecordFormSection
-            sectionKey="proyectos"
-            sectionTitle="Proyectos Destacados & Portafolio"
-            kindKey="projects"
-            addLabel="Agregar Proyecto"
-            cvData={cvData}
-            setCvData={setCvData}
-            fieldName="projects"
-            itemTitlePrefix="Proyecto"
-            helpText="Destaca aplicaciones, desarrollos, iniciativas o portafolios relevantes para tu puesto."
-            manualAdjustment={<SectionManualAdjustment sectionId="proyectos" cvData={cvData} setCvData={setCvData} />}
-          />
-        )}
+        {activeTab === 'publicaciones' && <PublicacionesSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
-        {/* TAB: PUBLICACIONES & PATENTES */}
-        {/* ========================================================================= */}
-        {activeTab === 'publicaciones' && (
-          <RecordFormSection
-            sectionKey="publicaciones"
-            sectionTitle="Publicaciones & Investigaciones"
-            kindKey="publications"
-            addLabel="Agregar Publicación"
-            cvData={cvData}
-            setCvData={setCvData}
-            fieldName="publications"
-            itemTitlePrefix="Publicación"
-            helpText="Artículos científicos, libros, ponencias o patentes que hayas publicado."
-            manualAdjustment={<SectionManualAdjustment sectionId="publicaciones" cvData={cvData} setCvData={setCvData} />}
-          />
-        )}
+        {activeTab === 'referencias' && <ReferenciasSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
-        {/* TAB: REFERENCIAS LABORALES */}
-        {/* ========================================================================= */}
-        {activeTab === 'referencias' && (
-          <RecordFormSection
-            sectionKey="referencias"
-            sectionTitle="Referencias Laborales & Comprobables"
-            kindKey="references"
-            addLabel="Agregar Referencia"
-            cvData={cvData}
-            setCvData={setCvData}
-            fieldName="references"
-            itemTitlePrefix="Referencia"
-            helpText="Contactos de ex-supervisores o colegas que puedan certificar tu desempeño profesional."
-            manualAdjustment={<SectionManualAdjustment sectionId="referencias" cvData={cvData} setCvData={setCvData} />}
-          />
-        )}
+        {activeTab === 'formacion' && <FormacionSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
-        {/* TAB 2: FORMACIÓN ACADÉMICA */}
-        {/* ========================================================================= */}
-        {/* ========================================================================= */}
-        {/* TAB 2: FORMACIÓN ACADÉMICA */}
-        {/* ========================================================================= */}
-        {activeTab === 'formacion' && (
-          <RecordFormSection
-            sectionKey="formacion"
-            sectionTitle="Formación Académica"
-            kindKey="education"
-            addLabel="Agregar Formación"
-            cvData={cvData}
-            setCvData={setCvData}
-            fieldName="education"
-            itemTitlePrefix="Estudio / Formación"
-            helpText="Formación Académica refiere al nivel educativo alcanzado (Secundario, Terciario, Universitario, Posgrado)."
-            manualAdjustment={<SectionManualAdjustment sectionId="formacion" cvData={cvData} setCvData={setCvData} />}
-          />
-        )}
+        {activeTab === 'profesion' && <ProfesionSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
-        {/* TAB 3: TÍTULOS PROFESIONALES */}
-        {/* ========================================================================= */}
-        {activeTab === 'profesion' && (
-          <RecordFormSection
-            sectionKey="profesion"
-            sectionTitle="Títulos Profesionales"
-            kindKey="profession"
-            addLabel="Agregar Título"
-            cvData={cvData}
-            setCvData={setCvData}
-            fieldName="profession"
-            itemTitlePrefix="Título Profesional"
-            helpText="Títulos Profesionales incluye carreras o títulos habilitantes para ejercer. Puedes añadir el campo opcional Resolución N° / Disposición legal que avala tu titulación."
-            manualAdjustment={<SectionManualAdjustment sectionId="profesion" cvData={cvData} setCvData={setCvData} />}
-          />
-        )}
+        {activeTab === 'experiencia' && <ExperienciaSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
-        {/* TAB 4: EXPERIENCIA LABORAL */}
-        {/* ========================================================================= */}
-        {activeTab === 'experiencia' && (
-          <RecordFormSection
-            sectionKey="experiencia"
-            sectionTitle="Experiencia Laboral"
-            kindKey="experience"
-            addLabel="Agregar Experiencia"
-            cvData={cvData}
-            setCvData={setCvData}
-            fieldName="experience"
-            itemTitlePrefix="Experiencia Laboral"
-            helpText="Experiencia Laboral detalla puestos desempeñados, instituciones o empresas y tareas clave realizadas."
-            manualAdjustment={<SectionManualAdjustment sectionId="experiencia" cvData={cvData} setCvData={setCvData} />}
-          />
-        )}
+        {activeTab === 'cursos' && <CursosSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
-        {/* TAB 5: CURSOS & CAPACITACIONES */}
-        {/* ========================================================================= */}
-        {activeTab === 'cursos' && (
-          <RecordFormSection
-            sectionKey="cursos"
-            sectionTitle="Cursos y Capacitaciones"
-            kindKey="course"
-            addLabel="Agregar Curso"
-            cvData={cvData}
-            setCvData={setCvData}
-            fieldName="coursesAndCertificates"
-            itemTitlePrefix="Curso / Capacitación"
-            helpText="Cursos y Capacitaciones incluye talleres, simposios, diplomaturas y certificaciones de formación continua."
-            manualAdjustment={<SectionManualAdjustment sectionId="cursos" cvData={cvData} setCvData={setCvData} />}
-          />
-        )}
+        {activeTab === 'informatica' && <InformaticaSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
-        {/* TAB 6: INFORMÁTICA */}
-        {/* ========================================================================= */}
-        {activeTab === 'informatica' && (
-          <RecordFormSection
-            sectionKey="informatica"
-            sectionTitle="Informática y TICs"
-            kindKey="informatics"
-            addLabel="Agregar Informática"
-            cvData={cvData}
-            setCvData={setCvData}
-            fieldName="informatics"
-            itemTitlePrefix="Curso Informático"
-            helpText="Informática y TICs incluye cursos, herramientas de computación, lenguajes y software profesional."
-            manualAdjustment={<SectionManualAdjustment sectionId="informatica" cvData={cvData} setCvData={setCvData} />}
-          />
-        )}
-
-        {/* ========================================================================= */}
-
-
-        {/* ========================================================================= */}
-        {/* TAB 8: CERTIFICADOS ESCANEADOS (NUEVO FLUJO SIMPLIFICADO A4) */}
-        {/* ========================================================================= */}
-        {activeTab === 'certificados' && (
-          <div className="space-y-4">
-            {renderSectionToggle('certificados', 'Certificados Escaneados')}
-
-            {cvData?.sectionVisibility?.certificados !== false && (
-              <>
-            {/* 1. Selector */}
-            <div>
-              <label className="block text-xs font-black text-[var(--ui-rose)] mb-1.5 uppercase tracking-wide">
-                IDENTIFICA TU CERTIFICADO *
-              </label>
-              <select
-                value={selectedRegIdx}
-                onChange={(e) => setSelectedRegIdx(e.target.value)}
-                className={`w-full text-xs p-2.5 rounded-[${radius.card}] border-2 border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-extrabold outline-none focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[var(--color-accent-rose-muted)] transition ${elevationSystem.raised}`}
-              >
-                <option value="">-- Hacer clic para elegir un título o curso --</option>
-                {registeredItems.map((item, idx) => (
-                  <option key={idx} value={idx}>
-                    [{item.category}] {item.title} ({item.year})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* 2. Action buttons */}
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => {
-                  if (selectedRegIdx === '') {
-                    showWarning('Por favor selecciona primero tu certificado en "IDENTIFICA TU CERTIFICADO".');
-                    return;
-                  }
-                  stopCamera();
-                  setCertMode('upload');
-                  fileInputRef.current?.click();
-                }}
-                className={`p-2.5 rounded-[${radius.card}] border-2 flex items-center justify-center gap-1.5 font-black text-xs transition ${
-                  certMode === 'upload'
-                    ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.raised}'
-                    : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-surface-warm)]'
-                }`}
-              >
-                <Upload className="w-4 h-4" /> Subir Imagen
-              </button>
-              <button
-                onClick={() => {
-                  if (selectedRegIdx === '') {
-                    showWarning('Por favor selecciona primero tu certificado en "IDENTIFICA TU CERTIFICADO".');
-                    return;
-                  }
-                  startCamera();
-                }}
-                className={`p-2.5 rounded-[${radius.card}] border-2 flex items-center justify-center gap-1.5 font-black text-xs transition ${
-                  certMode === 'camera'
-                    ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.raised}'
-                    : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-surface-warm)]'
-                }`}
-              >
-                <Camera className="w-4 h-4" /> Usar Cámara
-              </button>
-            </div>
-
-            {/* 3. Camera view or File dropzone with "CLIC AQUÍ" */}
-            {certMode === 'camera' && isCameraActive ? (
-              <div className={`relative rounded-[${radius.card}] overflow-hidden bg-black flex flex-col items-center justify-center h-52`}>
-                <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
-                <button
-                  onClick={capturePhoto}
-                  className={`absolute bottom-3 flex items-center gap-1.5 px-5 py-2 font-black text-xs rounded-full transition ${button.primary}`}
-                >
-                  <Camera className="w-4 h-4" /> Capturar Foto
-                </button>
-              </div>
-            ) : (
-              <div 
-                onClick={() => {
-                  if (selectedRegIdx === '') {
-                    showWarning('Por favor selecciona primero tu certificado en "IDENTIFICA TU CERTIFICADO".');
-                    return;
-                  }
-                  fileInputRef.current?.click();
-                }}
-                className={`w-full h-28 border-2 border-dashed border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] rounded-[${radius.modal}] flex flex-col items-center justify-center cursor-pointer hover:bg-[var(--color-secondary-muted)]/30 transition group ${elevationSystem.raised}`}
-              >
-                <Upload className="w-6 h-6 text-[var(--color-secondary-text)] mb-1 group-hover:scale-110 transition duration-300" />
-                <span className="font-black text-xs text-[var(--color-accent-text)] uppercase tracking-wider">CLIC AQUÍ</span>
-                <span className="text-[10px] text-[var(--color-neutral-text-primary)] font-bold">Seleccionar archivo o foto de certificado</span>
-              </div>
-            )}
-
-            <input type="file" ref={fileInputRef} accept="image/*" onChange={handleFileUpload} className="hidden" />
-
-            {/* 4. List of Attached Certificates */}
-            <div className="pt-3 border-t-2 border-[var(--color-neutral-border)] space-y-3">
-              <span className="text-xs font-black text-[var(--color-neutral-text-primary)] uppercase tracking-wider">
-                ANEXADOS: ({cvData.certificatesScanned.length})
-              </span>
-
-              {cvData.certificatesScanned.length === 0 ? (
-                <p className={`text-xs text-[var(--color-neutral-text-primary)] font-bold italic text-center py-4 border-2 border-dashed border-[var(--color-neutral-border)] rounded-[${radius.card}] bg-[var(--ui-bg-card)]`}>
-                  No hay certificados anexados aún.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {cvData.certificatesScanned.map((cert) => (
-                    <div key={cert.id} className={`flex items-center gap-3 p-2.5 bg-[var(--ui-bg-card)] rounded-[${radius.card}] border-2 border-[var(--color-neutral-border)] ${elevationSystem.raised}`}>
-                      <img 
-                        src={cert.dataUrl || cert.imageUrl} 
-                        alt={cert.title} 
-                        style={{ transform: `rotate(${cert.rotation || 0}deg)` }}
-                        className={`w-12 h-14 object-cover rounded-[${radius.control}] border border-[var(--color-neutral-border)] flex-shrink-0`} 
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-black text-[var(--color-neutral-text-primary)] truncate">{cert.title}</p>
-                        <p className="text-[10px] text-[var(--color-neutral-text-primary)] font-bold">{cert.institution} ({cert.year})</p>
-                      </div>
-
-                      {/* Rotate button */}
-                      <button
-                        onClick={() => {
-                          setCvData(prev => ({
-                            ...prev,
-                            certificatesScanned: prev.certificatesScanned.map(c => 
-                              c.id === cert.id ? { ...c, rotation: ((c.rotation || 0) + 90) % 360 } : c
-                            )
-                          }));
-                        }}
-                        className={`flex items-center gap-1 px-2 py-1.5 rounded-[${radius.control}] bg-[var(--color-accent-amber-muted)] border border-[var(--color-accent-amber)] text-[var(--color-neutral-text-primary)] font-black text-[11px] hover:bg-[var(--color-accent-amber)] transition`}
-                        title="Girar imagen 90°"
-                      >
-                        <RotateCw className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
-                        <span>Girar ({cert.rotation || 0}°)</span>
-                      </button>
-
-                      {/* Delete button */}
-                      <button
-                        onClick={() => {
-                          const name = cert.title || 'este certificado';
-                          confirm({
-                            title: '¿Eliminar certificado?',
-                            message: `¿Estás seguro de que deseas eliminar el certificado "${name}"?`,
-                            confirmText: 'Eliminar',
-                            onConfirm: () => {
-                              setCvData(prev => ({
-                                ...prev,
-                                certificatesScanned: (prev.certificatesScanned || []).filter(c => c.id !== cert.id)
-                              }));
-                              showSuccess('Certificado eliminado.');
-                            }
-                          });
-                        }}
-                        className="p-1.5 text-[var(--color-neutral-text-primary)] hover:text-[var(--color-status-danger-text)] transition"
-                        title="Eliminar"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* CertCropperModal Panel */}
-            <CertCropperModal
-              isOpen={isCertCropperOpen}
-              onClose={() => { setIsCertCropperOpen(false); setRawCertSrc(''); }}
-              registeredItems={registeredItems}
-              selectedRegIdx={selectedRegIdx}
-              setSelectedRegIdx={setSelectedRegIdx}
-              onAcceptCropped={(croppedUrl, targetRegIdx) => {
-                const selectedItem = registeredItems[parseInt(targetRegIdx, 10)] || { title: 'CERTIFICADO', institution: '', year: '' };
-                const newCert = {
-                  id: Date.now().toString(),
-                  title: selectedItem.title,
-                  institution: selectedItem.institution,
-                  year: selectedItem.year,
-                  // dataUrl es el campo canónico: lo lee el renderer del PDF (TemplateRenderer.tsx)
-                  // y el empaquetador de assets para Drive (driveDocumentPackager.ts). imageUrl se
-                  // mantiene en paralelo solo por compatibilidad con la miniatura de este panel.
-                  dataUrl: croppedUrl,
-                  imageUrl: croppedUrl,
-                  rotation: 0
-                };
-                setCvData(prev => ({
-                  ...prev,
-                  certificatesScanned: [...prev.certificatesScanned, newCert]
-                }));
-                setRawCertSrc('');
-                setSelectedRegIdx('');
-                setIsCertCropperOpen(false);
-              }}
-              rawImageSrc={rawCertSrc}
-            />
-            <div className="pt-2 border-t border-[var(--color-neutral-border)]">
-              <SectionManualAdjustment sectionId="certificados" cvData={cvData} setCvData={setCvData} />
-            </div>
-              </>
-            )}
-          </div>
-        )}
+        {activeTab === 'certificados' && <CertificadosSection cvData={cvData} setCvData={setCvData} registeredItems={registeredItems} />}
 
         {/* ========================================================================= */}
         {/* TAB 9: FIRMA DIGITAL */}
         {/* ========================================================================= */}
-        {activeTab === 'firma' && (
-          <div className="space-y-4">
-            {renderSectionToggle('firma', 'Firma Digital')}
-
-            {cvData?.sectionVisibility?.firma !== false && (
-              <>
-
-            <div className={`p-4 bg-[var(--ui-bg-card)] rounded-[${radius.modal}] border-2 border-[var(--color-neutral-border)] space-y-3 text-center ${elevationSystem.raised}`}>
-              {cvData.signature?.dataUrl ? (
-                <div className="space-y-2">
-                  <div className={`bg-[var(--color-neutral-surface-warm)] p-3 rounded-[${radius.card}] border border-[var(--color-accent-amber)]`}>
-                    <img src={cvData.signature.dataUrl} alt="Firma" className="h-16 mx-auto object-contain" />
-                  </div>
-                  <button
-                    onClick={() => {
-                      setCvData(prev => ({
-                        ...prev,
-                        signature: {
-                          ...prev.signature,
-                          dataUrl: ''
-                        }
-                      }));
-                    }}
-                    className={`flex items-center justify-center gap-1 mx-auto px-3 py-1 bg-[var(--color-status-danger-muted)] hover:opacity-80 text-[var(--color-status-danger-text)] text-xs font-bold rounded-[${radius.control}] transition cursor-pointer`}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" /> Quitar Imagen de Firma
-                  </button>
-                </div>
-              ) : (
-                <p className="text-xs text-[var(--color-neutral-text-primary)] font-bold italic">No has dibujado o subido una imagen de firma aún.</p>
-              )}
-
-              <button
-                onClick={onOpenSignature}
-                className={`w-full flex items-center justify-center gap-2 py-2.5 text-xs font-black rounded-[${radius.card}] transition cursor-pointer ${button.primary}`}
-              >
-                <PenTool className="w-4 h-4" /> Abrir Tablero de Firma (Dibujar / Subir)
-              </button>
-            </div>
-
-            <div className={`p-4 bg-[var(--ui-bg-card)] rounded-[${radius.modal}] border-2 border-[var(--color-neutral-border)] space-y-3 ${elevationSystem.raised}`}>
-              <h4 className="text-xs font-black text-[var(--color-neutral-text-primary)] uppercase">Datos del Pie de Firma</h4>
-              
-              {/* 1. Nombre Automático (Abreviaturas / Título + Nombres + Apellidos) */}
-              <div>
-                <label className="block text-[11px] font-bold text-[var(--color-neutral-text-primary)] mb-1 flex items-center justify-between">
-                  <span>Nombre del Firmante</span>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-[var(--color-secondary-muted)] text-[var(--color-secondary-text)] font-extrabold">Automático</span>
-                </label>
-                <div className={`w-full text-xs p-2.5 rounded-[${radius.card}] border border-[var(--color-neutral-border)] bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] font-extrabold ${elevationSystem.raised}`}>
-                  {resolveDisplayName(cvData.personalInfo)}
-                </div>
-              </div>
-
-              {/* 2. Selector de Título Profesional (de sección Profesión) */}
-              {(() => {
-                const titleList: string[] = Array.from(new Set([
-                  ...(cvData.profession || []).map((p: any) => p.degree).filter(Boolean),
-                  ...(cvData.education || []).map((e: any) => e.degree).filter(Boolean)
-                ]));
-                const currentSelectedRole = cvData.signature?.signerRole !== undefined 
-                  ? cvData.signature.signerRole 
-                  : (titleList[0] || '');
-
-                return (
-                  <div>
-                    <label className="block text-[11px] font-bold text-[var(--color-neutral-text-primary)] mb-1">
-                      Título Profesional (Registros de Profesión)
-                    </label>
-                    {titleList.length > 0 ? (
-                      <select
-                        value={currentSelectedRole}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setCvData((prev: any) => ({
-                            ...prev,
-                            signature: { ...(prev.signature || {}), signerRole: val }
-                          }));
-                        }}
-                        className={`w-full text-xs p-2.5 rounded-[${radius.card}] border-2 border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[var(--color-accent-rose-muted)] cursor-pointer transition`}
-                      >
-                        {titleList.map((t, idx) => (
-                          <option key={idx} value={t}>{t}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <div className={`w-full text-xs p-2.5 rounded-[${radius.card}] border border-[var(--color-status-warning-base)]/30 bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)] font-bold`}>
-                        ⚠️ No hay títulos agregados en la sección "Títulos Profesionales".
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-
-              {/* 3. Selector de Fecha con Calendario */}
-              <div>
-                <Field 
-                  label="Fecha de Firma"
-                  type="date"
-                  value={cvData.signature?.date || new Date().toISOString().split('T')[0]}
-                  onChange={(e: any) => {
-                    const val = e.target.value;
-                    setCvData((prev: any) => ({
-                      ...prev,
-                      signature: { ...(prev.signature || {}), date: val }
-                    }));
-                  }}
-                />
-              </div>
-
-              {/* 4. Lugar / Ciudad de Emisión de la Firma */}
-              <div>
-                <Field 
-                  label="Lugar / Ciudad de Emisión de la Firma"
-                  type="text"
-                  value={cvData.signature?.signerCity || cvData.personalInfo?.cityProvince || ''}
-                  onChange={(e: any) => {
-                    const val = e.target.value;
-                    setCvData((prev: any) => ({
-                      ...prev,
-                      signature: { ...(prev.signature || {}), signerCity: val }
-                    }));
-                  }}
-                  placeholder="Ej: Salta, Argentina"
-                />
-              </div>
-            </div>
-            <div className="pt-2 border-t border-[var(--color-neutral-border)]">
-              <SectionManualAdjustment sectionId="firma" cvData={cvData} setCvData={setCvData} />
-            </div>
-              </>
-            )}
-          </div>
-        )}
-
-
+        {/* TAB 9: FIRMA DIGITAL */}
         {/* ========================================================================= */}
-        {/* TAB: NUEVA SECCIÓN PERSONALIZADA (SECCIONES PREDISEÑADAS + SECCIÓN A MEDIDA) */}
-        {/* ========================================================================= */}
+        {activeTab === 'firma' && <FirmaSection cvData={cvData} setCvData={setCvData} onOpenSignature={onOpenSignature} />}
+
         {activeTab === 'nueva_seccion' && (
           <div className="space-y-6">
             {/* 1. SECCIONES PREDISEÑADAS CON 1 CLIC */}
@@ -1517,64 +810,13 @@ export default function EditorPanel({
         {/* TAB 10: CVS GUARDADOS / ABRIR */}
         {/* ========================================================================= */}
         {activeTab === 'guardados' && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between border-b pb-2 border-[var(--color-neutral-border)]">
-              <h3 className="text-xs font-extrabold uppercase text-[var(--ui-rose)] flex items-center gap-1.5">
-                <FolderOpen className="w-4 h-4 text-[var(--ui-secondary)]" /> Abrir Mis Documentos Guardados
-              </h3>
-
-              <button
-                onClick={handleSaveFromPanel}
-                disabled={isSavingFromPanel}
-                className={`px-3 py-1.5 font-bold text-xs rounded-[${radius.card}] transition flex items-center gap-1 cursor-pointer ${button.primary}`}
-              >
-                <Save className="w-3.5 h-3.5" />
-                <span>{isSavingFromPanel ? 'Guardando...' : 'Guardar Actual'}</span>
-              </button>
-            </div>
-
-            <div className="space-y-2.5">
-              {savedList.length === 0 ? (
-                <div className={`p-6 text-center text-xs text-[var(--color-neutral-text-primary)] font-medium border-2 border-dashed border-[var(--color-neutral-border)] rounded-[${radius.card}]`}>
-                  No hay currículums guardados aún. Haz clic en "Guardar Actual" para almacenar este borrador en WebP.
-                </div>
-              ) : (
-                savedList.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`p-3.5 rounded-[${radius.card}] border border-[var(--color-neutral-border)] bg-[var(--color-neutral-surface-warm)]/50  hover:border-[var(--color-accent-purple)] transition flex items-center justify-between gap-2`}
-                  >
-                    <div className="space-y-0.5 min-w-0">
-                      <h4 className="text-xs font-black text-[var(--color-neutral-text-primary)] font-black  truncate">
-                        {item.candidate_name || item.title}
-                      </h4>
-                      <p className="text-[10px] text-[var(--color-neutral-text-primary)] font-medium font-semibold flex items-center gap-1">
-                        <Calendar className="w-3 h-3 text-[var(--color-neutral-text-primary)] font-medium" />
-                        <span>{item.dni ? `DNI: ${item.dni}` : 'Borrador'}</span>
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      <button
-                        onClick={() => handleOpenSavedFromPanel(item.id)}
-                        className={`px-3 py-1.5 font-black text-[11px] rounded-[${radius.control}] transition flex items-center gap-1 cursor-pointer ${button.primary}`}
-                      >
-                        <FolderOpen className="w-3.5 h-3.5" /> Abrir
-                      </button>
-
-                      <button
-                        onClick={() => handleDeleteSavedFromPanel(item.id, item.candidate_name || item.title)}
-                        className={`p-1.5 text-[var(--color-neutral-text-primary)] font-medium hover:text-[var(--color-status-danger-text)] rounded-[${radius.control}] hover:bg-[var(--color-neutral-border)] transition cursor-pointer`}
-                        title="Eliminar"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+          <GuardadosSection
+            savedList={savedList}
+            isSavingFromPanel={isSavingFromPanel}
+            handleSaveFromPanel={handleSaveFromPanel}
+            handleOpenSavedFromPanel={handleOpenSavedFromPanel}
+            handleDeleteSavedFromPanel={handleDeleteSavedFromPanel}
+          />
         )}
 
         {/* ========================================================================= */}
@@ -2115,386 +1357,13 @@ export default function EditorPanel({
         {/* TABS DE TARJETA PERSONAL — 6 paneles independientes */}
         {/* ========================================================================= */}
 
-        {/* TAB: EXTRAER DATOS DE CV */}
-        {activeTab === 'card_extract' && (
-          <div className="space-y-6">
-            {(() => {
-              const openTabsList = getOpenTabs();
-              const cvTabs = openTabsList.filter(t => !t.docType || t.docType === 'cv');
-
-              return (
-                <PanelSection icon={<CreditCard className="w-4 h-4 text-[var(--color-accent-text)]" />} title="Fuente de Datos del CV">
-                  <div className="p-3 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-3">
-                    {cvTabs.length === 0 ? (
-                      <div className="p-3 bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-text)]/40 rounded-[var(--radius-card)] text-xs text-[var(--color-status-warning-text)] leading-relaxed">
-                        <span className="font-bold block mb-1">⚠️ No hay ningún CV abierto en el editor</span>
-                        <span>Podés introducir los datos de tu tarjeta personal manualmente o abrir un CV para vincular sus datos.</span>
-                      </div>
-                    ) : cvTabs.length === 1 ? (
-                      <div className="p-3 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 rounded-[var(--radius-card)] text-xs text-[var(--color-secondary-text)] flex items-center justify-between">
-                        <span className="font-bold">📄 Vinculado a: "{cvTabs[0].title}"</span>
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            const loaded = await loadCVById(cvTabs[0].cvId);
-                            if (loaded) {
-                              setCvData((prev: any) => ({
-                                ...prev,
-                                sourceCvTabId: cvTabs[0].cvId,
-                                personalInfo: loaded.personalInfo,
-                                roles: loaded.roles,
-                                profession: loaded.profession
-                              }));
-                              showSuccess(`Datos vinculados desde CV "${loaded.title || 'Seleccionado'}".`);
-                            }
-                          }}
-                          className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] cursor-pointer hover:opacity-90 transition"
-                        >
-                          Vincular
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="space-y-1.5">
-                        <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">
-                          Extraer registros desde pestaña de CV:
-                        </label>
-                        <select
-                          value={cvData?.sourceCvTabId || cvTabs[0].cvId}
-                          onChange={async (e) => {
-                            const tabId = e.target.value;
-                            const loaded = await loadCVById(tabId);
-                            if (loaded) {
-                              setCvData((prev: any) => ({
-                                ...prev,
-                                sourceCvTabId: tabId,
-                                personalInfo: loaded.personalInfo,
-                                roles: loaded.roles,
-                                profession: loaded.profession
-                              }));
-                              showSuccess(`Datos vinculados desde CV "${loaded.title || 'Seleccionado'}".`);
-                            }
-                          }}
-                          className="w-full text-xs p-2.5 rounded-[var(--radius-card)] border border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer"
-                        >
-                          {cvTabs.map((t) => (
-                            <option key={t.cvId} value={t.cvId}>
-                              📄 {t.title} {t.versionLabel ? `(${t.versionLabel})` : ''}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                  </div>
-                </PanelSection>
-              );
-            })()}
-          </div>
-        )}
-
-        {/* TAB: LOGOTIPO */}
-        {activeTab === 'card_logo' && (
-          <div className="space-y-6">
-            <PanelSection icon={<Camera className="w-4 h-4 text-[var(--color-accent-text)]" />} title="Logotipo de Marca / Empresa (Opcional)">
-              <div className="p-3 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-3">
-                <div className="flex items-center gap-4 p-3 rounded-[var(--radius-card)] bg-[var(--color-secondary-muted)] border border-[var(--color-neutral-border)]">
-                  <div className={`w-16 h-12 rounded-[var(--radius-control)] overflow-hidden bg-[var(--color-neutral-surface)] flex items-center justify-center border border-[var(--color-neutral-border-strong)] shadow-[var(--shadow-raised)]`}>
-                    {cvData?.cardOverrides?.logoDataUrl ? (
-                      <img src={cvData.cardOverrides.logoDataUrl} alt="Logo" className="w-full h-full object-contain" />
-                    ) : (
-                      <Camera className="w-5 h-5 text-[var(--color-secondary-text)]" />
-                    )}
-                  </div>
-                  <div className="flex-1 space-y-1.5">
-                    <p className="text-xs font-bold text-[var(--color-secondary-text)]">
-                      {cvData?.cardOverrides?.logoDataUrl ? 'Logotipo de Marca Cargado' : 'Sin Logotipo Subido'}
-                    </p>
-                    <p className="text-[11px] text-[var(--color-neutral-text-secondary)] leading-tight">
-                      Recomendado: PNG con fondo transparente o JPG. Se recortará reutilizando el visor de imagen.
-                    </p>
-                    <div className="flex flex-wrap gap-2 pt-1">
-                      <button
-                        type="button"
-                        onClick={() => setIsLogoCropperOpen(true)}
-                        className="px-2.5 py-1 text-xs font-bold rounded-[var(--radius-control)] bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] hover:opacity-90 transition cursor-pointer flex items-center gap-1"
-                      >
-                        <Camera className="w-3.5 h-3.5" />
-                        {cvData?.cardOverrides?.logoDataUrl ? 'Cambiar / Recortar Logo' : 'Subir / Recortar Logo'}
-                      </button>
-
-                      {cvData?.cardOverrides?.logoDataUrl && (
-                        <>
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              const color = await extractDominantCornerColor(cvData.cardOverrides.logoDataUrl);
-                              setCvData((prev: any) => ({
-                                ...prev,
-                                cardOverrides: { ...(prev?.cardOverrides || {}), cardBgColor: color }
-                              }));
-                              showSuccess(`Fondo de tarjeta adaptado al color del logo (${color}).`);
-                            }}
-                            className="px-2.5 py-1 text-[11px] font-bold rounded-[var(--radius-control)] border border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--color-neutral-surface-muted)] transition cursor-pointer flex items-center gap-1"
-                            title="Extrae el color de fondo de la imagen del logo y lo asigna al fondo de la tarjeta"
-                          >
-                            <Palette className="w-3 h-3 text-[var(--color-accent-text)]" />
-                            Usar color del logo como fondo
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setCvData((prev: any) => {
-                                const copy = { ...(prev?.cardOverrides || {}) };
-                                delete copy.logoDataUrl;
-                                return { ...prev, cardOverrides: copy };
-                              });
-                              showSuccess('Logotipo quitado de la tarjeta.');
-                            }}
-                            className="px-2.5 py-1 text-[11px] font-bold rounded-[var(--radius-control)] text-[var(--color-status-error-bright)] hover:bg-[var(--color-status-error-bg)] transition cursor-pointer"
-                          >
-                            Quitar Logo
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </PanelSection>
-          </div>
-        )}
-
-        {/* TAB: DATOS DEL FRENTE */}
-        {activeTab === 'card_front' && (
-          <div className="space-y-6">
-            <PanelSection icon={<PenTool className="w-4 h-4" />} title="Datos del Frente">
-              <div className="p-4 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-3">
-                {[
-                  { field: 'fullName', label: 'Nombre Completo', placeholder: 'Ej: Juan Pérez', cvFallback: `${cvData?.personalInfo?.surname || ''} ${cvData?.personalInfo?.givenNames || ''}`.trim() || cvData?.personalInfo?.fullName || '' },
-                  { field: 'role', label: 'Cargo / Profesión', placeholder: 'Ej: Diseñador UI/UX & Desarrollador', cvFallback: cvData?.roles?.[0] || cvData?.profession?.[0]?.degree || '' },
-                  { field: 'phone', label: 'Teléfono de Contacto', placeholder: 'Ej: +54 11 1234-5678', cvFallback: cvData?.personalInfo?.phone || '' },
-                  { field: 'email', label: 'Correo Electrónico', placeholder: 'Ej: juan@ejemplo.com', cvFallback: cvData?.personalInfo?.email || '' },
-                  { field: 'website', label: 'Sitio Web / Portafolio', placeholder: 'Ej: www.midominio.com', cvFallback: cvData?.personalInfo?.website || cvData?.personalInfo?.facebook || '' },
-                  { field: 'address', label: 'Ciudad / Dirección', placeholder: 'Ej: Buenos Aires, Argentina', cvFallback: cvData?.personalInfo?.cityProvince || cvData?.personalInfo?.address || '' }
-                ].map(({ field, label, placeholder, cvFallback }) => {
-                  const hasOverride = cvData?.cardOverrides?.[field] !== undefined;
-                  const currentValue = cvData?.cardOverrides?.[field] ?? cvFallback;
-
-                  return (
-                    <div key={field} className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">{label}</label>
-                        {hasOverride && cvFallback && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setCvData((prev: any) => {
-                                const copy = { ...(prev?.cardOverrides || {}) };
-                                delete copy[field];
-                                return { ...prev, cardOverrides: copy };
-                              });
-                              showSuccess(`Valor restaurado del CV para ${label}.`);
-                            }}
-                            className="text-[10px] font-bold text-[var(--color-accent-text)] hover:underline flex items-center gap-1 cursor-pointer"
-                            title="Restaurar valor original del CV"
-                          >
-                            <RotateCw className="w-3 h-3" /> Restaurar del CV
-                          </button>
-                        )}
-                      </div>
-                      <input
-                        type="text"
-                        value={currentValue}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setCvData((prev: any) => ({
-                            ...prev,
-                            cardOverrides: { ...(prev?.cardOverrides || {}), [field]: val }
-                          }));
-                        }}
-                        placeholder={placeholder}
-                        className="w-full text-xs p-2.5 rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none focus:border-[var(--color-accent-base)] transition"
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </PanelSection>
-          </div>
-        )}
-
-        {/* TAB: DATOS DEL DORSO */}
-        {activeTab === 'card_back' && (
-          <div className="space-y-6">
-            <PanelSection icon={<Sparkles className="w-4 h-4" />} title="Datos del Dorso (Marca & Eslogan)">
-              <div className="p-4 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-3">
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">Nombre de Marca / Empresa</label>
-                  <input
-                    type="text"
-                    value={cvData?.cardOverrides?.brandName ?? ''}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setCvData((prev: any) => ({
-                        ...prev,
-                        cardOverrides: { ...(prev?.cardOverrides || {}), brandName: val }
-                      }));
-                    }}
-                    placeholder="Ej: Pérez Studio / Mi Marca Personal"
-                    className="w-full text-xs p-2.5 rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">Eslogan / Frase Corta</label>
-                  <input
-                    type="text"
-                    value={cvData?.cardOverrides?.tagline ?? cvData?.personalInfo?.quote ?? ''}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setCvData((prev: any) => ({
-                        ...prev,
-                        cardOverrides: { ...(prev?.cardOverrides || {}), tagline: val }
-                      }));
-                    }}
-                    placeholder="Ej: Soluciones de Diseño de Alta Calidad"
-                    className="w-full text-xs p-2.5 rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none"
-                  />
-                </div>
-              </div>
-            </PanelSection>
-          </div>
-        )}
-
-        {/* TAB: QR INTERACTIVO */}
-        {activeTab === 'card_qr' && (
-          <div className="space-y-6">
-            <PanelSection icon={<QrCode className="w-4 h-4" />} title="Código QR Interactivo">
-              <div className="p-4 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-3">
-                <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">Modo del Código QR</label>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 p-2.5 rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] cursor-pointer hover:bg-[var(--color-neutral-surface-muted)] transition">
-                    <input
-                      type="radio"
-                      name="qrMode"
-                      value="vcard"
-                      checked={(cvData?.qrMode || 'vcard') === 'vcard'}
-                      onChange={() => {
-                        setCvData((prev: any) => ({ ...prev, qrMode: 'vcard' }));
-                      }}
-                      className="accent-[var(--color-accent-base)]"
-                    />
-                    <div className="text-xs">
-                      <span className="font-bold text-[var(--color-neutral-text-primary)] block">vCard (Guardar contacto en agenda)</span>
-                      <span className="text-[11px] text-[var(--color-neutral-text-secondary)]">Al escanear abre la agenda para guardar nombre, teléfono y mail.</span>
-                    </div>
-                  </label>
-
-                  <label className="flex items-center gap-2 p-2.5 rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] cursor-pointer hover:bg-[var(--color-neutral-surface-muted)] transition">
-                    <input
-                      type="radio"
-                      name="qrMode"
-                      value="public_link"
-                      checked={cvData?.qrMode === 'public_link'}
-                      onChange={() => {
-                        setCvData((prev: any) => ({ ...prev, qrMode: 'public_link' }));
-                      }}
-                      className="accent-[var(--color-accent-base)]"
-                    />
-                    <div className="text-xs">
-                      <span className="font-bold text-[var(--color-neutral-text-primary)] block">Link Directo a Perfil Web</span>
-                      <span className="text-[11px] text-[var(--color-neutral-text-secondary)]">Al escanear abre la versión web publicada del CV.</span>
-                    </div>
-                  </label>
-                </div>
-              </div>
-            </PanelSection>
-          </div>
-        )}
-
-        {/* TAB: TAMAÑO & SANGRADO */}
-        {activeTab === 'card_size' && (
-          <div className="space-y-6">
-            <div id="card-size-section">
-              <PanelSection icon={<Layout className="w-4 h-4" />} title="Tamaño Físico de Tarjeta + Sangrado + Marcas de Corte">
-                <div className="p-4 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-4">
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">Seleccionar Formato Estándar</label>
-                    <select
-                      value={cvData?.cardSize || 'tarjeta_estandar'}
-                      onChange={(e) => handlePaperSizeChange(e.target.value)}
-                      className="w-full text-xs p-2.5 rounded-[var(--radius-card)] border border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer"
-                    >
-                      {Object.values(PAGE_SIZES).filter(s => s.category === 'tarjeta').map((s) => (
-                        <option key={s.id} value={s.id}>
-                          📇 {s.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Slider de Sangrado para Imprenta Profesional (3-5mm) */}
-                  <div className="space-y-2 pt-3 border-t border-[var(--color-neutral-border)]">
-                    <div className="flex items-center justify-between text-xs font-bold text-[var(--color-neutral-text-primary)]">
-                      <span>Sangrado de Imprenta (Bleed)</span>
-                      <span className="text-[var(--color-secondary-bright)] font-black">{cvData?.cardBleedMm ?? 3} mm</span>
-                    </div>
-                    <input
-                      type="range"
-                      min={3}
-                      max={5}
-                      step={1}
-                      value={cvData?.cardBleedMm ?? 3}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value, 10);
-                        setCvData((prev: any) => ({
-                          ...prev,
-                          cardBleedMm: val
-                        }));
-                      }}
-                      className="w-full h-1.5 bg-[var(--ui-bg-panel)] rounded-[var(--radius-control)] appearance-none cursor-pointer accent-[var(--color-secondary-base)]"
-                    />
-                    <span className="text-[10px] text-[var(--color-neutral-text-secondary)] leading-tight block">
-                      Estándar profesional: 3 mm habitual / 5 mm para guillotina con margen extendido.
-                    </span>
-                  </div>
-                </div>
-              </PanelSection>
-
-              {/* Plantilla Base Predefinida */}
-              <PanelSection icon={<Sparkles className="w-4 h-4" />} title="Plantilla base predefinida">
-                <div className="grid grid-cols-2 gap-2">
-                  {getAllPresets().map((preset) => {
-                    const isSelected = (cvData?.activePresetId || 'tarjeta-personal') === preset.id;
-                    return (
-                      <button
-                        key={preset.id}
-                        onClick={() => {
-                          triggerPresetTransition(preset.name, 'preset');
-                          setCvData((prev: any) => applyPresetLevel(prev, 'preset', { presetId: preset.id }));
-                        }}
-                        className={`p-2.5 rounded-[${radius.card}] border text-left transition flex flex-col justify-between cursor-pointer ${
-                          isSelected
-                            ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
-                            : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-1.5 gap-1">
-                          <span className="text-[11px] font-bold text-[var(--color-neutral-text-primary)] truncate">{preset.name}</span>
-                          {isSelected && <Check className="w-3.5 h-3.5 text-[var(--ui-text-primary)] flex-shrink-0" />}
-                        </div>
-                        <div className="flex gap-1.5 items-center">
-                          <div className={`w-4 h-4 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: preset.palette.primary }} />
-                          <div className={`w-4 h-4 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: preset.palette.accent }} />
-                          <div className={`w-4 h-4 rounded-full border border-[var(--ui-border)] ${elevationSystem.raised}`} style={{ backgroundColor: preset.palette.secondary }} />
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </PanelSection>
-            </div>
-          </div>
-        )}
+        {/* TABS DE TARJETA PERSONAL — Componentizados */}
+        {activeTab === 'card_extract' && <CardExtractSection cvData={cvData} setCvData={setCvData} />}
+        {activeTab === 'card_logo' && <CardLogoSection cvData={cvData} setCvData={setCvData} />}
+        {activeTab === 'card_front' && <CardFrontSection cvData={cvData} setCvData={setCvData} />}
+        {activeTab === 'card_back' && <CardBackSection cvData={cvData} setCvData={setCvData} />}
+        {activeTab === 'card_qr' && <CardQrSection cvData={cvData} setCvData={setCvData} />}
+        {activeTab === 'card_size' && <CardSizeSection cvData={cvData} setCvData={setCvData} />}
 
         {/* Format Confirmation Modal */}
         {isFormatModalOpen && pendingFormatId && (
@@ -2515,25 +1384,7 @@ export default function EditorPanel({
             }}
           />
         )}
-        {/* PhotoCropperModal para Logo de Tarjeta */}
-        {isLogoCropperOpen && (
-          <PhotoCropperModal
-            isOpen={isLogoCropperOpen}
-            onClose={() => setIsLogoCropperOpen(false)}
-            onSavePhoto={(croppedDataUrl: string) => {
-              setCvData((prev: any) => ({
-                ...prev,
-                cardOverrides: { ...(prev?.cardOverrides || {}), logoDataUrl: croppedDataUrl }
-              }));
-              showSuccess('Logotipo guardado correctamente en la tarjeta.');
-            }}
-            currentPhoto={cvData?.cardOverrides?.logoDataUrl || ''}
-            title="Recortador de Logotipo de Marca"
-            canvasWidth={320}
-            canvasHeight={200}
-            exportFormat="image/png"
-          />
-        )}
+        
       </div>
     </div>
   );

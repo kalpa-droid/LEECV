@@ -183,6 +183,12 @@ function stripJsxExpressions(code) {
       uiGovernanceWarnings++;
     }
   }
+
+  // 6. Gobernanza de Datos (DAL): Ningún componente .tsx puede hacer supabase.from(
+  if (file.endsWith('.tsx') && /\bsupabase\.from\s*\(/.test(content)) {
+    console.error(`🚨 DAL Governance Error: [${file}] usa 'supabase.from()'. Los componentes de UI no deben consultar datos directamente.`);
+    violationsCount++;
+  }
 }
 
 function scanDir(dir, currentModule = null) {
