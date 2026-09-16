@@ -302,11 +302,18 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {/* TAB 1.2: REDES SOCIALES & ENLACES */}
         {/* ========================================================================= */}
-        {/* TAB 1.2: REDES SOCIALES & ENLACES */}
+        {activeTab === 'redes' && <RedesSection cvData={cvData} setCvData={setCvData} />}
+
         {/* ========================================================================= */}
         {/* TAB 1.5: COMPETENCIAS CLAVE */}
         {/* ========================================================================= */}
+        {activeTab === 'competencias' && <CompetenciasSection cvData={cvData} setCvData={setCvData} />}
+
+        {/* ========================================================================= */}
         {/* TAB: RESUMEN PROFESIONAL */}
+        {/* ========================================================================= */}
+        {activeTab === 'resumen' && <ResumenSection cvData={cvData} setCvData={setCvData} />}
+
         {/* ========================================================================= */}
         {/* TAB: OBJETIVO PROFESIONAL */}
         {/* ========================================================================= */}
@@ -317,7 +324,8 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {/* TAB: PORTAFOLIO / TRABAJOS DESTACADOS */}
         {/* ========================================================================= */}
-        {/* TAB: PORTAFOLIO / TRABAJOS DESTACADOS */}
+        {activeTab === 'portafolio' && <PortafolioSection cvData={cvData} setCvData={setCvData} />}
+
         {/* ========================================================================= */}
         {/* TAB: HABILIDADES TÉCNICAS (HARD SKILLS) */}
         {/* ========================================================================= */}
@@ -360,7 +368,7 @@ export default function EditorPanel({
         {activeTab === 'firma' && <FirmaSection cvData={cvData} setCvData={setCvData} onOpenSignature={onOpenSignature} />}
 
         {activeTab === 'nueva_seccion' && <NuevaSeccionSection cvData={cvData} setCvData={setCvData} activeTab={activeTab} changeActiveTab={changeActiveTab} showSuccess={showSuccess} showWarning={showWarning} triggerPresetTransition={triggerPresetTransition} getEffectiveCoverFeaturedItems={getEffectiveCoverFeaturedItems} />}
-        {activeTab?.startsWith('personalizada-') && <PersonalizadaSection cvData={cvData} setCvData={setCvData} activeTab={activeTab} changeActiveTab={changeActiveTab} showSuccess={showSuccess} showWarning={showWarning} triggerPresetTransition={triggerPresetTransition} getEffectiveCoverFeaturedItems={getEffectiveCoverFeaturedItems} confirm={confirm} savedList={savedList} isSavingFromPanel={isSavingFromPanel} handleSaveFromPanel={handleSaveFromPanel} handleOpenSavedFromPanel={handleOpenSavedFromPanel} handleDeleteSavedFromPanel={handleDeleteSavedFromPanel} />}
+        { (activeTab?.startsWith('personalizada-') || (cvData?.customSections || []).some((cs: any) => cs.id === activeTab)) && <PersonalizadaSection cvData={cvData} setCvData={setCvData} activeTab={activeTab} changeActiveTab={changeActiveTab} showSuccess={showSuccess} showWarning={showWarning} triggerPresetTransition={triggerPresetTransition} getEffectiveCoverFeaturedItems={getEffectiveCoverFeaturedItems} confirm={confirm} savedList={savedList} isSavingFromPanel={isSavingFromPanel} handleSaveFromPanel={handleSaveFromPanel} handleOpenSavedFromPanel={handleOpenSavedFromPanel} handleDeleteSavedFromPanel={handleDeleteSavedFromPanel} />}
         {activeTab === 'diseno' && <DisenoSection cvData={cvData} setCvData={setCvData} activeTab={activeTab} changeActiveTab={changeActiveTab} showSuccess={showSuccess} showWarning={showWarning} triggerPresetTransition={triggerPresetTransition} getEffectiveCoverFeaturedItems={getEffectiveCoverFeaturedItems} />}
         {activeTab === 'portada' && <PortadaSection cvData={cvData} setCvData={setCvData} activeTab={activeTab} changeActiveTab={changeActiveTab} showSuccess={showSuccess} showWarning={showWarning} triggerPresetTransition={triggerPresetTransition} getEffectiveCoverFeaturedItems={getEffectiveCoverFeaturedItems} />}
 
