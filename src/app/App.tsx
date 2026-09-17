@@ -746,6 +746,15 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           triggerAutoFit={handleUserAutoFitClick}
           isAutoFitMode={isAutoFitMode}
           cycleUITheme={cycleUITheme}
+          mobileTabState={mobileTabState}
+          onToggleMobileTab={(tab) => {
+            setMobileTabState(tab);
+            if (tab === 'editor') {
+              setIsPanelOpen(true);
+            } else {
+              handleUserAutoFitClick();
+            }
+          }}
         />
       }
       dockSlot={

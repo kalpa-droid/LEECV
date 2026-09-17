@@ -93,8 +93,20 @@ function extractJsxSectionBindings(filePath) {
 const editorResult = extractJsxSectionBindings(editorPanelPath);
 const personalResult = extractJsxSectionBindings(personalInfoPath);
 
+const sectionsDir = path.join(ROOT, 'src/modules/cv-builder/components/editor/sections');
+const sectionFiles = fs.readdirSync(sectionsDir).filter(f => f.endsWith('.tsx'));
+const sectionResults = sectionFiles.map(file => extractJsxSectionBindings(path.join(sectionsDir, file)));
+
 const allBoundIds = new Set([...editorResult.boundIds, ...personalResult.boundIds]);
-const hasCustomSlot = editorResult.hasDynamicCustomSectionSlot || personalResult.hasDynamicCustomSectionSlot;
+let hasCustomSlot = editorResult.hasDynamicCustomSectionSlot || personalResult.hasDynamicCustomSectionSlot;
+
+let allErrors = [...editorResult.errors, ...personalResult.errors];
+
+sectionResults.forEach(res => {
+  res.boundIds.forEach(id => allBoundIds.add(id));
+  if (res.hasDynamicCustomSectionSlot) hasCustomSlot = true;
+  allErrors = allErrors.concat(res.errors);
+});
 
 let missingSections = [];
 
@@ -123,8 +135,6 @@ if (hasCustomSlot) {
   console.log(`  ❌ Secciones Personalizadas Dinámicas (cs.id) -> FALTA slot de ajuste manual.`);
   missingSections.push('customSections-dynamic');
 }
-
-const allErrors = [...editorResult.errors, ...personalResult.errors];
 
 if (allErrors.length > 0) {
   console.error(`\n🚨 SE ENCONTRARON ERRORES DE DESCALCE O PROPS NULAS EN AST:`);

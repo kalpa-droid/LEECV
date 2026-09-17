@@ -91,25 +91,37 @@ export default function CVPreview({ cvData, setCvData: _setCvData, activeTab, zo
         presetType={transitionState.presetType}
       />
 
+      {/* Contenedor adaptativo geométricamente proporcional al zoom */}
       <div 
-        className="w-[794px] max-w-full my-2 no-print transition-transform duration-150 ease-out origin-top mx-auto shrink-0"
-        style={{ transform: `scale(${zoomLevel})` }}
+        className="my-2 no-print mx-auto shrink-0 flex justify-center"
+        style={{ 
+          width: `${Math.round(794 * zoomLevel)}px`,
+          minHeight: `${Math.round(1123 * zoomLevel)}px`
+        }}
       >
-        <ErrorBoundary 
-          compact 
-          title="Inconveniente en la vista previa" 
-          subtitle="Ocurrió un problema al procesar la plantilla del PDF. Tu información guardada no se ve afectada."
+        <div 
+          className="w-[794px] shrink-0 transition-transform duration-150 ease-out origin-top-left"
+          style={{ 
+            transform: `scale(${zoomLevel})`,
+            width: '794px'
+          }}
         >
-          <VectorDocViewer 
-            key={`${activePreset.id}_v${presetsVersion}`} 
-            document={renderedDocument} 
-            zoomLevel={zoomLevel}
-            activeTab={activeTab}
-            sections={sections}
-            preset={activePreset}
-            layoutOverrides={debouncedCvData?.layout}
-          />
-        </ErrorBoundary>
+          <ErrorBoundary 
+            compact 
+            title="Inconveniente en la vista previa" 
+            subtitle="Ocurrió un problema al procesar la plantilla del PDF. Tu información guardada no se ve afectada."
+          >
+            <VectorDocViewer 
+              key={`${activePreset.id}_v${presetsVersion}`} 
+              document={renderedDocument} 
+              zoomLevel={zoomLevel}
+              activeTab={activeTab}
+              sections={sections}
+              preset={activePreset}
+              layoutOverrides={debouncedCvData?.layout}
+            />
+          </ErrorBoundary>
+        </div>
       </div>
     </div>
   );

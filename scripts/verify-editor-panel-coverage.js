@@ -48,7 +48,7 @@ for (const entry of SECTION_CATALOG) {
     // Para secciones independientes, buscamos match exacto en EditorPanel de activeTab === 'sectionId'
     const matchesSectionId = editorPanelContent.includes(`activeTab === '${sectionId}'`) ||
       editorPanelContent.includes(`activeTab === "${sectionId}"`) ||
-      (sectionId.startsWith('personalizada-') && editorPanelContent.includes("activeTab.startsWith('personalizada-')"));
+      (sectionId.startsWith('personalizada-') && editorPanelContent.includes("activeTab?.startsWith('personalizada-')"));
 
     if (matchesSectionId) {
       console.log(`  ✓ Cobertura Formulario [Sección: ${sectionId}] -> Enrutamiento activeTab OK.`);
@@ -61,7 +61,7 @@ for (const entry of SECTION_CATALOG) {
 
 // Verificación de enrutamiento dinámico para secciones personalizadas (customSections)
 totalChecks++;
-const hasCustomSectionsDynamicRouting = editorPanelContent.includes('s.id === activeTab') && editorPanelContent.includes('<RecordFormSection');
+const hasCustomSectionsDynamicRouting = editorPanelContent.includes('cs.id === activeTab') && editorPanelContent.includes('<PersonalizadaSection');
 if (hasCustomSectionsDynamicRouting) {
   console.log(`  ✓ Cobertura Formulario [Secciones Personalizadas / Custom] -> Enrutamiento dinámico (cs.id === activeTab) OK.`);
 } else {

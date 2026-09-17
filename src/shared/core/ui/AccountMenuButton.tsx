@@ -59,7 +59,7 @@ export const AccountMenuButton: React.FC<AccountMenuButtonProps> = ({
       </button>
 
       {isOpen && (
-        <div className={`absolute right-0 mt-2 w-56 rounded-[${radius.modal}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.floating} p-1.5 z-50 space-y-1 animate-fadeIn`}>
+        <div className={`absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-56 max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-[${radius.modal}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.floating} p-1.5 z-50 space-y-1 animate-fadeIn`}>
           {/* Insignia del Plan Activo */}
           <div className={`px-3 py-1.5 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] flex items-center justify-between`}>
             <span className="text-[10px] text-[var(--ui-text-secondary)] font-bold">

@@ -15,7 +15,9 @@ import {
   ShieldCheck,
   Globe,
   LayoutDashboard,
-  Sparkles
+  Sparkles,
+  Eye,
+  Edit3
 } from 'lucide-react';
 import { elevationSystem, radius, UI_THEME_META, buttonUnavailable, button } from '../../../shared/core/uiDesignSystem';
 import { ThemeToggleButton } from '../../../shared/core/ui/ThemeToggleButton';
@@ -53,6 +55,8 @@ export interface NavbarProps {
   triggerAutoFit: () => void;
   isAutoFitMode?: boolean;
   cycleUITheme: () => void;
+  mobileTabState?: string;
+  onToggleMobileTab?: (tab: 'editor' | 'preview') => void;
 }
 
 export default function Navbar({ 
@@ -78,7 +82,9 @@ export default function Navbar({
   setZoomLevel,
   triggerAutoFit,
   isAutoFitMode = true,
-  cycleUITheme
+  cycleUITheme,
+  mobileTabState = 'editor',
+  onToggleMobileTab
 }: NavbarProps) {
   const isMobile = useIsMobile();
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
@@ -123,15 +129,48 @@ export default function Navbar({
           />
         </div>
 
-        {/* CLUSTER CENTRO: Botón de Tema + Controles de Zoom (Visibles en PC y Móvil) */}
+        {/* CLUSTER CENTRO: Botón de Tema + Selector Móvil / Controles de Zoom PC */}
         <div className="flex items-center gap-1.5 justify-center flex-1 min-w-0">
           {/* Botón Selector de Tema Cromático */}
           <ThemeToggleButton currentThemeId={currentThemeId} onToggle={cycleUITheme} size="sm" />
 
-          <div className="w-px h-5 bg-[var(--ui-border)] mx-0.5" />
+          {/* Selector de modo en celular (< 768px): [ 📝 Editar | 👁️ Ver ] */}
+          <div className="md:hidden flex items-center bg-[var(--ui-bg-dock)] p-0.5 rounded-full border border-[var(--ui-dock-border)] shrink-0">
+            <button
+              type="button"
+              onClick={() => onToggleMobileTab?.('editor')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black transition cursor-pointer ${
+                mobileTabState === 'editor'
+                  ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.raised}`
+                  : 'text-[var(--ui-dock-text-muted)] hover:text-[var(--ui-dock-text)]'
+              }`}
+              title="Panel de edición"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>Editar</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onToggleMobileTab?.('preview');
+                triggerAutoFit();
+              }}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black transition cursor-pointer ${
+                mobileTabState === 'preview'
+                  ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.raised}`
+                  : 'text-[var(--ui-dock-text-muted)] hover:text-[var(--ui-dock-text)]'
+              }`}
+              title="Vista previa del documento"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              <span>Ver</span>
+            </button>
+          </div>
 
-          {/* Controles de Zoom y Deshacer/Rehacer (Visibles en Escritorio y Celular) */}
-          <div className="flex items-center gap-1.5 min-w-0">
+          <div className="hidden md:block w-px h-5 bg-[var(--ui-border)] mx-0.5" />
+
+          {/* Controles de Zoom y Deshacer/Rehacer (Visibles en Escritorio y Tablet) */}
+          <div className="hidden md:flex items-center gap-1.5 min-w-0">
             <ZoomControls
               zoomLevel={zoomLevel}
               setZoomLevel={setZoomLevel}
@@ -151,20 +190,20 @@ export default function Navbar({
             <button
               type="button"
               onClick={onOpenAtsCheck}
-              className="flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full border bg-[var(--ui-bg-panel)] border-[var(--color-status-warning-text)]/60 text-[var(--color-status-warning-text)] hover:bg-[var(--color-accent-amber-muted)] font-black text-xs shrink-0 transition active:scale-95 cursor-pointer"
+              className="hidden sm:flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full border bg-[var(--ui-bg-panel)] border-[var(--color-status-warning-text)]/60 text-[var(--color-status-warning-text)] hover:bg-[var(--color-accent-amber-muted)] font-black text-xs shrink-0 transition active:scale-95 cursor-pointer"
               title="Auditoría Predictiva ATS"
             >
               <Sparkles className="w-4 h-4 flex-shrink-0 text-[var(--color-status-warning-text)]" />
-              <span className="hidden sm:inline">ATS</span>
+              <span>ATS</span>
             </button>
           )}
 
-          {/* PÍLDORA 0: PUBLICAR EN LA WEB */}
+          {/* PÍLDORA 0: PUBLICAR EN LA WEB (Visible en tablet/desktop; en móvil está dentro del menú de acciones) */}
           {hasCapability(docType, 'web_publish') ? (
             <button
               type="button"
               onClick={onOpenCloudStatus}
-              className={`flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-full transition cursor-pointer active:scale-95 font-black text-xs shrink-0 ${button.success}`}
+              className={`hidden md:flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-full transition cursor-pointer active:scale-95 font-black text-xs shrink-0 ${button.success}`}
               title={t.navbar.publishTitle}
             >
               <Globe className="w-4 h-4 flex-shrink-0" />
@@ -175,7 +214,7 @@ export default function Navbar({
               type="button"
               disabled
               title="La Publicación en la Web es para documentos con respaldo en la nube — los libros se descargan listos para imprimir"
-              className={`${buttonUnavailable} flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-full text-xs shrink-0`}
+              className={`${buttonUnavailable} hidden md:flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-full text-xs shrink-0`}
             >
               <Globe className="w-4 h-4 flex-shrink-0" />
               <span className="hidden sm:inline">{t.navbar.publishButton}</span>
@@ -199,7 +238,7 @@ export default function Navbar({
 
             {/* Dropdown de Acciones */}
             {isActionMenuOpen && (
-              <div className={`absolute right-0 mt-2 w-64 rounded-[${radius.modal}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.floating} p-1.5 z-50 space-y-1 animate-fadeIn`}>
+              <div className={`absolute right-0 sm:right-0 max-sm:-right-10 mt-2 w-[calc(100vw-2rem)] max-w-64 max-h-[calc(100dvh-4.5rem)] overflow-y-auto rounded-[${radius.modal}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.floating} p-1.5 z-50 space-y-1 animate-fadeIn`}>
                 
                 {/* 0. Abrir Documentos Guardados */}
                 <button
