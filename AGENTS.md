@@ -104,3 +104,14 @@ los 7 pasos. Un push directo rechazado por GitHub (paso 2 sobre `main`
 directamente) no es un error a resolver reintentando — es la señal de que
 hay que abrir una rama y una PR en su lugar.
 
+## Regla 7 — Planificación previa obligatoria antes de modificar código
+
+Cada vez que hablemos o se plantee un cambio o nueva funcionalidad para la web:
+1. **NO modificar código de inmediato ni ejecutarse sin consultar ("no mandarse de una")**.
+2. **Presentar primero un plan claro y conciso**:
+   - Qué se va a hacer y objetivo del cambio.
+   - Qué componentes/archivos se intervendrán.
+   - Qué precauciones o validaciones se considerarán.
+3. **Esperar el visto bueno o indicaciones del usuario** antes de escribir código o aplicar cambios.
+
+

@@ -48,14 +48,19 @@ export const AppShell: React.FC<AppShellProps> = ({
           {panelSlot}
         </div>
 
-        <div className={`flex-1 bg-[var(--ui-preview-bg)] h-full overflow-y-auto p-2 sm:p-4 justify-center items-start relative ${
-          mobileTabState === 'editor' && isPanelOpen ? 'hidden md:flex' : 'flex'
-        }`}>
+        <div 
+          id="preview-viewport-container"
+          className={`flex-1 bg-[var(--ui-preview-bg)] h-full overflow-auto p-2 sm:p-4 justify-center items-start relative touch-pan-x touch-pan-y overscroll-contain ${
+            mobileTabState === 'editor' && isPanelOpen ? 'hidden md:flex' : 'flex'
+          }`}
+        >
           {mainSlot}
         </div>
       </main>
 
-      <DocumentTabsBar {...tabsBarProps} docType={docType} />
+      <div className="hidden md:block w-full shrink-0">
+        <DocumentTabsBar {...tabsBarProps} docType={docType} />
+      </div>
 
       {modalsSlot}
 

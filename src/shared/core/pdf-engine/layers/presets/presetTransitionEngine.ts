@@ -9,7 +9,7 @@
  * de Pluma Antigua / Lápiz Rotatorio durante el refresco del documento PDF.
  */
 
-import { useState, useEffect, useRef, useSyncExternalStore } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { COVER_PRESETS_CATALOG } from './coverPresetCatalog';
 
 export interface PresetTransitionState {
@@ -132,11 +132,13 @@ export function getPresetTransitionSnapshot(): PresetTransitionState {
  * en las propiedades clave de presets de cvData.
  */
 export function usePresetTransition(cvData?: any): PresetTransitionState {
-  const transitionState = useSyncExternalStore(
-    subscribeToPresetTransition,
-    getPresetTransitionSnapshot,
-    getPresetTransitionSnapshot
-  );
+  const [transitionState, setTransitionState] = useState<PresetTransitionState>(getPresetTransitionSnapshot);
+
+  useEffect(() => {
+    return subscribeToPresetTransition(() => {
+      setTransitionState(getPresetTransitionSnapshot());
+    });
+  }, []);
 
   const prevPresetsRef = useRef<{
     activePresetId?: string;

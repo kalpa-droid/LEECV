@@ -79,6 +79,8 @@ export const blankCVBase = {
   }
 };
 
+import { DRAFT_CV_ID, DRAFT_CARD_ID } from '../shared/core/documents/documentLifecycleEngine';
+
 export function createBlankCVTemplate(overrides?: Record<string, any>) {
   const merged = { ...blankCVBase, ...overrides };
   const docType = inferDocumentTypeId(merged);
@@ -87,7 +89,7 @@ export function createBlankCVTemplate(overrides?: Record<string, any>) {
 
   return {
     ...blankCVBase,
-    id: generateDocumentId(prefix as any),
+    id: overrides?.id || generateDocumentId(prefix as any),
     title: overrides?.title || defaultTitle,
     doc_type_id: docType,
     docType: docType,

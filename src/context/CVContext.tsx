@@ -6,7 +6,8 @@ import { navigation } from '../shared/core/utils/navigation';
 import { CVData } from '../types/cv';
 
 import { getDocTypeForRoute, inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
-import { setTabDirty } from '../shared/core/documents/tabStore';
+import { setTabDirty, updateTabTitle } from '../shared/core/documents/tabStore';
+import { computeAutoDocumentTitle } from '../shared/core/documents/documentLifecycleEngine';
 
 interface CVContextType {
   cvData: CVData;
@@ -101,18 +102,28 @@ export function CVProvider({ children }: { children: ReactNode }) {
         historyMapRef.current.set(nextId, entry);
       }
 
+      let finalData = nextData;
+      const docType = inferDocumentTypeId(nextData);
+      if (docType !== 'book') {
+        const computedTitle = computeAutoDocumentTitle(nextData, docType as any, { isDirty: true });
+        if (computedTitle && nextData.title !== computedTitle) {
+          finalData = { ...nextData, title: computedTitle };
+          updateTabTitle(nextId, computedTitle, nextData.version_label);
+        }
+      }
+
       const currentStack = entry.stack.slice(0, entry.index + 1);
       const lastItem = currentStack[currentStack.length - 1];
 
-      if (JSON.stringify(lastItem) !== JSON.stringify(nextData)) {
-        currentStack.push(nextData);
+      if (JSON.stringify(lastItem) !== JSON.stringify(finalData)) {
+        currentStack.push(finalData);
         if (currentStack.length > 30) currentStack.shift();
         entry.stack = currentStack;
         entry.index = currentStack.length - 1;
         setHistoryState(n => n + 1);
       }
 
-      return nextData;
+      return finalData;
     });
   }, [getDocId]);
 

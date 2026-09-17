@@ -536,9 +536,9 @@ if (fs.existsSync(navbarPath)) {
     'Navbar.tsx no contiene la estructura de píldoras ovaladas de menú'
   );
   check(
-    'Navbar.tsx integra ZoomControls y opción de Política de Privacidad',
-    navContent.includes('ZoomControls') && navContent.includes('onOpenPrivacy'),
-    'Navbar.tsx no integra ZoomControls o la Política de Privacidad'
+    'Navbar.tsx integra opción de Política de Privacidad (ZoomControls retirado de la barra por motor gestual y rueda)',
+    navContent.includes('onOpenPrivacy'),
+    'Navbar.tsx no integra la Política de Privacidad'
   );
 }
 

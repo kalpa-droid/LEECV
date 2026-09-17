@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useSyncExternalStore } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 // ⚠️ NO envolver estos dos imports en React.lazy()/Suspense. @react-pdf/renderer usa su
 // propio reconciler para pdf(document).toBlob() (ver VectorDocViewer.tsx) y no soporta
 // React.lazy/Suspense — produce "Cannot read properties of null (reading 'props')".
@@ -14,13 +14,36 @@ import { VectorDocViewer } from '../../../shared/core/pdf-engine/VectorDocViewer
 import { ErrorBoundary } from '../../../shared/core/ui/ErrorBoundary';
 import { usePresetTransition } from '../../../shared/core/pdf-engine/layers/presets/presetTransitionEngine';
 import { PresetTransitionOverlay } from '../../../shared/core/ui/PresetTransitionOverlay';
+import { elevationSystem } from '../../../shared/core/uiDesignSystem';
 
-export default function CVPreview({ cvData, setCvData: _setCvData, activeTab, zoomLevel = 0.85 }: { cvData?: any; setCvData?: any; activeTab?: string; zoomLevel?: number }) {
+export interface CVPreviewProps {
+  cvData?: any;
+  setCvData?: any;
+  activeTab?: string;
+  zoomLevel?: number;
+  onZoomChange?: (action: number | ((prev: number) => number)) => void;
+}
+
+export default function CVPreview({ 
+  cvData, 
+  setCvData: _setCvData, 
+  activeTab, 
+  zoomLevel = 0.85,
+  onZoomChange 
+}: CVPreviewProps) {
+  const previewContainerRef = useRef<HTMLDivElement>(null);
+  const paperSheetRef = useRef<HTMLDivElement>(null);
+
   // Motor de transición de presets con animación de Pluma Antigua / Lápiz Rotatorio
   const transitionState = usePresetTransition(cvData);
 
-  // Suscripción reactiva con useSyncExternalStore para re-renderizado automático sin F5 al cambiar plantillas
-  const presetsVersion = useSyncExternalStore(subscribeToPresetChanges, getPresetsSnapshot, getPresetsSnapshot);
+  // Suscripción reactiva para re-renderizado automático sin F5 al cambiar plantillas
+  const [presetsVersion, setPresetsVersion] = useState<number>(getPresetsSnapshot);
+  useEffect(() => {
+    return subscribeToPresetChanges(() => {
+      setPresetsVersion(getPresetsSnapshot());
+    });
+  }, []);
 
   // Debounce de cvData para evitar re-generar el PDF en cada pulsación de tecla
   const [debouncedCvData, setDebouncedCvData] = useState(cvData);
@@ -53,6 +76,79 @@ export default function CVPreview({ cvData, setCvData: _setCvData, activeTab, zo
     fontFamily: theme.fontFamily || 'Arial, sans-serif'
   }), [theme.fontFamily]);
 
+  // MOTOR DE ZOOM POR RUEDA (PC) Y GESTOS TÁCTILES (CELULAR)
+  useEffect(() => {
+    const container = previewContainerRef.current;
+    if (!container || !onZoomChange) return;
+
+    // 1. ZOOM POR RUEDA DIRECTA (PC): sin apretar tecla Ctrl sobre la hoja
+    const handleWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isOverPaper = target && paperSheetRef.current && paperSheetRef.current.contains(target);
+
+      if (isOverPaper) {
+        // Intercepta solo el área de la hoja para hacer zoom directo sin alterar el navegador
+        e.preventDefault();
+        e.stopPropagation();
+
+        const zoomDelta = -e.deltaY * 0.0012;
+        onZoomChange((prev: number) => {
+          const next = Math.min(Math.max(prev + zoomDelta, 0.35), 2.5);
+          return Number(next.toFixed(3));
+        });
+      }
+      // Si el cursor está fuera de la hoja (en márgenes o barra de scroll lateral),
+      // el evento no se previene, permitiendo scroll vertical continuo normal.
+    };
+
+    // 2. PINCH-TO-ZOOM MULTI-TOUCH (CELULAR): 2 dedos ajustan zoom del visor de forma aislada
+    let initialPinchDistance: number | null = null;
+    let initialZoomOnPinch = zoomLevel;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        initialPinchDistance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
+        initialZoomOnPinch = zoomLevel;
+      } else {
+        initialPinchDistance = null;
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && initialPinchDistance !== null) {
+        e.preventDefault(); // Prevenir zoom de toda la interfaz del navegador
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        const currentDist = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
+        const ratio = currentDist / initialPinchDistance;
+
+        const newZoom = Math.min(Math.max(initialZoomOnPinch * ratio, 0.3), 2.5);
+        onZoomChange(Number(newZoom.toFixed(3)));
+      }
+      // Con 1 dedo se permite desplazamiento nativo libre en 2D (pan X e Y)
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) {
+        initialPinchDistance = null;
+      }
+    };
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      container.removeEventListener('wheel', handleWheel);
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [onZoomChange, zoomLevel]);
+
   const renderedDocument = useMemo(() => {
     if (activePreset.pageCategory === 'tarjeta') {
       return <CardSheetDocument card={cardData} preset={activePreset} />;
@@ -81,7 +177,8 @@ export default function CVPreview({ cvData, setCvData: _setCvData, activeTab, zo
 
   return (
     <div 
-      className="w-full min-h-full flex flex-col items-center print-wrapper relative"
+      ref={previewContainerRef}
+      className="w-full min-h-full flex flex-col items-center justify-start print-wrapper relative touch-pan-x touch-pan-y"
       style={dynamicThemeStyle}
     >
       {/* Capa de Transición de Preset con Pluma Antigua / Lápiz Rotatorio */}
@@ -91,16 +188,18 @@ export default function CVPreview({ cvData, setCvData: _setCvData, activeTab, zo
         presetType={transitionState.presetType}
       />
 
-      {/* Contenedor adaptativo geométricamente proporcional al zoom */}
+      {/* Contenedor adaptativo geométricamente proporcional al zoom y centrado sin cortes */}
       <div 
-        className="my-2 no-print mx-auto shrink-0 flex justify-center"
+        ref={paperSheetRef}
+        className={`my-3 sm:my-5 no-print mx-auto shrink-0 flex justify-center ${elevationSystem.overlay} transition-[width,height] duration-75 ease-out`}
         style={{ 
           width: `${Math.round(794 * zoomLevel)}px`,
-          minHeight: `${Math.round(1123 * zoomLevel)}px`
+          minHeight: `${Math.round(1123 * zoomLevel)}px`,
+          maxWidth: 'none'
         }}
       >
         <div 
-          className="w-[794px] shrink-0 transition-transform duration-150 ease-out origin-top-left"
+          className="w-[794px] shrink-0 transition-transform duration-75 ease-out origin-top-left"
           style={{ 
             transform: `scale(${zoomLevel})`,
             width: '794px'

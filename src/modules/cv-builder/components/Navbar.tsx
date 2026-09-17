@@ -21,7 +21,6 @@ import {
 } from 'lucide-react';
 import { elevationSystem, radius, UI_THEME_META, buttonUnavailable, button } from '../../../shared/core/uiDesignSystem';
 import { ThemeToggleButton } from '../../../shared/core/ui/ThemeToggleButton';
-import { ZoomControls } from '../../../shared/core/ui/ZoomControls';
 import { AccountMenuButton } from '../../../shared/core/ui/AccountMenuButton';
 import { UndoRedoControls } from '../../../shared/core/ui/UndoRedoControls';
 import { useIsMobile } from '../../../shared/core/ui/useIsMobile';
@@ -125,11 +124,11 @@ export default function Navbar({
             layout={isMobile ? 'isotipo' : 'horizontal'}
             currentUiTheme={currentThemeId}
             animatedRainbow={true}
-            className={isMobile ? 'h-7 w-7' : 'h-7 sm:h-8'}
+            className={isMobile ? 'h-7 w-auto' : 'h-7 sm:h-8 w-auto'}
           />
         </div>
 
-        {/* CLUSTER CENTRO: Botón de Tema + Selector Móvil / Controles de Zoom PC */}
+        {/* CLUSTER CENTRO: Botón de Tema + Selector Móvil / Deshacer y Rehacer */}
         <div className="flex items-center gap-1.5 justify-center flex-1 min-w-0">
           {/* Botón Selector de Tema Cromático */}
           <ThemeToggleButton currentThemeId={currentThemeId} onToggle={cycleUITheme} size="sm" />
@@ -169,15 +168,8 @@ export default function Navbar({
 
           <div className="hidden md:block w-px h-5 bg-[var(--ui-border)] mx-0.5" />
 
-          {/* Controles de Zoom y Deshacer/Rehacer (Visibles en Escritorio y Tablet) */}
+          {/* Controles de Deshacer/Rehacer en Barra (Sin botones redundantes de zoom) */}
           <div className="hidden md:flex items-center gap-1.5 min-w-0">
-            <ZoomControls
-              zoomLevel={zoomLevel}
-              setZoomLevel={setZoomLevel}
-              triggerAutoFit={triggerAutoFit}
-              isAutoFitMode={isAutoFitMode}
-              isMobile={isMobile}
-            />
             <UndoRedoControls isMobile={isMobile} />
           </div>
         </div>

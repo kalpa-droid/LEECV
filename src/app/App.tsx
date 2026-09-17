@@ -26,7 +26,6 @@ import PhotoCropperModal from '../modules/cv-builder/components/PhotoCropperModa
 import SignatureModal from '../modules/cv-builder/components/SignatureModal';
 import WizardModal from '../modules/cv-builder/components/WizardModal';
 import SavedCVsModal from '../modules/cv-builder/components/SavedCVsModal';
-import { ZoomControls } from '../shared/core/ui/ZoomControls';
 import SaveModal from '../modules/cv-builder/components/SaveModal';
 import SaveAsVersionModal from '../modules/cv-builder/components/SaveAsVersionModal';
 import CloudStatusModal from '../modules/cv-builder/components/CloudStatusModal';
@@ -792,7 +791,13 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
             <span className="text-xs font-bold uppercase tracking-wider text-[var(--ui-text-primary)]">Cargando Visor Vectorial de Alta Resolución…</span>
           </div>
         }>
-          <CVPreview cvData={cvData} setCvData={setCvData} activeTab={activeTab} zoomLevel={zoomLevel} />
+          <CVPreview 
+            cvData={cvData} 
+            setCvData={setCvData} 
+            activeTab={activeTab} 
+            zoomLevel={zoomLevel} 
+            onZoomChange={setZoomLevel}
+          />
         </Suspense>
       }
       tabsBarProps={{
