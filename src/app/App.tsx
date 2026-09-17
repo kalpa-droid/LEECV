@@ -336,8 +336,15 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         const lastTab = remaining[remaining.length - 1];
         await handleSwitchDocumentTab(lastTab.cvId, lastTab.docType || 'cv');
       } else {
-        resetToBlankCV();
-        setActiveTab('personales');
+        // 0 pestañas abiertas: volver a la landing page a elegir qué crear,
+        // no armar un CV en blanco en silencio — antes esto era exactamente
+        // lo que producía "siempre aparece un CV nuevo" al cerrar todo.
+        if (onNavigate) {
+          onNavigate('/');
+        } else if (typeof window !== 'undefined') {
+          window.history.pushState({}, '', '/');
+          window.dispatchEvent(new PopStateEvent('popstate'));
+        }
       }
     }
   };

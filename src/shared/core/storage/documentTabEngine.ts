@@ -88,7 +88,14 @@ export function removeOpenTab(cvId: string): OpenTabItem[] {
 export function syncTabTitleFromSave(cvId: string, newTitle: string, docType: 'cv' | 'business_card' | 'book' | 'cover_letter' = 'cv'): OpenTabItem[] {
   const current = getOpenTabs();
   const existing = current.find(t => t.cvId === cvId);
-  return addOpenTab(cvId, newTitle, undefined, existing?.docType || docType);
+  // Si el documento no tiene una pestaña abierta (ej: se acaba de cerrar a
+  // propósito, un instante antes de que este guardado se dispare por la
+  // clausura vieja de saveCV()), guardar NUNCA debe reabrirla — eso es
+  // exactamente lo que resucitaba la pestaña que el usuario acababa de
+  // cerrar. Guardar es sobre el documento; la lista de pestañas abiertas
+  // es una decisión del usuario que guardar no tiene por qué revertir.
+  if (!existing) return current;
+  return addOpenTab(cvId, newTitle, undefined, existing.docType);
 }
 
 export function generateDocumentId(prefix: 'cv' | 'book' | 'card' | 'cover_letter' = 'cv'): string {

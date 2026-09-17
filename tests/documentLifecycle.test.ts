@@ -5,6 +5,7 @@ import {
   addOpenTab, 
   getOpenTabs, 
   closeDocumentEverywhere,
+  syncTabTitleFromSave,
   saveOpenTabs
 } from '../src/shared/core/storage/documentTabEngine';
 
@@ -61,5 +62,31 @@ describe('documentLifecycle (Gestión de Documentos & Pestañas)', () => {
     expect(remaining.length).toBe(1);
     expect(remaining[0].cvId).toBe(idToKeep);
     expect(getOpenTabs().map(t => t.cvId)).not.toContain(idToDelete);
+  });
+
+  it('REGRESIÓN: guardar el documento recién cerrado (clausura vieja de saveCV) no debe resucitar su pestaña', async () => {
+    // Reproduce el bug real: cerrar una pestaña, y justo después (como pasa
+    // en handleSwitchDocumentTab, que llama a saveCV() sobre el cvData
+    // todavía viejo ANTES de cargar el documento al que se está cambiando)
+    // el motor recibe un intento de guardado para el documento que se
+    // acaba de cerrar. Eso nunca debe volver a agregarlo a la lista.
+    const closedId = generateDocumentId('cv');
+    const otherId = generateDocumentId('cv');
+
+    addOpenTab(closedId, 'Doc que se cierra');
+    addOpenTab(otherId, 'Doc que queda');
+    expect(getOpenTabs().length).toBe(2);
+
+    const remaining = await closeDocumentEverywhere(closedId, { alsoDeleteFromStorage: false });
+    expect(remaining.map(t => t.cvId)).not.toContain(closedId);
+
+    // Este es el paso que las 10 correcciones anteriores no simulaban:
+    // el guardado automático del documento recién cerrado, disparado por
+    // la clausura vieja de cvData en saveCV().
+    const afterSave = syncTabTitleFromSave(closedId, 'Doc que se cierra', 'cv');
+
+    expect(afterSave.map(t => t.cvId)).not.toContain(closedId);
+    expect(getOpenTabs().map(t => t.cvId)).not.toContain(closedId);
+    expect(getOpenTabs().map(t => t.cvId)).toContain(otherId);
   });
 });
