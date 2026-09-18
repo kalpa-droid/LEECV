@@ -356,12 +356,13 @@ export function inferDocumentTypeId(docData: any): 'cv' | 'business_card' | 'boo
   }
 
   const id = String(docData.id || '').toLowerCase();
-  if (id.startsWith('card_') || id.startsWith('doc_business_card_')) return 'business_card';
-  if (id.startsWith('book_') || id.startsWith('doc_book_')) return 'book';
-  if (id.startsWith('cover_letter_') || id.startsWith('doc_cover_letter_')) return 'cover_letter';
+  if (id.startsWith('card_') || id.startsWith('doc_business_card_') || id === 'draft_card') return 'business_card';
+  if (id.startsWith('book_') || id.startsWith('doc_book_') || id === 'draft_book') return 'book';
+  if (id.startsWith('cover_letter_') || id.startsWith('doc_cover_letter_') || id === 'draft_cover_letter') return 'cover_letter';
+  if (id === 'draft_cv') return 'cv';
 
   const presetId = String(docData.activePresetId || '').toLowerCase();
-  if (presetId === 'tarjeta-personal' || (docData.cardSize && String(docData.cardSize).startsWith('tarjeta_'))) return 'business_card';
+  if (presetId === 'tarjeta-personal') return 'business_card';
   if (presetId === 'carta-clasica' || presetId === 'carta-presentacion') return 'cover_letter';
   if (docData.bookMode) return 'book';
 
