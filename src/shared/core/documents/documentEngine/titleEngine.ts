@@ -15,7 +15,8 @@ export function generateDocumentId(prefix: string): string {
   
   const decimas = Math.floor(now.getMilliseconds() / 100);
   
-  return `doc_${prefix}_${YYYY}${MM}${DD}_${HH}${mm}${ss}_${decimas}`;
+  const randomStr = Math.random().toString(36).substring(2, 5);
+  return `doc_${prefix}_${YYYY}${MM}${DD}_${HH}${mm}${ss}_${decimas}_${randomStr}`;
 }
 
 export function deriveDocumentTitle(docType: string, docData: any): string {

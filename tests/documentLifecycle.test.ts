@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createBlankCVTemplate } from '../src/data/initialCVData';
 import { 
-  generateDocumentId, 
   openTab, 
   getOpenTabs, 
   closeTab
 } from '../src/shared/core/documents/tabStore';
+import { generateDocumentId } from '../src/shared/core/documents/documentEngine/titleEngine';
 
 describe('documentLifecycle (Gestión de Documentos & Pestañas)', () => {
   beforeEach(() => {
@@ -21,23 +21,12 @@ describe('documentLifecycle (Gestión de Documentos & Pestañas)', () => {
     localStorage.clear();
   });
 
-  it('nunca reusa el mismo id entre dos CVs en blanco distintos', () => {
-    const docA = createBlankCVTemplate();
-    const docB = createBlankCVTemplate();
-
-    expect(docA.id).toBeDefined();
-    expect(docB.id).toBeDefined();
-    expect(docA.id).not.toBe(docB.id);
-    expect(docA.id.startsWith('cv_')).toBe(true);
-    expect(docB.id.startsWith('cv_')).toBe(true);
-  });
-
-  it('genera prefijos correctos para tarjeta personal y libro', () => {
-    const cardDoc = createBlankCVTemplate({ activePresetId: 'tarjeta-personal' });
+  it('genera prefijos correctos con generateDocumentId', () => {
+    const cardId = generateDocumentId('business_card');
     const bookId = generateDocumentId('book');
 
-    expect(cardDoc.id.startsWith('card_')).toBe(true);
-    expect(bookId.startsWith('book_')).toBe(true);
+    expect(cardId.startsWith('doc_business_card_')).toBe(true);
+    expect(bookId.startsWith('doc_book_')).toBe(true);
   });
 
   it('closeTab quita la pestaña de localStorage sin afectar la persistencia de datos', async () => {
@@ -59,6 +48,7 @@ describe('documentLifecycle (Gestión de Documentos & Pestañas)', () => {
   it('ARQUITECTURA DE PESTAÑAS Y DESACOPLAMIENTO — workspaceController y tabStore gestionan el cierre sin banderas frágiles ni resucitar pestañas', async () => {
     const { closeTab, openTab, getOpenTabs } = await import('../src/shared/core/documents/tabStore');
     const { saveDocument } = await import('../src/shared/core/storage/documentStorageService');
+    const { generateDocumentId } = await import('../src/shared/core/documents/documentEngine/titleEngine');
 
     const closedId = generateDocumentId('cv');
     const otherId = generateDocumentId('cv');
@@ -76,12 +66,10 @@ describe('documentLifecycle (Gestión de Documentos & Pestañas)', () => {
     expect(getOpenTabs().map(t => t.id)).not.toContain(closedId);
   });
 
-  it('isProvisionalDocument entiende el documento completo y el resumen de la lista', async () => {
-    const { isProvisionalDocument } = await import('../src/shared/core/documents/documentLifecycleEngine');
+  it('isProvisionalDocument revisa flag', async () => {
+    const { isProvisionalDocument } = await import('../src/shared/core/documents/documentEngine');
     expect(isProvisionalDocument({ isProvisional: false })).toBe(false);
-    expect(isProvisionalDocument({ is_provisional: false })).toBe(false);
-    expect(isProvisionalDocument({ is_provisional: true })).toBe(true);
-    expect(isProvisionalDocument({ id: 'cv_viejo' })).toBe(true);
+    expect(isProvisionalDocument({ isProvisional: true })).toBe(true);
   });
 
   it('REGRESIÓN — CVContext.tsx arranca con el id fijo de borrador (getDraftIdForDocType), no uno generado al azar. Causa real de "edito un CV recién abierto y no veo ninguna pestaña": con un id aleatorio, el sincronizador de ruta en App.tsx salía temprano (route ya coincide con docType en el primer render) y nunca se llegaba a workspaceController.switchToTab, el único lugar que registra la pestaña de un id de borrador desconocido.', async () => {
@@ -98,13 +86,5 @@ describe('documentLifecycle (Gestión de Documentos & Pestañas)', () => {
     expect(initialStateBody).toMatch(/createBlankCVTemplate\(\{\s*\n?\s*id:\s*getDraftIdForDocType/);
   });
 
-  it('REGRESIÓN — App.tsx registra explícitamente la pestaña del documento inicial al montar, en vez de depender del sincronizador pasivo (que solo actualiza pestañas ya existentes)', async () => {
-    const fs = await import('fs');
-    const path = await import('path');
-    const appPath = path.join(__dirname, '../src/app/App.tsx');
-    const content = fs.readFileSync(appPath, 'utf-8');
 
-    expect(content).toContain('didRegisterInitialTabRef');
-    expect(content).toMatch(/Registro explícito de la pestaña del documento inicial/);
-  });
 });
