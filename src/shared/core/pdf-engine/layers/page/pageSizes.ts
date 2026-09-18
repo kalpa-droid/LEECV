@@ -54,3 +54,17 @@ export function makeCustomCardSize(widthMm: number, heightMm: number): PageSize 
     widthMm, heightMm, label: `Personalizada (${widthMm} × ${heightMm} mm)`, category: 'tarjeta'
   });
 }
+
+const MM_TO_PX_AT_96DPI = 3.779527559;
+
+/**
+ * Convierte el tamaño físico de lienzo ya definido (la única fuente de verdad)
+ * a píxeles CSS a 96 DPI para que los visores lo utilicen sin declarar medidas propias.
+ */
+export function resolveDocumentCanvasPx(pageSizeId: string = 'a4'): { widthPx: number; heightPx: number } {
+  const size = getPageSize(pageSizeId);
+  return {
+    widthPx: Math.round(size.widthMm * MM_TO_PX_AT_96DPI),
+    heightPx: Math.round(size.heightMm * MM_TO_PX_AT_96DPI)
+  };
+}

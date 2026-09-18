@@ -15,6 +15,7 @@ import { ErrorBoundary } from '../../../shared/core/ui/ErrorBoundary';
 import { usePresetTransition } from '../../../shared/core/pdf-engine/layers/presets/presetTransitionEngine';
 import { PresetTransitionOverlay } from '../../../shared/core/ui/PresetTransitionOverlay';
 import { elevationSystem } from '../../../shared/core/uiDesignSystem';
+import { resolveDocumentCanvasPx } from '../../../shared/core/pdf-engine/layers/page/pageSizes';
 
 export interface CVPreviewProps {
   cvData?: any;
@@ -22,6 +23,9 @@ export interface CVPreviewProps {
   activeTab?: string;
   zoomLevel?: number;
   onZoomChange?: (action: number | ((prev: number) => number)) => void;
+  containerRef?: React.Ref<HTMLDivElement>;
+  paperSheetRef?: React.Ref<HTMLDivElement>;
+  pageSizeId?: string;
 }
 
 export default function CVPreview({ 
@@ -29,10 +33,16 @@ export default function CVPreview({
   setCvData: _setCvData, 
   activeTab, 
   zoomLevel = 0.85,
-  onZoomChange 
+  onZoomChange,
+  containerRef: externalContainerRef,
+  paperSheetRef: externalPaperSheetRef,
+  pageSizeId = 'a4'
 }: CVPreviewProps) {
-  const previewContainerRef = useRef<HTMLDivElement>(null);
-  const paperSheetRef = useRef<HTMLDivElement>(null);
+  const fallbackContainerRef = useRef<HTMLDivElement>(null);
+  const fallbackPaperSheetRef = useRef<HTMLDivElement>(null);
+
+  const previewContainerRef = (externalContainerRef as React.RefObject<HTMLDivElement | null>) || fallbackContainerRef;
+  const paperSheetRef = (externalPaperSheetRef as React.RefObject<HTMLDivElement | null>) || fallbackPaperSheetRef;
 
   // Motor de transición de presets con animación de Pluma Antigua / Lápiz Rotatorio
   const transitionState = usePresetTransition(cvData);
@@ -175,6 +185,8 @@ export default function CVPreview({
     );
   }, [activePreset, sections, cardData, debouncedCvData]);
 
+  const { widthPx, heightPx } = useMemo(() => resolveDocumentCanvasPx(pageSizeId), [pageSizeId]);
+
   return (
     <div 
       ref={previewContainerRef}
@@ -193,16 +205,16 @@ export default function CVPreview({
         ref={paperSheetRef}
         className={`my-1 sm:my-5 no-print mx-auto shrink-0 flex justify-center ${elevationSystem.overlay} transition-[width,height] duration-75 ease-out`}
         style={{ 
-          width: `${Math.round(794 * zoomLevel)}px`,
-          minHeight: `${Math.round(1123 * zoomLevel)}px`,
+          width: `${Math.round(widthPx * zoomLevel)}px`,
+          minHeight: `${Math.round(heightPx * zoomLevel)}px`,
           maxWidth: 'none'
         }}
       >
         <div 
-          className="w-[794px] shrink-0 transition-transform duration-75 ease-out origin-top-left"
+          className="shrink-0 transition-transform duration-75 ease-out origin-top-left"
           style={{ 
             transform: `scale(${zoomLevel})`,
-            width: '794px'
+            width: `${widthPx}px`
           }}
         >
           <ErrorBoundary 

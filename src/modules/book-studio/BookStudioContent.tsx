@@ -16,6 +16,7 @@ import { openTab, OpenTab } from '../../shared/core/documents/tabStore';
 import { generateDocumentId } from '../../shared/core/documents/documentEngine/titleEngine';
 import { getPendingDocumentToOpen, clearPendingDocumentToOpen } from '../../shared/core/storage/pendingDocumentHandoff';
 import { radius, button } from '../../shared/core/uiDesignSystem';
+import { useDocumentViewport } from '../../shared/core/viewport';
 
 interface BookStudioContentProps {
   currentUiTheme?: string;
@@ -61,21 +62,10 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
     }
     return activeTabId && activeTabId.startsWith('book-') ? activeTabId : generateDocumentId('book');
   });
-  const [bookZoom, setBookZoom] = useState<number>(1);
-  const triggerBookAutoFit = React.useCallback(() => {
-    if (typeof window !== 'undefined') {
-      const isMobile = window.innerWidth < 768;
-      const padding = isMobile ? 16 : 48;
-      const sidebarWidth = isMobile ? 0 : (isPanelOpen ? 450 : 96);
-      const availableWidth = Math.max(280, window.innerWidth - sidebarWidth - padding);
-      const idealScale = Math.min(Math.max(availableWidth / 480, 0.4), 1.6);
-      setBookZoom(Number(idealScale.toFixed(2)));
-    }
-  }, [isPanelOpen]);
-
-  useEffect(() => {
-    triggerBookAutoFit();
-  }, [triggerBookAutoFit]);
+  const viewport = useDocumentViewport({
+    pageSizeId: 'a5',
+    safetyPaddingPx: 48
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [options, setOptions] = useState<BookImpositionOptions>(DEFAULT_BOOK_IMPOSITION_OPTIONS);
@@ -152,9 +142,10 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
           onPrint={() => setActiveStepTab('book_preview_export')}
           onOpenShareAppModal={() => {}}
           onOpenCloudStatus={() => {}}
-          zoomLevel={bookZoom}
-          setZoomLevel={setBookZoom}
-          triggerAutoFit={triggerBookAutoFit}
+          zoomLevel={viewport.zoomLevel}
+          setZoomLevel={viewport.setZoomLevel}
+          triggerAutoFit={viewport.fitAndCenter}
+          isAutoFitMode={viewport.isAutoFitMode}
           cycleUITheme={cycleUITheme}
           isLoggedIn={isLoggedIn}
           onAuthToggle={onAuthToggle}
@@ -237,14 +228,14 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
         </div>
       }
       mainSlot={
-        <div className="w-full h-full flex flex-col items-center justify-center p-4">
+        <div ref={viewport.containerRef} className="w-full h-full flex flex-col items-center justify-center p-4">
           {selectedFile ? (
             <BookPreviewStep
               options={options}
               setOptions={handleOptionsChange}
               selectedFile={selectedFile}
               pdfPageCount={pdfPageCount}
-              zoomScale={bookZoom}
+              zoomScale={viewport.zoomLevel}
               pdfDoc={pdfDoc}
               onConfirm={() => setActiveStepTab('book_preview_export')}
               activeStep={activeStepTab}

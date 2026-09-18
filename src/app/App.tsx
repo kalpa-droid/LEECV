@@ -64,6 +64,7 @@ import { initUpdateEngine, onUpdateReady } from '../shared/core/pwa/updateEngine
 import { trackPageView } from '../shared/core/analytics/analyticsService';
 import { getDocTypeForRoute, getRouteForDocType, getDefaultTitleForDocType, inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
 import { UpdateToast } from '../shared/core/ui/UpdateToast';
+import { useDocumentViewport } from '../shared/core/viewport';
 
 import { procesarRetornoPago } from '../modules/payments/paymentService';
 
@@ -252,47 +253,19 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 
   const [isPanelOpen, setIsPanelOpen] = useState(true);
 
-  // Zoom and Responsive A4 Auto-Fit state
-  const [zoomLevel, setZoomLevel] = useState(0.85);
-  const [isAutoFitMode, setIsAutoFitMode] = useState(true);
+  const activeDocType: 'cv' | 'business_card' | 'book' | 'cover_letter' =
+    currentRoute === '/crear-carta' || cvData?.activePresetId === 'carta-presentacion' || (cvData as any)?.docType === 'cover_letter'
+      ? 'cover_letter'
+      : cvData?.activePresetId === 'tarjeta-personal'
+      ? 'business_card'
+      : 'cv';
 
-  const triggerAutoFit = React.useCallback(() => {
-    if (typeof window !== 'undefined') {
-      const isMobile = window.innerWidth < 768;
-      const padding = isMobile ? 8 : 48;
-      const sidebarWidth = isMobile ? 0 : (isPanelOpen ? 500 : 96);
-      const availableWidth = Math.max(280, window.innerWidth - sidebarWidth - padding);
-      const a4WidthPx = 794;
-      
-      const calculatedScale = Math.min(Math.max(availableWidth / a4WidthPx, 0.25), 2.0);
-      setZoomLevel(Number(calculatedScale.toFixed(2)));
-    }
-  }, [isPanelOpen]);
+  const activePageSizeId = activeDocType === 'business_card' ? ((cvData as any)?.cardSize || 'tarjeta_estandar') : 'a4';
 
-  const handleUserAutoFitClick = React.useCallback(() => {
-    setIsAutoFitMode(true);
-    triggerAutoFit();
-  }, [triggerAutoFit]);
-
-  const handleZoomChange = React.useCallback((action: number | ((prev: number) => number)) => {
-    setIsAutoFitMode(false);
-    setZoomLevel(action);
-  }, []);
-
-  useEffect(() => {
-    if (isAutoFitMode) {
-      triggerAutoFit();
-      const timer = setTimeout(triggerAutoFit, 300);
-      const handleResize = () => triggerAutoFit();
-      window.addEventListener('resize', handleResize);
-      window.addEventListener('orientationchange', handleResize);
-      return () => {
-        clearTimeout(timer);
-        window.removeEventListener('resize', handleResize);
-        window.removeEventListener('orientationchange', handleResize);
-      };
-    }
-  }, [isPanelOpen, isAutoFitMode, triggerAutoFit]);
+  const viewport = useDocumentViewport({
+    pageSizeId: activePageSizeId,
+    safetyPaddingPx: 48
+  });
 
   const [isPhotoCropperOpen, setIsPhotoCropperOpen] = useState(false);
   const [isSignatureOpen, setIsSignatureOpen] = useState(false);
@@ -688,13 +661,6 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     );
   }
 
-  const activeDocType: 'cv' | 'business_card' | 'book' | 'cover_letter' =
-    currentRoute === '/crear-carta' || cvData?.activePresetId === 'carta-presentacion' || (cvData as any)?.docType === 'cover_letter'
-      ? 'cover_letter'
-      : cvData?.activePresetId === 'tarjeta-personal'
-      ? 'business_card'
-      : 'cv';
-
   return (
     <AppShell
       docType={activeDocType}
@@ -739,10 +705,10 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           isLoggedIn={!!currentProfile}
           userRole={currentProfile?.role || 'candidate'}
           isSaving={isSaving}
-          zoomLevel={zoomLevel}
-          setZoomLevel={handleZoomChange}
-          triggerAutoFit={handleUserAutoFitClick}
-          isAutoFitMode={isAutoFitMode}
+          zoomLevel={viewport.zoomLevel}
+          setZoomLevel={viewport.setZoomLevel}
+          triggerAutoFit={viewport.fitAndCenter}
+          isAutoFitMode={viewport.isAutoFitMode}
           cycleUITheme={cycleUITheme}
           mobileTabState={mobileTabState}
           onToggleMobileTab={(tab) => {
@@ -750,10 +716,10 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
             if (tab === 'editor') {
               setIsPanelOpen(true);
             } else {
-              handleUserAutoFitClick();
+              viewport.fitAndCenter();
               if (typeof window !== 'undefined') {
                 requestAnimationFrame(() => {
-                  setTimeout(handleUserAutoFitClick, 120);
+                  setTimeout(viewport.fitAndCenter, 120);
                 });
               }
             }
@@ -799,8 +765,11 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
             cvData={cvData} 
             setCvData={setCvData} 
             activeTab={activeTab} 
-            zoomLevel={zoomLevel} 
-            onZoomChange={setZoomLevel}
+            zoomLevel={viewport.zoomLevel} 
+            onZoomChange={viewport.setZoomLevel}
+            containerRef={viewport.containerRef}
+            paperSheetRef={viewport.paperSheetRef}
+            pageSizeId={activePageSizeId}
           />
         </Suspense>
       }
