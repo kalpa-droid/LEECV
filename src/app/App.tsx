@@ -5,6 +5,7 @@ import EditorPanel from '../modules/cv-builder/components/EditorPanel';
 const CVPreview = lazy(() => import('../modules/cv-builder/components/CVPreview'));
 import { FileText, CreditCard, Palette, Plus, X, Sparkles, ChevronRight } from 'lucide-react';
 import { getOpenTabs, openTab as addOpenTab, closeTab as removeOpenTab, updateTabTitle, OpenTab as OpenTabItem, TABS_CHANGED_EVENT } from '../shared/core/documents/tabStore';
+import { useDocumentTabs } from '../shared/core/documents/useDocumentTabs';
 import { generateDocumentId, computeAutoDocumentTitle, getDraftIdForDocType, isProvisionalDocument, markAsConfirmed, hasRealContent } from '../shared/core/documents/documentEngine';
 import * as workspaceController from '../shared/core/documents/workspaceController';
 import { capabilitiesGate } from '../shared/core/documents/documentEngine/capabilitiesGate';
@@ -315,32 +316,15 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const [isAtsModalOpen, setIsAtsModalOpen] = useState(false);
   const [atsResult, setAtsResult] = useState<AtsPreflightResult | null>(null);
 
-  // Hidratado desde el almacén en el primer render: si no, la barra arranca vacía
-  // y solo se llena cuando algún evento dispara setTabs.
-  const [tabs, setTabs] = useState<OpenTabItem[]>(() => getOpenTabs());
-  const activeCvId = cvData?.id || '';
-
-  // Registro de la pestaña del documento inicial — UNA sola vez al montar.
-  // (Reactivo sería un error: al cerrar la última pestaña cvData sigue en memoria
-  // y este efecto la resucitaría. Ver ensureDocumentTab en workspaceController.)
-  const didRegisterInitialTabRef = useRef(false);
-  useEffect(() => {
-    if (didRegisterInitialTabRef.current || !activeCvId) return;
-    didRegisterInitialTabRef.current = true;
-    setTabs(workspaceController.ensureDocumentTab(activeCvId, inferDocumentTypeId(cvData) as any, cvData));
-  }, [activeCvId]);
-
-  // Renombrado: mantiene el título/versión de la pestaña activa alineado con el
-  // documento. Solo ACTUALIZA una pestaña existente (updateTabTitle no crea).
-  useEffect(() => {
-    if (isSwitchingDocument || !activeCvId) return;
-    const docType = inferDocumentTypeId(cvData);
-    if (docType === 'book') return; // el libro tiene título congelado por capability
-    const title = computeAutoDocumentTitle(docType as any, cvData);
-    updateTabTitle(activeCvId, title, cvData?.version_label);
-  }, [activeCvId, cvData?.title, cvData?.version_label, isSwitchingDocument]);
-
-
+  // Gestión unificada y desacoplada de pestañas mediante el custom hook useDocumentTabs
+  const { tabs, setTabs, activeCvId } = useDocumentTabs({
+    cvData,
+    isSwitchingDocument,
+    currentRoute,
+    hasPendingChanges,
+    setCvData,
+    setIsSwitchingDocument
+  });
 
   /**
    * Crea un documento en blanco Y registra su pestaña explícitamente.
@@ -358,15 +342,6 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       setTabs(getOpenTabs());
     }
   }, [resetToBlankCV]);
-
-
-
-  // Bus de eventos: sincronizar pestañas cuando el motor de guardado actualiza títulos
-  useEffect(() => {
-    const syncTabsFromEngine = () => setTabs(getOpenTabs());
-    window.addEventListener(TABS_CHANGED_EVENT, syncTabsFromEngine);
-    return () => window.removeEventListener(TABS_CHANGED_EVENT, syncTabsFromEngine);
-  }, []);
 
   const goToLandingPage = React.useCallback(() => {
     if (onNavigate) {

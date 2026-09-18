@@ -84,14 +84,17 @@ describe('motor de pestañas', () => {
     expect(shell.slice(Math.max(0, idx - 120), idx)).not.toContain('hidden md:block');
   });
 
-  it('GUARDIA DE CABLEADO — App.tsx hidrata las pestañas y registra la inicial al montar', async () => {
+  it('GUARDIA DE CABLEADO — App.tsx delega en useDocumentTabs para hidratar, registrar y actualizar pestañas', async () => {
     const fs = await import('fs');
     const path = await import('path');
     const app = fs.readFileSync(path.join(__dirname, '../src/app/App.tsx'), 'utf-8');
-    expect(app).toMatch(/useState<OpenTabItem\[\]>\(\(\) => getOpenTabs\(\)\)/);
-    expect(app).toContain('workspaceController.ensureDocumentTab(');
-    expect(app).toContain('didRegisterInitialTabRef');
-    expect(app).toContain('updateTabTitle(activeCvId');
+    const hook = fs.readFileSync(path.join(__dirname, '../src/shared/core/documents/useDocumentTabs.ts'), 'utf-8');
+
+    expect(app).toContain('useDocumentTabs({');
+    expect(hook).toMatch(/useState<OpenTabItem\[\]>\(\(\) => getOpenTabs\(\)\)/);
+    expect(hook).toContain('ensureDocumentTab(');
+    expect(hook).toContain('didRegisterInitialTabRef');
+    expect(hook).toContain('updateTabTitle(');
   });
 });
 

@@ -59,18 +59,21 @@ allPassed &= checkFileForRegex(
   'App.tsx must use canVersionByJob from capabilitiesGate'
 );
 
-// 4. Pestañas: App.tsx hidrata el almacén y registra la pestaña inicial (regresión v5:
-//    "edito un CV y no veo ninguna pestaña"). Sin esto la barra queda vacía y el
-//    renombrado automático no tiene a qué aplicarse.
+// 4. Pestañas: useDocumentTabs.ts hidrata el almacén y registra la pestaña inicial, y App.tsx invoca el hook.
 allPassed &= checkFileForRegex(
   path.join(rootDir, 'app/App.tsx'),
-  /useState<OpenTabItem\[\]>\(\(\) => getOpenTabs\(\)\)/,
-  'App.tsx must hydrate tabs from tabStore on first render'
+  /useDocumentTabs\(/,
+  'App.tsx must invoke useDocumentTabs hook'
 );
 allPassed &= checkFileForRegex(
-  path.join(rootDir, 'app/App.tsx'),
-  /workspaceController\.ensureDocumentTab\(/,
-  'App.tsx must register the initial document tab via workspaceController.ensureDocumentTab'
+  path.join(rootDir, 'shared/core/documents/useDocumentTabs.ts'),
+  /useState<OpenTabItem\[\]>\(\(\) => getOpenTabs\(\)\)/,
+  'useDocumentTabs.ts must hydrate tabs from tabStore on first render'
+);
+allPassed &= checkFileForRegex(
+  path.join(rootDir, 'shared/core/documents/useDocumentTabs.ts'),
+  /ensureDocumentTab\(/,
+  'useDocumentTabs.ts must register the initial document tab via ensureDocumentTab'
 );
 // 5. Ningún efecto secundario global dentro de updaters de setState del contexto
 allPassed &= checkFileForRegex(

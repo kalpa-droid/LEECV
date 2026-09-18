@@ -6,6 +6,7 @@
  */
 
 import { getDefaultTitleForDocType } from '../capabilities/capabilityRegistry';
+import { isDraftDocumentId } from './documentEngine/documentHelpers';
 
 export interface OpenTab {
   id: string;
@@ -156,6 +157,26 @@ export function closeTab(id: string): OpenTab[] {
   const remaining = getOpenTabs().filter(t => t.id !== id);
   persist(remaining);
   return remaining;
+}
+
+export function purgeGhostTabs(validIds: string[]): OpenTab[] {
+  const current = getOpenTabs();
+  if (current.length === 0) return [];
+  const validSet = new Set(validIds || []);
+  const activeId = getActiveTabId();
+
+  const filtered = current.filter(t => {
+    if (t.id === activeId) return true;
+    if (t.isDirty) return true;
+    if (isDraftDocumentId(t.id)) return true;
+    return validSet.has(t.id);
+  });
+
+  if (filtered.length !== current.length) {
+    persist(filtered);
+  }
+
+  return filtered;
 }
 
 export function setTabDirty(id: string, isDirty: boolean): OpenTab[] {
