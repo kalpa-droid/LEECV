@@ -97,9 +97,34 @@ export function computeAutoDocumentTitle(
     return `${prefix} - ${candidateName}${suffix}`;
   }
 
-  // Si hay cambios pero aún no se ingresó el nombre: usar fecha y hora de la modificación
+  // Si hay cambios pero aún no se ingresó el nombre: usar fecha y hora de inicio de edición
   if (options?.isDirty || docData?.isDirty) {
-    const timeStr = formatCompactDateTime(options?.modifiedAt || new Date());
+    let baseDate: Date | null = null;
+    
+    // 1. Extraer timestamp de creación desde el ID (ej: "cv_1710000000000")
+    if (docData?.id) {
+      const parts = docData.id.split('_');
+      if (parts.length > 1) {
+        const ts = parseInt(parts[1], 10);
+        // Validar que parezca un timestamp en ms razonable (mayor al año 2001)
+        if (!isNaN(ts) && ts > 1000000000000) {
+          baseDate = new Date(ts);
+        }
+      }
+    }
+
+    // 2. Fallback a updatedAt si existe
+    if (!baseDate && docData?.updatedAt) {
+      const parsed = new Date(docData.updatedAt);
+      if (!isNaN(parsed.getTime())) baseDate = parsed;
+    }
+    
+    // 3. Fallback a modifiedAt de las opciones, y si nada funciona, a 'ahora' pero solo se evalúa una vez
+    if (!baseDate) {
+      baseDate = options?.modifiedAt || new Date();
+    }
+
+    const timeStr = formatCompactDateTime(baseDate);
     return `${prefix} - ${timeStr}${suffix}`;
   }
 
