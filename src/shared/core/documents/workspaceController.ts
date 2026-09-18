@@ -12,6 +12,7 @@
 
 import * as TabStore from './tabStore';
 import { loadDocumentById, saveDocument } from '../storage/documentStorageService';
+import { markAsConfirmed, isProvisionalDocument, hasRealContent } from './documentLifecycleEngine';
 
 export interface CurrentDocumentState {
   id: string;
@@ -86,19 +87,21 @@ export async function closeTab(
   id: string,
   currentDoc: CurrentDocumentState | null,
   setCvData: (data: any) => void,
-  goToLandingPage: () => void
+  goToLandingPage: () => void,
+  currentActiveId?: string
 ): Promise<void> {
-  // Guardar si el documento actual es el que se está cerrando y tiene cambios (ej. provisional sucio)
-  if (currentDoc?.id === id && currentDoc?.isDirty && currentDoc?.data) {
+  const activeId = currentActiveId ?? currentDoc?.id;
+
+  if (
+    currentDoc?.id === id &&
+    currentDoc.data &&
+    isProvisionalDocument(currentDoc.data) &&
+    hasRealContent(currentDoc.data)
+  ) {
     try {
-      // Importación dinámica para evitar dependencias circulares si las hay
-      const { saveDocument } = await import('../storage/documentStorageService');
-      const { markAsConfirmed } = await import('./documentLifecycleEngine');
-      
       const confirmedData = markAsConfirmed(currentDoc.data);
       await saveDocument(confirmedData, currentDoc.docType);
       TabStore.setTabDirty(currentDoc.id, false);
-      setCvData(confirmedData);
     } catch (err) {
       console.warn('Error guardando documento antes de cerrar pestaña:', err);
     }
@@ -106,8 +109,7 @@ export async function closeTab(
 
   const remaining = TabStore.closeTab(id);
 
-  // Si se cerró una pestaña que NO era la activa, el usuario sigue mirando su documento activo
-  if (id !== currentDoc?.id) {
+  if (id !== activeId) {
     return;
   }
 

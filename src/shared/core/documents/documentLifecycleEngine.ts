@@ -112,12 +112,14 @@ export function computeAutoDocumentTitle(
 }
 
 /**
- * Un documento es "provisional" mientras el usuario no lo confirmó con un guardado
- * explícito. Default true: si la marca no está (documentos viejos, anteriores a
- * este campo), se los trata como provisionales y el reconciliador los adopta.
+ * Acepta tanto el documento completo (isProvisional) como el resumen de la lista
+ * guardada (DocumentRecord.is_provisional). Los dos representan lo mismo y los dos
+ * llegan acá: el reconciliador filtra sobre resúmenes, closeTab sobre documentos.
  */
 export function isProvisionalDocument(doc: any): boolean {
-  return Boolean(doc) && doc.isProvisional !== false;
+  if (!doc) return false;
+  const flag = doc.isProvisional !== undefined ? doc.isProvisional : doc.is_provisional;
+  return flag !== false;
 }
 
 export function markAsConfirmed<T extends Record<string, any>>(doc: T): T {

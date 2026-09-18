@@ -75,4 +75,12 @@ describe('documentLifecycle (Gestión de Documentos & Pestañas)', () => {
     await saveDocument({ id: closedId, doc_type_id: 'cv', personalInfo: { fullName: 'Test' } }, 'cv');
     expect(getOpenTabs().map(t => t.id)).not.toContain(closedId);
   });
+
+  it('isProvisionalDocument entiende el documento completo y el resumen de la lista', async () => {
+    const { isProvisionalDocument } = await import('../src/shared/core/documents/documentLifecycleEngine');
+    expect(isProvisionalDocument({ isProvisional: false })).toBe(false);
+    expect(isProvisionalDocument({ is_provisional: false })).toBe(false);
+    expect(isProvisionalDocument({ is_provisional: true })).toBe(true);
+    expect(isProvisionalDocument({ id: 'cv_viejo' })).toBe(true);
+  });
 });

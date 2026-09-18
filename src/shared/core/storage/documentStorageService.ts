@@ -246,7 +246,6 @@ export const saveDocumentDraftLocal = async (
     await idbStorage.setItem(`doc_${docTypeId}_data_${id}`, fullDocObject);
     if (docTypeId === 'cv') {
       await idbStorage.setItem('cv_data_' + id, fullDocObject);
-      await idbStorage.setItem('cv_premium_data', fullDocObject);
     }
 
     try {

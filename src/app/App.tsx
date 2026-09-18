@@ -72,6 +72,7 @@ interface AppContentProps {
 
 function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: AppContentProps) {
   const { cvData, setCvData, resetToBlankCV, saveCV, saveCVAs, isSaving, hasPendingChanges, isSwitchingDocument, setIsSwitchingDocument } = useCVContext();
+  const didReconcileRef = useRef(false);
   const [updateBannerVisible, setUpdateBannerVisible] = useState(false);
 
   const { showSuccess, showError, showInfo } = useToast();
@@ -247,10 +248,12 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 
   // Paso 5: Reconciliar documentos provisionales al entrar
   useEffect(() => {
-    let isMounted = true;
+    if (didReconcileRef.current) return;
+    didReconcileRef.current = true;
+
     const reconcileProvisionals = async () => {
       try {
-        const { getSavedDocumentsList, loadDocumentById, deleteDocumentById, saveDocument } = await import('../shared/core/storage/documentStorageService');
+        const { getSavedDocumentsList, loadDocumentById, saveDocument } = await import('../shared/core/storage/documentStorageService');
         const { isProvisionalDocument, markAsConfirmed, hasRealContent } = await import('../shared/core/documents/documentLifecycleEngine');
         
         const docTypes = ['cv', 'business_card', 'cover_letter', 'book'];
@@ -262,18 +265,16 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           
           for (const p of provisionals) {
             const docData = await loadDocumentById(p.id, docType);
-            if (docData && hasRealContent(docData)) {
-              const confirmedDoc = markAsConfirmed(docData);
-              await saveDocument(confirmedDoc, docType);
-              addOpenTab(confirmedDoc.id, docType as any, confirmedDoc.title || 'Recuperado');
-              tabsChanged = true;
-            } else {
-              await deleteDocumentById(p.id, docType);
-            }
+            if (!docData || !hasRealContent(docData)) continue;
+
+            const confirmedDoc = markAsConfirmed(docData);
+            await saveDocument(confirmedDoc, docType);
+            addOpenTab(confirmedDoc.id, docType as any, confirmedDoc.title || 'Recuperado');
+            tabsChanged = true;
           }
         }
         
-        if (isMounted && tabsChanged) {
+        if (tabsChanged) {
           setTabs(getOpenTabs());
         }
       } catch (err) {
@@ -282,7 +283,6 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     };
     
     reconcileProvisionals();
-    return () => { isMounted = false; };
   }, []);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
 
@@ -450,7 +450,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
             isDirty: hasPendingChanges
           } : null;
           
-          await workspaceController.closeTab(cvId, currentDocState, setCvData, goToLandingPage);
+          await workspaceController.closeTab(cvId, currentDocState, setCvData, goToLandingPage, activeCvId);
           setTabs(getOpenTabs());
         } finally {
           setIsSwitchingDocument(false);
