@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import Navbar from '../modules/cv-builder/components/Navbar';
 import CanvaIconDock from '../modules/cv-builder/components/CanvaIconDock';
 import EditorPanel from '../modules/cv-builder/components/EditorPanel';
@@ -313,22 +313,50 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const [tabs, setTabs] = useState<OpenTabItem[]>([]);
   const activeCvId = cvData?.id || '';
 
-  // Sincronizador Núcleo 1: Asegura que la pestaña del documento activo en cvData se registre con su docType correcto
+  // Sincronizador Núcleo 1: mantiene actualizado el TÍTULO/tipo de la pestaña del
+  // documento activo. NO abre pestañas nuevas por su cuenta: abrir una pestaña es
+  // siempre una acción explícita (workspaceController.openDocument / el botón "+").
+  //
+  // Por qué: antes este efecto llamaba a addOpenTab() sin condición. Al cerrar la
+  // ÚLTIMA pestaña, closeTab() navega a la landing pero cvData sigue en memoria
+  // con su id — este efecto volvía a correr y RESUCITABA la pestaña recién
+  // cerrada. Ese era el bug de "cierro y no cierra" / "siempre aparece un CV
+  // nuevo": el cierre funcionaba, y 1 render después el sincronizador lo deshacía.
   useEffect(() => {
     if (isSwitchingDocument) return;
     if (activeCvId) {
-      const docTypeForTab = inferDocumentTypeId(cvData);
-      addOpenTab(
-        activeCvId,
-        docTypeForTab as any,
-        cvData?.title || getDefaultTitleForDocType(docTypeForTab),
-        cvData?.version_label
-      );
+      const alreadyOpen = getOpenTabs().some(t => t.cvId === activeCvId);
+      if (alreadyOpen) {
+        const docTypeForTab = inferDocumentTypeId(cvData);
+        addOpenTab(
+          activeCvId,
+          docTypeForTab as any,
+          cvData?.title || getDefaultTitleForDocType(docTypeForTab),
+          cvData?.version_label
+        );
+      }
       setTabs(getOpenTabs());
     } else {
       setTabs(getOpenTabs());
     }
   }, [activeCvId, cvData?.title, cvData?.version_label, cvData?.activePresetId, (cvData as any)?.cardSize, isSwitchingDocument]);
+
+  /**
+   * Crea un documento en blanco Y registra su pestaña explícitamente.
+   * Única vía para "documento nuevo" — antes cada llamador hacía solo
+   * resetToBlankCV() y dependía de que el sincronizador pasivo le creara la
+   * pestaña de rebote, que es justo lo que causaba que una pestaña recién
+   * cerrada reapareciera sola.
+   */
+  const createBlankDocumentWithTab = useCallback((presetId?: string) => {
+    const blank = resetToBlankCV(presetId ? { activePresetId: presetId } : undefined) as any;
+    const newId = blank?.id;
+    if (newId) {
+      const docType = inferDocumentTypeId(blank);
+      addOpenTab(newId, docType as any, blank?.title || getDefaultTitleForDocType(docType));
+      setTabs(getOpenTabs());
+    }
+  }, [resetToBlankCV]);
 
   // Sincronizador Núcleo 2: Sincroniza la URL actual con el tipo de documento activo en memoria
   useEffect(() => {
@@ -345,7 +373,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         const initialPresetId = routeDocType === 'business_card' ? 'tarjeta-personal'
           : routeDocType === 'cover_letter' ? 'carta-clasica'
           : 'cv-clasico';
-        resetToBlankCV({ activePresetId: initialPresetId });
+        createBlankDocumentWithTab(initialPresetId);
       }
     }
   }, [currentRoute, cvData?.id, isSwitchingDocument]);
@@ -528,7 +556,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         await runWithSafeSave(
           saveCV,
           () => {
-            resetToBlankCV();
+            createBlankDocumentWithTab();
             setActiveTab('personales');
             if (currentRoute !== '/crear-cv' && currentRoute !== '/') {
               if (onNavigate) {
@@ -554,7 +582,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         await runWithSafeSave(
           saveCV,
           () => {
-            resetToBlankCV({ activePresetId: 'tarjeta-personal' });
+            createBlankDocumentWithTab('tarjeta-personal');
             setActiveTab('personales');
             if (currentRoute !== '/crear-tarjeta') {
               if (onNavigate) {
