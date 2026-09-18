@@ -6,9 +6,10 @@ import {
   closeTab
 } from '../src/shared/core/documents/tabStore';
 import { generateDocumentId } from '../src/shared/core/documents/documentEngine/titleEngine';
+import { isProvisionalDocument } from '../src/shared/core/documents/documentEngine';
 
 describe('documentLifecycle (Gestión de Documentos & Pestañas)', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     let store: Record<string, string> = {};
     const localStorageMock = {
       getItem: (key: string) => store[key] || null,
@@ -19,6 +20,9 @@ describe('documentLifecycle (Gestión de Documentos & Pestañas)', () => {
     vi.stubGlobal('window', { localStorage: localStorageMock });
     vi.stubGlobal('localStorage', localStorageMock);
     localStorage.clear();
+
+    const driveBackup = await import('../src/shared/core/storage/driveBackupService');
+    vi.spyOn(driveBackup, 'backupCvToGoogleDrive').mockImplementation(async () => true as any);
   });
 
   it('genera prefijos correctos con generateDocumentId', () => {
@@ -66,13 +70,12 @@ describe('documentLifecycle (Gestión de Documentos & Pestañas)', () => {
     expect(getOpenTabs().map(t => t.id)).not.toContain(closedId);
   });
 
-  it('isProvisionalDocument revisa flag', async () => {
-    const { isProvisionalDocument } = await import('../src/shared/core/documents/documentEngine');
+  it('isProvisionalDocument revisa flag', () => {
     expect(isProvisionalDocument({ isProvisional: false })).toBe(false);
     expect(isProvisionalDocument({ isProvisional: true })).toBe(true);
   });
 
-  it('REGRESIÓN — CVContext.tsx arranca con el id fijo de borrador (getDraftIdForDocType), no uno generado al azar. Causa real de "edito un CV recién abierto y no veo ninguna pestaña": con un id aleatorio, el sincronizador de ruta en App.tsx salía temprano (route ya coincide con docType en el primer render) y nunca se llegaba a workspaceController.switchToTab, el único lugar que registra la pestaña de un id de borrador desconocido.', async () => {
+  it('REGRESIÓN — CVContext.tsx arranca con el id fijo de borrador (getDraftIdForDocType), no uno generado al azar.', async () => {
     const fs = await import('fs');
     const path = await import('path');
     const contextPath = path.join(__dirname, '../src/context/CVContext.tsx');
@@ -85,6 +88,4 @@ describe('documentLifecycle (Gestión de Documentos & Pestañas)', () => {
     expect(initialStateBody).toContain('getDraftIdForDocType');
     expect(initialStateBody).toMatch(/createBlankCVTemplate\(\{\s*\n?\s*id:\s*getDraftIdForDocType/);
   });
-
-
 });
