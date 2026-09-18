@@ -14,6 +14,7 @@ import {
   shadow as effects,
   button
 } from '../../../../../shared/core/uiDesignSystem';
+import { resolveActiveDockSections, checkSectionHasContent } from '../../../../../shared/core/sections/activeSectionsDockEngine';
 
 export const NuevaSeccionSection = ({
   cvData,
@@ -40,147 +41,154 @@ export const NuevaSeccionSection = ({
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                  {[
-                    {
-                      id: 'redes',
-                      titleText: 'Redes Sociales & Presencia Digital',
-                      iconId: 'redes',
-                      desc: 'LinkedIn, GitHub, Behance, Portafolio, YouTube, etc.',
-                      fields: ['plataforma', 'usuario', 'url']
-                    },
-                    {
-                      id: 'publicaciones',
-                      titleText: 'Publicaciones y Artículos',
-                      iconId: 'publicaciones',
-                      desc: 'Libros, artículos científicos, prensa, ensayos.',
-                      fields: ['tituloOGrado', 'institucion', 'autor', 'periodo', 'url']
-                    },
-                    {
-                      id: 'referencias',
-                      titleText: 'Referencias Laborales',
-                      iconId: 'referencias',
-                      desc: 'Contactos y cartas de recomendación.',
-                      fields: ['personaReferencia', 'institucion', 'contactoReferencia']
-                    },
-                    {
-                      id: 'idiomas',
-                      titleText: 'Idiomas y Certificaciones',
-                      iconId: 'idiomas',
-                      desc: 'Lenguas extranjeras y grado de dominio (A1-C2).',
-                      fields: ['tituloOGrado', 'institucion', 'nivel']
-                    },
-                    {
-                      id: 'voluntariado',
-                      titleText: 'Voluntariado & ONG',
-                      iconId: 'voluntariado',
-                      desc: 'Acción social y trabajo comunitario.',
-                      fields: ['cargo', 'institucion', 'periodo', 'descripcion']
-                    },
-                    {
-                      id: 'premios',
-                      titleText: 'Premios & Distinciones',
-                      iconId: 'premios',
-                      desc: 'Menciones de honor y reconocimientos.',
-                      fields: ['tituloOGrado', 'institucion', 'periodo', 'descripcion']
-                    },
-                    {
-                      id: 'patentes',
-                      titleText: 'Patentes & Habilitaciones',
-                      iconId: 'patentes',
-                      desc: 'Propiedad intelectual, registros y matrículas.',
-                      fields: ['tituloOGrado', 'institucion', 'resolucion', 'periodo']
-                    },
-                    {
-                      id: 'ponencias',
-                      titleText: 'Ponencias & Congresos',
-                      iconId: 'ponencias',
-                      desc: 'Disertaciones, conferencias y jornadas.',
-                      fields: ['tituloOGrado', 'institucion', 'periodo', 'url']
-                    }
-                  ].map((presetSec) => {
-                    const isBuiltIn = ['redes', 'publicaciones', 'referencias', 'idiomas'].includes(presetSec.id);
-                    const isAlreadyAdded = isBuiltIn
-                      ? cvData?.sectionVisibility?.[presetSec.id] !== false
-                      : (['personalizada-1', 'personalizada-2', 'personalizada-3', 'personalizada-4', 'personalizada-5'] as const).some(
-                          (slotId) => cvData?.sectionTitleOverrides?.[slotId] === presetSec.titleText || cvData?.sectionVisibility?.[slotId] === true && cvData?.sectionTitleOverrides?.[slotId]
-                        );
+                  {(() => {
+                    const PRESET_SECTIONS = [
+                      {
+                        id: 'redes',
+                        titleText: 'Redes Sociales & Presencia Digital',
+                        iconId: 'redes',
+                        desc: 'LinkedIn, GitHub, Behance, Portafolio, YouTube, etc.',
+                        fields: ['plataforma', 'usuario', 'url']
+                      },
+                      {
+                        id: 'publicaciones',
+                        titleText: 'Publicaciones y Artículos',
+                        iconId: 'publicaciones',
+                        desc: 'Libros, artículos científicos, prensa, ensayos.',
+                        fields: ['tituloOGrado', 'institucion', 'autor', 'periodo', 'url']
+                      },
+                      {
+                        id: 'referencias',
+                        titleText: 'Referencias Laborales',
+                        iconId: 'referencias',
+                        desc: 'Contactos y cartas de recomendación.',
+                        fields: ['personaReferencia', 'institucion', 'contactoReferencia']
+                      },
+                      {
+                        id: 'idiomas',
+                        titleText: 'Idiomas y Certificaciones',
+                        iconId: 'idiomas',
+                        desc: 'Lenguas extranjeras y grado de dominio (A1-C2).',
+                        fields: ['tituloOGrado', 'institucion', 'nivel']
+                      },
+                      {
+                        id: 'voluntariado',
+                        titleText: 'Voluntariado & ONG',
+                        iconId: 'voluntariado',
+                        desc: 'Acción social y trabajo comunitario.',
+                        fields: ['cargo', 'institucion', 'periodo', 'descripcion']
+                      },
+                      {
+                        id: 'premios',
+                        titleText: 'Premios & Distinciones',
+                        iconId: 'premios',
+                        desc: 'Menciones de honor y reconocimientos.',
+                        fields: ['tituloOGrado', 'institucion', 'periodo', 'descripcion']
+                      },
+                      {
+                        id: 'patentes',
+                        titleText: 'Patentes & Habilitaciones',
+                        iconId: 'patentes',
+                        desc: 'Propiedad intelectual, registros y matrículas.',
+                        fields: ['tituloOGrado', 'institucion', 'resolucion', 'periodo']
+                      },
+                      {
+                        id: 'ponencias',
+                        titleText: 'Ponencias & Congresos',
+                        iconId: 'ponencias',
+                        desc: 'Disertaciones, conferencias y jornadas.',
+                        fields: ['tituloOGrado', 'institucion', 'periodo', 'url']
+                      }
+                    ];
 
-                    return (
-                      <button
-                        key={presetSec.id}
-                        type="button"
-                        onClick={() => {
-                          if (isBuiltIn) {
+                    const activeDockSections = resolveActiveDockSections(cvData);
+
+                    // Opción A: Excluir de la grilla cualquier sección que ya esté activa en el Dock lateral
+                    const availableSections = PRESET_SECTIONS.filter((presetSec) => {
+                      const isBuiltIn = ['redes', 'publicaciones', 'referencias', 'idiomas'].includes(presetSec.id);
+                      if (isBuiltIn) {
+                        const isDockActive = activeDockSections.some(sec => sec.id === presetSec.id && !sec.isDisabled);
+                        const isVisibilityTrue = cvData?.sectionVisibility?.[presetSec.id] === true;
+                        const hasContent = checkSectionHasContent(cvData, presetSec.id);
+                        return !isDockActive && !isVisibilityTrue && !hasContent;
+                      } else {
+                        const isTitleInDock = activeDockSections.some(sec => !sec.isDisabled && (sec.label === presetSec.titleText || cvData?.sectionTitleOverrides?.[sec.id] === presetSec.titleText));
+                        const isSlotUsed = (['personalizada-1', 'personalizada-2', 'personalizada-3', 'personalizada-4', 'personalizada-5'] as const).some(
+                          (slotId) => (cvData?.sectionTitleOverrides?.[slotId] === presetSec.titleText && cvData?.sectionVisibility?.[slotId] !== false)
+                        );
+                        const isCustomSecUsed = Array.isArray(cvData?.customSections) && cvData.customSections.some(
+                          (cs: any) => cs.titleText === presetSec.titleText && cvData?.sectionVisibility?.[cs.id] !== false
+                        );
+                        return !isTitleInDock && !isSlotUsed && !isCustomSecUsed;
+                      }
+                    });
+
+                    return availableSections.map((presetSec) => {
+                      const isBuiltIn = ['redes', 'publicaciones', 'referencias', 'idiomas'].includes(presetSec.id);
+
+                      return (
+                        <button
+                          key={presetSec.id}
+                          type="button"
+                          onClick={() => {
+                            if (isBuiltIn) {
+                              setCvData((prev: any) => ({
+                                ...prev,
+                                sectionVisibility: {
+                                  ...(prev.sectionVisibility || {}),
+                                  [presetSec.id]: true
+                                }
+                              }));
+                              showSuccess(`Sección '${presetSec.titleText}' activada.`);
+                              changeActiveTab(presetSec.id);
+                              return;
+                            }
+
+                            const customSlots = ['personalizada-1', 'personalizada-2', 'personalizada-3', 'personalizada-4', 'personalizada-5'] as const;
+                            const freeSlot = customSlots.find(
+                              (slotId) => cvData?.sectionVisibility?.[slotId] !== true && (!cvData?.[slotId] || cvData[slotId].length === 0) && !cvData?.sectionTitleOverrides?.[slotId]
+                            );
+
+                            if (!freeSlot) {
+                              showWarning('Ya utilizaste los 5 slots de secciones personalizadas disponibles en tu plan. Puedes reutilizar una sección cambiando su nombre.');
+                              return;
+                            }
+
                             setCvData((prev: any) => ({
                               ...prev,
-                              sectionVisibility: {
-                                ...(prev.sectionVisibility || {}),
-                                [presetSec.id]: true
+                              sectionVisibility: { ...(prev.sectionVisibility || {}), [freeSlot]: true },
+                              sectionTitleOverrides: { ...(prev.sectionTitleOverrides || {}), [freeSlot]: presetSec.titleText },
+                              sectionFieldSelection: { ...(prev.sectionFieldSelection || {}), [freeSlot]: presetSec.fields },
+                              [freeSlot]: prev[freeSlot]?.length ? prev[freeSlot] : [{}],
+                              layout: {
+                                ...(prev.layout || {}),
+                                columnAssignments: {
+                                  ...(prev.layout?.columnAssignments || {}),
+                                  [freeSlot]: 'primaria'
+                                },
+                                sectionOrders: {
+                                  ...(prev.layout?.sectionOrders || {}),
+                                  primaria: [...(prev.layout?.sectionOrders?.primaria || []), freeSlot]
+                                }
                               }
                             }));
-                            showSuccess(`Sección '${presetSec.titleText}' activada.`);
-                            changeActiveTab(presetSec.id);
-                            return;
-                          }
 
-                          if (isAlreadyAdded) {
-                            const existingSlot = (['personalizada-1', 'personalizada-2', 'personalizada-3', 'personalizada-4', 'personalizada-5'] as const).find(
-                              (slotId) => cvData?.sectionTitleOverrides?.[slotId] === presetSec.titleText
-                            );
-                            if (existingSlot) changeActiveTab(existingSlot);
-                            return;
-                          }
-
-                          const customSlots = ['personalizada-1', 'personalizada-2', 'personalizada-3', 'personalizada-4', 'personalizada-5'] as const;
-                          const freeSlot = customSlots.find(
-                            (slotId) => cvData?.sectionVisibility?.[slotId] !== true && (!cvData?.[slotId] || cvData[slotId].length === 0) && !cvData?.sectionTitleOverrides?.[slotId]
-                          );
-
-                          if (!freeSlot) {
-                            showWarning('Ya utilizaste los 5 slots de secciones personalizadas disponibles en tu plan. Puedes reutilizar una sección cambiando su nombre.');
-                            return;
-                          }
-
-                          setCvData((prev: any) => ({
-                            ...prev,
-                            sectionVisibility: { ...(prev.sectionVisibility || {}), [freeSlot]: true },
-                            sectionTitleOverrides: { ...(prev.sectionTitleOverrides || {}), [freeSlot]: presetSec.titleText },
-                            sectionFieldSelection: { ...(prev.sectionFieldSelection || {}), [freeSlot]: presetSec.fields },
-                            [freeSlot]: prev[freeSlot]?.length ? prev[freeSlot] : [{}],
-                            layout: {
-                              ...(prev.layout || {}),
-                              columnAssignments: {
-                                ...(prev.layout?.columnAssignments || {}),
-                                [freeSlot]: 'primaria'
-                              },
-                              sectionOrders: {
-                                ...(prev.layout?.sectionOrders || {}),
-                                primaria: [...(prev.layout?.sectionOrders?.primaria || []), freeSlot]
-                              }
-                            }
-                          }));
-
-                          showSuccess(`Sección '${presetSec.titleText}' incorporada en slot ${freeSlot}.`);
-                          changeActiveTab(freeSlot);
-                        }}
-                        className={`p-2.5 rounded-[${radius.card}] border text-left flex flex-col justify-between transition cursor-pointer ${
-                          isAlreadyAdded
-                            ? 'bg-[var(--color-secondary-muted)] border-[var(--color-secondary-base)]/40 text-[var(--color-secondary-text)]'
-                            : 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] hover:border-[var(--color-accent-base)] hover:bg-[var(--ui-bg-card)]'
-                        }`}
-                      >
-                        <div className="space-y-1">
-                          <span className="text-xs font-black text-[var(--color-neutral-text-primary)] block">{presetSec.titleText}</span>
-                          <p className="text-[10px] text-[var(--color-neutral-text-secondary)] font-medium leading-tight">{presetSec.desc}</p>
-                        </div>
-                        <span className={`text-[10px] font-black mt-2 self-end px-2 py-0.5 rounded ${
-                          isAlreadyAdded ? 'bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)]' : 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
-                        }`}>
-                          {isAlreadyAdded ? '✓ Activa (Editar)' : '+ Incorporar'}
-                        </span>
-                      </button>
-                    );
-                  })}
+                            showSuccess(`Sección '${presetSec.titleText}' incorporada en slot ${freeSlot}.`);
+                            changeActiveTab(freeSlot);
+                          }}
+                          className={`p-2.5 rounded-[${radius.card}] border text-left flex flex-col justify-between transition cursor-pointer bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] hover:border-[var(--color-accent-base)] hover:bg-[var(--ui-bg-card)]`}
+                        >
+                          <div className="space-y-1">
+                            <span className="text-xs font-black text-[var(--color-neutral-text-primary)] block">{presetSec.titleText}</span>
+                            <p className="text-[10px] text-[var(--color-neutral-text-secondary)] font-medium leading-tight">{presetSec.desc}</p>
+                          </div>
+                          <span className="text-[10px] font-black mt-2 self-end px-2 py-0.5 rounded bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]">
+                            + Incorporar
+                          </span>
+                        </button>
+                      );
+                    });
+                  })()}
 
                   {/* 10ª Tarjeta para completar el par del grid (5 filas perfectas) */}
                   <button
