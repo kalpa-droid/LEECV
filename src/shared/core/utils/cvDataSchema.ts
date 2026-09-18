@@ -39,7 +39,7 @@ export function sanitizeCvData(rawCvData: any = {}) {
   return {
     id: data.id || `cv_${Date.now()}`,
     schemaVersion: typeof data.schemaVersion === 'number' ? data.schemaVersion : 1,
-    title: data.title || 'Mi Currículum Vitae',
+    title: data.title || '',
     versionLabel: data.versionLabel || data.version_label || undefined,
     version_label: data.version_label || data.versionLabel || undefined,
     updatedAt: data.updatedAt || new Date().toISOString(),

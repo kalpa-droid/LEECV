@@ -14,10 +14,21 @@
 
 export const DRAFT_CV_ID = 'draft_cv';
 export const DRAFT_CARD_ID = 'draft_card';
+export const DRAFT_COVER_LETTER_ID = 'draft_cover_letter';
+export const DRAFT_BOOK_ID = 'draft_book';
 
 export function isDraftDocumentId(id?: string): boolean {
   if (!id) return true;
-  return id === DRAFT_CV_ID || id === DRAFT_CARD_ID || id.startsWith('draft_');
+  return id === DRAFT_CV_ID || id === DRAFT_CARD_ID || id === DRAFT_COVER_LETTER_ID || id === DRAFT_BOOK_ID || id.startsWith('draft_');
+}
+
+export function getDraftIdForDocType(docType: 'cv' | 'business_card' | 'book' | 'cover_letter'): string {
+  switch (docType) {
+    case 'business_card': return DRAFT_CARD_ID;
+    case 'cover_letter': return DRAFT_COVER_LETTER_ID;
+    case 'book': return DRAFT_BOOK_ID;
+    default: return DRAFT_CV_ID;
+  }
 }
 
 /**

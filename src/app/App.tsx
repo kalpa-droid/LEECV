@@ -5,6 +5,7 @@ import EditorPanel from '../modules/cv-builder/components/EditorPanel';
 const CVPreview = lazy(() => import('../modules/cv-builder/components/CVPreview'));
 import { FileText, CreditCard, Palette, Plus, X, Sparkles, ChevronRight } from 'lucide-react';
 import { getOpenTabs, openTab as addOpenTab, closeTab as removeOpenTab, generateDocumentId, OpenTab as OpenTabItem, TABS_CHANGED_EVENT } from '../shared/core/documents/tabStore';
+import { computeAutoDocumentTitle, getDraftIdForDocType } from '../shared/core/documents/documentLifecycleEngine';
 import * as workspaceController from '../shared/core/documents/workspaceController';
 import { AppShell } from '../shared/core/ui/AppShell';
 const LandingPage = lazy(() => import('../modules/landing/LandingPage').then(m => ({ default: m.LandingPage })));
@@ -395,7 +396,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         addOpenTab(
           activeCvId,
           docTypeForTab as any,
-          cvData?.title || getDefaultTitleForDocType(docTypeForTab),
+          computeAutoDocumentTitle(cvData, docTypeForTab as any, { isDirty: false }),
           cvData?.version_label
         );
       }
@@ -417,7 +418,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     const newId = blank?.id;
     if (newId) {
       const docType = inferDocumentTypeId(blank);
-      addOpenTab(newId, docType as any, blank?.title || getDefaultTitleForDocType(docType));
+      addOpenTab(newId, docType as any, computeAutoDocumentTitle(blank, docType as any, { isDirty: false }));
       setTabs(getOpenTabs());
     }
   }, [resetToBlankCV]);
@@ -428,19 +429,23 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     const routeDocType = getDocTypeForRoute(currentRoute);
     const activeDocType = inferDocumentTypeId(cvData);
 
-    if (routeDocType !== activeDocType) {
-      const openTabs = getOpenTabs();
-      const matchingTab = openTabs.find(t => (t.docType || 'cv') === routeDocType);
-      if (matchingTab) {
-        handleSwitchDocumentTab(matchingTab.cvId, routeDocType, { skipSaveCurrent: false });
-      } else {
-        const initialPresetId = routeDocType === 'business_card' ? 'tarjeta-personal'
-          : routeDocType === 'cover_letter' ? 'carta-clasica'
-          : 'cv-clasico';
-        createBlankDocumentWithTab(initialPresetId);
-      }
+    if (routeDocType === activeDocType) return; // ya estamos donde corresponde, no hacer nada
+
+    const openTabs = getOpenTabs();
+    const matchingTab = openTabs.find(t => (t.docType || 'cv') === routeDocType);
+
+    if (matchingTab) {
+      handleSwitchDocumentTab(matchingTab.cvId, routeDocType, { skipSaveCurrent: false });
+      return;
     }
-  }, [currentRoute, cvData?.id, isSwitchingDocument]);
+
+    // No hay ninguna pestaña de ese tipo abierta — ir SIEMPRE al borrador fijo de
+    // ese tipo, nunca crear un id nuevo. Si ese borrador ya tenía contenido de una
+    // sesión anterior, se abre con lo que tenía; si estaba vacío, se abre vacío.
+    // Cualquiera de los dos casos usa el MISMO id siempre — nunca uno aleatorio.
+    const draftId = getDraftIdForDocType(routeDocType);
+    handleSwitchDocumentTab(draftId, routeDocType, { skipSaveCurrent: false });
+  }, [currentRoute, activeCvId, isSwitchingDocument]);
 
   // Bus de eventos: sincronizar pestañas cuando el motor de guardado actualiza títulos
   useEffect(() => {
