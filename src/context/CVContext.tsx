@@ -339,7 +339,14 @@ export function CVProvider({ children }: { children: ReactNode }) {
       const confirmedData = markAsConfirmed(cvData);
       const res = await saveCVAsStorage(confirmedData, versionLabel);
       if (res?.success && res.record?.id) {
-        setCvDataState((prev: CVData) => markAsConfirmed({ ...prev, id: res.record!.id }));
+        setCvDataState((prev: CVData) => {
+          const copy: any = {
+            ...prev,
+            id: res.record!.id,
+            ...(versionLabel ? { version_label: versionLabel, versionLabel } : {}),
+          };
+          return markAsConfirmed({ ...copy, title: computeAutoDocumentTitle(inferDocumentTypeId(copy) as any, copy) });
+        });
       } else if (res?.success) {
         setCvDataState((prev: CVData) => markAsConfirmed(prev));
       }

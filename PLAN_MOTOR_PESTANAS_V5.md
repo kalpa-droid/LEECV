@@ -37,11 +37,12 @@ Hallazgos secundarios encontrados en la misma auditoría:
 - `App.tsx`: estado hidratado con `useState(() => getOpenTabs())`; registro de la pestaña inicial **una sola vez al montar** (un efecto reactivo resucitaría la pestaña recién cerrada, bug de `8b1f619`); efecto de renombrado que solo **actualiza** pestañas existentes y deriva siempre el título del motor; "Mis archivos" registra su pestaña.
 - `CVContext.tsx`: se sacó el efecto secundario del updater de `setState`.
 - `AppShell.tsx`: la barra se muestra en todos los anchos.
-- `titleEngine.ts`: formato de título normativo (ver sección 3) y sello con décima de segundo congelado en el propio documento.
-- `tests/tabsEngine.test.ts` (15 tests): comportamiento real de `tabStore`/`titleEngine` con `localStorage` simulado, más guardias de cableado (`App.tsx`, `AppShell.tsx`). Se verificó que la guardia falla si se revierte el arreglo.
+- `titleEngine.ts`: formato de título normativo (ver abajo) y sello con décima de segundo congelado en el propio documento.
+- **Guardar como:** la copia pasa a ser el documento activo con su `version_label` y su título, y se le registra pestaña (antes cambiaba el id en memoria pero no creaba pestaña ni ponía la versión). El original conserva la suya. `DocumentTabsBar` ya no repite la insignia de versión cuando el título la incluye.
+- `tests/tabsEngine.test.ts` (17 tests): comportamiento real de `tabStore`/`titleEngine` con `localStorage` simulado, más guardias de cableado (`App.tsx`, `AppShell.tsx`). Se verificó que la guardia falla si se revierte el arreglo.
 - `scripts/verify-document-engine-contract.cjs` chequea el cableado de pestañas **y ahora está dentro de `check-all`** (antes existía pero no figuraba en `package.json`).
 
-Resultado: `tsc` 0 errores · vitest 119/119 · `build` OK · lint 0 errores · contrato OK · fronteras de módulo 0 violaciones.
+Resultado: `tsc` 0 errores · vitest 121/121 · `build` OK · lint 0 errores · contrato OK · fronteras de módulo 0 violaciones.
 
 ---
 
@@ -59,7 +60,18 @@ Resultado: `tsc` 0 errores · vitest 119/119 · `build` OK · lint 0 errores · 
 | Paso 5: cookies, modales `dvh`, auto-fit del visor | Válido pero **fuera de alcance** | Va en un plan aparte; no se mezcla con pestañas |
 | Paso 6: tests y `check-all` | Correcta, ampliada | Tests de comportamiento en lugar de solo greps del código fuente |
 
-Decisión pendiente sobre el v7: propone `CV - José Ramiro Burgos — Desarrollador Frontend` cuando hay versión de puesto. La barra ya muestra `versionLabel` como insignia al lado del título, así que agregarlo al título lo duplicaría. **No se implementó**; confirmar si se quiere igual.
+**Formato de título acordado (decidido):**
+
+| Situación | Título |
+|---|---|
+| Sin nombre cargado | `CV - 18/09 11:38:15.4` (sello congelado) |
+| Con nombre, documento base | `CV - José Ramiro Burgos - Base` |
+| Copia guardada con puesto | `CV - José Ramiro Burgos — Desarrollador Frontend` |
+| Tarjeta con nombre | `Tarjeta - José Ramiro Burgos` (sin Base ni puesto: no versiona por puesto) |
+| Carta con nombre | `Carta - José Ramiro Burgos - Base` / `— Puesto` (versiona por puesto, igual que el CV) |
+| Libro | `Libro - <sello>` para siempre |
+
+La marca `Base` y el puesto solo aplican a documentos con la capability `job_versioning` (CV y Carta). La regla para la Carta es una extensión mía de lo que se pidió para el CV; si no la querés, se quita cambiando una línea de `deriveDocumentTitle`.
 
 ---
 
@@ -98,8 +110,9 @@ Ya es visible. Falta pulirla para táctil: altura ~36px, `touch-pan-x`, títulos
 ## 6. Verificación manual (después de desplegar)
 
 1. Abrir `/crear-cv` en ventana privada → hay **una** pestaña "Mi Currículum Vitae".
-2. La pestaña dice `CV - DD/MM HH:mm:ss.d`. Cargar Nombres "José Ramiro" y Apellidos "Burgos" → pasa a `CV - José Ramiro Burgos`. Borrar el nombre → vuelve al sello original (no uno nuevo).
-   Tarjeta y Carta igual (`Tarjeta - …`, `Carta - …`); el Libro queda en `Libro - <sello>` para siempre.
+2. La pestaña dice `CV - DD/MM HH:mm:ss.d`. Cargar Nombres "José Ramiro" y Apellidos "Burgos" → pasa a `CV - José Ramiro Burgos - Base`. Borrar el nombre → vuelve al sello original (no uno nuevo).
+   Tarjeta: `Tarjeta - …`; Carta: `Carta - … - Base`; el Libro queda en `Libro - <sello>` para siempre.
+   Guardar como con puesto "Desarrollador Frontend" → aparece una pestaña nueva `CV - José Ramiro Burgos — Desarrollador Frontend` (activa) y la `- Base` sigue abierta.
 3. Cerrar la pestaña → vuelve a la landing y **no reaparece**.
 4. "+" → CV nuevo: pestaña nueva y la anterior sigue.
 5. "Mis archivos" → abrir un documento → su pestaña aparece y queda activa.

@@ -34,19 +34,19 @@ export function formatCompactDateTime(date: Date = new Date()): string {
   return `${pad(date.getDate())}/${pad(date.getMonth() + 1)} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}.${tenths}`;
 }
 
-const STAMP_RE = /\d{2}\/\d{2} \d{2}:\d{2}:\d{2}\.\d/;
+const STAMP_SRC = '\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d';
 const ID_STAMP_RE = /_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})_(\d)_[a-z0-9]+$/;
 
 /**
  * Sello de creación CONGELADO del documento (nunca cambia una vez asignado):
- * 1) el que ya lleva su título ("CV - 18/09 11:38:15.4"),
+ * 1) el que ya lleva su título ("CV - 18/09 11:38:15.4", con o sin " — versión"),
  * 2) el que codifica su id (generateDocumentId: doc_<tipo>_YYYYMMDD_HHmmss_d_xxx),
  * 3) recién ahora (borradores de id fijo, p. ej. draft_cv).
  */
 function frozenStamp(prefix: string, docData: any): string {
   const title: string = typeof docData?.title === 'string' ? docData.title : '';
-  const fromTitle = title.startsWith(`${prefix} - `) ? title.slice(prefix.length + 3) : '';
-  if (STAMP_RE.test(fromTitle) && fromTitle.match(STAMP_RE)![0] === fromTitle) return fromTitle;
+  const fromTitle = title.match(new RegExp(`^${prefix} - (${STAMP_SRC})(?: — .*)?$`));
+  if (fromTitle) return fromTitle[1];
 
   const m = typeof docData?.id === 'string' ? docData.id.match(ID_STAMP_RE) : null;
   if (m) return `${m[3]}/${m[2]} ${m[4]}:${m[5]}:${m[6]}.${m[7]}`;
@@ -56,13 +56,19 @@ function frozenStamp(prefix: string, docData: any): string {
 
 /**
  * Título del documento / pestaña:
- *   sin nombre cargado → "CV - 18/09 11:38:15.4"   (sello congelado)
- *   con nombre         → "CV - José Ramiro Burgos"
- * Tarjeta y Carta siguen la misma regla con su prefijo. El Libro NO es nombrable:
- * queda para siempre como "Libro - <sello>".
+ *   sin nombre cargado  → "CV - 18/09 11:38:15.4"                       (sello congelado)
+ *   con nombre          → "CV - José Ramiro Burgos - Base"                (documento base)
+ *   copia con versión   → "CV - José Ramiro Burgos — Desarrollador Frontend"
+ * La marca "Base" y la versión solo aplican a documentos con `job_versioning`
+ * (CV y Carta). Tarjeta: "Tarjeta - Nombre". El Libro NO es nombrable: queda para
+ * siempre como "Libro - <sello>".
  */
 export function deriveDocumentTitle(docType: string, docData: any): string {
   const prefix = DOC_TITLE_PREFIX[docType] || DOC_TITLE_PREFIX.cv;
+  const versionable = hasCapability(docType, 'job_versioning');
+  const versionLabel = versionable
+    ? String(docData?.version_label || docData?.versionLabel || '').trim()
+    : '';
 
   if (hasCapability(docType, 'nameable_title')) {
     const info = docData?.personalInfo;
@@ -73,8 +79,13 @@ export function deriveDocumentTitle(docType: string, docData: any): string {
     } else if (info?.fullName) {
       names.push(info.fullName);
     }
-    if (names.length > 0) return `${prefix} - ${names.join(' ').trim()}`;
+    if (names.length > 0) {
+      const base = `${prefix} - ${names.join(' ').trim()}`;
+      if (versionLabel) return `${base} — ${versionLabel}`;
+      return versionable ? `${base} - Base` : base;
+    }
   }
 
-  return `${prefix} - ${frozenStamp(prefix, docData)}`;
+  const stamped = `${prefix} - ${frozenStamp(prefix, docData)}`;
+  return versionLabel ? `${stamped} — ${versionLabel}` : stamped;
 }

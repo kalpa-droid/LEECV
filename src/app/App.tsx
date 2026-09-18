@@ -527,6 +527,12 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     try {
       const res = await saveCVAs(versionLabel);
       if (res?.success) {
+        // La copia es un documento nuevo: registrarle su pestaña (el original conserva la suya).
+        const copyId = res.record?.id;
+        if (copyId) {
+          const copy = { ...cvData, id: copyId, version_label: versionLabel };
+          setTabs(workspaceController.ensureDocumentTab(copyId, inferDocumentTypeId(cvData) as any, copy));
+        }
         showSuccess(`¡Nueva versión guardada! 📌 Título: "${res.title || versionLabel}"`);
       } else {
         showError('Hubo un inconveniente al crear la nueva versión.');

@@ -45,7 +45,7 @@ describe('motor de pestañas', () => {
 
   it('el título inicial ya refleja el nombre si el documento restaurado lo tiene', () => {
     const tabs = ensureDocumentTab('doc_cv_1', 'cv', { personalInfo: { givenNames: 'Mónica', surname: 'Burgos' } });
-    expect(tabs[0].title).toBe('CV - Mónica Burgos');
+    expect(tabs[0].title).toBe('CV - Mónica Burgos - Base');
   });
 
   it('ensureDocumentTab con documento cargado desde "Mis archivos" agrega su pestaña y la marca activa', () => {
@@ -108,12 +108,12 @@ describe('formato de título (titleEngine)', () => {
     expect(deriveDocumentTitle('cover_letter', { id: 'doc_cover_letter_20260918_113815_4_abc' })).toBe('Carta - 18/09 11:38:15.4');
   });
 
-  it('con nombre: "CV - Nombre Apellido"; Tarjeta y Carta igual con su prefijo', () => {
+  it('con nombre: "CV - Nombre Apellido - Base"; Tarjeta sin "Base" (no versiona por puesto)', () => {
     const doc = { id: 'draft_cv', personalInfo: { givenNames: 'José Ramiro', surname: 'Burgos' } };
-    expect(deriveDocumentTitle('cv', doc)).toBe('CV - José Ramiro Burgos');
+    expect(deriveDocumentTitle('cv', doc)).toBe('CV - José Ramiro Burgos - Base');
     expect(deriveDocumentTitle('business_card', doc)).toBe('Tarjeta - José Ramiro Burgos');
-    expect(deriveDocumentTitle('cover_letter', doc)).toBe('Carta - José Ramiro Burgos');
-    expect(deriveDocumentTitle('cv', { id: 'x', personalInfo: { fullName: 'Ana Gómez' } })).toBe('CV - Ana Gómez');
+    expect(deriveDocumentTitle('cover_letter', doc)).toBe('Carta - José Ramiro Burgos - Base');
+    expect(deriveDocumentTitle('cv', { id: 'x', personalInfo: { fullName: 'Ana Gómez' } })).toBe('CV - Ana Gómez - Base');
   });
 
   it('borrador de id fijo: el sello se congela en el título y NO cambia al recalcular', () => {
@@ -125,7 +125,7 @@ describe('formato de título (titleEngine)', () => {
   it('si se borra el nombre, vuelve al sello original del id', () => {
     const id = 'doc_cv_20260918_113815_4_abc';
     const named = { id, title: 'CV - Burgos', personalInfo: { surname: 'Burgos' } };
-    expect(deriveDocumentTitle('cv', named)).toBe('CV - Burgos');
+    expect(deriveDocumentTitle('cv', named)).toBe('CV - Burgos - Base');
     expect(deriveDocumentTitle('cv', { ...named, personalInfo: {} })).toBe('CV - 18/09 11:38:15.4');
   });
 
@@ -133,6 +133,21 @@ describe('formato de título (titleEngine)', () => {
     const id = 'doc_book_20260918_113815_4_abc';
     const t = deriveDocumentTitle('book', { id, personalInfo: { surname: 'Burgos' } });
     expect(t).toBe('Libro - 18/09 11:38:15.4');
+  });
+
+  it('copia con versión: "CV - Nombre — Puesto" reemplaza a "Base"; solo en documentos versionables', () => {
+    const doc = { id: 'doc_cv_1', personalInfo: { givenNames: 'José Ramiro', surname: 'Burgos' }, version_label: 'Desarrollador Frontend' };
+    expect(deriveDocumentTitle('cv', doc)).toBe('CV - José Ramiro Burgos — Desarrollador Frontend');
+    expect(deriveDocumentTitle('cover_letter', doc)).toBe('Carta - José Ramiro Burgos — Desarrollador Frontend');
+    expect(deriveDocumentTitle('business_card', doc)).toBe('Tarjeta - José Ramiro Burgos');
+    expect(deriveDocumentTitle('book', doc)).toMatch(/^Libro - \d{2}\/\d{2} /);
+  });
+
+  it('sin nombre pero con versión: conserva el sello congelado aunque el título ya lleve la versión', () => {
+    const id = 'doc_cv_20260918_113815_4_abc';
+    const t1 = deriveDocumentTitle('cv', { id, version_label: 'Backend' });
+    expect(t1).toBe('CV - 18/09 11:38:15.4 — Backend');
+    expect(deriveDocumentTitle('cv', { id: 'doc_cv_1758200000000', title: t1, version_label: 'Backend' })).toBe(t1);
   });
 });
 

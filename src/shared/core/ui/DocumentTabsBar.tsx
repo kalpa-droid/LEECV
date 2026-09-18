@@ -128,7 +128,7 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
                   </span>
                 </div>
 
-                {tab.versionLabel && (
+                {tab.versionLabel && !tab.title.includes(tab.versionLabel) && (
                   <span className={`text-[9px] px-1 py-0.2 rounded font-black uppercase tracking-tighter shrink-0 ${
                     isActive
                       ? 'bg-[var(--color-accent-on-base)] text-[var(--color-accent-base)]'
