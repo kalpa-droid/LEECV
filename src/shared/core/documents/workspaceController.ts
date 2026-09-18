@@ -12,7 +12,7 @@
 
 import * as TabStore from './tabStore';
 import { loadDocumentById, saveDocument } from '../storage/documentStorageService';
-import { markAsConfirmed, isProvisionalDocument, hasRealContent, isDraftDocumentId, inferDocTypeFromDraftId } from './documentEngine';
+import { markAsConfirmed, isProvisionalDocument, hasRealContent, isDraftDocumentId, inferDocTypeFromDraftId, computeAutoDocumentTitle } from './documentEngine';
 import { getDefaultTitleForDocType } from '../capabilities/capabilityRegistry';
 import { createBlankCVTemplate } from '../../../data/initialCVData';
 
@@ -43,6 +43,38 @@ export async function openDocument(
     return loaded;
   }
   return null;
+}
+
+/**
+ * Garantiza que el documento con el que arranca la sesión tenga su pestaña.
+ *
+ * Abrir una pestaña es siempre una acción explícita ("+", openDocument, switchToTab),
+ * pero el documento inicial (borrador fijo o sesión restaurada) no pasa por ninguna
+ * de esas vías. Sin esta función la barra queda vacía y `updateTabTitle` no tiene
+ * a qué renombrar (no hace nada si la pestaña no existe).
+ *
+ * También sirve para abrir un documento cargado desde "Mis archivos".
+ *
+ * Es idempotente: si la pestaña ya existe no la toca (solo la marca como activa).
+ * Debe llamarse al montar la app o desde una acción explícita del usuario — nunca
+ * desde un efecto reactivo, porque resucitaría la pestaña que el usuario acaba de
+ * cerrar (cvData sigue en memoria al volver a la landing).
+ */
+export function ensureDocumentTab(
+  id: string,
+  docType: TabStore.OpenTab['docType'],
+  docData: any
+): TabStore.OpenTab[] {
+  if (!id) return TabStore.getOpenTabs();
+  const current = TabStore.getOpenTabs();
+  if (current.some(t => t.id === id)) {
+    TabStore.setActiveTabId(id);
+    return current;
+  }
+
+  TabStore.openTab(id, docType, computeAutoDocumentTitle(docType, docData), docData?.version_label);
+  TabStore.setActiveTabId(id);
+  return TabStore.getOpenTabs();
 }
 
 /**

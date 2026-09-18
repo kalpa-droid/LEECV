@@ -59,6 +59,27 @@ allPassed &= checkFileForRegex(
   'App.tsx must use canVersionByJob from capabilitiesGate'
 );
 
+// 4. Pestañas: App.tsx hidrata el almacén y registra la pestaña inicial (regresión v5:
+//    "edito un CV y no veo ninguna pestaña"). Sin esto la barra queda vacía y el
+//    renombrado automático no tiene a qué aplicarse.
+allPassed &= checkFileForRegex(
+  path.join(rootDir, 'app/App.tsx'),
+  /useState<OpenTabItem\[\]>\(\(\) => getOpenTabs\(\)\)/,
+  'App.tsx must hydrate tabs from tabStore on first render'
+);
+allPassed &= checkFileForRegex(
+  path.join(rootDir, 'app/App.tsx'),
+  /workspaceController\.ensureDocumentTab\(/,
+  'App.tsx must register the initial document tab via workspaceController.ensureDocumentTab'
+);
+// 5. Ningún efecto secundario global dentro de updaters de setState del contexto
+allPassed &= checkFileForRegex(
+  path.join(rootDir, 'context/CVContext.tsx'),
+  /updateTabTitle\(/,
+  'CVContext.tsx must NOT call updateTabTitle inside setState updaters (do it in an App.tsx effect)',
+  false
+);
+
 if (allPassed) {
   console.log('[SUCCESS] All Document Engine contracts verified.');
   process.exit(0);

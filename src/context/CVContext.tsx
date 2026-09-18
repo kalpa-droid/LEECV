@@ -6,7 +6,7 @@ import { navigation } from '../shared/core/utils/navigation';
 import { CVData } from '../types/cv';
 
 import { getDocTypeForRoute, inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
-import { setTabDirty, updateTabTitle } from '../shared/core/documents/tabStore';
+import { setTabDirty } from '../shared/core/documents/tabStore';
 import { computeAutoDocumentTitle, markAsConfirmed, hasRealContent, getDraftIdForDocType } from '../shared/core/documents/documentEngine';
 import { saveDocumentDraftLocal } from '../shared/core/storage/documentStorageService';
 
@@ -116,8 +116,10 @@ export function CVProvider({ children }: { children: ReactNode }) {
       if (docType !== 'book') {
         const computedTitle = computeAutoDocumentTitle(docType as any, nextData);
         if (computedTitle && nextData.title !== computedTitle) {
+          // El título de la pestaña se sincroniza en un efecto de App.tsx: llamar acá a
+          // updateTabTitle dispararía un evento global (setState de otro componente)
+          // desde dentro de un updater de setState, que React trata como render impuro.
           finalData = { ...nextData, title: computedTitle };
-          updateTabTitle(nextId, computedTitle, nextData.version_label);
         }
       }
 
