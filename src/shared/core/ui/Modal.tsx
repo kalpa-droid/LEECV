@@ -53,7 +53,7 @@ export function Modal({
     xl: 'max-w-xl',
     '2xl': 'max-w-2xl',
     '4xl': 'max-w-4xl',
-    full: 'max-w-6xl w-full h-[90vh]'
+    full: 'max-w-6xl w-full h-[90dvh]'
   };
 
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -70,7 +70,7 @@ export function Modal({
     >
       <div
         data-ui-modal="true"
-        className={`w-full ${sizeClasses[size] || sizeClasses.md} bg-[var(--ui-bg-card)] ui-bg-card text-[var(--ui-text-primary)] ui-border border-2 rounded-[${radius.modal}] ${elevationSystem.overlay} overflow-hidden flex flex-col max-h-[92vh] ${className}`}
+        className={`w-full ${sizeClasses[size] || sizeClasses.md} bg-[var(--ui-bg-card)] ui-bg-card text-[var(--ui-text-primary)] ui-border border-2 rounded-[${radius.modal}] ${elevationSystem.overlay} overflow-hidden flex flex-col max-h-[92dvh] ${className}`}
       >
         {/* Header */}
         {(title || icon) && (
@@ -99,7 +99,7 @@ export function Modal({
 
         {/* Optional Footer */}
         {footer && (
-          <div className="px-5 py-3.5 border-t ui-border ui-bg-panel flex items-center justify-end gap-3">
+          <div className="px-5 py-3.5 border-t ui-border ui-bg-panel flex items-center justify-end gap-3 sticky bottom-0 shrink-0 z-10 pb-[calc(0.875rem+env(safe-area-inset-bottom,0px))]">
             {footer}
           </div>
         )}

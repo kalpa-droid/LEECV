@@ -258,7 +258,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const triggerAutoFit = React.useCallback(() => {
     if (typeof window !== 'undefined') {
       const isMobile = window.innerWidth < 768;
-      const padding = isMobile ? 16 : 48;
+      const padding = isMobile ? 8 : 48;
       const sidebarWidth = isMobile ? 0 : (isPanelOpen ? 500 : 96);
       const availableWidth = Math.max(280, window.innerWidth - sidebarWidth - padding);
       const a4WidthPx = 794;
@@ -776,6 +776,11 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
               setIsPanelOpen(true);
             } else {
               handleUserAutoFitClick();
+              if (typeof window !== 'undefined') {
+                requestAnimationFrame(() => {
+                  setTimeout(handleUserAutoFitClick, 120);
+                });
+              }
             }
           }}
         />

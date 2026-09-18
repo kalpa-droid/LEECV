@@ -34,7 +34,7 @@ export const CookieConsentBanner: React.FC = () => {
     <div
       role="region"
       aria-label="Consentimiento de cookies"
-      className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:max-w-md z-50 animate-in fade-in slide-in-from-bottom-5 duration-300"
+      className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] left-4 right-4 md:left-auto md:right-6 md:max-w-md z-[60] animate-in fade-in slide-in-from-bottom-5 duration-300"
     >
       <div className={`bg-[var(--ui-bg-panel)] backdrop-blur-md border border-[var(--color-neutral-border)] ${elevationSystem.overlay} rounded-[${radius.modal}] p-4 text-[var(--color-neutral-text-primary)]`}>
         <div className="flex items-start gap-3">
@@ -51,11 +51,11 @@ export const CookieConsentBanner: React.FC = () => {
               Tus datos personales y currículums son 100% privados y vectoriales.
             </p>
 
-            <div className="mt-3 flex items-center gap-2">
+            <div className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <button
                 type="button"
                 onClick={handleAccept}
-                className={`${button.primary} text-xs py-1.5 px-3.5 flex items-center gap-1.5`}
+                className={`${button.primary} text-xs py-2 px-3.5 min-h-[44px] flex items-center justify-center gap-1.5`}
               >
                 <Check className="w-3.5 h-3.5" />
                 Aceptar
@@ -63,7 +63,7 @@ export const CookieConsentBanner: React.FC = () => {
               <button
                 type="button"
                 onClick={handleDecline}
-                className={`${button.ghost} text-xs py-1.5 px-3.5 flex items-center gap-1.5`}
+                className={`${button.ghost} text-xs py-2 px-3.5 min-h-[44px] flex items-center justify-center gap-1.5`}
               >
                 <X className="w-3.5 h-3.5" />
                 Solo esenciales

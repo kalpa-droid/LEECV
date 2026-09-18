@@ -58,7 +58,6 @@ export const AppShell: React.FC<AppShellProps> = ({
         </div>
       </main>
 
-      {/* Visible en TODOS los anchos: en mobile la propia barra se apoya sobre el dock inferior (mb-[76px]). */}
       <div className="w-full shrink-0">
         <DocumentTabsBar {...tabsBarProps} docType={docType} />
       </div>

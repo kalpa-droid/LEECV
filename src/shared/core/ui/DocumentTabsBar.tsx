@@ -50,7 +50,7 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
     useHorizontalScrollControls(tabsScrollRef, [tabs.length]);
 
   return (
-    <footer className="h-8 bg-[var(--ui-bg-panel)] border-t border-[var(--ui-border)] text-[var(--ui-text-primary)] px-2 sm:px-3 md:pl-28 flex items-center justify-between gap-1.5 shrink-0 no-print select-none text-[11px] font-sans z-40 mb-[76px] md:mb-0">
+    <footer className="h-9 sm:h-10 bg-[var(--ui-bg-panel)] border-t border-[var(--ui-border)] text-[var(--ui-text-primary)] px-2 sm:px-3 md:pl-28 flex items-center justify-between gap-1.5 shrink-0 no-print select-none text-[11px] font-sans z-40 mb-[76px] md:mb-0 pb-[env(safe-area-inset-bottom,0px)]">
       {/* Pestañas de Documentos Abiertos + Botón "+" (con desplazamiento por flechas reales, rueda del mouse o swipe) */}
       <div className="flex items-center gap-1 flex-1 min-w-0 py-0.5">
         {/* Flecha izquierda: solo se muestra si hay pestañas ocultas a ese lado */}
@@ -72,7 +72,7 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
               e.currentTarget.scrollLeft += (e.deltaY || e.deltaX);
             }
           }}
-          className="flex items-center gap-1 overflow-x-auto no-scrollbar min-w-0"
+          className="flex items-center gap-1 overflow-x-auto no-scrollbar min-w-0 touch-pan-x"
         >
           {tabs.map((tab) => {
             const tabId = (tab as any).id || (tab as any).cvId;
@@ -112,7 +112,7 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
                       e.currentTarget.scrollLeft += (e.deltaY || e.deltaX);
                     }
                   }}
-                  className="overflow-x-auto no-scrollbar max-w-[85px] sm:max-w-[130px] flex items-center scroll-smooth"
+                  className="overflow-x-auto no-scrollbar max-w-[110px] sm:max-w-[160px] flex items-center scroll-smooth truncate"
                 >
                   <span
                     ref={(el) => {

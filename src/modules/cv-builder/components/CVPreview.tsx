@@ -191,7 +191,7 @@ export default function CVPreview({
       {/* Contenedor adaptativo geométricamente proporcional al zoom y centrado sin cortes */}
       <div 
         ref={paperSheetRef}
-        className={`my-3 sm:my-5 no-print mx-auto shrink-0 flex justify-center ${elevationSystem.overlay} transition-[width,height] duration-75 ease-out`}
+        className={`my-1 sm:my-5 no-print mx-auto shrink-0 flex justify-center ${elevationSystem.overlay} transition-[width,height] duration-75 ease-out`}
         style={{ 
           width: `${Math.round(794 * zoomLevel)}px`,
           minHeight: `${Math.round(1123 * zoomLevel)}px`,
