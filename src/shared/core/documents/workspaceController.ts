@@ -12,7 +12,9 @@
 
 import * as TabStore from './tabStore';
 import { loadDocumentById, saveDocument } from '../storage/documentStorageService';
-import { markAsConfirmed, isProvisionalDocument, hasRealContent } from './documentLifecycleEngine';
+import { markAsConfirmed, isProvisionalDocument, hasRealContent, isDraftDocumentId, inferDocTypeFromDraftId } from './documentLifecycleEngine';
+import { getDefaultTitleForDocType } from '../capabilities/capabilityRegistry';
+import { createBlankCVTemplate } from '../../../data/initialCVData';
 
 export interface CurrentDocumentState {
   id: string;
@@ -51,12 +53,22 @@ export async function switchToTab(
   targetId: string,
   currentDoc: CurrentDocumentState | null,
   setCvData: (data: any) => void,
-  options: { saveCurrentIfDirty?: boolean } = { saveCurrentIfDirty: true }
+  options: { saveCurrentIfDirty?: boolean; targetDocType?: string } = { saveCurrentIfDirty: true }
 ): Promise<boolean> {
   if (!targetId || targetId === currentDoc?.id) return false;
 
-  const targetTab = TabStore.getOpenTabs().find(t => t.id === targetId);
-  if (!targetTab) return false;
+  let targetTab = TabStore.getOpenTabs().find(t => t.id === targetId);
+
+  // NUEVO — si la pestaña todavía no existe pero es un id de borrador conocido
+  // (draft_cv, draft_card, draft_cover_letter, draft_book) o se indicó
+  // explícitamente su tipo, registrarla ahora en vez de fallar. Esto es lo que
+  // permite "ir al borrador fijo" sin que antes tenga que existir como pestaña.
+  if (!targetTab) {
+    const docType = options.targetDocType || (isDraftDocumentId(targetId) ? inferDocTypeFromDraftId(targetId) : null);
+    if (!docType) return false; // sigue siendo un error real si no es un borrador conocido ni se indicó el tipo
+    TabStore.openTab(targetId, docType as any, getDefaultTitleForDocType(docType));
+    targetTab = TabStore.getOpenTabs().find(t => t.id === targetId);
+  }
 
   // Si hay un documento activo con cambios pendientes, guardarlo antes de cambiar
   if (options.saveCurrentIfDirty && currentDoc?.isDirty && currentDoc?.data) {
@@ -68,14 +80,13 @@ export async function switchToTab(
     }
   }
 
-  const loaded = await loadDocumentById(targetId, targetTab.docType);
-  if (loaded) {
-    TabStore.setActiveTabId(targetId);
-    setCvData(loaded);
-    return true;
-  }
-
-  return false;
+  // Cargar el documento — si no existe nada guardado todavía bajo este id
+  // (caso real: primera vez que se usa este borrador), se abre en blanco,
+  // no se trata como error:
+  const loaded = await loadDocumentById(targetId, targetTab!.docType) || createBlankCVTemplate({ id: targetId, docTypeId: targetTab!.docType });
+  TabStore.setActiveTabId(targetId);
+  setCvData(loaded);
+  return true;
 }
 
 /**

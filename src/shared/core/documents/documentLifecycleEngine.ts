@@ -31,6 +31,14 @@ export function getDraftIdForDocType(docType: 'cv' | 'business_card' | 'book' | 
   }
 }
 
+export function inferDocTypeFromDraftId(id: string): 'cv' | 'business_card' | 'book' | 'cover_letter' | null {
+  if (id === DRAFT_CV_ID) return 'cv';
+  if (id === DRAFT_CARD_ID) return 'business_card';
+  if (id === DRAFT_COVER_LETTER_ID) return 'cover_letter';
+  if (id === DRAFT_BOOK_ID) return 'book';
+  return null;
+}
+
 /**
  * Formatea fecha y hora en estilo compacto latinoamericano (ej: "16/09 20:30")
  */

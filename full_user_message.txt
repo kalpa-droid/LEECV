@@ -1,0 +1,95 @@
+<USER_REQUEST>
+# Plan v3 — Opción B — Guía de implementación
+
+Verificado contra `origin/main` (`b22f6e1`). Cada paso dice **qué archivo**, **dónde**
+exactamente, y **qué código**. Los pasos van en orden: cada uno compila por sí solo,
+así que podés correr `npx tsc --noEmit` después de cada uno y no acumular errores.
+
+**Modelo elegido (Opción B):** el borrador **no** tiene un id fijo. Cada documento
+conserva su UUID y lleva una marca persistida `isProvisional`. Al entrar a la app se
+reconcilian los documentos provisionales con contenido real: se confirman y se les
+abre pestaña. Esto no rompe el test existente de ids únicos y protege *todos* los
+documentos abiertos, no solo uno.
+
+---
+
+## ⚠️ Hallazgo nuevo que cambia el paso 4 respecto al plan anterior
+
+Leí `saveDocumentInternal` completo (`documentStorageService.ts:78-199`). **No se
+puede usar `saveDocument()` para el autoguardado.** Cada llamada hace, sin ningún
+debounce interno:
+
+| Línea | Qué hace |
+|---|---|
+| 91 | `optimizeCVImagesToWebP(docData)` — recomprime **todas** las imágenes del CV |
+| 123 | `dedupAssetsForLocalStorage` — recalcula hashes de assets |
+| 151-165 | `dal.cvs.upsert(...)` → **escritura a Supabase** |
+| 174 | `backupCvToGoogleDrive(...)` → **subida a Google Drive** |
+
+Llamar a eso cada 1.5 segundos de tipeo te recomprime la foto de perfil y te sube el
+CV a la nube en cada pausa. Con una foto grande, el autoguardado bloquearía el hilo
+de la UI de forma visible.
+
+Además `saveDocumentInternal` **reescribe el `title`** con su propio formato
+(`CV - NOMBRE - Mes - Año`, línea 101), pisando el título que calcula
+`computeAutoDocumentTitle`.
+
+**Por eso el paso 4 crea una función de guardado liviana** (solo IndexedDB), en el
+mismo motor de storage. El `saveDocument` pesado sigue siendo el del guardado
+explícito, sin tocarlo.
+
+---
+
+## Paso 0 — Mergear la rama prerequisito
+
+```bash
+git fetch --all
+git merge origin/fix/close-tab-passive-resurrect
+```
+
+Trae dos cosas que los pasos 5 y 6 necesitan: el fix del sinc
+<truncated 16193 bytes>
+-all
+```
+
+**Manual — los 4 casos que ningún test cubre:**
+
+1. **Autoguardado sin efectos de red.** Escribir, esperar 2s sin tocar nada.
+   DevTools → Application → IndexedDB: el registro `doc_cv_data_<id>` tiene el texto
+   nuevo. **Y en la pestaña Network: cero requests a Supabase** por cada pausa de
+   tipeo. Si ves requests, el paso 4 quedó usando `saveDocument` en vez de
+   `saveDocumentDraftLocal`.
+2. **Categoría B (F5 / cerrar navegador).** Escribir un nombre sin guardar a mano,
+   recargar → el trabajo aparece como documento propio con su título en la barra de
+   pestañas, y podés seguir editándolo.
+3. **Categoría A (botón X de la app).** Escribir, cerrar la pestaña con la X,
+   confirmar → el documento aparece en "Abrir" con su contenido.
+4. **El caso que más rápido rompería todo:** entrar, **no escribir nada**, recargar
+   5 veces seguidas. La lista "Abrir" **no** debe tener 5 CVs vacíos. Si los tiene,
+   `hasRealContent` está devolviendo true de más — revisá que los nombres de las
+   listas del paso 1b coincidan con tu esquema real.
+
+---
+
+## Orden y puntos de corte
+
+```
+0. merge fix/close-tab-passive-resurrect     → check-all
+1. helpers en documentLifecycleEngine        → tsc
+2. is_provisional en DocumentRecord          → tsc
+3. saveDocumentDraftLocal + propagar marca   → tsc
+        ▼ (hasta acá no cambió ningún comportamiento visible: es andamiaje)
+4. autoguardado unificado                    → prueba manual 1
+5. reconcileProvisionalsOnEntry              → prueba manual 2 y 4
+6. closeTab con currentDoc                   → prueba manual 3
+7. beforeunload                              → check-all final
+8. tests
+```
+
+Los pasos 1-3 son puramente aditivos: si los mergeás y parás ahí, la app se comporta
+exactamente igual que hoy. El primer cambio de comportamiento real es el 4. Si algo
+sale mal en producción, ese es el punto al que revertir.
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-09-17T21:01:13-03:00.
+</ADDITIONAL_METADATA>

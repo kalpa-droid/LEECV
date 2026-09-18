@@ -206,7 +206,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         targetCvId,
         currentDocState,
         setCvData,
-        { saveCurrentIfDirty: !opts.skipSaveCurrent }
+        { saveCurrentIfDirty: !opts.skipSaveCurrent, targetDocType }
       );
 
       if (success) {
