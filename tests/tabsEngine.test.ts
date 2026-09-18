@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getOpenTabs, openTab, closeTab, updateTabTitle, getActiveTabId } from '../src/shared/core/documents/tabStore';
 import { ensureDocumentTab } from '../src/shared/core/documents/workspaceController';
+import { deriveDocumentTitle, formatCompactDateTime } from '../src/shared/core/documents/documentEngine/titleEngine';
 
 /**
  * Motor de pestañas — comportamiento real (no greps del código fuente).
@@ -28,7 +29,7 @@ describe('motor de pestañas', () => {
     expect(tabs).toHaveLength(1);
     expect(tabs[0].id).toBe('draft_cv');
     expect(tabs[0].docType).toBe('cv');
-    expect(tabs[0].title).toBe('Mi Currículum Vitae');
+    expect(tabs[0].title).toMatch(/^CV - \d{2}\/\d{2} \d{2}:\d{2}:\d{2}\.\d$/);
     expect(getActiveTabId()).toBe('draft_cv');
   });
 
@@ -44,7 +45,7 @@ describe('motor de pestañas', () => {
 
   it('el título inicial ya refleja el nombre si el documento restaurado lo tiene', () => {
     const tabs = ensureDocumentTab('doc_cv_1', 'cv', { personalInfo: { givenNames: 'Mónica', surname: 'Burgos' } });
-    expect(tabs[0].title).toBe('Mi Currículum Vitae de Mónica Burgos');
+    expect(tabs[0].title).toBe('CV - Mónica Burgos');
   });
 
   it('ensureDocumentTab con documento cargado desde "Mis archivos" agrega su pestaña y la marca activa', () => {
@@ -59,12 +60,12 @@ describe('motor de pestañas', () => {
 
   it('updateTabTitle renombra una pestaña existente', () => {
     ensureDocumentTab('draft_cv', 'cv', { personalInfo: {} });
-    updateTabTitle('draft_cv', 'Mi Currículum Vitae de Burgos');
-    expect(getOpenTabs()[0].title).toBe('Mi Currículum Vitae de Burgos');
+    updateTabTitle('draft_cv', 'CV - Burgos');
+    expect(getOpenTabs()[0].title).toBe('CV - Burgos');
   });
 
   it('updateTabTitle NO crea pestañas: sin pestaña registrada el renombrado no hace nada (causa del bug)', () => {
-    updateTabTitle('draft_cv', 'Mi Currículum Vitae de Burgos');
+    updateTabTitle('draft_cv', 'CV - Burgos');
     expect(getOpenTabs()).toHaveLength(0);
   });
 
@@ -72,6 +73,15 @@ describe('motor de pestañas', () => {
     ensureDocumentTab('draft_cv', 'cv', {});
     closeTab('draft_cv');
     expect(getOpenTabs()).toHaveLength(0);
+  });
+
+  it('AppShell no oculta la barra de pestañas en mobile (regresión b22f6e1: hidden md:block)', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const shell = fs.readFileSync(path.join(__dirname, '../src/shared/core/ui/AppShell.tsx'), 'utf-8');
+    const idx = shell.indexOf('<DocumentTabsBar');
+    expect(idx).toBeGreaterThan(0);
+    expect(shell.slice(Math.max(0, idx - 120), idx)).not.toContain('hidden md:block');
   });
 
   it('GUARDIA DE CABLEADO — App.tsx hidrata las pestañas y registra la inicial al montar', async () => {
@@ -84,3 +94,45 @@ describe('motor de pestañas', () => {
     expect(app).toContain('updateTabTitle(activeCvId');
   });
 });
+
+describe('formato de título (titleEngine)', () => {
+  it('formatCompactDateTime => DD/MM HH:mm:ss.d con décima de segundo', () => {
+    expect(formatCompactDateTime(new Date(2026, 8, 18, 11, 38, 15, 456))).toBe('18/09 11:38:15.4');
+    expect(formatCompactDateTime(new Date(2026, 0, 5, 3, 4, 5, 99))).toBe('05/01 03:04:05.0');
+  });
+
+  it('sin nombre: prefijo por tipo + sello tomado del id (congelado, determinista)', () => {
+    const id = 'doc_cv_20260918_113815_4_abc';
+    expect(deriveDocumentTitle('cv', { id })).toBe('CV - 18/09 11:38:15.4');
+    expect(deriveDocumentTitle('business_card', { id: 'doc_card_20260918_113815_4_abc' })).toBe('Tarjeta - 18/09 11:38:15.4');
+    expect(deriveDocumentTitle('cover_letter', { id: 'doc_cover_letter_20260918_113815_4_abc' })).toBe('Carta - 18/09 11:38:15.4');
+  });
+
+  it('con nombre: "CV - Nombre Apellido"; Tarjeta y Carta igual con su prefijo', () => {
+    const doc = { id: 'draft_cv', personalInfo: { givenNames: 'José Ramiro', surname: 'Burgos' } };
+    expect(deriveDocumentTitle('cv', doc)).toBe('CV - José Ramiro Burgos');
+    expect(deriveDocumentTitle('business_card', doc)).toBe('Tarjeta - José Ramiro Burgos');
+    expect(deriveDocumentTitle('cover_letter', doc)).toBe('Carta - José Ramiro Burgos');
+    expect(deriveDocumentTitle('cv', { id: 'x', personalInfo: { fullName: 'Ana Gómez' } })).toBe('CV - Ana Gómez');
+  });
+
+  it('borrador de id fijo: el sello se congela en el título y NO cambia al recalcular', () => {
+    const first = deriveDocumentTitle('cv', { id: 'draft_cv' });
+    expect(first).toMatch(/^CV - \d{2}\/\d{2} \d{2}:\d{2}:\d{2}\.\d$/);
+    expect(deriveDocumentTitle('cv', { id: 'draft_cv', title: first })).toBe(first);
+  });
+
+  it('si se borra el nombre, vuelve al sello original del id', () => {
+    const id = 'doc_cv_20260918_113815_4_abc';
+    const named = { id, title: 'CV - Burgos', personalInfo: { surname: 'Burgos' } };
+    expect(deriveDocumentTitle('cv', named)).toBe('CV - Burgos');
+    expect(deriveDocumentTitle('cv', { ...named, personalInfo: {} })).toBe('CV - 18/09 11:38:15.4');
+  });
+
+  it('Libro: inmutable, nunca toma el nombre', () => {
+    const id = 'doc_book_20260918_113815_4_abc';
+    const t = deriveDocumentTitle('book', { id, personalInfo: { surname: 'Burgos' } });
+    expect(t).toBe('Libro - 18/09 11:38:15.4');
+  });
+});
+

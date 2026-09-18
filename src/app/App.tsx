@@ -336,7 +336,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     if (isSwitchingDocument || !activeCvId) return;
     const docType = inferDocumentTypeId(cvData);
     if (docType === 'book') return; // el libro tiene título congelado por capability
-    const title = cvData?.title || computeAutoDocumentTitle(docType as any, cvData);
+    const title = computeAutoDocumentTitle(docType as any, cvData);
     updateTabTitle(activeCvId, title, cvData?.version_label);
   }, [activeCvId, cvData?.title, cvData?.version_label, isSwitchingDocument]);
 

@@ -1,5 +1,5 @@
-import { generateDocumentId } from '../shared/core/documents/documentEngine/titleEngine';
-import { getDefaultTitleForDocType, inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
+import { generateDocumentId, deriveDocumentTitle } from '../shared/core/documents/documentEngine/titleEngine';
+import { inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
 
 export const blankCVBase = {
   activePresetId: "cv-clasico",
@@ -84,12 +84,12 @@ export function createBlankCVTemplate(overrides?: Record<string, any>) {
   const merged = { ...blankCVBase, ...overrides };
   const docType = inferDocumentTypeId(merged);
   const prefix = docType === 'business_card' ? 'card' : docType === 'book' ? 'book' : docType === 'cover_letter' ? 'cover_letter' : 'cv';
-  const defaultTitle = getDefaultTitleForDocType(docType);
+  const id = overrides?.id || generateDocumentId(prefix as any);
 
   return {
     ...blankCVBase,
-    id: overrides?.id || generateDocumentId(prefix as any),
-    title: overrides?.title || defaultTitle,
+    id,
+    title: overrides?.title || deriveDocumentTitle(docType, { id }),
     doc_type_id: docType,
     docType: docType,
     ...overrides,
