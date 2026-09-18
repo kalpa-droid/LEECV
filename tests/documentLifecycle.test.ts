@@ -83,4 +83,28 @@ describe('documentLifecycle (Gestión de Documentos & Pestañas)', () => {
     expect(isProvisionalDocument({ is_provisional: true })).toBe(true);
     expect(isProvisionalDocument({ id: 'cv_viejo' })).toBe(true);
   });
+
+  it('REGRESIÓN — CVContext.tsx arranca con el id fijo de borrador (getDraftIdForDocType), no uno generado al azar. Causa real de "edito un CV recién abierto y no veo ninguna pestaña": con un id aleatorio, el sincronizador de ruta en App.tsx salía temprano (route ya coincide con docType en el primer render) y nunca se llegaba a workspaceController.switchToTab, el único lugar que registra la pestaña de un id de borrador desconocido.', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const contextPath = path.join(__dirname, '../src/context/CVContext.tsx');
+    const content = fs.readFileSync(contextPath, 'utf-8');
+
+    const initialStateMatch = content.match(/const \[cvData, setCvDataState\] = useState<CVData>\(\(\) => \{[\s\S]*?\n  \}\);/);
+    expect(initialStateMatch).toBeTruthy();
+    const initialStateBody = initialStateMatch![0];
+
+    expect(initialStateBody).toContain('getDraftIdForDocType');
+    expect(initialStateBody).toMatch(/createBlankCVTemplate\(\{\s*\n?\s*id:\s*getDraftIdForDocType/);
+  });
+
+  it('REGRESIÓN — App.tsx registra explícitamente la pestaña del documento inicial al montar, en vez de depender del sincronizador pasivo (que solo actualiza pestañas ya existentes)', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const appPath = path.join(__dirname, '../src/app/App.tsx');
+    const content = fs.readFileSync(appPath, 'utf-8');
+
+    expect(content).toContain('didRegisterInitialTabRef');
+    expect(content).toMatch(/Registro explícito de la pestaña del documento inicial/);
+  });
 });

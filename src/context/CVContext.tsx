@@ -7,7 +7,7 @@ import { CVData } from '../types/cv';
 
 import { getDocTypeForRoute, inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
 import { setTabDirty, updateTabTitle } from '../shared/core/documents/tabStore';
-import { computeAutoDocumentTitle, markAsConfirmed, hasRealContent } from '../shared/core/documents/documentLifecycleEngine';
+import { computeAutoDocumentTitle, markAsConfirmed, hasRealContent, getDraftIdForDocType } from '../shared/core/documents/documentLifecycleEngine';
 import { saveDocumentDraftLocal } from '../shared/core/storage/documentStorageService';
 
 interface CVContextType {
@@ -60,7 +60,15 @@ export function CVProvider({ children }: { children: ReactNode }) {
     const initialPresetId = targetDocType === 'business_card' ? 'tarjeta-personal'
       : targetDocType === 'cover_letter' ? 'carta-clasica'
       : 'cv-clasico';
-    return sanitizeCvData(createBlankCVTemplate({ activePresetId: initialPresetId }));
+    // Usar SIEMPRE el id fijo de borrador (draft_cv / draft_card / etc.) para el
+    // documento con el que arranca la app, no uno generado al azar — así el motor
+    // de pestañas lo reconoce como "borrador conocido" desde el primer render y le
+    // crea su pestaña (ver workspaceController.switchToTab), en vez de quedar sin
+    // ninguna pestaña hasta que el usuario haga una acción explícita.
+    return sanitizeCvData(createBlankCVTemplate({
+      id: getDraftIdForDocType(targetDocType as any),
+      activePresetId: initialPresetId
+    }));
   });
 
   const [isSaving, setIsSaving] = useState(false);

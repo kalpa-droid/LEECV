@@ -378,6 +378,29 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const [tabs, setTabs] = useState<OpenTabItem[]>([]);
   const activeCvId = cvData?.id || '';
 
+  // Registro explícito de la pestaña del documento inicial (una sola vez al montar).
+  // Sin esto, la primerísima pestaña de una sesión nunca se creaba: el sincronizador
+  // de abajo solo actualiza pestañas YA existentes (opening a tab is always an explicit
+  // action, por diseño), y el sincronizador de ruta sale temprano porque route/docType
+  // ya coinciden en el primer render, así que nunca llegaba a workspaceController.
+  const didRegisterInitialTabRef = useRef(false);
+  useEffect(() => {
+    if (didRegisterInitialTabRef.current) return;
+    if (!activeCvId) return;
+    didRegisterInitialTabRef.current = true;
+    const alreadyOpen = getOpenTabs().some(t => t.cvId === activeCvId);
+    if (!alreadyOpen) {
+      const docTypeForTab = inferDocumentTypeId(cvData);
+      addOpenTab(
+        activeCvId,
+        docTypeForTab as any,
+        computeAutoDocumentTitle(cvData, docTypeForTab as any, { isDirty: false }),
+        cvData?.version_label
+      );
+      setTabs(getOpenTabs());
+    }
+  }, [activeCvId]);
+
   // Sincronizador Núcleo 1: mantiene actualizado el TÍTULO/tipo de la pestaña del
   // documento activo. NO abre pestañas nuevas por su cuenta: abrir una pestaña es
   // siempre una acción explícita (workspaceController.openDocument / el botón "+").
