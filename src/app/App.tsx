@@ -277,6 +277,25 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         if (tabsChanged) {
           setTabs(getOpenTabs());
         }
+
+        // Purga de pestañas fantasma: residuo de localStorage generado ANTES de
+        // este fix — documentos que ya no existen, o blancos vacíos que quedaron
+        // guardados antes del gate de hasRealContent. El activo actual nunca se
+        // toca, sea cual sea su contenido.
+        const openTabsNow = getOpenTabs();
+        let purged = false;
+        for (const tab of openTabsNow) {
+          if (tab.id === cvData?.id) continue;
+          const doc = await loadDocumentById(tab.id, tab.docType || 'cv');
+          const isGhost = !doc || (!hasRealContent(doc) && isProvisionalDocument(doc));
+          if (isGhost) {
+            removeOpenTab(tab.id);
+            purged = true;
+          }
+        }
+        if (purged) {
+          setTabs(getOpenTabs());
+        }
       } catch (err) {
         console.warn('Error en reconciliación de documentos provisionales:', err);
       }
