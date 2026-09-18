@@ -249,6 +249,11 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   // Paso 5: Reconciliar documentos provisionales al entrar
   useEffect(() => {
     if (didReconcileRef.current) return;
+    
+    // Solo reconciliar cuando ya tenemos un documento activo cargado,
+    // de lo contrario se aborta el intento y se espera al siguiente render
+    if (!activeCvId) return;
+    
     didReconcileRef.current = true;
 
     const reconcileProvisionals = async () => {
@@ -285,7 +290,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         const openTabsNow = getOpenTabs();
         let purged = false;
         for (const tab of openTabsNow) {
-          if (tab.id === cvData?.id) continue;
+          if (tab.id === activeCvId) continue;
           const doc = await loadDocumentById(tab.id, tab.docType || 'cv');
           const isGhost = !doc || (!hasRealContent(doc) && isProvisionalDocument(doc));
           if (isGhost) {
@@ -302,7 +307,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     };
     
     reconcileProvisionals();
-  }, []);
+  }, [activeCvId]);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
 
   // Zoom and Responsive A4 Auto-Fit state
