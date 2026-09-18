@@ -28,7 +28,8 @@ export function formatCompactDateTime(date: Date = new Date()): string {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
-  return `${day}/${month} ${hours}:${minutes}`;
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${day}/${month} ${hours}:${minutes}:${seconds}`;
 }
 
 /**
@@ -109,3 +110,32 @@ export function computeAutoDocumentTitle(
 
   return docType === 'business_card' ? 'Nueva Tarjeta' : 'Nuevo Currículum';
 }
+
+/**
+ * Un documento es "provisional" mientras el usuario no lo confirmó con un guardado
+ * explícito. Default true: si la marca no está (documentos viejos, anteriores a
+ * este campo), se los trata como provisionales y el reconciliador los adopta.
+ */
+export function isProvisionalDocument(doc: any): boolean {
+  return Boolean(doc) && doc.isProvisional !== false;
+}
+
+export function markAsConfirmed<T extends Record<string, any>>(doc: T): T {
+  return { ...doc, isProvisional: false };
+}
+
+/**
+ * Guardarraíl contra llenar la lista "Abrir" de documentos vacíos: solo se
+ * reconcilia lo que tiene contenido real cargado por el usuario.
+ */
+export function hasRealContent(doc: any): boolean {
+  if (!doc) return false;
+  if (extractCandidateName(doc)) return true;
+
+  const p = doc.personalInfo || {};
+  if ((p.email || '').trim() || (p.phone || '').trim() || (p.quote || '').trim()) return true;
+
+  const listFields = ['roles', 'education', 'professions', 'courses', 'skills', 'languages', 'projects', 'customSections'];
+  return listFields.some((f) => Array.isArray(doc[f]) && doc[f].length > 0);
+}
+

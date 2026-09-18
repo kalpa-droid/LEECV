@@ -406,7 +406,7 @@ if (fs.existsSync(cvContextPath)) {
   const contextContent = fs.readFileSync(cvContextPath, 'utf-8');
   check(
     'CVContext.tsx sincroniza cvData.id al guardar y ofrece la función saveCVAs',
-    contextContent.includes('setCvData((prev: CVData) => ({ ...prev, id: res.record!.id }))') && contextContent.includes('saveCVAs'),
+    contextContent.includes('setCvData((prev: CVData) =>') && contextContent.includes('id: res.record!.id') && contextContent.includes('saveCVAs'),
     'CVContext.tsx no sincroniza id o no ofrece saveCVAs'
   );
 }

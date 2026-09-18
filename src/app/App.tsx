@@ -244,6 +244,46 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       handleSwitchDocumentTab(pending.id, pending.docType);
     }
   }, []);
+
+  // Paso 5: Reconciliar documentos provisionales al entrar
+  useEffect(() => {
+    let isMounted = true;
+    const reconcileProvisionals = async () => {
+      try {
+        const { getSavedDocumentsList, loadDocumentById, deleteDocumentById, saveDocument } = await import('../shared/core/storage/documentStorageService');
+        const { isProvisionalDocument, markAsConfirmed, hasRealContent } = await import('../shared/core/documents/documentLifecycleEngine');
+        
+        const docTypes = ['cv', 'business_card', 'cover_letter', 'book'];
+        let tabsChanged = false;
+
+        for (const docType of docTypes) {
+          const docs = await getSavedDocumentsList(docType);
+          const provisionals = docs.filter((d: any) => isProvisionalDocument(d));
+          
+          for (const p of provisionals) {
+            const docData = await loadDocumentById(p.id, docType);
+            if (docData && hasRealContent(docData)) {
+              const confirmedDoc = markAsConfirmed(docData);
+              await saveDocument(confirmedDoc, docType);
+              addOpenTab(confirmedDoc.id, docType as any, confirmedDoc.title || 'Recuperado');
+              tabsChanged = true;
+            } else {
+              await deleteDocumentById(p.id, docType);
+            }
+          }
+        }
+        
+        if (isMounted && tabsChanged) {
+          setTabs(getOpenTabs());
+        }
+      } catch (err) {
+        console.warn('Error en reconciliación de documentos provisionales:', err);
+      }
+    };
+    
+    reconcileProvisionals();
+    return () => { isMounted = false; };
+  }, []);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
 
   // Zoom and Responsive A4 Auto-Fit state
@@ -403,7 +443,14 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       onConfirm: async () => {
         setIsSwitchingDocument(true);
         try {
-          await workspaceController.closeTab(cvId, activeCvId, setCvData, goToLandingPage);
+          const currentDocState: workspaceController.CurrentDocumentState | null = cvData ? {
+            id: cvData.id,
+            docType: inferDocumentTypeId(cvData),
+            data: cvData,
+            isDirty: hasPendingChanges
+          } : null;
+          
+          await workspaceController.closeTab(cvId, currentDocState, setCvData, goToLandingPage);
           setTabs(getOpenTabs());
         } finally {
           setIsSwitchingDocument(false);
@@ -415,7 +462,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   // Protección ante cierre accidental del navegador
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (cvData) {
+      if (cvData && hasPendingChanges) {
         e.preventDefault();
         e.returnValue = '¿Deseas salir de la página? Asegúrate de que tus datos estén guardados.';
         return e.returnValue;
@@ -423,7 +470,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [cvData]);
+  }, [cvData, hasPendingChanges]);
 
   const handleAuthToggle = async () => {
     if (currentProfile) {
@@ -903,7 +950,13 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
               onImportJson={handleImportJsonFile}
               onOpenCloudStatus={() => setIsCloudModalOpen(true)}
               onDocumentClosed={(deletedId) => {
-                workspaceController.closeTab(deletedId, activeCvId, setCvData, goToLandingPage).then(() => setTabs(getOpenTabs()));
+                const currentDocState: workspaceController.CurrentDocumentState | null = cvData ? {
+                  id: cvData.id,
+                  docType: inferDocumentTypeId(cvData),
+                  data: cvData,
+                  isDirty: hasPendingChanges
+                } : null;
+                workspaceController.closeTab(deletedId, currentDocState, setCvData, goToLandingPage).then(() => setTabs(getOpenTabs()));
               }}
             />
           )}

@@ -108,7 +108,8 @@ const saveDocumentInternal = async (
       candidate_name: candidateName,
       dni: optimizedDoc.personalInfo?.dni || '',
       updated_at: nowIso,
-      ...(versionLabel ? { version_label: versionLabel } : {})
+      ...(versionLabel ? { version_label: versionLabel } : {}),
+      is_provisional: docData.isProvisional,
     };
 
     const fullDocObject = {
@@ -194,6 +195,84 @@ const saveDocumentInternal = async (
   } catch (err) {
     console.error(`Error crítico al guardar documento [${docTypeId}]:`, err);
     reportSilentError(err, `documentStorageService.saveDocumentInternal.critical[${docTypeId}]`);
+    return { success: false, error: err };
+  }
+};
+
+/**
+ * Guarda el documento SOLO en IndexedDB y actualiza la lista local.
+ * No comprime imágenes, no sube a Supabase y no sube a Drive.
+ * Ideal para el debounce de autoguardado continuo (1.5s).
+ */
+export const saveDocumentDraftLocal = async (
+  docData: any,
+  docTypeId: string = 'cv'
+): Promise<SaveDocumentResult> => {
+  if (!docData) return { success: false, error: 'DocumentData es nulo' };
+
+  const docConfig = getDocumentTypeConfig(docTypeId);
+  const id = docData.id || `doc_${docTypeId}_${Date.now()}`;
+  
+  try {
+    const candidateName = (
+      docData.personalInfo?.fullName || 
+      `${docData.personalInfo?.surname || ''} ${docData.personalInfo?.givenNames || ''}`.trim() || 
+      'DOCUMENTO'
+    ).trim();
+    
+    const monthName = getMonthNameEs();
+    const yearNum = new Date().getFullYear();
+    const formattedTitle = `${docConfig.name.toUpperCase()} - ${candidateName} - ${monthName} - ${yearNum}`;
+    const nowIso = new Date().toISOString();
+
+    const summaryRecord: DocumentRecord = {
+      id,
+      doc_type_id: docTypeId,
+      title: formattedTitle,
+      candidate_name: candidateName,
+      dni: docData.personalInfo?.dni || '',
+      updated_at: nowIso,
+      is_provisional: docData.isProvisional,
+    };
+
+    const fullDocObject = {
+      ...docData,
+      id,
+      doc_type_id: docTypeId,
+      updated_at: nowIso,
+      isProvisional: docData.isProvisional,
+    };
+
+    await idbStorage.setItem(`doc_${docTypeId}_data_${id}`, fullDocObject);
+    if (docTypeId === 'cv') {
+      await idbStorage.setItem('cv_data_' + id, fullDocObject);
+      await idbStorage.setItem('cv_premium_data', fullDocObject);
+    }
+
+    try {
+      const storageKey = getStorageKeyForType(docTypeId);
+      const list = await getSavedDocumentsList(docTypeId);
+      const existingIdx = list.findIndex(item => item.id === id);
+      if (existingIdx >= 0) {
+        list[existingIdx] = summaryRecord;
+      } else {
+        list.unshift(summaryRecord);
+      }
+      localStorage.setItem(storageKey, JSON.stringify(list));
+    } catch (lerr) {
+      reportSilentError(lerr, 'documentStorageService.saveDocumentDraftLocal.localStorageSummary');
+    }
+
+    return { 
+      success: true, 
+      syncState: 'local',
+      driveSyncState: 'not-configured',
+      record: summaryRecord, 
+      title: summaryRecord.title, 
+      doc_data: fullDocObject 
+    };
+  } catch (err) {
+    reportSilentError(err, `documentStorageService.saveDocumentDraftLocal.error`);
     return { success: false, error: err };
   }
 };

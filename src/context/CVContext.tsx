@@ -7,7 +7,8 @@ import { CVData } from '../types/cv';
 
 import { getDocTypeForRoute, inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
 import { setTabDirty, updateTabTitle } from '../shared/core/documents/tabStore';
-import { computeAutoDocumentTitle } from '../shared/core/documents/documentLifecycleEngine';
+import { computeAutoDocumentTitle, markAsConfirmed } from '../shared/core/documents/documentLifecycleEngine';
+import { saveDocumentDraftLocal } from '../shared/core/storage/documentStorageService';
 
 interface CVContextType {
   cvData: CVData;
@@ -127,22 +128,22 @@ export function CVProvider({ children }: { children: ReactNode }) {
     });
   }, [getDocId]);
 
-  // Save to localStorage automatically on every change (Debounced 500ms)
+  // Save to IndexedDB automatically on every change (Debounced 1500ms)
   useEffect(() => {
     if (isSwitchingDocument) return;
     const timeout = setTimeout(() => {
       if (typeof window !== 'undefined' && cvData) {
         try {
-          localStorage.setItem('cv_premium_data', JSON.stringify(cvData));
+          saveDocumentDraftLocal(cvData, inferDocumentTypeId(cvData) || 'cv');
         } catch (e) {
-          console.warn('Error guardando respaldo local:', e);
+          console.warn('Error guardando respaldo local (Draft):', e);
         } finally {
           setHasPendingChanges(false);
         }
       } else {
         setHasPendingChanges(false);
       }
-    }, 500);
+    }, 1500);
     return () => clearTimeout(timeout);
   }, [cvData, isSwitchingDocument]);
 
@@ -290,9 +291,12 @@ export function CVProvider({ children }: { children: ReactNode }) {
   const saveCV = async () => {
     setIsSaving(true);
     try {
-      const res = await saveCVStorage(cvData);
+      const confirmedData = markAsConfirmed(cvData);
+      const res = await saveCVStorage(confirmedData);
       if (res?.success && res.record?.id && res.record.id !== cvData.id) {
-        setCvData((prev: CVData) => ({ ...prev, id: res.record!.id }));
+        setCvData((prev: CVData) => markAsConfirmed({ ...prev, id: res.record!.id }));
+      } else if (res?.success) {
+        setCvData((prev: CVData) => markAsConfirmed(prev));
       }
       return res;
     } catch (err) {
@@ -308,9 +312,12 @@ export function CVProvider({ children }: { children: ReactNode }) {
   const saveCVAs = async (versionLabel?: string) => {
     setIsSaving(true);
     try {
-      const res = await saveCVAsStorage(cvData, versionLabel);
+      const confirmedData = markAsConfirmed(cvData);
+      const res = await saveCVAsStorage(confirmedData, versionLabel);
       if (res?.success && res.record?.id) {
-        setCvData((prev: CVData) => ({ ...prev, id: res.record!.id }));
+        setCvData((prev: CVData) => markAsConfirmed({ ...prev, id: res.record!.id }));
+      } else if (res?.success) {
+        setCvData((prev: CVData) => markAsConfirmed(prev));
       }
       return res;
     } catch (err) {

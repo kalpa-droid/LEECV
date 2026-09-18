@@ -84,14 +84,30 @@ export async function switchToTab(
  */
 export async function closeTab(
   id: string,
-  currentActiveId: string,
+  currentDoc: CurrentDocumentState | null,
   setCvData: (data: any) => void,
   goToLandingPage: () => void
 ): Promise<void> {
+  // Guardar si el documento actual es el que se está cerrando y tiene cambios (ej. provisional sucio)
+  if (currentDoc?.id === id && currentDoc?.isDirty && currentDoc?.data) {
+    try {
+      // Importación dinámica para evitar dependencias circulares si las hay
+      const { saveDocument } = await import('../storage/documentStorageService');
+      const { markAsConfirmed } = await import('./documentLifecycleEngine');
+      
+      const confirmedData = markAsConfirmed(currentDoc.data);
+      await saveDocument(confirmedData, currentDoc.docType);
+      TabStore.setTabDirty(currentDoc.id, false);
+      setCvData(confirmedData);
+    } catch (err) {
+      console.warn('Error guardando documento antes de cerrar pestaña:', err);
+    }
+  }
+
   const remaining = TabStore.closeTab(id);
 
   // Si se cerró una pestaña que NO era la activa, el usuario sigue mirando su documento activo
-  if (id !== currentActiveId) {
+  if (id !== currentDoc?.id) {
     return;
   }
 

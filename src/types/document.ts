@@ -30,8 +30,8 @@ export interface DocumentRecord {
   syncState?: 'local' | 'synced' | 'pending';
   driveSyncState?: 'not-configured' | 'synced' | 'pending';
   version_label?: string;
+  is_provisional?: boolean;
 }
-
 export interface SaveDocumentResult {
   success: boolean;
   syncState?: 'local' | 'synced' | 'pending';
