@@ -252,7 +252,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     
     // Solo reconciliar cuando ya tenemos un documento activo cargado,
     // de lo contrario se aborta el intento y se espera al siguiente render
-    if (!activeCvId) return;
+    if (!cvData?.id) return;
     
     didReconcileRef.current = true;
 
@@ -290,7 +290,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         const openTabsNow = getOpenTabs();
         let purged = false;
         for (const tab of openTabsNow) {
-          if (tab.id === activeCvId) continue;
+          if (tab.id === cvData?.id) continue;
           const doc = await loadDocumentById(tab.id, tab.docType || 'cv');
           const isGhost = !doc || (!hasRealContent(doc) && isProvisionalDocument(doc));
           if (isGhost) {
@@ -307,7 +307,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     };
     
     reconcileProvisionals();
-  }, [activeCvId]);
+  }, [cvData?.id]);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
 
   // Zoom and Responsive A4 Auto-Fit state
