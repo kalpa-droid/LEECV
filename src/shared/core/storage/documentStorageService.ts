@@ -75,7 +75,7 @@ export const getSavedDocumentsList = async (docTypeId: string = 'cv'): Promise<D
   );
 };
 
-const saveDocumentInternal = async (
+export const saveDocumentInternal = async (
   docData: any,
   docTypeId: string = 'cv',
   versionLabel?: string
@@ -150,7 +150,7 @@ const saveDocumentInternal = async (
     let driveSyncState: 'not-configured' | 'synced' | 'pending' = 'pending';
 
     // 3. Sync to Supabase in parallel
-    if (supabase) {
+    if (supabase && hasCapability(docTypeId, 'cloud_backup')) {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {

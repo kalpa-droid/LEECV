@@ -12,7 +12,7 @@
 
 import * as TabStore from './tabStore';
 import { loadDocumentById, saveDocument } from '../storage/documentStorageService';
-import { markAsConfirmed, isProvisionalDocument, hasRealContent, isDraftDocumentId, inferDocTypeFromDraftId } from './documentLifecycleEngine';
+import { markAsConfirmed, isProvisionalDocument, hasRealContent, isDraftDocumentId, inferDocTypeFromDraftId } from './documentEngine';
 import { getDefaultTitleForDocType } from '../capabilities/capabilityRegistry';
 import { createBlankCVTemplate } from '../../../data/initialCVData';
 

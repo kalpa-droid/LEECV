@@ -170,6 +170,20 @@ export const CAPABILITY_REGISTRY: Record<string, CapabilityConfig> = {
     defaultData: {
       tone: 'professional'
     }
+  },
+  job_versioning: {
+    id: 'job_versioning',
+    name: 'Versionado por Puesto',
+    description: 'Permite guardar versiones específicas del documento asociadas a diferentes vacantes o empresas.',
+    category: 'utility',
+    defaultData: {}
+  },
+  nameable_title: {
+    id: 'nameable_title',
+    name: 'Título Editable',
+    description: 'Permite que el usuario asigne un título o nombre personalizado al documento.',
+    category: 'utility',
+    defaultData: {}
   }
 };
 
@@ -195,7 +209,9 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
       'digital_signature',
       'json_backup',
       'cloud_backup',
-      'web_publish'
+      'web_publish',
+      'job_versioning',
+      'nameable_title'
     ],
     defaultPaperSize: 'a4',
     defaultActivePresetId: 'cv-clasico'
@@ -212,10 +228,11 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
       'digital_signature',
       'json_backup',
       'cloud_backup',
-      'web_publish',
       'cover_letter_body',
       'job_target',
-      'ai_generation'
+      'ai_generation',
+      'job_versioning',
+      'nameable_title'
     ],
     defaultPaperSize: 'a4',
     defaultActivePresetId: 'carta-clasica'
@@ -232,7 +249,7 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
       'logo_upload',
       'json_backup',
       'cloud_backup',
-      'web_publish'
+      'nameable_title'
     ]
   },
   portfolio: {
@@ -249,8 +266,7 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
       'scanned_certificates',
       'logo_upload',
       'json_backup',
-      'cloud_backup',
-      'web_publish'
+      'cloud_backup'
     ],
     defaultPaperSize: 'a4'
   },

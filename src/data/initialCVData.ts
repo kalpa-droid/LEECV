@@ -1,4 +1,4 @@
-import { generateDocumentId } from '../shared/core/documents/tabStore';
+import { generateDocumentId } from '../shared/core/documents/documentEngine/titleEngine';
 import { getDefaultTitleForDocType, inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
 
 export const blankCVBase = {
@@ -79,7 +79,6 @@ export const blankCVBase = {
   }
 };
 
-import { DRAFT_CV_ID, DRAFT_CARD_ID } from '../shared/core/documents/documentLifecycleEngine';
 
 export function createBlankCVTemplate(overrides?: Record<string, any>) {
   const merged = { ...blankCVBase, ...overrides };

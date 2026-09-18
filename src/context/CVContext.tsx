@@ -7,7 +7,7 @@ import { CVData } from '../types/cv';
 
 import { getDocTypeForRoute, inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
 import { setTabDirty, updateTabTitle } from '../shared/core/documents/tabStore';
-import { computeAutoDocumentTitle, markAsConfirmed, hasRealContent, getDraftIdForDocType } from '../shared/core/documents/documentLifecycleEngine';
+import { computeAutoDocumentTitle, markAsConfirmed, hasRealContent, getDraftIdForDocType } from '../shared/core/documents/documentEngine';
 import { saveDocumentDraftLocal } from '../shared/core/storage/documentStorageService';
 
 interface CVContextType {
@@ -114,7 +114,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
       let finalData = nextData;
       const docType = inferDocumentTypeId(nextData);
       if (docType !== 'book') {
-        const computedTitle = computeAutoDocumentTitle(nextData, docType as any, { isDirty: true });
+        const computedTitle = computeAutoDocumentTitle(docType as any, nextData);
         if (computedTitle && nextData.title !== computedTitle) {
           finalData = { ...nextData, title: computedTitle };
           updateTabTitle(nextId, computedTitle, nextData.version_label);

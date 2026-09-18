@@ -12,7 +12,8 @@ import { BookPreviewExportStep } from './BookPreviewExportStep';
 import { BookPreviewStep } from './BookPreviewStep';
 import { getNextBookStepId, getPrevBookStepId } from '../../shared/core/book-engine/bookStepSequence';
 import { saveBook } from '../../shared/core/storage/documentStorageService';
-import { openTab, generateDocumentId, OpenTab } from '../../shared/core/documents/tabStore';
+import { openTab, OpenTab } from '../../shared/core/documents/tabStore';
+import { generateDocumentId } from '../../shared/core/documents/documentEngine/titleEngine';
 import { getPendingDocumentToOpen, clearPendingDocumentToOpen } from '../../shared/core/storage/pendingDocumentHandoff';
 import { radius, button } from '../../shared/core/uiDesignSystem';
 

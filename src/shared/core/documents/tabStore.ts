@@ -6,7 +6,6 @@
  */
 
 import { getDefaultTitleForDocType } from '../capabilities/capabilityRegistry';
-import { DRAFT_CV_ID, DRAFT_CARD_ID } from './documentLifecycleEngine';
 
 export interface OpenTab {
   id: string;
@@ -183,10 +182,6 @@ export function setActiveTabId(id: string | null): void {
   }
 }
 
-export function generateDocumentId(prefix: 'cv' | 'book' | 'card' | 'cover_letter' = 'cv'): string {
-  const uuid = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-  return `${prefix}_${uuid}`;
-}
 
 export function onTabsChanged(listener: (tabs: OpenTab[]) => void): () => void {
   if (typeof window === 'undefined') return () => {};

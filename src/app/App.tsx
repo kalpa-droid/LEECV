@@ -4,9 +4,10 @@ import CanvaIconDock from '../modules/cv-builder/components/CanvaIconDock';
 import EditorPanel from '../modules/cv-builder/components/EditorPanel';
 const CVPreview = lazy(() => import('../modules/cv-builder/components/CVPreview'));
 import { FileText, CreditCard, Palette, Plus, X, Sparkles, ChevronRight } from 'lucide-react';
-import { getOpenTabs, openTab as addOpenTab, closeTab as removeOpenTab, generateDocumentId, OpenTab as OpenTabItem, TABS_CHANGED_EVENT } from '../shared/core/documents/tabStore';
-import { computeAutoDocumentTitle, getDraftIdForDocType } from '../shared/core/documents/documentLifecycleEngine';
+import { getOpenTabs, openTab as addOpenTab, closeTab as removeOpenTab, OpenTab as OpenTabItem, TABS_CHANGED_EVENT } from '../shared/core/documents/tabStore';
+import { generateDocumentId, computeAutoDocumentTitle, getDraftIdForDocType, isProvisionalDocument, markAsConfirmed, hasRealContent } from '../shared/core/documents/documentEngine';
 import * as workspaceController from '../shared/core/documents/workspaceController';
+import { capabilitiesGate } from '../shared/core/documents/documentEngine/capabilitiesGate';
 import { AppShell } from '../shared/core/ui/AppShell';
 const LandingPage = lazy(() => import('../modules/landing/LandingPage').then(m => ({ default: m.LandingPage })));
 const BookStudio = lazy(() => import('../modules/book-studio/BookStudio').then(m => ({ default: m.BookStudio })));
@@ -247,68 +248,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     }
   }, []);
 
-  // Paso 5: Reconciliar documentos provisionales al entrar
-  useEffect(() => {
-    if (didReconcileRef.current) return;
-    
-    // Solo reconciliar cuando ya tenemos un documento activo cargado,
-    // de lo contrario se aborta el intento y se espera al siguiente render
-    if (!cvData?.id) return;
-    
-    didReconcileRef.current = true;
 
-    const reconcileProvisionals = async () => {
-      try {
-        const { getSavedDocumentsList, loadDocumentById, saveDocument } = await import('../shared/core/storage/documentStorageService');
-        const { isProvisionalDocument, markAsConfirmed, hasRealContent } = await import('../shared/core/documents/documentLifecycleEngine');
-        
-        const docTypes = ['cv', 'business_card', 'cover_letter', 'book'];
-        let tabsChanged = false;
-
-        for (const docType of docTypes) {
-          const docs = await getSavedDocumentsList(docType);
-          const provisionals = docs.filter((d: any) => isProvisionalDocument(d));
-          
-          for (const p of provisionals) {
-            const docData = await loadDocumentById(p.id, docType);
-            if (!docData || !hasRealContent(docData)) continue;
-
-            const confirmedDoc = markAsConfirmed(docData);
-            await saveDocument(confirmedDoc, docType);
-            addOpenTab(confirmedDoc.id, docType as any, confirmedDoc.title || 'Recuperado');
-            tabsChanged = true;
-          }
-        }
-        
-        if (tabsChanged) {
-          setTabs(getOpenTabs());
-        }
-
-        // Purga de pestañas fantasma: residuo de localStorage generado ANTES de
-        // este fix — documentos que ya no existen, o blancos vacíos que quedaron
-        // guardados antes del gate de hasRealContent. El activo actual nunca se
-        // toca, sea cual sea su contenido.
-        const openTabsNow = getOpenTabs();
-        let purged = false;
-        for (const tab of openTabsNow) {
-          if (tab.id === cvData?.id) continue;
-          const doc = await loadDocumentById(tab.id, tab.docType || 'cv');
-          const isGhost = !doc || (!hasRealContent(doc) && isProvisionalDocument(doc));
-          if (isGhost) {
-            removeOpenTab(tab.id);
-            purged = true;
-          }
-        }
-        if (purged) {
-          setTabs(getOpenTabs());
-        }
-      } catch (err) {
-        console.warn('Error en reconciliación de documentos provisionales:', err);
-      }
-    };
-    
-    reconcileProvisionals();
-  }, [cvData?.id]);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
 
   // Zoom and Responsive A4 Auto-Fit state
@@ -378,56 +318,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const [tabs, setTabs] = useState<OpenTabItem[]>([]);
   const activeCvId = cvData?.id || '';
 
-  // Registro explícito de la pestaña del documento inicial (una sola vez al montar).
-  // Sin esto, la primerísima pestaña de una sesión nunca se creaba: el sincronizador
-  // de abajo solo actualiza pestañas YA existentes (opening a tab is always an explicit
-  // action, por diseño), y el sincronizador de ruta sale temprano porque route/docType
-  // ya coinciden en el primer render, así que nunca llegaba a workspaceController.
-  const didRegisterInitialTabRef = useRef(false);
-  useEffect(() => {
-    if (didRegisterInitialTabRef.current) return;
-    if (!activeCvId) return;
-    didRegisterInitialTabRef.current = true;
-    const alreadyOpen = getOpenTabs().some(t => t.cvId === activeCvId);
-    if (!alreadyOpen) {
-      const docTypeForTab = inferDocumentTypeId(cvData);
-      addOpenTab(
-        activeCvId,
-        docTypeForTab as any,
-        computeAutoDocumentTitle(cvData, docTypeForTab as any, { isDirty: false }),
-        cvData?.version_label
-      );
-      setTabs(getOpenTabs());
-    }
-  }, [activeCvId]);
 
-  // Sincronizador Núcleo 1: mantiene actualizado el TÍTULO/tipo de la pestaña del
-  // documento activo. NO abre pestañas nuevas por su cuenta: abrir una pestaña es
-  // siempre una acción explícita (workspaceController.openDocument / el botón "+").
-  //
-  // Por qué: antes este efecto llamaba a addOpenTab() sin condición. Al cerrar la
-  // ÚLTIMA pestaña, closeTab() navega a la landing pero cvData sigue en memoria
-  // con su id — este efecto volvía a correr y RESUCITABA la pestaña recién
-  // cerrada. Ese era el bug de "cierro y no cierra" / "siempre aparece un CV
-  // nuevo": el cierre funcionaba, y 1 render después el sincronizador lo deshacía.
-  useEffect(() => {
-    if (isSwitchingDocument) return;
-    if (activeCvId) {
-      const alreadyOpen = getOpenTabs().some(t => t.cvId === activeCvId);
-      if (alreadyOpen) {
-        const docTypeForTab = inferDocumentTypeId(cvData);
-        addOpenTab(
-          activeCvId,
-          docTypeForTab as any,
-          computeAutoDocumentTitle(cvData, docTypeForTab as any, { isDirty: false }),
-          cvData?.version_label
-        );
-      }
-      setTabs(getOpenTabs());
-    } else {
-      setTabs(getOpenTabs());
-    }
-  }, [activeCvId, cvData?.title, cvData?.version_label, cvData?.activePresetId, (cvData as any)?.cardSize, isSwitchingDocument]);
 
   /**
    * Crea un documento en blanco Y registra su pestaña explícitamente.
@@ -441,34 +332,12 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     const newId = blank?.id;
     if (newId) {
       const docType = inferDocumentTypeId(blank);
-      addOpenTab(newId, docType as any, computeAutoDocumentTitle(blank, docType as any, { isDirty: false }));
+      addOpenTab(newId, docType as any, computeAutoDocumentTitle(docType as any, blank));
       setTabs(getOpenTabs());
     }
   }, [resetToBlankCV]);
 
-  // Sincronizador Núcleo 2: Sincroniza la URL actual con el tipo de documento activo en memoria
-  useEffect(() => {
-    if (isSwitchingDocument || !cvData) return;
-    const routeDocType = getDocTypeForRoute(currentRoute);
-    const activeDocType = inferDocumentTypeId(cvData);
 
-    if (routeDocType === activeDocType) return; // ya estamos donde corresponde, no hacer nada
-
-    const openTabs = getOpenTabs();
-    const matchingTab = openTabs.find(t => (t.docType || 'cv') === routeDocType);
-
-    if (matchingTab) {
-      handleSwitchDocumentTab(matchingTab.cvId, routeDocType, { skipSaveCurrent: false });
-      return;
-    }
-
-    // No hay ninguna pestaña de ese tipo abierta — ir SIEMPRE al borrador fijo de
-    // ese tipo, nunca crear un id nuevo. Si ese borrador ya tenía contenido de una
-    // sesión anterior, se abre con lo que tenía; si estaba vacío, se abre vacío.
-    // Cualquiera de los dos casos usa el MISMO id siempre — nunca uno aleatorio.
-    const draftId = getDraftIdForDocType(routeDocType);
-    handleSwitchDocumentTab(draftId, routeDocType, { skipSaveCurrent: false });
-  }, [currentRoute, activeCvId, isSwitchingDocument]);
 
   // Bus de eventos: sincronizar pestañas cuando el motor de guardado actualiza títulos
   useEffect(() => {
@@ -1029,7 +898,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
             />
           )}
 
-          {isSaveAsModalOpen && (
+          {isSaveAsModalOpen && capabilitiesGate.canVersionByJob(inferDocumentTypeId(cvData)) && (
             <SaveAsVersionModal
               isOpen={isSaveAsModalOpen}
               onClose={() => setIsSaveAsModalOpen(false)}

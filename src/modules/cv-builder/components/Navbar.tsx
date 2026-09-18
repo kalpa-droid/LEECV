@@ -28,7 +28,7 @@ import { useEntitlements, getPlanLabel, PLAN_FEATURES } from '../../../shared/co
 import { navigation } from '../../../shared/core/utils/navigation';
 import { useText } from '../../../shared/i18n/useText';
 import { Logo } from '../../../shared/core/brand/Logo';
-import { hasCapability } from '../../../shared/core/capabilities/capabilityRegistry';
+import { capabilitiesGate } from '../../../shared/core/documents/documentEngine';
 
 export interface NavbarProps {
   currentCvData: any;
@@ -191,7 +191,7 @@ export default function Navbar({
           )}
 
           {/* PÍLDORA 0: PUBLICAR EN LA WEB (Visible en tablet/desktop; en móvil está dentro del menú de acciones) */}
-          {hasCapability(docType, 'web_publish') ? (
+          {capabilitiesGate.canPublish(docType) ? (
             <button
               type="button"
               onClick={onOpenCloudStatus}
@@ -248,7 +248,7 @@ export default function Navbar({
                 <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
 
                 {/* 1. Guardar Cambios, Copias y Backup JSON */}
-                {hasCapability(docType, 'cloud_backup') ? (
+                {capabilitiesGate.canBackupCloud(docType) ? (
                   <>
                     <button
                       type="button"
@@ -341,7 +341,7 @@ export default function Navbar({
                 {/* 6. Publicar en la Web — visible siempre, deshabilitado con tooltip para
                     Tarjeta/Libro (mismo motivo y mismo patron que el bloque de guardado
                     de arriba: no es que "no exista", es que no aplica a este producto). */}
-                {docType === 'cv' ? (
+                {capabilitiesGate.canPublish(docType) ? (
                   <button
                     type="button"
                     onClick={() => {
