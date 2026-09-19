@@ -1,21 +1,23 @@
 import React, { useRef } from 'react';
-import { FileText, BookOpen, CreditCard, Mail, X, ChevronRight, ChevronLeft } from 'lucide-react';
+import { FileText, BookOpen, CreditCard, Mail, X, ChevronRight, ChevronLeft, CalendarDays } from 'lucide-react';
 import { OpenTab } from '../documents/tabStore';
 import { elevationSystem, radius } from '../uiDesignSystem';
 import { NewDocumentMenu } from './NewDocumentMenu';
 import { useHorizontalScrollControls } from './useHorizontalScrollControls';
+import { DocumentTypeId } from '../../../types/document';
 
 export interface DocumentTabsBarProps {
   tabs: (OpenTab | { cvId: string; title: string; docType?: any; versionLabel?: string })[];
   activeId: string;
-  docType?: 'cv' | 'business_card' | 'book' | 'cover_letter';
+  docType?: DocumentTypeId;
   onSwitch: (id: string) => void;
-  onNavigateToDocument?: (docType: 'cv' | 'business_card' | 'book' | 'cover_letter', id: string) => void;
+  onNavigateToDocument?: (docType: DocumentTypeId, id: string) => void;
   onAdd: () => void;
   onNewCV?: () => void;
   onNewCard?: () => void;
   onNewBook?: () => void;
   onNewCoverLetter?: () => void;
+  onNewPlanner?: () => void;
   onClose: (e: React.MouseEvent, id: string, title: string) => void;
 }
 
@@ -30,6 +32,7 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
   onNewCard,
   onNewBook,
   onNewCoverLetter,
+  onNewPlanner,
   onClose,
 }) => {
   const getTabIcon = (tabDocType?: string) => {
@@ -40,6 +43,8 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
         return CreditCard;
       case 'cover_letter':
         return Mail;
+      case 'planner':
+        return CalendarDays;
       default:
         return FileText;
     }
@@ -151,12 +156,13 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
           })}
         </div>
 
-        {/* Menu (+) Nuevo Documento (CV, Tarjeta, Libro, Carta) */}
+        {/* Menu (+) Nuevo Documento (CV, Tarjeta, Libro, Carta, Agenda) */}
         <NewDocumentMenu
           onSelectCV={onNewCV || onAdd}
           onSelectCard={onNewCard || onAdd}
           onSelectBook={onNewBook || onAdd}
           onSelectCoverLetter={onNewCoverLetter}
+          onSelectPlanner={onNewPlanner || onAdd}
         />
 
         {/* Flecha derecha: solo se muestra si hay pestañas ocultas a ese lado */}

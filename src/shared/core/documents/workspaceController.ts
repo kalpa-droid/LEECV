@@ -15,10 +15,11 @@ import { loadDocumentById, saveDocument } from '../storage/documentStorageServic
 import { markAsConfirmed, isProvisionalDocument, hasRealContent, isDraftDocumentId, inferDocTypeFromDraftId, computeAutoDocumentTitle } from './documentEngine';
 import { getDefaultTitleForDocType, getRouteForDocType } from '../capabilities/capabilityRegistry';
 import { createBlankCVTemplate } from '../../../data/initialCVData';
+import { DocumentTypeId } from '../../../types/document';
 
 export interface CurrentDocumentState {
   id: string;
-  docType: 'cv' | 'business_card' | 'book' | 'cover_letter';
+  docType: DocumentTypeId;
   data: any;
   isDirty?: boolean;
 }

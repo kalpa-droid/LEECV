@@ -6,6 +6,7 @@ import { DomSectionIcon } from '../../../shared/core/pdf-engine/layers/icons/Dom
 import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { resolveActiveDockSections, DOCK_SPECIAL_TABS } from '../../../shared/core/sections/activeSectionsDockEngine';
 import { activateSection } from '../../../shared/core/sections/sectionActivationEngine';
+import { DocumentTypeId } from '../../../types/document';
 
 import { CreditCard, BookOpen, FileUp, Settings, Eye, Printer, Layers, BookMarked, Sliders, LayoutGrid, Hash } from 'lucide-react';
 
@@ -17,7 +18,7 @@ export interface CanvaIconDockProps {
   isPanelOpen: boolean;
   setIsPanelOpen: (open: boolean) => void;
   onOpenAtsCheck?: () => void;
-  docType?: 'cv' | 'business_card' | 'book' | 'cover_letter';
+  docType?: DocumentTypeId;
   bookMode?: string;
 }
 

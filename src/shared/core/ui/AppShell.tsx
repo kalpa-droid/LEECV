@@ -2,9 +2,10 @@ import React from 'react';
 import { DocumentTabsBar, DocumentTabsBarProps } from './DocumentTabsBar';
 import { PwaInstallBanner } from './PwaInstallBanner';
 import { elevationSystem } from '../uiDesignSystem';
+import { DocumentTypeId } from '../../../types/document';
 
 export interface AppShellProps {
-  docType?: 'cv' | 'business_card' | 'book' | 'cover_letter';
+  docType?: DocumentTypeId;
   navbarSlot: React.ReactNode;
   dockSlot: React.ReactNode;
   panelSlot: React.ReactNode;

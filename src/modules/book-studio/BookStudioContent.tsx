@@ -17,6 +17,7 @@ import { generateDocumentId } from '../../shared/core/documents/documentEngine/t
 import { getPendingDocumentToOpen, clearPendingDocumentToOpen } from '../../shared/core/storage/pendingDocumentHandoff';
 import { radius, button } from '../../shared/core/uiDesignSystem';
 import { useDocumentViewport } from '../../shared/core/viewport';
+import { DocumentTypeId } from '../../types/document';
 
 interface BookStudioContentProps {
   currentUiTheme?: string;
@@ -24,7 +25,7 @@ interface BookStudioContentProps {
   activeTabId: string;
   onSelectTab: (id: string) => void;
   onCloseTab: (id: string) => void;
-  onNavigateToDocument: (targetDocType: 'cv' | 'business_card' | 'book' | 'cover_letter', id: string) => void;
+  onNavigateToDocument: (targetDocType: DocumentTypeId, id: string) => void;
   onNewCV?: () => void;
   onNewCard?: () => void;
   onNewBook?: () => void;

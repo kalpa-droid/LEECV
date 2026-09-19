@@ -255,9 +255,11 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 
   const [isPanelOpen, setIsPanelOpen] = useState(true);
 
-  const activeDocType: 'cv' | 'business_card' | 'book' | 'cover_letter' =
+  const activeDocType: 'cv' | 'business_card' | 'book' | 'cover_letter' | 'planner' =
     currentRoute === '/crear-carta' || cvData?.activePresetId === 'carta-presentacion' || (cvData as any)?.docType === 'cover_letter'
       ? 'cover_letter'
+      : currentRoute === '/crear-agenda' || cvData?.activePresetId?.startsWith('planner-') || (cvData as any)?.docType === 'planner'
+      ? 'planner'
       : cvData?.activePresetId === 'tarjeta-personal'
       ? 'business_card'
       : 'cv';
@@ -650,6 +652,33 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     });
   };
 
+  const handleNewPlanner = async () => {
+    confirm({
+      title: '¿Iniciar nueva Agenda / Planificador?',
+      message: '¿Querés empezar una agenda nueva? Se resguardará tu borrador actual.',
+      confirmText: 'Sí, crear agenda',
+      variant: 'info',
+      onConfirm: async () => {
+        await runWithSafeSave(
+          saveCV,
+          () => {
+            createBlankDocumentWithTab('planner-mensual');
+            setActiveTab('personales'); // TODO: Update to planner tab
+            if (currentRoute !== '/crear-agenda') {
+              if (onNavigate) {
+                onNavigate('/crear-agenda');
+              } else if (typeof window !== 'undefined') {
+                window.history.pushState({}, '', '/crear-agenda');
+                window.dispatchEvent(new PopStateEvent('popstate'));
+              }
+            }
+            showSuccess('Nueva agenda lista para configurar.');
+          }
+        );
+      }
+    });
+  };
+
   const handleGenerateCoverLetterFromCV = (sourceCvData?: any) => {
     const dataToUse = sourceCvData || cvData;
     createBlankDocumentWithTab('carta-clasica');
@@ -732,6 +761,21 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           onAuthToggle={handleAuthToggle}
         />
       </Suspense>
+    );
+  }
+
+  if (currentRoute === '/crear-agenda') {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-black text-white p-10 text-center">
+        <h1 className="text-3xl font-bold mb-4 text-[var(--color-accent-base)]">Próximamente: Studio Agendas & Planificadores</h1>
+        <p className="opacity-80 max-w-md">El motor de grillas dinámicas y calendarios está en desarrollo. Volvé pronto para crear tus agendas personalizadas.</p>
+        <button 
+          onClick={() => onNavigate?.('/')} 
+          className="mt-8 px-6 py-2 bg-[var(--color-accent-base)] text-black rounded-lg font-bold hover:opacity-90"
+        >
+          Volver al Inicio
+        </button>
+      </div>
     );
   }
 
@@ -859,6 +903,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         onNewCard: handleNewCard,
         onNewBook: handleNewBook,
         onNewCoverLetter: handleNewCoverLetter,
+        onNewPlanner: handleNewPlanner,
         onClose: handleCloseFooterTab
       }}
       modalsSlot={
