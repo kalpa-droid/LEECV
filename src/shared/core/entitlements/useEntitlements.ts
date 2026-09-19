@@ -71,7 +71,10 @@ export function useEntitlements() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchPlan() {
+    fetchEntitlements();
+  }, []);
+
+  async function fetchEntitlements() {
       if (!supabase) {
         setLoading(false);
         return;
@@ -119,10 +122,7 @@ export function useEntitlements() {
       } finally {
         setLoading(false);
       }
-    }
-
-    fetchPlan();
-  }, []);
+  }
 
   const features = PLAN_FEATURES[plan] || PLAN_FEATURES.free;
   const isPremium = isProOrEnterprise(plan);
@@ -139,6 +139,7 @@ export function useEntitlements() {
     canEmergencyExport: inGracePeriod || isPremium,
     unlimitedExports: features.unlimitedExports,
     candidateManagement: features.candidateManagement,
-    cloudStorageGB: features.cloudStorageGB
+    cloudStorageGB: features.cloudStorageGB,
+    refreshEntitlements: fetchEntitlements
   };
 }

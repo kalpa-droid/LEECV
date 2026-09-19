@@ -85,7 +85,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const { showSuccess, showError, showInfo } = useToast();
   const { confirm } = useConfirm();
   const [currentProfile, setCurrentProfile] = useState<any>(null);
-  const { inGracePeriod, graceEndsAt } = useEntitlements();
+  const { inGracePeriod, graceEndsAt, aiCredits, refreshEntitlements } = useEntitlements();
   const [graceCvList, setGraceCvList] = useState<any[]>([]);
   const [isRetentionModalOpen, setIsRetentionModalOpen] = useState(false);
 
@@ -891,6 +891,8 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           onOpenSignature={() => setIsSignatureOpen(true)}
           onOpenSavedCVs={() => setIsSavedCVsOpen(true)}
           onGenerateCoverLetterFromCV={handleGenerateCoverLetterFromCV}
+          aiCredits={aiCredits}
+          onRefreshCredits={refreshEntitlements}
         />
       }
       mainSlot={

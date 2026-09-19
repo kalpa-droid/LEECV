@@ -49,7 +49,9 @@ export default function EditorPanel({
   docType = 'cv',
   onOpenPhotoCropper, 
   onOpenSignature,
-  onGenerateCoverLetterFromCV
+  onGenerateCoverLetterFromCV,
+  aiCredits,
+  onRefreshCredits
 }: any) {
   const { showSuccess, showError, showWarning } = useToast();
   const { confirm } = useConfirm();
@@ -296,7 +298,8 @@ export default function EditorPanel({
             onSelectPreset={(presetId: string) => {
               setCvData((prev: any) => ({ ...prev, activePresetId: presetId }));
             }}
-            aiCredits={3}
+            aiCredits={typeof aiCredits === 'number' ? aiCredits : 3}
+            onRefreshCredits={onRefreshCredits}
           />
         )}
 
