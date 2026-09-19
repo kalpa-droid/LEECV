@@ -86,6 +86,15 @@ export default function CVPreview({
     fontFamily: theme.fontFamily || 'Arial, sans-serif'
   }), [theme.fontFamily]);
 
+  // Ref con el zoom actual, para que el efecto de gestos no tenga que depender
+  // de `zoomLevel` (si dependiera de él, el propio gesto de pinch dispararía un
+  // re-montaje del efecto en cada tick, reseteando initialPinchDistance a mitad
+  // del gesto y "matando" el pinch después del primer milímetro).
+  const zoomLevelRef = useRef(zoomLevel);
+  useEffect(() => {
+    zoomLevelRef.current = zoomLevel;
+  }, [zoomLevel]);
+
   // MOTOR DE ZOOM POR RUEDA (PC) Y GESTOS TÁCTILES (CELULAR)
   useEffect(() => {
     const container = (externalContainerRef as React.RefObject<HTMLDivElement | null>)?.current || paperSheetRef.current;
@@ -113,7 +122,7 @@ export default function CVPreview({
 
     // 2. PINCH-TO-ZOOM MULTI-TOUCH (CELULAR): 2 dedos ajustan zoom del visor de forma aislada
     let initialPinchDistance: number | null = null;
-    let initialZoomOnPinch = zoomLevel;
+    let initialZoomOnPinch = zoomLevelRef.current;
 
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
@@ -126,7 +135,7 @@ export default function CVPreview({
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
         initialPinchDistance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
-        initialZoomOnPinch = zoomLevel;
+        initialZoomOnPinch = zoomLevelRef.current;
       } else {
         initialPinchDistance = null;
       }
@@ -163,7 +172,7 @@ export default function CVPreview({
       container.removeEventListener('touchmove', handleTouchMove);
       container.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [onZoomChange, zoomLevel]);
+  }, [onZoomChange]);
 
   const renderedDocument = useMemo(() => {
     if (activePreset.pageCategory === 'tarjeta') {
