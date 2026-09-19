@@ -56,6 +56,7 @@ import { navigation } from '../shared/core/utils/navigation';
 
 import EmailSaveModal from '../modules/cv-builder/components/modals/EmailSaveModal';
 import ShareAppModal from '../modules/cv-builder/components/modals/ShareAppModal';
+import { PlannerStudioContent } from '../modules/planner-studio/PlannerStudioContent';
 import { loadCVById, loadDocumentById, saveCV } from '../shared/core/storage/documentStorageService';
 import { setPendingDocumentToOpen, getPendingDocumentToOpen, clearPendingDocumentToOpen } from '../shared/core/storage/pendingDocumentHandoff';
 import { runWithSafeSave } from '../shared/core/storage/safeNavigationEngine';
@@ -766,16 +767,10 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 
   if (currentRoute === '/crear-agenda') {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-black text-white p-10 text-center">
-        <h1 className="text-3xl font-bold mb-4 text-[var(--color-accent-base)]">Próximamente: Studio Agendas & Planificadores</h1>
-        <p className="opacity-80 max-w-md">El motor de grillas dinámicas y calendarios está en desarrollo. Volvé pronto para crear tus agendas personalizadas.</p>
-        <button 
-          onClick={() => onNavigate?.('/')} 
-          className="mt-8 px-6 py-2 bg-[var(--color-accent-base)] text-black rounded-lg font-bold hover:opacity-90"
-        >
-          Volver al Inicio
-        </button>
-      </div>
+      <PlannerStudioContent 
+        onNavigateToDocument={handleNavigateToDocumentTab}
+        currentDraftId={cvData?.id || null}
+      />
     );
   }
 

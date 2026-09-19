@@ -42,6 +42,7 @@ export const PAGE_SIZES: Record<string, PageSize> = {
   tarjeta_brasilera: definePageSize({ id: 'tarjeta_brasilera', name: 'Brasil / MX / LATAM', widthMm: 90, heightMm: 50, label: 'Brasil / México', appLabel: 'Brasil / MX (90 × 50 mm)', category: 'tarjeta' }),
   tarjeta_cuadrada: definePageSize({ id: 'tarjeta_cuadrada', name: 'Cuadrada', widthMm: 65, heightMm: 65, label: 'Cuadrada', appLabel: 'Cuadrada (65 × 65 mm)', category: 'tarjeta' }),
   tarjeta_mini: definePageSize({ id: 'tarjeta_mini', name: 'Mini', widthMm: 70, heightMm: 28, label: 'Mini', appLabel: 'Mini (70 × 28 mm)', category: 'tarjeta' }),
+  b5: definePageSize({ id: 'b5', name: 'B5', widthMm: 176, heightMm: 250, label: 'Hoja de agenda', appLabel: 'Agenda B5 (176 × 250 mm)', category: 'documento' }),
   afiche_a3: definePageSize({ id: 'afiche_a3', name: 'Afiche grande', widthMm: 297, heightMm: 420, label: 'Hoja grande (para imprenta)', appLabel: 'Afiche grande (A3 - 297 × 420 mm)', category: 'afiche' }),
 };
 

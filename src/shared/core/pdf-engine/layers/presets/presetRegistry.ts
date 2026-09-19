@@ -67,6 +67,8 @@ export function resolveActivePreset(cvData: any): Preset {
   });
 }
 
+import { plannerClasicoPreset } from './presets/planner-clasico';
+
 // Presets nativos por defecto compilados vía el Motor de Composición
 const NATIVE_PRESETS: Preset[] = [
   composePreset({
@@ -113,7 +115,8 @@ const NATIVE_PRESETS: Preset[] = [
   }),
   cartaClasicaPreset,
   cartaModernaPreset,
-  cartaMinimalistaPreset
+  cartaMinimalistaPreset,
+  plannerClasicoPreset
 ];
 
 // Mapa en memoria dinámico
