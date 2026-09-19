@@ -76,6 +76,19 @@ export const blankCVBase = {
     bgColor: "var(--color-accent-base)",
     bgCorridor: "var(--color-accent-base)",
     fontFamily: "Helvetica"
+  },
+  jobTarget: {
+    jobTitle: "",
+    companyName: "",
+    recipientName: "",
+    jobDescription: ""
+  },
+  body: {
+    salutation: "Estimado/a responsable de selección,",
+    hookParagraph: "",
+    evidenceParagraph: "",
+    closingParagraph: "",
+    signoff: "Atentamente,"
   }
 };
 

@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
-import { Sparkles, Upload, FileText, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Sparkles, Upload, FileText, CheckCircle2, AlertCircle, RefreshCw, Download, CreditCard } from 'lucide-react';
 import type { CoverLetterTab } from './CoverLetterDock';
 import type { CoverLetterData } from '../../../shared/core/pdf-engine/layers/records/coverLetterDataAdapter';
 import { generateAiCompletion } from '../../../shared/core/ai/aiClient';
 import { COVER_LETTER_PRESETS } from '../../../shared/core/presets/coverLetterPresetCatalog';
 import { importLinkedinArchive } from '../../../shared/core/importers/linkedinArchiveImporter';
 import { button } from '../../../shared/core/uiDesignSystem';
+import { exportCoverLetterToDocx } from '../../../shared/core/export/docxExporter';
+import { downloadBlob } from '../../../shared/core/utils/downloadUtils';
+import { getOpenTabs } from '../../../shared/core/documents/tabStore';
+import { loadCVById, getSavedCVsList } from '../../cv-builder/services/cvStorageService';
 
 interface CoverLetterEditorPanelProps {
   activeTab: CoverLetterTab;
@@ -29,7 +33,75 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
   const [tone, setTone] = useState<'professional' | 'enthusiastic' | 'executive' | 'creative'>('professional');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isExportingDocx, setIsExportingDocx] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [savedCVs, setSavedCVs] = useState<any[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    getSavedCVsList()
+      .then((list) => {
+        if (isMounted) setSavedCVs(list || []);
+      })
+      .catch((err) => console.warn('Error al obtener CVs guardados:', err));
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Lista de CVs disponibles (Pestañas abiertas + Almacenamiento local)
+  const openTabsList = getOpenTabs();
+  const openCvTabs = openTabsList.filter(t => !t.docType || t.docType === 'cv');
+
+  const availableCvMap = new Map<string, { id: string; title: string; subtitle?: string }>();
+
+  openCvTabs.forEach((t) => {
+    const id = t.id || t.cvId;
+    if (id) {
+      availableCvMap.set(id, {
+        id,
+        title: t.title,
+        subtitle: t.versionLabel ? `(Pestaña abierta - ${t.versionLabel})` : '(Pestaña abierta)'
+      });
+    }
+  });
+
+  savedCVs.forEach((scv) => {
+    const id = scv.id;
+    if (id && !availableCvMap.has(id)) {
+      availableCvMap.set(id, {
+        id,
+        title: scv.title || scv.personalInfo?.fullName || 'CV Guardado',
+        subtitle: '(Guardado en almacenamiento)'
+      });
+    }
+  });
+
+  const availableCvs = Array.from(availableCvMap.values());
+
+  const handleLinkCv = async (id: string) => {
+    if (!id) return;
+    setFeedback(null);
+    const loaded = await loadCVById(id);
+    if (loaded) {
+      onChangeData({
+        ...data,
+        sourceCvTabId: id,
+        personalInfo: {
+          ...(data.personalInfo || {}),
+          fullName: loaded.personalInfo?.fullName || data.personalInfo?.fullName,
+          email: loaded.personalInfo?.email || data.personalInfo?.email,
+          phone: loaded.personalInfo?.phone || data.personalInfo?.phone,
+          cityProvince: loaded.personalInfo?.cityProvince || data.personalInfo?.cityProvince
+        },
+        roles: loaded.roles || (data as any).roles || [],
+        profession: loaded.profession || (data as any).profession || []
+      } as any);
+      setFeedback({ type: 'success', text: `Datos e historial vinculados desde CV "${loaded.title || 'Seleccionado'}".` });
+    } else {
+      setFeedback({ type: 'error', text: 'Error al recuperar los datos del CV seleccionado.' });
+    }
+  };
 
   const updateJobTarget = (field: string, val: string) => {
     onChangeData({
@@ -68,14 +140,31 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
             email: importedCv.personalInfo.email || data.personalInfo?.email,
             phone: importedCv.personalInfo.phone || data.personalInfo?.phone,
             cityProvince: importedCv.personalInfo.cityProvince || data.personalInfo?.cityProvince
-          }
-        });
+          },
+          roles: importedCv.experience || (data as any).roles || [],
+          profession: (importedCv.education || []).map((e: any) => ({ degree: e.degree, institution: e.institution, year: e.year })) || (data as any).profession || []
+        } as any);
       }
-      setFeedback({ type: 'success', text: 'Datos de LinkedIn importados con éxito.' });
+      setFeedback({ type: 'success', text: 'Datos e historial de LinkedIn importados con éxito.' });
     } catch (err: any) {
       setFeedback({ type: 'error', text: err.message || 'Error importando archivo de LinkedIn.' });
     } finally {
       setIsImporting(false);
+    }
+  };
+
+  const handleExportDocx = async () => {
+    setIsExportingDocx(true);
+    setFeedback(null);
+    try {
+      const blob = await exportCoverLetterToDocx(data);
+      const name = data.personalInfo?.fullName || 'Candidato';
+      downloadBlob(blob, `Carta de Presentacion - ${name}.docx`);
+      setFeedback({ type: 'success', text: 'Documento Word (.docx) descargado con éxito.' });
+    } catch (err: any) {
+      setFeedback({ type: 'error', text: err.message || 'Error al exportar archivo .docx.' });
+    } finally {
+      setIsExportingDocx(false);
     }
   };
 
@@ -85,14 +174,24 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
 
     const j = data.jobTarget || {};
     const p = data.personalInfo || {};
+    const roles: any[] = (data as any).roles || [];
+    const profession: any[] = (data as any).profession || [];
+
+    const expStr = roles.length > 0
+      ? roles.map(r => `- ${r.role || r.title || 'Puesto'} en ${r.company || 'Empresa'} (${r.year || 'Año'}): ${r.details || ''}`).join('\n')
+      : 'Sin experiencia previa registrada.';
+
+    const eduStr = profession.length > 0
+      ? profession.map(e => `- ${e.degree || e.title || 'Título'} en ${e.institution || 'Institución'} (${e.year || ''})`).join('\n')
+      : 'Sin títulos o estudios registrados.';
 
     const systemPrompt = `Eres un experto redactor de cartas de presentación profesionales en español. 
-Tu objetivo es redactar una carta de presentación altamente adaptada y convincente basada en los datos del candidato y la descripción de la vacante.
+Tu objetivo es redactar una carta de presentación altamente adaptada y convincente basada en los datos del candidato, su experiencia laboral previa y la descripción de la vacante.
 Debes devolver el resultado con exactamente 3 párrafos en formato JSON estructurado con las siguientes claves:
 {
   "salutation": "Estimado/a responsable de selección,",
   "hookParagraph": "Primer párrafo de gancho destacando entusiasmo y encaje con el puesto.",
-  "evidenceParagraph": "Segundo párrafo de evidencia conectando experiencia previa y logros relevantes.",
+  "evidenceParagraph": "Segundo párrafo de evidencia conectando experiencia previa y logros relevantes del candidato.",
   "closingParagraph": "Tercer párrafo de cierre solicitando entrevista.",
   "signoff": "Atentamente,"
 }
@@ -103,6 +202,12 @@ DATOS DEL CANDIDATO:
 - Nombre: ${p.fullName || 'Candidato'}
 - Email: ${p.email || ''}
 - Ubicación: ${p.cityProvince || ''}
+
+TRAYECTORIA Y EXPERIENCIA LABORAL:
+${expStr}
+
+FORMACIÓN ACADÉMICA Y TÍTULOS:
+${eduStr}
 
 VACANTE OBJETIVO:
 - Puesto: ${j.jobTitle || 'Profesional'}
@@ -168,10 +273,53 @@ TONO DESEADO: ${tone.toUpperCase()}
           <div>
             <h3 className="text-sm font-semibold mb-1">Origen de Datos del Candidato</h3>
             <p className="text-xs text-[var(--ui-text-secondary)]">
-              Importa tus datos desde LinkedIn o completa los campos principales para personalizar la carta.
+              Vincular tus datos personales y trayectoria desde un CV abierto, guardado o archivo ZIP de LinkedIn.
             </p>
           </div>
 
+          {/* Selector de CV */}
+          <div className="p-4 rounded-[12px] border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] space-y-3">
+            <h4 className="text-xs font-semibold text-[var(--ui-text-primary)] flex items-center gap-2">
+              <CreditCard className="w-4 h-4 text-[var(--color-primary-base)]" />
+              Vincular datos desde un Currículum (CV)
+            </h4>
+            {availableCvs.length === 0 ? (
+              <p className="text-xs text-[var(--ui-text-secondary)]">
+                No hay ningún CV abierto ni guardado. Puedes completar tus datos manualmente abajo o importar un ZIP de LinkedIn.
+              </p>
+            ) : availableCvs.length === 1 ? (
+              <div className="flex items-center justify-between text-xs p-2.5 rounded-[10px] bg-[var(--ui-bg-app)] border border-[var(--ui-border)]">
+                <div>
+                  <span className="font-bold block">📄 {availableCvs[0].title}</span>
+                  <span className="text-[10px] text-[var(--ui-text-secondary)]">{availableCvs[0].subtitle}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleLinkCv(availableCvs[0].id)}
+                  className="px-3 py-1 bg-[var(--color-primary-base)] text-white text-xs font-semibold rounded-[8px] hover:opacity-90 transition-all"
+                >
+                  Vincular
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <label className="block text-xs font-medium">Seleccionar CV:</label>
+                <select
+                  value={(data as any)?.sourceCvTabId || availableCvs[0].id}
+                  onChange={(e) => handleLinkCv(e.target.value)}
+                  className="w-full text-xs p-2.5 rounded-[10px] border border-[var(--ui-border)] bg-[var(--ui-bg-app)] text-[var(--ui-text-primary)] font-medium outline-none cursor-pointer"
+                >
+                  {availableCvs.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      📄 {item.title} {item.subtitle}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          {/* Importador de LinkedIn */}
           <div className="p-4 rounded-[12px] border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] space-y-4">
             <h4 className="text-xs font-semibold text-[var(--ui-text-primary)] flex items-center gap-2">
               <Upload className="w-4 h-4 text-[var(--ui-text-primary)]" />
@@ -187,6 +335,7 @@ TONO DESEADO: ${tone.toUpperCase()}
             </label>
           </div>
 
+          {/* Campos Manuales */}
           <div className="space-y-4 pt-2">
             <div>
               <label className="block text-xs font-medium mb-1">Nombre Completo</label>
@@ -290,7 +439,7 @@ TONO DESEADO: ${tone.toUpperCase()}
               Generación de Carta con IA
             </h3>
             <p className="text-xs text-[var(--ui-text-secondary)]">
-              Elige el tono deseado. La IA analizará los requerimientos del puesto y redactará los 3 párrafos clave.
+              Elige el tono deseado. La IA analizará la trayectoria del candidato y los requerimientos del puesto para redactar los 3 párrafos clave.
             </p>
           </div>
 
@@ -349,11 +498,22 @@ TONO DESEADO: ${tone.toUpperCase()}
 
       {activeTab === 'content' && (
         <div className="space-y-6 max-w-2xl">
-          <div>
-            <h3 className="text-sm font-semibold mb-1">Editor de Párrafos</h3>
-            <p className="text-xs text-[var(--ui-text-secondary)]">
-              Puedes ajustar o editar manualmente cada sección del texto generado por la IA.
-            </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold mb-1">Editor de Párrafos</h3>
+              <p className="text-xs text-[var(--ui-text-secondary)]">
+                Ajusta o edita manualmente las secciones del texto o descárgalo en formato Word.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleExportDocx}
+              disabled={isExportingDocx}
+              className="inline-flex items-center gap-2 px-3 py-1.5 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-[10px] text-xs font-semibold text-[var(--ui-text-primary)] hover:border-[var(--ui-border-hover)] transition-all"
+            >
+              <Download className="w-3.5 h-3.5 text-[var(--color-primary-base)]" />
+              <span>{isExportingDocx ? 'Generando DOCX...' : 'Descargar como Word (.docx)'}</span>
+            </button>
           </div>
 
           <div className="space-y-4">
@@ -417,11 +577,22 @@ TONO DESEADO: ${tone.toUpperCase()}
 
       {activeTab === 'styling' && (
         <div className="space-y-6 max-w-2xl">
-          <div>
-            <h3 className="text-sm font-semibold mb-1">Diseño y Estilo Editorial</h3>
-            <p className="text-xs text-[var(--ui-text-secondary)]">
-              Selecciona el estilo de encabezado y la disposición visual de la carta.
-            </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold mb-1">Diseño y Estilo Editorial</h3>
+              <p className="text-xs text-[var(--ui-text-secondary)]">
+                Selecciona el estilo de encabezado y la disposición visual de la carta.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleExportDocx}
+              disabled={isExportingDocx}
+              className="inline-flex items-center gap-2 px-3 py-1.5 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-[10px] text-xs font-semibold text-[var(--ui-text-primary)] hover:border-[var(--ui-border-hover)] transition-all"
+            >
+              <Download className="w-3.5 h-3.5 text-[var(--color-primary-base)]" />
+              <span>{isExportingDocx ? 'Generando DOCX...' : 'Descargar como Word (.docx)'}</span>
+            </button>
           </div>
 
           <div className="grid grid-cols-3 gap-4">

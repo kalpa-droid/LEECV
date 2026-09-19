@@ -179,19 +179,29 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   }, []);
 
   const [activeTab, setActiveTab] = useState(() => {
-    const isCard = initialPreset === 'tarjeta-personal';
-    return isCard ? 'card_front' : 'personales';
+    const docType = cvData ? inferDocumentTypeId(cvData) : (initialPreset === 'tarjeta-personal' ? 'business_card' : 'cv');
+    if (docType === 'business_card') return 'card_front';
+    if (docType === 'cover_letter') return 'source_data';
+    if (docType === 'book') return 'grid_viewer';
+    return 'personales';
   });
 
-  // Resetea activeTab a 'personales' o 'card_front' cuando se abre o cambia a un documento distinto (cvData.id cambia)
+  // Resetea activeTab al tab inicial correcto según el docType cuando cambia el documento activo (cvData.id)
   const prevCvIdRef = useRef(cvData?.id);
   useEffect(() => {
     if (cvData?.id && prevCvIdRef.current && prevCvIdRef.current !== cvData.id) {
-      const isCard = cvData?.activePresetId === 'tarjeta-personal' || (cvData as any)?.cardSize?.startsWith('tarjeta_');
-      setActiveTab(isCard ? 'card_front' : 'personales');
+      const docType = inferDocumentTypeId(cvData);
+      const defaultTab = docType === 'business_card' 
+        ? 'card_front' 
+        : docType === 'cover_letter' 
+        ? 'source_data' 
+        : docType === 'book' 
+        ? 'grid_viewer' 
+        : 'personales';
+      setActiveTab(defaultTab);
     }
     prevCvIdRef.current = cvData?.id;
-  }, [cvData?.id, cvData?.activePresetId, (cvData as any)?.cardSize]);
+  }, [cvData?.id, cvData?.activePresetId, (cvData as any)?.cardSize, (cvData as any)?.docType, cvData?.doc_type_id]);
 
   const handleSwitchDocumentTab = async (targetCvId: string, targetDocType: string = 'cv', opts: { skipSaveCurrent?: boolean } = {}) => {
     if (!targetCvId || targetCvId === cvData?.id || isSwitchingDocument) return;

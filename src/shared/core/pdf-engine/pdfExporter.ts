@@ -51,10 +51,11 @@ export async function exportCVToPDF(cvData: any, presetInput?: Preset, atsMode?:
   return true;
 }
 
+import { CoverLetterPdfDocument } from './renderer/CoverLetterPdfDocument';
 import { buildCardDataFromCV } from './layers/records/cardDataAdapter';
 
 /**
- * Universal PDF exporter connecting all document types (CVs, Business Card Sheets, etc.)
+ * Universal PDF exporter connecting all document types (CVs, Business Card Sheets, Cover Letters, etc.)
  */
 export async function exportDocumentToPDF(cvData: any, presetInput: string | Preset = 'cv-clasico', atsMode?: boolean): Promise<boolean> {
   const preset = typeof presetInput === 'string' ? getPreset(presetInput) : presetInput;
@@ -62,6 +63,22 @@ export async function exportDocumentToPDF(cvData: any, presetInput: string | Pre
   if (preset.pageCategory === 'tarjeta') {
     const cardData = await buildCardDataFromCV(cvData);
     return exportBusinessCardSheetToPDF(cardData, preset);
+  }
+
+  if (preset.pageCategory === 'carta') {
+    const candidateName = (
+      cvData?.personalInfo?.fullName || 
+      `${cvData?.personalInfo?.surname || ''} ${cvData?.personalInfo?.givenNames || ''}`.trim() || 
+      'Candidato'
+    ).trim();
+    const docElement = React.createElement(CoverLetterPdfDocument, {
+      data: cvData,
+      presetId: preset.id,
+      theme: cvData?.theme
+    });
+    const blob = await pdf(docElement as any).toBlob();
+    downloadBlob(blob, `Carta de Presentacion - ${candidateName}.pdf`);
+    return true;
   }
 
   return exportCVToPDF(cvData, preset, atsMode);
