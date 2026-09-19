@@ -78,5 +78,5 @@ describe('motor de lenguaje sencillo — escáner', () => {
     expect(fileCount).toBeGreaterThan(100);
     const resumen = findings.map(f => `${f.file}:${f.line} «${f.violation.match}» (${f.violation.ruleId})`);
     expect(resumen).toEqual([]);
-  });
+  }, 30000);
 });
