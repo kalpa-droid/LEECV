@@ -22,8 +22,8 @@ export const CAPABILITY_REGISTRY: Record<string, CapabilityConfig> = {
   },
   paper_size: {
     id: 'paper_size',
-    name: 'Formato de Papel',
-    description: 'Dimensiones físicas de hoja (A4, Carta, Oficio, Legal) y orientación.',
+    name: 'Tipo de hoja',
+    description: 'Tipo de hoja (común, carta, oficio, legal) y orientación.',
     category: 'styling',
     defaultData: {
       paperSize: 'a4',
@@ -195,7 +195,7 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
   cv: {
     id: 'cv',
     name: 'Currículum Vitae',
-    description: 'Documento editorial profesional multi-hoja A4/Carta/Oficio con anexo de certificados.',
+    description: 'Documento profesional de una o varias hojas, con anexo de certificados.',
     iconName: 'FileText',
     capabilities: [
       'theme',
@@ -288,7 +288,7 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
   book: {
     id: 'book',
     name: 'Libro / Folleto',
-    description: 'Imposición tipográfica e imprenta editorial de libro, folleto o manual en cuadernillos.',
+    description: 'Libro, folleto o manual listo para imprimir, doblar y armar.',
     iconName: 'BookOpen',
     capabilities: [
       'theme',

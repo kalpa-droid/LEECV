@@ -610,7 +610,7 @@ TONO DESEADO: ${tone.toUpperCase()}
 
           <div className="p-4 rounded-[12px] border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] space-y-2">
             <label className="block text-xs font-semibold text-[var(--ui-text-primary)]">
-              Tamaño de Hoja / Formato de Papel
+              ¿En qué hoja la vas a imprimir?
             </label>
             <select
               value={(data as any)?.layout?.pageSizeId || (data as any)?.layout?.paperSize || 'a4'}

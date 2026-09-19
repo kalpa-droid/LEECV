@@ -48,7 +48,7 @@ export const CookieConsentBanner: React.FC = () => {
             </h4>
             <p className="text-[var(--color-neutral-text-secondary)] leading-relaxed text-xs">
               Usamos cookies mínimas y anónimas para optimizar tu experiencia y medir el rendimiento del generador.
-              Tus datos personales y currículums son 100% privados y vectoriales.
+              Tus datos personales y currículums son 100% privados.
             </p>
 
             <div className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">

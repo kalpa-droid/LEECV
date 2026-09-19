@@ -95,7 +95,7 @@ export const DisenoSection = ({
               <PanelSection icon={<Layout className="w-4 h-4" />} title={UI_GLOSSARY.labels.paperFormat}>
                 <div className={`p-3 bg-[var(--ui-bg-card)] rounded-[${radius.card}] border border-[var(--color-neutral-border)]`}>
                   <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] mb-1.5">
-                    Tamaño de Hoja / Formato de Papel
+                    ¿En qué hoja lo vas a imprimir?
                   </label>
                   <select
                     value={cvData.layout?.pageSizeId || cvData.layout?.paperSize || cvData.cardSize || 'a4'}

@@ -54,38 +54,38 @@
   <!-- Left Content Area -->
   <g transform="translate(90, 110)">
     <!-- Brand Tag / Badge -->
-    <rect x="0" y="0" width="230" height="36" rx="18" fill="#6353fc" fill-opacity="0.2" stroke="#6353fc" stroke-opacity="0.4" stroke-width="1"/>
-    <text x="115" y="23" font-family="Inter, sans-serif" font-weight="700" font-size="14" fill="#a5b4fc" text-anchor="middle" letter-spacing="1.5">TECNOLOGÍA DE CV NATIVA</text>
+    <rect x="0" y="0" width="290" height="36" rx="18" fill="#6353fc" fill-opacity="0.2" stroke="#6353fc" stroke-opacity="0.4" stroke-width="1"/>
+    <text x="145" y="23" font-family="Inter, sans-serif" font-weight="700" font-size="14" fill="#a5b4fc" text-anchor="middle" letter-spacing="1.5">FÁCIL Y SIN COMPLICACIONES</text>
 
     <!-- Main Title -->
     <text x="0" y="110" font-family="Outfit, Montserrat, sans-serif" font-weight="900" font-size="54" fill="#ffffff" letter-spacing="-1">
-      Crea tu CV Profesional
+      Armá tu currículum
     </text>
     <text x="0" y="170" font-family="Outfit, Montserrat, sans-serif" font-weight="900" font-size="54" fill="url(#logoLinear)" letter-spacing="-1">
-      en PDF A4 Vectorial
+      listo para imprimir
     </text>
 
     <!-- Subtitle -->
     <text x="0" y="230" font-family="Inter, sans-serif" font-weight="400" font-size="22" fill="#94a3b8" width="580">
-      Diseños ejecutivos imprimibles, diseño de tarjetas y 100% privacidad.
+      Imprimilo en tu casa o llevalo a una imprenta.
     </text>
     <text x="0" y="260" font-family="Inter, sans-serif" font-weight="400" font-size="22" fill="#94a3b8">
-      Sin marcas de agua.
+      También tarjetas y libros. 100% privado.
     </text>
 
     <!-- Feature Bullets -->
     <g transform="translate(0, 315)">
       <!-- Feature 1 -->
       <rect x="0" y="0" width="200" height="42" rx="10" fill="#ffffff" fill-opacity="0.05" stroke="#ffffff" stroke-opacity="0.1"/>
-      <text x="15" y="26" font-family="Inter, sans-serif" font-weight="600" font-size="15" fill="#38bdf8">✓ Filtros ATS OK</text>
+      <text x="15" y="26" font-family="Inter, sans-serif" font-weight="600" font-size="15" fill="#38bdf8">✓ Sin marca de agua</text>
 
       <!-- Feature 2 -->
       <rect x="215" y="0" width="220" height="42" rx="10" fill="#ffffff" fill-opacity="0.05" stroke="#ffffff" stroke-opacity="0.1"/>
-      <text x="230" y="26" font-family="Inter, sans-serif" font-weight="600" font-size="15" fill="#a7f3d0">✓ Exportación Vectorial</text>
+      <text x="230" y="26" font-family="Inter, sans-serif" font-weight="600" font-size="15" fill="#a7f3d0">✓ Listo para imprimir</text>
 
       <!-- Feature 3 -->
       <rect x="450" y="0" width="180" height="42" rx="10" fill="#ffffff" fill-opacity="0.05" stroke="#ffffff" stroke-opacity="0.1"/>
-      <text x="465" y="26" font-family="Inter, sans-serif" font-weight="600" font-size="15" fill="#c084fc">✓ Multi-Plantilla</text>
+      <text x="465" y="26" font-family="Inter, sans-serif" font-weight="600" font-size="15" fill="#c084fc">✓ Varios diseños</text>
     </g>
   </g>
 

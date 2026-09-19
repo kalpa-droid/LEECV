@@ -482,7 +482,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     const isCard = cvData?.activePresetId === 'tarjeta-personal';
     const nextId = isCard ? 'cv-clasico' : 'tarjeta-personal';
     setCvData((prev: any) => ({ ...prev, activePresetId: nextId }));
-    showInfo(isCard ? 'Vista cambiada a: Currículum Vitae A4 📄' : 'Vista cambiada a: Tarjeta Personal 📇');
+    showInfo(isCard ? 'Vista cambiada a: Currículum Vitae 📄' : 'Vista cambiada a: Tarjeta Personal 📇');
   };
 
   const handleSaveCVClick = async () => {
@@ -574,7 +574,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const handleNewBook = async () => {
     confirm({
       title: '¿Iniciar nuevo Libro / Folleto?',
-      message: '¿Deseas iniciar la imposición de un nuevo libro? Se resguardará tu borrador actual.',
+      message: '¿Querés empezar un libro nuevo? Se resguardará tu borrador actual.',
       confirmText: 'Sí, crear libro',
       variant: 'info',
       onConfirm: async () => {
@@ -809,7 +809,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         <Suspense fallback={
           <div className="w-full h-[600px] flex flex-col items-center justify-center p-8 text-[var(--ui-text-secondary)]">
             <div className="w-10 h-10 border-4 border-[var(--color-accent-base)] border-t-transparent rounded-full animate-spin mb-4" />
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--ui-text-primary)]">Cargando Visor Vectorial de Alta Resolución…</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-[var(--ui-text-primary)]">Preparando la vista previa…</span>
           </div>
         }>
           <CVPreview 
@@ -1064,7 +1064,7 @@ export default function App() {
             </>
           ) : currentRoute === '/' ? (
             <>
-              <SeoMetaManager title="LEECV — CVs, Tarjetas y Libros en Calidad Imprenta" />
+              <SeoMetaManager title="LEECV — CVs, Tarjetas y Libros listos para imprimir" />
               <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando LEECV...</div>}>
                 <LandingPage onNavigate={(r) => navigateTo(r)} />
               </Suspense>

@@ -118,7 +118,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             <MarketingCTA label={t.landing.hero.primaryCta} onClick={() => onNavigate('/crear-cv')} size="lg" variant="primary" />
           </div>
           <div className="text-center text-[var(--ui-text-secondary)] text-sm font-medium pb-8">
-            ✓ 100% privado ✓ Sin marca de agua ✓ Exportación vectorial lista para imprenta
+            ✓ 100% privado ✓ Sin marca de agua ✓ Listo para imprimir en tu casa o en una imprenta
           </div>
 
           <div className="max-w-5xl mx-auto mt-12">
@@ -144,7 +144,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
                   label: t.landing.products.tarjetas.title,
                   image: '/marketing/preview-tarjeta.webp',
                   route: '/crear-tarjeta',
-                  features: ['85x55mm', 'Imposición A4', 'Código QR']
+                  features: ['Tamaño clásico', 'Varias por hoja', 'Código QR']
                 },
                 {
                   id: 'libros',
@@ -312,16 +312,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
               <span className="text-xs font-bold uppercase tracking-wider">Tarjetas Personales</span>
             </div>
             <h3 className="text-lg font-bold text-[var(--ui-text-primary)] mb-2 group-hover:text-[var(--color-accent-text)] transition-colors">Manual de diseño e impresión de tarjetas personales</h3>
-            <p className="text-sm text-[var(--ui-text-secondary)]">Todo lo que necesitas saber para imprimir tarjetas de 85x55mm con sangría correcta y códigos QR.</p>
+            <p className="text-sm text-[var(--ui-text-secondary)]">Todo lo que necesitas saber para imprimir tus tarjetas en casa o en una imprenta, con códigos QR.</p>
           </div>
           {/* Card 4 */}
           <div onClick={() => onNavigate('/blog/como-maquetar-doblar-libro-caballete')} className="group p-6 bg-[var(--ui-bg-panel)] rounded-[24px] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)]/50 cursor-pointer transition-all hover:-translate-y-1">
             <div className="flex items-center gap-3 mb-4 text-[var(--color-accent-text)]">
               <BookOpen className="w-5 h-5" />
-              <span className="text-xs font-bold uppercase tracking-wider">Imposición de Libros</span>
+              <span className="text-xs font-bold uppercase tracking-wider">Armado de Libros</span>
             </div>
             <h3 className="text-lg font-bold text-[var(--ui-text-primary)] mb-2 group-hover:text-[var(--color-accent-text)] transition-colors">Cómo maquetar y doblar tu primer libro en caballete</h3>
-            <p className="text-sm text-[var(--ui-text-secondary)]">Aprende la regla de los múltiplos de 4 y el orden correcto de los pliegos para un libro perfecto.</p>
+            <p className="text-sm text-[var(--ui-text-secondary)]">Aprende la regla de los múltiplos de 4 y el orden correcto de las hojas para un libro perfecto.</p>
           </div>
         </div>
         <div className="mt-10 text-center">

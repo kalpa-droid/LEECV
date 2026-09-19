@@ -34,6 +34,7 @@ export function CardSheetDocument({ card, preset }: CardSheetDocumentProps) {
   const outerHeightPt = mmToPt(bleedBox.bleedHeightMm);
 
   const syntheticBleedPage: PageSize = {
+    // plain-language:allow — nombre interno del PDF, nunca se muestra
     id: 'bleed-box', name: 'Bleed box', label: 'Bleed box',
     widthMm: bleedBox.bleedWidthMm, heightMm: bleedBox.bleedHeightMm,
     widthPt: outerWidthPt, heightPt: outerHeightPt, category: 'tarjeta'
@@ -42,6 +43,7 @@ export function CardSheetDocument({ card, preset }: CardSheetDocumentProps) {
     (typeof v === 'number' ? ((v + bleedSpec.bleedMm) as T) : v);
   const safeCardMarginPreset = cardMarginPreset || MARGIN_PRESETS.tarjeta_ajustada;
   const marginWithBleed: MarginPreset = {
+    // plain-language:allow — nombre interno del PDF, nunca se muestra
     id: 'auto-bleed', name: 'Auto (margen + sangrado)',
     top: addBleedToMargin(safeCardMarginPreset.top),
     bottom: addBleedToMargin(safeCardMarginPreset.bottom),

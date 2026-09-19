@@ -1,13 +1,13 @@
 export const modalsCatalog = {
   cardExport: {
     title: 'Impresión de Tarjetas de Presentación',
-    loadingPreview: 'Generando preview de imposición y QR...',
+    loadingPreview: 'Preparando la vista previa de tu hoja de tarjetas...',
   },
   pdfProgress: {
-    generatingTitle: 'Generando Documento PDF A4...',
+    generatingTitle: 'Preparando tu PDF...',
     generatingSub: 'Procesando páginas, imágenes y anexos. La descarga iniciará en unos instantes.',
     successTitle: '¡PDF Generado Exitosamente!',
-    successSub: 'El archivo PDF A4 y la copia de respaldo .JSON se han descargado correctamente.',
+    successSub: 'Tu PDF y la copia de respaldo (.JSON) se descargaron correctamente.',
   },
   saveAsVersion: {
     title: 'Guardar una copia para...',

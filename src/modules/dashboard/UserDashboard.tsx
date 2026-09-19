@@ -344,7 +344,7 @@ inGracePeriod ? 'bg-[var(--color-status-warning-muted)] text-[var(--color-status
                   </div>
                   <p className="text-[11px] text-[var(--ui-text-secondary)] mt-0.5">
                     {credits > 0
-                      ? 'Tenés créditos activos para exportar PDFs A4 o publicar tu CV sin límite de tiempo.'
+                      ? 'Tenés créditos activos para exportar PDFs o publicar tu CV sin límite de tiempo.'
                       : 'Sin créditos activos. Podés comprar un paquete o suscribirte a Pro/Enterprise.'}
                   </p>
                 </div>

@@ -115,3 +115,9 @@ Cada vez que hablemos o se plantee un cambio o nueva funcionalidad para la web:
 3. **Esperar el visto bueno o indicaciones del usuario** antes de escribir código o aplicar cambios.
 
 
+
+## Lenguaje sencillo (texto visible)
+LEECV es para gente común: tiene una impresora en casa o quiere llevar el archivo a una imprenta. Todo texto visible (UI, landing, blog, SEO, mensajes, imagen para compartir) habla de lo que la persona **hace**: "imprimilo en tu casa" / "llevalo a una imprenta". **Nunca** "vectorial", "imprenta pro/profesional", tamaños (A3/A4/A5, "tamaño de hoja/papel/página"), medidas en mm, sangrado, marcas de corte, imposición/pliegos, "PDF nativo" ni DPI.
+- Reglas y cómo decirlo en criollo: `src/shared/core/plainLanguage/plainLanguageRules.ts` (para prohibir una palabra nueva, agregá una regla ahí y nada más).
+- Lo audita `npm run check-plain-language` (pre-commit, `check-all` y `tests/plainLanguage.test.ts`). Un caso interno legítimo (nunca visible) se exime con `plain-language:allow` en la misma línea o la anterior.
+- Los códigos internos (`'A4'`, `paperSize: 'A3'`) no son texto visible y no se tocan; lo que cambia es la **etiqueta** que ve la persona.

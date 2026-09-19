@@ -1,7 +1,7 @@
 {
   "short_name": "LEECV",
-  "name": "LEECV — Creador de Currículum Vitae Profesional en PDF A4",
-  "description": "Crea tu Currículum Vitae profesional en PDF A4 nativo, editable e imprimible con plantillas ejecutivas y compatibilidad ATS.",
+  "name": "LEECV — Creador de Currículum Vitae listo para imprimir",
+  "description": "Crea tu Currículum Vitae listo para imprimir, con plantillas profesionales y compatibilidad ATS.",
   "icons": [
     {
       "src": "/brand/favicon.svg",

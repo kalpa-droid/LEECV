@@ -29,26 +29,26 @@ const articlesData: Article[] = [
       'Un sistema ATS (Applicant Tracking System) es un software automatizado que escanea y clasifica las postulaciones de empleo según palabras clave y formato de documento.',
       '1. Usa una estructura de 1 columna limpia: Las tablas complejas y los gráficos flotantes dificultan la extracción automática de texto. Con el motor ATS de LEECV, tu CV exporta etiquetas legibles estándar.',
       '2. Incluye nombres de cargos y habilidades explícitas: Si te postulas a "Desarrollador Frontend", asegúrate de incluir palabras clave como React, TypeScript, HTML y CSS en tus experiencias.',
-      '3. Formato PDF vectorial: Evita exportar tu currículum como una imagen JPG o PNG. Los archivos PDF vectoriales permiten la selección directa de texto que requiere el escáner.',
+      '3. Guarda tu currículum como PDF con texto: Evita exportarlo como una imagen JPG o PNG. Un PDF normal permite seleccionar el texto, y eso es justo lo que necesita leer el escáner.',
       'Con el chequeador ATS incorporado en LEECV, puedes auditar tu currículum en tiempo real antes de enviarlo a cualquier oferta laboral.'
     ]
   },
   {
     slug: 'guia-imposicion-libros-caballete',
-    title: 'Guía de Imposición de Libros: Cómo preparar PDFs para imprenta en caballete',
-    summary: 'La imposición de pliegos reordena las páginas de un PDF para que al imprimirse doble faz y doblarse al medio, queden en la secuencia exacta del libro.',
+    title: 'Cómo preparar tu libro para imprimirlo y doblarlo al medio',
+    summary: 'Para que un libro doblado al medio quede en orden, las páginas no se imprimen una tras otra: hay que reacomodarlas. Te explicamos cómo, y lo hacemos por ti.',
     category: 'Impresión & Imprenta',
     readTime: '6 min de lectura',
     date: '02 de Septiembre, 2026',
     author: 'Studio Imprenta',
     content: [
       'Cuando imprimes un libro o folleto abrochado al centro (saddle-stitch / caballete), no puedes imprimir la página 1 al lado de la página 2 en la misma hoja de papel.',
-      'En un libro de 8 páginas impreso en 2 hojas A4 dobladas al medio:',
+      'En un libro de 8 páginas impreso en 2 hojas dobladas al medio:',
       '• Frente de la Hoja 1: Página 8 (izquierda) y Página 1 (derecha).',
       '• Dorso de la Hoja 1: Página 2 (izquierda) y Página 7 (derecha).',
       '• Frente de la Hoja 2: Página 6 (izquierda) y Página 3 (derecha).',
       '• Dorso de la Hoja 2: Página 4 (izquierda) y Página 5 (derecha).',
-      'El motor de Studio Libros de LEECV realiza esta imposición matemática automáticamente, ajustando el número total de páginas al múltiplo de 4 requerido y generando el archivo PDF listo para enviar a la imprenta.'
+      'Studio Libros de LEECV reacomoda las páginas por ti automáticamente, ajusta el total al múltiplo de 4 que hace falta y te da el archivo listo para imprimir en tu casa o llevar a la imprenta.'
     ]
   },
   {
@@ -63,9 +63,9 @@ const articlesData: Article[] = [
       'Una tarjeta personal física sigue siendo el elemento de contacto más ágil en conferencias, eventos de negocios y reuniones presenciales.',
       'Para maximizar su utilidad:',
       '1. Incluye un código QR dinámico: Conecta la tarjeta física a tu portafolio en línea, perfil de LinkedIn o tarjeta digital interactiva.',
-      '2. Respeta los márgenes de corte de imprenta: El tamaño estándar de tarjeta es 85 x 55 mm o 90 x 50 mm. Deja siempre un margen de seguridad de 3 mm.',
+      '2. Deja un margen de seguridad: Mantén el texto y el logo un poco alejados del borde, para que no se corten al recortar la tarjeta.',
       '3. Contraste y legibilidad: Utiliza tipografías nítidas y colores de alto contraste entre el texto y el fondo.',
-      'En LEECV Tarjetas, puedes subir tu logo con recorte libre, extraer los colores principales y exportar una grilla de 9 tarjetas por hoja A4 para imprimir en cartulina.'
+      'En LEECV Tarjetas, puedes subir tu logo con recorte libre, extraer los colores principales y armar una hoja con 9 tarjetas para imprimir en cartulina.'
     ]
   },
   {
@@ -112,8 +112,8 @@ const articlesData: Article[] = [
       '1. Repetir el CV palabra por palabra: La carta debe aportar contexto y motivación, no resumir el currículum.',
       '2. Cartas genéricas sin personalizar: Enviar la misma carta a 20 empresas distintas destruye tu tasa de respuesta.',
       '3. Errores tipográficos en el nombre de la empresa o recruiter: Revisa siempre los datos antes de exportar.',
-      '4. Longitud excesiva: Mantén la carta en una sola hoja A4 limpia con 3 a 4 párrafos concisos.',
-      'Utiliza la suite de LEECV para previsualizar la carta en formato A4 y verificar la alineación con tu CV.'
+      '4. Longitud excesiva: Mantén la carta en una sola hoja, limpia, con 3 a 4 párrafos concisos.',
+      'Utiliza LEECV para ver cómo queda la carta impresa y comprobar que combine con tu CV.'
     ]
   },
   {
@@ -151,15 +151,15 @@ const articlesData: Article[] = [
   {
     slug: 'manual-diseno-impresion-tarjetas-personales',
     title: 'Manual de diseño e impresión de tarjetas personales',
-    summary: 'Todo lo que necesitas saber para imprimir tarjetas de 85x55mm con sangría correcta, códigos QR y compuestas en una hoja A4 de 9 tarjetas.',
+    summary: 'Todo lo que necesitas saber para imprimir tus tarjetas en casa o en una imprenta: cómo dejar márgenes seguros, sumar un código QR y armar una hoja con 9 tarjetas.',
     category: 'Guías Prácticas',
     readTime: '5 min de lectura',
     date: '19 de Septiembre, 2026',
     author: 'Equipo LEECV',
     content: [
-      'Paso 1: Medidas y Sangría. Configura tu diseño en 85x55mm o 90x50mm. Deja siempre 3mm adicionales de sangría (bleed) en los bordes para evitar márgenes blancos al guillotinar.',
+      'Paso 1: Deja margen para el corte. Extiende el color o el fondo de tu diseño un poquito más allá del borde. Así, si el corte sale apenas corrido, no quedan bordes blancos.',
       'Paso 2: El Código QR. Incluye un código QR que apunte a tu CV online o perfil de LinkedIn. Asegúrate de que el contraste sea alto para facilitar el escaneo.',
-      'Paso 3: Imposición A4. Para imprimir en casa o imprentas digitales rápidas, LEECV genera automáticamente un pliego A4 con 9 tarjetas ordenadas y listas para cortar.'
+      'Paso 3: Una hoja con varias tarjetas. Para imprimir en casa o en una imprenta, LEECV arma automáticamente una hoja con 9 tarjetas ordenadas y listas para recortar.'
     ],
     ctaLabel: 'Diseñar mis tarjetas',
     ctaRoute: '/crear-tarjeta'
@@ -167,7 +167,7 @@ const articlesData: Article[] = [
   {
     slug: 'como-maquetar-doblar-libro-caballete',
     title: 'Cómo maquetar y doblar tu primer libro en caballete',
-    summary: 'Aprende la regla de los múltiplos de 4 y el orden correcto de los pliegos para lograr un libro perfecto abrochado al medio.',
+    summary: 'Aprende la regla de los múltiplos de 4 y el orden correcto de las hojas para lograr un libro perfecto abrochado al medio.',
     category: 'Guías Prácticas',
     readTime: '7 min de lectura',
     date: '19 de Septiembre, 2026',
@@ -175,7 +175,7 @@ const articlesData: Article[] = [
     content: [
       'Paso 1: La regla del múltiplo de 4. Todo libro abrochado al medio (caballete) debe tener un número de páginas que sea múltiplo de 4 (8, 12, 16, 20, etc.).',
       'Paso 2: Carga tu PDF original de páginas simples. No intentes ordenarlas tú mismo. Sube tu archivo con las páginas del 1 al final en orden correlativo.',
-      'Paso 3: Imposición automática. Studio Libros tomará tus páginas simples y las organizará en pliegos dobles (ej: página 8 con página 1) listos para imprimir a doble faz y doblar.'
+      'Paso 3: Orden automático. Studio Libros tomará tus páginas simples y las acomodará en hojas dobles (por ejemplo, la página 8 junto a la 1), listas para imprimir de ambos lados y doblar.'
     ],
     ctaLabel: 'Abrir Studio Libros',
     ctaRoute: '/crear-libro'

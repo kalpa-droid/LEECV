@@ -13,7 +13,7 @@ export const BOOK_STEP_SEQUENCE: BookStepItem[] = [
     stepNumber: 1,
     label: '1. Origen',
     shortLabel: 'Origen',
-    description: 'Formato PDF y tamaño de hoja',
+    description: 'Tu archivo y dónde lo vas a imprimir',
   },
   {
     id: 'book_organize',

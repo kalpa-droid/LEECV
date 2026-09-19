@@ -70,7 +70,7 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
             </div>
             <div>
               <span className="block font-extrabold text-[var(--ui-text-primary)]">Nuevo Currículum Vitae</span>
-              <span className="block text-[10px] text-[var(--ui-text-secondary)]">Formato A4 o Bolsillo</span>
+              <span className="block text-[10px] text-[var(--ui-text-secondary)]">Para imprimir en casa o en una imprenta</span>
             </div>
           </button>
 
@@ -104,7 +104,7 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
             </div>
             <div>
               <span className="block font-extrabold text-[var(--ui-text-primary)]">Nuevo Libro / Folleto</span>
-              <span className="block text-[10px] text-[var(--ui-text-secondary)]">Montaje A4 / A3</span>
+              <span className="block text-[10px] text-[var(--ui-text-secondary)]">Para imprimir en casa o en una imprenta</span>
             </div>
           </button>
 

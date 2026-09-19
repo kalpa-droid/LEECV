@@ -124,7 +124,7 @@ export default function CertCropperModal({
     <Modal
       isOpen={isOpen && !!rawImageSrc}
       onClose={onClose}
-      title="Ajustar Certificado a Hoja A4"
+      title="Ajustar Certificado a la Hoja"
       icon={<Crop className="w-5 h-5 text-[var(--ui-warning)]" />}
       size="md"
       footer={

@@ -55,7 +55,7 @@ export const HeroProductPreview: React.FC<HeroProductPreviewProps> = ({
           <div className="absolute inset-0 bg-gradient-to-t from-[var(--ui-bg-panel)]/90 via-transparent to-transparent flex items-end justify-between p-6 opacity-95 group-hover:opacity-100 transition-opacity">
             <div className="text-left">
               <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent-text)] bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/30 px-2.5 py-1 rounded-md">
-                Motor Vectorial A4
+                Listo para imprimir
               </span>
               <h4 className="text-xl font-bold text-[var(--ui-text-primary)] mt-1">
                 {activeProduct.label}

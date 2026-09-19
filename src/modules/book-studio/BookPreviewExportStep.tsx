@@ -41,7 +41,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
         <div className="space-y-1 max-w-sm mx-auto">
           <h3 className="text-base font-bold text-[var(--ui-text-primary)]">Ningún PDF cargado aún</h3>
           <p className="text-xs text-[var(--ui-text-secondary)]">
-            Por favor carga un archivo PDF en la pestaña "1. Cargar PDF" para poder previsualizar y exportar la imposición.
+            Por favor carga un archivo PDF en la pestaña "1. Cargar PDF" para poder previsualizar y descargar tu libro.
           </p>
         </div>
       </div>
@@ -122,7 +122,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
             <div>
               <h3 className="text-sm font-bold text-[var(--ui-text-primary)]">{selectedFile.name}</h3>
               <p className="text-xs text-[var(--ui-text-secondary)]">
-                Modo: {options.mode === 'fotocopia' ? 'Escaneo 2 págs./hoja' : 'PDF 1 pág./hoja'} • Papel: {options.paperSize || 'A4'}
+                Modo: {options.mode === 'fotocopia' ? 'Escaneo 2 págs./hoja' : 'PDF 1 pág./hoja'} • Se imprime {options.paperSize === 'A3' ? 'en una imprenta' : 'en tu casa'}
               </p>
             </div>
           </div>
@@ -153,7 +153,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
 
           <div className={`p-3 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)]`}>
             <span className="text-[10px] font-semibold text-[var(--ui-text-secondary)] block uppercase">
-              Pliegos Físicos
+              Hojas a imprimir
             </span>
             <span className="text-xl font-bold text-[var(--color-secondary-bright)] mt-0.5 block">
               {totalSheetsToPrint} <span className="text-xs font-normal text-[var(--ui-text-secondary)]">hojas</span>
@@ -179,7 +179,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
           <div>
             <span className="font-bold block">Documento para Imprimir y Doblar</span>
             <span className="text-[11px] opacity-90 block">
-              El PDF resultante impone las hojas en pliegos dobles (caballete). Imprime en doble faz y dobla por la mitad.
+              El archivo trae las hojas ya ordenadas. Imprimí de ambos lados y doblá por la mitad.
             </span>
           </div>
         </div>
@@ -231,7 +231,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
             className={`w-full py-3.5 px-6 rounded-[${radius.control}] font-bold text-sm bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] hover:opacity-90 disabled:opacity-50 transition flex items-center justify-center gap-2 ${elevationSystem.floating}`}
           >
             <Printer className="w-4 h-4" />
-            <span>{isGating ? 'Verificando créditos...' : `Generar y Descargar PDF (${totalSheetsToPrint} pliegos)`}</span>
+            <span>{isGating ? 'Verificando créditos...' : `Descargar para imprimir (${totalSheetsToPrint} hojas)`}</span>
             <Sparkles className="w-4 h-4" />
           </button>
 
