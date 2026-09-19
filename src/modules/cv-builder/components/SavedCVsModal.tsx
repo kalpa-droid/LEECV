@@ -49,6 +49,7 @@ export default function SavedCVsModal({
   onImportJson,
   onOpenCloudStatus,
   onDocumentClosed,
+  onGenerateCoverLetterFromCV,
 }: SavedCVsModalProps) {
   const { confirm } = useConfirm();
   const { showSuccess, showError } = useToast();

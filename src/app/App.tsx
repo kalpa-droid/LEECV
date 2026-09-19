@@ -255,26 +255,6 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     }
   }, []);
 
-  // Paso 0: Resincronizar cvData con currentRoute cuando la ruta y el docType activo divergen
-  useEffect(() => {
-    if (!currentRoute || currentRoute === '/' || currentRoute === '/blog' || currentRoute === '/dashboard') return;
-    const targetDocType = getDocTypeForRoute(currentRoute);
-    const currentDocType = cvData ? inferDocumentTypeId(cvData) : null;
-
-    if (currentDocType && currentDocType !== targetDocType) {
-      const existingTab = tabs.find(t => t.docType === targetDocType);
-      if (existingTab) {
-        handleSwitchDocumentTab(existingTab.cvId, targetDocType, { skipSaveCurrent: false });
-      } else {
-        const targetPreset = targetDocType === 'cover_letter' ? 'carta-clasica'
-          : targetDocType === 'business_card' ? 'tarjeta-personal'
-          : targetDocType === 'book' ? 'libro-standard'
-          : 'cv-clasico';
-        createBlankDocumentWithTab(targetPreset);
-      }
-    }
-  }, [currentRoute, cvData, tabs, createBlankDocumentWithTab, handleSwitchDocumentTab]);
-
 
   const [isPanelOpen, setIsPanelOpen] = useState(true);
 
@@ -340,6 +320,26 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       setTabs(getOpenTabs());
     }
   }, [resetToBlankCV]);
+
+  // Paso 0: Resincronizar cvData con currentRoute cuando la ruta y el docType activo divergen
+  useEffect(() => {
+    if (!currentRoute || currentRoute === '/' || currentRoute === '/blog' || currentRoute === '/dashboard') return;
+    const targetDocType = getDocTypeForRoute(currentRoute);
+    const currentDocType = cvData ? inferDocumentTypeId(cvData) : null;
+
+    if (currentDocType && currentDocType !== targetDocType) {
+      const existingTab = tabs.find(t => t.docType === targetDocType);
+      if (existingTab) {
+        handleSwitchDocumentTab(existingTab.cvId, targetDocType, { skipSaveCurrent: false });
+      } else {
+        const targetPreset = targetDocType === 'cover_letter' ? 'carta-clasica'
+          : targetDocType === 'business_card' ? 'tarjeta-personal'
+          : targetDocType === 'book' ? 'libro-standard'
+          : 'cv-clasico';
+        createBlankDocumentWithTab(targetPreset);
+      }
+    }
+  }, [currentRoute, cvData, tabs, createBlankDocumentWithTab, handleSwitchDocumentTab]);
 
   const goToLandingPage = React.useCallback(() => {
     if (onNavigate) {
