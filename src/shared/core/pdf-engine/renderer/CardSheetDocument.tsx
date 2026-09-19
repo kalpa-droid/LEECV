@@ -35,9 +35,15 @@ export function CardSheetDocument({ card, preset }: CardSheetDocumentProps) {
 
   const syntheticBleedPage: PageSize = {
     // plain-language:allow — nombre interno del PDF, nunca se muestra
-    id: 'bleed-box', name: 'Bleed box', label: 'Bleed box',
-    widthMm: bleedBox.bleedWidthMm, heightMm: bleedBox.bleedHeightMm,
-    widthPt: outerWidthPt, heightPt: outerHeightPt, category: 'tarjeta'
+    id: 'synthetic_bleed',
+    name: 'Con demasía',
+    label: 'Con demasía',
+    appLabel: 'Con demasía',
+    widthMm: bleedBox.bleedWidthMm,
+    heightMm: bleedBox.bleedHeightMm,
+    widthPt: outerWidthPt,
+    heightPt: outerHeightPt,
+    category: 'tarjeta'
   };
   const addBleedToMargin = <T extends number | { percentOfHeight: number } | { percentOfWidth: number }>(v: T): T =>
     (typeof v === 'number' ? ((v + bleedSpec.bleedMm) as T) : v);

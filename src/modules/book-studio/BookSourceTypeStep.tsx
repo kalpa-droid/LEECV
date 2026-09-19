@@ -148,15 +148,15 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div
-            onClick={() => setOptions((prev) => ({ ...prev, paperSize: 'a4' }))}
+            onClick={() => setOptions((prev) => ({ ...prev, paperSize: 'A4' }))}
             className={`${selectableCard.base} ${
-              options.paperSize !== 'a3' ? selectableCard.selected : selectableCard.unselected
+              options.paperSize !== 'A3' ? selectableCard.selected : selectableCard.unselected
             } p-4 flex items-start space-x-3`}
           >
             <input
               type="radio"
               name="paperSize"
-              checked={options.paperSize !== 'a3'}
+              checked={options.paperSize !== 'A3'}
               onChange={() => {}}
               className="mt-1 text-[var(--color-accent-text)] cursor-pointer"
             />
@@ -172,15 +172,15 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
           </div>
 
           <div
-            onClick={() => setOptions((prev) => ({ ...prev, paperSize: 'a3' }))}
+            onClick={() => setOptions((prev) => ({ ...prev, paperSize: 'A3' }))}
             className={`${selectableCard.base} ${
-              options.paperSize === 'a3' ? selectableCard.selected : selectableCard.unselected
+              options.paperSize === 'A3' ? selectableCard.selected : selectableCard.unselected
             } p-4 flex items-start space-x-3`}
           >
             <input
               type="radio"
               name="paperSize"
-              checked={options.paperSize === 'a3'}
+              checked={options.paperSize === 'A3'}
               onChange={() => {}}
               className="mt-1 text-[var(--color-accent-text)] cursor-pointer"
             />
