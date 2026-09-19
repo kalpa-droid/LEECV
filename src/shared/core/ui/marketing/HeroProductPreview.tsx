@@ -8,6 +8,7 @@ export interface ProductPreviewItem {
   label: string;
   image: string;
   route: string;
+  features?: string[];
 }
 
 export interface HeroProductPreviewProps {
@@ -59,6 +60,15 @@ export const HeroProductPreview: React.FC<HeroProductPreviewProps> = ({
               <h4 className="text-xl font-bold text-[var(--ui-text-primary)] mt-1">
                 {activeProduct.label}
               </h4>
+              {activeProduct.features && activeProduct.features.length > 0 && (
+                <div className="flex gap-2 mt-3 flex-wrap max-w-sm">
+                  {activeProduct.features.map(f => (
+                    <span key={f} className="text-xs font-semibold px-2 py-1 bg-[var(--ui-bg-panel)]/50 backdrop-blur border border-[var(--ui-border)] rounded-md text-[var(--ui-text-secondary)]">
+                      {f}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <button

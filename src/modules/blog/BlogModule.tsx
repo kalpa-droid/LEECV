@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Newspaper, ArrowLeft, Clock, User, FileText, BookOpen, Mail } from 'lucide-react';
 import { displayScale, elevationSystem, radius, button } from '../../shared/core/uiDesignSystem';
+import { updatePageSeo, generateHowToSchema, generateTechArticleSchema } from '../../shared/core/seo/seoIndexingEngine';
 
 interface Article {
   slug: string;
@@ -11,6 +12,8 @@ interface Article {
   date: string;
   author: string;
   content: string[];
+  ctaLabel?: string;
+  ctaRoute?: string;
 }
 
 const articlesData: Article[] = [
@@ -112,16 +115,143 @@ const articlesData: Article[] = [
       '4. Longitud excesiva: Mantén la carta en una sola hoja A4 limpia con 3 a 4 párrafos concisos.',
       'Utiliza la suite de LEECV para previsualizar la carta en formato A4 y verificar la alineación con tu CV.'
     ]
+  },
+  {
+    slug: 'como-estructurar-cv-superar-filtros-ats',
+    title: 'Cómo estructurar tu CV para superar los filtros ATS',
+    summary: 'Aprende a maquetar tu currículum con una plantilla de 1 columna, ordenar las secciones correctamente y usar el chequeo ATS para asegurar que los robots lean tu perfil.',
+    category: 'Guías Prácticas',
+    readTime: '6 min de lectura',
+    date: '19 de Septiembre, 2026',
+    author: 'Equipo LEECV',
+    content: [
+      'Paso 1: Elige una plantilla de 1 columna. Las plantillas de dos columnas suelen romper la jerarquía de lectura de los sistemas ATS, haciendo que mezclen tu experiencia con tus habilidades.',
+      'Paso 2: Ordena tus secciones. Datos personales arriba, luego un breve resumen, seguido de tu experiencia laboral (la sección más importante), educación y finalmente habilidades.',
+      'Paso 3: Usa el chequeo ATS en tiempo real de LEECV. Nuestra herramienta te avisará si falta alguna sección clave o si hay problemas en la extracción del texto de tu PDF.'
+    ],
+    ctaLabel: 'Auditar mi currículum ahora',
+    ctaRoute: '/crear-cv'
+  },
+  {
+    slug: 'redactar-carta-de-presentacion-con-ia',
+    title: 'Paso a paso: redactar una carta de presentación con IA',
+    summary: 'Crea una carta de presentación perfectamente adaptada a los requerimientos del puesto en segundos, manteniendo un tono profesional y vinculada a tu CV.',
+    category: 'Guías Prácticas',
+    readTime: '4 min de lectura',
+    date: '19 de Septiembre, 2026',
+    author: 'Equipo LEECV',
+    content: [
+      'Paso 1: Define los requerimientos del puesto. Antes de generar la carta, asegúrate de tener a mano la descripción de la vacante para dársela a la IA.',
+      'Paso 2: Sincroniza tu CV. La IA leerá tus experiencias pasadas para justificar por qué eres el candidato ideal para esa vacante específica.',
+      'Paso 3: Ajusta el tono y personaliza. Revisa el borrador generado, ajusta el nivel de formalidad y asegúrate de que refleje tu voz.'
+    ],
+    ctaLabel: 'Crear mi carta de presentación',
+    ctaRoute: '/crear-carta'
+  },
+  {
+    slug: 'manual-diseno-impresion-tarjetas-personales',
+    title: 'Manual de diseño e impresión de tarjetas personales',
+    summary: 'Todo lo que necesitas saber para imprimir tarjetas de 85x55mm con sangría correcta, códigos QR y compuestas en una hoja A4 de 9 tarjetas.',
+    category: 'Guías Prácticas',
+    readTime: '5 min de lectura',
+    date: '19 de Septiembre, 2026',
+    author: 'Equipo LEECV',
+    content: [
+      'Paso 1: Medidas y Sangría. Configura tu diseño en 85x55mm o 90x50mm. Deja siempre 3mm adicionales de sangría (bleed) en los bordes para evitar márgenes blancos al guillotinar.',
+      'Paso 2: El Código QR. Incluye un código QR que apunte a tu CV online o perfil de LinkedIn. Asegúrate de que el contraste sea alto para facilitar el escaneo.',
+      'Paso 3: Imposición A4. Para imprimir en casa o imprentas digitales rápidas, LEECV genera automáticamente un pliego A4 con 9 tarjetas ordenadas y listas para cortar.'
+    ],
+    ctaLabel: 'Diseñar mis tarjetas',
+    ctaRoute: '/crear-tarjeta'
+  },
+  {
+    slug: 'como-maquetar-doblar-libro-caballete',
+    title: 'Cómo maquetar y doblar tu primer libro en caballete',
+    summary: 'Aprende la regla de los múltiplos de 4 y el orden correcto de los pliegos para lograr un libro perfecto abrochado al medio.',
+    category: 'Guías Prácticas',
+    readTime: '7 min de lectura',
+    date: '19 de Septiembre, 2026',
+    author: 'Equipo LEECV',
+    content: [
+      'Paso 1: La regla del múltiplo de 4. Todo libro abrochado al medio (caballete) debe tener un número de páginas que sea múltiplo de 4 (8, 12, 16, 20, etc.).',
+      'Paso 2: Carga tu PDF original de páginas simples. No intentes ordenarlas tú mismo. Sube tu archivo con las páginas del 1 al final en orden correlativo.',
+      'Paso 3: Imposición automática. Studio Libros tomará tus páginas simples y las organizará en pliegos dobles (ej: página 8 con página 1) listos para imprimir a doble faz y doblar.'
+    ],
+    ctaLabel: 'Abrir Studio Libros',
+    ctaRoute: '/crear-libro'
   }
 ];
 
 interface BlogModuleProps {
+  initialSlug?: string;
   onNavigateHome: () => void;
   onNavigateProduct: (route: string) => void;
 }
 
-export const BlogModule: React.FC<BlogModuleProps> = ({ onNavigateHome, onNavigateProduct }) => {
-  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+export const BlogModule: React.FC<BlogModuleProps> = ({ initialSlug, onNavigateHome, onNavigateProduct }) => {
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(() => {
+    if (initialSlug) {
+      const found = articlesData.find(a => a.slug === initialSlug);
+      if (found) return found;
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path.startsWith('/blog/')) {
+        const slug = path.replace('/blog/', '');
+        const found = articlesData.find(a => a.slug === slug);
+        setSelectedArticle(found || null);
+      } else if (path === '/blog') {
+        setSelectedArticle(null);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
+    if (selectedArticle) {
+      updatePageSeo({
+        title: selectedArticle.title,
+        description: selectedArticle.summary,
+        type: 'article',
+        canonicalUrl: `https://leecv.app/blog/${selectedArticle.slug}`,
+        schemas: [
+          generateTechArticleSchema(
+            selectedArticle.title,
+            selectedArticle.summary,
+            selectedArticle.author,
+            selectedArticle.date.replace(/ de /g, ' ').replace(',', ''), // very simple parsing or keep as string
+            `https://leecv.app/blog/${selectedArticle.slug}`
+          ),
+          generateHowToSchema(
+            selectedArticle.title,
+            selectedArticle.summary,
+            selectedArticle.content.filter(p => p.startsWith('Paso')) // Filter paragraphs that are steps
+          )
+        ]
+      });
+    } else {
+      updatePageSeo({
+        title: 'Blog & Recursos',
+        description: 'Guías prácticas, tutoriales y recursos sobre diseño de CV, cartas de presentación y tarjetas personales.',
+        type: 'website',
+        canonicalUrl: 'https://leecv.app/blog'
+      });
+    }
+  }, [selectedArticle]);
+
+  const handleSelectArticle = (art: Article | null) => {
+    setSelectedArticle(art);
+    if (art) {
+      window.history.pushState({}, '', `/blog/${art.slug}`);
+    } else {
+      window.history.pushState({}, '', '/blog');
+    }
+  };
 
   return (
     <div className="h-[100dvh] overflow-y-auto bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] flex flex-col font-sans transition-colors duration-300">
@@ -150,7 +280,7 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ onNavigateHome, onNaviga
           /* Vista de Artículo Individual */
           <article className="space-y-8 max-w-3xl mx-auto">
             <button
-              onClick={() => setSelectedArticle(null)}
+              onClick={() => handleSelectArticle(null)}
               className="flex items-center gap-2 text-sm font-semibold text-[var(--color-accent-text)] hover:text-[var(--color-accent-base)] transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -190,27 +320,38 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ onNavigateHome, onNaviga
                 ¿Listo para aplicar estas técnicas?
               </h3>
               <div className="flex flex-wrap justify-center gap-4 pt-2">
-                <button
-                  onClick={() => onNavigateProduct('/crear-cv')}
-                  className={`${button.base} ${button.primary} flex items-center gap-2 px-6 py-3 text-sm`}
-                >
-                  <FileText className="w-4 h-4" />
-                  <span>Crear CV Profesional</span>
-                </button>
-                <button
-                  onClick={() => onNavigateProduct('/crear-carta')}
-                  className={`${button.base} ${button.secondary} flex items-center gap-2 px-6 py-3 text-sm`}
-                >
-                  <Mail className="w-4 h-4" />
-                  <span>Crear Carta de Presentación</span>
-                </button>
-                <button
-                  onClick={() => onNavigateProduct('/crear-libro')}
-                  className={`${button.base} ${button.secondary} flex items-center gap-2 px-6 py-3 text-sm`}
-                >
-                  <BookOpen className="w-4 h-4" />
-                  <span>Imponer Libro PDF</span>
-                </button>
+                {selectedArticle.ctaLabel && selectedArticle.ctaRoute ? (
+                  <button
+                    onClick={() => onNavigateProduct(selectedArticle.ctaRoute!)}
+                    className={`${button.base} ${button.primary} flex items-center gap-2 px-8 py-4 text-base font-bold shadow-[var(--shadow-floating)] hover:scale-105 transition-transform`}
+                  >
+                    <span>{selectedArticle.ctaLabel}</span>
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => onNavigateProduct('/crear-cv')}
+                      className={`${button.base} ${button.primary} flex items-center gap-2 px-6 py-3 text-sm`}
+                    >
+                      <FileText className="w-4 h-4" />
+                      <span>Crear CV Profesional</span>
+                    </button>
+                    <button
+                      onClick={() => onNavigateProduct('/crear-carta')}
+                      className={`${button.base} ${button.secondary} flex items-center gap-2 px-6 py-3 text-sm`}
+                    >
+                      <Mail className="w-4 h-4" />
+                      <span>Crear Carta de Presentación</span>
+                    </button>
+                    <button
+                      onClick={() => onNavigateProduct('/crear-libro')}
+                      className={`${button.base} ${button.secondary} flex items-center gap-2 px-6 py-3 text-sm`}
+                    >
+                      <BookOpen className="w-4 h-4" />
+                      <span>Imponer Libro PDF</span>
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </article>
@@ -230,7 +371,7 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ onNavigateHome, onNaviga
               {articlesData.map((art) => (
                 <div
                   key={art.slug}
-                  onClick={() => setSelectedArticle(art)}
+                  onClick={() => handleSelectArticle(art)}
                   className={`group bg-[var(--ui-bg-card)] rounded-[24px] p-8 border border-[var(--ui-border)] hover:border-[var(--color-accent-base)]/50 ${elevationSystem.raised} transition-all cursor-pointer space-y-4 hover:-translate-y-0.5`}
                 >
                   <div className="flex items-center gap-3 text-xs font-semibold text-[var(--ui-text-secondary)]">

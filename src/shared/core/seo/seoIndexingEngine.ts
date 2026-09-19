@@ -14,6 +14,7 @@ export interface SeoMetadata {
   type?: 'website' | 'article' | 'profile';
   keywords?: string[];
   noIndex?: boolean;
+  schemas?: any[];
 }
 
 export const CENTRAL_SEO_CONFIG = {
@@ -112,6 +113,54 @@ export function generateWebApplicationSchema() {
 }
 
 /**
+ * Helper para generar esquema HowTo
+ */
+export function generateHowToSchema(name: string, description: string, steps: string[]) {
+  return {
+    '@type': 'HowTo',
+    'name': name,
+    'description': description,
+    'step': steps.map((s, i) => ({
+      '@type': 'HowToStep',
+      'url': `${CENTRAL_SEO_CONFIG.domain}/#step${i + 1}`,
+      'name': `Paso ${i + 1}`,
+      'itemListElement': [
+        {
+          '@type': 'HowToDirection',
+          'position': 1,
+          'text': s
+        }
+      ]
+    }))
+  };
+}
+
+/**
+ * Helper para generar esquema TechArticle
+ */
+export function generateTechArticleSchema(title: string, summary: string, author: string, datePublished: string, url: string) {
+  return {
+    '@type': 'TechArticle',
+    'headline': title,
+    'description': summary,
+    'author': { '@type': 'Organization', 'name': author },
+    'publisher': {
+      '@type': 'Organization',
+      'name': CENTRAL_SEO_CONFIG.siteName,
+      'logo': {
+        '@type': 'ImageObject',
+        'url': CENTRAL_SEO_CONFIG.defaultOgImage
+      }
+    },
+    'datePublished': new Date(datePublished).toISOString(),
+    'mainEntityOfPage': {
+      '@type': 'WebPage',
+      '@id': url
+    }
+  };
+}
+
+/**
  * Actualiza dinámicamente las etiquetas meta de HTML en tiempo de ejecución.
  */
 export function updatePageSeo(metadata: SeoMetadata = {}): void {
@@ -179,5 +228,9 @@ export function updatePageSeo(metadata: SeoMetadata = {}): void {
     scriptEl.setAttribute('id', 'seo-structured-data');
     document.head.appendChild(scriptEl);
   }
-  scriptEl.textContent = JSON.stringify(generateWebApplicationSchema());
+  const baseSchema = generateWebApplicationSchema();
+  if (metadata.schemas && metadata.schemas.length > 0) {
+    baseSchema['@graph'] = [...(baseSchema['@graph'] as any[]), ...metadata.schemas];
+  }
+  scriptEl.textContent = JSON.stringify(baseSchema);
 }

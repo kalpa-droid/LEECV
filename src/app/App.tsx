@@ -1028,7 +1028,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 export default function App() {
   const [currentRoute, setCurrentRoute] = useState<string>(() => {
     const path = navigation.getPathname();
-    if (path === '/crear-cv' || path === '/crear-tarjeta' || path === '/crear-libro' || path === '/crear-carta' || path === '/blog') {
+    if (path === '/crear-cv' || path === '/crear-tarjeta' || path === '/crear-libro' || path === '/crear-carta' || path.startsWith('/blog')) {
       return path;
     }
     return '/';
@@ -1055,11 +1055,11 @@ export default function App() {
     <ToastProvider>
       <ConfirmProvider>
         <CVProvider>
-          {currentRoute === '/blog' ? (
+          {currentRoute.startsWith('/blog') ? (
             <>
               <SeoMetaManager title="Blog & Recursos — LEECV" />
               <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Blog...</div>}>
-                <BlogModule onNavigateHome={() => navigateTo('/')} onNavigateProduct={(r) => navigateTo(r)} />
+                <BlogModule initialSlug={currentRoute.replace('/blog', '').replace('/', '') || undefined} onNavigateHome={() => navigateTo('/')} onNavigateProduct={(r) => navigateTo(r)} />
               </Suspense>
             </>
           ) : currentRoute === '/' ? (
