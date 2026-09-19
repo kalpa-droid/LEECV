@@ -28,10 +28,10 @@ export function CardSizeSection({ cvData, setCvData }: Props) {
   return (
     <div className="space-y-6">
       <div id="card-size-section">
-        <PanelSection icon={<Layout className="w-4 h-4" />} title="Tamaño Físico de Tarjeta + Sangrado + Marcas de Corte">
+        <PanelSection icon={<Layout className="w-4 h-4" />} title="Tipo de Tarjeta y Margen de Corte">
           <div className="p-4 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-4">
             <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">Seleccionar Formato Estándar</label>
+              <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">Elegí el tipo de tarjeta</label>
               <select
                 value={cvData?.cardSize || 'tarjeta_estandar'}
                 onChange={(e) => handlePaperSizeChange(e.target.value)}
@@ -39,7 +39,7 @@ export function CardSizeSection({ cvData, setCvData }: Props) {
               >
                 {Object.values(PAGE_SIZES).filter(s => s.category === 'tarjeta').map((s) => (
                   <option key={s.id} value={s.id}>
-                    📇 {s.label}
+                    📇 {s.appLabel || s.label}
                   </option>
                 ))}
               </select>
@@ -48,7 +48,7 @@ export function CardSizeSection({ cvData, setCvData }: Props) {
             {/* Slider de Sangrado para Imprenta Profesional (3-5mm) */}
             <div className="space-y-2 pt-3 border-t border-[var(--color-neutral-border)]">
               <div className="flex items-center justify-between text-xs font-bold text-[var(--color-neutral-text-primary)]">
-                <span>Sangrado de Imprenta (Bleed)</span>
+                <span>Margen de seguridad para el corte</span>
                 <span className="text-[var(--color-secondary-bright)] font-black">{cvData?.cardBleedMm ?? 3} mm</span>
               </div>
               <input
@@ -67,7 +67,7 @@ export function CardSizeSection({ cvData, setCvData }: Props) {
                 className="w-full h-1.5 bg-[var(--ui-bg-panel)] rounded-[var(--radius-control)] appearance-none cursor-pointer accent-[var(--color-secondary-base)]"
               />
               <span className="text-[10px] text-[var(--color-neutral-text-secondary)] leading-tight block">
-                Estándar profesional: 3 mm habitual / 5 mm para guillotina con margen extendido.
+                Un pequeño margen extra (3-5 mm) para asegurar que al recortar la tarjeta en la imprenta no queden bordes blancos.
               </span>
             </div>
           </div>

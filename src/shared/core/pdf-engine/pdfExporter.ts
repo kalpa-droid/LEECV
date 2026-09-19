@@ -52,6 +52,7 @@ export async function exportCVToPDF(cvData: any, presetInput?: Preset, atsMode?:
 }
 
 import { CoverLetterPdfDocument } from './renderer/CoverLetterPdfDocument';
+import { PlannerPdfDocument } from './renderer/PlannerPdfDocument';
 import { buildCardDataFromCV } from './layers/records/cardDataAdapter';
 
 /**
@@ -63,6 +64,18 @@ export async function exportDocumentToPDF(cvData: any, presetInput: string | Pre
   if (preset.pageCategory === 'tarjeta') {
     const cardData = await buildCardDataFromCV(cvData);
     return exportBusinessCardSheetToPDF(cardData, preset);
+  }
+
+  if (preset.pageCategory === 'planner') {
+    const year = cvData?.year || new Date().getFullYear();
+    const docElement = React.createElement(PlannerPdfDocument, {
+      data: cvData,
+      presetId: preset.id,
+      theme: cvData?.theme
+    });
+    const blob = await pdf(docElement as any).toBlob();
+    downloadBlob(blob, `Agenda - ${year}.pdf`);
+    return true;
   }
 
   if (preset.pageCategory === 'carta') {

@@ -19,7 +19,7 @@ export const pricingCatalog = {
   agencyProTitle: "Agencia Pro",
   agencyProSubtitle: "Para Reclutadores y Consultoras",
   perMonthLabel: "/ mes",
-  agencyPdfUnlimitedFeature: "PDFs A4 ILIMITADOS (Sin pagar",
+  agencyPdfUnlimitedFeature: "PDFs ILIMITADOS (Sin pagar",
   agencyPdfPerPdfSuffix: "/PDF)",
   agencySupabaseCloudFeature: "Panel Multi-Candidato en Supabase Cloud",
   agencyDriveBackupFeature: "Respaldo en tu propio Google Drive (15 GB)",

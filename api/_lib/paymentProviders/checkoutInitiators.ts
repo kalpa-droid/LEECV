@@ -22,7 +22,7 @@ export async function createCheckoutForProvider(
       };
 
       const PLAN_TITLES: Record<string, string> = {
-        single_pdf: 'LEECV - 1 Crédito de Exportación PDF A4',
+        single_pdf: 'LEECV - 1 Crédito de Exportación PDF',
         credits_pack_5: 'LEECV - Pack 5 Créditos de Exportación PDF',
         credits_pack_10: 'LEECV - Pack 10 Créditos de Exportación PDF',
         pro: 'LEECV Pro - Suscripción Agencia Mensual',

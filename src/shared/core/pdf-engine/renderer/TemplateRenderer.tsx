@@ -144,9 +144,10 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   const activePageSizeId = layoutOverrides?.pageSizeId || layoutOverrides?.paperSize || preset.pageSizeId;
   const pageDef: PageSize = embedded && canvasWidthMm && canvasHeightMm
     ? {
-        id: 'embedded',
+        id: 'embedded_canvas',
         name: 'Embedded Canvas',
         label: 'Embedded Canvas',
+        appLabel: 'Embedded Canvas',
         category: 'tarjeta',
         widthMm: canvasWidthMm,
         heightMm: canvasHeightMm,

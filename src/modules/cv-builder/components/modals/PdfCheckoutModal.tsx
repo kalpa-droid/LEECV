@@ -155,7 +155,7 @@ export default function PdfCheckoutModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={purpose === 'publish' ? UI_GLOSSARY.labels.publishTitle : 'Exportar Documento PDF A4 Nativo'}
+      title={purpose === 'publish' ? UI_GLOSSARY.labels.publishTitle : 'Descargar tu documento en PDF'}
       icon={<span className="text-xl">{purpose === 'publish' ? '🌐' : '📄'}</span>}
       size="lg"
       footer={
@@ -173,7 +173,7 @@ export default function PdfCheckoutModal({
               className={`${button.success} flex items-center gap-2`}
             >
               <Check className="w-4 h-4" />
-              <span>{isProOrEnterprise ? 'Exportar PDF A4 Gratis (Plan Pro Activo)' : `Confirmar Exportación (Créditos: ${credits})`}</span>
+              <span>{isProOrEnterprise ? 'Descargar PDF gratis (Plan Pro activo)' : `Confirmar Exportación (Créditos: ${credits})`}</span>
             </button>
           )}
         </div>

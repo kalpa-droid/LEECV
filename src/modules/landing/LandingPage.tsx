@@ -8,7 +8,8 @@ import { FeatureCard } from '../../shared/core/ui/marketing/FeatureCard';
 import { MarketingSection } from '../../shared/core/ui/marketing/MarketingSection';
 import { MarketingCTA } from '../../shared/core/ui/marketing/MarketingCTA';
 import { Logo } from '../../shared/core/brand/Logo';
-import { HeroProductPreview } from '../../shared/core/ui/marketing/HeroProductPreview';
+import { HeroCarousel } from '../../shared/core/ui/marketing/HeroCarousel';
+import { PortalProductsGrid } from '../../shared/core/ui/marketing/PortalProductsGrid';
 import { ProductDetailBlock } from '../../shared/core/ui/marketing/ProductDetailBlock';
 import { PlanFeatureCard } from '../../shared/core/ui/marketing/PlanFeatureCard';
 import { FaqAccordion } from '../../shared/core/ui/marketing/FaqAccordion';
@@ -96,13 +97,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
         </div>
       </header>
 
-      {/* 2. Hero Optimizado */}
+      {/* 2. Hero Optimizado con Carrusel y Social Proof */}
       <section className="relative pt-12 pb-16 md:pt-20 md:pb-24 shrink-0 overflow-hidden">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[var(--color-accent-muted)] blur-[150px] rounded-full pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/30 rounded-full text-[var(--color-accent-text)] font-semibold text-xs tracking-wider uppercase">
-            <Sparkles className="w-4 h-4" />
+            <Sparkles className="w-4 h-4 text-[var(--color-accent-text)]" />
             <span>{t.landing.hero.eyebrow}</span>
           </div>
 
@@ -110,52 +111,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             {t.landing.hero.title}
           </h1>
 
-          <p className={`${displayScale.lead} text-[var(--ui-text-secondary)] max-w-3xl mx-auto font-normal pb-4`}>
+          <p className={`${displayScale.lead} text-[var(--ui-text-secondary)] max-w-3xl mx-auto font-normal pb-2`}>
             {t.landing.hero.lead}
           </p>
 
           <div className="flex justify-center gap-4 pb-2">
             <MarketingCTA label={t.landing.hero.primaryCta} onClick={() => onNavigate('/crear-cv')} size="lg" variant="primary" />
           </div>
-          <div className="text-center text-[var(--ui-text-secondary)] text-sm font-medium pb-8">
-            ✓ 100% privado ✓ Sin marca de agua ✓ Exportación vectorial lista para imprenta
+
+          {/* Barra de Prueba Social */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-full text-xs font-bold text-[var(--ui-text-primary)] shadow-sm">
+            <span className="text-[var(--color-accent-amber-bright)]">⭐</span>
+            <span>{t.landing.socialProof.line}</span>
+            <span className="text-[var(--ui-text-secondary)] font-normal hidden sm:inline">| 100% privado · Sin marcas de agua</span>
           </div>
 
-          <div className="max-w-5xl mx-auto mt-12">
-            <HeroProductPreview 
-              onSelectRoute={onNavigate}
-              products={[
-                {
-                  id: 'cv',
-                  label: t.landing.products.cv.title,
-                  image: '/marketing/preview-cv.webp',
-                  route: '/crear-cv',
-                  features: ['Análisis ATS', 'Autoguardado', '1 Columna']
-                },
-                {
-                  id: 'cartas',
-                  label: ((t.landing.products as any).cartas?.title || 'Cartas de Presentación'),
-                  image: '/marketing/preview-carta.webp',
-                  route: '/crear-carta',
-                  features: ['Redacción IA', 'Vinculado al CV', 'Formato Formal']
-                },
-                {
-                  id: 'tarjetas',
-                  label: t.landing.products.tarjetas.title,
-                  image: '/marketing/preview-tarjeta.webp',
-                  route: '/crear-tarjeta',
-                  features: ['85x55mm', 'Imposición A4', 'Código QR']
-                },
-                {
-                  id: 'libros',
-                  label: t.landing.products.libros.title,
-                  image: '/marketing/preview-libro.webp',
-                  route: '/crear-libro',
-                  features: ['Múltiplos de 4', 'Doble Faz', 'Caballete']
-                }
-              ]}
-            />
-          </div>
+          {/* Carrusel Interactivo de Productos */}
+          <HeroCarousel onNavigate={onNavigate} />
         </div>
       </section>
 
@@ -184,6 +156,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             description={t.landing.features.printReady.description}
           />
         </div>
+      </MarketingSection>
+
+      {/* 4.5. Grilla Portal de Productos (Grilla 2x2 con CTAs directos) */}
+      <MarketingSection>
+        <PortalProductsGrid onNavigate={onNavigate} />
       </MarketingSection>
 
       {/* 5. Detalle de Productos en Zigzag */}
@@ -312,16 +289,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
               <span className="text-xs font-bold uppercase tracking-wider">Tarjetas Personales</span>
             </div>
             <h3 className="text-lg font-bold text-[var(--ui-text-primary)] mb-2 group-hover:text-[var(--color-accent-text)] transition-colors">Manual de diseño e impresión de tarjetas personales</h3>
-            <p className="text-sm text-[var(--ui-text-secondary)]">Todo lo que necesitas saber para imprimir tarjetas de 85x55mm con sangría correcta y códigos QR.</p>
+            <p className="text-sm text-[var(--ui-text-secondary)]">Todo lo que necesitas saber para imprimir tus tarjetas en casa o en una imprenta, con códigos QR.</p>
           </div>
           {/* Card 4 */}
           <div onClick={() => onNavigate('/blog/como-maquetar-doblar-libro-caballete')} className="group p-6 bg-[var(--ui-bg-panel)] rounded-[24px] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)]/50 cursor-pointer transition-all hover:-translate-y-1">
             <div className="flex items-center gap-3 mb-4 text-[var(--color-accent-text)]">
               <BookOpen className="w-5 h-5" />
-              <span className="text-xs font-bold uppercase tracking-wider">Imposición de Libros</span>
+              <span className="text-xs font-bold uppercase tracking-wider">Armado de Libros</span>
             </div>
             <h3 className="text-lg font-bold text-[var(--ui-text-primary)] mb-2 group-hover:text-[var(--color-accent-text)] transition-colors">Cómo maquetar y doblar tu primer libro en caballete</h3>
-            <p className="text-sm text-[var(--ui-text-secondary)]">Aprende la regla de los múltiplos de 4 y el orden correcto de los pliegos para un libro perfecto.</p>
+            <p className="text-sm text-[var(--ui-text-secondary)]">Aprende la regla de los múltiplos de 4 y el orden correcto de las hojas para un libro perfecto.</p>
           </div>
         </div>
         <div className="mt-10 text-center">

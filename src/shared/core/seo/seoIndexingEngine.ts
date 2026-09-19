@@ -20,8 +20,8 @@ export interface SeoMetadata {
 export const CENTRAL_SEO_CONFIG = {
   siteName: 'LEECV - Generador y Diseñador de CV Profesional',
   domain: 'https://leecv.app',
-  defaultTitle: 'LEECV — Creador de Currículum Vitae Profesional en PDF A4',
-  defaultDescription: 'Crea tu Currículum Vitae profesional en PDF A4 e imprimible en minutos. Plantillas ejecutivas, diseño de tarjetas, exportación vectorial y 100% privacidad sin marca de agua.',
+  defaultTitle: 'LEECV — Creador de Currículum Vitae listo para imprimir',
+  defaultDescription: 'Crea tu Currículum Vitae en minutos y ten tu PDF listo para imprimir en casa o llevar a una imprenta. Plantillas profesionales, diseño de tarjetas, 100% privacidad y sin marca de agua.',
   defaultOgImage: 'https://leecv.app/og-image.png',
   twitterHandle: '@leecv_app',
   defaultKeywords: [
@@ -60,10 +60,10 @@ export function generateWebApplicationSchema() {
           'availability': 'https://schema.org/InStock'
         },
         'featureList': [
-          'Generación de PDF vectorial en tiempo real',
+          'Vista previa en tiempo real y PDF listo para imprimir',
           'Composición de plantillas multi-sector',
           'Autoguardado incremental en Google Drive y almacenamiento local',
-          'Impresión de tarjetas personales e imposición A4'
+          'Hojas con varias tarjetas personales listas para imprimir'
         ]
       },
       {
@@ -87,7 +87,7 @@ export function generateWebApplicationSchema() {
             'name': '¿Cómo crear un CV profesional en PDF gratis con LEECV?',
             'acceptedAnswer': {
               '@type': 'Answer',
-              'text': 'Ingresa a LEECV, completa tus datos personales, experiencia y estudios. Elige una plantilla ejecutiva y descarga tu PDF vectorial listo para imprimir o enviar por email.'
+              'text': 'Ingresa a LEECV, completa tus datos personales, experiencia y estudios. Elige una plantilla ejecutiva y descarga tu PDF listo para imprimir o enviar por email.'
             }
           },
           {

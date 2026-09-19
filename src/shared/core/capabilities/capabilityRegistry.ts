@@ -1,4 +1,4 @@
-import { CapabilityConfig, DocumentTypeConfig } from '../../../types/document';
+import { CapabilityConfig, DocumentTypeConfig, DocumentTypeId } from '../../../types/document';
 
 /**
  * CAPABILITY_REGISTRY
@@ -22,8 +22,8 @@ export const CAPABILITY_REGISTRY: Record<string, CapabilityConfig> = {
   },
   paper_size: {
     id: 'paper_size',
-    name: 'Formato de Papel',
-    description: 'Dimensiones físicas de hoja (A4, Carta, Oficio, Legal) y orientación.',
+    name: 'Tipo de hoja',
+    description: 'Tipo de hoja (común, carta, oficio, legal) y orientación.',
     category: 'styling',
     defaultData: {
       paperSize: 'a4',
@@ -195,7 +195,7 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
   cv: {
     id: 'cv',
     name: 'Currículum Vitae',
-    description: 'Documento editorial profesional multi-hoja A4/Carta/Oficio con anexo de certificados.',
+    description: 'Documento profesional de una o varias hojas, con anexo de certificados.',
     iconName: 'FileText',
     capabilities: [
       'theme',
@@ -288,12 +288,25 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
   book: {
     id: 'book',
     name: 'Libro / Folleto',
-    description: 'Imposición tipográfica e imprenta editorial de libro, folleto o manual en cuadernillos.',
+    description: 'Libro, folleto o manual listo para imprimir, doblar y armar.',
     iconName: 'BookOpen',
     capabilities: [
       'theme',
       'paper_size',
       'json_backup'
+    ],
+    defaultPaperSize: 'a4'
+  },
+  planner: {
+    id: 'planner',
+    name: 'Agenda / Planificador',
+    description: 'Organizador personal, diario, semanal o mensual.',
+    iconName: 'CalendarCheck',
+    capabilities: [
+      'theme',
+      'paper_size',
+      'json_backup',
+      'nameable_title'
     ],
     defaultPaperSize: 'a4'
   }
@@ -327,11 +340,12 @@ export function hasCapability(docTypeId: string = 'cv', capabilityId: string): b
 /**
  * Motor Declarativo de Mapeo Ruta <-> Tipo de Documento <-> Título por Defecto
  */
-export function getDocTypeForRoute(route: string = '/'): 'cv' | 'business_card' | 'book' | 'cover_letter' {
+export function getDocTypeForRoute(route: string = '/'): DocumentTypeId {
   const cleanRoute = (route || '/').toLowerCase().trim();
   if (cleanRoute === '/crear-tarjeta' || cleanRoute.includes('tarjeta')) return 'business_card';
   if (cleanRoute === '/crear-libro' || cleanRoute.includes('libro')) return 'book';
   if (cleanRoute === '/crear-carta' || cleanRoute.includes('carta')) return 'cover_letter';
+  if (cleanRoute === '/crear-agenda' || cleanRoute.includes('agenda') || cleanRoute.includes('planner')) return 'planner';
   return 'cv';
 }
 
@@ -343,6 +357,8 @@ export function getRouteForDocType(docTypeId: string = 'cv'): string {
       return '/crear-libro';
     case 'cover_letter':
       return '/crear-carta';
+    case 'planner':
+      return '/crear-agenda';
     case 'cv':
     default:
       return '/crear-cv';
@@ -357,32 +373,37 @@ export function getDefaultTitleForDocType(docTypeId: string = 'cv'): string {
       return 'Mi Libro / Folleto';
     case 'cover_letter':
       return 'Mi Carta de Presentación';
+    case 'planner':
+      return 'Mi Agenda / Planificador';
     case 'cv':
     default:
       return 'Mi Currículum Vitae';
   }
 }
 
-export function inferDocumentTypeId(docData: any): 'cv' | 'business_card' | 'book' | 'cover_letter' {
+export function inferDocumentTypeId(docData: any): DocumentTypeId {
   if (!docData || typeof docData !== 'object') return 'cv';
 
   const docTypeId = docData.doc_type_id || docData.docType;
-  if (docTypeId === 'business_card' || docTypeId === 'book' || docTypeId === 'cover_letter' || docTypeId === 'cv') {
+  if (docTypeId === 'business_card' || docTypeId === 'book' || docTypeId === 'cover_letter' || docTypeId === 'planner' || docTypeId === 'cv') {
     return docTypeId;
   }
   if (docTypeId === 'carta') return 'cover_letter';
   if (docTypeId === 'tarjeta') return 'business_card';
   if (docTypeId === 'libro') return 'book';
+  if (docTypeId === 'agenda') return 'planner';
 
   const id = String(docData.id || '').toLowerCase();
   if (id.startsWith('card_') || id.startsWith('doc_business_card_') || id === 'draft_card') return 'business_card';
   if (id.startsWith('book_') || id.startsWith('doc_book_') || id === 'draft_book') return 'book';
   if (id.startsWith('cover_letter_') || id.startsWith('doc_cover_letter_') || id === 'draft_cover_letter') return 'cover_letter';
+  if (id.startsWith('planner_') || id.startsWith('doc_planner_') || id === 'draft_planner') return 'planner';
   if (id === 'draft_cv') return 'cv';
 
   const presetId = String(docData.activePresetId || '').toLowerCase();
   if (presetId === 'tarjeta-personal') return 'business_card';
   if (presetId === 'carta-clasica' || presetId === 'carta-presentacion') return 'cover_letter';
+  if (presetId.startsWith('planner-')) return 'planner';
   if (docData.bookMode) return 'book';
 
   return 'cv';

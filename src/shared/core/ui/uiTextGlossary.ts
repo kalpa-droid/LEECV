@@ -16,7 +16,7 @@ export const UI_GLOSSARY = {
   labels: {
     documentStatus: 'Estado del documento',
     customized: 'Personalizado',
-    paperFormat: 'Formato de Papel',
+    paperFormat: 'Hoja para imprimir',
     threeLevelCascade: 'Nivel 1: Preset Regional ➔ Nivel 2: Plantilla Base ➔ Nivel 3: Ajustes Personalizados',
     draftStatus: 'Borrador (En Edición)',
     officialStatus: 'CV Oficial',
@@ -36,8 +36,8 @@ export const UI_GLOSSARY = {
     },
     exportPdf: {
       id: 'exportPdf',
-      title: 'Descarga PDF Nativo',
-      text: 'Genera el PDF con tipografías vectoriales integradas y enlaces activos.'
+      title: 'Descargar PDF',
+      text: 'Descarga tu documento en PDF, con las letras bien definidas y los enlaces funcionando.'
     },
     jsonBackup: {
       id: 'jsonBackup',

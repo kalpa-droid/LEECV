@@ -706,7 +706,7 @@ export async function processBookImposition(
   for (let i = 0; i < totalHojasImpresas; i++) {
     if (onProgress) {
       const avance = 60 + Math.floor((i / totalHojasImpresas) * 35);
-      onProgress(`Armando pliego de imposición ${i + 1} de ${totalHojasImpresas}...`, avance);
+      onProgress(`Armando la hoja ${i + 1} de ${totalHojasImpresas}...`, avance);
     }
     if (i % 5 === 0) await new Promise((r) => setTimeout(r, 15));
 

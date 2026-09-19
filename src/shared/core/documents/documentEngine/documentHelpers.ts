@@ -1,3 +1,5 @@
+import { DocumentTypeId } from '../../../../types/document';
+
 export function isProvisionalDocument(docData: any): boolean {
   return Boolean(docData?.isProvisional);
 }
@@ -44,13 +46,14 @@ export function hasRealContent(docData: any): boolean {
 
 export function isDraftDocumentId(id: string): boolean {
   if (!id) return false;
-  return ['draft_cv', 'draft_card', 'draft_book', 'draft_cover_letter'].includes(id);
+  return ['draft_cv', 'draft_card', 'draft_book', 'draft_cover_letter', 'draft_planner'].includes(id);
 }
 
-export function inferDocTypeFromDraftId(id: string): 'cv' | 'business_card' | 'book' | 'cover_letter' {
+export function inferDocTypeFromDraftId(id: string): DocumentTypeId {
   if (id === 'draft_card') return 'business_card';
   if (id === 'draft_book') return 'book';
   if (id === 'draft_cover_letter') return 'cover_letter';
+  if (id === 'draft_planner') return 'planner';
   return 'cv';
 }
 
@@ -58,5 +61,6 @@ export function getDraftIdForDocType(docType: string): string {
   if (docType === 'business_card') return 'draft_card';
   if (docType === 'book') return 'draft_book';
   if (docType === 'cover_letter') return 'draft_cover_letter';
+  if (docType === 'planner') return 'draft_planner';
   return 'draft_cv';
 }

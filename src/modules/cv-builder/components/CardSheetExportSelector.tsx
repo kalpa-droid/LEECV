@@ -12,10 +12,9 @@ import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { usePageAwareCreditGate } from '../../../shared/core/hooks/usePageAwareCreditGate';
 
 const CARD_SIZE_OPTIONS = [
-  { id: 'tarjeta_estandar', label: 'Estándar AR/US (89 × 51 mm)' },
-  { id: 'tarjeta_europea', label: 'Europea (85 × 54 mm)' },
-  { id: 'tarjeta_cuadrada', label: 'Cuadrada (65 × 65 mm)' },
-  { id: 'tarjeta_mini', label: 'Mini (70 × 28 mm)' },
+  ...Object.values(PAGE_SIZES)
+    .filter(p => p.category === 'tarjeta')
+    .map(p => ({ id: p.id, label: p.appLabel })),
   { id: 'personalizado', label: 'Personalizado…' },
 ];
 
@@ -129,7 +128,7 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
           className={`w-full p-2.5 rounded-[${radius.card}] border border-[var(--color-neutral-border)] font-semibold text-[var(--color-neutral-text-primary)] outline-none focus:border-[var(--color-accent-base)] bg-white cursor-pointer`}
         >
           {SHEET_SIZE_OPTIONS.map(p => (
-            <option key={p.id} value={p.id}>{p.label}</option>
+            <option key={p.id} value={p.id}>{p.appLabel || p.label}</option>
           ))}
         </select>
       </div>
@@ -188,7 +187,7 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
         ) : (
           <p className="text-xs font-bold text-[var(--color-secondary-bright)]">
             Entran <span className="font-black text-[var(--color-neutral-text-primary)]">{preview.totalPerSheet} tarjetas</span> por hoja
-            ({preview.cols} columnas × {preview.rows} filas), con sangrado y marcas de corte incluidas.
+            ({preview.cols} columnas × {preview.rows} filas), con líneas guía para recortar.
           </p>
         )}
       </div>

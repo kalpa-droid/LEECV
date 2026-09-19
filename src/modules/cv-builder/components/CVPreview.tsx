@@ -17,6 +17,7 @@ import { usePresetTransition } from '../../../shared/core/pdf-engine/layers/pres
 import { PresetTransitionOverlay } from '../../../shared/core/ui/PresetTransitionOverlay';
 import { elevationSystem } from '../../../shared/core/uiDesignSystem';
 import { resolveDocumentCanvasPx } from '../../../shared/core/pdf-engine/layers/page/pageSizes';
+import { DOC_SCALE_VAR, quantizeRasterZoom } from '../../../shared/core/viewport';
 
 export interface CVPreviewProps {
   cvData?: any;
@@ -121,8 +122,12 @@ export default function CVPreview({
     };
 
     // 2. PINCH-TO-ZOOM MULTI-TOUCH (CELULAR): 2 dedos ajustan zoom del visor de forma aislada
+    // El zoom vigente vive en la variable CSS del contenedor (la escribe el viewport de forma
+    // síncrona); el estado de React puede ir un frame atrasado, así que no se lee de ahí.
+    const readCurrentScale = () =>
+      parseFloat(container.style.getPropertyValue(DOC_SCALE_VAR)) || zoomLevelRef.current;
     let initialPinchDistance: number | null = null;
-    let initialZoomOnPinch = zoomLevelRef.current;
+    let initialZoomOnPinch = readCurrentScale();
 
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
@@ -135,7 +140,7 @@ export default function CVPreview({
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
         initialPinchDistance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
-        initialZoomOnPinch = zoomLevelRef.current;
+        initialZoomOnPinch = readCurrentScale();
       } else {
         initialPinchDistance = null;
       }
@@ -205,10 +210,33 @@ export default function CVPreview({
 
   const { widthPx, heightPx } = useMemo(() => resolveDocumentCanvasPx(pageSizeId), [pageSizeId]);
 
+  // La hoja interna conserva su tamaño REAL (A4/A5/tarjeta) y solo se le aplica `scale`,
+  // pero `transform` no achica el espacio que ocupa: la caja externa mediría el alto SIN
+  // escalar y dejaría un vacío enorme debajo del documento. Se mide el alto real del
+  // contenido (ResizeObserver, sin pasar por React) y la caja externa toma alto × escala.
+  const paperContentRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const content = paperContentRef.current;
+    const sheet = paperSheetRef.current;
+    if (!content || !sheet || typeof ResizeObserver === 'undefined') return;
+    const syncHeight = () => sheet.style.setProperty('--doc-content-h', `${content.offsetHeight}px`);
+    const observer = new ResizeObserver(syncHeight);
+    observer.observe(content);
+    syncHeight();
+    return () => observer.disconnect();
+  }, [paperSheetRef]);
+
+  // Con contenedor propio (visor del editor) el zoom lo dicta la variable CSS que escribe
+  // useDocumentViewport directo al DOM; `zoomLevel` (estado de React) queda solo de respaldo.
+  // Sin contenedor (vista pública) no hay variable: se usa el zoom recibido por props.
+  const isViewportManaged = externalContainerRef !== undefined;
+  const scaleExpr = isViewportManaged ? `var(${DOC_SCALE_VAR}, ${zoomLevel})` : String(zoomLevel);
+  // Resolución del canvas escalonada: un pellizco continuo no re-rasteriza cada tick.
+  const rasterZoom = quantizeRasterZoom(zoomLevel);
+
   return (
     <div 
-      ref={externalContainerRef}
-      className="w-full flex flex-col items-center justify-start print-wrapper relative touch-pan-x touch-pan-y"
+      className="w-full flex flex-col items-start justify-start print-wrapper relative touch-pan-x touch-pan-y"
       style={dynamicThemeStyle}
     >
       {/* Capa de Transición de Preset con Pluma Antigua / Lápiz Rotatorio */}
@@ -221,17 +249,19 @@ export default function CVPreview({
       {/* Contenedor adaptativo geométricamente proporcional al zoom y centrado sin cortes */}
       <div 
         ref={paperSheetRef}
-        className={`my-1 sm:my-5 no-print mx-auto shrink-0 flex justify-center ${elevationSystem.overlay} transition-[width,height] duration-75 ease-out`}
+        className={`my-1 sm:my-5 no-print mx-auto shrink-0 relative ${elevationSystem.overlay}`}
         style={{ 
-          width: `${Math.round(widthPx * zoomLevel)}px`,
-          minHeight: `${Math.round(heightPx * zoomLevel)}px`,
+          width: `calc(${widthPx}px * ${scaleExpr})`,
+          height: `calc(var(--doc-content-h, ${heightPx}px) * ${scaleExpr})`,
+          minHeight: `calc(${heightPx}px * ${scaleExpr})`,
           maxWidth: 'none'
         }}
       >
         <div 
-          className="shrink-0 transition-transform duration-75 ease-out origin-top-left"
+          ref={paperContentRef}
+          className="shrink-0 origin-top-left"
           style={{ 
-            transform: `scale(${zoomLevel})`,
+            transform: `scale(${scaleExpr})`,
             width: `${widthPx}px`
           }}
         >
@@ -243,7 +273,7 @@ export default function CVPreview({
             <VectorDocViewer 
               key={`${activePreset.id}_v${presetsVersion}`} 
               document={renderedDocument} 
-              zoomLevel={zoomLevel}
+              zoomLevel={rasterZoom}
               activeTab={activeTab}
               sections={sections}
               preset={activePreset}

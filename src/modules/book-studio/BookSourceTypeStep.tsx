@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BookOpen, Copy, Upload, CheckCircle2, ChevronRight, FileText } from 'lucide-react';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
 import { ensurePdfjsWorkerConfigured } from '../../shared/core/pdf-engine/pdfjsWorkerSetup';
+import { PAGE_SIZES } from '../../shared/core/pdf-engine/layers/page/pageSizes';
 import { button, selectableCard, radius } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 
@@ -162,7 +163,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
             <div className="space-y-1">
               <span className="font-bold block text-sm text-[var(--ui-text-primary)] flex items-center gap-2">
                 <FileText className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
-                {t.bookStudio.sourceStep.paperA4Title}
+                {PAGE_SIZES.a4?.appLabel}
               </span>
               <span className="text-xs text-[var(--ui-text-secondary)] block leading-normal">
                 {t.bookStudio.sourceStep.paperA4Desc}
@@ -186,7 +187,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
             <div className="space-y-1">
               <span className="font-bold block text-sm text-[var(--ui-text-primary)] flex items-center gap-2">
                 <FileText className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
-                {t.bookStudio.sourceStep.paperA3Title}
+                {PAGE_SIZES.a3?.appLabel}
               </span>
               <span className="text-xs text-[var(--ui-text-secondary)] block leading-normal">
                 {t.bookStudio.sourceStep.paperA3Desc}

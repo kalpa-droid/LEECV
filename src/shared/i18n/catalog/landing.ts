@@ -9,29 +9,63 @@ export const landingCatalog = {
     cta: 'Iniciar Ahora',
   },
   hero: {
-    eyebrow: 'Suite Completa de Diseño y Publicación',
-    title: 'Crea Currículums, Cartas, Tarjetas y Libros en Calidad Imprenta Pro',
-    lead: 'Plataforma integral para crear documentos profesionales con precisión vectorial A4, redacción asistida por IA y exportación PDF lista para imprenta.',
+    eyebrow: 'Todo para armar e imprimir tus documentos',
+    title: 'Currículums, cartas, tarjetas y libros listos para imprimir',
+    lead: 'Armalos paso a paso, con ayuda de inteligencia artificial si querés. Después imprimilos en tu casa, en tu impresora, o llevalos a una imprenta.',
     primaryCta: 'Crear mi CV gratis',
     secondaryCta: 'Explorar productos',
+    beforeAfter: {
+      before: 'Texto suelto',
+      after: 'Listo para imprimir con máxima nitidez'
+    }
+  },
+  heroCarousel: {
+    cv: {
+      badge: 'Más Elegido',
+      title: 'Currículum listo para enviar e imprimir',
+      description: 'Elegí un diseño moderno, completá tus datos en vivo y descargá tu PDF en segundos sin marcas de agua.',
+      features: ['Lectura ATS garantizada', '100% Privado en tu navegador', 'Descarga instantánea'],
+    },
+    cartas: {
+      badge: 'Con Inteligencia Artificial',
+      title: 'Cartas de presentación personalizadas',
+      description: 'Redactá cartas formales adaptadas a cada puesto de trabajo con la ayuda de nuestra asistente de IA.',
+      features: ['Sincronizado con tu CV', 'IA de redacción profesional', 'Estilo unificado'],
+    },
+    tarjetas: {
+      badge: 'Frente + Dorso',
+      title: 'Tarjetas personales listas para imprimir',
+      description: 'Diseñá tu tarjeta con código QR y logo. El sistema acomoda automáticamente varias tarjetas por hoja.',
+      features: ['Varias tarjetas por hoja', 'Frente y dorso con QR', 'Listas para cortar'],
+    },
+    libros: {
+      badge: 'Organización Automática',
+      title: 'Libros y folletos fáciles de armar',
+      description: 'Convertí tus documentos en un librito o folleto. El sistema ordena las páginas para que al doblar queden perfectas.',
+      features: ['Páginas ordenadas solas', 'Márgenes de doblado seguros', 'Ideal para impresoras de casa'],
+    }
   },
   socialProof: {
-    line: 'Más de 10.000 documentos profesionales creados con calidad de imprenta',
+    line: 'Más de 10.000 documentos creados y listos para imprimir',
   },
   products: {
-    sectionTitle: 'Cuatro Motores Especializados en una Sola Suite',
+    sectionTitle: 'Cuatro herramientas en un solo lugar',
     cv: {
-      title: 'Creador de CV Vectorial A4',
-      description: 'Diseño en tiempo real con plantillas ATS-friendly, personalización cromática, exportación en PDF de alta fidelidad e integración en la nube.',
+      badge: 'Lo Más Usado',
+      title: 'Creador de Currículum',
+      tagline: 'Diseños que superan filtros ATS de selección',
+      description: 'Elegí un diseño, completá tus datos y mirá cómo va quedando mientras escribís. Cambiá los colores a tu gusto y guardá tu trabajo en la nube.',
       bullets: [
-        'Motor ATS-Friendly compatible con filtros automáticos de selección',
-        'Renderizado 100% vectorial A4 nativo en tu navegador con privacidad total',
-        'Sin marcas de agua y listo para envío inmediato a reclutadores',
+        'Diseños pensados para que los sistemas de selección de personal lean bien tu currículum',
+        'Se arma en tu navegador: tus datos son solo tuyos',
+        'Sin marcas de agua, listo para enviar o imprimir',
       ],
       cta: 'Diseñar mi CV',
     },
     cartas: {
+      badge: 'IA Integrada',
       title: 'Cartas de Presentación & IA',
+      tagline: 'Redacción asistida adaptada al puesto',
       description: 'Cartas de presentación personalizadas por vacante, redactadas con asistencia de IA desde tu CV y la descripción del puesto.',
       bullets: [
         'Sincronización instantánea con los datos de tu CV activo o perfil de LinkedIn',
@@ -41,34 +75,43 @@ export const landingCatalog = {
       cta: 'Crear Carta con IA',
     },
     tarjetas: {
-      title: 'Tarjetas Personales & Isotipos',
-      description: 'Generación de hojas de corte multi-tarjeta, isotipos vectoriales personalizados, reverso editable y formatos estándar internacional.',
+      badge: 'Varias por Hoja',
+      title: 'Tarjetas Personales',
+      tagline: 'Frente, dorso y acomodamiento automático',
+      description: 'Diseñá el frente y el dorso de tu tarjeta y armá una hoja con varias tarjetas, lista para imprimir en tu casa y recortar.',
       bullets: [
-        'Generación automática de pliegos y hojas de corte multi-tarjeta en PDF',
-        'Diseño de frente y dorso con marcas de registro e isotipos',
-        'Estándar internacional para imprenta digital de alta resolución',
+        'Una hoja con varias tarjetas, lista para imprimir y recortar',
+        'Frente y dorso, con tu logo y código QR',
+        'Si preferís, llevá el archivo a una imprenta',
       ],
       cta: 'Crear Tarjeta',
     },
     libros: {
-      title: 'Libros, Folletos e Imposición PDF',
-      description: 'Motor de imposition para encuadernación, cálculo automático de pliegos, margenería de imprenta, guías de corte y folletos listos para prensa.',
+      badge: 'Auto-Doblado',
+      title: 'Libros y Folletos',
+      tagline: 'Páginas ordenadas solas para doblar',
+      description: 'Convertí tu archivo en un libro o folleto listo para imprimir, doblar y armar. Nosotros acomodamos las páginas por vos.',
       bullets: [
-        'Cálculo automático de imposición de pliegos para encuadernación',
-        'Control preciso de sangrados, medianiles y márgenes de imprenta',
-        'Exportación directa lista para prensa sin programas externos',
+        'Las páginas se ordenan solas, para que al doblar las hojas el libro quede en orden',
+        'Márgenes cuidados para que nada se corte al doblar',
+        'Lo descargás y lo imprimís en tu casa, o lo llevás a una imprenta',
       ],
-      cta: 'Imponer Libro PDF',
+      cta: 'Armar mi libro',
     },
+  },
+  portalIntro: {
+    eyebrow: 'Cuatro herramientas independientes',
+    title: '¿Qué querés crear hoy?',
+    description: 'Seleccioná la herramienta que necesitas. Todas incluyen autoguardado, privacidad total y descarga directa.',
   },
   howItWorks: {
     sectionTitle: 'Cómo Funciona LEECV en 3 Pasos',
     step1Title: '1. Elegí qué crear',
-    step1Desc: 'Seleccioná el motor especializado: CV Profesional A4, Tarjeta Personal o Folleto / Libro.',
+    step1Desc: 'Seleccioná qué querés armar: un currículum, una tarjeta personal, un folleto o un libro.',
     step2Title: '2. Personalizá tu contenido',
-    step2Desc: 'Completá tus datos en el editor dinámico con paletas cromáticas armónicas y tipografías ejecutivas.',
-    step3Title: '3. Exportá listo para imprenta',
-    step3Desc: 'Descargá tu documento vectorial limpio en PDF A4 nativo o compartí el enlace público.',
+    step2Desc: 'Completá tus datos en el editor y elegí los colores y las letras que más te gusten.',
+    step3Title: '3. Imprimilo o descargalo',
+    step3Desc: 'Descargá tu archivo e imprimilo en tu casa, en tu impresora, o llevalo a una imprenta. También podés compartir el enlace.',
   },
   faq: {
     sectionTitle: 'Preguntas Frecuentes',
@@ -82,18 +125,18 @@ export const landingCatalog = {
     a4: 'Absolutamente. Podés gestionar o cancelar tu suscripción a 1-clic desde el panel de cuenta sin penalizaciones ni letras chicas.',
   },
   features: {
-    sectionTitle: 'Gobernanza y Calidad Profesional',
+    sectionTitle: 'Pensado para que te salga bien',
     speed: {
-      title: 'Procesamiento Vectorial Local',
-      description: 'Motor sin dependencias pesadas en servidor. Todo el renderizado PDF se realiza en tu navegador con máxima privacidad y velocidad.',
+      title: 'Se arma en tu navegador',
+      description: 'No hace falta instalar nada. Tus datos quedan en tu equipo y todo funciona rápido.',
     },
     designSystem: {
-      title: 'Motor de Diseño Armónico',
-      description: 'Temas cromáticos unificados (Día, Noche, Océano e Ink) con tipografía ajustada para mantener coherencia en cada documento.',
+      title: 'Colores y letras que combinan',
+      description: 'Elegí entre los temas Día, Noche, Océano e Ink: los colores y las letras siempre combinan entre sí.',
     },
     printReady: {
-      title: 'Estándar de Imprenta Profesional',
-      description: 'Exportaciones con sangrado, marcas de registro, perfiles de color ajustados y estructura PDF optimizada para imprentas.',
+      title: 'Listo para imprimir',
+      description: 'Tu archivo sale preparado para imprimirse bien, ya sea en tu impresora de casa o en una imprenta.',
     },
   },
   blogTeaser: {

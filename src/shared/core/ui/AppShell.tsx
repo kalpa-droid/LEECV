@@ -2,9 +2,10 @@ import React from 'react';
 import { DocumentTabsBar, DocumentTabsBarProps } from './DocumentTabsBar';
 import { PwaInstallBanner } from './PwaInstallBanner';
 import { elevationSystem } from '../uiDesignSystem';
+import { DocumentTypeId } from '../../../types/document';
 
 export interface AppShellProps {
-  docType?: 'cv' | 'business_card' | 'book' | 'cover_letter';
+  docType?: DocumentTypeId;
   navbarSlot: React.ReactNode;
   dockSlot: React.ReactNode;
   panelSlot: React.ReactNode;
@@ -50,10 +51,16 @@ export const AppShell: React.FC<AppShellProps> = ({
           {panelSlot}
         </div>
 
+        {/* items-start (no items-center): con contenido más ancho que el
+            contenedor, align-items:center hace que el navegador no pueda
+            scrollear hasta el borde recortado de un lado (trampa clásica de
+            Flexbox+overflow). El centrado real lo hace CVPreview con
+            margin:auto sobre la hoja + el scrollLeft calculado a mano en
+            useDocumentViewport, que sí funciona en cualquier caso. */}
         <div 
           ref={containerRef}
           id="preview-viewport-container"
-          className={`flex-1 bg-[var(--ui-preview-bg)] h-full overflow-auto p-2 sm:p-4 flex flex-col items-center relative touch-pan-x touch-pan-y overscroll-contain ${
+          className={`flex-1 bg-[var(--ui-preview-bg)] h-full overflow-auto p-2 sm:p-4 flex flex-col items-start relative touch-pan-x touch-pan-y overscroll-contain ${
             mobileTabState === 'editor' && isPanelOpen ? 'hidden md:flex' : 'flex'
           }`}
         >

@@ -127,7 +127,7 @@ export default function AgencyCandidateDashboard({ onBackToEditor }) {
                       <button className={`p-1.5 bg-[var(--color-accent-purple)]/30 hover:bg-[var(--color-accent-purple)] text-white rounded-[${radius.control}] transition`} title="Enviar WhatsApp">
                         <MessageSquare className="w-3.5 h-3.5" />
                       </button>
-                      <button className={`p-1.5 bg-white/10 hover:bg-white/20 text-white/80 rounded-[${radius.control}] transition`} title="Exportar PDF A4">
+                      <button className={`p-1.5 bg-white/10 hover:bg-white/20 text-white/80 rounded-[${radius.control}] transition`} title="Exportar PDF">
                         <Download className="w-3.5 h-3.5" />
                       </button>
                     </div>

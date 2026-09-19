@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, FileText, CreditCard, BookOpen, Mail } from 'lucide-react';
+import { Plus, FileText, CreditCard, BookOpen, Mail, CalendarDays } from 'lucide-react';
 import { radius, elevationSystem } from '../uiDesignSystem';
 
 export interface NewDocumentMenuProps {
@@ -7,6 +7,7 @@ export interface NewDocumentMenuProps {
   onSelectCard: () => void;
   onSelectBook: () => void;
   onSelectCoverLetter?: () => void;
+  onSelectPlanner?: () => void;
   className?: string;
 }
 
@@ -15,6 +16,7 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
   onSelectCard,
   onSelectBook,
   onSelectCoverLetter,
+  onSelectPlanner,
   className = '',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -70,7 +72,7 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
             </div>
             <div>
               <span className="block font-extrabold text-[var(--ui-text-primary)]">Nuevo Currículum Vitae</span>
-              <span className="block text-[10px] text-[var(--ui-text-secondary)]">Formato A4 o Bolsillo</span>
+              <span className="block text-[10px] text-[var(--ui-text-secondary)]">Para imprimir en casa o en una imprenta</span>
             </div>
           </button>
 
@@ -104,7 +106,7 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
             </div>
             <div>
               <span className="block font-extrabold text-[var(--ui-text-primary)]">Nuevo Libro / Folleto</span>
-              <span className="block text-[10px] text-[var(--ui-text-secondary)]">Montaje A4 / A3</span>
+              <span className="block text-[10px] text-[var(--ui-text-secondary)]">Para imprimir en casa o en una imprenta</span>
             </div>
           </button>
 
@@ -123,6 +125,25 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
               <div>
                 <span className="block font-extrabold text-[var(--ui-text-primary)]">Nueva Carta de Presentación</span>
                 <span className="block text-[10px] text-[var(--ui-text-secondary)]">Redacción IA adaptada por vacante</span>
+              </div>
+            </button>
+          )}
+
+          {onSelectPlanner && (
+            <button
+              type="button"
+              onClick={() => {
+                setIsOpen(false);
+                onSelectPlanner();
+              }}
+              className="w-full text-left px-3 py-2 rounded-[10px] text-xs font-bold hover:bg-[var(--ui-btn-neutral-hover)] flex items-center gap-2.5 transition cursor-pointer group"
+            >
+              <div className={`p-1.5 rounded-[${radius.card}] bg-[var(--color-accent-green-light)] text-[var(--color-accent-green-text)] group-hover:scale-105 transition`}>
+                <CalendarDays className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="block font-extrabold text-[var(--ui-text-primary)]">Nueva Agenda / Planificador</span>
+                <span className="block text-[10px] text-[var(--ui-text-secondary)]">Para imprimir en casa o en una imprenta</span>
               </div>
             </button>
           )}
