@@ -370,6 +370,9 @@ export function inferDocumentTypeId(docData: any): 'cv' | 'business_card' | 'boo
   if (docTypeId === 'business_card' || docTypeId === 'book' || docTypeId === 'cover_letter' || docTypeId === 'cv') {
     return docTypeId;
   }
+  if (docTypeId === 'carta') return 'cover_letter';
+  if (docTypeId === 'tarjeta') return 'business_card';
+  if (docTypeId === 'libro') return 'book';
 
   const id = String(docData.id || '').toLowerCase();
   if (id.startsWith('card_') || id.startsWith('doc_business_card_') || id === 'draft_card') return 'business_card';

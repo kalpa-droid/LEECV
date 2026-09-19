@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { hasRealContent } from '../src/shared/core/documents/documentEngine/documentHelpers';
-import { getDocTypeForRoute } from '../src/app/App';
+import { getDocTypeForRoute } from '../src/shared/core/capabilities/capabilityRegistry';
 import { createBlankCVTemplate } from '../src/data/initialCVData';
 
 describe('Cover Letter Integration & Route Sync', () => {
@@ -36,8 +36,8 @@ describe('Cover Letter Integration & Route Sync', () => {
   });
 
   it('getDocTypeForRoute mapea correctamente rutas a tipo de documento', () => {
-    expect(getDocTypeForRoute('/crear-carta')).toBe('carta');
-    expect(getDocTypeForRoute('/crear-tarjeta')).toBe('tarjeta');
+    expect(getDocTypeForRoute('/crear-carta')).toBe('cover_letter');
+    expect(getDocTypeForRoute('/crear-tarjeta')).toBe('business_card');
     expect(getDocTypeForRoute('/crear-cv')).toBe('cv');
     expect(getDocTypeForRoute('/')).toBe('cv');
   });
@@ -50,6 +50,6 @@ describe('Cover Letter Integration & Route Sync', () => {
     expect(blankCarta.activePresetId).toBe('carta-clasica');
 
     const blankTarjeta = createBlankCVTemplate({ docType: 'tarjeta' });
-    expect(blankTarjeta.activePresetId).toBe('tarjeta-horizontal-clasica');
+    expect(blankTarjeta.activePresetId).toBe('tarjeta-personal');
   });
 });
