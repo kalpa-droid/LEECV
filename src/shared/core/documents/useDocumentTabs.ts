@@ -72,11 +72,21 @@ export function useDocumentTabs({
     }
   }, []);
 
+  const prevRouteRef = useRef<string | undefined>(currentRoute);
+
   // Sincronizador de Ruta (Núcleo 2):
   // Al cambiar la ruta de navegación (ej: /crear-tarjeta), si el tipo del documento activo
   // no coincide con el tipo de la ruta, conmuta síncronamente al borrador de ese tipo.
   useEffect(() => {
-    if (!currentRoute || isSwitchingDocument || !setCvData || currentRoute === '/' || currentRoute === '/blog') return;
+    if (!currentRoute || isSwitchingDocument || !setCvData || currentRoute === '/' || currentRoute === '/blog') {
+      prevRouteRef.current = currentRoute;
+      return;
+    }
+
+    const routeChanged = prevRouteRef.current !== currentRoute;
+    prevRouteRef.current = currentRoute;
+
+    if (!routeChanged) return;
 
     const routeDocType = getDocTypeForRoute(currentRoute);
     const activeDocType = cvData ? inferDocumentTypeId(cvData) : null;
@@ -97,7 +107,7 @@ export function useDocumentTabs({
           if (setIsSwitchingDocument) setIsSwitchingDocument(false);
         });
     }
-  }, [currentRoute, activeCvId, isSwitchingDocument, hasPendingChanges, setCvData, setIsSwitchingDocument]);
+  }, [currentRoute, cvData, isSwitchingDocument, hasPendingChanges, setCvData, setIsSwitchingDocument]);
 
   return {
     tabs,

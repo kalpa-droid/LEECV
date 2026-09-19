@@ -179,7 +179,7 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {/* TAB 1: DATOS PERSONALES */}
         {/* ========================================================================= */}
-        {activeTab === 'personales' && (
+        {docType === 'cv' && activeTab === 'personales' && (
           <PersonalInfoSection 
             onOpenPhotoCropper={onOpenPhotoCropper}
             registeredItems={registeredItems}
@@ -189,73 +189,71 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {/* TAB 1.2: REDES SOCIALES & ENLACES */}
         {/* ========================================================================= */}
-        {activeTab === 'redes' && <RedesSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'cv' && activeTab === 'redes' && <RedesSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
         {/* TAB 1.5: COMPETENCIAS CLAVE */}
         {/* ========================================================================= */}
-        {activeTab === 'competencias' && <CompetenciasSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'cv' && activeTab === 'competencias' && <CompetenciasSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
         {/* TAB: RESUMEN PROFESIONAL */}
         {/* ========================================================================= */}
-        {activeTab === 'resumen' && <ResumenSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'cv' && activeTab === 'resumen' && <ResumenSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
         {/* TAB: OBJETIVO PROFESIONAL */}
         {/* ========================================================================= */}
-        {activeTab === 'objetivo' && <ObjetivoSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'cv' && activeTab === 'objetivo' && <ObjetivoSection cvData={cvData} setCvData={setCvData} />}
 
-        {activeTab === 'logros' && <LogrosSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'cv' && activeTab === 'logros' && <LogrosSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
         {/* TAB: PORTAFOLIO / TRABAJOS DESTACADOS */}
         {/* ========================================================================= */}
-        {activeTab === 'portafolio' && <PortafolioSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'cv' && activeTab === 'portafolio' && <PortafolioSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
         {/* TAB: HABILIDADES TÉCNICAS (HARD SKILLS) */}
         {/* ========================================================================= */}
-        {activeTab === 'habilidades' && <HabilidadesSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'cv' && activeTab === 'habilidades' && <HabilidadesSection cvData={cvData} setCvData={setCvData} />}
 
-        {activeTab === 'idiomas' && <IdiomasSection cvData={cvData} setCvData={setCvData} />}
-
-        {/* ========================================================================= */}
-        {activeTab === 'proyectos' && <ProyectosSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'cv' && activeTab === 'idiomas' && <IdiomasSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
-        {activeTab === 'publicaciones' && <PublicacionesSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'cv' && activeTab === 'proyectos' && <ProyectosSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
-        {activeTab === 'referencias' && <ReferenciasSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'cv' && activeTab === 'publicaciones' && <PublicacionesSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
-        {activeTab === 'formacion' && <FormacionSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'cv' && activeTab === 'referencias' && <ReferenciasSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
-        {activeTab === 'profesion' && <ProfesionSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'cv' && activeTab === 'formacion' && <FormacionSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
-        {activeTab === 'experiencia' && <ExperienciaSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'cv' && activeTab === 'profesion' && <ProfesionSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
-        {activeTab === 'cursos' && <CursosSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'cv' && activeTab === 'experiencia' && <ExperienciaSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
-        {activeTab === 'informatica' && <InformaticaSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'cv' && activeTab === 'cursos' && <CursosSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
-        {activeTab === 'certificados' && <CertificadosSection cvData={cvData} setCvData={setCvData} registeredItems={registeredItems} />}
+        {docType === 'cv' && activeTab === 'informatica' && <InformaticaSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
-        {/* TAB 9: FIRMA DIGITAL */}
+        {docType === 'cv' && activeTab === 'certificados' && <CertificadosSection cvData={cvData} setCvData={setCvData} registeredItems={registeredItems} />}
+
         {/* ========================================================================= */}
         {/* TAB 9: FIRMA DIGITAL */}
         {/* ========================================================================= */}
-        {activeTab === 'firma' && <FirmaSection cvData={cvData} setCvData={setCvData} onOpenSignature={onOpenSignature} />}
+        {docType === 'cv' && activeTab === 'firma' && <FirmaSection cvData={cvData} setCvData={setCvData} onOpenSignature={onOpenSignature} />}
 
-        {activeTab === 'nueva_seccion' && <NuevaSeccionSection cvData={cvData} setCvData={setCvData} activeTab={activeTab} changeActiveTab={changeActiveTab} showSuccess={showSuccess} showWarning={showWarning} triggerPresetTransition={triggerPresetTransition} getEffectiveCoverFeaturedItems={getEffectiveCoverFeaturedItems} />}
-        { (activeTab?.startsWith('personalizada-') || (cvData?.customSections || []).some((cs: any) => cs.id === activeTab)) && <PersonalizadaSection cvData={cvData} setCvData={setCvData} activeTab={activeTab} changeActiveTab={changeActiveTab} showSuccess={showSuccess} showWarning={showWarning} triggerPresetTransition={triggerPresetTransition} getEffectiveCoverFeaturedItems={getEffectiveCoverFeaturedItems} confirm={confirm} />}
+        {docType === 'cv' && activeTab === 'nueva_seccion' && <NuevaSeccionSection cvData={cvData} setCvData={setCvData} activeTab={activeTab} changeActiveTab={changeActiveTab} showSuccess={showSuccess} showWarning={showWarning} triggerPresetTransition={triggerPresetTransition} getEffectiveCoverFeaturedItems={getEffectiveCoverFeaturedItems} />}
+        {docType === 'cv' && (activeTab?.startsWith('personalizada-') || (cvData?.customSections || []).some((cs: any) => cs.id === activeTab)) && <PersonalizadaSection cvData={cvData} setCvData={setCvData} activeTab={activeTab} changeActiveTab={changeActiveTab} showSuccess={showSuccess} showWarning={showWarning} triggerPresetTransition={triggerPresetTransition} getEffectiveCoverFeaturedItems={getEffectiveCoverFeaturedItems} confirm={confirm} />}
         {activeTab === 'guardados' && (
           <GuardadosSection
             savedList={savedList}
@@ -266,19 +264,19 @@ export default function EditorPanel({
           />
         )}
         {activeTab === 'diseno' && <DisenoSection cvData={cvData} setCvData={setCvData} activeTab={activeTab} changeActiveTab={changeActiveTab} showSuccess={showSuccess} showWarning={showWarning} triggerPresetTransition={triggerPresetTransition} getEffectiveCoverFeaturedItems={getEffectiveCoverFeaturedItems} setPendingFormatId={setPendingFormatId} setIsFormatModalOpen={setIsFormatModalOpen} updateTheme={updateTheme} fontOptions={fontOptions} docType={docType} />}
-        {activeTab === 'portada' && <PortadaSection cvData={cvData} setCvData={setCvData} activeTab={activeTab} changeActiveTab={changeActiveTab} showSuccess={showSuccess} showWarning={showWarning} triggerPresetTransition={triggerPresetTransition} getEffectiveCoverFeaturedItems={getEffectiveCoverFeaturedItems} />}
+        {docType === 'cv' && activeTab === 'portada' && <PortadaSection cvData={cvData} setCvData={setCvData} activeTab={activeTab} changeActiveTab={changeActiveTab} showSuccess={showSuccess} showWarning={showWarning} triggerPresetTransition={triggerPresetTransition} getEffectiveCoverFeaturedItems={getEffectiveCoverFeaturedItems} />}
 
         {/* ========================================================================= */}
         {/* TABS DE TARJETA PERSONAL — 6 paneles independientes */}
         {/* ========================================================================= */}
 
         {/* TABS DE TARJETA PERSONAL — Componentizados */}
-        {activeTab === 'card_extract' && <CardExtractSection cvData={cvData} setCvData={setCvData} />}
-        {activeTab === 'card_logo' && <CardLogoSection cvData={cvData} setCvData={setCvData} />}
-        {activeTab === 'card_front' && <CardFrontSection cvData={cvData} setCvData={setCvData} />}
-        {activeTab === 'card_back' && <CardBackSection cvData={cvData} setCvData={setCvData} />}
-        {activeTab === 'card_qr' && <CardQrSection cvData={cvData} setCvData={setCvData} />}
-        {activeTab === 'card_size' && <CardSizeSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'business_card' && activeTab === 'card_extract' && <CardExtractSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'business_card' && activeTab === 'card_logo' && <CardLogoSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'business_card' && activeTab === 'card_front' && <CardFrontSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'business_card' && activeTab === 'card_back' && <CardBackSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'business_card' && activeTab === 'card_qr' && <CardQrSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'business_card' && activeTab === 'card_size' && <CardSizeSection cvData={cvData} setCvData={setCvData} />}
 
         {/* Format Confirmation Modal */}
         {isFormatModalOpen && pendingFormatId && (

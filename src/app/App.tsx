@@ -856,7 +856,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
                   data: cvData,
                   isDirty: hasPendingChanges
                 } : null;
-                workspaceController.closeTab(deletedId, currentDocState, setCvData, goToLandingPage).then(() => setTabs(getOpenTabs()));
+                workspaceController.closeTab(deletedId, currentDocState, setCvData, goToLandingPage, activeCvId).then(() => setTabs(getOpenTabs()));
               }}
             />
           )}

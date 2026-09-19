@@ -9,12 +9,27 @@ export function markAsConfirmed(docData: any): any {
 
 export function hasRealContent(docData: any): boolean {
   if (!docData) return false;
-  // heuristic to detect if the user has added any real content
+  
   const info = docData.personalInfo || {};
   if (info.fullName || info.givenNames || info.surname) return true;
+  if (info.role || info.jobTitle || info.phone || info.email || info.website || info.portfolioUrl || info.cityProvince || info.address) return true;
+  
   if (docData.roles && docData.roles.length > 0) return true;
   if (docData.education && docData.education.length > 0) return true;
   if (docData.experience && docData.experience.length > 0) return true;
+  if (docData.coursesAndCertificates && docData.coursesAndCertificates.length > 0) return true;
+  if (docData.languages && docData.languages.length > 0) return true;
+  if (docData.skills && docData.skills.length > 0) return true;
+  if (docData.customSections && docData.customSections.length > 0) return true;
+
+  if (docData.cardOverrides) {
+    const card = docData.cardOverrides;
+    if (card.name || card.role || card.phone || card.email || card.website || card.address || card.companyName) return true;
+  }
+
+  if (docData.coverLetterContent?.text || docData.vacancy?.jobTitle) return true;
+  if (docData.bookMetadata?.title) return true;
+
   return false;
 }
 

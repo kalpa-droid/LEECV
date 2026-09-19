@@ -13,7 +13,7 @@
 import * as TabStore from './tabStore';
 import { loadDocumentById, saveDocument } from '../storage/documentStorageService';
 import { markAsConfirmed, isProvisionalDocument, hasRealContent, isDraftDocumentId, inferDocTypeFromDraftId, computeAutoDocumentTitle } from './documentEngine';
-import { getDefaultTitleForDocType } from '../capabilities/capabilityRegistry';
+import { getDefaultTitleForDocType, getRouteForDocType } from '../capabilities/capabilityRegistry';
 import { createBlankCVTemplate } from '../../../data/initialCVData';
 
 export interface CurrentDocumentState {
@@ -160,6 +160,13 @@ export async function closeTab(
   if (remaining.length > 0) {
     const nextTab = remaining[remaining.length - 1];
     await switchToTab(nextTab.id, null, setCvData, { saveCurrentIfDirty: false });
+    if (typeof window !== 'undefined') {
+      const targetRoute = getRouteForDocType(nextTab.docType);
+      if (window.location.pathname !== targetRoute) {
+        window.history.pushState({}, '', targetRoute);
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      }
+    }
   } else {
     // 0 pestañas abiertas -> Limpiar ID activo y volver a la Landing Page
     TabStore.setActiveTabId(null);

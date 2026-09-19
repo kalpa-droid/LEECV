@@ -20,7 +20,7 @@ import {
   saveDocumentAs,
   checkStorageStatus 
 } from '../services/cvStorageService';
-import { OpenTab, closeTab as closeTabInStore } from '../../../shared/core/documents/tabStore';
+import { OpenTab } from '../../../shared/core/documents/tabStore';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { InfoHint } from '../../../shared/core/ui/InfoHint';
@@ -36,7 +36,7 @@ export interface SavedCVsModalProps {
   onSelectCV: (cvData: any) => void;
   onImportJson?: (e: any) => Promise<void>;
   onOpenCloudStatus: () => void;
-  onDocumentClosed?: (deletedId: string, remainingTabs: OpenTab[]) => void;
+  onDocumentClosed?: (deletedId: string, remainingTabs?: OpenTab[]) => void;
 }
 
 export default function SavedCVsModal({ 
@@ -130,10 +130,9 @@ export default function SavedCVsModal({
         await withErrorHandling(
           async () => {
             await deleteDocumentById(id, docType);
-            const remaining = closeTabInStore(id);
             showSuccess(`Documento "${title}" eliminado.`);
             fetchList();
-            onDocumentClosed?.(id, remaining);
+            onDocumentClosed?.(id);
           },
           {
             context: 'Eliminación de Documento',
