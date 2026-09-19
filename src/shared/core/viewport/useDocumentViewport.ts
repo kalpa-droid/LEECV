@@ -58,6 +58,18 @@ export function useDocumentViewport(options: UseDocumentViewportOptions = {}) {
       containerRef.current.scrollLeft = 0;
       containerRef.current.scrollTop = 0;
     }
+    // El contenedor con overflow-auto real (el que efectivamente scrollea en pantalla)
+    // es el <div id="preview-viewport-container"> de AppShell.tsx, un ancestro del
+    // containerRef de arriba (que apunta al wrapper interno de CVPreview, sin scroll
+    // propio). Sin este reset, "Ver"/fitAndCenter recalculaba el zoom pero la hoja
+    // seguía corrida al costado porque el scroll real nunca volvía a 0.
+    if (typeof document !== 'undefined') {
+      const realScrollContainer = document.getElementById('preview-viewport-container');
+      if (realScrollContainer) {
+        realScrollContainer.scrollLeft = 0;
+        realScrollContainer.scrollTop = 0;
+      }
+    }
   }, [triggerAutoFit]);
 
   // Medición real mediante ResizeObserver sobre el contenedor del DOM
