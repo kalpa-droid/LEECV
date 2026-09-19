@@ -4,6 +4,15 @@ import { createRoot } from 'react-dom/client';
 import '../index.css';
 import { ErrorBoundary } from '../shared/core/ui/ErrorBoundary';
 import { navigation } from '../shared/core/utils/navigation';
+import { initGlobalUiTheme } from '../shared/core/utils/globalThemePreference';
+
+// Aplica el tema guardado (CSS vars + <meta name="theme-color"> de la barra
+// de estado) ANTES de montar React. Ni LandingPage.tsx ni App.tsx lo hacían:
+// solo se aplicaba reactivamente al tocar el botón de cambiar tema, así que
+// en una carga normal (o al entrar por primera vez) la app se quedaba con
+// los valores por defecto del CSS/HTML estático sin importar la preferencia
+// guardada del usuario.
+initGlobalUiTheme();
 
 const App = lazy(() => import('./App'));
 const AdminDashboard = lazy(() => import('../modules/admin/AdminDashboard'));
