@@ -27,7 +27,14 @@ function parseCustomHex(value: unknown): string | null {
 }
 
 export function resolveActivePreset(cvData: any): Preset {
-  const basePreset = getPreset(cvData?.activePresetId || 'cv-clasico');
+  const isCoverLetter =
+    cvData?.docType === 'cover_letter' ||
+    cvData?.docType === 'carta' ||
+    cvData?.activePresetId === 'carta-presentacion' ||
+    cvData?.activePresetId?.startsWith('carta-');
+
+  const defaultFallbackId = isCoverLetter ? 'carta-clasica' : 'cv-clasico';
+  const basePreset = getPreset(cvData?.activePresetId || defaultFallbackId);
 
   const customColor = cvData?.colorPresetId ? (PRESET_COLORS as any)[cvData.colorPresetId] : undefined;
   const customTypo = cvData?.typographyPresetId ? (PRESET_TYPOGRAPHY as any)[cvData.typographyPresetId] : undefined;
@@ -112,6 +119,7 @@ const NATIVE_PRESETS: Preset[] = [
 // Mapa en memoria dinámico
 const PRESET_MAP = new Map<string, Preset>();
 NATIVE_PRESETS.forEach(p => PRESET_MAP.set(p.id, p));
+PRESET_MAP.set('carta-presentacion', cartaClasicaPreset);
 
 // Contador de versión y mini pub-sub (15 líneas)
 let presetsVersion = 0;
@@ -171,6 +179,7 @@ export function registerPresetInMemory(preset: any): boolean {
  * Consulta síncrona instantánea y segura para @react-pdf/renderer y CVPreview.
  */
 export function getPreset(id: string): Preset {
+  if (id === 'carta-presentacion') id = 'carta-clasica';
   return PRESET_MAP.get(id) || PRESET_MAP.get('cv-clasico') || cvClasicoPreset;
 }
 

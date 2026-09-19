@@ -4,6 +4,7 @@ import { validateFieldValue } from '../utils/validationEngine';
 
 export interface FieldProps {
   label?: ReactNode;
+  headerAction?: ReactNode;
   error?: string | null;
   helperText?: string | null;
   as?: ElementType;
@@ -18,6 +19,7 @@ export interface FieldProps {
 
 export function Field({
   label,
+  headerAction,
   error,
   helperText,
   as: Component = 'input',
@@ -42,13 +44,18 @@ export function Field({
 
   return (
     <div className={`space-y-1 ${containerClassName}`}>
-      {label && (
-        <label
-          htmlFor={id}
-          className={`${typeScale.fieldLabel} block ui-text-primary`}
-        >
-          {label}
-        </label>
+      {(label || headerAction) && (
+        <div className="flex items-center justify-between gap-2 mb-1">
+          {label && (
+            <label
+              htmlFor={id}
+              className={`${typeScale.fieldLabel} block ui-text-primary`}
+            >
+              {label}
+            </label>
+          )}
+          {headerAction}
+        </div>
       )}
 
       <Component

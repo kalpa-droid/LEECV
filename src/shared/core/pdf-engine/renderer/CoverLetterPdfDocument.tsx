@@ -2,6 +2,7 @@ import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { prepareCoverLetterRenderData, CoverLetterData } from '../layers/records/coverLetterDataAdapter';
 import { getCoverLetterPreset } from '../../presets/coverLetterPresetCatalog';
+import { getPageSize } from '../layers/page/pageSizes';
 
 interface CoverLetterPdfProps {
   data: CoverLetterData;
@@ -20,6 +21,17 @@ export const CoverLetterPdfDocument: React.FC<CoverLetterPdfProps> = ({
 }) => {
   const renderData = prepareCoverLetterRenderData(data);
   const preset = getCoverLetterPreset(presetId);
+
+  const activePageSizeId = data.layout?.pageSizeId || data.layout?.paperSize || 'a4';
+  const pageDef = getPageSize(activePageSizeId);
+  const pdfPageSize: 'A4' | 'LETTER' | 'LEGAL' | [number, number] =
+    activePageSizeId === 'carta'
+      ? 'LETTER'
+      : activePageSizeId === 'legal'
+      ? 'LEGAL'
+      : activePageSizeId === 'a4'
+      ? 'A4'
+      : [pageDef.widthPt, pageDef.heightPt];
 
   const primaryColor = theme.primaryColor || '#1D9E75';
   const textColor = '#2D3748';
@@ -144,7 +156,7 @@ export const CoverLetterPdfDocument: React.FC<CoverLetterPdfProps> = ({
 
   return (
     <Document title={`Carta de Presentación - ${renderData.sender.fullName}`}>
-      <Page size="A4" style={styles.page}>
+      <Page size={pdfPageSize} style={styles.page}>
         {renderHeader()}
 
         <View style={styles.dateRow}>

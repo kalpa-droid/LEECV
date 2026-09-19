@@ -265,7 +265,11 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       ? 'business_card'
       : 'cv';
 
-  const activePageSizeId = activeDocType === 'business_card' ? ((cvData as any)?.cardSize || 'tarjeta_estandar') : 'a4';
+  const activePageSizeId =
+    (cvData as any)?.layout?.pageSizeId ||
+    (cvData as any)?.layout?.paperSize ||
+    (cvData as any)?.documentSettings?.paperSizeId ||
+    (activeDocType === 'business_card' ? ((cvData as any)?.cardSize || 'tarjeta_estandar') : 'a4');
 
   const viewport = useDocumentViewport({
     pageSizeId: activePageSizeId,
@@ -320,6 +324,26 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       setTabs(getOpenTabs());
     }
   }, [resetToBlankCV]);
+
+  // Paso 0: Resincronizar cvData con currentRoute cuando la ruta y el docType activo divergen
+  useEffect(() => {
+    if (!currentRoute || currentRoute === '/' || currentRoute === '/blog' || currentRoute === '/dashboard') return;
+    const targetDocType = getDocTypeForRoute(currentRoute);
+    const currentDocType = cvData ? inferDocumentTypeId(cvData) : null;
+
+    if (currentDocType && currentDocType !== targetDocType) {
+      const existingTab = tabs.find(t => t.docType === targetDocType);
+      if (existingTab) {
+        handleSwitchDocumentTab(existingTab.cvId, targetDocType, { skipSaveCurrent: false });
+      } else {
+        const targetPreset = targetDocType === 'cover_letter' ? 'carta-clasica'
+          : targetDocType === 'business_card' ? 'tarjeta-personal'
+          : targetDocType === 'book' ? 'libro-standard'
+          : 'cv-clasico';
+        createBlankDocumentWithTab(targetPreset);
+      }
+    }
+  }, [currentRoute, cvData, tabs, createBlankDocumentWithTab, handleSwitchDocumentTab]);
 
   const goToLandingPage = React.useCallback(() => {
     if (onNavigate) {
@@ -602,6 +626,30 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     });
   };
 
+  const handleGenerateCoverLetterFromCV = (sourceCvData?: any) => {
+    const dataToUse = sourceCvData || cvData;
+    createBlankDocumentWithTab('carta-clasica');
+    setActiveTab('source_data');
+    if (dataToUse?.personalInfo) {
+      setCvData(prev => ({
+        ...prev,
+        personalInfo: {
+          ...prev.personalInfo,
+          ...dataToUse.personalInfo
+        }
+      }));
+    }
+    if (currentRoute !== '/crear-carta') {
+      if (onNavigate) {
+        onNavigate('/crear-carta');
+      } else if (typeof window !== 'undefined') {
+        window.history.pushState({}, '', '/crear-carta');
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      }
+    }
+    showSuccess('Carta de presentación creada reutilizando tus datos.');
+  };
+
   const handleImportJsonFile = async (e: any) => {
     const file = e.target?.files?.[0];
     if (file) {
@@ -754,6 +802,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           onOpenPhotoCropper={() => setIsPhotoCropperOpen(true)}
           onOpenSignature={() => setIsSignatureOpen(true)}
           onOpenSavedCVs={() => setIsSavedCVsOpen(true)}
+          onGenerateCoverLetterFromCV={handleGenerateCoverLetterFromCV}
         />
       }
       mainSlot={
@@ -851,6 +900,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
               }}
               onImportJson={handleImportJsonFile}
               onOpenCloudStatus={() => setIsCloudModalOpen(true)}
+              onGenerateCoverLetterFromCV={handleGenerateCoverLetterFromCV}
               onDocumentClosed={(deletedId) => {
                 const currentDocState: workspaceController.CurrentDocumentState | null = cvData ? {
                   id: cvData.id,
@@ -978,7 +1028,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 export default function App() {
   const [currentRoute, setCurrentRoute] = useState<string>(() => {
     const path = navigation.getPathname();
-    if (path === '/crear-cv' || path === '/crear-tarjeta' || path === '/crear-libro' || path === '/crear-carta' || path === '/blog') {
+    if (path === '/crear-cv' || path === '/crear-tarjeta' || path === '/crear-libro' || path === '/crear-carta' || path.startsWith('/blog')) {
       return path;
     }
     return '/';
@@ -1005,11 +1055,11 @@ export default function App() {
     <ToastProvider>
       <ConfirmProvider>
         <CVProvider>
-          {currentRoute === '/blog' ? (
+          {currentRoute.startsWith('/blog') ? (
             <>
               <SeoMetaManager title="Blog & Recursos — LEECV" />
               <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Blog...</div>}>
-                <BlogModule onNavigateHome={() => navigateTo('/')} onNavigateProduct={(r) => navigateTo(r)} />
+                <BlogModule initialSlug={currentRoute.replace('/blog', '').replace('/', '') || undefined} onNavigateHome={() => navigateTo('/')} onNavigateProduct={(r) => navigateTo(r)} />
               </Suspense>
             </>
           ) : currentRoute === '/' ? (

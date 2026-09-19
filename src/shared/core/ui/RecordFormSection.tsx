@@ -8,6 +8,8 @@ import { getFieldLabelOptions } from '../pdf-engine/layers/records/fieldLabelOpt
 import { Info } from 'lucide-react';
 import { radius } from '../uiDesignSystem';
 import { SectionPositionControl } from './SectionPositionControl';
+import { AIButton } from './AIButton';
+import { generateAiCompletion } from '../ai/aiClient';
 
 interface RecordFormSectionProps {
   sectionKey: string;
@@ -85,10 +87,6 @@ export function RecordFormSection({
 
               const labelOptions = getFieldLabelOptions(fDef);
               const currentOverride = item.fieldLabelOverrides?.[fieldId] || labelOptions[0];
-              // 'title' y 'description' nunca imprimen su label en el PDF (recordLayoutEngine.ts:
-              // 'title' pasa a ser el encabezado en crudo, 'description' se concatena en el bloque
-              // de texto libre) — mostrar el selector ahí sería elegir algo que no cambia nada
-              // visible, como pasaba con "Título / Grado / Nombre" en Curso / Capacitación.
               const labelIsEverShownInPdf = fDef.pdfRole !== 'title' && fDef.pdfRole !== 'description';
 
               const labelElement = labelOptions.length > 1 && labelIsEverShownInPdf ? (
@@ -114,11 +112,36 @@ export function RecordFormSection({
                 fDef.label
               );
 
+              const headerAiAction = (fDef.type === 'textarea' && (kindKey === 'experience' || fieldId === 'description')) ? (
+                <AIButton
+                  label="Sugerir Logros"
+                  onGenerate={async () => {
+                    const title = item.tituloOGrado || item.title || item.cargo || 'Profesional';
+                    const company = item.institucion || item.company || item.empresa || '';
+                    const res = await generateAiCompletion({
+                      systemPrompt: 'Eres un experto redactor de CVs enfocado en logros cuantificables (STAR / XYZ). Genera 2 a 3 logros profesionales clave en español con formato de lista corta (•).',
+                      userPrompt: `Puesto: ${title}. Empresa: ${company}.`,
+                      maxTokens: 250,
+                      temperature: 0.7
+                    });
+                    return res.text;
+                  }}
+                  onSuccess={(generatedText) => {
+                    const newValue = currentValue ? `${currentValue}\n\n${generatedText}` : generatedText;
+                    updateField(fieldId, newValue);
+                    if (legacyKey !== fieldId) {
+                      updateField(legacyKey, newValue);
+                    }
+                  }}
+                />
+              ) : undefined;
+
               if (fDef.type === 'select' && fDef.options && fDef.options.length > 0) {
                 return (
                   <Field
                     key={fieldId}
                     label={labelElement}
+                    headerAction={headerAiAction}
                     as="select"
                     value={currentValue || fDef.options[0]}
                     onChange={(e: any) => {
@@ -142,6 +165,7 @@ export function RecordFormSection({
                 <Field
                   key={fieldId}
                   label={labelElement}
+                  headerAction={headerAiAction}
                   value={currentValue}
                   onChange={(e: any) => {
                     const val = e.target.value;

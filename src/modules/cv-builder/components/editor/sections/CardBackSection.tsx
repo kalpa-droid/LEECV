@@ -1,6 +1,8 @@
 import React from 'react';
 import { Sparkles } from 'lucide-react';
 import { PanelSection } from '../PanelSection';
+import { AIButton } from '../../../../../shared/core/ui/AIButton';
+import { generateAiCompletion } from '../../../../../shared/core/ai/aiClient';
 
 interface Props {
   cvData: any;
@@ -29,7 +31,29 @@ export function CardBackSection({ cvData, setCvData }: Props) {
             />
           </div>
           <div className="space-y-1">
-            <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">Eslogan / Frase Corta</label>
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">Eslogan / Frase Corta</label>
+              <AIButton
+                label="Sugerir Eslogan"
+                onGenerate={async () => {
+                  const role = cvData?.cardOverrides?.role || cvData?.roles?.[0] || 'Profesional';
+                  const brand = cvData?.cardOverrides?.brandName || cvData?.personalInfo?.fullName || 'Marca Personal';
+                  const res = await generateAiCompletion({
+                    systemPrompt: 'Eres un estratega de marca personal y copywriter. Genera una sola frase corta, profesional, pegadiza y concisa (máximo 8 palabras) en español para una tarjeta personal.',
+                    userPrompt: `Profesión: ${role}. Marca/Empresa: ${brand}.`,
+                    maxTokens: 100,
+                    temperature: 0.8
+                  });
+                  return res.text.replace(/^["'«]/, '').replace(/["'»]$/, '').trim();
+                }}
+                onSuccess={(slogan) => {
+                  setCvData((prev: any) => ({
+                    ...prev,
+                    cardOverrides: { ...(prev?.cardOverrides || {}), tagline: slogan }
+                  }));
+                }}
+              />
+            </div>
             <input
               type="text"
               value={cvData?.cardOverrides?.tagline ?? cvData?.personalInfo?.quote ?? ''}

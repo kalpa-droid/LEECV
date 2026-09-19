@@ -42,8 +42,22 @@ export const DisenoSection = ({
   registerSection
 }: any) => {
   const isBusinessCard = docType === 'business_card';
-  const hasDesignOverrides = !!(cvData?.colorPresetId || cvData?.typographyPresetId || cvData?.columnLayoutPresetId);
-  const handlePaperSizeChange = (val: string) => { setCvData((prev: any) => ({ ...prev, documentSettings: { ...(prev.documentSettings || {}), paperSizeId: val } })); };
+  const hasDesignOverrides = Boolean(cvData?.colorPresetId || cvData?.typographyPresetId || cvData?.columnLayoutPresetId);
+  const handlePaperSizeChange = (val: string) => {
+    setCvData((prev: any) => ({
+      ...prev,
+      documentSettings: {
+        ...(prev?.documentSettings || {}),
+        paperSizeId: val
+      },
+      layout: {
+        ...(prev?.layout || {}),
+        pageSizeId: val,
+        paperSize: val
+      },
+      cardSize: docType === 'business_card' ? val : prev?.cardSize
+    }));
+  };
   return (
     <>
       {activeTab === 'diseno' && (

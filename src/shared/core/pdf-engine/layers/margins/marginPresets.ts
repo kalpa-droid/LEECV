@@ -31,11 +31,13 @@ export interface UsableArea {
 
 export const MARGIN_PRESETS: Record<string, MarginPreset> = {
   documento_estandar: { id: 'documento_estandar', name: 'Documento estándar', top: 12, bottom: 12, left: 12, right: 12 },
+  normal: { id: 'documento_estandar', name: 'Documento estándar', top: 12, bottom: 12, left: 12, right: 12 },
   documento_amplio: { id: 'documento_amplio', name: 'Documento con aire', top: 18, bottom: 18, left: 16, right: 16 },
   tarjeta_ajustada: { id: 'tarjeta_ajustada', name: 'Tarjeta al borde', top: 3, bottom: 3, left: 3, right: 3 },
 };
 
 function resolveSide(value: number | { percentOfHeight: number } | { percentOfWidth: number }, refMm: number): number {
+  if (value === undefined || value === null) return 12;
   if (typeof value === 'number') return value;
   if ('percentOfHeight' in value) return refMm * value.percentOfHeight;
   return refMm * value.percentOfWidth;
@@ -43,10 +45,11 @@ function resolveSide(value: number | { percentOfHeight: number } | { percentOfWi
 
 /** Capa 0 (página) + Capa 1 (preset de margen) → área útil real, en mm y en pt */
 export function resolveMargins(page: PageSize, preset: MarginPreset): UsableArea {
-  const topMm = resolveSide(preset.top, page.heightMm);
-  const bottomMm = resolveSide(preset.bottom, page.heightMm);
-  const leftMm = resolveSide(preset.left, page.widthMm);
-  const rightMm = resolveSide(preset.right, page.widthMm);
+  const safePreset = preset || MARGIN_PRESETS.documento_estandar;
+  const topMm = resolveSide(safePreset.top, page.heightMm);
+  const bottomMm = resolveSide(safePreset.bottom, page.heightMm);
+  const leftMm = resolveSide(safePreset.left, page.widthMm);
+  const rightMm = resolveSide(safePreset.right, page.widthMm);
 
   const mmToPt = (mm: number) => Math.round(mm * 2.8346);
 

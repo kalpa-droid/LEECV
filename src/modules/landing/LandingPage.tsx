@@ -114,8 +114,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             {t.landing.hero.lead}
           </p>
 
-          <div className="flex justify-center gap-4 pb-8">
+          <div className="flex justify-center gap-4 pb-2">
             <MarketingCTA label={t.landing.hero.primaryCta} onClick={() => onNavigate('/crear-cv')} size="lg" variant="primary" />
+          </div>
+          <div className="text-center text-[var(--ui-text-secondary)] text-sm font-medium pb-8">
+            ✓ 100% privado ✓ Sin marca de agua ✓ Exportación vectorial lista para imprenta
           </div>
 
           <div className="max-w-5xl mx-auto mt-12">
@@ -126,25 +129,29 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
                   id: 'cv',
                   label: t.landing.products.cv.title,
                   image: '/marketing/preview-cv.webp',
-                  route: '/crear-cv'
+                  route: '/crear-cv',
+                  features: ['Análisis ATS', 'Autoguardado', '1 Columna']
                 },
                 {
                   id: 'cartas',
                   label: ((t.landing.products as any).cartas?.title || 'Cartas de Presentación'),
                   image: '/marketing/preview-carta.webp',
-                  route: '/crear-carta'
+                  route: '/crear-carta',
+                  features: ['Redacción IA', 'Vinculado al CV', 'Formato Formal']
                 },
                 {
                   id: 'tarjetas',
                   label: t.landing.products.tarjetas.title,
                   image: '/marketing/preview-tarjeta.webp',
-                  route: '/crear-tarjeta'
+                  route: '/crear-tarjeta',
+                  features: ['85x55mm', 'Imposición A4', 'Código QR']
                 },
                 {
                   id: 'libros',
                   label: t.landing.products.libros.title,
                   image: '/marketing/preview-libro.webp',
-                  route: '/crear-libro'
+                  route: '/crear-libro',
+                  features: ['Múltiplos de 4', 'Doble Faz', 'Caballete']
                 }
               ]}
             />
@@ -152,12 +159,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
         </div>
       </section>
 
-      {/* 3. Franja de Prueba Social */}
-      <section className="border-y border-[var(--ui-border)] bg-[var(--ui-bg-card)] shrink-0">
-        <div className="max-w-7xl mx-auto px-4 py-8 text-center text-[var(--ui-text-secondary)] text-sm font-medium">
-          {t.landing.socialProof.line}
-        </div>
-      </section>
 
       {/* 4. Gobernanza (Features Grid) */}
       <MarketingSection>
@@ -275,24 +276,56 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
         </div>
       </MarketingSection>
 
-      {/* 8. Teaser Blog */}
-      <MarketingSection>
-        <div className={`bg-[var(--ui-bg-panel)] rounded-[24px] p-8 sm:p-12 border border-[var(--ui-border)] ${elevationSystem.floating} flex flex-col md:flex-row items-center justify-between gap-8`}>
-          <div className="space-y-3 text-left">
-            <div className="flex items-center gap-2 text-[var(--color-accent-text)] font-bold text-xs uppercase tracking-wider">
-              <Newspaper className="w-4 h-4" />
-              <span>{t.landing.blogTeaser.title}</span>
+      {/* 8. Guías Prácticas y Tutoriales de Uso */}
+      <MarketingSection className="bg-[var(--ui-bg-card)] border-t border-[var(--ui-border)]">
+        <div className="text-center mb-12">
+          <h2 className={`${displayScale.sectionHeading} text-[var(--ui-text-primary)] mb-4`}>
+            Guías Prácticas y Tutoriales de Uso
+          </h2>
+          <p className="text-[var(--ui-text-secondary)] max-w-2xl mx-auto">
+            Aprende a sacar el máximo provecho de nuestras herramientas con estas guías paso a paso.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+          {/* Card 1 */}
+          <div onClick={() => onNavigate('/blog/como-estructurar-cv-superar-filtros-ats')} className="group p-6 bg-[var(--ui-bg-panel)] rounded-[24px] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)]/50 cursor-pointer transition-all hover:-translate-y-1">
+            <div className="flex items-center gap-3 mb-4 text-[var(--color-accent-text)]">
+              <FileText className="w-5 h-5" />
+              <span className="text-xs font-bold uppercase tracking-wider">Curriculum Vitae</span>
             </div>
-            <h2 className={`${displayScale.sectionHeading} text-[var(--ui-text-primary)]`}>
-              {t.landing.blogTeaser.subtitle}
-            </h2>
+            <h3 className="text-lg font-bold text-[var(--ui-text-primary)] mb-2 group-hover:text-[var(--color-accent-text)] transition-colors">Cómo estructurar tu CV para superar los filtros ATS</h3>
+            <p className="text-sm text-[var(--ui-text-secondary)]">Aprende a maquetar tu currículum con una plantilla de 1 columna y ordenar las secciones correctamente.</p>
           </div>
-
-          <MarketingCTA
-            label={t.landing.blogTeaser.readMore}
-            onClick={() => onNavigate('/blog')}
-            variant="secondary"
-          />
+          {/* Card 2 */}
+          <div onClick={() => onNavigate('/blog/redactar-carta-de-presentacion-con-ia')} className="group p-6 bg-[var(--ui-bg-panel)] rounded-[24px] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)]/50 cursor-pointer transition-all hover:-translate-y-1">
+            <div className="flex items-center gap-3 mb-4 text-[var(--color-accent-text)]">
+              <Mail className="w-5 h-5" />
+              <span className="text-xs font-bold uppercase tracking-wider">Cartas de Presentación</span>
+            </div>
+            <h3 className="text-lg font-bold text-[var(--ui-text-primary)] mb-2 group-hover:text-[var(--color-accent-text)] transition-colors">Paso a paso: redactar una carta de presentación con IA</h3>
+            <p className="text-sm text-[var(--ui-text-secondary)]">Crea una carta de presentación perfectamente adaptada a los requerimientos del puesto en segundos.</p>
+          </div>
+          {/* Card 3 */}
+          <div onClick={() => onNavigate('/blog/manual-diseno-impresion-tarjetas-personales')} className="group p-6 bg-[var(--ui-bg-panel)] rounded-[24px] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)]/50 cursor-pointer transition-all hover:-translate-y-1">
+            <div className="flex items-center gap-3 mb-4 text-[var(--color-accent-text)]">
+              <CreditCard className="w-5 h-5" />
+              <span className="text-xs font-bold uppercase tracking-wider">Tarjetas Personales</span>
+            </div>
+            <h3 className="text-lg font-bold text-[var(--ui-text-primary)] mb-2 group-hover:text-[var(--color-accent-text)] transition-colors">Manual de diseño e impresión de tarjetas personales</h3>
+            <p className="text-sm text-[var(--ui-text-secondary)]">Todo lo que necesitas saber para imprimir tarjetas de 85x55mm con sangría correcta y códigos QR.</p>
+          </div>
+          {/* Card 4 */}
+          <div onClick={() => onNavigate('/blog/como-maquetar-doblar-libro-caballete')} className="group p-6 bg-[var(--ui-bg-panel)] rounded-[24px] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)]/50 cursor-pointer transition-all hover:-translate-y-1">
+            <div className="flex items-center gap-3 mb-4 text-[var(--color-accent-text)]">
+              <BookOpen className="w-5 h-5" />
+              <span className="text-xs font-bold uppercase tracking-wider">Imposición de Libros</span>
+            </div>
+            <h3 className="text-lg font-bold text-[var(--ui-text-primary)] mb-2 group-hover:text-[var(--color-accent-text)] transition-colors">Cómo maquetar y doblar tu primer libro en caballete</h3>
+            <p className="text-sm text-[var(--ui-text-secondary)]">Aprende la regla de los múltiplos de 4 y el orden correcto de los pliegos para un libro perfecto.</p>
+          </div>
+        </div>
+        <div className="mt-10 text-center">
+          <MarketingCTA label="Ver todos los artículos del Blog" onClick={() => onNavigate('/blog')} variant="secondary" />
         </div>
       </MarketingSection>
 

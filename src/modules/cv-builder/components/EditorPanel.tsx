@@ -34,6 +34,7 @@ import { PersonalizadaSection } from './editor/sections/PersonalizadaSection';
 import { DisenoSection } from './editor/sections/DisenoSection';
 import { PortadaSection } from './editor/sections/PortadaSection';
 import { CoverLetterEditorPanel } from '../../cover-letter/components/CoverLetterEditorPanel';
+import { CoverLetterCrossSellBanner } from './CoverLetterCrossSellBanner';
 import { applyPresetLevel } from '../../../shared/core/pdf-engine/layers/presets/presetHierarchyEngine';
 import { triggerPresetTransition } from '../../../shared/core/pdf-engine/layers/presets/presetTransitionEngine';
 import { getEffectiveCoverFeaturedItems } from '../../../shared/core/pdf-engine/layers/sectors/coverFeaturedEngine';
@@ -47,7 +48,8 @@ export default function EditorPanel({
   setActiveTab,
   docType = 'cv',
   onOpenPhotoCropper, 
-  onOpenSignature
+  onOpenSignature,
+  onGenerateCoverLetterFromCV
 }: any) {
   const { showSuccess, showError, showWarning } = useToast();
   const { confirm } = useConfirm();
@@ -263,6 +265,9 @@ export default function EditorPanel({
             handleOpenSavedFromPanel={handleOpenSavedFromPanel}
             handleDeleteSavedFromPanel={handleDeleteSavedFromPanel}
           />
+        )}
+        {docType === 'cv' && activeTab === 'diseno' && onGenerateCoverLetterFromCV && (
+          <CoverLetterCrossSellBanner onGenerateCoverLetter={onGenerateCoverLetterFromCV} />
         )}
         {activeTab === 'diseno' && <DisenoSection cvData={cvData} setCvData={setCvData} activeTab={activeTab} changeActiveTab={changeActiveTab} showSuccess={showSuccess} showWarning={showWarning} triggerPresetTransition={triggerPresetTransition} getEffectiveCoverFeaturedItems={getEffectiveCoverFeaturedItems} setPendingFormatId={setPendingFormatId} setIsFormatModalOpen={setIsFormatModalOpen} updateTheme={updateTheme} fontOptions={fontOptions} docType={docType} />}
         {docType === 'cv' && activeTab === 'portada' && <PortadaSection cvData={cvData} setCvData={setCvData} activeTab={activeTab} changeActiveTab={changeActiveTab} showSuccess={showSuccess} showWarning={showWarning} triggerPresetTransition={triggerPresetTransition} getEffectiveCoverFeaturedItems={getEffectiveCoverFeaturedItems} />}

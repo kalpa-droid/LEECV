@@ -7,7 +7,8 @@ import {
   Cloud,
   Sparkles,
   Download,
-  Copy
+  Copy,
+  Mail
 } from 'lucide-react';
 import { 
   getSavedCVsList, 
@@ -37,6 +38,7 @@ export interface SavedCVsModalProps {
   onImportJson?: (e: any) => Promise<void>;
   onOpenCloudStatus: () => void;
   onDocumentClosed?: (deletedId: string, remainingTabs?: OpenTab[]) => void;
+  onGenerateCoverLetterFromCV?: (cvData: any) => void;
 }
 
 export default function SavedCVsModal({ 
@@ -47,6 +49,7 @@ export default function SavedCVsModal({
   onImportJson,
   onOpenCloudStatus,
   onDocumentClosed,
+  onGenerateCoverLetterFromCV,
 }: SavedCVsModalProps) {
   const { confirm } = useConfirm();
   const { showSuccess, showError } = useToast();
@@ -279,6 +282,23 @@ export default function SavedCVsModal({
                       <FolderOpen className="w-3.5 h-3.5" />
                       <span>Abrir</span>
                     </button>
+
+                    {docType === 'cv' && onGenerateCoverLetterFromCV && (
+                      <button
+                        onClick={async () => {
+                          const loaded = await loadDocumentById(item.id, 'cv');
+                          if (loaded) {
+                            onGenerateCoverLetterFromCV(loaded);
+                            onClose();
+                          }
+                        }}
+                        className={`${button.secondary} px-3 py-2 font-bold text-xs flex items-center gap-1.5`}
+                        title="Generar Carta de Presentación desde este CV"
+                      >
+                        <Mail className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
+                        <span className="hidden sm:inline">Carta</span>
+                      </button>
+                    )}
 
                     <button
                       onClick={() => handleDuplicate(item.id, item.candidate_name || item.title)}

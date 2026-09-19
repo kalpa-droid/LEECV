@@ -4,12 +4,14 @@ import type { CoverLetterTab } from './CoverLetterDock';
 import type { CoverLetterData } from '../../../shared/core/pdf-engine/layers/records/coverLetterDataAdapter';
 import { generateAiCompletion } from '../../../shared/core/ai/aiClient';
 import { COVER_LETTER_PRESETS } from '../../../shared/core/presets/coverLetterPresetCatalog';
+import { PAGE_SIZES } from '../../../shared/core/pdf-engine/layers/page/pageSizes';
 import { importLinkedinArchive } from '../../../shared/core/importers/linkedinArchiveImporter';
 import { button } from '../../../shared/core/uiDesignSystem';
 import { exportCoverLetterToDocx } from '../../../shared/core/export/docxExporter';
 import { downloadBlob } from '../../../shared/core/utils/downloadUtils';
 import { getOpenTabs } from '../../../shared/core/documents/tabStore';
 import { loadCVById, getSavedCVsList } from '../../cv-builder/services/cvStorageService';
+import { CoverLetterOnboardingModal } from './CoverLetterOnboardingModal';
 
 interface CoverLetterEditorPanelProps {
   activeTab: CoverLetterTab;
@@ -34,6 +36,7 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isExportingDocx, setIsExportingDocx] = useState(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [savedCVs, setSavedCVs] = useState<any[]>([]);
 
@@ -375,11 +378,21 @@ TONO DESEADO: ${tone.toUpperCase()}
 
       {activeTab === 'vacancy' && (
         <div className="space-y-6 max-w-2xl">
-          <div>
-            <h3 className="text-sm font-semibold mb-1">Información de la Vacante</h3>
-            <p className="text-xs text-[var(--ui-text-secondary)]">
-              Pega la descripción del puesto y datos de la empresa para que la IA adapte los argumentos exactos.
-            </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold mb-1">Información de la Vacante</h3>
+              <p className="text-xs text-[var(--ui-text-secondary)]">
+                Pega la descripción del puesto y datos de la empresa para que la IA adapte los argumentos exactos.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsOnboardingOpen(true)}
+              className="px-3 py-1.5 bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/40 text-[var(--color-accent-text)] hover:bg-[var(--color-accent-base)] hover:text-[var(--color-accent-on-base)] text-xs font-bold rounded-[8px] flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Autocompletar con 1-Clic</span>
+            </button>
           </div>
 
           <div className="space-y-4">
@@ -595,6 +608,35 @@ TONO DESEADO: ${tone.toUpperCase()}
             </button>
           </div>
 
+          <div className="p-4 rounded-[12px] border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] space-y-2">
+            <label className="block text-xs font-semibold text-[var(--ui-text-primary)]">
+              Tamaño de Hoja / Formato de Papel
+            </label>
+            <select
+              value={(data as any)?.layout?.pageSizeId || (data as any)?.layout?.paperSize || 'a4'}
+              onChange={(e) => {
+                const val = e.target.value;
+                onChangeData({
+                  ...data,
+                  layout: {
+                    ...((data as any).layout || {}),
+                    pageSizeId: val,
+                    paperSize: val
+                  }
+                } as any);
+              }}
+              className="w-full text-xs p-2.5 rounded-[10px] border border-[var(--ui-border)] bg-[var(--ui-bg-app)] text-[var(--ui-text-primary)] font-medium outline-none cursor-pointer"
+            >
+              {Object.values(PAGE_SIZES)
+                .filter((s: any) => s.category === 'documento' && ['a4', 'carta', 'legal', 'oficio'].includes(s.id))
+                .map((size: any) => (
+                  <option key={size.id} value={size.id}>
+                    📄 {size.label}
+                  </option>
+                ))}
+            </select>
+          </div>
+
           <div className="grid grid-cols-3 gap-4">
             {Object.values(COVER_LETTER_PRESETS).map((p) => (
               <button
@@ -614,6 +656,13 @@ TONO DESEADO: ${tone.toUpperCase()}
           </div>
         </div>
       )}
+
+      <CoverLetterOnboardingModal
+        isOpen={isOnboardingOpen}
+        onClose={() => setIsOnboardingOpen(false)}
+        data={data}
+        onChangeData={onChangeData}
+      />
     </div>
   );
 };
