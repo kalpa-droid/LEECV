@@ -51,6 +51,7 @@ import { useConfirm, ConfirmProvider } from '../shared/core/ui/ConfirmDialog';
 import { syncPresetsFromStorage, getPreset, resolveActivePreset } from '../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { cvDataToContentSections } from '../shared/core/pdf-engine/layers/records/cvDataAdapter';
 import { runAtsPreflightCheck, AtsPreflightResult } from '../shared/core/pdf-engine/layers/ats/atsPreflightCheck';
+import { runAiAtsAnalysis, AtsAiFinding } from '../shared/core/pdf-engine/layers/ats/atsAiAnalysis';
 import { AtsCheckModal } from '../modules/cv-builder/components/AtsCheckModal';
 import { navigation } from '../shared/core/utils/navigation';
 
@@ -296,6 +297,10 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const [isCardExportOpen, setIsCardExportOpen] = useState(false);
   const [isAtsModalOpen, setIsAtsModalOpen] = useState(false);
   const [atsResult, setAtsResult] = useState<AtsPreflightResult | null>(null);
+  const [isAnalyzingAtsAi, setIsAnalyzingAtsAi] = useState(false);
+  const [atsAiSemanticScore, setAtsAiSemanticScore] = useState<number | null>(null);
+  const [atsAiFindings, setAtsAiFindings] = useState<AtsAiFinding[] | null>(null);
+  const [atsAiError, setAtsAiError] = useState<string | null>(null);
 
   // Gestión unificada y desacoplada de pestañas mediante el custom hook useDocumentTabs
   const { tabs, setTabs, activeCvId } = useDocumentTabs({
@@ -438,7 +443,26 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     const sections = cvDataToContentSections(cvData);
     const res = runAtsPreflightCheck(preset, sections, cvData?.personalInfo);
     setAtsResult(res);
+    setAtsAiSemanticScore(null);
+    setAtsAiFindings(null);
+    setAtsAiError(null);
     setIsAtsModalOpen(true);
+  };
+
+  const handleRunAtsAiAnalysis = async (jobDescription: string) => {
+    if (!atsResult) return;
+    setIsAnalyzingAtsAi(true);
+    setAtsAiError(null);
+    try {
+      const cvText = atsResult.linearReadingOrder.join('\n');
+      const res = await runAiAtsAnalysis(cvText, jobDescription.trim() || undefined);
+      setAtsAiSemanticScore(res.semanticScore);
+      setAtsAiFindings(res.findings);
+    } catch (err: any) {
+      setAtsAiError(err?.message || 'Error al analizar el contenido con IA.');
+    } finally {
+      setIsAnalyzingAtsAi(false);
+    }
   };
 
   const handleExportAtsPdf = async () => {
@@ -1076,6 +1100,11 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
               onClose={() => setIsAtsModalOpen(false)}
               result={atsResult}
               onExportAtsPdf={handleExportAtsPdf}
+              onRunAiAnalysis={handleRunAtsAiAnalysis}
+              isAnalyzingAi={isAnalyzingAtsAi}
+              aiSemanticScore={atsAiSemanticScore}
+              aiFindings={atsAiFindings}
+              aiError={atsAiError}
             />
           )}
 
