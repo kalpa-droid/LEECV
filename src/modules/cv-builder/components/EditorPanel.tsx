@@ -33,6 +33,7 @@ import { NuevaSeccionSection } from './editor/sections/NuevaSeccionSection';
 import { PersonalizadaSection } from './editor/sections/PersonalizadaSection';
 import { DisenoSection } from './editor/sections/DisenoSection';
 import { PortadaSection } from './editor/sections/PortadaSection';
+import { CoverLetterEditorPanel } from '../../cover-letter/components/CoverLetterEditorPanel';
 import { applyPresetLevel } from '../../../shared/core/pdf-engine/layers/presets/presetHierarchyEngine';
 import { triggerPresetTransition } from '../../../shared/core/pdf-engine/layers/presets/presetTransitionEngine';
 import { getEffectiveCoverFeaturedItems } from '../../../shared/core/pdf-engine/layers/sectors/coverFeaturedEngine';
@@ -277,6 +278,22 @@ export default function EditorPanel({
         {docType === 'business_card' && activeTab === 'card_back' && <CardBackSection cvData={cvData} setCvData={setCvData} />}
         {docType === 'business_card' && activeTab === 'card_qr' && <CardQrSection cvData={cvData} setCvData={setCvData} />}
         {docType === 'business_card' && activeTab === 'card_size' && <CardSizeSection cvData={cvData} setCvData={setCvData} />}
+
+        {/* ========================================================================= */}
+        {/* TABS DE CARTA DE PRESENTACIÓN */}
+        {/* ========================================================================= */}
+        {docType === 'cover_letter' && (
+          <CoverLetterEditorPanel
+            activeTab={activeTab}
+            data={cvData}
+            onChangeData={setCvData}
+            presetId={cvData?.activePresetId || 'carta-clasica'}
+            onSelectPreset={(presetId: string) => {
+              setCvData((prev: any) => ({ ...prev, activePresetId: presetId }));
+            }}
+            aiCredits={3}
+          />
+        )}
 
         {/* Format Confirmation Modal */}
         {isFormatModalOpen && pendingFormatId && (

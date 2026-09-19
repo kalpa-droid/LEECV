@@ -4,6 +4,7 @@ import { modernCorporatePreset } from './presets/modern-corporate';
 import { minimalEditorialPreset } from './presets/minimal-editorial';
 import { creativeSustentablePreset } from './presets/creative-sustentable';
 import { tarjetaPersonalPreset } from './presets/tarjeta-personal';
+import { cartaClasicaPreset, cartaModernaPreset, cartaMinimalistaPreset } from '../../../presets/coverLetterPresetCatalog';
 
 import { composePreset } from './presetCompositionEngine';
 import { PRESET_COLORS, PRESET_TYPOGRAPHY, PRESET_COLUMNS, getColumnLayoutPresetName } from './presetCompositionInstances';
@@ -102,7 +103,10 @@ const NATIVE_PRESETS: Preset[] = [
     basePreset: tarjetaPersonalPreset,
     id: tarjetaPersonalPreset.id,
     name: tarjetaPersonalPreset.name
-  })
+  }),
+  cartaClasicaPreset,
+  cartaModernaPreset,
+  cartaMinimalistaPreset
 ];
 
 // Mapa en memoria dinámico
@@ -174,7 +178,7 @@ export function getPreset(id: string): Preset {
  * Devuelve la lista completa de plantillas de CV activas registradas (excluye tarjetas).
  */
 export function getAllPresets(): Preset[] {
-  return Array.from(PRESET_MAP.values()).filter(p => p.pageCategory !== 'tarjeta');
+  return Array.from(PRESET_MAP.values()).filter(p => p.pageCategory === 'documento');
 }
 
 /**

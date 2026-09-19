@@ -83,7 +83,7 @@ export interface Preset {
   typographyPresetId?: string;
   columnLayoutPresetId?: string;
   /** A qué categoría de página aplica — un preset de tarjeta no debería poder elegir A4 */
-  pageCategory: 'documento' | 'tarjeta' | 'afiche';
+  pageCategory: 'documento' | 'tarjeta' | 'afiche' | 'carta';
   pageSizeId: string;
   marginPresetId: string;
   sectors: SectorDefinition[];
