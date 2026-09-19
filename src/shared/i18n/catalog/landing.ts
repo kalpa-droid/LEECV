@@ -14,6 +14,36 @@ export const landingCatalog = {
     lead: 'Armalos paso a paso, con ayuda de inteligencia artificial si querés. Después imprimilos en tu casa, en tu impresora, o llevalos a una imprenta.',
     primaryCta: 'Crear mi CV gratis',
     secondaryCta: 'Explorar productos',
+    beforeAfter: {
+      before: 'Texto suelto',
+      after: 'Listo para imprimir con máxima nitidez'
+    }
+  },
+  heroCarousel: {
+    cv: {
+      badge: 'Más Elegido',
+      title: 'Currículum listo para enviar e imprimir',
+      description: 'Elegí un diseño moderno, completá tus datos en vivo y descargá tu PDF en segundos sin marcas de agua.',
+      features: ['Lectura ATS garantizada', '100% Privado en tu navegador', 'Descarga instantánea'],
+    },
+    cartas: {
+      badge: 'Con Inteligencia Artificial',
+      title: 'Cartas de presentación personalizadas',
+      description: 'Redactá cartas formales adaptadas a cada puesto de trabajo con la ayuda de nuestra asistente de IA.',
+      features: ['Sincronizado con tu CV', 'IA de redacción profesional', 'Estilo unificado'],
+    },
+    tarjetas: {
+      badge: 'Frente + Dorso',
+      title: 'Tarjetas personales listas para imprimir',
+      description: 'Diseñá tu tarjeta con código QR y logo. El sistema acomoda automáticamente varias tarjetas por hoja.',
+      features: ['Varias tarjetas por hoja', 'Frente y dorso con QR', 'Listas para cortar'],
+    },
+    libros: {
+      badge: 'Organización Automática',
+      title: 'Libros y folletos fáciles de armar',
+      description: 'Convertí tus documentos en un librito o folleto. El sistema ordena las páginas para que al doblar queden perfectas.',
+      features: ['Páginas ordenadas solas', 'Márgenes de doblado seguros', 'Ideal para impresoras de casa'],
+    }
   },
   socialProof: {
     line: 'Más de 10.000 documentos creados y listos para imprimir',
@@ -21,7 +51,9 @@ export const landingCatalog = {
   products: {
     sectionTitle: 'Cuatro herramientas en un solo lugar',
     cv: {
+      badge: 'Lo Más Usado',
       title: 'Creador de Currículum',
+      tagline: 'Diseños que superan filtros ATS de selección',
       description: 'Elegí un diseño, completá tus datos y mirá cómo va quedando mientras escribís. Cambiá los colores a tu gusto y guardá tu trabajo en la nube.',
       bullets: [
         'Diseños pensados para que los sistemas de selección de personal lean bien tu currículum',
@@ -31,7 +63,9 @@ export const landingCatalog = {
       cta: 'Diseñar mi CV',
     },
     cartas: {
+      badge: 'IA Integrada',
       title: 'Cartas de Presentación & IA',
+      tagline: 'Redacción asistida adaptada al puesto',
       description: 'Cartas de presentación personalizadas por vacante, redactadas con asistencia de IA desde tu CV y la descripción del puesto.',
       bullets: [
         'Sincronización instantánea con los datos de tu CV activo o perfil de LinkedIn',
@@ -41,7 +75,9 @@ export const landingCatalog = {
       cta: 'Crear Carta con IA',
     },
     tarjetas: {
+      badge: 'Varias por Hoja',
       title: 'Tarjetas Personales',
+      tagline: 'Frente, dorso y acomodamiento automático',
       description: 'Diseñá el frente y el dorso de tu tarjeta y armá una hoja con varias tarjetas, lista para imprimir en tu casa y recortar.',
       bullets: [
         'Una hoja con varias tarjetas, lista para imprimir y recortar',
@@ -51,7 +87,9 @@ export const landingCatalog = {
       cta: 'Crear Tarjeta',
     },
     libros: {
+      badge: 'Auto-Doblado',
       title: 'Libros y Folletos',
+      tagline: 'Páginas ordenadas solas para doblar',
       description: 'Convertí tu archivo en un libro o folleto listo para imprimir, doblar y armar. Nosotros acomodamos las páginas por vos.',
       bullets: [
         'Las páginas se ordenan solas, para que al doblar las hojas el libro quede en orden',
@@ -60,6 +98,11 @@ export const landingCatalog = {
       ],
       cta: 'Armar mi libro',
     },
+  },
+  portalIntro: {
+    eyebrow: 'Cuatro herramientas independientes',
+    title: '¿Qué querés crear hoy?',
+    description: 'Seleccioná la herramienta que necesitas. Todas incluyen autoguardado, privacidad total y descarga directa.',
   },
   howItWorks: {
     sectionTitle: 'Cómo Funciona LEECV en 3 Pasos',

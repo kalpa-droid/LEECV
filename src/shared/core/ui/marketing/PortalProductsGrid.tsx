@@ -2,76 +2,64 @@ import React from 'react';
 import { FileText, Mail, CreditCard, BookOpen, ArrowRight, Check, Sparkles } from 'lucide-react';
 import { radius, elevationSystem } from '../../uiDesignSystem';
 
+import { useText } from '../../../i18n/useText';
+
 export interface PortalProductsGridProps {
   onNavigate: (route: string) => void;
 }
 
 export const PortalProductsGrid: React.FC<PortalProductsGridProps> = ({ onNavigate }) => {
+  const t = useText();
+
   const products = [
     {
       id: 'cv',
       icon: FileText,
-      badge: 'Lo Más Usado',
+      badge: t.landing.products.cv.badge,
       badgeColor: 'bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] border-[var(--color-accent-base)]/30',
-      title: 'Creador de Currículum',
-      tagline: 'Diseños que superan filtros ATS de selección',
-      description: 'Armá tu CV en minutos con vista previa en tiempo real. Modificá los colores y letras a tu gusto y descargá tu PDF.',
-      bullets: [
-        'Modelos estructurados de 1 columna para fácil lectura',
-        'Se genera en tu navegador: datos 100% privados',
-        'Sin marcas de agua y listo para enviar o imprimir',
-      ],
+      title: t.landing.products.cv.title,
+      tagline: t.landing.products.cv.tagline,
+      description: t.landing.products.cv.description,
+      bullets: [...t.landing.products.cv.bullets],
       route: '/crear-cv',
-      cta: 'Diseñar mi CV',
+      cta: t.landing.products.cv.cta,
     },
     {
       id: 'cartas',
       icon: Mail,
-      badge: 'IA Integrada',
+      badge: t.landing.products.cartas.badge,
       badgeColor: 'bg-[var(--color-accent-purple-muted)] text-[var(--color-accent-purple)] border-[var(--color-accent-purple)]/30',
-      title: 'Cartas de Presentación & IA',
+      title: t.landing.products.cartas.title,
       badgeIcon: Sparkles,
-      tagline: 'Redacción asistida adaptada al puesto',
-      description: 'Creá cartas de presentación profesionales ajustadas a la vacante. Nuestra IA toma tus datos y redacta los párrafos clave.',
-      bullets: [
-        'Conexión directa con tus datos de CV',
-        'Redacción automática ajustada a la oferta laboral',
-        'Estilo visual coordinado con tu currículum',
-      ],
+      tagline: t.landing.products.cartas.tagline,
+      description: t.landing.products.cartas.description,
+      bullets: [...t.landing.products.cartas.bullets],
       route: '/crear-carta',
-      cta: 'Crear Carta con IA',
+      cta: t.landing.products.cartas.cta,
     },
     {
       id: 'tarjetas',
       icon: CreditCard,
-      badge: 'Varias por Hoja',
+      badge: t.landing.products.tarjetas.badge,
       badgeColor: 'bg-[var(--color-accent-amber-muted)] text-[var(--color-neutral-text-primary)] border-[var(--color-accent-amber-bright)]/30',
-      title: 'Tarjetas Personales',
-      tagline: 'Frente, dorso y acomodamiento automático',
-      description: 'Diseñá tus tarjetas con código QR y logo. El sistema las ordena en una sola hoja para que las imprimas en tu casa y las cortes.',
-      bullets: [
-        'Acomodamiento automático en la hoja',
-        'Diseño de frente y dorso con QR personalizado',
-        'Líneas de corte claras para tijera o guillotina',
-      ],
+      title: t.landing.products.tarjetas.title,
+      tagline: t.landing.products.tarjetas.tagline,
+      description: t.landing.products.tarjetas.description,
+      bullets: [...t.landing.products.tarjetas.bullets],
       route: '/crear-tarjeta',
-      cta: 'Crear Tarjetas',
+      cta: t.landing.products.tarjetas.cta,
     },
     {
       id: 'libros',
       icon: BookOpen,
-      badge: 'Auto-Doblado',
+      badge: t.landing.products.libros.badge,
       badgeColor: 'bg-[var(--color-accent-emerald-muted)] text-[var(--color-neutral-text-primary)] border-[var(--color-accent-emerald-bright)]/30',
-      title: 'Libros y Folletos',
-      tagline: 'Páginas ordenadas solas para doblar',
-      description: 'Prepará tu escrito para armar un libro o folleto. Nosotros acomodamos el orden de las páginas para que al doblar las hojas quede perfecto.',
-      bullets: [
-        'Las páginas se ordenan solas al imprimir',
-        'Márgenes cuidados para que no se pise el texto',
-        'Listos para imprimir en tu casa o imprenta',
-      ],
+      title: t.landing.products.libros.title,
+      tagline: t.landing.products.libros.tagline,
+      description: t.landing.products.libros.description,
+      bullets: [...t.landing.products.libros.bullets],
       route: '/crear-libro',
-      cta: 'Armar mi Libro',
+      cta: t.landing.products.libros.cta,
     },
   ];
 
@@ -79,13 +67,13 @@ export const PortalProductsGrid: React.FC<PortalProductsGridProps> = ({ onNaviga
     <div className="w-full max-w-6xl mx-auto py-8">
       <div className="text-center mb-10 space-y-2">
         <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent-text)]">
-          Cuatro herramientas independientes
+          {t.landing.portalIntro.eyebrow}
         </span>
         <h2 className="text-2xl sm:text-4xl font-extrabold text-[var(--ui-text-primary)]">
-          ¿Qué querés crear hoy?
+          {t.landing.portalIntro.title}
         </h2>
         <p className="text-sm sm:text-base text-[var(--ui-text-secondary)] max-w-2xl mx-auto font-medium">
-          Seleccioná la herramienta que necesitas. Todas incluyen autoguardado, privacidad total y descarga directa.
+          {t.landing.portalIntro.description}
         </p>
       </div>
 

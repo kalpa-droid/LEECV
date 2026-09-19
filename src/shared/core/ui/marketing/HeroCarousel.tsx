@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FileText, Mail, CreditCard, BookOpen, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
 import { radius, elevationSystem } from '../../uiDesignSystem';
 
+import { useText } from '../../../i18n/useText';
+
 export interface HeroCarouselSlide {
   id: 'cv' | 'cartas' | 'tarjetas' | 'libros';
   label: string;
@@ -18,54 +20,56 @@ export interface HeroCarouselProps {
   onNavigate: (route: string) => void;
 }
 
-const SLIDES: HeroCarouselSlide[] = [
-  {
-    id: 'cv',
-    label: 'Currículum Vitae',
-    badge: 'Más Elegido',
-    title: 'Currículum listo para enviar e imprimir',
-    description: 'Elegí un diseño moderno, completá tus datos en vivo y descargá tu PDF en segundos sin marcas de agua.',
-    image: '/marketing/preview-cv.webp',
-    route: '/crear-cv',
-    ctaText: 'Diseñar mi CV gratis',
-    features: ['Lectura ATS garantizada', '100% Privado en tu navegador', 'Descarga instantánea'],
-  },
-  {
-    id: 'cartas',
-    label: 'Carta de Presentación',
-    badge: 'Con Inteligencia Artificial',
-    title: 'Cartas de presentación personalizadas',
-    description: 'Redactá cartas formales adaptadas a cada puesto de trabajo con la ayuda de nuestra asistente de IA.',
-    image: '/marketing/preview-cv.webp', // fallback seguro verified en public/marketing/
-    route: '/crear-carta',
-    ctaText: 'Redactar mi Carta con IA',
-    features: ['Sincronizado con tu CV', 'IA de redacción profesional', 'Estilo unificado'],
-  },
-  {
-    id: 'tarjetas',
-    label: 'Tarjetas Personales',
-    badge: 'Frente + Dorso',
-    title: 'Tarjetas personales listas para imprimir',
-    description: 'Diseñá tu tarjeta con código QR y logo. El sistema acomoda automáticamente varias tarjetas por hoja.',
-    image: '/marketing/preview-tarjeta.webp',
-    route: '/crear-tarjeta',
-    ctaText: 'Crear mis Tarjetas',
-    features: ['Varias tarjetas por hoja', 'Frente y dorso con QR', 'Listas para cortar'],
-  },
-  {
-    id: 'libros',
-    label: 'Libros y Folletos',
-    badge: 'Organización Automática',
-    title: 'Libros y folletos fáciles de armar',
-    description: 'Convertí tus documentos en un librito o folleto. El sistema ordena las páginas para que al doblar queden perfectas.',
-    image: '/marketing/preview-libro.webp',
-    route: '/crear-libro',
-    ctaText: 'Armar mi Libro',
-    features: ['Páginas ordenadas solas', 'Márgenes de doblado seguros', 'Ideal para impresoras de casa'],
-  },
-];
-
 export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onNavigate }) => {
+  const t = useText();
+
+  const SLIDES: HeroCarouselSlide[] = [
+    {
+      id: 'cv',
+      label: t.landing.nav.cv,
+      badge: t.landing.heroCarousel.cv.badge,
+      title: t.landing.heroCarousel.cv.title,
+      description: t.landing.heroCarousel.cv.description,
+      image: '/marketing/preview-cv.webp',
+      route: '/crear-cv',
+      ctaText: t.landing.products.cv.cta,
+      features: [...t.landing.heroCarousel.cv.features],
+    },
+    {
+      id: 'cartas',
+      label: (t.landing.nav as any).cartas || 'Cartas de Presentación',
+      badge: t.landing.heroCarousel.cartas.badge,
+      title: t.landing.heroCarousel.cartas.title,
+      description: t.landing.heroCarousel.cartas.description,
+      image: '/marketing/preview-cv.webp',
+      route: '/crear-carta',
+      ctaText: t.landing.products.cartas.cta,
+      features: [...t.landing.heroCarousel.cartas.features],
+    },
+    {
+      id: 'tarjetas',
+      label: t.landing.nav.tarjetas,
+      badge: t.landing.heroCarousel.tarjetas.badge,
+      title: t.landing.heroCarousel.tarjetas.title,
+      description: t.landing.heroCarousel.tarjetas.description,
+      image: '/marketing/preview-tarjeta.webp',
+      route: '/crear-tarjeta',
+      ctaText: t.landing.products.tarjetas.cta,
+      features: [...t.landing.heroCarousel.tarjetas.features],
+    },
+    {
+      id: 'libros',
+      label: t.landing.nav.libros,
+      badge: t.landing.heroCarousel.libros.badge,
+      title: t.landing.heroCarousel.libros.title,
+      description: t.landing.heroCarousel.libros.description,
+      image: '/marketing/preview-libro.webp',
+      route: '/crear-libro',
+      ctaText: t.landing.products.libros.cta,
+      features: [...t.landing.heroCarousel.libros.features],
+    },
+  ];
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
