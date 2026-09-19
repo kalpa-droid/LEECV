@@ -117,6 +117,12 @@ export default function CVPreview({
 
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
+        // Frenar acá mismo el paneo nativo del navegador (con passive:false abajo,
+        // preventDefault() sí surte efecto). Si esto no se hace en touchstart, con
+        // touchstart en modo passive:true el navegador ya arranca su propio gesto
+        // de paneo/scroll antes de que touchmove llegue a interceptarlo, y la hoja
+        // "se va al costado" en vez de hacer zoom.
+        e.preventDefault();
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
         initialPinchDistance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
@@ -147,7 +153,7 @@ export default function CVPreview({
     };
 
     container.addEventListener('wheel', handleWheel, { passive: false });
-    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    container.addEventListener('touchstart', handleTouchStart, { passive: false });
     container.addEventListener('touchmove', handleTouchMove, { passive: false });
     container.addEventListener('touchend', handleTouchEnd, { passive: true });
 
