@@ -22,7 +22,7 @@ export const CoverLetterPdfDocument: React.FC<CoverLetterPdfProps> = ({
   const renderData = prepareCoverLetterRenderData(data);
   const preset = getCoverLetterPreset(presetId);
 
-  const activePageSizeId = (data as any)?.layout?.pageSizeId || (data as any)?.layout?.paperSize || 'a4';
+  const activePageSizeId = data.layout?.pageSizeId || data.layout?.paperSize || 'a4';
   const pageDef = getPageSize(activePageSizeId);
   const pdfPageSize: 'A4' | 'LETTER' | 'LEGAL' | [number, number] =
     activePageSizeId === 'carta'

@@ -1,4 +1,8 @@
 export interface CoverLetterData {
+  layout?: {
+    paperSize?: string;
+    pageSizeId?: string;
+  };
   personalInfo?: {
     fullName?: string;
     givenNames?: string;

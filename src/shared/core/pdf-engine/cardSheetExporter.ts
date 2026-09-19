@@ -136,12 +136,13 @@ export async function exportBusinessCardSheetToPDF(
   };
   const addBleedToMargin = <T extends number | { percentOfHeight: number } | { percentOfWidth: number }>(v: T): T =>
     (typeof v === 'number' ? ((v + bleedSpec.bleedMm) as T) : v);
+  const safeCardMarginPreset = cardMarginPreset || MARGIN_PRESETS.tarjeta_ajustada;
   const marginWithBleed: MarginPreset = {
     id: 'auto-bleed', name: 'Auto (margen + sangrado)',
-    top: addBleedToMargin(cardMarginPreset.top),
-    bottom: addBleedToMargin(cardMarginPreset.bottom),
-    left: addBleedToMargin(cardMarginPreset.left),
-    right: addBleedToMargin(cardMarginPreset.right)
+    top: addBleedToMargin(safeCardMarginPreset.top),
+    bottom: addBleedToMargin(safeCardMarginPreset.bottom),
+    left: addBleedToMargin(safeCardMarginPreset.left),
+    right: addBleedToMargin(safeCardMarginPreset.right)
   };
   const usableArea = resolveMargins(syntheticBleedPage, marginWithBleed);
 
