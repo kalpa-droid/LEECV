@@ -440,4 +440,15 @@ export function applyUiTheme(themeId?: string): void {
   root.style.setProperty('--ui-page-border', theme.pageBorder);
   root.style.setProperty('--ui-accent', theme.accent);
   root.style.setProperty('--ui-secondary', theme.secondary);
+
+  // Sincroniza la barra de estado del celular (hora/batería/wifi) con el
+  // color real de la barra superior del tema activo, en vez de dejar el
+  // valor lila fijo del <meta name="theme-color"> original de index.html.
+  let themeColorMeta = document.querySelector('meta[name="theme-color"]');
+  if (!themeColorMeta) {
+    themeColorMeta = document.createElement('meta');
+    themeColorMeta.setAttribute('name', 'theme-color');
+    document.head.appendChild(themeColorMeta);
+  }
+  themeColorMeta.setAttribute('content', theme.bgHeader);
 }

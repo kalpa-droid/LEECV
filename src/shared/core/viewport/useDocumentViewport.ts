@@ -13,7 +13,7 @@ export interface UseDocumentViewportOptions extends FitScaleOptions {
  * la medición da null y consolida la gestión de gestos (rueda, pellizco, pan).
  */
 export function useDocumentViewport(options: UseDocumentViewportOptions = {}) {
-  const { pageSizeId = 'a4', onZoomChange } = options;
+  const { pageSizeId = 'a4', onZoomChange, safetyPaddingPx, minScale, maxScale } = options;
   const containerRef = useRef<HTMLDivElement | null>(null);
   const paperSheetRef = useRef<HTMLDivElement | null>(null);
   const rafIdRef = useRef<number | null>(null);
@@ -37,7 +37,7 @@ export function useDocumentViewport(options: UseDocumentViewportOptions = {}) {
     if (!container) return;
 
     const { width, height } = container.getBoundingClientRect();
-    const scale = calculateFitScale(width, height, docWidth, docHeight, options);
+    const scale = calculateFitScale(width, height, docWidth, docHeight, { safetyPaddingPx, minScale, maxScale });
 
     if (scale === null) {
       // Reintentar en cascada mediante rAF si la medición aún no es válida (width 0)
@@ -49,7 +49,13 @@ export function useDocumentViewport(options: UseDocumentViewportOptions = {}) {
 
     setZoomLevelState(scale);
     if (onZoomChange) onZoomChange(scale);
-  }, [docWidth, docHeight, options, onZoomChange, cancelPendingRaf]);
+    // Deps con primitivos, no el objeto `options` completo: un objeto literal
+    // nuevo en cada render del componente que llama al hook (ej. App.tsx en
+    // cada tecla tipeada) recreaba esta función constantemente, disparando de
+    // nuevo el ResizeObserver de abajo en cada render y re-midiendo en
+    // cualquier instante -- incluso con el visor recién oculto/a mitad de
+    // transición -- lo que hacía que el resultado de "Ver" fuera intermitente.
+  }, [docWidth, docHeight, safetyPaddingPx, minScale, maxScale, onZoomChange, cancelPendingRaf]);
 
   const fitAndCenter = useCallback(() => {
     setIsAutoFitMode(true);
