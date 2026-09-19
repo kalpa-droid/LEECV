@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { resolveDocumentCanvasPx } from '../src/shared/core/pdf-engine/layers/page/pageSizes';
+import { createObservableRef } from '../src/shared/core/viewport/observableRef';
 import { calculateFitScale, calculateCenteredScroll, clampZoom, contentBoxWidth, quantizeRasterZoom } from '../src/shared/core/viewport/viewportCalculations';
 
 describe('viewportEngine — Nucleo de Calculos Fisicos y Viewport', () => {
@@ -133,6 +134,36 @@ describe('viewportEngine — Nucleo de Calculos Fisicos y Viewport', () => {
     it('App y Book Studio ya no pisan el padding adaptativo con safetyPaddingPx: 48', () => {
       expect(read('src/app/App.tsx')).not.toMatch(/safetyPaddingPx:\s*48/);
       expect(read('src/modules/book-studio/BookStudioContent.tsx')).not.toMatch(/safetyPaddingPx:\s*48/);
+    });
+  });
+
+  describe('contenedor del visor realmente enlazado (regresión: "el botón Ver no ajusta")', () => {
+    it('createObservableRef: se comporta como RefObject y avisa solo cuando el elemento cambia', () => {
+      const calls: Array<string | null> = [];
+      const ref = createObservableRef<string>(v => calls.push(v));
+      expect(ref.current).toBeNull();
+      ref.current = 'div-1';
+      ref.current = 'div-1'; // mismo elemento: no avisa de nuevo
+      expect(ref.current).toBe('div-1');
+      ref.current = null; // React limpia el ref al desmontar
+      expect(calls).toEqual(['div-1', null]);
+    });
+
+    it('App.tsx le pasa viewport.containerRef al AppShell (sin esto el auto-fit nunca corre y el zoom queda en 85%)', () => {
+      const app = require('fs').readFileSync(require('path').join(__dirname, '../src/app/App.tsx'), 'utf-8') as string;
+      expect(app).toMatch(/<AppShell[\s\S]{0,400}containerRef=\{viewport\.containerRef\}/);
+    });
+
+    it('Book Studio también enlaza el contenedor al AppShell', () => {
+      const book = require('fs').readFileSync(require('path').join(__dirname, '../src/modules/book-studio/BookStudioContent.tsx'), 'utf-8') as string;
+      expect(book).toMatch(/<AppShell[\s\S]{0,600}containerRef=\{viewport\.containerRef\}/);
+    });
+
+    it('el hook re-engancha el observador cuando el contenedor aparece o cambia (depende del elemento)', () => {
+      const hook = require('fs').readFileSync(require('path').join(__dirname, '../src/shared/core/viewport/useDocumentViewport.ts'), 'utf-8') as string;
+      expect(hook).toContain('createObservableRef');
+      expect(hook).toMatch(/\[containerEl, docWidth, docHeight/);
+      expect(hook).toContain('userZoomRef.current = 1;');
     });
   });
 });

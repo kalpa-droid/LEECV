@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
 import { resolveDocumentCanvasPx } from '../pdf-engine/layers/page/pageSizes';
 import {
   calculateFitScale,
@@ -7,6 +7,7 @@ import {
   contentBoxWidth,
   FitScaleOptions,
 } from './viewportCalculations';
+import { createObservableRef } from './observableRef';
 
 /** Variable CSS (definida sobre el contenedor) con el zoom total vigente. La hoja la lee por CSS. */
 export const DOC_SCALE_VAR = '--doc-scale';
@@ -35,7 +36,10 @@ const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffec
  */
 export function useDocumentViewport(options: UseDocumentViewportOptions = {}) {
   const { pageSizeId = 'a4', onZoomChange, safetyPaddingPx, minScale, maxScale } = options;
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  // Ref observable: el contenedor puede montarse DESPUÉS de este hook (retornos tempranos en
+  // App). Al asignarse/limpiarse dispara un estado que re-engancha el observador de abajo.
+  const [containerEl, setContainerEl] = useState<HTMLDivElement | null>(null);
+  const containerRef = useMemo(() => createObservableRef<HTMLDivElement>(setContainerEl), []);
   const paperSheetRef = useRef<HTMLDivElement | null>(null);
 
   // Fuente de verdad del zoom: refs (síncronas). El estado de abajo es solo espejo para la UI.
@@ -134,14 +138,20 @@ export function useDocumentViewport(options: UseDocumentViewportOptions = {}) {
   }, [applyFit, cancelPending]);
 
   /** Vuelve al ajuste automático limpio (descarta el zoom manual) y centra. */
-  const fitAndCenter = useCallback(() => fitWithRetry(true, true), [fitWithRetry]);
+  const fitAndCenter = useCallback(() => {
+    // Se descarta el zoom manual YA, antes de medir: si el contenedor está oculto (ej. al
+    // tocar "Ver" en el celular) el ajuste se completa un frame después, y un resize
+    // intermedio no debe "revivir" el zoom anterior.
+    userZoomRef.current = 1;
+    fitWithRetry(true, true);
+  }, [fitWithRetry]);
 
   // Medición real sobre el contenedor. useLayoutEffect: el primer ajuste ocurre ANTES del
   // primer pintado, así no hay un frame con el zoom por defecto. El ResizeObserver corre
   // siempre (también con zoom manual): al rotar el teléfono se conserva el zoom relativo.
   const lastDocKeyRef = useRef(`${docWidth}x${docHeight}`);
   useIsomorphicLayoutEffect(() => {
-    const container = containerRef.current;
+    const container = containerEl;
     if (!container) return;
 
     const docKey = `${docWidth}x${docHeight}`;
@@ -161,7 +171,7 @@ export function useDocumentViewport(options: UseDocumentViewportOptions = {}) {
       cancelPending();
       observer.disconnect();
     };
-  }, [docWidth, docHeight, fitWithRetry, cancelPending]);
+  }, [containerEl, docWidth, docHeight, fitWithRetry, cancelPending]);
 
   useEffect(() => () => {
     if (pendingStateRafRef.current !== null && typeof cancelAnimationFrame === 'function') {

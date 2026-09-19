@@ -715,6 +715,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       docType={activeDocType}
       isPanelOpen={isPanelOpen}
       mobileTabState={mobileTabState}
+      containerRef={viewport.containerRef}
       bannerSlot={
         <>
           {inGracePeriod && currentProfile?.id && (
