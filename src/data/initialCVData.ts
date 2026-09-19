@@ -96,6 +96,13 @@ export const blankCVBase = {
 export function createBlankCVTemplate(overrides?: Record<string, any>) {
   const merged = { ...blankCVBase, ...overrides };
   const docType = inferDocumentTypeId(merged);
+
+  let defaultPresetId = 'cv-clasico';
+  if (docType === 'business_card') defaultPresetId = 'tarjeta-personal';
+  else if (docType === 'cover_letter') defaultPresetId = 'carta-clasica';
+  else if (docType === 'book') defaultPresetId = 'libro-standard';
+
+  const activePresetId = overrides?.activePresetId || defaultPresetId;
   const prefix = docType === 'business_card' ? 'card' : docType === 'book' ? 'book' : docType === 'cover_letter' ? 'cover_letter' : 'cv';
   const id = overrides?.id || generateDocumentId(prefix as any);
 
@@ -105,6 +112,7 @@ export function createBlankCVTemplate(overrides?: Record<string, any>) {
     title: overrides?.title || deriveDocumentTitle(docType, { id }),
     doc_type_id: docType,
     docType: docType,
+    activePresetId,
     ...overrides,
   };
 }

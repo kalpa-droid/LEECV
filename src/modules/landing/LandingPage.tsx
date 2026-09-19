@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, CreditCard, BookOpen, Newspaper, Sparkles, ShieldCheck, Award, Zap } from 'lucide-react';
+import { FileText, Mail, CreditCard, BookOpen, Newspaper, Sparkles, ShieldCheck, Award, Zap } from 'lucide-react';
 import { displayScale, elevationSystem, radius } from '../../shared/core/uiDesignSystem';
 import { ThemeToggleButton } from '../../shared/core/ui/ThemeToggleButton';
 import { getGlobalUiTheme, cycleGlobalUiTheme } from '../../shared/core/utils/globalThemePreference';
@@ -66,6 +66,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
               <FileText className="w-4 h-4" />
               {!isMobile && <span>{t.landing.nav.cv}</span>}
             </button>
+            <button onClick={() => onNavigate('/crear-carta')} className="flex items-center gap-1 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer" title={(t.landing.nav as any).cartas || 'Cartas de Presentación'}>
+              <Mail className="w-4 h-4" />
+              {!isMobile && <span>{(t.landing.nav as any).cartas || 'Cartas'}</span>}
+            </button>
             <button onClick={() => onNavigate('/crear-tarjeta')} className="flex items-center gap-1 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer" title={t.landing.nav.tarjetas}>
               <CreditCard className="w-4 h-4" />
               {!isMobile && <span>{t.landing.nav.tarjetas}</span>}
@@ -123,6 +127,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
                   label: t.landing.products.cv.title,
                   image: '/marketing/preview-cv.webp',
                   route: '/crear-cv'
+                },
+                {
+                  id: 'cartas',
+                  label: ((t.landing.products as any).cartas?.title || 'Cartas de Presentación'),
+                  image: '/marketing/preview-carta.webp',
+                  route: '/crear-carta'
                 },
                 {
                   id: 'tarjetas',
@@ -195,13 +205,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
           />
 
           <ProductDetailBlock
+            title={((t.landing.products as any).cartas?.title || 'Cartas de Presentación & IA')}
+            description={((t.landing.products as any).cartas?.description || 'Cartas de presentación personalizadas por vacante, redactadas con asistencia de IA.')}
+            bullets={((t.landing.products as any).cartas?.bullets || []) as any as string[]}
+            image="/marketing/preview-carta-detail.webp"
+            ctaLabel={((t.landing.products as any).cartas?.cta || 'Crear Carta con IA')}
+            onClick={() => onNavigate('/crear-carta')}
+            reverse={true}
+          />
+
+          <ProductDetailBlock
             title={t.landing.products.tarjetas.title}
             description={t.landing.products.tarjetas.description}
             bullets={t.landing.products.tarjetas.bullets as any as string[]}
             image="/marketing/preview-tarjeta-detail.webp"
             ctaLabel={t.landing.products.tarjetas.cta}
             onClick={() => onNavigate('/crear-tarjeta')}
-            reverse={true}
+            reverse={false}
           />
 
           <ProductDetailBlock
@@ -211,7 +231,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             image="/marketing/preview-libro-detail.webp"
             ctaLabel={t.landing.products.libros.cta}
             onClick={() => onNavigate('/crear-libro')}
-            reverse={false}
+            reverse={true}
           />
         </div>
       </MarketingSection>

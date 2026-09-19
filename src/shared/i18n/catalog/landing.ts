@@ -1,6 +1,7 @@
 export const landingCatalog = {
   nav: {
     cv: 'Creador de CV',
+    cartas: 'Cartas de Presentación',
     tarjetas: 'Tarjetas Personales',
     libros: 'Libros & Folletos',
     blog: 'Blog & Recursos',
@@ -9,8 +10,8 @@ export const landingCatalog = {
   },
   hero: {
     eyebrow: 'Suite Completa de Diseño y Publicación',
-    title: 'Crea Currículums, Tarjetas y Libros en Calidad Imprenta Pro',
-    lead: 'Plataforma integral para crear documentos profesionales con precisión vectorial A4, imposición de pliegos y exportación PDF lista para imprenta.',
+    title: 'Crea Currículums, Cartas, Tarjetas y Libros en Calidad Imprenta Pro',
+    lead: 'Plataforma integral para crear documentos profesionales con precisión vectorial A4, redacción asistida por IA y exportación PDF lista para imprenta.',
     primaryCta: 'Crear mi CV gratis',
     secondaryCta: 'Explorar productos',
   },
@@ -18,7 +19,7 @@ export const landingCatalog = {
     line: 'Más de 10.000 documentos profesionales creados con calidad de imprenta',
   },
   products: {
-    sectionTitle: 'Tres Motores Especializados en una Sola Suite',
+    sectionTitle: 'Cuatro Motores Especializados en una Sola Suite',
     cv: {
       title: 'Creador de CV Vectorial A4',
       description: 'Diseño en tiempo real con plantillas ATS-friendly, personalización cromática, exportación en PDF de alta fidelidad e integración en la nube.',
@@ -28,6 +29,16 @@ export const landingCatalog = {
         'Sin marcas de agua y listo para envío inmediato a reclutadores',
       ],
       cta: 'Diseñar mi CV',
+    },
+    cartas: {
+      title: 'Cartas de Presentación & IA',
+      description: 'Cartas de presentación personalizadas por vacante, redactadas con asistencia de IA desde tu CV y la descripción del puesto.',
+      bullets: [
+        'Sincronización instantánea con los datos de tu CV activo o perfil de LinkedIn',
+        'Generación de párrafos a medida con IA según el puesto y la empresa objetiva',
+        'Mismo diseño cromático y tipográfico que tu CV para una postulación impecable',
+      ],
+      cta: 'Crear Carta con IA',
     },
     tarjetas: {
       title: 'Tarjetas Personales & Isotipos',

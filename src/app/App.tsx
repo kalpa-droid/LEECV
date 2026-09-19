@@ -17,8 +17,8 @@ const BlogModule = lazy(() => import('../modules/blog/BlogModule').then(m => ({ 
 import { getCurrentProfile, capturarConexionDriveSiCorresponde } from '../modules/auth/authService';
 import { supabase } from '../shared/core/lib/supabaseClient';
 import { exportCVToJson, importCVFromJsonFile } from '../shared/core/utils/jsonImporterExporter';
-import { withErrorHandling } from '../shared/core/utils/errorHandler';
 import { applyUiTheme, getNextUiTheme, elevationSystem, radius } from '../shared/core/uiDesignSystem';
+import { getGlobalUiTheme, setGlobalUiTheme as setGlobalUiThemeInStorage, cycleGlobalUiTheme, subscribeToGlobalUiTheme } from '../shared/core/utils/globalThemePreference';
 
 const PublicCVView = lazy(() => import('../modules/cv-builder/components/PublicCVView').then(m => ({ default: m.PublicCVView })));
 const CardExportModal = lazy(() => import('../modules/cv-builder/components/modals/CardExportModal').then(m => ({ default: m.CardExportModal })));
@@ -114,21 +114,15 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const [publicSlug, setPublicSlug] = useState<string | undefined>(undefined);
 
   const [globalUiTheme, setGlobalUiTheme] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('cv_ui_theme_preference') || 'day';
-    }
-    return 'day';
+    return getGlobalUiTheme();
   });
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && globalUiTheme) {
-      applyUiTheme(globalUiTheme);
-      localStorage.setItem('cv_ui_theme_preference', globalUiTheme);
-    }
-  }, [globalUiTheme]);
+    return subscribeToGlobalUiTheme(setGlobalUiTheme);
+  }, []);
 
   const cycleUITheme = () => {
-    const nextTheme = getNextUiTheme(globalUiTheme);
+    const nextTheme = cycleGlobalUiTheme();
     setGlobalUiTheme(nextTheme);
   };
 
@@ -563,13 +557,15 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         await runWithSafeSave(
           saveCV,
           () => {
-            const newBookId = generateDocumentId('book');
-            setPendingDocumentToOpen(newBookId, 'book');
-            if (onNavigate) {
-              onNavigate('/crear-libro');
-            } else if (typeof window !== 'undefined') {
-              window.history.pushState({}, '', '/crear-libro');
-              window.dispatchEvent(new PopStateEvent('popstate'));
+            createBlankDocumentWithTab('libro-standard');
+            setActiveTab('grid_viewer');
+            if (currentRoute !== '/crear-libro') {
+              if (onNavigate) {
+                onNavigate('/crear-libro');
+              } else if (typeof window !== 'undefined') {
+                window.history.pushState({}, '', '/crear-libro');
+                window.dispatchEvent(new PopStateEvent('popstate'));
+              }
             }
             showSuccess('Nuevo libro / folleto listo para procesar.');
           }
@@ -588,8 +584,8 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         await runWithSafeSave(
           saveCV,
           () => {
-            const newDocId = generateDocumentId('cover_letter');
-            setPendingDocumentToOpen(newDocId, 'cover_letter');
+            createBlankDocumentWithTab('carta-clasica');
+            setActiveTab('source_data');
             if (currentRoute !== '/crear-carta') {
               if (onNavigate) {
                 onNavigate('/crear-carta');
@@ -658,12 +654,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           onNewCV={handleNewCV}
           onNewCard={handleNewCard}
           onNewBook={handleNewBook}
-          cycleUITheme={() => {
-            const next = getNextUiTheme(globalUiTheme);
-            setGlobalUiTheme(next);
-            applyUiTheme(next);
-            if (typeof window !== 'undefined') localStorage.setItem('cv_ui_theme_preference', next);
-          }}
+          cycleUITheme={cycleUITheme}
           isLoggedIn={!!currentProfile}
           onAuthToggle={handleAuthToggle}
         />
