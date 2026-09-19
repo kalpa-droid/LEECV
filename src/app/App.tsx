@@ -247,13 +247,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     );
   };
 
-  useEffect(() => {
-    const pending = getPendingDocumentToOpen();
-    if (pending && (pending.docType === 'cv' || pending.docType === 'business_card' || pending.docType === 'cover_letter')) {
-      clearPendingDocumentToOpen();
-      handleSwitchDocumentTab(pending.id, pending.docType);
-    }
-  }, []);
+
 
 
   const [isPanelOpen, setIsPanelOpen] = useState(true);
@@ -324,12 +318,33 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     }
   }, [resetToBlankCV]);
 
-  // Paso 0: Resincronizar cvData con currentRoute cuando la ruta y el docType activo divergen
+  const prevRouteRef = useRef<string | undefined>(currentRoute);
+
+  // Paso 0: Resincronizar cvData con currentRoute cuando la ruta y el docType activo divergen,
+  // y procesar intenciones explícitas de navegación (pendingDocumentToOpen)
   useEffect(() => {
-    if (!currentRoute || currentRoute === '/' || currentRoute === '/blog' || currentRoute === '/dashboard') return;
+    if (!currentRoute || currentRoute === '/' || currentRoute === '/blog' || currentRoute === '/dashboard') {
+      prevRouteRef.current = currentRoute;
+      return;
+    }
+
+    const routeChanged = prevRouteRef.current !== currentRoute;
+    prevRouteRef.current = currentRoute;
+
+    if (!routeChanged) return;
+
     const targetDocType = getDocTypeForRoute(currentRoute);
     const currentDocType = cvData ? inferDocumentTypeId(cvData) : null;
 
+    // Primero, si hay una intención explícita de navegación hacia un documento específico
+    const pending = getPendingDocumentToOpen();
+    if (pending && pending.docType === targetDocType) {
+      clearPendingDocumentToOpen();
+      handleSwitchDocumentTab(pending.id, pending.docType);
+      return;
+    }
+
+    // Si no hay intención explícita, pero la ruta y el documento divergen (ej: por botones Back/Forward del navegador)
     if (currentDocType && currentDocType !== targetDocType) {
       const existingTab = tabs.find(t => t.docType === targetDocType);
       if (existingTab) {

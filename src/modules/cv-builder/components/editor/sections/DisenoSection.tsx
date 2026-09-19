@@ -108,11 +108,20 @@ export const DisenoSection = ({
                         return size.category === 'tarjeta' && ['tarjeta_estandar', 'tarjeta_europea', 'tarjeta_cuadrada', 'tarjeta_mini'].includes(size.id);
                       }
                       return size.category === 'documento' && ['a4', 'carta', 'legal', 'oficio'].includes(size.id);
-                    }).map((size) => (
+                    }).map((size) => {
+                      let uiLabel = size.label;
+                      if (size.id === 'a4') uiLabel = 'Para imprimir en tu casa';
+                      else if (size.id === 'carta') uiLabel = 'Para imprimir en tu casa (Carta)';
+                      else if (size.id === 'tarjeta_estandar') uiLabel = 'Tarjeta Estándar';
+                      else if (size.id === 'tarjeta_europea') uiLabel = 'Tarjeta Europea';
+                      else if (size.id === 'tarjeta_cuadrada') uiLabel = 'Tarjeta Cuadrada';
+                      else if (size.id === 'tarjeta_mini') uiLabel = 'Tarjeta Mini';
+                      return (
                       <option key={size.id} value={size.id}>
-                        📄 {size.label}
+                        📄 {uiLabel}
                       </option>
-                    ))}
+                      );
+                    })}
                   </select>
                 </div>
               </PanelSection>

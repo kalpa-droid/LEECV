@@ -37,18 +37,25 @@ export function CardSizeSection({ cvData, setCvData }: Props) {
                 onChange={(e) => handlePaperSizeChange(e.target.value)}
                 className="w-full text-xs p-2.5 rounded-[var(--radius-card)] border border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer"
               >
-                {Object.values(PAGE_SIZES).filter(s => s.category === 'tarjeta').map((s) => (
+                {Object.values(PAGE_SIZES).filter(s => s.category === 'tarjeta').map((s) => {
+                  let uiLabel = s.label;
+                  if (s.id === 'tarjeta_estandar') uiLabel = 'Tarjeta Estándar';
+                  else if (s.id === 'tarjeta_europea') uiLabel = 'Tarjeta Europea';
+                  else if (s.id === 'tarjeta_cuadrada') uiLabel = 'Tarjeta Cuadrada';
+                  else if (s.id === 'tarjeta_mini') uiLabel = 'Tarjeta Mini';
+                  return (
                   <option key={s.id} value={s.id}>
-                    📇 {s.label}
+                    📇 {uiLabel}
                   </option>
-                ))}
+                  );
+                })}
               </select>
             </div>
 
             {/* Slider de Sangrado para Imprenta Profesional (3-5mm) */}
             <div className="space-y-2 pt-3 border-t border-[var(--color-neutral-border)]">
               <div className="flex items-center justify-between text-xs font-bold text-[var(--color-neutral-text-primary)]">
-                <span>Margen extra para el corte</span>
+                <span>Margen de seguridad para el corte</span>
                 <span className="text-[var(--color-secondary-bright)] font-black">{cvData?.cardBleedMm ?? 3} mm</span>
               </div>
               <input
@@ -67,7 +74,7 @@ export function CardSizeSection({ cvData, setCvData }: Props) {
                 className="w-full h-1.5 bg-[var(--ui-bg-panel)] rounded-[var(--radius-control)] appearance-none cursor-pointer accent-[var(--color-secondary-base)]"
               />
               <span className="text-[10px] text-[var(--color-neutral-text-secondary)] leading-tight block">
-                Estándar profesional: 3 mm habitual / 5 mm para guillotina con margen extendido.
+                Un pequeño margen extra (3-5 mm) para asegurar que al recortar la tarjeta en la imprenta no queden bordes blancos.
               </span>
             </div>
           </div>
