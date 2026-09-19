@@ -207,7 +207,7 @@ export default function CVPreview({
 
   return (
     <div 
-      className="w-full flex flex-col items-center justify-start print-wrapper relative touch-pan-x touch-pan-y"
+      className="w-full flex flex-col items-start justify-start print-wrapper relative touch-pan-x touch-pan-y"
       style={dynamicThemeStyle}
     >
       {/* Capa de Transición de Preset con Pluma Antigua / Lápiz Rotatorio */}

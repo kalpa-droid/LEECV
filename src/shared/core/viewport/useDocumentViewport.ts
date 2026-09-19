@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { resolveDocumentCanvasPx } from '../pdf-engine/layers/page/pageSizes';
-import { calculateFitScale, FitScaleOptions } from './viewportCalculations';
+import { calculateFitScale, calculateCenteredScroll, FitScaleOptions } from './viewportCalculations';
 
 export interface UseDocumentViewportOptions extends FitScaleOptions {
   pageSizeId?: string;
@@ -49,6 +49,16 @@ export function useDocumentViewport(options: UseDocumentViewportOptions = {}) {
 
     setZoomLevelState(scale);
     if (onZoomChange) onZoomChange(scale);
+
+    // Centrado geométrico: se calcula con la MISMA medición de `width`/`height`
+    // que ya usamos para la escala, en el mismo tick -- nunca depende de que
+    // el DOM ya haya vuelto a pintar con el nuevo ancho de la hoja (por eso
+    // antes "a veces" quedaba corrido: el reset de scroll no tenía forma de
+    // saber si la hoja entraba o no en ese instante). Ancho de pantalla,
+    // ancho del visor y ancho de la hoja quedan resueltos en un solo lugar.
+    const { scrollLeft, scrollTop } = calculateCenteredScroll(width, height, docWidth * scale, docHeight * scale);
+    container.scrollLeft = scrollLeft;
+    container.scrollTop = scrollTop;
     // Deps con primitivos, no el objeto `options` completo: un objeto literal
     // nuevo en cada render del componente que llama al hook (ej. App.tsx en
     // cada tecla tipeada) recreaba esta función constantemente, disparando de
@@ -60,10 +70,6 @@ export function useDocumentViewport(options: UseDocumentViewportOptions = {}) {
   const fitAndCenter = useCallback(() => {
     setIsAutoFitMode(true);
     triggerAutoFit();
-    if (containerRef.current) {
-      containerRef.current.scrollLeft = 0;
-      containerRef.current.scrollTop = 0;
-    }
   }, [triggerAutoFit]);
 
   // Medición real mediante ResizeObserver sobre el contenedor del DOM
