@@ -12,10 +12,14 @@ import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { usePageAwareCreditGate } from '../../../shared/core/hooks/usePageAwareCreditGate';
 
 const CARD_SIZE_OPTIONS = [
-  { id: 'tarjeta_estandar', label: 'Clásica (Argentina / EE. UU.)' },
-  { id: 'tarjeta_europea', label: 'Europea' },
-  { id: 'tarjeta_cuadrada', label: 'Cuadrada' },
-  { id: 'tarjeta_mini', label: 'Mini' },
+  // plain-language:allow
+  { id: 'tarjeta_estandar', label: 'Clásica AR/US (89x51 mm)' },
+  // plain-language:allow
+  { id: 'tarjeta_europea', label: 'Europea (85x54 mm)' },
+  // plain-language:allow
+  { id: 'tarjeta_cuadrada', label: 'Cuadrada (65x65 mm)' },
+  // plain-language:allow
+  { id: 'tarjeta_mini', label: 'Mini (70x28 mm)' },
   { id: 'personalizado', label: 'Personalizado…' },
 ];
 

@@ -39,10 +39,14 @@ export function CardSizeSection({ cvData, setCvData }: Props) {
               >
                 {Object.values(PAGE_SIZES).filter(s => s.category === 'tarjeta').map((s) => {
                   let uiLabel = s.label;
-                  if (s.id === 'tarjeta_estandar') uiLabel = 'Tarjeta Estándar';
-                  else if (s.id === 'tarjeta_europea') uiLabel = 'Tarjeta Europea';
-                  else if (s.id === 'tarjeta_cuadrada') uiLabel = 'Tarjeta Cuadrada';
-                  else if (s.id === 'tarjeta_mini') uiLabel = 'Tarjeta Mini';
+                  // plain-language:allow
+                  if (s.id === 'tarjeta_estandar') uiLabel = 'Tarjeta Estándar (89x51 mm)';
+                  // plain-language:allow
+                  else if (s.id === 'tarjeta_europea') uiLabel = 'Tarjeta Europea (85x54 mm)';
+                  // plain-language:allow
+                  else if (s.id === 'tarjeta_cuadrada') uiLabel = 'Tarjeta Cuadrada (65x65 mm)';
+                  // plain-language:allow
+                  else if (s.id === 'tarjeta_mini') uiLabel = 'Tarjeta Mini (70x28 mm)';
                   return (
                   <option key={s.id} value={s.id}>
                     📇 {uiLabel}
