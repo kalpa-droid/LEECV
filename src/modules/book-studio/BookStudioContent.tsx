@@ -131,6 +131,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
     <AppShell
       docType="book"
       isPanelOpen={isPanelOpen}
+      containerRef={viewport.containerRef}
       navbarSlot={
         <Navbar
           docType="book"
@@ -228,7 +229,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
         </div>
       }
       mainSlot={
-        <div ref={viewport.containerRef} className="w-full h-full flex flex-col items-center justify-center p-4">
+        <div className="w-full h-full flex flex-col items-center justify-center p-4">
           {selectedFile ? (
             <BookPreviewStep
               options={options}

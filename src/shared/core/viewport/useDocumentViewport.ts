@@ -9,13 +9,14 @@ export interface UseDocumentViewportOptions extends FitScaleOptions {
 
 /**
  * Custom Hook Reactivo Universal de Viewport (viewportEngine).
- * Mide el contenedor real usando ResizeObserver, calcula la escala óptima basada en el formato
- * de página de pageSizes.ts y consolida la gestión de gestos (rueda, pellizco, pan).
+ * Mide el contenedor real usando ResizeObserver, reintenta en cascada con rAF si
+ * la medición da null y consolida la gestión de gestos (rueda, pellizco, pan).
  */
 export function useDocumentViewport(options: UseDocumentViewportOptions = {}) {
   const { pageSizeId = 'a4', onZoomChange } = options;
   const containerRef = useRef<HTMLDivElement | null>(null);
   const paperSheetRef = useRef<HTMLDivElement | null>(null);
+  const rafIdRef = useRef<number | null>(null);
 
   const [zoomLevel, setZoomLevelState] = useState<number>(0.85);
   const [isAutoFitMode, setIsAutoFitMode] = useState<boolean>(true);
@@ -23,14 +24,32 @@ export function useDocumentViewport(options: UseDocumentViewportOptions = {}) {
   const canvasDimensions = resolveDocumentCanvasPx(pageSizeId);
   const { widthPx: docWidth, heightPx: docHeight } = canvasDimensions;
 
+  const cancelPendingRaf = useCallback(() => {
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+  }, []);
+
   const triggerAutoFit = useCallback(() => {
+    cancelPendingRaf();
     const container = containerRef.current;
     if (!container) return;
+
     const { width, height } = container.getBoundingClientRect();
     const scale = calculateFitScale(width, height, docWidth, docHeight, options);
+
+    if (scale === null) {
+      // Reintentar en cascada mediante rAF si la medición aún no es válida (width 0)
+      rafIdRef.current = requestAnimationFrame(() => {
+        triggerAutoFit();
+      });
+      return;
+    }
+
     setZoomLevelState(scale);
     if (onZoomChange) onZoomChange(scale);
-  }, [docWidth, docHeight, options, onZoomChange]);
+  }, [docWidth, docHeight, options, onZoomChange, cancelPendingRaf]);
 
   const fitAndCenter = useCallback(() => {
     setIsAutoFitMode(true);
@@ -48,8 +67,11 @@ export function useDocumentViewport(options: UseDocumentViewportOptions = {}) {
     const observer = new ResizeObserver(() => triggerAutoFit());
     observer.observe(container);
     triggerAutoFit();
-    return () => observer.disconnect();
-  }, [isAutoFitMode, triggerAutoFit]);
+    return () => {
+      cancelPendingRaf();
+      observer.disconnect();
+    };
+  }, [isAutoFitMode, triggerAutoFit, cancelPendingRaf]);
 
   const setZoomLevel = useCallback((value: number | ((prev: number) => number)) => {
     setIsAutoFitMode(false);

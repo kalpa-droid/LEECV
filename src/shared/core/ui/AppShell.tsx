@@ -14,6 +14,7 @@ export interface AppShellProps {
   isPanelOpen?: boolean;
   mobileTabState?: string;
   modalsSlot?: React.ReactNode;
+  containerRef?: React.Ref<HTMLDivElement>;
 }
 
 export const AppShell: React.FC<AppShellProps> = ({
@@ -27,6 +28,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   isPanelOpen = true,
   mobileTabState = 'editor',
   modalsSlot = null,
+  containerRef,
 }) => {
   return (
     <div className="h-screen h-[100dvh] bg-[var(--color-neutral-text-primary)] text-white flex flex-col font-sans overflow-hidden selection:bg-[var(--color-accent-base)] selection:text-white relative">
@@ -49,8 +51,9 @@ export const AppShell: React.FC<AppShellProps> = ({
         </div>
 
         <div 
+          ref={containerRef}
           id="preview-viewport-container"
-          className={`flex-1 bg-[var(--ui-preview-bg)] h-full overflow-auto p-2 sm:p-4 justify-center items-start relative touch-pan-x touch-pan-y overscroll-contain ${
+          className={`flex-1 bg-[var(--ui-preview-bg)] h-full overflow-auto p-2 sm:p-4 flex flex-col items-center relative touch-pan-x touch-pan-y overscroll-contain ${
             mobileTabState === 'editor' && isPanelOpen ? 'hidden md:flex' : 'flex'
           }`}
         >

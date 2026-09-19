@@ -30,16 +30,27 @@ describe('viewportEngine — Nucleo de Calculos Fisicos y Viewport', () => {
   });
 
   describe('calculateFitScale', () => {
-    it('calcula escala de ajuste optima en pantalla movil (360px de ancho)', () => {
+    it('retorna null si el ancho del contenedor es 0 o invalido (señal de no medir todavia)', () => {
+      expect(calculateFitScale(0, 640, 794, 1123)).toBeNull();
+      expect(calculateFitScale(-10, 640, 794, 1123)).toBeNull();
+    });
+
+    it('aplica padding adaptativo por defecto en movil (12px para containerWidth < 768)', () => {
+      const scale = calculateFitScale(360, 640, 794, 1123);
+      // (360 - 12) / 794 = 348 / 794 = 0.438 -> 0.44
+      expect(scale).toBeCloseTo(0.44, 2);
+    });
+
+    it('aplica padding adaptativo por defecto en desktop (32px para containerWidth >= 768)', () => {
+      const scale = calculateFitScale(1024, 768, 794, 1123);
+      // (1024 - 32) / 794 = 992 / 794 = 1.249 -> 1.25
+      expect(scale).toBeCloseTo(1.25, 2);
+    });
+
+    it('calcula escala de ajuste optima con padding explicito', () => {
       const scale = calculateFitScale(360, 640, 794, 1123, { safetyPaddingPx: 32 });
       // (360 - 32) / 794 = 328 / 794 = 0.413 -> 0.41
       expect(scale).toBeCloseTo(0.41, 2);
-    });
-
-    it('calcula escala de ajuste optima en pantalla tablet (768px de ancho)', () => {
-      const scale = calculateFitScale(768, 1024, 794, 1123, { safetyPaddingPx: 48 });
-      // (768 - 48) / 794 = 720 / 794 = 0.906 -> 0.91
-      expect(scale).toBeCloseTo(0.91, 2);
     });
 
     it('respeta minScale y maxScale', () => {

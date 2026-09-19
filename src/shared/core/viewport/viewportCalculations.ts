@@ -6,6 +6,7 @@ export interface FitScaleOptions {
 
 /**
  * Algoritmo puro de cálculo de escala de Auto-Fit basado en dimensiones reales.
+ * Retorna `null` si las dimensiones del contenedor aún no han sido obtenidas por el DOM.
  */
 export function calculateFitScale(
   containerWidth: number,
@@ -13,11 +14,12 @@ export function calculateFitScale(
   docWidthPx: number,
   docHeightPx: number,
   options: FitScaleOptions = {}
-): number {
+): number | null {
   if (!containerWidth || containerWidth <= 0 || !docWidthPx || docWidthPx <= 0) {
-    return 1;
+    return null;
   }
-  const padding = options.safetyPaddingPx ?? 16;
+  const defaultPadding = containerWidth < 768 ? 12 : 32;
+  const padding = options.safetyPaddingPx ?? defaultPadding;
   const availableWidth = Math.max(150, containerWidth - padding);
   const scaleByWidth = availableWidth / docWidthPx;
   const min = options.minScale ?? 0.2;

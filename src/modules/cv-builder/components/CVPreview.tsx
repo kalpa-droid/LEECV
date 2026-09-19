@@ -41,7 +41,6 @@ export default function CVPreview({
   const fallbackContainerRef = useRef<HTMLDivElement>(null);
   const fallbackPaperSheetRef = useRef<HTMLDivElement>(null);
 
-  const previewContainerRef = (externalContainerRef as React.RefObject<HTMLDivElement | null>) || fallbackContainerRef;
   const paperSheetRef = (externalPaperSheetRef as React.RefObject<HTMLDivElement | null>) || fallbackPaperSheetRef;
 
   // Motor de transición de presets con animación de Pluma Antigua / Lápiz Rotatorio
@@ -88,7 +87,7 @@ export default function CVPreview({
 
   // MOTOR DE ZOOM POR RUEDA (PC) Y GESTOS TÁCTILES (CELULAR)
   useEffect(() => {
-    const container = previewContainerRef.current;
+    const container = (externalContainerRef as React.RefObject<HTMLDivElement | null>)?.current || paperSheetRef.current;
     if (!container || !onZoomChange) return;
 
     // 1. ZOOM POR RUEDA DIRECTA (PC): sin apretar tecla Ctrl sobre la hoja
@@ -189,8 +188,7 @@ export default function CVPreview({
 
   return (
     <div 
-      ref={previewContainerRef}
-      className="w-full min-h-full flex flex-col items-center justify-start print-wrapper relative touch-pan-x touch-pan-y"
+      className="w-full flex flex-col items-center justify-start print-wrapper relative touch-pan-x touch-pan-y"
       style={dynamicThemeStyle}
     >
       {/* Capa de Transición de Preset con Pluma Antigua / Lápiz Rotatorio */}

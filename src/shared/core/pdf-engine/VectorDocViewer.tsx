@@ -75,7 +75,15 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
 
         // Renderizado offscreen en Fragment para evitar parpadeos blancos durante el renderizado
         const fragment = window.document.createDocumentFragment();
-        const containerWidth = container.clientWidth || 800;
+        const containerWidth = container.clientWidth;
+        if (!containerWidth || containerWidth <= 0) {
+          requestAnimationFrame(() => {
+            if (!cancelled && renderTokenRef.current === myToken) {
+              renderPdf();
+            }
+          });
+          return;
+        }
         const devicePixelRatio = window.devicePixelRatio || 1;
         const newAnchorMap: Record<string, { startPage: number; startXRatio: number; startYRatio: number; endPage: number; endXRatio: number; endYRatio: number }> = {};
 

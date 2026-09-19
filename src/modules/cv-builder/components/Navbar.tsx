@@ -150,10 +150,7 @@ export default function Navbar({
             </button>
             <button
               type="button"
-              onClick={() => {
-                onToggleMobileTab?.('preview');
-                triggerAutoFit();
-              }}
+              onClick={() => onToggleMobileTab?.('preview')}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black transition cursor-pointer ${
                 mobileTabState === 'preview'
                   ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.raised}`
