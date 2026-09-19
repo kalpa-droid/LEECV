@@ -265,7 +265,11 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       ? 'business_card'
       : 'cv';
 
-  const activePageSizeId = activeDocType === 'business_card' ? ((cvData as any)?.cardSize || 'tarjeta_estandar') : 'a4';
+  const activePageSizeId =
+    (cvData as any)?.layout?.pageSizeId ||
+    (cvData as any)?.layout?.paperSize ||
+    (cvData as any)?.documentSettings?.paperSizeId ||
+    (activeDocType === 'business_card' ? ((cvData as any)?.cardSize || 'tarjeta_estandar') : 'a4');
 
   const viewport = useDocumentViewport({
     pageSizeId: activePageSizeId,

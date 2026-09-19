@@ -4,6 +4,7 @@ import type { CoverLetterTab } from './CoverLetterDock';
 import type { CoverLetterData } from '../../../shared/core/pdf-engine/layers/records/coverLetterDataAdapter';
 import { generateAiCompletion } from '../../../shared/core/ai/aiClient';
 import { COVER_LETTER_PRESETS } from '../../../shared/core/presets/coverLetterPresetCatalog';
+import { PAGE_SIZES } from '../../../shared/core/pdf-engine/layers/page-size/pageSizePresets';
 import { importLinkedinArchive } from '../../../shared/core/importers/linkedinArchiveImporter';
 import { button } from '../../../shared/core/uiDesignSystem';
 import { exportCoverLetterToDocx } from '../../../shared/core/export/docxExporter';
@@ -605,6 +606,35 @@ TONO DESEADO: ${tone.toUpperCase()}
               <Download className="w-3.5 h-3.5 text-[var(--color-primary-base)]" />
               <span>{isExportingDocx ? 'Generando DOCX...' : 'Descargar como Word (.docx)'}</span>
             </button>
+          </div>
+
+          <div className="p-4 rounded-[12px] border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] space-y-2">
+            <label className="block text-xs font-semibold text-[var(--ui-text-primary)]">
+              Tamaño de Hoja / Formato de Papel
+            </label>
+            <select
+              value={(data as any)?.layout?.pageSizeId || (data as any)?.layout?.paperSize || 'a4'}
+              onChange={(e) => {
+                const val = e.target.value;
+                onChangeData({
+                  ...data,
+                  layout: {
+                    ...((data as any).layout || {}),
+                    pageSizeId: val,
+                    paperSize: val
+                  }
+                } as any);
+              }}
+              className="w-full text-xs p-2.5 rounded-[10px] border border-[var(--ui-border)] bg-[var(--ui-bg-app)] text-[var(--ui-text-primary)] font-medium outline-none cursor-pointer"
+            >
+              {Object.values(PAGE_SIZES)
+                .filter((s: any) => s.category === 'documento' && ['a4', 'carta', 'legal', 'oficio'].includes(s.id))
+                .map((size: any) => (
+                  <option key={size.id} value={size.id}>
+                    📄 {size.label}
+                  </option>
+                ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-3 gap-4">

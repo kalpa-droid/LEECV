@@ -69,6 +69,19 @@ export function resolveSectionAnchor(
   anchorMap?: PdfAnchorMap
 ): PdfAnchorTarget {
   const normalizedTab = (activeTab || 'personales').toLowerCase().trim();
+
+  // Guard: si es carta o tarjeta, no existen las 27 secciones curriculares de CV
+  if (preset?.pageCategory === 'carta' || preset?.pageCategory === 'tarjeta') {
+    return {
+      tabId: normalizedTab,
+      sectionId: normalizedTab,
+      pageIndex: 1,
+      verticalRatio: 0.0,
+      horizontalRatio: 0.0,
+      hasRecords: false
+    };
+  }
+
   const possibleSectionIds = SECTION_TAB_MAPPING[normalizedTab] || [normalizedTab];
 
   // 0. Si existe el mapa de marcadores reales de PDF.js, usar la VERDAD DE TERRENO O(1)
@@ -171,7 +184,7 @@ export function resolveSectionAnchor(
   };
 
   const pageDef = getPageSize(preset?.pageSizeId || 'a4');
-  const marginDef = MARGIN_PRESETS[preset?.marginPresetId || 'normal'] || MARGIN_PRESETS.normal;
+  const marginDef = MARGIN_PRESETS[preset?.marginPresetId || 'documento_estandar'] || MARGIN_PRESETS.documento_estandar;
   const usableArea = resolveMargins(pageDef, marginDef);
   const USEFUL_PAGE_HEIGHT_PT = usableArea?.heightPt || 680;
   let accumulatedPt = 0;

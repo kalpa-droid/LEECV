@@ -2,6 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { hasRealContent } from '../src/shared/core/documents/documentEngine/documentHelpers';
 import { getDocTypeForRoute } from '../src/shared/core/capabilities/capabilityRegistry';
 import { createBlankCVTemplate } from '../src/data/initialCVData';
+import { resolveMargins } from '../src/shared/core/pdf-engine/layers/margins/marginPresets';
+import { resolveSectionAnchor } from '../src/shared/core/pdf-engine/layers/anchors/pdfAnchorEngine';
+import { resolveActivePreset } from '../src/shared/core/pdf-engine/layers/presets/presetRegistry';
 
 describe('Cover Letter Integration & Route Sync', () => {
   it('hasRealContent reconoce campos reales de Carta de Presentación (body & jobTarget)', () => {
@@ -51,5 +54,32 @@ describe('Cover Letter Integration & Route Sync', () => {
 
     const blankTarjeta = createBlankCVTemplate({ docType: 'tarjeta' });
     expect(blankTarjeta.activePresetId).toBe('tarjeta-personal');
+  });
+
+  it('resolveMargins no lanza error de undefined al recibir preset nulo o alias normal', () => {
+    const pageDef = { widthPt: 595.28, heightPt: 841.89 } as any;
+    expect(() => resolveMargins(pageDef, undefined as any)).not.toThrow();
+    const result = resolveMargins(pageDef, undefined as any);
+    expect(result.top).toBeGreaterThan(0);
+  });
+
+  it('resolveSectionAnchor omite secciones de CV sin arrojar error cuando pageCategory es carta', () => {
+    const mockPreset: any = {
+      pageCategory: 'carta',
+      marginPresetId: 'documento_estandar',
+      sectors: []
+    };
+    const mockState: any = {
+      pageDef: { widthPt: 595.28, heightPt: 841.89 },
+      preset: mockPreset
+    };
+    expect(() => resolveSectionAnchor(mockState, 'experience')).not.toThrow();
+    expect(resolveSectionAnchor(mockState, 'experience')).toBeNull();
+  });
+
+  it('resolveActivePreset asigna un preset de categoría carta cuando docType es cover_letter', () => {
+    const mockCoverLetterDoc = { docType: 'cover_letter' };
+    const preset = resolveActivePreset(mockCoverLetterDoc);
+    expect(preset.pageCategory).toBe('carta');
   });
 });

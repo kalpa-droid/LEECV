@@ -27,7 +27,14 @@ function parseCustomHex(value: unknown): string | null {
 }
 
 export function resolveActivePreset(cvData: any): Preset {
-  const basePreset = getPreset(cvData?.activePresetId || 'cv-clasico');
+  const isCoverLetter =
+    cvData?.docType === 'cover_letter' ||
+    cvData?.docType === 'carta' ||
+    cvData?.activePresetId === 'carta-presentacion' ||
+    cvData?.activePresetId?.startsWith('carta-');
+
+  const defaultFallbackId = isCoverLetter ? 'carta-clasica' : 'cv-clasico';
+  const basePreset = getPreset(cvData?.activePresetId || defaultFallbackId);
 
   const customColor = cvData?.colorPresetId ? (PRESET_COLORS as any)[cvData.colorPresetId] : undefined;
   const customTypo = cvData?.typographyPresetId ? (PRESET_TYPOGRAPHY as any)[cvData.typographyPresetId] : undefined;

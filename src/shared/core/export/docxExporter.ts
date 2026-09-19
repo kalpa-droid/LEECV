@@ -1,10 +1,16 @@
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import type { CoverLetterData } from '../pdf-engine/layers/records/coverLetterDataAdapter.js';
+import { getPageSize } from '../pdf-engine/layers/page-size/pageSizePresets.js';
 
 export async function exportCoverLetterToDocx(data: CoverLetterData): Promise<Blob> {
   const p = data.personalInfo || {};
   const j = data.jobTarget || {};
   const b = data.body || {};
+
+  const activePageSizeId = (data as any)?.layout?.pageSizeId || (data as any)?.layout?.paperSize || 'a4';
+  const pageDef = getPageSize(activePageSizeId);
+  const widthTwips = Math.round(pageDef.widthPt * 20);
+  const heightTwips = Math.round(pageDef.heightPt * 20);
 
   const fullName = p.fullName || `${p.givenNames || ''} ${p.surname || ''}`.trim() || 'Nombre Completo';
   const today = data.date || new Date().toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -12,7 +18,14 @@ export async function exportCoverLetterToDocx(data: CoverLetterData): Promise<Bl
   const doc = new Document({
     sections: [
       {
-        properties: {},
+        properties: {
+          page: {
+            size: {
+              width: widthTwips,
+              height: heightTwips
+            }
+          }
+        },
         children: [
           new Paragraph({
             heading: HeadingLevel.HEADING_1,

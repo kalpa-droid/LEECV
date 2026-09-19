@@ -159,7 +159,14 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   const effectiveSectors = resolveEffectivePresetSectors(preset, layoutOverrides);
   const resolvedSectors = resolveSectors({ widthPt: pageDef.widthPt, heightPt: pageDef.heightPt }, effectiveSectors); // Capa 2: geometría sobre la hoja FÍSICA completa, sin margen
   const sectorsWithFlow = placeFixedObjects(resolvedSectors, preset.fixedObjects);
-  const pdfPaperSize = activePageSizeId === 'carta' ? 'LETTER' : activePageSizeId === 'legal' ? 'LEGAL' : 'A4';
+  const pdfPaperSize: 'A4' | 'LETTER' | 'LEGAL' | [number, number] =
+    activePageSizeId === 'carta'
+      ? 'LETTER'
+      : activePageSizeId === 'legal'
+      ? 'LEGAL'
+      : activePageSizeId === 'a4'
+      ? 'A4'
+      : [pageDef.widthPt, pageDef.heightPt];
 
   const sidebarCardBg = resolveSubtleCardBackground('sidebar', sidebarRolesColor);
   const mainCardBg = resolveSubtleCardBackground('main', mainRolesColor);
