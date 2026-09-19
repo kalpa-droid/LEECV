@@ -2,7 +2,7 @@ import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { prepareCoverLetterRenderData, CoverLetterData } from '../layers/records/coverLetterDataAdapter';
 import { getCoverLetterPreset } from '../../presets/coverLetterPresetCatalog';
-import { getPageSize } from '../page-size/pageSizePresets';
+import { getPageSize } from '../layers/page/pageSizes';
 
 interface CoverLetterPdfProps {
   data: CoverLetterData;

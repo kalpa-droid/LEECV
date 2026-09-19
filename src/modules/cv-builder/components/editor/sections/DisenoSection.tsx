@@ -42,6 +42,7 @@ export const DisenoSection = ({
   registerSection
 }: any) => {
   const isBusinessCard = docType === 'business_card';
+  const hasDesignOverrides = Boolean(cvData?.colorPresetId || cvData?.typographyPresetId || cvData?.columnLayoutPresetId);
   const handlePaperSizeChange = (val: string) => {
     setCvData((prev: any) => ({
       ...prev,

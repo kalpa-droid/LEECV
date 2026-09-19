@@ -4,7 +4,7 @@ import type { CoverLetterTab } from './CoverLetterDock';
 import type { CoverLetterData } from '../../../shared/core/pdf-engine/layers/records/coverLetterDataAdapter';
 import { generateAiCompletion } from '../../../shared/core/ai/aiClient';
 import { COVER_LETTER_PRESETS } from '../../../shared/core/presets/coverLetterPresetCatalog';
-import { PAGE_SIZES } from '../../../shared/core/pdf-engine/layers/page-size/pageSizePresets';
+import { PAGE_SIZES } from '../../../shared/core/pdf-engine/layers/page/pageSizes';
 import { importLinkedinArchive } from '../../../shared/core/importers/linkedinArchiveImporter';
 import { button } from '../../../shared/core/uiDesignSystem';
 import { exportCoverLetterToDocx } from '../../../shared/core/export/docxExporter';
