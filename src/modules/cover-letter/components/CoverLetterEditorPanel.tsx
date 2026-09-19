@@ -10,6 +10,7 @@ import { exportCoverLetterToDocx } from '../../../shared/core/export/docxExporte
 import { downloadBlob } from '../../../shared/core/utils/downloadUtils';
 import { getOpenTabs } from '../../../shared/core/documents/tabStore';
 import { loadCVById, getSavedCVsList } from '../../cv-builder/services/cvStorageService';
+import { CoverLetterOnboardingModal } from './CoverLetterOnboardingModal';
 
 interface CoverLetterEditorPanelProps {
   activeTab: CoverLetterTab;
@@ -34,6 +35,7 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isExportingDocx, setIsExportingDocx] = useState(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [savedCVs, setSavedCVs] = useState<any[]>([]);
 
@@ -375,11 +377,21 @@ TONO DESEADO: ${tone.toUpperCase()}
 
       {activeTab === 'vacancy' && (
         <div className="space-y-6 max-w-2xl">
-          <div>
-            <h3 className="text-sm font-semibold mb-1">Información de la Vacante</h3>
-            <p className="text-xs text-[var(--ui-text-secondary)]">
-              Pega la descripción del puesto y datos de la empresa para que la IA adapte los argumentos exactos.
-            </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold mb-1">Información de la Vacante</h3>
+              <p className="text-xs text-[var(--ui-text-secondary)]">
+                Pega la descripción del puesto y datos de la empresa para que la IA adapte los argumentos exactos.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsOnboardingOpen(true)}
+              className="px-3 py-1.5 bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/40 text-[var(--color-accent-text)] hover:bg-[var(--color-accent-base)] hover:text-[var(--color-accent-on-base)] text-xs font-bold rounded-[8px] flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Autocompletar con 1-Clic</span>
+            </button>
           </div>
 
           <div className="space-y-4">
@@ -614,6 +626,13 @@ TONO DESEADO: ${tone.toUpperCase()}
           </div>
         </div>
       )}
+
+      <CoverLetterOnboardingModal
+        isOpen={isOnboardingOpen}
+        onClose={() => setIsOnboardingOpen(false)}
+        data={data}
+        onChangeData={onChangeData}
+      />
     </div>
   );
 };

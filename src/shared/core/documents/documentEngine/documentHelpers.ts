@@ -27,7 +27,16 @@ export function hasRealContent(docData: any): boolean {
     if (card.name || card.role || card.phone || card.email || card.website || card.address || card.companyName) return true;
   }
 
-  if (docData.coverLetterContent?.text || docData.vacancy?.jobTitle) return true;
+  if (
+    docData.body?.hookParagraph ||
+    docData.body?.evidenceParagraph ||
+    docData.body?.closingParagraph ||
+    docData.jobTarget?.jobTitle ||
+    docData.jobTarget?.companyName ||
+    docData.jobTarget?.jobDescription ||
+    docData.coverLetterContent?.text ||
+    docData.vacancy?.jobTitle
+  ) return true;
   if (docData.bookMetadata?.title) return true;
 
   return false;

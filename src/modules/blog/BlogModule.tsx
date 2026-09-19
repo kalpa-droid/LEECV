@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Newspaper, ArrowLeft, Clock, User, FileText, BookOpen } from 'lucide-react';
+import { Newspaper, ArrowLeft, Clock, User, FileText, BookOpen, Mail } from 'lucide-react';
 import { displayScale, elevationSystem, radius, button } from '../../shared/core/uiDesignSystem';
 
 interface Article {
@@ -63,6 +63,54 @@ const articlesData: Article[] = [
       '2. Respeta los márgenes de corte de imprenta: El tamaño estándar de tarjeta es 85 x 55 mm o 90 x 50 mm. Deja siempre un margen de seguridad de 3 mm.',
       '3. Contraste y legibilidad: Utiliza tipografías nítidas y colores de alto contraste entre el texto y el fondo.',
       'En LEECV Tarjetas, puedes subir tu logo con recorte libre, extraer los colores principales y exportar una grilla de 9 tarjetas por hoja A4 para imprimir en cartulina.'
+    ]
+  },
+  {
+    slug: 'como-escribir-carta-presentacion-entrevistas',
+    title: 'Cómo escribir una carta de presentación que consiga entrevistas',
+    summary: 'La carta de presentación es tu oportunidad de contar la historia detrás de tu CV. Aprende la estructura de 4 párrafos que capta la atención de los reclutadores.',
+    category: 'Cartas de Presentación',
+    readTime: '5 min de lectura',
+    date: '18 de Septiembre, 2026',
+    author: 'Equipo LEECV',
+    content: [
+      'Mientras que tu CV enumera tus logros pasados, la carta de presentación explica por qué esos logros te convierten en el candidato ideal para el puesto específico al que te postulas.',
+      '1. Saludo personalizado y gancho inicial: Evita frases genéricas. Menciona el puesto exacto y un logro relevante que demuestre tu entusiasmo.',
+      '2. Evidencia concreta: Demuestra con métricas cómo resolviste problemas similares a los que enfrenta la empresa.',
+      '3. Cierre proactivo: Expresa tu deseo de profundizar en una entrevista y agradece el tiempo del selector.',
+      'Con la asistencia de IA en LEECV Cartas, puedes conectar tu CV y la oferta laboral para redactar una propuesta adaptada en segundos.'
+    ]
+  },
+  {
+    slug: 'carta-vs-cv-cuando-usar-cada-una',
+    title: 'Carta de Presentación vs CV: cuándo usar cada una y cómo complementarlas',
+    summary: 'Comprende las diferencias fundamentales entre ambos documentos y cómo usarlos en conjunto para destacar en postulaciones competitivas.',
+    category: 'Estrategia Laboral',
+    readTime: '4 min de lectura',
+    date: '15 de Septiembre, 2026',
+    author: 'Equipo LEECV',
+    content: [
+      'Existe una confusión frecuente sobre si enviar solo el CV o adjuntar también una carta. La regla general es: siempre que la postulación lo permita, adjunta ambas.',
+      '• El CV es cuantitativo y estructurado: resume tu trayectoria en listas limpias y escaneables.',
+      '• La Carta de Presentación es narrativa y enfocada: conecta tu motivación personal con los valores y necesidades de la empresa.',
+      'Al sincronizar ambos documentos en LEECV, mantienes la misma paleta cromática y tipografía para presentar un legajo visualmente armónico.'
+    ]
+  },
+  {
+    slug: 'errores-que-matan-tu-carta-de-presentacion',
+    title: '5 Errores fatales que matan tu carta de presentación antes de que la lean',
+    summary: 'Descubre las fallas más comunes al redactar cartas de presentación y cómo evitarlas para asegurar que tu postulación pase los primeros filtros.',
+    category: 'Consejos de Selección',
+    readTime: '4 min de lectura',
+    date: '10 de Septiembre, 2026',
+    author: 'Equipo LEECV',
+    content: [
+      'Incluso profesionales con excelente trayectoria son descartados por errores evitables en su carta de presentación:',
+      '1. Repetir el CV palabra por palabra: La carta debe aportar contexto y motivación, no resumir el currículum.',
+      '2. Cartas genéricas sin personalizar: Enviar la misma carta a 20 empresas distintas destruye tu tasa de respuesta.',
+      '3. Errores tipográficos en el nombre de la empresa o recruiter: Revisa siempre los datos antes de exportar.',
+      '4. Longitud excesiva: Mantén la carta en una sola hoja A4 limpia con 3 a 4 párrafos concisos.',
+      'Utiliza la suite de LEECV para previsualizar la carta en formato A4 y verificar la alineación con tu CV.'
     ]
   }
 ];
@@ -148,6 +196,13 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ onNavigateHome, onNaviga
                 >
                   <FileText className="w-4 h-4" />
                   <span>Crear CV Profesional</span>
+                </button>
+                <button
+                  onClick={() => onNavigateProduct('/crear-carta')}
+                  className={`${button.base} ${button.secondary} flex items-center gap-2 px-6 py-3 text-sm`}
+                >
+                  <Mail className="w-4 h-4" />
+                  <span>Crear Carta de Presentación</span>
                 </button>
                 <button
                   onClick={() => onNavigateProduct('/crear-libro')}

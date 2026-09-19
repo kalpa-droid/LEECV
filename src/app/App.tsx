@@ -255,6 +255,26 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     }
   }, []);
 
+  // Paso 0: Resincronizar cvData con currentRoute cuando la ruta y el docType activo divergen
+  useEffect(() => {
+    if (!currentRoute || currentRoute === '/' || currentRoute === '/blog' || currentRoute === '/dashboard') return;
+    const targetDocType = getDocTypeForRoute(currentRoute);
+    const currentDocType = cvData ? inferDocumentTypeId(cvData) : null;
+
+    if (currentDocType && currentDocType !== targetDocType) {
+      const existingTab = tabs.find(t => t.docType === targetDocType);
+      if (existingTab) {
+        handleSwitchDocumentTab(existingTab.cvId, targetDocType, { skipSaveCurrent: false });
+      } else {
+        const targetPreset = targetDocType === 'cover_letter' ? 'carta-clasica'
+          : targetDocType === 'business_card' ? 'tarjeta-personal'
+          : targetDocType === 'book' ? 'libro-standard'
+          : 'cv-clasico';
+        createBlankDocumentWithTab(targetPreset);
+      }
+    }
+  }, [currentRoute, cvData, tabs, createBlankDocumentWithTab, handleSwitchDocumentTab]);
+
 
   const [isPanelOpen, setIsPanelOpen] = useState(true);
 
@@ -602,6 +622,30 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     });
   };
 
+  const handleGenerateCoverLetterFromCV = (sourceCvData?: any) => {
+    const dataToUse = sourceCvData || cvData;
+    createBlankDocumentWithTab('carta-clasica');
+    setActiveTab('source_data');
+    if (dataToUse?.personalInfo) {
+      setCvData(prev => ({
+        ...prev,
+        personalInfo: {
+          ...prev.personalInfo,
+          ...dataToUse.personalInfo
+        }
+      }));
+    }
+    if (currentRoute !== '/crear-carta') {
+      if (onNavigate) {
+        onNavigate('/crear-carta');
+      } else if (typeof window !== 'undefined') {
+        window.history.pushState({}, '', '/crear-carta');
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      }
+    }
+    showSuccess('Carta de presentación creada reutilizando tus datos.');
+  };
+
   const handleImportJsonFile = async (e: any) => {
     const file = e.target?.files?.[0];
     if (file) {
@@ -754,6 +798,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           onOpenPhotoCropper={() => setIsPhotoCropperOpen(true)}
           onOpenSignature={() => setIsSignatureOpen(true)}
           onOpenSavedCVs={() => setIsSavedCVsOpen(true)}
+          onGenerateCoverLetterFromCV={handleGenerateCoverLetterFromCV}
         />
       }
       mainSlot={
@@ -851,6 +896,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
               }}
               onImportJson={handleImportJsonFile}
               onOpenCloudStatus={() => setIsCloudModalOpen(true)}
+              onGenerateCoverLetterFromCV={handleGenerateCoverLetterFromCV}
               onDocumentClosed={(deletedId) => {
                 const currentDocState: workspaceController.CurrentDocumentState | null = cvData ? {
                   id: cvData.id,
