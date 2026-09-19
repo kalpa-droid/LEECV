@@ -166,5 +166,22 @@ describe('viewportEngine — Nucleo de Calculos Fisicos y Viewport', () => {
       expect(hook).toContain('userZoomRef.current = 1;');
     });
   });
+
+  describe('la hoja no se corre a un costado (regresión: "la mitad izquierda se esconde")', () => {
+    const preview = () => require('fs').readFileSync(require('path').join(__dirname, '../src/modules/cv-builder/components/CVPreview.tsx'), 'utf-8') as string;
+
+    it('la caja externa NO centra con flex: un hijo más ancho que ella se desbordaría a ambos lados (x negativo)', () => {
+      const src = preview();
+      const outer = src.slice(src.indexOf('ref={paperSheetRef}'), src.indexOf('ref={paperContentRef}'));
+      expect(outer).not.toMatch(/justify-center|justify-around|justify-evenly|items-center/);
+      expect(outer).not.toMatch(/\bflex\b/);
+    });
+
+    it('la altura de la caja externa sigue al contenido escalado (sin vacío debajo del documento)', () => {
+      const src = preview();
+      expect(src).toContain('--doc-content-h');
+      expect(src).toContain('height: `calc(var(--doc-content-h,');
+    });
+  });
 });
 

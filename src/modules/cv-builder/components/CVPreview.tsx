@@ -210,6 +210,22 @@ export default function CVPreview({
 
   const { widthPx, heightPx } = useMemo(() => resolveDocumentCanvasPx(pageSizeId), [pageSizeId]);
 
+  // La hoja interna conserva su tamaño REAL (A4/A5/tarjeta) y solo se le aplica `scale`,
+  // pero `transform` no achica el espacio que ocupa: la caja externa mediría el alto SIN
+  // escalar y dejaría un vacío enorme debajo del documento. Se mide el alto real del
+  // contenido (ResizeObserver, sin pasar por React) y la caja externa toma alto × escala.
+  const paperContentRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const content = paperContentRef.current;
+    const sheet = paperSheetRef.current;
+    if (!content || !sheet || typeof ResizeObserver === 'undefined') return;
+    const syncHeight = () => sheet.style.setProperty('--doc-content-h', `${content.offsetHeight}px`);
+    const observer = new ResizeObserver(syncHeight);
+    observer.observe(content);
+    syncHeight();
+    return () => observer.disconnect();
+  }, [paperSheetRef]);
+
   // Con contenedor propio (visor del editor) el zoom lo dicta la variable CSS que escribe
   // useDocumentViewport directo al DOM; `zoomLevel` (estado de React) queda solo de respaldo.
   // Sin contenedor (vista pública) no hay variable: se usa el zoom recibido por props.
@@ -233,14 +249,16 @@ export default function CVPreview({
       {/* Contenedor adaptativo geométricamente proporcional al zoom y centrado sin cortes */}
       <div 
         ref={paperSheetRef}
-        className={`my-1 sm:my-5 no-print mx-auto shrink-0 flex justify-center ${elevationSystem.overlay}`}
+        className={`my-1 sm:my-5 no-print mx-auto shrink-0 relative ${elevationSystem.overlay}`}
         style={{ 
           width: `calc(${widthPx}px * ${scaleExpr})`,
+          height: `calc(var(--doc-content-h, ${heightPx}px) * ${scaleExpr})`,
           minHeight: `calc(${heightPx}px * ${scaleExpr})`,
           maxWidth: 'none'
         }}
       >
         <div 
+          ref={paperContentRef}
           className="shrink-0 origin-top-left"
           style={{ 
             transform: `scale(${scaleExpr})`,
