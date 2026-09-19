@@ -60,7 +60,7 @@ describe('Cover Letter Integration & Route Sync', () => {
     const pageDef = { widthPt: 595.28, heightPt: 841.89 } as any;
     expect(() => resolveMargins(pageDef, undefined as any)).not.toThrow();
     const result = resolveMargins(pageDef, undefined as any);
-    expect(result.topPt).toBeGreaterThan(0);
+    expect(result.margins.topPt).toBeGreaterThan(0);
   });
 
   it('resolveSectionAnchor omite secciones de CV sin arrojar error cuando pageCategory es carta', () => {
@@ -69,12 +69,10 @@ describe('Cover Letter Integration & Route Sync', () => {
       marginPresetId: 'documento_estandar',
       sectors: []
     };
-    const mockState: any = {
-      pageDef: { widthPt: 595.28, heightPt: 841.89 },
-      preset: mockPreset
-    };
-    expect(() => resolveSectionAnchor(mockState, 'personales')).not.toThrow();
-    expect(resolveSectionAnchor(mockState, 'personales')).toBeNull();
+    expect(() => resolveSectionAnchor('personales', [], mockPreset)).not.toThrow();
+    const anchor = resolveSectionAnchor('personales', [], mockPreset);
+    expect(anchor.pageIndex).toBe(1);
+    expect(anchor.hasRecords).toBe(false);
   });
 
   it('resolveActivePreset asigna un preset de categoría carta cuando docType es cover_letter', () => {
