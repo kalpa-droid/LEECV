@@ -12,14 +12,9 @@ import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { usePageAwareCreditGate } from '../../../shared/core/hooks/usePageAwareCreditGate';
 
 const CARD_SIZE_OPTIONS = [
-  // plain-language:allow
-  { id: 'tarjeta_estandar', label: 'Clásica AR/US (89x51 mm)' },
-  // plain-language:allow
-  { id: 'tarjeta_europea', label: 'Europea (85x54 mm)' },
-  // plain-language:allow
-  { id: 'tarjeta_cuadrada', label: 'Cuadrada (65x65 mm)' },
-  // plain-language:allow
-  { id: 'tarjeta_mini', label: 'Mini (70x28 mm)' },
+  ...Object.values(PAGE_SIZES)
+    .filter(p => p.category === 'tarjeta')
+    .map(p => ({ id: p.id, label: p.appLabel })),
   { id: 'personalizado', label: 'Personalizado…' },
 ];
 
@@ -133,7 +128,7 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
           className={`w-full p-2.5 rounded-[${radius.card}] border border-[var(--color-neutral-border)] font-semibold text-[var(--color-neutral-text-primary)] outline-none focus:border-[var(--color-accent-base)] bg-white cursor-pointer`}
         >
           {SHEET_SIZE_OPTIONS.map(p => (
-            <option key={p.id} value={p.id}>{p.label}</option>
+            <option key={p.id} value={p.id}>{p.appLabel || p.label}</option>
           ))}
         </select>
       </div>

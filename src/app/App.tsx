@@ -348,7 +348,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     if (currentDocType && currentDocType !== targetDocType) {
       const existingTab = tabs.find(t => t.docType === targetDocType);
       if (existingTab) {
-        handleSwitchDocumentTab(existingTab.cvId, targetDocType, { skipSaveCurrent: false });
+        handleSwitchDocumentTab(existingTab.cvId || existingTab.id, targetDocType, { skipSaveCurrent: false });
       } else {
         const targetPreset = targetDocType === 'cover_letter' ? 'carta-clasica'
           : targetDocType === 'business_card' ? 'tarjeta-personal'

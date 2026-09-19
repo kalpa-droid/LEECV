@@ -20,6 +20,7 @@ const SKIP_PATH = [
   /[\\/]__tests__[\\/]/,
   /[\\/]modules[\\/]admin[\\/]/, // consola interna: no la ve la gente común
   /[\\/]core[\\/]plainLanguage[\\/]/, // las propias reglas (contienen la jerga a propósito)
+  /[\\/]layers[\\/]page[\\/]pageSizes\.ts$/, // definición técnica de tamaños (Ámbito 2: appLabel)
 ];
 const CATALOG_DIR = /src[\\/]shared[\\/]i18n[\\/]catalog[\\/]/;
 const IGNORED_CALLEES = /^(console\.|logger\.)/;

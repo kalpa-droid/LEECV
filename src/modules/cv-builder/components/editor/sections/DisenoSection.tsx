@@ -92,7 +92,7 @@ export const DisenoSection = ({
               </div>
 
               {/* Formato de Papel */}
-              <PanelSection icon={<Layout className="w-4 h-4" />} title={UI_GLOSSARY.labels.paperFormat}>
+              <PanelSection icon={<Layout className="w-4 h-4" />} title="¿En qué hoja lo vas a imprimir?">
                 <div className={`p-3 bg-[var(--ui-bg-card)] rounded-[${radius.card}] border border-[var(--color-neutral-border)]`}>
                   <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] mb-1.5">
                     ¿En qué hoja lo vas a imprimir?
@@ -108,26 +108,11 @@ export const DisenoSection = ({
                         return size.category === 'tarjeta' && ['tarjeta_estandar', 'tarjeta_europea', 'tarjeta_cuadrada', 'tarjeta_mini'].includes(size.id);
                       }
                       return size.category === 'documento' && ['a4', 'carta', 'legal', 'oficio'].includes(size.id);
-                    }).map((size) => {
-                      let uiLabel = size.label;
-                      // plain-language:allow
-                      if (size.id === 'a4') uiLabel = 'Para imprimir en tu casa (A4)';
-                      // plain-language:allow
-                      else if (size.id === 'carta') uiLabel = 'Para imprimir en tu casa (Carta)';
-                      // plain-language:allow
-                      else if (size.id === 'tarjeta_estandar') uiLabel = 'Tarjeta Estándar (89x51 mm)';
-                      // plain-language:allow
-                      else if (size.id === 'tarjeta_europea') uiLabel = 'Tarjeta Europea (85x54 mm)';
-                      // plain-language:allow
-                      else if (size.id === 'tarjeta_cuadrada') uiLabel = 'Tarjeta Cuadrada (65x65 mm)';
-                      // plain-language:allow
-                      else if (size.id === 'tarjeta_mini') uiLabel = 'Tarjeta Mini (70x28 mm)';
-                      return (
+                    }).map((size) => (
                       <option key={size.id} value={size.id}>
-                        📄 {uiLabel}
+                        📄 {size.appLabel || size.label}
                       </option>
-                      );
-                    })}
+                    ))}
                   </select>
                 </div>
               </PanelSection>

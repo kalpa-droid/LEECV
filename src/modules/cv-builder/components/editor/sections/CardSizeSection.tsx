@@ -37,22 +37,11 @@ export function CardSizeSection({ cvData, setCvData }: Props) {
                 onChange={(e) => handlePaperSizeChange(e.target.value)}
                 className="w-full text-xs p-2.5 rounded-[var(--radius-card)] border border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer"
               >
-                {Object.values(PAGE_SIZES).filter(s => s.category === 'tarjeta').map((s) => {
-                  let uiLabel = s.label;
-                  // plain-language:allow
-                  if (s.id === 'tarjeta_estandar') uiLabel = 'Tarjeta Estándar (89x51 mm)';
-                  // plain-language:allow
-                  else if (s.id === 'tarjeta_europea') uiLabel = 'Tarjeta Europea (85x54 mm)';
-                  // plain-language:allow
-                  else if (s.id === 'tarjeta_cuadrada') uiLabel = 'Tarjeta Cuadrada (65x65 mm)';
-                  // plain-language:allow
-                  else if (s.id === 'tarjeta_mini') uiLabel = 'Tarjeta Mini (70x28 mm)';
-                  return (
+                {Object.values(PAGE_SIZES).filter(s => s.category === 'tarjeta').map((s) => (
                   <option key={s.id} value={s.id}>
-                    📇 {uiLabel}
+                    📇 {s.appLabel || s.label}
                   </option>
-                  );
-                })}
+                ))}
               </select>
             </div>
 

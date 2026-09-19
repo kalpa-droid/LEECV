@@ -51,6 +51,14 @@ describe('motor de lenguaje sencillo — reglas', () => {
     for (const v of findJargon('Exportación vectorial A4 con sangrado')) expect(v.say.length).toBeGreaterThan(10);
   });
 
+  it('PAGE_SIZES diferencia label (Ámbito 1 - sin jerga) y appLabel (Ámbito 2 - con especificación técnica)', async () => {
+    const { PAGE_SIZES } = await import('../src/shared/core/pdf-engine/layers/page/pageSizes');
+    for (const size of Object.values(PAGE_SIZES)) {
+      expect(findJargon(size.label)).toEqual([]);
+      expect(size.appLabel).toContain('(');
+    }
+  });
+
   it('looksLikeProse distingue un texto de un código interno como A4', () => {
     expect(looksLikeProse('A4')).toBe(false);
     expect(looksLikeProse('Hoja A4')).toBe(true);

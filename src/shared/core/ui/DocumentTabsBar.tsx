@@ -75,7 +75,7 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
           className="flex items-center gap-1 overflow-x-auto no-scrollbar min-w-0 touch-pan-x"
         >
           {tabs.map((tab) => {
-            const tabId = (tab as any).id || (tab as any).cvId;
+            const tabId = (tab as any).cvId || (tab as any).id;
             const isActive = tabId === activeId;
             const targetDocType = tab.docType || 'cv';
             const Icon = getTabIcon(targetDocType);
