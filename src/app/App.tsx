@@ -16,7 +16,7 @@ const BlogModule = lazy(() => import('../modules/blog/BlogModule').then(m => ({ 
 
 import { getCurrentProfile, capturarConexionDriveSiCorresponde } from '../modules/auth/authService';
 import { supabase } from '../shared/core/lib/supabaseClient';
-import { exportCVToJson, importCVFromJsonFile } from '../shared/core/utils/jsonImporterExporter';
+import { withErrorHandling } from '../shared/core/utils/errorHandler';
 import { applyUiTheme, getNextUiTheme, elevationSystem, radius } from '../shared/core/uiDesignSystem';
 import { getGlobalUiTheme, setGlobalUiTheme as setGlobalUiThemeInStorage, cycleGlobalUiTheme, subscribeToGlobalUiTheme } from '../shared/core/utils/globalThemePreference';
 
