@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Sparkles, Loader2 } from 'lucide-react';
-import { button, elevationSystem, radius } from './uiDesignSystem';
+import { button, elevationSystem, radius } from '../uiDesignSystem';
 import { useToast } from './Toast';
 
 export interface AIButtonProps {
