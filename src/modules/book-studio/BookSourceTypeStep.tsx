@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BookOpen, Copy, Upload, CheckCircle2, ChevronRight, FileText } from 'lucide-react';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
 import { ensurePdfjsWorkerConfigured } from '../../shared/core/pdf-engine/pdfjsWorkerSetup';
+import { PAGE_SIZES } from '../../shared/core/pdf-engine/layers/page/pageSizes';
 import { button, selectableCard, radius } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 
@@ -147,22 +148,22 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div
-            onClick={() => setOptions((prev) => ({ ...prev, paperSize: 'A4' }))}
+            onClick={() => setOptions((prev) => ({ ...prev, paperSize: 'a4' }))}
             className={`${selectableCard.base} ${
-              options.paperSize !== 'A3' ? selectableCard.selected : selectableCard.unselected
+              options.paperSize !== 'a3' ? selectableCard.selected : selectableCard.unselected
             } p-4 flex items-start space-x-3`}
           >
             <input
               type="radio"
               name="paperSize"
-              checked={options.paperSize !== 'A3'}
+              checked={options.paperSize !== 'a3'}
               onChange={() => {}}
               className="mt-1 text-[var(--color-accent-text)] cursor-pointer"
             />
             <div className="space-y-1">
               <span className="font-bold block text-sm text-[var(--ui-text-primary)] flex items-center gap-2">
                 <FileText className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
-                {t.bookStudio.sourceStep.paperA4Title}
+                {PAGE_SIZES.a4?.appLabel}
               </span>
               <span className="text-xs text-[var(--ui-text-secondary)] block leading-normal">
                 {t.bookStudio.sourceStep.paperA4Desc}
@@ -171,22 +172,22 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
           </div>
 
           <div
-            onClick={() => setOptions((prev) => ({ ...prev, paperSize: 'A3' }))}
+            onClick={() => setOptions((prev) => ({ ...prev, paperSize: 'a3' }))}
             className={`${selectableCard.base} ${
-              options.paperSize === 'A3' ? selectableCard.selected : selectableCard.unselected
+              options.paperSize === 'a3' ? selectableCard.selected : selectableCard.unselected
             } p-4 flex items-start space-x-3`}
           >
             <input
               type="radio"
               name="paperSize"
-              checked={options.paperSize === 'A3'}
+              checked={options.paperSize === 'a3'}
               onChange={() => {}}
               className="mt-1 text-[var(--color-accent-text)] cursor-pointer"
             />
             <div className="space-y-1">
               <span className="font-bold block text-sm text-[var(--ui-text-primary)] flex items-center gap-2">
                 <FileText className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
-                {t.bookStudio.sourceStep.paperA3Title}
+                {PAGE_SIZES.a3?.appLabel}
               </span>
               <span className="text-xs text-[var(--ui-text-secondary)] block leading-normal">
                 {t.bookStudio.sourceStep.paperA3Desc}

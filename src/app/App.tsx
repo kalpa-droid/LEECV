@@ -232,10 +232,13 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   };
 
   const handleNavigateToDocumentTab = async (targetDocType: 'cv' | 'business_card' | 'book' | 'cover_letter', targetId: string) => {
+    const existingTab = tabs.find(t => t.docType === targetDocType);
+    const finalTargetId = existingTab ? (existingTab.cvId || existingTab.id) : targetId;
+
     await runWithSafeSave(
       saveCV,
       async () => {
-        setPendingDocumentToOpen(targetId, targetDocType);
+        setPendingDocumentToOpen(finalTargetId, targetDocType);
         const targetRoute = getRouteForDocType(targetDocType);
         if (onNavigate) {
           onNavigate(targetRoute);
@@ -354,7 +357,14 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           : targetDocType === 'business_card' ? 'tarjeta-personal'
           : targetDocType === 'book' ? 'libro-standard'
           : 'cv-clasico';
-        createBlankDocumentWithTab(targetPreset);
+        
+        // Verifica nuevamente si hay una pestaña activa antes de crear una nueva a lo ciego
+        const newlyFoundTab = getOpenTabs().find(t => t.docType === targetDocType);
+        if (newlyFoundTab) {
+          handleSwitchDocumentTab(newlyFoundTab.cvId || newlyFoundTab.id, targetDocType, { skipSaveCurrent: false });
+        } else {
+          createBlankDocumentWithTab(targetPreset);
+        }
       }
     }
   }, [currentRoute, cvData, tabs, createBlankDocumentWithTab, handleSwitchDocumentTab]);

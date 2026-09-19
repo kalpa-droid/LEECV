@@ -631,7 +631,7 @@ TONO DESEADO: ${tone.toUpperCase()}
                 .filter((s: any) => s.category === 'documento' && ['a4', 'carta', 'legal', 'oficio'].includes(s.id))
                 .map((size: any) => (
                   <option key={size.id} value={size.id}>
-                    📄 {size.label}
+                    📄 {size.appLabel || size.label}
                   </option>
                 ))}
             </select>
