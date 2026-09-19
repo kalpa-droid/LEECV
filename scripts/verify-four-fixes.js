@@ -41,12 +41,15 @@ if (appContent.includes('saveCV()') || appContent.includes('saveCV(cvData)')) {
   failed++;
 }
 
-// Assert 3: UI Theme atado a localStorage ('cv_ui_theme_preference')
-if (appContent.includes("localStorage.getItem('cv_ui_theme_preference')") && appContent.includes("localStorage.setItem('cv_ui_theme_preference'")) {
-  console.log('  ✓ Arreglo 3: Tema de UI desvinculado del documento y persistido en localStorage ("cv_ui_theme_preference") OK.');
+// Assert 3: UI Theme atado a localStorage (gestión global unificada)
+const themePrefPath = path.join(ROOT, 'src/shared/core/utils/globalThemePreference.ts');
+const themePrefContent = fs.existsSync(themePrefPath) ? fs.readFileSync(themePrefPath, 'utf-8') : '';
+if ((appContent.includes("getGlobalUiTheme") || appContent.includes("cv_ui_theme_preference")) &&
+    (themePrefContent.includes("cv_ui_theme_preference") || themePrefContent.includes("leecv_ui_theme_global"))) {
+  console.log('  ✓ Arreglo 3: Tema de UI desvinculado del documento y persistido en localStorage ("leecv_ui_theme_global") OK.');
   passed++;
 } else {
-  console.error('  ❌ Arreglo 3 falló: App.tsx no gestiona el tema UI en localStorage.');
+  console.error('  ❌ Arreglo 3 falló: App.tsx / globalThemePreference.ts no gestionan el tema UI en localStorage.');
   failed++;
 }
 
