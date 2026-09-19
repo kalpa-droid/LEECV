@@ -207,6 +207,7 @@ export default function CVPreview({
 
   return (
     <div 
+      ref={externalContainerRef}
       className="w-full flex flex-col items-center justify-start print-wrapper relative touch-pan-x touch-pan-y"
       style={dynamicThemeStyle}
     >
