@@ -63,8 +63,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
     return activeTabId && activeTabId.startsWith('book-') ? activeTabId : generateDocumentId('book');
   });
   const viewport = useDocumentViewport({
-    pageSizeId: 'a5',
-    safetyPaddingPx: 48
+    pageSizeId: 'a5'
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
 

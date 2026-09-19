@@ -272,8 +272,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     (activeDocType === 'business_card' ? ((cvData as any)?.cardSize || 'tarjeta_estandar') : 'a4');
 
   const viewport = useDocumentViewport({
-    pageSizeId: activePageSizeId,
-    safetyPaddingPx: 48
+    pageSizeId: activePageSizeId
   });
 
   const [isPhotoCropperOpen, setIsPhotoCropperOpen] = useState(false);
