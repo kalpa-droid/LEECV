@@ -9,7 +9,7 @@ import { Preset } from '../presets/presetSchema';
 
 export function flattenPresetForATS(basePreset: Preset): Preset {
   const allSectionIds: string[] = [];
-  basePreset.sectionOrder.forEach((sector) => {
+  (basePreset.sectionOrder || []).forEach((sector) => {
     sector.sectionIds.forEach((sid) => {
       if (!allSectionIds.includes(sid)) {
         allSectionIds.push(sid);

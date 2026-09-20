@@ -8,7 +8,7 @@ import { getPreset } from '../../shared/core/pdf-engine/layers/presets/presetReg
 import { DocumentTypeId } from '../../types/document';
 import { useDocumentViewport } from '../../shared/core/viewport';
 import { OpenTab, openTab } from '../../shared/core/documents/tabStore';
-import { generateDocumentId } from '../../shared/core/documents/documentEngine/titleEngine';
+import { generateDocumentId, computeAutoDocumentTitle } from '../../shared/core/documents/documentEngine';
 import { PlannerMonthOverride } from '../../shared/core/pdf-engine/layers/records/plannerDataAdapter';
 import { PersonalInfoFields } from '../../shared/core/ui/PersonalInfoFields';
 
@@ -22,6 +22,7 @@ interface PlannerStudioContentProps {
   onNewCV?: () => void;
   onNewCard?: () => void;
   onNewBook?: () => void;
+  onNewPlanner?: () => void;
   cycleUITheme: () => void;
   onTabsChanged?: (tabs: OpenTab[]) => void;
   isLoggedIn?: boolean;
@@ -45,6 +46,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   onNewCV: _onNewCV,
   onNewCard,
   onNewBook,
+  onNewPlanner,
   cycleUITheme,
   onTabsChanged = () => {},
   isLoggedIn = false,
@@ -106,11 +108,12 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
 
   useEffect(() => {
     const currentId = plannerId || generateDocumentId('planner');
-    const name = `Agenda ${data.year}`;
-    if (activeTabId === currentId && name === 'Agenda 2026') return; // Guard
+    const alreadyExists = documentTabs.some(t => t.id === currentId || t.cvId === currentId);
+    if (alreadyExists) return;
+    const name = computeAutoDocumentTitle('planner' as any, data);
     const updatedTabs = openTab(currentId, 'planner', name);
     if (onTabsChanged) onTabsChanged(updatedTabs);
-  }, [plannerId, data.year, activeTabId, onTabsChanged]);
+  }, [plannerId, documentTabs, onTabsChanged, data]);
 
   const pdfElement = useMemo(() => (
     <PlannerPdfDocument data={data} presetId={preset.id} theme={data.theme} />
@@ -388,6 +391,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
               document={pdfElement} 
               zoomLevel={viewport.zoomLevel}
               activeTab={activeStepTab}
+              preset={preset}
             />
           </div>
         </div>
@@ -402,6 +406,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
         onNewCV: _onNewCV,
         onNewCard: onNewCard,
         onNewBook: onNewBook,
+        onNewPlanner: onNewPlanner,
         onClose: (e, id) => onCloseTab(id),
       }}
     />

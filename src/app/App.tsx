@@ -329,7 +329,9 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       const docType = inferDocumentTypeId(blank);
       addOpenTab(newId, docType as any, computeAutoDocumentTitle(docType as any, blank));
       setTabs(getOpenTabs());
+      return { id: newId, docType };
     }
+    return null;
   }, [resetToBlankCV]);
 
   const prevRouteRef = useRef<string | undefined>(currentRoute);
@@ -589,8 +591,9 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         await runWithSafeSave(
           saveCV,
           () => {
-            createBlankDocumentWithTab();
+            const created = createBlankDocumentWithTab();
             setActiveTab('personales');
+            if (created) setPendingDocumentToOpen(created.id, created.docType);
             if (currentRoute !== '/crear-cv' && currentRoute !== '/') {
               if (onNavigate) {
                 onNavigate('/crear-cv');
@@ -615,8 +618,9 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         await runWithSafeSave(
           saveCV,
           () => {
-            createBlankDocumentWithTab('tarjeta-personal');
+            const created = createBlankDocumentWithTab('tarjeta-personal');
             setActiveTab('personales');
+            if (created) setPendingDocumentToOpen(created.id, created.docType);
             if (currentRoute !== '/crear-tarjeta') {
               if (onNavigate) {
                 onNavigate('/crear-tarjeta');
@@ -642,8 +646,9 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         await runWithSafeSave(
           saveCV,
           () => {
-            createBlankDocumentWithTab('libro-standard');
+            const created = createBlankDocumentWithTab('libro-standard');
             setActiveTab('grid_viewer');
+            if (created) setPendingDocumentToOpen(created.id, created.docType);
             if (currentRoute !== '/crear-libro') {
               if (onNavigate) {
                 onNavigate('/crear-libro');
@@ -669,8 +674,9 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         await runWithSafeSave(
           saveCV,
           () => {
-            createBlankDocumentWithTab('carta-clasica');
+            const created = createBlankDocumentWithTab('carta-clasica');
             setActiveTab('source_data');
+            if (created) setPendingDocumentToOpen(created.id, created.docType);
             if (currentRoute !== '/crear-carta') {
               if (onNavigate) {
                 onNavigate('/crear-carta');
@@ -696,8 +702,9 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         await runWithSafeSave(
           saveCV,
           () => {
-            createBlankDocumentWithTab('planner-mensual');
+            const created = createBlankDocumentWithTab('planner-mensual');
             setActiveTab('personales'); // TODO: Update to planner tab
+            if (created) setPendingDocumentToOpen(created.id, created.docType);
             if (currentRoute !== '/crear-agenda') {
               if (onNavigate) {
                 onNavigate('/crear-agenda');

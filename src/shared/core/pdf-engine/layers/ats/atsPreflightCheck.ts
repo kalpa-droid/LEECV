@@ -34,7 +34,7 @@ export function runAtsPreflightCheck(
   const linearReadingOrder: string[] = [];
 
   // 1. Verificación de Estructura Multicolumna
-  const hasSidebar = preset.sectionOrder.some(s => s.sectorRole === 'sidebar' && s.sectionIds.length > 0);
+  const hasSidebar = (preset.sectionOrder || []).some(s => s.sectorRole === 'sidebar' && s.sectionIds.length > 0);
   if (hasSidebar) {
     warnings.push({
       id: 'multicol_warning',

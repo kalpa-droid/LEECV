@@ -27,8 +27,8 @@ export function resolveEffectivePresetSectionOrder(
   preset: Preset,
   layoutOverrides?: CvLayoutOverrides
 ): PresetSectionOrder[] {
-  const baseSidebar = preset.sectionOrder.find(s => s.sectorRole === 'sidebar')?.sectionIds || [];
-  const baseMain = preset.sectionOrder.find(s => s.sectorRole === 'main')?.sectionIds || [];
+  const baseSidebar = (preset.sectionOrder || []).find(s => s.sectorRole === 'sidebar')?.sectionIds || [];
+  const baseMain = (preset.sectionOrder || []).find(s => s.sectorRole === 'main')?.sectionIds || [];
 
   const hasSidebarSector = Array.isArray(preset.sectors) && preset.sectors.some(s => s.role === 'sidebar');
 
