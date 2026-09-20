@@ -12,6 +12,40 @@ import { generateDocumentId, computeAutoDocumentTitle, useDraftAutosave, useRegi
 import { inferDocumentTypeId } from '../../shared/core/capabilities/capabilityRegistry';
 import { PlannerMonthOverride } from '../../shared/core/pdf-engine/layers/records/plannerDataAdapter';
 import { PersonalInfoFields } from '../../shared/core/ui/PersonalInfoFields';
+import { PresetPersonaSelector, PresetPersonaItem } from '../../shared/core/ui/PresetPersonaSelector';
+
+const PLANNER_PRESETS_LIST: PresetPersonaItem[] = [
+  {
+    id: 'planner-clasico',
+    name: 'Planner Clásico',
+    description: 'Diseño sobrio y elegante para organización integral.',
+    palette: { primary: '#1E293B', secondary: '#64748B', accent: '#3B82F6' },
+  },
+  {
+    id: 'planner-docente',
+    name: 'Planner Docente',
+    description: 'Estructura orientada a planificación académica y clases.',
+    palette: { primary: '#0D9488', secondary: '#14B8A6', accent: '#F59E0B' },
+  },
+  {
+    id: 'planner-ejecutivo',
+    name: 'Planner Ejecutivo',
+    description: 'Gestión de objetivos corporativos, reuniones y metas.',
+    palette: { primary: '#1E1B4B', secondary: '#4338CA', accent: '#6366F1' },
+  },
+  {
+    id: 'planner-emprendedor',
+    name: 'Planner Emprendedor',
+    description: 'Control de proyectos, finanzas y seguimiento de hitos.',
+    palette: { primary: '#7C2D12', secondary: '#EA580C', accent: '#10B981' },
+  },
+  {
+    id: 'planner-personal',
+    name: 'Planner Personal',
+    description: 'Estilo de vida, hábitos, bienestar y desarrollo personal.',
+    palette: { primary: '#831843', secondary: '#DB2777', accent: '#EC4899' },
+  },
+];
 
 interface PlannerStudioContentProps {
   currentUiTheme?: string;
@@ -56,6 +90,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   const [activeStepTab, setActiveStepTab] = useState<string>('planner_design');
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
   const [selectedMonthIndex, setSelectedMonthIndex] = useState<number>(0);
+  const [selectedPresetId, setSelectedPresetId] = useState<string>('planner-clasico');
   
   const [plannerId] = useState<string>(() => resolveDocumentIdWithHandoff(activeTabId, 'planner'));
   
@@ -97,10 +132,10 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
     onTabsChanged
   });
 
-  const preset = getPreset('planner-clasico');
+  const preset = getPreset(selectedPresetId);
 
   useDraftAutosave({
-    docData: { ...data, id: plannerId, doc_type_id: 'planner' },
+    docData: { ...data, id: plannerId, doc_type_id: 'planner', selectedPresetId },
     localStorageKey: `planner_data_${plannerId}`
   });
 
@@ -127,6 +162,17 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   ), [data, preset.id]);
 
   const currentMonthOverride = data.monthOverrides[selectedMonthIndex] || {};
+
+  const handleSelectPreset = (presetId: string) => {
+    setSelectedPresetId(presetId);
+    const selectedPresetObj = PLANNER_PRESETS_LIST.find((p) => p.id === presetId);
+    if (selectedPresetObj?.palette?.primary) {
+      setData((d) => ({
+        ...d,
+        theme: { ...d.theme, primaryColor: selectedPresetObj.palette!.primary },
+      }));
+    }
+  };
 
   return (
     <AppShell
@@ -165,10 +211,20 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
       panelSlot={
         <div className="p-4 pb-24 sm:pb-16 space-y-6 overflow-y-auto h-full max-h-full text-[var(--ui-text-primary)]">
           {activeStepTab === 'planner_design' && (
-            <div className="flex flex-col gap-4">
-              <h2 className="text-xl font-bold">Diseño y Paleta</h2>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold">Color Principal</label>
+            <div className="flex flex-col gap-5">
+              <h2 className="text-xl font-bold">Diseño y Preset Persona</h2>
+
+              <PresetPersonaSelector
+                title="Plantilla Persona"
+                subtitle="Seleccioná la plantilla prediseñada para tu tipo de agenda."
+                presets={PLANNER_PRESETS_LIST}
+                selectedPresetId={selectedPresetId}
+                onSelectPreset={handleSelectPreset}
+                columns={1}
+              />
+
+              <div className="flex flex-col gap-2 pt-2 border-t border-[var(--ui-border-base)]">
+                <label className="text-sm font-semibold">Color Principal Personalizado</label>
                 <input 
                   type="color" 
                   value={data.theme.primaryColor} 
