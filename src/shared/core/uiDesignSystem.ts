@@ -282,10 +282,18 @@ export const elevationSystem = {
  * MAPA DE CAPAS Z-INDEX — Control estricto de superposición
  */
 export const zIndex = {
+  base: 10,
+  panel: 20,
+  header: 40,
+  tabsBar: 40,
   dropdown: 50,
+  pwaBanner: 50,
+  banner: 60,
   sticky: 100,
   drawer: 500,
-  modal: 1000,
+  dock: 999,
+  modal: 9999,
+  overlay: 9999,
   toast: 9999,
 } as const;
 
