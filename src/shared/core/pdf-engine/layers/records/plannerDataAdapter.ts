@@ -17,6 +17,7 @@ export interface PlannerDocumentData {
   monthOverrides?: Record<number, PlannerMonthOverride>;
   title?: string;
   subtitle?: string;
+  primaryColor?: string;
 }
 
 export interface PreparedPlannerRenderData {
@@ -29,6 +30,7 @@ export interface PreparedPlannerRenderData {
   monthOverrides: Record<number, PlannerMonthOverride>;
   title: string;
   subtitle: string;
+  primaryColor: string;
 }
 
 export function preparePlannerRenderData(data: PlannerDocumentData): PreparedPlannerRenderData {
@@ -42,5 +44,6 @@ export function preparePlannerRenderData(data: PlannerDocumentData): PreparedPla
     monthOverrides: data.monthOverrides || {},
     title: data.title || 'Agenda Anual',
     subtitle: data.subtitle || 'Planificador y Organización',
+    primaryColor: data.primaryColor || '#1D9E75',
   };
 }

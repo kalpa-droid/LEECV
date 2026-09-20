@@ -170,7 +170,7 @@ export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({
           notesText: {
             fontSize: 9,
             color: '#334155',
-            fontStyle: 'italic',
+            fontFamily: 'Helvetica-Oblique',
           },
           habitRow: {
             display: 'flex',
