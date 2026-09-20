@@ -3,6 +3,7 @@ import { Document, Page, Text, View, StyleSheet, Svg, Path } from '@react-pdf/re
 import { getPageSize } from '../layers/page/pageSizes';
 import { generateGridPatternPath, GridPatternType } from '../layers/planner/gridPatternEngine';
 import { generateYearArchitecture } from '../layers/planner/timeArchitectureEngine';
+import { generateHybridMarkersPath } from '../layers/planner/hybridPageMarkers';
 
 interface PlannerPdfProps {
   data: any; // PlannerData
@@ -37,6 +38,10 @@ export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({
     pageDef.widthMm, 
     pageDef.heightMm
   );
+
+  const hybridMarkers = data?.hybridMarkers || { enabled: true, marginMm: 5, lengthMm: 10, colorHex: '#94a3b8' };
+  const markersPath = generateHybridMarkersPath(hybridMarkers, pageDef.widthMm, pageDef.heightMm);
+
 
   const styles = StyleSheet.create({
     page: {
@@ -135,6 +140,19 @@ export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({
                   stroke={gridPath.style.stroke} 
                   strokeWidth={gridPath.style.strokeWidth} 
                   strokeDasharray={gridPath.style.strokeDasharray}
+                />
+              </Svg>
+            </View>
+          )}
+
+          {/* Marcas de Corte/Registro (Híbrido) */}
+          {markersPath && (
+            <View style={styles.gridLayer}>
+              <Svg width={pageDef.widthPt} height={pageDef.heightPt}>
+                <Path 
+                  d={markersPath.pathString} 
+                  stroke={markersPath.style.stroke} 
+                  strokeWidth={markersPath.style.strokeWidth} 
                 />
               </Svg>
             </View>
