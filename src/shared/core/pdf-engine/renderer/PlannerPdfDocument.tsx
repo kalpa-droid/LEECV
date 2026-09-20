@@ -4,6 +4,7 @@ import { getPageSize } from '../layers/page/pageSizes';
 import { generateGridPatternPath, GridPatternType } from '../layers/planner/gridPatternEngine';
 import { generateYearArchitecture } from '../layers/planner/timeArchitectureEngine';
 import { generateHybridMarkersPath } from '../layers/planner/hybridPageMarkers';
+import { preparePlannerRenderData } from '../layers/records/plannerDataAdapter';
 
 interface PlannerPdfProps {
   data: any; // PlannerData
@@ -27,17 +28,15 @@ export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({
       : activePageSizeId === 'a4' ? 'A4'
       : [pageDef.widthPt, pageDef.heightPt];
 
+  const prepared = preparePlannerRenderData(data || {});
   const primaryColor = theme.primaryColor || '#1D9E75';
   const textColor = '#2D3748';
-  const year = data?.year || new Date().getFullYear();
-  const yearArch = generateYearArchitecture(year, true);
-  
-  const gridType: GridPatternType = data?.gridType || 'dot-grid';
-  const gridPath = generateGridPatternPath(
-    { type: gridType, colorHex: '#cbd5e1' }, 
-    pageDef.widthMm, 
-    pageDef.heightMm
-  );
+  const year = prepared.year;
+  const yearArch = generateYearArchitecture(year, {
+    weekStart: prepared.weekStart,
+    temporalView: prepared.temporalView,
+    weeklyLayout: prepared.weeklyLayout
+  });
 
   const hybridMarkers = data?.hybridMarkers || { enabled: true, marginMm: 5, lengthMm: 10, colorHex: '#94a3b8' };
   const markersPath = generateHybridMarkersPath(hybridMarkers, pageDef.widthMm, pageDef.heightMm);
@@ -121,74 +120,98 @@ export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({
     emptyCell: {
       flex: 1,
       backgroundColor: 'transparent'
+    },
+    monthNotes: {
+      marginTop: 14,
+      fontSize: 9,
+      color: '#64748b',
+      fontFamily: 'Helvetica-Oblique'
     }
   });
 
-  const weekDayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+  const weekDayNamesMonday = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+  const weekDayNamesSunday = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const weekDayNames = prepared.weekStart === 'sunday' ? weekDayNamesSunday : weekDayNamesMonday;
 
   return (
     <Document title={`Agenda ${year}`}>
-      {yearArch.months.map((month) => (
-        <Page key={month.monthIndex} size={pdfPageSize} style={styles.page}>
-          
-          {/* Capa de Retícula de Fondo */}
-          {gridPath && (
-            <View style={styles.gridLayer}>
-              <Svg width={pageDef.widthPt} height={pageDef.heightPt}>
-                <Path 
-                  d={gridPath.pathString} 
-                  stroke={gridPath.style.stroke} 
-                  strokeWidth={gridPath.style.strokeWidth} 
-                  strokeDasharray={gridPath.style.strokeDasharray}
-                />
-              </Svg>
-            </View>
-          )}
+      {yearArch.months.map((month) => {
+        // El override de este mes (si existe) pisa el diseño general del año.
+        const override = prepared.monthOverrides[month.monthIndex];
+        const monthGridType: GridPatternType = override?.gridType || prepared.gridType;
+        const monthColor = override?.primaryColor || primaryColor;
+        const monthGridPath = generateGridPatternPath(
+          { type: monthGridType, colorHex: prepared.gridColor },
+          pageDef.widthMm,
+          pageDef.heightMm
+        );
 
-          {/* Marcas de Corte/Registro (Híbrido) */}
-          {markersPath && (
-            <View style={styles.gridLayer}>
-              <Svg width={pageDef.widthPt} height={pageDef.heightPt}>
-                <Path 
-                  d={markersPath.pathString} 
-                  stroke={markersPath.style.stroke} 
-                  strokeWidth={markersPath.style.strokeWidth} 
-                />
-              </Svg>
-            </View>
-          )}
+        return (
+          <Page key={month.monthIndex} size={pdfPageSize} style={styles.page}>
 
-          {/* Capa de Contenido del Mes */}
-          <View style={styles.monthContainer}>
-            <View style={styles.header}>
-              <Text>{month.monthName}</Text>
-              <Text style={styles.yearText}>{year}</Text>
-            </View>
+            {/* Capa de Retícula de Fondo (respeta el override de este mes si lo tiene) */}
+            {monthGridPath && (
+              <View style={styles.gridLayer}>
+                <Svg width={pageDef.widthPt} height={pageDef.heightPt}>
+                  <Path
+                    d={monthGridPath.pathString}
+                    stroke={monthGridPath.style.stroke}
+                    strokeWidth={monthGridPath.style.strokeWidth}
+                    strokeDasharray={monthGridPath.style.strokeDasharray}
+                  />
+                </Svg>
+              </View>
+            )}
 
-            <View style={styles.calendarGrid}>
-              <View style={styles.weekDaysRow}>
-                {weekDayNames.map(wd => (
-                  <Text key={wd} style={styles.weekDayCell}>{wd}</Text>
+            {/* Marcas de Corte/Registro (Híbrido) */}
+            {markersPath && (
+              <View style={styles.gridLayer}>
+                <Svg width={pageDef.widthPt} height={pageDef.heightPt}>
+                  <Path
+                    d={markersPath.pathString}
+                    stroke={markersPath.style.stroke}
+                    strokeWidth={markersPath.style.strokeWidth}
+                  />
+                </Svg>
+              </View>
+            )}
+
+            {/* Capa de Contenido del Mes */}
+            <View style={styles.monthContainer}>
+              <View style={[styles.header, { color: monthColor, borderBottomColor: monthColor }]}>
+                <Text>{month.monthName}</Text>
+                <Text style={styles.yearText}>{year}</Text>
+              </View>
+
+              <View style={styles.calendarGrid}>
+                <View style={styles.weekDaysRow}>
+                  {weekDayNames.map(wd => (
+                    <Text key={wd} style={styles.weekDayCell}>{wd}</Text>
+                  ))}
+                </View>
+
+                {month.weeks.map((week, wIdx) => (
+                  <View key={wIdx} style={styles.weekRow}>
+                    {week.map((day, dIdx) => (
+                      day ? (
+                        <View key={dIdx} style={styles.dayCell}>
+                          <Text style={styles.dayNumber}>{day}</Text>
+                        </View>
+                      ) : (
+                        <View key={dIdx} style={styles.emptyCell} />
+                      )
+                    ))}
+                  </View>
                 ))}
               </View>
 
-              {month.weeks.map((week, wIdx) => (
-                <View key={wIdx} style={styles.weekRow}>
-                  {week.map((day, dIdx) => (
-                    day ? (
-                      <View key={dIdx} style={styles.dayCell}>
-                        <Text style={styles.dayNumber}>{day}</Text>
-                      </View>
-                    ) : (
-                      <View key={dIdx} style={styles.emptyCell} />
-                    )
-                  ))}
-                </View>
-              ))}
+              {override?.notes ? (
+                <Text style={styles.monthNotes}>{override.notes}</Text>
+              ) : null}
             </View>
-          </View>
-        </Page>
-      ))}
+          </Page>
+        );
+      })}
     </Document>
   );
 };

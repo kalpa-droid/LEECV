@@ -10,6 +10,12 @@ import { useDocumentViewport } from '../../shared/core/viewport';
 import { getNextPlannerStepId, getPrevPlannerStepId } from './plannerStepSequence';
 import { OpenTab, openTab } from '../../shared/core/documents/tabStore';
 import { generateDocumentId } from '../../shared/core/documents/documentEngine/titleEngine';
+import { PlannerMonthOverride } from '../../shared/core/pdf-engine/layers/records/plannerDataAdapter';
+
+const MONTH_NAMES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
 
 interface PlannerStudioContentProps {
   currentUiTheme?: string;
@@ -62,10 +68,31 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
     theme: {
       primaryColor: '#1E293B',
       fontFamily: 'Helvetica'
-    }
+    },
+    monthOverrides: {} as Record<number, PlannerMonthOverride>
   });
 
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
+
   const preset = getPreset('planner-clasico');
+
+  const updateMonthOverride = (monthIndex: number, patch: Partial<PlannerMonthOverride>) => {
+    setData(d => ({
+      ...d,
+      monthOverrides: {
+        ...d.monthOverrides,
+        [monthIndex]: { ...(d.monthOverrides[monthIndex] || {}), ...patch }
+      }
+    }));
+  };
+
+  const clearMonthOverride = (monthIndex: number) => {
+    setData(d => {
+      const next = { ...d.monthOverrides };
+      delete next[monthIndex];
+      return { ...d, monthOverrides: next };
+    });
+  };
 
   useEffect(() => {
     const currentId = plannerId || generateDocumentId('planner');
@@ -165,7 +192,97 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
           {activeStepTab === 'planner_months' && (
             <div className="flex flex-col gap-4">
               <h2 className="text-xl font-bold">Meses</h2>
-              <p className="text-sm text-[var(--ui-text-secondary)]">Aquí configuraremos overrides por cada mes.</p>
+              <p className="text-sm text-[var(--ui-text-secondary)]">
+                Por defecto los 12 meses usan el mismo fondo y color que elegiste en las pestañas anteriores.
+                Tocá un mes para darle un diseño distinto solo a ese mes.
+              </p>
+
+              <div className="grid grid-cols-3 gap-2">
+                {MONTH_NAMES.map((name, idx) => {
+                  const hasOverride = Boolean(data.monthOverrides[idx]);
+                  const isSelected = selectedMonth === idx;
+                  return (
+                    <button
+                      key={name}
+                      type="button"
+                      onClick={() => setSelectedMonth(isSelected ? null : idx)}
+                      className={`relative px-2 py-3 rounded-md border text-sm font-medium transition-colors ${
+                        isSelected
+                          ? 'border-[var(--color-accent-purple)] bg-[var(--color-accent-purple-light)] text-[var(--ui-text-primary)]'
+                          : 'border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] hover:bg-[var(--ui-btn-outline-hover)]'
+                      }`}
+                    >
+                      {name}
+                      {hasOverride && (
+                        <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[var(--color-accent-purple-bright)]" title="Este mes tiene un diseño propio" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {selectedMonth !== null && (
+                <div className="flex flex-col gap-3 p-3 rounded-md border border-[var(--ui-border)] bg-[var(--ui-bg-panel)]">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold">{MONTH_NAMES[selectedMonth]}</h3>
+                    {data.monthOverrides[selectedMonth] && (
+                      <button
+                        type="button"
+                        onClick={() => clearMonthOverride(selectedMonth)}
+                        className="text-xs text-[var(--ui-text-secondary)] underline hover:text-[var(--ui-text-primary)]"
+                      >
+                        Usar el diseño general
+                      </button>
+                    )}
+                  </div>
+
+                  {!data.monthOverrides[selectedMonth] ? (
+                    <button
+                      type="button"
+                      onClick={() => updateMonthOverride(selectedMonth, {})}
+                      className="text-sm px-3 py-2 rounded-md border border-dashed border-[var(--ui-border)] text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] hover:border-[var(--color-accent-purple)]"
+                    >
+                      + Usar un diseño distinto para este mes
+                    </button>
+                  ) : (
+                    <>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-semibold">Fondo de hoja de este mes</label>
+                        <select
+                          value={data.monthOverrides[selectedMonth]?.gridType || data.gridType}
+                          onChange={e => updateMonthOverride(selectedMonth, { gridType: e.target.value as any })}
+                          className="px-3 py-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-md text-[var(--ui-text-primary)]"
+                        >
+                          <option value="dot-grid">Puntos (Dot-Grid)</option>
+                          <option value="lined">Líneas</option>
+                          <option value="blank">Blanco</option>
+                        </select>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-semibold">Color de este mes</label>
+                        <input
+                          type="color"
+                          value={data.monthOverrides[selectedMonth]?.primaryColor || data.theme.primaryColor}
+                          onChange={e => updateMonthOverride(selectedMonth, { primaryColor: e.target.value })}
+                          className="w-full h-10 p-1 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-md cursor-pointer"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-semibold">Nota para este mes (opcional)</label>
+                        <textarea
+                          value={data.monthOverrides[selectedMonth]?.notes || ''}
+                          onChange={e => updateMonthOverride(selectedMonth, { notes: e.target.value })}
+                          placeholder="Ej: Vacaciones, cierre de trimestre..."
+                          rows={2}
+                          className="px-3 py-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-md text-[var(--ui-text-primary)] resize-none"
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
