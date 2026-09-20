@@ -170,8 +170,8 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
               targetContainer.scrollTop = Math.round(relativeScrollRatio * targetContainer.scrollHeight);
             }
             const finalTarget = pendingScrollTabRef.current || activeTab;
-            if (finalTarget && relativeScrollRatio === 0) {
-              scrollToPdfAnchor(targetContainer, finalTarget, sections, preset!, layoutOverrides, anchorMapRef.current);
+            if (finalTarget && relativeScrollRatio === 0 && preset) {
+              scrollToPdfAnchor(targetContainer, finalTarget, sections, preset, layoutOverrides, anchorMapRef.current);
             }
           });
         }
@@ -197,8 +197,8 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
   // Reacciona ante el cambio de activeTab ejecutando scroll suave en el contenedor
   useEffect(() => {
     pendingScrollTabRef.current = activeTab;
-    if (!loading && activeTab && containerRef.current) {
-      scrollToPdfAnchor(wrapperRef.current || containerRef.current, activeTab, sections, preset!, layoutOverrides, anchorMapRef.current);
+    if (!loading && activeTab && containerRef.current && preset) {
+      scrollToPdfAnchor(wrapperRef.current || containerRef.current, activeTab, sections, preset, layoutOverrides, anchorMapRef.current);
     }
   }, [activeTab, loading, sections, preset, layoutOverrides]);
 
@@ -208,8 +208,8 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
       const customEvt = e as CustomEvent;
       const targetTab = customEvt.detail?.tabId || activeTab;
       pendingScrollTabRef.current = targetTab;
-      if (!loading && targetTab && (wrapperRef.current || containerRef.current)) {
-        scrollToPdfAnchor(wrapperRef.current || containerRef.current, targetTab, sections, preset!, layoutOverrides, anchorMapRef.current);
+      if (!loading && targetTab && (wrapperRef.current || containerRef.current) && preset) {
+        scrollToPdfAnchor(wrapperRef.current || containerRef.current, targetTab, sections, preset, layoutOverrides, anchorMapRef.current);
       }
     };
 

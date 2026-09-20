@@ -722,8 +722,9 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 
   const handleGenerateCoverLetterFromCV = (sourceCvData?: any) => {
     const dataToUse = sourceCvData || cvData;
-    createBlankDocumentWithTab('carta-clasica');
+    const created = createBlankDocumentWithTab('carta-clasica');
     setActiveTab('source_data');
+    if (created) setPendingDocumentToOpen(created.id, created.docType);
     if (dataToUse?.personalInfo) {
       setCvData(prev => ({
         ...prev,
@@ -806,14 +807,14 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   }
 
   if (currentRoute === '/crear-agenda') {
-    const activePlannerTab = tabs.find(t => t.docType === 'planner' || t.cvId.startsWith('planner-')) || { cvId: 'planner-main' };
+    const activePlannerTab = tabs.find(t => t.docType === 'planner' || (t.cvId && t.cvId.startsWith('planner-')) || (t.id && t.id.startsWith('planner-'))) || { id: 'planner-main', cvId: 'planner-main' };
     return (
       <PlannerStudioContent 
         documentTabs={tabs}
-        activeTabId={activePlannerTab.cvId}
+        activeTabId={activePlannerTab.id || activePlannerTab.cvId}
         onSelectTab={handleSwitchDocumentTab}
         onCloseTab={(id) => {
-          const tab = tabs.find(t => t.cvId === id);
+          const tab = tabs.find(t => t.id === id || t.cvId === id);
           handleCloseFooterTab({ stopPropagation: () => {} } as any, id, tab?.title || 'Documento');
         }}
         onNavigateToDocument={(targetDocType, id) => handleNavigateToDocumentTab(targetDocType, id)}
@@ -821,6 +822,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         onNewCV={handleNewCV}
         onNewCard={handleNewCard}
         onNewBook={handleNewBook}
+        onNewPlanner={handleNewPlanner}
         cycleUITheme={cycleUITheme}
         isLoggedIn={!!currentProfile}
         onAuthToggle={handleAuthToggle}
