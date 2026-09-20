@@ -1156,7 +1156,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 export default function App() {
   const [currentRoute, setCurrentRoute] = useState<string>(() => {
     const path = navigation.getPathname();
-    if (path === '/crear-cv' || path === '/crear-tarjeta' || path === '/crear-libro' || path === '/crear-carta' || path.startsWith('/blog')) {
+    if (path === '/crear-cv' || path === '/crear-tarjeta' || path === '/crear-libro' || path === '/crear-carta' || path === '/crear-agenda' || path.startsWith('/blog')) {
       return path;
     }
     return '/';

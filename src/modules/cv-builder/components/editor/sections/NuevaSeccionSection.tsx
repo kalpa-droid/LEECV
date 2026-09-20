@@ -2,7 +2,7 @@ import { AlertTriangle, Check, ChevronRight, Cloud, Download, FileText, Grid, Gr
 import { Field } from '../../../../../shared/core/ui/Field';
 import { FIELD_CATALOG } from '../../../../../shared/core/pdf-engine/layers/records/fieldCatalog';
 import React, { useState } from 'react';
-import { PanelSection } from '../PanelSection';
+import { PanelSection } from '../../../../../shared/core/ui/PanelSection';
 
 import { SectionManualAdjustment } from '../SectionManualAdjustment';
 import { GuardadosSection } from './GuardadosSection';

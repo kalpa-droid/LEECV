@@ -10,6 +10,7 @@ import { useDocumentViewport } from '../../shared/core/viewport';
 import { OpenTab, openTab } from '../../shared/core/documents/tabStore';
 import { generateDocumentId } from '../../shared/core/documents/documentEngine/titleEngine';
 import { PlannerMonthOverride } from '../../shared/core/pdf-engine/layers/records/plannerDataAdapter';
+import { PersonalInfoFields } from '../../shared/core/ui/PersonalInfoFields';
 
 interface PlannerStudioContentProps {
   currentUiTheme?: string;
@@ -26,6 +27,8 @@ interface PlannerStudioContentProps {
   isLoggedIn?: boolean;
   onAuthToggle?: () => void;
 }
+
+import { PLANNER_SECTION_REGISTRY } from './plannerSectionRegistry';
 
 const MONTH_NAMES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -51,9 +54,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
   const [selectedMonthIndex, setSelectedMonthIndex] = useState<number>(0);
   
-  const [plannerId] = useState<string>(() => {
-    return activeTabId && activeTabId.startsWith('planner-') ? activeTabId : generateDocumentId('planner');
-  });
+  const [plannerId] = useState<string>(() => activeTabId || generateDocumentId('planner'));
   
   const viewport = useDocumentViewport({
     pageSizeId: 'b5'
@@ -77,7 +78,9 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
       taskPriority: false,
       timeBlocking: false,
       notesBlock: false,
+      expenseTracker: false,
     },
+    personalInfo: {},
     monthOverrides: {} as Record<number, PlannerMonthOverride>
   });
 
@@ -104,9 +107,10 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   useEffect(() => {
     const currentId = plannerId || generateDocumentId('planner');
     const name = `Agenda ${data.year}`;
+    if (activeTabId === currentId && name === 'Agenda 2026') return; // Guard
     const updatedTabs = openTab(currentId, 'planner', name);
-    onTabsChanged(updatedTabs);
-  }, [plannerId, data.year]);
+    if (onTabsChanged) onTabsChanged(updatedTabs);
+  }, [plannerId, data.year, activeTabId, onTabsChanged]);
 
   const pdfElement = useMemo(() => (
     <PlannerPdfDocument data={data} presetId={preset.id} theme={data.theme} />
@@ -242,45 +246,20 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
                 Activá los bloques de organización que aparecerán en la agenda.
               </p>
               
-              <label className="flex items-center gap-3 p-3 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-lg cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={data.modules.taskPriority}
-                  onChange={e => setData(d => ({ ...d, modules: { ...d.modules, taskPriority: e.target.checked } }))}
-                  className="w-4 h-4 rounded accent-[var(--color-accent-base)]"
-                />
-                <span className="text-sm font-semibold">Tareas Prioritarias</span>
-              </label>
-
-              <label className="flex items-center gap-3 p-3 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-lg cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={data.modules.habitTracker}
-                  onChange={e => setData(d => ({ ...d, modules: { ...d.modules, habitTracker: e.target.checked } }))}
-                  className="w-4 h-4 rounded accent-[var(--color-accent-base)]"
-                />
-                <span className="text-sm font-semibold">Seguimiento de Hábitos</span>
-              </label>
-
-              <label className="flex items-center gap-3 p-3 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-lg cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={data.modules.timeBlocking}
-                  onChange={e => setData(d => ({ ...d, modules: { ...d.modules, timeBlocking: e.target.checked } }))}
-                  className="w-4 h-4 rounded accent-[var(--color-accent-base)]"
-                />
-                <span className="text-sm font-semibold">Bloques de Tiempo (Horarios)</span>
-              </label>
-
-              <label className="flex items-center gap-3 p-3 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-lg cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={data.modules.notesBlock}
-                  onChange={e => setData(d => ({ ...d, modules: { ...d.modules, notesBlock: e.target.checked } }))}
-                  className="w-4 h-4 rounded accent-[var(--color-accent-base)]"
-                />
-                <span className="text-sm font-semibold">Bloque de Notas y Objetivos</span>
-              </label>
+              {PLANNER_SECTION_REGISTRY.map(section => (
+                <label key={section.id} className="flex items-center gap-3 p-3 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-lg cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={(data.modules as any)[section.id]}
+                    onChange={e => setData(d => ({ ...d, modules: { ...d.modules, [section.id]: e.target.checked } }))}
+                    className="w-4 h-4 rounded accent-[var(--color-accent-base)]"
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold">{section.label}</span>
+                    {section.description && <span className="text-xs text-[var(--ui-text-secondary)]">{section.description}</span>}
+                  </div>
+                </label>
+              ))}
             </div>
           )}
 
@@ -380,6 +359,24 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {activeStepTab === 'planner_personal' && (
+            <div className="flex flex-col gap-4">
+              <h2 className="text-xl font-bold">Datos Personales</h2>
+              <p className="text-xs text-[var(--ui-text-secondary)]">
+                Estos datos aparecerán en la portada o en secciones especiales de la agenda.
+              </p>
+              <PersonalInfoFields
+                personalInfo={data.personalInfo}
+                onChange={(patch) =>
+                  setData((d) => ({
+                    ...d,
+                    personalInfo: { ...d.personalInfo, ...patch },
+                  }))
+                }
+              />
             </div>
           )}
         </div>

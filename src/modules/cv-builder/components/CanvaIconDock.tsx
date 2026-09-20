@@ -8,7 +8,7 @@ import { resolveActiveDockSections, DOCK_SPECIAL_TABS } from '../../../shared/co
 import { activateSection } from '../../../shared/core/sections/sectionActivationEngine';
 import { DocumentTypeId } from '../../../types/document';
 
-import { CreditCard, BookOpen, FileUp, Settings, Eye, Printer, Layers, BookMarked, Sliders, LayoutGrid, Hash, Calendar, CalendarDays, CheckSquare } from 'lucide-react';
+import { CreditCard, BookOpen, FileUp, Settings, Eye, Printer, Layers, BookMarked, Sliders, LayoutGrid, Hash, Calendar, CalendarDays, CheckSquare, User } from 'lucide-react';
 
 export interface CanvaIconDockProps {
   cvData?: any;
@@ -65,6 +65,7 @@ const plannerTabIcons: Record<string, any> = {
   planner_structure: Settings,
   planner_sections: CheckSquare,
   planner_months: CalendarDays,
+  planner_personal: User,
 };
 
 // 2. Pestañas de Sección Especiales Gobernadas por el Motor (activeSectionsDockEngine.ts)

@@ -6,7 +6,7 @@ import { getUiHint } from '../../../../../shared/core/uiTextGlossary';
 import { UI_GLOSSARY } from '../../../../../shared/core/ui/uiTextGlossary';
 import { Globe, Columns3, Layout } from 'lucide-react';
 import React from 'react';
-import { PanelSection } from '../PanelSection';
+import { PanelSection } from '../../../../../shared/core/ui/PanelSection';
 
 import { SectionManualAdjustment } from '../SectionManualAdjustment';
 import { GuardadosSection } from './GuardadosSection';

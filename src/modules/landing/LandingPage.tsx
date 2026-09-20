@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Mail, CreditCard, BookOpen, Newspaper, Sparkles, ShieldCheck, Award, Zap } from 'lucide-react';
+import { FileText, Mail, CreditCard, BookOpen, Newspaper, Sparkles, ShieldCheck, Award, Zap, CalendarDays } from 'lucide-react';
 import { displayScale, elevationSystem, radius } from '../../shared/core/uiDesignSystem';
 import { ThemeToggleButton } from '../../shared/core/ui/ThemeToggleButton';
 import { getGlobalUiTheme, cycleGlobalUiTheme } from '../../shared/core/utils/globalThemePreference';
@@ -78,6 +78,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             <button onClick={() => onNavigate('/crear-libro')} className="flex items-center gap-1 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer" title={t.landing.nav.libros}>
               <BookOpen className="w-4 h-4" />
               {!isMobile && <span>{t.landing.nav.libros}</span>}
+            </button>
+            <button onClick={() => onNavigate('/crear-agenda')} className="flex items-center gap-1 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer" title="Agendas">
+              <CalendarDays className="w-4 h-4" />
+              {!isMobile && <span>Agendas</span>}
             </button>
             <button onClick={() => onNavigate('/blog')} className="flex items-center gap-1 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer" title={t.landing.nav.blog}>
               <Newspaper className="w-4 h-4" />

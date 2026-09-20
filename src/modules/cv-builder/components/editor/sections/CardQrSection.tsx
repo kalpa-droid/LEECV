@@ -1,6 +1,6 @@
 import React from 'react';
 import { QrCode } from 'lucide-react';
-import { PanelSection } from '../PanelSection';
+import { PanelSection } from '../../../../../shared/core/ui/PanelSection';
 
 interface Props {
   cvData: any;

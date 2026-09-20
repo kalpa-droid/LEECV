@@ -1,6 +1,6 @@
 import React from 'react';
 import { Sparkles } from 'lucide-react';
-import { PanelSection } from '../PanelSection';
+import { PanelSection } from '../../../../../shared/core/ui/PanelSection';
 import { AIButton } from '../../../../../shared/core/ui/AIButton';
 import { generateAiCompletion } from '../../../../../shared/core/ai/aiClient';
 

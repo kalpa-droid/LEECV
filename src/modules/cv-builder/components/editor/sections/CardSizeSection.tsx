@@ -1,6 +1,6 @@
 import React from 'react';
 import { Layout, Sparkles, Check } from 'lucide-react';
-import { PanelSection } from '../PanelSection';
+import { PanelSection } from '../../../../../shared/core/ui/PanelSection';
 import { PAGE_SIZES } from '../../../../../shared/core/pdf-engine/layers/page/pageSizes';
 import { getAllPresets } from '../../../../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { triggerPresetTransition } from '../../../../../shared/core/pdf-engine/layers/presets/presetTransitionEngine';

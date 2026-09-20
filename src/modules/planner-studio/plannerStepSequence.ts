@@ -42,6 +42,13 @@ export const PLANNER_STEP_SEQUENCE: PlannerStepItem[] = [
     shortLabel: 'Meses',
     description: 'Overrides mes a mes',
   },
+  {
+    id: 'planner_personal',
+    stepNumber: 6,
+    label: '6. Datos Personales',
+    shortLabel: 'Personales',
+    description: 'Datos del titular',
+  },
 ];
 
 export const getPlannerStepById = (id: string): PlannerStepItem | undefined => {

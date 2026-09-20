@@ -1,6 +1,6 @@
 import React from 'react';
 import { PenTool, RotateCw } from 'lucide-react';
-import { PanelSection } from '../PanelSection';
+import { PanelSection } from '../../../../../shared/core/ui/PanelSection';
 import { useToast } from '../../../../../shared/core/ui/Toast';
 
 interface Props {

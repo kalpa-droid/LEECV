@@ -24,7 +24,7 @@ export function generateGridPatternPath(
   const style = {
     stroke: config.colorHex || '#D1D5DB',
     strokeWidth: config.type === 'dot-grid' ? 1.5 : 0.5,
-    strokeDasharray: config.type === 'dot-grid' ? `0 ${spacingPt}` : undefined,
+    strokeDasharray: config.type === 'dot-grid' ? `0.01 ${spacingPt}` : undefined,
     strokeLinecap: config.type === 'dot-grid' ? 'round' as const : 'butt' as const,
     opacity: config.opacity ?? 0.5
   };

@@ -1,6 +1,6 @@
 import { AlertTriangle, Check, ChevronRight, Cloud, Download, FileText, Grid, Grid3X3, GripHorizontal, GripVertical, Image as ImageIcon, Layers, Layout, Monitor, Palette, Plus, RotateCcw, Sparkles, Trash2, User, X } from 'lucide-react';
 import React from 'react';
-import { PanelSection } from '../PanelSection';
+import { PanelSection } from '../../../../../shared/core/ui/PanelSection';
 
 import { SectionManualAdjustment } from '../SectionManualAdjustment';
 import { GuardadosSection } from './GuardadosSection';

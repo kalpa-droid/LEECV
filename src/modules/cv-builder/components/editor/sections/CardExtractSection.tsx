@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CreditCard, Upload, FileText } from 'lucide-react';
-import { PanelSection } from '../PanelSection';
+import { PanelSection } from '../../../../../shared/core/ui/PanelSection';
 import { getOpenTabs } from '../../../../../shared/core/documents/tabStore';
 import { loadCVById, getSavedCVsList } from '../../../services/cvStorageService';
 import { importLinkedinArchive } from '../../../../../shared/core/importers/linkedinArchiveImporter';

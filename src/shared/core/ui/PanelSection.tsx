@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { colorSystem, typeScale } from '../../../../shared/core/uiDesignSystem';
+import { colorSystem, typeScale } from '../uiDesignSystem';
 
 interface PanelSectionProps {
   icon: React.ReactNode;

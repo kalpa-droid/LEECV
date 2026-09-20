@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Camera, Palette } from 'lucide-react';
-import { PanelSection } from '../PanelSection';
+import { PanelSection } from '../../../../../shared/core/ui/PanelSection';
 import PhotoCropperModal from '../../PhotoCropperModal';
 import { extractDominantCornerColor } from '../../../../../shared/core/pdf-engine/utils/extractDominantEdgeColor';
 import { useToast } from '../../../../../shared/core/ui/Toast';
