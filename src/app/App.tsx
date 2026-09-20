@@ -182,6 +182,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     if (docType === 'business_card') return 'card_front';
     if (docType === 'cover_letter') return 'source_data';
     if (docType === 'book') return 'grid_viewer';
+    if (docType === 'planner') return 'planner_design';
     return 'personales';
   });
 
@@ -196,6 +197,8 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         ? 'source_data' 
         : docType === 'book' 
         ? 'grid_viewer' 
+        : docType === 'planner'
+        ? 'planner_design'
         : 'personales';
       setActiveTab(defaultTab);
     }
@@ -702,8 +705,8 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         await runWithSafeSave(
           saveCV,
           () => {
-            const created = createBlankDocumentWithTab('planner-mensual');
-            setActiveTab('personales'); // TODO: Update to planner tab
+            const created = createBlankDocumentWithTab('planner-clasico');
+            setActiveTab('planner_design');
             if (created) setPendingDocumentToOpen(created.id, created.docType);
             if (currentRoute !== '/crear-agenda') {
               if (onNavigate) {
@@ -780,17 +783,17 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   }
 
   if (currentRoute === '/crear-libro') {
-    const activeBookTab = tabs.find(t => t.docType === 'book' || t.cvId.startsWith('book-')) || { cvId: 'book-main' };
+    const activeBookTab = tabs.find(t => t.docType === 'book' || (t.id && t.id.startsWith('book-')) || (t.cvId && t.cvId.startsWith('book-'))) || { id: 'book-main', cvId: 'book-main' };
     return (
       <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Creador de Libros...</div>}>
         <BookStudio
           currentUiTheme={globalUiTheme}
           onBackToHome={() => onNavigate?.('/')}
           documentTabs={tabs}
-          activeTabId={activeBookTab.cvId}
+          activeTabId={activeBookTab.id || activeBookTab.cvId}
           onSelectTab={handleSwitchDocumentTab}
           onCloseTab={(id) => {
-            const tab = tabs.find(t => t.cvId === id);
+            const tab = tabs.find(t => t.id === id || t.cvId === id);
             handleCloseFooterTab({ stopPropagation: () => {} } as any, id, tab?.title || 'Documento');
           }}
           onNavigateToDocument={(targetDocType, id) => handleNavigateToDocumentTab(targetDocType, id)}
@@ -807,7 +810,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   }
 
   if (currentRoute === '/crear-agenda') {
-    const activePlannerTab = tabs.find(t => t.docType === 'planner' || (t.cvId && t.cvId.startsWith('planner-')) || (t.id && t.id.startsWith('planner-'))) || { id: 'planner-main', cvId: 'planner-main' };
+    const activePlannerTab = tabs.find(t => t.docType === 'planner' || (t.id && t.id.startsWith('planner-')) || (t.cvId && t.cvId.startsWith('planner-'))) || { id: 'planner-main', cvId: 'planner-main' };
     return (
       <PlannerStudioContent 
         documentTabs={tabs}
