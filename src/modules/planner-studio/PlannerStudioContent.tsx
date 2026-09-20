@@ -166,12 +166,22 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   const handleSelectPreset = (presetId: string) => {
     setSelectedPresetId(presetId);
     const selectedPresetObj = PLANNER_PRESETS_LIST.find((p) => p.id === presetId);
-    if (selectedPresetObj?.palette?.primary) {
-      setData((d) => ({
+    
+    setData((d) => {
+      const nextModules = { ...d.modules };
+      PLANNER_SECTION_REGISTRY.forEach((sec) => {
+        (nextModules as any)[sec.id] = Boolean(sec.defaultForPersonas?.includes(presetId));
+      });
+
+      return {
         ...d,
-        theme: { ...d.theme, primaryColor: selectedPresetObj.palette!.primary },
-      }));
-    }
+        theme: {
+          ...d.theme,
+          primaryColor: selectedPresetObj?.palette?.primary || d.theme.primaryColor,
+        },
+        modules: nextModules,
+      };
+    });
   };
 
   return (

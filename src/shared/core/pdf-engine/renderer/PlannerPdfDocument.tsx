@@ -5,6 +5,8 @@ import { generateGridPatternPath, GridPatternType } from '../layers/planner/grid
 import { generateYearArchitecture, WeekStart, WeeklyLayout, TemporalView } from '../layers/planner/timeArchitectureEngine';
 import { generateHybridMarkersPath } from '../layers/planner/hybridPageMarkers';
 import { preparePlannerRenderData } from '../layers/records/plannerDataAdapter';
+import { getPreset } from '../layers/presets/presetRegistry';
+import { resolvePlannerStyles } from '../layers/planner/plannerStyleEngine';
 
 interface PlannerPdfProps {
   data: any; // PlannerData
@@ -29,8 +31,10 @@ export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({
       : [pageDef.widthPt, pageDef.heightPt];
 
   const prepared = preparePlannerRenderData(data || {});
-  const primaryColor = theme.primaryColor || data?.theme?.primaryColor || prepared.primaryColor || '#1D9E75';
-  const textColor = '#2D3748';
+  const activePreset = getPreset(presetId);
+  const plannerStyles = resolvePlannerStyles(activePreset);
+
+  const primaryColor = theme.primaryColor || data?.theme?.primaryColor || prepared.primaryColor || activePreset.palette.primary || '#1D9E75';
   const year = data?.year || prepared.year || new Date().getFullYear();
   const weekStart: WeekStart = data?.weekStart || prepared.weekStart || 'monday';
   const weeklyLayout: WeeklyLayout = data?.weeklyLayout || prepared.weeklyLayout || 'horizontal';
@@ -67,8 +71,8 @@ export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({
 
         const styles = StyleSheet.create({
           page: {
-            fontFamily: 'Helvetica',
-            color: textColor,
+            fontFamily: plannerStyles.bodyText.fontFamily,
+            color: plannerStyles.rolesColor.text,
             position: 'relative',
           },
           gridLayer: {
@@ -86,8 +90,8 @@ export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({
             flexDirection: 'column',
           },
           header: {
-            fontSize: 22,
-            fontFamily: 'Helvetica-Bold',
+            fontSize: plannerStyles.monthName.fontSizePt,
+            fontFamily: plannerStyles.monthName.fontFamily,
             color: monthPrimaryColor,
             marginBottom: 15,
             borderBottomWidth: 2,
@@ -99,8 +103,9 @@ export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({
             alignItems: 'baseline',
           },
           yearText: {
-            fontSize: 14,
-            color: '#64748b',
+            fontSize: plannerStyles.year.fontSizePt,
+            fontFamily: plannerStyles.year.fontFamily,
+            color: plannerStyles.year.colorHex,
           },
           calendarGrid: {
             display: 'flex',
@@ -119,9 +124,9 @@ export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({
           weekDayCell: {
             flex: 1,
             textAlign: 'center',
-            fontSize: 9,
-            fontFamily: 'Helvetica-Bold',
-            color: '#64748b',
+            fontSize: plannerStyles.weekDayLabel.fontSizePt,
+            fontFamily: plannerStyles.weekDayLabel.fontFamily,
+            color: plannerStyles.weekDayLabel.colorHex,
             textTransform: 'uppercase',
           },
           weekRow: {
@@ -137,8 +142,9 @@ export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({
             backgroundColor: 'white',
           },
           dayNumber: {
-            fontSize: 10,
-            color: '#334155',
+            fontSize: plannerStyles.dayNumber.fontSizePt,
+            fontFamily: plannerStyles.dayNumber.fontFamily,
+            color: plannerStyles.dayNumber.colorHex,
           },
           emptyCell: {
             flex: 1,
@@ -158,19 +164,21 @@ export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({
             backgroundColor: 'rgba(255,255,255,0.9)',
           },
           moduleTitle: {
-            fontSize: 10,
-            fontFamily: 'Helvetica-Bold',
+            fontSize: plannerStyles.moduleTitle.fontSizePt,
+            fontFamily: plannerStyles.moduleTitle.fontFamily,
             color: monthPrimaryColor,
             marginBottom: 4,
           },
           moduleText: {
-            fontSize: 9,
-            color: '#475569',
+            fontSize: plannerStyles.bodyText.fontSizePt,
+            fontFamily: plannerStyles.bodyText.fontFamily,
+            color: plannerStyles.bodyText.colorHex,
           },
           notesText: {
-            fontSize: 9,
-            color: '#334155',
-            fontFamily: 'Helvetica-Oblique',
+            fontSize: plannerStyles.bodyText.fontSizePt,
+            fontFamily: plannerStyles.bodyText.fontFamily,
+            color: plannerStyles.bodyText.colorHex,
+            fontStyle: plannerStyles.bodyText.fontStyle,
           },
           habitRow: {
             display: 'flex',
