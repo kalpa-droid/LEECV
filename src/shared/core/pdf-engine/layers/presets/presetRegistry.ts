@@ -68,6 +68,10 @@ export function resolveActivePreset(cvData: any): Preset {
 }
 
 import { plannerClasicoPreset } from './presets/planner-clasico';
+import { plannerDocentePreset } from './presets/planner-docente';
+import { plannerEjecutivoPreset } from './presets/planner-ejecutivo';
+import { plannerEmprendedorPreset } from './presets/planner-emprendedor';
+import { plannerPersonalPreset } from './presets/planner-personal';
 
 // Presets nativos por defecto compilados vía el Motor de Composición
 const NATIVE_PRESETS: Preset[] = [
@@ -116,7 +120,11 @@ const NATIVE_PRESETS: Preset[] = [
   cartaClasicaPreset,
   cartaModernaPreset,
   cartaMinimalistaPreset,
-  plannerClasicoPreset
+  plannerClasicoPreset,
+  plannerDocentePreset,
+  plannerEjecutivoPreset,
+  plannerEmprendedorPreset,
+  plannerPersonalPreset
 ];
 
 // Mapa en memoria dinámico

@@ -1,4 +1,5 @@
-export type GridPatternType = 'blank' | 'dot-grid' | 'lined';
+export type GridPatternType = 'blank' | 'dot-grid' | 'lined' | 'graph';
+export type GridType = GridPatternType;
 
 export interface GridPatternConfig {
   type: GridPatternType;

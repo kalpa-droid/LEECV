@@ -98,6 +98,18 @@ export const landingCatalog = {
       ],
       cta: 'Armar mi libro',
     },
+    agendas: {
+      badge: 'Novedad 2026',
+      title: 'Agendas & Planificadores',
+      tagline: 'Diseñá tu propio año listo para imprimir',
+      description: 'Creá agendas anuales con grilla de 12 meses, marcas para encuadernación en lomo espiral y hojas con puntos guía.',
+      bullets: [
+        '12 meses completos generados automáticamente',
+        'Puntos guía claros y hojas con renglones para escribir',
+        'Líneas guía para cortar y margen seguro para espiralado',
+      ],
+      cta: 'Crear Agenda',
+    },
   },
   portalIntro: {
     eyebrow: 'Cuatro herramientas independientes',

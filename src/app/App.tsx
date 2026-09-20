@@ -367,6 +367,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         const targetPreset = targetDocType === 'cover_letter' ? 'carta-clasica'
           : targetDocType === 'business_card' ? 'tarjeta-personal'
           : targetDocType === 'book' ? 'libro-standard'
+          : targetDocType === 'planner' ? 'planner-clasico'
           : 'cv-clasico';
         
         // Verifica nuevamente si hay una pestaña activa antes de crear una nueva a lo ciego

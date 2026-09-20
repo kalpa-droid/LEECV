@@ -1,14 +1,21 @@
+export type TemporalView = 'undated' | 'daily' | 'weekly' | 'monthly';
+export type WeeklyLayout = 'horizontal' | 'vertical' | 'dashboard';
+export type WeekStart = 'monday' | 'sunday';
+
 export interface MonthData {
   year: number;
   monthIndex: number; // 0-11
   monthName: string;
   daysInMonth: number;
-  firstDayOfWeek: number; // 0 = Sunday, 1 = Monday, etc.
+  firstDayOfWeek: number; // 0 = Sunday or Monday depending on weekStart
   weeks: (number | null)[][];
 }
 
 export interface YearArchitecture {
   year: number;
+  temporalView?: TemporalView;
+  weeklyLayout?: WeeklyLayout;
+  weekStart?: WeekStart;
   months: MonthData[];
 }
 
@@ -17,7 +24,37 @@ const MONTH_NAMES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
 
-export function generateYearArchitecture(year: number, startOnMonday: boolean = true): YearArchitecture {
+export interface TimeArchitectureOptions {
+  temporalView?: TemporalView;
+  weeklyLayout?: WeeklyLayout;
+  weekStart?: WeekStart;
+  startOnMonday?: boolean;
+}
+
+export function generateYearArchitecture(
+  year: number,
+  optionsOrStartOnMonday: boolean | TimeArchitectureOptions = true
+): YearArchitecture {
+  let isMonday = true;
+  let temporalView: TemporalView = 'monthly';
+  let weeklyLayout: WeeklyLayout = 'horizontal';
+  let weekStart: WeekStart = 'monday';
+
+  if (typeof optionsOrStartOnMonday === 'boolean') {
+    isMonday = optionsOrStartOnMonday;
+    weekStart = isMonday ? 'monday' : 'sunday';
+  } else if (optionsOrStartOnMonday) {
+    if (optionsOrStartOnMonday.weekStart) {
+      weekStart = optionsOrStartOnMonday.weekStart;
+      isMonday = weekStart === 'monday';
+    } else if (optionsOrStartOnMonday.startOnMonday !== undefined) {
+      isMonday = optionsOrStartOnMonday.startOnMonday;
+      weekStart = isMonday ? 'monday' : 'sunday';
+    }
+    if (optionsOrStartOnMonday.temporalView) temporalView = optionsOrStartOnMonday.temporalView;
+    if (optionsOrStartOnMonday.weeklyLayout) weeklyLayout = optionsOrStartOnMonday.weeklyLayout;
+  }
+
   const months: MonthData[] = [];
 
   for (let m = 0; m < 12; m++) {
@@ -26,7 +63,7 @@ export function generateYearArchitecture(year: number, startOnMonday: boolean = 
     
     // JS Date.getDay(): 0 is Sunday.
     let firstDayOfWeek = date.getDay();
-    if (startOnMonday) {
+    if (isMonday) {
       firstDayOfWeek = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
     }
 
@@ -58,5 +95,11 @@ export function generateYearArchitecture(year: number, startOnMonday: boolean = 
     });
   }
 
-  return { year, months };
+  return {
+    year,
+    temporalView,
+    weeklyLayout,
+    weekStart,
+    months
+  };
 }

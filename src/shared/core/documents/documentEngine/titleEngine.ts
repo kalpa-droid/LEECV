@@ -25,6 +25,7 @@ export const DOC_TITLE_PREFIX: Record<string, string> = {
   business_card: 'Tarjeta',
   cover_letter: 'Carta',
   book: 'Libro',
+  planner: 'Agenda',
 };
 
 /** DD/MM HH:mm:ss.d — con décima de segundo. */

@@ -64,14 +64,14 @@ export const PortalProductsGrid: React.FC<PortalProductsGridProps> = ({ onNaviga
     {
       id: 'agendas',
       icon: CalendarDays,
-      badge: 'NUEVO',
+      badge: t.landing.products.agendas.badge,
       badgeColor: 'bg-[var(--color-accent-amber-muted)] text-[var(--color-neutral-text-primary)] border-[var(--color-accent-amber-bright)]/30',
-      title: 'Agendas & Planners',
-      tagline: 'Diseña tu propio año',
-      description: 'Crea agendas en formato B5, planificadores semanales y diarios con diseños elegantes.',
-      bullets: ['Retículas de puntos', 'Marcas para encuadernación', 'Formatos mensuales y anuales'],
+      title: t.landing.products.agendas.title,
+      tagline: t.landing.products.agendas.tagline,
+      description: t.landing.products.agendas.description,
+      bullets: [...t.landing.products.agendas.bullets],
       route: '/crear-agenda',
-      cta: 'Crear Agenda',
+      cta: t.landing.products.agendas.cta,
     },
   ];
 

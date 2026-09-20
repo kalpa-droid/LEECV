@@ -184,6 +184,37 @@ export const CAPABILITY_REGISTRY: Record<string, CapabilityConfig> = {
     description: 'Permite que el usuario asigne un título o nombre personalizado al documento.',
     category: 'utility',
     defaultData: {}
+  },
+  planner_grid: {
+    id: 'planner_grid',
+    name: 'Retícula y Guías de Fondo',
+    description: 'Patrón de fondo para las hojas (puntos guía, renglones, cuadrícula o blanco).',
+    category: 'styling',
+    defaultData: {
+      gridType: 'dot-grid',
+      gridColor: '#CBD5E1'
+    }
+  },
+  planner_time: {
+    id: 'planner_time',
+    name: 'Arquitectura de Tiempo Anual',
+    description: 'Configuración del año objetivo, vista temporal y día de inicio de semana.',
+    category: 'content',
+    defaultData: {
+      year: new Date().getFullYear(),
+      temporalView: 'monthly',
+      weeklyLayout: 'horizontal',
+      weekStart: 'monday'
+    }
+  },
+  planner_months: {
+    id: 'planner_months',
+    name: 'Personalización por Mes',
+    description: 'Ajustes y notas personalizadas mes a mes.',
+    category: 'content',
+    defaultData: {
+      monthOverrides: {}
+    }
   }
 };
 
@@ -305,10 +336,14 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
     capabilities: [
       'theme',
       'paper_size',
+      'planner_grid',
+      'planner_time',
+      'planner_months',
       'json_backup',
       'nameable_title'
     ],
-    defaultPaperSize: 'a4'
+    defaultPaperSize: 'b5',
+    defaultActivePresetId: 'planner-clasico'
   }
 };
 
