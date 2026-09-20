@@ -7,15 +7,9 @@ import { VectorDocViewer } from '../../shared/core/pdf-engine/VectorDocViewer';
 import { getPreset } from '../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { DocumentTypeId } from '../../types/document';
 import { useDocumentViewport } from '../../shared/core/viewport';
-import { getNextPlannerStepId, getPrevPlannerStepId } from './plannerStepSequence';
 import { OpenTab, openTab } from '../../shared/core/documents/tabStore';
 import { generateDocumentId } from '../../shared/core/documents/documentEngine/titleEngine';
 import { PlannerMonthOverride } from '../../shared/core/pdf-engine/layers/records/plannerDataAdapter';
-
-const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-];
 
 interface PlannerStudioContentProps {
   currentUiTheme?: string;
@@ -32,6 +26,11 @@ interface PlannerStudioContentProps {
   isLoggedIn?: boolean;
   onAuthToggle?: () => void;
 }
+
+const MONTH_NAMES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
 
 export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   currentUiTheme = 'day',
@@ -50,8 +49,9 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
 }) => {
   const [activeStepTab, setActiveStepTab] = useState<string>('planner_design');
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
+  const [selectedMonthIndex, setSelectedMonthIndex] = useState<number>(0);
   
-  const [plannerId, setPlannerId] = useState<string>(() => {
+  const [plannerId] = useState<string>(() => {
     return activeTabId && activeTabId.startsWith('planner-') ? activeTabId : generateDocumentId('planner');
   });
   
@@ -61,7 +61,10 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
 
   const [data, setData] = useState({
     year: new Date().getFullYear(),
-    gridType: 'dot-grid' as const,
+    weekStart: 'monday' as 'monday' | 'sunday',
+    weeklyLayout: 'horizontal' as 'horizontal' | 'vertical' | 'dashboard',
+    temporalView: 'monthly' as 'monthly' | 'weekly' | 'daily' | 'undated',
+    gridType: 'dot-grid' as 'blank' | 'dot-grid' | 'lined' | 'graph',
     layout: {
       pageSizeId: 'b5'
     },
@@ -69,10 +72,14 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
       primaryColor: '#1E293B',
       fontFamily: 'Helvetica'
     },
+    modules: {
+      habitTracker: false,
+      taskPriority: false,
+      timeBlocking: false,
+      notesBlock: false,
+    },
     monthOverrides: {} as Record<number, PlannerMonthOverride>
   });
-
-  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
 
   const preset = getPreset('planner-clasico');
 
@@ -104,6 +111,8 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   const pdfElement = useMemo(() => (
     <PlannerPdfDocument data={data} presetId={preset.id} theme={data.theme} />
   ), [data, preset.id]);
+
+  const currentMonthOverride = data.monthOverrides[selectedMonthIndex] || {};
 
   return (
     <AppShell
@@ -160,14 +169,15 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
             <div className="flex flex-col gap-4">
               <h2 className="text-xl font-bold">Fondo de Hoja</h2>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold">Retícula</label>
+                <label className="text-sm font-semibold">Retícula General</label>
                 <select 
                   value={data.gridType}
                   onChange={e => setData(d => ({ ...d, gridType: e.target.value as any }))}
                   className="px-3 py-2 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-md text-[var(--ui-text-primary)]"
                 >
-                  <option value="dot-grid">Puntos (Dot-Grid)</option>
-                  <option value="lined">Líneas</option>
+                  <option value="dot-grid">Puntos guía (Dot-Grid)</option>
+                  <option value="lined">Renglones (Líneas)</option>
+                  <option value="graph">Cuadrícula (Graph)</option>
                   <option value="blank">Blanco</option>
                 </select>
               </div>
@@ -178,7 +188,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
             <div className="flex flex-col gap-4">
               <h2 className="text-xl font-bold">Estructura del Año</h2>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold">Año</label>
+                <label className="text-sm font-semibold">Año Objetivo</label>
                 <input 
                   type="number" 
                   value={data.year} 
@@ -186,114 +196,200 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
                   className="px-3 py-2 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-md text-[var(--ui-text-primary)]"
                 />
               </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold">Inicio de Semana</label>
+                <select
+                  value={data.weekStart}
+                  onChange={e => setData(d => ({ ...d, weekStart: e.target.value as any }))}
+                  className="px-3 py-2 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-md text-[var(--ui-text-primary)]"
+                >
+                  <option value="monday">Lunes</option>
+                  <option value="sunday">Domingo</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold">Disposición Semanal</label>
+                <select
+                  value={data.weeklyLayout}
+                  onChange={e => setData(d => ({ ...d, weeklyLayout: e.target.value as any }))}
+                  className="px-3 py-2 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-md text-[var(--ui-text-primary)]"
+                >
+                  <option value="horizontal">Horizontal Estándar</option>
+                  <option value="vertical">Vertical Amplia</option>
+                  <option value="dashboard">Panel Compacto (Dashboard)</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold">Vista Temporal</label>
+                <select
+                  value={data.temporalView}
+                  onChange={e => setData(d => ({ ...d, temporalView: e.target.value as any }))}
+                  className="px-3 py-2 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-md text-[var(--ui-text-primary)]"
+                >
+                  <option value="monthly">Anual con Grilla Mensual</option>
+                  <option value="weekly">Planificador Semanal</option>
+                  <option value="daily">Planificador Diario</option>
+                  <option value="undated">Sin Fechas Fijas</option>
+                </select>
+              </div>
             </div>
           )}
-          
+
+          {activeStepTab === 'planner_sections' && (
+            <div className="flex flex-col gap-4">
+              <h2 className="text-xl font-bold">Módulos de Contenido</h2>
+              <p className="text-xs text-[var(--ui-text-secondary)]">
+                Activá los bloques de organización que aparecerán en la agenda.
+              </p>
+              
+              <label className="flex items-center gap-3 p-3 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-lg cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={data.modules.taskPriority}
+                  onChange={e => setData(d => ({ ...d, modules: { ...d.modules, taskPriority: e.target.checked } }))}
+                  className="w-4 h-4 rounded accent-[var(--color-accent-base)]"
+                />
+                <span className="text-sm font-semibold">Tareas Prioritarias</span>
+              </label>
+
+              <label className="flex items-center gap-3 p-3 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-lg cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={data.modules.habitTracker}
+                  onChange={e => setData(d => ({ ...d, modules: { ...d.modules, habitTracker: e.target.checked } }))}
+                  className="w-4 h-4 rounded accent-[var(--color-accent-base)]"
+                />
+                <span className="text-sm font-semibold">Seguimiento de Hábitos</span>
+              </label>
+
+              <label className="flex items-center gap-3 p-3 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-lg cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={data.modules.timeBlocking}
+                  onChange={e => setData(d => ({ ...d, modules: { ...d.modules, timeBlocking: e.target.checked } }))}
+                  className="w-4 h-4 rounded accent-[var(--color-accent-base)]"
+                />
+                <span className="text-sm font-semibold">Bloques de Tiempo (Horarios)</span>
+              </label>
+
+              <label className="flex items-center gap-3 p-3 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-lg cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={data.modules.notesBlock}
+                  onChange={e => setData(d => ({ ...d, modules: { ...d.modules, notesBlock: e.target.checked } }))}
+                  className="w-4 h-4 rounded accent-[var(--color-accent-base)]"
+                />
+                <span className="text-sm font-semibold">Bloque de Notas y Objetivos</span>
+              </label>
+            </div>
+          )}
+
           {activeStepTab === 'planner_months' && (
             <div className="flex flex-col gap-4">
-              <h2 className="text-xl font-bold">Meses</h2>
-              <p className="text-sm text-[var(--ui-text-secondary)]">
-                Por defecto los 12 meses usan el mismo fondo y color que elegiste en las pestañas anteriores.
-                Tocá un mes para darle un diseño distinto solo a ese mes.
+              <h2 className="text-xl font-bold">Personalización por Mes</h2>
+              <p className="text-xs text-[var(--ui-text-secondary)]">
+                Por defecto los 12 meses usan el mismo fondo y color. Tocá un mes para darle un diseño distinto.
               </p>
 
+              {/* Selector de 12 Meses */}
               <div className="grid grid-cols-3 gap-2">
                 {MONTH_NAMES.map((name, idx) => {
                   const hasOverride = Boolean(data.monthOverrides[idx]);
-                  const isSelected = selectedMonth === idx;
+                  const isSelected = selectedMonthIndex === idx;
                   return (
                     <button
                       key={name}
                       type="button"
-                      onClick={() => setSelectedMonth(isSelected ? null : idx)}
-                      className={`relative px-2 py-3 rounded-md border text-sm font-medium transition-colors ${
+                      onClick={() => setSelectedMonthIndex(idx)}
+                      className={`p-2 text-xs font-bold rounded-lg border text-center transition-all ${
                         isSelected
-                          ? 'border-[var(--color-accent-purple)] bg-[var(--color-accent-purple-light)] text-[var(--ui-text-primary)]'
-                          : 'border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] hover:bg-[var(--ui-btn-outline-hover)]'
+                          ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--color-accent-base)]'
+                          : hasOverride
+                          ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] border-[var(--color-accent-base)]/40'
+                          : 'bg-[var(--ui-bg-base)] border-[var(--ui-border-base)] hover:border-[var(--color-accent-base)]'
                       }`}
                     >
                       {name}
-                      {hasOverride && (
-                        <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[var(--color-accent-purple-bright)]" title="Este mes tiene un diseño propio" />
-                      )}
+                      {hasOverride && <span className="ml-1 text-[9px]">●</span>}
                     </button>
                   );
                 })}
               </div>
 
-              {selectedMonth !== null && (
-                <div className="flex flex-col gap-3 p-3 rounded-md border border-[var(--ui-border)] bg-[var(--ui-bg-panel)]">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold">{MONTH_NAMES[selectedMonth]}</h3>
-                    {data.monthOverrides[selectedMonth] && (
-                      <button
-                        type="button"
-                        onClick={() => clearMonthOverride(selectedMonth)}
-                        className="text-xs text-[var(--ui-text-secondary)] underline hover:text-[var(--ui-text-primary)]"
-                      >
-                        Usar el diseño general
-                      </button>
-                    )}
-                  </div>
-
-                  {!data.monthOverrides[selectedMonth] ? (
+              {/* Panel de Override del Mes Seleccionado */}
+              <div className="p-4 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-extrabold text-[var(--color-accent-text)]">
+                    Configuración de {MONTH_NAMES[selectedMonthIndex]}
+                  </h3>
+                  {data.monthOverrides[selectedMonthIndex] ? (
                     <button
                       type="button"
-                      onClick={() => updateMonthOverride(selectedMonth, {})}
-                      className="text-sm px-3 py-2 rounded-md border border-dashed border-[var(--ui-border)] text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] hover:border-[var(--color-accent-purple)]"
+                      onClick={() => clearMonthOverride(selectedMonthIndex)}
+                      className="text-xs text-[var(--ui-text-secondary)] underline hover:text-[var(--ui-text-primary)]"
                     >
-                      + Usar un diseño distinto para este mes
+                      Usar el diseño general
                     </button>
                   ) : (
-                    <>
-                      <div className="flex flex-col gap-2">
-                        <label className="text-sm font-semibold">Fondo de hoja de este mes</label>
-                        <select
-                          value={data.monthOverrides[selectedMonth]?.gridType || data.gridType}
-                          onChange={e => updateMonthOverride(selectedMonth, { gridType: e.target.value as any })}
-                          className="px-3 py-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-md text-[var(--ui-text-primary)]"
-                        >
-                          <option value="dot-grid">Puntos (Dot-Grid)</option>
-                          <option value="lined">Líneas</option>
-                          <option value="blank">Blanco</option>
-                        </select>
-                      </div>
-
-                      <div className="flex flex-col gap-2">
-                        <label className="text-sm font-semibold">Color de este mes</label>
-                        <input
-                          type="color"
-                          value={data.monthOverrides[selectedMonth]?.primaryColor || data.theme.primaryColor}
-                          onChange={e => updateMonthOverride(selectedMonth, { primaryColor: e.target.value })}
-                          className="w-full h-10 p-1 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-md cursor-pointer"
-                        />
-                      </div>
-
-                      <div className="flex flex-col gap-2">
-                        <label className="text-sm font-semibold">Nota para este mes (opcional)</label>
-                        <textarea
-                          value={data.monthOverrides[selectedMonth]?.notes || ''}
-                          onChange={e => updateMonthOverride(selectedMonth, { notes: e.target.value })}
-                          placeholder="Ej: Vacaciones, cierre de trimestre..."
-                          rows={2}
-                          className="px-3 py-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-md text-[var(--ui-text-primary)] resize-none"
-                        />
-                      </div>
-                    </>
+                    <button
+                      type="button"
+                      onClick={() => updateMonthOverride(selectedMonthIndex, { gridType: data.gridType, primaryColor: data.theme.primaryColor })}
+                      className="text-xs font-semibold px-2.5 py-1 rounded border border-dashed border-[var(--ui-border-base)] text-[var(--color-accent-text)]"
+                    >
+                      + Personalizar este mes
+                    </button>
                   )}
                 </div>
-              )}
+
+                {data.monthOverrides[selectedMonthIndex] && (
+                  <div className="space-y-3 pt-2 border-t border-[var(--ui-border-base)]">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold">Color del Mes</label>
+                      <input
+                        type="color"
+                        value={currentMonthOverride.primaryColor || data.theme.primaryColor}
+                        onChange={e => updateMonthOverride(selectedMonthIndex, { primaryColor: e.target.value })}
+                        className="w-full h-8 p-1 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-md cursor-pointer"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold">Retícula del Mes</label>
+                      <select
+                        value={currentMonthOverride.gridType || data.gridType}
+                        onChange={e => updateMonthOverride(selectedMonthIndex, { gridType: e.target.value as any })}
+                        className="px-3 py-1.5 text-xs bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-md text-[var(--ui-text-primary)]"
+                      >
+                        <option value="dot-grid">Puntos guía (Dot-Grid)</option>
+                        <option value="lined">Renglones (Líneas)</option>
+                        <option value="graph">Cuadrícula (Graph)</option>
+                        <option value="blank">Blanco</option>
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold">Nota / Objetivo del Mes</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: Planificar proyectos de Q1"
+                        value={currentMonthOverride.notes || ''}
+                        onChange={e => updateMonthOverride(selectedMonthIndex, { notes: e.target.value })}
+                        className="px-3 py-1.5 text-xs bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-md text-[var(--ui-text-primary)]"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
       }
       mainSlot={
-        <div className="w-full h-full flex flex-col items-center p-4 bg-[var(--ui-bg-panel)] relative overflow-y-auto">
-          <div className="w-full max-w-4xl rounded-xl shadow-2xl border border-[var(--ui-border)] bg-[var(--ui-bg-card)] overflow-hidden">
-            <VectorDocViewer
-              document={pdfElement}
+        <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-[var(--ui-bg-sunken)] relative overflow-hidden">
+          <div className="flex-1 w-full max-w-4xl rounded-xl overflow-hidden shadow-2xl border border-[var(--ui-border-base)] bg-[var(--ui-bg-base)]">
+            <VectorDocViewer 
+              document={pdfElement} 
               zoomLevel={viewport.zoomLevel}
-              preset={preset}
               activeTab={activeStepTab}
             />
           </div>

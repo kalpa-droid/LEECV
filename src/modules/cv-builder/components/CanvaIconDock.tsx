@@ -8,7 +8,7 @@ import { resolveActiveDockSections, DOCK_SPECIAL_TABS } from '../../../shared/co
 import { activateSection } from '../../../shared/core/sections/sectionActivationEngine';
 import { DocumentTypeId } from '../../../types/document';
 
-import { CreditCard, BookOpen, FileUp, Settings, Eye, Printer, Layers, BookMarked, Sliders, LayoutGrid, Hash, Calendar, CalendarDays } from 'lucide-react';
+import { CreditCard, BookOpen, FileUp, Settings, Eye, Printer, Layers, BookMarked, Sliders, LayoutGrid, Hash, Calendar, CalendarDays, CheckSquare } from 'lucide-react';
 
 export interface CanvaIconDockProps {
   cvData?: any;
@@ -43,9 +43,8 @@ const CARD_TABS_SMALL = [
 const COVER_LETTER_TABS = [
   { id: 'source_data', label: '1. Origen de Datos', icon: Database },
   { id: 'vacancy', label: '2. Vacante', icon: Briefcase },
-  { id: 'ai_generate', label: '3. Generar con IA', icon: Sparkles },
-  { id: 'content', label: '4. Contenido', icon: FileText },
-  { id: 'styling', label: '5. Diseño', icon: Palette },
+  { id: 'letter_style', label: '3. Estilo', icon: Palette },
+  { id: 'ai_editor', label: '4. Redacción IA', icon: Sparkles },
 ] as const;
 
 import { BOOK_STEP_SEQUENCE } from '../../../shared/core/book-engine/bookStepSequence';
@@ -64,6 +63,7 @@ const plannerTabIcons: Record<string, any> = {
   planner_design: Palette,
   planner_background: LayoutGrid,
   planner_structure: Settings,
+  planner_sections: CheckSquare,
   planner_months: CalendarDays,
 };
 
