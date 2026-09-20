@@ -53,6 +53,7 @@ import { cvDataToContentSections } from '../shared/core/pdf-engine/layers/record
 import { runAtsPreflightCheck, AtsPreflightResult } from '../shared/core/pdf-engine/layers/ats/atsPreflightCheck';
 import { runAiAtsAnalysis, AtsAiFinding } from '../shared/core/pdf-engine/layers/ats/atsAiAnalysis';
 import { AtsCheckModal } from '../modules/cv-builder/components/AtsCheckModal';
+import { CoverLetterExportModal } from '../modules/cover-letter/components/CoverLetterExportModal';
 import { navigation } from '../shared/core/utils/navigation';
 
 import EmailSaveModal from '../modules/cv-builder/components/modals/EmailSaveModal';
@@ -295,6 +296,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 
   const [isPdfCheckoutOpen, setIsPdfCheckoutOpen] = useState(false);
   const [isCardExportOpen, setIsCardExportOpen] = useState(false);
+  const [isCoverLetterExportOpen, setIsCoverLetterExportOpen] = useState(false);
   const [isAtsModalOpen, setIsAtsModalOpen] = useState(false);
   const [atsResult, setAtsResult] = useState<AtsPreflightResult | null>(null);
   const [isAnalyzingAtsAi, setIsAnalyzingAtsAi] = useState(false);
@@ -521,6 +523,11 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const handleExportPDFClick = () => {
     if (cvData?.activePresetId === 'tarjeta-personal') {
       setIsCardExportOpen(true);
+      return;
+    }
+
+    if (activeDocType === 'cover_letter') {
+      setIsCoverLetterExportOpen(true);
       return;
     }
 
@@ -1071,6 +1078,15 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
                 presetId={cvData?.activePresetId || 'tarjeta-personal'}
               />
             </Suspense>
+          )}
+
+          {isCoverLetterExportOpen && (
+            <CoverLetterExportModal
+              isOpen={isCoverLetterExportOpen}
+              onClose={() => setIsCoverLetterExportOpen(false)}
+              cvData={cvData}
+              presetId={cvData?.activePresetId || 'carta-clasica'}
+            />
           )}
 
           {isDownloadModalOpen && (
