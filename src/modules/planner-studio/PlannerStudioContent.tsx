@@ -8,7 +8,7 @@ import { getPreset } from '../../shared/core/pdf-engine/layers/presets/presetReg
 import { DocumentTypeId } from '../../types/document';
 import { useDocumentViewport } from '../../shared/core/viewport';
 import { OpenTab, openTab } from '../../shared/core/documents/tabStore';
-import { generateDocumentId, computeAutoDocumentTitle, useDraftAutosave } from '../../shared/core/documents/documentEngine';
+import { generateDocumentId, computeAutoDocumentTitle, useDraftAutosave, useRegisterDocumentTab, resolveDocumentIdWithHandoff } from '../../shared/core/documents/documentEngine';
 import { inferDocumentTypeId } from '../../shared/core/capabilities/capabilityRegistry';
 import { PlannerMonthOverride } from '../../shared/core/pdf-engine/layers/records/plannerDataAdapter';
 import { PersonalInfoFields } from '../../shared/core/ui/PersonalInfoFields';
@@ -57,7 +57,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
   const [selectedMonthIndex, setSelectedMonthIndex] = useState<number>(0);
   
-  const [plannerId] = useState<string>(() => activeTabId || generateDocumentId('planner'));
+  const [plannerId] = useState<string>(() => resolveDocumentIdWithHandoff(activeTabId, 'planner'));
   
   const viewport = useDocumentViewport({
     pageSizeId: 'b5'
@@ -87,6 +87,16 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
     monthOverrides: {} as Record<number, PlannerMonthOverride>
   });
 
+  const plannerTitle = computeAutoDocumentTitle('planner' as any, data);
+
+  useRegisterDocumentTab({
+    id: plannerId,
+    docType: 'planner',
+    title: plannerTitle,
+    documentTabs,
+    onTabsChanged
+  });
+
   const preset = getPreset('planner-clasico');
 
   useDraftAutosave({
@@ -111,15 +121,6 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
       return { ...d, monthOverrides: next };
     });
   };
-
-  useEffect(() => {
-    const currentId = plannerId || generateDocumentId('planner');
-    const alreadyExists = documentTabs.some(t => t.id === currentId || t.cvId === currentId || inferDocumentTypeId(t) === 'planner');
-    if (alreadyExists) return;
-    const name = computeAutoDocumentTitle('planner' as any, data);
-    const updatedTabs = openTab(currentId, 'planner', name);
-    if (onTabsChanged) onTabsChanged(updatedTabs);
-  }, [plannerId, documentTabs, onTabsChanged, data]);
 
   const pdfElement = useMemo(() => (
     <PlannerPdfDocument data={data} presetId={preset.id} theme={data.theme} />

@@ -13,9 +13,7 @@ import { BookPreviewStep } from './BookPreviewStep';
 import { getNextBookStepId, getPrevBookStepId } from '../../shared/core/book-engine/bookStepSequence';
 import { saveBook } from '../../shared/core/storage/documentStorageService';
 import { openTab, OpenTab } from '../../shared/core/documents/tabStore';
-import { generateDocumentId } from '../../shared/core/documents/documentEngine/titleEngine';
-import { inferDocumentTypeId } from '../../shared/core/capabilities/capabilityRegistry';
-import { getPendingDocumentToOpen, clearPendingDocumentToOpen } from '../../shared/core/storage/pendingDocumentHandoff';
+import { useRegisterDocumentTab, resolveDocumentIdWithHandoff, generateDocumentId } from '../../shared/core/documents/documentEngine';
 import { radius, button } from '../../shared/core/uiDesignSystem';
 import { useDocumentViewport } from '../../shared/core/viewport';
 import { DocumentTypeId } from '../../types/document';
@@ -56,14 +54,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [pdfDoc, setPdfDoc] = useState<any>(null);
   const [pdfPageCount, setPdfPageCount] = useState<number>(0);
-  const [bookId, setBookId] = useState<string>(() => {
-    const pending = getPendingDocumentToOpen();
-    if (pending && pending.docType === 'book') {
-      clearPendingDocumentToOpen();
-      return pending.id;
-    }
-    return activeTabId && activeTabId.startsWith('book-') ? activeTabId : generateDocumentId('book');
-  });
+  const [bookId, setBookId] = useState<string>(() => resolveDocumentIdWithHandoff(activeTabId, 'book'));
   const viewport = useDocumentViewport({
     pageSizeId: 'a5'
   });
@@ -71,15 +62,16 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
 
   const [options, setOptions] = useState<BookImpositionOptions>(DEFAULT_BOOK_IMPOSITION_OPTIONS);
 
+  const bookTitle = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, '') : 'Mi Libro / Folleto';
+
   // Garantizar que la pestaña activa sea "Mi Libro / Folleto" desde la carga inicial
-  useEffect(() => {
-    const currentId = bookId || generateDocumentId('book');
-    const alreadyExists = documentTabs?.some(t => t.id === currentId || t.cvId === currentId || inferDocumentTypeId(t) === 'book');
-    if (alreadyExists) return;
-    const name = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, '') : 'Mi Libro / Folleto';
-    const updatedTabs = openTab(currentId, 'book', name);
-    onTabsChanged(updatedTabs);
-  }, [bookId, documentTabs, selectedFile, onTabsChanged]);
+  useRegisterDocumentTab({
+    id: bookId,
+    docType: 'book',
+    title: bookTitle,
+    documentTabs,
+    onTabsChanged
+  });
 
   const persistBookState = (file: File | null, opts: BookImpositionOptions) => {
     const id = bookId || generateDocumentId('book');

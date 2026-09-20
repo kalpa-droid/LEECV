@@ -10,3 +10,4 @@ export * from './documentHelpers';
 export { generateDocumentId, deriveDocumentTitle, deriveDocumentTitle as computeAutoDocumentTitle } from './titleEngine';
 export { getPendingDocumentToOpen, setPendingDocumentToOpen, clearPendingDocumentToOpen } from './handoffEngine';
 export { useDraftAutosave } from './useDraftAutosave';
+export { useRegisterDocumentTab, resolveDocumentIdWithHandoff } from './useRegisterDocumentTab';
