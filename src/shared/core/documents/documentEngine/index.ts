@@ -9,5 +9,5 @@ export * from './documentHelpers';
 // Re-export specific pieces for convenience
 export { generateDocumentId, deriveDocumentTitle, deriveDocumentTitle as computeAutoDocumentTitle } from './titleEngine';
 export { getPendingDocumentToOpen, setPendingDocumentToOpen, clearPendingDocumentToOpen } from './handoffEngine';
-export { useDraftAutosave } from './useDraftAutosave';
-export { useRegisterDocumentTab, resolveDocumentIdWithHandoff } from './useRegisterDocumentTab';
+export { useDraftAutosave } from '../useDraftAutosave';
+export { useRegisterDocumentTab, resolveDocumentIdWithHandoff } from '../useRegisterDocumentTab';

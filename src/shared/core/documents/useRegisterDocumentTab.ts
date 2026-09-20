@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
-import { OpenTab, openTab } from '../tabStore';
-import { inferDocumentTypeId } from '../../capabilities/capabilityRegistry';
-import { getPendingDocumentToOpen, clearPendingDocumentToOpen } from '../../storage/pendingDocumentHandoff';
-import { generateDocumentId } from './titleEngine';
-import { DocumentTypeId } from '../../../../types/document';
+import { OpenTab, openTab } from './tabStore';
+import { inferDocumentTypeId } from '../capabilities/capabilityRegistry';
+import { getPendingDocumentToOpen, clearPendingDocumentToOpen } from '../storage/pendingDocumentHandoff';
+import { generateDocumentId } from './documentEngine/titleEngine';
+import { DocumentTypeId } from '../../../types/document';
 
 interface UseRegisterDocumentTabOptions {
   id: string;

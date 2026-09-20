@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { saveDocumentDraftLocal } from '../../storage/documentStorageService';
-import { inferDocumentTypeId } from '../../capabilities/capabilityRegistry';
-import { hasRealContent, AUTOSAVE_DEBOUNCE_MS } from './documentHelpers';
+import { saveDocumentDraftLocal } from '../storage/documentStorageService';
+import { inferDocumentTypeId } from '../capabilities/capabilityRegistry';
+import { hasRealContent, AUTOSAVE_DEBOUNCE_MS } from './documentEngine/documentHelpers';
 
 interface UseDraftAutosaveOptions {
   docData: any;
