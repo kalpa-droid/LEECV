@@ -1,5 +1,7 @@
 import { DocumentTypeId } from '../../../../types/document';
 
+export const AUTOSAVE_DEBOUNCE_MS = 1500;
+
 export function isProvisionalDocument(docData: any): boolean {
   return Boolean(docData?.isProvisional);
 }
@@ -40,6 +42,9 @@ export function hasRealContent(docData: any): boolean {
     docData.vacancy?.jobTitle
   ) return true;
   if (docData.bookMetadata?.title) return true;
+
+  if (docData.modules && Object.values(docData.modules).some(Boolean)) return true;
+  if (docData.monthOverrides && Object.keys(docData.monthOverrides).length > 0) return true;
 
   return false;
 }

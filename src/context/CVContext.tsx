@@ -7,7 +7,7 @@ import { CVData } from '../types/cv';
 
 import { getDocTypeForRoute, inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
 import { setTabDirty } from '../shared/core/documents/tabStore';
-import { computeAutoDocumentTitle, markAsConfirmed, hasRealContent, getDraftIdForDocType } from '../shared/core/documents/documentEngine';
+import { computeAutoDocumentTitle, markAsConfirmed, hasRealContent, getDraftIdForDocType, AUTOSAVE_DEBOUNCE_MS } from '../shared/core/documents/documentEngine';
 import { saveDocumentDraftLocal } from '../shared/core/storage/documentStorageService';
 
 interface CVContextType {
@@ -167,7 +167,7 @@ export function CVProvider({ children }: { children: ReactNode }) {
         }
       }
       setHasPendingChanges(false);
-    }, 1500);
+    }, AUTOSAVE_DEBOUNCE_MS);
     return () => clearTimeout(timeout);
   }, [cvData, isSwitchingDocument]);
 
