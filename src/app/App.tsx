@@ -806,7 +806,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
             handleCloseFooterTab({ stopPropagation: () => {} } as any, id, tab?.title || 'Documento');
           }}
           onNavigateToDocument={(targetDocType, id) => handleNavigateToDocumentTab(targetDocType, id)}
-          onTabsChanged={(updated) => setTabs(updated)}
+          onTabsChanged={setTabs}
           onNewCV={handleNewCV}
           onNewCard={handleNewCard}
           onNewBook={handleNewBook}
@@ -836,7 +836,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           handleCloseFooterTab({ stopPropagation: () => {} } as any, id, tab?.title || 'Documento');
         }}
         onNavigateToDocument={(targetDocType, id) => handleNavigateToDocumentTab(targetDocType, id)}
-        onTabsChanged={(updated) => setTabs(updated)}
+        onTabsChanged={setTabs}
         onNewCV={handleNewCV}
         onNewCard={handleNewCard}
         onNewBook={handleNewBook}
