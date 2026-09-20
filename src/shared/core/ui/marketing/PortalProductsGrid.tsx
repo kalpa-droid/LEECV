@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, Mail, CreditCard, BookOpen, ArrowRight, Check, Sparkles } from 'lucide-react';
+import { FileText, Mail, CreditCard, BookOpen, ArrowRight, Check, Sparkles, CalendarDays } from 'lucide-react';
 import { radius, elevationSystem } from '../../uiDesignSystem';
 
 import { useText } from '../../../i18n/useText';
@@ -60,6 +60,18 @@ export const PortalProductsGrid: React.FC<PortalProductsGridProps> = ({ onNaviga
       bullets: [...t.landing.products.libros.bullets],
       route: '/crear-libro',
       cta: t.landing.products.libros.cta,
+    },
+    {
+      id: 'agendas',
+      icon: CalendarDays,
+      badge: 'NUEVO',
+      badgeColor: 'bg-[var(--color-accent-amber-muted)] text-[var(--color-neutral-text-primary)] border-[var(--color-accent-amber-bright)]/30',
+      title: 'Agendas & Planners',
+      tagline: 'Diseña tu propio año',
+      description: 'Crea agendas en formato B5, planificadores semanales y diarios con diseños elegantes.',
+      bullets: ['Retículas de puntos', 'Marcas para encuadernación', 'Formatos mensuales y anuales'],
+      route: '/crear-agenda',
+      cta: 'Crear Agenda',
     },
   ];
 

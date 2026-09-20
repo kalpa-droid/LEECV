@@ -29,10 +29,11 @@ import { navigation } from '../../../shared/core/utils/navigation';
 import { useText } from '../../../shared/i18n/useText';
 import { Logo } from '../../../shared/core/brand/Logo';
 import { capabilitiesGate } from '../../../shared/core/documents/documentEngine';
+import { DocumentTypeId } from '../../../types/document';
 
 export interface NavbarProps {
   currentCvData: any;
-  docType?: 'cv' | 'business_card' | 'book' | 'cover_letter';
+  docType?: DocumentTypeId;
   setCvData?: React.Dispatch<React.SetStateAction<any>>;
   onOpenSavedCVsModal: () => void;
   onSaveCVClick: () => void;

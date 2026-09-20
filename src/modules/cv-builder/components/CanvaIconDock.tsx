@@ -8,7 +8,7 @@ import { resolveActiveDockSections, DOCK_SPECIAL_TABS } from '../../../shared/co
 import { activateSection } from '../../../shared/core/sections/sectionActivationEngine';
 import { DocumentTypeId } from '../../../types/document';
 
-import { CreditCard, BookOpen, FileUp, Settings, Eye, Printer, Layers, BookMarked, Sliders, LayoutGrid, Hash } from 'lucide-react';
+import { CreditCard, BookOpen, FileUp, Settings, Eye, Printer, Layers, BookMarked, Sliders, LayoutGrid, Hash, Calendar, CalendarDays } from 'lucide-react';
 
 export interface CanvaIconDockProps {
   cvData?: any;
@@ -49,6 +49,7 @@ const COVER_LETTER_TABS = [
 ] as const;
 
 import { BOOK_STEP_SEQUENCE } from '../../../shared/core/book-engine/bookStepSequence';
+import { PLANNER_STEP_SEQUENCE } from '../../planner-studio/plannerStepSequence';
 
 const bookTabIcons: Record<string, any> = {
   book_source_type: Layers,
@@ -57,6 +58,13 @@ const bookTabIcons: Record<string, any> = {
   book_back_cover: BookMarked,
   book_foliado: Hash,
   book_preview_export: Printer,
+};
+
+const plannerTabIcons: Record<string, any> = {
+  planner_design: Palette,
+  planner_background: LayoutGrid,
+  planner_structure: Settings,
+  planner_months: CalendarDays,
 };
 
 // 2. Pestañas de Sección Especiales Gobernadas por el Motor (activeSectionsDockEngine.ts)
@@ -91,6 +99,15 @@ export default function CanvaIconDock({
       }));
   }, [bookMode]);
 
+  const activePlannerTabs = useMemo(() => {
+    return PLANNER_STEP_SEQUENCE.map((step) => ({
+      id: step.id,
+      stepNumber: step.stepNumber,
+      label: step.label,
+      icon: plannerTabIcons[step.id] || Layers,
+    }));
+  }, []);
+
   const computedDockTabs = useMemo(() => {
     if (docType === 'business_card') {
       return [
@@ -100,6 +117,9 @@ export default function CanvaIconDock({
     }
     if (docType === 'book') {
       return activeBookTabs.map(t => ({ ...t, isLarge: true }));
+    }
+    if (docType === 'planner') {
+      return activePlannerTabs.map(t => ({ ...t, isLarge: true }));
     }
     if (docType === 'cover_letter') {
       return COVER_LETTER_TABS.map(t => ({ ...t, isLarge: true }));
@@ -238,6 +258,39 @@ export default function CanvaIconDock({
 
           {/* BOTONES LIBRO (Solo para docType === 'book') */}
           {docType === 'book' && activeBookTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id && isPanelOpen;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => handleTabClick(tab.id)}
+                className={`col-span-2 w-full h-10 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer border ${
+                  isActive
+                    ? `bg-[var(--color-accent-base)] border-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.floating} shadow-[var(--color-accent-base)]/30 scale-[1.02]`
+                    : 'bg-[var(--ui-dock-hover)] border-[var(--ui-dock-border)] text-[var(--color-secondary-bright)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--ui-dock-hover)]'
+                }`}
+                title={tab.label}
+              >
+                <div className="relative flex items-center justify-center">
+                  <Icon className={`w-5 h-5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
+                  <span className={`absolute -top-2.5 -right-3 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center border ${
+                    isActive
+                      ? 'bg-[var(--color-accent-on-base)] text-[var(--color-accent-base)] border-[var(--color-accent-base)]'
+                      : 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--ui-bg-dock)]'
+                  }`}>
+                    {tab.stepNumber}
+                  </span>
+                </div>
+                <span className={`absolute left-24 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[10px] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
+
+          {/* BOTONES PLANNER (Solo para docType === 'planner') */}
+          {docType === 'planner' && activePlannerTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id && isPanelOpen;
             return (
@@ -472,6 +525,36 @@ export default function CanvaIconDock({
 
         {/* BOTONES LIBRO (Solo para docType === 'book') */}
         {docType === 'book' && activeBookTabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id && isPanelOpen;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => handleTabClick(tab.id)}
+              className={`row-span-2 h-full w-[42px] rounded-[8px] flex items-center justify-center shrink-0 transition cursor-pointer border ${
+                isActive
+                  ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--color-accent-base)] ${elevationSystem.raised}`
+                  : 'bg-[var(--ui-bg-panel)] text-[var(--ui-dock-text-muted)] border-[var(--ui-border)]'
+              }`}
+              title={tab.label}
+            >
+              <div className="relative flex items-center justify-center">
+                <Icon className={`w-5 h-5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--ui-dock-text-muted)]'}`} />
+                <span className={`absolute -top-2.5 -right-3 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center border ${
+                  isActive
+                    ? 'bg-[var(--color-accent-on-base)] text-[var(--color-accent-base)] border-[var(--color-accent-base)]'
+                    : 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--ui-bg-dock)]'
+                }`}>
+                  {tab.stepNumber}
+                </span>
+              </div>
+            </button>
+          );
+        })}
+
+        {/* BOTONES PLANNER (Solo para docType === 'planner') */}
+        {docType === 'planner' && activePlannerTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id && isPanelOpen;
           return (

@@ -7,11 +7,12 @@
 
 import { getDefaultTitleForDocType } from '../capabilities/capabilityRegistry';
 import { isDraftDocumentId } from './documentEngine/documentHelpers';
+import { DocumentTypeId } from '../../../types/document';
 
 export interface OpenTab {
   id: string;
   cvId?: string;
-  docType: 'cv' | 'business_card' | 'book' | 'cover_letter';
+  docType: DocumentTypeId;
   title: string;
   versionLabel?: string;
   isDirty?: boolean;
@@ -94,7 +95,7 @@ function persist(tabs: OpenTab[]): void {
 
 export function openTab(
   id: string,
-  docType: OpenTab['docType'] = 'cv',
+  docType: DocumentTypeId = 'cv',
   title?: string,
   versionLabel?: string
 ): OpenTab[] {

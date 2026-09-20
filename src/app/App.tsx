@@ -67,6 +67,7 @@ import { PwaInstallBanner } from '../shared/core/ui/PwaInstallBanner';
 import { initUpdateEngine, onUpdateReady } from '../shared/core/pwa/updateEngine';
 import { trackPageView } from '../shared/core/analytics/analyticsService';
 import { getDocTypeForRoute, getRouteForDocType, getDefaultTitleForDocType, inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
+import { DocumentTypeId } from '../types/document';
 import { UpdateToast } from '../shared/core/ui/UpdateToast';
 import { useDocumentViewport } from '../shared/core/viewport';
 
@@ -234,7 +235,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     }
   };
 
-  const handleNavigateToDocumentTab = async (targetDocType: 'cv' | 'business_card' | 'book' | 'cover_letter', targetId: string) => {
+  const handleNavigateToDocumentTab = async (targetDocType: DocumentTypeId, targetId: string) => {
     const existingTab = tabs.find(t => t.docType === targetDocType);
     const finalTargetId = existingTab ? (existingTab.cvId || existingTab.id) : targetId;
 
@@ -797,10 +798,24 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   }
 
   if (currentRoute === '/crear-agenda') {
+    const activePlannerTab = tabs.find(t => t.docType === 'planner' || t.cvId.startsWith('planner-')) || { cvId: 'planner-main' };
     return (
       <PlannerStudioContent 
-        onNavigateToDocument={handleNavigateToDocumentTab}
-        currentDraftId={cvData?.id || null}
+        documentTabs={tabs}
+        activeTabId={activePlannerTab.cvId}
+        onSelectTab={handleSwitchDocumentTab}
+        onCloseTab={(id) => {
+          const tab = tabs.find(t => t.cvId === id);
+          handleCloseFooterTab({ stopPropagation: () => {} } as any, id, tab?.title || 'Documento');
+        }}
+        onNavigateToDocument={(targetDocType, id) => handleNavigateToDocumentTab(targetDocType, id)}
+        onTabsChanged={(updated) => setTabs(updated)}
+        onNewCV={handleNewCV}
+        onNewCard={handleNewCard}
+        onNewBook={handleNewBook}
+        cycleUITheme={cycleUITheme}
+        isLoggedIn={!!currentProfile}
+        onAuthToggle={handleAuthToggle}
       />
     );
   }

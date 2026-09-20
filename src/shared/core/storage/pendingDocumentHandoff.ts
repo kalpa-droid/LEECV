@@ -4,14 +4,16 @@
  * al navegar entre rutas de productos (/crear-cv, /crear-tarjeta, /crear-libro).
  */
 
+import { DocumentTypeId } from '../../../types/document';
+
 const PENDING_DOC_KEY = 'leecv_pending_open_document';
 
 export interface PendingDocument {
   id: string;
-  docType: 'cv' | 'business_card' | 'book' | 'cover_letter';
+  docType: DocumentTypeId;
 }
 
-export function setPendingDocumentToOpen(id: string, docType: 'cv' | 'business_card' | 'book' | 'cover_letter'): void {
+export function setPendingDocumentToOpen(id: string, docType: DocumentTypeId): void {
   if (typeof window === 'undefined') return;
   try {
     const payload: PendingDocument = { id, docType };
