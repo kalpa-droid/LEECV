@@ -70,8 +70,8 @@ export function resolveSectionAnchor(
 ): PdfAnchorTarget {
   const normalizedTab = (activeTab || 'personales').toLowerCase().trim();
 
-  // Guard: si es carta o tarjeta, no existen las 27 secciones curriculares de CV
-  if (preset?.pageCategory === 'carta' || preset?.pageCategory === 'tarjeta') {
+  // Guard: si es carta, tarjeta o agenda, no existen las 27 secciones curriculares de CV
+  if (preset?.pageCategory === 'carta' || preset?.pageCategory === 'tarjeta' || preset?.pageCategory === 'planner') {
     return {
       tabId: normalizedTab,
       sectionId: normalizedTab,

@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { PDFViewer } from '@react-pdf/renderer';
 import { AppShell } from '../../shared/core/ui/AppShell';
 import Navbar from '../cv-builder/components/Navbar';
 import CanvaIconDock from '../cv-builder/components/CanvaIconDock';
 import { PlannerPdfDocument } from '../../shared/core/pdf-engine/renderer/PlannerPdfDocument';
+import { VectorDocViewer } from '../../shared/core/pdf-engine/VectorDocViewer';
 import { getPreset } from '../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { DocumentTypeId } from '../../types/document';
 import { useDocumentViewport } from '../../shared/core/viewport';
@@ -288,11 +288,14 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
         </div>
       }
       mainSlot={
-        <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-[var(--ui-bg-sunken)] relative overflow-hidden">
-          <div className="flex-1 w-full max-w-4xl rounded-xl overflow-hidden shadow-2xl border border-[var(--ui-border-base)] bg-[var(--ui-bg-base)]">
-            <PDFViewer width="100%" height="100%" className="border-none">
-              {pdfElement}
-            </PDFViewer>
+        <div className="w-full h-full flex flex-col items-center p-4 bg-[var(--ui-bg-panel)] relative overflow-y-auto">
+          <div className="w-full max-w-4xl rounded-xl shadow-2xl border border-[var(--ui-border)] bg-[var(--ui-bg-card)] overflow-hidden">
+            <VectorDocViewer
+              document={pdfElement}
+              zoomLevel={viewport.zoomLevel}
+              preset={preset}
+              activeTab={activeStepTab}
+            />
           </div>
         </div>
       }
