@@ -10,10 +10,10 @@ export const bookStudioCatalog = {
     modeFotocopiaDesc: 'Para PDFs con 2 páginas escaneadas lado a lado. Se dividen al centro automáticamente.',
 
     paperSizeQuestionLabel: '1.b. ¿Dónde lo vas a imprimir?',
-    paperA4Title: 'En mi impresora de casa',
-    paperA4Desc: 'Imprimís en hojas comunes y las doblás al medio. Te queda un libro chico, cómodo de llevar.',
-    paperA3Title: 'En una imprenta',
-    paperA3Desc: 'Para llevar a una imprenta que imprime en hojas grandes y las dobla al medio. Te queda un libro más grande.',
+    paperA4Title: 'En mi impresora de casa (hoja A4)',
+    paperA4Desc: 'Imprimís en hojas comunes y las doblás al medio. Te queda un libro chico, cómodo de llevar (tamaño A5).',
+    paperA3Title: 'En una imprenta (hoja A3)',
+    paperA3Desc: 'Para llevar a una imprenta que imprime en hojas grandes y las dobla al medio. Te queda un libro más grande (tamaño A4).',
 
     loadingPdf: 'Analizando páginas del PDF...',
     changePdf: 'Cambiar PDF',

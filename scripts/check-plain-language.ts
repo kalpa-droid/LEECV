@@ -11,7 +11,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import ts from 'typescript';
-import { findJargon, looksLikeProse, PlainLanguageViolation } from '../src/shared/core/plainLanguage';
+import { findJargon, looksLikeProse, zoneOfPath, PlainLanguageViolation } from '../src/shared/core/plainLanguage';
 
 const ROOTS = ['src', 'api'];
 const SKIP_PATH = [
@@ -58,13 +58,14 @@ export function scanSource(fileName: string, code: string): Finding[] {
   const kind = fileName.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
   const sf = ts.createSourceFile(fileName, code, ts.ScriptTarget.Latest, true, kind);
   const inCatalog = CATALOG_DIR.test(fileName);
+  const zone = zoneOfPath(fileName.replace(/\\/g, '/'));
   const out: Finding[] = [];
 
   const check = (node: ts.Node, text: string) => {
     if (!text.trim()) return;
     if (!inCatalog && !looksLikeProse(text)) return; // 'A4' suelto = código interno
     if (isInvisibleContext(node) || isAllowed(sf, node.getStart(sf))) return;
-    for (const v of findJargon(text)) {
+    for (const v of findJargon(text, zone)) {
       out.push({ file: fileName, line: lineOf(sf, node.getStart(sf)), text: text.trim().slice(0, 140), violation: v });
     }
   };
@@ -84,11 +85,12 @@ export function scanSource(fileName: string, code: string): Finding[] {
 /** Archivos públicos que no son código (título/descripción de index.html, manifest, imagen para compartir). */
 export function scanPlainText(fileName: string, text: string): Finding[] {
   const out: Finding[] = [];
+  const zone = zoneOfPath(fileName.replace(/\\/g, '/'));
   const lines = text.split('\n');
   lines.forEach((raw, i) => {
     if (/plain-language:allow/.test(raw) || /plain-language:allow/.test(lines[i - 1] || '')) return;
     const line = raw.replace(/https?:\/\/\S+/g, ''); // las URL (slugs) no son texto visible
-    for (const v of findJargon(line)) {
+    for (const v of findJargon(line, zone)) {
       out.push({ file: fileName, line: i + 1, text: raw.trim().slice(0, 140), violation: v });
     }
   });
@@ -136,6 +138,10 @@ function selftest(): number {
     ['a.ts', `// plain-language:allow\nconst t = 'Motor vectorial interno';`, 0],
     ['src/shared/i18n/catalog/x.ts', `export const c = { a: 'Hoja A4' };`, 1],
     ['a.ts', `console.log('render vectorial A4');`, 0],
+    ['src/modules/blog/x.ts', `const t = 'Hoja común (A4)';`, 1], // pública: ni entre paréntesis
+    ['src/modules/x.ts', `const t = 'Hoja común (A4)';`, 0], // app: técnico entre paréntesis OK
+    ['src/modules/x.ts', `const t = 'Imprimí en hojas A4';`, 1], // app: suelto, no
+    ['src/modules/x.ts', `const t = 'Hoja común (vectorial)';`, 1], // vectorial: prohibido en todos lados
   ];
   let bad = 0;
   const plainCases: Array<[string, number]> = [
@@ -182,9 +188,14 @@ function main() {
     return;
   }
   for (const f of findings) {
-    console.error(`🗣️  ${f.file}:${f.line}  «${f.violation.match}»  [${f.violation.ruleId}]\n     "${f.text}"\n     → ${f.violation.say}`);
+    const v = f.violation;
+    const hint =
+      v.zone === 'app' && v.example
+        ? `En la app va la explicación sencilla primero y el nombre técnico entre paréntesis. Ej: «${v.example}»`
+        : v.say;
+    console.error(`🗣️  [${v.zone}] ${f.file}:${f.line}  «${v.match}»  [${v.ruleId}]\n     "${f.text}"\n     → ${hint}`);
   }
-  console.error(`\n❌ ${findings.length} texto(s) con jerga. La página habla para gente común: ver src/shared/core/plainLanguage/plainLanguageRules.ts`);
+  console.error(`\n❌ ${findings.length} texto(s) con jerga. Zona pública: cero jerga. Zona app: nombre técnico solo entre paréntesis. Ver src/shared/core/plainLanguage/plainLanguageRules.ts`);
   process.exit(1);
 }
 

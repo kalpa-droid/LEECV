@@ -122,7 +122,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
             <div>
               <h3 className="text-sm font-bold text-[var(--ui-text-primary)]">{selectedFile.name}</h3>
               <p className="text-xs text-[var(--ui-text-secondary)]">
-                Modo: {options.mode === 'fotocopia' ? 'Escaneo 2 págs./hoja' : 'PDF 1 pág./hoja'} • Se imprime {options.paperSize === 'A3' ? 'en una imprenta' : 'en tu casa'}
+                Modo: {options.mode === 'fotocopia' ? 'Escaneo 2 págs./hoja' : 'PDF 1 pág./hoja'} • Se imprime {options.paperSize === 'A3' ? 'en una imprenta (A3)' : 'en tu casa (A4)'}
               </p>
             </div>
           </div>

@@ -32,7 +32,7 @@ const CARD_TABS_LARGE = [
   { id: 'diseno', label: 'Diseño & Paleta', icon: Palette },
 ] as const;
 const CARD_TABS_SMALL = [
-  { id: 'card_size', label: 'Tipo y Corte', icon: Sliders },
+  { id: 'card_size', label: 'Tamaño y Corte', icon: Sliders },
   { id: 'card_extract', label: 'Extraer datos de CV', icon: FileUp },
   { id: 'card_logo', label: 'Logotipo', icon: CreditCard },
   { id: 'card_front', label: 'Datos Frente', icon: Settings },

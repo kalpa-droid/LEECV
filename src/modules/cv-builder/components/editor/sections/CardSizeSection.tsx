@@ -28,7 +28,7 @@ export function CardSizeSection({ cvData, setCvData }: Props) {
   return (
     <div className="space-y-6">
       <div id="card-size-section">
-        <PanelSection icon={<Layout className="w-4 h-4" />} title="Tipo de Tarjeta y Margen de Corte">
+        <PanelSection icon={<Layout className="w-4 h-4" />} title="Tamaño de Tarjeta y Margen de Corte (sangrado y marcas de corte)">
           <div className="p-4 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-4">
             <div className="space-y-1.5">
               <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">Elegí el tipo de tarjeta</label>
@@ -48,7 +48,7 @@ export function CardSizeSection({ cvData, setCvData }: Props) {
             {/* Slider de Sangrado para Imprenta Profesional (3-5mm) */}
             <div className="space-y-2 pt-3 border-t border-[var(--color-neutral-border)]">
               <div className="flex items-center justify-between text-xs font-bold text-[var(--color-neutral-text-primary)]">
-                <span>Margen de seguridad para el corte</span>
+                <span>Margen extra para el corte (sangrado)</span>
                 <span className="text-[var(--color-secondary-bright)] font-black">{cvData?.cardBleedMm ?? 3} mm</span>
               </div>
               <input

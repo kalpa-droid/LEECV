@@ -116,8 +116,10 @@ Cada vez que hablemos o se plantee un cambio o nueva funcionalidad para la web:
 
 
 
-## Lenguaje sencillo (texto visible)
-LEECV es para gente común: tiene una impresora en casa o quiere llevar el archivo a una imprenta. Todo texto visible (UI, landing, blog, SEO, mensajes, imagen para compartir) habla de lo que la persona **hace**: "imprimilo en tu casa" / "llevalo a una imprenta". **Nunca** "vectorial", "imprenta pro/profesional", tamaños (A3/A4/A5, "tamaño de hoja/papel/página"), medidas en mm, sangrado, marcas de corte, imposición/pliegos, "PDF nativo" ni DPI.
-- Reglas y cómo decirlo en criollo: `src/shared/core/plainLanguage/plainLanguageRules.ts` (para prohibir una palabra nueva, agregá una regla ahí y nada más).
+## Lenguaje sencillo (texto visible) — dos zonas
+LEECV es para gente común: tiene una impresora en casa o quiere llevar el archivo a una imprenta.
+- **Zona pública** (landing, blog, SEO, `index.html`, manifest, imagen para compartir, textos de compartir y cookies): **cero jerga**. Se habla de lo que la persona hace: "imprimilo en tu casa" / "llevalo a una imprenta". Nunca "vectorial", "imprenta pro", tamaños (A3/A4/A5, "tamaño de hoja/papel"), mm, sangrado, marcas de corte, imposición/pliegos, "PDF nativo" ni DPI.
+- **Zona app** (editor, ventanas, menús, Book Studio): ahí hay que elegir hoja, corte, etc., así que el nombre técnico **sí va**, pero **entre paréntesis y después de la explicación sencilla**: `📄 Hoja común (A4)`, `Margen extra para el corte (sangrado)`. Suelto en el texto ("Imprimí en hojas A4") no se admite. "Vectorial", "imprenta pro", "PDF nativo" y DPI siguen prohibidos en toda la app.
+- Reglas, modo por zona y ejemplos: `src/shared/core/plainLanguage/plainLanguageRules.ts`; qué archivo es de cada zona: `zoneOfPath` en `plainLanguageEngine.ts`. Para prohibir o permitir una palabra nueva, agregá/cambiá una regla ahí.
 - Lo audita `npm run check-plain-language` (pre-commit, `check-all` y `tests/plainLanguage.test.ts`). Un caso interno legítimo (nunca visible) se exime con `plain-language:allow` en la misma línea o la anterior.
 - Los códigos internos (`'A4'`, `paperSize: 'A3'`) no son texto visible y no se tocan; lo que cambia es la **etiqueta** que ve la persona.
