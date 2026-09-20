@@ -7,7 +7,7 @@ import { CVData } from '../types/cv';
 
 import { getDocTypeForRoute, inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
 import { setTabDirty } from '../shared/core/documents/tabStore';
-import { computeAutoDocumentTitle, markAsConfirmed, hasRealContent, getDraftIdForDocType, AUTOSAVE_DEBOUNCE_MS } from '../shared/core/documents/documentEngine';
+import { computeAutoDocumentTitle, markAsConfirmed, hasRealContent, getDraftIdForDocType, useDraftAutosave } from '../shared/core/documents/documentEngine';
 import { saveDocumentDraftLocal } from '../shared/core/storage/documentStorageService';
 
 interface CVContextType {
@@ -138,38 +138,13 @@ export function CVProvider({ children }: { children: ReactNode }) {
     });
   }, [getDocId]);
 
-  // Save to IndexedDB automatically on every change (Debounced 1500ms)
-  useEffect(() => {
-    if (isSwitchingDocument) return;
-    const timeout = setTimeout(async () => {
-      if (typeof window === 'undefined' || !cvData) {
-        setHasPendingChanges(false);
-        return;
-      }
-      // a) Respaldo de sesión: SIEMPRE se actualiza, sin importar si hay contenido.
-      //    Es una sola key global que se autopisa — no acumula nada — y es lo que
-      //    permite recuperar el trabajo si cierran el navegador antes de que el
-      //    borrador junte contenido real.
-      try {
-        localStorage.setItem('cv_premium_data', JSON.stringify(cvData));
-      } catch (e) {
-        console.warn('Error guardando respaldo local:', e);
-      }
-
-      // b) Persistencia como documento: SOLO si ya hay algo que valga la pena
-      //    guardar. Mientras el borrador esté vacío, no se toca IndexedDB ni la
-      //    lista de documentos guardados — así nunca se acumulan blancos.
-      if (hasRealContent(cvData)) {
-        try {
-          await saveDocumentDraftLocal(cvData, inferDocumentTypeId(cvData) || 'cv');
-        } catch (e) {
-          console.warn('Autoguardado de documento falló:', e);
-        }
-      }
-      setHasPendingChanges(false);
-    }, AUTOSAVE_DEBOUNCE_MS);
-    return () => clearTimeout(timeout);
-  }, [cvData, isSwitchingDocument]);
+  // Autoguardado unificado de borrador en localStorage e IndexedDB (Debounced 1500ms)
+  useDraftAutosave({
+    docData: cvData,
+    isSwitchingDocument,
+    setHasPendingChanges,
+    localStorageKey: 'cv_premium_data'
+  });
 
   const undo = useCallback(() => {
     const activeId = getDocId(cvData);

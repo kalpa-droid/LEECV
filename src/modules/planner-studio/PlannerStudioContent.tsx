@@ -8,7 +8,7 @@ import { getPreset } from '../../shared/core/pdf-engine/layers/presets/presetReg
 import { DocumentTypeId } from '../../types/document';
 import { useDocumentViewport } from '../../shared/core/viewport';
 import { OpenTab, openTab } from '../../shared/core/documents/tabStore';
-import { generateDocumentId, computeAutoDocumentTitle } from '../../shared/core/documents/documentEngine';
+import { generateDocumentId, computeAutoDocumentTitle, useDraftAutosave } from '../../shared/core/documents/documentEngine';
 import { inferDocumentTypeId } from '../../shared/core/capabilities/capabilityRegistry';
 import { PlannerMonthOverride } from '../../shared/core/pdf-engine/layers/records/plannerDataAdapter';
 import { PersonalInfoFields } from '../../shared/core/ui/PersonalInfoFields';
@@ -88,6 +88,11 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   });
 
   const preset = getPreset('planner-clasico');
+
+  useDraftAutosave({
+    docData: { ...data, id: plannerId, doc_type_id: 'planner' },
+    localStorageKey: `planner_data_${plannerId}`
+  });
 
   const updateMonthOverride = (monthIndex: number, patch: Partial<PlannerMonthOverride>) => {
     setData(d => ({
