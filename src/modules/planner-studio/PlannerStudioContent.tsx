@@ -9,6 +9,7 @@ import { DocumentTypeId } from '../../types/document';
 import { useDocumentViewport } from '../../shared/core/viewport';
 import { OpenTab, openTab } from '../../shared/core/documents/tabStore';
 import { generateDocumentId, computeAutoDocumentTitle } from '../../shared/core/documents/documentEngine';
+import { inferDocumentTypeId } from '../../shared/core/capabilities/capabilityRegistry';
 import { PlannerMonthOverride } from '../../shared/core/pdf-engine/layers/records/plannerDataAdapter';
 import { PersonalInfoFields } from '../../shared/core/ui/PersonalInfoFields';
 
@@ -108,7 +109,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
 
   useEffect(() => {
     const currentId = plannerId || generateDocumentId('planner');
-    const alreadyExists = documentTabs.some(t => t.id === currentId || t.cvId === currentId);
+    const alreadyExists = documentTabs.some(t => t.id === currentId || t.cvId === currentId || inferDocumentTypeId(t) === 'planner');
     if (alreadyExists) return;
     const name = computeAutoDocumentTitle('planner' as any, data);
     const updatedTabs = openTab(currentId, 'planner', name);

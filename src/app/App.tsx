@@ -73,6 +73,9 @@ import { useDocumentViewport } from '../shared/core/viewport';
 
 import { procesarRetornoPago } from '../modules/payments/paymentService';
 
+export const DEFAULT_PLANNER_PRESET_ID = 'planner-clasico';
+export const DEFAULT_BOOK_PRESET_ID = 'libro-standard';
+
 interface AppContentProps {
   initialPreset?: string;
   currentRoute?: string;
@@ -783,14 +786,20 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   }
 
   if (currentRoute === '/crear-libro') {
-    const activeBookTab = tabs.find(t => t.docType === 'book' || (t.id && t.id.startsWith('book-')) || (t.cvId && t.cvId.startsWith('book-'))) || { id: 'book-main', cvId: 'book-main' };
+    let activeBookTab = tabs.find(t => t.docType === 'book' || inferDocumentTypeId(t) === 'book');
+    if (!activeBookTab) {
+      const created = createBlankDocumentWithTab(DEFAULT_BOOK_PRESET_ID);
+      const newTabs = getOpenTabs();
+      activeBookTab = newTabs.find(t => t.docType === 'book' || inferDocumentTypeId(t) === 'book') || (created ? { id: created.id, docType: 'book' } as any : undefined);
+    }
+    const activeBookTabId = activeBookTab?.id || activeBookTab?.cvId || cvData?.id || '';
     return (
       <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Creador de Libros...</div>}>
         <BookStudio
           currentUiTheme={globalUiTheme}
           onBackToHome={() => onNavigate?.('/')}
           documentTabs={tabs}
-          activeTabId={activeBookTab.id || activeBookTab.cvId}
+          activeTabId={activeBookTabId}
           onSelectTab={handleSwitchDocumentTab}
           onCloseTab={(id) => {
             const tab = tabs.find(t => t.id === id || t.cvId === id);
@@ -810,11 +819,17 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   }
 
   if (currentRoute === '/crear-agenda') {
-    const activePlannerTab = tabs.find(t => t.docType === 'planner' || (t.id && t.id.startsWith('planner-')) || (t.cvId && t.cvId.startsWith('planner-'))) || { id: 'planner-main', cvId: 'planner-main' };
+    let activePlannerTab = tabs.find(t => t.docType === 'planner' || inferDocumentTypeId(t) === 'planner');
+    if (!activePlannerTab) {
+      const created = createBlankDocumentWithTab(DEFAULT_PLANNER_PRESET_ID);
+      const newTabs = getOpenTabs();
+      activePlannerTab = newTabs.find(t => t.docType === 'planner' || inferDocumentTypeId(t) === 'planner') || (created ? { id: created.id, docType: 'planner' } as any : undefined);
+    }
+    const activePlannerTabId = activePlannerTab?.id || activePlannerTab?.cvId || cvData?.id || '';
     return (
       <PlannerStudioContent 
         documentTabs={tabs}
-        activeTabId={activePlannerTab.id || activePlannerTab.cvId}
+        activeTabId={activePlannerTabId}
         onSelectTab={handleSwitchDocumentTab}
         onCloseTab={(id) => {
           const tab = tabs.find(t => t.id === id || t.cvId === id);

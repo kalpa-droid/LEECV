@@ -14,6 +14,7 @@ import { getNextBookStepId, getPrevBookStepId } from '../../shared/core/book-eng
 import { saveBook } from '../../shared/core/storage/documentStorageService';
 import { openTab, OpenTab } from '../../shared/core/documents/tabStore';
 import { generateDocumentId } from '../../shared/core/documents/documentEngine/titleEngine';
+import { inferDocumentTypeId } from '../../shared/core/capabilities/capabilityRegistry';
 import { getPendingDocumentToOpen, clearPendingDocumentToOpen } from '../../shared/core/storage/pendingDocumentHandoff';
 import { radius, button } from '../../shared/core/uiDesignSystem';
 import { useDocumentViewport } from '../../shared/core/viewport';
@@ -73,10 +74,12 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   // Garantizar que la pestaña activa sea "Mi Libro / Folleto" desde la carga inicial
   useEffect(() => {
     const currentId = bookId || generateDocumentId('book');
+    const alreadyExists = documentTabs?.some(t => t.id === currentId || t.cvId === currentId || inferDocumentTypeId(t) === 'book');
+    if (alreadyExists) return;
     const name = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, '') : 'Mi Libro / Folleto';
     const updatedTabs = openTab(currentId, 'book', name);
     onTabsChanged(updatedTabs);
-  }, [bookId]);
+  }, [bookId, documentTabs, selectedFile, onTabsChanged]);
 
   const persistBookState = (file: File | null, opts: BookImpositionOptions) => {
     const id = bookId || generateDocumentId('book');
