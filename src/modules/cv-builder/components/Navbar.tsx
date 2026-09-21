@@ -33,6 +33,8 @@ import { DocumentTypeId } from '../../../types/document';
 
 export interface NavbarProps {
   currentCvData: any;
+  /** Tema global de UI. Si se pasa, tiene prioridad sobre currentCvData.uiTheme. */
+  currentUiTheme?: string;
   docType?: DocumentTypeId;
   setCvData?: React.Dispatch<React.SetStateAction<any>>;
   onOpenSavedCVsModal: () => void;
@@ -61,6 +63,7 @@ export interface NavbarProps {
 
 export default function Navbar({ 
   currentCvData,
+  currentUiTheme,
   docType = 'cv',
   setCvData: _setCvData,
   onOpenSavedCVsModal,
@@ -95,7 +98,7 @@ export default function Navbar({
   const actionMenuRef = useRef<HTMLDivElement>(null);
   const accountMenuRef = useRef<HTMLDivElement>(null);
 
-  const currentThemeId = currentCvData?.uiTheme || 'day';
+  const currentThemeId = currentUiTheme || currentCvData?.uiTheme || 'day';
   const themeMeta = UI_THEME_META[currentThemeId] || UI_THEME_META.default;
 
   // Cierre de desplegables al hacer clic fuera

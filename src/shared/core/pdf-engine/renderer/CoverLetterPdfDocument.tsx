@@ -2,6 +2,8 @@ import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { prepareCoverLetterRenderData, CoverLetterData } from '../layers/records/coverLetterDataAdapter';
 import { getCoverLetterPreset } from '../../presets/coverLetterPresetCatalog';
+import { getPreset } from '../layers/presets/presetRegistry';
+import { resolveCoverLetterStyles } from '../layers/records/coverLetterStyleEngine';
 import { getPageSize } from '../layers/page/pageSizes';
 
 interface CoverLetterPdfProps {
@@ -21,6 +23,8 @@ export const CoverLetterPdfDocument: React.FC<CoverLetterPdfProps> = ({
 }) => {
   const renderData = prepareCoverLetterRenderData(data);
   const preset = getCoverLetterPreset(presetId);
+  const activePreset = getPreset(presetId);
+  const letterStyles = resolveCoverLetterStyles(activePreset, activePreset.palette.background);
 
   const activePageSizeId = data.layout?.pageSizeId || data.layout?.paperSize || 'a4';
   const pageDef = getPageSize(activePageSizeId);
@@ -33,8 +37,8 @@ export const CoverLetterPdfDocument: React.FC<CoverLetterPdfProps> = ({
       ? 'A4'
       : [pageDef.widthPt, pageDef.heightPt];
 
-  const primaryColor = theme.primaryColor || '#1D9E75';
-  const textColor = '#2D3748';
+  const primaryColor = theme.primaryColor || activePreset.palette.primary;
+  const textColor = letterStyles.rolesColor.text;
 
   const styles = StyleSheet.create({
     page: {
@@ -42,8 +46,8 @@ export const CoverLetterPdfDocument: React.FC<CoverLetterPdfProps> = ({
       paddingBottom: 45,
       paddingLeft: 55,
       paddingRight: 55,
-      fontFamily: 'Helvetica',
-      fontSize: 10.5,
+      fontFamily: letterStyles.body.fontFamily,
+      fontSize: letterStyles.body.fontSizePt,
       color: textColor,
       lineHeight: preset.lineSpacing
     },
@@ -71,13 +75,13 @@ export const CoverLetterPdfDocument: React.FC<CoverLetterPdfProps> = ({
       textTransform: 'uppercase'
     },
     senderContact: {
-      fontSize: 9,
-      color: '#718096'
+      fontSize: letterStyles.senderContact.fontSizePt,
+      color: letterStyles.senderContact.colorHex
     },
     dateRow: {
       marginBottom: 16,
-      fontSize: 10,
-      color: '#4A5568'
+      fontSize: letterStyles.dateRow.fontSizePt,
+      color: letterStyles.dateRow.colorHex
     },
     recipientBox: {
       marginBottom: 20
@@ -87,8 +91,8 @@ export const CoverLetterPdfDocument: React.FC<CoverLetterPdfProps> = ({
       fontSize: 11
     },
     recipientSub: {
-      fontSize: 10,
-      color: '#4A5568'
+      fontSize: letterStyles.recipientSub.fontSizePt,
+      color: letterStyles.recipientSub.colorHex
     },
     salutation: {
       marginBottom: 14,
@@ -115,8 +119,8 @@ export const CoverLetterPdfDocument: React.FC<CoverLetterPdfProps> = ({
       fontSize: 11
     },
     signerRole: {
-      fontSize: 9,
-      color: '#718096'
+      fontSize: letterStyles.signerRole.fontSizePt,
+      color: letterStyles.signerRole.colorHex
     }
   });
 

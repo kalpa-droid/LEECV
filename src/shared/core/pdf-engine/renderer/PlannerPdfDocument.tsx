@@ -13,7 +13,6 @@ interface PlannerPdfProps {
   presetId?: string;
   theme?: {
     primaryColor?: string;
-    fontFamily?: string;
   };
 }
 
@@ -63,7 +62,7 @@ export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({
         const monthPrimaryColor = override?.primaryColor || primaryColor;
         const monthGridType: GridPatternType = override?.gridType || defaultGridType;
         const monthGridPath = generateGridPatternPath(
-          { type: monthGridType, colorHex: '#cbd5e1' },
+          { type: monthGridType, colorHex: plannerStyles.rolesColor.border },
           pageDef.widthMm,
           pageDef.heightMm
         );
@@ -73,6 +72,7 @@ export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({
           page: {
             fontFamily: plannerStyles.bodyText.fontFamily,
             color: plannerStyles.rolesColor.text,
+            backgroundColor: plannerStyles.rolesColor.background,
             position: 'relative',
           },
           gridLayer: {
@@ -118,7 +118,7 @@ export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({
             flexDirection: 'row',
             marginBottom: 4,
             borderBottomWidth: 1,
-            borderBottomColor: '#e2e8f0',
+            borderBottomColor: plannerStyles.rolesColor.border,
             paddingBottom: 4,
           },
           weekDayCell: {
@@ -137,9 +137,9 @@ export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({
           dayCell: {
             flex: 1,
             borderWidth: 1,
-            borderColor: '#f1f5f9',
+            borderColor: plannerStyles.rolesColor.border,
             padding: 4,
-            backgroundColor: 'white',
+            backgroundColor: plannerStyles.rolesColor.background,
           },
           dayNumber: {
             fontSize: plannerStyles.dayNumber.fontSizePt,
@@ -158,10 +158,10 @@ export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({
           },
           moduleCard: {
             borderWidth: 1,
-            borderColor: '#CBD5E1',
+            borderColor: plannerStyles.rolesColor.border,
             borderRadius: 4,
             padding: 8,
-            backgroundColor: 'rgba(255,255,255,0.9)',
+            backgroundColor: plannerStyles.rolesColor.background,
           },
           moduleTitle: {
             fontSize: plannerStyles.moduleTitle.fontSizePt,
@@ -186,7 +186,7 @@ export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({
             alignItems: 'center',
             justifyContent: 'space-between',
             borderBottomWidth: 1,
-            borderBottomColor: '#F1F5F9',
+            borderBottomColor: plannerStyles.rolesColor.border,
             paddingVertical: 2,
           }
         });
@@ -276,6 +276,15 @@ export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({
                       <Text style={styles.moduleText}>Hábito 1: O O O O O O O</Text>
                       <Text style={styles.moduleText}>Hábito 2: O O O O O O O</Text>
                     </View>
+                  </View>
+                )}
+
+                {modules.expenseTracker && (
+                  <View style={styles.moduleCard}>
+                    <Text style={styles.moduleTitle}>Control de Gastos</Text>
+                    <Text style={styles.moduleText}>Ingresos: ______________________</Text>
+                    <Text style={styles.moduleText}>Gastos: ______________________</Text>
+                    <Text style={styles.moduleText}>Balance: ______________________</Text>
                   </View>
                 )}
 

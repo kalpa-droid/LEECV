@@ -192,7 +192,8 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
       navbarSlot={
         <Navbar
           docType="planner"
-          currentCvData={{ uiTheme: currentUiTheme }}
+          currentCvData={{}}
+          currentUiTheme={currentUiTheme}
           onOpenSavedCVsModal={() => {}}
           onSaveCVClick={() => {}}
           onOpenSaveAsModal={() => {}}

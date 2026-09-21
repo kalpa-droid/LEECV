@@ -130,7 +130,8 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
       navbarSlot={
         <Navbar
           docType="book"
-          currentCvData={{ uiTheme: currentUiTheme }}
+          currentCvData={{}}
+          currentUiTheme={currentUiTheme}
           onOpenSavedCVsModal={() => {}}
           onSaveCVClick={() => persistBookState(selectedFile, options)}
           onOpenSaveAsModal={() => {}}

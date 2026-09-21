@@ -841,6 +841,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         onNewCard={handleNewCard}
         onNewBook={handleNewBook}
         onNewPlanner={handleNewPlanner}
+        currentUiTheme={globalUiTheme}
         cycleUITheme={cycleUITheme}
         isLoggedIn={!!currentProfile}
         onAuthToggle={handleAuthToggle}
@@ -877,7 +878,8 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       }
       navbarSlot={
         <Navbar 
-          currentCvData={{ ...cvData, uiTheme: globalUiTheme }}
+          currentCvData={cvData}
+          currentUiTheme={globalUiTheme}
           setCvData={setCvData}
           onOpenSavedCVsModal={() => setIsSavedCVsOpen(true)}
           onSaveCVClick={handleSaveCVClick}
