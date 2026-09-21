@@ -4,7 +4,6 @@ import { Modal } from '../../../shared/core/ui/Modal';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
 import { downloadBlob } from '../../../shared/core/utils/downloadUtils';
-import { exportDocumentToPDF } from '../../../shared/core/pdf-engine/pdfExporter';
 import { exportCoverLetterToDocx } from '../../../shared/core/export/docxExporter';
 import { usePageAwareCreditGate } from '../../../shared/core/hooks/usePageAwareCreditGate';
 
@@ -37,6 +36,7 @@ export function CoverLetterExportModal({ isOpen, onClose, cvData, presetId = 'ca
     setIsExportingPdf(true);
     await withErrorHandling(
       async () => {
+        const { exportDocumentToPDF } = await import('../../../shared/core/pdf-engine/pdfExporter');
         await exportDocumentToPDF(cvData, cvData?.activePresetId || presetId);
         showSuccess('Carta de presentación exportada en PDF.');
         onClose();
