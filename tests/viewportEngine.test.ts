@@ -122,13 +122,20 @@ describe('viewportEngine — Nucleo de Calculos Fisicos y Viewport', () => {
       expect(hook).not.toMatch(/safetyPaddingPx:\s*48/);
     });
 
-    it('la hoja de CVPreview lee el zoom por CSS (var + calc) y ya no lo redondea en JS ni lo anima con transición', () => {
-      const preview = read('src/modules/cv-builder/components/CVPreview.tsx');
-      expect(preview).toContain('var(${DOC_SCALE_VAR}');
-      expect(preview).toContain('calc(${widthPx}px * ${scaleExpr})');
-      expect(preview).not.toContain('Math.round(widthPx * zoomLevel)');
-      expect(preview).not.toContain('transition-[width,height]');
-      expect(preview).not.toMatch(/transform: `scale\(\$\{zoomLevel\}\)`/);
+    it('la hoja escalada (compartida) lee el zoom por CSS (var + calc), sin redondeo en JS ni transición', () => {
+      const sheet = require('fs').readFileSync(require('path').join(__dirname, '../src/shared/core/viewport/ScaledPaperSheet.tsx'), 'utf-8') as string;
+      expect(sheet).toContain('var(${DOC_SCALE_VAR}');
+      expect(sheet).toContain('calc(${widthPx}px * ${scaleExpr})');
+      expect(sheet).not.toContain('Math.round(widthPx * zoomLevel)');
+      expect(sheet).not.toContain('transition-[width,height]');
+      expect(sheet).not.toMatch(/transform: `scale\(\$\{zoomLevel\}\)`/);
+    });
+
+    it('CVPreview usa la hoja escalada y los gestos compartidos (no una copia propia)', () => {
+      const preview = require('fs').readFileSync(require('path').join(__dirname, '../src/modules/cv-builder/components/CVPreview.tsx'), 'utf-8') as string;
+      expect(preview).toContain('<ScaledPaperSheet');
+      expect(preview).toContain('useViewportGestures(');
+      expect(preview).not.toContain("addEventListener('touchmove'");
     });
 
     it('App y Book Studio ya no pisan el padding adaptativo con safetyPaddingPx: 48', () => {
@@ -168,17 +175,17 @@ describe('viewportEngine — Nucleo de Calculos Fisicos y Viewport', () => {
   });
 
   describe('la hoja no se corre a un costado (regresión: "la mitad izquierda se esconde")', () => {
-    const preview = () => require('fs').readFileSync(require('path').join(__dirname, '../src/modules/cv-builder/components/CVPreview.tsx'), 'utf-8') as string;
+    const sheetSrc = () => require('fs').readFileSync(require('path').join(__dirname, '../src/shared/core/viewport/ScaledPaperSheet.tsx'), 'utf-8') as string;
 
     it('la caja externa NO centra con flex: un hijo más ancho que ella se desbordaría a ambos lados (x negativo)', () => {
-      const src = preview();
-      const outer = src.slice(src.indexOf('ref={paperSheetRef}'), src.indexOf('ref={paperContentRef}'));
+      const src = sheetSrc();
+      const outer = src.slice(src.indexOf('ref={sheetRef}'), src.indexOf('ref={contentRef}'));
       expect(outer).not.toMatch(/justify-center|justify-around|justify-evenly|items-center/);
       expect(outer).not.toMatch(/\bflex\b/);
     });
 
     it('la altura de la caja externa sigue al contenido escalado (sin vacío debajo del documento)', () => {
-      const src = preview();
+      const src = sheetSrc();
       expect(src).toContain('--doc-content-h');
       expect(src).toContain('height: `calc(var(--doc-content-h,');
     });

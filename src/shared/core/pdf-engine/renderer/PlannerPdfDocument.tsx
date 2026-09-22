@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Svg, Path } from '@react-pdf/renderer';
+import { Document, Page, View, Text, StyleSheet, Svg, Path } from '@react-pdf/renderer';
 import { getPageSize } from '../layers/page/pageSizes';
 import { generateGridPatternPath, GridPatternType } from '../layers/planner/gridPatternEngine';
 import { generateYearArchitecture, WeekStart, WeeklyLayout, TemporalView } from '../layers/planner/timeArchitectureEngine';
@@ -9,18 +9,15 @@ import { getPreset } from '../layers/presets/presetRegistry';
 import { resolvePlannerStyles } from '../layers/planner/plannerStyleEngine';
 
 interface PlannerPdfProps {
-  data: any; // PlannerData
+  data: any; // PlannerDocumentData + layout.pageSizeId
   presetId?: string;
   theme?: {
     primaryColor?: string;
   };
 }
 
-export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({
-  data,
-  presetId = 'planner-clasico',
-  theme = {}
-}) => {
+/** Agenda anual: una página por mes; el tipo, colores y tipografías salen del preset/persona elegido. */
+export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({ data, presetId = 'planner-clasico', theme = {} }) => {
   const activePageSizeId = data?.layout?.pageSizeId || 'b5';
   const pageDef = getPageSize(activePageSizeId);
   const pdfPageSize: 'A4' | 'LETTER' | 'LEGAL' | [number, number] =
@@ -44,7 +41,6 @@ export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({
     weeklyLayout,
     temporalView,
   });
-
   const defaultGridType: GridPatternType = data?.gridType || prepared.gridType || 'dot-grid';
   const hybridMarkers = data?.hybridMarkers || { enabled: true, marginMm: 5, lengthMm: 10, colorHex: '#94a3b8' };
   const markersPath = generateHybridMarkersPath(hybridMarkers, pageDef.widthMm, pageDef.heightMm);
@@ -201,7 +197,8 @@ export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({
                     d={monthGridPath.pathString}
                     stroke={monthGridPath.style.stroke}
                     strokeWidth={monthGridPath.style.strokeWidth}
-                    strokeDasharray={monthGridPath.style.strokeDasharray}
+                    strokeLinecap={monthGridPath.style.strokeLinecap}
+                    strokeOpacity={monthGridPath.style.opacity}
                   />
                 </Svg>
               </View>

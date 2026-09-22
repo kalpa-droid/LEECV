@@ -17,7 +17,7 @@ import { usePresetTransition } from '../../../shared/core/pdf-engine/layers/pres
 import { PresetTransitionOverlay } from '../../../shared/core/ui/PresetTransitionOverlay';
 import { elevationSystem } from '../../../shared/core/uiDesignSystem';
 import { resolveDocumentCanvasPx } from '../../../shared/core/pdf-engine/layers/page/pageSizes';
-import { DOC_SCALE_VAR, quantizeRasterZoom } from '../../../shared/core/viewport';
+import { ScaledPaperSheet, useViewportGestures, quantizeRasterZoom } from '../../../shared/core/viewport';
 
 export interface CVPreviewProps {
   cvData?: any;
@@ -87,97 +87,8 @@ export default function CVPreview({
     fontFamily: theme.fontFamily || 'Arial, sans-serif'
   }), [theme.fontFamily]);
 
-  // Ref con el zoom actual, para que el efecto de gestos no tenga que depender
-  // de `zoomLevel` (si dependiera de él, el propio gesto de pinch dispararía un
-  // re-montaje del efecto en cada tick, reseteando initialPinchDistance a mitad
-  // del gesto y "matando" el pinch después del primer milímetro).
-  const zoomLevelRef = useRef(zoomLevel);
-  useEffect(() => {
-    zoomLevelRef.current = zoomLevel;
-  }, [zoomLevel]);
-
-  // MOTOR DE ZOOM POR RUEDA (PC) Y GESTOS TÁCTILES (CELULAR)
-  useEffect(() => {
-    const container = (externalContainerRef as React.RefObject<HTMLDivElement | null>)?.current || paperSheetRef.current;
-    if (!container || !onZoomChange) return;
-
-    // 1. ZOOM POR RUEDA DIRECTA (PC): sin apretar tecla Ctrl sobre la hoja
-    const handleWheel = (e: WheelEvent) => {
-      const target = e.target as HTMLElement | null;
-      const isOverPaper = target && paperSheetRef.current && paperSheetRef.current.contains(target);
-
-      if (isOverPaper) {
-        // Intercepta solo el área de la hoja para hacer zoom directo sin alterar el navegador
-        e.preventDefault();
-        e.stopPropagation();
-
-        const zoomDelta = -e.deltaY * 0.0012;
-        onZoomChange((prev: number) => {
-          const next = Math.min(Math.max(prev + zoomDelta, 0.35), 2.5);
-          return Number(next.toFixed(3));
-        });
-      }
-      // Si el cursor está fuera de la hoja (en márgenes o barra de scroll lateral),
-      // el evento no se previene, permitiendo scroll vertical continuo normal.
-    };
-
-    // 2. PINCH-TO-ZOOM MULTI-TOUCH (CELULAR): 2 dedos ajustan zoom del visor de forma aislada
-    // El zoom vigente vive en la variable CSS del contenedor (la escribe el viewport de forma
-    // síncrona); el estado de React puede ir un frame atrasado, así que no se lee de ahí.
-    const readCurrentScale = () =>
-      parseFloat(container.style.getPropertyValue(DOC_SCALE_VAR)) || zoomLevelRef.current;
-    let initialPinchDistance: number | null = null;
-    let initialZoomOnPinch = readCurrentScale();
-
-    const handleTouchStart = (e: TouchEvent) => {
-      if (e.touches.length === 2) {
-        // Frenar acá mismo el paneo nativo del navegador (con passive:false abajo,
-        // preventDefault() sí surte efecto). Si esto no se hace en touchstart, con
-        // touchstart en modo passive:true el navegador ya arranca su propio gesto
-        // de paneo/scroll antes de que touchmove llegue a interceptarlo, y la hoja
-        // "se va al costado" en vez de hacer zoom.
-        e.preventDefault();
-        const touch1 = e.touches[0];
-        const touch2 = e.touches[1];
-        initialPinchDistance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
-        initialZoomOnPinch = readCurrentScale();
-      } else {
-        initialPinchDistance = null;
-      }
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length === 2 && initialPinchDistance !== null) {
-        e.preventDefault(); // Prevenir zoom de toda la interfaz del navegador
-        const touch1 = e.touches[0];
-        const touch2 = e.touches[1];
-        const currentDist = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
-        const ratio = currentDist / initialPinchDistance;
-
-        const newZoom = Math.min(Math.max(initialZoomOnPinch * ratio, 0.3), 2.5);
-        onZoomChange(Number(newZoom.toFixed(3)));
-      }
-      // Con 1 dedo se permite desplazamiento nativo libre en 2D (pan X e Y)
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      if (e.touches.length < 2) {
-        initialPinchDistance = null;
-      }
-    };
-
-    container.addEventListener('wheel', handleWheel, { passive: false });
-    container.addEventListener('touchstart', handleTouchStart, { passive: false });
-    container.addEventListener('touchmove', handleTouchMove, { passive: false });
-    container.addEventListener('touchend', handleTouchEnd, { passive: true });
-
-    return () => {
-      container.removeEventListener('wheel', handleWheel);
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchmove', handleTouchMove);
-      container.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [onZoomChange]);
+  // Zoom por rueda (PC) y pellizco (celular): compartido con los demás visores.
+  useViewportGestures({ containerRef: externalContainerRef, sheetRef: paperSheetRef, onZoomChange, zoomLevel });
 
   const renderedDocument = useMemo(() => {
     if (activePreset.pageCategory === 'tarjeta') {
@@ -210,27 +121,7 @@ export default function CVPreview({
 
   const { widthPx, heightPx } = useMemo(() => resolveDocumentCanvasPx(pageSizeId), [pageSizeId]);
 
-  // La hoja interna conserva su tamaño REAL (A4/A5/tarjeta) y solo se le aplica `scale`,
-  // pero `transform` no achica el espacio que ocupa: la caja externa mediría el alto SIN
-  // escalar y dejaría un vacío enorme debajo del documento. Se mide el alto real del
-  // contenido (ResizeObserver, sin pasar por React) y la caja externa toma alto × escala.
-  const paperContentRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const content = paperContentRef.current;
-    const sheet = paperSheetRef.current;
-    if (!content || !sheet || typeof ResizeObserver === 'undefined') return;
-    const syncHeight = () => sheet.style.setProperty('--doc-content-h', `${content.offsetHeight}px`);
-    const observer = new ResizeObserver(syncHeight);
-    observer.observe(content);
-    syncHeight();
-    return () => observer.disconnect();
-  }, [paperSheetRef]);
-
-  // Con contenedor propio (visor del editor) el zoom lo dicta la variable CSS que escribe
-  // useDocumentViewport directo al DOM; `zoomLevel` (estado de React) queda solo de respaldo.
-  // Sin contenedor (vista pública) no hay variable: se usa el zoom recibido por props.
   const isViewportManaged = externalContainerRef !== undefined;
-  const scaleExpr = isViewportManaged ? `var(${DOC_SCALE_VAR}, ${zoomLevel})` : String(zoomLevel);
   // Resolución del canvas escalonada: un pellizco continuo no re-rasteriza cada tick.
   const rasterZoom = quantizeRasterZoom(zoomLevel);
 
@@ -246,42 +137,31 @@ export default function CVPreview({
         presetType={transitionState.presetType}
       />
 
-      {/* Contenedor adaptativo geométricamente proporcional al zoom y centrado sin cortes */}
-      <div 
-        ref={paperSheetRef}
-        className={`my-1 sm:my-5 no-print mx-auto shrink-0 relative ${elevationSystem.overlay}`}
-        style={{ 
-          width: `calc(${widthPx}px * ${scaleExpr})`,
-          height: `calc(var(--doc-content-h, ${heightPx}px) * ${scaleExpr})`,
-          minHeight: `calc(${heightPx}px * ${scaleExpr})`,
-          maxWidth: 'none'
-        }}
+      {/* Hoja escalada (compartida): tamaño real fijo + scale, centrada sin cortes */}
+      <ScaledPaperSheet
+        widthPx={widthPx}
+        heightPx={heightPx}
+        zoomLevel={zoomLevel}
+        managed={isViewportManaged}
+        sheetRef={paperSheetRef}
+        className={elevationSystem.overlay}
       >
-        <div 
-          ref={paperContentRef}
-          className="shrink-0 origin-top-left"
-          style={{ 
-            transform: `scale(${scaleExpr})`,
-            width: `${widthPx}px`
-          }}
+        <ErrorBoundary 
+          compact 
+          title="Inconveniente en la vista previa" 
+          subtitle="Ocurrió un problema al procesar la plantilla del PDF. Tu información guardada no se ve afectada."
         >
-          <ErrorBoundary 
-            compact 
-            title="Inconveniente en la vista previa" 
-            subtitle="Ocurrió un problema al procesar la plantilla del PDF. Tu información guardada no se ve afectada."
-          >
-            <VectorDocViewer 
-              key={`${activePreset.id}_v${presetsVersion}`} 
-              document={renderedDocument} 
-              zoomLevel={rasterZoom}
-              activeTab={activeTab}
-              sections={sections}
-              preset={activePreset}
-              layoutOverrides={debouncedCvData?.layout}
-            />
-          </ErrorBoundary>
-        </div>
-      </div>
+          <VectorDocViewer 
+            key={`${activePreset.id}_v${presetsVersion}`} 
+            document={renderedDocument} 
+            zoomLevel={rasterZoom}
+            activeTab={activeTab}
+            sections={sections}
+            preset={activePreset}
+            layoutOverrides={debouncedCvData?.layout}
+          />
+        </ErrorBoundary>
+      </ScaledPaperSheet>
     </div>
   );
 }
