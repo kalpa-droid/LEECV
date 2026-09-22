@@ -91,7 +91,7 @@ REGLA CRITICA: Si un dato (ej. descripcion de experiencia) es la CONTINUACION ex
 
     let jsonString;
     try {
-      jsonString = await gemini.complete(request, apiKey, 'gemini-2.5-flash');
+      jsonString = await gemini.complete(request, apiKey, gemini.defaultModel);
     } catch (error: any) {
       if (error.status === 429 || error.message?.includes('429')) {
         markKeyRateLimited('gemini', apiKey, 60);
