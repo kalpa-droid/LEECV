@@ -48,15 +48,19 @@ if (!modalContent.includes('dvh')) {
   process.exit(1);
 }
 
-// 4. Verificar CVPreview.tsx
+// 4. Verificar el margen vertical compacto de la hoja en celular.
+// Vive en ScaledPaperSheet.tsx (compartido por CV/tarjeta/carta/agenda) desde que se extrajo
+// de CVPreview.tsx; se acepta en cualquiera de los dos para no atarse a dónde vive hoy.
 const previewPath = path.join(ROOT, 'src/modules/cv-builder/components/CVPreview.tsx');
+const sheetPath = path.join(ROOT, 'src/shared/core/viewport/ScaledPaperSheet.tsx');
 if (!fs.existsSync(previewPath)) {
   console.error('❌ No se encontró CVPreview.tsx');
   process.exit(1);
 }
 const previewContent = fs.readFileSync(previewPath, 'utf-8');
-if (!previewContent.includes('my-1 sm:my-5')) {
-  console.error('❌ CVPreview.tsx no utiliza my-1 sm:my-5 para el margen vertical compacto del documento en celular.');
+const sheetContent = fs.existsSync(sheetPath) ? fs.readFileSync(sheetPath, 'utf-8') : '';
+if (!previewContent.includes('my-1 sm:my-5') && !sheetContent.includes('my-1 sm:my-5')) {
+  console.error('❌ Ni CVPreview.tsx ni ScaledPaperSheet.tsx usan my-1 sm:my-5 para el margen vertical compacto del documento en celular.');
   process.exit(1);
 }
 
