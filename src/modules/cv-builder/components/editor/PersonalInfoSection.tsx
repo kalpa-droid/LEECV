@@ -4,7 +4,8 @@ import { useCVContext } from '../../../../context/CVContext';
 import { PersonalInfoFields } from '../../../../shared/core/ui/PersonalInfoFields';
 import { SectionManualAdjustment } from './SectionManualAdjustment';
 import { colorSystem, typeScale, button, elevationSystem } from '../../../../shared/core/uiDesignSystem';
-import ImportCvAiModal from '../modals/ImportCvAiModal';
+
+const ImportCvAiModal = React.lazy(() => import('../modals/ImportCvAiModal'));
 
 export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhotoCropper: () => void; registeredItems?: any[] }) {
   const { cvData, setCvData, updatePersonalInfo } = useCVContext();
@@ -86,23 +87,25 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
         </div>
       )}
 
-      <ImportCvAiModal 
-        isOpen={isImportModalOpen} 
-        onClose={() => setIsImportModalOpen(false)}
-        onImportComplete={(importedData) => {
-          setIsImportModalOpen(false);
-          if (importedData) {
-            setCvData(prev => ({
-              ...prev,
-              personalInfo: { ...prev.personalInfo, ...importedData.personalInfo },
-              experience: importedData.experience || prev.experience,
-              education: importedData.education || prev.education,
-              skills: importedData.skills || prev.skills,
-              languages: importedData.languages || prev.languages,
-            }));
-          }
-        }}
-      />
+      <React.Suspense fallback={null}>
+        <ImportCvAiModal 
+          isOpen={isImportModalOpen} 
+          onClose={() => setIsImportModalOpen(false)}
+          onImportComplete={(importedData) => {
+            setIsImportModalOpen(false);
+            if (importedData) {
+              setCvData(prev => ({
+                ...prev,
+                personalInfo: { ...prev.personalInfo, ...importedData.personalInfo },
+                experience: importedData.experience || prev.experience,
+                education: importedData.education || prev.education,
+                skills: importedData.skills || prev.skills,
+                languages: importedData.languages || prev.languages,
+              }));
+            }
+          }}
+        />
+      </React.Suspense>
     </div>
   );
 }
