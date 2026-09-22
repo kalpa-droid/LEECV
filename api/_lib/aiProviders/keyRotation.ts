@@ -7,7 +7,6 @@ interface KeyStatus {
 }
 
 const keyStatusStoreMap = new Map<string, KeyStatus>();
-const providerKeyIndexMap = new Map<string, number>();
 
 function getEnvKeysForProvider(providerId: string): string[] {
   let envVal = '';
@@ -28,7 +27,14 @@ export function getNextAvailableKey(providerId: string): string | null {
   if (keys.length === 0) return null;
 
   const now = Date.now();
-  const startIndex = providerKeyIndexMap.get(providerId) || 0;
+  // Antes esto arrancaba desde un índice guardado en un Map en memoria del proceso
+  // (providerKeyIndexMap). En Vercel, dos pedidos concurrentes pueden atenderse en
+  // dos instancias de función distintas, cada una con su propio Map vacío — todas
+  // arrancaban en el índice 0 y terminaban eligiendo siempre la misma llave bajo
+  // tráfico real, aunque pareciera una rotación distribuida. Elegir el punto de
+  // partida al azar en cada pedido reparte la carga estadísticamente bien entre
+  // las llaves disponibles sin necesitar ningún estado compartido entre instancias.
+  const startIndex = Math.floor(Math.random() * keys.length);
 
   for (let i = 0; i < keys.length; i++) {
     const idx = (startIndex + i) % keys.length;
@@ -37,7 +43,6 @@ export function getNextAvailableKey(providerId: string): string | null {
     const status = keyStatusStoreMap.get(storeKey);
 
     if (!status || status.pausedUntil <= now) {
-      providerKeyIndexMap.set(providerId, (idx + 1) % keys.length);
       return candidateKey;
     }
   }
