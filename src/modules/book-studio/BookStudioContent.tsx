@@ -15,7 +15,7 @@ import { saveBook } from '../../shared/core/storage/documentStorageService';
 import { openTab, OpenTab } from '../../shared/core/documents/tabStore';
 import { useRegisterDocumentTab, resolveDocumentIdWithHandoff, generateDocumentId } from '../../shared/core/documents/documentEngine';
 import { radius, button } from '../../shared/core/uiDesignSystem';
-import { useDocumentViewport } from '../../shared/core/viewport';
+import { useDocumentViewport, useViewportGestures } from '../../shared/core/viewport';
 import { DocumentTypeId } from '../../types/document';
 
 interface BookStudioContentProps {
@@ -57,6 +57,15 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   const [bookId, setBookId] = useState<string>(() => resolveDocumentIdWithHandoff(activeTabId, 'book'));
   const viewport = useDocumentViewport({
     pageSizeId: 'a5'
+  });
+  
+  const sheetRef = useRef<HTMLDivElement>(null);
+
+  useViewportGestures({
+    containerRef: viewport.containerRef,
+    sheetRef,
+    onZoomChange: viewport.setZoomLevel,
+    zoomLevel: viewport.zoomLevel
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -227,16 +236,18 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
       mainSlot={
         <div className="w-full h-full flex flex-col items-center justify-center p-4">
           {selectedFile ? (
-            <BookPreviewStep
-              options={options}
-              setOptions={handleOptionsChange}
-              selectedFile={selectedFile}
-              pdfPageCount={pdfPageCount}
-              zoomScale={viewport.zoomLevel}
-              pdfDoc={pdfDoc}
-              onConfirm={() => setActiveStepTab('book_preview_export')}
-              activeStep={activeStepTab}
-            />
+            <div ref={sheetRef} className="w-full h-full flex flex-col items-center justify-center">
+              <BookPreviewStep
+                options={options}
+                setOptions={handleOptionsChange}
+                selectedFile={selectedFile}
+                pdfPageCount={pdfPageCount}
+                zoomScale={viewport.zoomLevel}
+                pdfDoc={pdfDoc}
+                onConfirm={() => setActiveStepTab('book_preview_export')}
+                activeStep={activeStepTab}
+              />
+            </div>
           ) : (
             <div className={`text-center p-10 bg-[var(--ui-bg-card)] rounded-[${radius.modal}] border-2 border-dashed border-[var(--ui-border)] max-w-md space-y-3`}>
               <h3 className="text-base font-bold text-[var(--ui-text-primary)]">Ningún PDF cargado aún</h3>

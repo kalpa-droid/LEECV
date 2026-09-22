@@ -1,14 +1,14 @@
 import React from 'react';
-import { User, Camera, Phone } from 'lucide-react';
+import { Bot } from 'lucide-react';
 import { useCVContext } from '../../../../context/CVContext';
-import { Field } from '../../../../shared/core/ui/Field';
-import { PanelSection } from '../../../../shared/core/ui/PanelSection';
 import { PersonalInfoFields } from '../../../../shared/core/ui/PersonalInfoFields';
 import { SectionManualAdjustment } from './SectionManualAdjustment';
 import { colorSystem, typeScale, button, elevationSystem } from '../../../../shared/core/uiDesignSystem';
+import ImportCvAiModal from '../modals/ImportCvAiModal';
 
 export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhotoCropper: () => void; registeredItems?: any[] }) {
   const { cvData, setCvData, updatePersonalInfo } = useCVContext();
+  const [isImportModalOpen, setIsImportModalOpen] = React.useState(false);
 
   if (!cvData) return null;
 
@@ -32,7 +32,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
       {/* Header con Toggle */}
       <div className={`flex items-center justify-between p-2.5 rounded-[12px] border transition ${
         isVisible 
-          ? 'bg-white border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] ${elevationSystem.raised}' 
+          ? `bg-[var(--ui-bg-card)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] ${elevationSystem.raised}` 
           : 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-muted)] opacity-75'
       }`}>
         <span className={`${typeScale.sectionTitle} uppercase tracking-wide`} style={{ color: colorSystem.neutral.textPrimary }}>
@@ -71,6 +71,38 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
           }}
         />
       )}
+
+      {/* Floating Action / Import Button */}
+      {isVisible && (
+        <div className="mt-4 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setIsImportModalOpen(true)}
+            className={`${button.base} ${button.secondary} flex items-center gap-2`}
+          >
+            <Bot size={18} />
+            Importar con IA (PDF/Foto)
+          </button>
+        </div>
+      )}
+
+      <ImportCvAiModal 
+        isOpen={isImportModalOpen} 
+        onClose={() => setIsImportModalOpen(false)}
+        onImportComplete={(importedData) => {
+          setIsImportModalOpen(false);
+          if (importedData) {
+            setCvData(prev => ({
+              ...prev,
+              personalInfo: { ...prev.personalInfo, ...importedData.personalInfo },
+              experience: importedData.experience || prev.experience,
+              education: importedData.education || prev.education,
+              skills: importedData.skills || prev.skills,
+              languages: importedData.languages || prev.languages,
+            }));
+          }
+        }}
+      />
     </div>
   );
 }

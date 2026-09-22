@@ -22,12 +22,21 @@ export const geminiProvider: AiProviderDefinition = {
         contents: [
           {
             role: 'user',
-            parts: [{ text: req.userPrompt }]
+            parts: [
+              ...(req.images || []).map(img => ({
+                inlineData: {
+                  mimeType: img.mimeType,
+                  data: img.base64
+                }
+              })),
+              { text: req.userPrompt }
+            ]
           }
         ],
         generationConfig: {
           temperature: req.temperature ?? 0.7,
-          maxOutputTokens: req.maxTokens || 1200
+          maxOutputTokens: req.maxTokens || 1200,
+          ...(req.responseSchema ? { responseMimeType: 'application/json', responseSchema: req.responseSchema } : {})
         }
       })
     });

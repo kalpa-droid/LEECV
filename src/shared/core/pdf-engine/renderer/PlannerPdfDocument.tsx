@@ -42,7 +42,7 @@ export const PlannerPdfDocument: React.FC<PlannerPdfProps> = ({ data, presetId =
     temporalView,
   });
   const defaultGridType: GridPatternType = data?.gridType || prepared.gridType || 'dot-grid';
-  const hybridMarkers = data?.hybridMarkers || { enabled: true, marginMm: 5, lengthMm: 10, colorHex: '#94a3b8' };
+  const hybridMarkers = data?.hybridMarkers || { enabled: true, marginMm: 5, lengthMm: 10, colorHex: plannerStyles.rolesColor.border };
   const markersPath = generateHybridMarkersPath(hybridMarkers, pageDef.widthMm, pageDef.heightMm);
 
   const weekDayNames = weekStart === 'sunday'
