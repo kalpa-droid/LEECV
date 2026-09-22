@@ -46,8 +46,8 @@ export const CoverLetterPdfDocument: React.FC<CoverLetterPdfProps> = ({
       paddingBottom: 45,
       paddingLeft: 55,
       paddingRight: 55,
-      fontFamily: letterStyles.body.fontFamily,
-      fontSize: letterStyles.body.fontSizePt,
+      fontFamily: letterStyles.paragraph.fontFamily,
+      fontSize: letterStyles.paragraph.fontSizePt,
       color: textColor,
       lineHeight: preset.lineSpacing
     },
