@@ -6,6 +6,7 @@ import { requireRateLimit } from './_lib/rateLimiter.js';
 import { AI_PROVIDERS } from './_lib/aiProviders/registry.js';
 import { getNextAvailableKey, markKeyRateLimited } from './_lib/aiProviders/keyRotation.js';
 import type { AiCompletionRequest } from './_lib/aiProviders/types.js';
+import { calculateAiCost } from './_lib/costCalculator.js';
 
 export const maxDuration = 60;
 export const config = {
@@ -184,7 +185,21 @@ REGLA CRITICA: Si un dato (ej. descripcion de experiencia) es la CONTINUACION ex
 
         let jsonString;
         try {
-          jsonString = await gemini.complete(request, apiKey, gemini.defaultModel);
+          const result = await gemini.complete(request, apiKey, gemini.defaultModel);
+          jsonString = result.content;
+
+          if (result.usage) {
+            const cost = calculateAiCost('gemini', gemini.defaultModel, result.usage.promptTokens, result.usage.completionTokens);
+            serverDal.aiTelemetry.logUsage({
+              userId: auth.user.id,
+              provider: 'gemini',
+              model: gemini.defaultModel,
+              endpoint: 'cv-import',
+              promptTokens: result.usage.promptTokens,
+              completionTokens: result.usage.completionTokens,
+              estimatedCostUsd: cost
+            }).catch(err => console.error('[aiTelemetry] Error logging usage in cv-import-api:', err));
+          }
         } catch (error: any) {
           if (error.status === 429 || error.message?.includes('429')) {
             markKeyRateLimited('gemini', apiKey, 60);

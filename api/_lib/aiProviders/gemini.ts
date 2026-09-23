@@ -1,4 +1,4 @@
-import type { AiCompletionRequest, AiProviderDefinition, AiProviderPingResult } from './types.js';
+import type { AiCompletionRequest, AiProviderDefinition, AiProviderPingResult, AiCompletionResponse } from './types.js';
 
 export const geminiProvider: AiProviderDefinition = {
   id: 'gemini',
@@ -6,7 +6,7 @@ export const geminiProvider: AiProviderDefinition = {
   requiredEnvVars: ['GEMINI_API_KEYS', 'GEMINI_API_KEY'],
   defaultModel: 'gemini-2.5-flash',
 
-  async complete(req: AiCompletionRequest, apiKey: string, model?: string): Promise<string> {
+  async complete(req: AiCompletionRequest, apiKey: string, model?: string): Promise<AiCompletionResponse> {
     const targetModel = model || this.defaultModel;
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${apiKey}`;
 
@@ -54,7 +54,13 @@ export const geminiProvider: AiProviderDefinition = {
       throw new Error('Respuesta vacía o inválida de Gemini API');
     }
 
-    return content.trim();
+    const usage = data?.usageMetadata ? {
+      promptTokens: data.usageMetadata.promptTokenCount || 0,
+      completionTokens: data.usageMetadata.candidatesTokenCount || 0,
+      totalTokens: data.usageMetadata.totalTokenCount || 0,
+    } : undefined;
+
+    return { content: content.trim(), usage };
   },
 
   async ping(): Promise<AiProviderPingResult> {

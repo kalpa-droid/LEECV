@@ -6,6 +6,7 @@ import { serverDal } from './_lib/serverDal.js';
 import { AI_PROVIDERS, AI_PROVIDER_FALLBACK_ORDER } from './_lib/aiProviders/registry.js';
 import { getNextAvailableKey, markKeyRateLimited } from './_lib/aiProviders/keyRotation.js';
 import type { AiCompletionRequest } from './_lib/aiProviders/types.js';
+import { calculateAiCost } from './_lib/costCalculator.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -50,12 +51,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!apiKey) continue;
 
     try {
-      completionText = await provider.complete(completionReq, apiKey);
+      const result = await provider.complete(completionReq, apiKey);
+      completionText = result.content;
+      
+      if (result.usage) {
+        const cost = calculateAiCost(providerId, provider.defaultModel, result.usage.promptTokens, result.usage.completionTokens);
+        serverDal.aiTelemetry.logUsage({
+          userId,
+          provider: providerId,
+          model: provider.defaultModel,
+          endpoint: 'ai-generate',
+          promptTokens: result.usage.promptTokens,
+          completionTokens: result.usage.completionTokens,
+          estimatedCostUsd: cost
+        }).catch(err => console.error('[aiTelemetry] Error logging usage in ai-generate:', err));
+      }
+
       successfulProviderId = providerId;
       break;
     } catch (err: any) {
       lastError = err;
-      if (err.status === 429) {
+      if (err.status === 429 || err.message?.includes('429')) {
         markKeyRateLimited(providerId, apiKey, 60);
       }
     }

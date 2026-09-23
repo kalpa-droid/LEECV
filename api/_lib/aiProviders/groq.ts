@@ -1,4 +1,4 @@
-import type { AiCompletionRequest, AiProviderDefinition, AiProviderPingResult } from './types.js';
+import type { AiCompletionRequest, AiProviderDefinition, AiProviderPingResult, AiCompletionResponse } from './types.js';
 
 export const groqProvider: AiProviderDefinition = {
   id: 'groq',
@@ -6,7 +6,7 @@ export const groqProvider: AiProviderDefinition = {
   requiredEnvVars: ['GROQ_API_KEYS', 'GROQ_API_KEY'],
   defaultModel: 'llama-3.3-70b-versatile',
 
-  async complete(req: AiCompletionRequest, apiKey: string, model?: string): Promise<string> {
+  async complete(req: AiCompletionRequest, apiKey: string, model?: string): Promise<AiCompletionResponse> {
     const targetModel = model || this.defaultModel;
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -38,7 +38,13 @@ export const groqProvider: AiProviderDefinition = {
       throw new Error('Respuesta vacía o inválida de Groq API');
     }
 
-    return content.trim();
+    const usage = data?.usage ? {
+      promptTokens: data.usage.prompt_tokens || 0,
+      completionTokens: data.usage.completion_tokens || 0,
+      totalTokens: data.usage.total_tokens || 0,
+    } : undefined;
+
+    return { content: content.trim(), usage };
   },
 
   async ping(): Promise<AiProviderPingResult> {

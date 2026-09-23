@@ -389,5 +389,34 @@ export const serverDal = {
       if (error) throw new Error(`Error obteniendo import job pages: ${error.message}`);
       return data || [];
     }
+  },
+
+  aiTelemetry: {
+    async logUsage(data: {
+      userId: string;
+      provider: string;
+      model: string;
+      endpoint: string;
+      promptTokens: number;
+      completionTokens: number;
+      estimatedCostUsd: number;
+    }): Promise<void> {
+      const { error } = await supabaseAdmin
+        .from('ai_usage_telemetry')
+        .insert({
+          user_id: data.userId,
+          provider: data.provider,
+          model: data.model,
+          endpoint: data.endpoint,
+          prompt_tokens: data.promptTokens,
+          completion_tokens: data.completionTokens,
+          estimated_cost_usd: data.estimatedCostUsd,
+          created_at: new Date().toISOString()
+        });
+      
+      if (error) {
+        console.error(`[aiTelemetry] Error logging usage: ${error.message}`);
+      }
+    }
   }
 };

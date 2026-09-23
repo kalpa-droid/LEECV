@@ -14,11 +14,20 @@ export interface AiProviderPingResult {
   model: string;
 }
 
+export interface AiCompletionResponse {
+  content: string;
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+}
+
 export interface AiProviderDefinition {
   id: string;
   displayName: string;
   requiredEnvVars: string[];
   defaultModel: string;
-  complete: (req: AiCompletionRequest, apiKey: string, model?: string) => Promise<string>;
+  complete: (req: AiCompletionRequest, apiKey: string, model?: string) => Promise<AiCompletionResponse>;
   ping: () => Promise<AiProviderPingResult>;
 }
