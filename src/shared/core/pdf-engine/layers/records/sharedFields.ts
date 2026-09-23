@@ -12,6 +12,7 @@
  */
 
 import { ContentRecord } from './recordTypes';
+import { INTERNAL_METADATA_DENYLIST } from './recordLayoutEngine';
 
 export interface ContactField {
   key: string;
@@ -33,10 +34,33 @@ export const CONTACT_FIELDS: ContactField[] = [
   { key: 'birthDate', cvLabel: 'Nac.:', cardOmit: true },
 ];
 
-/** Devuelve solo los campos con valor real, en el orden canónico de arriba */
+function humanizeCamelCase(key: string): string {
+  const withSpaces = key.replace(/([A-Z])/g, ' $1');
+  const capitalized = withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
+  return capitalized.trim() + ':';
+}
+
+/** Devuelve solo los campos con valor real, en el orden canónico de arriba, seguidos de los custom */
 export function getPresentContactFields(rec: ContentRecord, variant: 'document' | 'card') {
-  return CONTACT_FIELDS.filter((f) => {
+  const knownFields = CONTACT_FIELDS.filter((f) => {
     if (variant === 'card' && f.cardOmit) return false;
     return Boolean(rec.fields[f.key]);
   }).map((f) => ({ ...f, value: String(rec.fields[f.key]) }));
+
+  const knownKeys = new Set(CONTACT_FIELDS.map(f => f.key));
+  const customFields: (ContactField & { value: string })[] = [];
+
+  for (const [key, val] of Object.entries(rec.fields || {})) {
+    if (INTERNAL_METADATA_DENYLIST.has(key.toLowerCase())) continue;
+    if (knownKeys.has(key)) continue;
+    if (val === undefined || val === null || String(val).trim() === '') continue;
+
+    customFields.push({
+      key,
+      cvLabel: humanizeCamelCase(key),
+      value: String(val)
+    });
+  }
+
+  return [...knownFields, ...customFields];
 }

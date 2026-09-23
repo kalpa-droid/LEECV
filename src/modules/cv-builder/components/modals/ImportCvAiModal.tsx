@@ -47,7 +47,7 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
       setStatus('processing');
 
       // 1. Start Job
-      const startRes = await fetch('/api/cv-import/start', {
+      const startRes = await fetch('/api/cv-import-api?action=start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ totalPages: pagesToProcess.length })
@@ -59,7 +59,7 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
       // 2. Process each page sequentially
       for (let i = 0; i < pagesToProcess.length; i++) {
         const page = pagesToProcess[i];
-        const pRes = await fetch('/api/cv-import/process-page', {
+        const pRes = await fetch('/api/cv-import-api?action=process-page', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -75,7 +75,7 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
       }
 
       // 3. Finalize
-      const finRes = await fetch('/api/cv-import/finalize', {
+      const finRes = await fetch('/api/cv-import-api?action=finalize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ jobId })

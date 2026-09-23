@@ -48,12 +48,22 @@ export const CANONICAL_SECTIONS: CanonicalMapping[] = [
 
 export function findCanonicalLabel(titleText: string): string | null {
   if (!titleText) return null;
-  const clean = titleText.toLowerCase().trim();
+
+  const normalizeText = (text: string) =>
+    text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+
+  const clean = normalizeText(titleText);
+  const escapeRegex = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
   for (const item of CANONICAL_SECTIONS) {
-    if (clean.includes(item.standardName.toLowerCase())) return item.standardName;
+    const stdNormalized = normalizeText(item.standardName);
+    const stdRegex = new RegExp(`\\b${escapeRegex(stdNormalized)}\\b`, 'i');
+    if (stdRegex.test(clean)) return item.standardName;
+
     for (const alias of item.aliases) {
-      if (clean.includes(alias)) return item.standardName;
+      const aliasNormalized = normalizeText(alias);
+      const aliasRegex = new RegExp(`\\b${escapeRegex(aliasNormalized)}\\b`, 'i');
+      if (aliasRegex.test(clean)) return item.standardName;
     }
   }
 

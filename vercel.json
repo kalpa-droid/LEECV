@@ -1,7 +1,7 @@
 {
   "functions": {
-    "api/cv-import/*.ts": {
-      "maxDuration": 30
+    "api/cv-import-api.ts": {
+      "maxDuration": 60
     }
   },
   "headers": [
@@ -73,6 +73,18 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/api/cv-import/start",
+      "destination": "/api/cv-import-api?action=start"
+    },
+    {
+      "source": "/api/cv-import/process-page",
+      "destination": "/api/cv-import-api?action=process-page"
+    },
+    {
+      "source": "/api/cv-import/finalize",
+      "destination": "/api/cv-import-api?action=finalize"
+    },
     {
       "source": "/api/mercadopago-webhook",
       "destination": "/api/webhooks?provider=mercadopago"

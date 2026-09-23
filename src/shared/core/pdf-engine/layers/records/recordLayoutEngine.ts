@@ -40,7 +40,7 @@ export interface StructuredRecordLayout {
 }
 
 export function inferPdfRole(fieldId: string, val: string): 'title' | 'subtitle' | 'badge' | 'extra' | 'description' {
-  const lowerId = fieldId.toLowerCase();
+  const lowerId = fieldId.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const cleanVal = val.trim();
 
   // 1. Pattern matching on fieldId keywords
@@ -76,7 +76,7 @@ export function inferPdfRole(fieldId: string, val: string): 'title' | 'subtitle'
 
 const FIELD_CONTAINER_KEYS = new Set(['fields', 'record']);
 
-const INTERNAL_METADATA_DENYLIST = new Set([
+export const INTERNAL_METADATA_DENYLIST = new Set([
   'id', 'kind', 'level', 'rol', '_meta', 'createdat', 'updatedat',
   'targetsectorrole', 'fieldlabeloverrides', 'manualoverrides', 'sectionvisibility'
 ]);
@@ -226,7 +226,7 @@ export function buildStructuredRecordLayout(
         break;
 
       default:
-        extras.push({ id: fieldId, label: def.label, value: val, type: def.type });
+        extras.push({ id: fieldId, label: fieldLabel, value: val, type: fieldType });
         break;
     }
   }
