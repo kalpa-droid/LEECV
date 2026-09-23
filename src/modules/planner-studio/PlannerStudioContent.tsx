@@ -9,6 +9,8 @@ import { DocumentTypeId } from '../../types/document';
 import { useDocumentViewport } from '../../shared/core/viewport';
 import { OpenTab, openTab } from '../../shared/core/documents/tabStore';
 import { generateDocumentId, computeAutoDocumentTitle, useDraftAutosave, useRegisterDocumentTab, resolveDocumentIdWithHandoff } from '../../shared/core/documents/documentEngine';
+import { savePlanner, loadPlannerById } from '../../shared/core/storage/documentStorageService';
+import { useToast } from '../../shared/core/ui/Toast';
 import { inferDocumentTypeId } from '../../shared/core/capabilities/capabilityRegistry';
 import { PlannerMonthOverride } from '../../shared/core/pdf-engine/layers/records/plannerDataAdapter';
 import { PersonalInfoFields } from '../../shared/core/ui/PersonalInfoFields';
@@ -93,6 +95,23 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   const [selectedPresetId, setSelectedPresetId] = useState<string>('planner-clasico');
   
   const [plannerId] = useState<string>(() => resolveDocumentIdWithHandoff(activeTabId, 'planner'));
+
+  // Cargar el borrador guardado (IndexedDB/Supabase, vía loadDocumentById) si existe.
+  // Sin esto, useDraftAutosave escribe pero nadie lee de vuelta: cerrar y reabrir
+  // la pestaña perdía todo lo tipeado pese a que el autoguardado corría bien.
+  useEffect(() => {
+    let cancelled = false;
+    loadPlannerById(plannerId).then((saved) => {
+      if (cancelled || !saved) return;
+      const { id: _id, doc_type_id: _dt, updated_at: _u, isProvisional: _ip, ...restored } = saved;
+      setData((prev) => ({ ...prev, ...restored }));
+      if (saved.selectedPresetId) setSelectedPresetId(saved.selectedPresetId);
+    }).catch(() => {
+      // Sin borrador guardado todavía (agenda nueva) — se sigue con el estado en blanco.
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plannerId]);
   
   const viewport = useDocumentViewport({
     pageSizeId: 'b5'
@@ -138,6 +157,28 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
     docData: { ...data, id: plannerId, doc_type_id: 'planner', selectedPresetId },
     localStorageKey: `planner_data_${plannerId}`
   });
+
+  const { showSuccess, showError } = useToast();
+
+  const persistPlannerState = async () => {
+    try {
+      const res = await savePlanner({
+        ...data,
+        id: plannerId,
+        selectedPresetId,
+        activePresetId: selectedPresetId,
+        title: plannerTitle,
+        updatedAt: new Date().toISOString()
+      });
+      if (res?.success) {
+        showSuccess(`Agenda guardada: "${res.title || plannerTitle}"`);
+      } else {
+        showError('No se pudo guardar la agenda.');
+      }
+    } catch (err) {
+      showError('Error al guardar la agenda.');
+    }
+  };
 
   const updateMonthOverride = (monthIndex: number, patch: Partial<PlannerMonthOverride>) => {
     setData(d => ({
@@ -195,7 +236,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
           currentCvData={{}}
           currentUiTheme={currentUiTheme}
           onOpenSavedCVsModal={() => {}}
-          onSaveCVClick={() => {}}
+          onSaveCVClick={persistPlannerState}
           onOpenSaveAsModal={() => {}}
           onOpenJsonDownloadModal={() => {}}
           onPrint={() => {}}

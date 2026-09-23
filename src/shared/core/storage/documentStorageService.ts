@@ -387,3 +387,8 @@ export const saveBook = (bookData: any) => saveDocument(bookData, 'book');
 export const loadBookById = (id: string) => loadDocumentById(id, 'book');
 export const deleteBookById = (id: string) => deleteDocumentById(id, 'book');
 
+export const getSavedPlannersList = () => getSavedDocumentsList('planner');
+export const savePlanner = (plannerData: any) => saveDocument(plannerData, 'planner');
+export const loadPlannerById = (id: string) => loadDocumentById(id, 'planner');
+export const deletePlannerById = (id: string) => deleteDocumentById(id, 'planner');
+
