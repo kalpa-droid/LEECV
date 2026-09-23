@@ -138,8 +138,8 @@ export async function logAdminAction(actionType: string, targetUserId: string | 
   }
 }
 
-export async function listAiTelemetry(limit: number = 100) {
-  return await dal.aiTelemetry.list(limit);
+export async function listAiTelemetry(limit: number = 100, filters?: { from?: string; endpoint?: string }) {
+  return await dal.aiTelemetry.list(limit, filters);
 }
 
 export async function getAiTelemetryStats() {

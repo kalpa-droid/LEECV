@@ -11,12 +11,15 @@ export function AiTelemetryTab() {
   const [logs, setLogs] = useState<any[]>([]);
   const [stats, setStats] = useState({ totalCost: 0, totalTokens: 0 });
 
+  const [dateFrom, setDateFrom] = useState('');
+  const [endpointFilter, setEndpointFilter] = useState('');
+
   async function loadData() {
     setLoading(true);
     await withErrorHandling(
       async () => {
         const [telemetryLogs, telemetryStats] = await Promise.all([
-          listAiTelemetry(100),
+          listAiTelemetry(100, { from: dateFrom || undefined, endpoint: endpointFilter || undefined }),
           getAiTelemetryStats()
         ]);
         setLogs(telemetryLogs);
@@ -77,6 +80,37 @@ export function AiTelemetryTab() {
             <p className="text-xs text-[var(--color-neutral-text-secondary)] font-bold">Tokens Procesados Totales</p>
           </div>
         </div>
+      </div>
+
+      <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-4 ${elevationSystem.raised} border border-[var(--color-neutral-border)] flex flex-wrap items-center gap-3`}>
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-bold text-[var(--color-neutral-text-secondary)]">Desde:</label>
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className={`px-3 py-1.5 text-xs bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[${radius.card}] text-[var(--color-neutral-text-primary)] focus:outline-none focus:border-[var(--color-accent-purple)]`}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-bold text-[var(--color-neutral-text-secondary)]">Endpoint:</label>
+          <select
+            value={endpointFilter}
+            onChange={(e) => setEndpointFilter(e.target.value)}
+            className={`px-3 py-1.5 text-xs bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[${radius.card}] text-[var(--color-neutral-text-primary)] focus:outline-none focus:border-[var(--color-accent-purple)]`}
+          >
+            <option value="">Todos los endpoints</option>
+            <option value="cv-import">cv-import</option>
+            <option value="ai-generate">ai-generate</option>
+          </select>
+        </div>
+        <button
+          onClick={loadData}
+          disabled={loading}
+          className={`px-4 py-1.5 bg-[var(--color-accent-purple-light)] hover:bg-[var(--color-accent-purple)]/20 text-[var(--color-accent-purple-text)] text-xs font-bold rounded-[${radius.card}] border border-[var(--color-accent-purple)]/30 transition cursor-pointer disabled:opacity-50`}
+        >
+          Filtrar
+        </button>
       </div>
 
       <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] ${elevationSystem.raised} border border-[var(--color-neutral-border)] overflow-hidden`}>

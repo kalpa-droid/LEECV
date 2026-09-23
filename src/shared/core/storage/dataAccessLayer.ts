@@ -403,37 +403,32 @@ export const dal = {
   },
 
   aiTelemetry: {
-    async list(limit: number = 100): Promise<any[]> {
+    async list(limit: number = 100, filters?: { from?: string; endpoint?: string }): Promise<any[]> {
       if (!supabase) return [];
-      const res = await safeSupabaseCall(() =>
-        supabase
+      const res = await safeSupabaseCall(() => {
+        let query = supabase
           .from('ai_usage_telemetry')
           .select('*, profiles(email)')
           .order('created_at', { ascending: false })
-          .limit(limit)
-      );
+          .limit(limit);
+
+        if (filters?.from) query = query.gte('created_at', filters.from);
+        if (filters?.endpoint) query = query.eq('endpoint', filters.endpoint);
+
+        return query;
+      });
       return (res.data as any[]) || [];
     },
 
     async getAggregatedStats(): Promise<{ totalCost: number; totalTokens: number }> {
       if (!supabase) return { totalCost: 0, totalTokens: 0 };
-      // Note: We'll fetch all rows for simplicity in this admin view,
-      // in a real large-scale app this should be an RPC call.
       const res = await safeSupabaseCall(() =>
-        supabase.from('ai_usage_telemetry').select('estimated_cost_usd, prompt_tokens, completion_tokens')
+        supabase.rpc('get_ai_telemetry_stats').single()
       );
-      
-      let totalCost = 0;
-      let totalTokens = 0;
-      
-      if (res.data) {
-        for (const row of res.data) {
-          totalCost += Number(row.estimated_cost_usd || 0);
-          totalTokens += Number(row.prompt_tokens || 0) + Number(row.completion_tokens || 0);
-        }
-      }
-      
-      return { totalCost, totalTokens };
+      return {
+        totalCost: Number((res.data as any)?.total_cost || 0),
+        totalTokens: Number((res.data as any)?.total_tokens || 0)
+      };
     }
   }
 };
