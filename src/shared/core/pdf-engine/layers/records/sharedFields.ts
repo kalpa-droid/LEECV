@@ -22,16 +22,18 @@ export interface ContactField {
    *  pensada para caber en 89x51mm, no tiene sentido mostrarlo — pero queda
    *  documentado ACÁ que la omisión es a propósito, no un olvido. */
   cardOmit?: boolean;
+  /** true = renderizar el valor con mayor peso tipográfico (ej. negrita) */
+  emphasize?: boolean;
 }
 
 export const CONTACT_FIELDS: ContactField[] = [
   { key: 'phone', cvLabel: 'Tel:' },
   { key: 'email', cvLabel: 'Email:' },
   { key: 'address', cvLabel: 'Dom:' },
-  { key: 'cityProvince', cvLabel: 'Ubic.:', cardOmit: true },
-  { key: 'dni', cvLabel: 'DNI:', cardOmit: true },
-  { key: 'cuit', cvLabel: 'CUIT:', cardOmit: true },
-  { key: 'birthDate', cvLabel: 'Nac.:', cardOmit: true },
+  { key: 'cityProvince', cvLabel: 'Ubic.:', cardOmit: true, emphasize: true },
+  { key: 'dni', cvLabel: 'DNI:', cardOmit: true, emphasize: true },
+  { key: 'cuit', cvLabel: 'CUIT:', cardOmit: true, emphasize: true },
+  { key: 'birthDate', cvLabel: 'Nac.:', cardOmit: true, emphasize: true },
 ];
 
 function humanizeCamelCase(key: string): string {

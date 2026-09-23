@@ -1,33 +1,40 @@
 import { describe, it, expect } from 'vitest';
-import { findCanonicalLabel } from '../canonicalSectionLabels';
+import { resolveCanonicalSection, findCanonicalLabel } from '../canonicalSectionLabels';
 
-describe('findCanonicalLabel', () => {
-  it('should find standard names correctly', () => {
+describe('resolveCanonicalSection', () => {
+  it('Nivel 1: should find standard names correctly by sectionId regardless of titleText', () => {
+    // Nivel 1 gana pase lo que pase con el título
+    expect(resolveCanonicalSection({ sectionId: 'experiencia', titleText: 'Cosas que hice' })).toBe('Experiencia Laboral');
+    expect(resolveCanonicalSection({ sectionId: 'formacion' })).toBe('Formación Académica');
+  });
+
+  it('Nivel 2: should find using exact aliases for custom sections (no sectionId)', () => {
+    expect(resolveCanonicalSection({ titleText: 'Experiencia Laboral' })).toBe('Experiencia Laboral');
+    expect(resolveCanonicalSection({ titleText: 'Educación' })).toBe('Formación Académica');
+    expect(resolveCanonicalSection({ titleText: 'Trabajo' })).toBe('Experiencia Laboral');
+    expect(resolveCanonicalSection({ titleText: 'Skills' })).toBe('Competencias Clave (Soft Skills)');
+  });
+
+  it('Nivel 2: should be case insensitive and ignore accents', () => {
+    expect(resolveCanonicalSection({ titleText: 'EXPERIENCIA' })).toBe('Experiencia Laboral');
+    expect(resolveCanonicalSection({ titleText: 'educación' })).toBe('Formación Académica');
+    expect(resolveCanonicalSection({ titleText: 'Educacíón' })).toBe('Formación Académica');
+    expect(resolveCanonicalSection({ titleText: 'educación :' })).toBe('Formación Académica'); // Strip trailing colon
+  });
+
+  it('Nivel 2: should enforce strict ^alias$ matching (no partial words or words inside titles)', () => {
+    // "Trabajos" is not "trabajo"
+    expect(resolveCanonicalSection({ titleText: 'Trabajos Destacados' })).toBeNull();
+    
+    // "Trabajo" appears inside a longer title, should not match because it requires exact match of the whole title
+    expect(resolveCanonicalSection({ titleText: 'Trabajos de mi equipo' })).toBeNull();
+    expect(resolveCanonicalSection({ titleText: 'Mi primer trabajo' })).toBeNull();
+  });
+});
+
+describe('findCanonicalLabel (deprecated)', () => {
+  it('should act as a wrapper for Nivel 2 resolution', () => {
     expect(findCanonicalLabel('Experiencia Laboral')).toBe('Experiencia Laboral');
-    expect(findCanonicalLabel('Formación Académica')).toBe('Formación Académica');
-  });
-
-  it('should find using aliases', () => {
-    expect(findCanonicalLabel('Educación')).toBe('Formación Académica');
-    expect(findCanonicalLabel('Trabajo')).toBe('Experiencia Laboral');
-    expect(findCanonicalLabel('Skills')).toBe('Competencias Clave (Soft Skills)');
-  });
-
-  it('should be case insensitive and ignore accents', () => {
-    expect(findCanonicalLabel('EXPERIENCIA')).toBe('Experiencia Laboral');
-    expect(findCanonicalLabel('educación')).toBe('Formación Académica');
-    // Normalization test
-    expect(findCanonicalLabel('Educacíón')).toBe('Formación Académica');
-  });
-
-  it('should not match partial words (no false positives for plurals if not in aliases)', () => {
-    // This was the main bug: "Trabajos de mi equipo" matched "trabajo" via .includes()
-    expect(findCanonicalLabel('Trabajos Destacados')).toBeNull();
-    expect(findCanonicalLabel('Trabajos de mi equipo')).toBeNull();
-  });
-
-  it('should match if the exact alias appears as a full word', () => {
-    // "trabajo" is an alias, so it should match if it appears as a whole word
-    expect(findCanonicalLabel('Mi primer trabajo')).toBe('Experiencia Laboral');
+    expect(findCanonicalLabel('Mi primer trabajo')).toBeNull();
   });
 });

@@ -8,6 +8,7 @@ import { placeFixedObjects } from '../layers/fixedObjects/placeFixedObjects';
 import { ContentSection, ContentRecord, CvRecordKind } from '../layers/records/recordTypes';
 import { CV_RECORD_RENDERERS, CvRenderContext } from './cvRecordRenderers';
 import { getPresentContactFields } from '../layers/records/sharedFields';
+import { resolveCanonicalSection } from '../layers/ats/canonicalSectionLabels';
 import { resolveThemeRoles, getTypographyColorBinding, ResolvedThemeRoles, getContrastRatio } from '../layers/colors/colorSystem';
 import { resolvePageTextStyle, buildPageTextTemplate } from '../layers/pageText/pageTextObjects';
 import { CardObjectRenderer } from '../layers/cards/CardObjectRenderer';
@@ -634,16 +635,17 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                 const isFirma = sec.id === 'firma' || sec.id.startsWith('firma');
                 const sectionStyle = isFirma ? { marginTop: 16 } : undefined;
                 const baseSecId = sec.id.replace(/-cont$/, '');
+                const displayTitle = atsMode ? (resolveCanonicalSection({ sectionId: sec.id, titleText: sec.titleText }) ?? sec.titleText) : sec.titleText;
 
                 if (isSidebar) {
                   // Sidebar: la sección completa es un bloque atómico (wrap={false})
                   return (
                     <View key={sec.id} break={sec.breakBefore || false} wrap={false} style={sectionStyle as any}>
                       {interactiveAnchors && <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>{`ANCHOR_START:${baseSecId}`}</Text>}
-                      {sec.titleText && !isFirma && (
+                      {displayTitle && !isFirma && (
                         <SectionBannerCard
                           preset={preset}
-                          titleText={sec.titleText}
+                          titleText={displayTitle}
                           iconId={sec.id}
                           designId={undefined}
                           rolesColor={sectorRolesColor}
@@ -664,10 +666,10 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                     {sec.records.length > 0 ? (
                       <>
                         <View wrap={false}>
-                          {sec.titleText && !isFirma && (
+                          {displayTitle && !isFirma && (
                             <SectionBannerCard
                               preset={preset}
-                              titleText={sec.titleText}
+                              titleText={displayTitle}
                               iconId={sec.id}
                               designId={customRecordCardDesigns?.education || preset.recordCardDesigns?.education}
                               rolesColor={sectorRolesColor}
@@ -684,11 +686,11 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                         ))}
                       </>
                     ) : (
-                      sec.titleText && !isFirma && (
+                      displayTitle && !isFirma && (
                         <View wrap={false}>
                           <SectionBannerCard
                             preset={preset}
-                            titleText={sec.titleText}
+                            titleText={displayTitle}
                             iconId={sec.id}
                             designId={customRecordCardDesigns?.education || preset.recordCardDesigns?.education}
                             rolesColor={sectorRolesColor}

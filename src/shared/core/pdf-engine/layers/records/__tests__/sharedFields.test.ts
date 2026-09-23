@@ -6,7 +6,6 @@ describe('getPresentContactFields', () => {
   const mockRec = (fields: Record<string, string>): ContentRecord => ({
     id: 'test',
     kind: 'contact-item',
-    targetSectorRole: 'sidebar',
     fields
   });
 

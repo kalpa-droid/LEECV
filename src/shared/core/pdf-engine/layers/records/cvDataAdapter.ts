@@ -56,7 +56,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         {
           id: 'rec-contact',
           kind: 'contact-item',
-          targetSectorRole: 'sidebar',
           fields: {
             phone: personalInfo.phone || '',
             email: personalInfo.email || '',
@@ -89,7 +88,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         {
           id: 'rec-personal-details',
           kind: 'contact-item',
-          targetSectorRole: 'sidebar',
           fields: personalDetailsFields
         }
       ]
@@ -105,7 +103,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         {
           id: 'rec-frase',
           kind: 'quote-text',
-          targetSectorRole: 'main',
           fields: { text: cvData.frase }
         }
       ]
@@ -121,7 +118,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         {
           id: 'rec-objective',
           kind: 'quote-text',
-          targetSectorRole: 'main',
           fields: { text: cvData.objective }
         }
       ]
@@ -137,7 +133,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         id: `rec-ach-${idx}`,
         kind: 'projects',
         fieldLabelOverrides: ach.fieldLabelOverrides,
-        targetSectorRole: 'main',
         fields: {
           ...ach,
           title: ach.title || ach.tituloOGrado || ach.name || ach.logro || ach.achievement || '',
@@ -157,7 +152,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         id: `rec-port-${idx}`,
         kind: 'projects',
         fieldLabelOverrides: port.fieldLabelOverrides,
-        targetSectorRole: 'main',
         fields: {
           ...port,
           title: port.title || port.tituloOGrado || port.name || port.proyecto || '',
@@ -177,7 +171,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         {
           id: 'rec-summary',
           kind: 'quote-text',
-          targetSectorRole: 'main',
           fields: { text: cvData.summary }
         }
       ]
@@ -193,7 +186,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         id: `rec-redes-${idx}`,
         kind: 'social-link',
         fieldLabelOverrides: r.fieldLabelOverrides,
-        targetSectorRole: 'sidebar',
         fields: {
           label: r.usuario ? `${r.plataforma || 'Red'}: ${r.usuario}` : r.plataforma || r.url || '',
           url: r.url || (r.plataforma === 'Email' && r.usuario ? `mailto:${r.usuario}` : ''),
@@ -214,7 +206,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
       records: cvData.hardSkills.map((sk: any, idx: number) => ({
         id: `rec-hardskill-${idx}`,
         kind: 'skill',
-        targetSectorRole: 'sidebar',
         fields: {
           name: typeof sk === 'string' ? sk : sk.name || sk.title || ''
         }
@@ -230,7 +221,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
       records: skills.map((sk: any, idx: number) => ({
         id: `rec-skill-${idx}`,
         kind: 'skill',
-        targetSectorRole: 'sidebar',
         fields: {
           name: typeof sk === 'string' ? sk : sk.name || sk.title || ''
         }
@@ -246,7 +236,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
       records: cvData.languages.map((lang: any, idx: number) => ({
         id: `rec-lang-${idx}`,
         kind: 'languages',
-        targetSectorRole: 'sidebar',
         fields: {
           ...lang,
           idioma: lang.idioma || lang.language || lang.title || lang.name || '',
@@ -267,7 +256,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
           id: `rec-proj-${idx}`,
           kind: 'projects',
           fieldLabelOverrides: proj.fieldLabelOverrides,
-          targetSectorRole: 'main',
           fields: {
             ...projRest,
             title: proj.title || proj.name || proj.tituloOGrado || '',
@@ -291,7 +279,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
           id: `rec-pub-${idx}`,
           kind: 'publications',
           fieldLabelOverrides: pub.fieldLabelOverrides,
-          targetSectorRole: 'main',
           fields: {
             ...pubRest,
             title: pub.title || pub.tituloOGrado || '',
@@ -313,7 +300,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         id: `rec-ref-${idx}`,
         kind: 'references',
         fieldLabelOverrides: ref.fieldLabelOverrides,
-        targetSectorRole: 'main',
         fields: {
           ...ref,
           personaReferencia: ref.personaReferencia || ref.name || ref.persona || '',
@@ -334,7 +320,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         id: `rec-inf-${idx}`,
         kind: 'course',
         fieldLabelOverrides: inf.fieldLabelOverrides,
-        targetSectorRole: 'sidebar',
         fields: {
           ...inf,
           title: inf.course || inf.title || inf.name || '',
@@ -355,7 +340,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
           id: `rec-edu-${idx}`,
           kind: 'education',
           fieldLabelOverrides: edu.fieldLabelOverrides,
-          targetSectorRole: 'main',
           fields: {
             ...eduRest,
             degree: edu.degree || edu.title || edu.tituloOGrado || '',
@@ -379,7 +363,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
           id: `rec-prof-${idx}`,
           kind: 'education',
           fieldLabelOverrides: prof.fieldLabelOverrides,
-          targetSectorRole: 'main',
           fields: {
             ...profRest,
             degree: prof.degree || prof.title || prof.tituloOGrado || '',
@@ -402,7 +385,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
           id: `rec-exp-${idx}`,
           kind: 'experience',
           fieldLabelOverrides: exp.fieldLabelOverrides,
-          targetSectorRole: 'main',
           fields: {
             ...expRest,
             role: exp.role || exp.cargo || exp.title || '',
@@ -426,7 +408,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
           id: `rec-course-${idx}`,
           kind: 'course',
           fieldLabelOverrides: c.fieldLabelOverrides,
-          targetSectorRole: 'main',
           fields: {
             ...cRest,
             title: c.title || c.name || c.course || c.tituloOGrado || '',
@@ -456,7 +437,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
           id: `rec-${slotId}-${rIdx}`,
           kind: 'custom',
           fieldLabelOverrides: r.fieldLabelOverrides,
-          targetSectorRole: 'main',
           fields: {
             ...r,
             _fields: activeFields
@@ -477,7 +457,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
             id: `rec-${cs.id}-${idx}`,
             kind: 'custom',
             fieldLabelOverrides: r.fieldLabelOverrides,
-            targetSectorRole: 'main',
             fields: {
               ...r,
               _fields: cs.fields || ['tituloOGrado', 'institucion']
@@ -502,7 +481,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         {
           id: 'rec-sig',
           kind: 'freeform',
-          targetSectorRole: 'main',
           fields: {
             signerName: autoSignerName,
             signerRole: selectedRole,

@@ -36,3 +36,6 @@ Logos/
 # Leaked metadata
 .vercel_deployments.json
 parse_message.py
+
+.vercel_deployments.json
+parse_message.py

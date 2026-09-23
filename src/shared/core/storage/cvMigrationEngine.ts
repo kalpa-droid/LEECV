@@ -13,8 +13,10 @@
  */
 
 import { sanitizeCvData } from '../utils/cvDataSchema';
+import { inferPdfRole } from '../pdf-engine/layers/records/recordLayoutEngine';
+import { FIELD_CATALOG } from '../pdf-engine/layers/records/fieldCatalog';
 
-export const CURRENT_SCHEMA_VERSION = 4;
+export const CURRENT_SCHEMA_VERSION = 5;
 
 export function migrateCvData(rawCvData: any): any {
   if (!rawCvData || typeof rawCvData !== 'object') {
@@ -147,6 +149,47 @@ export function migrateCvData(rawCvData: any): any {
       delete migrated.customSections;
     }
     currentVersion = 4;
+  }
+
+  // Migration v4 -> v5: Calculamos roles de campos para secciones personalizadas (fieldRoleOverrides)
+  // para que, si cambia la heurística en el futuro, no cambie el diseño exportado sin aviso.
+  if (currentVersion < 5) {
+    migrated.schemaVersion = 5;
+
+    const customSlots = ['personalizada-1', 'personalizada-2', 'personalizada-3', 'personalizada-4', 'personalizada-5'] as const;
+    
+    customSlots.forEach((slotId) => {
+      if (Array.isArray(migrated[slotId])) {
+        migrated[slotId] = migrated[slotId].map((rec: any) => {
+          if (!rec || typeof rec !== 'object') return rec;
+          
+          const newRec = { ...rec };
+          const roleOverrides = newRec.fieldRoleOverrides || {};
+          let changed = false;
+
+          for (const [key, val] of Object.entries(newRec)) {
+            // Ignorar campos nativos de metadatos o campos ya en el catálogo
+            if (key === 'id' || key === 'kind' || key === 'fieldRoleOverrides' || key === 'fieldLabelOverrides') continue;
+            if (FIELD_CATALOG[key]) continue;
+
+            const strVal = String(val).trim();
+            if (!strVal) continue;
+
+            if (!roleOverrides[key]) {
+              roleOverrides[key] = inferPdfRole(key, strVal);
+              changed = true;
+            }
+          }
+
+          if (changed) {
+            newRec.fieldRoleOverrides = roleOverrides;
+          }
+          return newRec;
+        });
+      }
+    });
+
+    currentVersion = 5;
   }
 
   // Retornar objeto desinfectado garantizado

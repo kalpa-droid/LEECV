@@ -8,7 +8,7 @@
 import { Preset } from '../presets/presetSchema';
 import { ContentSection } from '../records/recordTypes';
 import { PersonalInfo } from '../../../../../types/cv';
-import { findCanonicalLabel } from './canonicalSectionLabels';
+import { resolveCanonicalSection } from './canonicalSectionLabels';
 import { buildStructuredRecordLayout } from '../records/recordLayoutEngine';
 
 export interface AtsWarning {
@@ -69,7 +69,7 @@ export function runAtsPreflightCheck(
   // 3. Simulación de Flujo Lineal de Secciones y Nombres Canónicos (F5)
   sections.forEach((sec) => {
     if (sec.titleText) {
-      const canonical = findCanonicalLabel(sec.titleText);
+      const canonical = resolveCanonicalSection({ sectionId: sec.id, titleText: sec.titleText });
       if (!canonical) {
         warnings.push({
           id: `non_standard_section_${sec.id}`,

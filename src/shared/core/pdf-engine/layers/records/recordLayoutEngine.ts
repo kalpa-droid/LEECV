@@ -15,6 +15,14 @@
 import { FIELD_CATALOG, FieldDefinition } from './fieldCatalog';
 import { FIELD_ALIASES } from './fieldAliasCatalog';
 import { getFieldLabelOptions } from './fieldLabelOptions';
+import { reportMessage } from '../../../utils/monitoring';
+
+function onHeuristicFallback(fieldId: string, assignedRole: string) {
+  reportMessage(`Heuristic fallback triggered for custom field: ${fieldId} -> ${assignedRole}`, 'info', {
+    context: 'recordLayoutEngine',
+    extra: { fieldId, assignedRole }
+  });
+}
 
 export interface RecordBadgeItem {
   id: string;
@@ -43,35 +51,60 @@ export function inferPdfRole(fieldId: string, val: string): 'title' | 'subtitle'
   const lowerId = fieldId.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const cleanVal = val.trim();
 
+  let scoreTitle = 0;
+  let scoreSubtitle = 0;
+  let scoreBadge = 0;
+  let scoreExtra = 0;
+  let scoreDesc = 0;
+
   // 1. Pattern matching on fieldId keywords
-  if (/fecha|periodo|year|año|hora|date|duration|hours|duracion|promedio|estado|modalidad/i.test(lowerId)) {
-    return 'badge';
+  if (/fecha|periodo|year|ano|hora|date|duration|hours|duracion|promedio|estado|modalidad/i.test(lowerId)) {
+    scoreBadge += 10;
   }
   if (/url|link|web|github|linkedin|email|site|sitio|adjunto|pdf/i.test(lowerId)) {
-    return 'extra';
+    scoreExtra += 10;
   }
   if (/desc|block|detalle|resumen|summary|abstract|contenido|bio|quote|cita|bullet|logros|achievements/i.test(lowerId)) {
-    return 'description';
+    scoreDesc += 10;
   }
   if (/subtit|instituc|empresa|company|org|entidad|autor|editorial/i.test(lowerId)) {
-    return 'subtitle';
+    scoreSubtitle += 10;
   }
   if (/titul|title|grado|degree|nombre|name|cargo|puesto|role|herramienta/i.test(lowerId)) {
-    return 'title';
+    scoreTitle += 10;
   }
 
   // 2. Data format / length heuristics as fallback
   if (/^https?:\/\//i.test(cleanVal) || cleanVal.includes('@')) {
-    return 'extra';
+    scoreExtra += 5;
   }
-  if (/^\d{4}(\s*-\s*\d{4}|\s*-\s*Presente)?$/i.test(cleanVal) || /^\d+\s*(hs|hrs|horas|meses|años)$/i.test(cleanVal)) {
-    return 'badge';
+  if (/^\d{4}(\s*-\s*\d{4}|\s*-\s*Presente)?$/i.test(cleanVal) || /^\d+\s*(hs|hrs|horas|meses|anos)$/i.test(cleanVal)) {
+    scoreBadge += 5;
   }
-  if (cleanVal.length > 120 || cleanVal.includes('\n')) {
-    return 'description';
+  if (cleanVal.length > 80 || /[.;:!?]\s|\n/.test(cleanVal)) {
+    scoreDesc += 5;
   }
 
-  return 'extra';
+  const scores = [
+    { role: 'badge', score: scoreBadge },
+    { role: 'extra', score: scoreExtra },
+    { role: 'description', score: scoreDesc },
+    { role: 'subtitle', score: scoreSubtitle },
+    { role: 'title', score: scoreTitle }
+  ] as const;
+
+  let maxScore = 0;
+  let maxRole: typeof scores[number]['role'] = 'extra';
+  
+  for (const s of scores) {
+    if (s.score > maxScore) {
+      maxScore = s.score;
+      maxRole = s.role;
+    }
+  }
+
+  onHeuristicFallback(fieldId, maxRole);
+  return maxRole;
 }
 
 const FIELD_CONTAINER_KEYS = new Set(['fields', 'record']);
@@ -152,6 +185,8 @@ export function buildStructuredRecordLayout(
     ...Object.keys(normalizedRecord)
   ]));
 
+  let sawTitle = false;
+
   for (const fieldId of allKeysToProcess) {
     const rawVal = normalizedRecord[fieldId];
     if (rawVal === undefined || rawVal === null) continue;
@@ -174,13 +209,15 @@ export function buildStructuredRecordLayout(
     hasData = true;
     const def: FieldDefinition | undefined = FIELD_CATALOG[fieldId];
 
-    const effectiveRole = def ? def.pdfRole : inferPdfRole(fieldId, val);
+    const effectiveRole = record.fieldRoleOverrides?.[fieldId]
+      || (def ? def.pdfRole : inferPdfRole(fieldId, val));
     const fieldLabel = record.fieldLabelOverrides?.[fieldId]
       || (def ? getFieldLabelOptions(def)[0] : fieldId);
     const fieldType = def ? def.type : (effectiveRole === 'extra' && /^https?:\/\//i.test(val) ? 'url' : 'text');
 
     switch (effectiveRole) {
       case 'title':
+        sawTitle = true;
         if (!header) {
           header = val;
         } else if (!subheader) {
@@ -232,7 +269,7 @@ export function buildStructuredRecordLayout(
   }
 
   // Fallback si no hay header pero hay subheader o datos
-  if (!header && subheader) {
+  if (!header && subheader && !sawTitle) {
     header = subheader;
     subheader = null;
   }
