@@ -446,7 +446,14 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       try {
         if (cvData) await saveCV();
       } catch {}
-      await signInWithGoogle();
+      await withErrorHandling(
+        () => signInWithGoogle(),
+        {
+          context: 'Iniciar sesión con Google',
+          errorMessage: 'No se pudo iniciar sesión con Google.',
+          notify: (msg) => showError(msg),
+        }
+      );
     }
   };
 

@@ -29,7 +29,7 @@ export default function CloudStatusModal({
   cvData,
   onOpenPdfCheckout
 }: CloudStatusModalProps) {
-  const { showSuccess, showInfo } = useToast();
+  const { showSuccess, showInfo, showError } = useToast();
   const [profile, setProfile] = useState<any>(null);
   const [driveQuota, setDriveQuota] = useState<any>(null);
   const [loadingDrive, setLoadingDrive] = useState(false);
@@ -232,11 +232,14 @@ export default function CloudStatusModal({
 
               <button
                 onClick={async () => {
-                  try {
-                    await signInWithGoogle();
-                  } catch (err) {
-                    console.error('Error conectando Google Drive:', err);
-                  }
+                  await withErrorHandling(
+                    () => signInWithGoogle(),
+                    {
+                      context: 'Vincular Google Drive',
+                      errorMessage: 'No se pudo vincular Google Drive.',
+                      notify: (msg) => showError(msg),
+                    }
+                  );
                 }}
                 className={`w-full py-2 px-3 ${button.primary} font-extrabold text-xs flex items-center justify-center gap-2`}
               >

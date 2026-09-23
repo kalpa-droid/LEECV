@@ -33,7 +33,18 @@ export async function signInWithGoogle() {
       },
     },
   });
-  if (error) throw error;
+  if (error) {
+    const msg = error.message || String(error);
+    if (
+      (error as any).code === 'validation_failed' ||
+      msg.includes('validation_failed') ||
+      msg.toLowerCase().includes('provider is not enabled') ||
+      msg.toLowerCase().includes('unsupported provider')
+    ) {
+      throw new Error('El inicio de sesión con Google no está disponible en este momento. Probá con tu correo electrónico.');
+    }
+    throw error;
+  }
   return data;
 }
 

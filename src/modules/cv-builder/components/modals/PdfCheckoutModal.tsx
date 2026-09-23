@@ -195,7 +195,19 @@ export default function PdfCheckoutModal({
                 {t.checkout.step1Title}
               </span>
               <button 
-                onClick={signInWithGoogle}
+                onClick={async () => {
+                  setErrorMsg('');
+                  const res = await withErrorHandling(
+                    () => signInWithGoogle(),
+                    {
+                      context: 'Iniciar sesión con Google',
+                      errorMessage: 'No se pudo iniciar sesión con Google.',
+                    }
+                  );
+                  if (!res.success) {
+                    setErrorMsg(res.error?.message || 'No se pudo iniciar sesión con Google.');
+                  }
+                }}
                 className={`${button.secondary} text-[11px] py-1 px-2.5 flex items-center gap-1`}
               >
                 <LogIn className="w-3.5 h-3.5 text-[var(--ui-text-primary)]" /> {t.checkout.loginWithGoogle}
