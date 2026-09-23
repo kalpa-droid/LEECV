@@ -7,6 +7,8 @@ import { UI_GLOSSARY } from '../../../../../shared/core/ui/uiTextGlossary';
 import { Globe, Columns3, Layout } from 'lucide-react';
 import React from 'react';
 import { PanelSection } from '../../../../../shared/core/ui/PanelSection';
+import { loadGoogleFont } from '../../../../../shared/core/utils/fontLoader';
+import { useEffect } from 'react';
 
 import { SectionManualAdjustment } from '../SectionManualAdjustment';
 import { GuardadosSection } from './GuardadosSection';
@@ -43,6 +45,13 @@ export const DisenoSection = ({
 }: any) => {
   const isBusinessCard = docType === 'business_card';
   const hasDesignOverrides = Boolean(cvData?.colorPresetId || cvData?.typographyPresetId || cvData?.columnLayoutPresetId);
+  
+  useEffect(() => {
+    if (cvData?.theme?.fontFamily) {
+      loadGoogleFont(cvData.theme.fontFamily);
+    }
+  }, [cvData?.theme?.fontFamily]);
+
   const handlePaperSizeChange = (val: string) => {
     setCvData((prev: any) => ({
       ...prev,

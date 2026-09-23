@@ -1,7 +1,7 @@
 import { CVData } from '../../../types/cv';
 import { sanitizeCvData } from './cvDataSchema';
 import { downloadBlob } from './downloadUtils';
-import JSZip from 'jszip';
+
 import { splitCvDataForDrive, reconstructCvDataFromParts } from '../storage/driveDocumentPackager';
 import { migrateCvData } from '../storage/cvMigrationEngine';
 
@@ -74,6 +74,7 @@ export async function exportCVToZip(cvData: CVData | null | undefined): Promise<
   ).trim();
 
   const { cleanCvData, binaryAssets } = await splitCvDataForDrive(cvData);
+  const { default: JSZip } = await import('jszip');
   const zip = new JSZip();
 
   const exportPayload = {
@@ -100,6 +101,7 @@ export async function exportCVToZip(cvData: CVData | null | undefined): Promise<
 export function importCVFromZipFile(file: File): Promise<CVData> {
   return new Promise(async (resolve, reject) => {
     try {
+      const { default: JSZip } = await import('jszip');
       const zip = await JSZip.loadAsync(file);
       const jsonFile = zip.file('datos.json');
       if (!jsonFile) {
@@ -135,6 +137,7 @@ export function importCVFromZipFile(file: File): Promise<CVData> {
 export async function exportAllCVsToZip(cvList: any[], candidateName: string = 'Usuario'): Promise<void> {
   if (!cvList || cvList.length === 0) return;
 
+  const { default: JSZip } = await import('jszip');
   const zip = new JSZip();
   const manifest = {
     exportedAt: new Date().toISOString(),

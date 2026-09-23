@@ -139,7 +139,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": ".*(WhatsApp|facebookexternalhit|LinkedInBot|Twitterbot|Slackbot|TelegramBot|Discordbot).*"
+          "value": ".*(Googlebot|bingbot|WhatsApp|facebookexternalhit|LinkedInBot|Twitterbot|Slackbot|TelegramBot|Discordbot).*"
         }
       ],
       "destination": "/api/cv-meta?slug=:slug"

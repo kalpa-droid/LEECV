@@ -58,7 +58,7 @@ import { navigation } from '../shared/core/utils/navigation';
 
 import EmailSaveModal from '../modules/cv-builder/components/modals/EmailSaveModal';
 import ShareAppModal from '../modules/cv-builder/components/modals/ShareAppModal';
-import { PlannerStudioContent } from '../modules/planner-studio/PlannerStudioContent';
+const PlannerStudioContent = lazy(() => import('../modules/planner-studio/PlannerStudioContent').then(m => ({ default: m.PlannerStudioContent })));
 import { loadCVById, loadDocumentById, saveCV } from '../shared/core/storage/documentStorageService';
 import { setPendingDocumentToOpen, getPendingDocumentToOpen, clearPendingDocumentToOpen } from '../shared/core/storage/pendingDocumentHandoff';
 import { runWithSafeSave } from '../shared/core/storage/safeNavigationEngine';
@@ -827,25 +827,27 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     }
     const activePlannerTabId = activePlannerTab?.id || activePlannerTab?.cvId || cvData?.id || '';
     return (
-      <PlannerStudioContent 
-        documentTabs={tabs}
-        activeTabId={activePlannerTabId}
-        onSelectTab={handleSwitchDocumentTab}
-        onCloseTab={(id) => {
-          const tab = tabs.find(t => t.id === id || t.cvId === id);
-          handleCloseFooterTab({ stopPropagation: () => {} } as any, id, tab?.title || 'Documento');
-        }}
-        onNavigateToDocument={(targetDocType, id) => handleNavigateToDocumentTab(targetDocType, id)}
-        onTabsChanged={setTabs}
-        onNewCV={handleNewCV}
-        onNewCard={handleNewCard}
-        onNewBook={handleNewBook}
-        onNewPlanner={handleNewPlanner}
-        currentUiTheme={globalUiTheme}
-        cycleUITheme={cycleUITheme}
-        isLoggedIn={!!currentProfile}
-        onAuthToggle={handleAuthToggle}
-      />
+      <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Estudio de Agendas...</div>}>
+        <PlannerStudioContent 
+          documentTabs={tabs}
+          activeTabId={activePlannerTabId}
+          onSelectTab={handleSwitchDocumentTab}
+          onCloseTab={(id) => {
+            const tab = tabs.find(t => t.id === id || t.cvId === id);
+            handleCloseFooterTab({ stopPropagation: () => {} } as any, id, tab?.title || 'Documento');
+          }}
+          onNavigateToDocument={(targetDocType, id) => handleNavigateToDocumentTab(targetDocType, id)}
+          onTabsChanged={setTabs}
+          onNewCV={handleNewCV}
+          onNewCard={handleNewCard}
+          onNewBook={handleNewBook}
+          onNewPlanner={handleNewPlanner}
+          currentUiTheme={globalUiTheme}
+          cycleUITheme={cycleUITheme}
+          isLoggedIn={!!currentProfile}
+          onAuthToggle={handleAuthToggle}
+        />
+      </Suspense>
     );
   }
 

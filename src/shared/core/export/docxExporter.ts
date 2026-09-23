@@ -1,8 +1,9 @@
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import type { CoverLetterData } from '../pdf-engine/layers/records/coverLetterDataAdapter.js';
 import { getPageSize } from '../pdf-engine/layers/page/pageSizes.js';
 
 export async function exportCoverLetterToDocx(data: CoverLetterData): Promise<Blob> {
+  const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = await import('docx');
+
   const p = data.personalInfo || {};
   const j = data.jobTarget || {};
   const b = data.body || {};

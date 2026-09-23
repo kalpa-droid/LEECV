@@ -71,6 +71,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 <head>
   <meta charset="UTF-8" />
   <title>Currículum de ${safeFullName} — ${safeTitle} | LEECV</title>
+  <meta name="robots" content="noindex" />
   <meta name="description" content="${safeDescription}" />
   <meta property="og:site_name" content="LEECV — Creador de CV Profesional" />
   <meta property="og:title" content="Currículum de ${safeFullName} — ${safeTitle}" />

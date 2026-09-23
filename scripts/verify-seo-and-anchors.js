@@ -11,6 +11,7 @@ import { getAllPresets } from '../src/shared/core/pdf-engine/layers/presets/pres
 
 console.log('🔍 Iniciando auditoría profunda de SEO, Indexación Google y Motor de Anclaje PDF...\n');
 
+(async () => {
 let totalChecks = 0;
 let failedChecks = 0;
 
@@ -84,6 +85,29 @@ for (const preset of presets) {
   console.log(`  ✓ Motor Anclaje PDF [Preset: ${preset.id}] - Resuelve las 9 pestañas de UI a coordenadas verticales OK.`);
 }
 
+// 5. Verificación de Prerenderizado (Blog y Legales)
+totalChecks++;
+const { ROUTES } = await import('./prerenderMeta.mjs');
+let prerenderFails = 0;
+for (const route of ROUTES) {
+  const p = path.resolve(process.cwd(), 'dist', route.substring(1), 'index.html');
+  if (!fs.existsSync(p)) {
+    console.error(`❌ FALLO SEO PRERENDER: Archivo no existe para ruta ${route} -> ${p}`);
+    prerenderFails++;
+  } else {
+    const html = fs.readFileSync(p, 'utf8');
+    if (!html.includes('<title>') || !html.includes('og:title') || !html.includes('application/ld+json')) {
+      console.error(`❌ FALLO SEO PRERENDER: Archivo para ${route} no tiene title, og:title o JSON-LD.`);
+      prerenderFails++;
+    }
+  }
+}
+if (prerenderFails > 0) {
+  failedChecks++;
+} else {
+  console.log(`  ✓ Motor SEO Prerender: ${ROUTES.length} rutas estáticas generadas con metadatos y HTML.`);
+}
+
 console.log('\n════════════════════════════════════════════════════════════');
 if (failedChecks > 0) {
   console.error(`❌ AUDITORÍA DE SEO Y ANCLAJE PDF FALLIDA: ${failedChecks} de ${totalChecks} verificaciones no pasaron.`);
@@ -91,3 +115,4 @@ if (failedChecks > 0) {
 } else {
   console.log(`✅ AUDITORÍA DE SEO Y ANCLAJE PDF EXITOSA: ${totalChecks} verificaciones pasaron al 100%.`);
 }
+})();
