@@ -137,3 +137,11 @@ export async function logAdminAction(actionType: string, targetUserId: string | 
     console.warn('Error guardando auditoría:', err);
   }
 }
+
+export async function listAiTelemetry(limit: number = 100) {
+  return await dal.aiTelemetry.list(limit);
+}
+
+export async function getAiTelemetryStats() {
+  return await dal.aiTelemetry.getAggregatedStats();
+}

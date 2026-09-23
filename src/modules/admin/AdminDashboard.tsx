@@ -12,6 +12,7 @@ import AdminLogin from './AdminLogin';
 import { StorageDriveTab } from './components/StorageDriveTab';
 import { SentryReportsTab } from './components/SentryReportsTab';
 import { ProcessedPaymentsTab } from './components/ProcessedPaymentsTab';
+import { AiTelemetryTab } from './components/AiTelemetryTab';
 import { useToast } from '../../shared/core/ui/Toast';
 import { useConfirm } from '../../shared/core/ui/ConfirmDialog';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
@@ -64,7 +65,7 @@ export default function AdminDashboard() {
   const { showError, showSuccess } = useToast();
   const { confirm } = useConfirm();
 
-  const [adminTab, setAdminTab] = useState<'users' | 'payments' | 'storage' | 'sentry'>('users');
+  const [adminTab, setAdminTab] = useState<'users' | 'payments' | 'storage' | 'sentry' | 'aiTelemetry'>('users');
   const [profile, setProfile] = useState<any>(undefined);
   const [users, setUsers] = useState<any[]>([]);
   const [stats, setStats] = useState({ totalUsers: 0, proUsers: 0, enterpriseUsers: 0, activeSubscriptions: 0 });
@@ -331,6 +332,16 @@ export default function AdminDashboard() {
             <HardDrive className="w-4 h-4" />
             <span>Almacenamiento, Servidores & Drive</span>
           </button>
+
+          <button
+            onClick={() => setAdminTab('aiTelemetry')}
+            className={adminTab === 'aiTelemetry'
+              ? `${button.primary} px-4 py-2 text-xs font-black flex items-center gap-2`
+              : `${button.secondary} px-4 py-2 text-xs font-black flex items-center gap-2`}
+          >
+            <Sparkles className="w-4 h-4 text-[var(--color-accent-text)]" />
+            <span>Costos y Telemetría IA</span>
+          </button>
         </div>
 
         {adminTab === 'sentry' ? (
@@ -339,6 +350,8 @@ export default function AdminDashboard() {
           <ProcessedPaymentsTab />
         ) : adminTab === 'storage' ? (
           <StorageDriveTab />
+        ) : adminTab === 'aiTelemetry' ? (
+          <AiTelemetryTab />
         ) : (
           <div className="space-y-6">
 
