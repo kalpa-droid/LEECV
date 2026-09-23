@@ -136,7 +136,7 @@ const legacyCvData = {
   ]
 };
 const migrated = migrateCvData(legacyCvData);
-assert(migrated.schemaVersion === 4, `Schema version not bumped to 4`);
+assert(migrated.schemaVersion === 5, `Schema version not bumped to 5`);
 assert(migrated.sectionTitleOverrides?.['personalizada-1'] === 'Voluntariado', `Legacy customSection title not migrated to personalizada-1`);
 assert(Array.isArray(migrated['personalizada-1']) && migrated['personalizada-1'].length === 1, `Legacy customSection records not migrated to personalizada-1`);
 assert(migrated.customSections === undefined, `Legacy customSections array not removed after migration`);
