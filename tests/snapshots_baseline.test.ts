@@ -29,7 +29,7 @@ describe('FASE 0 — Snapshots Baseline', () => {
 
   it('debe migrar v2 -> v3 correctamente poblando experience y skills', () => {
     const migrated = migrateCvData(fixtures.cv_v2_legacy);
-    expect(migrated.schemaVersion).toBe(4);
+    expect(migrated.schemaVersion).toBe(5);
     expect(migrated.experience).toBeDefined();
     expect(migrated.experience).toHaveLength(1);
     expect(migrated.experience[0].role).toBe('Desarrolladora Full Stack');

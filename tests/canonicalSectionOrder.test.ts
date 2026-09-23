@@ -96,7 +96,7 @@ describe('Canonical Section Order Engine & Section Fixes', () => {
     };
 
     const migrated = migrateCvData(legacyCv);
-    expect(migrated.schemaVersion).toBe(4);
+    expect(migrated.schemaVersion).toBe(5);
     expect(migrated.ecology).toBeUndefined();
     expect(migrated.projects).toHaveLength(1);
     expect(migrated.projects[0].title).toBe('Huerta Orgánica Comunitaria');
