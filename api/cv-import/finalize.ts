@@ -68,6 +68,8 @@ function mergePageFragments(fragments: CVFragment[]): CVFragment {
   return merged;
 }
 
+export const maxDuration = 60;
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return errorResponse(res, 405, 'Método no permitido');

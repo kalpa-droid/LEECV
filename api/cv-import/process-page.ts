@@ -7,6 +7,15 @@ import { AI_PROVIDERS } from '../_lib/aiProviders/registry.js';
 import { getNextAvailableKey, markKeyRateLimited } from '../_lib/aiProviders/keyRotation.js';
 import type { AiCompletionRequest } from '../_lib/aiProviders/types.js';
 
+export const maxDuration = 60;
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb'
+    }
+  }
+};
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return errorResponse(res, 405, 'Método no permitido');
