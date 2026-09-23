@@ -12,6 +12,7 @@
  */
 
 import { ContentRecord } from './recordTypes';
+import { INTERNAL_METADATA_DENYLIST } from './recordLayoutEngine';
 
 export interface ContactField {
   key: string;
@@ -21,22 +22,47 @@ export interface ContactField {
    *  pensada para caber en 89x51mm, no tiene sentido mostrarlo — pero queda
    *  documentado ACÁ que la omisión es a propósito, no un olvido. */
   cardOmit?: boolean;
+  /** true = renderizar el valor con mayor peso tipográfico (ej. negrita) */
+  emphasize?: boolean;
 }
 
 export const CONTACT_FIELDS: ContactField[] = [
   { key: 'phone', cvLabel: 'Tel:' },
   { key: 'email', cvLabel: 'Email:' },
   { key: 'address', cvLabel: 'Dom:' },
-  { key: 'cityProvince', cvLabel: 'Ubic.:', cardOmit: true },
-  { key: 'dni', cvLabel: 'DNI:', cardOmit: true },
-  { key: 'cuit', cvLabel: 'CUIT:', cardOmit: true },
-  { key: 'birthDate', cvLabel: 'Nac.:', cardOmit: true },
+  { key: 'cityProvince', cvLabel: 'Ubic.:', cardOmit: true, emphasize: true },
+  { key: 'dni', cvLabel: 'DNI:', cardOmit: true, emphasize: true },
+  { key: 'cuit', cvLabel: 'CUIT:', cardOmit: true, emphasize: true },
+  { key: 'birthDate', cvLabel: 'Nac.:', cardOmit: true, emphasize: true },
 ];
 
-/** Devuelve solo los campos con valor real, en el orden canónico de arriba */
+function humanizeCamelCase(key: string): string {
+  const withSpaces = key.replace(/([A-Z])/g, ' $1');
+  const capitalized = withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
+  return capitalized.trim() + ':';
+}
+
+/** Devuelve solo los campos con valor real, en el orden canónico de arriba, seguidos de los custom */
 export function getPresentContactFields(rec: ContentRecord, variant: 'document' | 'card') {
-  return CONTACT_FIELDS.filter((f) => {
+  const knownFields = CONTACT_FIELDS.filter((f) => {
     if (variant === 'card' && f.cardOmit) return false;
     return Boolean(rec.fields[f.key]);
   }).map((f) => ({ ...f, value: String(rec.fields[f.key]) }));
+
+  const knownKeys = new Set(CONTACT_FIELDS.map(f => f.key));
+  const customFields: (ContactField & { value: string })[] = [];
+
+  for (const [key, val] of Object.entries(rec.fields || {})) {
+    if (INTERNAL_METADATA_DENYLIST.has(key.toLowerCase())) continue;
+    if (knownKeys.has(key)) continue;
+    if (val === undefined || val === null || String(val).trim() === '') continue;
+
+    customFields.push({
+      key,
+      cvLabel: humanizeCamelCase(key),
+      value: String(val)
+    });
+  }
+
+  return [...knownFields, ...customFields];
 }

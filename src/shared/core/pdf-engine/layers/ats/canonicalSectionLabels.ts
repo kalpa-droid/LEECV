@@ -27,7 +27,7 @@ export const CANONICAL_SECTIONS: CanonicalMapping[] = [
   {
     canonicalId: 'formacion',
     standardName: getCatalogLabel('formacion', 'Formación Académica'),
-    aliases: ['estudios', 'educacion', 'educación', 'formacion', 'formación', 'títulos', 'titulos', 'estudios realizados', 'education']
+    aliases: ['estudios', 'educacion', 'formacion', 'titulos', 'estudios realizados', 'education']
   },
   {
     canonicalId: 'cursos',
@@ -42,20 +42,46 @@ export const CANONICAL_SECTIONS: CanonicalMapping[] = [
   {
     canonicalId: 'competencias',
     standardName: getCatalogLabel('competencias', 'Competencias Clave'),
-    aliases: ['habilidades', 'competencias', 'destrezas', 'aptitudes', 'skills', 'tecnologias', 'tecnologías']
+    aliases: ['habilidades', 'competencias', 'destrezas', 'aptitudes', 'skills', 'tecnologias']
   }
 ];
 
-export function findCanonicalLabel(titleText: string): string | null {
-  if (!titleText) return null;
-  const clean = titleText.toLowerCase().trim();
+const normalizeText = (text: string) =>
+  text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/:/g, '').trim().replace(/\s+/g, ' ');
 
-  for (const item of CANONICAL_SECTIONS) {
-    if (clean.includes(item.standardName.toLowerCase())) return item.standardName;
-    for (const alias of item.aliases) {
-      if (clean.includes(alias)) return item.standardName;
-    }
+const CANONICAL_MAP = new Map<string, string>();
+const ALIAS_MAP = new Map<string, string>();
+
+// Precompilar mapas para búsqueda O(1)
+CANONICAL_SECTIONS.forEach(sec => {
+  CANONICAL_MAP.set(sec.canonicalId, sec.standardName);
+  ALIAS_MAP.set(normalizeText(sec.standardName), sec.standardName);
+  sec.aliases.forEach(alias => {
+    ALIAS_MAP.set(normalizeText(alias), sec.standardName);
+  });
+});
+
+export function resolveCanonicalSection({ sectionId, titleText }: { sectionId?: string; titleText?: string }): string | null {
+  // Nivel 1: Lookup directo por sectionId
+  if (sectionId && CANONICAL_MAP.has(sectionId)) {
+    return CANONICAL_MAP.get(sectionId)!;
+  }
+
+  // Nivel 2: Fallback léxico solo si sectionId no resolvió (secciones custom)
+  if (!titleText) return null;
+  const cleanTitle = normalizeText(titleText);
+
+  if (ALIAS_MAP.has(cleanTitle)) {
+    return ALIAS_MAP.get(cleanTitle)!;
   }
 
   return null;
+}
+
+/**
+ * @deprecated Usa resolveCanonicalSection en su lugar.
+ * Mantenido temporalmente para llamadores no migrados.
+ */
+export function findCanonicalLabel(titleText: string): string | null {
+  return resolveCanonicalSection({ titleText });
 }

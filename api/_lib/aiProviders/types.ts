@@ -3,6 +3,9 @@ export interface AiCompletionRequest {
   userPrompt: string;
   maxTokens?: number;
   temperature?: number;
+  images?: Array<{ mimeType: 'image/png' | 'image/jpeg'; base64: string }>;
+  /** Pide a Gemini que devuelva JSON validado contra este esquema (no texto libre a interpretar). */
+  responseSchema?: object;
 }
 
 export interface AiProviderPingResult {

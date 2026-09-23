@@ -123,3 +123,12 @@ LEECV es para gente común: tiene una impresora en casa o quiere llevar el archi
 - Reglas, modo por zona y ejemplos: `src/shared/core/plainLanguage/plainLanguageRules.ts`; qué archivo es de cada zona: `zoneOfPath` en `plainLanguageEngine.ts`. Para prohibir o permitir una palabra nueva, agregá/cambiá una regla ahí.
 - Lo audita `npm run check-plain-language` (pre-commit, `check-all` y `tests/plainLanguage.test.ts`). Un caso interno legítimo (nunca visible) se exime con `plain-language:allow` en la misma línea o la anterior.
 - Los códigos internos (`'A4'`, `paperSize: 'A3'`) no son texto visible y no se tocan; lo que cambia es la **etiqueta** que ve la persona.
+
+## Regla 8 — Identidad Canónica y Heurísticas Léxicas (Semántica de Datos)
+
+- **La semántica viaja con el dato:** `sectionId` (p. ej. `experience`, `education`) y `pdfRole` (p. ej. `title`, `badge`, `extra`) son la identidad **canónica**. Nunca se debe derivar la identidad o el tipo de dato a partir de strings visibles o títulos ingresados por el usuario.
+- **Las heurísticas léxicas son FALLBACK:** Si se necesita inferir el tipo de un campo dinámico (como en las secciones personalizadas), esa heurística debe ejecutarse *solamente* si el ID o el rol canónico no resuelve.
+- **Reglas de implementación para heurísticas:** Al implementar una heurística de matching de texto, siempre se debe:
+  1. **Normalizar diacríticos:** Usar `.normalize('NFD')` para no fallar por tildes o acentos extraños (ej: "Período" vs "Periodo").
+  2. **Matching estricto:** Anclar la búsqueda (`^...$`) cuando aplique, o usar palabras completas seguras (`\b`), en lugar de `.includes()` débiles para evitar falsos positivos ("Cosas de mi equipo" -> "equipo").
+  3. **Trazabilidad obligatoria:** Toda invocación a una adivinanza/heurística debe reportarse (p. ej., `reportMessage`) para saber cuándo se invoca y detectar falsos positivos/negativos en uso real.

@@ -3,7 +3,7 @@ import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/render
 import { prepareCoverLetterRenderData, CoverLetterData } from '../layers/records/coverLetterDataAdapter';
 import { getCoverLetterPreset } from '../../presets/coverLetterPresetCatalog';
 import { getPreset } from '../layers/presets/presetRegistry';
-import { resolveCoverLetterStyles } from '../layers/records/coverLetterStyleEngine';
+import { resolveCoverLetterStyles } from '../layers/cover-letter/coverLetterStyleEngine';
 import { getPageSize } from '../layers/page/pageSizes';
 
 interface CoverLetterPdfProps {
@@ -46,8 +46,8 @@ export const CoverLetterPdfDocument: React.FC<CoverLetterPdfProps> = ({
       paddingBottom: 45,
       paddingLeft: 55,
       paddingRight: 55,
-      fontFamily: letterStyles.body.fontFamily,
-      fontSize: letterStyles.body.fontSizePt,
+      fontFamily: letterStyles.paragraph.fontFamily,
+      fontSize: letterStyles.paragraph.fontSizePt,
       color: textColor,
       lineHeight: preset.lineSpacing
     },
@@ -96,17 +96,25 @@ export const CoverLetterPdfDocument: React.FC<CoverLetterPdfProps> = ({
     },
     salutation: {
       marginBottom: 14,
-      fontFamily: 'Helvetica-Bold'
+      fontFamily: letterStyles.salutation.fontFamily,
+      fontSize: letterStyles.salutation.fontSizePt,
+      color: letterStyles.salutation.colorHex
     },
     paragraph: {
       marginBottom: 14,
-      textAlign: 'justify'
+      textAlign: 'justify',
+      fontFamily: letterStyles.paragraph.fontFamily,
+      fontSize: letterStyles.paragraph.fontSizePt,
+      color: letterStyles.paragraph.colorHex
     },
     signoffBox: {
       marginTop: 20
     },
     signoffText: {
-      marginBottom: 12
+      marginBottom: 12,
+      fontFamily: letterStyles.signoffText.fontFamily,
+      fontSize: letterStyles.signoffText.fontSizePt,
+      color: letterStyles.signoffText.colorHex
     },
     signatureImage: {
       width: 140,

@@ -53,9 +53,12 @@ export const CARD_RECORD_RENDERERS: Record<CardRecordKind, CardRecordRenderFn> =
     );
   },
   'contact-item': (rec, { preset }) => {
+    const fields = getPresentContactFields(rec, 'card');
+    if (fields.length === 0) return null;
+
     return (
       <View key={rec.id} style={{ marginTop: 6 }}>
-        {getPresentContactFields(rec, 'card').map((f, i, arr) => (
+        {fields.map((f, i, arr) => (
           <Text
             key={f.key}
             style={{

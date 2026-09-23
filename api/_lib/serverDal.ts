@@ -133,6 +133,35 @@ export const serverDal = {
       }
 
       return { success: true, remaining: Number(data ?? (current.credits - amount)) };
+    },
+    async consumeImportCredit(userId: string, totalPages: number): Promise<{ success: boolean; remaining: number }> {
+      const current = await this.getByUserId(userId);
+      const needed = totalPages * 2; // match the SQL logic
+      if (current.credits < needed) {
+        return { success: false, remaining: current.credits };
+      }
+
+      const { data, error } = await supabaseAdmin.rpc('consume_ai_import_credits', {
+        p_user_id: userId,
+        p_page_count: totalPages
+      });
+
+      if (!error && data === null) {
+        return { success: false, remaining: current.credits };
+      }
+
+      if (error) {
+        // Fallback Upsert if RPC fails
+        const nextAmount = Math.max(0, current.credits - needed);
+        await supabaseAdmin.from('user_credits').upsert({
+          user_id: userId,
+          ai_credits: nextAmount,
+          updated_at: new Date().toISOString()
+        });
+        return { success: true, remaining: nextAmount };
+      }
+
+      return { success: true, remaining: Number(data ?? (current.credits - needed)) };
     }
   },
 
@@ -313,6 +342,52 @@ export const serverDal = {
         .eq('id', cvId);
 
       if (error) throw new Error(`Error limpiando puntero de Drive: ${error.message}`);
+    }
+  },
+
+  cvImportJobs: {
+    async create(userId: string, totalPages: number): Promise<{ id: string }> {
+      const { data, error } = await supabaseAdmin
+        .from('cv_import_jobs')
+        .insert({ user_id: userId, total_pages: totalPages, status: 'processing' })
+        .select('id')
+        .single();
+      if (error) throw new Error(`Error creando import job: ${error.message}`);
+      return data;
+    },
+    async getById(id: string): Promise<any> {
+      const { data, error } = await supabaseAdmin
+        .from('cv_import_jobs')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      if (error) throw new Error(`Error obteniendo import job: ${error.message}`);
+      return data;
+    },
+    async updateStatus(id: string, status: string): Promise<void> {
+      const { error } = await supabaseAdmin
+        .from('cv_import_jobs')
+        .update({ status })
+        .eq('id', id);
+      if (error) throw new Error(`Error actualizando import job: ${error.message}`);
+    }
+  },
+
+  cvImportJobPages: {
+    async insert(jobId: string, pageIndex: number, fragmentJson: any): Promise<void> {
+      const { error } = await supabaseAdmin
+        .from('cv_import_job_pages')
+        .insert({ job_id: jobId, page_index: pageIndex, fragment_json: fragmentJson });
+      if (error) throw new Error(`Error guardando import job page: ${error.message}`);
+    },
+    async getAllForJob(jobId: string): Promise<any[]> {
+      const { data, error } = await supabaseAdmin
+        .from('cv_import_job_pages')
+        .select('*')
+        .eq('job_id', jobId)
+        .order('page_index', { ascending: true });
+      if (error) throw new Error(`Error obteniendo import job pages: ${error.message}`);
+      return data || [];
     }
   }
 };

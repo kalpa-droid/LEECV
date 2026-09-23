@@ -35,8 +35,10 @@ export interface ContentRecord<K extends RecordKind = RecordKind> {
   fields: Record<string, string | TextRun[]>;
   /** Selección de etiqueta personalizada por campo para este registro puntual */
   fieldLabelOverrides?: Record<string, string>;
+  /** Rol visual forzado por migración o edición manual, para evitar que la heurística cambie con el tiempo */
+  fieldRoleOverrides?: Record<string, 'title' | 'subtitle' | 'badge' | 'extra' | 'description'>;
   /** A qué sector va este registro (ej: 'sidebar' o 'main') — lo define el preset, no el dato en sí */
-  targetSectorRole: 'sidebar' | 'main' | 'banner' | 'footer';
+
 }
 
 /** Un grupo de registros del mismo tipo, con su título de sección (ej: "EXPERIENCIA LABORAL") */

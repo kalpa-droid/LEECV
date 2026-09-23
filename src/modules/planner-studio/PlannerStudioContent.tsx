@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { AppShell } from '../../shared/core/ui/AppShell';
 import Navbar from '../cv-builder/components/Navbar';
 import CanvaIconDock from '../cv-builder/components/CanvaIconDock';
@@ -6,7 +6,7 @@ import { PlannerPdfDocument } from '../../shared/core/pdf-engine/renderer/Planne
 import { VectorDocViewer } from '../../shared/core/pdf-engine/VectorDocViewer';
 import { getPreset } from '../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { DocumentTypeId } from '../../types/document';
-import { useDocumentViewport } from '../../shared/core/viewport';
+import { useDocumentViewport, useViewportGestures } from '../../shared/core/viewport';
 import { OpenTab, openTab } from '../../shared/core/documents/tabStore';
 import { generateDocumentId, computeAutoDocumentTitle, useDraftAutosave, useRegisterDocumentTab, resolveDocumentIdWithHandoff } from '../../shared/core/documents/documentEngine';
 import { savePlanner, loadPlannerById } from '../../shared/core/storage/documentStorageService';
@@ -15,6 +15,7 @@ import { inferDocumentTypeId } from '../../shared/core/capabilities/capabilityRe
 import { PlannerMonthOverride } from '../../shared/core/pdf-engine/layers/records/plannerDataAdapter';
 import { PersonalInfoFields } from '../../shared/core/ui/PersonalInfoFields';
 import { PresetPersonaSelector, PresetPersonaItem } from '../../shared/core/ui/PresetPersonaSelector';
+import { elevationSystem, radius } from '../../shared/core/uiDesignSystem';
 
 const PLANNER_PRESETS_LIST: PresetPersonaItem[] = [
   {
@@ -115,6 +116,15 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   
   const viewport = useDocumentViewport({
     pageSizeId: 'b5'
+  });
+  
+  const sheetRef = useRef<HTMLDivElement>(null);
+
+  useViewportGestures({
+    containerRef: viewport.containerRef,
+    sheetRef,
+    onZoomChange: viewport.setZoomLevel,
+    zoomLevel: viewport.zoomLevel
   });
 
   const [data, setData] = useState({
@@ -275,13 +285,13 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
                 columns={1}
               />
 
-              <div className="flex flex-col gap-2 pt-2 border-t border-[var(--ui-border-base)]">
+              <div className="flex flex-col gap-2 pt-2 border-t border-[var(--ui-border)]">
                 <label className="text-sm font-semibold">Color Principal Personalizado</label>
                 <input 
                   type="color" 
                   value={data.theme.primaryColor} 
                   onChange={e => setData(d => ({ ...d, theme: { ...d.theme, primaryColor: e.target.value } }))}
-                  className="w-full h-10 p-1 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-md cursor-pointer"
+                  className="w-full h-10 p-1 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-md cursor-pointer"
                 />
               </div>
             </div>
@@ -295,7 +305,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
                 <select 
                   value={data.gridType}
                   onChange={e => setData(d => ({ ...d, gridType: e.target.value as any }))}
-                  className="px-3 py-2 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-md text-[var(--ui-text-primary)]"
+                  className="px-3 py-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-md text-[var(--ui-text-primary)]"
                 >
                   <option value="dot-grid">Puntos guía (Dot-Grid)</option>
                   <option value="lined">Renglones (Líneas)</option>
@@ -315,7 +325,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
                   type="number" 
                   value={data.year} 
                   onChange={e => setData(d => ({ ...d, year: parseInt(e.target.value) || new Date().getFullYear() }))}
-                  className="px-3 py-2 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-md text-[var(--ui-text-primary)]"
+                  className="px-3 py-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-md text-[var(--ui-text-primary)]"
                 />
               </div>
               <div className="flex flex-col gap-2">
@@ -323,7 +333,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
                 <select
                   value={data.weekStart}
                   onChange={e => setData(d => ({ ...d, weekStart: e.target.value as any }))}
-                  className="px-3 py-2 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-md text-[var(--ui-text-primary)]"
+                  className="px-3 py-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-md text-[var(--ui-text-primary)]"
                 >
                   <option value="monday">Lunes</option>
                   <option value="sunday">Domingo</option>
@@ -334,7 +344,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
                 <select
                   value={data.weeklyLayout}
                   onChange={e => setData(d => ({ ...d, weeklyLayout: e.target.value as any }))}
-                  className="px-3 py-2 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-md text-[var(--ui-text-primary)]"
+                  className="px-3 py-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-md text-[var(--ui-text-primary)]"
                 >
                   <option value="horizontal">Horizontal Estándar</option>
                   <option value="vertical">Vertical Amplia</option>
@@ -346,7 +356,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
                 <select
                   value={data.temporalView}
                   onChange={e => setData(d => ({ ...d, temporalView: e.target.value as any }))}
-                  className="px-3 py-2 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-md text-[var(--ui-text-primary)]"
+                  className="px-3 py-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-md text-[var(--ui-text-primary)]"
                 >
                   <option value="monthly">Anual con Grilla Mensual</option>
                   <option value="weekly">Planificador Semanal</option>
@@ -365,7 +375,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
               </p>
               
               {PLANNER_SECTION_REGISTRY.map(section => (
-                <label key={section.id} className="flex items-center gap-3 p-3 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-lg cursor-pointer">
+                <label key={section.id} className="flex items-center gap-3 p-3 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-lg cursor-pointer">
                   <input
                     type="checkbox"
                     checked={(data.modules as any)[section.id]}
@@ -403,7 +413,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
                           ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--color-accent-base)]'
                           : hasOverride
                           ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] border-[var(--color-accent-base)]/40'
-                          : 'bg-[var(--ui-bg-base)] border-[var(--ui-border-base)] hover:border-[var(--color-accent-base)]'
+                          : 'bg-[var(--ui-bg-card)] border-[var(--ui-border)] hover:border-[var(--color-accent-base)]'
                       }`}
                     >
                       {name}
@@ -414,7 +424,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
               </div>
 
               {/* Panel de Override del Mes Seleccionado */}
-              <div className="p-4 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-xl space-y-4">
+              <div className={`p-4 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.card}] space-y-4`}>
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-extrabold text-[var(--color-accent-text)]">
                     Configuración de {MONTH_NAMES[selectedMonthIndex]}
@@ -431,7 +441,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
                     <button
                       type="button"
                       onClick={() => updateMonthOverride(selectedMonthIndex, { gridType: data.gridType, primaryColor: data.theme.primaryColor })}
-                      className="text-xs font-semibold px-2.5 py-1 rounded border border-dashed border-[var(--ui-border-base)] text-[var(--color-accent-text)]"
+                      className="text-xs font-semibold px-2.5 py-1 rounded border border-dashed border-[var(--ui-border)] text-[var(--color-accent-text)]"
                     >
                       + Personalizar este mes
                     </button>
@@ -439,14 +449,14 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
                 </div>
 
                 {data.monthOverrides[selectedMonthIndex] && (
-                  <div className="space-y-3 pt-2 border-t border-[var(--ui-border-base)]">
+                  <div className="space-y-3 pt-2 border-t border-[var(--ui-border)]">
                     <div className="flex flex-col gap-1">
                       <label className="text-xs font-semibold">Color del Mes</label>
                       <input
                         type="color"
                         value={currentMonthOverride.primaryColor || data.theme.primaryColor}
                         onChange={e => updateMonthOverride(selectedMonthIndex, { primaryColor: e.target.value })}
-                        className="w-full h-8 p-1 bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-md cursor-pointer"
+                        className="w-full h-8 p-1 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-md cursor-pointer"
                       />
                     </div>
 
@@ -455,7 +465,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
                       <select
                         value={currentMonthOverride.gridType || data.gridType}
                         onChange={e => updateMonthOverride(selectedMonthIndex, { gridType: e.target.value as any })}
-                        className="px-3 py-1.5 text-xs bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-md text-[var(--ui-text-primary)]"
+                        className="px-3 py-1.5 text-xs bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-md text-[var(--ui-text-primary)]"
                       >
                         <option value="dot-grid">Puntos guía (Dot-Grid)</option>
                         <option value="lined">Renglones (Líneas)</option>
@@ -471,7 +481,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
                         placeholder="Ej: Planificar proyectos de Q1"
                         value={currentMonthOverride.notes || ''}
                         onChange={e => updateMonthOverride(selectedMonthIndex, { notes: e.target.value })}
-                        className="px-3 py-1.5 text-xs bg-[var(--ui-bg-base)] border border-[var(--ui-border-base)] rounded-md text-[var(--ui-text-primary)]"
+                        className="px-3 py-1.5 text-xs bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-md text-[var(--ui-text-primary)]"
                       />
                     </div>
                   </div>
@@ -500,8 +510,8 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
         </div>
       }
       mainSlot={
-        <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-[var(--ui-bg-sunken)] relative overflow-hidden">
-          <div className="flex-1 w-full max-w-4xl rounded-xl overflow-hidden shadow-2xl border border-[var(--ui-border-base)] bg-[var(--ui-bg-base)]">
+        <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-[var(--ui-bg-panel)] relative overflow-hidden">
+          <div ref={sheetRef} className={`flex-1 w-full max-w-4xl overflow-hidden border border-[var(--ui-border)] bg-[var(--ui-bg-card)] rounded-[${radius.card}] ${elevationSystem.floating}`}>
             <VectorDocViewer 
               document={pdfElement} 
               zoomLevel={viewport.zoomLevel}

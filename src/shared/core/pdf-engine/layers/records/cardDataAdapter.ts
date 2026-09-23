@@ -105,7 +105,6 @@ export function cardDataToFrontSections(card: BusinessCardData): ContentSection<
         {
           id: 'rec-logo',
           kind: 'card-logo',
-          targetSectorRole: 'main',
           fields: { logoDataUrl: card.logoDataUrl }
         }
       ]
@@ -120,7 +119,6 @@ export function cardDataToFrontSections(card: BusinessCardData): ContentSection<
         {
           id: 'rec-heading',
           kind: 'card-heading',
-          targetSectorRole: 'main',
           fields: { fullName: card.fullName || '', role: card.role || '' }
         }
       ]
@@ -132,7 +130,6 @@ export function cardDataToFrontSections(card: BusinessCardData): ContentSection<
         {
           id: 'rec-contact',
           kind: 'contact-item',
-          targetSectorRole: 'main',
           fields: {
             phone: card.phone || '',
             email: card.email || '',
@@ -152,7 +149,6 @@ export function cardDataToBackSections(card: BusinessCardData): ContentSection<C
     {
       id: 'rec-brand',
       kind: 'card-heading',
-      targetSectorRole: 'main',
       fields: { fullName: card.brandName || card.fullName || '', role: card.tagline || '' }
     }
   ];
@@ -165,7 +161,6 @@ export function cardDataToBackSections(card: BusinessCardData): ContentSection<C
     records.push({
       id: 'rec-card-qr',
       kind: 'qr',
-      targetSectorRole: 'main',
       fields: { dataUrl: card.qrDataUrl, caption }
     });
   }
