@@ -4,6 +4,7 @@ import { colorSystem, typeScale, elevationSystem, button } from '../../../../sha
 import { Modal } from '../../../../shared/core/ui/Modal';
 import { isTextLayerCoherent } from '../../../../shared/core/cv-import/textCoherenceHeuristic';
 import { ensurePdfjsWorkerConfigured } from '../../../../shared/core/pdf-engine/pdfjsWorkerSetup';
+import { clampCanvasSize, encodeCanvasWithinBudget, encodeImageFileWithinBudget } from '../../../../shared/core/cv-import/pageImageEncoder';
 
 interface ImportCvAiModalProps {
   isOpen: boolean;
@@ -34,7 +35,9 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
       let pagesToProcess: Array<{ kind: 'text'|'image', content: string }> = [];
       
       if (file.type.startsWith('image/')) {
-        const base64 = await fileToBase64(file);
+        // Una foto de cámara sin procesar puede pesar varios MB — se reduce y comprime ANTES
+        // de mandarla, o el pedido supera el límite de tamaño de Vercel y la función se cae.
+        const base64 = await encodeImageFileWithinBudget(file);
         pagesToProcess.push({ kind: 'image', content: base64 });
       } else if (file.type === 'application/pdf') {
         pagesToProcess = await processPdfPages(file);
@@ -115,26 +118,14 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
         const ctx = canvas.getContext('2d');
         if (ctx) {
           await page.render({ canvasContext: ctx, viewport }).promise;
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-          pages.push({ kind: 'image', content: dataUrl.split(',')[1] });
+          const base64 = encodeCanvasWithinBudget(clampCanvasSize(canvas));
+          pages.push({ kind: 'image', content: base64 });
         } else {
           throw new Error('Canvas no soportado en este navegador.');
         }
       }
     }
     return pages;
-  };
-
-  const fileToBase64 = (f: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(f);
-      reader.onload = () => {
-        const result = reader.result as string;
-        resolve(result.split(',')[1]);
-      };
-      reader.onerror = error => reject(error);
-    });
   };
 
   if (!isOpen) return null;

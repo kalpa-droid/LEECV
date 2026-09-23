@@ -8,14 +8,18 @@ import { getNextAvailableKey, markKeyRateLimited } from './_lib/aiProviders/keyR
 import type { AiCompletionRequest } from './_lib/aiProviders/types.js';
 import { calculateAiCost } from './_lib/costCalculator.js';
 
+// maxDuration SÍ lo respeta Vercel para funciones serverless estándar (Gemini puede tardar
+// varios segundos por página, sobre todo con imagen).
 export const maxDuration = 60;
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb'
-    }
-  }
-};
+// NOTA: acá hubo un `export const config = { api: { bodyParser: { sizeLimit: '10mb' } } }`.
+// Esa sintaxis es de Next.js; este proyecto usa funciones @vercel/node puras (sin Next.js,
+// ver package.json) así que nadie la lee — no hacía nada. Además, aunque se leyera, el límite
+// real de 4.5 MB por pedido en las funciones serverless de Vercel es de la plataforma y NINGÚN
+// ajuste de código lo puede subir. La solución real es que el body nunca llegue a pesar eso:
+// ver src/shared/core/cv-import/pageImageEncoder.ts, que comprime cada página/foto en el
+// navegador antes de mandarla, con margen de sobra por debajo de ese límite (se usa en
+// ImportCvAiModal.tsx). Si esta nota volvió a aparecer sin el import de pageImageEncoder en el
+// modal, es que el fix se perdió de nuevo — revisar ahí primero, no acá.
 
 export interface CVFragment {
   personalInfo?: Record<string, string>;
