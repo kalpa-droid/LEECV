@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { RefreshCw, LogIn, Globe, LogOut } from 'lucide-react';
 import { checkGoogleDriveQuota } from '../services/googleDriveQuotaService';
-import { getCurrentProfile, signInWithGoogle, logout } from '../../auth/authService';
+import { getCurrentProfile, signInWithGoogle, logout } from '../../../shared/core/auth/authService';
 import { publishCV } from '../../../shared/core/storage/publishService';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { Modal } from '../../../shared/core/ui/Modal';

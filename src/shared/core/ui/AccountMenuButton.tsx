@@ -4,9 +4,10 @@ import { useText } from '../../i18n/useText';
 import { radius, elevationSystem } from '../uiDesignSystem';
 import { getPlanLabel, PLAN_FEATURES } from '../entitlements/useEntitlements';
 
+import { useAuth } from '../auth/AuthProvider';
+import { signInWithGoogle, logout } from '../auth/authService';
+
 export interface AccountMenuButtonProps {
-  isLoggedIn?: boolean;
-  currentProfile?: any;
   onLogin?: () => void;
   onLogout?: () => void;
   onOpenPricing?: () => void;
@@ -16,8 +17,6 @@ export interface AccountMenuButtonProps {
 }
 
 export const AccountMenuButton: React.FC<AccountMenuButtonProps> = ({
-  isLoggedIn = false,
-  currentProfile,
   onLogin,
   onLogout,
   onOpenPricing,
@@ -26,6 +25,7 @@ export const AccountMenuButton: React.FC<AccountMenuButtonProps> = ({
   buttonText,
 }) => {
   const t = useText();
+  const { currentProfile, isLoggedIn, refreshProfile } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -80,27 +80,37 @@ export const AccountMenuButton: React.FC<AccountMenuButtonProps> = ({
 
           {/* Opción 1: Iniciar / Cerrar Sesión */}
           {isLoggedIn ? (
-            onLogout && (
-              <button
-                type="button"
-                onClick={() => { setIsOpen(false); onLogout(); }}
-                className="w-full text-left px-3 py-1.5 rounded-[10px] text-xs font-bold text-[var(--color-status-danger-text)] hover:bg-[var(--color-status-danger-muted)] flex items-center gap-2 transition cursor-pointer"
-              >
-                <LogOut className="w-4 h-4 text-[var(--color-status-danger-text)]" />
-                <span>Cerrar Sesión</span>
-              </button>
-            )
+            <button
+              type="button"
+              onClick={async () => {
+                setIsOpen(false);
+                if (onLogout) onLogout();
+                else {
+                  await logout();
+                  refreshProfile();
+                }
+              }}
+              className="w-full text-left px-3 py-1.5 rounded-[10px] text-xs font-bold text-[var(--color-status-danger-text)] hover:bg-[var(--color-status-danger-muted)] flex items-center gap-2 transition cursor-pointer"
+            >
+              <LogOut className="w-4 h-4 text-[var(--color-status-danger-text)]" />
+              <span>Cerrar Sesión</span>
+            </button>
           ) : (
-            onLogin && (
-              <button
-                type="button"
-                onClick={() => { setIsOpen(false); onLogin(); }}
-                className="w-full text-left px-3 py-1.5 rounded-[10px] text-xs font-bold text-[var(--color-accent-purple-text)] hover:bg-[var(--color-accent-purple-light)] flex items-center gap-2 transition cursor-pointer"
-              >
-                <LogIn className="w-4 h-4 text-[var(--color-accent-purple-text)]" />
-                <span>Iniciar Sesión</span>
-              </button>
-            )
+            <button
+              type="button"
+              onClick={async () => {
+                setIsOpen(false);
+                if (onLogin) onLogin();
+                else {
+                  await signInWithGoogle();
+                  refreshProfile();
+                }
+              }}
+              className="w-full text-left px-3 py-1.5 rounded-[10px] text-xs font-bold text-[var(--color-accent-purple-text)] hover:bg-[var(--color-accent-purple-light)] flex items-center gap-2 transition cursor-pointer"
+            >
+              <LogIn className="w-4 h-4 text-[var(--color-accent-purple-text)]" />
+              <span>Iniciar Sesión</span>
+            </button>
           )}
 
           {/* Opción 2: Documentos Guardados */}

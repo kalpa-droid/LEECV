@@ -371,8 +371,6 @@ export default function Navbar({
 
           {/* PÍLDORA 2: MENÚ DE CUENTA */}
           <AccountMenuButton
-            isLoggedIn={isLoggedIn}
-            currentProfile={{ plan }}
             onLogin={onAuthToggle}
             onLogout={onAuthToggle}
             onOpenPricing={onOpenPricing}

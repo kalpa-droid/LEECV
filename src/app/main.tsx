@@ -40,18 +40,25 @@ const RootComponent = isAdminRoute
   ? RefundPolicyPage
   : App;
 
+import { AuthProvider } from '../shared/core/auth/AuthProvider';
+import { ToastProvider } from '../shared/core/ui/Toast';
+
 const rootElement = document.getElementById('root');
 if (rootElement) {
   createRoot(rootElement).render(
     <StrictMode>
       <ErrorBoundary>
-        <Suspense fallback={
-          <div className="min-h-screen bg-[var(--color-neutral-text-primary)] text-white flex items-center justify-center font-bold">
-            Cargando LEECV...
-          </div>
-        }>
-          <RootComponent />
-        </Suspense>
+        <AuthProvider>
+          <ToastProvider>
+            <Suspense fallback={
+              <div className="min-h-screen bg-[var(--color-neutral-text-primary)] text-white flex items-center justify-center font-bold">
+                Cargando LEECV...
+              </div>
+            }>
+              <RootComponent />
+            </Suspense>
+          </ToastProvider>
+        </AuthProvider>
       </ErrorBoundary>
     </StrictMode>,
   );

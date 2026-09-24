@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { login, signInWithGoogle } from '../auth/authService';
+import { login, signInWithGoogle } from '../../shared/core/auth/authService';
 import { Lock } from 'lucide-react';
 import { isValidEmail } from '../../shared/core/utils/validationEngine';
 

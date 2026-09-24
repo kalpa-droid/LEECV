@@ -12,6 +12,7 @@ import { backupCvToGoogleDrive, deleteBackupFromDrive } from '../../shared/core/
 import { getLEECVCloudUsage } from '../../shared/core/storage/leecvCloudBackend';
 import { exportAllCVsToZip, exportCVToZip } from '../../shared/core/utils/jsonImporterExporter';
 import { GracePeriodBanner } from '../../shared/core/ui/GracePeriodBanner';
+import { AccountMenuButton } from '../../shared/core/ui/AccountMenuButton';
 import { RetentionOfferModal } from '../payments/components/RetentionOfferModal';
 import { button, badge, glassmorphism, input, radius } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
@@ -273,6 +274,10 @@ inGracePeriod ? 'bg-[var(--color-status-warning-muted)] text-[var(--color-status
                 {t.dashboard.goToEditorBtn}
               </button>
             )}
+            
+            <AccountMenuButton 
+              onOpenPricing={() => setIsRetentionModalOpen(true)}
+            />
           </div>
         </header>
 

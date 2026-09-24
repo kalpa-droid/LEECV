@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Newspaper, ArrowLeft, Clock, User, FileText, BookOpen, Mail } from 'lucide-react';
 import { displayScale, elevationSystem, radius, button } from '../../shared/core/uiDesignSystem';
+import { AccountMenuButton } from '../../shared/core/ui/AccountMenuButton';
 import { updatePageSeo, generateHowToSchema, generateTechArticleSchema } from '../../shared/core/seo/seoIndexingEngine';
 
 interface Article {
@@ -270,6 +271,9 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ initialSlug, onNavigateH
                 Blog & Recursos <span className="text-[var(--color-accent-text)] text-xs font-normal">LEECV</span>
               </span>
             </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <AccountMenuButton />
           </div>
         </div>
       </header>

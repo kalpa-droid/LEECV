@@ -14,7 +14,7 @@ const LandingPage = lazy(() => import('../modules/landing/LandingPage').then(m =
 const BookStudio = lazy(() => import('../modules/book-studio/BookStudio').then(m => ({ default: m.BookStudio })));
 const BlogModule = lazy(() => import('../modules/blog/BlogModule').then(m => ({ default: m.BlogModule })));
 
-import { getCurrentProfile, capturarConexionDriveSiCorresponde } from '../modules/auth/authService';
+import { getCurrentProfile } from '../shared/core/auth/authService';
 import { supabase } from '../shared/core/lib/supabaseClient';
 import { exportCVToJson, importCVFromJsonFile } from '../shared/core/utils/jsonImporterExporter';
 import { withErrorHandling } from '../shared/core/utils/errorHandler';
@@ -62,7 +62,8 @@ const PlannerStudioContent = lazy(() => import('../modules/planner-studio/Planne
 import { loadCVById, loadDocumentById, saveCV } from '../shared/core/storage/documentStorageService';
 import { setPendingDocumentToOpen, getPendingDocumentToOpen, clearPendingDocumentToOpen } from '../shared/core/storage/pendingDocumentHandoff';
 import { runWithSafeSave } from '../shared/core/storage/safeNavigationEngine';
-import { signInWithGoogle, logout } from '../modules/auth/authService';
+import { signInWithGoogle, logout } from '../shared/core/auth/authService';
+import { useAuth } from '../shared/core/auth/AuthProvider';
 import { PwaInstallBanner } from '../shared/core/ui/PwaInstallBanner';
 import { initUpdateEngine, onUpdateReady } from '../shared/core/pwa/updateEngine';
 import { trackPageView } from '../shared/core/analytics/analyticsService';
@@ -89,7 +90,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 
   const { showSuccess, showError, showInfo } = useToast();
   const { confirm } = useConfirm();
-  const [currentProfile, setCurrentProfile] = useState<any>(null);
+  const { currentProfile, refreshProfile } = useAuth();
   const { inGracePeriod, graceEndsAt, aiCredits, refreshEntitlements } = useEntitlements();
   const [graceCvList, setGraceCvList] = useState<any[]>([]);
   const [isRetentionModalOpen, setIsRetentionModalOpen] = useState(false);
@@ -136,16 +137,16 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 
   useEffect(() => {
     syncPresetsFromStorage().catch(err => console.warn('Error sincronizando presets iniciales:', err));
-    getCurrentProfile().then(p => setCurrentProfile(p)).catch(() => {});
+    refreshProfile();
 
     procesarRetornoPago()
       .then((res) => {
         if (res?.status === 'paypal_captured') {
           showSuccess('¡Pago procesado con éxito vía PayPal! Tu suscripción o créditos han sido activados.');
-          getCurrentProfile().then(p => setCurrentProfile(p)).catch(() => {});
+          refreshProfile();
         } else if (res?.status === 'payment_success') {
           showSuccess('¡Pago confirmado! Tu cuenta ha sido actualizada.');
-          getCurrentProfile().then(p => setCurrentProfile(p)).catch(() => {});
+          refreshProfile();
         }
       })
       .catch((err) => {
@@ -169,15 +170,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       }
     }
 
-    if (supabase) {
-      supabase.auth.getSession()
-        .then(({ data: { session } }) => {
-          capturarConexionDriveSiCorresponde(session);
-        })
-        .catch(err => {
-          console.warn('Error al obtener sesión de Supabase:', err);
-        });
-    }
+
   }, []);
 
   const [activeTab, setActiveTab] = useState(() => {
@@ -439,7 +432,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const handleAuthToggle = async () => {
     if (currentProfile) {
       await logout();
-      setCurrentProfile(null);
+      refreshProfile();
       showSuccess('Sesión cerrada correctamente.');
     } else {
       // Proteger todos los datos y pestañas abiertas antes del redireccionamiento OAuth
@@ -1218,32 +1211,30 @@ export default function App() {
   };
 
   return (
-    <ToastProvider>
-      <ConfirmProvider>
-        <CVProvider>
-          {currentRoute.startsWith('/blog') ? (
-            <>
-              <SeoMetaManager title="Blog & Recursos — LEECV" />
-              <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Blog...</div>}>
-                <BlogModule initialSlug={currentRoute.replace('/blog', '').replace('/', '') || undefined} onNavigateHome={() => navigateTo('/')} onNavigateProduct={(r) => navigateTo(r)} />
-              </Suspense>
-            </>
-          ) : currentRoute === '/' ? (
-            <>
-              <SeoMetaManager title="LEECV — CVs, Tarjetas y Libros listos para imprimir" />
-              <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando LEECV...</div>}>
-                <LandingPage onNavigate={(r) => navigateTo(r)} />
-              </Suspense>
-            </>
-          ) : (
-            <>
-              <SeoMetaManager title={`${getDefaultTitleForDocType(getDocTypeForRoute(currentRoute))} — LEECV`} noIndex />
-              <AppContent currentRoute={currentRoute} onNavigate={(r) => navigateTo(r)} />
-            </>
-          )}
-          <CookieConsentBanner />
-        </CVProvider>
-      </ConfirmProvider>
-    </ToastProvider>
+    <ConfirmProvider>
+      <CVProvider>
+        {currentRoute.startsWith('/blog') ? (
+          <>
+            <SeoMetaManager title="Blog & Recursos — LEECV" />
+            <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Blog...</div>}>
+              <BlogModule initialSlug={currentRoute.replace('/blog', '').replace('/', '') || undefined} onNavigateHome={() => navigateTo('/')} onNavigateProduct={(r) => navigateTo(r)} />
+            </Suspense>
+          </>
+        ) : currentRoute === '/' ? (
+          <>
+            <SeoMetaManager title="LEECV — CVs, Tarjetas y Libros listos para imprimir" />
+            <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando LEECV...</div>}>
+              <LandingPage onNavigate={(r) => navigateTo(r)} />
+            </Suspense>
+          </>
+        ) : (
+          <>
+            <SeoMetaManager title={`${getDefaultTitleForDocType(getDocTypeForRoute(currentRoute))} — LEECV`} noIndex />
+            <AppContent currentRoute={currentRoute} onNavigate={(r) => navigateTo(r)} />
+          </>
+        )}
+        <CookieConsentBanner />
+      </CVProvider>
+    </ConfirmProvider>
   );
 }

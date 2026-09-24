@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { iniciarPagoMercadoPago, iniciarPagoPayPal, iniciarPagoLemonSqueezy } from '../../../payments/paymentService';
-import { signInWithGoogle } from '../../../auth/authService';
+import { signInWithGoogle } from '../../../../shared/core/auth/authService';
 import {} from '../../../../shared/core/lib/supabaseClient';
 import { apiClient } from '../../../../shared/core/utils/apiClient';
 import { CreditCard, Sparkles, Download, LogIn, Check, AlertCircle } from 'lucide-react';

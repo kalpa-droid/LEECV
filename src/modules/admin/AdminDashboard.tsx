@@ -7,7 +7,7 @@ import {
   listAdminNotifications, markNotificationRead,
   getIntegrationsStatus, getAiProvidersStatus
 } from './adminService';
-import { getCurrentProfile, logout } from '../auth/authService';
+import { getCurrentProfile, logout } from '../../shared/core/auth/authService';
 import AdminLogin from './AdminLogin';
 import { StorageDriveTab } from './components/StorageDriveTab';
 import { SentryReportsTab } from './components/SentryReportsTab';

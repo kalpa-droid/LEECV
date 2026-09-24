@@ -5,7 +5,7 @@ import { useToast } from '../../shared/core/ui/Toast';
 import { Modal } from '../../shared/core/ui/Modal';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
 import { navigation } from '../../shared/core/utils/navigation';
-import { logout, signInWithGoogle } from '../auth/authService';
+import { logout, signInWithGoogle } from '../../shared/core/auth/authService';
 
 import { button, elevationSystem, radius } from '../../shared/core/uiDesignSystem';
 import { formatPrice, formatPricePerMonth } from '../../shared/core/payments/pricingCatalog';

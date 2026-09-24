@@ -1,7 +1,7 @@
-import { supabase } from '../../shared/core/lib/supabaseClient';
-import { navigation } from '../../shared/core/utils/navigation';
-import { apiClient } from '../../shared/core/utils/apiClient';
-import { UserProfile } from '../../types/user';
+import { supabase } from '../lib/supabaseClient';
+import { navigation } from '../utils/navigation';
+import { apiClient } from '../utils/apiClient';
+import { UserProfile } from '../../../types/user';
 import { Session } from '@supabase/supabase-js';
 
 /**
@@ -26,6 +26,7 @@ export async function signInWithGoogle() {
     provider: 'google',
     options: {
       redirectTo: redirectUrl,
+      skipBrowserRedirect: true,
       scopes: 'https://www.googleapis.com/auth/drive.file',
       queryParams: {
         access_type: 'offline',
@@ -44,6 +45,18 @@ export async function signInWithGoogle() {
       throw new Error('El inicio de sesión con Google no está disponible en este momento. Probá con tu correo electrónico.');
     }
     throw error;
+  }
+  
+  if (data?.url) {
+    const width = 500;
+    const height = 600;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+    window.open(
+      data.url,
+      'google-oauth-popup',
+      `width=${width},height=${height},left=${left},top=${top}`
+    );
   }
   return data;
 }
