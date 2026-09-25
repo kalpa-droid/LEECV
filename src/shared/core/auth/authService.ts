@@ -14,6 +14,12 @@ export async function login(email: string, password: string) {
   return data.user;
 }
 
+let globalBeforeRedirect: (() => Promise<void>) | null = null;
+
+export function setGlobalBeforeRedirect(callback: (() => Promise<void>) | null) {
+  globalBeforeRedirect = callback;
+}
+
 /**
  * Inicia sesión / registro con Google OAuth. Pide también permiso de Drive
  * (solo archivos que la propia app crea, no todo el Drive) con acceso offline.
@@ -58,6 +64,13 @@ export async function signInWithGoogle() {
       `width=${width},height=${height},left=${left},top=${top}`
     );
     if (!popup) {
+      if (globalBeforeRedirect) {
+        try {
+          await globalBeforeRedirect();
+        } catch (e) {
+          console.error('Error in globalBeforeRedirect hook:', e);
+        }
+      }
       window.location.href = data.url;
     }
   }

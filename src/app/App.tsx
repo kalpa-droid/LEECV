@@ -62,7 +62,7 @@ const PlannerStudioContent = lazy(() => import('../modules/planner-studio/Planne
 import { loadCVById, loadDocumentById, saveCV } from '../shared/core/storage/documentStorageService';
 import { setPendingDocumentToOpen, getPendingDocumentToOpen, clearPendingDocumentToOpen } from '../shared/core/storage/pendingDocumentHandoff';
 import { runWithSafeSave } from '../shared/core/storage/safeNavigationEngine';
-import { signInWithGoogle, logout } from '../shared/core/auth/authService';
+import { signInWithGoogle, logout, setGlobalBeforeRedirect } from '../shared/core/auth/authService';
 import { useAuth } from '../shared/core/auth/AuthProvider';
 import { PwaInstallBanner } from '../shared/core/ui/PwaInstallBanner';
 import { initUpdateEngine, onUpdateReady } from '../shared/core/pwa/updateEngine';
@@ -116,6 +116,17 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     }, 5 * 60 * 1000);
     return () => clearTimeout(timer);
   }, [updateBannerVisible, isSaving, hasPendingChanges]);
+
+  // Hook global de guardado para la redirección de autenticación (evita pérdida de datos)
+  useEffect(() => {
+    setGlobalBeforeRedirect(async () => {
+      const docType = cvData ? inferDocumentTypeId(cvData) : 'cv';
+      if (capabilitiesGate.canBackupCloud(docType)) {
+        await saveCV();
+      }
+    });
+    return () => setGlobalBeforeRedirect(null);
+  }, [saveCV, cvData]);
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
 
