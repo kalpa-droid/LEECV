@@ -83,6 +83,22 @@ interface AppContentProps {
   onNavigate?: (route: string) => void;
 }
 
+function GlobalAuthBeforeRedirectManager() {
+  const { cvData, saveCV } = useCVContext();
+  
+  useEffect(() => {
+    setGlobalBeforeRedirect(async () => {
+      const docType = cvData ? inferDocumentTypeId(cvData) : 'cv';
+      if (capabilitiesGate.canBackupCloud(docType)) {
+        await saveCV();
+      }
+    });
+    return () => setGlobalBeforeRedirect(null);
+  }, [saveCV, cvData]);
+
+  return null;
+}
+
 function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: AppContentProps) {
   const { cvData, setCvData, resetToBlankCV, saveCV, saveCVAs, isSaving, hasPendingChanges, isSwitchingDocument, setIsSwitchingDocument } = useCVContext();
   const didReconcileRef = useRef(false);
@@ -117,16 +133,6 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     return () => clearTimeout(timer);
   }, [updateBannerVisible, isSaving, hasPendingChanges]);
 
-  // Hook global de guardado para la redirección de autenticación (evita pérdida de datos)
-  useEffect(() => {
-    setGlobalBeforeRedirect(async () => {
-      const docType = cvData ? inferDocumentTypeId(cvData) : 'cv';
-      if (capabilitiesGate.canBackupCloud(docType)) {
-        await saveCV();
-      }
-    });
-    return () => setGlobalBeforeRedirect(null);
-  }, [saveCV, cvData]);
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
 
@@ -1199,6 +1205,7 @@ export default function App() {
   return (
     <ConfirmProvider>
       <CVProvider>
+        <GlobalAuthBeforeRedirectManager />
         {currentRoute.startsWith('/blog') ? (
           <>
             <SeoMetaManager title="Blog & Recursos — LEECV" />
