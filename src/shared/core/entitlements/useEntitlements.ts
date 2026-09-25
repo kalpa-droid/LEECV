@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../auth/AuthProvider';
 
 export const PLAN_FEATURES = {
   free: {
@@ -70,9 +71,11 @@ export function useEntitlements() {
   const [aiCredits, setAiCredits] = useState<number>(3);
   const [loading, setLoading] = useState(true);
 
+  const { user } = useAuth();
+
   useEffect(() => {
     fetchEntitlements();
-  }, []);
+  }, [user?.id]);
 
   async function fetchEntitlements() {
       if (!supabase) {
@@ -81,7 +84,6 @@ export function useEntitlements() {
       }
 
       try {
-        const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const { data } = await supabase
             .from('profiles')

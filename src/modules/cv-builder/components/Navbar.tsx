@@ -48,8 +48,6 @@ export interface NavbarProps {
   onOpenShareAppModal: () => void;
   onOpenPrivacy?: () => void;
   onOpenCloudStatus: () => void;
-  onAuthToggle?: () => void;
-  isLoggedIn?: boolean;
   userRole?: string;
   isSaving?: boolean;
   zoomLevel: number;
@@ -77,8 +75,6 @@ export default function Navbar({
   onOpenShareAppModal,
   onOpenPrivacy,
   onOpenCloudStatus,
-  onAuthToggle,
-  isLoggedIn = false,
   userRole = 'candidate',
   isSaving = false,
   zoomLevel,
@@ -371,8 +367,6 @@ export default function Navbar({
 
           {/* PÍLDORA 2: MENÚ DE CUENTA */}
           <AccountMenuButton
-            onLogin={onAuthToggle}
-            onLogout={onAuthToggle}
             onOpenPricing={onOpenPricing}
             onOpenSavedDocs={onOpenSavedCVsModal}
           />

@@ -52,11 +52,14 @@ export async function signInWithGoogle() {
     const height = 600;
     const left = window.screenX + (window.outerWidth - width) / 2;
     const top = window.screenY + (window.outerHeight - height) / 2;
-    window.open(
+    const popup = window.open(
       data.url,
       'google-oauth-popup',
       `width=${width},height=${height},left=${left},top=${top}`
     );
+    if (!popup) {
+      window.location.href = data.url;
+    }
   }
   return data;
 }
@@ -114,7 +117,12 @@ export async function getCurrentProfile(): Promise<UserProfile | null> {
     console.error('Error leyendo perfil:', error);
     return null;
   }
-  return profile as UserProfile;
+  
+  return {
+    ...profile,
+    avatar_url: user.user_metadata?.avatar_url,
+    name: user.user_metadata?.full_name || user.user_metadata?.name,
+  } as UserProfile;
 }
 
 export function onAuthStateChange(callback: (user: any) => void) {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { RefreshCw, LogIn, Globe, LogOut } from 'lucide-react';
 import { checkGoogleDriveQuota } from '../services/googleDriveQuotaService';
-import { getCurrentProfile, signInWithGoogle, logout } from '../../../shared/core/auth/authService';
+import { useAuth } from '../../../shared/core/auth/AuthProvider';
 import { publishCV } from '../../../shared/core/storage/publishService';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { Modal } from '../../../shared/core/ui/Modal';
@@ -30,7 +30,7 @@ export default function CloudStatusModal({
   onOpenPdfCheckout
 }: CloudStatusModalProps) {
   const { showSuccess, showInfo, showError } = useToast();
-  const [profile, setProfile] = useState<any>(null);
+  const { user: profile, login, logout } = useAuth();
   const [driveQuota, setDriveQuota] = useState<any>(null);
   const [loadingDrive, setLoadingDrive] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -77,10 +77,7 @@ export default function CloudStatusModal({
 
     async function loadStatus() {
       try {
-        const userProf = await getCurrentProfile();
-        if (isMounted) setProfile(userProf);
-
-        if (userProf?.drive_connected) {
+        if (profile?.drive_connected) {
           setLoadingDrive(true);
           try {
             const { ok, data } = await apiClient.post('/api/drive/get-access-token');
@@ -104,7 +101,7 @@ export default function CloudStatusModal({
     return () => {
       isMounted = false;
     };
-  }, [isOpen]);
+  }, [isOpen, profile?.drive_connected]);
 
 
 
@@ -233,7 +230,7 @@ export default function CloudStatusModal({
               <button
                 onClick={async () => {
                   await withErrorHandling(
-                    () => signInWithGoogle(),
+                    () => login(),
                     {
                       context: 'Vincular Google Drive',
                       errorMessage: 'No se pudo vincular Google Drive.',

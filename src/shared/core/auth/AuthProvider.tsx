@@ -1,13 +1,16 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { UserProfile } from '../../../types/user';
 import { supabase } from '../lib/supabaseClient';
-import { getCurrentProfile, capturarConexionDriveSiCorresponde } from './authService';
+import { getCurrentProfile, capturarConexionDriveSiCorresponde, signInWithGoogle, logout } from './authService';
 
 interface AuthContextType {
   currentProfile: UserProfile | null;
   isLoggedIn: boolean;
   loading: boolean;
   refreshProfile: () => Promise<void>;
+  login: () => Promise<void>;
+  logout: () => Promise<void>;
+  user: UserProfile | null;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -15,6 +18,9 @@ const AuthContext = createContext<AuthContextType>({
   isLoggedIn: false,
   loading: true,
   refreshProfile: async () => {},
+  login: async () => {},
+  logout: async () => {},
+  user: null,
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -67,6 +73,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isLoggedIn: !!currentProfile,
       loading,
       refreshProfile,
+      login: signInWithGoogle,
+      logout,
+      user: currentProfile
     }}>
       {children}
     </AuthContext.Provider>

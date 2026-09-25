@@ -4,6 +4,7 @@ import { BookImpositionOptions, processBookImposition } from '../../shared/core/
 import { calculateFinalBookPageCount } from '../../shared/core/book-engine/bookPageCount';
 import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
+import { useAuth } from '../../shared/core/auth/AuthProvider';
 
 import { usePageAwareCreditGate } from '../../shared/core/hooks/usePageAwareCreditGate';
 
@@ -12,8 +13,6 @@ interface BookPreviewExportStepProps {
   selectedFile: File | null;
   pdfPageCount: number;
   onPrevStep?: () => void;
-  isLoggedIn?: boolean;
-  onAuthToggle?: () => void;
 }
 
 export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
@@ -21,10 +20,9 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   selectedFile,
   pdfPageCount,
   onPrevStep,
-  isLoggedIn,
-  onAuthToggle,
 }) => {
   const t = useText();
+  const { isLoggedIn, login } = useAuth();
   const { consumeCredits, isGating, gateError } = usePageAwareCreditGate();
   const [isProcessing, setIsProcessing] = useState(false);
   const [progressPercent, setProgressPercent] = useState(0);
@@ -207,7 +205,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
           {!isLoggedIn ? (
             <button
               type="button"
-              onClick={onAuthToggle}
+              onClick={login}
               className={`px-4 py-2 text-xs font-bold bg-[var(--color-status-danger-base)] text-[var(--color-status-danger-on-base)] border border-[var(--color-status-danger-base)]/40 rounded-[${radius.control}]`}
             >
               Iniciar Sesión con Google

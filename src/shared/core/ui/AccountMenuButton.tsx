@@ -5,7 +5,6 @@ import { radius, elevationSystem } from '../uiDesignSystem';
 import { getPlanLabel, PLAN_FEATURES } from '../entitlements/useEntitlements';
 
 import { useAuth } from '../auth/AuthProvider';
-import { signInWithGoogle, logout } from '../auth/authService';
 
 export interface AccountMenuButtonProps {
   onLogin?: () => void;
@@ -25,7 +24,7 @@ export const AccountMenuButton: React.FC<AccountMenuButtonProps> = ({
   buttonText,
 }) => {
   const t = useText();
-  const { currentProfile, isLoggedIn, refreshProfile } = useAuth();
+  const { currentProfile, isLoggedIn, login, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -49,8 +48,26 @@ export const AccountMenuButton: React.FC<AccountMenuButtonProps> = ({
         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--color-accent-amber)] bg-gradient-to-tr from-[var(--color-accent-orange)] to-[var(--color-accent-amber)] text-black border-2 border-[var(--ui-border)] transition ${elevationSystem.raised} cursor-pointer active:scale-95 text-xs font-black`}
         title={t.navbar?.accountMenuTitle || 'Menú de Cuenta'}
       >
-        <User className="w-4 h-4 stroke-[2.5]" />
-        {buttonText && <span>{buttonText}</span>}
+        <div className="relative">
+          {isLoggedIn && currentProfile?.avatar_url ? (
+            <img src={currentProfile.avatar_url} alt="User" className="w-5 h-5 rounded-full object-cover" />
+          ) : isLoggedIn ? (
+            <div className="w-5 h-5 rounded-full bg-[var(--ui-btn-neutral)] flex items-center justify-center font-bold text-[10px] text-[var(--ui-text-primary)]">
+              {(currentProfile?.name || currentProfile?.email || 'U').charAt(0).toUpperCase()}
+            </div>
+          ) : (
+            <User className="w-4 h-4 stroke-[2.5]" />
+          )}
+          {isLoggedIn && (
+            <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-[var(--color-status-success-base)] border-2 border-[var(--ui-border)] rounded-full" />
+          )}
+        </div>
+        
+        {isLoggedIn && currentProfile?.name && (
+          <span className="hidden sm:inline">{currentProfile.name.split(' ')[0]}</span>
+        )}
+        {!isLoggedIn && buttonText && <span>{buttonText}</span>}
+
         {isLoggedIn ? (
           <LogOut className="w-3.5 h-3.5 stroke-[2.5]" />
         ) : (
@@ -87,7 +104,6 @@ export const AccountMenuButton: React.FC<AccountMenuButtonProps> = ({
                 if (onLogout) onLogout();
                 else {
                   await logout();
-                  refreshProfile();
                 }
               }}
               className="w-full text-left px-3 py-1.5 rounded-[10px] text-xs font-bold text-[var(--color-status-danger-text)] hover:bg-[var(--color-status-danger-muted)] flex items-center gap-2 transition cursor-pointer"
@@ -102,8 +118,7 @@ export const AccountMenuButton: React.FC<AccountMenuButtonProps> = ({
                 setIsOpen(false);
                 if (onLogin) onLogin();
                 else {
-                  await signInWithGoogle();
-                  refreshProfile();
+                  await login();
                 }
               }}
               className="w-full text-left px-3 py-1.5 rounded-[10px] text-xs font-bold text-[var(--color-accent-purple-text)] hover:bg-[var(--color-accent-purple-light)] flex items-center gap-2 transition cursor-pointer"

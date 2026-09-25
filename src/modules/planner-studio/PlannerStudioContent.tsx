@@ -63,8 +63,6 @@ interface PlannerStudioContentProps {
   onNewPlanner?: () => void;
   cycleUITheme: () => void;
   onTabsChanged?: (tabs: OpenTab[]) => void;
-  isLoggedIn?: boolean;
-  onAuthToggle?: () => void;
 }
 
 import { PLANNER_SECTION_REGISTRY } from './plannerSectionRegistry';
@@ -87,8 +85,6 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   onNewPlanner,
   cycleUITheme,
   onTabsChanged = () => {},
-  isLoggedIn = false,
-  onAuthToggle = () => {},
 }) => {
   const [activeStepTab, setActiveStepTab] = useState<string>('planner_design');
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
@@ -257,8 +253,6 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
           triggerAutoFit={viewport.fitAndCenter}
           isAutoFitMode={viewport.isAutoFitMode}
           cycleUITheme={cycleUITheme}
-          isLoggedIn={isLoggedIn}
-          onAuthToggle={onAuthToggle}
         />
       }
       dockSlot={

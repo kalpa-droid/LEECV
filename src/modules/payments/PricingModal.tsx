@@ -5,7 +5,7 @@ import { useToast } from '../../shared/core/ui/Toast';
 import { Modal } from '../../shared/core/ui/Modal';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
 import { navigation } from '../../shared/core/utils/navigation';
-import { logout, signInWithGoogle } from '../../shared/core/auth/authService';
+import { useAuth } from '../../shared/core/auth/AuthProvider';
 
 import { button, elevationSystem, radius } from '../../shared/core/uiDesignSystem';
 import { formatPrice, formatPricePerMonth } from '../../shared/core/payments/pricingCatalog';
@@ -13,11 +13,12 @@ import { getPlanLabel } from '../../shared/core/entitlements/useEntitlements';
 import { useText } from '../../shared/i18n/useText';
 import { PlanFeatureCard } from '../../shared/core/ui/marketing/PlanFeatureCard';
 
-export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
+export default function PricingModal({ isOpen, onClose }: any) {
   const { showError, showSuccess } = useToast();
   const [loadingGateway, setLoadingGateway] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const t = useText();
+  const { user: currentProfile, login, logout } = useAuth();
 
   async function handleLogout() {
     setIsLoggingOut(true);
@@ -35,7 +36,7 @@ export default function PricingModal({ isOpen, onClose, currentProfile }: any) {
   async function handleGoogleConnect() {
     await withErrorHandling(
       async () => {
-        await signInWithGoogle();
+        await login();
       },
       { context: 'Vincular Google Drive' }
     );

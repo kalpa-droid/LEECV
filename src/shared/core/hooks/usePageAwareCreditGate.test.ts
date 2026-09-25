@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { usePageAwareCreditGate } from './usePageAwareCreditGate';
 import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../auth/AuthProvider';
 
 vi.mock('react', () => ({
   useState: (initial: any) => {
@@ -10,6 +11,12 @@ vi.mock('react', () => ({
     };
     return [state, setState];
   },
+  createContext: vi.fn(),
+  useContext: vi.fn(),
+}));
+
+vi.mock('../auth/AuthProvider', () => ({
+  useAuth: vi.fn(),
 }));
 
 vi.mock('../lib/supabaseClient', () => ({
@@ -28,10 +35,7 @@ describe('usePageAwareCreditGate', () => {
   });
 
   it('blocks export when user is not authenticated (fail closed)', async () => {
-    vi.mocked(supabase!.auth.getUser).mockResolvedValue({
-      data: { user: null },
-      error: null,
-    } as any);
+    vi.mocked(useAuth).mockReturnValue({ user: null } as any);
 
     const gate = usePageAwareCreditGate();
     const allowed = await gate.consumeCredits(1);
@@ -40,10 +44,7 @@ describe('usePageAwareCreditGate', () => {
   });
 
   it('allows export without consuming credits for PRO plan users', async () => {
-    vi.mocked(supabase!.auth.getUser).mockResolvedValue({
-      data: { user: { id: 'user-123' } },
-      error: null,
-    } as any);
+    vi.mocked(useAuth).mockReturnValue({ user: { id: 'user-123' } } as any);
 
     vi.mocked(supabase!.from).mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -61,10 +62,7 @@ describe('usePageAwareCreditGate', () => {
   });
 
   it('consumes page credits via consume_pdf_credits_for_pages for free users with enough credits', async () => {
-    vi.mocked(supabase!.auth.getUser).mockResolvedValue({
-      data: { user: { id: 'user-123' } },
-      error: null,
-    } as any);
+    vi.mocked(useAuth).mockReturnValue({ user: { id: 'user-123' } } as any);
 
     vi.mocked(supabase!.from).mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -90,10 +88,7 @@ describe('usePageAwareCreditGate', () => {
   });
 
   it('blocks export when credits are insufficient (remainingCredits === null)', async () => {
-    vi.mocked(supabase!.auth.getUser).mockResolvedValue({
-      data: { user: { id: 'user-123' } },
-      error: null,
-    } as any);
+    vi.mocked(useAuth).mockReturnValue({ user: { id: 'user-123' } } as any);
 
     vi.mocked(supabase!.from).mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -115,10 +110,7 @@ describe('usePageAwareCreditGate', () => {
   });
 
   it('falls back to consume_pdf_credit with p_user_id if consume_pdf_credits_for_pages fails', async () => {
-    vi.mocked(supabase!.auth.getUser).mockResolvedValue({
-      data: { user: { id: 'user-123' } },
-      error: null,
-    } as any);
+    vi.mocked(useAuth).mockReturnValue({ user: { id: 'user-123' } } as any);
 
     vi.mocked(supabase!.from).mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -146,10 +138,7 @@ describe('usePageAwareCreditGate', () => {
   });
 
   it('fails closed when RPC errors out on both calls', async () => {
-    vi.mocked(supabase!.auth.getUser).mockResolvedValue({
-      data: { user: { id: 'user-123' } },
-      error: null,
-    } as any);
+    vi.mocked(useAuth).mockReturnValue({ user: { id: 'user-123' } } as any);
 
     vi.mocked(supabase!.from).mockReturnValue({
       select: vi.fn().mockReturnValue({

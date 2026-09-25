@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { dal } from '../storage/dataAccessLayer';
+import { useAuth } from '../auth/AuthProvider';
 import { useEntitlements } from './useEntitlements';
 
 /**
@@ -10,6 +11,7 @@ import { useEntitlements } from './useEntitlements';
  */
 export function usePdfExportGate() {
   const { plan, unlimitedExports, loading: loadingPlan } = useEntitlements();
+  const { user } = useAuth();
   const [credits, setCredits] = useState(0);
   const [loadingCredits, setLoadingCredits] = useState(true);
 
@@ -19,7 +21,6 @@ export function usePdfExportGate() {
       return;
     }
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLoadingCredits(false); return; }
       const creditRecord = await dal.pdfExportCredits.getByUserId(user.id);
       setCredits(creditRecord?.credits || 0);
@@ -28,7 +29,7 @@ export function usePdfExportGate() {
     } finally {
       setLoadingCredits(false);
     }
-  }, [unlimitedExports]);
+  }, [unlimitedExports, user]);
 
   useEffect(() => { refreshCredits(); }, [refreshCredits]);
 
@@ -50,7 +51,6 @@ export function usePdfExportGate() {
     if (unlimitedExports) return true;
     if (!supabase) return false;
 
-    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
 
     const { data, error } = await supabase.rpc('consume_pdf_credit', { p_user_id: user.id });
@@ -58,7 +58,7 @@ export function usePdfExportGate() {
 
     setCredits(c => Math.max(0, c - 1));
     return true;
-  }, [unlimitedExports]);
+  }, [unlimitedExports, user]);
 
   return {
     plan,

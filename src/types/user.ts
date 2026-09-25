@@ -14,4 +14,6 @@ export interface UserProfile {
   drive_quota_percent?: number | null;
   drive_last_checked_at?: string | null;
   created_at?: string;
+  avatar_url?: string;
+  name?: string;
 }

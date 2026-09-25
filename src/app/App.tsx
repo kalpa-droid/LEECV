@@ -429,26 +429,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [cvData, hasPendingChanges]);
 
-  const handleAuthToggle = async () => {
-    if (currentProfile) {
-      await logout();
-      refreshProfile();
-      showSuccess('Sesión cerrada correctamente.');
-    } else {
-      // Proteger todos los datos y pestañas abiertas antes del redireccionamiento OAuth
-      try {
-        if (cvData) await saveCV();
-      } catch {}
-      await withErrorHandling(
-        () => signInWithGoogle(),
-        {
-          context: 'Iniciar sesión con Google',
-          errorMessage: 'No se pudo iniciar sesión con Google.',
-          notify: (msg) => showError(msg),
-        }
-      );
-    }
-  };
+
 
   const handleOpenAtsCheck = () => {
     const preset = resolveActivePreset(cvData);
@@ -811,8 +792,6 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           onNewCard={handleNewCard}
           onNewBook={handleNewBook}
           cycleUITheme={cycleUITheme}
-          isLoggedIn={!!currentProfile}
-          onAuthToggle={handleAuthToggle}
         />
       </Suspense>
     );
@@ -844,8 +823,6 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           onNewPlanner={handleNewPlanner}
           currentUiTheme={globalUiTheme}
           cycleUITheme={cycleUITheme}
-          isLoggedIn={!!currentProfile}
-          onAuthToggle={handleAuthToggle}
         />
       </Suspense>
     );
@@ -893,8 +870,6 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           onOpenShareAppModal={() => setIsShareAppModalOpen(true)}
           onOpenPrivacy={() => setIsPrivacyModalOpen(true)}
           onOpenCloudStatus={() => setIsCloudModalOpen(true)}
-          onAuthToggle={handleAuthToggle}
-          isLoggedIn={!!currentProfile}
           userRole={currentProfile?.role || 'candidate'}
           isSaving={isSaving}
           zoomLevel={viewport.zoomLevel}

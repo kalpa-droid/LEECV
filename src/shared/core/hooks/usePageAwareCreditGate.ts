@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { dal } from '../storage/dataAccessLayer';
+import { useAuth } from '../auth/AuthProvider';
 
 export function usePageAwareCreditGate() {
   const [isGating, setIsGating] = useState(false);
   const [gateError, setGateError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   const consumeCredits = async (pageCount: number = 1): Promise<boolean> => {
     setIsGating(true);
@@ -16,7 +18,6 @@ export function usePageAwareCreditGate() {
         return false;
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setGateError('Necesitás iniciar sesión para exportar.');
         setIsGating(false);
