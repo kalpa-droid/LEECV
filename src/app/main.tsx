@@ -20,15 +20,19 @@ const UserDashboard = lazy(() => import('../modules/dashboard/UserDashboard').th
 const PrivacyPolicyPage = lazy(() => import('../modules/legal/PrivacyPolicyPage'));
 const TermsOfServicePage = lazy(() => import('../modules/legal/TermsOfServicePage'));
 const RefundPolicyPage = lazy(() => import('../modules/legal/RefundPolicyPage'));
+const AuthCallbackScreen = lazy(() => import('../shared/core/auth/AuthCallbackScreen'));
 
 const pathname = navigation.getPathname().toLowerCase();
+const isAuthCallbackRoute = pathname.startsWith('/auth/callback');
 const isAdminRoute = pathname.startsWith('/admin');
 const isDashboardRoute = pathname.startsWith('/dashboard');
 const isPrivacyRoute = pathname.startsWith('/privacidad') || pathname.startsWith('/privacy');
 const isTermsRoute = pathname.startsWith('/terminos') || pathname.startsWith('/terms');
 const isRefundRoute = pathname.startsWith('/reembolsos') || pathname.startsWith('/refunds');
 
-const RootComponent = isAdminRoute
+const RootComponent = isAuthCallbackRoute
+  ? AuthCallbackScreen
+  : isAdminRoute
   ? AdminDashboard
   : isDashboardRoute
   ? UserDashboard

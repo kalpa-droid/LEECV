@@ -26,12 +26,27 @@ export function setGlobalBeforeRedirect(callback: (() => Promise<void>) | null) 
  */
 export async function signInWithGoogle() {
   if (!supabase) throw new Error('Supabase no está configurado');
-  const redirectUrl = navigation.getOrigin();
+  const origin = navigation.getOrigin();
+
+  const width = 500;
+  const height = 600;
+  const left = window.screenX + (window.outerWidth - width) / 2;
+  const top = window.screenY + (window.outerHeight - height) / 2;
+
+  // Abrir popup de forma síncrona dentro del gesto de click del usuario para evitar bloqueos
+  const popup = window.open(
+    'about:blank',
+    'google-oauth-popup',
+    `width=${width},height=${height},left=${left},top=${top}`
+  );
+
+  const isPopupMode = !!popup;
+  const callbackUrl = `${origin}/auth/callback${isPopupMode ? '?popup=1' : ''}`;
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: redirectUrl,
+      redirectTo: callbackUrl,
       skipBrowserRedirect: true,
       scopes: 'https://www.googleapis.com/auth/drive.file',
       queryParams: {
@@ -40,7 +55,9 @@ export async function signInWithGoogle() {
       },
     },
   });
+
   if (error) {
+    if (popup) popup.close();
     const msg = error.message || String(error);
     if (
       (error as any).code === 'validation_failed' ||
@@ -52,18 +69,11 @@ export async function signInWithGoogle() {
     }
     throw error;
   }
-  
+
   if (data?.url) {
-    const width = 500;
-    const height = 600;
-    const left = window.screenX + (window.outerWidth - width) / 2;
-    const top = window.screenY + (window.outerHeight - height) / 2;
-    const popup = window.open(
-      data.url,
-      'google-oauth-popup',
-      `width=${width},height=${height},left=${left},top=${top}`
-    );
-    if (!popup) {
+    if (isPopupMode && popup) {
+      popup.location.href = data.url;
+    } else {
       if (globalBeforeRedirect) {
         try {
           await globalBeforeRedirect();
@@ -73,7 +83,10 @@ export async function signInWithGoogle() {
       }
       window.location.href = data.url;
     }
+  } else if (popup) {
+    popup.close();
   }
+
   return data;
 }
 

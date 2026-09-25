@@ -92,7 +92,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
           <div className="flex items-center gap-2 shrink-0">
             <ThemeToggleButton currentThemeId={currentTheme} onToggle={handleToggleTheme} size="md" />
             <AccountMenuButton
-              onLogin={() => onNavigate('/crear-cv')}
               onOpenPricing={() => { document.getElementById('precios')?.scrollIntoView({ behavior: 'smooth' }); }}
               onOpenSavedDocs={() => onNavigate('/dashboard')}
               buttonText={isMobile ? undefined : t.landing.nav.cta}

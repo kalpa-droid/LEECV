@@ -24,7 +24,7 @@ describe('authService - globalBeforeRedirect & popup fallback', () => {
     setGlobalBeforeRedirect(null);
   });
 
-  it('ejecuta el hook globalBeforeRedirect cuando window.open retorna null (popup bloqueado)', async () => {
+  it('ejecuta el hook globalBeforeRedirect y pasa redirectTo sin ?popup=1 cuando window.open retorna null (popup bloqueado)', async () => {
     const mockCallback = vi.fn().mockResolvedValue(undefined);
     setGlobalBeforeRedirect(mockCallback);
 
@@ -43,22 +43,37 @@ describe('authService - globalBeforeRedirect & popup fallback', () => {
     await signInWithGoogle();
 
     expect(mockCallback).toHaveBeenCalledTimes(1);
+    expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith(
+      expect.objectContaining({
+        options: expect.objectContaining({
+          redirectTo: expect.not.stringContaining('popup=1'),
+        }),
+      })
+    );
   });
 
-  it('no ejecuta el hook globalBeforeRedirect si window.open es exitoso (popup abierto)', async () => {
+  it('asigna popup.location.href y pasa ?popup=1 cuando window.open es exitoso (popup abierto)', async () => {
     const mockCallback = vi.fn().mockResolvedValue(undefined);
     setGlobalBeforeRedirect(mockCallback);
+
+    const mockPopup = { location: { href: '' }, close: vi.fn() };
+    window.open = vi.fn().mockReturnValue(mockPopup);
 
     vi.mocked(supabase.auth.signInWithOAuth).mockResolvedValue({
       data: { url: 'https://accounts.google.com/oauth', provider: 'google' },
       error: null,
     } as any);
 
-    // Mock popup exitoso
-    window.open = vi.fn().mockReturnValue({ focus: vi.fn() } as any);
-
     await signInWithGoogle();
 
     expect(mockCallback).not.toHaveBeenCalled();
+    expect(mockPopup.location.href).toBe('https://accounts.google.com/oauth');
+    expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith(
+      expect.objectContaining({
+        options: expect.objectContaining({
+          redirectTo: expect.stringContaining('popup=1'),
+        }),
+      })
+    );
   });
 });

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { UserProfile } from '../../../types/user';
 import { supabase } from '../lib/supabaseClient';
-import { getCurrentProfile, capturarConexionDriveSiCorresponde, signInWithGoogle, logout } from './authService';
+import { getCurrentProfile, signInWithGoogle, logout } from './authService';
 
 interface AuthContextType {
   currentProfile: UserProfile | null;
@@ -40,31 +40,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    // If popup completed login, it might close itself or we might check here
-    if (window.opener && window.name === 'google-oauth-popup') {
-      supabase?.auth.getSession().then(({ data }) => {
-        if (data?.session) {
-          window.close();
-        }
-      });
-    }
-
     refreshProfile();
 
-    if (supabase) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        if (event === 'SIGNED_IN') {
-           capturarConexionDriveSiCorresponde(session);
+    // Sincronización entre pestañas y popup usando BroadcastChannel
+    let channel: BroadcastChannel | null = null;
+    try {
+      channel = new BroadcastChannel('leecv-auth');
+      channel.onmessage = (event) => {
+        if (event.data?.type === 'AUTH_COMPLETE') {
+          refreshProfile();
         }
+      };
+    } catch (e) {
+      // ignore
+    }
+
+    // Fallback con evento storage para navegadores que no soportan BroadcastChannel
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'leecv_auth_signal') {
+        refreshProfile();
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    if (supabase) {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_OUT') {
            refreshProfile();
-           if (window.opener && window.name === 'google-oauth-popup' && event === 'SIGNED_IN') {
-             window.close();
-           }
         }
       });
-      return () => subscription.unsubscribe();
+      return () => {
+        subscription.unsubscribe();
+        if (channel) channel.close();
+        window.removeEventListener('storage', handleStorage);
+      };
     }
+
+    return () => {
+      if (channel) channel.close();
+      window.removeEventListener('storage', handleStorage);
+    };
   }, []);
 
   return (
