@@ -23,7 +23,16 @@ const RefundPolicyPage = lazy(() => import('../modules/legal/RefundPolicyPage'))
 const AuthCallbackScreen = lazy(() => import('../shared/core/auth/AuthCallbackScreen'));
 
 const pathname = navigation.getPathname().toLowerCase();
-const isAuthCallbackRoute = pathname.startsWith('/auth/callback');
+const isAuthCallbackRoute = 
+  pathname.startsWith('/auth/callback') ||
+  (typeof window !== 'undefined' && (
+    window.name === 'google-oauth-popup' ||
+    window.location.search.includes('popup=1') ||
+    window.location.hash.includes('access_token=') ||
+    window.location.hash.includes('refresh_token=') ||
+    window.location.search.includes('error=') ||
+    window.location.hash.includes('error=')
+  ));
 const isAdminRoute = pathname.startsWith('/admin');
 const isDashboardRoute = pathname.startsWith('/dashboard');
 const isPrivacyRoute = pathname.startsWith('/privacidad') || pathname.startsWith('/privacy');

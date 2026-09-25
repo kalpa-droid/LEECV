@@ -41,7 +41,9 @@ describe('AuthCallbackScreen', () => {
     root = createRoot(document.getElementById('root')!);
     window.close = vi.fn();
     delete (window as any).location;
-    window.location = { search: '', href: '' } as any;
+    window.location = { search: '', href: '', hash: '' } as any;
+    window.name = '';
+    (window as any).opener = null;
   });
 
   afterEach(() => {
@@ -49,8 +51,9 @@ describe('AuthCallbackScreen', () => {
     vi.unstubAllGlobals();
   });
 
-  it('procesa la sesión, dispara la captura de Drive y llama window.close() si ?popup=1', async () => {
-    window.location.search = '?popup=1';
+  it('procesa la sesión, dispara la captura de Drive y llama window.close() si window.name === "google-oauth-popup"', async () => {
+    window.name = 'google-oauth-popup';
+    window.location.search = '';
     const mockSession = { user: { id: 'user-1' } };
     vi.mocked(supabase.auth.getSession).mockResolvedValue({
       data: { session: mockSession as any },

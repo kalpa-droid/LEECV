@@ -1,13 +1,15 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { setGlobalBeforeRedirect, signInWithGoogle } from '../src/shared/core/auth/authService';
+import { setGlobalBeforeRedirect, signInWithGoogle, getCurrentProfile } from '../src/shared/core/auth/authService';
 import { supabase } from '../src/shared/core/lib/supabaseClient';
 
 vi.mock('../src/shared/core/lib/supabaseClient', () => ({
   supabase: {
     auth: {
       signInWithOAuth: vi.fn(),
+      getUser: vi.fn(),
     },
+    from: vi.fn(),
   },
 }));
 
@@ -75,5 +77,50 @@ describe('authService - globalBeforeRedirect & popup fallback', () => {
         }),
       })
     );
+  });
+});
+
+describe('authService - getCurrentProfile fallback', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('crea un perfil de respaldo si la consulta a profiles falla', async () => {
+    const mockUser = {
+      id: 'test-user',
+      email: 'test@example.com',
+      user_metadata: { full_name: 'Test Name', avatar_url: 'test.jpg' },
+      created_at: new Date().toISOString()
+    };
+    
+    vi.mocked(supabase.auth.getUser).mockResolvedValue({ data: { user: mockUser }, error: null } as any);
+    
+    const mockSelect = vi.fn().mockReturnThis();
+    const mockEq = vi.fn().mockReturnThis();
+    const mockSingle = vi.fn().mockResolvedValue({ data: null, error: { message: 'Row not found' } });
+    
+    const mockUpsert = vi.fn().mockResolvedValue({ data: null, error: null });
+    
+    // Mock then() para que el Promise devuelto por upsert funcione sin bloquear
+    const mockUpsertPromise = Promise.resolve({ error: null });
+    
+    vi.mocked(supabase.from).mockImplementation((table: string) => {
+      if (table === 'profiles') {
+        return {
+          select: mockSelect,
+          eq: mockEq,
+          single: mockSingle,
+          upsert: vi.fn().mockReturnValue(mockUpsertPromise)
+        } as any;
+      }
+      return {} as any;
+    });
+
+    const profile = await getCurrentProfile();
+    
+    // Verificar que profile tenga los datos inyectados por el fallback
+    expect(profile).toBeDefined();
+    expect(profile?.name).toBe('Test Name');
+    expect(profile?.email).toBe('test@example.com');
   });
 });

@@ -6,10 +6,27 @@ import { navigation } from '../utils/navigation';
 export const AuthCallbackScreen: React.FC = () => {
   const [status, setStatus] = useState<'loading' | 'completed' | 'error'>('loading');
 
+  const params = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace('#', '?')); // URLSearchParams expects ?
+  const errorParam = params.get('error') || hashParams.get('error');
+  const errorDescription = params.get('error_description') || hashParams.get('error_description') || 'Hubo un problema al procesar el inicio de sesión.';
+
+  const isPopup = 
+    window.name === 'google-oauth-popup' ||
+    !!window.opener ||
+    params.get('popup') === '1' ||
+    window.location.hash.includes('access_token=') ||
+    window.location.hash.includes('error=');
+
   useEffect(() => {
     let mounted = true;
 
     async function processCallback() {
+      if (errorParam) {
+        if (mounted) setStatus('error');
+        return;
+      }
+
       try {
         if (!supabase) throw new Error('Supabase no está configurado');
         const { data: { session } } = await supabase.auth.getSession();
@@ -36,9 +53,6 @@ export const AuthCallbackScreen: React.FC = () => {
         if (!mounted) return;
         setStatus('completed');
 
-        const params = new URLSearchParams(window.location.search);
-        const isPopup = params.get('popup') === '1';
-
         if (isPopup) {
           window.close();
         } else {
@@ -55,7 +69,7 @@ export const AuthCallbackScreen: React.FC = () => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [errorParam, isPopup]);
 
   if (status === 'loading') {
     return (
@@ -70,13 +84,15 @@ export const AuthCallbackScreen: React.FC = () => {
 
   if (status === 'error') {
     return (
-      <div className="min-h-screen bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] flex flex-col items-center justify-center font-sans p-4">
-        <p className="text-sm font-medium text-[var(--color-accent-rose-bright)] mb-4">Hubo un problema al procesar el inicio de sesión.</p>
+      <div className="min-h-screen bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] flex flex-col items-center justify-center font-sans p-4 text-center">
+        <p className="text-sm font-medium text-[var(--color-accent-rose-bright)] mb-4">
+          {errorDescription.replace(/\+/g, ' ')}
+        </p>
         <button
-          onClick={() => navigation.goTo('/')}
+          onClick={() => isPopup ? window.close() : navigation.goTo('/')}
           className="px-4 py-2 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] rounded-xl text-sm font-semibold transition-colors cursor-pointer"
         >
-          Volver al inicio
+          {isPopup ? 'Cerrar ventana' : 'Volver al inicio'}
         </button>
       </div>
     );

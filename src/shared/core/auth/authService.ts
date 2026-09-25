@@ -133,7 +133,7 @@ export async function getCurrentProfile(): Promise<UserProfile | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: profile, error } = await supabase
+  let { data: profile, error } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)
@@ -141,13 +141,31 @@ export async function getCurrentProfile(): Promise<UserProfile | null> {
 
   if (error) {
     console.error('Error leyendo perfil:', error);
-    return null;
+    
+    // Crear fallback y hacer upsert
+    const fallbackProfile = {
+      id: user.id,
+      email: user.email || '',
+      full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Usuario',
+      avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || '',
+      drive_connected: false,
+      created_at: user.created_at || new Date().toISOString(),
+    };
+    
+    // Upsert asincrono para evitar bloquear el UI
+    supabase.from('profiles').upsert(fallbackProfile).then(({ error: upsertError }) => {
+      if (upsertError) {
+        console.error('Error creando perfil de respaldo:', upsertError);
+      }
+    });
+
+    profile = fallbackProfile;
   }
   
   return {
     ...profile,
-    avatar_url: user.user_metadata?.avatar_url,
-    name: user.user_metadata?.full_name || user.user_metadata?.name,
+    avatar_url: profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture,
+    name: profile?.full_name || user.user_metadata?.full_name || user.user_metadata?.name,
   } as UserProfile;
 }
 
