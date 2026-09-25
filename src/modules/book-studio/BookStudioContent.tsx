@@ -29,6 +29,7 @@ interface BookStudioContentProps {
   onNewCard?: () => void;
   onNewBook?: () => void;
   cycleUITheme: () => void;
+  onTabsChanged?: (tabs: any[]) => void;
 }
 
 export const BookStudioContent: React.FC<BookStudioContentProps> = ({

@@ -8,7 +8,7 @@ interface AuthContextType {
   isLoggedIn: boolean;
   loading: boolean;
   refreshProfile: () => Promise<void>;
-  login: () => Promise<void>;
+  login: () => Promise<any>;
   logout: () => Promise<void>;
   user: UserProfile | null;
 }
