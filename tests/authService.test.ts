@@ -19,11 +19,14 @@ describe('authService - globalBeforeRedirect & popup fallback', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setGlobalBeforeRedirect(null);
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
     window.open = originalOpen;
     setGlobalBeforeRedirect(null);
+    vi.runAllTimers();
+    vi.useRealTimers();
   });
 
   it('ejecuta el hook globalBeforeRedirect y pasa redirectTo sin ?popup=1 cuando window.open retorna null (popup bloqueado)', async () => {

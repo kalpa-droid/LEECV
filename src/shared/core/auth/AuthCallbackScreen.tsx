@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { capturarConexionDriveSiCorresponde } from './authService';
+import { capturarConexionDriveSiCorresponde, retrySignInInCurrentWindow } from './authService';
 import { navigation } from '../utils/navigation';
 
 export const AuthCallbackScreen: React.FC = () => {
@@ -83,17 +83,36 @@ export const AuthCallbackScreen: React.FC = () => {
   }
 
   if (status === 'error') {
+    const isStateExpired = errorDescription.toLowerCase().includes('oauth state has expired') || errorDescription.toLowerCase().includes('timeout');
+    const displayError = isStateExpired 
+      ? 'El tiempo para iniciar sesión expiró o la ventana estuvo abierta demasiado tiempo.' 
+      : errorDescription.replace(/\+/g, ' ');
+
     return (
       <div className="min-h-screen bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] flex flex-col items-center justify-center font-sans p-4 text-center">
         <p className="text-sm font-medium text-[var(--color-accent-rose-bright)] mb-4">
-          {errorDescription.replace(/\+/g, ' ')}
+          {displayError}
         </p>
-        <button
-          onClick={() => isPopup ? window.close() : navigation.goTo('/')}
-          className="px-4 py-2 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] rounded-xl text-sm font-semibold transition-colors cursor-pointer"
-        >
-          {isPopup ? 'Cerrar ventana' : 'Volver al inicio'}
-        </button>
+        <div className="flex flex-col gap-3 items-center">
+          {isStateExpired && (
+            <button
+              onClick={() => retrySignInInCurrentWindow().catch(console.error)}
+              className="px-4 py-2 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] rounded-xl text-sm font-semibold transition-colors cursor-pointer w-full max-w-xs"
+            >
+              Reintentar con Google
+            </button>
+          )}
+          <button
+            onClick={() => isPopup ? window.close() : navigation.goTo('/')}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors cursor-pointer w-full max-w-xs ${
+              isStateExpired 
+                ? 'bg-transparent border-2 border-[var(--ui-text-secondary)] text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-surface)]' 
+                : 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
+            }`}
+          >
+            {isPopup ? 'Cerrar ventana' : 'Volver al inicio'}
+          </button>
+        </div>
       </div>
     );
   }
