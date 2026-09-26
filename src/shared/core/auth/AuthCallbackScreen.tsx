@@ -3,6 +3,35 @@ import { supabase } from '../lib/supabaseClient';
 import { capturarConexionDriveSiCorresponde, retrySignInInCurrentWindow } from './authService';
 import { navigation } from '../utils/navigation';
 
+const parseAuthError = (error: string, description: string): { message: string, canRetry: boolean } => {
+  const desc = description.toLowerCase();
+  const err = error.toLowerCase();
+  
+  if (desc.includes('unable to exchange external code') || err === 'server_error') {
+    return {
+      message: 'No pudimos verificar tu inicio de sesión con Google. Por favor, intentá nuevamente.',
+      canRetry: true
+    };
+  }
+  if (desc.includes('oauth state has expired') || desc.includes('timeout')) {
+    return {
+      message: 'El tiempo para iniciar sesión expiró o la ventana estuvo abierta demasiado tiempo.',
+      canRetry: true
+    };
+  }
+  if (desc.includes('access_denied') || err === 'access_denied') {
+    return {
+      message: 'Se canceló el inicio de sesión o no se otorgaron los permisos necesarios.',
+      canRetry: true
+    };
+  }
+  
+  return {
+    message: description.replace(/\+/g, ' ') || 'Error desconocido de autenticación.',
+    canRetry: true
+  };
+};
+
 export const AuthCallbackScreen: React.FC = () => {
   const [status, setStatus] = useState<'loading' | 'completed' | 'error'>('loading');
 
@@ -83,10 +112,7 @@ export const AuthCallbackScreen: React.FC = () => {
   }
 
   if (status === 'error') {
-    const isStateExpired = errorDescription.toLowerCase().includes('oauth state has expired') || errorDescription.toLowerCase().includes('timeout');
-    const displayError = isStateExpired 
-      ? 'El tiempo para iniciar sesión expiró o la ventana estuvo abierta demasiado tiempo.' 
-      : errorDescription.replace(/\+/g, ' ');
+    const { message: displayError, canRetry } = parseAuthError(errorParam || '', errorDescription);
 
     return (
       <div className="min-h-screen bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] flex flex-col items-center justify-center font-sans p-4 text-center">
@@ -94,7 +120,7 @@ export const AuthCallbackScreen: React.FC = () => {
           {displayError}
         </p>
         <div className="flex flex-col gap-3 items-center">
-          {isStateExpired && (
+          {canRetry && (
             <button
               onClick={() => retrySignInInCurrentWindow().catch(console.error)}
               className="px-4 py-2 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] rounded-xl text-sm font-semibold transition-colors cursor-pointer w-full max-w-xs"
@@ -103,9 +129,16 @@ export const AuthCallbackScreen: React.FC = () => {
             </button>
           )}
           <button
-            onClick={() => isPopup ? window.close() : navigation.goTo('/')}
+            onClick={() => {
+              if (isPopup) {
+                window.close();
+              } else {
+                navigation.cleanQueryParams();
+                navigation.goTo('/');
+              }
+            }}
             className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors cursor-pointer w-full max-w-xs ${
-              isStateExpired 
+              canRetry 
                 ? 'bg-transparent border-2 border-[var(--ui-text-secondary)] text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-surface)]' 
                 : 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
             }`}

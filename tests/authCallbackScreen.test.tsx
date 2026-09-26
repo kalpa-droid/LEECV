@@ -22,6 +22,7 @@ vi.mock('../src/shared/core/auth/authService', () => ({
 vi.mock('../src/shared/core/utils/navigation', () => ({
   navigation: {
     goTo: vi.fn(),
+    cleanQueryParams: vi.fn(),
   },
 }));
 
@@ -93,6 +94,44 @@ describe('AuthCallbackScreen', () => {
 
     expect(navigation.goTo).toHaveBeenCalledWith('/');
     expect(window.close).not.toHaveBeenCalled();
+    root.unmount();
+  });
+
+  it('traduce el error "Unable to exchange external code" y muestra el botón de reintento', async () => {
+    window.location.search = '?error=server_error&error_description=Unable+to+exchange+external+code:+4/0A';
+    
+    await act(async () => {
+      root.render(<AuthCallbackScreen />);
+    });
+    await flush();
+
+    expect(document.body.textContent).toContain('No pudimos verificar tu inicio de sesión con Google. Por favor, intentá nuevamente.');
+    expect(document.body.textContent).toContain('Reintentar con Google');
+    root.unmount();
+  });
+
+  it('limpia los query params al volver al inicio si no es popup', async () => {
+    window.location.search = '?error=access_denied';
+    window.name = '';
+    
+    const cleanQueryParamsSpy = vi.spyOn(navigation, 'cleanQueryParams');
+
+    await act(async () => {
+      root.render(<AuthCallbackScreen />);
+    });
+    await flush();
+
+    const returnBtn = Array.from(document.querySelectorAll('button')).find(
+      (b) => b.textContent === 'Volver al inicio'
+    );
+    expect(returnBtn).toBeTruthy();
+
+    await act(async () => {
+      returnBtn!.click();
+    });
+
+    expect(cleanQueryParamsSpy).toHaveBeenCalled();
+    expect(navigation.goTo).toHaveBeenCalledWith('/');
     root.unmount();
   });
 });
