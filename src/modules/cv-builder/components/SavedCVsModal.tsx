@@ -24,6 +24,7 @@ import {
 import { OpenTab } from '../../../shared/core/documents/tabStore';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { useToast } from '../../../shared/core/ui/Toast';
+import { useAuth } from '../../../shared/core/auth/AuthProvider';
 import { InfoHint } from '../../../shared/core/ui/InfoHint';
 import { button, elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { Modal } from '../../../shared/core/ui/Modal';
@@ -51,6 +52,7 @@ export default function SavedCVsModal({
   onDocumentClosed,
   onGenerateCoverLetterFromCV,
 }: SavedCVsModalProps) {
+  const { user: profile, login } = useAuth();
   const { confirm } = useConfirm();
   const { showSuccess, showError } = useToast();
   const [savedList, setSavedList] = useState<any[]>([]);
@@ -170,6 +172,46 @@ export default function SavedCVsModal({
       }
     >
       <div className={`space-y-4 p-4 bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] rounded-[${radius.modal}]`}>
+        {/* Auth Banner */}
+        {profile ? (
+          <div className={`p-4 rounded-[${radius.modal}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] flex flex-col sm:flex-row items-center justify-between gap-3`}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] flex items-center justify-center font-bold text-lg uppercase flex-shrink-0">
+                {profile.email?.charAt(0)?.toUpperCase() || 'U'}
+              </div>
+              <div>
+                <p className="font-bold text-sm text-[var(--ui-text-primary)]">{profile.email}</p>
+                <p className="text-xs text-[var(--ui-text-secondary)] mt-0.5">
+                  {profile.drive_connected ? 'Google Drive sincronizado ✅' : 'Google Drive no vinculado ⚪'}
+                </p>
+              </div>
+            </div>
+            {!profile.drive_connected && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onOpenCloudStatus();
+                }}
+                className={`${button.primary} px-3 py-1.5 text-xs font-bold whitespace-nowrap`}
+              >
+                Vincular Drive
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className={`p-4 rounded-[${radius.modal}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] flex flex-col sm:flex-row items-center justify-between gap-3`}>
+            <div className="text-sm text-[var(--ui-text-primary)] font-bold">
+              Iniciá sesión con tu cuenta de Google para respaldar tus CVs en Drive
+            </div>
+            <button
+              onClick={login}
+              className={`${button.primary} px-4 py-2 text-xs font-bold whitespace-nowrap`}
+            >
+              Iniciar sesión
+            </button>
+          </div>
+        )}
+
         {/* Action Header: Apertura e Importación */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className={`p-3 rounded-[${radius.modal}] bg-[var(--color-secondary-muted)]/50 hover:bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 hover:border-[var(--color-secondary-base)]/60 transition cursor-pointer flex items-center gap-3 group`}>

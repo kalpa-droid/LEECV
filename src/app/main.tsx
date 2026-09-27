@@ -53,8 +53,23 @@ const RootComponent = isAuthCallbackRoute
   ? RefundPolicyPage
   : App;
 
-import { AuthProvider } from '../shared/core/auth/AuthProvider';
-import { ToastProvider } from '../shared/core/ui/Toast';
+import { AuthProvider, useAuth } from '../shared/core/auth/AuthProvider';
+import { ToastProvider, useToast } from '../shared/core/ui/Toast';
+
+function GlobalLoginToastManager() {
+  const { user } = useAuth();
+  const { showSuccess } = useToast();
+  const prevUserRef = React.useRef(user);
+
+  React.useEffect(() => {
+    if (!prevUserRef.current && user?.email) {
+      showSuccess(`Ingresaste como ${user.email}`);
+    }
+    prevUserRef.current = user;
+  }, [user, showSuccess]);
+
+  return null;
+}
 
 const rootElement = document.getElementById('root');
 if (rootElement) {
@@ -63,6 +78,7 @@ if (rootElement) {
       <ErrorBoundary>
         <AuthProvider>
           <ToastProvider>
+            <GlobalLoginToastManager />
             <Suspense fallback={
               <div className="min-h-screen bg-[var(--color-neutral-text-primary)] text-white flex items-center justify-center font-bold">
                 Cargando LEECV...

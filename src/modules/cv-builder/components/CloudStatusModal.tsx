@@ -162,6 +162,11 @@ export default function CloudStatusModal({
             <h4 className="font-extrabold text-xs text-[var(--ui-text-primary)]">
               {profile?.drive_connected ? 'Cuenta vinculada ✅' : 'Vinculá tu correo para publicar'}
             </h4>
+            {profile?.email && (
+              <p className="text-[11px] font-bold text-[var(--ui-text-primary)] mb-0.5">
+                {profile.email}
+              </p>
+            )}
             <p className="text-[11px] text-[var(--ui-text-secondary)]">
               {profile?.drive_connected
                 ? 'Tu cuenta de Google está conectada. Puedes publicar y respaldar tu CV.'
