@@ -30,6 +30,7 @@ const mockCvData = {
     nacionalidad: 'Argentina',
     quote: 'Educadora e Investigadora'
   },
+  hiddenFields: [],
   frase: 'Cita inspiradora de prueba',
   summary: 'Profesional altamente calificada con experiencia en gestión educativa y coordinación pedagógica.',
   objective: 'Liderar proyectos educativos innovadores.',
