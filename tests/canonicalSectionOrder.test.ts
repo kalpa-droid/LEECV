@@ -147,6 +147,7 @@ describe('Canonical Section Order Engine & Section Fixes', () => {
   it('10. cvDataToContentSections ubica datos-personales antes de la firma al combinar primaria y secundaria', () => {
     const cvData = {
       personalInfo: { fullName: 'Juan Pérez', dni: '12345678' },
+      hiddenFields: [],
       signature: { signerName: 'Juan Pérez', dataUrl: 'data:image/png;base64,123' },
       layout: {
         sectionOrders: {
