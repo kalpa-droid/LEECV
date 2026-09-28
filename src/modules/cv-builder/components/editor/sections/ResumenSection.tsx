@@ -12,16 +12,17 @@ interface ResumenSectionProps {
 
 export const ResumenSection: React.FC<ResumenSectionProps> = ({ cvData, setCvData }) => {
   const handleGenerateSummary = async () => {
-    const res = await executeAiTask<{ improvedSummary: string }>({
+    const jobTargetStr = cvData.jobTarget?.jobDescription || cvData.jobTarget?.jobTitle || 'No especificada';
+    const res = await executeAiTask<{ summary: string }>({
       taskId: 'generate_summary',
       payload: { 
-        jobTargetText: 'No especificada', // Idealmente podríamos pasarlo si estuviera en cvData
+        jobTargetText: jobTargetStr,
         currentSummary: cvData.summary || ''
       },
       cvData,
       temperature: 0.7
     });
-    return res.data.improvedSummary;
+    return res.data.summary;
   };
 
   return (

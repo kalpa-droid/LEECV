@@ -54,9 +54,14 @@ REGLA 3: Párrafo 3 (Cierre) - Llamada a la acción profesional para una entrevi
 REGLA 4: NO incluyas pretensiones salariales.
 Debes devolver un JSON válido con esta estructura:
 {
-  "paragraph1": "texto",
-  "paragraph2": "texto",
-  "paragraph3": "texto",
+  "jobTitle": "Título de la vacante extraído del aviso (o null)",
+  "companyName": "Nombre de la empresa extraído del aviso (o null)",
+  "recipientName": "Nombre del destinatario extraído del aviso (o null)",
+  "salutation": "Estimado/a...",
+  "hookParagraph": "texto del gancho",
+  "evidenceParagraph": "texto con los logros",
+  "closingParagraph": "texto del cierre",
+  "signoff": "Atentamente,",
   "missingDataWarning": "Aviso si tuviste que omitir algo de la vacante porque no está en el CV (o null)"
 }
 

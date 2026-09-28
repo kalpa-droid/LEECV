@@ -37,7 +37,7 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
   const [isImporting, setIsImporting] = useState(false);
   const [isExportingDocx, setIsExportingDocx] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error' | 'warning'; text: string } | null>(null);
   const [savedCVs, setSavedCVs] = useState<any[]>([]);
 
   useEffect(() => {
@@ -206,10 +206,17 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
         }
       });
 
-      setFeedback({
-        type: 'success',
-        text: `¡Carta generada con éxito usando ${res.providerUsed.toUpperCase()}! Te quedan ${res.remainingCredits} créditos.`
-      });
+      if (parsed.missingDataWarning) {
+        setFeedback({
+          type: 'warning',
+          text: `¡Carta generada! Aviso de la IA: ${parsed.missingDataWarning} (Restan ${res.remainingCredits} créditos)`
+        });
+      } else {
+        setFeedback({
+          type: 'success',
+          text: `¡Carta generada con éxito usando ${res.providerUsed.toUpperCase()}! Te quedan ${res.remainingCredits} créditos.`
+        });
+      }
       if (onRefreshCredits) onRefreshCredits();
     } catch (err: any) {
       setFeedback({
@@ -227,6 +234,8 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
         <div className={`mb-6 p-4 rounded-[12px] border flex items-center gap-3 text-xs ${
           feedback.type === 'success'
             ? 'bg-[var(--color-status-success-muted)] border-[var(--ui-border)] text-[var(--color-status-success-text)]'
+            : feedback.type === 'warning'
+            ? 'bg-[var(--color-status-warning-muted)] border-[var(--color-status-warning-base)] text-[var(--color-status-warning-text)]'
             : 'bg-[var(--color-status-danger-muted)] border-[var(--ui-border)] text-[var(--color-status-danger-text)]'
         }`}>
           {feedback.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
