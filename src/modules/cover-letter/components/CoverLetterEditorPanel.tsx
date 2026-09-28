@@ -183,6 +183,7 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
         evidenceParagraph: string;
         closingParagraph: string;
         signoff: string;
+        missingDataWarning?: string;
       }>({
         taskId: 'cover_letter',
         payload: {

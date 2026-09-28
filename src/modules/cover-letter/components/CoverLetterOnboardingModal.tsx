@@ -47,6 +47,7 @@ export const CoverLetterOnboardingModal: React.FC<CoverLetterOnboardingModalProp
         evidenceParagraph: string;
         closingParagraph: string;
         signoff: string;
+        missingDataWarning?: string;
       }>({
         taskId: 'cover_letter',
         payload: {
