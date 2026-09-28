@@ -39,8 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     systemPrompt: String(systemPrompt),
     userPrompt: String(userPrompt),
     maxTokens: Number(maxTokens) || 1200,
-    temperature: Number(temperature) ?? 0.7,
-    responseFormat: 'json_object' // Idealmente si el provider lo soporta, aunque lo podemos manejar en el prompt.
+    temperature: Number(temperature) ?? 0.7
   };
 
   let completionText: string | null = null;

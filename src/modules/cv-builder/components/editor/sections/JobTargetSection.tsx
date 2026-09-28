@@ -3,52 +3,25 @@ import { Briefcase, Target, Plus, CheckCircle, AlertCircle } from 'lucide-react'
 import { Field } from '../../../../../shared/core/ui/Field';
 import { radius } from '../../../../../shared/core/uiDesignSystem';
 
-// --- UTILIDAD DE EXTRACCIÓN (Local, sin IA) ---
-function extractKeywords(text: string) {
-  if (!text) return [];
-  // Normalizar acentos y pasar a minúsculas
-  const normalized = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  
-  // Palabras comunes a ignorar (stopwords)
-  const stopwords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'pero', 'si', 'no', 'en', 'para', 'con', 'por', 'de', 'del', 'al', 'a', 'su', 'sus', 'te', 'se', 'lo', 'que', 'como', 'mas', 'muy', 'este', 'esta', 'estos', 'estas', 'es', 'son', 'ser', 'estar', 'tiene', 'tienen', 'hacer', 'años', 'experiencia', 'busqueda', 'buscamos', 'importante', 'empresa', 'zona', 'lunes', 'viernes', 'horario', 'sueldo', 'remuneracion', 'puesto', 'cargo', 'requisitos', 'excluyente', 'deseable', 'secundario', 'completo']);
-  
-  // Extraer palabras que parecen herramientas, skills, o títulos (alfanuméricas, más de 3 letras)
-  const words = normalized.match(/\b[a-z0-9#+]{3,}\b/g) || [];
-  
-  const freq: Record<string, number> = {};
-  for (const w of words) {
-    if (!stopwords.has(w) && !/^\d+$/.test(w)) { // Ignorar números solos
-      freq[w] = (freq[w] || 0) + 1;
-    }
-  }
-  
-  // Ordenar por frecuencia y quedarnos con las 15 más repetidas/relevantes
-  return Object.entries(freq)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 15)
-    .map(e => e[0]);
-}
-
-// --- UTILIDAD DE BÚSQUEDA EN CV ---
-function checkKeywordInCV(keyword: string, cvData: any): boolean {
-  const cvText = JSON.stringify(cvData).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  return cvText.includes(keyword);
-}
+import { extractJobData, checkKeywordInCV, ExtractedJobData } from '../../../../../shared/core/utils/keywordExtractor';
 
 export const JobTargetSection = ({ cvData, setCvData }: any) => {
   const jobTarget = cvData.jobTarget || {};
   
+  const [extractedData, setExtractedData] = useState<ExtractedJobData | null>(null);
   const [extractedKeywords, setExtractedKeywords] = useState<{word: string, found: boolean}[]>([]);
 
   useEffect(() => {
     if (jobTarget.jobDescription) {
-      const keywords = extractKeywords(jobTarget.jobDescription);
-      const matched = keywords.map(kw => ({
+      const data = extractJobData(jobTarget.jobDescription);
+      setExtractedData(data);
+      const matched = data.keywords.map(kw => ({
         word: kw,
         found: checkKeywordInCV(kw, cvData)
       }));
       setExtractedKeywords(matched);
     } else {
+      setExtractedData(null);
       setExtractedKeywords([]);
     }
   }, [jobTarget.jobDescription, cvData]);
@@ -100,6 +73,21 @@ export const JobTargetSection = ({ cvData, setCvData }: any) => {
           />
         </div>
       </div>
+
+      {extractedData && (extractedData.yearsOfExperience !== null || extractedData.degree !== null) && (
+        <div className="flex gap-4 mt-4 p-3 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 rounded-[var(--ui-radius-card)]">
+          {extractedData.yearsOfExperience !== null && (
+            <div className="text-sm">
+              <span className="font-semibold">Exp. Requerida:</span> {extractedData.yearsOfExperience} años
+            </div>
+          )}
+          {extractedData.degree !== null && (
+            <div className="text-sm">
+              <span className="font-semibold">Nivel Educativo:</span> {extractedData.degree}
+            </div>
+          )}
+        </div>
+      )}
 
       {extractedKeywords.length > 0 && (
         <div className="space-y-3 mt-6 pt-4 border-t border-[var(--color-neutral-border)]">
