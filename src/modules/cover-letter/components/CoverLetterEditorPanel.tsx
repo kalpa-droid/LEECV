@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Sparkles, Upload, FileText, CheckCircle2, AlertCircle, RefreshCw, Download, CreditCard } from 'lucide-react';
 import type { CoverLetterTab } from './CoverLetterDock';
 import type { CoverLetterData } from '../../../shared/core/pdf-engine/layers/records/coverLetterDataAdapter';
-import { generateAiCompletion } from '../../../shared/core/ai/aiClient';
+import { executeAiTask } from '../../../shared/core/ai/aiClient';
 import { COVER_LETTER_PRESETS } from '../../../shared/core/presets/coverLetterPresetCatalog';
 import { PAGE_SIZES } from '../../../shared/core/pdf-engine/layers/page/pageSizes';
 import { importLinkedinArchive } from '../../../shared/core/importers/linkedinArchiveImporter';
@@ -176,61 +176,24 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
     setFeedback(null);
 
     const j = data.jobTarget || {};
-    const p = data.personalInfo || {};
-    const roles: any[] = (data as any).roles || [];
-    const profession: any[] = (data as any).profession || [];
-
-    const expStr = roles.length > 0
-      ? roles.map(r => `- ${r.role || r.title || 'Puesto'} en ${r.company || 'Empresa'} (${r.year || 'Año'}): ${r.details || ''}`).join('\n')
-      : 'Sin experiencia previa registrada.';
-
-    const eduStr = profession.length > 0
-      ? profession.map(e => `- ${e.degree || e.title || 'Título'} en ${e.institution || 'Institución'} (${e.year || ''})`).join('\n')
-      : 'Sin títulos o estudios registrados.';
-
-    const systemPrompt = `Eres un experto redactor de cartas de presentación profesionales en español. 
-Tu objetivo es redactar una carta de presentación altamente adaptada y convincente basada en los datos del candidato, su experiencia laboral previa y la descripción de la vacante.
-Debes devolver el resultado con exactamente 3 párrafos en formato JSON estructurado con las siguientes claves:
-{
-  "salutation": "Estimado/a responsable de selección,",
-  "hookParagraph": "Primer párrafo de gancho destacando entusiasmo y encaje con el puesto.",
-  "evidenceParagraph": "Segundo párrafo de evidencia conectando experiencia previa y logros relevantes del candidato.",
-  "closingParagraph": "Tercer párrafo de cierre solicitando entrevista.",
-  "signoff": "Atentamente,"
-}
-No devuelvas marcado markdown alrededor del JSON. Solo el objeto JSON plano.`;
-
-    const userPrompt = `
-DATOS DEL CANDIDATO:
-- Nombre: ${p.fullName || 'Candidato'}
-- Email: ${p.email || ''}
-- Ubicación: ${p.cityProvince || ''}
-
-TRAYECTORIA Y EXPERIENCIA LABORAL:
-${expStr}
-
-FORMACIÓN ACADÉMICA Y TÍTULOS:
-${eduStr}
-
-VACANTE OBJETIVO:
-- Puesto: ${j.jobTitle || 'Profesional'}
-- Empresa: ${j.companyName || 'Empresa'}
-- Reclutador: ${j.recipientName || 'Responsable de Selección'}
-- Descripción del Puesto:
-${j.jobDescription || 'Sin descripción detallada. Generar carta profesional genérica pero relevante.'}
-
-TONO DESEADO: ${tone.toUpperCase()}
-`;
-
     try {
-      const res = await generateAiCompletion({
-        systemPrompt,
-        userPrompt,
+      const res = await executeAiTask<{
+        salutation: string;
+        hookParagraph: string;
+        evidenceParagraph: string;
+        closingParagraph: string;
+        signoff: string;
+      }>({
+        taskId: 'cover_letter',
+        payload: {
+          jobTargetText: j.jobDescription || j.jobTitle || 'No se especificó vacante.',
+          tone
+        },
+        cvData: data as any,
         temperature: 0.7
       });
 
-      let jsonClean = res.text.replace(/```json/g, '').replace(/```/g, '').trim();
-      const parsed = JSON.parse(jsonClean);
+      const parsed = res.data;
 
       onChangeData({
         ...data,

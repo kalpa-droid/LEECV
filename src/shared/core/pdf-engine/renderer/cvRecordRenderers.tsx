@@ -137,6 +137,9 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
     const { sectorRolesColor, surfaceHex, preset, styles } = ctx;
     const f = rec.fields;
     const itemSpec = resolveUnifiedTextSpec('body', surfaceHex, sectorRolesColor, preset.typography, 'skill');
+    const name = String(f.name || '');
+    const level = f.level ? ` - ${f.level}` : '';
+    const label = `${name}${level}`;
     return (
       <Text
         key={rec.id}
@@ -150,7 +153,7 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
           }
         ]}
       >
-        • {String(f.name || '')}
+        • {label}
       </Text>
     );
   },

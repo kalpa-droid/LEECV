@@ -30,21 +30,33 @@ export const CompetenciasSection: React.FC<CompetenciasSectionProps> = ({ cvData
         emptyItem="Nueva Competencia"
         itemTitlePrefix="Competencia"
         getItemName={(item: any, idx: number) => typeof item === 'string' ? item : (item?.name || item?.title || `Competencia #${idx + 1}`)}
-        renderItem={(item: any, idx: number, updateField: (field: string, val: any) => void) => (
-          <Field
-            label={`Competencia Clave #${idx + 1}`}
-            value={typeof item === 'string' ? item : (item?.name || '')}
-            onChange={(e: any) => {
-              const val = e.target.value;
-              setCvData((prev: any) => {
-                const currentSkills = [...(Array.isArray(prev.skills) ? prev.skills : [])];
-                currentSkills[idx] = val;
-                return { ...prev, skills: currentSkills };
-              });
-            }}
-            placeholder="Ej: Pedagogía Dialógica, Alfabetización Digital, Liderazgo de Equipos..."
-          />
-        )}
+        renderItem={(item: any, idx: number, updateField: (field: string, val: any) => void) => {
+          const val = typeof item === 'string' ? item : (item?.name || '');
+          const isTooLong = val.trim().split(/\s+/).length > 2;
+
+          return (
+            <div className="space-y-1">
+              <Field
+                label={`Competencia Clave #${idx + 1}`}
+                value={val}
+                onChange={(e: any) => {
+                  const newVal = e.target.value;
+                  setCvData((prev: any) => {
+                    const currentSkills = [...(Array.isArray(prev.skills) ? prev.skills : [])];
+                    currentSkills[idx] = newVal;
+                    return { ...prev, skills: currentSkills };
+                  });
+                }}
+                placeholder="Ej: Liderazgo, Proactividad, Negociación..."
+              />
+              {isTooLong && val.trim().length > 0 && (
+                <p className="text-[10px] text-[var(--color-danger-base)] mt-1 font-medium">
+                  💡 Los ATS prefieren competencias de 1 o 2 palabras máximo. Evitá frases largas.
+                </p>
+              )}
+            </div>
+          );
+        }}
         manualAdjustment={<SectionManualAdjustment sectionId="competencias" cvData={cvData} setCvData={setCvData} />}
       />
     </div>

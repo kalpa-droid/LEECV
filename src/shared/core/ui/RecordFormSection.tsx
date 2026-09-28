@@ -9,7 +9,7 @@ import { Info } from 'lucide-react';
 import { radius } from '../uiDesignSystem';
 import { SectionPositionControl } from './SectionPositionControl';
 import { AIButton } from './AIButton';
-import { generateAiCompletion } from '../ai/aiClient';
+import { executeAiTask } from '../ai/aiClient';
 
 interface RecordFormSectionProps {
   sectionKey: string;
@@ -20,7 +20,7 @@ interface RecordFormSectionProps {
   setCvData: React.Dispatch<React.SetStateAction<any>>;
   fieldName: string;
   itemTitlePrefix: string;
-  helpText?: string;
+  helpText?: React.ReactNode;
   /**
    * Para secciones creadas por la persona desde "Nueva Sección": la lista de
    * campos la eligió el usuario, no viene de BUILTIN_RECORD_KINDS. Cuando
@@ -118,13 +118,18 @@ export function RecordFormSection({
                   onGenerate={async () => {
                     const title = item.tituloOGrado || item.title || item.cargo || 'Profesional';
                     const company = item.institucion || item.company || item.empresa || '';
-                    const res = await generateAiCompletion({
-                      systemPrompt: 'Eres un experto redactor de CVs enfocado en logros cuantificables (STAR / XYZ). Genera 2 a 3 logros profesionales clave en español con formato de lista corta (•).',
-                      userPrompt: `Puesto: ${title}. Empresa: ${company}.`,
+                    const res = await executeAiTask<{ improvedBullet: string; missingMetrics: string | null }>({
+                      taskId: 'improve_bullet',
+                      payload: { role: title, company: company, bulletText: currentValue || '' },
                       maxTokens: 250,
                       temperature: 0.7
                     });
-                    return res.text;
+                    
+                    if (res.data.missingMetrics) {
+                      // Se podría mostrar un toast o alerta, pero por ahora lo inyectamos o devolvemos el texto mejorado
+                      console.info('Métricas faltantes sugeridas por IA:', res.data.missingMetrics);
+                    }
+                    return res.data.improvedBullet;
                   }}
                   onSuccess={(generatedText) => {
                     const newValue = currentValue ? `${currentValue}\n\n${generatedText}` : generatedText;

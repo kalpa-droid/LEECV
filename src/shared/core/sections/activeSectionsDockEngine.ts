@@ -40,7 +40,8 @@ export interface DockSectionItem {
 export const DOCK_SPECIAL_TABS = {
   addSection: { id: 'nueva_seccion', label: 'Sección', iconId: 'custom' },
   portada: { id: 'portada', label: 'Portada', iconId: 'portada' },
-  personal: { id: 'personales', label: 'Personal', iconId: 'personales' }
+  personal: { id: 'personales', label: 'Personal', iconId: 'personales' },
+  vacante: { id: 'vacante', label: 'Vacante', iconId: 'target' }
 };
 
 /**

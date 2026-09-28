@@ -36,7 +36,13 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
   } = cvData;
 
   const activeFormat = resolveActiveFormat(cvData);
-  const hiddenFieldsSet = new Set(activeFormat?.hiddenPersonalFields || []);
+  const defaultHiddenFields = ['dni', 'cuit', 'birthDate', 'nacionalidad', 'estadoCivil'];
+  const userHiddenFields = cvData?.hiddenFields ?? defaultHiddenFields;
+
+  const hiddenFieldsSet = new Set([
+    ...(activeFormat?.hiddenPersonalFields || []),
+    ...userHiddenFields
+  ]);
 
   const sortedEducation = sortByYearDesc(education);
   const sortedCourses = sortByYearDesc(coursesAndCertificates);
@@ -207,7 +213,8 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         id: `rec-hardskill-${idx}`,
         kind: 'skill',
         fields: {
-          name: typeof sk === 'string' ? sk : sk.name || sk.title || ''
+          name: typeof sk === 'string' ? sk : sk.name || sk.title || '',
+          level: typeof sk === 'string' ? '' : sk.level || sk.nivel || ''
         }
       }))
     });
@@ -239,7 +246,7 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         fields: {
           ...lang,
           idioma: lang.idioma || lang.language || lang.title || lang.name || '',
-          nivel: lang.nivel || lang.level || ''
+          nivel: lang.nivelDominio || lang.nivel || lang.level || ''
         }
       }))
     });

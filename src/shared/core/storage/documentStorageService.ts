@@ -164,24 +164,22 @@ export const saveDocumentInternal = async (
             updated_at: summaryRecord.updated_at
           });
           syncState = success ? 'synced' : 'pending';
+
+          // 4. Respaldo incremental en segundo plano a Google Drive
+          backupCvToGoogleDrive(fullDocObject).then(res => {
+            if (res.success) {
+              summaryRecord.driveSyncState = 'synced';
+            }
+          }).catch(err => {
+            console.warn('Advertencia en respaldo a Google Drive:', err);
+            reportSilentError(err, 'documentStorageService.saveDocumentInternal.driveBackup');
+          });
         }
       } catch (err) {
-        console.warn('Error conectando a Supabase:', err);
-        reportSilentError(err, 'documentStorageService.saveDocumentInternal.supabaseSync');
+        console.warn('Error conectando a Supabase o Drive:', err);
+        reportSilentError(err, 'documentStorageService.saveDocumentInternal.cloudSync');
         syncState = 'pending';
       }
-    }
-
-    // 4. Respaldo incremental en segundo plano a Google Drive
-    if (hasCapability(docTypeId, 'cloud_backup')) {
-      backupCvToGoogleDrive(fullDocObject).then(res => {
-        if (res.success) {
-          summaryRecord.driveSyncState = 'synced';
-        }
-      }).catch(err => {
-        console.warn('Advertencia en respaldo a Google Drive:', err);
-        reportSilentError(err, 'documentStorageService.saveDocumentInternal.driveBackup');
-      });
     }
 
     return { 

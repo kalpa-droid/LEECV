@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Sparkles, X, Loader2, FileText, CheckCircle2 } from 'lucide-react';
-import { generateAiCompletion } from '../../../shared/core/ai/aiClient';
+import { executeAiTask } from '../../../shared/core/ai/aiClient';
 import { button, radius } from '../../../shared/core/uiDesignSystem';
 import { useToast } from '../../../shared/core/ui/Toast';
 import type { CoverLetterData } from '../../../shared/core/pdf-engine/layers/records/coverLetterDataAdapter';
@@ -38,37 +38,26 @@ export const CoverLetterOnboardingModal: React.FC<CoverLetterOnboardingModalProp
         ? roles.map(r => `${r.role || r.title || 'Puesto'} en ${r.company || 'Empresa'}`).join(', ')
         : 'Candidato con perfil general';
 
-      const systemPrompt = `Eres un asistente de selección de personal y redactor de cartas profesionales.
-Analiza la siguiente oferta de trabajo y los datos del candidato para extraer los datos clave y redactar los 3 párrafos de la carta.
-Devuelve ÚNICAMENTE un objeto JSON estricto sin marcado markdown:
-{
-  "jobTitle": "Título del puesto identificado",
-  "companyName": "Nombre de la empresa",
-  "recipientName": "Responsable de selección o Estimado/a Responsable",
-  "salutation": "Estimado/a responsable de selección,",
-  "hookParagraph": "Párrafo de gancho (primer párrafo) conectando el interés en la empresa y el puesto.",
-  "evidenceParagraph": "Párrafo de evidencia (segundo párrafo) alineando la experiencia previa del candidato con los requisitos.",
-  "closingParagraph": "Párrafo de cierre (tercer párrafo) solicitando entrevista.",
-  "signoff": "Atentamente,"
-}`;
-
-      const userPrompt = `
-OFERTA DE EMPLEO / AVISO:
-${jobText}
-
-CANDIDATO:
-- Nombre: ${p.fullName || 'Candidato'}
-- Experiencia: ${expStr}
-`;
-
-      const res = await generateAiCompletion({
-        systemPrompt,
-        userPrompt,
+      const res = await executeAiTask<{
+        jobTitle: string;
+        companyName: string;
+        recipientName: string;
+        salutation: string;
+        hookParagraph: string;
+        evidenceParagraph: string;
+        closingParagraph: string;
+        signoff: string;
+      }>({
+        taskId: 'cover_letter',
+        payload: {
+          jobTargetText: jobText,
+          tone: 'professional' // Default tone for onboarding
+        },
+        cvData: data as any,
         temperature: 0.6
       });
 
-      const jsonClean = res.text.replace(/```json/g, '').replace(/```/g, '').trim();
-      const parsed = JSON.parse(jsonClean);
+      const parsed = res.data;
 
       onChangeData({
         ...data,

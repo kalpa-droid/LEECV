@@ -61,16 +61,26 @@ export const FIELD_CATALOG: Record<string, FieldDefinition> = {
   nivel: {
     id: 'nivel',
     label: 'Nivel / Dominio',
-    placeholder: 'Ej: Nivel Terciario / Superior, Avanzado (C1)',
+    placeholder: 'Ej: Nivel Terciario / Superior',
     type: 'text',
+    pdfRole: 'badge',
+    designHint: { colorOverride: 'accent' }
+  },
+  nivelDominio: {
+    id: 'nivelDominio',
+    label: 'Nivel de Dominio',
+    placeholder: 'Ej: Básico, Intermedio, Avanzado, Nativo',
+    type: 'select',
+    options: ['Básico', 'Intermedio', 'Avanzado', 'Experto', 'Nativo', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2', ''],
     pdfRole: 'badge',
     designHint: { colorOverride: 'accent' }
   },
   estado: {
     id: 'estado',
     label: 'Estado Académico / Situación',
-    placeholder: 'Ej: Graduado, En Curso (80% aprobado), Finalizado',
-    type: 'text',
+    placeholder: 'Ej: Graduado, En Curso...',
+    type: 'select',
+    options: ['Completo / Graduado', 'En curso', 'Abandonado / Incompleto', 'Título Intermedio', ''],
     pdfRole: 'badge',
     designHint: { colorOverride: 'accent' }
   },
@@ -246,12 +256,12 @@ export const BUILTIN_RECORD_KINDS = {
   course: {
     kind: 'course',
     label: 'Cursos y Capacitaciones',
-    defaultFields: ['tituloOGrado', 'institucion', 'periodo', 'cargaHoraria', 'modalidad', 'resolucion', 'url']
+    defaultFields: ['tituloOGrado', 'institucion', 'periodo', 'cargaHoraria', 'modalidad', 'descripcion', 'resolucion', 'url']
   },
   informatics: {
     kind: 'course',
     label: 'Informática y TICs',
-    defaultFields: ['tituloOGrado', 'institucion', 'nivel', 'descripcion']
+    defaultFields: ['tituloOGrado', 'institucion', 'nivelDominio', 'descripcion']
   },
   redes: {
     kind: 'social-link',
@@ -261,7 +271,7 @@ export const BUILTIN_RECORD_KINDS = {
   languages: {
     kind: 'languages',
     label: 'Idiomas & Nivel de Dominio',
-    defaultFields: ['idioma', 'nivel', 'institucion', 'descripcion']
+    defaultFields: ['idioma', 'nivelDominio', 'institucion', 'descripcion']
   },
   projects: {
     kind: 'projects',

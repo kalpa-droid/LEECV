@@ -21,6 +21,7 @@ import { ObjetivoSection } from './editor/sections/ObjetivoSection';
 import { PortafolioSection } from './editor/sections/PortafolioSection';
 import { HabilidadesSection } from './editor/sections/HabilidadesSection';
 import { FirmaSection } from './editor/sections/FirmaSection';
+import { JobTargetSection } from './editor/sections/JobTargetSection';
 import { FormatConfirmationModal, FormatApplicationMode } from './FormatConfirmationModal';
 import PersonalInfoSection from './editor/PersonalInfoSection';
 import { CardExtractSection } from './editor/sections/CardExtractSection';
@@ -210,6 +211,8 @@ export default function EditorPanel({
         {/* TAB: OBJETIVO PROFESIONAL */}
         {/* ========================================================================= */}
         {docType === 'cv' && activeTab === 'objetivo' && <ObjetivoSection cvData={cvData} setCvData={setCvData} />}
+
+        {docType === 'cv' && activeTab === 'vacante' && <JobTargetSection cvData={cvData} setCvData={setCvData} />}
 
         {docType === 'cv' && activeTab === 'logros' && <LogrosSection cvData={cvData} setCvData={setCvData} />}
 

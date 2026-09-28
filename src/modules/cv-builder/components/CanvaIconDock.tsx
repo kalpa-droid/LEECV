@@ -1,6 +1,6 @@
 import React, { useMemo, useRef } from 'react';
 import { 
-  Palette, Menu, X, Plus, Sparkles, Database, Briefcase, FileText
+  Palette, Menu, X, Plus, Sparkles, Database, Briefcase, FileText, Target
 } from 'lucide-react';
 import { DomSectionIcon } from '../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
 import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
@@ -72,6 +72,7 @@ const plannerTabIcons: Record<string, any> = {
 const addSectionTab = DOCK_SPECIAL_TABS.addSection;
 const portadaTab = DOCK_SPECIAL_TABS.portada;
 const personalTab = DOCK_SPECIAL_TABS.personal;
+const vacanteTab = DOCK_SPECIAL_TABS.vacante;
 
 export default function CanvaIconDock({ 
   cvData,
@@ -130,6 +131,7 @@ export default function CanvaIconDock({
       { ...styleTabs[0], isLarge: true },
       { ...portadaTab, isLarge: true },
       { ...personalTab, isLarge: true },
+      { ...vacanteTab, isLarge: true },
       ...dockSections.map(sec => ({
         id: sec.id,
         label: sec.label,
@@ -420,6 +422,29 @@ export default function CanvaIconDock({
             );
           })()}
 
+          {/* 6b. BOTÓN VACANTE (Solo para CVs) */}
+          {docType === 'cv' && (() => {
+            const isActive = activeTab === vacanteTab.id && isPanelOpen;
+            return (
+              <button
+                key={vacanteTab.id}
+                type="button"
+                onClick={() => handleTabClick(vacanteTab.id)}
+                className={`w-9 h-9 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer ${
+                  isActive
+                    ? `bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.floating} shadow-[var(--color-secondary-base)]/30 scale-105`
+                    : 'text-[var(--ui-dock-text-muted)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--ui-dock-hover)]'
+                }`}
+                title={vacanteTab.label}
+              >
+                <Target className="w-4.5 h-4.5" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
+                <span className={`absolute left-24 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
+                  {vacanteTab.label}
+                </span>
+              </button>
+            );
+          })()}
+
           {/* 7..N. SECCIONES DINÁMICAS (En 2 Columnas) */}
           {dockSections.map((sec) => {
             const isActive = activeTab === sec.id && isPanelOpen;
@@ -661,6 +686,25 @@ export default function CanvaIconDock({
               title={personalTab.label}
             >
               <DomSectionIcon iconId={personalTab.iconId} className="w-4 h-4" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
+            </button>
+          );
+        })()}
+
+        {/* 6b. BOTÓN VACANTE (Solo para CVs) */}
+        {docType === 'cv' && (() => {
+          const isActive = activeTab === vacanteTab.id && isPanelOpen;
+          return (
+            <button
+              type="button"
+              onClick={() => handleTabClick(vacanteTab.id)}
+              className={`w-7.5 h-7.5 rounded-[6px] flex items-center justify-center shrink-0 transition cursor-pointer border ${
+                isActive
+                  ? `bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.raised}`
+                  : 'bg-[var(--ui-bg-panel)] text-[var(--color-secondary-bright)] border-[var(--color-secondary-base)]/30'
+              }`}
+              title={vacanteTab.label}
+            >
+              <Target className="w-4 h-4" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
             </button>
           );
         })()}

@@ -18,9 +18,7 @@ export function usePdfExportGate() {
       }
 
       const { data, error } = await supabase
-        .from('pdf_export_tokens')
-        .select('paid, consumed')
-        .eq('token', token)
+        .rpc('check_export_token_status', { p_token: token })
         .single();
 
       if (error || !data) {
@@ -28,7 +26,9 @@ export function usePdfExportGate() {
         return;
       }
 
-      if (data.paid && !data.consumed) {
+      const typedData = data as { paid: boolean; consumed: boolean };
+
+      if (typedData.paid && !typedData.consumed) {
         setCredits(1);
       } else {
         setCredits(0);

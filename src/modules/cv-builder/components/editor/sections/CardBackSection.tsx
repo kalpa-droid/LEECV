@@ -2,7 +2,7 @@ import React from 'react';
 import { Sparkles } from 'lucide-react';
 import { PanelSection } from '../../../../../shared/core/ui/PanelSection';
 import { AIButton } from '../../../../../shared/core/ui/AIButton';
-import { generateAiCompletion } from '../../../../../shared/core/ai/aiClient';
+import { executeAiTask } from '../../../../../shared/core/ai/aiClient';
 
 interface Props {
   cvData: any;
@@ -38,13 +38,13 @@ export function CardBackSection({ cvData, setCvData }: Props) {
                 onGenerate={async () => {
                   const role = cvData?.cardOverrides?.role || cvData?.roles?.[0] || 'Profesional';
                   const brand = cvData?.cardOverrides?.brandName || cvData?.personalInfo?.fullName || 'Marca Personal';
-                  const res = await generateAiCompletion({
-                    systemPrompt: 'Eres un estratega de marca personal y copywriter. Genera una sola frase corta, profesional, pegadiza y concisa (máximo 8 palabras) en español para una tarjeta personal.',
-                    userPrompt: `Profesión: ${role}. Marca/Empresa: ${brand}.`,
+                  const res = await executeAiTask<{ slogan: string }>({
+                    taskId: 'generate_slogan',
+                    payload: { role, brand },
                     maxTokens: 100,
                     temperature: 0.8
                   });
-                  return res.text.replace(/^["'«]/, '').replace(/["'»]$/, '').trim();
+                  return res.data.slogan.replace(/^["'«]/, '').replace(/["'»]$/, '').trim();
                 }}
                 onSuccess={(slogan) => {
                   setCvData((prev: any) => ({

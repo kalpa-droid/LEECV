@@ -9,7 +9,7 @@
  * de Carta de Presentación. No se crea un cliente de IA nuevo (Regla 1).
  */
 
-import { generateAiCompletion } from '../../../ai/aiClient';
+import { executeAiTask } from '../../../ai/aiClient';
 
 export interface AtsAiFinding {
   id: string;
@@ -36,34 +36,16 @@ export async function runAiAtsAnalysis(
   cvText: string,
   jobDescription?: string
 ): Promise<AtsAiAnalysisResult> {
-  const systemPrompt = `Eres un reclutador técnico experto en sistemas ATS (Applicant Tracking Systems) y en redacción de currículums en español.
-Analizás el texto plano de un CV (tal como lo leería un parser ATS, sin diseño) y, si se provee, la descripción de una vacante puntual.
-Tu tarea es encontrar problemas de CONTENIDO que una revisión de estructura no puede detectar: palabras clave de la vacante ausentes en el CV, bullets de experiencia redactados de forma vaga o sin verbo de acción, y logros sin cuantificar (sin números, porcentajes o resultados medibles).
-Devolvé EXCLUSIVAMENTE un objeto JSON plano, sin texto adicional ni marcado markdown, con esta forma exacta:
-{
-  "semanticScore": 0-100,
-  "findings": [
-    { "id": "string único", "category": "keyword_gap" | "weak_bullet" | "quantification" | "general", "title": "Título corto del hallazgo", "detail": "Explicación de 1-2 oraciones con la recomendación concreta" }
-  ]
-}
-Máximo 6 hallazgos, priorizando los de mayor impacto. Si el CV está sólido, devolvé menos hallazgos o un array vacío, no inventes problemas.`;
 
-  const userPrompt = `TEXTO DEL CV (orden de lectura lineal, tal como lo procesaría un ATS):
-${cvText || 'Sin contenido detectado.'}
 
-${jobDescription
-    ? `DESCRIPCIÓN DE LA VACANTE OBJETIVO:\n${jobDescription}`
-    : 'No se proveyó una vacante puntual: evaluá calidad general de redacción y cuantificación de logros, sin comparar contra palabras clave de una oferta específica.'
-  }`;
-
-  const res = await generateAiCompletion({
-    systemPrompt,
-    userPrompt,
+  const res = await executeAiTask<{ semanticScore: number; findings: any[] }>({
+    taskId: 'ats_analysis',
+    payload: { cvText, jobDescription },
+    maxTokens: 1200,
     temperature: 0.4
   });
 
-  const jsonClean = res.text.replace(/```json/g, '').replace(/```/g, '').trim();
-  const parsed = JSON.parse(jsonClean);
+  const parsed = res.data;
 
   const findings: AtsAiFinding[] = Array.isArray(parsed.findings)
     ? parsed.findings.slice(0, 6).map((f: any, i: number) => ({

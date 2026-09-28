@@ -53,6 +53,15 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
       </div>
 
       {isVisible && (
+        <div className={`p-3 rounded-[8px] bg-[var(--color-status-info-muted)] border border-[var(--color-status-info-base)]/30 text-[var(--color-status-info-text)] text-[11px] leading-snug font-medium flex items-start gap-2`}>
+          <Bot className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--color-status-info-base)]" />
+          <p>
+            <strong>Consejo de Reclutador:</strong> No incluyas tu DNI, CUIT, edad, fecha de nacimiento, estado civil o nacionalidad. Omitir estos datos evita sesgos en la selección inicial y protege tu privacidad. Si los cargás, <strong>LEECV los ocultará del PDF por defecto</strong> para cuidarte. Tampoco pongas tu dirección exacta; con la localidad o provincia es suficiente.
+          </p>
+        </div>
+      )}
+
+      {isVisible && (
         <PersonalInfoFields
           personalInfo={cvData.personalInfo}
           onChange={(patch) => {
@@ -97,10 +106,10 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
               setCvData(prev => ({
                 ...prev,
                 personalInfo: { ...prev.personalInfo, ...importedData.personalInfo },
-                experience: importedData.experience || prev.experience,
-                education: importedData.education || prev.education,
-                skills: importedData.skills || prev.skills,
-                languages: importedData.languages || prev.languages,
+                experience: importedData.experience?.length ? importedData.experience : prev.experience,
+                education: importedData.education?.length ? importedData.education : prev.education,
+                skills: importedData.skills?.length ? importedData.skills : prev.skills,
+                languages: importedData.languages?.length ? importedData.languages : prev.languages,
               }));
             }
           }}

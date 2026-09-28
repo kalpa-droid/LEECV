@@ -7,9 +7,10 @@
 
 import { Preset } from '../presets/presetSchema';
 import { ContentSection } from '../records/recordTypes';
-import { PersonalInfo } from '../../../../../types/cv';
+import { CVData } from '../../../../../types/cv';
 import { resolveCanonicalSection } from './canonicalSectionLabels';
 import { buildStructuredRecordLayout } from '../records/recordLayoutEngine';
+import { RULES_CATALOG } from '../../../recruiter-rules/rulesCatalog';
 
 export interface AtsWarning {
   id: string;
@@ -17,6 +18,8 @@ export interface AtsWarning {
   title: string;
   description: string;
   recommendation: string;
+  articleSlug?: string;
+  fixAction?: 'hide_field' | 'edit_section';
 }
 
 export interface AtsPreflightResult {
@@ -28,49 +31,36 @@ export interface AtsPreflightResult {
 export function runAtsPreflightCheck(
   preset: Preset,
   sections: ContentSection[],
-  personalInfo?: PersonalInfo
+  cvData?: CVData
 ): AtsPreflightResult {
   const warnings: AtsWarning[] = [];
   const linearReadingOrder: string[] = [];
 
-  // 1. Verificación de Estructura Multicolumna
-  const hasSidebar = (preset?.sectionOrder || []).some(s => s.sectorRole === 'sidebar' && s.sectionIds.length > 0);
-  if (hasSidebar) {
-    warnings.push({
-      id: 'multicol_warning',
-      level: 'warning',
-      title: 'Diseño Multicolumna Detectado',
-      description: 'Algunos parsers ATS antiguos pueden leer el sidebar y la columna principal como líneas continuas.',
-      recommendation: 'Usa la opción "Exportar versión ATS" para generar un PDF unicontenido de 1 sola columna.'
+  // Evaluación dinámica usando el catálogo central de reglas
+  if (cvData) {
+    RULES_CATALOG.forEach((rule) => {
+      const result = rule.evaluate(cvData);
+      if (result === 'fail') {
+        warnings.push({
+          id: rule.id,
+          level: rule.severity === 'high' ? 'critical' : rule.severity === 'medium' ? 'warning' : 'info',
+          title: rule.title,
+          description: rule.description,
+          recommendation: rule.articleSlug ? `Consultá la guía en nuestro blog para más detalles.` : 'Revisá esta sección.',
+          articleSlug: rule.articleSlug,
+          fixAction: rule.fixAction
+        });
+      }
     });
   }
 
-  // 2. Verificación de Contacto y Datos Críticos
-  if (!personalInfo?.email) {
-    warnings.push({
-      id: 'missing_email',
-      level: 'critical',
-      title: 'Correo Electrónico Ausente',
-      description: 'Los sistemas ATS descartan postulaciones que carecen de un correo electrónico parseable.',
-      recommendation: 'Agrega tu dirección de email en la sección de datos personales.'
-    });
-  }
-
-  if (!personalInfo?.phone) {
-    warnings.push({
-      id: 'missing_phone',
-      level: 'warning',
-      title: 'Teléfono de Contacto Ausente',
-      description: 'Un número de teléfono facilita el contacto directo por reclutadores.',
-      recommendation: 'Agrega un número telefónico válido con código de área.'
-    });
-  }
-
-  // 3. Simulación de Flujo Lineal de Secciones y Nombres Canónicos (F5)
+  // Simulación de Flujo Lineal de Secciones y Nombres Canónicos (F5)
   sections.forEach((sec) => {
     if (sec.titleText) {
       const canonical = resolveCanonicalSection({ sectionId: sec.id, titleText: sec.titleText });
       if (!canonical) {
+        // Esta regla se mantiene estática porque requiere saber la estructura de secciones generada por el PDF engine,
+        // no solo el objeto CVData crudo.
         warnings.push({
           id: `non_standard_section_${sec.id}`,
           level: 'info',

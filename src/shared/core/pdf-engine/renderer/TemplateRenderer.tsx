@@ -714,6 +714,16 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   const renderCoverPageContent = () => {
     const styleId = coverStyle || preset.coverStyle || 'monica-classic';
 
+    const defaultHiddenFields = ['dni', 'cuit', 'birthDate', 'nacionalidad', 'estadoCivil'];
+    const userHiddenFields = personalInfo?.hiddenFields ?? defaultHiddenFields;
+    const isHidden = (field: string) => userHiddenFields.includes(field);
+    const renderDniCuit = () => {
+      const parts = [];
+      if (!isHidden('dni') && personalInfo.dni) parts.push(`DNI: ${personalInfo.dni}`);
+      if (!isHidden('cuit') && personalInfo.cuit) parts.push(`CUIT: ${personalInfo.cuit}`);
+      return parts.join(' | ');
+    };
+
     // 1. CANON CLÁSICO & PROPORCIÓN ÁUREA (monica-classic)
     if (styleId === 'monica-classic') {
       return (
@@ -773,10 +783,10 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
           <View style={[styles.coverFooterBar, { backgroundColor: coverSubtleBoxBg, borderColor: coverRolesColor.accent }]}>
             <View>
               <Text style={[styles.coverFooterSub, { color: coverFooterSubSpec.colorHex, fontFamily: coverFontRegular, fontSize: preset.typography.cover?.footerSub || 8 }]}>
-                DNI: {personalInfo.dni || '---'} | CUIT: {personalInfo.cuit || '---'}
+                {renderDniCuit()}
               </Text>
               <Text style={[styles.coverFooterMain, { color: coverFooterMainSpec.colorHex, fontFamily: coverFontBold, fontSize: preset.typography.cover?.footerMain || 10 }]}>
-                {personalInfo.cityProvince || 'Salta, Argentina'}
+                {personalInfo.cityProvince || ''}
               </Text>
             </View>
             <View style={{ alignItems: 'flex-end' }}>
@@ -851,10 +861,10 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
             <View style={{ backgroundColor: coverSubtleBoxBg, borderRadius: 10, padding: 12, borderWidth: 1, borderColor: coverRolesColor.accent, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <View>
                 <Text style={{ fontSize: 8, fontFamily: coverFontRegular, color: coverFooterSubSpec.colorHex }}>
-                  DNI: {personalInfo.dni || '---'} | CUIT: {personalInfo.cuit || '---'}
+                  {renderDniCuit()}
                 </Text>
                 <Text style={{ fontSize: 10, fontFamily: coverFontBold, color: coverFooterMainSpec.colorHex, marginTop: 2 }}>
-                  {personalInfo.cityProvince || 'Salta, Argentina'}
+                  {personalInfo.cityProvince || ''}
                 </Text>
               </View>
               <View style={{ alignItems: 'flex-end' }}>
@@ -905,7 +915,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
 
           <View style={{ width: '100%', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.2)', paddingTop: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text style={{ fontSize: 8, fontFamily: coverFontRegular, color: coverFooterSubSpec.colorHex }}>
-              DNI {personalInfo.dni || '---'} | CUIT {personalInfo.cuit || '---'} | {personalInfo.cityProvince || 'Salta'}
+              {[renderDniCuit(), personalInfo.cityProvince].filter(Boolean).join(' | ')}
             </Text>
             <Text style={{ fontSize: 8, fontFamily: coverFontBold, color: coverRolesColor.accent, letterSpacing: 1 }}>
               LEECV MINIMALIST
@@ -970,10 +980,10 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
           <View style={[styles.coverFooterBar, { backgroundColor: coverSubtleBoxBg, borderColor: coverRolesColor.accent }]}>
             <View>
               <Text style={[styles.coverFooterSub, { color: coverFooterSubSpec.colorHex, fontFamily: coverFontRegular, fontSize: 8 }]}>
-                DNI: {personalInfo.dni || '---'} | CUIT: {personalInfo.cuit || '---'}
+                {renderDniCuit()}
               </Text>
               <Text style={[styles.coverFooterMain, { color: coverFooterMainSpec.colorHex, fontFamily: coverFontBold, fontSize: 10 }]}>
-                {personalInfo.cityProvince || 'Salta, Argentina'}
+                {personalInfo.cityProvince || ''}
               </Text>
             </View>
             <View style={{ alignItems: 'flex-end' }}>
@@ -1041,7 +1051,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
 
             <View style={{ width: '100%', backgroundColor: coverRolesColor.accent, padding: 10, borderRadius: 6, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <Text style={{ fontSize: 9, fontFamily: coverFontBold, color: '#ffffff' }}>
-                DNI: {personalInfo.dni || '---'} | CUIT: {personalInfo.cuit || '---'} | {personalInfo.cityProvince || 'Salta, Argentina'}
+                {[renderDniCuit(), personalInfo.cityProvince].filter(Boolean).join(' | ')}
               </Text>
               <Text style={{ fontSize: 9, fontFamily: coverFontBold, color: '#ffffff', letterSpacing: 1 }}>
                 LEECV BOLD EXECUTIVE
@@ -1108,10 +1118,10 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
           <View style={[styles.coverFooterBar, { backgroundColor: coverSubtleBoxBg, borderColor: coverRolesColor.accent, width: '100%', marginHorizontal: 0 }]}>
             <View>
               <Text style={[styles.coverFooterSub, { color: coverFooterSubSpec.colorHex, fontFamily: coverFontRegular, fontSize: 8 }]}>
-                DNI: {personalInfo.dni || '---'} | CUIT: {personalInfo.cuit || '---'}
+                {renderDniCuit()}
               </Text>
               <Text style={[styles.coverFooterMain, { color: coverFooterMainSpec.colorHex, fontFamily: coverFontBold, fontSize: 10 }]}>
-                {personalInfo.cityProvince || 'Salta, Argentina'}
+                {personalInfo.cityProvince || ''}
               </Text>
             </View>
             <View style={{ alignItems: 'flex-end' }}>

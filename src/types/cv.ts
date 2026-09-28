@@ -196,4 +196,5 @@ export interface CVData {
   manualOverrides?: Record<string, { highlightColorOverride?: string }>;
   theme?: ThemeConfig;
   updatedAt?: string;
+  hiddenFields?: string[];
 }

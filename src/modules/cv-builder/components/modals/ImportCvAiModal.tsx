@@ -5,6 +5,8 @@ import { Modal } from '../../../../shared/core/ui/Modal';
 import { isTextLayerCoherent } from '../../../../shared/core/cv-import/textCoherenceHeuristic';
 import { ensurePdfjsWorkerConfigured } from '../../../../shared/core/pdf-engine/pdfjsWorkerSetup';
 import { clampCanvasSize, encodeCanvasWithinBudget, encodeImageFileWithinBudget } from '../../../../shared/core/cv-import/pageImageEncoder';
+import { mergePageFragments, type CVFragment } from '../../../../shared/core/cv-import/mergeFragments';
+import { apiClient } from '../../../../shared/core/utils/apiClient';
 
 interface ImportCvAiModalProps {
   isOpen: boolean;
@@ -49,45 +51,33 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
       setProgress(0);
       setStatus('processing');
 
-      // 1. Start Job
-      const startRes = await fetch('/api/cv-import-api?action=start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ totalPages: pagesToProcess.length })
-      });
-      const startData = await startRes.json();
-      if (!startRes.ok) throw new Error(startData.error || 'Error al iniciar importación.');
-      const jobId = startData.jobId;
-
-      // 2. Process each page sequentially
+      // Process each page sequentially and collect fragments
+      const fragments: CVFragment[] = [];
       for (let i = 0; i < pagesToProcess.length; i++) {
         const page = pagesToProcess[i];
-        const pRes = await fetch('/api/cv-import-api?action=process-page', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jobId,
-            pageIndex: i,
-            kind: page.kind,
-            content: page.content
-          })
+        
+        let contextSummary = '';
+        if (fragments.length > 0) {
+          const summaries = fragments.map((f, idx) => `Página ${idx}: ${JSON.stringify(f)}`);
+          contextSummary = `\nContexto previo extraido:\n${summaries.join('\n')}\n`;
+        }
+
+        const pData = await apiClient.post('/api/cv-import-api?action=extract-page', {
+          kind: page.kind,
+          content: page.content,
+          contextSummary
         });
-        const pData = await pRes.json();
-        if (!pRes.ok) throw new Error(pData.error || `Error en página ${i+1}`);
+        
+        if (!pData || !pData.data || !pData.data.fragmentJson) {
+           throw new Error(`Error inesperado procesando página ${i+1}`);
+        }
+        fragments.push(pData.data.fragmentJson);
         setProgress(i + 1);
       }
 
-      // 3. Finalize
-      const finRes = await fetch('/api/cv-import-api?action=finalize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jobId })
-      });
-      const finData = await finRes.json();
-      if (!finRes.ok) throw new Error(finData.error || 'Error al finalizar importación.');
-
+      const mergedCv = mergePageFragments(fragments);
       setStatus('done');
-      onImportComplete(finData.cvData);
+      onImportComplete(mergedCv);
       
     } catch (err: any) {
       console.error(err);

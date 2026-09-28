@@ -22,8 +22,8 @@ export async function exportCVToPDF(cvData: any, presetInput?: Preset, atsMode?:
   const monthName = getMonthNameEs();
   const yearNum = new Date().getFullYear();
   const fileName = atsMode 
-    ? `CV - ${candidateName} - ${monthName} - ${yearNum} - ATS.pdf`
-    : `CV - ${candidateName} - ${monthName} - ${yearNum}.pdf`;
+    ? `${candidateName.replace(/\s+/g, '-')}-ATS.pdf`
+    : `${candidateName.replace(/\s+/g, '-')}.pdf`;
 
   const sections = cvDataToContentSections(cvData);
   const docElement = React.createElement(TemplateRenderer, {
