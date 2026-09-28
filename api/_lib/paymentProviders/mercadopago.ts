@@ -98,27 +98,27 @@ export const mercadoPagoProvider: PaymentProvider = {
 
     if (payment.status !== 'approved') return null;
 
-    let userId: string | undefined;
+    let exportToken: string | undefined;
     let rawPlan = 'pro';
 
     if (payment.external_reference) {
       try {
         const refObj = JSON.parse(payment.external_reference);
-        userId = refObj.userId;
+        exportToken = refObj.exportToken;
         rawPlan = refObj.plan || 'pro';
       } catch {
-        userId = payment.external_reference;
+        exportToken = payment.external_reference;
       }
     }
 
     const payerEmail = payment.payer?.email;
-    if (!userId && !payerEmail) return null;
+    if (!exportToken && !payerEmail) return null;
 
     const validPlans: PlanType[] = ['single_pdf', 'credits_pack_5', 'credits_pack_10', 'pro', 'enterprise'];
     const plan: PlanType = validPlans.includes(rawPlan as any) ? (rawPlan as PlanType) : 'pro';
 
     return {
-      userId,
+      exportToken,
       email: payerEmail,
       plan,
       metodoPago: 'mercadopago',

@@ -11,7 +11,6 @@ export interface SaveModalProps {
   onClose: () => void;
   onSaveStorage: () => void;
   onExportJson: () => void;
-  onOpenCloudStatus: () => void;
   isSaving?: boolean;
   onSaveAs?: (versionLabel: string) => void;
   initialSaveAsOpen?: boolean;
@@ -22,7 +21,6 @@ export default function SaveModal({
   onClose,
   onSaveStorage,
   onExportJson,
-  onOpenCloudStatus,
   isSaving = false,
   onSaveAs,
   initialSaveAsOpen = false
@@ -71,16 +69,6 @@ export default function SaveModal({
           <div className="flex items-center gap-2">
             <Cloud className="w-4 h-4 text-[var(--ui-accent-purple)]" />
             <span className="text-xs font-bold text-[var(--ui-text-primary)]">{storageStatus.label}</span>
-            <button
-              type="button"
-              onClick={() => {
-                onClose();
-                onOpenCloudStatus();
-              }}
-              className="ml-2 text-[10px] font-extrabold text-[var(--color-secondary-bright)] hover:underline cursor-pointer"
-            >
-              {t.modals.saveModal.cloudStatusBadge}
-            </button>
           </div>
           <button
             type="button"
@@ -240,30 +228,6 @@ export default function SaveModal({
           </div>
         </button>
 
-        {/* Opción 4: Publicar en la Web (Link Público) */}
-        <button
-          type="button"
-          onClick={() => {
-            onClose();
-            onOpenCloudStatus();
-          }}
-          className={`w-full text-left p-3.5 rounded-[${radius.modal}] bg-[var(--color-status-success-base)] hover:opacity-90 border border-[var(--color-status-success-base)] transition group flex items-start gap-3 cursor-pointer`}
-        >
-          <div className={`p-2.5 rounded-[${radius.card}] bg-[var(--color-status-success-base)] border border-[var(--color-status-success-on-base)]/20 text-[var(--color-status-success-on-base)] group-hover:scale-110 transition flex-shrink-0`}>
-            <Globe className="w-5 h-5" />
-          </div>
-          <div className="space-y-0.5 min-w-0 flex-1">
-            <div className="flex items-center justify-between">
-              <span className="font-black text-xs sm:text-sm text-[var(--color-status-success-on-base)]">{t.modals.saveModal.publishWebTitle}</span>
-              <span className="text-[10px] font-black px-2 py-0.5 rounded bg-[var(--color-status-success-base)] border border-[var(--color-status-success-on-base)]/20 text-[var(--color-status-success-on-base)]">
-                {t.modals.saveModal.publishWebBadge}
-              </span>
-            </div>
-            <p className="text-[11px] text-[var(--color-status-success-on-base)] opacity-80">
-              {t.modals.saveModal.publishWebSub}
-            </p>
-          </div>
-        </button>
       </div>
     </Modal>
   );

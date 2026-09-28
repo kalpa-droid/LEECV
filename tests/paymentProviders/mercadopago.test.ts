@@ -27,7 +27,7 @@ describe('MercadoPago Provider Contract', () => {
         status: 'approved',
         transaction_amount: 1500,
         currency_id: 'ARS',
-        external_reference: JSON.stringify({ userId: 'usr_mp_123', plan: 'pro' }),
+        external_reference: JSON.stringify({ exportToken: 'tok_mp_123', email: 'mp_user@test.com', plan: 'pro' }),
         payer: { email: 'mp_user@test.com' },
       }),
     }));
@@ -77,7 +77,7 @@ describe('MercadoPago Provider Contract', () => {
       status: 'approved',
       transaction_amount: 1500,
       currency_id: 'ARS',
-      external_reference: JSON.stringify({ userId: 'usr_mp_123', plan: 'credits_pack_5' }),
+      external_reference: JSON.stringify({ exportToken: 'tok_mp_123', email: 'user@test.com', plan: 'credits_pack_5' }),
       payer: { email: 'user@test.com' },
     };
 
@@ -88,7 +88,8 @@ describe('MercadoPago Provider Contract', () => {
 
     const details = await mercadoPagoProvider.extractPaymentData(validContext);
     expect(details).not.toBeNull();
-    expect(details?.userId).toBe('usr_mp_123');
+    expect(details?.exportToken).toBe('tok_mp_123');
+    expect(details?.email).toBe('user@test.com');
     expect(details?.plan).toBe('credits_pack_5');
     expect(details?.amount).toBe(1500);
     expect(details?.currency).toBe('ARS');

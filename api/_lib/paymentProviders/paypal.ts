@@ -106,24 +106,24 @@ export const paypalProvider: PaymentProvider = {
     const customId = resource.custom_id || resource.subscriber?.custom_id || '';
     const payerEmail = resource.payer?.email_address || resource.subscriber?.email_address;
 
-    let userId: string | undefined = customId || undefined;
+    let exportToken: string | undefined = customId || undefined;
     let rawPlan = 'pro';
 
     try {
       const parsed = JSON.parse(customId);
-      userId = parsed.userId || userId;
+      exportToken = parsed.exportToken || exportToken;
       rawPlan = parsed.plan || 'pro';
     } catch {
-      userId = customId || undefined;
+      exportToken = customId || undefined;
     }
 
-    if (!userId && !payerEmail) return null;
+    if (!exportToken && !payerEmail) return null;
 
     const validPlans: PlanType[] = ['single_pdf', 'credits_pack_5', 'credits_pack_10', 'pro', 'enterprise'];
     const plan: PlanType = validPlans.includes(rawPlan as any) ? (rawPlan as PlanType) : 'pro';
 
     return {
-      userId,
+      exportToken,
       email: payerEmail,
       plan,
       metodoPago: 'paypal',

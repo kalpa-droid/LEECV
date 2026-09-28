@@ -239,8 +239,6 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
       'scanned_certificates',
       'digital_signature',
       'json_backup',
-      'cloud_backup',
-      'web_publish',
       'job_versioning',
       'nameable_title'
     ],
@@ -258,7 +256,6 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
       'personal_info',
       'digital_signature',
       'json_backup',
-      'cloud_backup',
       'cover_letter_body',
       'job_target',
       'ai_generation',
@@ -279,7 +276,6 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
       'qr_code',
       'logo_upload',
       'json_backup',
-      'cloud_backup',
       'nameable_title'
     ]
   },
@@ -296,8 +292,7 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
       'profession',
       'scanned_certificates',
       'logo_upload',
-      'json_backup',
-      'cloud_backup'
+      'json_backup'
     ],
     defaultPaperSize: 'a4'
   },

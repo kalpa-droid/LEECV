@@ -4,9 +4,9 @@ import { BookImpositionOptions, processBookImposition } from '../../shared/core/
 import { calculateFinalBookPageCount } from '../../shared/core/book-engine/bookPageCount';
 import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
-import { useAuth } from '../../shared/core/auth/AuthProvider';
 
 import { usePageAwareCreditGate } from '../../shared/core/hooks/usePageAwareCreditGate';
+import PdfCheckoutModal from '../cv-builder/components/modals/PdfCheckoutModal';
 
 interface BookPreviewExportStepProps {
   options: BookImpositionOptions;
@@ -22,8 +22,8 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   onPrevStep,
 }) => {
   const t = useText();
-  const { isLoggedIn, login } = useAuth();
   const { consumeCredits, isGating, gateError } = usePageAwareCreditGate();
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progressPercent, setProgressPercent] = useState(0);
   const [statusMessage, setStatusMessage] = useState('');
@@ -61,6 +61,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
     const allowed = await consumeCredits(finalPageCount);
     if (!allowed) {
       if (gateError) setErrorMsg(gateError);
+      setIsCheckoutOpen(true);
       return;
     }
 
@@ -202,23 +203,13 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
         <div className={`p-4 bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/30 rounded-[${radius.card}] space-y-3 text-center`}>
           <AlertCircle className="w-8 h-8 text-[var(--color-status-danger-text)] mx-auto" />
           <p className="text-xs font-medium text-[var(--color-status-danger-text)]">{errorMsg}</p>
-          {!isLoggedIn ? (
-            <button
-              type="button"
-              onClick={login}
-              className={`px-4 py-2 text-xs font-bold bg-[var(--color-status-danger-base)] text-[var(--color-status-danger-on-base)] border border-[var(--color-status-danger-base)]/40 rounded-[${radius.control}]`}
-            >
-              Iniciar Sesión con Google
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleStartExport}
-              className={`px-4 py-2 text-xs font-bold bg-[var(--color-status-danger-muted)] text-[var(--color-status-danger-text)] border border-[var(--color-status-danger-base)]/40 rounded-[${radius.control}]`}
-            >
-              Reintentar Exportación
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleStartExport}
+            className={`px-4 py-2 text-xs font-bold bg-[var(--color-status-danger-muted)] text-[var(--color-status-danger-text)] border border-[var(--color-status-danger-base)]/40 rounded-[${radius.control}]`}
+          >
+            Reintentar Exportación
+          </button>
         </div>
       ) : (
         <div className="space-y-3">
@@ -261,6 +252,15 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
           </button>
         </div>
       )}
+
+      <PdfCheckoutModal
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        onConfirm={() => {
+          setIsCheckoutOpen(false);
+          handleStartExport();
+        }}
+      />
     </div>
   );
 };

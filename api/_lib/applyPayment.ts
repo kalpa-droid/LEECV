@@ -1,10 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { serverDal } from './serverDal.js';
 
-export type PlanType = 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' | 'pro' | 'enterprise';
+export type PlanType = string;
 
 export interface PaymentDetails {
-  userId?: string | null;
+  exportToken?: string | null;
   email?: string | null;
   plan: PlanType;
   metodoPago: 'mercadopago' | 'paypal' | 'lemonsqueezy' | 'manual';
@@ -14,26 +14,19 @@ export interface PaymentDetails {
   details?: any;
 }
 
-export async function applyPayment(_supabaseAdmin: SupabaseClient, payment: PaymentDetails) {
-  const { userId, email, plan, metodoPago, externalId, amount, currency } = payment;
+export async function applyPayment(supabaseAdmin: SupabaseClient, payment: PaymentDetails) {
+  const { exportToken, email, plan, metodoPago, externalId, amount, currency } = payment;
 
-  if (!userId && !email) {
-    throw new Error('applyPayment requiere userId o email para identificar al usuario');
+  if (!exportToken && !email) {
+    throw new Error('applyPayment requiere exportToken o email para habilitar el servicio');
   }
 
-  let resolvedUserId = userId;
-  if (!resolvedUserId && email) {
-    const p = await serverDal.profiles.getByEmail(email);
-    if (p?.id) resolvedUserId = p.id;
-  }
-
-  // 1. Intentar registrar el pago primero para garantizar idempotencia atómica vía UNIQUE constraint
+  // 1. Intentar registrar el pago primero para garantizar idempotencia atómica
   if (externalId && metodoPago) {
     try {
       await serverDal.processedPayments.record({
         provider: metodoPago,
         external_id: externalId,
-        user_id: resolvedUserId || undefined,
         user_email: email || undefined,
         plan,
         amount: amount || undefined,
@@ -53,65 +46,27 @@ export async function applyPayment(_supabaseAdmin: SupabaseClient, payment: Paym
     }
   }
 
-  const CREDIT_PACKS: Record<string, number> = {
-    single_pdf: 1,
-    credits_pack_5: 5,
-    credits_pack_10: 10,
-  };
+  // 2. Marcar el token de exportación como pagado
+  const { error: updateError } = await supabaseAdmin
+    .from('pdf_export_tokens')
+    .update({ 
+      paid: true, 
+      payment_id: externalId,
+      email: email || undefined
+    })
+    .eq('token', exportToken);
 
-  let result;
-
-  if (CREDIT_PACKS[plan]) {
-    const res = await serverDal.pdfExportCredits.grantCredits(resolvedUserId || '', CREDIT_PACKS[plan]);
-    result = { type: 'credits', credits: res.credits };
-  } else if (plan === 'pro' || plan === 'enterprise') {
-    result = await activateSubscription({ userId: userId || undefined, email: email || undefined, plan, metodoPago });
-  } else {
-    throw new Error(`Plan desconocido en applyPayment: ${plan}`);
+  if (updateError) {
+    throw new Error(`Error actualizando pdf_export_tokens: ${updateError.message}`);
   }
 
-  // Registro único de auditoría + fuente para el panel de admin ("avisos de pago").
+  // 3. Registro único de auditoría
   await serverDal.adminNotifications.create({
     type: 'payment_received',
-    title: `Pago recibido (${metodoPago})`,
-    message: `Plan/paquete: ${plan}${amount ? ` — ${amount} ${currency || ''}` : ''}${externalId ? ` — ref: ${externalId}` : ''}`,
-    metadata: { plan, metodoPago, externalId, amount, currency, user_id: userId || null, user_email: email || null },
+    title: `Pago recibido de Invitado (${metodoPago})`,
+    message: `Token: ${exportToken}${amount ? ` — ${amount} ${currency || ''}` : ''}${externalId ? ` — ref: ${externalId}` : ''}`,
+    metadata: { plan, metodoPago, externalId, amount, currency, exportToken, email },
   });
 
-  return result;
-}
-
-async function activateSubscription(
-  { userId, email, plan, metodoPago }: { userId?: string; email?: string; plan: string; metodoPago: string }
-) {
-  const vence = new Date();
-  vence.setMonth(vence.getMonth() + 1);
-
-  const patch = {
-    plan,
-    plan_vence: vence.toISOString(),
-    premium_activo: true,
-    premium_vence: vence.toISOString(),
-    metodo_pago: metodoPago,
-  };
-
-  const matchBy = userId ? { id: userId } : { email: email! };
-  const updated = await serverDal.profiles.updateSubscription(matchBy, patch);
-
-  // Usar el id devuelto por la actualización, no el userId original: en pagos
-  // que sólo traen email (ej. Lemon Squeezy sin custom_data.user_id), userId
-  // llega undefined y esto es lo único que identifica al perfil real.
-  const targetUserId = updated?.id || null;
-
-  if (plan === 'enterprise' && targetUserId) {
-    const existingOrg = await serverDal.organizations.getByOwnerId(targetUserId);
-    if (!existingOrg) {
-      await serverDal.organizations.create({
-        name: email ? `Organización de ${email}` : 'Mi organización',
-        owner_id: targetUserId,
-      });
-    }
-  }
-
-  return { type: 'subscription', plan, vence: vence.toISOString() };
+  return { type: 'token_activated', exportToken };
 }

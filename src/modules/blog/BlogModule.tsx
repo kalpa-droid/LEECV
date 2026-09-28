@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Newspaper, ArrowLeft, Clock, User, FileText, BookOpen, Mail } from 'lucide-react';
 import { displayScale, elevationSystem, radius, button } from '../../shared/core/uiDesignSystem';
-import { AccountMenuButton } from '../../shared/core/ui/AccountMenuButton';
-import { updatePageSeo, generateHowToSchema, generateTechArticleSchema } from '../../shared/core/seo/seoIndexingEngine';
+
 
 interface Article {
   slug: string;
@@ -213,37 +212,8 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ initialSlug, onNavigateH
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  useEffect(() => {
-    if (selectedArticle) {
-      updatePageSeo({
-        title: selectedArticle.title,
-        description: selectedArticle.summary,
-        type: 'article',
-        canonicalUrl: `https://leecv.app/blog/${selectedArticle.slug}`,
-        schemas: [
-          generateTechArticleSchema(
-            selectedArticle.title,
-            selectedArticle.summary,
-            selectedArticle.author,
-            selectedArticle.date.replace(/ de /g, ' ').replace(',', ''), // very simple parsing or keep as string
-            `https://leecv.app/blog/${selectedArticle.slug}`
-          ),
-          generateHowToSchema(
-            selectedArticle.title,
-            selectedArticle.summary,
-            selectedArticle.content.filter(p => p.startsWith('Paso')) // Filter paragraphs that are steps
-          )
-        ]
-      });
-    } else {
-      updatePageSeo({
-        title: 'Blog & Recursos',
-        description: 'Guías prácticas, tutoriales y recursos sobre diseño de CV, cartas de presentación y tarjetas personales.',
-        type: 'website',
-        canonicalUrl: 'https://leecv.app/blog'
-      });
-    }
-  }, [selectedArticle]);
+    // SEO features removed
+
 
   const handleSelectArticle = (art: Article | null) => {
     setSelectedArticle(art);
@@ -273,7 +243,7 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ initialSlug, onNavigateH
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <AccountMenuButton />
+
           </div>
         </div>
       </header>

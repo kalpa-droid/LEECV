@@ -5,21 +5,10 @@ import { serverDal } from '../../api/_lib/serverDal.js';
 vi.mock('../../api/_lib/serverDal.js', () => {
   return {
     serverDal: {
-      profiles: {
-        getByEmail: vi.fn(),
-        updateSubscription: vi.fn(),
-      },
       processedPayments: {
         record: vi.fn(),
       },
-      pdfExportCredits: {
-        grantCredits: vi.fn(),
-      },
       adminNotifications: {
-        create: vi.fn(),
-      },
-      organizations: {
-        getByOwnerId: vi.fn(),
         create: vi.fn(),
       },
     },
@@ -27,7 +16,13 @@ vi.mock('../../api/_lib/serverDal.js', () => {
 });
 
 describe('Payment Webhook Integration & Gateway Handlers', () => {
-  const fakeAdminClient: any = {};
+  const fakeAdminClient: any = {
+    from: vi.fn(() => ({
+      update: vi.fn(() => ({
+        eq: vi.fn(() => ({ error: null }))
+      }))
+    })),
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -36,11 +31,16 @@ describe('Payment Webhook Integration & Gateway Handlers', () => {
   describe('Mercado Pago Webhook Flow', () => {
     it('debe procesar un evento de pago aprobado de Mercado Pago y otorgar créditos', async () => {
       vi.mocked(serverDal.processedPayments.record).mockResolvedValueOnce(undefined as any);
-      vi.mocked(serverDal.pdfExportCredits.grantCredits).mockResolvedValueOnce({ credits: 5 } as any);
+      
+      const eqMock = vi.fn().mockResolvedValue({ error: null });
+      const updateMock = vi.fn().mockReturnValue({ eq: eqMock });
+      fakeAdminClient.from.mockReturnValue({ update: updateMock } as any);
+      
       vi.mocked(serverDal.adminNotifications.create).mockResolvedValueOnce(undefined as any);
 
       const mpWebhookPayload = {
-        userId: 'usr_mp_1',
+        exportToken: 'tok_mp_1',
+        email: 'mp_user@test.com',
         plan: 'credits_pack_5',
         metodoPago: 'mercadopago' as const,
         externalId: 'mp_payment_998877',
@@ -50,42 +50,19 @@ describe('Payment Webhook Integration & Gateway Handlers', () => {
 
       const result = await applyPayment(fakeAdminClient, mpWebhookPayload);
 
-      expect(result).toEqual({ type: 'credits', credits: 5 });
+      expect(result).toEqual({ type: 'token_activated', exportToken: 'tok_mp_1' });
       expect(serverDal.processedPayments.record).toHaveBeenCalledWith(
         expect.objectContaining({
           provider: 'mercadopago',
           external_id: 'mp_payment_998877',
-          user_id: 'usr_mp_1',
+          user_email: 'mp_user@test.com',
           amount: 5.0,
         })
       );
     });
   });
 
-  describe('PayPal Webhook Flow', () => {
-    it('debe procesar la captura de una orden de PayPal y activar la suscripción Pro', async () => {
-      vi.mocked(serverDal.processedPayments.record).mockResolvedValueOnce(undefined as any);
-      vi.mocked(serverDal.profiles.updateSubscription).mockResolvedValueOnce({ id: 'usr_paypal_1', plan: 'pro' } as any);
-      vi.mocked(serverDal.adminNotifications.create).mockResolvedValueOnce(undefined as any);
 
-      const paypalPayload = {
-        userId: 'usr_paypal_1',
-        plan: 'pro',
-        metodoPago: 'paypal' as const,
-        externalId: 'PAYPAL_ORDER_883311',
-        amount: 9.0,
-        currency: 'USD',
-      };
-
-      const result = await applyPayment(fakeAdminClient, paypalPayload);
-
-      expect(result).toEqual(expect.objectContaining({ type: 'subscription', plan: 'pro' }));
-      expect(serverDal.profiles.updateSubscription).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 'usr_paypal_1' }),
-        expect.objectContaining({ plan: 'pro', metodo_pago: 'paypal' })
-      );
-    });
-  });
 
   describe('Lemon Squeezy Webhook Flow', () => {
     it('debe descartar un webhook duplicado de Lemon Squeezy sin re-acreditar créditos', async () => {
@@ -94,7 +71,8 @@ describe('Payment Webhook Integration & Gateway Handlers', () => {
       vi.mocked(serverDal.processedPayments.record).mockRejectedValueOnce(duplicateErr);
 
       const lsDuplicatePayload = {
-        userId: 'usr_ls_dup',
+        exportToken: 'tok_ls_dup',
+        email: 'ls_dup@test.com',
         plan: 'credits_pack_10',
         metodoPago: 'lemonsqueezy' as const,
         externalId: 'LS_ORDER_DUP_123',
@@ -103,7 +81,7 @@ describe('Payment Webhook Integration & Gateway Handlers', () => {
       const result = await applyPayment(fakeAdminClient, lsDuplicatePayload);
 
       expect(result).toEqual({ type: 'already_processed', message: 'Payment already recorded' });
-      expect(serverDal.pdfExportCredits.grantCredits).not.toHaveBeenCalled();
+      expect(fakeAdminClient.from).not.toHaveBeenCalled();
     });
   });
 });

@@ -143,7 +143,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
           onOpenJsonDownloadModal={() => {}}
           onPrint={() => setActiveStepTab('book_preview_export')}
           onOpenShareAppModal={() => {}}
-          onOpenCloudStatus={() => {}}
+          onOpenPrivacy={() => {}}
           zoomLevel={viewport.zoomLevel}
           setZoomLevel={viewport.setZoomLevel}
           triggerAutoFit={viewport.fitAndCenter}

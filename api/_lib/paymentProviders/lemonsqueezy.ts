@@ -68,9 +68,9 @@ export const lemonSqueezyProvider: PaymentProvider = {
     }
 
     const email = event.data?.attributes?.user_email || event.data?.attributes?.customer_email;
-    const userId = event.meta?.custom_data?.user_id;
+    const exportToken = event.meta?.custom_data?.export_token;
 
-    if (!userId && !email) return null;
+    if (!exportToken && !email) return null;
 
     // Mapa de variantes numéricas de Lemon Squeezy a PlanType de LEECV
     const variantIdMap: Record<string, PlanType> = {};
@@ -112,7 +112,7 @@ export const lemonSqueezyProvider: PaymentProvider = {
     const amount = typeof rawTotal === 'number' ? rawTotal / 100 : rawTotal;
 
     return {
-      userId: userId || undefined,
+      exportToken: exportToken || undefined,
       email,
       plan,
       metodoPago: 'lemonsqueezy',

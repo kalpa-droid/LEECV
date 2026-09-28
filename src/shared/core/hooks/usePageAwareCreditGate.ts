@@ -1,69 +1,43 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { dal } from '../storage/dataAccessLayer';
-import { useAuth } from '../auth/AuthProvider';
 
 export function usePageAwareCreditGate() {
   const [isGating, setIsGating] = useState(false);
   const [gateError, setGateError] = useState<string | null>(null);
-  const { user } = useAuth();
 
   const consumeCredits = async (pageCount: number = 1): Promise<boolean> => {
     setIsGating(true);
     setGateError(null);
     try {
       if (!supabase) {
-        setGateError('No se pudo conectar con el servicio de autenticación.');
+        setGateError('No se pudo conectar con la base de datos.');
         setIsGating(false);
         return false;
       }
 
-      if (!user) {
-        setGateError('Necesitás iniciar sesión para exportar.');
+      const token = localStorage.getItem('leecv_export_token');
+      if (!token) {
+        setGateError('Necesitas pagar por la exportación.');
         setIsGating(false);
         return false;
       }
 
-      const profile = await dal.profiles.getById(user.id);
-      if (profile?.plan === 'pro' || profile?.plan === 'enterprise') {
-        setIsGating(false);
-        return true;
-      }
+      // We just consume the single token we have, regardless of pageCount for now
+      // since the guest checkout model pays per export.
+      const { data, error } = await supabase.rpc('consume_export_token', { p_token: token });
 
-      const { data: remainingCredits, error } = await supabase.rpc('consume_pdf_credits_for_pages', {
-        p_user_id: user.id,
-        p_page_count: pageCount,
-      });
-
-      if (error) {
-        const { data: fallbackRemaining, error: fallbackError } = await supabase.rpc('consume_pdf_credit', {
-          p_user_id: user.id,
-        });
-
-        if (fallbackError) {
-          console.warn('[usePdfExportGate] Credit RPC warning:', fallbackError.message);
-          setGateError('No pudimos verificar tus créditos. Por favor intenta de nuevo.');
-          setIsGating(false);
-          return false;
-        }
-
-        if (fallbackRemaining === null || fallbackRemaining === undefined || fallbackRemaining === false) {
-          setGateError('No tenés suficientes créditos para exportar el documento. Por favor adquiere créditos o pasa al plan PRO.');
-          setIsGating(false);
-          return false;
-        }
-      } else if (remainingCredits === null || remainingCredits === undefined) {
-        const creditsNeeded = Math.ceil(pageCount / 10);
-        setGateError(`Necesitás ${creditsNeeded} crédito(s) para exportar este documento (${pageCount} páginas). Adquiere créditos o pasa a PRO.`);
+      if (error || !data) {
+        setGateError('El pago no es válido o ya fue consumido.');
         setIsGating(false);
         return false;
       }
 
+      localStorage.removeItem('leecv_export_token');
       setIsGating(false);
       return true;
     } catch (err) {
-      console.error('[usePdfExportGate] Exception while verifying credits:', err);
-      setGateError('No pudimos verificar tus créditos. Por favor intenta de nuevo.');
+      console.error('[usePageAwareCreditGate] Exception while verifying credits:', err);
+      setGateError('Error validando el pago.');
       setIsGating(false);
       return false;
     }

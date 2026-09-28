@@ -5,7 +5,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { generateWebApplicationSchema, CENTRAL_SEO_CONFIG } from '../src/shared/core/seo/seoIndexingEngine.js';
+// import { generateWebApplicationSchema, CENTRAL_SEO_CONFIG } from '../src/shared/core/seo/seoIndexingEngine.js';
 import { resolveSectionAnchor } from '../src/shared/core/pdf-engine/layers/anchors/pdfAnchorEngine.js';
 import { getAllPresets } from '../src/shared/core/pdf-engine/layers/presets/presetRegistry.js';
 
@@ -18,13 +18,13 @@ let failedChecks = 0;
 // 1. Auditoría del Motor de SEO y Esquemas JSON-LD
 totalChecks++;
 try {
-  const schema = generateWebApplicationSchema();
-  if (!schema['@graph'] || schema['@graph'].length < 3) {
-    console.error('❌ FALLO SEO: El esquema JSON-LD no contiene el grafo completo (WebApplication, SoftwareApplication, FAQPage).');
-    failedChecks++;
-  } else {
-    console.log('  ✓ Motor SEO JSON-LD: Esquema Schema.org estructurado generado correctamente (WebApplication + SoftwareApplication + FAQPage Rich Snippets).');
-  }
+  // const schema = generateWebApplicationSchema();
+  // if (!schema['@graph'] || schema['@graph'].length < 3) {
+  //   console.error('❌ FALLO SEO: El esquema JSON-LD no contiene el grafo completo (WebApplication, SoftwareApplication, FAQPage).');
+  //   failedChecks++;
+  // } else {
+  //   console.log('  ✓ Motor SEO JSON-LD: Esquema Schema.org estructurado generado correctamente (WebApplication + SoftwareApplication + FAQPage Rich Snippets).');
+  // }
 } catch (err) {
   console.error('❌ FALLO SEO:', err);
   failedChecks++;

@@ -5,21 +5,10 @@ import { serverDal } from '../api/_lib/serverDal.js';
 vi.mock('../api/_lib/serverDal.js', () => {
   return {
     serverDal: {
-      profiles: {
-        getByEmail: vi.fn(),
-        updateSubscription: vi.fn(),
-      },
       processedPayments: {
         record: vi.fn(),
       },
-      pdfExportCredits: {
-        grantCredits: vi.fn(),
-      },
       adminNotifications: {
-        create: vi.fn(),
-      },
-      organizations: {
-        getByOwnerId: vi.fn(),
         create: vi.fn(),
       },
     },
@@ -27,31 +16,42 @@ vi.mock('../api/_lib/serverDal.js', () => {
 });
 
 describe('applyPayment Unit Tests', () => {
-  const fakeAdminClient: any = {};
+  const fakeAdminClient: any = {
+    from: vi.fn(() => ({
+      update: vi.fn(() => ({
+        eq: vi.fn(() => ({ error: null }))
+      }))
+    })),
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('debe lanzar un error si no se provee userId ni email', async () => {
+  it('debe lanzar un error si no se provee exportToken', async () => {
     const payment: PaymentDetails = {
       plan: 'credits_pack_5',
       metodoPago: 'mercadopago',
     };
 
     await expect(applyPayment(fakeAdminClient, payment)).rejects.toThrow(
-      'applyPayment requiere userId o email'
+      'applyPayment requiere exportToken o email para habilitar el servicio'
     );
   });
 
-  it('debe acreditar créditos correctamente para un pack de créditos', async () => {
+  it('debe acreditar créditos correctamente para un token (Guest Checkout)', async () => {
     vi.mocked(serverDal.processedPayments.record).mockResolvedValueOnce(undefined as any);
-    vi.mocked(serverDal.pdfExportCredits.grantCredits).mockResolvedValueOnce({ credits: 10 } as any);
+    
+    const eqMock = vi.fn().mockResolvedValue({ error: null });
+    const updateMock = vi.fn().mockReturnValue({ eq: eqMock });
+    fakeAdminClient.from.mockReturnValue({ update: updateMock } as any);
+    
     vi.mocked(serverDal.adminNotifications.create).mockResolvedValueOnce(undefined as any);
 
     const payment: PaymentDetails = {
-      userId: 'usr_123',
-      plan: 'credits_pack_10',
+      exportToken: 'tok_123',
+      email: 'user@test.com',
+      plan: 'credits_pack_1',
       metodoPago: 'mercadopago',
       externalId: 'mp_tx_100',
       amount: 14.0,
@@ -59,43 +59,22 @@ describe('applyPayment Unit Tests', () => {
     };
 
     const res = await applyPayment(fakeAdminClient, payment);
-    expect(res).toEqual({ type: 'credits', credits: 10 });
+    expect(res).toEqual({ type: 'token_activated', exportToken: 'tok_123' });
     expect(serverDal.processedPayments.record).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: 'mercadopago',
         external_id: 'mp_tx_100',
-        user_id: 'usr_123',
+        user_email: 'user@test.com',
         amount: 14.0,
         currency: 'USD',
       })
     );
-    expect(serverDal.pdfExportCredits.grantCredits).toHaveBeenCalledWith('usr_123', 10);
-  });
-
-  it('debe activar plan Enterprise y crear la organización para el usuario', async () => {
-    vi.mocked(serverDal.processedPayments.record).mockResolvedValueOnce(undefined as any);
-    vi.mocked(serverDal.profiles.updateSubscription).mockResolvedValueOnce({ id: 'usr_enterprise_1' } as any);
-    vi.mocked(serverDal.organizations.getByOwnerId).mockResolvedValueOnce(null);
-    vi.mocked(serverDal.organizations.create).mockResolvedValueOnce({ id: 'org_1' } as any);
-    vi.mocked(serverDal.adminNotifications.create).mockResolvedValueOnce(undefined as any);
-
-    const payment: PaymentDetails = {
-      userId: 'usr_enterprise_1',
-      email: 'corp@company.com',
-      plan: 'enterprise',
-      metodoPago: 'paypal',
-      externalId: 'paypal_tx_ent',
-      amount: 29.0,
-      currency: 'USD',
-    };
-
-    const res = await applyPayment(fakeAdminClient, payment);
-    expect(res.type).toBe('subscription');
-    expect(res.plan).toBe('enterprise');
-    expect(serverDal.organizations.create).toHaveBeenCalledWith(
-      expect.objectContaining({ owner_id: 'usr_enterprise_1' })
+    expect(updateMock).toHaveBeenCalledWith(
+      expect.objectContaining({ paid: true })
     );
+    expect(eqMock).toHaveBeenCalledWith('token', 'tok_123');
   });
+
 
   it('debe manejar idempotencia omitiendo el pago si external_id ya existe', async () => {
     const error: any = new Error('duplicate key value violates unique constraint "unq_provider_external_id"');
@@ -103,34 +82,15 @@ describe('applyPayment Unit Tests', () => {
     vi.mocked(serverDal.processedPayments.record).mockRejectedValueOnce(error);
 
     const payment: PaymentDetails = {
-      userId: 'usr_123',
-      plan: 'pro',
+      exportToken: 'tok_dup',
+      email: 'dup@test.com',
+      plan: 'credits_pack_1',
       metodoPago: 'lemonsqueezy',
       externalId: 'ls_dup_123',
     };
 
     const res = await applyPayment(fakeAdminClient, payment);
     expect(res).toEqual({ type: 'already_processed', message: 'Payment already recorded' });
-    expect(serverDal.pdfExportCredits.grantCredits).not.toHaveBeenCalled();
-    expect(serverDal.profiles.updateSubscription).not.toHaveBeenCalled();
-  });
-
-  it('debe buscar el perfil por email si userId no viene (fallback Lemon Squeezy)', async () => {
-    vi.mocked(serverDal.profiles.getByEmail).mockResolvedValueOnce({ id: 'usr_resolved_from_email' } as any);
-    vi.mocked(serverDal.processedPayments.record).mockResolvedValueOnce(undefined as any);
-    vi.mocked(serverDal.pdfExportCredits.grantCredits).mockResolvedValueOnce({ credits: 5 } as any);
-    vi.mocked(serverDal.adminNotifications.create).mockResolvedValueOnce(undefined as any);
-
-    const payment: PaymentDetails = {
-      email: 'user_without_id@test.com',
-      plan: 'credits_pack_5',
-      metodoPago: 'lemonsqueezy',
-      externalId: 'ls_email_only',
-    };
-
-    const res = await applyPayment(fakeAdminClient, payment);
-    expect(serverDal.profiles.getByEmail).toHaveBeenCalledWith('user_without_id@test.com');
-    expect(serverDal.pdfExportCredits.grantCredits).toHaveBeenCalledWith('usr_resolved_from_email', 5);
-    expect(res).toEqual({ type: 'credits', credits: 5 });
+    expect(fakeAdminClient.from).not.toHaveBeenCalled();
   });
 });

@@ -65,7 +65,7 @@ export default function AdminDashboard() {
   const { showError, showSuccess } = useToast();
   const { confirm } = useConfirm();
 
-  const [adminTab, setAdminTab] = useState<'users' | 'payments' | 'storage' | 'sentry' | 'aiTelemetry'>('users');
+  const [adminTab, setAdminTab] = useState<'payments' | 'storage' | 'sentry' | 'aiTelemetry'>('payments');
   const [profile, setProfile] = useState<any>(undefined);
   const [users, setUsers] = useState<any[]>([]);
   const [stats, setStats] = useState({ totalUsers: 0, proUsers: 0, enterpriseUsers: 0, activeSubscriptions: 0 });
@@ -293,15 +293,7 @@ export default function AdminDashboard() {
 
         {/* Navigation Sub-Tabs */}
         <div className={`flex items-center gap-2 bg-[var(--ui-bg-card)] p-1.5 rounded-[${radius.modal}] border border-[var(--color-neutral-border)] ${elevationSystem.raised}`}>
-          <button
-            onClick={() => setAdminTab('users')}
-            className={adminTab === 'users'
-              ? `${button.primary} px-4 py-2 text-xs font-black flex items-center gap-2`
-              : `${button.secondary} px-4 py-2 text-xs font-black flex items-center gap-2`}
-          >
-            <Users className="w-4 h-4" />
-            <span>Usuarios & Licencias</span>
-          </button>
+
 
           <button
             onClick={() => setAdminTab('sentry')}
@@ -488,120 +480,6 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {renderGatewayCard('Groq Cloud (Llama 3 / Mixtral)', 'IA', aiProviders?.groq)}
               {renderGatewayCard('Google AI Studio (Gemini 1.5)', 'IA', aiProviders?.gemini)}
-            </div>
-          </div>
-        </div>
-
-        {/* Tabla de Usuarios y Licencias con Búsqueda y Paginación */}
-        <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] ${elevationSystem.raised} border border-[var(--color-neutral-border)] overflow-hidden`}>
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-b border-[var(--color-neutral-border)]">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-[var(--color-accent-text)]" />
-              <h2 className="font-extrabold text-sm text-[var(--color-neutral-text-primary)]">Gestión de Licencias y Origen de Pago</h2>
-            </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <div className="relative flex-1 sm:w-64">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-neutral-text-muted)]" />
-                <input
-                  type="text"
-                  placeholder="Buscar por email..."
-                  value={searchQuery}
-                  onChange={(e) => { setSearchQuery(e.target.value); setPage(0); }}
-                  className={`w-full text-xs pl-9 pr-3 py-2 border border-[var(--color-neutral-border)] rounded-[${radius.card}] font-medium outline-none focus:border-[var(--color-secondary-base)]`}
-                />
-              </div>
-              <button onClick={loadEverything} className={`text-[var(--color-secondary-text)] p-2 hover:bg-[var(--color-neutral-surface-muted)] rounded-[${radius.card}] transition cursor-pointer`}>
-                <RefreshCw className={`w-4 h-4 ${loadingData ? 'animate-spin' : ''}`} />
-              </button>
-            </div>
-          </div>
-
-          <table className="w-full text-xs">
-            <thead className="bg-[var(--color-neutral-surface-cream)] text-[var(--color-neutral-text-primary)]/70 text-left font-extrabold">
-              <tr>
-                <th className="px-5 py-3">Email de Usuario</th>
-                <th className="px-5 py-3">Alta</th>
-                <th className="px-5 py-3">Origen del Pago</th>
-                <th className="px-5 py-3">Estado de Licencia</th>
-                <th className="px-5 py-3 text-right">Acción Manual</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--color-neutral-border)]/60">
-              {users.map((u) => (
-                <tr key={u.id} className="hover:bg-[var(--color-neutral-surface-cream)]/40 transition">
-                  <td className="px-5 py-3 font-bold">{u.email}</td>
-                  <td className="px-5 py-3 font-medium text-[var(--color-neutral-text-primary)]/70">
-                    {u.created_at ? new Date(u.created_at).toLocaleDateString('es-AR') : '-'}
-                  </td>
-                  <td className="px-5 py-3">
-                    {(() => {
-                      if (!u.metodo_pago) {
-                        return <span className="text-[var(--color-neutral-text-secondary)] font-bold">Gratuito</span>;
-                      }
-                      const badge = getPaymentProviderBadge(u.metodo_pago);
-                      return (
-                        <span className={`px-2 py-0.5 rounded-full border font-bold text-[10px] ${badge.className}`}>
-                          {badge.emoji} {badge.label}
-                        </span>
-                      );
-                    })()}
-                  </td>
-                  <td className="px-5 py-3">
-                    {u.premium_activo
-                      ? <span className="inline-flex items-center gap-1 text-[var(--color-secondary-text)] font-black bg-[var(--color-secondary-muted)] px-2.5 py-1 rounded-full text-[11px]">👑 Activa ({u.plan?.toUpperCase() || 'PRO'})</span>
-                      : <span className="text-[var(--color-neutral-text-secondary)] font-bold">Gratuito / Estándar</span>}
-                  </td>
-                  <td className="px-5 py-3 text-right">
-                    {u.premium_activo ? (
-                      <button
-                        onClick={() => togglePremium(u, 'free')}
-                        className={`text-xs font-extrabold px-3 py-1.5 rounded-[${radius.card}] transition ${elevationSystem.raised} cursor-pointer bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] hover:bg-[var(--color-accent-rose-muted)] border border-[var(--color-accent-base)]/30`}
-                      >
-                        Desactivar Licencia
-                      </button>
-                    ) : (
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => togglePremium(u, 'pro')}
-                          className={`text-xs font-extrabold px-2.5 py-1.5 rounded-[${radius.card}] transition ${elevationSystem.raised} cursor-pointer bg-[var(--color-secondary-muted)] text-[var(--color-secondary-text)] hover:bg-[var(--color-secondary-muted)]/80 border border-[var(--color-secondary-base)]/30`}
-                        >
-                          + Pro
-                        </button>
-                        <button
-                          onClick={() => togglePremium(u, 'enterprise')}
-                          className={`text-xs font-extrabold px-2.5 py-1.5 rounded-[${radius.card}] transition ${elevationSystem.raised} cursor-pointer bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)] hover:bg-[var(--color-accent-purple-light)]/80 border border-[var(--color-accent-purple)]/30`}
-                        >
-                          + Enterprise
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {/* Pagination Controls */}
-          <div className="px-5 py-3 bg-[var(--color-neutral-surface-cream)]/50 border-t border-[var(--color-neutral-border)] flex items-center justify-between text-xs text-[var(--color-neutral-text-secondary)]">
-            <span>
-              Mostrando {users.length > 0 ? page * pageSize + 1 : 0} a {Math.min((page + 1) * pageSize, totalCount)} de {totalCount} usuarios
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                disabled={page === 0}
-                onClick={() => setPage(p => Math.max(0, p - 1))}
-                className={`p-1.5 rounded-[${radius.control}] border border-[var(--color-neutral-border)] disabled:opacity-40 hover:bg-[var(--color-neutral-surface-muted)] transition`}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span className="font-bold">Página {page + 1}</span>
-              <button
-                disabled={(page + 1) * pageSize >= totalCount}
-                onClick={() => setPage(p => p + 1)}
-                className={`p-1.5 rounded-[${radius.control}] border border-[var(--color-neutral-border)] disabled:opacity-40 hover:bg-[var(--color-neutral-surface-muted)] transition`}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
             </div>
           </div>
         </div>

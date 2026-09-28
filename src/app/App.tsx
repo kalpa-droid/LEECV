@@ -14,16 +14,15 @@ const LandingPage = lazy(() => import('../modules/landing/LandingPage').then(m =
 const BookStudio = lazy(() => import('../modules/book-studio/BookStudio').then(m => ({ default: m.BookStudio })));
 const BlogModule = lazy(() => import('../modules/blog/BlogModule').then(m => ({ default: m.BlogModule })));
 
-import { getCurrentProfile } from '../shared/core/auth/authService';
 import { supabase } from '../shared/core/lib/supabaseClient';
 import { exportCVToJson, importCVFromJsonFile } from '../shared/core/utils/jsonImporterExporter';
 import { withErrorHandling } from '../shared/core/utils/errorHandler';
 import { applyUiTheme, getNextUiTheme, elevationSystem, radius } from '../shared/core/uiDesignSystem';
 import { getGlobalUiTheme, setGlobalUiTheme as setGlobalUiThemeInStorage, cycleGlobalUiTheme, subscribeToGlobalUiTheme } from '../shared/core/utils/globalThemePreference';
 
-const PublicCVView = lazy(() => import('../modules/cv-builder/components/PublicCVView').then(m => ({ default: m.PublicCVView })));
+
 const CardExportModal = lazy(() => import('../modules/cv-builder/components/modals/CardExportModal').then(m => ({ default: m.CardExportModal })));
-import { SeoMetaManager } from '../shared/core/seo/SeoMetaManager';
+
 
 // Direct Modals Imports (Prevents dynamic chunk fetch errors on updates)
 import PhotoCropperModal from '../modules/cv-builder/components/PhotoCropperModal';
@@ -32,7 +31,7 @@ import WizardModal from '../modules/cv-builder/components/WizardModal';
 import SavedCVsModal from '../modules/cv-builder/components/SavedCVsModal';
 import SaveModal from '../modules/cv-builder/components/SaveModal';
 import SaveAsVersionModal from '../modules/cv-builder/components/SaveAsVersionModal';
-import CloudStatusModal from '../modules/cv-builder/components/CloudStatusModal';
+
 import PricingModal from '../modules/payments/PricingModal';
 import PdfCheckoutModal from '../modules/cv-builder/components/modals/PdfCheckoutModal';
 import JsonDownloadModal from '../modules/cv-builder/components/modals/JsonDownloadModal';
@@ -42,6 +41,7 @@ import { GracePeriodBanner } from '../shared/core/ui/GracePeriodBanner';
 import { RetentionOfferModal } from '../modules/payments/components/RetentionOfferModal';
 import { CookieConsentBanner } from '../shared/core/ui/CookieConsentBanner';
 import { useEntitlements } from '../shared/core/entitlements/useEntitlements';
+import { usePageAwareCreditGate } from '../shared/core/hooks/usePageAwareCreditGate';
 import { dal } from '../shared/core/storage/dataAccessLayer';
 
 import { CVProvider, useCVContext } from '../context/CVContext';
@@ -62,8 +62,7 @@ const PlannerStudioContent = lazy(() => import('../modules/planner-studio/Planne
 import { loadCVById, loadDocumentById, saveCV } from '../shared/core/storage/documentStorageService';
 import { setPendingDocumentToOpen, getPendingDocumentToOpen, clearPendingDocumentToOpen } from '../shared/core/storage/pendingDocumentHandoff';
 import { runWithSafeSave } from '../shared/core/storage/safeNavigationEngine';
-import { signInWithGoogle, logout, setGlobalBeforeRedirect } from '../shared/core/auth/authService';
-import { useAuth } from '../shared/core/auth/AuthProvider';
+
 import { PwaInstallBanner } from '../shared/core/ui/PwaInstallBanner';
 import { initUpdateEngine, onUpdateReady } from '../shared/core/pwa/updateEngine';
 import { trackPageView } from '../shared/core/analytics/analyticsService';
@@ -83,21 +82,7 @@ interface AppContentProps {
   onNavigate?: (route: string) => void;
 }
 
-function GlobalAuthBeforeRedirectManager() {
-  const { cvData, saveCV } = useCVContext();
-  
-  useEffect(() => {
-    setGlobalBeforeRedirect(async () => {
-      const docType = cvData ? inferDocumentTypeId(cvData) : 'cv';
-      if (capabilitiesGate.canBackupCloud(docType)) {
-        await saveCV();
-      }
-    });
-    return () => setGlobalBeforeRedirect(null);
-  }, [saveCV, cvData]);
 
-  return null;
-}
 
 function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: AppContentProps) {
   const { cvData, setCvData, resetToBlankCV, saveCV, saveCVAs, isSaving, hasPendingChanges, isSwitchingDocument, setIsSwitchingDocument } = useCVContext();
@@ -106,17 +91,12 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 
   const { showSuccess, showError, showInfo } = useToast();
   const { confirm } = useConfirm();
-  const { currentProfile, refreshProfile } = useAuth();
+  const currentProfile = undefined;
   const { inGracePeriod, graceEndsAt, aiCredits, refreshEntitlements } = useEntitlements();
   const [graceCvList, setGraceCvList] = useState<any[]>([]);
   const [isRetentionModalOpen, setIsRetentionModalOpen] = useState(false);
 
-  // Solo se consulta la lista de CVs cuando el usuario está en período de gracia —
-  // evita una query extra para el resto de los usuarios en cada carga de la app.
-  useEffect(() => {
-    if (!inGracePeriod || !currentProfile?.id) return;
-    dal.cvs.listByUser(currentProfile.id).then(setGraceCvList).catch(() => {});
-  }, [inGracePeriod, currentProfile?.id]);
+
 
   useEffect(() => {
     initUpdateEngine();
@@ -136,8 +116,6 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
 
-  const [isPublicView, setIsPublicView] = useState(false);
-  const [publicSlug, setPublicSlug] = useState<string | undefined>(undefined);
 
   const [globalUiTheme, setGlobalUiTheme] = useState<string>(() => {
     return getGlobalUiTheme();
@@ -154,38 +132,18 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 
   useEffect(() => {
     syncPresetsFromStorage().catch(err => console.warn('Error sincronizando presets iniciales:', err));
-    refreshProfile();
 
     procesarRetornoPago()
       .then((res) => {
         if (res?.status === 'paypal_captured') {
           showSuccess('¡Pago procesado con éxito vía PayPal! Tu suscripción o créditos han sido activados.');
-          refreshProfile();
         } else if (res?.status === 'payment_success') {
           showSuccess('¡Pago confirmado! Tu cuenta ha sido actualizada.');
-          refreshProfile();
         }
       })
       .catch((err) => {
         showError(err?.message || 'Inconveniente al procesar el retorno del pago.');
       });
-
-    if (typeof window !== 'undefined') {
-      const pathname = navigation.getPathname();
-      const params = navigation.getSearchParams();
-      const publicId = params.get('c') || params.get('publicCv') || params.get('share');
-
-      if (pathname.startsWith('/c/') || pathname.startsWith('/cv/')) {
-        const slug = pathname.replace('/c/', '').replace('/cv/', '');
-        if (slug) {
-          setPublicSlug(slug);
-          setIsPublicView(true);
-        }
-      } else if (publicId) {
-        setPublicSlug(publicId);
-        setIsPublicView(true);
-      }
-    }
 
 
   }, []);
@@ -309,6 +267,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const [, setPdfProgress] = useState(0);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isPdfComplete, setIsPdfComplete] = useState(false);
+  const { consumeCredits } = usePageAwareCreditGate();
   const [mobileTabState, setMobileTabState] = useState('editor');
 
   const [isPdfCheckoutOpen, setIsPdfCheckoutOpen] = useState(false);
@@ -528,7 +487,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 
   const triggerPdfGeneration = handleStartPDFGeneration;
 
-  const handleExportPDFClick = () => {
+  const handleExportPDFClick = async () => {
     if (cvData?.activePresetId === 'tarjeta-personal') {
       setIsCardExportOpen(true);
       return;
@@ -539,8 +498,14 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       return;
     }
 
-    setPdfCheckoutPurpose('export');
-    setIsPdfCheckoutOpen(true);
+    const allowed = await consumeCredits(1);
+    if (!allowed) {
+      setPdfCheckoutPurpose('export');
+      setIsPdfCheckoutOpen(true);
+      return;
+    }
+
+    handleStartPDFGeneration();
   };
 
 
@@ -770,19 +735,6 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     }
   };
 
-  if (isPublicView) {
-    return (
-      <Suspense fallback={
-        <div className="min-h-screen bg-black flex items-center justify-center text-[var(--color-accent-base)] font-bold text-xs">
-          <div className="w-8 h-8 border-4 border-[var(--color-accent-base)] border-t-transparent rounded-full animate-spin mr-3" />
-          <span>Cargando Perfil Público…</span>
-        </div>
-      }>
-        <PublicCVView slugInput={publicSlug} />
-      </Suspense>
-    );
-  }
-
   if (currentRoute === '/crear-libro') {
     let activeBookTab = tabs.find(t => t.docType === 'book' || inferDocumentTypeId(t) === 'book');
     if (!activeBookTab) {
@@ -853,17 +805,17 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       containerRef={viewport.containerRef}
       bannerSlot={
         <>
-          {inGracePeriod && currentProfile?.id && (
+          {false && (
             <div className="px-3 pt-3 md:px-6 md:pt-4">
               <GracePeriodBanner
                 graceEndsAt={graceEndsAt}
                 cvList={graceCvList}
-                userName={currentProfile?.email || 'Usuario'}
+                userName={'Usuario'}
                 onOpenRetentionModal={() => setIsRetentionModalOpen(true)}
               />
             </div>
           )}
-          {currentProfile?.id && (
+          {false && (
             <RetentionOfferModal
               isOpen={isRetentionModalOpen}
               onClose={() => setIsRetentionModalOpen(false)}
@@ -886,8 +838,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           onOpenPricing={() => setIsPricingModalOpen(true)}
           onOpenShareAppModal={() => setIsShareAppModalOpen(true)}
           onOpenPrivacy={() => setIsPrivacyModalOpen(true)}
-          onOpenCloudStatus={() => setIsCloudModalOpen(true)}
-          userRole={currentProfile?.role || 'candidate'}
+
           isSaving={isSaving}
           zoomLevel={viewport.zoomLevel}
           setZoomLevel={viewport.setZoomLevel}
@@ -1036,7 +987,6 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
                 setIsSavedCVsOpen(false);
               }}
               onImportJson={handleImportJsonFile}
-              onOpenCloudStatus={() => setIsCloudModalOpen(true)}
               onGenerateCoverLetterFromCV={handleGenerateCoverLetterFromCV}
               onDocumentClosed={(deletedId) => {
                 const currentDocState: workspaceController.CurrentDocumentState | null = cvData ? {
@@ -1060,7 +1010,6 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
               onSaveStorage={handleSaveCVClick}
               onSaveAs={handleSaveCVAsClick}
               onExportJson={() => setIsDownloadModalOpen(true)}
-              onOpenCloudStatus={() => setIsCloudModalOpen(true)}
               isSaving={isSaving}
               initialSaveAsOpen={initialSaveAsOpen}
             />
@@ -1082,19 +1031,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
             />
           )}
 
-          {isCloudModalOpen && (
-            <CloudStatusModal 
-              isOpen={isCloudModalOpen}
-              onClose={() => setIsCloudModalOpen(false)}
-              onForceSave={handleSaveCVClick}
-              isSaving={isSaving}
-              cvData={cvData}
-              onOpenPdfCheckout={() => {
-                setPdfCheckoutPurpose('publish');
-                setIsPdfCheckoutOpen(true);
-              }}
-            />
-          )}
+
 
           {isPdfCheckoutOpen && (
             <PdfCheckoutModal 
@@ -1205,24 +1142,20 @@ export default function App() {
   return (
     <ConfirmProvider>
       <CVProvider>
-        <GlobalAuthBeforeRedirectManager />
         {currentRoute.startsWith('/blog') ? (
           <>
-            <SeoMetaManager title="Blog & Recursos — LEECV" />
             <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Blog...</div>}>
               <BlogModule initialSlug={currentRoute.replace('/blog', '').replace('/', '') || undefined} onNavigateHome={() => navigateTo('/')} onNavigateProduct={(r) => navigateTo(r)} />
             </Suspense>
           </>
         ) : currentRoute === '/' ? (
           <>
-            <SeoMetaManager title="LEECV — CVs, Tarjetas y Libros listos para imprimir" />
             <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando LEECV...</div>}>
               <LandingPage onNavigate={(r) => navigateTo(r)} />
             </Suspense>
           </>
         ) : (
           <>
-            <SeoMetaManager title={`${getDefaultTitleForDocType(getDocTypeForRoute(currentRoute))} — LEECV`} noIndex />
             <AppContent currentRoute={currentRoute} onNavigate={(r) => navigateTo(r)} />
           </>
         )}

@@ -11,6 +11,10 @@ import { OpenTab, openTab } from '../../shared/core/documents/tabStore';
 import { generateDocumentId, computeAutoDocumentTitle, useDraftAutosave, useRegisterDocumentTab, resolveDocumentIdWithHandoff } from '../../shared/core/documents/documentEngine';
 import { savePlanner, loadPlannerById } from '../../shared/core/storage/documentStorageService';
 import { useToast } from '../../shared/core/ui/Toast';
+import { withErrorHandling } from '../../shared/core/utils/errorHandler';
+import { exportDocumentToPDF } from '../../shared/core/pdf-engine/pdfExporter';
+import { usePageAwareCreditGate } from '../../shared/core/hooks/usePageAwareCreditGate';
+import PdfCheckoutModal from '../cv-builder/components/modals/PdfCheckoutModal';
 import { inferDocumentTypeId } from '../../shared/core/capabilities/capabilityRegistry';
 import { PlannerMonthOverride } from '../../shared/core/pdf-engine/layers/records/plannerDataAdapter';
 import { PersonalInfoFields } from '../../shared/core/ui/PersonalInfoFields';
@@ -90,7 +94,11 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
   const [selectedMonthIndex, setSelectedMonthIndex] = useState<number>(0);
   const [selectedPresetId, setSelectedPresetId] = useState<string>('planner-clasico');
+  const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState<boolean>(false);
   
+  const { consumeCredits, isGating } = usePageAwareCreditGate();
+
   const [plannerId] = useState<string>(() => resolveDocumentIdWithHandoff(activeTabId, 'planner'));
 
   // Cargar el borrador guardado (IndexedDB/Supabase, vía loadDocumentById) si existe.
@@ -186,6 +194,28 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
     }
   };
 
+  const handlePrint = async () => {
+    const allowed = await consumeCredits(1);
+    if (!allowed) {
+      setIsCheckoutOpen(true);
+      return;
+    }
+
+    setIsExporting(true);
+    await withErrorHandling(
+      async () => {
+        await exportDocumentToPDF(data, selectedPresetId);
+        showSuccess('Agenda exportada correctamente.');
+      },
+      {
+        context: 'Exportación de Agenda',
+        errorMessage: 'Error al exportar la agenda a PDF.',
+        notify: (msg) => showError(msg)
+      }
+    );
+    setIsExporting(false);
+  };
+
   const updateMonthOverride = (monthIndex: number, patch: Partial<PlannerMonthOverride>) => {
     setData(d => ({
       ...d,
@@ -232,6 +262,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   };
 
   return (
+    <>
     <AppShell
       docType="planner"
       isPanelOpen={isPanelOpen}
@@ -245,9 +276,9 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
           onSaveCVClick={persistPlannerState}
           onOpenSaveAsModal={() => {}}
           onOpenJsonDownloadModal={() => {}}
-          onPrint={() => {}}
+          onPrint={handlePrint}
           onOpenShareAppModal={() => {}}
-          onOpenCloudStatus={() => {}}
+          onOpenPrivacy={() => {}}
           zoomLevel={viewport.zoomLevel}
           setZoomLevel={viewport.setZoomLevel}
           triggerAutoFit={viewport.fitAndCenter}
@@ -529,5 +560,14 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
         onClose: (e, id) => onCloseTab(id),
       }}
     />
+      <PdfCheckoutModal
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        onConfirm={() => {
+          setIsCheckoutOpen(false);
+          handlePrint();
+        }}
+      />
+    </>
   );
 };

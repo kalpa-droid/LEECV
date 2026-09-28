@@ -1,30 +1,32 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+/**
+ * @vitest-environment jsdom
+ */
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { usePageAwareCreditGate } from './usePageAwareCreditGate';
 import { supabase } from '../lib/supabaseClient';
-import { useAuth } from '../auth/AuthProvider';
 
-vi.mock('react', () => ({
-  useState: (initial: any) => {
-    let state = initial;
-    const setState = (updater: any) => {
-      state = typeof updater === 'function' ? updater(state) : updater;
-    };
-    return [state, setState];
-  },
-  createContext: vi.fn(),
-  useContext: vi.fn(),
-}));
+import { renderHook, act } from '@testing-library/react';
 
-vi.mock('../auth/AuthProvider', () => ({
-  useAuth: vi.fn(),
-}));
+const fakeLocalStorage = (() => {
+  let store: Record<string, string> = {};
+  return {
+    getItem: vi.fn((key: string) => store[key] || null),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = value.toString();
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete store[key];
+    }),
+    clear: vi.fn(() => {
+      store = {};
+    }),
+  };
+})();
+
+vi.stubGlobal('localStorage', fakeLocalStorage);
 
 vi.mock('../lib/supabaseClient', () => ({
   supabase: {
-    auth: {
-      getUser: vi.fn(),
-    },
-    from: vi.fn(),
     rpc: vi.fn(),
   },
 }));
@@ -32,129 +34,64 @@ vi.mock('../lib/supabaseClient', () => ({
 describe('usePageAwareCreditGate', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
   });
 
-  it('blocks export when user is not authenticated (fail closed)', async () => {
-    vi.mocked(useAuth).mockReturnValue({ user: null } as any);
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
 
-    const gate = usePageAwareCreditGate();
-    const allowed = await gate.consumeCredits(1);
+  it('blocks export when no token is present', async () => {
+    const { result } = renderHook(() => usePageAwareCreditGate());
+    
+    let allowed: boolean = false;
+    await act(async () => {
+      allowed = await result.current.consumeCredits(1);
+    });
 
     expect(allowed).toBe(false);
+    expect(result.current.gateError).toBe('Necesitas pagar por la exportación.');
   });
 
-  it('allows export without consuming credits for PRO plan users', async () => {
-    vi.mocked(useAuth).mockReturnValue({ user: { id: 'user-123' } } as any);
-
-    vi.mocked(supabase!.from).mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: { plan: 'pro' } }),
-        }),
-      }),
-    } as any);
-
-    const gate = usePageAwareCreditGate();
-    const allowed = await gate.consumeCredits(5);
-
-    expect(allowed).toBe(true);
-    expect(supabase!.rpc).not.toHaveBeenCalled();
-  });
-
-  it('consumes page credits via consume_pdf_credits_for_pages for free users with enough credits', async () => {
-    vi.mocked(useAuth).mockReturnValue({ user: { id: 'user-123' } } as any);
-
-    vi.mocked(supabase!.from).mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: { plan: 'free' } }),
-        }),
-      }),
-    } as any);
+  it('allows export and consumes token when valid token is present', async () => {
+    localStorage.setItem('leecv_export_token', 'valid-token-123');
 
     vi.mocked(supabase!.rpc).mockResolvedValue({
-      data: 3, // 3 credits remaining
+      data: true,
       error: null,
     } as any);
 
-    const gate = usePageAwareCreditGate();
-    const allowed = await gate.consumeCredits(12); // needs 2 credits
+    const { result } = renderHook(() => usePageAwareCreditGate());
+    
+    let allowed: boolean = false;
+    await act(async () => {
+      allowed = await result.current.consumeCredits(1);
+    });
 
     expect(allowed).toBe(true);
-    expect(supabase!.rpc).toHaveBeenCalledWith('consume_pdf_credits_for_pages', {
-      p_user_id: 'user-123',
-      p_page_count: 12,
+    expect(supabase!.rpc).toHaveBeenCalledWith('consume_export_token', {
+      p_token: 'valid-token-123',
     });
+    expect(localStorage.getItem('leecv_export_token')).toBeNull();
   });
 
-  it('blocks export when credits are insufficient (remainingCredits === null)', async () => {
-    vi.mocked(useAuth).mockReturnValue({ user: { id: 'user-123' } } as any);
-
-    vi.mocked(supabase!.from).mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: { plan: 'free' } }),
-        }),
-      }),
-    } as any);
+  it('blocks export when token consumption fails', async () => {
+    localStorage.setItem('leecv_export_token', 'invalid-token-123');
 
     vi.mocked(supabase!.rpc).mockResolvedValue({
-      data: null, // insufficient credits
-      error: null,
+      data: null,
+      error: { message: 'Token invalid or already consumed' },
     } as any);
 
-    const gate = usePageAwareCreditGate();
-    const allowed = await gate.consumeCredits(25); // needs 3 credits
+    const { result } = renderHook(() => usePageAwareCreditGate());
+    
+    let allowed: boolean = false;
+    await act(async () => {
+      allowed = await result.current.consumeCredits(1);
+    });
 
     expect(allowed).toBe(false);
-  });
-
-  it('falls back to consume_pdf_credit with p_user_id if consume_pdf_credits_for_pages fails', async () => {
-    vi.mocked(useAuth).mockReturnValue({ user: { id: 'user-123' } } as any);
-
-    vi.mocked(supabase!.from).mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: { plan: 'free' } }),
-        }),
-      }),
-    } as any);
-
-    vi.mocked(supabase!.rpc)
-      .mockResolvedValueOnce({ data: null, error: { message: 'Function not found' } } as any)
-      .mockResolvedValueOnce({ data: true, error: null } as any);
-
-    const gate = usePageAwareCreditGate();
-    const allowed = await gate.consumeCredits(1);
-
-    expect(allowed).toBe(true);
-    expect(supabase!.rpc).toHaveBeenNthCalledWith(1, 'consume_pdf_credits_for_pages', {
-      p_user_id: 'user-123',
-      p_page_count: 1,
-    });
-    expect(supabase!.rpc).toHaveBeenNthCalledWith(2, 'consume_pdf_credit', {
-      p_user_id: 'user-123',
-    });
-  });
-
-  it('fails closed when RPC errors out on both calls', async () => {
-    vi.mocked(useAuth).mockReturnValue({ user: { id: 'user-123' } } as any);
-
-    vi.mocked(supabase!.from).mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: { plan: 'free' } }),
-        }),
-      }),
-    } as any);
-
-    vi.mocked(supabase!.rpc)
-      .mockResolvedValueOnce({ data: null, error: { message: 'RPC Error 1' } } as any)
-      .mockResolvedValueOnce({ data: null, error: { message: 'RPC Error 2' } } as any);
-
-    const gate = usePageAwareCreditGate();
-    const allowed = await gate.consumeCredits(1);
-
-    expect(allowed).toBe(false);
+    expect(result.current.gateError).toBe('El pago no es válido o ya fue consumido.');
+    expect(localStorage.getItem('leecv_export_token')).toBe('invalid-token-123');
   });
 });

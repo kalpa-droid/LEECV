@@ -15,7 +15,7 @@ import { PlanFeatureCard } from '../../shared/core/ui/marketing/PlanFeatureCard'
 import { FaqAccordion } from '../../shared/core/ui/marketing/FaqAccordion';
 import { useToast } from '../../shared/core/ui/Toast';
 import { useIsMobile } from '../../shared/core/ui/useIsMobile';
-import { AccountMenuButton } from '../../shared/core/ui/AccountMenuButton';
+
 import { selectPaidPlan } from '../payments/paymentService';
 
 interface LandingPageProps {
@@ -31,7 +31,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
 
   const handleSelectGateway = async (planId: 'pro' | 'enterprise', gateway: 'mercadopago' | 'paypal' | 'lemonsqueezy') => {
     setLoadingGateway(gateway);
-    await selectPaidPlan(planId, gateway, {
+    await selectPaidPlan(planId, gateway, 'guest@leecv.com', undefined, {
       onError: (msg) => showError(msg),
     });
     setLoadingGateway(null);
@@ -91,11 +91,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
 
           <div className="flex items-center gap-2 shrink-0">
             <ThemeToggleButton currentThemeId={currentTheme} onToggle={handleToggleTheme} size="md" />
-            <AccountMenuButton
-              onOpenPricing={() => { document.getElementById('precios')?.scrollIntoView({ behavior: 'smooth' }); }}
-              onOpenSavedDocs={() => onNavigate('/dashboard')}
-              buttonText={isMobile ? undefined : t.landing.nav.cta}
-            />
+
           </div>
         </div>
       </header>

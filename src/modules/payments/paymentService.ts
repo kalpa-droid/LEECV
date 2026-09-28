@@ -1,4 +1,3 @@
-import { supabase } from '../../shared/core/lib/supabaseClient';
 import { dal } from '../../shared/core/storage/dataAccessLayer';
 import { apiClient } from '../../shared/core/utils/apiClient';
 import { navigation } from '../../shared/core/utils/navigation';
@@ -7,9 +6,14 @@ import { PaymentClaim, PaymentGateway } from '../../types/payments';
 import { ProviderId, getPaymentProvider } from '../../shared/core/payments/paymentProviderCatalog';
 
 /**
- * Iniciador unificado de pagos (Mercado Pago, PayPal, Lemon Squeezy).
+ * Iniciador unificado de pagos (Mercado Pago, PayPal, Lemon Squeezy) para Guest Checkout.
  */
-export async function iniciarPago(providerId: ProviderId, plan: 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' | 'pro' | 'enterprise' = 'pro') {
+export async function iniciarPago(
+  providerId: ProviderId, 
+  plan: string, 
+  email: string, 
+  exportToken?: string
+) {
   const provider = getPaymentProvider(providerId);
   if (!provider?.checkoutSupported) {
     throw new Error(`${provider?.name || providerId} no soporta inicio de pago automático todavía`);
@@ -17,11 +21,8 @@ export async function iniciarPago(providerId: ProviderId, plan: 'single_pdf' | '
 
   switch (providerId) {
     case 'mercadopago': {
-      const { data: { session } } = await supabase?.auth.getSession() || { data: { session: null } };
-      if (!session?.user?.email) {
-        throw new Error('Necesitás iniciar sesión con tu correo para pagar con Mercado Pago');
-      }
-      const { ok, data, error } = await apiClient.post<{ checkoutUrl?: string }>('/api/create-mp-preference', { plan });
+      if (!email) throw new Error('Email requerido para Mercado Pago');
+      const { ok, data, error } = await apiClient.post<{ checkoutUrl?: string }>('/api/create-mp-preference', { plan, email, exportToken });
       if (!ok || !data?.checkoutUrl) {
         throw new Error(error || 'No se pudo iniciar el pago con Mercado Pago');
       }
@@ -30,11 +31,8 @@ export async function iniciarPago(providerId: ProviderId, plan: 'single_pdf' | '
     }
 
     case 'paypal': {
-      const { data: { session } } = await supabase?.auth.getSession() || { data: { session: null } };
-      if (!session?.user?.email) {
-        throw new Error('Necesitás iniciar sesión con tu correo para pagar con PayPal');
-      }
-      const { ok, data, error } = await apiClient.post<{ checkoutUrl?: string }>('/api/create-paypal-order', { plan });
+      if (!email) throw new Error('Email requerido para PayPal');
+      const { ok, data, error } = await apiClient.post<{ checkoutUrl?: string }>('/api/create-paypal-order', { plan, email, exportToken });
       if (!ok || !data?.checkoutUrl) {
         throw new Error(error || 'No se pudo iniciar el pago con PayPal');
       }
@@ -55,12 +53,14 @@ export async function iniciarPago(providerId: ProviderId, plan: 'single_pdf' | '
       if (!base) {
         throw new Error('No está configurada la URL de checkout de Lemon Squeezy para este plan');
       }
-      const { data: { user } } = await supabase?.auth.getUser() || { data: { user: null } };
+      
       const url = new URL(base);
-      if (user) {
-        url.searchParams.set('checkout[custom][user_id]', user.id);
+      url.searchParams.set('checkout[email]', email);
+      if (exportToken) {
+        url.searchParams.set('checkout[custom][export_token]', exportToken);
       }
       url.searchParams.set('checkout[custom][plan]', plan);
+      
       if (typeof navigator !== 'undefined' && navigator.language) {
         const userLang = navigator.language.slice(0, 2).toLowerCase();
         url.searchParams.set('locale', userLang);
@@ -74,28 +74,18 @@ export async function iniciarPago(providerId: ProviderId, plan: 'single_pdf' | '
   }
 }
 
-export async function iniciarPagoMercadoPago(plan: 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' | 'pro' | 'enterprise' = 'pro') {
-  return iniciarPago('mercadopago', plan);
-}
-
-export async function iniciarPagoPayPal(plan: 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' | 'pro' | 'enterprise' = 'pro') {
-  return iniciarPago('paypal', plan);
-}
-
-export async function iniciarPagoLemonSqueezy(plan: 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' | 'pro' | 'enterprise' = 'pro') {
-  return iniciarPago('lemonsqueezy', plan);
-}
-
 /**
  * Función centralizada para invocar la pasarela seleccionada desde cualquier lugar de la app.
  */
 export async function selectPaidPlan(
-  plan: 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' | 'pro' | 'enterprise',
+  plan: string,
   gateway: 'mercadopago' | 'paypal' | 'lemonsqueezy',
+  email: string,
+  exportToken?: string,
   options?: { onError?: (errorMsg: string) => void }
 ) {
   try {
-    await iniciarPago(gateway, plan);
+    await iniciarPago(gateway, plan, email, exportToken);
   } catch (err: any) {
     const msg = err?.message || 'Error al conectar con la pasarela de pagos';
     if (options?.onError) {
@@ -158,11 +148,7 @@ export async function enviarComprobanteManual({
   transactionRef?: string;
   amount?: string | number;
 }): Promise<PaymentClaim> {
-  if (!supabase) throw new Error('Supabase no configurado');
-  const { data: { user } } = await supabase.auth.getUser();
-
   const payload: Partial<PaymentClaim> = {
-    user_id: user?.id || undefined,
     email,
     plan,
     payment_method: paymentMethod,
@@ -176,9 +162,9 @@ export async function enviarComprobanteManual({
 
   await dal.adminNotifications.insert({
     type: 'manual_payment_claim',
-    title: 'Nuevo comprobante manual de pago',
-    detail: `Usuario ${email} envió comprobante (${paymentMethod}) para plan ${plan}`,
-    user_id: user?.id || null,
+    title: 'Nuevo comprobante manual de pago (Invitado)',
+    detail: `Invitado ${email} envió comprobante (${paymentMethod}) para plan ${plan}`,
+    user_id: null,
   });
 
   return claim;

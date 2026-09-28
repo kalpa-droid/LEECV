@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { Check, Crown, Zap, Shield, Sparkles, Cloud, Smartphone, User, LogOut, HardDrive, LogIn } from 'lucide-react';
-import { iniciarPagoMercadoPago, iniciarPagoLemonSqueezy, iniciarPagoPayPal } from './paymentService';
+import { selectPaidPlan } from './paymentService';
 import { useToast } from '../../shared/core/ui/Toast';
 import { Modal } from '../../shared/core/ui/Modal';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
 import { navigation } from '../../shared/core/utils/navigation';
-import { useAuth } from '../../shared/core/auth/AuthProvider';
 
 import { button, elevationSystem, radius } from '../../shared/core/uiDesignSystem';
 import { formatPrice, formatPricePerMonth } from '../../shared/core/payments/pricingCatalog';
@@ -16,43 +15,20 @@ import { PlanFeatureCard } from '../../shared/core/ui/marketing/PlanFeatureCard'
 export default function PricingModal({ isOpen, onClose }: any) {
   const { showError, showSuccess } = useToast();
   const [loadingGateway, setLoadingGateway] = useState<string | null>(null);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [email, setEmail] = useState('');
   const t = useText();
-  const { user: currentProfile, login, logout } = useAuth();
-
-  async function handleLogout() {
-    setIsLoggingOut(true);
-    await withErrorHandling(
-      async () => {
-        await logout();
-        showSuccess(t.pricing.sessionClosedSuccess);
-        navigation.reload();
-      },
-      { context: 'Cerrar Sesión' }
-    );
-    setIsLoggingOut(false);
-  }
-
-  async function handleGoogleConnect() {
-    await withErrorHandling(
-      async () => {
-        await login();
-      },
-      { context: 'Vincular Google Drive' }
-    );
-  }
 
   async function handleSelectPlan(planId: 'pro' | 'enterprise', gateway: 'mercadopago' | 'paypal' | 'lemonsqueezy') {
+    if (!email) {
+      showError('Por favor ingresa tu email para asociar la compra.');
+      return;
+    }
     setLoadingGateway(gateway);
     await withErrorHandling(
       async () => {
-        if (gateway === 'mercadopago') {
-          await iniciarPagoMercadoPago(planId);
-        } else if (gateway === 'paypal') {
-          await iniciarPagoPayPal(planId);
-        } else {
-          await iniciarPagoLemonSqueezy(planId);
-        }
+        await selectPaidPlan(planId, gateway, email, undefined, {
+          onError: (msg) => showError(msg)
+        });
       },
       {
         context: 'Selección de Plan de Pago',
@@ -77,29 +53,6 @@ export default function PricingModal({ isOpen, onClose }: any) {
       }
     >
       <div className={`space-y-6 bg-[var(--ui-bg-panel)] p-4 rounded-[${radius.modal}] text-[var(--ui-text-primary)]`}>
-        {/* Tarjeta de Cuenta Activa / Perfil de Usuario */}
-        <div className={`bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.modal}] p-4 flex flex-col md:flex-row items-center justify-between gap-4`}>
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className={`w-10 h-10 rounded-[${radius.card}] bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple-text)] flex items-center justify-center flex-shrink-0`}>
-              <User className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-xs font-black text-[var(--ui-text-primary)] block">
-                {currentProfile?.email}
-              </span>
-              <p className="text-[11px] text-[var(--ui-text-secondary)] flex items-center gap-1.5 mt-0.5">
-                <HardDrive className="w-3.5 h-3.5 text-[var(--ui-secondary)]" />
-                <span>{t.pricing.googleDriveLabel} {currentProfile?.drive_connected ? '🟢 Conectado' : '⚪ No vinculado'}</span>
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-            <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)] border border-[var(--color-status-warning-base)]/30 uppercase">
-              {currentProfile?.role === 'admin' ? 'Administrador' : getPlanLabel(currentProfile?.plan)}
-            </span>
-          </div>
-        </div>
 
         {/* Encabezado Explicativo */}
         <div className="text-center space-y-1.5 max-w-xl mx-auto">
@@ -107,6 +60,15 @@ export default function PricingModal({ isOpen, onClose }: any) {
           <p className="text-xs text-[var(--ui-text-secondary)]">
             {t.pricing.planSubtitle}
           </p>
+          <div className="pt-4 max-w-sm mx-auto">
+            <input 
+              type="email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Tu correo electrónico (para enviarte el comprobante y token)"
+              className="w-full px-3 py-2 text-sm border border-[var(--ui-border)] rounded-[var(--radius-control)] bg-[var(--ui-bg-card)] focus:outline-none focus:border-[var(--color-accent-base)] text-[var(--ui-text-primary)] placeholder:text-[var(--ui-text-secondary)]/50"
+            />
+          </div>
         </div>
 
         {/* Tabla de 3 Niveles */}

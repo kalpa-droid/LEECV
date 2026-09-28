@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { capturarConexionDriveSiCorresponde, retrySignInInCurrentWindow } from './authService';
 import { navigation } from '../utils/navigation';
@@ -9,7 +9,7 @@ const parseAuthError = (error: string, description: string): { message: string, 
   
   if (desc.includes('unable to exchange external code') || err === 'server_error') {
     return {
-      message: 'No pudimos verificar tu inicio de sesión con Google. Por favor, intentá nuevamente.',
+      message: 'No pudimos verificar tu cuenta con Google. Por favor, intentá nuevamente.',
       canRetry: true
     };
   }
@@ -34,6 +34,7 @@ const parseAuthError = (error: string, description: string): { message: string, 
 
 export const AuthCallbackScreen: React.FC = () => {
   const [status, setStatus] = useState<'loading' | 'completed' | 'error'>('loading');
+  const hasProcessedCallbackRef = useRef(false);
 
   const params = new URLSearchParams(window.location.search);
   const hashParams = new URLSearchParams(window.location.hash.replace('#', '?')); // URLSearchParams expects ?
@@ -51,6 +52,9 @@ export const AuthCallbackScreen: React.FC = () => {
     let mounted = true;
 
     async function processCallback() {
+      if (hasProcessedCallbackRef.current) return;
+      hasProcessedCallbackRef.current = true;
+
       if (errorParam) {
         if (mounted) setStatus('error');
         return;
@@ -71,6 +75,14 @@ export const AuthCallbackScreen: React.FC = () => {
           channel.close();
         } catch (e) {
           // Fallback para entornos sin BroadcastChannel
+        }
+
+        try {
+          if (window.opener && window.opener !== window) {
+            window.opener.postMessage({ type: 'LEECV_AUTH_SUCCESS', timestamp: Date.now() }, window.location.origin);
+          }
+        } catch (e) {
+          // Fallback para window.opener
         }
 
         try {

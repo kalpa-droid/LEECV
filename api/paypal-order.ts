@@ -8,28 +8,29 @@ import { captureBackendException } from './_lib/sentryBackend.js';
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return errorResponse(res, 405, 'Método HTTP no permitido');
 
-  const auth = await requireAuth(req, res);
-  if (!auth) return;
-
   const action = (req.query.action as string) || req.body?.action || 'create';
-
+  
   if (action === 'create') {
-    const rateOk = await requireRateLimit(req, res, `user:${auth.user.id}:paypal-order`, {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    
+    const rateOk = await requireRateLimit(req, res, `guest:${ip}:paypal-order`, {
       maxRequests: 10,
       windowSeconds: 60,
     });
     if (!rateOk) return;
 
-    const userId = auth.user.id;
-    const email = auth.user.email || '';
-    const { plan = 'pro' } = req.body || {};
+    const { plan = 'single_pdf', email, exportToken } = req.body || {};
+
+    if (!email || !exportToken) {
+      return errorResponse(res, 400, 'Faltan campos obligatorios: email y exportToken');
+    }
 
     try {
-      const result = await createCheckoutForProvider('paypal', plan, userId, email);
+      const result = await createCheckoutForProvider('paypal', plan, exportToken, email);
       return successResponse(res, { checkoutUrl: result.checkoutUrl });
     } catch (err: any) {
       console.error('Error creando orden PayPal:', err);
-      await captureBackendException(err, 'paypal-order:create', { userId, plan });
+      await captureBackendException(err, 'paypal-order:create', { plan, exportToken });
       return errorResponse(res, 500, err?.message || 'No se pudo crear la orden de pago con PayPal');
     }
   }

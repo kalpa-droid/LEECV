@@ -118,7 +118,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       if (approve) {
         await applyPayment(supabaseAdmin, {
-          userId: claim.user_id,
           email: claim.user_email,
           plan: claim.plan,
           metodoPago: 'manual',

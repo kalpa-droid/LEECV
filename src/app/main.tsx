@@ -20,28 +20,14 @@ const UserDashboard = lazy(() => import('../modules/dashboard/UserDashboard').th
 const PrivacyPolicyPage = lazy(() => import('../modules/legal/PrivacyPolicyPage'));
 const TermsOfServicePage = lazy(() => import('../modules/legal/TermsOfServicePage'));
 const RefundPolicyPage = lazy(() => import('../modules/legal/RefundPolicyPage'));
-const AuthCallbackScreen = lazy(() => import('../shared/core/auth/AuthCallbackScreen'));
-
 const pathname = navigation.getPathname().toLowerCase();
-const isAuthCallbackRoute = 
-  pathname.startsWith('/auth/callback') ||
-  (typeof window !== 'undefined' && (
-    window.name === 'google-oauth-popup' ||
-    window.location.search.includes('popup=1') ||
-    window.location.hash.includes('access_token=') ||
-    window.location.hash.includes('refresh_token=') ||
-    window.location.search.includes('error=') ||
-    window.location.hash.includes('error=')
-  ));
 const isAdminRoute = pathname.startsWith('/admin');
 const isDashboardRoute = pathname.startsWith('/dashboard');
 const isPrivacyRoute = pathname.startsWith('/privacidad') || pathname.startsWith('/privacy');
 const isTermsRoute = pathname.startsWith('/terminos') || pathname.startsWith('/terms');
 const isRefundRoute = pathname.startsWith('/reembolsos') || pathname.startsWith('/refunds');
 
-const RootComponent = isAuthCallbackRoute
-  ? AuthCallbackScreen
-  : isAdminRoute
+const RootComponent = isAdminRoute
   ? AdminDashboard
   : isDashboardRoute
   ? UserDashboard
@@ -53,41 +39,22 @@ const RootComponent = isAuthCallbackRoute
   ? RefundPolicyPage
   : App;
 
-import { AuthProvider, useAuth } from '../shared/core/auth/AuthProvider';
-import { ToastProvider, useToast } from '../shared/core/ui/Toast';
-
-function GlobalLoginToastManager() {
-  const { user } = useAuth();
-  const { showSuccess } = useToast();
-  const prevUserRef = React.useRef(user);
-
-  React.useEffect(() => {
-    if (!prevUserRef.current && user?.email) {
-      showSuccess(`Ingresaste como ${user.email}`);
-    }
-    prevUserRef.current = user;
-  }, [user, showSuccess]);
-
-  return null;
-}
+import { ToastProvider } from '../shared/core/ui/Toast';
 
 const rootElement = document.getElementById('root');
 if (rootElement) {
   createRoot(rootElement).render(
     <StrictMode>
       <ErrorBoundary>
-        <AuthProvider>
-          <ToastProvider>
-            <GlobalLoginToastManager />
-            <Suspense fallback={
-              <div className="min-h-screen bg-[var(--color-neutral-text-primary)] text-white flex items-center justify-center font-bold">
-                Cargando LEECV...
-              </div>
-            }>
-              <RootComponent />
-            </Suspense>
-          </ToastProvider>
-        </AuthProvider>
+        <ToastProvider>
+          <Suspense fallback={
+            <div className="min-h-screen bg-[var(--color-neutral-text-primary)] text-white flex items-center justify-center font-bold">
+              Cargando LEECV...
+            </div>
+          }>
+            <RootComponent />
+          </Suspense>
+        </ToastProvider>
       </ErrorBoundary>
     </StrictMode>,
   );

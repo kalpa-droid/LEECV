@@ -133,5 +133,3 @@ LEECV es para gente común: tiene una impresora en casa o quiere llevar el archi
   2. **Matching estricto:** Anclar la búsqueda (`^...$`) cuando aplique, o usar palabras completas seguras (`\b`), en lugar de `.includes()` débiles para evitar falsos positivos ("Cosas de mi equipo" -> "equipo").
   3. **Trazabilidad obligatoria:** Toda invocación a una adivinanza/heurística debe reportarse (p. ej., `reportMessage`) para saber cuándo se invoca y detectar falsos positivos/negativos en uso real.
 
-### Auth Management
-- ALWAYS use the `useAuth()` hook from `src/shared/core/auth/AuthProvider.tsx` for retrieving authentication state (`user`, `isLoggedIn`, `loading`), and performing authentication actions (`login`, `logout`). Do not read from `supabase.auth` directly, and avoid prop-drilling authentication states.

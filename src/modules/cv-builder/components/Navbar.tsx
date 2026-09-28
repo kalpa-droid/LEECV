@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { elevationSystem, radius, UI_THEME_META, buttonUnavailable, button } from '../../../shared/core/uiDesignSystem';
 import { ThemeToggleButton } from '../../../shared/core/ui/ThemeToggleButton';
-import { AccountMenuButton } from '../../../shared/core/ui/AccountMenuButton';
+
 import { UndoRedoControls } from '../../../shared/core/ui/UndoRedoControls';
 import { useIsMobile } from '../../../shared/core/ui/useIsMobile';
 import { useEntitlements, getPlanLabel, PLAN_FEATURES } from '../../../shared/core/entitlements/useEntitlements';
@@ -47,8 +47,7 @@ export interface NavbarProps {
   onOpenAgencyPanel?: () => void;
   onOpenShareAppModal: () => void;
   onOpenPrivacy?: () => void;
-  onOpenCloudStatus: () => void;
-  userRole?: string;
+
   isSaving?: boolean;
   zoomLevel: number;
   setZoomLevel: (action: number | ((prev: number) => number)) => void;
@@ -74,8 +73,7 @@ export default function Navbar({
   onOpenAgencyPanel,
   onOpenShareAppModal,
   onOpenPrivacy,
-  onOpenCloudStatus,
-  userRole = 'candidate',
+
   isSaving = false,
   zoomLevel,
   setZoomLevel,
@@ -111,7 +109,6 @@ export default function Navbar({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const isAgencyUser = userRole === 'agency' || userRole === 'enterprise' || userRole === 'admin';
 
   return (
     <header className={`sticky top-0 z-40 bg-[var(--ui-bg-header)] border-b border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.overlay} no-print select-none`}>
@@ -187,28 +184,7 @@ export default function Navbar({
             </button>
           )}
 
-          {/* PÍLDORA 0: PUBLICAR EN LA WEB (Visible en tablet/desktop; en móvil está dentro del menú de acciones) */}
-          {capabilitiesGate.canPublish(docType) ? (
-            <button
-              type="button"
-              onClick={onOpenCloudStatus}
-              className={`hidden md:flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-full transition cursor-pointer active:scale-95 font-black text-xs shrink-0 ${button.success}`}
-              title={t.navbar.publishTitle}
-            >
-              <Globe className="w-4 h-4 flex-shrink-0" />
-              <span className="hidden sm:inline">{t.navbar.publishButton}</span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              disabled
-              title="La Publicación en la Web es para documentos con respaldo en la nube — los libros se descargan listos para imprimir"
-              className={`${buttonUnavailable} hidden md:flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-full text-xs shrink-0`}
-            >
-              <Globe className="w-4 h-4 flex-shrink-0" />
-              <span className="hidden sm:inline">{t.navbar.publishButton}</span>
-            </button>
-          )}
+
 
           {/* PÍLDORA 1: MENÚ DE ACCIONES */}
           <div className="relative" ref={actionMenuRef}>
@@ -335,41 +311,11 @@ export default function Navbar({
                   <span>{t.navbar.exportPdf}</span>
                 </button>
 
-                {/* 6. Publicar en la Web — visible siempre, deshabilitado con tooltip para
-                    Tarjeta/Libro (mismo motivo y mismo patron que el bloque de guardado
-                    de arriba: no es que "no exista", es que no aplica a este producto). */}
-                {capabilitiesGate.canPublish(docType) ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsActionMenuOpen(false);
-                      onOpenCloudStatus();
-                    }}
-                    className={`w-full text-left px-3 py-2 rounded-[${radius.card}] text-xs font-black flex items-center gap-2 transition cursor-pointer ${button.success}`}
-                  >
-                    <Globe className="w-4 h-4" />
-                    <span>{t.navbar.publishWebPublicLink}</span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    disabled
-                    title={docType === 'business_card' ? 'Publicar en la Web es para CVs — las tarjetas se descargan listas para imprimir' : 'Publicar en la Web es para CVs — los libros se descargan listos para imprimir'}
-                    className={`${buttonUnavailable} w-full text-left px-3 py-2 text-xs flex items-center gap-2`}
-                  >
-                    <Globe className="w-4 h-4" />
-                    <span>{t.navbar.publishWebPublicLink}</span>
-                  </button>
-                )}
               </div>
             )}
           </div>
 
-          {/* PÍLDORA 2: MENÚ DE CUENTA */}
-          <AccountMenuButton
-            onOpenPricing={onOpenPricing}
-            onOpenSavedDocs={onOpenSavedCVsModal}
-          />
+
         </div>
       </div>
     </header>

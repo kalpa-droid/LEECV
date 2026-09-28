@@ -47,12 +47,7 @@ if (fs.existsSync(engineDir)) {
   });
 }
 
-// 3. Modales importen canPublish y canVersionByJob desde capabilitiesGate
-allPassed &= checkFileForRegex(
-  path.join(rootDir, 'modules/cv-builder/components/Navbar.tsx'),
-  /capabilitiesGate\.canPublish/,
-  'Navbar.tsx must import canPublish from capabilitiesGate'
-);
+// 3. Modales importen canVersionByJob desde capabilitiesGate
 allPassed &= checkFileForRegex(
   path.join(rootDir, 'app/App.tsx'),
   /capabilitiesGate\.canVersionByJob/,

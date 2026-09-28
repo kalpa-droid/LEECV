@@ -1,64 +1,65 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { dal } from '../storage/dataAccessLayer';
-import { useAuth } from '../auth/AuthProvider';
-import { useEntitlements } from './useEntitlements';
 
-/**
- * Único punto de decisión de "¿puede exportar PDF ahora mismo?".
- * Usado tanto por el flujo Registrado-gratis (créditos) como por
- * Premium/Enterprise (ilimitado) — un solo hook, no una función por plan.
- */
 export function usePdfExportGate() {
-  const { plan, unlimitedExports, loading: loadingPlan } = useEntitlements();
-  const { user } = useAuth();
   const [credits, setCredits] = useState(0);
-  const [loadingCredits, setLoadingCredits] = useState(true);
+  const [loading, setLoading] = useState(true);
+
+  // We keep the return signature somewhat compatible for existing components
+  const plan = 'free';
+  const unlimitedExports = false;
 
   const refreshCredits = useCallback(async () => {
-    if (!supabase || unlimitedExports) {
-      setLoadingCredits(false);
-      return;
-    }
     try {
-      if (!user) { setLoadingCredits(false); return; }
-      const creditRecord = await dal.pdfExportCredits.getByUserId(user.id);
-      setCredits(creditRecord?.credits || 0);
-    } catch {
+      const token = localStorage.getItem('leecv_export_token');
+      if (!token || !supabase) {
+        setCredits(0);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('pdf_export_tokens')
+        .select('paid, consumed')
+        .eq('token', token)
+        .single();
+
+      if (error || !data) {
+        setCredits(0);
+        return;
+      }
+
+      if (data.paid && !data.consumed) {
+        setCredits(1);
+      } else {
+        setCredits(0);
+      }
+    } catch (e) {
       setCredits(0);
     } finally {
-      setLoadingCredits(false);
+      setLoading(false);
     }
-  }, [unlimitedExports, user]);
+  }, []);
 
-  useEffect(() => { refreshCredits(); }, [refreshCredits]);
+  useEffect(() => {
+    refreshCredits();
+  }, [refreshCredits]);
 
-  const canExport = unlimitedExports || credits > 0;
-  const reason = unlimitedExports
-    ? null
-    : credits > 0
-      ? null
-      : plan === 'free'
-        ? 'sin_creditos'   // mostrar paywall: comprar créditos o suscribirse
-        : 'no_logueado';   // usuario anónimo: solo puede descargar zip/json, no PDF
+  const canExport = credits > 0;
+  const reason = credits > 0 ? null : 'sin_creditos';
 
-  /**
-   * Descuenta 1 crédito vía RPC (server-side, no confía en el cliente)
-   * y actualiza el estado local. Devuelve false si no había créditos —
-   * el llamador debe abortar la exportación en ese caso.
-   */
   const consumeCreditIfNeeded = useCallback(async () => {
-    if (unlimitedExports) return true;
     if (!supabase) return false;
 
-    if (!user) return false;
+    const token = localStorage.getItem('leecv_export_token');
+    if (!token) return false;
 
-    const { data, error } = await supabase.rpc('consume_pdf_credit', { p_user_id: user.id });
+    const { data, error } = await supabase.rpc('consume_export_token', { p_token: token });
     if (error || !data) return false;
 
-    setCredits(c => Math.max(0, c - 1));
+    setCredits(0);
+    localStorage.removeItem('leecv_export_token');
     return true;
-  }, [unlimitedExports, user]);
+  }, []);
 
   return {
     plan,
@@ -66,7 +67,7 @@ export function usePdfExportGate() {
     reason,
     credits,
     unlimitedExports,
-    loading: loadingPlan || loadingCredits,
+    loading,
     consumeCreditIfNeeded,
     refreshCredits,
   };

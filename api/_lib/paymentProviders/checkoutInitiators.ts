@@ -8,8 +8,8 @@ export interface CheckoutSessionResult {
 export async function createCheckoutForProvider(
   providerId: ProviderId,
   plan: string,
-  userId: string,
-  email?: string
+  exportToken: string,
+  email: string
 ): Promise<CheckoutSessionResult> {
   switch (providerId) {
     case 'mercadopago': {
@@ -49,7 +49,7 @@ export async function createCheckoutForProvider(
             },
           ],
           payer: { email },
-          external_reference: JSON.stringify({ userId, plan }),
+          external_reference: JSON.stringify({ exportToken, plan }),
           back_urls: {
             success: `${process.env.SITE_URL}/?pago=exitoso`,
             failure: `${process.env.SITE_URL}/?pago=fallido`,
@@ -106,8 +106,8 @@ export async function createCheckoutForProvider(
                 currency_code: 'USD',
                 value: priceStr,
               },
-              custom_id: JSON.stringify({ userId, plan }),
-              description: `LEECV Subscription (${plan})`,
+              custom_id: JSON.stringify({ exportToken, plan }),
+              description: `LEECV Export (${plan})`,
             },
           ],
           application_context: {
