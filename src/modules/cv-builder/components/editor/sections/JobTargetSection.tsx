@@ -2,10 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Briefcase, Target, Plus, CheckCircle, AlertCircle } from 'lucide-react';
 import { Field } from '../../../../../shared/core/ui/Field';
 import { radius } from '../../../../../shared/core/uiDesignSystem';
+import { useCVContext } from '../../../../../context/CVContext';
+import { useToast } from '../../../../../shared/core/ui/Toast';
 
 import { extractJobData, checkKeywordInCV, ExtractedJobData } from '../../../../../shared/core/utils/keywordExtractor';
 
 export const JobTargetSection = ({ cvData, setCvData }: any) => {
+  const { saveCVAs } = useCVContext();
+  const { showSuccess } = useToast();
   const jobTarget = cvData.jobTarget || {};
   
   const [extractedData, setExtractedData] = useState<ExtractedJobData | null>(null);
@@ -122,6 +126,24 @@ export const JobTargetSection = ({ cvData, setCvData }: any) => {
           </div>
         </div>
       )}
+
+      <div className="pt-4 mt-6 border-t border-[var(--color-neutral-border)]">
+        <button
+          onClick={async (e) => {
+            e.preventDefault();
+            const label = jobTarget.companyName ? `Para ${jobTarget.companyName}` : `Para ${jobTarget.jobTitle || 'Nueva Vacante'}`;
+            await saveCVAs(label);
+            showSuccess(`CV duplicado como: ${label}`);
+          }}
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-[var(--color-primary-base)] text-white rounded-[var(--ui-radius-control)] font-medium text-sm hover:bg-[var(--color-primary-hover)] transition-colors"
+        >
+          <Briefcase className="w-4 h-4" />
+          Duplicar y Adaptar a esta Vacante
+        </button>
+        <p className="text-center text-xs text-[var(--color-neutral-text-secondary)] mt-2">
+          Crea una copia de este CV para no perder el original.
+        </p>
+      </div>
     </div>
   );
 };
