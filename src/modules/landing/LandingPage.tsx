@@ -15,6 +15,7 @@ import { PlanFeatureCard } from '../../shared/core/ui/marketing/PlanFeatureCard'
 import { FaqAccordion } from '../../shared/core/ui/marketing/FaqAccordion';
 import { useToast } from '../../shared/core/ui/Toast';
 import { useIsMobile } from '../../shared/core/ui/useIsMobile';
+import { useJsonLd } from '../../shared/core/hooks/useJsonLd';
 
 import { selectPaidPlan } from '../payments/paymentService';
 
@@ -52,6 +53,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
     { question: t.landing.faq.q3, answer: t.landing.faq.a3 },
     { question: t.landing.faq.q4, answer: t.landing.faq.a4 },
   ];
+
+  useJsonLd({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqItems.map(item => ({
+      "@type": "Question",
+      "name": item.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": item.answer
+      }
+    }))
+  });
 
   return (
     <div className="h-[100dvh] w-full overflow-y-auto bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] flex flex-col font-sans transition-colors duration-300">

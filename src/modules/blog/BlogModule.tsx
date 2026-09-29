@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Newspaper, ArrowLeft, Clock, User, FileText, BookOpen, Mail } from 'lucide-react';
 import { displayScale, elevationSystem, radius, button } from '../../shared/core/uiDesignSystem';
+import { FaqAccordion } from '../../shared/core/ui/marketing/FaqAccordion';
+import { useJsonLd } from '../../shared/core/hooks/useJsonLd';
 
 
 interface Article {
@@ -14,6 +16,7 @@ interface Article {
   content: string[];
   ctaLabel?: string;
   ctaRoute?: string;
+  faq?: Array<{ question: string; answer: string; }>;
 }
 
 import * as allArticles from './data';
@@ -51,7 +54,34 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ initialSlug, onNavigateH
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-    // SEO features removed
+  const seoSchema = React.useMemo(() => {
+    if (!selectedArticle) return null;
+    const baseSchema: any = {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": selectedArticle.title,
+      "description": selectedArticle.summary,
+      "author": {
+        "@type": "Person",
+        "name": selectedArticle.author
+      },
+      "datePublished": selectedArticle.date
+    };
+    if (selectedArticle.faq?.length) {
+      baseSchema.mainEntity = selectedArticle.faq.map(item => ({
+        "@type": "Question",
+        "name": item.question,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": item.answer
+        }
+      }));
+      baseSchema["@type"] = ["BlogPosting", "FAQPage"];
+    }
+    return baseSchema;
+  }, [selectedArticle]);
+
+  useJsonLd(seoSchema);
 
 
   const handleSelectArticle = (art: Article | null) => {
@@ -126,6 +156,15 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ initialSlug, onNavigateH
                 <p key={idx}>{paragraph}</p>
               ))}
             </div>
+
+            {selectedArticle.faq && selectedArticle.faq.length > 0 && (
+              <div className="mt-12 pt-8 border-t border-[var(--ui-border)]">
+                <h3 className={`${displayScale.sectionHeading} text-[var(--ui-text-primary)] mb-6 text-center`}>
+                  Preguntas Frecuentes
+                </h3>
+                <FaqAccordion items={selectedArticle.faq} />
+              </div>
+            )}
 
             {/* CTA al final del artículo */}
             <div className={`mt-12 p-8 bg-[var(--ui-bg-card)] rounded-[24px] border border-[var(--ui-border)] ${elevationSystem.floating} text-center space-y-4`}>
