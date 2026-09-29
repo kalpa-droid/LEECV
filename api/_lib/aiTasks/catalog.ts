@@ -125,5 +125,30 @@ ${payload.jobDescription
     ? `VACANTE OBJETIVO:\n${payload.jobDescription}`
     : 'No se proveyó una vacante puntual: evaluá calidad general de redacción.'
   }`
+  },
+
+  first_job_interview: {
+    taskId: 'first_job_interview',
+    buildSystemPrompt: () => `Eres un entrevistador experto en primeros empleos.
+Tu objetivo es formular 3 preguntas clave que guíen al usuario a extraer habilidades transferibles de experiencias no laborales (voluntariados, proyectos académicos, hobbies).
+Devuelve un JSON con esta estructura:
+{
+  "questions": ["pregunta 1", "pregunta 2", "pregunta 3"]
+}`,
+    buildUserPrompt: (payload: any) => `El candidato busca un puesto de: ${payload.targetRole || 'Primer Empleo'}. Genera las preguntas.`
+  },
+
+  classify_raw_data: {
+    taskId: 'classify_raw_data',
+    buildSystemPrompt: () => `Eres un clasificador de datos curriculares.
+Recibes un texto sin formato (pegado de un PDF o LinkedIn) y debes categorizar los bloques de información en secciones estándar de un CV.
+Devuelve un JSON con esta estructura:
+{
+  "personal": "datos personales encontrados",
+  "experience": ["bloque exp 1", "bloque exp 2"],
+  "education": ["bloque edu 1"],
+  "skills": ["habilidad 1", "habilidad 2"]
+}`,
+    buildUserPrompt: (payload: any) => `Texto raw:\n${payload.rawData}`
   }
 };

@@ -76,4 +76,24 @@ describe('Recruiter Rules Catalog', () => {
     cvData.layout!.sectionOrder = ['experiencia', 'formacion'];
     expect(rule.evaluate(cvData)).toBe('pass');
   });
+
+  it('keyword_match: evaluates correctly based on jobTargetText', () => {
+    const rule = RULES_CATALOG.find(r => r.id === 'keyword_match')!;
+    
+    const cvData: CVData = {
+      experience: [{ id: '1', company: 'Tech', role: 'Desarrollador', description: 'Uso de Node.js' }]
+    };
+    
+    // Si no hay texto, es not_applicable
+    expect(rule.evaluate(cvData, undefined)).toBe('not_applicable');
+    
+    // Si la vacante pide React, falla
+    expect(rule.evaluate(cvData, 'Se busca desarrollador con experiencia en React')).toBe('fail');
+    const msg = rule.getDynamicMessage!(cvData, 'Se busca desarrollador con experiencia en React');
+    expect(msg).toContain('react');
+    
+    // Si agregamos React, pasa
+    cvData.experience![0].description = 'Uso de Node.js y React';
+    expect(rule.evaluate(cvData, 'Se busca desarrollador con experiencia en React')).toBe('pass');
+  });
 });

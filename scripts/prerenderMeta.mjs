@@ -43,7 +43,8 @@ if (fs.existsSync(articlesDir)) {
           title: articleData.title,
           description: articleData.summary,
           content: articleData.content,
-          type: 'Article'
+          type: 'Article',
+          faq: articleData.faq || undefined
         };
       } catch (e) {
         console.error('Error parsing article file:', file);

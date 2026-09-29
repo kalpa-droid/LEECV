@@ -42,6 +42,14 @@ export const FIELD_CATALOG: Record<string, FieldDefinition> = {
     pdfRole: 'title',
     designHint: {}
   },
+  herramienta: {
+    id: 'herramienta',
+    label: 'Software / Herramienta / Tecnología',
+    placeholder: 'Ej: Excel, SAP, React, AutoCAD',
+    type: 'text',
+    pdfRole: 'title',
+    designHint: {}
+  },
   cargo: {
     id: 'cargo',
     label: 'Puesto / Cargo Desempeñado',
@@ -71,7 +79,7 @@ export const FIELD_CATALOG: Record<string, FieldDefinition> = {
     label: 'Nivel de Dominio',
     placeholder: 'Ej: Básico, Intermedio, Avanzado, Nativo',
     type: 'select',
-    options: ['Básico', 'Intermedio', 'Avanzado', 'Experto', 'Nativo', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2', ''],
+    options: ['', 'Básico', 'Intermedio', 'Avanzado', 'Experto', 'Nativo', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'],
     pdfRole: 'badge',
     designHint: { colorOverride: 'accent' }
   },
@@ -261,7 +269,7 @@ export const BUILTIN_RECORD_KINDS = {
   informatics: {
     kind: 'course',
     label: 'Informática y TICs',
-    defaultFields: ['tituloOGrado', 'institucion', 'nivelDominio', 'descripcion']
+    defaultFields: ['herramienta', 'institucion', 'nivelDominio', 'descripcion']
   },
   redes: {
     kind: 'social-link',

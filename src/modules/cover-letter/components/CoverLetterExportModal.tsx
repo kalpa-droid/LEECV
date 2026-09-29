@@ -25,6 +25,7 @@ export function CoverLetterExportModal({ isOpen, onClose, cvData, presetId = 'ca
   
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<'pdf' | 'docx' | null>(null);
+  const [hasReviewed, setHasReviewed] = useState(false);
 
   const handleExportPdf = async () => {
     const allowed = await consumeCredits(1);
@@ -91,10 +92,23 @@ export function CoverLetterExportModal({ isOpen, onClose, cvData, presetId = 'ca
             Elegí el formato de descarga. Cada descarga consume un pago único.
           </p>
 
+          <div className="bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)] p-3 rounded-md flex items-start gap-2 mb-2">
+            <input
+              type="checkbox"
+              id="review-gate"
+              checked={hasReviewed}
+              onChange={(e) => setHasReviewed(e.target.checked)}
+              className="mt-1"
+            />
+            <label htmlFor="review-gate" className="text-xs text-[var(--color-status-warning-text)] leading-tight cursor-pointer">
+              <strong>Confirmación Obligatoria:</strong> He revisado cuidadosamente el contenido de esta carta, reemplazado cualquier texto de relleno o sugerencias genéricas de la IA, y confirmo que es veraz y adecuada para la vacante.
+            </label>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               onClick={handleExportPdf}
-              disabled={isExportingPdf || isExportingDocx || isGating}
+              disabled={!hasReviewed || isExportingPdf || isExportingDocx || isGating}
               className={`p-4 ${button.primary} rounded-[${radius.modal}] flex flex-col items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${elevationSystem.raised}`}
             >
               <Download className="w-5 h-5" />
@@ -105,7 +119,7 @@ export function CoverLetterExportModal({ isOpen, onClose, cvData, presetId = 'ca
 
             <button
               onClick={handleExportDocx}
-              disabled={isExportingPdf || isExportingDocx || isGating}
+              disabled={!hasReviewed || isExportingPdf || isExportingDocx || isGating}
               className={`p-4 ${button.secondary} rounded-[${radius.modal}] flex flex-col items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${elevationSystem.raised}`}
             >
               <FileType className="w-5 h-5" />

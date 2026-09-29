@@ -141,12 +141,36 @@ export function RecordFormSection({
                 />
               ) : undefined;
 
+              let finalHeaderAction = headerAiAction;
+              if (fieldId === 'periodo') {
+                finalHeaderAction = (
+                  <div className="flex gap-2 items-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!currentValue) return;
+                        const matches = currentValue.match(/\d{4}/g);
+                        if (matches && matches.length > 0) {
+                          const newValue = matches.length > 1 ? `${matches[0]} - ${matches[matches.length - 1]}` : matches[0];
+                          updateField(fieldId, newValue);
+                          if (legacyKey !== fieldId) updateField(legacyKey, newValue);
+                        }
+                      }}
+                      className="text-xs px-2 py-0.5 font-bold rounded-md bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--color-neutral-text-secondary)] hover:bg-[var(--color-neutral-muted)] transition-colors"
+                    >
+                      Solo Año
+                    </button>
+                    {headerAiAction}
+                  </div>
+                ) as any;
+              }
+
               if (fDef.type === 'select' && fDef.options && fDef.options.length > 0) {
                 return (
                   <Field
                     key={fieldId}
                     label={labelElement}
-                    headerAction={headerAiAction}
+                    headerAction={finalHeaderAction}
                     as="select"
                     value={currentValue || fDef.options[0]}
                     onChange={(e: any) => {
@@ -170,7 +194,7 @@ export function RecordFormSection({
                 <Field
                   key={fieldId}
                   label={labelElement}
-                  headerAction={headerAiAction}
+                  headerAction={finalHeaderAction}
                   value={currentValue}
                   onChange={(e: any) => {
                     const val = e.target.value;

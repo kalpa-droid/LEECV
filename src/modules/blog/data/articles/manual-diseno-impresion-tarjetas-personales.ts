@@ -8,11 +8,7 @@ export const manualDisenoImpresionTarjetasPersonales: Article = {
   "readTime": "5 min de lectura",
   "date": "19 de Septiembre, 2026",
   "author": "Equipo LEECV",
-  "content": [
-    "Paso 1: Deja margen para el corte.",
-    "Paso 2: El Código QR.",
-    "Paso 3: Una hoja con varias tarjetas."
-  ],
+  "content": "Paso 1: Deja margen para el corte.\n\nPaso 2: El Código QR.\n\nPaso 3: Una hoja con varias tarjetas.",
   "ctaLabel": "Diseñar mis tarjetas",
   "ctaRoute": "/crear-tarjeta"
 };

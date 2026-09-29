@@ -8,10 +8,5 @@ export const erroresQueMatanTuCartaDePresentacion: Article = {
   "readTime": "4 min de lectura",
   "date": "10 de Septiembre, 2026",
   "author": "Equipo LEECV",
-  "content": [
-    "1. Repetir el CV palabra por palabra.",
-    "2. Cartas genéricas sin personalizar.",
-    "3. Errores tipográficos.",
-    "4. Longitud excesiva."
-  ]
+  "content": "1. Repetir el CV palabra por palabra.\n\n2. Cartas genéricas sin personalizar.\n\n3. Errores tipográficos.\n\n4. Longitud excesiva."
 };

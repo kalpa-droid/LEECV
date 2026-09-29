@@ -8,13 +8,7 @@ export const tarjetasPersonalesQrNetworking: Article = {
   "readTime": "4 min de lectura",
   "date": "28 de Agosto, 2026",
   "author": "Equipo LEECV",
-  "content": [
-    "Una tarjeta personal física sigue siendo el elemento de contacto más ágil en conferencias y networking.",
-    "1. Incluye un código QR dinámico.",
-    "2. Deja un margen de seguridad.",
-    "3. Contraste y legibilidad: Utiliza tipografías nítidas.",
-    "En LEECV Tarjetas, puedes subir tu logo y armar una hoja con 9 tarjetas."
-  ],
+  "content": "Una tarjeta personal física sigue siendo el elemento de contacto más ágil en conferencias y networking.\n\n1. Incluye un código QR dinámico.\n\n2. Deja un margen de seguridad.\n\n3. Contraste y legibilidad: Utiliza tipografías nítidas.\n\nEn LEECV Tarjetas, puedes subir tu logo y armar una hoja con 9 tarjetas.",
   "ctaLabel": "Diseñar mis tarjetas",
   "ctaRoute": "/crear-tarjeta"
 };

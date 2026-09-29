@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Newspaper, ArrowLeft, Clock, User, FileText, BookOpen, Mail } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { displayScale, elevationSystem, radius, button } from '../../shared/core/uiDesignSystem';
 import { FaqAccordion } from '../../shared/core/ui/marketing/FaqAccordion';
 import { useJsonLd } from '../../shared/core/hooks/useJsonLd';
@@ -13,7 +14,7 @@ interface Article {
   readTime: string;
   date: string;
   author: string;
-  content: string[];
+  content: string;
   ctaLabel?: string;
   ctaRoute?: string;
   faq?: Array<{ question: string; answer: string; }>;
@@ -151,10 +152,8 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ initialSlug, onNavigateH
               </div>
             </div>
 
-            <div className="space-y-6 text-[var(--ui-text-secondary)] text-base leading-relaxed">
-              {selectedArticle.content.map((paragraph, idx) => (
-                <p key={idx}>{paragraph}</p>
-              ))}
+            <div className="prose dark:prose-invert max-w-none text-[var(--ui-text-secondary)]">
+              <ReactMarkdown>{selectedArticle.content}</ReactMarkdown>
             </div>
 
             {selectedArticle.faq && selectedArticle.faq.length > 0 && (

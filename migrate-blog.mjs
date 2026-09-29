@@ -166,7 +166,7 @@ missingSlugs.forEach(slug => {
     readTime: '2 min de lectura',
     date: '28 de Septiembre, 2026',
     author: 'Equipo LEECV',
-    content: ['Este artículo está siendo redactado y pronto estará disponible.'],
+    content: 'Este artículo está siendo redactado y pronto estará disponible.',
     ctaLabel: 'Mejorar mi CV',
     ctaRoute: '/crear-cv'
   });
@@ -177,6 +177,9 @@ const outDir = path.join(process.cwd(), 'src/modules/blog/data/articles');
 let indexExport = '';
 
 articles.forEach(art => {
+  if (Array.isArray(art.content)) {
+    art.content = art.content.join('\n\n');
+  }
   const varName = art.slug.replace(/-./g, x => x[1].toUpperCase());
   indexExport += `export { ${varName} } from './articles/${art.slug}';\n`;
 

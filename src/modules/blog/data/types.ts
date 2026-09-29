@@ -11,7 +11,7 @@ export interface Article {
   readTime: string;
   date: string;
   author: string;
-  content: string[];
+  content: string;
   ctaLabel?: string;
   ctaRoute?: string;
   schemaOrg?: Record<string, any>;

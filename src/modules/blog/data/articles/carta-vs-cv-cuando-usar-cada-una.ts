@@ -8,9 +8,5 @@ export const cartaVsCvCuandoUsarCadaUna: Article = {
   "readTime": "4 min de lectura",
   "date": "15 de Septiembre, 2026",
   "author": "Equipo LEECV",
-  "content": [
-    "El CV es cuantitativo y estructurado.",
-    "La Carta de Presentación es narrativa y enfocada.",
-    "Sincroniza ambos documentos en LEECV."
-  ]
+  "content": "El CV es cuantitativo y estructurado.\n\nLa Carta de Presentación es narrativa y enfocada.\n\nSincroniza ambos documentos en LEECV."
 };

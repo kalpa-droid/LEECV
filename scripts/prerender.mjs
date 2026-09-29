@@ -44,9 +44,9 @@ for (const route of ROUTES) {
   script.type = 'application/ld+json';
   
   if (meta.type === 'Article') {
-    script.textContent = JSON.stringify({
+    const baseSchema = {
       "@context": "https://schema.org",
-      "@type": "Article",
+      "@type": meta.faq && meta.faq.length > 0 ? ["Article", "FAQPage"] : "Article",
       "headline": meta.title,
       "description": meta.description,
       "author": {
@@ -54,7 +54,20 @@ for (const route of ROUTES) {
         "name": "LEECV"
       },
       "url": `https://leecv.app${route}`
-    });
+    };
+
+    if (meta.faq && meta.faq.length > 0) {
+      baseSchema.mainEntity = meta.faq.map(item => ({
+        "@type": "Question",
+        "name": item.question,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": item.answer
+        }
+      }));
+    }
+
+    script.textContent = JSON.stringify(baseSchema);
   } else {
     script.textContent = JSON.stringify({
       "@context": "https://schema.org",

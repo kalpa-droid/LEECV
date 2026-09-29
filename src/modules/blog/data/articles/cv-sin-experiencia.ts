@@ -8,9 +8,7 @@ export const cvSinExperiencia: Article = {
   "readTime": "2 min de lectura",
   "date": "28 de Septiembre, 2026",
   "author": "Equipo LEECV",
-  "content": [
-    "Este artículo está siendo redactado y pronto estará disponible."
-  ],
+  "content": "Este artículo está siendo redactado y pronto estará disponible.",
   "ctaLabel": "Mejorar mi CV",
   "ctaRoute": "/crear-cv"
 };
