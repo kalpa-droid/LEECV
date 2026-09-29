@@ -26,7 +26,7 @@ export function extractJobData(text: string): ExtractedJobData {
   else if (normalized.includes("universitario")) degree = "Universitario";
   
   // Palabras comunes a ignorar (stopwords)
-  const stopwords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'pero', 'si', 'no', 'en', 'para', 'con', 'por', 'de', 'del', 'al', 'a', 'su', 'sus', 'te', 'se', 'lo', 'que', 'como', 'mas', 'muy', 'este', 'esta', 'estos', 'estas', 'es', 'son', 'ser', 'estar', 'tiene', 'tienen', 'hacer', 'anos', 'experiencia', 'busqueda', 'buscamos', 'importante', 'empresa', 'zona', 'lunes', 'viernes', 'horario', 'sueldo', 'remuneracion', 'puesto', 'cargo', 'requisitos', 'excluyente', 'deseable', 'secundario', 'completo']);
+  const stopwords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'pero', 'si', 'no', 'en', 'para', 'con', 'por', 'de', 'del', 'al', 'a', 'su', 'sus', 'te', 'se', 'lo', 'que', 'como', 'mas', 'muy', 'este', 'esta', 'estos', 'estas', 'es', 'son', 'ser', 'estar', 'tiene', 'tienen', 'hacer', 'anos', 'experiencia', 'busqueda', 'buscamos', 'busca', 'importante', 'empresa', 'zona', 'lunes', 'viernes', 'horario', 'sueldo', 'remuneracion', 'puesto', 'cargo', 'requisitos', 'excluyente', 'deseable', 'secundario', 'completo']);
   
   // Extraer palabras clave
   const words = normalized.match(/\b[a-z0-9#+]{3,}\b/g) || [];
