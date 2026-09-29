@@ -1,8 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { RecordFormSection } from '../../../../../shared/core/ui/RecordFormSection';
 import { SectionManualAdjustment } from '../SectionManualAdjustment';
+import { ClassifyItemModal } from '../../modals/ClassifyItemModal';
+import { FirstJobHelpModal } from '../../modals/FirstJobHelpModal';
+import { Sparkles, Briefcase } from 'lucide-react';
+import { button } from '../../../../../shared/core/uiDesignSystem';
 
 export const ExperienciaSection = ({ cvData, setCvData }: any) => {
+  const [isClassifyOpen, setIsClassifyOpen] = useState(false);
+  const [isFirstJobOpen, setIsFirstJobOpen] = useState(false);
+
   const guide = (
     <div className="space-y-2 mt-1">
       <p className="font-bold text-[var(--color-primary-base)]">¿Qué mira un reclutador acá?</p>
@@ -18,17 +25,54 @@ export const ExperienciaSection = ({ cvData, setCvData }: any) => {
   );
 
   return (
-    <RecordFormSection
-      sectionKey="experiencia"
-      sectionTitle="Experiencia Laboral"
-      kindKey="experience"
-      addLabel="Agregar Experiencia"
-      cvData={cvData}
-      setCvData={setCvData}
-      fieldName="experience"
-      itemTitlePrefix="Experiencia Laboral"
-      helpText={guide}
-      manualAdjustment={<SectionManualAdjustment sectionId="experiencia" cvData={cvData} setCvData={setCvData} />}
-    />
+    <>
+      <RecordFormSection
+        sectionKey="experiencia"
+        sectionTitle="Experiencia Laboral"
+        kindKey="experience"
+        addLabel="Agregar Experiencia"
+        cvData={cvData}
+        setCvData={setCvData}
+        fieldName="experience"
+        itemTitlePrefix="Experiencia Laboral"
+        helpText={guide}
+        manualAdjustment={
+          <div className="space-y-3">
+            <SectionManualAdjustment sectionId="experiencia" cvData={cvData} setCvData={setCvData} />
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-[var(--ui-border)]/50">
+              <button
+                type="button"
+                onClick={() => setIsClassifyOpen(true)}
+                className={`${button.secondary} text-xs py-1.5 px-3 flex items-center gap-1.5`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[var(--color-primary-base)]" />
+                Extraer desde texto (IA)
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsFirstJobOpen(true)}
+                className={`${button.secondary} text-xs py-1.5 px-3 flex items-center gap-1.5`}
+              >
+                <Briefcase className="w-3.5 h-3.5 text-[var(--color-primary-base)]" />
+                Ayuda Primer Empleo
+              </button>
+            </div>
+          </div>
+        }
+      />
+
+      <ClassifyItemModal
+        isOpen={isClassifyOpen}
+        onClose={() => setIsClassifyOpen(false)}
+        cvData={cvData}
+        setCvData={setCvData}
+      />
+      <FirstJobHelpModal
+        isOpen={isFirstJobOpen}
+        onClose={() => setIsFirstJobOpen(false)}
+        cvData={cvData}
+        setCvData={setCvData}
+      />
+    </>
   );
 };

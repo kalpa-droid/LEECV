@@ -12,6 +12,7 @@ import { downloadBlob } from '../../../shared/core/utils/downloadUtils';
 import { getOpenTabs } from '../../../shared/core/documents/tabStore';
 import { loadCVById, getSavedCVsList } from '../../cv-builder/services/cvStorageService';
 import { CoverLetterOnboardingModal } from './CoverLetterOnboardingModal';
+import { FillerWordDetector } from './FillerWordDetector';
 
 interface CoverLetterEditorPanelProps {
   activeTab: CoverLetterTab;
@@ -523,6 +524,7 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
                 placeholder="Expresa tu motivación por el puesto..."
                 className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-[10px] text-xs leading-relaxed"
               />
+              <FillerWordDetector text={data.body?.hookParagraph || ''} />
             </div>
 
             <div>
@@ -534,6 +536,7 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
                 placeholder="Detalla tu experiencia clave y encaje técnico..."
                 className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-[10px] text-xs leading-relaxed"
               />
+              <FillerWordDetector text={data.body?.evidenceParagraph || ''} />
             </div>
 
             <div>
@@ -545,6 +548,7 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
                 placeholder="Solicita una entrevista de trabajo..."
                 className="w-full px-3 py-2 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-[10px] text-xs leading-relaxed"
               />
+              <FillerWordDetector text={data.body?.closingParagraph || ''} />
             </div>
 
             <div>

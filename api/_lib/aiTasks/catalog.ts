@@ -129,26 +129,35 @@ ${payload.jobDescription
 
   first_job_interview: {
     taskId: 'first_job_interview',
-    buildSystemPrompt: () => `Eres un entrevistador experto en primeros empleos.
-Tu objetivo es formular 3 preguntas clave que guíen al usuario a extraer habilidades transferibles de experiencias no laborales (voluntariados, proyectos académicos, hobbies).
-Devuelve un JSON con esta estructura:
+    buildSystemPrompt: () => `Eres un orientador laboral experto en ayudar a personas a buscar su primer empleo.
+El usuario te explicará con sus propias palabras actividades informales, pasatiempos, voluntariados o tareas familiares que realiza (ej. "ayudo en la tienda de mi tío", "organizo torneos de fútbol").
+Tu objetivo es traducir esa experiencia informal en un formato profesional para un CV, destacando habilidades transferibles (comunicación, liderazgo, organización, etc.).
+Devuelve EXCLUSIVAMENTE un JSON con esta estructura:
 {
-  "questions": ["pregunta 1", "pregunta 2", "pregunta 3"]
+  "professionalTitle": "Un título de puesto profesional sugerido (ej. Asistente de Ventas)",
+  "description": "Una descripción redactada profesionalmente destacando las tareas y habilidades transferibles en 1 o 2 oraciones."
 }`,
-    buildUserPrompt: (payload: any) => `El candidato busca un puesto de: ${payload.targetRole || 'Primer Empleo'}. Genera las preguntas.`
+    buildUserPrompt: (payload: any) => `Actividad informal que realizo:\n"${payload.rawActivity}"`
   },
 
   classify_raw_data: {
     taskId: 'classify_raw_data',
-    buildSystemPrompt: () => `Eres un clasificador de datos curriculares.
-Recibes un texto sin formato (pegado de un PDF o LinkedIn) y debes categorizar los bloques de información en secciones estándar de un CV.
-Devuelve un JSON con esta estructura:
+    buildSystemPrompt: () => `Eres un asistente inteligente para la extracción de datos de currículums.
+El usuario te enviará un fragmento de texto suelto (por ejemplo, copiado y pegado de un CV viejo o de LinkedIn).
+Tu objetivo es clasificar a qué sección del CV pertenece este fragmento y extraer sus campos de forma estructurada.
+Las categorías posibles (type) son: "experience" (Experiencia), "education" (Educación), "skill" (Habilidades o Conocimientos), "language" (Idiomas), "project" (Proyectos), o "unknown" (no se puede determinar).
+Debes devolver EXCLUSIVAMENTE un objeto JSON válido con esta estructura exacta:
 {
-  "personal": "datos personales encontrados",
-  "experience": ["bloque exp 1", "bloque exp 2"],
-  "education": ["bloque edu 1"],
-  "skills": ["habilidad 1", "habilidad 2"]
-}`,
-    buildUserPrompt: (payload: any) => `Texto raw:\n${payload.rawData}`
+  "type": "experience" | "education" | "skill" | "language" | "project" | "unknown",
+  "confidence": 0 a 100,
+  "extractedFields": {
+    "title": "Título del puesto, carrera, o nombre de la habilidad (o null)",
+    "subtitle": "Nombre de la empresa, institución o nivel de idioma (o null)",
+    "dateRange": "Rango de fechas (o null)",
+    "description": "Resto de la información, tareas o detalles (o null)"
+  }
+}
+No inventes datos. Extrae solo lo que está en el texto.`,
+    buildUserPrompt: (payload: any) => `Por favor, clasifica y extrae los datos de este fragmento de texto:\n\n"${payload.rawData}"`
   }
 };
