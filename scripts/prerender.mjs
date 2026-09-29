@@ -88,10 +88,16 @@ for (const route of ROUTES) {
     // Hide it from visual view if needed, but it will be replaced by React on hydration
     // Actually better to just wrap it in a visually hidden class, but React will wipe #root
     // So if it's inside #root, React replaces it.
-    contentDiv.innerHTML = `<h1>${meta.title}</h1>` + meta.content.map(p => {
-      if(p.startsWith('<h')) return p;
-      return `<p>${p}</p>`;
-    }).join('');
+    let contentHtml = '';
+    if (typeof meta.content === 'string') {
+      contentHtml = `<p>${meta.content}</p>`;
+    } else if (Array.isArray(meta.content)) {
+      contentHtml = meta.content.map(p => {
+        if(p.startsWith('<h')) return p;
+        return `<p>${p}</p>`;
+      }).join('');
+    }
+    contentDiv.innerHTML = `<h1>${meta.title}</h1>` + contentHtml;
     root.appendChild(contentDiv);
   }
 
