@@ -31,7 +31,8 @@ export interface AtsPreflightResult {
 export function runAtsPreflightCheck(
   preset: Preset,
   sections: ContentSection[],
-  cvData?: CVData
+  cvData?: CVData,
+  jobTargetText?: string
 ): AtsPreflightResult {
   const warnings: AtsWarning[] = [];
   const linearReadingOrder: string[] = [];
@@ -39,13 +40,13 @@ export function runAtsPreflightCheck(
   // Evaluación dinámica usando el catálogo central de reglas
   if (cvData) {
     RULES_CATALOG.forEach((rule) => {
-      const result = rule.evaluate(cvData);
+      const result = rule.evaluate(cvData, jobTargetText);
       if (result === 'fail') {
         warnings.push({
           id: rule.id,
           level: rule.severity === 'high' ? 'critical' : rule.severity === 'medium' ? 'warning' : 'info',
           title: rule.title,
-          description: rule.description,
+          description: rule.getDynamicMessage?.(cvData, jobTargetText) ?? rule.description,
           recommendation: rule.articleSlug ? `Consultá la guía en nuestro blog para más detalles.` : 'Revisá esta sección.',
           articleSlug: rule.articleSlug,
           fixAction: rule.fixAction

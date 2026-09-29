@@ -16,7 +16,10 @@ export interface RecruiterRule {
    * - 'not_applicable': La regla no aplica a este CV.
    */
   evaluate: (cvData: CVData, jobTargetText?: string) => 'pass' | 'fail' | 'not_applicable';
+  getDynamicMessage?: (cvData: CVData, jobTargetText?: string) => string;
 }
+
+import { extractJobData, checkKeywordInCV } from '../utils/keywordExtractor';
 
 export const RULES_CATALOG: RecruiterRule[] = [
   // 1. Datos Personales
@@ -379,9 +382,19 @@ export const RULES_CATALOG: RecruiterRule[] = [
     articleSlug: 'como-adaptar-tu-cv',
     evaluate: (cvData, jobTargetText) => {
       if (!jobTargetText) return 'not_applicable';
-      // Esta evaluación se hace mucho mejor usando IA en el backend (atsAiAnalysis).
-      // Localmente podemos hacer una búsqueda rudimentaria o simplemente retornar pass para no dar falsos positivos.
-      return 'pass'; 
+      const { keywords } = extractJobData(jobTargetText);
+      if (keywords.length === 0) return 'pass';
+      const missingKeywords = keywords.filter(kw => !checkKeywordInCV(kw, cvData));
+      return missingKeywords.length > 0 ? 'fail' : 'pass';
+    },
+    getDynamicMessage: (cvData, jobTargetText) => {
+      if (!jobTargetText) return 'Faltan palabras clave de la vacante';
+      const { keywords } = extractJobData(jobTargetText);
+      const missingKeywords = keywords.filter(kw => !checkKeywordInCV(kw, cvData));
+      if (missingKeywords.length > 0) {
+        return `Es vital copiar las palabras reales del requisito de la vacante. Detectamos que te faltan estas palabras clave importantes: ${missingKeywords.join(', ')}.`;
+      }
+      return '¡Excelente! Tu currículum contiene las palabras clave de la vacante.';
     }
   }
 ];

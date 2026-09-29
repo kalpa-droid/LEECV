@@ -80,7 +80,7 @@ export const FIELD_CATALOG: Record<string, FieldDefinition> = {
     label: 'Estado Académico / Situación',
     placeholder: 'Ej: Graduado, En Curso...',
     type: 'select',
-    options: ['Completo / Graduado', 'En curso', 'Abandonado / Incompleto', 'Título Intermedio', ''],
+    options: ['Completo / Graduado', 'En curso', 'Título Intermedio', ''],
     pdfRole: 'badge',
     designHint: { colorOverride: 'accent' }
   },

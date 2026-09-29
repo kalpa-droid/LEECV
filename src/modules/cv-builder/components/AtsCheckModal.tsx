@@ -11,6 +11,7 @@ export interface AtsCheckModalProps {
   result: AtsPreflightResult;
   onExportAtsPdf?: () => void;
   onExportOriginal?: () => void;
+  onFixAction?: (actionId: string, ruleId: string) => void;
 }
 
 export function AtsCheckModal({
@@ -18,7 +19,8 @@ export function AtsCheckModal({
   onClose,
   result,
   onExportAtsPdf,
-  onExportOriginal
+  onExportOriginal,
+  onFixAction
 }: AtsCheckModalProps) {
 
   const getScoreBadge = (score: number) => {
@@ -125,9 +127,11 @@ export function AtsCheckModal({
                       <button 
                         className={`${button.primary} px-2.5 py-1 text-[10px] font-bold h-auto`}
                         onClick={() => {
-                          onClose();
-                          // In a full implementation we would dispatch an event or callback
-                          // For now we just close the modal so they can edit.
+                          if (onFixAction) {
+                            onFixAction(w.fixAction!, w.id);
+                          } else {
+                            onClose();
+                          }
                         }}
                       >
                         Arreglar

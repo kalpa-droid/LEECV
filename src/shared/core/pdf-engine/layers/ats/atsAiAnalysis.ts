@@ -16,6 +16,8 @@ export interface AtsAiFinding {
   category: 'keyword_gap' | 'weak_bullet' | 'quantification' | 'general';
   title: string;
   detail: string;
+  originalText?: string;
+  suggestedText?: string;
 }
 
 export interface AtsAiAnalysisResult {
@@ -37,7 +39,6 @@ export async function runAiAtsAnalysis(
   jobDescription?: string
 ): Promise<AtsAiAnalysisResult> {
 
-
   const res = await executeAiTask<{ semanticScore: number; findings: any[] }>({
     taskId: 'ats_analysis',
     payload: { cvText, jobDescription },
@@ -52,7 +53,9 @@ export async function runAiAtsAnalysis(
         id: f.id || `ai_finding_${i}`,
         category: ['keyword_gap', 'weak_bullet', 'quantification', 'general'].includes(f.category) ? f.category : 'general',
         title: f.title || 'Hallazgo de IA',
-        detail: f.detail || ''
+        detail: f.detail || '',
+        originalText: f.originalText,
+        suggestedText: f.suggestedText
       }))
     : [];
 

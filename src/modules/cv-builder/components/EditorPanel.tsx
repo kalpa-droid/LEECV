@@ -212,7 +212,7 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {docType === 'cv' && activeTab === 'objetivo' && <ObjetivoSection cvData={cvData} setCvData={setCvData} />}
 
-        {docType === 'cv' && activeTab === 'vacante' && <JobTargetSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'cv' && activeTab === 'vacante' && <JobTargetSection cvData={cvData} setCvData={setCvData} aiCredits={aiCredits} onRefreshCredits={onRefreshCredits} />}
 
         {docType === 'cv' && activeTab === 'logros' && <LogrosSection cvData={cvData} setCvData={setCvData} />}
 

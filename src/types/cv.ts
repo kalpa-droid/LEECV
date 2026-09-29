@@ -190,6 +190,12 @@ export interface CVData {
   customSections?: any[];
   sectionVisibility?: Record<string, boolean>;
   cardOverrides?: Record<string, any>;
+  jobTarget?: {
+    jobTitle?: string;
+    companyName?: string;
+    recipientName?: string;
+    jobDescription?: string;
+  };
   sourceCvTabId?: string;
   qrMode?: string;
   version_label?: string;

@@ -405,7 +405,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const handleOpenAtsCheck = () => {
     const preset = resolveActivePreset(cvData);
     const sections = cvDataToContentSections(cvData);
-    const res = runAtsPreflightCheck(preset, sections, cvData);
+    const res = runAtsPreflightCheck(preset, sections, cvData, cvData?.jobTarget?.jobDescription);
     setAtsResult(res);
     setIsAtsModalOpen(true);
   };
@@ -486,7 +486,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 
     const preset = resolveActivePreset(cvData);
     const sections = cvDataToContentSections(cvData);
-    const preflight = runAtsPreflightCheck(preset, sections, cvData);
+    const preflight = runAtsPreflightCheck(preset, sections, cvData, cvData?.jobTarget?.jobDescription);
     
     if (preflight.score < 100) {
       setAtsResult(preflight);
@@ -1085,6 +1085,26 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
               result={atsResult}
               onExportAtsPdf={handleExportAtsPdf}
               onExportOriginal={proceedWithExport}
+              onFixAction={(actionId, ruleId) => {
+                if (actionId === 'hide_field' && ruleId === 'sensitive_data') {
+                  const pi = cvData?.personalInfo;
+                  const toHide = [];
+                  if (pi?.dni) toHide.push('dni');
+                  if (pi?.cuit) toHide.push('cuit');
+                  if (pi?.birthDate) toHide.push('birthDate');
+                  if (pi?.estadoCivil) toHide.push('estadoCivil');
+                  if (pi?.nacionalidad) toHide.push('nacionalidad');
+                  
+                  if (toHide.length > 0) {
+                    setCvData((prev: any) => ({
+                      ...prev,
+                      hiddenFields: Array.from(new Set([...(prev.hiddenFields || []), ...toHide]))
+                    }));
+                    showSuccess('Se han ocultado los datos sensibles.');
+                  }
+                  setIsAtsModalOpen(false);
+                }
+              }}
             />
           )}
 

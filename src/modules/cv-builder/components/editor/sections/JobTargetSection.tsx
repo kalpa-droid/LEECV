@@ -1,19 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Briefcase, Target, Plus, CheckCircle, AlertCircle } from 'lucide-react';
+import { Briefcase, Target, Plus, CheckCircle, AlertCircle, Wand2 } from 'lucide-react';
 import { Field } from '../../../../../shared/core/ui/Field';
-import { radius } from '../../../../../shared/core/uiDesignSystem';
+import { radius, button } from '../../../../../shared/core/uiDesignSystem';
 import { useCVContext } from '../../../../../context/CVContext';
 import { useToast } from '../../../../../shared/core/ui/Toast';
 
 import { extractJobData, checkKeywordInCV, ExtractedJobData } from '../../../../../shared/core/utils/keywordExtractor';
+import { runAtsPreflightCheck } from '../../../../../shared/core/pdf-engine/layers/ats/atsPreflightCheck';
+import { resolveActivePreset } from '../../../../../shared/core/pdf-engine/layers/presets/presetRegistry';
+import { cvDataToContentSections } from '../../../../../shared/core/pdf-engine/layers/records/cvDataAdapter';
+import { AtsAiAnalysisModal } from '../../AtsAiAnalysisModal';
 
-export const JobTargetSection = ({ cvData, setCvData }: any) => {
+export const JobTargetSection = ({ cvData, setCvData, aiCredits, onRefreshCredits }: any) => {
   const { saveCVAs } = useCVContext();
   const { showSuccess } = useToast();
   const jobTarget = cvData.jobTarget || {};
   
   const [extractedData, setExtractedData] = useState<ExtractedJobData | null>(null);
   const [extractedKeywords, setExtractedKeywords] = useState<{word: string, found: boolean}[]>([]);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [cvTextForAi, setCvTextForAi] = useState('');
 
   useEffect(() => {
     if (jobTarget.jobDescription) {
@@ -38,6 +44,14 @@ export const JobTargetSection = ({ cvData, setCvData }: any) => {
         [field]: val
       }
     }));
+  };
+
+  const handleOpenAiAnalysis = () => {
+    const preset = resolveActivePreset(cvData);
+    const sections = cvDataToContentSections(cvData);
+    const result = runAtsPreflightCheck(preset, sections, cvData, jobTarget.jobDescription);
+    setCvTextForAi(result.linearReadingOrder.join('\n'));
+    setIsAiModalOpen(true);
   };
 
   return (
@@ -76,6 +90,16 @@ export const JobTargetSection = ({ cvData, setCvData }: any) => {
             className={`w-full bg-[var(--ui-bg-input)] border border-[var(--ui-border)] rounded-[${radius.control}] p-2.5 text-sm focus:outline-none focus:border-[var(--color-primary-base)] resize-y min-h-[120px]`}
           />
         </div>
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          onClick={handleOpenAiAnalysis}
+          className={`${button.secondary} py-2 px-4 flex items-center gap-2`}
+        >
+          <Wand2 className="w-4 h-4 text-[var(--color-primary-base)]" />
+          Análisis Profundo con IA
+        </button>
       </div>
 
       {extractedData && (extractedData.yearsOfExperience !== null || extractedData.degree !== null) && (
@@ -144,6 +168,16 @@ export const JobTargetSection = ({ cvData, setCvData }: any) => {
           Crea una copia de este CV para no perder el original.
         </p>
       </div>
+
+      <AtsAiAnalysisModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        cvData={cvData}
+        cvText={cvTextForAi}
+        jobDescription={jobTarget.jobDescription}
+        onUpdateCvData={setCvData}
+        onRefreshCredits={onRefreshCredits}
+      />
     </div>
   );
 };

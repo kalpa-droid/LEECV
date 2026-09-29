@@ -107,7 +107,14 @@ Devolvé EXCLUSIVAMENTE un objeto JSON con esta forma exacta:
 {
   "semanticScore": 0-100,
   "findings": [
-    { "id": "string", "category": "keyword_gap" | "weak_bullet" | "quantification" | "general", "title": "título corto", "detail": "Explicación" }
+    { 
+      "id": "string", 
+      "category": "keyword_gap" | "weak_bullet" | "quantification" | "general", 
+      "title": "título corto", 
+      "detail": "Explicación",
+      "originalText": "texto original extraído EXACTAMENTE del CV letra por letra, sin modificar puntuación, o null si no aplica",
+      "suggestedText": "texto sugerido como reemplazo, o null si no aplica"
+    }
   ]
 }
 Máximo 6 hallazgos, priorizando los de mayor impacto. Si el CV está sólido, devolvé menos hallazgos o un array vacío.`,
