@@ -49,9 +49,9 @@ if (fs.existsSync(engineDir)) {
 
 // 3. Modales importen canVersionByJob desde capabilitiesGate
 allPassed &= checkFileForRegex(
-  path.join(rootDir, 'app/App.tsx'),
+  path.join(rootDir, 'app/AppModals.tsx'),
   /capabilitiesGate\.canVersionByJob/,
-  'App.tsx must use canVersionByJob from capabilitiesGate'
+  'AppModals.tsx must use canVersionByJob from capabilitiesGate'
 );
 
 // 4. Pestañas: useDocumentTabs.ts hidrata el almacén y registra la pestaña inicial, y App.tsx invoca el hook.

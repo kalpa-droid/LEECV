@@ -21,8 +21,6 @@ describe('documentLifecycle (Gestión de Documentos & Pestañas)', () => {
     vi.stubGlobal('localStorage', localStorageMock);
     localStorage.clear();
 
-    const driveBackup = await import('../src/shared/core/storage/driveBackupService');
-    vi.spyOn(driveBackup, 'backupCvToGoogleDrive').mockImplementation(async () => true as any);
   });
 
   it('genera prefijos correctos con generateDocumentId', () => {

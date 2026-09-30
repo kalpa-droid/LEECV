@@ -3,6 +3,7 @@ import { selectPaidPlan } from '../../../payments/paymentService';
 import { CreditCard, Download, Check, AlertCircle } from 'lucide-react';
 import { Modal } from '../../../../shared/core/ui/Modal';
 import { supabase } from '../../../../shared/core/lib/supabaseClient';
+import { dal } from '../../../../shared/core/storage/dataAccessLayer';
 
 import { isValidEmail } from '../../../../shared/core/utils/validationEngine';
 import { usePdfExportGate } from '../../../../shared/core/entitlements/usePdfExportGate';
@@ -39,13 +40,8 @@ export default function PdfCheckoutModal({
     let exportToken = '';
     const resToken = await withErrorHandling(
       async () => {
-        if (!supabase) throw new Error('No DB connection');
-        const { data, error } = await supabase
-          .from('pdf_export_tokens')
-          .insert({ email, doc_type: 'cv' })
-          .select('token')
-          .single();
-        if (error || !data) throw new Error('Error al generar token de pago');
+        const data = await dal.pdfExportTokens.insert({ email, doc_type: 'cv' });
+        if (!data) throw new Error('Error al generar token de pago');
         exportToken = data.token;
       },
       { context: 'Creando Token de Checkout', errorMessage: 'Error al inicializar el checkout' }

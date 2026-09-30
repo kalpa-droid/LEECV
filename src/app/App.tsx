@@ -20,27 +20,10 @@ import { withErrorHandling } from '../shared/core/utils/errorHandler';
 import { applyUiTheme, getNextUiTheme, elevationSystem, radius } from '../shared/core/uiDesignSystem';
 import { getGlobalUiTheme, setGlobalUiTheme as setGlobalUiThemeInStorage, cycleGlobalUiTheme, subscribeToGlobalUiTheme } from '../shared/core/utils/globalThemePreference';
 
-
-const CardExportModal = lazy(() => import('../modules/cv-builder/components/modals/CardExportModal').then(m => ({ default: m.CardExportModal })));
-
-
-// Direct Modals Imports (Prevents dynamic chunk fetch errors on updates)
-import PhotoCropperModal from '../modules/cv-builder/components/PhotoCropperModal';
-import SignatureModal from '../modules/cv-builder/components/SignatureModal';
-import WizardModal from '../modules/cv-builder/components/WizardModal';
-import SavedCVsModal from '../modules/cv-builder/components/SavedCVsModal';
-import SaveModal from '../modules/cv-builder/components/SaveModal';
-import SaveAsVersionModal from '../modules/cv-builder/components/SaveAsVersionModal';
-
-import PricingModal from '../modules/payments/PricingModal';
-import PdfCheckoutModal from '../modules/cv-builder/components/modals/PdfCheckoutModal';
-import JsonDownloadModal from '../modules/cv-builder/components/modals/JsonDownloadModal';
-import PdfProgressModal from '../modules/cv-builder/components/modals/PdfProgressModal';
-import PrivacyModal from '../modules/cv-builder/components/PrivacyModal';
-import { GracePeriodBanner } from '../shared/core/ui/GracePeriodBanner';
-import { RetentionOfferModal } from '../modules/payments/components/RetentionOfferModal';
 import { CookieConsentBanner } from '../shared/core/ui/CookieConsentBanner';
 import { useEntitlements } from '../shared/core/entitlements/useEntitlements';
+import { navigation } from '../shared/core/utils/navigation';
+import { AppModals } from './AppModals';
 import { usePageAwareCreditGate } from '../shared/core/hooks/usePageAwareCreditGate';
 import { dal } from '../shared/core/storage/dataAccessLayer';
 
@@ -51,12 +34,6 @@ import { useConfirm, ConfirmProvider } from '../shared/core/ui/ConfirmDialog';
 import { syncPresetsFromStorage, getPreset, resolveActivePreset } from '../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { cvDataToContentSections } from '../shared/core/pdf-engine/layers/records/cvDataAdapter';
 import { runAtsPreflightCheck, AtsPreflightResult } from '../shared/core/pdf-engine/layers/ats/atsPreflightCheck';
-import { AtsCheckModal } from '../modules/cv-builder/components/AtsCheckModal';
-import { CoverLetterExportModal } from '../modules/cover-letter/components/CoverLetterExportModal';
-import { navigation } from '../shared/core/utils/navigation';
-
-import EmailSaveModal from '../modules/cv-builder/components/modals/EmailSaveModal';
-import ShareAppModal from '../modules/cv-builder/components/modals/ShareAppModal';
 const PlannerStudioContent = lazy(() => import('../modules/planner-studio/PlannerStudioContent').then(m => ({ default: m.PlannerStudioContent })));
 import { loadCVById, loadDocumentById, saveCV } from '../shared/core/storage/documentStorageService';
 import { setPendingDocumentToOpen, getPendingDocumentToOpen, clearPendingDocumentToOpen } from '../shared/core/storage/pendingDocumentHandoff';
@@ -67,7 +44,6 @@ import { initUpdateEngine, onUpdateReady } from '../shared/core/pwa/updateEngine
 import { trackPageView } from '../shared/core/analytics/analyticsService';
 import { getDocTypeForRoute, getRouteForDocType, getDefaultTitleForDocType, inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
 import { DocumentTypeId } from '../types/document';
-import { UpdateToast } from '../shared/core/ui/UpdateToast';
 import { useDocumentViewport } from '../shared/core/viewport';
 
 import { procesarRetornoPago } from '../modules/payments/paymentService';
@@ -90,10 +66,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 
   const { showSuccess, showError, showInfo } = useToast();
   const { confirm } = useConfirm();
-  const currentProfile = undefined;
   const { inGracePeriod, graceEndsAt, aiCredits, refreshEntitlements } = useEntitlements();
-  const [graceCvList, setGraceCvList] = useState<any[]>([]);
-  const [isRetentionModalOpen, setIsRetentionModalOpen] = useState(false);
 
 
 
@@ -793,27 +766,6 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       isPanelOpen={isPanelOpen}
       mobileTabState={mobileTabState}
       containerRef={viewport.containerRef}
-      bannerSlot={
-        <>
-          {false && (
-            <div className="px-3 pt-3 md:px-6 md:pt-4">
-              <GracePeriodBanner
-                graceEndsAt={graceEndsAt}
-                cvList={graceCvList}
-                userName={'Usuario'}
-                onOpenRetentionModal={() => setIsRetentionModalOpen(true)}
-              />
-            </div>
-          )}
-          {false && (
-            <RetentionOfferModal
-              isOpen={isRetentionModalOpen}
-              onClose={() => setIsRetentionModalOpen(false)}
-              userId={currentProfile.id}
-            />
-          )}
-        </>
-      }
       navbarSlot={
         <Navbar 
           currentCvData={cvData}
@@ -915,205 +867,43 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         onClose: handleCloseFooterTab
       }}
       modalsSlot={
-        <Suspense fallback={null}>
-          {isPricingModalOpen && (
-            <PricingModal 
-              isOpen={isPricingModalOpen} 
-              onClose={() => setIsPricingModalOpen(false)}
-              currentProfile={currentProfile}
-            />
-          )}
-
-          {isPhotoCropperOpen && (
-            <PhotoCropperModal 
-              isOpen={isPhotoCropperOpen}
-              onClose={() => setIsPhotoCropperOpen(false)}
-              currentPhoto={cvData?.personalInfo?.profilePhoto || ''}
-              onSavePhoto={(croppedUrl: string) => {
-                setCvData(prev => ({
-                  ...prev,
-                  personalInfo: { ...prev.personalInfo, profilePhoto: croppedUrl }
-                }));
-                setIsPhotoCropperOpen(false);
-              }}
-            />
-          )}
-
-          {isSignatureOpen && (
-            <SignatureModal 
-              isOpen={isSignatureOpen}
-              onClose={() => setIsSignatureOpen(false)}
-              currentSignature={cvData?.signature}
-              onSaveSignature={(sigData: any) => {
-                setCvData(prev => ({
-                  ...prev,
-                  signature: sigData
-                }));
-                setIsSignatureOpen(false);
-              }}
-            />
-          )}
-
-          {isWizardOpen && (
-            <WizardModal 
-              isOpen={isWizardOpen}
-              onClose={() => setIsWizardOpen(false)}
-              onOpenPhotoCropper={() => setIsPhotoCropperOpen(true)}
-              onOpenSignature={() => setIsSignatureOpen(true)}
-              cvData={cvData}
-              setCvData={setCvData}
-            />
-          )}
-
-          {isSavedCVsOpen && (
-            <SavedCVsModal 
-              isOpen={isSavedCVsOpen}
-              docType={activeDocType}
-              onClose={() => setIsSavedCVsOpen(false)}
-              onSelectCV={(selectedCV: any) => {
-                setCvData(selectedCV);
-                // Abrir desde "Mis archivos" también debe dejar su pestaña visible.
-                setTabs(workspaceController.ensureDocumentTab(selectedCV.id, inferDocumentTypeId(selectedCV) as any, selectedCV));
-                setIsSavedCVsOpen(false);
-              }}
-              onImportJson={handleImportJsonFile}
-              onGenerateCoverLetterFromCV={handleGenerateCoverLetterFromCV}
-              onDocumentClosed={(deletedId) => {
-                const currentDocState: workspaceController.CurrentDocumentState | null = cvData ? {
-                  id: cvData.id,
-                  docType: inferDocumentTypeId(cvData),
-                  data: cvData,
-                  isDirty: hasPendingChanges
-                } : null;
-                workspaceController.closeTab(deletedId, currentDocState, setCvData, goToLandingPage, activeCvId).then(() => setTabs(getOpenTabs()));
-              }}
-            />
-          )}
-
-          {isSaveModalOpen && (
-            <SaveModal 
-              isOpen={isSaveModalOpen}
-              onClose={() => {
-                setIsSaveModalOpen(false);
-                setInitialSaveAsOpen(false);
-              }}
-              onSaveStorage={handleSaveCVClick}
-              onSaveAs={handleSaveCVAsClick}
-              onExportJson={() => setIsDownloadModalOpen(true)}
-              isSaving={isSaving}
-              initialSaveAsOpen={initialSaveAsOpen}
-            />
-          )}
-
-          {isSaveAsModalOpen && capabilitiesGate.canVersionByJob(inferDocumentTypeId(cvData)) && (
-            <SaveAsVersionModal
-              isOpen={isSaveAsModalOpen}
-              onClose={() => setIsSaveAsModalOpen(false)}
-              onSaveAs={handleSaveCVAsClick}
-              isSaving={isSaving}
-            />
-          )}
-
-          {isShareAppModalOpen && (
-            <ShareAppModal
-              isOpen={isShareAppModalOpen}
-              onClose={() => setIsShareAppModalOpen(false)}
-            />
-          )}
-
-
-
-          {isPdfCheckoutOpen && (
-            <PdfCheckoutModal 
-              isOpen={isPdfCheckoutOpen}
-              onClose={() => setIsPdfCheckoutOpen(false)}
-              onConfirm={triggerPdfGeneration}
-              currentProfile={currentProfile}
-              onOpenPricing={() => setIsPricingModalOpen(true)}
-              onExportJson={() => exportCVToJson(cvData)}
-              purpose={pdfCheckoutPurpose}
-            />
-          )}
-
-          {isCardExportOpen && (
-            <Suspense fallback={null}>
-              <CardExportModal
-                isOpen={isCardExportOpen}
-                onClose={() => setIsCardExportOpen(false)}
-                cvData={cvData}
-                presetId={cvData?.activePresetId || 'tarjeta-personal'}
-              />
-            </Suspense>
-          )}
-
-          {isCoverLetterExportOpen && (
-            <CoverLetterExportModal
-              isOpen={isCoverLetterExportOpen}
-              onClose={() => setIsCoverLetterExportOpen(false)}
-              cvData={cvData}
-              presetId={cvData?.activePresetId || 'carta-clasica'}
-            />
-          )}
-
-          {isDownloadModalOpen && (
-            <JsonDownloadModal 
-              isOpen={isDownloadModalOpen}
-              onClose={() => setIsDownloadModalOpen(false)}
-              cvData={cvData}
-            />
-          )}
-
-          {(isGeneratingPDF || isPdfComplete) && (
-            <PdfProgressModal 
-              isGenerating={isGeneratingPDF}
-              isComplete={isPdfComplete}
-              onClose={() => setIsPdfComplete(false)}
-            />
-          )}
-
-          {isPrivacyModalOpen && (
-            <PrivacyModal
-              isOpen={isPrivacyModalOpen}
-              onClose={() => setIsPrivacyModalOpen(false)}
-            />
-          )}
-
-          {isAtsModalOpen && atsResult && (
-            <AtsCheckModal
-              isOpen={isAtsModalOpen}
-              onClose={() => setIsAtsModalOpen(false)}
-              result={atsResult}
-              onExportAtsPdf={handleExportAtsPdf}
-              onExportOriginal={proceedWithExport}
-              onFixAction={(actionId, ruleId) => {
-                if (actionId === 'hide_field' && ruleId === 'sensitive_data') {
-                  const pi = cvData?.personalInfo;
-                  const toHide = [];
-                  if (pi?.dni) toHide.push('dni');
-                  if (pi?.cuit) toHide.push('cuit');
-                  if (pi?.birthDate) toHide.push('birthDate');
-                  if (pi?.estadoCivil) toHide.push('estadoCivil');
-                  if (pi?.nacionalidad) toHide.push('nacionalidad');
-                  
-                  if (toHide.length > 0) {
-                    setCvData((prev: any) => ({
-                      ...prev,
-                      hiddenFields: Array.from(new Set([...(prev.hiddenFields || []), ...toHide]))
-                    }));
-                    showSuccess('Se han ocultado los datos sensibles.');
-                  }
-                  setIsAtsModalOpen(false);
-                }
-              }}
-            />
-          )}
-
-          <UpdateToast
-            isVisible={updateBannerVisible}
-            onUpdate={() => navigation.reload()}
-            onDismiss={() => setUpdateBannerVisible(false)}
-          />
-        </Suspense>
+        <AppModals
+          isPhotoCropperOpen={isPhotoCropperOpen} setIsPhotoCropperOpen={setIsPhotoCropperOpen}
+          isSignatureOpen={isSignatureOpen} setIsSignatureOpen={setIsSignatureOpen}
+          isWizardOpen={isWizardOpen} setIsWizardOpen={setIsWizardOpen}
+          isSavedCVsOpen={isSavedCVsOpen} setIsSavedCVsOpen={setIsSavedCVsOpen}
+          isSaveModalOpen={isSaveModalOpen} setIsSaveModalOpen={setIsSaveModalOpen}
+          isSaveAsModalOpen={isSaveAsModalOpen} setIsSaveAsModalOpen={setIsSaveAsModalOpen}
+          initialSaveAsOpen={initialSaveAsOpen} setInitialSaveAsOpen={setInitialSaveAsOpen}
+          isShareAppModalOpen={isShareAppModalOpen} setIsShareAppModalOpen={setIsShareAppModalOpen}
+          isPdfCheckoutOpen={isPdfCheckoutOpen} setIsPdfCheckoutOpen={setIsPdfCheckoutOpen}
+          isCardExportOpen={isCardExportOpen} setIsCardExportOpen={setIsCardExportOpen}
+          isCoverLetterExportOpen={isCoverLetterExportOpen} setIsCoverLetterExportOpen={setIsCoverLetterExportOpen}
+          isDownloadModalOpen={isDownloadModalOpen} setIsDownloadModalOpen={setIsDownloadModalOpen}
+          isPrivacyModalOpen={isPrivacyModalOpen} setIsPrivacyModalOpen={setIsPrivacyModalOpen}
+          isAtsModalOpen={isAtsModalOpen} setIsAtsModalOpen={setIsAtsModalOpen}
+          isPricingModalOpen={isPricingModalOpen} setIsPricingModalOpen={setIsPricingModalOpen}
+          pdfCheckoutPurpose={pdfCheckoutPurpose}
+          isGeneratingPDF={isGeneratingPDF}
+          isPdfComplete={isPdfComplete} setIsPdfComplete={setIsPdfComplete}
+          updateBannerVisible={updateBannerVisible} setUpdateBannerVisible={setUpdateBannerVisible}
+          atsResult={atsResult}
+          cvData={cvData}
+          setCvData={setCvData}
+          activeDocType={activeDocType}
+          isSaving={isSaving}
+          hasPendingChanges={hasPendingChanges}
+          activeCvId={activeCvId}
+          setTabs={setTabs}
+          handleSaveCVClick={handleSaveCVClick}
+          handleSaveCVAsClick={handleSaveCVAsClick}
+          handleExportAtsPdf={handleExportAtsPdf}
+          proceedWithExport={proceedWithExport}
+          triggerPdfGeneration={triggerPdfGeneration}
+          handleImportJsonFile={handleImportJsonFile}
+          handleGenerateCoverLetterFromCV={handleGenerateCoverLetterFromCV}
+          goToLandingPage={goToLandingPage}
+        />
       }
     />
   );

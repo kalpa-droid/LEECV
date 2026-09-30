@@ -332,17 +332,7 @@ if (fs.existsSync(enterprisePath)) {
   check('enterpriseStorageStrategy.ts existe', false, `No encontrado: ${enterprisePath}`);
 }
 
-const driveBackupPath = path.join(ROOT, 'src/shared/core/storage/driveBackupService.ts');
-if (fs.existsSync(driveBackupPath)) {
-  const driveContent = fs.readFileSync(driveBackupPath, 'utf-8');
-  check(
-    'driveBackupService.ts implementa la verificación incremental por hash y estado driveSyncState',
-    driveContent.includes('drive_asset_hashes_') && driveContent.includes('driveSyncState'),
-    'driveBackupService.ts no implementa la verificación incremental por hash'
-  );
-} else {
-  check('driveBackupService.ts existe', false, `No encontrado: ${driveBackupPath}`);
-}
+// Check removed since driveBackupService.ts was deleted
 
 // ─── 12. Plan v29: Fix Importación JSON, Catálogo de Puestos y "Guardar como" ───
 console.log('\n── 12. Plan v29: Fix Importación JSON, Catálogo de Puestos y "Guardar como" ──');
@@ -497,15 +487,7 @@ if (fs.existsSync(driveBackendPath)) {
   );
 }
 
-const driveBackupServiceFile = path.join(ROOT, 'src/shared/core/storage/driveBackupService.ts');
-if (fs.existsSync(driveBackupServiceFile)) {
-  const backupContent = fs.readFileSync(driveBackupServiceFile, 'utf-8');
-  check(
-    'driveBackupService.ts pasa el driveFolderId real a addFolderAsParent en lugar de la string cvId',
-    backupContent.includes('addFolderAsParent(existingFileId, driveFolderId)'),
-    'driveBackupService.ts sigue pasando cvId a addFolderAsParent'
-  );
-}
+// Check removed since driveBackupService.ts was deleted
 
 const safeNavPath = path.join(ROOT, 'src/shared/core/storage/safeNavigationEngine.ts');
 if (fs.existsSync(safeNavPath)) {

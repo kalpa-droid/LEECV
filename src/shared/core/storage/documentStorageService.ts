@@ -5,7 +5,6 @@ import { idbStorage } from './storageIndexedDB';
 import { SaveDocumentResult, DocumentRecord } from '../../../types/document';
 import { getDocumentTypeConfig, hasCapability } from '../capabilities/capabilityRegistry';
 import { getMonthNameEs } from '../utils/formatDate';
-import { backupCvToGoogleDrive } from './driveBackupService';
 import { dedupAssetsForLocalStorage, reconstructCvDataFromParts } from './driveDocumentPackager';
 import { migrateCvData } from './cvMigrationEngine';
 import { reportSilentError } from '../utils/errorHandler';
@@ -147,7 +146,6 @@ export const saveDocumentInternal = async (
     }
 
     let syncState: 'local' | 'synced' | 'pending' = 'local';
-    let driveSyncState: 'not-configured' | 'synced' | 'pending' = 'pending';
 
     // 3. Sync to Supabase in parallel
     if (supabase && hasCapability(docTypeId, 'cloud_backup')) {
@@ -164,16 +162,6 @@ export const saveDocumentInternal = async (
             updated_at: summaryRecord.updated_at
           });
           syncState = success ? 'synced' : 'pending';
-
-          // 4. Respaldo incremental en segundo plano a Google Drive
-          backupCvToGoogleDrive(fullDocObject).then(res => {
-            if (res.success) {
-              summaryRecord.driveSyncState = 'synced';
-            }
-          }).catch(err => {
-            console.warn('Advertencia en respaldo a Google Drive:', err);
-            reportSilentError(err, 'documentStorageService.saveDocumentInternal.driveBackup');
-          });
         }
       } catch (err) {
         console.warn('Error conectando a Supabase o Drive:', err);
@@ -185,7 +173,6 @@ export const saveDocumentInternal = async (
     return { 
       success: true, 
       syncState,
-      driveSyncState,
       record: summaryRecord, 
       title: summaryRecord.title, 
       doc_data: fullDocObject 
@@ -263,7 +250,6 @@ export const saveDocumentDraftLocal = async (
     return { 
       success: true, 
       syncState: 'local',
-      driveSyncState: 'not-configured',
       record: summaryRecord, 
       title: summaryRecord.title, 
       doc_data: fullDocObject 

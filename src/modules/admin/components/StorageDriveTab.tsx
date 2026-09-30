@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { HardDrive, RefreshCw, CheckCircle2, Database, Cloud, Trash2, Cpu, ShieldCheck } from 'lucide-react';
 import { checkStorageStatus, supabase } from '../../../shared/core/storage/documentStorageService';
+import { dal } from '../../../shared/core/storage/dataAccessLayer';
 import { idbStorage } from '../../cv-builder/services/storageIndexedDB';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
@@ -25,14 +26,8 @@ export function StorageDriveTab() {
         setStorageStatus(status);
 
         // 2. Count Cloud Supabase documents
-        if (supabase) {
-          const { count, error } = await supabase
-            .from('cvs')
-            .select('*', { count: 'exact', head: true });
-          if (!error && count !== null) {
-            setCloudDocsCount(count);
-          }
-        }
+        const count = await dal.cvs.countAll();
+        setCloudDocsCount(count);
 
         // 3. Count Local IndexedDB keys
         const keys = await idbStorage.keys();

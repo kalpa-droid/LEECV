@@ -250,6 +250,12 @@ export const dal = {
         supabase.from('cvs').delete().eq('id', id)
       );
       return res.success;
+    },
+
+    async countAll(): Promise<number> {
+      if (!supabase) return 0;
+      const { count } = await supabase.from('cvs').select('*', { count: 'exact', head: true });
+      return count || 0;
     }
   },
 
@@ -429,6 +435,20 @@ export const dal = {
         totalCost: Number((res.data as any)?.total_cost || 0),
         totalTokens: Number((res.data as any)?.total_tokens || 0)
       };
+    }
+  },
+
+  pdfExportTokens: {
+    async insert(payload: { email: string; doc_type: string }): Promise<{ token: string } | null> {
+      if (!supabase) return null;
+      const res = await safeSupabaseCall(() =>
+        supabase
+          .from('pdf_export_tokens')
+          .insert(payload)
+          .select('token')
+          .single()
+      );
+      return (res.data as { token: string }) || null;
     }
   }
 };
