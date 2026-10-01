@@ -122,7 +122,7 @@ export function RecordFormSection({
                       taskId: 'improve_bullet',
                       payload: { role: title, company: company, bulletText: currentValue || '' },
                       maxTokens: 250,
-                      temperature: 0.7
+                      temperature: 0.4
                     });
                     
                     if (res.data.missingMetrics) {

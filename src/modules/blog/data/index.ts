@@ -16,3 +16,6 @@ export { formacionYCursos } from './articles/formacion-y-cursos';
 export { herramientasIdiomasBarras } from './articles/herramientas-idiomas-barras';
 export { disenoYPlantillas } from './articles/diseno-y-plantillas';
 export { comoAdaptarTuCv } from './articles/como-adaptar-tu-cv';
+export { cvProgramador } from './articles/cv-programador';
+export { cvEnfermeria } from './articles/cv-enfermeria';
+export { cvVentas } from './articles/cv-ventas';

@@ -192,7 +192,7 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
           tone
         },
         cvData: data as any,
-        temperature: 0.7
+        temperature: 0.4
       });
 
       const parsed = res.data;

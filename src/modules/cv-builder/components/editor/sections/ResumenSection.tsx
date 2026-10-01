@@ -20,7 +20,7 @@ export const ResumenSection: React.FC<ResumenSectionProps> = ({ cvData, setCvDat
         currentSummary: cvData.summary || ''
       },
       cvData,
-      temperature: 0.7
+      temperature: 0.4
     });
     return res.data.summary;
   };

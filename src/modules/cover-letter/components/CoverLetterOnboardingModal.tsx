@@ -55,7 +55,7 @@ export const CoverLetterOnboardingModal: React.FC<CoverLetterOnboardingModalProp
           tone: 'professional' // Default tone for onboarding
         },
         cvData: data as any,
-        temperature: 0.6
+        temperature: 0.4
       });
 
       const parsed = res.data;
