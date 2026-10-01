@@ -167,23 +167,6 @@ export default function PdfCheckoutModal({
             </span>
             <div className="space-y-2.5">
               <button
-                onClick={() => handleCheckout('paypal')}
-                disabled={isProcessing}
-                className={`w-full p-3 ${button.providerBrand('paypal')} rounded-[${radius.modal}] transition flex items-center justify-between cursor-pointer`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <CreditCard className="w-5 h-5 text-[var(--color-secondary-text)]" />
-                  <div className="text-left">
-                    <p className="leading-tight">{t.checkout.payPaypalTitle}</p>
-                    <p className="text-[10px] opacity-80 font-bold">{t.checkout.payPaypalDesc}</p>
-                  </div>
-                </div>
-                <span className={`px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] rounded-[${radius.control}] text-[10px] font-black`}>
-                  {formatPrice('single_pdf', 'usd')}
-                </span>
-              </button>
-
-              <button
                 onClick={() => handleCheckout('lemonsqueezy')}
                 disabled={isProcessing}
                 className={`w-full p-3 ${button.providerBrand('lemonsqueezy')} rounded-[${radius.modal}] transition flex items-center justify-between cursor-pointer`}

@@ -74,6 +74,21 @@ export async function splitCvDataForDrive(cvData: any): Promise<SplitCvDataResul
     cleanCvData.personalInfo.profilePhoto = `ref://${filename}`;
   }
 
+  // 1b. Logo de Tarjeta Personal (Card Overrides)
+  if (cleanCvData.cardOverrides?.logoDataUrl && cleanCvData.cardOverrides.logoDataUrl.startsWith('data:')) {
+    const { blob, mimeType } = base64ToBlob(cleanCvData.cardOverrides.logoDataUrl);
+    const hash = await hashBlob(blob);
+    const filename = 'logo_tarjeta.webp';
+    binaryAssets.push({
+      filename,
+      blob,
+      mimeType,
+      hash,
+      fieldPath: 'cardOverrides.logoDataUrl'
+    });
+    cleanCvData.cardOverrides.logoDataUrl = `ref://${filename}`;
+  }
+
   // 2. Firma Digital
   if (cleanCvData.signature?.dataUrl && cleanCvData.signature.dataUrl.startsWith('data:')) {
     const { blob, mimeType } = base64ToBlob(cleanCvData.signature.dataUrl);
@@ -133,6 +148,8 @@ export async function dedupAssetsForLocalStorage(cvData: any): Promise<any> {
 
     if (asset.fieldPath === 'personalInfo.profilePhoto' && storedCvData.personalInfo) {
       storedCvData.personalInfo.profilePhoto = `asset://${asset.hash}`;
+    } else if (asset.fieldPath === 'cardOverrides.logoDataUrl' && storedCvData.cardOverrides) {
+      storedCvData.cardOverrides.logoDataUrl = `asset://${asset.hash}`;
     } else if (asset.fieldPath === 'signature.dataUrl' && storedCvData.signature) {
       storedCvData.signature.dataUrl = `asset://${asset.hash}`;
     } else if (asset.fieldPath.startsWith('certificatesScanned[')) {
@@ -208,6 +225,11 @@ export async function reconstructCvDataFromParts(
   // 1. Fotografía de Perfil
   if (reconstructed.personalInfo?.profilePhoto) {
     reconstructed.personalInfo.profilePhoto = await resolveRefToDataUrl(reconstructed.personalInfo.profilePhoto);
+  }
+
+  // 1b. Logo de Tarjeta Personal (Card Overrides)
+  if (reconstructed.cardOverrides?.logoDataUrl) {
+    reconstructed.cardOverrides.logoDataUrl = await resolveRefToDataUrl(reconstructed.cardOverrides.logoDataUrl);
   }
 
   // 2. Firma Digital

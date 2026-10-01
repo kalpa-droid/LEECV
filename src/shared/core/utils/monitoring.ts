@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/react';
-import { env } from '../config/env';
+import { env, envError } from '../config/env';
 
 const SENTRY_DSN = env.SENTRY_DSN;
 
@@ -10,6 +10,10 @@ if (typeof window !== 'undefined' && SENTRY_DSN) {
       integrations: [Sentry.browserTracingIntegration()],
       tracesSampleRate: 0.2,
     });
+    
+    if (envError) {
+      Sentry.captureException(new Error(`[CRITICAL] Variables de entorno inválidas o faltantes en producción: ${envError.message}`));
+    }
   } catch (err) {
     console.warn('[MONITORING] Error inicializando Sentry:', err);
   }

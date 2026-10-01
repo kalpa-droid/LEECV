@@ -25,6 +25,11 @@ const isAdminRoute = pathname.startsWith('/admin');
 const isPrivacyRoute = pathname.startsWith('/privacidad') || pathname.startsWith('/privacy');
 const isTermsRoute = pathname.startsWith('/terminos') || pathname.startsWith('/terms');
 const isRefundRoute = pathname.startsWith('/reembolsos') || pathname.startsWith('/refunds');
+const isDashboardRoute = pathname.startsWith('/dashboard');
+
+if (isDashboardRoute) {
+  navigation.goTo('/');
+}
 
 const RootComponent = isAdminRoute
   ? AdminDashboard
@@ -37,13 +42,13 @@ const RootComponent = isAdminRoute
   : App;
 
 import { ToastProvider } from '../shared/core/ui/Toast';
-import { GlobalErrorBoundary } from '../shared/core/ui/GlobalErrorBoundary';
+import { ErrorBoundary } from '../shared/core/ui/ErrorBoundary';
 
 const rootElement = document.getElementById('root');
 if (rootElement) {
   createRoot(rootElement).render(
     <StrictMode>
-      <GlobalErrorBoundary>
+      <ErrorBoundary>
         <ToastProvider>
           <Suspense fallback={
             <div className="min-h-screen bg-[var(--color-neutral-text-primary)] text-white flex items-center justify-center font-bold">
@@ -53,7 +58,7 @@ if (rootElement) {
             <RootComponent />
           </Suspense>
         </ToastProvider>
-      </GlobalErrorBoundary>
+      </ErrorBoundary>
     </StrictMode>,
   );
 }

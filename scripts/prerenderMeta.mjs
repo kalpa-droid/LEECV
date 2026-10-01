@@ -36,7 +36,7 @@ if (fs.existsSync(articlesDir)) {
     const match = contentStr.match(/export const [a-zA-Z0-9_]+: Article = ([\s\S]+);/);
     if (match && match[1]) {
       try {
-        const articleData = JSON.parse(match[1]);
+        const articleData = eval('(' + match[1] + ')');
         const route = `/blog/${articleData.slug}`;
         ROUTES.push(route);
         metaMap[route] = {

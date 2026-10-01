@@ -135,7 +135,7 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
           <div className="flex flex-col items-center gap-4 py-8">
             <Bot size={48} color={colorSystem.accent.base} />
             <p className={`${typeScale.body} text-center`} style={{ color: colorSystem.neutral.textSecondary }}>
-              Subí tu CV en PDF o una foto clara para que nuestra IA extraiga toda tu información automáticamente.
+              Subí tu CV en PDF, una foto, o el PDF de tu <b>Perfil de LinkedIn</b> (<i>Más &gt; Guardar en PDF</i>) para extraer tus datos.
             </p>
             <label className={`${button.base} ${button.primary} cursor-pointer inline-flex items-center gap-2`}>
               <Upload size={18} />

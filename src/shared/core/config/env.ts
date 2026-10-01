@@ -68,10 +68,12 @@ const rawEnv = {
 };
 
 let parsedEnv: EnvConfig;
+export let envError: Error | null = null;
 
 try {
   parsedEnv = envSchema.parse(rawEnv);
 } catch (error) {
+  envError = error as Error;
   if (isDev && typeof window !== 'undefined') {
     console.error('[Config/Env] Variables de entorno inválidas o faltantes:', error);
     throw new Error('Variables de entorno requeridas faltantes en desarrollo. Revisa la consola o tu archivo .env.');

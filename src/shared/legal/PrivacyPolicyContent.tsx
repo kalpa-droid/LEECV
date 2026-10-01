@@ -30,12 +30,18 @@ export function PrivacyPolicyContent() {
         <li>Los tokens de refresco se almacenan en servidores seguros con cifrado de nivel bancario y nunca son expuestos en el navegador.</li>
       </ul>
 
-      <h3 className="text-sm font-black text-[var(--ui-text-primary)]">3. Uso y Compartición de Datos</h3>
+      <h3 className="text-sm font-black text-[var(--ui-text-primary)]">3. Uso de Inteligencia Artificial (IA) y Privacidad</h3>
+      <p>
+        LEECV utiliza servicios de IA (Gemini y Groq) para mejorar la redacción de tu currículum, resumir experiencia y generar cartas de presentación. 
+        <strong>Tu privacidad está garantizada por diseño:</strong> antes de que cualquier texto salga de tu navegador hacia la IA, nuestro sistema interno anonimiza la información eliminando automáticamente datos sensibles de contacto como DNI, teléfonos, correos electrónicos y direcciones físicas. Los modelos de IA no entrenan con tus datos.
+      </p>
+
+      <h3 className="text-sm font-black text-[var(--ui-text-primary)]">4. Uso y Compartición de Datos</h3>
       <p>
         Tus datos personales NUNCA serán vendidos, alquilados ni transferidos a terceros con fines publicitarios o comerciales. El procesamiento de datos se limita exclusivamente a permitir la edición, guardado, respaldos en la nube y exportación en formato PDF de tus documentos.
       </p>
 
-      <h3 className="text-sm font-black text-[var(--ui-text-primary)]">4. Derechos del Usuario y Borrado de Cuenta</h3>
+      <h3 className="text-sm font-black text-[var(--ui-text-primary)]">5. Derechos del Usuario y Borrado de Cuenta</h3>
       <p>
         Tienes el derecho inalienable de acceder, corregir o solicitar la eliminación total de tus datos personales, historial de currículums o revocar el acceso a tu Google Drive en cualquier momento directamente desde el panel o enviando un correo a nuestro equipo de soporte a <a href="mailto:soporte@leecv.app" className="text-[var(--ui-text-primary)] underline font-bold">soporte@leecv.app</a>.
       </p>

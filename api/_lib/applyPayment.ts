@@ -60,6 +60,19 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
     throw new Error(`Error actualizando pdf_export_tokens: ${updateError.message}`);
   }
 
+  // 2.5 Bono opcional de IA
+  if (email) {
+    try {
+      const profile = await serverDal.profiles.getByEmail(email);
+      if (profile?.id) {
+        await serverDal.aiCredits.grantCredits(profile.id, 3);
+        console.log(`[applyPayment] Bono de 3 créditos de IA otorgado a ${email}`);
+      }
+    } catch (e: any) {
+      console.warn(`[applyPayment] No se pudo otorgar el bono de IA a ${email}: ${e.message}`);
+    }
+  }
+
   // 3. Registro único de auditoría
   await serverDal.adminNotifications.create({
     type: 'payment_received',
