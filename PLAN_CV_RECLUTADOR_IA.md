@@ -1,5 +1,7 @@
 # Plan Integral LEECV — Reglas de Reclutadoras + IA + Web Clásica
 
+> **Aviso 2026-10-01:** las partes de este plan que mandan a ocultar o avisar contra DNI, CUIT, nacimiento, estado civil y nacionalidad (secciones 3 y 4, y la Fase 1) quedan **reemplazadas** por `PLAN_DESTINOS_Y_CORRECCIONES.md`: esos datos se mantienen y se eligen por destino del CV.
+
 > Versión unificada. Combina el análisis verificado contra el código (commit `d823e29`) con la propuesta arquitectónica de componentes. Pensado para ir marcando fases a medida que las implementás.
 
 **Estado (verificado contra el código el 2026-10-01):** ✅ Fase 0 (con excepciones, ver sección 11) · ✅ Fase 1 · ✅ Fase 2 · ✅ Fase 3 (con huecos, ver sección 11) · ✅ Fase 4 (Ola 1 completa; Ola 2 parcial) · 🔲 Fase 5 · 🔲 Fase 6
