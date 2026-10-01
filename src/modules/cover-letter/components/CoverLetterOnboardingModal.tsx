@@ -33,7 +33,7 @@ export const CoverLetterOnboardingModal: React.FC<CoverLetterOnboardingModalProp
     setIsProcessing(true);
     try {
       const p = data.personalInfo || {};
-      const roles: any[] = (data as any).roles || [];
+      const roles: any[] = (data as any).experience || [];
       const expStr = roles.length > 0
         ? roles.map(r => `${r.role || r.title || 'Puesto'} en ${r.company || 'Empresa'}`).join(', ')
         : 'Candidato con perfil general';

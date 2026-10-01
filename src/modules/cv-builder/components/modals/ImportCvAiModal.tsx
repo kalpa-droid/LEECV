@@ -7,6 +7,7 @@ import { ensurePdfjsWorkerConfigured } from '../../../../shared/core/pdf-engine/
 import { clampCanvasSize, encodeCanvasWithinBudget, encodeImageFileWithinBudget } from '../../../../shared/core/cv-import/pageImageEncoder';
 import { mergePageFragments, type CVFragment } from '../../../../shared/core/cv-import/mergeFragments';
 import { apiClient } from '../../../../shared/core/utils/apiClient';
+import { supabase } from '../../../../shared/core/lib/supabaseClient';
 
 interface ImportCvAiModalProps {
   isOpen: boolean;
@@ -31,6 +32,13 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
 
   const startImport = async () => {
     if (!file) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setErrorMsg('Debes iniciar sesión para usar la importación con IA.');
+      setStatus('error');
+      return;
+    }
+    
     setStatus('analyzing');
     
     try {

@@ -98,7 +98,7 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
           phone: loaded.personalInfo?.phone || data.personalInfo?.phone,
           cityProvince: loaded.personalInfo?.cityProvince || data.personalInfo?.cityProvince
         },
-        roles: loaded.roles || (data as any).roles || [],
+        roles: loaded.roles || (data as any).experience || [],
         profession: loaded.profession || (data as any).profession || []
       } as any);
       setFeedback({ type: 'success', text: `Datos e historial vinculados desde CV "${loaded.title || 'Seleccionado'}".` });
@@ -145,7 +145,7 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
             phone: importedCv.personalInfo.phone || data.personalInfo?.phone,
             cityProvince: importedCv.personalInfo.cityProvince || data.personalInfo?.cityProvince
           },
-          roles: importedCv.experience || (data as any).roles || [],
+          roles: importedCv.experience || (data as any).experience || [],
           profession: (importedCv.education || []).map((e: any) => ({ degree: e.degree, institution: e.institution, year: e.year })) || (data as any).profession || []
         } as any);
       }

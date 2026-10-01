@@ -384,6 +384,12 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   };
 
   const handleExportAtsPdf = async () => {
+    const allowed = await consumeCredits(1);
+    if (!allowed) {
+      setPdfCheckoutPurpose('export');
+      setIsPdfCheckoutOpen(true);
+      return;
+    }
     setIsGeneratingPDF(true);
     setIsPdfComplete(false);
     setPdfProgress(15);

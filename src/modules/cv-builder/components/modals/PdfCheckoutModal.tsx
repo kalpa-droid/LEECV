@@ -139,60 +139,68 @@ export default function PdfCheckoutModal({
             {t.checkout.step2Title}
           </span>
 
-          <button
-            onClick={() => handleCheckout('mercadopago')}
-            disabled={isProcessing}
-            className={`w-full p-3 ${button.providerBrand('mercadopago')} rounded-[${radius.modal}] transition flex items-center justify-between cursor-pointer`}
-          >
-            <div className="flex items-center gap-2.5">
-              <CreditCard className="w-5 h-5" />
-              <div className="text-left">
-                <p className="leading-tight">{t.checkout.payMercadoPagoTitle}</p>
-                <p className="text-[10px] opacity-80 font-bold">{t.checkout.payMercadoPagoDesc}</p>
-              </div>
-            </div>
-            <span className={`px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] rounded-[${radius.control}] text-[10px] font-black`}>
-              {formatPrice('single_pdf', 'ars')}
+          <div className="pt-2">
+            <span className="text-[10px] font-bold text-[var(--ui-text-secondary)] uppercase tracking-wider block mb-2">
+              🇦🇷 Pago en pesos
             </span>
-          </button>
-
-          <button
-            onClick={() => handleCheckout('paypal')}
-            disabled={isProcessing}
-            className={`w-full p-3 ${button.providerBrand('paypal')} rounded-[${radius.modal}] transition flex items-center justify-between cursor-pointer`}
-          >
-            <div className="flex items-center gap-2.5">
-              <CreditCard className="w-5 h-5 text-[var(--color-secondary-text)]" />
-              <div className="text-left">
-                <p className="leading-tight">{t.checkout.payPaypalTitle}</p>
-                <p className="text-[10px] opacity-80 font-bold">{t.checkout.payPaypalDesc}</p>
+            <button
+              onClick={() => handleCheckout('mercadopago')}
+              disabled={isProcessing}
+              className={`w-full p-3 ${button.providerBrand('mercadopago')} rounded-[${radius.modal}] transition flex items-center justify-between cursor-pointer`}
+            >
+              <div className="flex items-center gap-2.5">
+                <CreditCard className="w-5 h-5" />
+                <div className="text-left">
+                  <p className="leading-tight">{t.checkout.payMercadoPagoTitle}</p>
+                  <p className="text-[10px] opacity-80 font-bold">{t.checkout.payMercadoPagoDesc}</p>
+                </div>
               </div>
-            </div>
-            <span className={`px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] rounded-[${radius.control}] text-[10px] font-black`}>
-              {formatPrice('single_pdf', 'usd')}
-            </span>
-          </button>
+              <span className={`px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] rounded-[${radius.control}] text-[10px] font-black`}>
+                {formatPrice('single_pdf', 'ars')}
+              </span>
+            </button>
+          </div>
 
-          <button
-            onClick={() => handleCheckout('lemonsqueezy')}
-            disabled={isProcessing}
-            className={`w-full p-3 ${button.providerBrand('lemonsqueezy')} rounded-[${radius.modal}] transition flex items-center justify-between cursor-pointer`}
-          >
-            <div className="flex items-center gap-2.5">
-              <CreditCard className="w-5 h-5 text-[var(--color-accent-purple-text)]" />
-              <div className="text-left">
-                <p className="leading-tight">{t.checkout.payLemonSqueezyTitle}</p>
-                <p className="text-[10px] opacity-80 font-bold">{t.checkout.payLemonSqueezyDesc}</p>
-              </div>
-            </div>
-            <span className={`px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] rounded-[${radius.control}] text-[10px] font-black`}>
-              {formatPrice('single_pdf', 'usd')}
+          <div className="pt-2 border-t border-[var(--ui-border)] mt-1">
+            <span className="text-[10px] font-bold text-[var(--ui-text-secondary)] uppercase tracking-wider block mb-2 mt-1">
+              🌎 Pago en dólares
             </span>
-          </button>
+            <div className="space-y-2.5">
+              <button
+                onClick={() => handleCheckout('paypal')}
+                disabled={isProcessing}
+                className={`w-full p-3 ${button.providerBrand('paypal')} rounded-[${radius.modal}] transition flex items-center justify-between cursor-pointer`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <CreditCard className="w-5 h-5 text-[var(--color-secondary-text)]" />
+                  <div className="text-left">
+                    <p className="leading-tight">{t.checkout.payPaypalTitle}</p>
+                    <p className="text-[10px] opacity-80 font-bold">{t.checkout.payPaypalDesc}</p>
+                  </div>
+                </div>
+                <span className={`px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] rounded-[${radius.control}] text-[10px] font-black`}>
+                  {formatPrice('single_pdf', 'usd')}
+                </span>
+              </button>
 
-          <p className="text-[10px] text-[var(--ui-text-secondary)] text-center leading-tight py-1">
-            🇦🇷 <strong>ARS</strong> con Mercado Pago &bull; 💳/🌎 <strong>USD</strong> con PayPal o Lemon Squeezy
-          </p>
+              <button
+                onClick={() => handleCheckout('lemonsqueezy')}
+                disabled={isProcessing}
+                className={`w-full p-3 ${button.providerBrand('lemonsqueezy')} rounded-[${radius.modal}] transition flex items-center justify-between cursor-pointer`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <CreditCard className="w-5 h-5 text-[var(--color-accent-purple-text)]" />
+                  <div className="text-left">
+                    <p className="leading-tight">{t.checkout.payLemonSqueezyTitle}</p>
+                    <p className="text-[10px] opacity-80 font-bold">{t.checkout.payLemonSqueezyDesc}</p>
+                  </div>
+                </div>
+                <span className={`px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] rounded-[${radius.control}] text-[10px] font-black`}>
+                  {formatPrice('single_pdf', 'usd')}
+                </span>
+              </button>
+            </div>
+          </div>
 
           <button
             onClick={() => { onClose(); if (onExportJson) onExportJson(); }}
