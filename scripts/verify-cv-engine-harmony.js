@@ -574,7 +574,7 @@ if (fs.existsSync(editorPanelPath)) {
   const editorContent = fs.readFileSync(editorPanelPath, 'utf-8');
   check(
     'DisenoSection.tsx consume el Selector de Formatos Globales (getAllCvFormats & getFormatDefaultVisibility)',
-    editorContent.includes('getAllCvFormats()') && editorContent.includes('getFormatDefaultVisibility') && editorContent.includes('Estándar & Formato Global'),
+    editorContent.includes('getAllCvFormats()') && editorContent.includes('getFormatDefaultVisibility') && editorContent.includes('Formato Global & Estándares Internacionales'),
     'DisenoSection.tsx no consume el Selector de Formatos Globales'
   );
 }
@@ -617,7 +617,7 @@ if (fs.existsSync(cvAdapterPath)) {
   const adapterContent = fs.readFileSync(cvAdapterPath, 'utf-8');
   check(
     'cvDataAdapter.ts conecta activeFormatId con resolveActiveFormat para reordenamiento de secciones y filtrado de datos personales',
-    (adapterContent.includes('resolveActiveFormat') || adapterContent.includes('getCvFormat')) && adapterContent.includes('hiddenFieldsSet') && adapterContent.includes('formatOrderMap'),
+    (adapterContent.includes('resolveActiveFormat') || adapterContent.includes('getCvFormat')) && adapterContent.includes('resolvePersonalFieldVisibility') && adapterContent.includes('formatOrderMap'),
     'cvDataAdapter.ts no consume el motor de formatos globales para reordenar secciones o filtrar datos personales'
   );
 }
