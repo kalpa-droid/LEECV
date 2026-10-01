@@ -2,7 +2,7 @@
 
 > Versión unificada. Combina el análisis verificado contra el código (commit `d823e29`) con la propuesta arquitectónica de componentes. Pensado para ir marcando fases a medida que las implementás.
 
-**Estado:** ✅ Fase 0 · ✅ Fase 1 · ✅ Fase 2 · ✅ Fase 3 · 🔲 Fase 4 · 🔲 Fase 5 · 🔲 Fase 6
+**Estado (verificado contra el código el 2026-10-01):** ✅ Fase 0 (con excepciones, ver sección 11) · ✅ Fase 1 · ✅ Fase 2 · ✅ Fase 3 (con huecos, ver sección 11) · ✅ Fase 4 (Ola 1 completa; Ola 2 parcial) · 🔲 Fase 5 · 🔲 Fase 6
 
 ---
 
@@ -35,7 +35,11 @@ De la auditoría previa, esta ronda solo re-verificó H4 (parcial) y H5 contra e
 
 ---
 
-## 2. Decisión de identidad para la IA (hacerla antes de tocar cualquier otra cosa)
+## 2. Decisión de identidad para la IA
+
+> **RESUELTO:** se implementó la **Opción C** (límite por IP, `requireRateLimit`). `ai-generate` usa 3 usos/día por IP y `cv-import-api` 20/hora por IP; ninguno exige login. No hay `signInAnonymously` en el código. Las Opciones A y B quedan solo como referencia histórica. Una consecuencia pendiente: la interfaz todavía muestra "créditos" que no existen (ver sección 11).
+
+(Texto original de la decisión:)
 
 Sin cuentas, hay que decidir cómo limitar y cobrar el uso de IA. Tres opciones:
 
@@ -228,7 +232,14 @@ Así el blog, el editor y la IA nunca se contradicen entre sí.
 
 - **Fase 4 — Blog:** motor de secciones, metadatos `Article`, prerender, artículos de la Ola 1 (1–6); después la Ola 2 (7–16).
 
-- **Fase 5 — Portabilidad y limpieza del plan anterior:** JSON con imágenes embebidas + reindexado en IndexedDB (sección 7); LinkedIn (H8); cobro único de exportación reformulado para tokens (H2/H3); higiene general y landing.
+- **Fase 5 — Portabilidad, LinkedIn y hardening de IA** (reordenada tras verificar el código), en este orden:
+  1. **Verificar el round-trip del JSON antes de escribir código:** `exportCVToJson()` exporta `cvData` tal cual y `documentStorageService.loadDocumentById()` ya hidrata las imágenes con `reconstructCvDataFromParts()`, así que el `.json` probablemente ya es portable. Probar a mano: CV con foto, firma y certificado → exportar `.json` → confirmar que empieza con `data:image/` (no `ref://` ni `asset://`) → importar en ventana de incógnito. Ya existen además `exportAllCVsToZip` / `importCVFromZipFile` (la sección 7 no los mencionaba). Si funciona, tachar la sección 7.
+  2. **Generalizar el empaquetador** (`driveDocumentPackager.ts`, `dedupAssetsForLocalStorage`, `reconstructCvDataFromParts`) a `cardOverrides.logoDataUrl` y a las imágenes de libros (confirmar nombres de campo en `PortadaSection.tsx` antes de tocar). No rompe el export; es deduplicación.
+  3. **Hardening de IA** (surge de contrastar con el documento de prompts): delimitar texto de terceros en los prompts y pedir tratarlo como datos, nunca como instrucciones; pasar `responseSchema` en `ai-generate` y sumar un reintento si el JSON falla; tachar emails/teléfonos dentro de textos libres en `buildCandidateContext`; inyectar el catálogo de reglas en los prompts en lugar de duplicarlo a mano.
+  4. **LinkedIn por PDF, no por ZIP:** reemplaza el "Importar ZIP de LinkedIn" del artículo 12. LinkedIn permite "Más → Guardar en PDF"; se reutiliza `ImportCvAiModal` + `cv-import-api` (ya sin login tras el arreglo) con un prompt adaptado a los títulos de LinkedIn (Experience, Education, Licenses & Certifications, Skills).
+  5. **Higiene de privacidad:** párrafo en `PrivacyPolicyPage.tsx` (hoy 0 menciones de IA, Gemini o Groq) que cuente qué texto sale a la IA y que los datos sensibles se tachan antes.
+  6. **Créditos honestos en la interfaz** (sección 11, punto 1).
+  7. ~~Bono de IA por export pagado~~ — **descartado**: la IA se limita por IP y no hay identidad a la que sumar créditos.
 
 - **Fase 6 — Cierre:** `npm run check-all` completo (TypeScript, Vitest, Oxlint, auditoría de tokens de diseño, lenguaje simple sin jergas), `npm run build`, verificación de prerenderizado de todas las rutas del blog.
 
@@ -238,7 +249,46 @@ Cada fase termina con tests. Las reglas se prueban con CVs de ejemplo que reprod
 
 ---
 
-## 11. Lo que todavía no está verificado
+## 11. Estado verificado contra el código (2026-10-01) y huecos reales
+
+Se revisó el repo, corrieron `vitest` (29 archivos, 223 tests) y `tsc --noEmit`, todo en verde. **No** se corrieron `check-all` completo, `build` ni prerender.
+
+### Corregido en esta pasada
+- `api/cv-import-api.ts` exigía `requireAuth` pero ya no existe ningún login de usuario: **importar CV con IA devolvía 401 a todos**. Se quitó el gate; queda el límite por IP y la telemetría anónima.
+- `api/ai-generate.ts`: `Number(temperature) ?? 0.7` daba `NaN` cuando el cliente no mandaba temperatura (la mayoría de los flujos), porque `??` no atrapa `NaN`. Ahora el servidor valida y acota la temperatura (por defecto 0.3, máximo 0.5).
+
+### Contrastado con el documento "Arquitectura de Prompts y Optimización ATS"
+| Punto del documento | Estado en la app |
+|---|---|
+| System prompt separado del user prompt, por tarea | ✅ `api/_lib/aiTasks/catalog.ts` |
+| Contexto del candidato con datos sensibles tachados | ✅ parcial: `candidateContext.ts` tacha DNI, CUIT, teléfono, email, dirección, ubicación, nacimiento, estado civil, nacionalidad y quita imágenes. **No** tacha teléfonos/emails escritos dentro de textos libres (resumen, descripciones) |
+| Sustantivos de acción | ✅ solo en `improve_bullet`; no hay validación posterior de que la salida cumpla |
+| No inventar datos / preguntar métricas | ✅ en `improve_bullet`, `generate_summary`, `cover_letter` |
+| Carta en estructura fija | ✅ 3 párrafos (el documento propone 4; se mantiene 3, que es lo que dicen las reclutoras) |
+| Salida JSON estructurada | ⚠️ solo pedida en el texto del prompt. `ai-generate` **no** pasa `responseSchema` (sí lo hace `cv-import-api`), el cliente limpia ```` ```json ```` a mano y **no hay reintento** si el JSON viene mal |
+| Temperatura baja (0.1–0.3) | ✅ ahora, tras el arreglo. Top-P no se configura (prioridad baja) |
+| Defensa contra prompt injection | ❌ no existe. El texto de la vacante, el CV pegado y las actividades informales entran sin delimitar |
+| Escalas de nivel estandarizadas (Básico/Intermedio/Avanzado, A1–C2) en la salida de IA | ❌ no están en ningún prompt; el catálogo solo detecta barras visuales |
+| Inyección literal de palabras clave de la vacante | ⚠️ solo en `generate_summary` y `cover_letter`; `improve_bullet` no recibe la vacante y no hay tarea "adaptar a esta vacante" |
+| Catálogo de reglas inyectado en los prompts (sección 5 de este plan) | ❌ `rulesCatalog` solo lo usa `atsPreflightCheck`; los prompts tienen sus reglas escritas a mano, duplicadas |
+
+**Del documento NO conviene copiar:** la promesa de "100% de tasa de éxito en el parsing" (contradice la sección 9: nada de promesas no verificables); la prohibición absoluta de varias columnas (las reclutoras dicen que sirven 1 o 2, y el modo ATS ya resuelve el problema real); y varias cifras sueltas (98% de Fortune 500, 112% de mejora semántica, 6–7 segundos) que no tienen fuente confiable en su lista de citas. Esa lista además incluye referencias sin relación (ANMAT, un hospital, un comité de ética).
+
+### Otros huecos que siguen abiertos
+1. **Créditos de IA que no existen:** `useEntitlements` devuelve `hasAiCredits: true` fijo, `ai-generate` responde `remainingCredits: 3` fijo y las pantallas muestran "Créditos disponibles: 3". La IA real se limita por IP. Decidir el mensaje ("X usos por día") y reflejar el 429.
+2. **`consume-pdf-credit.ts` y `paypal-order.ts` siguen con `requireAuth`**, y no hay llamadores de `consume-pdf-credit` en `src/`. Confirmar si son código muerto del modelo con cuentas y borrarlos, o migrarlos.
+3. **RLS de `pdf_export_tokens`:** el INSERT quedó restringido a `paid=false, consumed=false` y se cerró el SELECT (migración `20261006`). Pendiente de probar contra la base real; `consume_export_token` sigue ejecutable por `anon` (es lo esperado, pero conviene limitar intentos por token).
+4. **Reglas del catálogo:** hay unas 17; faltan extensión en páginas, requisito duro de la vacante y aviso de CV desactualizado (60–90 días).
+5. **Blog Ola 2:** faltan "Tu CV y LinkedIn", "Foto en el CV", "CV para mayores de 40 y 50", "Pretensión salarial" y el tutorial de la IA de LEECV.
+6. **Rate limit fail-open:** si falla la RPC `check_rate_limit`, `requireRateLimit` deja pasar todo. Con IA sin login, eso deja el gasto sin tope si Supabase tiene un problema. Considerar fail-closed para los endpoints de IA.
+
+### Lo que sigue sin verificarse
+- Nada se probó en un navegador real; el análisis es por lectura de código y tests.
+- No se revisaron las políticas reales de la base, Drive ni los webhooks de pago.
+
+---
+
+## 11b. (histórico) Lo que todavía no estaba verificado
 
 - Nada de esto se probó en un navegador real todavía — todo el análisis de código es por lectura estática.
 - No se revisaron las políticas reales de la base de datos en producción, ni Drive, ni los webhooks de pago.
@@ -248,4 +298,4 @@ Cada fase termina con tests. Las reglas se prueban con CVs de ejemplo que reprod
 
 ## 12. Próximo paso inmediato
 
-Antes de escribir una sola línea de código de reclutadoras: hacé el spike de anon auth de Supabase (sección 2, punto 1) y decidí si seguís con Opción A o pasás a la Opción C temporal. Esa decisión determina cómo se escriben `requireAuth` y los endpoints de IA en toda la Fase 0, así que conviene cerrarla primero y no volver atrás después.
+Fase 5, punto 1: probar a mano el round-trip del JSON con imágenes. Después, el hardening de IA (punto 3) y la política de privacidad (punto 5), que son lo más barato y de más impacto.

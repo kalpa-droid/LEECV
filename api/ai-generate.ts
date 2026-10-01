@@ -10,6 +10,14 @@ import { calculateAiCost } from './_lib/costCalculator.js';
 import { AI_TASKS_CATALOG } from './_lib/aiTasks/catalog.js';
 import { buildCandidateContext } from './_lib/aiTasks/candidateContext.js';
 
+// Number(undefined) es NaN y NaN ?? 0.7 sigue siendo NaN: se valida explícitamente.
+// Rango acotado a 0–0.5 porque el CV no debe "crear" datos (ver plan: 0.1–0.3).
+function resolveTemperature(raw: unknown): number {
+  const n = Number(raw);
+  if (raw === undefined || raw === null || !Number.isFinite(n)) return 0.3;
+  return Math.min(Math.max(n, 0), 0.5);
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return errorResponse(res, 405, 'Método no permitido');
@@ -39,7 +47,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     systemPrompt: String(systemPrompt),
     userPrompt: String(userPrompt),
     maxTokens: Number(maxTokens) || 1200,
-    temperature: Number(temperature) ?? 0.7
+    temperature: resolveTemperature(temperature)
   };
 
   let completionText: string | null = null;

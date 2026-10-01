@@ -1,6 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { requireRateLimit } from './_lib/rateLimiter.js';
-import { requireAuth } from './_lib/authMiddleware.js';
 import { successResponse, errorResponse } from './_lib/apiResponse.js';
 import { serverDal } from './_lib/serverDal.js';
 import { AI_PROVIDERS, AI_PROVIDER_FALLBACK_ORDER } from './_lib/aiProviders/registry.js';
@@ -14,9 +13,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return errorResponse(res, 405, 'Método no permitido');
   }
-
-  const auth = await requireAuth(req, res);
-  if (!auth) return; // Ya responde con 401
 
   const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket?.remoteAddress || 'unknown-ip';
 
@@ -91,7 +87,7 @@ REGLA CRITICA: Si un dato (ej. descripcion de experiencia) es la CONTINUACION ex
         if (result.usage) {
           const cost = calculateAiCost(providerId, provider.defaultModel, result.usage.promptTokens, result.usage.completionTokens);
           serverDal.aiTelemetry.logUsage({
-            userId: auth.user.id,
+            userId: '00000000-0000-0000-0000-000000000000', // Uso anónimo (sin cuentas)
             provider: providerId,
             model: provider.defaultModel,
             endpoint: 'cv-import-stateless',
