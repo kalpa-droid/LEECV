@@ -56,7 +56,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
         <div className={`p-3 rounded-[8px] bg-[var(--color-status-info-muted)] border border-[var(--color-status-info-base)]/30 text-[var(--color-status-info-text)] text-[11px] leading-snug font-medium flex items-start gap-2`}>
           <Bot className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--color-status-info-base)]" />
           <p>
-            <strong>Consejo de Reclutador:</strong> No incluyas tu DNI, CUIT, edad, fecha de nacimiento, estado civil o nacionalidad. Omitir estos datos evita sesgos en la selección inicial y protege tu privacidad. Si los cargás, <strong>LEECV los ocultará del PDF por defecto</strong> para cuidarte. Tampoco pongas tu dirección exacta; con la localidad o provincia es suficiente.
+            <strong>Privacidad y Sesgos:</strong> En la selección moderna se recomienda no incluir DNI, CUIT, estado civil, fecha de nacimiento o nacionalidad para evitar discriminación inconsciente. Podés completar estos datos si querés y usar el interruptor debajo de cada campo para elegir si se muestran en tu PDF o no.
           </p>
         </div>
       )}
@@ -67,6 +67,18 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
           onChange={(patch) => {
             Object.entries(patch).forEach(([key, value]) => {
               updatePersonalInfo(key, value);
+            });
+          }}
+          cvData={cvData}
+          onOverrideChange={(field, override) => {
+            setCvData(prev => {
+              const personalFieldOverrides = prev.personalFieldOverrides || {};
+              if (override === undefined) {
+                const newOverrides = { ...personalFieldOverrides };
+                delete newOverrides[field];
+                return { ...prev, personalFieldOverrides: newOverrides };
+              }
+              return { ...prev, personalFieldOverrides: { ...personalFieldOverrides, [field]: override } };
             });
           }}
           onOpenPhotoCropper={onOpenPhotoCropper}

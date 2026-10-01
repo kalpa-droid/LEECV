@@ -34,13 +34,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const systemInstruction = `Eres un extractor experto de CVs y perfiles de LinkedIn. Extrae la información de la página provista a un objeto JSON que respete esta estructura:
 {
-  "personalInfo": { "fullName": "", "email": "", "phone": "", "role": "", "location": "", "summary": "" },
+  "personalInfo": { "fullName": "", "email": "", "phone": "", "role": "", "location": "", "summary": "", "dni": "", "cuit": "", "birthDate": "", "estadoCivil": "", "nacionalidad": "" },
   "experience": [ { "company": "", "role": "", "startDate": "", "endDate": "", "description": "", "continuesFromPrevious": false } ],
   "education": [ { "institution": "", "degree": "", "startDate": "", "endDate": "", "continuesFromPrevious": false } ],
   "skills": [ { "name": "" } ],
   "languages": [ { "language": "", "proficiency": "" } ]
 }
-El documento de entrada puede ser un CV tradicional o una exportación en PDF de un perfil de LinkedIn (que incluye secciones como "Licenses & Certifications", "Experience", etc). Mapea toda la información relevante a esta estructura central.
+El documento de entrada puede ser un CV tradicional o una exportación en PDF de un perfil de LinkedIn (que incluye secciones como "Licenses & Certifications", "Experience", etc). Mapea toda la información relevante a esta estructura central. Extrae explícitamente DNI, CUIT, fecha de nacimiento, estado civil y nacionalidad si los encuentras.
 REGLA CRITICA: Si un dato (ej. descripcion de experiencia) es la CONTINUACION exacta del texto de la pagina anterior y no un nuevo trabajo, debes poner "continuesFromPrevious": true en ese objeto de experiencia, para que sepamos que debemos concatenar ese texto al ultimo trabajo de la pagina anterior. Devuelve SOLO JSON valido.`;
 
     const request: AiCompletionRequest = {

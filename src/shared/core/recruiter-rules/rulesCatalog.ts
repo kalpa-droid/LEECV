@@ -1,4 +1,5 @@
 import { CVData } from '../../../types/cv';
+import { resolveActiveFormat, resolvePersonalFieldVisibility } from '../formats/cvFormatRegistry';
 
 export interface RecruiterRule {
   id: string;
@@ -36,14 +37,19 @@ export const RULES_CATALOG: RecruiterRule[] = [
       const pi = cvData.personalInfo;
       if (!pi) return 'not_applicable';
       
-      const hidden = new Set(cvData.hiddenFields || []);
+      const format = resolveActiveFormat(cvData);
+      
+      // Si el formato es latam-clasico, no se penalizan los datos personales
+      if (format.id === 'latam-clasico') {
+        return 'pass';
+      }
       
       const hasSensitive = 
-        (pi.dni && !hidden.has('dni')) || 
-        (pi.cuit && !hidden.has('cuit')) || 
-        (pi.birthDate && !hidden.has('birthDate')) || 
-        (pi.estadoCivil && !hidden.has('estadoCivil')) || 
-        (pi.nacionalidad && !hidden.has('nacionalidad'));
+        (pi.dni && resolvePersonalFieldVisibility(cvData, 'dni')) || 
+        (pi.cuit && resolvePersonalFieldVisibility(cvData, 'cuit')) || 
+        (pi.birthDate && resolvePersonalFieldVisibility(cvData, 'birthDate')) || 
+        (pi.estadoCivil && resolvePersonalFieldVisibility(cvData, 'estadoCivil')) || 
+        (pi.nacionalidad && resolvePersonalFieldVisibility(cvData, 'nacionalidad'));
         
       return hasSensitive ? 'fail' : 'pass';
     }

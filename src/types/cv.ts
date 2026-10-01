@@ -203,4 +203,5 @@ export interface CVData {
   theme?: ThemeConfig;
   updatedAt?: string;
   hiddenFields?: string[];
+  personalFieldOverrides?: Record<string, 'show' | 'hide'>;
 }

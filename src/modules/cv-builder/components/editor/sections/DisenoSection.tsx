@@ -128,7 +128,7 @@ export const DisenoSection = ({
 
             {/* Formato Global & Estándares Internacionales (ATS, US Resume, Europass, Tech, LATAM) */}
             {!isBusinessCard && (
-              <PanelSection icon={<Globe className="w-4 h-4 text-[var(--color-accent-text)]" />} title="Estándar & Formato Global (Internacional)">
+              <PanelSection icon={<Globe className="w-4 h-4 text-[var(--color-accent-text)]" />} title="¿Para quién es este CV? (Formato y Destino)">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {getAllCvFormats().map((format) => {
                     const isSelected = resolveActiveFormatId(cvData) === format.id;
@@ -366,18 +366,30 @@ export const DisenoSection = ({
                     const isSelected = (cvData?.activePresetId || 'cv-clasico') === preset.id;
                     const hasOverrides = !!(cvData?.colorPresetId || cvData?.typographyPresetId || cvData?.columnLayoutPresetId);
                     const isBusinessCard = docType === 'business_card';
-  return (
+                    
+                    const activeFormat = resolveActiveFormat(cvData);
+                    const isSingleColumnFormat = activeFormat?.columnLayoutPresetId === 'full-width';
+                    const isPresetIncompatible = isSingleColumnFormat && preset.columnLayoutPresetId !== 'full-width';
+
+                    return (
                       <button
                         key={preset.id}
                         onClick={() => {
+                          if (isPresetIncompatible) {
+                            showWarning(`La plantilla "${preset.name}" tiene 2 columnas y no es compatible con el formato ${activeFormat?.name}. Cambiá el formato primero.`);
+                            return;
+                          }
                           triggerPresetTransition(preset.name, 'preset');
                           setCvData((prev: any) => applyPresetLevel(prev, 'preset', { presetId: preset.id }));
                         }}
-                        className={`p-2.5 rounded-[${radius.card}] border text-left transition flex flex-col justify-between cursor-pointer ${
-                          isSelected
-                            ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30'
-                            : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]'
+                        className={`p-2.5 rounded-[${radius.card}] border text-left transition flex flex-col justify-between ${
+                          isPresetIncompatible
+                            ? 'opacity-40 cursor-not-allowed bg-[var(--ui-bg-panel)] border-[var(--color-neutral-border)]'
+                            : isSelected
+                              ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 cursor-pointer'
+                              : 'border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)] cursor-pointer'
                         }`}
+                        title={isPresetIncompatible ? `No compatible con ${activeFormat?.name}` : preset.name}
                       >
                         <div className="flex items-center justify-between mb-1.5 gap-1">
                           <div className="flex items-center gap-1 min-w-0 pr-1">

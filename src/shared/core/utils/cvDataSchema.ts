@@ -60,6 +60,10 @@ export function sanitizeCvData(rawCvData: any = {}) {
     cardOverrides: (typeof data.cardOverrides === 'object' && data.cardOverrides !== null)
       ? data.cardOverrides
       : {},
+    personalFieldOverrides: (typeof data.personalFieldOverrides === 'object' && data.personalFieldOverrides !== null)
+      ? data.personalFieldOverrides
+      : {},
+    hiddenFields: Array.isArray(data.hiddenFields) ? data.hiddenFields : undefined,
     qrMode: data.qrMode || 'vcard',
     cardSize: data.cardSize || 'tarjeta_estandar',
     showBusinessCard: data.showBusinessCard !== false,

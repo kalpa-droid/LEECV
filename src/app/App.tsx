@@ -383,7 +383,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     setIsAtsModalOpen(true);
   };
 
-  const handleExportAtsPdf = async () => {
+  const handleExportAtsPdf = async (omitSensitiveData: boolean = false) => {
     const allowed = await consumeCredits(1);
     if (!allowed) {
       setPdfCheckoutPurpose('export');
@@ -397,7 +397,14 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     const result = await withErrorHandling(
       async () => {
         const { exportDocumentToPDF } = await import('../shared/core/pdf-engine/pdfExporter');
-        return exportDocumentToPDF(cvData, resolveActivePreset(cvData), true);
+        let exportData = cvData;
+        if (omitSensitiveData) {
+          exportData = {
+            ...cvData,
+            hiddenFields: Array.from(new Set([...(cvData?.hiddenFields || []), 'dni', 'cuit', 'birthDate', 'estadoCivil', 'nacionalidad']))
+          };
+        }
+        return exportDocumentToPDF(exportData, resolveActivePreset(exportData), true);
       },
       {
         context: 'Exportar PDF ATS',

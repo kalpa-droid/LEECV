@@ -9,7 +9,7 @@ export interface AtsCheckModalProps {
   isOpen: boolean;
   onClose: () => void;
   result: AtsPreflightResult;
-  onExportAtsPdf?: () => void;
+  onExportAtsPdf?: (omitSensitiveData?: boolean) => void;
   onExportOriginal?: () => void;
   onFixAction?: (actionId: string, ruleId: string) => void;
 }
@@ -22,6 +22,7 @@ export function AtsCheckModal({
   onExportOriginal,
   onFixAction
 }: AtsCheckModalProps) {
+  const [omitSensitiveData, setOmitSensitiveData] = useState(true);
 
   const getScoreBadge = (score: number) => {
     if (score >= 85) {
@@ -51,31 +52,46 @@ export function AtsCheckModal({
             Cerrar
           </button>
 
-          <div className="flex gap-2">
-            {onExportOriginal && (
-              <button
-                onClick={() => {
-                  onClose();
-                  onExportOriginal();
-                }}
-                className={`${button.secondary} px-4 py-2 font-black text-xs flex items-center gap-1.5 border-[var(--ui-border)] hover:bg-[var(--ui-bg-hover)]`}
-              >
-                <span>Descargar de todos modos</span>
-              </button>
-            )}
-
+          <div className="flex flex-col items-end gap-2">
             {onExportAtsPdf && (
-              <button
-                onClick={() => {
-                  onClose();
-                  onExportAtsPdf();
-                }}
-                className={`${button.primary} px-4 py-2 font-black text-xs flex items-center gap-1.5`}
-              >
-                <FileText className="w-4 h-4" />
-                <span>Exportar Versión ATS (1 Columna)</span>
-              </button>
+              <label className="flex items-center gap-2 cursor-pointer mr-2">
+                <input 
+                  type="checkbox" 
+                  checked={omitSensitiveData}
+                  onChange={(e) => setOmitSensitiveData(e.target.checked)}
+                  className="w-3.5 h-3.5 text-[var(--color-neutral-text-primary)] rounded border-[var(--color-neutral-border)] focus:ring-[var(--color-neutral-text-primary)] cursor-pointer"
+                />
+                <span className="text-[11px] font-bold text-[var(--ui-text-secondary)]">
+                  Omitir datos personales sensibles en esta versión
+                </span>
+              </label>
             )}
+            <div className="flex gap-2">
+              {onExportOriginal && (
+                <button
+                  onClick={() => {
+                    onClose();
+                    onExportOriginal();
+                  }}
+                  className={`${button.secondary} px-4 py-2 font-black text-xs flex items-center gap-1.5 border-[var(--ui-border)] hover:bg-[var(--ui-bg-hover)]`}
+                >
+                  <span>Descargar igual</span>
+                </button>
+              )}
+
+              {onExportAtsPdf && (
+                <button
+                  onClick={() => {
+                    onClose();
+                    onExportAtsPdf(omitSensitiveData);
+                  }}
+                  className={`${button.primary} px-4 py-2 font-black text-xs flex items-center gap-1.5`}
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>Exportar Versión ATS (1 Columna)</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       }

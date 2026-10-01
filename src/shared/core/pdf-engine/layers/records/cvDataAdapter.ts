@@ -1,6 +1,6 @@
 import { ContentSection, CvRecordKind } from './recordTypes';
 import { getSectionLabel } from '../../../sectionRegistry';
-import { resolveActiveFormat } from '../../../formats/cvFormatRegistry';
+import { resolveActiveFormat, resolvePersonalFieldVisibility } from '../../../formats/cvFormatRegistry';
 import { resolveDisplayName } from '../../../utils/cvDataSchema';
 import { resolveDateRange } from './dateRangeResolver';
 import { CANONICAL_SECTION_ORDER } from '../../../sections/canonicalSectionOrder';
@@ -36,13 +36,6 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
   } = cvData;
 
   const activeFormat = resolveActiveFormat(cvData);
-  const defaultHiddenFields = ['dni', 'cuit', 'birthDate', 'nacionalidad', 'estadoCivil'];
-  const userHiddenFields = cvData?.hiddenFields ?? defaultHiddenFields;
-
-  const hiddenFieldsSet = new Set([
-    ...(activeFormat?.hiddenPersonalFields || []),
-    ...userHiddenFields
-  ]);
 
   const sortedEducation = sortByYearDesc(education);
   const sortedCourses = sortByYearDesc(coursesAndCertificates);
@@ -74,15 +67,15 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
     });
   }
 
-  // Datos Personales (Sidebar - Filtrados dinámicamente según hiddenPersonalFields del Formato Activo)
+  // Datos Personales (Sidebar - Filtrados dinámicamente según la política)
   const personalDetailsFields = {
-    dni: hiddenFieldsSet.has('dni') ? '' : personalInfo.dni || '',
-    cuit: hiddenFieldsSet.has('cuit') ? '' : personalInfo.cuit || '',
-    birthDate: hiddenFieldsSet.has('birthDate') ? '' : personalInfo.birthDate || '',
-    nacionalidad: hiddenFieldsSet.has('nacionalidad') ? '' : personalInfo.nacionalidad || '',
-    estadoCivil: hiddenFieldsSet.has('estadoCivil') ? '' : personalInfo.estadoCivil || '',
-    disponibilidad: hiddenFieldsSet.has('disponibilidad') ? '' : personalInfo.disponibilidad || '',
-    licenciaConducir: hiddenFieldsSet.has('licenciaConducir') ? '' : personalInfo.licenciaConducir || ''
+    dni: !resolvePersonalFieldVisibility(cvData, 'dni') ? '' : personalInfo.dni || '',
+    cuit: !resolvePersonalFieldVisibility(cvData, 'cuit') ? '' : personalInfo.cuit || '',
+    birthDate: !resolvePersonalFieldVisibility(cvData, 'birthDate') ? '' : personalInfo.birthDate || '',
+    nacionalidad: !resolvePersonalFieldVisibility(cvData, 'nacionalidad') ? '' : personalInfo.nacionalidad || '',
+    estadoCivil: !resolvePersonalFieldVisibility(cvData, 'estadoCivil') ? '' : personalInfo.estadoCivil || '',
+    disponibilidad: cvData?.hiddenFields?.includes('disponibilidad') ? '' : personalInfo.disponibilidad || '',
+    licenciaConducir: cvData?.hiddenFields?.includes('licenciaConducir') ? '' : personalInfo.licenciaConducir || ''
   };
 
   const hasPersonalDetails = Object.values(personalDetailsFields).some((val) => !!val);

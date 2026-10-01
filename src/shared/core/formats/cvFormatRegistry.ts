@@ -11,13 +11,18 @@
 
 import { CANONICAL_SECTION_ORDER } from '../sections/canonicalSectionOrder';
 
+export type PersonalFieldPolicy = Record<
+  'dni' | 'cuit' | 'birthDate' | 'estadoCivil' | 'nacionalidad' | 'profilePhoto',
+  'user' | 'hide' | 'show'
+>;
+
 export interface CvFormatDefinition {
   id: string;
   name: string;
   description: string;
   columnLayoutPresetId: 'full-width' | 'sidebar-left' | 'sidebar-right';
   defaultVisibleSections: string[];
-  hiddenPersonalFields: string[];
+  personalFieldPolicy: PersonalFieldPolicy;
   recommendedPresetIds: string[];
 }
 
@@ -28,7 +33,7 @@ export const CV_FORMAT_REGISTRY: Record<string, CvFormatDefinition> = {
     description: 'Formato tradicional sin restricciones regionales, con las 18 secciones disponibles activas por defecto. Punto de partida recomendado si no aplicás a un estándar internacional específico.',
     columnLayoutPresetId: 'sidebar-left',
     defaultVisibleSections: [...CANONICAL_SECTION_ORDER],
-    hiddenPersonalFields: [],
+    personalFieldPolicy: { dni: 'user', cuit: 'user', birthDate: 'user', estadoCivil: 'user', nacionalidad: 'user', profilePhoto: 'user' },
     recommendedPresetIds: ['cv-clasico', 'modern-corporate', 'minimal-editorial', 'creative-sustentable']
   },
 
@@ -38,7 +43,7 @@ export const CV_FORMAT_REGISTRY: Record<string, CvFormatDefinition> = {
     description: 'Estructura lineal de 1 sola columna en flujo continuo. Máxima compatibilidad con sistemas ATS de selección corporativa.',
     columnLayoutPresetId: 'full-width',
     defaultVisibleSections: ['contacto', 'redes', 'resumen', 'experiencia', 'formacion', 'habilidades', 'idiomas', 'certificados'],
-    hiddenPersonalFields: [],
+    personalFieldPolicy: { dni: 'user', cuit: 'user', birthDate: 'user', estadoCivil: 'user', nacionalidad: 'user', profilePhoto: 'user' },
     recommendedPresetIds: ['cv-clasico', 'minimal-editorial']
   },
 
@@ -48,7 +53,7 @@ export const CV_FORMAT_REGISTRY: Record<string, CvFormatDefinition> = {
     description: 'Estándar norteamericano con cumplimiento estricto de leyes de no discriminación (sin foto, edad ni estado civil).',
     columnLayoutPresetId: 'full-width',
     defaultVisibleSections: ['contacto', 'redes', 'resumen', 'experiencia', 'habilidades', 'formacion', 'proyectos'],
-    hiddenPersonalFields: ['profilePhoto', 'birthDate', 'estadoCivil', 'dni', 'cuit', 'nacionalidad'],
+    personalFieldPolicy: { dni: 'hide', cuit: 'hide', birthDate: 'hide', estadoCivil: 'hide', nacionalidad: 'hide', profilePhoto: 'hide' },
     recommendedPresetIds: ['minimal-editorial', 'cv-clasico']
   },
 
@@ -58,7 +63,7 @@ export const CV_FORMAT_REGISTRY: Record<string, CvFormatDefinition> = {
     description: 'Estructura europea unificada con énfasis en Formación, Experiencia e Idiomas clasificados por marco CEFR (A1-C2).',
     columnLayoutPresetId: 'sidebar-left',
     defaultVisibleSections: ['contacto', 'datos-personales', 'redes', 'resumen', 'experiencia', 'formacion', 'idiomas', 'habilidades'],
-    hiddenPersonalFields: [],
+    personalFieldPolicy: { dni: 'user', cuit: 'user', birthDate: 'user', estadoCivil: 'user', nacionalidad: 'user', profilePhoto: 'user' },
     recommendedPresetIds: ['modern-corporate', 'cv-clasico']
   },
 
@@ -68,7 +73,7 @@ export const CV_FORMAT_REGISTRY: Record<string, CvFormatDefinition> = {
     description: 'Orientado a desarrolladores, ingenieros y perfiles tecnológicos. Prioriza Proyectos, Habilidades Técnicas y Repositorios.',
     columnLayoutPresetId: 'sidebar-left',
     defaultVisibleSections: ['contacto', 'redes', 'resumen', 'proyectos', 'habilidades', 'experiencia', 'formacion', 'publicaciones'],
-    hiddenPersonalFields: [],
+    personalFieldPolicy: { dni: 'user', cuit: 'user', birthDate: 'user', estadoCivil: 'user', nacionalidad: 'user', profilePhoto: 'user' },
     recommendedPresetIds: ['creative-sustentable', 'modern-corporate']
   },
 
@@ -78,7 +83,7 @@ export const CV_FORMAT_REGISTRY: Record<string, CvFormatDefinition> = {
     description: 'Formato clásico de 2 columnas ampliamente utilizado en América Latina con foto de perfil y datos completos.',
     columnLayoutPresetId: 'sidebar-left',
     defaultVisibleSections: ['contacto', 'datos-personales', 'resumen', 'redes', 'experiencia', 'formacion', 'profesion', 'competencias', 'cursos', 'firma'],
-    hiddenPersonalFields: [],
+    personalFieldPolicy: { dni: 'user', cuit: 'user', birthDate: 'user', estadoCivil: 'user', nacionalidad: 'user', profilePhoto: 'user' },
     recommendedPresetIds: ['cv-clasico', 'modern-corporate']
   }
 };
@@ -136,5 +141,36 @@ export function resolveActiveFormatId(cvData: any): string {
 
 export function resolveActiveFormat(cvData: any): CvFormatDefinition {
   return getCvFormat(resolveActiveFormatId(cvData));
+}
+
+/**
+ * NÚCLEO — RESUELVE LA VISIBILIDAD DE DATOS PERSONALES
+ *
+ * 1. Si el formato dice 'hide', se oculta (ej. EE.UU. prohíbe DNI).
+ * 2. Si no, si el usuario explícitamente lo oculta en `personalFieldOverrides`, se oculta.
+ * 3. Si no, el default es mostrar si está cargado (devuelve true).
+ */
+export function resolvePersonalFieldVisibility(
+  cvData: any,
+  field: keyof PersonalFieldPolicy
+): boolean {
+  const format = resolveActiveFormat(cvData);
+  const policy = format.personalFieldPolicy[field];
+
+  if (policy === 'hide') {
+    return false; // El formato lo oculta incondicionalmente
+  }
+
+  const override = cvData?.personalFieldOverrides?.[field];
+  if (override === 'hide') {
+    return false; // El usuario eligió ocultarlo
+  }
+
+  // Comportamiento legado: si el usuario usaba hiddenFields
+  if (Array.isArray(cvData?.hiddenFields) && cvData.hiddenFields.includes(field)) {
+    return false;
+  }
+
+  return true; // Si está cargado y no hay overrides, se muestra
 }
 

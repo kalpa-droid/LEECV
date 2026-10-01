@@ -16,7 +16,7 @@ import { sanitizeCvData } from '../utils/cvDataSchema';
 import { inferPdfRole } from '../pdf-engine/layers/records/recordLayoutEngine';
 import { FIELD_CATALOG } from '../pdf-engine/layers/records/fieldCatalog';
 
-export const CURRENT_SCHEMA_VERSION = 5;
+export const CURRENT_SCHEMA_VERSION = 6;
 
 export function migrateCvData(rawCvData: any): any {
   if (!rawCvData || typeof rawCvData !== 'object') {
@@ -190,6 +190,12 @@ export function migrateCvData(rawCvData: any): any {
     });
 
     currentVersion = 5;
+  }
+
+  // Migration v5 -> v6: Nueva política de datos personales (sin transformación, solo bump de versión)
+  if (currentVersion < 6) {
+    migrated.schemaVersion = 6;
+    currentVersion = 6;
   }
 
   // Retornar objeto desinfectado garantizado

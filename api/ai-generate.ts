@@ -40,14 +40,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const cvContext = buildCandidateContext(cvData || {});
-  const systemPrompt = taskDef.buildSystemPrompt(cvContext, payload);
+  
+  let formatContext = "Formato estándar: Profesional, claro y orientado a impacto.";
+  if (cvData?.activeFormatId) {
+    if (cvData.activeFormatId.includes('ats')) {
+      formatContext = "Formato ATS: Sé extremadamente claro, objetivo, sin florituras, orientado a sistemas automáticos. Evita palabras vacías o formato inusual.";
+    } else if (cvData.activeFormatId.includes('latam')) {
+      formatContext = "Formato Latam Clásico: Profesional, formal, balanceando logros con descripción clara de responsabilidades. Tono corporativo.";
+    } else {
+      formatContext = "Formato Moderno/Creativo: Directo, dinámico, enfocado en impacto y logros destacados de lectura rápida.";
+    }
+  }
+
+  const systemPrompt = taskDef.buildSystemPrompt(cvContext, payload, formatContext);
   const userPrompt = taskDef.buildUserPrompt(payload);
 
   const completionReq: AiCompletionRequest = {
     systemPrompt: String(systemPrompt),
     userPrompt: String(userPrompt),
     maxTokens: Number(maxTokens) || 1200,
-    temperature: resolveTemperature(temperature)
+    temperature: resolveTemperature(temperature),
+    ...(taskDef.responseSchema && { responseSchema: taskDef.responseSchema })
   };
 
   let completionText: string | null = null;

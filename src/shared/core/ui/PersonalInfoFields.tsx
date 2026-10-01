@@ -1,8 +1,9 @@
 import React from 'react';
-import { User, Camera, Phone } from 'lucide-react';
+import { User, Camera, Phone, Info } from 'lucide-react';
 import { Field } from './Field';
 import { PanelSection } from './PanelSection';
 import { colorSystem, typeScale, button, elevationSystem } from '../uiDesignSystem';
+import { resolvePersonalFieldVisibility, getCvFormat } from '../formats/cvFormatRegistry';
 
 interface PersonalInfo {
   titlePrefix?: string;
@@ -28,14 +29,47 @@ interface PersonalInfoFieldsProps {
   onChange: (patch: Partial<PersonalInfo>) => void;
   onOpenPhotoCropper?: () => void;
   renderManualAdjustment?: (sectionId: string) => React.ReactNode;
+  cvData?: any;
+  onOverrideChange?: (field: string, override: 'show' | 'hide' | undefined) => void;
 }
 
 export function PersonalInfoFields({
   personalInfo = {},
   onChange,
   onOpenPhotoCropper,
-  renderManualAdjustment
+  renderManualAdjustment,
+  cvData,
+  onOverrideChange
 }: PersonalInfoFieldsProps) {
+
+  const renderVisibilityToggle = (fieldId: string) => {
+    if (!cvData || !onOverrideChange) return null;
+    const format = getCvFormat(cvData.activeFormatId);
+    const policy = format.personalFieldPolicy[fieldId as keyof typeof format.personalFieldPolicy];
+    const isVisible = resolvePersonalFieldVisibility(cvData, fieldId as any);
+
+    if (policy === 'hide') {
+      return (
+        <div className="text-[10px] mt-1.5 flex items-start gap-1" style={{ color: colorSystem.status.warning.text }}>
+          <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
+          <span>El formato <strong>{format.name}</strong> oculta este dato para evitar sesgos.</span>
+        </div>
+      );
+    }
+
+    return (
+      <label className="flex items-center gap-1.5 mt-1.5 cursor-pointer text-[11px] font-medium transition hover:opacity-80" style={{ color: isVisible ? colorSystem.secondary.base : colorSystem.neutral.textMuted }}>
+        <input 
+          type="checkbox" 
+          checked={isVisible} 
+          onChange={(e) => onOverrideChange(fieldId, e.target.checked ? 'show' : 'hide')}
+          className="w-3.5 h-3.5 rounded border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] focus:ring-[var(--color-neutral-text-primary)] cursor-pointer"
+        />
+        {isVisible ? 'Se muestra en el PDF' : 'Oculto en el PDF'}
+      </label>
+    );
+  };
+
   return (
     <>
       {/* 1. Titular Profesional & Título Honorífico */}
@@ -96,6 +130,7 @@ export function PersonalInfoFields({
               <p className={typeScale.helper} style={{ color: 'var(--ui-text-secondary)' }}>
                 Se muestra en la portada y en el encabezado principal del documento.
               </p>
+              {renderVisibilityToggle('profilePhoto')}
               {onOpenPhotoCropper && (
                 <button
                   type="button"
@@ -138,62 +173,83 @@ export function PersonalInfoFields({
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field
-              id="dni"
-              label="DNI"
-              value={personalInfo.dni || ''}
-              onChange={(e: any) => onChange({ dni: e.target.value })}
-              placeholder="Ej: 29334206"
-            />
-            <Field
-              id="cuit"
-              label="CUIT / CUIL"
-              value={personalInfo.cuit || ''}
-              onChange={(e: any) => onChange({ cuit: e.target.value })}
-              placeholder="Ej: 27-29334206-2"
-            />
+            <div>
+              <Field
+                id="dni"
+                label="DNI"
+                value={personalInfo.dni || ''}
+                onChange={(e: any) => onChange({ dni: e.target.value })}
+                placeholder="Ej: 29334206"
+              />
+              {renderVisibilityToggle('dni')}
+            </div>
+            <div>
+              <Field
+                id="cuit"
+                label="CUIT / CUIL"
+                value={personalInfo.cuit || ''}
+                onChange={(e: any) => onChange({ cuit: e.target.value })}
+                placeholder="Ej: 27-29334206-2"
+              />
+              {renderVisibilityToggle('cuit')}
+            </div>
           </div>
 
-          <Field
-            id="birthDate"
-            label="Fecha de Nacimiento"
-            type="date"
-            value={personalInfo.birthDate || ''}
-            onChange={(e: any) => onChange({ birthDate: e.target.value })}
-          />
-
-          <div className="grid grid-cols-2 gap-3">
+          <div>
             <Field
-              id="nacionalidad"
-              label="Nacionalidad"
-              value={personalInfo.nacionalidad || ''}
-              onChange={(e: any) => onChange({ nacionalidad: e.target.value })}
-              placeholder="Ej: Argentina"
+              id="birthDate"
+              label="Fecha de Nacimiento"
+              type="date"
+              value={personalInfo.birthDate || ''}
+              onChange={(e: any) => onChange({ birthDate: e.target.value })}
             />
-            <Field
-              id="estadoCivil"
-              label="Estado Civil"
-              value={personalInfo.estadoCivil || ''}
-              onChange={(e: any) => onChange({ estadoCivil: e.target.value })}
-              placeholder="Ej: Soltero/a, Casado/a"
-            />
+            {renderVisibilityToggle('birthDate')}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field
-              id="disponibilidad"
-              label="Disponibilidad (Viaje / Horarios)"
-              value={personalInfo.disponibilidad || ''}
-              onChange={(e: any) => onChange({ disponibilidad: e.target.value })}
-              placeholder="Ej: Inmediata / Relocalización"
-            />
-            <Field
-              id="licenciaConducir"
-              label="Licencia de Conducir"
-              value={personalInfo.licenciaConducir || ''}
-              onChange={(e: any) => onChange({ licenciaConducir: e.target.value })}
-              placeholder="Ej: Clase B1 (Autos particulares)"
-            />
+            <div>
+              <Field
+                id="nacionalidad"
+                label="Nacionalidad"
+                value={personalInfo.nacionalidad || ''}
+                onChange={(e: any) => onChange({ nacionalidad: e.target.value })}
+                placeholder="Ej: Argentina"
+              />
+              {renderVisibilityToggle('nacionalidad')}
+            </div>
+            <div>
+              <Field
+                id="estadoCivil"
+                label="Estado Civil"
+                value={personalInfo.estadoCivil || ''}
+                onChange={(e: any) => onChange({ estadoCivil: e.target.value })}
+                placeholder="Ej: Soltero/a, Casado/a"
+              />
+              {renderVisibilityToggle('estadoCivil')}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Field
+                id="disponibilidad"
+                label="Disponibilidad (Viaje / Horarios)"
+                value={personalInfo.disponibilidad || ''}
+                onChange={(e: any) => onChange({ disponibilidad: e.target.value })}
+                placeholder="Ej: Inmediata / Relocalización"
+              />
+              {renderVisibilityToggle('disponibilidad')}
+            </div>
+            <div>
+              <Field
+                id="licenciaConducir"
+                label="Licencia de Conducir"
+                value={personalInfo.licenciaConducir || ''}
+                onChange={(e: any) => onChange({ licenciaConducir: e.target.value })}
+                placeholder="Ej: Clase B1 (Autos particulares)"
+              />
+              {renderVisibilityToggle('licenciaConducir')}
+            </div>
           </div>
 
           {/* Ajuste Manual: Datos Personales */}

@@ -39,5 +39,37 @@ export function buildCandidateContext(cvData: any): string {
   delete sanitized.layout;
   delete sanitized.config;
 
+  // Tachar emails y teléfonos en textos libres
+  const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+  const phoneRegex = /(?:(?:\+|00)\d{1,3}[\s-]?)?(?:\(?\d{2,4}\)?[\s-]?)?\d{3,4}[\s-]?\d{3,4}/g;
+
+  function redactFreeText(obj: any): any {
+    if (typeof obj === 'string') {
+      let redacted = obj.replace(emailRegex, '[DATO_PROTEGIDO]');
+      redacted = redacted.replace(phoneRegex, (match) => {
+        const trimmed = match.trim();
+        // Evitar tachar rangos de años comunes como 2020-2022 o fechas simples
+        if (/^(19|20)\d{2}[-\s./]?(19|20)\d{2}$/.test(trimmed)) return match;
+        if (/^\d{1,4}$/.test(trimmed)) return match;
+        // Evitar tachar números de versión o fechas aisladas
+        if (trimmed.length < 8 && !trimmed.startsWith('+')) return match;
+        return '[DATO_PROTEGIDO]';
+      });
+      return redacted;
+    }
+    if (Array.isArray(obj)) {
+      obj.forEach((item, index) => {
+        obj[index] = redactFreeText(item);
+      });
+    } else if (obj !== null && typeof obj === 'object') {
+      for (const key of Object.keys(obj)) {
+        obj[key] = redactFreeText(obj[key]);
+      }
+    }
+    return obj;
+  }
+
+  redactFreeText(sanitized);
+
   return JSON.stringify(sanitized, null, 2);
 }

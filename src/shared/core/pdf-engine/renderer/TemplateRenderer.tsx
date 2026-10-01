@@ -24,7 +24,7 @@ import { resolveUnifiedTextSpec } from '../layers/typography/unifiedTextHierarch
 import { resolveSubtleCardBackground } from '../layers/colors/surfaceAwareColorEngine';
 import { initPdfFonts, sanitizeFontFamily } from '../layers/typography/pdfFontRegistry';
 import { resolveEffectivePresetSectionOrder, resolveEffectivePresetSectors, CvLayoutOverrides } from '../layers/sectors/layoutResolutionEngine';
-import { getCvFormat } from '../../formats/cvFormatRegistry';
+import { getCvFormat, resolvePersonalFieldVisibility } from '../../formats/cvFormatRegistry';
 import { getContainerStyle } from '../../styles/containerStyleEngine';
 import { resolveDisplayName } from '../../utils/cvDataSchema';
 import { getCoverFeaturedBadges } from '../layers/sectors/coverFeaturedEngine';
@@ -522,9 +522,16 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
     return null;
   };
 
+  const pseudoCvData = {
+    activeFormatId: activeFormatId || personalInfo?.activeFormatId,
+    columnLayoutPresetId: layoutOverrides?.pageSizeId,
+    personalFieldOverrides: personalInfo?.personalFieldOverrides,
+    hiddenFields: personalInfo?.hiddenFields
+  };
+
   const resolvedFormatId = activeFormatId || personalInfo?.activeFormatId;
   const activeFormat = resolvedFormatId ? getCvFormat(resolvedFormatId) : null;
-  const hidePhoto = activeFormat?.hiddenPersonalFields?.includes('profilePhoto');
+  const hidePhoto = !resolvePersonalFieldVisibility(pseudoCvData, 'profilePhoto');
 
   const effectiveSectionOrder = resolveEffectivePresetSectionOrder(preset, layoutOverrides);
   const overflowResult = processPageOverflow(preset, sections);
@@ -714,9 +721,8 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   const renderCoverPageContent = () => {
     const styleId = coverStyle || preset.coverStyle || 'monica-classic';
 
-    const defaultHiddenFields = ['dni', 'cuit', 'birthDate', 'nacionalidad', 'estadoCivil'];
-    const userHiddenFields = personalInfo?.hiddenFields ?? defaultHiddenFields;
-    const isHidden = (field: string) => userHiddenFields.includes(field);
+    const isHidden = (field: string) => !resolvePersonalFieldVisibility(pseudoCvData, field as any);
+
     const renderDniCuit = () => {
       const parts = [];
       if (!isHidden('dni') && personalInfo.dni) parts.push(`DNI: ${personalInfo.dni}`);

@@ -3,19 +3,27 @@ import { RULES_CATALOG } from './rulesCatalog';
 import { CVData } from '../../../types/cv';
 
 describe('Recruiter Rules Catalog', () => {
-  it('sensitive_data: fails if DNI or birthDate is present and not hidden', () => {
+  it('sensitive_data: fails if DNI or birthDate is present and not hidden in ats format', () => {
     const rule = RULES_CATALOG.find(r => r.id === 'sensitive_data')!;
     
     const cvData: CVData = {
+      activeFormatId: 'ats-one-column',
       personalInfo: {
         dni: '12345678',
         birthDate: '1990-01-01'
       }
     };
     
+    // Falla si el formato es ats-one-column y los datos están visibles
     expect(rule.evaluate(cvData)).toBe('fail');
     
+    // Si se ocultan (legacy o por policy/override), pasa
     cvData.hiddenFields = ['dni', 'birthDate'];
+    expect(rule.evaluate(cvData)).toBe('pass');
+    
+    // Si el formato es latam-clasico, SIEMPRE pasa porque no penaliza datos personales
+    cvData.activeFormatId = 'latam-clasico';
+    cvData.hiddenFields = []; // Volvemos a mostrarlos
     expect(rule.evaluate(cvData)).toBe('pass');
   });
 

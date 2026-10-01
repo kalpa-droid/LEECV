@@ -61,7 +61,7 @@ export interface AppModalsProps {
   // Handlers
   handleSaveCVClick: () => void;
   handleSaveCVAsClick: (v: string) => void;
-  handleExportAtsPdf: () => void;
+  handleExportAtsPdf: (omitSensitiveData?: boolean) => void;
   proceedWithExport: () => void;
   triggerPdfGeneration: () => void;
   handleImportJsonFile: (e: any) => Promise<void>;

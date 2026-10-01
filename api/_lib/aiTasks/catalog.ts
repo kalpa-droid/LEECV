@@ -1,47 +1,65 @@
 export interface AiTaskDefinition {
   taskId: string;
-  buildSystemPrompt: (cvContext: string, payload: any) => string;
+  buildSystemPrompt: (cvContext: string, payload: any, formatContext?: string) => string;
   buildUserPrompt: (payload: any) => string;
+  responseSchema?: any;
 }
 
 export const AI_TASKS_CATALOG: Record<string, AiTaskDefinition> = {
   improve_bullet: {
     taskId: 'improve_bullet',
-    buildSystemPrompt: (cvContext: string) => `Eres un reclutador experto en optimización de CVs para sistemas ATS.
+    buildSystemPrompt: (cvContext: string, payload: any, formatContext?: string) => `Eres un reclutador experto en optimización de CVs.
 Tu objetivo es mejorar una viñeta de experiencia laboral. 
 REGLA 1: Usa siempre un sustantivo de acción al inicio (ej. 'Administración de...', 'Liderazgo de...'), NO un verbo conjugado (ej. no uses 'Lideré', 'Desarrollé').
 REGLA 2: No inventes números ni métricas. Si la viñeta original no los tiene, pide al usuario que los agregue o reformula sin inventar.
 REGLA 3: Mantén el resultado en una sola oración concisa.
-Debes devolver un JSON válido con la siguiente estructura exacta:
-{
-  "improvedBullet": "el texto mejorado",
-  "missingMetrics": "¿Qué métricas le faltan? (ej. '¿A cuántas personas lideraste?', o null si ya tiene métricas)"
-}
+Debes devolver un JSON válido.
+${formatContext ? `\nADAPTACIÓN AL FORMATO OBJETIVO:\n${formatContext}\nAjusta el tono para encajar con el estilo de este formato.` : ''}
 
 Aquí está el contexto del CV (solo para referencia de estilo o industria, no inventes datos de él):
-${cvContext}`,
-    buildUserPrompt: (payload: any) => `Viñeta original: "${payload.bulletText}"
+<candidate_context>
+${cvContext}
+</candidate_context>`,
+    buildUserPrompt: (payload: any) => `Viñeta original a mejorar:
+<target_text>
+"${payload.bulletText}"
+</target_text>
 Cargo: "${payload.role || 'Desconocido'}"
 Empresa: "${payload.company || 'Desconocida'}"
 
-Mejora esta viñeta aplicando las reglas.`
+Mejora esta viñeta aplicando las reglas.`,
+    responseSchema: {
+      type: "object",
+      properties: {
+        improvedBullet: { type: "string" },
+        missingMetrics: { type: ["string", "null"] }
+      },
+      required: ["improvedBullet"]
+    }
   },
   
   generate_summary: {
     taskId: 'generate_summary',
-    buildSystemPrompt: (cvContext: string, payload: any) => `Eres un reclutador experto en optimización de CVs.
+    buildSystemPrompt: (cvContext: string, payload: any, formatContext?: string) => `Eres un reclutador experto en optimización de CVs.
 Tu objetivo es crear un perfil profesional (resumen) de 4 a 5 renglones.
 REGLA 1: Enfócate en quién es el candidato, qué busca y sus años de experiencia.
 REGLA 2: Usa únicamente la información provista en el CV del candidato. NO inventes habilidades, roles ni años de experiencia.
 REGLA 3: No uses clichés vacíos (ej. "proactivo, orientado a resultados"). 
-Debes devolver un JSON válido con esta estructura:
-{
-  "summary": "el texto del resumen (4-5 oraciones max)"
-}
+Debes devolver un JSON válido.
+${formatContext ? `\nADAPTACIÓN AL FORMATO OBJETIVO:\n${formatContext}\nAjusta el tono para encajar con el estilo de este formato.` : ''}
 
 Contexto del CV del candidato:
-${cvContext}`,
-    buildUserPrompt: (payload: any) => `Por favor, genera un resumen profesional para mi CV. ${payload.jobTargetText ? `Ten en cuenta esta vacante objetivo para resaltar lo más relevante: ${payload.jobTargetText}` : ''}`
+<candidate_context>
+${cvContext}
+</candidate_context>`,
+    buildUserPrompt: (payload: any) => `Por favor, genera un resumen profesional para mi CV. ${payload.jobTargetText ? `\nVacante objetivo (solo para resaltar lo relevante):\n<target_text>\n${payload.jobTargetText}\n</target_text>` : ''}`,
+    responseSchema: {
+      type: "object",
+      properties: {
+        summary: { type: "string" }
+      },
+      required: ["summary"]
+    }
   },
 
   cover_letter: {
@@ -146,18 +164,26 @@ Devuelve EXCLUSIVAMENTE un JSON con esta estructura:
 El usuario te enviará un fragmento de texto suelto (por ejemplo, copiado y pegado de un CV viejo o de LinkedIn).
 Tu objetivo es clasificar a qué sección del CV pertenece este fragmento y extraer sus campos de forma estructurada.
 Las categorías posibles (type) son: "experience" (Experiencia), "education" (Educación), "skill" (Habilidades o Conocimientos), "language" (Idiomas), "project" (Proyectos), o "unknown" (no se puede determinar).
-Debes devolver EXCLUSIVAMENTE un objeto JSON válido con esta estructura exacta:
-{
-  "type": "experience" | "education" | "skill" | "language" | "project" | "unknown",
-  "confidence": 0 a 100,
-  "extractedFields": {
-    "title": "Título del puesto, carrera, o nombre de la habilidad (o null)",
-    "subtitle": "Nombre de la empresa, institución o nivel de idioma (o null)",
-    "dateRange": "Rango de fechas (o null)",
-    "description": "Resto de la información, tareas o detalles (o null)"
-  }
-}
+REGLA PARA IDIOMAS: Si el texto extraído es un idioma, debes mapear el nivel a uno de los siguientes niveles estandarizados: Básico, Intermedio, Avanzado, Nativo, o A1, A2, B1, B2, C1, C2.
+Debes devolver EXCLUSIVAMENTE un objeto JSON válido.
 No inventes datos. Extrae solo lo que está en el texto.`,
-    buildUserPrompt: (payload: any) => `Por favor, clasifica y extrae los datos de este fragmento de texto:\n\n"${payload.rawData}"`
+    buildUserPrompt: (payload: any) => `Por favor, clasifica y extrae los datos de este fragmento de texto:\n\n<target_text>\n"${payload.rawData}"\n</target_text>`,
+    responseSchema: {
+      type: "object",
+      properties: {
+        type: { type: "string", enum: ["experience", "education", "skill", "language", "project", "unknown"] },
+        confidence: { type: "number" },
+        extractedFields: {
+          type: "object",
+          properties: {
+            title: { type: ["string", "null"] },
+            subtitle: { type: ["string", "null"] },
+            dateRange: { type: ["string", "null"] },
+            description: { type: ["string", "null"] }
+          }
+        }
+      },
+      required: ["type", "confidence", "extractedFields"]
+    }
   }
 };
