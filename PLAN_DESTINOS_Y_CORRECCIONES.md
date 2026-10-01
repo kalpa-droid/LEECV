@@ -60,9 +60,9 @@ Lo que cambia entre formatos es la **recomendación** que muestra la app (ver fa
   3. si no, el default: **se muestra si está cargado**.
 - Esa función reemplaza las dos listas fijas, el chequeo de `rulesCatalog`, el arreglo de `AppModals` y lo que lee la portada. Preview, PDF, versión ATS y JSON usan la misma.
 
-### 2.3 Documentos ya guardados (migración, `schemaVersion` +1)
+### 2.3 Documentos ya guardados (decidido: mostrar todo)
 
-Un documento viejo con `hiddenFields` indefinido hoy **oculta** esos datos aunque estén cargados. Para no exponer de golpe algo que la persona creía oculto (el editor se lo prometía), la migración escribe overrides `hide` explícitos para los campos cargados. Se muestra un aviso una sola vez: *"Ahora podés elegir qué datos personales aparecen en tu PDF."* y cada campo tiene su interruptor. Documentos nuevos: se muestra lo que se cargue.
+La migración (`schemaVersion` +1) **no** escribe overrides: en los documentos viejos se muestra todo lo que esté cargado. Aviso de una sola vez al abrir: *"Ahora se muestran los datos personales que cargaste. Podés apagar cualquiera con su interruptor."* (el editor viejo prometía ocultarlos, por eso el aviso sigue siendo necesario).
 
 ---
 
@@ -115,7 +115,7 @@ Un documento viejo con `hiddenFields` indefinido hoy **oculta** esos datos aunqu
 ### Fase G — Portabilidad
 1. Probar a mano el round-trip del `.json` con foto, firma y certificado (abrir y verificar `data:image/`; importar en ventana de incógnito). Si anda, tachar la sección 7 del plan anterior.
 2. Sumar `cardOverrides.logoDataUrl` al empaquetador (`driveDocumentPackager.ts`, `dedupAssetsForLocalStorage`, `reconstructCvDataFromParts`).
-3. Importar desde LinkedIn **por PDF** reutilizando `ImportCvAiModal` + `cv-import-api`.
+3. LinkedIn: conectar el importador de ZIP que ya existe (`linkedinArchiveImporter.ts`) al CV base, y ofrecer el PDF del perfil como alternativa vía `ImportCvAiModal` + `cv-import-api`.
 4. El JSON exportado conserva `personalFieldOverrides`.
 
 ### Fase H — Contenido
@@ -144,8 +144,51 @@ Un documento viejo con `hiddenFields` indefinido hoy **oculta** esos datos aunqu
 - [ ] Abrir un CV guardado antes de la migración → nada cambia visualmente; aparece el aviso una sola vez.
 - [ ] Importar un CV viejo con DNI por IA → el DNI queda cargado.
 
-## 6. Decisiones que necesito de vos
+## 6. Decisiones tomadas (2026-10-01)
 
-1. ¿Versión ATS incluida en el mismo crédito, o aparte? (Fase D.4)
-2. ¿Migración conservadora (como en 2.3) o mostrar todo lo cargado en documentos viejos?
-3. ¿Hay algún formato donde quieras que un dato esté **siempre** visible (`show`)? Hoy no propongo ninguno.
+1. **Versión ATS incluida en el mismo crédito** que el PDF principal: un export = dos archivos. Hoy `handleExportAtsPdf` (`App.tsx`) llama a `consumeCredits(1)` aparte; se unifica en un único consumo.
+2. **Documentos ya guardados: mostrar todo** (sección 2.3).
+3. **Ningún formato fuerza `show`.** En su lugar: varias plantillas por necesidad y un flujo en tres pasos (sección 7).
+
+---
+
+## 7. Flujo de trabajo de la web
+
+```
+A. DATOS (CV base, uno solo y completo)
+   manual · PDF · imagen · JSON · ZIP de LEECV · ZIP de LinkedIn
+        │
+        ▼
+   B. DISEÑO del CV base: destino → formato → plantilla → secciones → datos personales
+        │
+        ▼
+   C. PUESTOS / IA: una versión por puesto (copia del base, la IA solo toca esta copia)
+        │
+        ▼
+   D. SALIDA: CV (PDF + versión ATS, 1 crédito) · Carta de presentación de esa versión
+```
+
+### A. Datos
+- **Importadores que ya existen:** manual; PDF e imagen (`ImportCvAiModal`, acepta pdf/png/jpeg); JSON; ZIP de LEECV (`importCVFromZipFile`).
+- **ZIP de LinkedIn:** el importador **ya existe** (`importers/linkedinArchiveImporter.ts`: Profile, Positions, Education, Skills, Languages, Certifications) pero hoy solo está conectado a la tarjeta personal y a la carta. Hay que conectarlo al CV base. Se mantiene también el PDF del perfil de LinkedIn como alternativa (el ZIP de LinkedIn tarda en generarse).
+- Toda importación **mezcla sin borrar** lo ya cargado y deja los datos personales con su interruptor.
+- Un indicador de completitud del CV base (qué secciones faltan) antes de pasar al paso B.
+
+### B. Diseño del CV base
+1. **¿Para quién es?** (destino) → elige formato (`cvFormatRegistry`).
+2. **Plantilla por necesidad.** Hoy hay 4 plantillas de CV (`cv-clasico`, `modern-corporate`, `minimal-editorial`, `creative-sustentable`) × 6 formatos. El plan las empaqueta como "plantillas por necesidad" = formato + plantilla + secciones visibles + política de datos: portal online (1 columna ATS), empresa o institución tradicional (2 columnas, datos completos, foto, firma), ejecutivo, primer empleo, tecnología, internacional, Europass. La matriz de la Fase D mostrará si falta alguna combinación para sumar plantillas.
+3. **Mostrar u ocultar secciones** (ya existe) y **datos personales** con interruptor.
+
+### C. Puestos con IA
+- **Catálogo de áreas y puestos como datos** (nuevo, `src/shared/core/recruiter-rules/jobAreas.ts`), con tus cinco áreas: Administración/Finanzas/Gestión; Comercial/Ventas/Marketing; Tecnología/Datos/Producto; RRHH/Selección; Atención al cliente/Logística. Cada área: puestos a los que apunta, sustantivos de acción clave y viñetas modelo.
+- **Crear versión para un puesto:** elegir área y puesto (o pegar el aviso) → se duplica el CV base (ya existe duplicar con `version_label`, "Puesto: …") y se guarda `jobTarget`. **El CV base nunca se modifica.**
+- **Qué hace la IA solo en la versión:** reescribe viñetas con la fórmula *[sustantivo de acción] + [contexto o herramienta] + [métrica]*, ajusta el resumen, propone palabras clave del aviso como chips "agregar si es verdad". **Pregunta las métricas, no las inventa**, y los modelos del catálogo son ejemplos de formato, nunca datos del candidato. Cada cambio se muestra como diff y se acepta de a uno (revisión forzada).
+- El mismo catálogo alimenta: las sugerencias del editor de viñetas, el chequeo local de palabras clave (sin IA), los prompts, y el blog.
+- **No toca datos personales.** El contexto que sale a la IA sigue tachando DNI, CUIT, teléfono, email y dirección.
+
+### D. Salida
+- **CV:** el PDF principal y su versión ATS de 1 columna salen juntos con **un solo crédito**.
+- **Carta de presentación:** se arma desde la versión del puesto + `jobTarget` (estructura de 3 párrafos, revisión obligatoria antes de descargar).
+
+### Orden de implementación ajustado
+A, B, C, D (fases del punto 3) → **E: importadores al CV base** → **F: catálogo de áreas + versiones por puesto + IA** → **G: carta desde la versión** → infraestructura, portabilidad, contenido y cierre (fases F–I del punto 3, renumeradas).
