@@ -20,8 +20,6 @@ interface CoverLetterEditorPanelProps {
   onChangeData: (data: CoverLetterData) => void;
   presetId: string;
   onSelectPreset: (presetId: string) => void;
-  aiCredits?: number;
-  onRefreshCredits?: () => void;
 }
 
 export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
@@ -29,9 +27,7 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
   data,
   onChangeData,
   presetId,
-  onSelectPreset,
-  aiCredits = 3,
-  onRefreshCredits
+  onSelectPreset
 }) => {
   const [tone, setTone] = useState<'professional' | 'enthusiastic' | 'executive' | 'creative'>('professional');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -211,15 +207,14 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
       if (parsed.missingDataWarning) {
         setFeedback({
           type: 'warning',
-          text: `¡Carta generada! Aviso de la IA: ${parsed.missingDataWarning} (Restan ${res.remainingCredits} créditos)`
+          text: `¡Carta generada! Aviso de la IA: ${parsed.missingDataWarning}`
         });
       } else {
         setFeedback({
           type: 'success',
-          text: `¡Carta generada con éxito usando ${res.providerUsed.toUpperCase()}! Te quedan ${res.remainingCredits} créditos.`
+          text: `¡Carta generada con éxito usando ${res.providerUsed.toUpperCase()}!`
         });
       }
-      if (onRefreshCredits) onRefreshCredits();
     } catch (err: any) {
       setFeedback({
         type: 'error',
@@ -456,15 +451,11 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
             </div>
           </div>
 
-          <div className="pt-4 border-t border-[var(--ui-border)] flex items-center justify-between">
-            <div className="text-xs text-[var(--ui-text-secondary)]">
-              Créditos disponibles: <strong className="text-[var(--color-status-warning-text)]">{aiCredits}</strong>
-            </div>
-
+          <div className="pt-4 border-t border-[var(--ui-border)] flex justify-end">
             <button
               type="button"
               onClick={handleGenerateAi}
-              disabled={isGenerating || aiCredits <= 0}
+              disabled={isGenerating}
               className={`flex items-center gap-2 ${button.primary}`}
             >
               {isGenerating ? (

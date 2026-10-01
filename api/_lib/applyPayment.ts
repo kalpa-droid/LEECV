@@ -1,5 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { serverDal } from './serverDal.js';
+import { getPrice } from './paymentProviders/pricingCatalog.js';
+import { sendPurchaseReceipt } from './emails/sendPurchaseReceipt.js';
 
 export type PlanType = string;
 
@@ -46,40 +48,80 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
     }
   }
 
-  // 2. Marcar el token de exportación como pagado
-  const { error: updateError } = await supabaseAdmin
-    .from('pdf_export_tokens')
-    .update({ 
-      paid: true, 
-      payment_id: externalId,
-      email: email || undefined
-    })
-    .eq('token', exportToken);
+  // 2. Aplicar el pago basado en el plan (Invitado vs Packs/Pro)
+  const planData = getPrice(plan);
+  if (planData && planData.id !== 'single_pdf') {
+    // Es un Pack o Pro (requieren cuenta/email)
+    if (!email) {
+      throw new Error(`Se requiere email para procesar el plan ${plan}`);
+    }
 
-  if (updateError) {
-    throw new Error(`Error actualizando pdf_export_tokens: ${updateError.message}`);
+    const profile = await serverDal.profiles.getByEmail(email);
+    if (!profile?.id) {
+      console.warn(`[applyPayment] Pago recibido para ${plan} pero no hay perfil para ${email}`);
+    } else {
+      if (planData.id === 'pro') {
+        // Otorgar suscripción Pro
+        await serverDal.profiles.updateSubscription({ id: profile.id }, { plan: 'pro' });
+        console.log(`[applyPayment] Plan Pro otorgado a ${email}`);
+      } else if (planData.id === 'credits_pack_5' || planData.id === 'credits_pack_10') {
+        // Otorgar tokens de exportación
+        const creditsToGrant = planData.id === 'credits_pack_5' ? 5 : 10;
+        const { error: grantError } = await supabaseAdmin.rpc('grant_export_tokens', {
+          p_payment_id: externalId || null,
+          p_user_id: profile.id,
+          p_amount: creditsToGrant,
+          p_email: email
+        });
+
+        if (grantError) {
+          throw new Error(`Error en grant_export_tokens: ${grantError.message}`);
+        }
+        console.log(`[applyPayment] ${creditsToGrant} tokens otorgados a ${email}`);
+      }
+    }
+  } else {
+    // Invitado (single_pdf)
+    if (!exportToken) {
+      throw new Error('Se requiere exportToken para habilitar single_pdf');
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from('pdf_export_tokens')
+      .update({ 
+        paid: true, 
+        payment_id: externalId || null,
+        email: email || undefined
+      })
+      .eq('token', exportToken);
+
+    if (updateError) {
+      throw new Error(`Error actualizando pdf_export_tokens: ${updateError.message}`);
+    }
   }
 
-  // 2.5 Bono opcional de IA
-  if (email) {
-    try {
-      const profile = await serverDal.profiles.getByEmail(email);
-      if (profile?.id) {
-        await serverDal.aiCredits.grantCredits(profile.id, 3);
-        console.log(`[applyPayment] Bono de 3 créditos de IA otorgado a ${email}`);
-      }
-    } catch (e: any) {
-      console.warn(`[applyPayment] No se pudo otorgar el bono de IA a ${email}: ${e.message}`);
-    }
+  // 2.5 Enviar recibo de compra
+  if (email && planData) {
+    const PLAN_LABELS: Record<string, string> = {
+      'single_pdf': 'LEECV - 1 Exportación PDF',
+      'credits_pack_5': 'Pack de 5 Exportaciones',
+      'credits_pack_10': 'Pack de 10 Exportaciones',
+      'pro': 'Plan Pro (Suscripción Mensual)'
+    };
+    const label = PLAN_LABELS[planData.id] || planData.id;
+    // Fire and forget, we don't await this so we don't block the webhook response
+    sendPurchaseReceipt(email, label, `${amount || 0} ${currency || ''}`, externalId || 'N/A').catch(e => {
+      console.error('Error enviando recibo no bloqueante:', e);
+    });
   }
 
   // 3. Registro único de auditoría
   await serverDal.adminNotifications.create({
     type: 'payment_received',
-    title: `Pago recibido de Invitado (${metodoPago})`,
-    message: `Token: ${exportToken}${amount ? ` — ${amount} ${currency || ''}` : ''}${externalId ? ` — ref: ${externalId}` : ''}`,
+    title: `Pago recibido (${plan} via ${metodoPago})`,
+    message: `${email ? `Email: ${email} ` : ''}${exportToken ? `Token: ${exportToken}` : ''}${amount ? ` — ${amount} ${currency || ''}` : ''}${externalId ? ` — ref: ${externalId}` : ''}`,
     metadata: { plan, metodoPago, externalId, amount, currency, exportToken, email },
   });
 
-  return { type: 'token_activated', exportToken };
+  return { type: 'payment_applied', plan, exportToken };
 }

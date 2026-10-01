@@ -78,7 +78,7 @@ export const lemonSqueezyProvider: PaymentProvider = {
     if (process.env.LS_VARIANT_PACK5) variantIdMap[process.env.LS_VARIANT_PACK5] = 'credits_pack_5';
     if (process.env.LS_VARIANT_PACK10) variantIdMap[process.env.LS_VARIANT_PACK10] = 'credits_pack_10';
     if (process.env.LS_VARIANT_PRO) variantIdMap[process.env.LS_VARIANT_PRO] = 'pro';
-    if (process.env.LS_VARIANT_ENTERPRISE) variantIdMap[process.env.LS_VARIANT_ENTERPRISE] = 'enterprise';
+
 
     // order_created trae la variante en first_order_item; suscripciones en attributes.variant_id
     const rawVariantId = String(
@@ -87,7 +87,7 @@ export const lemonSqueezyProvider: PaymentProvider = {
       ''
     );
 
-    const validPlans: PlanType[] = ['single_pdf', 'credits_pack_5', 'credits_pack_10', 'pro', 'enterprise'];
+    const validPlans: PlanType[] = ['single_pdf', 'credits_pack_5', 'credits_pack_10', 'pro'];
     const customPlan = event.meta?.custom_data?.plan;
 
     // 1. Prioridad a la variante real recibida de Lemon Squeezy

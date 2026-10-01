@@ -24,6 +24,27 @@ export const serverDal = {
       return { id: data.id };
     },
 
+    async listCustomers(limit: number = 50, offset: number = 0, q: string = '') {
+      let query = supabaseAdmin
+        .from('profiles')
+        .select(`
+          id, email, plan, role, created_at,
+          pdf_export_credits ( credits ),
+          user_credits ( ai_credits )
+        `, { count: 'exact' });
+        
+      if (q) {
+        query = query.ilike('email', `%${q}%`);
+      }
+
+      const { data, count, error } = await query
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) throw new Error(`Error listando clientes: ${error.message}`);
+      return { customers: data || [], totalCount: count || 0 };
+    },
+
     async updateDriveStatus(
       userId: string, 
       patch: { drive_connected: boolean; drive_email?: string | null; drive_avatar?: string | null; drive_quota_percent?: number | null }

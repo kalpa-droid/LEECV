@@ -9,7 +9,8 @@ export async function createCheckoutForProvider(
   providerId: ProviderId,
   plan: string,
   exportToken: string,
-  email: string
+  email: string,
+  userId?: string
 ): Promise<CheckoutSessionResult> {
   switch (providerId) {
     case 'mercadopago': {
@@ -18,7 +19,6 @@ export async function createCheckoutForProvider(
         credits_pack_5: Number(process.env.MP_PRECIO_PACK5_ARS || getPrice('credits_pack_5')?.ars),
         credits_pack_10: Number(process.env.MP_PRECIO_PACK10_ARS || getPrice('credits_pack_10')?.ars),
         pro: Number(process.env.MP_PRECIO_PRO_ARS || getPrice('pro')?.ars),
-        enterprise: Number(process.env.MP_PRECIO_ENTERPRISE_ARS || getPrice('enterprise')?.ars),
       };
 
       const PLAN_TITLES: Record<string, string> = {
@@ -26,7 +26,6 @@ export async function createCheckoutForProvider(
         credits_pack_5: 'LEECV - Pack 5 Créditos de Exportación PDF',
         credits_pack_10: 'LEECV - Pack 10 Créditos de Exportación PDF',
         pro: 'LEECV Pro - Suscripción Agencia Mensual',
-        enterprise: 'LEECV Enterprise - Suscripción Agencia Cloud Mensual',
       };
 
       const price = PLAN_PRICES_ARS[plan];
@@ -49,7 +48,7 @@ export async function createCheckoutForProvider(
             },
           ],
           payer: { email },
-          external_reference: JSON.stringify({ exportToken, plan }),
+          external_reference: JSON.stringify({ exportToken, plan, userId }),
           back_urls: {
             success: `${process.env.SITE_URL}/?pago=exitoso`,
             failure: `${process.env.SITE_URL}/?pago=fallido`,
@@ -71,7 +70,6 @@ export async function createCheckoutForProvider(
         credits_pack_5: process.env.PAYPAL_PRECIO_PACK5_USD || String(getPrice('credits_pack_5')?.usd),
         credits_pack_10: process.env.PAYPAL_PRECIO_PACK10_USD || String(getPrice('credits_pack_10')?.usd),
         pro: process.env.PAYPAL_PRECIO_PRO_USD || String(getPrice('pro')?.usd),
-        enterprise: process.env.PAYPAL_PRECIO_ENTERPRISE_USD || String(getPrice('enterprise')?.usd),
       };
 
       const priceStr = PLAN_PRICES_USD[plan];
@@ -106,7 +104,7 @@ export async function createCheckoutForProvider(
                 currency_code: 'USD',
                 value: priceStr,
               },
-              custom_id: JSON.stringify({ exportToken, plan }),
+              custom_id: JSON.stringify({ exportToken, plan, userId }),
               description: `LEECV Export (${plan})`,
             },
           ],

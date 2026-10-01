@@ -16,6 +16,7 @@ import { FaqAccordion } from '../../shared/core/ui/marketing/FaqAccordion';
 import { useToast } from '../../shared/core/ui/Toast';
 import { useIsMobile } from '../../shared/core/ui/useIsMobile';
 import { useJsonLd } from '../../shared/core/hooks/useJsonLd';
+import { PlanId } from '../../shared/core/payments/pricingCatalog';
 
 import { selectPaidPlan } from '../payments/paymentService';
 
@@ -30,9 +31,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
   const [currentTheme, setCurrentTheme] = useState<string>('day');
   const [loadingGateway, setLoadingGateway] = useState<string | null>(null);
 
-  const handleSelectGateway = async (planId: 'pro' | 'enterprise', gateway: 'mercadopago' | 'paypal' | 'lemonsqueezy') => {
+  const handleSelectGateway = async (planId: PlanId, gateway: 'mercadopago' | 'paypal' | 'lemonsqueezy') => {
     setLoadingGateway(gateway);
-    await selectPaidPlan(planId, gateway, 'guest@leecv.com', undefined, {
+    await selectPaidPlan(planId, gateway, 'guest@leecv.com', undefined, undefined, {
       onError: (msg) => showError(msg),
     });
     setLoadingGateway(null);
@@ -238,16 +239,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-center">
           <PlanFeatureCard planId="free" onSelectPlan={() => onNavigate('/crear-cv')} />
           <PlanFeatureCard
             planId="pro"
             highlighted
-            onSelectGateway={handleSelectGateway}
-            loadingGateway={loadingGateway}
-          />
-          <PlanFeatureCard
-            planId="enterprise"
             onSelectGateway={handleSelectGateway}
             loadingGateway={loadingGateway}
           />

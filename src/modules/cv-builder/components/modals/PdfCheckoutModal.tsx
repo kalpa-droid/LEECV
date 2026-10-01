@@ -4,6 +4,7 @@ import { CreditCard, Download, Check, AlertCircle } from 'lucide-react';
 import { Modal } from '../../../../shared/core/ui/Modal';
 import { supabase } from '../../../../shared/core/lib/supabaseClient';
 import { dal } from '../../../../shared/core/storage/dataAccessLayer';
+import { useAuth } from '../../../../shared/core/auth/AuthContext';
 
 import { isValidEmail } from '../../../../shared/core/utils/validationEngine';
 import { usePdfExportGate } from '../../../../shared/core/entitlements/usePdfExportGate';
@@ -24,6 +25,7 @@ export default function PdfCheckoutModal({
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const t = useText();
+  const { user } = useAuth();
 
   const { credits, refreshCredits, consumeCreditIfNeeded } = usePdfExportGate();
 
@@ -57,7 +59,7 @@ export default function PdfCheckoutModal({
     localStorage.setItem('leecv_export_token', exportToken);
 
     // Proceed to gateway
-    await selectPaidPlan('single_pdf', gateway, email, exportToken, {
+    await selectPaidPlan('single_pdf', gateway, email, exportToken, user?.id, {
       onError: (msg) => {
         setErrorMsg(msg);
         setIsProcessing(false);

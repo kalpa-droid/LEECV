@@ -6,12 +6,12 @@ import { useText } from '../../../i18n/useText';
 import { PlanPaymentButtons } from './PlanPaymentButtons';
 
 export interface PlanFeatureCardProps {
-  planId: 'free' | 'pro' | 'enterprise';
+  planId: 'free' | PlanId;
   highlighted?: boolean;
   currency?: 'usd' | 'ars';
   ctaLabel?: string;
   onSelectPlan?: (planId: string) => void;
-  onSelectGateway?: (planId: 'pro' | 'enterprise', gateway: 'mercadopago' | 'paypal' | 'lemonsqueezy') => void;
+  onSelectGateway?: (planId: PlanId, gateway: 'mercadopago' | 'paypal' | 'lemonsqueezy') => void;
   loadingGateway?: string | null;
   children?: React.ReactNode;
 }

@@ -439,7 +439,7 @@ export const dal = {
   },
 
   pdfExportTokens: {
-    async insert(payload: { email: string; doc_type: string }): Promise<{ token: string } | null> {
+    async insert(payload: { email: string; doc_type: string; user_id?: string }): Promise<{ token: string } | null> {
       if (!supabase) return null;
       const res = await safeSupabaseCall(() =>
         supabase
@@ -449,6 +449,18 @@ export const dal = {
           .single()
       );
       return (res.data as { token: string }) || null;
+    },
+    async getAvailableTokens(email: string): Promise<any[]> {
+      if (!supabase) return [];
+      const res = await safeSupabaseCall(() =>
+        supabase
+          .from('pdf_export_tokens')
+          .select('token, paid, used_at')
+          .eq('email', email)
+          .eq('paid', true)
+          .is('used_at', null)
+      );
+      return (res.data as any[]) || [];
     }
   }
 };

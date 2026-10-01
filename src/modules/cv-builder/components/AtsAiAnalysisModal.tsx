@@ -12,7 +12,6 @@ export interface AtsAiAnalysisModalProps {
   cvText: string;
   jobDescription?: string;
   onUpdateCvData: (newData: any) => void;
-  onRefreshCredits?: () => void;
 }
 
 function replaceTextDeep(obj: any, search: string, replace: string): { newObj: any, found: boolean } {
@@ -66,8 +65,7 @@ export function AtsAiAnalysisModal({
   cvData,
   cvText,
   jobDescription,
-  onUpdateCvData,
-  onRefreshCredits
+  onUpdateCvData
 }: AtsAiAnalysisModalProps) {
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState<AtsAiAnalysisResult | null>(null);
@@ -81,7 +79,6 @@ export function AtsAiAnalysisModal({
         .then(res => {
           setResult(res);
           setLoading(false);
-          if (onRefreshCredits) onRefreshCredits();
         })
         .catch(err => {
           console.error(err);

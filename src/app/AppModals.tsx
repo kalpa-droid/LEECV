@@ -14,6 +14,9 @@ import EmailSaveModal from '../modules/cv-builder/components/modals/EmailSaveMod
 import { AtsCheckModal } from '../modules/cv-builder/components/AtsCheckModal';
 import { CoverLetterExportModal } from '../modules/cover-letter/components/CoverLetterExportModal';
 import { UpdateToast } from '../shared/core/ui/UpdateToast';
+import { PricingModal } from '../modules/payments/components/PricingModal';
+import { CreditsModal } from '../modules/payments/components/CreditsModal';
+import { LoginModal } from '../modules/auth/components/LoginModal';
 import { navigation } from '../shared/core/utils/navigation';
 import { exportCVToJson } from '../shared/core/utils/jsonImporterExporter';
 import * as workspaceController from '../shared/core/documents/workspaceController';
@@ -41,6 +44,8 @@ export interface AppModalsProps {
   isPrivacyModalOpen: boolean; setIsPrivacyModalOpen: (v: boolean) => void;
   isAtsModalOpen: boolean; setIsAtsModalOpen: (v: boolean) => void;
   isPricingModalOpen: boolean; setIsPricingModalOpen: (v: boolean) => void;
+  isCreditsModalOpen: boolean; setIsCreditsModalOpen: (v: boolean) => void;
+  isLoginModalOpen: boolean; setIsLoginModalOpen: (v: boolean) => void;
   
   // Extra values
   pdfCheckoutPurpose: 'export' | 'publish';
@@ -87,6 +92,8 @@ export function AppModals(props: AppModalsProps) {
     isPrivacyModalOpen, setIsPrivacyModalOpen,
     isAtsModalOpen, setIsAtsModalOpen,
     isPricingModalOpen, setIsPricingModalOpen,
+    isCreditsModalOpen, setIsCreditsModalOpen,
+    isLoginModalOpen, setIsLoginModalOpen,
 
     pdfCheckoutPurpose,
     isGeneratingPDF,
@@ -260,6 +267,29 @@ export function AppModals(props: AppModalsProps) {
         <PrivacyModal
           isOpen={isPrivacyModalOpen}
           onClose={() => setIsPrivacyModalOpen(false)}
+        />
+      )}
+
+      {isPricingModalOpen && (
+        <PricingModal
+          isOpen={isPricingModalOpen}
+          onClose={() => setIsPricingModalOpen(false)}
+          onOpenLogin={() => setIsLoginModalOpen(true)}
+        />
+      )}
+
+      {isCreditsModalOpen && (
+        <CreditsModal
+          isOpen={isCreditsModalOpen}
+          onClose={() => setIsCreditsModalOpen(false)}
+          onOpenPricing={() => setIsPricingModalOpen(true)}
+        />
+      )}
+
+      {isLoginModalOpen && (
+        <LoginModal
+          isOpen={isLoginModalOpen}
+          onClose={() => setIsLoginModalOpen(false)}
         />
       )}
 

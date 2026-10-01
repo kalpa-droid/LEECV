@@ -5,7 +5,7 @@ import { useText } from '../../../i18n/useText';
 import { radius, elevationSystem } from '../../uiDesignSystem';
 
 export interface PlanPaymentButtonsProps {
-  planId: Extract<PlanId, 'pro' | 'enterprise'>;
+  planId: PlanId;
   onSelectGateway: (gateway: 'mercadopago' | 'paypal' | 'lemonsqueezy') => void;
   loadingGateway?: string | null;
   disabled?: boolean;
@@ -37,11 +37,7 @@ export const PlanPaymentButtons: React.FC<PlanPaymentButtonsProps> = ({
         disabled={isCurrentlyDisabled}
         className={`w-full ${
           compact ? 'py-1.5 px-3 text-[11px]' : 'py-2.5 px-4 text-xs'
-        } rounded-[${radius.card}] ${
-          planId === 'enterprise'
-            ? 'bg-[var(--color-status-warning-base)] hover:opacity-95 text-[var(--color-accent-on-base)]'
-            : 'bg-[var(--color-accent-purple)] hover:opacity-90 text-white'
-        } font-black transition cursor-pointer flex items-center justify-between gap-2 ${elevationSystem.raised} disabled:opacity-50`}
+        } rounded-[${radius.card}] bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-black transition cursor-pointer flex items-center justify-between gap-2 ${elevationSystem.raised} disabled:opacity-50`}
       >
         <span className="flex items-center gap-1.5 truncate">
           {loadingGateway === 'mercadopago' ? (

@@ -6,13 +6,11 @@ export type CoverLetterTab = 'source_data' | 'vacancy' | 'ai_generate' | 'conten
 interface CoverLetterDockProps {
   activeTab: CoverLetterTab;
   onSelectTab: (tab: CoverLetterTab) => void;
-  aiCredits?: number;
 }
 
 export const CoverLetterDock: React.FC<CoverLetterDockProps> = ({
   activeTab,
-  onSelectTab,
-  aiCredits = 3
+  onSelectTab
 }) => {
   const tabs: Array<{ id: CoverLetterTab; label: string; icon: React.ReactNode; badge?: string }> = [
     {
@@ -28,8 +26,7 @@ export const CoverLetterDock: React.FC<CoverLetterDockProps> = ({
     {
       id: 'ai_generate',
       label: 'Generar con IA',
-      icon: <Sparkles className="w-5 h-5 text-[var(--color-status-warning-text)]" />,
-      badge: `${aiCredits} cr.`
+      icon: <Sparkles className="w-5 h-5 text-[var(--color-status-warning-text)]" />
     },
     {
       id: 'content',

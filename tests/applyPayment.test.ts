@@ -11,6 +11,9 @@ vi.mock('../api/_lib/serverDal.js', () => {
       adminNotifications: {
         create: vi.fn(),
       },
+      profiles: {
+        getByEmail: vi.fn(),
+      },
     },
   };
 });
@@ -22,6 +25,7 @@ describe('applyPayment Unit Tests', () => {
         eq: vi.fn(() => ({ error: null }))
       }))
     })),
+    rpc: vi.fn().mockResolvedValue({ error: null })
   };
 
   beforeEach(() => {
@@ -41,6 +45,7 @@ describe('applyPayment Unit Tests', () => {
 
   it('debe acreditar créditos correctamente para un token (Guest Checkout)', async () => {
     vi.mocked(serverDal.processedPayments.record).mockResolvedValueOnce(undefined as any);
+    vi.mocked(serverDal.profiles.getByEmail).mockResolvedValueOnce({ id: 'user_123' } as any);
     
     const eqMock = vi.fn().mockResolvedValue({ error: null });
     const updateMock = vi.fn().mockReturnValue({ eq: eqMock });
@@ -59,7 +64,7 @@ describe('applyPayment Unit Tests', () => {
     };
 
     const res = await applyPayment(fakeAdminClient, payment);
-    expect(res).toEqual({ type: 'token_activated', exportToken: 'tok_123' });
+    expect(res).toEqual({ type: 'payment_applied', plan: 'credits_pack_1', exportToken: 'tok_123' });
     expect(serverDal.processedPayments.record).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: 'mercadopago',

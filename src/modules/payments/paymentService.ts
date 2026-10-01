@@ -4,6 +4,7 @@ import { navigation } from '../../shared/core/utils/navigation';
 import { env } from '../../shared/core/config/env';
 import { PaymentClaim, PaymentGateway } from '../../types/payments';
 import { ProviderId, getPaymentProvider } from '../../shared/core/payments/paymentProviderCatalog';
+import { PlanId } from '../../shared/core/payments/pricingCatalog';
 
 /**
  * Iniciador unificado de pagos (Mercado Pago, PayPal, Lemon Squeezy) para Guest Checkout.
@@ -12,7 +13,8 @@ export async function iniciarPago(
   providerId: ProviderId, 
   plan: string, 
   email: string, 
-  exportToken?: string
+  exportToken?: string,
+  userId?: string
 ) {
   const provider = getPaymentProvider(providerId);
   if (!provider?.checkoutSupported) {
@@ -22,7 +24,7 @@ export async function iniciarPago(
   switch (providerId) {
     case 'mercadopago': {
       if (!email) throw new Error('Email requerido para Mercado Pago');
-      const { ok, data, error } = await apiClient.post<{ checkoutUrl?: string }>('/api/create-mp-preference', { plan, email, exportToken });
+      const { ok, data, error } = await apiClient.post<{ checkoutUrl?: string }>('/api/create-mp-preference', { plan, email, exportToken, userId });
       if (!ok || !data?.checkoutUrl) {
         throw new Error(error || 'No se pudo iniciar el pago con Mercado Pago');
       }
@@ -32,7 +34,7 @@ export async function iniciarPago(
 
     case 'paypal': {
       if (!email) throw new Error('Email requerido para PayPal');
-      const { ok, data, error } = await apiClient.post<{ checkoutUrl?: string }>('/api/create-paypal-order', { plan, email, exportToken });
+      const { ok, data, error } = await apiClient.post<{ checkoutUrl?: string }>('/api/create-paypal-order', { plan, email, exportToken, userId });
       if (!ok || !data?.checkoutUrl) {
         throw new Error(error || 'No se pudo iniciar el pago con PayPal');
       }
@@ -59,6 +61,9 @@ export async function iniciarPago(
       if (exportToken) {
         url.searchParams.set('checkout[custom][export_token]', exportToken);
       }
+      if (userId) {
+        url.searchParams.set('checkout[custom][user_id]', userId);
+      }
       url.searchParams.set('checkout[custom][plan]', plan);
       
       if (typeof navigator !== 'undefined' && navigator.language) {
@@ -82,10 +87,11 @@ export async function selectPaidPlan(
   gateway: 'mercadopago' | 'paypal' | 'lemonsqueezy',
   email: string,
   exportToken?: string,
+  userId?: string,
   options?: { onError?: (errorMsg: string) => void }
 ) {
   try {
-    await iniciarPago(gateway, plan, email, exportToken);
+    await iniciarPago(gateway, plan, email, exportToken, userId);
   } catch (err: any) {
     const msg = err?.message || 'Error al conectar con la pasarela de pagos';
     if (options?.onError) {
@@ -143,7 +149,7 @@ export async function enviarComprobanteManual({
   amount,
 }: {
   email: string;
-  plan: 'pro' | 'enterprise';
+  plan: PlanId;
   paymentMethod: PaymentGateway;
   transactionRef?: string;
   amount?: string | number;

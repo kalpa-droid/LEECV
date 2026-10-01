@@ -137,5 +137,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
+  if (action === 'list-customers') {
+    if (req.method !== 'GET') return errorResponse(res, 405, 'Método HTTP no permitido');
+
+    const rateOk = await requireRateLimit(req, res, `admin:${admin.user.id}:list-customers`, {
+      maxRequests: 30,
+      windowSeconds: 60,
+    });
+    if (!rateOk) return;
+
+    const page = Math.max(0, parseInt((req.query.page as string) || '0', 10));
+    const limit = Math.min(100, Math.max(1, parseInt((req.query.limit as string) || '50', 10)));
+    const q = ((req.query.q as string) || '').trim();
+    
+    try {
+      const { customers, totalCount } = await serverDal.profiles.listCustomers(limit, page * limit, q);
+
+      // Map DB response to expected UI shape
+      const mapped = customers.map((c: any) => ({
+        id: c.id,
+        email: c.email,
+        plan: c.plan,
+        role: c.role,
+        createdAt: c.created_at,
+        pdfExportTokens: Array.isArray(c.pdf_export_credits) && c.pdf_export_credits.length > 0 
+          ? c.pdf_export_credits[0].credits 
+          : (c.pdf_export_credits?.credits || 0),
+        aiCredits: Array.isArray(c.user_credits) && c.user_credits.length > 0 
+          ? c.user_credits[0].ai_credits 
+          : (c.user_credits?.ai_credits || 0)
+      }));
+
+      return successResponse(res, {
+        customers: mapped,
+        totalCount,
+        page,
+        pageSize: limit,
+      });
+    } catch (err: any) {
+      console.error('[CRITICAL ADMIN API ERROR - list-customers]:', err?.message || err, err?.stack);
+      await captureBackendException(err, 'admin-api:list-customers');
+      return errorResponse(res, 500, 'Error al consultar la lista de clientes');
+    }
+  }
+
   return errorResponse(res, 400, 'Acción no válida');
 }

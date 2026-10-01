@@ -5,7 +5,7 @@ import {
   getBasicStats,
   listPendingClaims, reviewManualClaim,
   listAdminNotifications, markNotificationRead,
-  getIntegrationsStatus, getAiProvidersStatus
+  getIntegrationsStatus, getAiProvidersStatus, listCustomers
 } from './adminService';
 import { getCurrentProfile, logout } from '../../shared/core/auth/authService';
 import AdminLogin from './AdminLogin';
@@ -13,6 +13,7 @@ import { StorageDriveTab } from './components/StorageDriveTab';
 import { SentryReportsTab } from './components/SentryReportsTab';
 import { ProcessedPaymentsTab } from './components/ProcessedPaymentsTab';
 import { AiTelemetryTab } from './components/AiTelemetryTab';
+import { UsersTab } from './components/UsersTab';
 import { useToast } from '../../shared/core/ui/Toast';
 import { useConfirm } from '../../shared/core/ui/ConfirmDialog';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
@@ -65,7 +66,7 @@ export default function AdminDashboard() {
   const { showError, showSuccess } = useToast();
   const { confirm } = useConfirm();
 
-  const [adminTab, setAdminTab] = useState<'payments' | 'storage' | 'sentry' | 'aiTelemetry'>('payments');
+  const [adminTab, setAdminTab] = useState<'users' | 'payments' | 'storage' | 'sentry' | 'aiTelemetry'>('users');
   const [profile, setProfile] = useState<any>(undefined);
   const [users, setUsers] = useState<any[]>([]);
   const [stats, setStats] = useState({ totalUsers: 0, proUsers: 0, enterpriseUsers: 0, activeSubscriptions: 0 });
@@ -105,14 +106,14 @@ export default function AdminDashboard() {
     fetchIntegrations(false);
     await withErrorHandling(
       async () => {
-        const [userList, s, claimList, notifList] = await Promise.all([
-          listUsers(searchQuery),
+        const [customersData, s, claimList, notifList] = await Promise.all([
+          listCustomers({ page, limit: pageSize, q: searchQuery }),
           getBasicStats(),
           listPendingClaims(),
           listAdminNotifications()
         ]);
-        setUsers(userList || []);
-        setTotalCount(userList?.length || 0);
+        setUsers(customersData.customers || []);
+        setTotalCount(customersData.customers?.length || 0);
         setStats(s || { totalUsers: 0, proUsers: 0, enterpriseUsers: 0, activeSubscriptions: 0 });
         setClaims(claimList || []);
         setNotifications(notifList || []);
@@ -292,8 +293,17 @@ export default function AdminDashboard() {
         </div>
 
         {/* Navigation Sub-Tabs */}
-        <div className={`flex items-center gap-2 bg-[var(--ui-bg-card)] p-1.5 rounded-[${radius.modal}] border border-[var(--color-neutral-border)] ${elevationSystem.raised}`}>
+        <div className={`flex items-center gap-2 bg-[var(--ui-bg-card)] p-1.5 rounded-[${radius.modal}] border border-[var(--color-neutral-border)] ${elevationSystem.raised} overflow-x-auto whitespace-nowrap`}>
 
+          <button
+            onClick={() => setAdminTab('users')}
+            className={adminTab === 'users'
+              ? `${button.primary} px-4 py-2 text-xs font-black flex items-center gap-2`
+              : `${button.secondary} px-4 py-2 text-xs font-black flex items-center gap-2`}
+          >
+            <Users className="w-4 h-4" />
+            <span>Gestión de Clientes</span>
+          </button>
 
           <button
             onClick={() => setAdminTab('sentry')}
@@ -336,7 +346,18 @@ export default function AdminDashboard() {
           </button>
         </div>
 
-        {adminTab === 'sentry' ? (
+        {adminTab === 'users' ? (
+          <UsersTab
+            users={users}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            page={page}
+            setPage={setPage}
+            totalCount={totalCount}
+            pageSize={pageSize}
+            togglePremium={togglePremium}
+          />
+        ) : adminTab === 'sentry' ? (
           <SentryReportsTab />
         ) : adminTab === 'payments' ? (
           <ProcessedPaymentsTab />

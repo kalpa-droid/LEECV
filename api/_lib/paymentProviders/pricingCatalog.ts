@@ -12,7 +12,7 @@
  * de dos números que alguien tiene que acordarse de mantener iguales.
  */
 
-export type PlanId = 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' | 'pro' | 'enterprise';
+export type PlanId = 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' | 'pro';
 
 export interface PricingCatalogEntry {
   id: PlanId;
@@ -21,11 +21,10 @@ export interface PricingCatalogEntry {
 }
 
 export const PRICING_CATALOG: PricingCatalogEntry[] = [
-  { id: 'single_pdf', usd: 2.0, ars: 1900 },
-  { id: 'credits_pack_5', usd: 8.0, ars: 7500 },
-  { id: 'credits_pack_10', usd: 14.0, ars: 12500 },
-  { id: 'pro', usd: 19.0, ars: 18500 },
-  { id: 'enterprise', usd: 29.0, ars: 28500 },
+  { id: 'single_pdf', usd: 2.6, ars: 3200 },
+  { id: 'credits_pack_5', usd: 10.0, ars: 12500 },
+  { id: 'credits_pack_10', usd: 17.0, ars: 21000 },
+  { id: 'pro', usd: 22.0, ars: 27000 }
 ];
 
 export function getPrice(planId: string): PricingCatalogEntry | undefined {
