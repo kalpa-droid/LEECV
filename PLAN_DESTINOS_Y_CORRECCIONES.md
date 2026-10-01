@@ -105,12 +105,73 @@ La migración (`schemaVersion` +1) **no** escribe overrides: en los documentos v
 6. Niveles estandarizados en la salida (Básico/Intermedio/Avanzado; A1–C2). `improve_bullet` recibe la vacante; nueva tarea "adaptar a esta vacante" con diff aceptable de a uno.
 7. Tests de prompts: sin PII en el contexto, con delimitadores, esquema válido.
 
-### Fase F — Infraestructura pendiente
-1. **Créditos de IA honestos:** `useEntitlements` (`hasAiCredits: true` fijo) y `remainingCredits: 3` fijo. Mostrar "X usos por día" real y manejar el 429.
-2. `consume-pdf-credit.ts` y `paypal-order.ts` siguen con `requireAuth` y sin llamadores en `src/`: confirmar y borrar, o migrar.
-3. `requireRateLimit` deja pasar todo si falla la RPC: para endpoints de IA, cerrar el acceso (fail-closed).
-4. Probar contra la base real las políticas de `pdf_export_tokens` (migración `20261006`) y limitar intentos de `consume_export_token`.
-5. Párrafo en `PrivacyPolicyPage.tsx` (hoy cero menciones de IA, Gemini o Groq): qué texto sale, qué se tacha.
+### Fase F — Billetera de IA sin login + infraestructura
+
+**Decisión:** cobrar la IA **sin cuentas y sin Supabase Auth**, con una *billetera con token* (mismo patrón que el `exportToken`, que ya cobra sin login). El servidor usa `supabaseAdmin` solo como base de datos; `auth.uid()` no interviene en nada.
+
+#### Estado verificado en el código (2026-10-01)
+- La firma de los webhooks **ya se verifica** en los tres proveedores (`webhookHandler.ts` → `verifyWebhook`; Lemon Squeezy con HMAC SHA-256 y `timingSafeEqual`). **No agregar** límite por IP al webhook: da falsos positivos con los pools de IPs de los proveedores.
+- La idempotencia existe (`processed_payments`, clave única proveedor + id externo), pero **hay un bug**: `applyPayment` registra el pago *antes* de activar el servicio. Si el paso 2 falla, el proveedor reintenta, el reintento choca con la clave única y responde `already_processed`: **el cliente pagó y nunca recibe el servicio**.
+- `applyPayment` paso 2.5 ("bono de IA") busca un `profiles` por correo para sumar créditos. Sin cuentas ese perfil no existe, así que **ese bono hoy nunca se otorga**.
+- `user_credits`, `consume_ai_credit` y `grant_ai_credits` (migración `20260915`) dependen de `auth.users`: quedan sin uso.
+- `applyPayment` siempre intenta marcar un `pdf_export_tokens` con el `exportToken`; una compra de solo IA no trae ese token.
+- `credits_pack_5` y `credits_pack_10` en `pricingCatalog.ts` son créditos de **PDF**, no de IA. Para no mezclar, los de IA llevan ids nuevos (`ai_pack_*`).
+- No hay servicio de envío de correo en el proyecto.
+- `consume-pdf-credit.ts`: ningún llamador en `src/`, `api/`, `tests/`, `scripts/` ni `vercel.json`. Se puede borrar.
+
+#### F1. Datos (migración nueva)
+- `ai_wallets(token_hash, credits, email, restore_hash, created_at, updated_at)`. Se guarda el **hash SHA-256** del token, no el token: si se filtra la base, no se puede gastar nada.
+- RLS activada **sin políticas** para `anon`/`authenticated`: solo accede el servidor.
+- RPC atómica `consume_ai_wallet_credit(p_token_hash, p_amount)`: `UPDATE … SET credits = credits - p_amount WHERE token_hash = $1 AND credits >= p_amount RETURNING credits`; sin filas → 402.
+- RPC `apply_ai_wallet_payment(provider, external_id, token_hash, credits, email)` que **en una sola transacción** registra `processed_payments` y suma al saldo (corrige el bug de pago perdido).
+- Cupo gratis: contador por día y por dispositivo (con un tope más alto por IP). CGNAT en redes móviles hace que muchos usuarios compartan IP, así que **la IP sola no alcanza**.
+
+#### F2. Cliente
+- `aiWalletStore`: el token se genera con `crypto.randomUUID()` la primera vez que hace falta y se guarda en `localStorage`; también un ID de dispositivo para el cupo gratis.
+- Se envía en el encabezado **`x-ai-token`** (y `x-device-id`). **No** usar `Authorization`: `apiClient.ts` ya lo completa con la sesión de Supabase cuando existe y se pisarían.
+- **No** incluir el token en el JSON ni en el ZIP exportados: son archivos que la gente manda por correo y es una credencial. (Corrección de lo propuesto antes.)
+- `useEntitlements` deja de devolver `hasAiCredits: true` fijo: muestra los créditos reales y "X usos gratis hoy".
+
+#### F3. Servidor (`ai-generate.ts` y `cv-import-api.ts`)
+- Un helper compartido `requireAiAllowance(req, res)`, en este orden: (1) si hay token con saldo, descuenta; (2) si no, usa el cupo gratis; (3) si no queda nada, responde `402` con `{ code: 'ai_quota_exhausted' }`.
+- Respuesta con `remainingCredits` real y `freeRemaining` (reemplaza el `3` fijo).
+- `requireRateLimit` pasa a **fail-closed** para los endpoints de IA (hoy deja pasar si falla la RPC).
+- **Importar CV con IA: 1 crédito por documento, no por página.** Una llamada `start-import` consume el crédito y devuelve un token firmado de corta vida (HMAC, unos 30 min, máximo de páginas); `extract-page` lo exige. Así no se cobra 4 veces un CV de 4 páginas ni se evade mandando siempre "página 1".
+
+#### F4. Pagos
+- Variable `custom_data.wallet_token` (o `external_reference` / `custom_id`, igual que ya viaja `exportToken` en Mercado Pago y PayPal), generada por el cliente antes del pago.
+- `applyPayment` se ramifica por plan:
+  - `single_pdf`: activa el `exportToken` **y** suma `AI_CREDITS_PER_EXPORT` a la billetera (reemplaza el paso 2.5 muerto);
+  - `ai_pack_*`: solo billetera.
+- Todo en una transacción (F1). Solo el webhook con firma válida crea o recarga billeteras; el cliente nunca.
+- **Sin micropagos:** nada de packs de US$ 1. Comisión fija por transacción (según recuerdo Lemon Squeezy cobra 5 % + US$ 0,50 y Stripe suele rondar 2,9 % + US$ 0,30; verificar en tus cuentas): en US$ 1 se va entre un tercio y la mitad. Pack mínimo de IA a partir de US$ 5, y el grueso de la IA va **incluido en el export pagado** (venta cruzada).
+
+#### F5. Recuperación del saldo (sin contraseña)
+1. **Pantalla de agradecimiento:** muestra un código de recuperación para copiar y guarda el token en `localStorage`.
+2. **Enlace de restauración por correo:** el webhook guarda el correo del pago y envía un mail **propio** con `…/?restore=<secreto>` (los recibos de los proveedores no pueden llevar nuestro token). Requiere elegir un servicio de envío (Resend, Brevo u otro). Hasta que exista, queda solo el código del punto 1.
+3. El secreto de restauración es **distinto** del token de gasto, se guarda hasheado y se canjea en `POST /api/ai-wallet?action=restore` con límite de intentos. Quien tenga el correo puede restaurar: es tan sensible como el saldo.
+
+#### F6. Interfaz
+- Muro de pago al recibir `402`, con dos salidas: comprar el export (incluye créditos de IA) o un pack de IA. Mostrar siempre "X usos gratis hoy · Y créditos".
+- Pantalla "Mi saldo" con el código de recuperación y el botón "Restaurar".
+
+#### F7. Limpieza
+1. Borrar `api/consume-pdf-credit.ts`.
+2. Quitar el `requireAuth` huérfano de `paypal-order.ts` (y revisar `create-paypal-order`).
+3. Marcar como sin uso `user_credits` y las funciones de `20260915` (no borrar migraciones ya aplicadas); quitar `serverDal.aiCredits` cuando nada lo llame.
+4. Probar contra la base real las políticas de `pdf_export_tokens` (migración `20261006`) y limitar los intentos sobre `consume_export_token`.
+5. Párrafo en `PrivacyPolicyPage.tsx`: qué texto sale a la IA, qué se tacha, y que el correo del pago se guarda solo para restaurar créditos.
+
+#### F8. Pruebas
+- Descuento atómico bajo concurrencia (dos llamadas simultáneas con saldo 1: una pasa, una recibe 402).
+- Webhook duplicado no suma dos veces; un fallo a mitad de camino **sí** se puede reintentar.
+- El token no se guarda en claro; el restore tiene límite de intentos.
+- Cupo gratis por dispositivo y tope por IP; `402` con el código esperado; `remainingCredits` real.
+
+#### Pendiente de decidir
+- Cuántos créditos de IA incluir por export pagado (`AI_CREDITS_PER_EXPORT`). Se fija con la telemetría de costo por llamada del panel de admin: costo medio × N debe ser una fracción chica del precio del export.
+- Servicio de correo para el enlace de restauración.
+- Tamaño y precio del pack de IA (mínimo US$ 5).
 
 ### Fase G — Portabilidad
 1. Probar a mano el round-trip del `.json` con foto, firma y certificado (abrir y verificar `data:image/`; importar en ventana de incógnito). Si anda, tachar la sección 7 del plan anterior.
