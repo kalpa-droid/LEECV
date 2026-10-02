@@ -15,8 +15,8 @@ const PAYPAL_PERCENT_FEE = 0.054;
 const LEMONSQUEEZY_FIXED_FEE = 0.50;
 const LEMONSQUEEZY_PERCENT_FEE = 0.05;
 
-// Mercado Pago 10 días: 4.39%
-const MP_PERCENT_FEE = 0.0439;
+// Mercado Pago 10 días: 4.39% + 21% IVA
+const MP_PERCENT_FEE = 0.0439 * 1.21;
 
 // Límites mínimos netos
 const MIN_NET_USD = 1.80;

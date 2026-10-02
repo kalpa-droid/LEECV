@@ -33,7 +33,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .select('id, email, plan, premium_vence')
       .lt('premium_vence', nowIso)
       .is('grace_period_ends_at', null)
-      .in('plan', ['pro', 'enterprise']);
+      .in('plan', ['pro']);
 
     if (fetchExpiringErr) {
       console.error('Error obteniendo perfiles por vencer:', fetchExpiringErr);
@@ -89,7 +89,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         grace_period_ends_at: null,
       })
       .lt('grace_period_ends_at', nowIso)
-      .in('plan', ['pro', 'enterprise'])
+      .in('plan', ['pro'])
       .select('id, email');
 
     if (downgradeErr) {

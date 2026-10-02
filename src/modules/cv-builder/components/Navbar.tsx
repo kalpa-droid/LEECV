@@ -89,7 +89,7 @@ export default function Navbar({
   const isMobile = useIsMobile();
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
-  const { plan } = useEntitlements();
+  const { plan, pdfTokens, isPro } = useEntitlements();
   const { user } = useAuth();
   const t = useText();
 
@@ -199,7 +199,7 @@ export default function Navbar({
               title="Mi Cuenta & Créditos"
             >
               <User className="w-4 h-4 flex-shrink-0 text-[var(--color-accent-blue-text)]" />
-              <span>{user ? user.email?.split('@')[0] : 'Invitado'}</span>
+              <span>{user ? (isPro ? 'PRO Ilimitado' : `🪙 ${pdfTokens} Créditos`) : 'Invitado'}</span>
             </button>
           )}
 
