@@ -48,7 +48,6 @@ export async function iniciarPago(
         credits_pack_5: env.LEMONSQUEEZY_URL_PACK5,
         credits_pack_10: env.LEMONSQUEEZY_URL_PACK10,
         pro: env.LEMONSQUEEZY_URL_PRO,
-        enterprise: env.LEMONSQUEEZY_URL_ENTERPRISE,
       };
 
       const base = urlMap[plan] || env.LEMONSQUEEZY_CHECKOUT_URL;

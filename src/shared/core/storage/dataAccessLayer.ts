@@ -461,6 +461,20 @@ export const dal = {
           .is('used_at', null)
       );
       return (res.data as any[]) || [];
+    },
+    async getTokenStats(email: string): Promise<{ total: number; used: number; available: number }> {
+      if (!supabase) return { total: 0, used: 0, available: 0 };
+      const res = await safeSupabaseCall(() =>
+        supabase
+          .from('pdf_export_tokens')
+          .select('used_at')
+          .eq('email', email)
+          .eq('paid', true)
+      );
+      const tokens = (res.data as any[]) || [];
+      const total = tokens.length;
+      const used = tokens.filter(t => t.used_at !== null).length;
+      return { total, used, available: total - used };
     }
   }
 };

@@ -10,7 +10,7 @@ interface CreditsModalProps {
 }
 
 export function CreditsModal({ isOpen, onClose, onOpenPricing }: CreditsModalProps) {
-  const { plan, pdfTokens, isPro } = useEntitlements();
+  const { plan, pdfTokens, tokenStats, isPro } = useEntitlements();
 
   if (!isOpen) return null;
 
@@ -55,11 +55,23 @@ export function CreditsModal({ isOpen, onClose, onOpenPricing }: CreditsModalPro
           </div>
 
           {!isPro && (
-            <div className={`bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.card}] p-4 space-y-2`}>
+            <div className={`bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.card}] p-4 space-y-3`}>
               <div className="flex items-center justify-between">
                 <p className="text-xs font-bold text-[var(--ui-text-secondary)] uppercase tracking-wider">Créditos PDF (Packs)</p>
-                <span className="text-xl font-black text-[var(--color-accent-text)]">{pdfTokens}</span>
+                <span className="text-xl font-black text-[var(--color-accent-text)]">{pdfTokens} disponibles</span>
               </div>
+              
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <div className={`bg-[var(--ui-bg-panel)] rounded p-2 text-center border border-[var(--ui-border)]`}>
+                  <p className="text-[10px] text-[var(--ui-text-secondary)] uppercase">Usados</p>
+                  <p className="text-sm font-bold text-[var(--ui-text-primary)]">{tokenStats?.used || 0}</p>
+                </div>
+                <div className={`bg-[var(--ui-bg-panel)] rounded p-2 text-center border border-[var(--ui-border)]`}>
+                  <p className="text-[10px] text-[var(--ui-text-secondary)] uppercase">Comprados (Total)</p>
+                  <p className="text-sm font-bold text-[var(--ui-text-primary)]">{tokenStats?.total || 0}</p>
+                </div>
+              </div>
+
               <p className="text-[11px] text-[var(--ui-text-secondary)]">
                 Los créditos se usan para exportar a PDF (1 crédito = 1 exportación).
               </p>

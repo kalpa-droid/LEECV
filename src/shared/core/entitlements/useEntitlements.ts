@@ -50,11 +50,13 @@ export function isAdminRole(role?: string | null): boolean {
 export function useEntitlements() {
   const { profile, user } = useAuth();
   const [pdfTokens, setPdfTokens] = useState(0);
+  const [tokenStats, setTokenStats] = useState({ total: 0, used: 0, available: 0 });
 
   useEffect(() => {
     if (user?.email) {
-      dal.pdfExportTokens.getAvailableTokens(user.email).then(tokens => {
-        setPdfTokens(tokens.length);
+      dal.pdfExportTokens.getTokenStats(user.email).then(stats => {
+        setTokenStats(stats);
+        setPdfTokens(stats.available);
       }).catch(console.error);
     }
   }, [user]);
@@ -66,6 +68,7 @@ export function useEntitlements() {
     plan,
     isPro: plan === 'pro',
     pdfTokens,
+    tokenStats,
     loading: false,
     features,
     isPremium: plan === 'pro',

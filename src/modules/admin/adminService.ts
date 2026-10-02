@@ -56,7 +56,7 @@ export async function reviewManualClaim(claimId: string, approve: boolean) {
   return data;
 }
 
-export async function sendRetentionOffer(userId: string, { discountPercent = 50, validDays = 7, planAtOffer = 'enterprise' } = {}): Promise<void> {
+export async function sendRetentionOffer(userId: string, { discountPercent = 50, validDays = 7, planAtOffer = 'pro' } = {}): Promise<void> {
   const validUntil = new Date();
   validUntil.setDate(validUntil.getDate() + validDays);
 

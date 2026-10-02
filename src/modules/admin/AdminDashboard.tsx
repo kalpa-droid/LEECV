@@ -69,7 +69,7 @@ export default function AdminDashboard() {
   const [adminTab, setAdminTab] = useState<'users' | 'payments' | 'storage' | 'sentry' | 'aiTelemetry'>('users');
   const [profile, setProfile] = useState<any>(undefined);
   const [users, setUsers] = useState<any[]>([]);
-  const [stats, setStats] = useState({ totalUsers: 0, proUsers: 0, enterpriseUsers: 0, activeSubscriptions: 0 });
+  const [stats, setStats] = useState({ totalUsers: 0, proUsers: 0, activeSubscriptions: 0 });
   const [loadingData, setLoadingData] = useState(false);
   const [claims, setClaims] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -114,7 +114,7 @@ export default function AdminDashboard() {
         ]);
         setUsers(customersData.customers || []);
         setTotalCount(customersData.customers?.length || 0);
-        setStats(s || { totalUsers: 0, proUsers: 0, enterpriseUsers: 0, activeSubscriptions: 0 });
+        setStats(s || { totalUsers: 0, proUsers: 0, activeSubscriptions: 0 });
         setClaims(claimList || []);
         setNotifications(notifList || []);
       },
@@ -158,7 +158,7 @@ export default function AdminDashboard() {
         if (targetPlan === 'free' || (user.premium_activo && targetPlan === 'free')) {
           confirm({
             title: `¿Desactivar licencia de ${user.email}?`,
-            message: 'Esta acción removerá el acceso a las funciones Pro/Enterprise de este usuario.',
+            message: 'Esta acción removerá el acceso a las funciones Pro de este usuario.',
             confirmText: 'Desactivar Licencia',
             variant: 'danger',
             onConfirm: async () => {

@@ -25,6 +25,7 @@ import { ThemeToggleButton } from '../../../shared/core/ui/ThemeToggleButton';
 import { UndoRedoControls } from '../../../shared/core/ui/UndoRedoControls';
 import { useIsMobile } from '../../../shared/core/ui/useIsMobile';
 import { useEntitlements, getPlanLabel, PLAN_FEATURES } from '../../../shared/core/entitlements/useEntitlements';
+import { useAuth } from '../../../shared/core/auth/AuthContext';
 import { navigation } from '../../../shared/core/utils/navigation';
 import { useText } from '../../../shared/i18n/useText';
 import { Logo } from '../../../shared/core/brand/Logo';
@@ -89,6 +90,7 @@ export default function Navbar({
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const { plan } = useEntitlements();
+  const { user } = useAuth();
   const t = useText();
 
   const actionMenuRef = useRef<HTMLDivElement>(null);
@@ -197,7 +199,7 @@ export default function Navbar({
               title="Mi Cuenta & Créditos"
             >
               <User className="w-4 h-4 flex-shrink-0 text-[var(--color-accent-blue-text)]" />
-              <span>Cuenta</span>
+              <span>{user ? user.email?.split('@')[0] : 'Invitado'}</span>
             </button>
           )}
 
