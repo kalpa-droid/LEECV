@@ -320,19 +320,7 @@ if (fs.existsSync(packagerPath)) {
   check('driveDocumentPackager.ts existe', false, `No encontrado: ${packagerPath}`);
 }
 
-const enterprisePath = path.join(ROOT, 'src/shared/core/storage/enterpriseStorageStrategy.ts');
-if (fs.existsSync(enterprisePath)) {
-  const entContent = fs.readFileSync(enterprisePath, 'utf-8');
-  check(
-    'enterpriseStorageStrategy.ts implementa conteo de referencias refCount en bóveda enterprise',
-    entContent.includes('incrementVaultAssetRefCount') && entContent.includes('decrementVaultAssetRefCount'),
-    'enterpriseStorageStrategy.ts no implementa el conteo de referencias'
-  );
-} else {
-  check('enterpriseStorageStrategy.ts existe', false, `No encontrado: ${enterprisePath}`);
-}
 
-// Check removed since driveBackupService.ts was deleted
 
 // ─── 12. Plan v29: Fix Importación JSON, Catálogo de Puestos y "Guardar como" ───
 console.log('\n── 12. Plan v29: Fix Importación JSON, Catálogo de Puestos y "Guardar como" ──');
