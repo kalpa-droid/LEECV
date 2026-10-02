@@ -5,7 +5,6 @@ import { dal } from '../storage/dataAccessLayer';
 export const PLAN_FEATURES = {
   free: {
     unlimitedExports: false,
-    candidateManagement: false,
     cloudStorageGB: 0,
     label: 'Plan Gratuito',
     badgeClass: 'bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)] border-[var(--ui-border)]',
@@ -18,7 +17,6 @@ export const PLAN_FEATURES = {
   },
   pro: {
     unlimitedExports: true,
-    candidateManagement: true,
     cloudStorageGB: 0,
     label: 'Plan Pro',
     badgeClass: 'bg-[var(--color-secondary-muted)] text-[var(--color-secondary-text)] border-[var(--color-secondary-base)]/30',
@@ -76,7 +74,6 @@ export function useEntitlements() {
     graceEndsAt: null,
     canEmergencyExport: false,
     unlimitedExports: features.unlimitedExports,
-    candidateManagement: features.candidateManagement,
     cloudStorageGB: features.cloudStorageGB,
     refreshEntitlements: async () => {}
   };

@@ -2,6 +2,7 @@ import React from 'react';
 import { CreditCard, ArrowLeft, RefreshCw } from 'lucide-react';
 import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
 import { navigation } from '../../shared/core/utils/navigation';
+import { getRecurringPlansSentence, getPacksSentence } from '../../shared/core/payments/legalCopyEngine';
 
 export function RefundPolicyPage() {
   return (
@@ -41,21 +42,21 @@ export function RefundPolicyPage() {
             <div className={`p-3 bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/30 rounded-[${radius.card}] flex items-start gap-3`}>
               <RefreshCw className="w-5 h-5 text-[var(--color-status-success-text)] flex-shrink-0 mt-0.5" />
               <p className="text-[11px] text-[var(--color-status-success-text)]">
-                Transparencia total en compras puntuales de paquetes de créditos y suscripciones recurrentes Pro y Enterprise.
+                Transparencia total en compras puntuales de paquetes de créditos y suscripciones recurrentes ({getRecurringPlansSentence()}).
               </p>
             </div>
 
-            <h3 className="text-sm font-black text-[var(--ui-text-primary)]">1. Paquetes de Créditos (Pack 5 y Pack 10)</h3>
+            <h3 className="text-sm font-black text-[var(--ui-text-primary)]">1. Paquetes de Créditos ({getPacksSentence()})</h3>
             <p>
-              Los créditos adquiridos mediante paquetes individuales (Pack 5 y Pack 10) no tienen fecha de caducidad y permanecen asociados indefinidamente a la cuenta del usuario.
+              Los créditos adquiridos mediante paquetes individuales ({getPacksSentence()}) no tienen fecha de caducidad y permanecen asociados indefinidamente a la cuenta del usuario.
             </p>
             <p>
               Si un usuario realiza una compra por error y no ha consumido ninguno de los créditos del paquete adquirido, puede solicitar el reembolso total dentro de los primeros 14 días corridos desde la fecha de compra. El reembolso se procesará a través del mismo medio de pago (Mercado Pago, PayPal o Lemon Squeezy).
             </p>
 
-            <h3 className="text-sm font-black text-[var(--ui-text-primary)]">2. Suscripciones Recurrentes (Pro y Enterprise)</h3>
+            <h3 className="text-sm font-black text-[var(--ui-text-primary)]">2. Suscripciones Recurrentes ({getRecurringPlansSentence()})</h3>
             <p>
-              Las suscripciones mensuales Pro y Enterprise pueden cancelarse en cualquier momento desde el panel de usuario o comunicándose con soporte. La cancelación evita futuros cobros y mantiene el acceso a las funciones avanzadas y almacenamiento hasta la finalización del período contratado.
+              Las suscripciones mensuales ({getRecurringPlansSentence()}) pueden cancelarse en cualquier momento desde el panel de usuario o comunicándose con soporte. La cancelación evita futuros cobros y mantiene el acceso a las funciones avanzadas y almacenamiento hasta la finalización del período contratado.
             </p>
 
             <h3 className="text-sm font-black text-[var(--ui-text-primary)]">3. Solicitud de Reembolso y Atención al Cliente</h3>

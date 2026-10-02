@@ -8,7 +8,7 @@ export function PrivacyPolicyContent() {
       <div className={`p-3 bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/30 rounded-[${radius.card}] flex items-start gap-3`}>
         <Database className="w-5 h-5 text-[var(--color-accent-purple-text)] flex-shrink-0 mt-0.5" />
         <p className="text-[11px] text-[var(--color-accent-purple-text)]">
-          LEECV respeta estrictamente tu privacidad. Todos tus datos personales, currículums, fotografías y certificados son de tu exclusiva propiedad y están protegidos por encriptación en tránsito y en reposo (RLS en Supabase y almacenamiento seguro en LEECV Cloud).
+          LEECV respeta estrictamente tu privacidad. Todos tus datos personales, currículums, fotografías y certificados son de tu exclusiva propiedad y están protegidos por encriptación en tránsito y en reposo (RLS en Supabase).
         </p>
       </div>
 
@@ -17,9 +17,9 @@ export function PrivacyPolicyContent() {
         Al utilizar LEECV, recopilamos la información que proporcionas voluntariamente al confeccionar tu currículum: nombre completo, datos de contacto, historial académico, experiencia laboral, habilidades y documentos adjuntos (fotos de perfil, firmas y certificados).
       </p>
 
-      <h3 className="text-sm font-black text-[var(--ui-text-primary)]">2. Almacenamiento en Supabase, LEECV Cloud y Google Drive API</h3>
+      <h3 className="text-sm font-black text-[var(--ui-text-primary)]">2. Almacenamiento en Supabase y Google Drive API</h3>
       <p>
-        Los datos de tus currículums y respaldos se almacenan de manera segura en Supabase Database, el almacenamiento privado LEECV Cloud (Enterprise) y opcionalmente en tu propia cuenta de Google Drive.
+        Los datos de tus currículums y respaldos se almacenan de manera segura en Supabase Database y opcionalmente en tu propia cuenta de Google Drive.
       </p>
       <p>
         Al conectar tu cuenta de Google Drive para el guardado de respaldos, solicitamos únicamente el permiso acotado <code>https://www.googleapis.com/auth/drive.file</code>:
@@ -32,7 +32,7 @@ export function PrivacyPolicyContent() {
 
       <h3 className="text-sm font-black text-[var(--ui-text-primary)]">3. Uso de Inteligencia Artificial (IA) y Privacidad</h3>
       <p>
-        LEECV utiliza servicios de IA (Gemini y Groq) para mejorar la redacción de tu currículum, resumir experiencia y generar cartas de presentación. 
+        LEECV utiliza servicios de IA (Gemini y Groq) para mejorar la redacción de tu currículum, resumir experiencia y generar cartas de presentación.
         <strong>Tu privacidad está garantizada por diseño:</strong> antes de que cualquier texto salga de tu navegador hacia la IA, nuestro sistema interno anonimiza la información eliminando automáticamente datos sensibles de contacto como DNI, teléfonos, correos electrónicos y direcciones físicas. Los modelos de IA no entrenan con tus datos.
       </p>
 
