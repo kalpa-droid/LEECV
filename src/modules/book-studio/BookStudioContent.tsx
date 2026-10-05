@@ -30,6 +30,11 @@ interface BookStudioContentProps {
   onNewBook?: () => void;
   cycleUITheme: () => void;
   onTabsChanged?: (tabs: any[]) => void;
+  onOpenSavedCVsModal?: () => void;
+  onOpenSaveAsModal?: () => void;
+  onOpenJsonDownloadModal?: () => void;
+  onOpenShareAppModal?: () => void;
+  onOpenPrivacy?: () => void;
 }
 
 export const BookStudioContent: React.FC<BookStudioContentProps> = ({
@@ -44,6 +49,11 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   onNewBook,
   cycleUITheme,
   onTabsChanged = () => {},
+  onOpenSavedCVsModal,
+  onOpenSaveAsModal,
+  onOpenJsonDownloadModal,
+  onOpenShareAppModal,
+  onOpenPrivacy,
 }) => {
   const [activeStepTab, setActiveStepTab] = useState<string>('book_source_type');
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
@@ -137,13 +147,13 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
           docType="book"
           currentCvData={{}}
           currentUiTheme={currentUiTheme}
-          onOpenSavedCVsModal={() => {}}
+          onOpenSavedCVsModal={onOpenSavedCVsModal || (() => {})}
           onSaveCVClick={() => persistBookState(selectedFile, options)}
-          onOpenSaveAsModal={() => {}}
-          onOpenJsonDownloadModal={() => {}}
+          onOpenSaveAsModal={onOpenSaveAsModal || (() => {})}
+          onOpenJsonDownloadModal={onOpenJsonDownloadModal || (() => {})}
           onPrint={() => setActiveStepTab('book_preview_export')}
-          onOpenShareAppModal={() => {}}
-          onOpenPrivacy={() => {}}
+          onOpenShareAppModal={onOpenShareAppModal || (() => {})}
+          onOpenPrivacy={onOpenPrivacy || (() => {})}
           zoomLevel={viewport.zoomLevel}
           setZoomLevel={viewport.setZoomLevel}
           triggerAutoFit={viewport.fitAndCenter}

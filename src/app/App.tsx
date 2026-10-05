@@ -739,6 +739,11 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           onNewCard={handleNewCard}
           onNewBook={handleNewBook}
           cycleUITheme={cycleUITheme}
+          onOpenSavedCVsModal={() => setIsSavedCVsOpen(true)}
+          onOpenSaveAsModal={() => setIsSaveAsModalOpen(true)}
+          onOpenJsonDownloadModal={() => setIsDownloadModalOpen(true)}
+          onOpenShareAppModal={() => setIsShareAppModalOpen(true)}
+          onOpenPrivacy={() => setIsPrivacyModalOpen(true)}
         />
       </Suspense>
     );
@@ -770,6 +775,11 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           onNewPlanner={handleNewPlanner}
           currentUiTheme={globalUiTheme}
           cycleUITheme={cycleUITheme}
+          onOpenSavedCVsModal={() => setIsSavedCVsOpen(true)}
+          onOpenSaveAsModal={() => setIsSaveAsModalOpen(true)}
+          onOpenJsonDownloadModal={() => setIsDownloadModalOpen(true)}
+          onOpenShareAppModal={() => setIsShareAppModalOpen(true)}
+          onOpenPrivacy={() => setIsPrivacyModalOpen(true)}
         />
       </Suspense>
     );

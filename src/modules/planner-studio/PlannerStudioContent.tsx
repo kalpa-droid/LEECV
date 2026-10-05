@@ -67,6 +67,11 @@ interface PlannerStudioContentProps {
   onNewPlanner?: () => void;
   cycleUITheme: () => void;
   onTabsChanged?: (tabs: OpenTab[]) => void;
+  onOpenSavedCVsModal?: () => void;
+  onOpenSaveAsModal?: () => void;
+  onOpenJsonDownloadModal?: () => void;
+  onOpenShareAppModal?: () => void;
+  onOpenPrivacy?: () => void;
 }
 
 import { PLANNER_SECTION_REGISTRY } from './plannerSectionRegistry';
@@ -89,6 +94,11 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   onNewPlanner,
   cycleUITheme,
   onTabsChanged = () => {},
+  onOpenSavedCVsModal,
+  onOpenSaveAsModal,
+  onOpenJsonDownloadModal,
+  onOpenShareAppModal,
+  onOpenPrivacy,
 }) => {
   const [activeStepTab, setActiveStepTab] = useState<string>('planner_design');
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
@@ -272,13 +282,13 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
           docType="planner"
           currentCvData={{}}
           currentUiTheme={currentUiTheme}
-          onOpenSavedCVsModal={() => {}}
+          onOpenSavedCVsModal={onOpenSavedCVsModal || (() => {})}
           onSaveCVClick={persistPlannerState}
-          onOpenSaveAsModal={() => {}}
-          onOpenJsonDownloadModal={() => {}}
+          onOpenSaveAsModal={onOpenSaveAsModal || (() => {})}
+          onOpenJsonDownloadModal={onOpenJsonDownloadModal || (() => {})}
           onPrint={handlePrint}
-          onOpenShareAppModal={() => {}}
-          onOpenPrivacy={() => {}}
+          onOpenShareAppModal={onOpenShareAppModal || (() => {})}
+          onOpenPrivacy={onOpenPrivacy || (() => {})}
           zoomLevel={viewport.zoomLevel}
           setZoomLevel={viewport.setZoomLevel}
           triggerAutoFit={viewport.fitAndCenter}
@@ -552,7 +562,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
         docType: 'planner',
         onSwitch: onSelectTab,
         onNavigateToDocument: (targetType, id) => onNavigateToDocument(targetType, id),
-        onAdd: () => {},
+        onAdd: onNewPlanner || (() => {}),
         onNewCV: _onNewCV,
         onNewCard: onNewCard,
         onNewBook: onNewBook,

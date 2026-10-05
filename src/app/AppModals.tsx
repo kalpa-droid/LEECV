@@ -207,6 +207,7 @@ export function AppModals(props: AppModalsProps) {
           onClose={() => setIsSaveAsModalOpen(false)}
           onSaveAs={handleSaveCVAsClick}
           isSaving={isSaving}
+          cvData={cvData}
         />
       )}
 
