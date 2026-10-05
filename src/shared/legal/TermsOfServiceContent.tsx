@@ -20,7 +20,7 @@ export function TermsOfServiceContent() {
 
       <h3 className="text-sm font-black text-[var(--ui-text-primary)]">2. Licencias de Suscripción y Créditos PDF</h3>
       <p>
-        LEECV ofrece {getAllPlansOfferingSentence()}. Las modalidades varían desde el uso gratuito con almacenamiento local o en la nube del usuario (Google Drive), pasando por paquetes de créditos para exportaciones específicas, hasta suscripciones ilimitadas.
+        LEECV ofrece {getAllPlansOfferingSentence()}. Las modalidades varían desde el uso gratuito con almacenamiento local o en la nube del usuario, pasando por paquetes de créditos para exportaciones específicas, hasta suscripciones ilimitadas.
       </p>
 
       <h3 className="text-sm font-black text-[var(--ui-text-primary)]">3. Responsabilidad del Contenido</h3>

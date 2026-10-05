@@ -56,21 +56,18 @@ export const dal = {
     },
 
     async getPlatformMetrics() {
-      if (!supabase) return { totalUsers: 0, proUsers: 0, enterpriseUsers: 0, activeSubscriptions: 0 };
-      const [total, pro, ent] = await Promise.all([
+      if (!supabase) return { totalUsers: 0, proUsers: 0, activeSubscriptions: 0 };
+      const [total, pro] = await Promise.all([
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('plan', 'pro'),
-        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('plan', 'enterprise')
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('plan', 'pro')
       ]);
 
       const totalUsers = total.count || 0;
       const proUsers = pro.count || 0;
-      const enterpriseUsers = ent.count || 0;
       return {
         totalUsers,
         proUsers,
-        enterpriseUsers,
-        activeSubscriptions: proUsers + enterpriseUsers,
+        activeSubscriptions: proUsers,
       };
     },
 

@@ -22,7 +22,7 @@ export const modalsCatalog = {
     title: 'Guardar Documento',
     cloudStatusBadge: '⚙️ Estado de Nube & Drive',
     saveActiveTitle: 'Guardar Cambios (Sobrescribir Activo)',
-    saveActiveSub: 'Actualiza el documento activo en tu Navegador, Supabase y Google Drive simultáneamente.',
+    saveActiveSub: 'Actualiza el documento activo en tu Navegador y Supabase simultáneamente.',
     saveCopyTitle: 'Guardar una copia para...',
     saveCopyBadge: 'Copia Independiente',
     saveCopySub: 'Crea una nueva copia con ID único etiquetada para un puesto específico (ej. "Docencia", "Gerente").',

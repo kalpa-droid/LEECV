@@ -84,7 +84,6 @@ export function UsersTab({
                   <td className="py-3 px-3">
                     <div className="flex flex-col gap-1 text-[11px] font-medium text-[var(--color-neutral-text-secondary)]">
                       <span>PDF: <strong className="text-[var(--color-neutral-text-primary)]">{user.pdfExportTokens || 0}</strong></span>
-                      <span>IA: <strong className="text-[var(--color-neutral-text-primary)]">{user.aiCredits || 0}</strong></span>
                     </div>
                   </td>
                   <td className="py-3 px-3 text-right">
