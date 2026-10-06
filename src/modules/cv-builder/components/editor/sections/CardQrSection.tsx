@@ -31,11 +31,12 @@ export function CardQrSection({ cvData, setCvData }: Props) {
               </div>
             </label>
 
-            <label className="flex items-center gap-2 p-2.5 rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] cursor-pointer hover:bg-[var(--color-neutral-surface-muted)] transition">
+            <label className="flex items-center gap-2 p-2.5 rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] opacity-50 cursor-not-allowed transition">
               <input
                 type="radio"
                 name="qrMode"
                 value="public_link"
+                disabled
                 checked={cvData?.qrMode === 'public_link'}
                 onChange={() => {
                   setCvData((prev: any) => ({ ...prev, qrMode: 'public_link' }));
@@ -43,7 +44,10 @@ export function CardQrSection({ cvData, setCvData }: Props) {
                 className="accent-[var(--color-accent-base)]"
               />
               <div className="text-xs">
-                <span className="font-bold text-[var(--color-neutral-text-primary)] block">Link Directo a Perfil Web</span>
+                <span className="font-bold text-[var(--color-neutral-text-primary)] block">
+                  Link Directo a Perfil Web
+                  <span className="ml-2 inline-block px-1.5 py-0.5 border border-[var(--color-neutral-text-primary)] text-[var(--color-neutral-text-primary)] text-[10px] rounded-full">Próximamente</span>
+                </span>
                 <span className="text-[11px] text-[var(--color-neutral-text-secondary)]">Al escanear abre la versión web publicada del CV.</span>
               </div>
             </label>
