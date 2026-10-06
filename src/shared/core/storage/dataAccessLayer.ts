@@ -60,6 +60,7 @@ export const dal = {
       };
     },
 
+  },
 
   adminAuditLogs: {
     async list(searchQuery: string = ''): Promise<any[]> {
