@@ -256,13 +256,24 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               <p className="text-xs text-[var(--ui-text-secondary)]">
                 Carga un archivo PDF en la pestaña lateral para comenzar el montaje en caballete o imprenta.
               </p>
-              <button
-                type="button"
-                onClick={handleTriggerFileInput}
-                className={`px-5 py-2.5 font-bold text-xs rounded-[${radius.card}] transition cursor-pointer ${button.primary}`}
-              >
-                Cargar PDF Ahora
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mt-4">
+                <button
+                  type="button"
+                  onClick={handleTriggerFileInput}
+                  className={`px-5 py-2.5 font-bold text-xs rounded-[${radius.card}] transition cursor-pointer ${button.primary}`}
+                >
+                  Cargar PDF Ahora
+                </button>
+                {onOpenSavedCVsModal && (
+                  <button
+                    type="button"
+                    onClick={onOpenSavedCVsModal}
+                    className={`px-5 py-2.5 font-bold text-xs rounded-[${radius.card}] transition cursor-pointer ${button.secondary}`}
+                  >
+                    Mis Libros Guardados
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
