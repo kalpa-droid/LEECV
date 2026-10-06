@@ -126,7 +126,7 @@ export const CAPABILITY_REGISTRY: Record<string, CapabilityConfig> = {
   cloud_backup: {
     id: 'cloud_backup',
     name: 'Respaldo en la Nube (Google Drive)',
-    description: 'Guarda el documento en la lista de borradores y sincroniza con Google Drive.',
+    description: 'Guarda el documento en la lista de borradores. La sincronización con Google Drive estará disponible próximamente.',
     category: 'utility',
     defaultData: {}
   },

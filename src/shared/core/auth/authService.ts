@@ -11,6 +11,24 @@ export async function login(email: string, password: string) {
   return data.user;
 }
 
+/**
+ * Registra un nuevo usuario con email y contraseña.
+ */
+export async function signup(email: string, password: string, fullName?: string) {
+  if (!supabase) throw new Error('Supabase no está configurado');
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: fullName,
+      }
+    }
+  });
+  if (error) throw error;
+  return data.user;
+}
+
 export async function logout(): Promise<void> {
   if (supabase) {
     try {

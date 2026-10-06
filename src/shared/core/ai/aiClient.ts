@@ -12,7 +12,6 @@ export interface AiTaskParams<T = any> {
 export interface AiTaskResult<T = any> {
   data: T;
   providerUsed: string;
-  remainingCredits: number;
 }
 
 /**
@@ -38,7 +37,6 @@ export async function executeAiTask<T = any>(params: AiTaskParams): Promise<AiTa
 
   return {
     data: parsedData,
-    providerUsed: res.data.providerUsed,
-    remainingCredits: res.data.remainingCredits
+    providerUsed: res.data.providerUsed
   };
 }

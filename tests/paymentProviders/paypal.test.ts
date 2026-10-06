@@ -83,7 +83,7 @@ describe('PayPal Provider Contract', () => {
         event_type: 'PAYMENT.CAPTURE.COMPLETED',
         resource: {
           id: 'CAP_998877',
-          custom_id: JSON.stringify({ exportToken: 'tok_paypal_456', email: 'paypal_client@test.com', plan: 'enterprise' }),
+          custom_id: JSON.stringify({ exportToken: 'tok_paypal_456', email: 'paypal_client@test.com', plan: 'pro' }),
           amount: { value: 29, currency_code: 'USD' },
           payer: { email_address: 'paypal_client@test.com' },
         },
@@ -94,7 +94,7 @@ describe('PayPal Provider Contract', () => {
     expect(details).not.toBeNull();
     expect(details?.exportToken).toBe('tok_paypal_456');
     expect(details?.email).toBe('paypal_client@test.com');
-    expect(details?.plan).toBe('enterprise');
+    expect(details?.plan).toBe('pro');
     expect(details?.amount).toBe(29);
     expect(details?.currency).toBe('USD');
     expect(details?.metodoPago).toBe('paypal');

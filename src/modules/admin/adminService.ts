@@ -56,7 +56,7 @@ export async function reviewManualClaim(claimId: string, approve: boolean) {
   return data;
 }
 
-export async function sendRetentionOffer(userId: string, { discountPercent = 50, validDays = 7, planAtOffer = 'enterprise' } = {}): Promise<void> {
+export async function sendRetentionOffer(userId: string, { discountPercent = 50, validDays = 7, planAtOffer = 'pro' } = {}): Promise<void> {
   const validUntil = new Date();
   validUntil.setDate(validUntil.getDate() + validDays);
 
@@ -106,6 +106,17 @@ export async function listProcessedPayments({ page = 0, limit = 50, provider = '
 
   const { ok, data, error } = await apiClient.get(`/api/admin/list-processed-payments?${params.toString()}`);
   if (!ok) throw new Error(error || 'Error al consultar historial de pagos');
+  return data;
+}
+
+export async function listCustomers({ page = 0, limit = 50, q = '' } = {}) {
+  const params = new URLSearchParams();
+  params.set('page', String(page));
+  params.set('limit', String(limit));
+  if (q) params.set('q', q);
+
+  const { ok, data, error } = await apiClient.get(`/api/admin/list-customers?${params.toString()}`);
+  if (!ok) throw new Error(error || 'Error al consultar lista de clientes');
   return data;
 }
 

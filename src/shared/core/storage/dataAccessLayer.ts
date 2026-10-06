@@ -56,21 +56,18 @@ export const dal = {
     },
 
     async getPlatformMetrics() {
-      if (!supabase) return { totalUsers: 0, proUsers: 0, enterpriseUsers: 0, activeSubscriptions: 0 };
-      const [total, pro, ent] = await Promise.all([
+      if (!supabase) return { totalUsers: 0, proUsers: 0, activeSubscriptions: 0 };
+      const [total, pro] = await Promise.all([
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('plan', 'pro'),
-        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('plan', 'enterprise')
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('plan', 'pro')
       ]);
 
       const totalUsers = total.count || 0;
       const proUsers = pro.count || 0;
-      const enterpriseUsers = ent.count || 0;
       return {
         totalUsers,
         proUsers,
-        enterpriseUsers,
-        activeSubscriptions: proUsers + enterpriseUsers,
+        activeSubscriptions: proUsers,
       };
     },
 
@@ -439,7 +436,7 @@ export const dal = {
   },
 
   pdfExportTokens: {
-    async insert(payload: { email: string; doc_type: string }): Promise<{ token: string } | null> {
+    async insert(payload: { email: string; doc_type: string; user_id?: string }): Promise<{ token: string } | null> {
       if (!supabase) return null;
       const res = await safeSupabaseCall(() =>
         supabase
@@ -449,6 +446,32 @@ export const dal = {
           .single()
       );
       return (res.data as { token: string }) || null;
+    },
+    async getAvailableTokens(email: string): Promise<any[]> {
+      if (!supabase) return [];
+      const res = await safeSupabaseCall(() =>
+        supabase
+          .from('pdf_export_tokens')
+          .select('token, paid, used_at')
+          .eq('email', email)
+          .eq('paid', true)
+          .is('used_at', null)
+      );
+      return (res.data as any[]) || [];
+    },
+    async getTokenStats(email: string): Promise<{ total: number; used: number; available: number }> {
+      if (!supabase) return { total: 0, used: 0, available: 0 };
+      const res = await safeSupabaseCall(() =>
+        supabase
+          .from('pdf_export_tokens')
+          .select('used_at')
+          .eq('email', email)
+          .eq('paid', true)
+      );
+      const tokens = (res.data as any[]) || [];
+      const total = tokens.length;
+      const used = tokens.filter(t => t.used_at !== null).length;
+      return { total, used, available: total - used };
     }
   }
 };

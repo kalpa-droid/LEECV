@@ -50,9 +50,7 @@ export default function EditorPanel({
   docType = 'cv',
   onOpenPhotoCropper, 
   onOpenSignature,
-  onGenerateCoverLetterFromCV,
-  aiCredits,
-  onRefreshCredits
+  onGenerateCoverLetterFromCV
 }: any) {
   const { showSuccess, showError, showWarning } = useToast();
   const { confirm } = useConfirm();
@@ -212,7 +210,7 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {docType === 'cv' && activeTab === 'objetivo' && <ObjetivoSection cvData={cvData} setCvData={setCvData} />}
 
-        {docType === 'cv' && activeTab === 'vacante' && <JobTargetSection cvData={cvData} setCvData={setCvData} aiCredits={aiCredits} onRefreshCredits={onRefreshCredits} />}
+        {docType === 'cv' && activeTab === 'vacante' && <JobTargetSection cvData={cvData} setCvData={setCvData} />}
 
         {docType === 'cv' && activeTab === 'logros' && <LogrosSection cvData={cvData} setCvData={setCvData} />}
 
@@ -301,8 +299,6 @@ export default function EditorPanel({
             onSelectPreset={(presetId: string) => {
               setCvData((prev: any) => ({ ...prev, activePresetId: presetId }));
             }}
-            aiCredits={typeof aiCredits === 'number' ? aiCredits : 3}
-            onRefreshCredits={onRefreshCredits}
           />
         )}
 

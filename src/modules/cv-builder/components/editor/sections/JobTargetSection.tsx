@@ -11,7 +11,7 @@ import { resolveActivePreset } from '../../../../../shared/core/pdf-engine/layer
 import { cvDataToContentSections } from '../../../../../shared/core/pdf-engine/layers/records/cvDataAdapter';
 import { AtsAiAnalysisModal } from '../../AtsAiAnalysisModal';
 
-export const JobTargetSection = ({ cvData, setCvData, aiCredits, onRefreshCredits }: any) => {
+export const JobTargetSection = ({ cvData, setCvData }: any) => {
   const { saveCVAs } = useCVContext();
   const { showSuccess } = useToast();
   const jobTarget = cvData.jobTarget || {};
@@ -176,7 +176,6 @@ export const JobTargetSection = ({ cvData, setCvData, aiCredits, onRefreshCredit
         cvText={cvTextForAi}
         jobDescription={jobTarget.jobDescription}
         onUpdateCvData={setCvData}
-        onRefreshCredits={onRefreshCredits}
       />
     </div>
   );

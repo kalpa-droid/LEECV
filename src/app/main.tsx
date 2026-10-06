@@ -43,21 +43,24 @@ const RootComponent = isAdminRoute
 
 import { ToastProvider } from '../shared/core/ui/Toast';
 import { ErrorBoundary } from '../shared/core/ui/ErrorBoundary';
+import { AuthProvider } from '../shared/core/auth/AuthContext';
 
 const rootElement = document.getElementById('root');
 if (rootElement) {
   createRoot(rootElement).render(
     <StrictMode>
       <ErrorBoundary>
-        <ToastProvider>
-          <Suspense fallback={
-            <div className="min-h-screen bg-[var(--color-neutral-text-primary)] text-white flex items-center justify-center font-bold">
-              Cargando LEECV...
-            </div>
-          }>
-            <RootComponent />
-          </Suspense>
-        </ToastProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <Suspense fallback={
+              <div className="min-h-screen bg-[var(--color-neutral-text-primary)] text-white flex items-center justify-center font-bold">
+                Cargando LEECV...
+              </div>
+            }>
+              <RootComponent />
+            </Suspense>
+          </ToastProvider>
+        </AuthProvider>
       </ErrorBoundary>
     </StrictMode>,
   );

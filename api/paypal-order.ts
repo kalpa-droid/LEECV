@@ -1,5 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { requireAuth } from './_lib/authMiddleware.js';
 import { errorResponse, successResponse } from './_lib/apiResponse.js';
 import { requireRateLimit } from './_lib/rateLimiter.js';
 import { createCheckoutForProvider } from './_lib/paymentProviders/checkoutInitiators.js';
@@ -19,14 +18,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
     if (!rateOk) return;
 
-    const { plan = 'single_pdf', email, exportToken } = req.body || {};
+    const { plan = 'single_pdf', email, exportToken, userId } = req.body || {};
 
     if (!email || !exportToken) {
       return errorResponse(res, 400, 'Faltan campos obligatorios: email y exportToken');
     }
 
     try {
-      const result = await createCheckoutForProvider('paypal', plan, exportToken, email);
+      const result = await createCheckoutForProvider('paypal', plan, exportToken, email, userId);
       return successResponse(res, { checkoutUrl: result.checkoutUrl });
     } catch (err: any) {
       console.error('Error creando orden PayPal:', err);

@@ -4,6 +4,7 @@ import { mercadoPagoProvider } from './_lib/paymentProviders/mercadopago.js';
 import { paypalProvider } from './_lib/paymentProviders/paypal.js';
 import { lemonSqueezyProvider } from './_lib/paymentProviders/lemonsqueezy.js';
 import { errorResponse } from './_lib/apiResponse.js';
+import { requireRateLimit } from './_lib/rateLimiter.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -29,6 +30,11 @@ const lsHandler = createWebhookHandler({
 });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Rate limiter based on IP
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  const ok = await requireRateLimit(req, res, `webhook:ip:${ip}`, { maxRequests: 50, windowSeconds: 60 });
+  if (!ok) return;
+
   const provider = (req.query.provider as string) || (req.query.gateway as string);
 
   if (provider === 'mercadopago') {

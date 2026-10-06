@@ -119,7 +119,7 @@ export const paypalProvider: PaymentProvider = {
 
     if (!exportToken && !payerEmail) return null;
 
-    const validPlans: PlanType[] = ['single_pdf', 'credits_pack_5', 'credits_pack_10', 'pro', 'enterprise'];
+    const validPlans: PlanType[] = ['single_pdf', 'credits_pack_5', 'credits_pack_10', 'pro'];
     const plan: PlanType = validPlans.includes(rawPlan as any) ? (rawPlan as PlanType) : 'pro';
 
     return {

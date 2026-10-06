@@ -105,7 +105,7 @@ export function StorageDriveTab() {
         <div>
           <h2 className="text-base font-black text-[var(--color-neutral-text-primary)] flex items-center gap-2">
             <HardDrive className="w-5 h-5 text-[var(--color-accent-purple-text)]" />
-            <span>Almacenamiento, Servidores & Google Drive</span>
+            <span>Almacenamiento y Servidores</span>
           </h2>
           <p className="text-xs text-[var(--color-neutral-text-secondary)] font-medium">
             Diagnóstico en vivo de cuotas, bases de datos Supabase e integridad de almacenamiento IndexedDB local.
@@ -161,16 +161,13 @@ export function StorageDriveTab() {
         {/* Storage Health Status */}
         <div className={`p-4 bg-[var(--color-neutral-surface-muted)] rounded-[${radius.modal}] border border-[var(--color-neutral-border)] space-y-2`}>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[var(--color-neutral-text-secondary)] uppercase">Google Drive & Servidor</span>
-            <Cpu className="w-4 h-4 text-[var(--color-status-success-text)]" />
+            <span className="text-xs font-bold text-[var(--color-neutral-text-secondary)] uppercase">Google Drive</span>
+            <Cpu className="w-4 h-4 text-[var(--color-neutral-text-muted)]" />
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-xl font-black text-[var(--color-neutral-text-primary)]">Activo</span>
-            <span className="text-[10px] font-extrabold text-[var(--color-accent-purple-text)] bg-[var(--color-accent-purple-light)] px-2 py-0.5 rounded-full flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3" /> OK
-            </span>
+            <span className="text-xl font-black text-[var(--color-neutral-text-primary)]">Próximamente</span>
           </div>
-          <p className="text-[11px] text-[var(--color-neutral-text-secondary)]">Integración con Google Drive lista</p>
+          <p className="text-[11px] text-[var(--color-neutral-text-secondary)]">Integración con Google Drive en desarrollo</p>
         </div>
       </div>
 

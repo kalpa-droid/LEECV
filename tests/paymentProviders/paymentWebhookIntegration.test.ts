@@ -11,6 +11,9 @@ vi.mock('../../api/_lib/serverDal.js', () => {
       adminNotifications: {
         create: vi.fn(),
       },
+      profiles: {
+        getByEmail: vi.fn(),
+      },
     },
   };
 });
@@ -22,6 +25,7 @@ describe('Payment Webhook Integration & Gateway Handlers', () => {
         eq: vi.fn(() => ({ error: null }))
       }))
     })),
+    rpc: vi.fn().mockResolvedValue({ error: null })
   };
 
   beforeEach(() => {
@@ -31,6 +35,7 @@ describe('Payment Webhook Integration & Gateway Handlers', () => {
   describe('Mercado Pago Webhook Flow', () => {
     it('debe procesar un evento de pago aprobado de Mercado Pago y otorgar créditos', async () => {
       vi.mocked(serverDal.processedPayments.record).mockResolvedValueOnce(undefined as any);
+      vi.mocked(serverDal.profiles.getByEmail).mockResolvedValueOnce({ id: 'mp_user_123' } as any);
       
       const eqMock = vi.fn().mockResolvedValue({ error: null });
       const updateMock = vi.fn().mockReturnValue({ eq: eqMock });
@@ -50,7 +55,7 @@ describe('Payment Webhook Integration & Gateway Handlers', () => {
 
       const result = await applyPayment(fakeAdminClient, mpWebhookPayload);
 
-      expect(result).toEqual({ type: 'token_activated', exportToken: 'tok_mp_1' });
+      expect(result).toEqual({ type: 'payment_applied', plan: 'credits_pack_5', exportToken: 'tok_mp_1' });
       expect(serverDal.processedPayments.record).toHaveBeenCalledWith(
         expect.objectContaining({
           provider: 'mercadopago',

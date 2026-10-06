@@ -25,7 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket?.remoteAddress || 'unknown-ip';
 
-  const rateLimitOk = await requireRateLimit(req, res, `ai_ip_${clientIp}`, { maxRequests: 3, windowSeconds: 86400 });
+  const rateLimitOk = await requireRateLimit(req, res, `ai_ip_${clientIp}`, { maxRequests: 100, windowSeconds: 86400 });
   if (!rateLimitOk) return;
 
   const { taskId, payload, cvData, maxTokens, temperature } = req.body || {};
@@ -112,7 +112,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   return successResponse(res, {
     text: completionText,
-    providerUsed: successfulProviderId,
-    remainingCredits: 3 // Mocked for UI compatibility
+    providerUsed: successfulProviderId
   });
 }

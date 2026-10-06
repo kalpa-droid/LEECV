@@ -14,6 +14,11 @@ interface BookStudioProps {
   onNewBook?: () => void;
   cycleUITheme?: () => void;
   onTabsChanged?: (tabs: any[]) => void;
+  onOpenSavedCVsModal?: () => void;
+  onOpenSaveAsModal?: () => void;
+  onOpenJsonDownloadModal?: () => void;
+  onOpenShareAppModal?: () => void;
+  onOpenPrivacy?: () => void;
 }
 
 export const BookStudio: React.FC<BookStudioProps> = ({
@@ -28,6 +33,11 @@ export const BookStudio: React.FC<BookStudioProps> = ({
   onNewBook,
   cycleUITheme = () => {},
   onTabsChanged = () => {},
+  onOpenSavedCVsModal,
+  onOpenSaveAsModal,
+  onOpenJsonDownloadModal,
+  onOpenShareAppModal,
+  onOpenPrivacy,
 }) => {
   return (
     <BookStudioContent
@@ -42,6 +52,11 @@ export const BookStudio: React.FC<BookStudioProps> = ({
       onNewBook={onNewBook}
       cycleUITheme={cycleUITheme}
       onTabsChanged={onTabsChanged}
+      onOpenSavedCVsModal={onOpenSavedCVsModal}
+      onOpenSaveAsModal={onOpenSaveAsModal}
+      onOpenJsonDownloadModal={onOpenJsonDownloadModal}
+      onOpenShareAppModal={onOpenShareAppModal}
+      onOpenPrivacy={onOpenPrivacy}
     />
   );
 };

@@ -25,6 +25,7 @@ import { ThemeToggleButton } from '../../../shared/core/ui/ThemeToggleButton';
 import { UndoRedoControls } from '../../../shared/core/ui/UndoRedoControls';
 import { useIsMobile } from '../../../shared/core/ui/useIsMobile';
 import { useEntitlements, getPlanLabel, PLAN_FEATURES } from '../../../shared/core/entitlements/useEntitlements';
+import { useAuth } from '../../../shared/core/auth/AuthContext';
 import { navigation } from '../../../shared/core/utils/navigation';
 import { useText } from '../../../shared/i18n/useText';
 import { Logo } from '../../../shared/core/brand/Logo';
@@ -44,6 +45,7 @@ export interface NavbarProps {
   onPrint: () => void;
   onOpenAtsCheck?: () => void;
   onOpenPricing?: () => void;
+  onOpenCreditsModal?: () => void;
   onOpenAgencyPanel?: () => void;
   onOpenShareAppModal: () => void;
   onOpenPrivacy?: () => void;
@@ -70,6 +72,7 @@ export default function Navbar({
   onPrint,
   onOpenAtsCheck,
   onOpenPricing,
+  onOpenCreditsModal,
   onOpenAgencyPanel,
   onOpenShareAppModal,
   onOpenPrivacy,
@@ -86,7 +89,8 @@ export default function Navbar({
   const isMobile = useIsMobile();
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
-  const { plan } = useEntitlements();
+  const { plan, pdfTokens, isPro } = useEntitlements();
+  const { user } = useAuth();
   const t = useText();
 
   const actionMenuRef = useRef<HTMLDivElement>(null);
@@ -185,6 +189,19 @@ export default function Navbar({
           )}
 
 
+
+          {/* PÍLDORA 0: MIS CRÉDITOS */}
+          {typeof onOpenCreditsModal === 'function' && (
+            <button
+              type="button"
+              onClick={onOpenCreditsModal}
+              className="hidden sm:flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full border bg-[var(--ui-bg-panel)] border-[var(--color-accent-blue)]/60 text-[var(--color-accent-blue-text)] hover:bg-[var(--color-accent-blue-muted)] font-black text-xs shrink-0 transition active:scale-95 cursor-pointer"
+              title="Mi Cuenta & Créditos"
+            >
+              <User className="w-4 h-4 flex-shrink-0 text-[var(--color-accent-blue-text)]" />
+              <span>{user ? (isPro ? 'PRO Ilimitado' : `🪙 ${pdfTokens} Créditos`) : 'Invitado'}</span>
+            </button>
+          )}
 
           {/* PÍLDORA 1: MENÚ DE ACCIONES */}
           <div className="relative" ref={actionMenuRef}>

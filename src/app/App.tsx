@@ -66,7 +66,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 
   const { showSuccess, showError, showInfo } = useToast();
   const { confirm } = useConfirm();
-  const { inGracePeriod, graceEndsAt, aiCredits, refreshEntitlements } = useEntitlements();
+  const { inGracePeriod, graceEndsAt, refreshEntitlements } = useEntitlements();
 
 
 
@@ -86,7 +86,9 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   }, [updateBannerVisible, isSaving, hasPendingChanges]);
 
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
+  const [isCreditsModalOpen, setIsCreditsModalOpen] = useState(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
 
   const [globalUiTheme, setGlobalUiTheme] = useState<string>(() => {
@@ -737,6 +739,11 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           onNewCard={handleNewCard}
           onNewBook={handleNewBook}
           cycleUITheme={cycleUITheme}
+          onOpenSavedCVsModal={() => setIsSavedCVsOpen(true)}
+          onOpenSaveAsModal={() => setIsSaveAsModalOpen(true)}
+          onOpenJsonDownloadModal={() => setIsDownloadModalOpen(true)}
+          onOpenShareAppModal={() => setIsShareAppModalOpen(true)}
+          onOpenPrivacy={() => setIsPrivacyModalOpen(true)}
         />
       </Suspense>
     );
@@ -768,6 +775,11 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           onNewPlanner={handleNewPlanner}
           currentUiTheme={globalUiTheme}
           cycleUITheme={cycleUITheme}
+          onOpenSavedCVsModal={() => setIsSavedCVsOpen(true)}
+          onOpenSaveAsModal={() => setIsSaveAsModalOpen(true)}
+          onOpenJsonDownloadModal={() => setIsDownloadModalOpen(true)}
+          onOpenShareAppModal={() => setIsShareAppModalOpen(true)}
+          onOpenPrivacy={() => setIsPrivacyModalOpen(true)}
         />
       </Suspense>
     );
@@ -791,6 +803,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           onPrint={handleExportPDFClick}
           onOpenAtsCheck={handleOpenAtsCheck}
           onOpenPricing={() => setIsPricingModalOpen(true)}
+          onOpenCreditsModal={() => setIsCreditsModalOpen(true)}
           onOpenShareAppModal={() => setIsShareAppModalOpen(true)}
           onOpenPrivacy={() => setIsPrivacyModalOpen(true)}
 
@@ -843,7 +856,6 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           onOpenSignature={() => setIsSignatureOpen(true)}
           onOpenSavedCVs={() => setIsSavedCVsOpen(true)}
           onGenerateCoverLetterFromCV={handleGenerateCoverLetterFromCV}
-          aiCredits={aiCredits}
           onRefreshCredits={refreshEntitlements}
         />
       }
@@ -896,6 +908,8 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           isPrivacyModalOpen={isPrivacyModalOpen} setIsPrivacyModalOpen={setIsPrivacyModalOpen}
           isAtsModalOpen={isAtsModalOpen} setIsAtsModalOpen={setIsAtsModalOpen}
           isPricingModalOpen={isPricingModalOpen} setIsPricingModalOpen={setIsPricingModalOpen}
+          isCreditsModalOpen={isCreditsModalOpen} setIsCreditsModalOpen={setIsCreditsModalOpen}
+          isLoginModalOpen={isLoginModalOpen} setIsLoginModalOpen={setIsLoginModalOpen}
           pdfCheckoutPurpose={pdfCheckoutPurpose}
           isGeneratingPDF={isGeneratingPDF}
           isPdfComplete={isPdfComplete} setIsPdfComplete={setIsPdfComplete}

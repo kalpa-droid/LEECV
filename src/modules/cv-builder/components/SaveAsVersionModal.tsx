@@ -10,6 +10,7 @@ export interface SaveAsVersionModalProps {
   onClose: () => void;
   onSaveAs: (versionLabel: string) => void;
   isSaving?: boolean;
+  cvData?: any;
 }
 
 /**
@@ -22,11 +23,25 @@ export default function SaveAsVersionModal({
   isOpen,
   onClose,
   onSaveAs,
-  isSaving = false
+  isSaving = false,
+  cvData
 }: SaveAsVersionModalProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>(JOB_POSITION_CATALOG[0].category);
   const [selectedPosition, setSelectedPosition] = useState<string>(JOB_POSITION_CATALOG[0].positions[0]);
   const [customPositionInput, setCustomPositionInput] = useState<string>('');
+
+  React.useEffect(() => {
+    if (isOpen && cvData?.jobTarget) {
+      const jobTargetTitle = cvData.jobTarget.jobTitle || '';
+      const companyName = cvData.jobTarget.companyName || '';
+      if (jobTargetTitle || companyName) {
+        const suggested = [jobTargetTitle, companyName].filter(Boolean).join(' en ');
+        setCustomPositionInput(suggested);
+      }
+    } else if (isOpen) {
+      setCustomPositionInput('');
+    }
+  }, [isOpen, cvData]);
 
   const currentCategoryObj = JOB_POSITION_CATALOG.find(c => c.category === selectedCategory) || JOB_POSITION_CATALOG[0];
   const effectiveLabel = customPositionInput.trim() || selectedPosition || selectedCategory;

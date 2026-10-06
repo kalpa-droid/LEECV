@@ -15,14 +15,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   });
   if (!rateOk) return;
 
-  const { plan = 'single_pdf', email, exportToken } = req.body || {};
+  const { plan = 'single_pdf', email, exportToken, userId } = req.body || {};
 
   if (!email || !exportToken) {
     return errorResponse(res, 400, 'Faltan campos obligatorios: email y exportToken');
   }
 
   try {
-    const result = await createCheckoutForProvider('mercadopago', plan, exportToken, email);
+    const result = await createCheckoutForProvider('mercadopago', plan, exportToken, email, userId);
     return successResponse(res, { checkoutUrl: result.checkoutUrl });
   } catch (err: any) {
     console.error('Error creando preferencia MP:', err);

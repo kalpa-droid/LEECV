@@ -21,7 +21,7 @@
  * memoria de quien edite uno de los dos.
  */
 
-export type PlanId = 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' | 'pro' | 'enterprise';
+export type PlanId = 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' | 'pro';
 
 export interface PricingCatalogEntry {
   id: PlanId;
@@ -37,11 +37,10 @@ export interface PricingCatalogEntry {
 }
 
 export const PRICING_CATALOG: PricingCatalogEntry[] = [
-  { id: 'single_pdf', label: '1 Exportación de PDF / Publicación', usd: 2.0, ars: 1900, credits: 1, recurring: false },
-  { id: 'credits_pack_5', label: 'Pack 5 Créditos', usd: 8.0, ars: 7500, credits: 5, recurring: false },
-  { id: 'credits_pack_10', label: 'Pack 10 Créditos', usd: 14.0, ars: 12500, credits: 10, recurring: false },
-  { id: 'pro', label: 'LEECV Pro', usd: 19.0, ars: 18500, credits: 'unlimited', recurring: true },
-  { id: 'enterprise', label: 'LEECV Enterprise + Cloud', usd: 29.0, ars: 28500, credits: 'unlimited', recurring: true },
+  { id: 'single_pdf', label: '1 Exportación de PDF / Publicación', usd: 2.6, ars: 3200, credits: 1, recurring: false },
+  { id: 'credits_pack_5', label: 'Pack 5 Créditos', usd: 10.0, ars: 12500, credits: 5, recurring: false },
+  { id: 'credits_pack_10', label: 'Pack 10 Créditos', usd: 17.0, ars: 21000, credits: 10, recurring: false },
+  { id: 'pro', label: 'LEECV Pro', usd: 22.0, ars: 27000, credits: 'unlimited', recurring: true }
 ];
 
 export function getPrice(planId: PlanId): PricingCatalogEntry {

@@ -24,7 +24,6 @@ export interface AtsAiAnalysisResult {
   semanticScore: number;
   findings: AtsAiFinding[];
   providerUsed: string;
-  remainingCredits: number;
 }
 
 /**
@@ -64,7 +63,6 @@ export async function runAiAtsAnalysis(
   return {
     semanticScore,
     findings,
-    providerUsed: res.providerUsed,
-    remainingCredits: res.remainingCredits
+    providerUsed: res.providerUsed
   };
 }
