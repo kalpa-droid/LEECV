@@ -2,6 +2,8 @@ import crypto from 'crypto';
 import type { PaymentProvider, ProviderStatus, WebhookVerifyContext } from './types.js';
 import type { PaymentDetails, PlanType } from '../applyPayment.js';
 import { captureBackendException } from '../sentryBackend.js';
+import { parsePlanReference } from './planReference.js';
+import { env } from '../config/env.js';
 
 export const lemonSqueezyProvider: PaymentProvider = {
   id: 'lemonsqueezy',
@@ -9,8 +11,8 @@ export const lemonSqueezyProvider: PaymentProvider = {
 
   diagnose: async (_forcePing: boolean): Promise<ProviderStatus> => {
     const missing: string[] = [];
-    if (!process.env.LEMONSQUEEZY_API_KEY) missing.push('LEMONSQUEEZY_API_KEY');
-    if (!process.env.LEMONSQUEEZY_WEBHOOK_SECRET) missing.push('LEMONSQUEEZY_WEBHOOK_SECRET');
+    if (!env.LEMONSQUEEZY_API_KEY) missing.push('LEMONSQUEEZY_API_KEY');
+    if (!env.LEMONSQUEEZY_WEBHOOK_SECRET) missing.push('LEMONSQUEEZY_WEBHOOK_SECRET');
 
     if (missing.length > 0) {
       return { status: 'missing_vars', label: `Faltan variables: ${missing.join(', ')}`, missingVars: missing };
@@ -20,7 +22,7 @@ export const lemonSqueezyProvider: PaymentProvider = {
     const timeoutId = setTimeout(() => controller.abort(), 5000);
     try {
       const response = await fetch('https://api.lemonsqueezy.com/v1/stores', {
-        headers: { Authorization: `Bearer ${process.env.LEMONSQUEEZY_API_KEY}` },
+        headers: { Authorization: `Bearer ${env.LEMONSQUEEZY_API_KEY}` },
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
@@ -43,7 +45,7 @@ export const lemonSqueezyProvider: PaymentProvider = {
   },
 
   verifyWebhook: async ({ rawBody, req }: WebhookVerifyContext): Promise<boolean> => {
-    const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET;
+    const secret = env.LEMONSQUEEZY_WEBHOOK_SECRET;
     if (!secret) return false;
 
     const signature = req.headers['x-signature'] as string | undefined;
@@ -69,15 +71,15 @@ export const lemonSqueezyProvider: PaymentProvider = {
 
     const email = event.data?.attributes?.user_email || event.data?.attributes?.customer_email;
     const exportToken = event.meta?.custom_data?.export_token;
-
-    if (!exportToken && !email) return null;
+    const userId = event.meta?.custom_data?.user_id;
+    const customPlan = event.meta?.custom_data?.plan;
 
     // Mapa de variantes numéricas de Lemon Squeezy a PlanType de LEECV
     const variantIdMap: Record<string, PlanType> = {};
-    if (process.env.LS_VARIANT_SINGLE_PDF) variantIdMap[process.env.LS_VARIANT_SINGLE_PDF] = 'single_pdf';
-    if (process.env.LS_VARIANT_PACK5) variantIdMap[process.env.LS_VARIANT_PACK5] = 'credits_pack_5';
-    if (process.env.LS_VARIANT_PACK10) variantIdMap[process.env.LS_VARIANT_PACK10] = 'credits_pack_10';
-    if (process.env.LS_VARIANT_PRO) variantIdMap[process.env.LS_VARIANT_PRO] = 'pro';
+    if (env.LS_VARIANT_SINGLE_PDF) variantIdMap[env.LS_VARIANT_SINGLE_PDF] = 'single_pdf';
+    if (env.LS_VARIANT_PACK5) variantIdMap[env.LS_VARIANT_PACK5] = 'credits_pack_5';
+    if (env.LS_VARIANT_PACK10) variantIdMap[env.LS_VARIANT_PACK10] = 'credits_pack_10';
+    if (env.LS_VARIANT_PRO) variantIdMap[env.LS_VARIANT_PRO] = 'pro';
 
 
     // order_created trae la variante en first_order_item; suscripciones en attributes.variant_id
@@ -87,34 +89,32 @@ export const lemonSqueezyProvider: PaymentProvider = {
       ''
     );
 
-    const validPlans: PlanType[] = ['single_pdf', 'credits_pack_5', 'credits_pack_10', 'pro'];
-    const customPlan = event.meta?.custom_data?.plan;
-
-    // 1. Prioridad a la variante real recibida de Lemon Squeezy
-    // 2. Fallback a custom_data.plan si es un plan válido
-    // 3. Si ninguno se reconoce, NO asignar 'pro' por defecto -> retornar null para evitar regalar suscripciones por error
-    const plan: PlanType | undefined =
-      variantIdMap[rawVariantId] ||
-      (validPlans.includes(customPlan as any) ? (customPlan as PlanType) : undefined);
-
-    if (!plan) {
-      console.warn(`[LEMON SQUEEZY WEBHOOK] Variante o plan no reconocido (variant_id: ${rawVariantId}, custom_plan: ${customPlan}). Evento omitido.`);
+    const planToValidate = variantIdMap[rawVariantId] || customPlan;
+    
+    // We construct a JSON string to pass into parsePlanReference
+    const refStr = JSON.stringify({ plan: planToValidate, exportToken, userId });
+    
+    const parsedRef = await parsePlanReference(refStr, 'lemonsqueezy', String(event.data?.id));
+    if (!parsedRef) {
       await captureBackendException(
-        new Error(`Lemon Squeezy: pago recibido con variant_id "${rawVariantId}" no mapeado a ningún plan`),
+        new Error(`Lemon Squeezy: pago recibido con variant_id "${rawVariantId}" no mapeado a ningún plan válido`),
         'lemonsqueezy_unrecognized_variant',
         { rawVariantId, customPlan, orderId: event.data?.id, email }
       );
       return null;
     }
 
+    if (!parsedRef.exportToken && !email && !parsedRef.userId) return null;
+
     // Lemon Squeezy expresa el monto total en centavos (ej: 22800 = $228.00)
     const rawTotal = event.data?.attributes?.total;
     const amount = typeof rawTotal === 'number' ? rawTotal / 100 : rawTotal;
 
     return {
-      exportToken: exportToken || undefined,
+      exportToken: parsedRef.exportToken,
       email,
-      plan,
+      userId: parsedRef.userId,
+      plan: parsedRef.plan as PlanType,
       metodoPago: 'lemonsqueezy',
       externalId: String(event.data?.id),
       amount,

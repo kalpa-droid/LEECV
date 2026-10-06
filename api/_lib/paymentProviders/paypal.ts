@@ -1,14 +1,16 @@
 import type { PaymentProvider, ProviderStatus, WebhookVerifyContext } from './types.js';
 import type { PaymentDetails, PlanType } from '../applyPayment.js';
+import { parsePlanReference } from './planReference.js';
+import { env as configEnv } from '../config/env.js';
 
 function getPaypalApiUrl(): string {
-  const env = (process.env.PAYPAL_ENV || 'live').toLowerCase();
-  return env === 'sandbox' ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.paypal.com';
+  const envVar = configEnv.PAYPAL_ENV.toLowerCase();
+  return envVar === 'sandbox' ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.paypal.com';
 }
 
 async function getPaypalAccessToken(): Promise<string> {
   const baseUrl = getPaypalApiUrl();
-  const auth = Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`).toString('base64');
+  const auth = Buffer.from(`${configEnv.PAYPAL_CLIENT_ID}:${configEnv.PAYPAL_CLIENT_SECRET}`).toString('base64');
   const res = await fetch(`${baseUrl}/v1/oauth2/token`, {
     method: 'POST',
     headers: {
@@ -28,9 +30,9 @@ export const paypalProvider: PaymentProvider = {
 
   diagnose: async (_forcePing: boolean): Promise<ProviderStatus> => {
     const missing: string[] = [];
-    if (!process.env.PAYPAL_CLIENT_ID) missing.push('PAYPAL_CLIENT_ID');
-    if (!process.env.PAYPAL_CLIENT_SECRET) missing.push('PAYPAL_CLIENT_SECRET');
-    if (!process.env.PAYPAL_WEBHOOK_ID) missing.push('PAYPAL_WEBHOOK_ID');
+    if (!configEnv.PAYPAL_CLIENT_ID) missing.push('PAYPAL_CLIENT_ID');
+    if (!configEnv.PAYPAL_CLIENT_SECRET) missing.push('PAYPAL_CLIENT_SECRET');
+    if (!configEnv.PAYPAL_WEBHOOK_ID) missing.push('PAYPAL_WEBHOOK_ID');
 
     if (missing.length > 0) {
       return { status: 'missing_vars', label: `Faltan variables: ${missing.join(', ')}`, missingVars: missing };
@@ -41,7 +43,7 @@ export const paypalProvider: PaymentProvider = {
     try {
       const accessToken = await getPaypalAccessToken();
       const baseUrl = getPaypalApiUrl();
-      const webhookId = process.env.PAYPAL_WEBHOOK_ID;
+      const webhookId = configEnv.PAYPAL_WEBHOOK_ID;
 
       const webhookRes = await fetch(`${baseUrl}/v1/notifications/webhooks/${webhookId}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -76,7 +78,7 @@ export const paypalProvider: PaymentProvider = {
         transmission_id: req.headers['paypal-transmission-id'],
         transmission_sig: req.headers['paypal-transmission-sig'],
         transmission_time: req.headers['paypal-transmission-time'],
-        webhook_id: process.env.PAYPAL_WEBHOOK_ID,
+        webhook_id: configEnv.PAYPAL_WEBHOOK_ID,
         webhook_event: parsedBody,
       };
 
@@ -105,31 +107,35 @@ export const paypalProvider: PaymentProvider = {
     const resource = event.resource || {};
     const customId = resource.custom_id || resource.subscriber?.custom_id || '';
     const payerEmail = resource.payer?.email_address || resource.subscriber?.email_address;
+    
+    // In some cases (e.g. PAYMENT.CAPTURE.COMPLETED), payer email is nested in another object or missing if guest checkout
+    const emailToUse = payerEmail || undefined;
 
-    let exportToken: string | undefined = customId || undefined;
-    let rawPlan = 'pro';
-
-    try {
-      const parsed = JSON.parse(customId);
-      exportToken = parsed.exportToken || exportToken;
-      rawPlan = parsed.plan || 'pro';
-    } catch {
-      exportToken = customId || undefined;
+    const parsedRef = await parsePlanReference(customId, 'paypal', String(resource.id));
+    if (!parsedRef) {
+      return null;
     }
 
-    if (!exportToken && !payerEmail) return null;
+    if (!parsedRef.exportToken && !emailToUse && !parsedRef.userId) return null;
 
-    const validPlans: PlanType[] = ['single_pdf', 'credits_pack_5', 'credits_pack_10', 'pro'];
-    const plan: PlanType = validPlans.includes(rawPlan as any) ? (rawPlan as PlanType) : 'pro';
+    let amount = resource.amount?.value;
+    let currency = resource.amount?.currency_code || 'USD';
+    
+    // If it's a billing subscription payment, the amount structure might be different
+    if (eventType === 'BILLING.SUBSCRIPTION.PAYMENT.COMPLETED' && resource.amount) {
+      amount = resource.amount.total?.value || resource.amount.value;
+      currency = resource.amount.total?.currency_code || resource.amount.currency_code || 'USD';
+    }
 
     return {
-      exportToken,
-      email: payerEmail,
-      plan,
+      exportToken: parsedRef.exportToken,
+      email: emailToUse,
+      userId: parsedRef.userId,
+      plan: parsedRef.plan as PlanType,
       metodoPago: 'paypal',
       externalId: String(resource.id),
-      amount: resource.amount?.value,
-      currency: resource.amount?.currency_code || 'USD',
+      amount: amount,
+      currency: currency,
       details: event,
     };
   },

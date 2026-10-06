@@ -14,6 +14,9 @@ vi.mock('../../api/_lib/serverDal.js', () => {
       profiles: {
         getByEmail: vi.fn(),
       },
+      pendingGrants: {
+        create: vi.fn(),
+      }
     },
   };
 });
@@ -49,8 +52,8 @@ describe('Payment Webhook Integration & Gateway Handlers', () => {
         plan: 'credits_pack_5',
         metodoPago: 'mercadopago' as const,
         externalId: 'mp_payment_998877',
-        amount: 5.0,
-        currency: 'USD',
+        amount: 12500,
+        currency: 'ARS',
       };
 
       const result = await applyPayment(fakeAdminClient, mpWebhookPayload);
@@ -61,7 +64,7 @@ describe('Payment Webhook Integration & Gateway Handlers', () => {
           provider: 'mercadopago',
           external_id: 'mp_payment_998877',
           user_email: 'mp_user@test.com',
-          amount: 5.0,
+          amount: 12500,
         })
       );
     });

@@ -1,5 +1,6 @@
 import type { ProviderId } from './types.js';
 import { getPrice } from './pricingCatalog.js';
+import { env } from '../config/env.js';
 
 export interface CheckoutSessionResult {
   checkoutUrl: string;
@@ -12,15 +13,13 @@ export async function createCheckoutForProvider(
   email: string,
   userId?: string
 ): Promise<CheckoutSessionResult> {
+  const planData = getPrice(plan);
+  if (!planData) {
+    throw new Error(`Plan desconocido: ${plan}`);
+  }
+
   switch (providerId) {
     case 'mercadopago': {
-      const PLAN_PRICES_ARS: Record<string, number> = {
-        single_pdf: Number(process.env.MP_PRECIO_PDF_ARS || getPrice('single_pdf')?.ars),
-        credits_pack_5: Number(process.env.MP_PRECIO_PACK5_ARS || getPrice('credits_pack_5')?.ars),
-        credits_pack_10: Number(process.env.MP_PRECIO_PACK10_ARS || getPrice('credits_pack_10')?.ars),
-        pro: Number(process.env.MP_PRECIO_PRO_ARS || getPrice('pro')?.ars),
-      };
-
       const PLAN_TITLES: Record<string, string> = {
         single_pdf: 'LEECV - 1 Crédito de Exportación PDF',
         credits_pack_5: 'LEECV - Pack 5 Créditos de Exportación PDF',
@@ -28,14 +27,13 @@ export async function createCheckoutForProvider(
         pro: 'LEECV Pro - Suscripción Agencia Mensual',
       };
 
-      const price = PLAN_PRICES_ARS[plan];
-      if (!price) throw new Error(`Plan desconocido para Mercado Pago: ${plan}`);
+      const price = planData.ars;
       const title = PLAN_TITLES[plan] || 'LEECV - Exportación PDF';
 
       const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}`,
+          'Authorization': `Bearer ${env.MP_ACCESS_TOKEN}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -50,12 +48,12 @@ export async function createCheckoutForProvider(
           payer: { email },
           external_reference: JSON.stringify({ exportToken, plan, userId }),
           back_urls: {
-            success: `${process.env.SITE_URL}/?pago=exitoso`,
-            failure: `${process.env.SITE_URL}/?pago=fallido`,
-            pending: `${process.env.SITE_URL}/?pago=pendiente`,
+            success: `${env.SITE_URL}/?pago=exitoso`,
+            failure: `${env.SITE_URL}/?pago=fallido`,
+            pending: `${env.SITE_URL}/?pago=pendiente`,
           },
           auto_return: 'approved',
-          notification_url: `${process.env.SITE_URL}/api/mercadopago-webhook`,
+          notification_url: `${env.SITE_URL}/api/mercadopago-webhook`,
         }),
       });
 
@@ -65,19 +63,10 @@ export async function createCheckoutForProvider(
     }
 
     case 'paypal': {
-      const PLAN_PRICES_USD: Record<string, string> = {
-        single_pdf: process.env.PAYPAL_PRECIO_PDF_USD || String(getPrice('single_pdf')?.usd),
-        credits_pack_5: process.env.PAYPAL_PRECIO_PACK5_USD || String(getPrice('credits_pack_5')?.usd),
-        credits_pack_10: process.env.PAYPAL_PRECIO_PACK10_USD || String(getPrice('credits_pack_10')?.usd),
-        pro: process.env.PAYPAL_PRECIO_PRO_USD || String(getPrice('pro')?.usd),
-      };
-
-      const priceStr = PLAN_PRICES_USD[plan];
-      if (!priceStr) throw new Error(`Plan desconocido para PayPal: ${plan}`);
-
-      const env = (process.env.PAYPAL_ENV || 'live').toLowerCase();
-      const baseUrl = env === 'sandbox' ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.paypal.com';
-      const auth = Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`).toString('base64');
+      const priceStr = String(planData.usd);
+      
+      const baseUrl = env.PAYPAL_ENV === 'sandbox' ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.paypal.com';
+      const auth = Buffer.from(`${env.PAYPAL_CLIENT_ID}:${env.PAYPAL_CLIENT_SECRET}`).toString('base64');
 
       const tokenRes = await fetch(`${baseUrl}/v1/oauth2/token`, {
         method: 'POST',
@@ -112,8 +101,8 @@ export async function createCheckoutForProvider(
             brand_name: 'LEECV',
             landing_page: 'NO_PREFERENCE',
             user_action: 'PAY_NOW',
-            return_url: `${process.env.SITE_URL}/?pago=exitoso`,
-            cancel_url: `${process.env.SITE_URL}/?pago=fallido`,
+            return_url: `${env.SITE_URL}/?pago=exitoso`,
+            cancel_url: `${env.SITE_URL}/?pago=fallido`,
           },
         }),
       });
@@ -125,6 +114,28 @@ export async function createCheckoutForProvider(
       if (!approveLink) throw new Error('PayPal no devolvió link de aprobación');
 
       return { checkoutUrl: approveLink };
+    }
+
+    case 'lemonsqueezy': {
+      const urlMap: Record<string, string | undefined> = {
+        single_pdf: env.LEMONSQUEEZY_URL_PDF1,
+        credits_pack_5: env.LEMONSQUEEZY_URL_PACK5,
+        credits_pack_10: env.LEMONSQUEEZY_URL_PACK10,
+        pro: env.LEMONSQUEEZY_URL_PRO,
+      };
+
+      const base = urlMap[plan] || env.LEMONSQUEEZY_CHECKOUT_URL;
+      if (!base) {
+        throw new Error('No está configurada la URL de checkout de Lemon Squeezy para este plan en el backend');
+      }
+
+      const url = new URL(base);
+      url.searchParams.set('checkout[email]', email);
+      if (exportToken) url.searchParams.set('checkout[custom][export_token]', exportToken);
+      if (userId) url.searchParams.set('checkout[custom][user_id]', userId);
+      url.searchParams.set('checkout[custom][plan]', plan);
+
+      return { checkoutUrl: url.toString() };
     }
 
     default:

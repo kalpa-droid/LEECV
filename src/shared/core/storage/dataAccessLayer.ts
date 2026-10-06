@@ -395,16 +395,6 @@ export const dal = {
     }
   },
 
-  pdfExportCredits: {
-    async getByUserId(userId: string): Promise<{ credits: number } | null> {
-      if (!supabase) return null;
-      const res = await safeSupabaseCall(() =>
-        supabase.from('pdf_export_credits').select('credits').eq('user_id', userId).single()
-      );
-      return res.data || null;
-    }
-  },
-
   aiTelemetry: {
     async list(limit: number = 100, filters?: { from?: string; endpoint?: string }): Promise<any[]> {
       if (!supabase) return [];
@@ -436,7 +426,7 @@ export const dal = {
   },
 
   pdfExportTokens: {
-    async insert(payload: { email: string; doc_type: string; user_id?: string }): Promise<{ token: string } | null> {
+    async insert(payload: { email: string; doc_type?: string; user_id?: string }): Promise<{ token: string } | null> {
       if (!supabase) return null;
       const res = await safeSupabaseCall(() =>
         supabase
@@ -452,10 +442,10 @@ export const dal = {
       const res = await safeSupabaseCall(() =>
         supabase
           .from('pdf_export_tokens')
-          .select('token, paid, used_at')
+          .select('token, paid, consumed')
           .eq('email', email)
           .eq('paid', true)
-          .is('used_at', null)
+          .eq('consumed', false)
       );
       return (res.data as any[]) || [];
     },
@@ -464,13 +454,13 @@ export const dal = {
       const res = await safeSupabaseCall(() =>
         supabase
           .from('pdf_export_tokens')
-          .select('used_at')
+          .select('consumed')
           .eq('email', email)
           .eq('paid', true)
       );
       const tokens = (res.data as any[]) || [];
       const total = tokens.length;
-      const used = tokens.filter(t => t.used_at !== null).length;
+      const used = tokens.filter(t => t.consumed).length;
       return { total, used, available: total - used };
     }
   }

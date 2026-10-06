@@ -18,13 +18,15 @@ export interface PricingCatalogEntry {
   id: PlanId;
   usd: number;
   ars: number;
+  credits: number | 'unlimited';
+  recurring: boolean;
 }
 
 export const PRICING_CATALOG: PricingCatalogEntry[] = [
-  { id: 'single_pdf', usd: 2.6, ars: 3200 },
-  { id: 'credits_pack_5', usd: 10.0, ars: 12500 },
-  { id: 'credits_pack_10', usd: 17.0, ars: 21000 },
-  { id: 'pro', usd: 22.0, ars: 27000 }
+  { id: 'single_pdf', usd: 2.6, ars: 3200, credits: 1, recurring: false },
+  { id: 'credits_pack_5', usd: 10.0, ars: 12500, credits: 5, recurring: false },
+  { id: 'credits_pack_10', usd: 17.0, ars: 21000, credits: 10, recurring: false },
+  { id: 'pro', usd: 22.0, ars: 27000, credits: 'unlimited', recurring: true }
 ];
 
 export function getPrice(planId: string): PricingCatalogEntry | undefined {
