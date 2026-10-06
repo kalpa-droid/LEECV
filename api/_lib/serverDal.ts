@@ -261,8 +261,18 @@ export const serverDal = {
     }
   },
 
+  pendingGrants: {
+    async create(data: { email?: string; provider: string; external_id: string; plan: string; amount?: number; currency?: string }): Promise<void> {
+      const { error } = await supabaseAdmin.from('pending_grants').insert({
+        ...data,
+        created_at: new Date().toISOString()
+      });
+      if (error) console.error(`[pendingGrants] Error creating pending grant: ${error.message}`);
+    }
+  },
+
   adminNotifications: {
-    async create(data: { type: string; title: string; message: string; metadata?: any }): Promise<void> {
+    async create(data: { type: string; title: string; message: string; metadata?: any; user_id?: string | null }): Promise<void> {
       const { error } = await supabaseAdmin
         .from('admin_notifications')
         .insert({

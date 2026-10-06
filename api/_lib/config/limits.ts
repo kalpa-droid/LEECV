@@ -1,0 +1,6 @@
+export const BILLING_CONFIG = {
+  GRACE_PERIOD_DAYS: 10,
+  RETENTION_DISCOUNT_PERCENT: 20,
+  PRO_PLAN_DAYS: 30, // Fallback si no es recurrente
+  PAYMENT_TOLERANCE_PERCENT: 0.01,
+};

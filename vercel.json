@@ -114,35 +114,16 @@
       "destination": "/api/admin-api?action=list-processed-payments"
     },
     {
+      "source": "/api/admin/list-customers",
+      "destination": "/api/admin-api?action=list-customers"
+    },
+    {
       "source": "/api/approve-manual-claim",
       "destination": "/api/admin-api?action=approve-manual-claim"
     },
     {
-      "source": "/api/drive/connect",
-      "destination": "/api/drive-api?action=connect"
-    },
-    {
-      "source": "/api/drive/disconnect",
-      "destination": "/api/drive-api?action=disconnect"
-    },
-    {
-      "source": "/api/drive/get-access-token",
-      "destination": "/api/drive-api?action=get-access-token"
-    },
-    {
       "source": "/api/cron/downgrade-expired-plans",
       "destination": "/api/cron-downgrade"
-    },
-    {
-      "source": "/(c|cv|public)/:slug",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": ".*(Googlebot|bingbot|WhatsApp|facebookexternalhit|LinkedInBot|Twitterbot|Slackbot|TelegramBot|Discordbot).*"
-        }
-      ],
-      "destination": "/api/cv-meta?slug=:slug"
     },
     {
       "source": "/((?!api/).*)",

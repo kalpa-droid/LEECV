@@ -39,7 +39,7 @@ describe('applyPayment Unit Tests', () => {
     };
 
     await expect(applyPayment(fakeAdminClient, payment)).rejects.toThrow(
-      'applyPayment requiere exportToken o email para habilitar el servicio'
+      'applyPayment requiere exportToken, userId, o email para habilitar el servicio'
     );
   });
 

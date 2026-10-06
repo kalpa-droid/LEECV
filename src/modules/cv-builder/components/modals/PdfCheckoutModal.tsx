@@ -7,7 +7,7 @@ import { dal } from '../../../../shared/core/storage/dataAccessLayer';
 import { useAuth } from '../../../../shared/core/auth/AuthContext';
 
 import { isValidEmail } from '../../../../shared/core/utils/validationEngine';
-import { usePdfExportGate } from '../../../../shared/core/entitlements/usePdfExportGate';
+import { useExportEntitlement } from '../../../../shared/core/entitlements/useExportEntitlement';
 import { withErrorHandling } from '../../../../shared/core/utils/errorHandler';
 
 import { radius, button } from '../../../../shared/core/uiDesignSystem';
@@ -27,7 +27,7 @@ export default function PdfCheckoutModal({
   const t = useText();
   const { user } = useAuth();
 
-  const { credits, refreshCredits, consumeCreditIfNeeded } = usePdfExportGate();
+  const { credits, refreshCredits, consumeCreditIfNeeded } = useExportEntitlement();
 
   const handleCheckout = async (gateway: 'mercadopago' | 'paypal' | 'lemonsqueezy') => {
     if (!email || !isValidEmail(email)) {

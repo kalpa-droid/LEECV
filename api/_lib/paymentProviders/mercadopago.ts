@@ -1,6 +1,8 @@
 import crypto from 'crypto';
 import type { PaymentProvider, ProviderStatus, WebhookVerifyContext } from './types.js';
 import type { PaymentDetails, PlanType } from '../applyPayment.js';
+import { parsePlanReference } from './planReference.js';
+import { env } from '../config/env.js';
 
 export const mercadoPagoProvider: PaymentProvider = {
   id: 'mercadopago',
@@ -8,8 +10,8 @@ export const mercadoPagoProvider: PaymentProvider = {
 
   diagnose: async (_forcePing: boolean): Promise<ProviderStatus> => {
     const missing: string[] = [];
-    if (!process.env.MP_ACCESS_TOKEN) missing.push('MP_ACCESS_TOKEN');
-    if (!process.env.MP_WEBHOOK_SECRET) missing.push('MP_WEBHOOK_SECRET');
+    if (!env.MP_ACCESS_TOKEN) missing.push('MP_ACCESS_TOKEN');
+    if (!env.MP_WEBHOOK_SECRET) missing.push('MP_WEBHOOK_SECRET');
 
     if (missing.length > 0) {
       return { status: 'missing_vars', label: `Faltan variables: ${missing.join(', ')}`, missingVars: missing };
@@ -19,7 +21,7 @@ export const mercadoPagoProvider: PaymentProvider = {
     const timeoutId = setTimeout(() => controller.abort(), 5000);
     try {
       const response = await fetch('https://api.mercadopago.com/users/me', {
-        headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` },
+        headers: { Authorization: `Bearer ${env.MP_ACCESS_TOKEN}` },
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
@@ -42,7 +44,7 @@ export const mercadoPagoProvider: PaymentProvider = {
   },
 
   verifyWebhook: async ({ req, parsedBody }: WebhookVerifyContext): Promise<boolean> => {
-    const secret = process.env.MP_WEBHOOK_SECRET;
+    const secret = env.MP_WEBHOOK_SECRET;
     if (!secret) {
       console.warn('[MercadoPago Webhook]: MP_WEBHOOK_SECRET no está configurado');
       if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
@@ -88,7 +90,7 @@ export const mercadoPagoProvider: PaymentProvider = {
     const { type, data } = parsedBody || {};
     if (type !== 'payment' || !data?.id) return null;
 
-    const mpToken = process.env.MP_ACCESS_TOKEN;
+    const mpToken = env.MP_ACCESS_TOKEN;
     if (!mpToken) return null;
 
     const paymentRes = await fetch(`https://api.mercadopago.com/v1/payments/${data.id}`, {
@@ -98,29 +100,19 @@ export const mercadoPagoProvider: PaymentProvider = {
 
     if (payment.status !== 'approved') return null;
 
-    let exportToken: string | undefined;
-    let rawPlan = 'pro';
-
-    if (payment.external_reference) {
-      try {
-        const refObj = JSON.parse(payment.external_reference);
-        exportToken = refObj.exportToken;
-        rawPlan = refObj.plan || 'pro';
-      } catch {
-        exportToken = payment.external_reference;
-      }
+    const parsedRef = await parsePlanReference(payment.external_reference, 'mercadopago', String(payment.id));
+    if (!parsedRef) {
+      return null;
     }
 
     const payerEmail = payment.payer?.email;
-    if (!exportToken && !payerEmail) return null;
-
-    const validPlans: PlanType[] = ['single_pdf', 'credits_pack_5', 'credits_pack_10', 'pro'];
-    const plan: PlanType = validPlans.includes(rawPlan as any) ? (rawPlan as PlanType) : 'pro';
+    if (!parsedRef.exportToken && !payerEmail && !parsedRef.userId) return null;
 
     return {
-      exportToken,
+      exportToken: parsedRef.exportToken,
       email: payerEmail,
-      plan,
+      userId: parsedRef.userId,
+      plan: parsedRef.plan,
       metodoPago: 'mercadopago',
       externalId: String(payment.id),
       amount: payment.transaction_amount,

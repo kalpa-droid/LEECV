@@ -45,10 +45,13 @@ export function isAdminRole(role?: string | null): boolean {
   return role === 'admin';
 }
 
+import { useExportEntitlement } from './useExportEntitlement';
+
 export function useEntitlements() {
   const { profile, user } = useAuth();
   const [pdfTokens, setPdfTokens] = useState(0);
   const [tokenStats, setTokenStats] = useState({ total: 0, used: 0, available: 0 });
+  const exportEntitlement = useExportEntitlement();
 
   useEffect(() => {
     if (user?.email) {
@@ -67,7 +70,7 @@ export function useEntitlements() {
     isPro: plan === 'pro',
     pdfTokens,
     tokenStats,
-    loading: false,
+    loading: exportEntitlement.loading,
     features,
     isPremium: plan === 'pro',
     inGracePeriod: false,
@@ -75,6 +78,10 @@ export function useEntitlements() {
     canEmergencyExport: false,
     unlimitedExports: features.unlimitedExports,
     cloudStorageGB: features.cloudStorageGB,
-    refreshEntitlements: async () => {}
+    canExport: exportEntitlement.canExport,
+    consumeExport: exportEntitlement.consumeCreditIfNeeded,
+    refreshEntitlements: async () => {
+      exportEntitlement.refreshCredits();
+    }
   };
 }

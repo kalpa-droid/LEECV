@@ -21,61 +21,19 @@ export async function iniciarPago(
     throw new Error(`${provider?.name || providerId} no soporta inicio de pago automático todavía`);
   }
 
-  switch (providerId) {
-    case 'mercadopago': {
-      if (!email) throw new Error('Email requerido para Mercado Pago');
-      const { ok, data, error } = await apiClient.post<{ checkoutUrl?: string }>('/api/create-mp-preference', { plan, email, exportToken, userId });
-      if (!ok || !data?.checkoutUrl) {
-        throw new Error(error || 'No se pudo iniciar el pago con Mercado Pago');
-      }
-      navigation.goTo(data.checkoutUrl);
-      return;
-    }
+  const { ok, data, error } = await apiClient.post<{ checkoutUrl?: string }>('/api/create-checkout', {
+    providerId,
+    plan,
+    email,
+    exportToken,
+    userId,
+  });
 
-    case 'paypal': {
-      if (!email) throw new Error('Email requerido para PayPal');
-      const { ok, data, error } = await apiClient.post<{ checkoutUrl?: string }>('/api/create-paypal-order', { plan, email, exportToken, userId });
-      if (!ok || !data?.checkoutUrl) {
-        throw new Error(error || 'No se pudo iniciar el pago con PayPal');
-      }
-      navigation.goTo(data.checkoutUrl);
-      return;
-    }
-
-    case 'lemonsqueezy': {
-      const urlMap: Record<string, string | undefined> = {
-        single_pdf: env.LEMONSQUEEZY_URL_PDF1,
-        credits_pack_5: env.LEMONSQUEEZY_URL_PACK5,
-        credits_pack_10: env.LEMONSQUEEZY_URL_PACK10,
-        pro: env.LEMONSQUEEZY_URL_PRO,
-      };
-
-      const base = urlMap[plan] || env.LEMONSQUEEZY_CHECKOUT_URL;
-      if (!base) {
-        throw new Error('No está configurada la URL de checkout de Lemon Squeezy para este plan');
-      }
-      
-      const url = new URL(base);
-      url.searchParams.set('checkout[email]', email);
-      if (exportToken) {
-        url.searchParams.set('checkout[custom][export_token]', exportToken);
-      }
-      if (userId) {
-        url.searchParams.set('checkout[custom][user_id]', userId);
-      }
-      url.searchParams.set('checkout[custom][plan]', plan);
-      
-      if (typeof navigator !== 'undefined' && navigator.language) {
-        const userLang = navigator.language.slice(0, 2).toLowerCase();
-        url.searchParams.set('locale', userLang);
-      }
-      navigation.goTo(url.toString());
-      return;
-    }
-
-    default:
-      throw new Error(`Proveedor de pago no reconocido: ${providerId}`);
+  if (!ok || !data?.checkoutUrl) {
+    throw new Error(error || `No se pudo iniciar el pago con ${provider.name}`);
   }
+
+  navigation.goTo(data.checkoutUrl);
 }
 
 /**

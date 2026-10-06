@@ -2,6 +2,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabaseAdmin } from './_lib/supabaseAdmin.js';
 import { errorResponse, successResponse } from './_lib/apiResponse.js';
 import { captureBackendException } from './_lib/sentryBackend.js';
+import { BILLING_CONFIG } from './_lib/config/limits.js';
+
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET' && req.method !== 'POST') {
@@ -30,8 +32,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // ----------------------------------------------------
     const { data: expiringProfiles, error: fetchExpiringErr } = await supabaseAdmin
       .from('profiles')
-      .select('id, email, plan, premium_vence')
-      .lt('premium_vence', nowIso)
+      .select('id, email, plan, plan_vence')
+      .lt('plan_vence', nowIso)
       .is('grace_period_ends_at', null)
       .in('plan', ['pro']);
 
@@ -41,7 +43,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     let newlyInGrace = 0;
     if (expiringProfiles && expiringProfiles.length > 0) {
-      const tenDaysFromNow = new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000).toISOString();
+      const tenDaysFromNow = new Date(now.getTime() + BILLING_CONFIG.GRACE_PERIOD_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
       for (const profile of expiringProfiles) {
         // 1. Marcar inicio del período de gracia de 10 días
@@ -53,7 +55,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (!updateErr) {
           newlyInGrace++;
 
-          // 2. Generar oferta automática de retención del 20% OFF por 10 días si no tiene una pendiente
+          // 2. Generar oferta automática de retención
           const { data: existingOffer } = await supabaseAdmin
             .from('retention_offers')
             .select('id')
@@ -66,10 +68,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const { error: offerErr } = await supabaseAdmin.from('retention_offers').insert({
               user_id: profile.id,
               plan_at_offer: profile.plan,
-              discount_percent: 20,
+              discount_percent: BILLING_CONFIG.RETENTION_DISCOUNT_PERCENT,
               valid_until: tenDaysFromNow,
               status: 'pendiente',
-              notes: 'Oferta automática al iniciar período de gracia (20% OFF)',
+              notes: `Oferta automática al iniciar período de gracia (${BILLING_CONFIG.RETENTION_DISCOUNT_PERCENT}% OFF)`,
             });
             if (offerErr) {
               console.error(`Error creando oferta de retención para ${profile.id}:`, offerErr);
