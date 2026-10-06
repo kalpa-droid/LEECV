@@ -332,7 +332,7 @@ export default function AdminDashboard() {
               : `${button.secondary} px-4 py-2 text-xs font-black flex items-center gap-2`}
           >
             <HardDrive className="w-4 h-4" />
-            <span>Almacenamiento, Servidores & Drive</span>
+            <span>Almacenamiento Almacenamiento, Servidores & Drive Servidores</span>
           </button>
 
           <button

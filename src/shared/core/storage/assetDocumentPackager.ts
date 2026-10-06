@@ -50,7 +50,7 @@ export function blobToBase64(blob: Blob): Promise<string> {
  * JSON principal `cvData`, generando referencias relativas livianas ("ref://...").
  * Preserva el 100% de la configuración de diseño (presets, overrides).
  */
-export async function splitCvDataForDrive(cvData: any): Promise<SplitCvDataResult> {
+export async function splitCvDataForAssets(cvData: any): Promise<SplitCvDataResult> {
   if (!cvData || typeof cvData !== 'object') {
     return { cleanCvData: cvData, binaryAssets: [] };
   }
@@ -136,7 +136,7 @@ export async function splitCvDataForDrive(cvData: any): Promise<SplitCvDataResul
 export async function dedupAssetsForLocalStorage(cvData: any): Promise<any> {
   if (!cvData || typeof cvData !== 'object') return cvData;
 
-  const { cleanCvData, binaryAssets } = await splitCvDataForDrive(cvData);
+  const { cleanCvData, binaryAssets } = await splitCvDataForAssets(cvData);
   const storedCvData = JSON.parse(JSON.stringify(cleanCvData));
 
   for (const asset of binaryAssets) {

@@ -45,17 +45,7 @@ export const serverDal = {
       return { customers: data || [], totalCount: count || 0 };
     },
 
-    async updateDriveStatus(
-      userId: string, 
-      patch: { drive_connected: boolean; drive_email?: string | null; drive_avatar?: string | null; drive_quota_percent?: number | null }
-    ): Promise<void> {
-      const { error } = await supabaseAdmin
-        .from('profiles')
-        .update(patch)
-        .eq('id', userId);
 
-      if (error) throw new Error(`Error actualizando estado de Drive en perfiles: ${error.message}`);
-    },
 
     async updateSubscription(
       matchBy: { id?: string; email?: string },
@@ -180,28 +170,7 @@ export const serverDal = {
   },
 
   cvs: {
-    // Confirma que `fileId` es realmente el drive_file_id de un CV que pertenece
-    // a `userId`, antes de autorizar un borrado en Google Drive.
-    async findByDriveFileIdAndUser(fileId: string, userId: string): Promise<{ id: string } | null> {
-      const { data, error } = await supabaseAdmin
-        .from('cvs')
-        .select('id')
-        .eq('drive_file_id', fileId)
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (error || !data) return null;
-      return data;
-    },
-
-    async clearDriveBackup(cvId: string): Promise<void> {
-      const { error } = await supabaseAdmin
-        .from('cvs')
-        .update({ drive_file_id: null, drive_synced_at: null })
-        .eq('id', cvId);
-
-      if (error) throw new Error(`Error limpiando puntero de Drive: ${error.message}`);
-    }
+    // Other cv operations can go here if needed in the future
   },
 
   aiTelemetry: {

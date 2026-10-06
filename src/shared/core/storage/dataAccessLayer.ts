@@ -43,17 +43,6 @@ export const dal = {
       return (res.data as UserProfile[]) || [];
     },
 
-    async listConnectedDrives(): Promise<UserProfile[]> {
-      if (!supabase) return [];
-      const res = await safeSupabaseCall(() =>
-        supabase
-          .from('profiles')
-          .select('id, email, plan, drive_connected, drive_quota_percent, drive_last_checked_at')
-          .eq('drive_connected', true)
-          .order('drive_quota_percent', { ascending: false })
-      );
-      return (res.data as UserProfile[]) || [];
-    },
 
     async getPlatformMetrics() {
       if (!supabase) return { totalUsers: 0, proUsers: 0, activeSubscriptions: 0 };
@@ -71,17 +60,6 @@ export const dal = {
       };
     },
 
-    async updateDriveQuota(userId: string, percentUsed: number): Promise<boolean> {
-      if (!supabase) return false;
-      const res = await safeSupabaseCall(() =>
-        supabase.from('profiles').update({
-          drive_quota_percent: percentUsed,
-          drive_last_checked_at: new Date().toISOString(),
-        }).eq('id', userId)
-      );
-      return res.success;
-    }
-  },
 
   adminAuditLogs: {
     async list(searchQuery: string = ''): Promise<any[]> {
