@@ -100,11 +100,20 @@ export const paypalProvider: PaymentProvider = {
 
   extractPaymentData: async ({ parsedBody: event }: WebhookVerifyContext): Promise<PaymentDetails | null> => {
     const eventType = event?.event_type;
+    const resource = event?.resource || {};
+
+    if (eventType === 'BILLING.SUBSCRIPTION.CANCELLED') {
+      const { serverDal } = await import('../serverDal.js');
+      await serverDal.profiles.downgradeSubscription({ paypal_subscription_id: String(resource.id) });
+      console.log(`[PayPal] Suscripción ${resource.id} cancelada, downgrade a free.`);
+      return null;
+    }
+
     if (eventType !== 'PAYMENT.CAPTURE.COMPLETED' && eventType !== 'BILLING.SUBSCRIPTION.PAYMENT.COMPLETED') {
       return null;
     }
 
-    const resource = event.resource || {};
+
     const customId = resource.custom_id || resource.subscriber?.custom_id || '';
     const payerEmail = resource.payer?.email_address || resource.subscriber?.email_address;
     
@@ -136,6 +145,7 @@ export const paypalProvider: PaymentProvider = {
       externalId: String(resource.id),
       amount: amount,
       currency: currency,
+      subscriptionId: resource.billing_agreement_id || null,
       details: event,
     };
   },

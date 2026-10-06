@@ -80,6 +80,8 @@ export function useEntitlements() {
     cloudStorageGB: features.cloudStorageGB,
     canExport: exportEntitlement.canExport,
     consumeExport: exportEntitlement.consumeCreditIfNeeded,
+    hasActiveSubscription: !!(profile as any)?.mp_preapproval_id || !!(profile as any)?.paypal_subscription_id,
+    subscriptionProvider: (profile as any)?.mp_preapproval_id ? 'MercadoPago' : ((profile as any)?.paypal_subscription_id ? 'PayPal' : null),
     refreshEntitlements: async () => {
       exportEntitlement.refreshCredits();
     }

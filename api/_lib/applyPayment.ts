@@ -15,6 +15,7 @@ export interface PaymentDetails {
   externalId?: string | null;
   amount?: number | null;
   currency?: string | null;
+  subscriptionId?: string | null;
   details?: any;
 }
 
@@ -135,15 +136,21 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
     } else {
       if (planData.id === 'pro') {
         // Otorgar suscripción Pro (añadir BILLING_CONFIG.PRO_PLAN_DAYS días o a partir de hoy)
-        const currentProfile = await supabaseAdmin.from('profiles').select('premium_vence').eq('id', profileId).single();
-        const currentVence = currentProfile.data?.premium_vence ? new Date(currentProfile.data.premium_vence) : new Date();
+        const currentProfile = await supabaseAdmin.from('profiles').select('plan_vence').eq('id', profileId).single();
+        const currentVence = currentProfile.data?.plan_vence ? new Date(currentProfile.data.plan_vence) : new Date();
         const now = new Date();
         const baseDate = currentVence > now ? currentVence : now;
         
         const newVence = new Date(baseDate);
         newVence.setDate(newVence.getDate() + BILLING_CONFIG.PRO_PLAN_DAYS);
 
-        await serverDal.profiles.updateSubscription({ id: profileId }, { plan: 'pro', premium_vence: newVence.toISOString() });
+        let patch: any = { plan: 'pro', plan_vence: newVence.toISOString() };
+        if (payment.subscriptionId) {
+          if (payment.metodoPago === 'mercadopago') patch.mp_preapproval_id = payment.subscriptionId;
+          else if (payment.metodoPago === 'paypal') patch.paypal_subscription_id = payment.subscriptionId;
+        }
+
+        await serverDal.profiles.updateSubscription({ id: profileId }, patch);
         console.log(`[applyPayment] Plan Pro otorgado a perfil ${profileId} hasta ${newVence.toISOString()}`);
       } else if (planData.id === 'credits_pack_5' || planData.id === 'credits_pack_10') {
         // Otorgar tokens de exportación

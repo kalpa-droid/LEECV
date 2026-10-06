@@ -73,6 +73,25 @@ export const serverDal = {
       const { data, error } = await query.select('id').single();
       if (error) throw new Error(`Error actualizando suscripción de perfil: ${error.message}`);
       return data ? { id: data.id } : null;
+    },
+
+    async downgradeSubscription(matchBy: { mp_preapproval_id?: string; paypal_subscription_id?: string; id?: string }): Promise<void> {
+      let query = supabaseAdmin
+        .from('profiles')
+        .update({ plan: 'free', plan_vence: null, mp_preapproval_id: null, paypal_subscription_id: null });
+
+      if (matchBy.mp_preapproval_id) {
+        query = query.eq('mp_preapproval_id', matchBy.mp_preapproval_id);
+      } else if (matchBy.paypal_subscription_id) {
+        query = query.eq('paypal_subscription_id', matchBy.paypal_subscription_id);
+      } else if (matchBy.id) {
+        query = query.eq('id', matchBy.id);
+      } else {
+        throw new Error('downgradeSubscription requiere un identificador válido.');
+      }
+
+      const { error } = await query;
+      if (error) throw new Error(`Error haciendo downgrade a free: ${error.message}`);
     }
   },
 

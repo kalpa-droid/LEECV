@@ -1,7 +1,11 @@
 import React from 'react';
-import { X, Crown, Sparkles, AlertCircle } from 'lucide-react';
+import { X, Crown, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
 import { button, elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { useEntitlements } from '../../../shared/core/entitlements/useEntitlements';
+import { useAuth } from '../../../shared/core/auth/AuthContext';
+import { useToast } from '../../../shared/core/ui/Toast';
+import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
+import { apiClient } from '../../../shared/core/utils/apiClient';
 
 interface CreditsModalProps {
   isOpen: boolean;
@@ -10,7 +14,36 @@ interface CreditsModalProps {
 }
 
 export function CreditsModal({ isOpen, onClose, onOpenPricing }: CreditsModalProps) {
-  const { plan, pdfTokens, tokenStats, isPro } = useEntitlements();
+  const { plan, pdfTokens, tokenStats, isPro, hasActiveSubscription, subscriptionProvider, refreshEntitlements } = useEntitlements();
+  const { showSuccess, showError } = useToast();
+  const confirm = useConfirm();
+  const [isCancelling, setIsCancelling] = React.useState(false);
+
+  const handleCancelSubscription = async () => {
+    const isConfirmed = await confirm({
+      title: 'Cancelar Suscripción',
+      message: '¿Estás seguro de que deseas cancelar tu suscripción recurrente? Perderás los beneficios Pro inmediatamente al finalizar tu ciclo actual.',
+      confirmText: 'Sí, cancelar',
+      cancelText: 'No, mantener',
+      type: 'danger'
+    });
+    
+    if (!isConfirmed) return;
+    
+    setIsCancelling(true);
+    try {
+      const { ok, error } = await apiClient.post('/api/user/cancel-subscription');
+      if (!ok) {
+        throw new Error(error || 'No se pudo cancelar la suscripción.');
+      }
+      showSuccess('Suscripción cancelada exitosamente.');
+      window.location.reload();
+    } catch (err: any) {
+      showError(err.message || 'Ocurrió un error al cancelar.');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -51,6 +84,21 @@ export function CreditsModal({ isOpen, onClose, onOpenPricing }: CreditsModalPro
               <p className="text-[11px] text-[var(--color-status-success-text)] font-medium mt-1">
                 ¡Tienes acceso ilimitado a todas las funciones y descargas PDF!
               </p>
+            )}
+            
+            {isPro && hasActiveSubscription && (
+              <div className="mt-3 p-3 bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/40 rounded-[var(--radius-card)] flex flex-col gap-2">
+                <p className="text-[11px] text-[var(--color-status-warning-text)] font-bold">
+                  Suscripción activa mediante {subscriptionProvider}
+                </p>
+                <button
+                  onClick={handleCancelSubscription}
+                  disabled={isCancelling}
+                  className={`${button.secondary} w-full text-[10px] py-1 border-[var(--color-status-error-base)] text-[var(--color-status-error-text)] hover:bg-[var(--color-status-error-muted)]`}
+                >
+                  {isCancelling ? <Loader2 className="w-3 h-3 animate-spin mx-auto" /> : 'Cancelar Suscripción Recurrente'}
+                </button>
+              </div>
             )}
           </div>
 

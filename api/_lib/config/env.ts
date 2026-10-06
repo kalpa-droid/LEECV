@@ -23,4 +23,5 @@ export const env = new Proxy({}, {
   LS_VARIANT_PACK5?: string;
   LS_VARIANT_PACK10?: string;
   LS_VARIANT_PRO?: string;
+  PAYPAL_PRO_PLAN_ID?: string;
 };

@@ -30,32 +30,55 @@ export async function createCheckoutForProvider(
       const price = planData.ars;
       const title = PLAN_TITLES[plan] || 'LEECV - Exportación PDF';
 
-      const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${env.MP_ACCESS_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          items: [
-            {
-              title,
-              quantity: 1,
-              unit_price: price,
-              currency_id: 'ARS',
-            },
-          ],
-          payer: { email },
-          external_reference: JSON.stringify({ exportToken, plan, userId }),
-          back_urls: {
-            success: `${env.SITE_URL}/?pago=exitoso`,
-            failure: `${env.SITE_URL}/?pago=fallido`,
-            pending: `${env.SITE_URL}/?pago=pendiente`,
+      let response;
+      if (plan === 'pro') {
+        response = await fetch('https://api.mercadopago.com/preapproval', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${env.MP_ACCESS_TOKEN}`,
+            'Content-Type': 'application/json',
           },
-          auto_return: 'approved',
-          notification_url: `${env.SITE_URL}/api/mercadopago-webhook`,
-        }),
-      });
+          body: JSON.stringify({
+            reason: title,
+            external_reference: JSON.stringify({ exportToken, plan, userId }),
+            payer_email: email,
+            auto_recurring: {
+              frequency: 1,
+              frequency_type: 'months',
+              transaction_amount: price,
+              currency_id: 'ARS'
+            },
+            back_url: `${env.SITE_URL}/?pago=exitoso`
+          }),
+        });
+      } else {
+        response = await fetch('https://api.mercadopago.com/checkout/preferences', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${env.MP_ACCESS_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            items: [
+              {
+                title,
+                quantity: 1,
+                unit_price: price,
+                currency_id: 'ARS',
+              },
+            ],
+            payer: { email },
+            external_reference: JSON.stringify({ exportToken, plan, userId }),
+            back_urls: {
+              success: `${env.SITE_URL}/?pago=exitoso`,
+              failure: `${env.SITE_URL}/?pago=fallido`,
+              pending: `${env.SITE_URL}/?pago=pendiente`,
+            },
+            auto_return: 'approved',
+            notification_url: `${env.SITE_URL}/api/mercadopago-webhook`,
+          }),
+        });
+      }
 
       const data: any = await response.json();
       if (!response.ok || !data.init_point) throw new Error(`Error MP: ${data.message || JSON.stringify(data)}`);
@@ -79,33 +102,61 @@ export async function createCheckoutForProvider(
       const tokenData: any = await tokenRes.json();
       if (!tokenRes.ok) throw new Error(`PayPal Auth Error: ${tokenData.error_description || tokenData.error}`);
 
-      const orderRes = await fetch(`${baseUrl}/v2/checkout/orders`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${tokenData.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          intent: 'CAPTURE',
-          purchase_units: [
-            {
-              amount: {
-                currency_code: 'USD',
-                value: priceStr,
-              },
-              custom_id: JSON.stringify({ exportToken, plan, userId }),
-              description: `LEECV Export (${plan})`,
-            },
-          ],
-          application_context: {
-            brand_name: 'LEECV',
-            landing_page: 'NO_PREFERENCE',
-            user_action: 'PAY_NOW',
-            return_url: `${env.SITE_URL}/?pago=exitoso`,
-            cancel_url: `${env.SITE_URL}/?pago=fallido`,
+      let orderRes;
+      if (plan === 'pro') {
+        if (!env.PAYPAL_PRO_PLAN_ID) {
+          throw new Error('No está configurado PAYPAL_PRO_PLAN_ID');
+        }
+        orderRes = await fetch(`${baseUrl}/v1/billing/subscriptions`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${tokenData.access_token}`,
+            'Content-Type': 'application/json',
           },
-        }),
-      });
+          body: JSON.stringify({
+            plan_id: env.PAYPAL_PRO_PLAN_ID,
+            custom_id: JSON.stringify({ exportToken, plan, userId }),
+            subscriber: {
+              email_address: email
+            },
+            application_context: {
+              brand_name: 'LEECV',
+              landing_page: 'NO_PREFERENCE',
+              user_action: 'SUBSCRIBE_NOW',
+              return_url: `${env.SITE_URL}/?pago=exitoso`,
+              cancel_url: `${env.SITE_URL}/?pago=fallido`,
+            }
+          })
+        });
+      } else {
+        orderRes = await fetch(`${baseUrl}/v2/checkout/orders`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${tokenData.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            intent: 'CAPTURE',
+            purchase_units: [
+              {
+                amount: {
+                  currency_code: 'USD',
+                  value: priceStr,
+                },
+                custom_id: JSON.stringify({ exportToken, plan, userId }),
+                description: `LEECV Export (${plan})`,
+              },
+            ],
+            application_context: {
+              brand_name: 'LEECV',
+              landing_page: 'NO_PREFERENCE',
+              user_action: 'PAY_NOW',
+              return_url: `${env.SITE_URL}/?pago=exitoso`,
+              cancel_url: `${env.SITE_URL}/?pago=fallido`,
+            },
+          }),
+        });
+      }
 
       const orderData: any = await orderRes.json();
       if (!orderRes.ok) throw new Error(`Error PayPal Order: ${JSON.stringify(orderData)}`);

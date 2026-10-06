@@ -87,11 +87,27 @@ export const mercadoPagoProvider: PaymentProvider = {
   },
 
   extractPaymentData: async ({ parsedBody }: WebhookVerifyContext): Promise<PaymentDetails | null> => {
-    const { type, data } = parsedBody || {};
-    if (type !== 'payment' || !data?.id) return null;
+    const { type, data, action } = parsedBody || {};
+    if (!data?.id) return null;
 
     const mpToken = env.MP_ACCESS_TOKEN;
     if (!mpToken) return null;
+
+    if (type === 'subscription_preapproval' || parsedBody?.topic === 'subscription_preapproval') {
+      const subRes = await fetch(`https://api.mercadopago.com/preapproval/${data.id}`, {
+        headers: { Authorization: `Bearer ${mpToken}` },
+      });
+      const sub: any = await subRes.json();
+
+      if (sub.status === 'cancelled') {
+        const { serverDal } = await import('../serverDal.js');
+        await serverDal.profiles.downgradeSubscription({ mp_preapproval_id: String(data.id) });
+        console.log(`[MercadoPago] Suscripción ${data.id} cancelada, downgrade a free.`);
+      }
+      return null;
+    }
+
+    if (type !== 'payment') return null;
 
     const paymentRes = await fetch(`https://api.mercadopago.com/v1/payments/${data.id}`, {
       headers: { Authorization: `Bearer ${mpToken}` },
@@ -117,6 +133,7 @@ export const mercadoPagoProvider: PaymentProvider = {
       externalId: String(payment.id),
       amount: payment.transaction_amount,
       currency: payment.currency_id || 'ARS',
+      subscriptionId: payment.preapproval_id || payment.order?.id || null,
       details: payment,
     };
   },
