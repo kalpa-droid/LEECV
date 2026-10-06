@@ -13,7 +13,7 @@ import { savePlanner, loadPlannerById } from '../../shared/core/storage/document
 import { useToast } from '../../shared/core/ui/Toast';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
 import { exportDocumentToPDF } from '../../shared/core/pdf-engine/pdfExporter';
-import { usePageAwareCreditGate } from '../../shared/core/hooks/usePageAwareCreditGate';
+import { useExportEntitlement } from '../../shared/core/entitlements/useExportEntitlement';
 import PdfCheckoutModal from '../cv-builder/components/modals/PdfCheckoutModal';
 import { inferDocumentTypeId } from '../../shared/core/capabilities/capabilityRegistry';
 import { PlannerMonthOverride } from '../../shared/core/pdf-engine/layers/records/plannerDataAdapter';
@@ -107,7 +107,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState<boolean>(false);
   
-  const { consumeCredits, isGating } = usePageAwareCreditGate();
+  const { consumeCreditIfNeeded } = useExportEntitlement();
 
   const [plannerId] = useState<string>(() => resolveDocumentIdWithHandoff(activeTabId, 'planner'));
 
@@ -205,7 +205,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   };
 
   const handlePrint = async () => {
-    const allowed = await consumeCredits(1);
+    const allowed = await consumeCreditIfNeeded();
     if (!allowed) {
       setIsCheckoutOpen(true);
       return;

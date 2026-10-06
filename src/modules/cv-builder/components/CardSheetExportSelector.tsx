@@ -9,7 +9,7 @@ import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
 
 import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 
-import { usePageAwareCreditGate } from '../../../shared/core/hooks/usePageAwareCreditGate';
+import { useExportEntitlement } from '../../../shared/core/entitlements/useExportEntitlement';
 import PdfCheckoutModal from './modals/PdfCheckoutModal';
 
 const CARD_SIZE_OPTIONS = [
@@ -29,7 +29,7 @@ interface CardSheetExportSelectorProps {
 
 export function CardSheetExportSelector({ preset, cardData, onExported }: CardSheetExportSelectorProps) {
   const { showError, showSuccess } = useToast();
-  const { consumeCredits, isGating, gateError } = usePageAwareCreditGate();
+  const { consumeCreditIfNeeded, loading: isGating } = useExportEntitlement();
   const [cardSizeId, setCardSizeId] = useState('tarjeta_estandar');
   const [customWidthMm, setCustomWidthMm] = useState(85);
   const [customHeightMm, setCustomHeightMm] = useState(55);
@@ -56,7 +56,7 @@ export function CardSheetExportSelector({ preset, cardData, onExported }: CardSh
   }, [trimSize, sheetSize, printerMode, preset.print]);
 
   const handleExport = async () => {
-    const allowed = await consumeCredits(1);
+    const allowed = await consumeCreditIfNeeded();
     if (!allowed) {
       setIsCheckoutOpen(true);
       return;

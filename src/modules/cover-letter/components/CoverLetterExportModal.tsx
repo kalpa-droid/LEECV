@@ -5,7 +5,7 @@ import { useToast } from '../../../shared/core/ui/Toast';
 import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
 import { downloadBlob } from '../../../shared/core/utils/downloadUtils';
 import { exportCoverLetterToDocx } from '../../../shared/core/export/docxExporter';
-import { usePageAwareCreditGate } from '../../../shared/core/hooks/usePageAwareCreditGate';
+import { useExportEntitlement } from '../../../shared/core/entitlements/useExportEntitlement';
 import PdfCheckoutModal from '../../cv-builder/components/modals/PdfCheckoutModal';
 
 import { button, elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
@@ -19,7 +19,7 @@ interface CoverLetterExportModalProps {
 
 export function CoverLetterExportModal({ isOpen, onClose, cvData, presetId = 'carta-clasica' }: CoverLetterExportModalProps) {
   const { showError, showSuccess } = useToast();
-  const { consumeCredits, isGating, gateError } = usePageAwareCreditGate();
+  const { consumeCreditIfNeeded, loading: isGating } = useExportEntitlement();
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [isExportingDocx, setIsExportingDocx] = useState(false);
   
@@ -28,7 +28,7 @@ export function CoverLetterExportModal({ isOpen, onClose, cvData, presetId = 'ca
   const [hasReviewed, setHasReviewed] = useState(false);
 
   const handleExportPdf = async () => {
-    const allowed = await consumeCredits(1);
+    const allowed = await consumeCreditIfNeeded();
     if (!allowed) {
       setPendingAction('pdf');
       setIsCheckoutOpen(true);
@@ -53,7 +53,7 @@ export function CoverLetterExportModal({ isOpen, onClose, cvData, presetId = 'ca
   };
 
   const handleExportDocx = async () => {
-    const allowed = await consumeCredits(1);
+    const allowed = await consumeCreditIfNeeded();
     if (!allowed) {
       setPendingAction('docx');
       setIsCheckoutOpen(true);

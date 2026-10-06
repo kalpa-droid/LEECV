@@ -5,7 +5,7 @@ import { calculateFinalBookPageCount } from '../../shared/core/book-engine/bookP
 import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 
-import { usePageAwareCreditGate } from '../../shared/core/hooks/usePageAwareCreditGate';
+import { useExportEntitlement } from '../../shared/core/entitlements/useExportEntitlement';
 import PdfCheckoutModal from '../cv-builder/components/modals/PdfCheckoutModal';
 
 interface BookPreviewExportStepProps {
@@ -22,7 +22,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   onPrevStep,
 }) => {
   const t = useText();
-  const { consumeCredits, isGating, gateError } = usePageAwareCreditGate();
+  const { consumeCreditIfNeeded, loading: isGating } = useExportEntitlement();
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progressPercent, setProgressPercent] = useState(0);
@@ -58,9 +58,9 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   const totalSheetsToPrint = finalPageCount / 2;
 
   const handleStartExport = async () => {
-    const allowed = await consumeCredits(finalPageCount);
+    const allowed = await consumeCreditIfNeeded();
     if (!allowed) {
-      if (gateError) setErrorMsg(gateError);
+      setErrorMsg('No tenés créditos suficientes.');
       setIsCheckoutOpen(true);
       return;
     }

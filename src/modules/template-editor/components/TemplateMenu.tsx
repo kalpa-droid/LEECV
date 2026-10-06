@@ -3,7 +3,7 @@ import { PRESET_LIST } from '../../../shared/core/pdf-engine/layers/presets/pres
 import {} from '../../../shared/core/pdf-engine/layers/presets/presetSchema';
 import { FileText, CreditCard, Download, Printer, Layers } from 'lucide-react';
 import { exportBusinessCardSheetToPDF } from '../../../shared/core/pdf-engine/cardSheetExporter';
-import { usePageAwareCreditGate } from '../../../shared/core/hooks/usePageAwareCreditGate';
+import { useExportEntitlement } from '../../../shared/core/entitlements/useExportEntitlement';
 import PdfCheckoutModal from '../../cv-builder/components/modals/PdfCheckoutModal';
 
 import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
@@ -18,12 +18,12 @@ export function TemplateMenu({ activePresetId, onSelectPreset, cvData }: Templat
   const [isExporting, setIsExporting] = React.useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = React.useState(false);
 
-  const { consumeCredits } = usePageAwareCreditGate();
+  const { consumeCreditIfNeeded } = useExportEntitlement();
 
   const activePreset = PRESET_LIST.find(p => p.id === activePresetId) || PRESET_LIST[0];
 
   const handleDownload = async () => {
-    const allowed = await consumeCredits(1);
+    const allowed = await consumeCreditIfNeeded();
     if (!allowed) {
       setIsCheckoutOpen(true);
       return;

@@ -184,6 +184,23 @@ export default function PdfCheckoutModal({
                   {formatPrice('single_pdf', 'usd')}
                 </span>
               </button>
+
+              <button
+                onClick={() => handleCheckout('paypal')}
+                disabled={isProcessing}
+                className={`w-full p-3 ${button.providerBrand('paypal')} rounded-[${radius.modal}] transition flex items-center justify-between cursor-pointer`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <CreditCard className="w-5 h-5" />
+                  <div className="text-left">
+                    <p className="leading-tight">Pagar con PayPal</p>
+                    <p className="text-[10px] opacity-80 font-bold">Saldo o tarjeta internacional</p>
+                  </div>
+                </div>
+                <span className={`px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] rounded-[${radius.control}] text-[10px] font-black`}>
+                  {formatPrice('single_pdf', 'usd')}
+                </span>
+              </button>
             </div>
           </div>
 

@@ -123,7 +123,7 @@ export function StorageDriveTab() {
       </div>
 
       {/* Metrics Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Supabase Status */}
         <div className={`p-4 bg-[var(--color-neutral-surface-muted)] rounded-[${radius.modal}] border border-[var(--color-neutral-border)] space-y-2`}>
           <div className="flex items-center justify-between">
@@ -158,17 +158,6 @@ export function StorageDriveTab() {
           <p className="text-[11px] text-[var(--color-neutral-text-secondary)]">Caché ilimitada persistente en cliente</p>
         </div>
 
-        {/* Storage Health Status */}
-        <div className={`p-4 bg-[var(--color-neutral-surface-muted)] rounded-[${radius.modal}] border border-[var(--color-neutral-border)] space-y-2`}>
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[var(--color-neutral-text-secondary)] uppercase">Google Drive</span>
-            <Cpu className="w-4 h-4 text-[var(--color-neutral-text-muted)]" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-xl font-black text-[var(--color-neutral-text-primary)]">Próximamente</span>
-          </div>
-          <p className="text-[11px] text-[var(--color-neutral-text-secondary)]">Integración con Google Drive en desarrollo</p>
-        </div>
       </div>
 
       {/* Diagnostic & Maintenance Tools */}

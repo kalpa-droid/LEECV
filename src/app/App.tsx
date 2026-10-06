@@ -24,7 +24,7 @@ import { CookieConsentBanner } from '../shared/core/ui/CookieConsentBanner';
 import { useEntitlements } from '../shared/core/entitlements/useEntitlements';
 import { navigation } from '../shared/core/utils/navigation';
 import { AppModals } from './AppModals';
-import { usePageAwareCreditGate } from '../shared/core/hooks/usePageAwareCreditGate';
+import { useExportEntitlement } from '../shared/core/entitlements/useExportEntitlement';
 import { dal } from '../shared/core/storage/dataAccessLayer';
 
 import { CVProvider, useCVContext } from '../context/CVContext';
@@ -241,7 +241,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const [, setPdfProgress] = useState(0);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isPdfComplete, setIsPdfComplete] = useState(false);
-  const { consumeCredits } = usePageAwareCreditGate();
+  const { consumeCreditIfNeeded } = useExportEntitlement();
   const [mobileTabState, setMobileTabState] = useState('editor');
 
   const [isPdfCheckoutOpen, setIsPdfCheckoutOpen] = useState(false);
@@ -386,7 +386,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   };
 
   const handleExportAtsPdf = async (omitSensitiveData: boolean = false) => {
-    const allowed = await consumeCredits(1);
+    const allowed = await consumeCreditIfNeeded();
     if (!allowed) {
       setPdfCheckoutPurpose('export');
       setIsPdfCheckoutOpen(true);
@@ -452,7 +452,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const triggerPdfGeneration = handleStartPDFGeneration;
 
   const proceedWithExport = async () => {
-    const allowed = await consumeCredits(1);
+    const allowed = await consumeCreditIfNeeded();
     if (!allowed) {
       setPdfCheckoutPurpose('export');
       setIsPdfCheckoutOpen(true);

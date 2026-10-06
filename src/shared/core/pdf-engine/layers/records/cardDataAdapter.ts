@@ -57,7 +57,7 @@ export async function buildCardDataFromCV(
     ? `${origin}/c/${publishedSlug}`
     : undefined;
 
-  const publicProfileUrl = publishedCvUrl || `${origin}/?publicCv=${cvData?.id || ''}`;
+  const publicProfileUrl = publishedCvUrl; // Si no hay URL publicada real, el generador usará vCard.
   const activePreset = resolveActivePreset(cvData);
 
   const qrDataUrl = await generateVCardQRCodeDataUrl({

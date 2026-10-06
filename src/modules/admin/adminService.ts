@@ -75,20 +75,7 @@ export async function sendRetentionOffer(userId: string, { discountPercent = 50,
   });
 }
 
-export async function listDriveConnections(): Promise<UserProfile[]> {
-  return await dal.profiles.listConnectedDrives();
-}
 
-export async function disconnectUserDrive(userId: string) {
-  const { ok, data, error } = await apiClient.post('/api/drive/disconnect', { targetUserId: userId });
-  if (!ok) throw new Error(error || 'No se pudo desconectar Drive');
-  await logAdminAction('disconnect_user_drive', userId);
-  return data;
-}
-
-export async function listOrganizationsStorage(): Promise<Organization[]> {
-  return await dal.organizations.list();
-}
 
 export async function getIntegrationsStatus(forcePing = false) {
   const query = forcePing ? '?forcePing=true' : '';
