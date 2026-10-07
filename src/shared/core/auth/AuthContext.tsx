@@ -1,15 +1,18 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { UserProfile } from '../../../types/user';
-import { getCurrentProfile, onAuthStateChange, login as authLogin, logout as authLogout, signup as authSignup } from './authService';
+import { getCurrentProfile, onAuthStateChange, login as authLogin, logout as authLogout, signup as authSignup, resetPasswordForEmail as authResetPassword, updatePassword as authUpdatePassword } from './authService';
 
 interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   isLoading: boolean;
+  isPasswordRecovery: boolean;
   login: typeof authLogin;
   signup: typeof authSignup;
   logout: typeof authLogout;
+  resetPasswordForEmail: typeof authResetPassword;
+  updatePassword: typeof authUpdatePassword;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,6 +21,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -41,7 +45,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initAuth();
 
-    const { data: authListener } = onAuthStateChange(async (sessionUser) => {
+    const { data: authListener } = onAuthStateChange(async (sessionUser, event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsPasswordRecovery(true);
+      } else if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+        setIsPasswordRecovery(false);
+      }
+
       setUser(sessionUser);
       if (sessionUser) {
         const p = await getCurrentProfile();
@@ -64,9 +74,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         profile,
         isLoading,
+        isPasswordRecovery,
         login: authLogin,
         signup: authSignup,
         logout: authLogout,
+        resetPasswordForEmail: authResetPassword,
+        updatePassword: authUpdatePassword,
       }}
     >
       {children}

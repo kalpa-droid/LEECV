@@ -2,7 +2,7 @@ import { CVData } from '../../../types/cv';
 import { sanitizeCvData } from './cvDataSchema';
 import { downloadBlob } from './downloadUtils';
 
-import { splitCvDataForDrive, reconstructCvDataFromParts } from '../storage/driveDocumentPackager';
+import { splitCvDataForAssets, reconstructCvDataFromParts } from '../storage/assetDocumentPackager';
 import { migrateCvData } from '../storage/cvMigrationEngine';
 
 export function exportCVToJson(cvData: CVData | null | undefined): void {
@@ -73,7 +73,7 @@ export async function exportCVToZip(cvData: CVData | null | undefined): Promise<
     'Postulante'
   ).trim();
 
-  const { cleanCvData, binaryAssets } = await splitCvDataForDrive(cvData);
+  const { cleanCvData, binaryAssets } = await splitCvDataForAssets(cvData);
   const { default: JSZip } = await import('jszip');
   const zip = new JSZip();
 
@@ -154,7 +154,7 @@ export async function exportAllCVsToZip(cvList: any[], candidateName: string = '
     const title = (item.title || cvData?.personalInfo?.fullName || `CV_${i + 1}`).replace(/[^\w\s-]/gi, '_');
 
     if (cvData) {
-      const { cleanCvData, binaryAssets } = await splitCvDataForDrive(cvData);
+      const { cleanCvData, binaryAssets } = await splitCvDataForAssets(cvData);
       const cvSubfolder = rootFolder?.folder(title);
 
       if (cvSubfolder) {
