@@ -20,7 +20,7 @@ export async function sendPurchaseReceipt(toEmail: string, planLabel: string, am
           <td style="padding: 10px; text-align: right;">${orderId}</td>
         </tr>
       </table>
-      <p>Tus créditos / plan ya han sido acreditados en tu cuenta. Puedes ir a <a href="https://leecv.com">LEECV</a> para empezar a usarlos.</p>
+      <p>Tus créditos / plan ya han sido acreditados en tu cuenta. Puedes ir a <a href="https://leecv.app">LEECV</a> para empezar a usarlos.</p>
       <p>Si tienes alguna consulta, puedes responder a este correo.</p>
       <p>Saludos,<br>El equipo de LEECV.</p>
     </div>
@@ -34,7 +34,7 @@ export async function sendPurchaseReceipt(toEmail: string, planLabel: string, am
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'LEECV Pagos <pagos@leecv.com>',
+        from: 'LEECV Pagos <pagos@leecv.app>',
         to: [toEmail],
         subject: `Recibo de tu compra: ${planLabel}`,
         html: htmlContent

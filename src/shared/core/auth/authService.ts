@@ -29,6 +29,26 @@ export async function signup(email: string, password: string, fullName?: string)
   return data.user;
 }
 
+/**
+ * Solicita el restablecimiento de contraseña.
+ */
+export async function resetPasswordForEmail(email: string) {
+  if (!supabase) throw new Error('Supabase no está configurado');
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/`,
+  });
+  if (error) throw error;
+}
+
+/**
+ * Actualiza la contraseña del usuario actual.
+ */
+export async function updatePassword(password: string) {
+  if (!supabase) throw new Error('Supabase no está configurado');
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) throw error;
+}
+
 export async function logout(): Promise<void> {
   if (supabase) {
     try {
@@ -92,7 +112,7 @@ export async function getCurrentProfile(): Promise<UserProfile | null> {
   } as UserProfile;
 }
 
-export function onAuthStateChange(callback: (user: any) => void) {
+export function onAuthStateChange(callback: (user: any, event?: string) => void) {
   if (!supabase) return { data: { subscription: { unsubscribe() {} } } };
-  return supabase.auth.onAuthStateChange((_event, session) => callback(session?.user ?? null));
+  return supabase.auth.onAuthStateChange((event, session) => callback(session?.user ?? null, event));
 }

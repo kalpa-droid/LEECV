@@ -28,6 +28,7 @@ import { useExportEntitlement } from '../shared/core/entitlements/useExportEntit
 import { dal } from '../shared/core/storage/dataAccessLayer';
 
 import { CVProvider, useCVContext } from '../context/CVContext';
+import { useAuth } from '../shared/core/auth/AuthContext';
 import { ToastProvider, useToast } from '../shared/core/ui/Toast';
 import { useConfirm, ConfirmProvider } from '../shared/core/ui/ConfirmDialog';
 
@@ -89,6 +90,14 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const [isCreditsModalOpen, setIsCreditsModalOpen] = useState(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  const { isPasswordRecovery } = useAuth();
+
+  useEffect(() => {
+    if (isPasswordRecovery) {
+      setIsLoginModalOpen(true);
+    }
+  }, [isPasswordRecovery]);
 
 
   const [globalUiTheme, setGlobalUiTheme] = useState<string>(() => {

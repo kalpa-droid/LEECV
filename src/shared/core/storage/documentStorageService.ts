@@ -5,7 +5,7 @@ import { idbStorage } from './storageIndexedDB';
 import { SaveDocumentResult, DocumentRecord } from '../../../types/document';
 import { getDocumentTypeConfig, hasCapability } from '../capabilities/capabilityRegistry';
 import { getMonthNameEs } from '../utils/formatDate';
-import { dedupAssetsForLocalStorage, reconstructCvDataFromParts } from './driveDocumentPackager';
+import { dedupAssetsForLocalStorage, reconstructCvDataFromParts } from './assetDocumentPackager';
 import { migrateCvData } from './cvMigrationEngine';
 import { reportSilentError } from '../utils/errorHandler';
 
