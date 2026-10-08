@@ -19,7 +19,7 @@ describe('grant_export_tokens concurrency & isolation guard', () => {
         throw new Error(`[SEGURIDAD] Supabase URL inválida: ${supabaseUrl}`);
       }
 
-      const ALLOWED_LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1', '0.0.0.0']);
+      const ALLOWED_LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '[::1]', '::1', '0.0.0.0']);
       if (!ALLOWED_LOCAL_HOSTNAMES.has(parsedUrl.hostname)) {
         throw new Error(
           `[SEGURIDAD] Intento bloqueado: la prueba de concurrencia solo puede ejecutarse contra endpoints locales estrictos (${Array.from(ALLOWED_LOCAL_HOSTNAMES).join(', ')}). Host recibido: ${parsedUrl.hostname}`
@@ -39,8 +39,7 @@ describe('grant_export_tokens concurrency & isolation guard', () => {
     });
 
     if (createError || !newUser?.user) {
-      console.warn('Omitiendo prueba de integración: No se pudo crear usuario efímero local');
-      return;
+      throw new Error(`[PRUEBA] Falló la creación del usuario efímero local: ${createError?.message}`);
     }
 
     const testUserId = newUser.user.id;

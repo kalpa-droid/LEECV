@@ -1,9 +1,9 @@
 -- Migration: 20261012_secure_sales_and_export_entitlements.sql
 -- Objetivo: Blindar la emisión y consumo de tokens de exportación frente a accesos cruzados y ejecución no autorizada,
--- garantizar la idempotencia y atomicidad en la extensión de suscripciones Pro con compatibilidad histórica,
--- y asegurar search_path mínimo con referencias calificadas.
+-- garantizar la idempotencia y atomicidad en la extensión de suscripciones Pro con compatibilidad histórica aislada por proveedor,
+-- asegurar search_path mínimo con referencias calificadas y unicidad en pending_grants.
 
--- 1. Asegurar tablas de idempotencia de grants y estado de derechos en pagos procesados
+-- 1. Asegurar tablas de idempotencia de grants, unicidad en pending_grants y estado de derechos en pagos procesados
 CREATE TABLE IF NOT EXISTS public.pdf_export_token_grants (
   payment_id TEXT PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id),
@@ -24,6 +24,19 @@ ALTER TABLE public.pro_subscription_grants ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE public.processed_payments
   ADD COLUMN IF NOT EXISTS entitlement_status text DEFAULT 'completed';
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'unq_pending_grants_provider_external_id'
+  ) THEN
+    ALTER TABLE public.pending_grants
+      ADD CONSTRAINT unq_pending_grants_provider_external_id UNIQUE (provider, external_id);
+  END IF;
+EXCEPTION WHEN duplicate_table OR duplicate_object THEN
+  NULL;
+END;
+$$;
 
 
 -- 2. Función grant_export_tokens blindada
@@ -49,15 +62,29 @@ BEGIN
     RAISE EXCEPTION 'p_amount must be a positive integer' USING ERRCODE = '22003';
   END IF;
 
-  -- 1. Idempotencia y compatibilidad histórica:
-  -- Detecta si ya existe el grant bajo la clave canónica (ej. 'mercadopago:123') o la clave histórica cruda (ej. '123')
+  -- 1. Idempotencia y compatibilidad histórica aislada por proveedor:
   IF p_payment_id IS NOT NULL AND pg_catalog.btrim(p_payment_id) <> '' THEN
+    -- A. Coincidencia exacta con la clave canónica o directa
     IF EXISTS (
       SELECT 1 FROM public.pdf_export_token_grants
       WHERE payment_id = p_payment_id
-         OR (p_payment_id LIKE '%:%' AND payment_id = pg_catalog.split_part(p_payment_id, ':', 2))
     ) THEN
       RETURN true;
+    END IF;
+
+    -- B. Compatibilidad histórica con grants previos sin prefijo:
+    -- Requiere que el ID crudo coincida Y que en processed_payments pertenezca al MISMO proveedor,
+    -- previniendo cualquier colisión entre proveedores con identificadores numéricos idénticos.
+    IF p_payment_id LIKE '%:%' THEN
+      IF EXISTS (
+        SELECT 1 
+        FROM public.pdf_export_token_grants g
+        JOIN public.processed_payments p ON p.external_id = g.payment_id
+        WHERE g.payment_id = pg_catalog.split_part(p_payment_id, ':', 2)
+          AND p.provider = pg_catalog.split_part(p_payment_id, ':', 1)
+      ) THEN
+        RETURN true;
+      END IF;
     END IF;
 
     BEGIN
@@ -175,13 +202,11 @@ BEGIN
     RAISE EXCEPTION 'p_days must be a positive integer' USING ERRCODE = '22003';
   END IF;
 
-  -- 1. Idempotencia y compatibilidad histórica:
-  -- Detecta si ya existe el grant bajo la clave canónica o la clave cruda
+  -- 1. Idempotencia exacta: si ya se procesó este payment_id, no duplicar días
   IF p_payment_id IS NOT NULL AND pg_catalog.btrim(p_payment_id) <> '' THEN
     IF EXISTS (
       SELECT 1 FROM public.pro_subscription_grants
       WHERE payment_id = p_payment_id
-         OR (p_payment_id LIKE '%:%' AND payment_id = pg_catalog.split_part(p_payment_id, ':', 2))
     ) THEN
       RETURN true;
     END IF;
