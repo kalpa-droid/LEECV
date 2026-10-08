@@ -172,4 +172,81 @@ describe('applyPayment Unit Tests', () => {
     expect(serverDal.processedPayments.record).not.toHaveBeenCalled();
     expect(serverDal.pendingGrants.create).toHaveBeenCalled();
   });
+
+  it('debe otorgar suscripción Pro de forma atómica e idempotente vía grant_pro_subscription', async () => {
+    vi.mocked(serverDal.processedPayments.record).mockResolvedValueOnce(undefined as any);
+    vi.mocked(serverDal.profiles.getByEmail).mockResolvedValueOnce({ id: 'user_pro_1' } as any);
+    vi.mocked(serverDal.adminNotifications.create).mockResolvedValueOnce(undefined as any);
+
+    const payment: PaymentDetails = {
+      userId: 'user_pro_1',
+      email: 'pro@test.com',
+      plan: 'pro',
+      metodoPago: 'mercadopago',
+      externalId: 'mp_pro_123',
+      amount: 27000,
+      currency: 'ARS',
+    };
+
+    const res = await applyPayment(fakeAdminClient, payment);
+    expect(res).toEqual({ type: 'payment_applied', plan: 'pro', exportToken: undefined });
+    expect(fakeAdminClient.rpc).toHaveBeenCalledWith('grant_pro_subscription', {
+      p_payment_id: 'mp_pro_123',
+      p_user_id: 'user_pro_1',
+      p_days: 30
+    });
+    expect(serverDal.processedPayments.updateEntitlementStatus).toHaveBeenCalledWith('mercadopago', 'mp_pro_123', 'completed');
+  });
+
+  it('debe recuperar suscripción Pro en reintento de webhook con entitlement pendiente', async () => {
+    const error: any = new Error('duplicate key value violates unique constraint "unq_provider_external_id"');
+    error.code = '23505';
+    vi.mocked(serverDal.processedPayments.record).mockRejectedValueOnce(error);
+    vi.mocked(serverDal.processedPayments.getByProviderAndExternalId).mockResolvedValueOnce({
+      id: 'pay_pro_retry',
+      plan: 'pro',
+      entitlement_status: 'pending',
+    });
+    vi.mocked(serverDal.profiles.getByEmail).mockResolvedValue({ id: 'user_pro_retry' } as any);
+    vi.mocked(serverDal.adminNotifications.create).mockResolvedValueOnce(undefined as any);
+
+    const payment: PaymentDetails = {
+      userId: 'user_pro_retry',
+      email: 'pro_retry@test.com',
+      plan: 'pro',
+      metodoPago: 'mercadopago',
+      externalId: 'mp_pro_retry_456',
+    };
+
+    const res = await applyPayment(fakeAdminClient, payment);
+    expect(res).toEqual({ type: 'payment_applied', plan: 'pro', exportToken: undefined });
+    expect(fakeAdminClient.rpc).toHaveBeenCalledWith('grant_pro_subscription', {
+      p_payment_id: 'mp_pro_retry_456',
+      p_user_id: 'user_pro_retry',
+      p_days: 30
+    });
+    expect(serverDal.processedPayments.updateEntitlementStatus).toHaveBeenCalledWith('mercadopago', 'mp_pro_retry_456', 'completed');
+  });
+
+  it('debe propagar el error si updateEntitlementStatus falla en la base de datos', async () => {
+    vi.mocked(serverDal.processedPayments.record).mockResolvedValueOnce(undefined as any);
+    vi.mocked(serverDal.profiles.getByEmail).mockResolvedValueOnce({ id: 'user_pro_fail' } as any);
+    vi.mocked(serverDal.processedPayments.updateEntitlementStatus).mockRejectedValueOnce(
+      new Error('[processedPayments] Error actualizando entitlement_status: connection terminated')
+    );
+
+    const payment: PaymentDetails = {
+      userId: 'user_pro_fail',
+      email: 'pro_fail@test.com',
+      plan: 'pro',
+      metodoPago: 'mercadopago',
+      externalId: 'mp_pro_fail_789',
+      amount: 27000,
+      currency: 'ARS',
+    };
+
+    await expect(applyPayment(fakeAdminClient, payment)).rejects.toThrow(
+      'Error actualizando entitlement_status'
+    );
+  });
 });

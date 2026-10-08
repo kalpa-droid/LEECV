@@ -137,7 +137,9 @@ export const serverDal = {
         .eq('provider', provider)
         .eq('external_id', external_id);
 
-      if (error) console.error(`[processedPayments] Error actualizando entitlement_status: ${error.message}`);
+      if (error) {
+        throw new Error(`[processedPayments] Error actualizando entitlement_status: ${error.message}`);
+      }
     }
   },
 

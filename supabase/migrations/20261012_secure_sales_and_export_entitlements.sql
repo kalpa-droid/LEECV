@@ -1,7 +1,8 @@
 -- Migration: 20261012_secure_sales_and_export_entitlements.sql
--- Objetivo: Blindar la emisión y consumo de tokens de exportación frente a accesos cruzados y ejecución no autorizada.
+-- Objetivo: Blindar la emisión y consumo de tokens de exportación frente a accesos cruzados y ejecución no autorizada,
+-- así como garantizar la idempotencia y atomicidad en la extensión de suscripciones Pro.
 
--- 1. Asegurar tabla de idempotencia de grants y estado de derechos en pagos procesados
+-- 1. Asegurar tablas de idempotencia de grants y estado de derechos en pagos procesados
 CREATE TABLE IF NOT EXISTS public.pdf_export_token_grants (
   payment_id TEXT PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id),
@@ -10,6 +11,15 @@ CREATE TABLE IF NOT EXISTS public.pdf_export_token_grants (
 );
 
 ALTER TABLE public.pdf_export_token_grants ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE IF NOT EXISTS public.pro_subscription_grants (
+  payment_id TEXT PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id),
+  days_granted INT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.pro_subscription_grants ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE public.processed_payments
   ADD COLUMN IF NOT EXISTS entitlement_status text DEFAULT 'completed';
@@ -26,7 +36,7 @@ CREATE OR REPLACE FUNCTION public.grant_export_tokens(
 RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = pg_catalog, pg_temp
+SET search_path = public, auth, pg_catalog, pg_temp
 AS $$
 BEGIN
   -- Validaciones estrictas de entrada
@@ -81,7 +91,7 @@ CREATE OR REPLACE FUNCTION public.check_and_consume_export_entitlement(p_user_id
 RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = pg_catalog, pg_temp
+SET search_path = public, auth, pg_catalog, pg_temp
 AS $$
 DECLARE
   v_caller_id UUID;
@@ -127,3 +137,68 @@ $$;
 -- Restringir permisos: denegado a público y anónimo, concedido solo a authenticated
 REVOKE ALL ON FUNCTION public.check_and_consume_export_entitlement(UUID) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.check_and_consume_export_entitlement(UUID) TO authenticated;
+
+
+-- 4. Función grant_pro_subscription blindada e idempotente
+-- Solo ejecutable por backend de confianza (service_role)
+CREATE OR REPLACE FUNCTION public.grant_pro_subscription(
+  p_payment_id TEXT,
+  p_user_id UUID,
+  p_days INT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth, pg_catalog, pg_temp
+AS $$
+DECLARE
+  v_current_vence TIMESTAMPTZ;
+  v_base_date TIMESTAMPTZ;
+  v_new_vence TIMESTAMPTZ;
+BEGIN
+  -- Validaciones estrictas de entrada
+  IF p_user_id IS NULL THEN
+    RAISE EXCEPTION 'p_user_id cannot be null' USING ERRCODE = '22004';
+  END IF;
+
+  IF p_days IS NULL OR p_days <= 0 THEN
+    RAISE EXCEPTION 'p_days must be a positive integer' USING ERRCODE = '22003';
+  END IF;
+
+  -- 1. Idempotencia: Si ya se otorgó para este payment_id, no duplicar días
+  IF p_payment_id IS NOT NULL AND btrim(p_payment_id) <> '' THEN
+    BEGIN
+      INSERT INTO public.pro_subscription_grants (payment_id, user_id, days_granted)
+      VALUES (p_payment_id, p_user_id, p_days);
+    EXCEPTION WHEN unique_violation THEN
+      -- Pago ya procesado y suscripción ya extendida para este payment_id
+      RETURN true;
+    END;
+  END IF;
+
+  -- 2. Bloquear perfil bajo transacción para cálculo atómico de vigencia
+  SELECT plan_vence INTO v_current_vence
+  FROM public.profiles
+  WHERE id = p_user_id
+  FOR UPDATE;
+
+  IF v_current_vence IS NOT NULL AND v_current_vence > now() THEN
+    v_base_date := v_current_vence;
+  ELSE
+    v_base_date := now();
+  END IF;
+
+  v_new_vence := v_base_date + (p_days || ' days')::interval;
+
+  UPDATE public.profiles
+  SET plan = 'pro',
+      plan_vence = v_new_vence
+  WHERE id = p_user_id;
+
+  RETURN true;
+END;
+$$;
+
+-- Restringir permisos estrictamente a service_role
+REVOKE ALL ON FUNCTION public.grant_pro_subscription(TEXT, UUID, INT) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.grant_pro_subscription(TEXT, UUID, INT) TO service_role;

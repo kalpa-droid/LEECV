@@ -141,17 +141,17 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
       return { type: 'pending_grant', message: 'Profile not found, grant held' };
     } else {
       if (planData.id === 'pro') {
-        // Otorgar suscripción Pro (añadir BILLING_CONFIG.PRO_PLAN_DAYS días o a partir de hoy)
-        const currentProfile = await supabaseAdmin.from('profiles').select('plan_vence').eq('id', profileId).single();
-        const currentVence = currentProfile.data?.plan_vence ? new Date(currentProfile.data.plan_vence) : new Date();
-        const now = new Date();
-        const baseDate = currentVence > now ? currentVence : now;
-        
-        const newVence = new Date(baseDate);
-        newVence.setDate(newVence.getDate() + BILLING_CONFIG.PRO_PLAN_DAYS);
+        // Otorgar suscripción Pro de forma atómica e idempotente vía RPC
+        const { error: proGrantError } = await supabaseAdmin.rpc('grant_pro_subscription', {
+          p_payment_id: externalId || null,
+          p_user_id: profileId,
+          p_days: BILLING_CONFIG.PRO_PLAN_DAYS
+        });
 
-        await serverDal.profiles.updateSubscription({ id: profileId }, { plan: 'pro', plan_vence: newVence.toISOString() });
-        console.log(`[applyPayment] Plan Pro otorgado a perfil ${profileId} hasta ${newVence.toISOString()}`);
+        if (proGrantError) {
+          throw new Error(`Error en grant_pro_subscription: ${proGrantError.message}`);
+        }
+        console.log(`[applyPayment] Plan Pro otorgado a perfil ${profileId} de forma idempotente`);
       } else if (planData.id === 'credits_pack_5' || planData.id === 'credits_pack_10') {
         // Otorgar tokens de exportación
         const creditsToGrant = planData.credits || (planData.id === 'credits_pack_5' ? 5 : 10);

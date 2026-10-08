@@ -13,23 +13,15 @@ describe('grant_export_tokens concurrency & isolation guard', () => {
       return;
     }
 
-    // Salvaguarda P0: Rechazar explícitamente cualquier entorno productivo
-    const isLocalOrDisposable = 
+    // Salvaguarda P0: Allowlist ESTRICTA de endpoints locales descartables.
+    // NUNCA permitir ejecución contra URLs remotas (*.supabase.co, leecv.com, etc.),
+    // sin excepciones por variables de entorno.
+    const isStrictlyLocal = 
       supabaseUrl.includes('localhost') || 
-      supabaseUrl.includes('127.0.0.1') || 
-      process.env.SUPABASE_ALLOW_TEST_ENV === 'true';
+      supabaseUrl.includes('127.0.0.1');
 
-    const isProductionUrl = 
-      supabaseUrl.includes('prod') || 
-      supabaseUrl.includes('leecv.com') ||
-      supabaseUrl.includes('supabase.co');
-
-    if (isProductionUrl && process.env.SUPABASE_ALLOW_TEST_ENV !== 'true') {
-      throw new Error(`[SEGURIDAD] Intento de ejecutar prueba de concurrencia contra entorno no descartable (${supabaseUrl}). Abortado.`);
-    }
-
-    if (!isLocalOrDisposable) {
-      console.warn('[SEGURIDAD] Prueba de concurrencia omitida: URL no descartable y SUPABASE_ALLOW_TEST_ENV no activo.');
+    if (!isStrictlyLocal) {
+      console.warn(`[SEGURIDAD] Prueba de concurrencia omitida: ${supabaseUrl} no es un endpoint local descartable.`);
       return;
     }
 
