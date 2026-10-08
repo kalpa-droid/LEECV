@@ -7,6 +7,8 @@ vi.mock('../../api/_lib/serverDal.js', () => {
     serverDal: {
       processedPayments: {
         record: vi.fn(),
+        getByProviderAndExternalId: vi.fn().mockResolvedValue({ entitlement_status: 'completed' }),
+        updateEntitlementStatus: vi.fn(),
       },
       adminNotifications: {
         create: vi.fn(),

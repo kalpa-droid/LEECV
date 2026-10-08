@@ -25,35 +25,9 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
     throw new Error('applyPayment requiere exportToken, userId, o email para habilitar el servicio');
   }
 
-  // 1. Intentar registrar el pago primero para garantizar idempotencia atómica
-  if (externalId && metodoPago) {
-    try {
-      await serverDal.processedPayments.record({
-        provider: metodoPago,
-        external_id: externalId,
-        user_email: email || undefined,
-        user_id: userId || undefined,
-        plan,
-        amount: amount || undefined,
-        currency: currency || undefined,
-      });
-    } catch (err: any) {
-      if (
-        err.code === '23505' || 
-        String(err?.message).includes('unique constraint') || 
-        String(err?.message).includes('duplicate key') ||
-        String(err?.message).includes('unq_provider_external_id')
-      ) {
-        console.log(`[applyPayment] Transacción duplicada omitida (${metodoPago}: ${externalId})`);
-        return { type: 'already_processed', message: 'Payment already recorded' };
-      }
-      throw err;
-    }
-  }
-
   const planData = getPrice(plan);
 
-  // 1.5 Validar amount y currency
+  // 1. Validar amount y currency ANTES de registrar el pago
   if (planData && amount !== undefined && amount !== null && externalId && metodoPago !== 'manual') {
     let expectedAmount = 0;
     let expectedCurrency = 'USD';
@@ -96,6 +70,39 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
         });
 
         return { type: 'held_for_review', message: 'Payment held due to mismatch' };
+      }
+    }
+  }
+
+  // 1.5 Intentar registrar el pago con estado inicial 'pending'
+  if (externalId && metodoPago) {
+    try {
+      await serverDal.processedPayments.record({
+        provider: metodoPago,
+        external_id: externalId,
+        user_email: email || undefined,
+        user_id: userId || undefined,
+        plan,
+        amount: amount || undefined,
+        currency: currency || undefined,
+        entitlement_status: 'pending',
+      });
+    } catch (err: any) {
+      if (
+        err.code === '23505' || 
+        String(err?.message).includes('unique constraint') || 
+        String(err?.message).includes('duplicate key') ||
+        String(err?.message).includes('unq_provider_external_id')
+      ) {
+        // Consultar si el derecho ya fue otorgado con éxito
+        const existing = await serverDal.processedPayments.getByProviderAndExternalId(metodoPago, externalId);
+        if (!existing || existing.entitlement_status === 'completed') {
+          console.log(`[applyPayment] Transacción duplicada omitida (${metodoPago}: ${externalId})`);
+          return { type: 'already_processed', message: 'Payment already recorded' };
+        }
+        console.warn(`[applyPayment] Reintento de pago detectado con derecho pendiente (${metodoPago}: ${externalId}). Recuperando otorgamiento...`);
+      } else {
+        throw err;
       }
     }
   }
@@ -179,6 +186,11 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
     if (updateError) {
       throw new Error(`Error actualizando pdf_export_tokens: ${updateError.message}`);
     }
+  }
+
+  // 2.3 Marcar derecho como completado en el registro de pago para garantizar recuperación idempotente
+  if (externalId && metodoPago) {
+    await serverDal.processedPayments.updateEntitlementStatus(metodoPago, externalId, 'completed');
   }
 
   // 2.5 Enviar recibo de compra

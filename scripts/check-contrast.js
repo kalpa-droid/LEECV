@@ -674,8 +674,10 @@ function auditCodebaseContrast() {
 
   const shouldUpdateBaseline = process.argv.includes('--update-baseline');
 
+  const normalizeKey = (v) => `${v.file.replace(/\\/g, '/')}:${v.theme}:${v.line}:${v.bgToken}:${v.textToken}`;
+
   if (shouldUpdateBaseline) {
-    const currentKeys = violations.map(v => `${v.file}:${v.theme}:${v.line}:${v.bgToken}:${v.textToken}`);
+    const currentKeys = violations.map(normalizeKey);
     fs.writeFileSync(baselinePath, JSON.stringify(currentKeys, null, 2));
     console.log(`\n💾 Baseline de contraste actualizada exitosamente (${currentKeys.length} entradas en ${path.basename(baselinePath)}).`);
     process.exit(0);
@@ -685,7 +687,7 @@ function auditCodebaseContrast() {
   const knownBaselineViolations = [];
 
   for (const v of violations) {
-    const key = `${v.file}:${v.theme}:${v.line}:${v.bgToken}:${v.textToken}`;
+    const key = normalizeKey(v);
     if (baselineSet.has(key)) {
       knownBaselineViolations.push(v);
     } else {

@@ -90,12 +90,14 @@ export const serverDal = {
       user_id?: string;
       user_email?: string;
       plan?: string;
+      entitlement_status?: string;
       details?: any;
     }): Promise<void> {
       const recordToInsert: Record<string, any> = {
         provider: data.provider,
         external_id: data.external_id || '',
         plan: data.plan || 'single_pdf',
+        entitlement_status: data.entitlement_status || 'pending',
         created_at: new Date().toISOString(),
       };
       if (data.user_id) recordToInsert.user_id = data.user_id;
@@ -114,6 +116,28 @@ export const serverDal = {
         errObj.code = error.code;
         throw errObj;
       }
+    },
+
+    async getByProviderAndExternalId(provider: string, external_id: string): Promise<{ id: string; plan: string; entitlement_status?: string } | null> {
+      const { data, error } = await supabaseAdmin
+        .from('processed_payments')
+        .select('id, plan, entitlement_status')
+        .eq('provider', provider)
+        .eq('external_id', external_id)
+        .maybeSingle();
+
+      if (error || !data) return null;
+      return data;
+    },
+
+    async updateEntitlementStatus(provider: string, external_id: string, entitlement_status: 'completed' | 'failed' | 'pending'): Promise<void> {
+      const { error } = await supabaseAdmin
+        .from('processed_payments')
+        .update({ entitlement_status })
+        .eq('provider', provider)
+        .eq('external_id', external_id);
+
+      if (error) console.error(`[processedPayments] Error actualizando entitlement_status: ${error.message}`);
     }
   },
 

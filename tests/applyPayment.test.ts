@@ -7,12 +7,18 @@ vi.mock('../api/_lib/serverDal.js', () => {
     serverDal: {
       processedPayments: {
         record: vi.fn(),
+        getByProviderAndExternalId: vi.fn(),
+        updateEntitlementStatus: vi.fn(),
       },
       adminNotifications: {
         create: vi.fn(),
       },
       profiles: {
         getByEmail: vi.fn(),
+        updateSubscription: vi.fn(),
+      },
+      pendingGrants: {
+        create: vi.fn(),
       },
     },
   };
@@ -23,6 +29,11 @@ describe('applyPayment Unit Tests', () => {
     from: vi.fn(() => ({
       update: vi.fn(() => ({
         eq: vi.fn(() => ({ error: null }))
+      })),
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          single: vi.fn().mockResolvedValue({ data: { plan_vence: null } })
+        }))
       }))
     })),
     rpc: vi.fn().mockResolvedValue({ error: null })
@@ -72,19 +83,25 @@ describe('applyPayment Unit Tests', () => {
         user_email: 'user@test.com',
         amount: 14.0,
         currency: 'USD',
+        entitlement_status: 'pending',
       })
     );
     expect(updateMock).toHaveBeenCalledWith(
       expect.objectContaining({ paid: true })
     );
     expect(eqMock).toHaveBeenCalledWith('token', 'tok_123');
+    expect(serverDal.processedPayments.updateEntitlementStatus).toHaveBeenCalledWith('mercadopago', 'mp_tx_100', 'completed');
   });
 
-
-  it('debe manejar idempotencia omitiendo el pago si external_id ya existe', async () => {
+  it('debe manejar idempotencia omitiendo el pago si external_id ya existe con derecho completado', async () => {
     const error: any = new Error('duplicate key value violates unique constraint "unq_provider_external_id"');
     error.code = '23505';
     vi.mocked(serverDal.processedPayments.record).mockRejectedValueOnce(error);
+    vi.mocked(serverDal.processedPayments.getByProviderAndExternalId).mockResolvedValueOnce({
+      id: 'pay_123',
+      plan: 'credits_pack_1',
+      entitlement_status: 'completed',
+    });
 
     const payment: PaymentDetails = {
       exportToken: 'tok_dup',
@@ -97,5 +114,62 @@ describe('applyPayment Unit Tests', () => {
     const res = await applyPayment(fakeAdminClient, payment);
     expect(res).toEqual({ type: 'already_processed', message: 'Payment already recorded' });
     expect(fakeAdminClient.from).not.toHaveBeenCalled();
+    expect(serverDal.processedPayments.updateEntitlementStatus).not.toHaveBeenCalled();
+  });
+
+  it('debe recuperar el otorgamiento si el registro previo falló parcialmente (entitlement pendiente)', async () => {
+    // 1. Simular reintento de webhook donde processedPayments da 23505 pero con entitlement_status 'pending'
+    const error: any = new Error('duplicate key value violates unique constraint "unq_provider_external_id"');
+    error.code = '23505';
+    vi.mocked(serverDal.processedPayments.record).mockRejectedValueOnce(error);
+    vi.mocked(serverDal.processedPayments.getByProviderAndExternalId).mockResolvedValueOnce({
+      id: 'pay_retry',
+      plan: 'credits_pack_5',
+      entitlement_status: 'pending',
+    });
+    vi.mocked(serverDal.profiles.getByEmail).mockResolvedValue({ id: 'user_retry' } as any);
+    vi.mocked(serverDal.adminNotifications.create).mockResolvedValueOnce(undefined as any);
+
+    const payment: PaymentDetails = {
+      userId: 'user_retry',
+      email: 'retry@test.com',
+      plan: 'credits_pack_5',
+      metodoPago: 'mercadopago',
+      externalId: 'mp_retry_999',
+    };
+
+    const res = await applyPayment(fakeAdminClient, payment);
+
+    // Debe proceder a otorgar los tokens via RPC a pesar de ser duplicado
+    expect(res).toEqual({ type: 'payment_applied', plan: 'credits_pack_5', exportToken: undefined });
+    expect(fakeAdminClient.rpc).toHaveBeenCalledWith('grant_export_tokens', expect.objectContaining({
+      p_payment_id: 'mp_retry_999',
+      p_user_id: 'user_retry',
+      p_amount: 5,
+      p_email: 'retry@test.com'
+    }));
+    // Y finalmente debe marcar como completado
+    expect(serverDal.processedPayments.updateEntitlementStatus).toHaveBeenCalledWith('mercadopago', 'mp_retry_999', 'completed');
+  });
+
+  it('debe retener para revisión si el monto/moneda no coincide con el catálogo', async () => {
+    vi.mocked(serverDal.adminNotifications.create).mockResolvedValueOnce(undefined as any);
+    vi.mocked(serverDal.pendingGrants.create).mockResolvedValueOnce(undefined as any);
+
+    const payment: PaymentDetails = {
+      email: 'mismatch@test.com',
+      userId: 'user_mismatch',
+      plan: 'credits_pack_5',
+      metodoPago: 'paypal',
+      externalId: 'pp_mismatch_123',
+      amount: 1.0, // Cobrado 1 USD, cuando el plan vale más
+      currency: 'USD',
+    };
+
+    const res = await applyPayment(fakeAdminClient, payment);
+    expect(res).toEqual({ type: 'held_for_review', message: 'Payment held due to mismatch' });
+    // NO debe haberse registrado como pago aprobado en processedPayments
+    expect(serverDal.processedPayments.record).not.toHaveBeenCalled();
+    expect(serverDal.pendingGrants.create).toHaveBeenCalled();
   });
 });
