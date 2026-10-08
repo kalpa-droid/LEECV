@@ -26,12 +26,27 @@ ALTER TABLE public.processed_payments
   ADD COLUMN IF NOT EXISTS entitlement_status text DEFAULT 'completed';
 
 DO $$
+DECLARE
+  v_dup_count INT := 0;
 BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint WHERE conname = 'unq_pending_grants_provider_external_id'
-  ) THEN
-    ALTER TABLE public.pending_grants
-      ADD CONSTRAINT unq_pending_grants_provider_external_id UNIQUE (provider, external_id);
+  -- Preflight de solo lectura: verificar si existen duplicados antes de aplicar la restricción
+  SELECT COUNT(*) INTO v_dup_count
+  FROM (
+    SELECT provider, external_id
+    FROM public.pending_grants
+    GROUP BY provider, external_id
+    HAVING COUNT(*) > 1
+  ) dups;
+
+  IF v_dup_count > 0 THEN
+    RAISE NOTICE '[PREFLIGHT] Se detectaron % grupos de registros duplicados en pending_grants. Se posterga la restricción única para resolución manual sin pérdida de datos.', v_dup_count;
+  ELSE
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_constraint WHERE conname = 'unq_pending_grants_provider_external_id'
+    ) THEN
+      ALTER TABLE public.pending_grants
+        ADD CONSTRAINT unq_pending_grants_provider_external_id UNIQUE (provider, external_id);
+    END IF;
   END IF;
 EXCEPTION WHEN duplicate_table OR duplicate_object THEN
   NULL;
