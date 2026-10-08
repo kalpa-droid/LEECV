@@ -1,6 +1,7 @@
 -- Migration: 20261012_secure_sales_and_export_entitlements.sql
 -- Objetivo: Blindar la emisión y consumo de tokens de exportación frente a accesos cruzados y ejecución no autorizada,
--- así como garantizar la idempotencia y atomicidad en la extensión de suscripciones Pro.
+-- garantizar la idempotencia y atomicidad en la extensión de suscripciones Pro con compatibilidad histórica,
+-- y asegurar search_path mínimo con referencias calificadas.
 
 -- 1. Asegurar tablas de idempotencia de grants y estado de derechos en pagos procesados
 CREATE TABLE IF NOT EXISTS public.pdf_export_token_grants (
@@ -36,7 +37,7 @@ CREATE OR REPLACE FUNCTION public.grant_export_tokens(
 RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, auth, pg_catalog, pg_temp
+SET search_path = pg_catalog, pg_temp
 AS $$
 BEGIN
   -- Validaciones estrictas de entrada
@@ -48,13 +49,21 @@ BEGIN
     RAISE EXCEPTION 'p_amount must be a positive integer' USING ERRCODE = '22003';
   END IF;
 
-  -- 1. Registrar el otorgamiento de forma idempotente si hay payment_id
-  IF p_payment_id IS NOT NULL AND btrim(p_payment_id) <> '' THEN
+  -- 1. Idempotencia y compatibilidad histórica:
+  -- Detecta si ya existe el grant bajo la clave canónica (ej. 'mercadopago:123') o la clave histórica cruda (ej. '123')
+  IF p_payment_id IS NOT NULL AND pg_catalog.btrim(p_payment_id) <> '' THEN
+    IF EXISTS (
+      SELECT 1 FROM public.pdf_export_token_grants
+      WHERE payment_id = p_payment_id
+         OR (p_payment_id LIKE '%:%' AND payment_id = pg_catalog.split_part(p_payment_id, ':', 2))
+    ) THEN
+      RETURN true;
+    END IF;
+
     BEGIN
       INSERT INTO public.pdf_export_token_grants (payment_id, user_id, amount)
       VALUES (p_payment_id, p_user_id, p_amount);
     EXCEPTION WHEN unique_violation THEN
-      -- Pago ya procesado y tokens ya acreditados para este payment_id
       RETURN true;
     END;
   END IF;
@@ -91,7 +100,7 @@ CREATE OR REPLACE FUNCTION public.check_and_consume_export_entitlement(p_user_id
 RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, auth, pg_catalog, pg_temp
+SET search_path = pg_catalog, pg_temp
 AS $$
 DECLARE
   v_caller_id UUID;
@@ -105,12 +114,12 @@ BEGIN
     RAISE EXCEPTION 'Acceso denegado: solo el usuario autenticado puede consumir sus propios derechos' USING ERRCODE = '42501';
   END IF;
 
-  -- 1. Verificar plan Pro en perfil
+  -- 1. Verificar plan Pro en perfil (vence nulo se trata como Pro activo/indefinido)
   SELECT plan, plan_vence INTO v_plan, v_plan_vence
   FROM public.profiles
   WHERE id = p_user_id;
 
-  IF v_plan = 'pro' AND (v_plan_vence IS NULL OR v_plan_vence > now()) THEN
+  IF v_plan = 'pro' AND (v_plan_vence IS NULL OR v_plan_vence > pg_catalog.now()) THEN
     RETURN true;
   END IF;
 
@@ -149,12 +158,13 @@ CREATE OR REPLACE FUNCTION public.grant_pro_subscription(
 RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, auth, pg_catalog, pg_temp
+SET search_path = pg_catalog, pg_temp
 AS $$
 DECLARE
   v_current_vence TIMESTAMPTZ;
   v_base_date TIMESTAMPTZ;
   v_new_vence TIMESTAMPTZ;
+  v_rows_updated INT;
 BEGIN
   -- Validaciones estrictas de entrada
   IF p_user_id IS NULL THEN
@@ -165,35 +175,53 @@ BEGIN
     RAISE EXCEPTION 'p_days must be a positive integer' USING ERRCODE = '22003';
   END IF;
 
-  -- 1. Idempotencia: Si ya se otorgó para este payment_id, no duplicar días
-  IF p_payment_id IS NOT NULL AND btrim(p_payment_id) <> '' THEN
+  -- 1. Idempotencia y compatibilidad histórica:
+  -- Detecta si ya existe el grant bajo la clave canónica o la clave cruda
+  IF p_payment_id IS NOT NULL AND pg_catalog.btrim(p_payment_id) <> '' THEN
+    IF EXISTS (
+      SELECT 1 FROM public.pro_subscription_grants
+      WHERE payment_id = p_payment_id
+         OR (p_payment_id LIKE '%:%' AND payment_id = pg_catalog.split_part(p_payment_id, ':', 2))
+    ) THEN
+      RETURN true;
+    END IF;
+
     BEGIN
       INSERT INTO public.pro_subscription_grants (payment_id, user_id, days_granted)
       VALUES (p_payment_id, p_user_id, p_days);
     EXCEPTION WHEN unique_violation THEN
-      -- Pago ya procesado y suscripción ya extendida para este payment_id
       RETURN true;
     END;
   END IF;
 
-  -- 2. Bloquear perfil bajo transacción para cálculo atómico de vigencia
+  -- 2. Bloquear perfil bajo transacción para cálculo atómico y verificar existencia
   SELECT plan_vence INTO v_current_vence
   FROM public.profiles
   WHERE id = p_user_id
   FOR UPDATE;
 
-  IF v_current_vence IS NOT NULL AND v_current_vence > now() THEN
-    v_base_date := v_current_vence;
-  ELSE
-    v_base_date := now();
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Perfil no encontrado para user_id %', p_user_id USING ERRCODE = 'P0002';
   END IF;
 
-  v_new_vence := v_base_date + (p_days || ' days')::interval;
+  -- Si plan_vence es nulo (plan manual indefinido o inicial), la base es now()
+  IF v_current_vence IS NOT NULL AND v_current_vence > pg_catalog.now() THEN
+    v_base_date := v_current_vence;
+  ELSE
+    v_base_date := pg_catalog.now();
+  END IF;
+
+  v_new_vence := v_base_date + pg_catalog.make_interval(days => p_days);
 
   UPDATE public.profiles
   SET plan = 'pro',
       plan_vence = v_new_vence
   WHERE id = p_user_id;
+
+  GET DIAGNOSTICS v_rows_updated = ROW_COUNT;
+  IF v_rows_updated <> 1 THEN
+    RAISE EXCEPTION 'Falló actualización de perfil: se esperaba 1 fila pero se afectaron %', v_rows_updated;
+  END IF;
 
   RETURN true;
 END;

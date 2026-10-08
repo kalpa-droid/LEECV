@@ -96,7 +96,10 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
       ) {
         // Consultar si el derecho ya fue otorgado con éxito
         const existing = await serverDal.processedPayments.getByProviderAndExternalId(metodoPago, externalId);
-        if (!existing || existing.entitlement_status === 'completed') {
+        if (!existing) {
+          throw new Error(`[applyPayment] Violación de clave única 23505 pero no se pudo leer el registro existente (${metodoPago}: ${externalId})`);
+        }
+        if (existing.entitlement_status === 'completed') {
           console.log(`[applyPayment] Transacción duplicada omitida (${metodoPago}: ${externalId})`);
           return { type: 'already_processed', message: 'Payment already recorded' };
         }
@@ -106,6 +109,9 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
       }
     }
   }
+
+  // Clave canónica de grant para evitar colisiones entre distintos proveedores
+  const grantPaymentId = externalId ? (metodoPago ? `${metodoPago}:${externalId}` : externalId) : null;
 
   // 2. Aplicar el pago basado en el plan (Invitado vs Packs/Pro)
   if (planData && planData.id !== 'single_pdf') {
@@ -143,7 +149,7 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
       if (planData.id === 'pro') {
         // Otorgar suscripción Pro de forma atómica e idempotente vía RPC
         const { error: proGrantError } = await supabaseAdmin.rpc('grant_pro_subscription', {
-          p_payment_id: externalId || null,
+          p_payment_id: grantPaymentId,
           p_user_id: profileId,
           p_days: BILLING_CONFIG.PRO_PLAN_DAYS
         });
@@ -156,7 +162,7 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
         // Otorgar tokens de exportación
         const creditsToGrant = planData.credits || (planData.id === 'credits_pack_5' ? 5 : 10);
         const { error: grantError } = await supabaseAdmin.rpc('grant_export_tokens', {
-          p_payment_id: externalId || null,
+          p_payment_id: grantPaymentId,
           p_user_id: profileId,
           p_amount: creditsToGrant,
           p_email: email
@@ -174,17 +180,38 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
       throw new Error('Se requiere exportToken para habilitar single_pdf');
     }
 
-    const { error: updateError } = await supabaseAdmin
+    const { data: updatedRows, error: updateError } = await supabaseAdmin
       .from('pdf_export_tokens')
       .update({ 
         paid: true, 
-        payment_id: externalId || null,
+        payment_id: grantPaymentId,
         email: email || undefined
       })
-      .eq('token', exportToken);
+      .eq('token', exportToken)
+      .select('token, paid, payment_id');
 
     if (updateError) {
       throw new Error(`Error actualizando pdf_export_tokens: ${updateError.message}`);
+    }
+
+    if (!updatedRows || updatedRows.length === 0) {
+      // Verificar si el token ya había sido marcado como paid con este payment_id (reintento idempotente)
+      const { data: existingToken } = await supabaseAdmin
+        .from('pdf_export_tokens')
+        .select('token, paid, payment_id')
+        .eq('token', exportToken)
+        .maybeSingle();
+
+      const matchesPayment = existingToken?.paid && (
+        existingToken.payment_id === grantPaymentId || 
+        existingToken.payment_id === externalId
+      );
+
+      if (matchesPayment) {
+        console.log(`[applyPayment] Token ${exportToken} ya pagado previamente para pago ${grantPaymentId} (idempotente)`);
+      } else {
+        throw new Error(`[applyPayment] No se encontró el token de exportación especificado: ${exportToken}`);
+      }
     }
   }
 

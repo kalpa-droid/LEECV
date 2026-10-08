@@ -25,22 +25,30 @@ vi.mock('../api/_lib/serverDal.js', () => {
 });
 
 describe('applyPayment Unit Tests', () => {
-  const fakeAdminClient: any = {
-    from: vi.fn(() => ({
-      update: vi.fn(() => ({
-        eq: vi.fn(() => ({ error: null }))
-      })),
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          single: vi.fn().mockResolvedValue({ data: { plan_vence: null } })
-        }))
-      }))
-    })),
-    rpc: vi.fn().mockResolvedValue({ error: null })
-  };
+  let fakeAdminClient: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    fakeAdminClient = {
+      from: vi.fn((table: string) => ({
+        update: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            select: vi.fn().mockResolvedValue({
+              data: [{ token: 'tok_123', paid: true, payment_id: 'mercadopago:mp_tx_100' }],
+              error: null,
+            }),
+          })),
+        })),
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            single: vi.fn().mockResolvedValue({ data: { plan_vence: null } }),
+            maybeSingle: vi.fn().mockResolvedValue({ data: null }),
+          })),
+        })),
+      })),
+      rpc: vi.fn().mockResolvedValue({ error: null }),
+    };
   });
 
   it('debe lanzar un error si no se provee exportToken', async () => {
@@ -56,38 +64,40 @@ describe('applyPayment Unit Tests', () => {
 
   it('debe acreditar créditos correctamente para un token (Guest Checkout)', async () => {
     vi.mocked(serverDal.processedPayments.record).mockResolvedValueOnce(undefined as any);
-    vi.mocked(serverDal.profiles.getByEmail).mockResolvedValueOnce({ id: 'user_123' } as any);
-    
-    const eqMock = vi.fn().mockResolvedValue({ error: null });
-    const updateMock = vi.fn().mockReturnValue({ eq: eqMock });
-    fakeAdminClient.from.mockReturnValue({ update: updateMock } as any);
-    
     vi.mocked(serverDal.adminNotifications.create).mockResolvedValueOnce(undefined as any);
+
+    const selectMock = vi.fn().mockResolvedValue({
+      data: [{ token: 'tok_123', paid: true, payment_id: 'mercadopago:mp_tx_100' }],
+      error: null,
+    });
+    const eqMock = vi.fn().mockReturnValue({ select: selectMock });
+    const updateMock = vi.fn().mockReturnValue({ eq: eqMock });
+    fakeAdminClient.from = vi.fn().mockReturnValue({ update: updateMock } as any);
 
     const payment: PaymentDetails = {
       exportToken: 'tok_123',
       email: 'user@test.com',
-      plan: 'credits_pack_1',
+      plan: 'single_pdf',
       metodoPago: 'mercadopago',
       externalId: 'mp_tx_100',
-      amount: 14.0,
-      currency: 'USD',
+      amount: 3200,
+      currency: 'ARS',
     };
 
     const res = await applyPayment(fakeAdminClient, payment);
-    expect(res).toEqual({ type: 'payment_applied', plan: 'credits_pack_1', exportToken: 'tok_123' });
+    expect(res).toEqual({ type: 'payment_applied', plan: 'single_pdf', exportToken: 'tok_123' });
     expect(serverDal.processedPayments.record).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: 'mercadopago',
         external_id: 'mp_tx_100',
         user_email: 'user@test.com',
-        amount: 14.0,
-        currency: 'USD',
+        amount: 3200,
+        currency: 'ARS',
         entitlement_status: 'pending',
       })
     );
     expect(updateMock).toHaveBeenCalledWith(
-      expect.objectContaining({ paid: true })
+      expect.objectContaining({ paid: true, payment_id: 'mercadopago:mp_tx_100' })
     );
     expect(eqMock).toHaveBeenCalledWith('token', 'tok_123');
     expect(serverDal.processedPayments.updateEntitlementStatus).toHaveBeenCalledWith('mercadopago', 'mp_tx_100', 'completed');
@@ -99,16 +109,18 @@ describe('applyPayment Unit Tests', () => {
     vi.mocked(serverDal.processedPayments.record).mockRejectedValueOnce(error);
     vi.mocked(serverDal.processedPayments.getByProviderAndExternalId).mockResolvedValueOnce({
       id: 'pay_123',
-      plan: 'credits_pack_1',
+      plan: 'single_pdf',
       entitlement_status: 'completed',
     });
 
     const payment: PaymentDetails = {
       exportToken: 'tok_dup',
       email: 'dup@test.com',
-      plan: 'credits_pack_1',
+      plan: 'single_pdf',
       metodoPago: 'lemonsqueezy',
       externalId: 'ls_dup_123',
+      amount: 2.6,
+      currency: 'USD',
     };
 
     const res = await applyPayment(fakeAdminClient, payment);
@@ -117,8 +129,28 @@ describe('applyPayment Unit Tests', () => {
     expect(serverDal.processedPayments.updateEntitlementStatus).not.toHaveBeenCalled();
   });
 
+  it('debe lanzar error si 23505 ocurre pero getByProviderAndExternalId devuelve null (fallo de lectura)', async () => {
+    const error: any = new Error('duplicate key value violates unique constraint "unq_provider_external_id"');
+    error.code = '23505';
+    vi.mocked(serverDal.processedPayments.record).mockRejectedValueOnce(error);
+    vi.mocked(serverDal.processedPayments.getByProviderAndExternalId).mockResolvedValueOnce(null);
+
+    const payment: PaymentDetails = {
+      exportToken: 'tok_err',
+      email: 'err@test.com',
+      plan: 'single_pdf',
+      metodoPago: 'mercadopago',
+      externalId: 'mp_err_999',
+      amount: 3200,
+      currency: 'ARS',
+    };
+
+    await expect(applyPayment(fakeAdminClient, payment)).rejects.toThrow(
+      'Violación de clave única 23505 pero no se pudo leer el registro existente'
+    );
+  });
+
   it('debe recuperar el otorgamiento si el registro previo falló parcialmente (entitlement pendiente)', async () => {
-    // 1. Simular reintento de webhook donde processedPayments da 23505 pero con entitlement_status 'pending'
     const error: any = new Error('duplicate key value violates unique constraint "unq_provider_external_id"');
     error.code = '23505';
     vi.mocked(serverDal.processedPayments.record).mockRejectedValueOnce(error);
@@ -127,7 +159,6 @@ describe('applyPayment Unit Tests', () => {
       plan: 'credits_pack_5',
       entitlement_status: 'pending',
     });
-    vi.mocked(serverDal.profiles.getByEmail).mockResolvedValue({ id: 'user_retry' } as any);
     vi.mocked(serverDal.adminNotifications.create).mockResolvedValueOnce(undefined as any);
 
     const payment: PaymentDetails = {
@@ -136,19 +167,19 @@ describe('applyPayment Unit Tests', () => {
       plan: 'credits_pack_5',
       metodoPago: 'mercadopago',
       externalId: 'mp_retry_999',
+      amount: 12500,
+      currency: 'ARS',
     };
 
     const res = await applyPayment(fakeAdminClient, payment);
 
-    // Debe proceder a otorgar los tokens via RPC a pesar de ser duplicado
     expect(res).toEqual({ type: 'payment_applied', plan: 'credits_pack_5', exportToken: undefined });
     expect(fakeAdminClient.rpc).toHaveBeenCalledWith('grant_export_tokens', expect.objectContaining({
-      p_payment_id: 'mp_retry_999',
+      p_payment_id: 'mercadopago:mp_retry_999',
       p_user_id: 'user_retry',
       p_amount: 5,
       p_email: 'retry@test.com'
     }));
-    // Y finalmente debe marcar como completado
     expect(serverDal.processedPayments.updateEntitlementStatus).toHaveBeenCalledWith('mercadopago', 'mp_retry_999', 'completed');
   });
 
@@ -162,15 +193,35 @@ describe('applyPayment Unit Tests', () => {
       plan: 'credits_pack_5',
       metodoPago: 'paypal',
       externalId: 'pp_mismatch_123',
-      amount: 1.0, // Cobrado 1 USD, cuando el plan vale más
+      amount: 1.0,
       currency: 'USD',
     };
 
     const res = await applyPayment(fakeAdminClient, payment);
     expect(res).toEqual({ type: 'held_for_review', message: 'Payment held due to mismatch' });
-    // NO debe haberse registrado como pago aprobado en processedPayments
     expect(serverDal.processedPayments.record).not.toHaveBeenCalled();
     expect(serverDal.pendingGrants.create).toHaveBeenCalled();
+  });
+
+  it('debe propagar el error si pendingGrants.create falla al retener pago sin perfil', async () => {
+    vi.mocked(serverDal.processedPayments.record).mockResolvedValueOnce(undefined as any);
+    vi.mocked(serverDal.profiles.getByEmail).mockResolvedValueOnce(null as any);
+    vi.mocked(serverDal.pendingGrants.create).mockRejectedValueOnce(
+      new Error('[pendingGrants] Error creando pending grant: db down')
+    );
+
+    const payment: PaymentDetails = {
+      email: 'unknown@test.com',
+      plan: 'credits_pack_5',
+      metodoPago: 'mercadopago',
+      externalId: 'mp_noprofile_123',
+      amount: 12500,
+      currency: 'ARS',
+    };
+
+    await expect(applyPayment(fakeAdminClient, payment)).rejects.toThrow(
+      'Error creando pending grant'
+    );
   });
 
   it('debe otorgar suscripción Pro de forma atómica e idempotente vía grant_pro_subscription', async () => {
@@ -191,7 +242,7 @@ describe('applyPayment Unit Tests', () => {
     const res = await applyPayment(fakeAdminClient, payment);
     expect(res).toEqual({ type: 'payment_applied', plan: 'pro', exportToken: undefined });
     expect(fakeAdminClient.rpc).toHaveBeenCalledWith('grant_pro_subscription', {
-      p_payment_id: 'mp_pro_123',
+      p_payment_id: 'mercadopago:mp_pro_123',
       p_user_id: 'user_pro_1',
       p_days: 30
     });
@@ -207,7 +258,7 @@ describe('applyPayment Unit Tests', () => {
       plan: 'pro',
       entitlement_status: 'pending',
     });
-    vi.mocked(serverDal.profiles.getByEmail).mockResolvedValue({ id: 'user_pro_retry' } as any);
+    vi.mocked(serverDal.profiles.getByEmail).mockResolvedValueOnce({ id: 'user_pro_retry' } as any);
     vi.mocked(serverDal.adminNotifications.create).mockResolvedValueOnce(undefined as any);
 
     const payment: PaymentDetails = {
@@ -216,12 +267,14 @@ describe('applyPayment Unit Tests', () => {
       plan: 'pro',
       metodoPago: 'mercadopago',
       externalId: 'mp_pro_retry_456',
+      amount: 27000,
+      currency: 'ARS',
     };
 
     const res = await applyPayment(fakeAdminClient, payment);
     expect(res).toEqual({ type: 'payment_applied', plan: 'pro', exportToken: undefined });
     expect(fakeAdminClient.rpc).toHaveBeenCalledWith('grant_pro_subscription', {
-      p_payment_id: 'mp_pro_retry_456',
+      p_payment_id: 'mercadopago:mp_pro_retry_456',
       p_user_id: 'user_pro_retry',
       p_days: 30
     });
@@ -248,5 +301,119 @@ describe('applyPayment Unit Tests', () => {
     await expect(applyPayment(fakeAdminClient, payment)).rejects.toThrow(
       'Error actualizando entitlement_status'
     );
+  });
+
+  it('debe lanzar error en single_pdf si 0 filas se actualizaron y el token no existe', async () => {
+    vi.mocked(serverDal.processedPayments.record).mockResolvedValueOnce(undefined as any);
+    
+    // update returns 0 rows updated
+    const selectMock = vi.fn().mockResolvedValue({ data: [], error: null });
+    const eqMock = vi.fn().mockReturnValue({ select: selectMock });
+    const updateMock = vi.fn().mockReturnValue({ eq: eqMock });
+    
+    // fallback check returns null
+    const maybeSingleMock = vi.fn().mockResolvedValue({ data: null, error: null });
+    const selectFallbackEq = vi.fn().mockReturnValue({ maybeSingle: maybeSingleMock });
+    const selectFallback = vi.fn().mockReturnValue({ eq: selectFallbackEq });
+
+    fakeAdminClient.from = vi.fn().mockImplementation((table: string) => {
+      if (table === 'pdf_export_tokens') {
+        return {
+          update: updateMock,
+          select: selectFallback,
+        };
+      }
+      return {};
+    });
+
+    const payment: PaymentDetails = {
+      exportToken: 'tok_missing_404',
+      email: 'guest@test.com',
+      plan: 'single_pdf',
+      metodoPago: 'mercadopago',
+      externalId: 'mp_single_404',
+      amount: 3200,
+      currency: 'ARS',
+    };
+
+    await expect(applyPayment(fakeAdminClient, payment)).rejects.toThrow(
+      'No se encontró el token de exportación especificado: tok_missing_404'
+    );
+  });
+
+  it('debe permitir reintento idempotente en single_pdf si el token ya fue pagado con este payment_id', async () => {
+    vi.mocked(serverDal.processedPayments.record).mockResolvedValueOnce(undefined as any);
+    
+    // update returns 0 rows updated
+    const selectMock = vi.fn().mockResolvedValue({ data: [], error: null });
+    const eqMock = vi.fn().mockReturnValue({ select: selectMock });
+    const updateMock = vi.fn().mockReturnValue({ eq: eqMock });
+    
+    // fallback check returns existing paid token with matching payment_id
+    const maybeSingleMock = vi.fn().mockResolvedValue({
+      data: { token: 'tok_already_paid', paid: true, payment_id: 'mercadopago:mp_already_1' },
+      error: null,
+    });
+    const selectFallbackEq = vi.fn().mockReturnValue({ maybeSingle: maybeSingleMock });
+    const selectFallback = vi.fn().mockReturnValue({ eq: selectFallbackEq });
+
+    fakeAdminClient.from = vi.fn().mockImplementation((table: string) => {
+      if (table === 'pdf_export_tokens') {
+        return {
+          update: updateMock,
+          select: selectFallback,
+        };
+      }
+      return {};
+    });
+
+    const payment: PaymentDetails = {
+      exportToken: 'tok_already_paid',
+      email: 'guest@test.com',
+      plan: 'single_pdf',
+      metodoPago: 'mercadopago',
+      externalId: 'mp_already_1',
+      amount: 3200,
+      currency: 'ARS',
+    };
+
+    const res = await applyPayment(fakeAdminClient, payment);
+    expect(res).toEqual({ type: 'payment_applied', plan: 'single_pdf', exportToken: 'tok_already_paid' });
+    expect(serverDal.processedPayments.updateEntitlementStatus).toHaveBeenCalledWith('mercadopago', 'mp_already_1', 'completed');
+  });
+
+  it('debe aislar pagos de diferentes proveedores con el mismo externalId numérico', async () => {
+    vi.mocked(serverDal.processedPayments.record).mockResolvedValue(undefined as any);
+    vi.mocked(serverDal.profiles.getByEmail).mockResolvedValue({ id: 'user_shared_id' } as any);
+
+    const paymentMp: PaymentDetails = {
+      userId: 'user_shared_id',
+      email: 'mp@test.com',
+      plan: 'credits_pack_5',
+      metodoPago: 'mercadopago',
+      externalId: '12345',
+      amount: 12500,
+      currency: 'ARS',
+    };
+
+    const paymentPp: PaymentDetails = {
+      userId: 'user_shared_id',
+      email: 'pp@test.com',
+      plan: 'credits_pack_5',
+      metodoPago: 'paypal',
+      externalId: '12345',
+      amount: 10,
+      currency: 'USD',
+    };
+
+    await applyPayment(fakeAdminClient, paymentMp);
+    expect(fakeAdminClient.rpc).toHaveBeenCalledWith('grant_export_tokens', expect.objectContaining({
+      p_payment_id: 'mercadopago:12345',
+    }));
+
+    await applyPayment(fakeAdminClient, paymentPp);
+    expect(fakeAdminClient.rpc).toHaveBeenCalledWith('grant_export_tokens', expect.objectContaining({
+      p_payment_id: 'paypal:12345',
+    }));
   });
 });

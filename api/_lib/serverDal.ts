@@ -126,8 +126,10 @@ export const serverDal = {
         .eq('external_id', external_id)
         .maybeSingle();
 
-      if (error || !data) return null;
-      return data;
+      if (error) {
+        throw new Error(`[processedPayments] Error consultando pago (${provider}:${external_id}): ${error.message}`);
+      }
+      return data || null;
     },
 
     async updateEntitlementStatus(provider: string, external_id: string, entitlement_status: 'completed' | 'failed' | 'pending'): Promise<void> {
@@ -149,7 +151,17 @@ export const serverDal = {
         ...data,
         created_at: new Date().toISOString()
       });
-      if (error) console.error(`[pendingGrants] Error creating pending grant: ${error.message}`);
+      if (error) {
+        if (
+          error.code === '23505' ||
+          String(error.message).includes('duplicate key') ||
+          String(error.message).includes('unique constraint')
+        ) {
+          // Idempotente: si ya existe una entrada para este pago, omitir sin error
+          return;
+        }
+        throw new Error(`[pendingGrants] Error creando pending grant: ${error.message}`);
+      }
     }
   },
 

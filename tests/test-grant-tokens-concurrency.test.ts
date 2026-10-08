@@ -6,24 +6,25 @@ const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 describe('grant_export_tokens concurrency & isolation guard', () => {
-  it('should reject execution against production and isolate test users safely', async () => {
-    if (!supabaseUrl || !supabaseServiceRoleKey) {
-      // Entorno de CI / Unitario normal: Seguro por defecto (no corre contra remoto)
-      expect(true).toBe(true);
-      return;
-    }
+  it.skipIf(!supabaseUrl || !supabaseServiceRoleKey)(
+    'should execute concurrency test strictly against local disposable supabase',
+    async () => {
+      // Salvaguarda P0: Allowlist ESTRICTA de endpoints locales descartables con new URL().hostname
+      // NUNCA permitir ejecución contra URLs remotas (*.supabase.co, leecv.com, etc.),
+      // sin excepciones por variables de entorno.
+      let parsedUrl: URL;
+      try {
+        parsedUrl = new URL(supabaseUrl!);
+      } catch {
+        throw new Error(`[SEGURIDAD] Supabase URL inválida: ${supabaseUrl}`);
+      }
 
-    // Salvaguarda P0: Allowlist ESTRICTA de endpoints locales descartables.
-    // NUNCA permitir ejecución contra URLs remotas (*.supabase.co, leecv.com, etc.),
-    // sin excepciones por variables de entorno.
-    const isStrictlyLocal = 
-      supabaseUrl.includes('localhost') || 
-      supabaseUrl.includes('127.0.0.1');
-
-    if (!isStrictlyLocal) {
-      console.warn(`[SEGURIDAD] Prueba de concurrencia omitida: ${supabaseUrl} no es un endpoint local descartable.`);
-      return;
-    }
+      const ALLOWED_LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1', '0.0.0.0']);
+      if (!ALLOWED_LOCAL_HOSTNAMES.has(parsedUrl.hostname)) {
+        throw new Error(
+          `[SEGURIDAD] Intento bloqueado: la prueba de concurrencia solo puede ejecutarse contra endpoints locales estrictos (${Array.from(ALLOWED_LOCAL_HOSTNAMES).join(', ')}). Host recibido: ${parsedUrl.hostname}`
+        );
+      }
 
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
     const mockPaymentId = `test_payment_${crypto.randomUUID()}`;
