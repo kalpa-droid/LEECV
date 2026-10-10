@@ -128,6 +128,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     if (docType === 'cover_letter') return 'source_data';
     if (docType === 'book') return 'grid_viewer';
     if (docType === 'planner') return 'planner_design';
+    if (cvData?.sourceCvTabId || cvData?.body?.hookParagraph) return 'carta';
     return 'personales';
   });
 
@@ -144,6 +145,8 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         ? 'grid_viewer' 
         : docType === 'planner'
         ? 'planner_design'
+        : cvData?.sourceCvTabId || cvData?.body?.hookParagraph
+        ? 'carta'
         : 'personales';
       setActiveTab(defaultTab);
     }
@@ -611,30 +614,45 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     });
   };
 
+  const navigateToCvBuilder = () => {
+    if (currentRoute === '/crear-cv' || currentRoute === '/') return;
+    if (onNavigate) {
+      onNavigate('/crear-cv');
+    } else if (typeof window !== 'undefined') {
+      navigation.push('/crear-cv');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }
+  };
+
   const handleNewCoverLetter = async () => {
     confirm({
-      title: '¿Iniciar nueva Carta de Presentación?',
-      message: '¿Deseas iniciar una carta de presentación en blanco? Se resguardará tu borrador actual.',
-      confirmText: 'Sí, crear carta',
+      title: '¿Crear una nueva postulación?',
+      message: 'Se creará una copia independiente de este CV para completar la vacante y su carta. El perfil de origen se conservará.',
+      confirmText: 'Crear postulación',
       variant: 'info',
       onConfirm: async () => {
-        await runWithSafeSave(
-          saveCV,
-          () => {
-            const created = createBlankDocumentWithTab('carta-clasica');
-            setActiveTab('source_data');
-            if (created) setPendingDocumentToOpen(created.id, created.docType);
-            if (currentRoute !== '/crear-carta') {
-              if (onNavigate) {
-                onNavigate('/crear-carta');
-              } else if (typeof window !== 'undefined') {
-                window.history.pushState({}, '', '/crear-carta');
-                window.dispatchEvent(new PopStateEvent('popstate'));
-              }
-            }
-            showSuccess('Nueva carta de presentación lista para editar.');
+        const sourceCvTabId = cvData.sourceCvTabId || cvData.id;
+        const result = await saveCVAs('Nueva postulación', {
+          ...cvData,
+          id: undefined,
+          doc_type_id: 'cv',
+          sourceCvTabId,
+          jobTarget: {},
+          body: {
+            salutation: '',
+            hookParagraph: '',
+            evidenceParagraph: '',
+            closingParagraph: '',
+            signoff: ''
           }
-        );
+        });
+        if (!result?.success) {
+          showError('No se pudo crear la postulación. El CV de origen sigue intacto.');
+          return;
+        }
+        navigateToCvBuilder();
+        setActiveTab('carta');
+        showSuccess('Postulación creada. Completá la vacante y redactá la carta dentro de esta versión.');
       }
     });
   };
@@ -667,29 +685,37 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     });
   };
 
-  const handleGenerateCoverLetterFromCV = (sourceCvData?: any) => {
-    const dataToUse = sourceCvData || cvData;
-    const created = createBlankDocumentWithTab('carta-clasica');
-    setActiveTab('source_data');
-    if (created) setPendingDocumentToOpen(created.id, created.docType);
-    if (dataToUse?.personalInfo) {
-      setCvData(prev => ({
-        ...prev,
-        personalInfo: {
-          ...prev.personalInfo,
-          ...dataToUse.personalInfo
-        }
-      }));
+  const handleGenerateCoverLetterFromCV = async (sourceCvData?: any) => {
+    if (!sourceCvData || sourceCvData.id === cvData?.id) {
+      setActiveTab('carta');
+      return;
     }
-    if (currentRoute !== '/crear-carta') {
-      if (onNavigate) {
-        onNavigate('/crear-carta');
-      } else if (typeof window !== 'undefined') {
-        window.history.pushState({}, '', '/crear-carta');
-        window.dispatchEvent(new PopStateEvent('popstate'));
+
+    const sourceCvTabId = sourceCvData.sourceCvTabId || sourceCvData.id;
+    const label = sourceCvData.personalInfo?.fullName
+      ? `Postulación de ${sourceCvData.personalInfo.fullName}`
+      : 'Nueva postulación';
+    const result = await saveCVAs(label, {
+      ...sourceCvData,
+      id: undefined,
+      doc_type_id: 'cv',
+      sourceCvTabId,
+      jobTarget: sourceCvData.jobTarget || {},
+      body: {
+        salutation: '',
+        hookParagraph: '',
+        evidenceParagraph: '',
+        closingParagraph: '',
+        signoff: ''
       }
+    });
+    if (!result?.success) {
+      showError('No se pudo crear la postulación a partir de ese CV.');
+      return;
     }
-    showSuccess('Carta de presentación creada reutilizando tus datos.');
+    navigateToCvBuilder();
+    setActiveTab('carta');
+    showSuccess('Se creó una versión independiente para preparar la postulación y su carta.');
   };
 
   const handleImportJsonFile = async (e: any) => {
@@ -856,6 +882,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           onOpenSignature={() => setIsSignatureOpen(true)}
           onOpenSavedCVs={() => setIsSavedCVsOpen(true)}
           onGenerateCoverLetterFromCV={handleGenerateCoverLetterFromCV}
+          onExportCoverLetter={() => setIsCoverLetterExportOpen(true)}
           onRefreshCredits={refreshEntitlements}
         />
       }

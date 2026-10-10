@@ -150,16 +150,16 @@ export const typeScale = {
  */
 export const button = {
   base: 'rounded-[10px] font-medium text-[13px] px-4 py-2.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed',
-  primary: `bg-[image:var(--gradient-brand)] text-[var(--color-accent-on-base)] hover:opacity-95 active:scale-[0.98] shadow-md`,
+  primary: `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] hover:opacity-95 active:scale-[0.98] shadow-md`,
   secondary: `bg-[var(--ui-btn-outline-bg)] border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] hover:border-[var(--color-neutral-border-strong)] active:scale-[0.98]`,
   ghost: `bg-transparent text-[var(--color-neutral-text-secondary)] hover:text-[var(--color-neutral-text-primary)]`,
   danger: `bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/30 text-[var(--color-status-danger-text)] hover:bg-[var(--color-status-danger-muted)]`,
-  success: `bg-gradient-to-r from-emerald-600 to-teal-500 text-white hover:opacity-95 active:scale-[0.98] shadow-md`,
+  success: `bg-[var(--color-status-success-base)] text-[var(--color-status-success-on-base)] hover:opacity-95 active:scale-[0.98] shadow-md`,
   warning: `bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/40 text-[var(--color-status-warning-text)] hover:bg-[var(--color-status-warning-base)]/20`,
   providerBrand: (provider: 'mercadopago' | 'paypal' | 'lemonsqueezy') => {
     switch (provider) {
       case 'mercadopago':
-        return `bg-[image:var(--gradient-gold)] text-black font-bold hover:opacity-95 shadow-md`;
+        return `bg-[var(--color-accent-amber)] text-black font-bold hover:opacity-95 shadow-md`;
       case 'paypal':
         return `bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 text-[var(--color-secondary-text)] font-bold hover:opacity-90`;
       case 'lemonsqueezy':

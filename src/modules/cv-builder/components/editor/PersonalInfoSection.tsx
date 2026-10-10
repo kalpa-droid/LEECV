@@ -3,13 +3,10 @@ import { Bot } from 'lucide-react';
 import { useCVContext } from '../../../../context/CVContext';
 import { PersonalInfoFields } from '../../../../shared/core/ui/PersonalInfoFields';
 import { SectionManualAdjustment } from './SectionManualAdjustment';
-import { colorSystem, typeScale, button, elevationSystem } from '../../../../shared/core/uiDesignSystem';
-
-const ImportCvAiModal = React.lazy(() => import('../modals/ImportCvAiModal'));
+import { colorSystem, typeScale, elevationSystem } from '../../../../shared/core/uiDesignSystem';
 
 export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhotoCropper: () => void; registeredItems?: any[] }) {
   const { cvData, setCvData, updatePersonalInfo } = useCVContext();
-  const [isImportModalOpen, setIsImportModalOpen] = React.useState(false);
 
   if (!cvData) return null;
 
@@ -94,39 +91,6 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
         />
       )}
 
-      {/* Floating Action / Import Button */}
-      {isVisible && (
-        <div className="mt-4 flex justify-center">
-          <button
-            type="button"
-            onClick={() => setIsImportModalOpen(true)}
-            className={`${button.base} ${button.secondary} flex items-center gap-2`}
-          >
-            <Bot size={18} />
-            Importar con IA (PDF/Foto)
-          </button>
-        </div>
-      )}
-
-      <React.Suspense fallback={null}>
-        <ImportCvAiModal 
-          isOpen={isImportModalOpen} 
-          onClose={() => setIsImportModalOpen(false)}
-          onImportComplete={(importedData) => {
-            setIsImportModalOpen(false);
-            if (importedData) {
-              setCvData(prev => ({
-                ...prev,
-                personalInfo: { ...prev.personalInfo, ...importedData.personalInfo },
-                experience: importedData.experience?.length ? importedData.experience : prev.experience,
-                education: importedData.education?.length ? importedData.education : prev.education,
-                skills: importedData.skills?.length ? importedData.skills : prev.skills,
-                languages: importedData.languages?.length ? importedData.languages : prev.languages,
-              }));
-            }
-          }}
-        />
-      </React.Suspense>
     </div>
   );
 }

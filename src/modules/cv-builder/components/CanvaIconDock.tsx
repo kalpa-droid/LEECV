@@ -1,6 +1,6 @@
 import React, { useMemo, useRef } from 'react';
 import { 
-  Palette, Menu, X, Plus, Sparkles, Database, Briefcase, FileText, Target
+  Palette, Menu, X, Plus, Sparkles, Database, Briefcase, FileText, Target, Mail
 } from 'lucide-react';
 import { DomSectionIcon } from '../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
 import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
@@ -71,7 +71,9 @@ const plannerTabIcons: Record<string, any> = {
 // 2. Pestañas de Sección Especiales Gobernadas por el Motor (activeSectionsDockEngine.ts)
 const addSectionTab = DOCK_SPECIAL_TABS.addSection;
 const portadaTab = DOCK_SPECIAL_TABS.portada;
+const coverLetterTab = DOCK_SPECIAL_TABS.coverLetter;
 const personalTab = DOCK_SPECIAL_TABS.personal;
+const importDataTab = DOCK_SPECIAL_TABS.importData;
 const vacanteTab = DOCK_SPECIAL_TABS.vacante;
 
 export default function CanvaIconDock({ 
@@ -130,6 +132,7 @@ export default function CanvaIconDock({
       { ...addSectionTab, isAddSection: true, isLarge: true },
       { ...styleTabs[0], isLarge: true },
       { ...portadaTab, isLarge: true },
+      { ...coverLetterTab, isLarge: true },
       { ...personalTab, isLarge: true },
       { ...vacanteTab, isLarge: true },
       ...dockSections.map(sec => ({
@@ -399,6 +402,29 @@ export default function CanvaIconDock({
             );
           })()}
 
+          {/* Carta de presentación asociada a la versión del CV */}
+          {docType === 'cv' && (() => {
+            const isActive = activeTab === coverLetterTab.id && isPanelOpen;
+            return (
+              <button
+                key={coverLetterTab.id}
+                type="button"
+                onClick={() => handleTabClick(coverLetterTab.id)}
+                className={`w-9 h-9 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer border ${
+                  isActive
+                    ? `bg-[var(--color-secondary-base)] border-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.floating} scale-105`
+                    : 'text-[var(--ui-dock-text-muted)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--ui-dock-hover)]'
+                }`}
+                title={coverLetterTab.label}
+              >
+                <Mail className="w-4.5 h-4.5" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
+                <span className={`absolute left-24 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
+                  {coverLetterTab.label}
+                </span>
+              </button>
+            );
+          })()}
+
           {/* 6. BOTÓN PERSONAL (Solo para CVs) */}
           {docType === 'cv' && (() => {
             const isActive = activeTab === personalTab.id && isPanelOpen;
@@ -417,6 +443,29 @@ export default function CanvaIconDock({
                 <DomSectionIcon iconId={personalTab.iconId} className="w-4.5 h-4.5" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
                 <span className={`absolute left-24 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
                   {personalTab.label}
+                </span>
+              </button>
+            );
+          })()}
+
+          {/* 6a. BOTÓN IMPORTAR DATOS (Solo para CVs) */}
+          {docType === 'cv' && (() => {
+            const isActive = activeTab === importDataTab.id && isPanelOpen;
+            return (
+              <button
+                key={importDataTab.id}
+                type="button"
+                onClick={() => handleTabClick(importDataTab.id)}
+                className={`w-9 h-9 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer ${
+                  isActive
+                    ? `bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.floating} scale-105`
+                    : 'text-[var(--ui-dock-text-muted)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--ui-dock-hover)]'
+                }`}
+                title={importDataTab.label}
+              >
+                <FileUp className="w-4.5 h-4.5" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
+                <span className={`absolute left-24 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
+                  {importDataTab.label}
                 </span>
               </button>
             );
@@ -670,6 +719,43 @@ export default function CanvaIconDock({
           );
         })()}
 
+        {/* Carta de presentación asociada a la versión del CV */}
+        {docType === 'cv' && (() => {
+          const isActive = activeTab === coverLetterTab.id && isPanelOpen;
+          return (
+            <button
+              type="button"
+              onClick={() => handleTabClick(coverLetterTab.id)}
+              className={`w-7.5 h-7.5 rounded-[6px] flex items-center justify-center shrink-0 cursor-pointer border transition ${
+                isActive
+                  ? 'bg-[var(--color-secondary-base)] border-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)]'
+                  : 'bg-[var(--ui-bg-panel)] border-[var(--ui-border)] text-[var(--color-secondary-bright)]'
+              }`}
+              title={coverLetterTab.label}
+            >
+              <Mail className="w-4 h-4" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
+            </button>
+          );
+        })()}
+
+        {/* Importar datos (Solo para CVs) */}
+        {docType === 'cv' && (() => {
+          const isActive = activeTab === importDataTab.id && isPanelOpen;
+          return (
+            <button
+              type="button"
+              onClick={() => handleTabClick(importDataTab.id)}
+              className={`w-7.5 h-7.5 rounded-[6px] flex items-center justify-center shrink-0 transition cursor-pointer border ${
+                isActive
+                  ? `bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] ${elevationSystem.raised}`
+                  : 'bg-[var(--ui-bg-panel)] text-[var(--color-secondary-bright)] border-[var(--color-secondary-base)]/30'
+              }`}
+              title={importDataTab.label}
+            >
+              <FileUp className="w-4 h-4" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
+            </button>
+          );
+        })()}
 
         {/* 6. BOTÓN PERSONAL (Solo para CVs) */}
         {docType === 'cv' && (() => {

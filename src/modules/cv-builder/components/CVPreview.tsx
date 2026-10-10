@@ -91,6 +91,18 @@ export default function CVPreview({
   useViewportGestures({ containerRef: externalContainerRef, sheetRef: paperSheetRef, onZoomChange, zoomLevel });
 
   const renderedDocument = useMemo(() => {
+    if (activeTab === 'carta' && debouncedCvData?.sourceCvTabId) {
+      return (
+        <CoverLetterPdfDocument
+          data={debouncedCvData}
+          presetId="carta-clasica"
+          theme={{
+            ...debouncedCvData?.theme,
+            primaryColor: debouncedCvData?.theme?.primaryColor || activePreset.palette.primary
+          }}
+        />
+      );
+    }
     if (activePreset.pageCategory === 'tarjeta') {
       return <CardSheetDocument card={cardData} preset={activePreset} />;
     }
@@ -117,7 +129,7 @@ export default function CVPreview({
         interactiveAnchors={true}
       />
     );
-  }, [activePreset, sections, cardData, debouncedCvData]);
+  }, [activePreset, sections, cardData, debouncedCvData, activeTab]);
 
   const { widthPx, heightPx } = useMemo(() => resolveDocumentCanvasPx(pageSizeId), [pageSizeId]);
 

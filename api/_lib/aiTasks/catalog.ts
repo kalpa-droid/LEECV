@@ -41,8 +41,8 @@ Mejora esta viñeta aplicando las reglas.`,
   generate_summary: {
     taskId: 'generate_summary',
     buildSystemPrompt: (cvContext: string, payload: any, formatContext?: string) => `Eres un reclutador experto en optimización de CVs.
-Tu objetivo es crear un perfil profesional (resumen) de 4 a 5 renglones.
-REGLA 1: Enfócate en quién es el candidato, qué busca y sus años de experiencia.
+Tu objetivo es crear un extracto profesional de 4 a 5 renglones centrado en trayectoria, especialidad, credenciales y logros documentados.
+REGLA 1: Enfócate en la experiencia real del candidato, no en sus metas o aspiraciones, que pertenecen al objetivo profesional.
 REGLA 2: Usa únicamente la información provista en el CV del candidato. NO inventes habilidades, roles ni años de experiencia.
 REGLA 3: No uses clichés vacíos (ej. "proactivo, orientado a resultados"). 
 Debes devolver un JSON válido.
@@ -59,6 +59,84 @@ ${cvContext}
         summary: { type: "string" }
       },
       required: ["summary"]
+    }
+  },
+
+  generate_objective: {
+    taskId: 'generate_objective',
+    buildSystemPrompt: (cvContext: string, _payload: any, formatContext?: string) => `Eres un orientador laboral experto en objetivos profesionales.
+Redacta un objetivo profesional breve, de hasta 4 líneas, alineado con el puesto indicado.
+REGLA 1: Expresa el tipo de contribución y dirección profesional que busca la persona; no repitas su trayectoria como resumen.
+REGLA 2: No inventes experiencia, habilidades, títulos, resultados ni años. Usa solo datos respaldados por el CV y la oferta.
+REGLA 3: Evita clichés y promesas que no se desprendan de los datos.
+REGLA 4: Si no hay datos suficientes para una afirmación concreta, usa una formulación prudente y general.
+Devuelve exclusivamente JSON válido con la propiedad "objective".
+${formatContext ? `\nADAPTACIÓN AL FORMATO OBJETIVO:\n${formatContext}\nMantén el objetivo claro y conciso.` : ''}
+
+Contexto del CV:
+<candidate_context>
+${cvContext}
+</candidate_context>`,
+    buildUserPrompt: (payload: any) => `Objetivo actual:
+<current_objective>
+${payload.currentObjective || 'No hay un objetivo escrito.'}
+</current_objective>
+
+Vacante objetivo:
+<target_job>
+${payload.jobTargetText || 'No se especificó una vacante.'}
+</target_job>
+
+Propón un objetivo alineado sin afirmar habilidades o experiencia no documentadas.`,
+    responseSchema: {
+      type: 'object',
+      properties: {
+        objective: { type: 'string' }
+      },
+      required: ['objective']
+    }
+  },
+
+  suggest_competencies: {
+    taskId: 'suggest_competencies',
+    buildSystemPrompt: (cvContext: string) => `Eres un orientador laboral que ayuda a adaptar competencias a una oferta.
+Selecciona únicamente competencias que estén respaldadas explícitamente por datos del CV y que sean relevantes para la vacante.
+No infieras competencias a partir del puesto deseado ni agregues habilidades que la persona no haya demostrado.
+Devuelve exclusivamente JSON válido con la propiedad "suggestions", un array de objetos con "skill", "evidence" y "relevance".
+Usa una evidencia concreta y breve del CV para cada competencia. Si no hay competencias respaldadas y relevantes, devuelve un array vacío.
+
+Contexto del CV:
+<candidate_context>
+${cvContext}
+</candidate_context>`,
+    buildUserPrompt: (payload: any) => `Vacante:
+<target_job>
+${payload.jobTargetText || 'No se especificó una vacante.'}
+</target_job>
+
+Competencias que ya están en el CV:
+<current_competencies>
+${JSON.stringify(payload.currentSkills || [])}
+</current_competencies>
+
+Devuelve sólo competencias respaldadas por el CV, sin repetir las actuales.`,
+    responseSchema: {
+      type: 'object',
+      properties: {
+        suggestions: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              skill: { type: 'string' },
+              evidence: { type: 'string' },
+              relevance: { type: 'string' }
+            },
+            required: ['skill', 'evidence', 'relevance']
+          }
+        }
+      },
+      required: ['suggestions']
     }
   },
 
