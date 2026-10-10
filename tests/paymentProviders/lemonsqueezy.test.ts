@@ -69,4 +69,47 @@ describe('Lemon Squeezy Provider Contract', () => {
     expect(details?.email).toBe('lemon@test.com');
     expect(details?.plan).toBe('credits_pack_5');
   });
+
+  it('extractPaymentData() debe omitir order_created para plan Pro para evitar doble otorgamiento', async () => {
+    process.env.LS_VARIANT_PRO = '999999';
+    const proOrderContext: any = {
+      parsedBody: {
+        meta: { event_name: 'order_created' },
+        data: {
+          id: 'ord_pro_123',
+          attributes: {
+            user_email: 'pro@test.com',
+            total: 2500,
+            currency: 'USD',
+            first_order_item: { variant_id: 999999 }
+          }
+        }
+      }
+    };
+    const res = await lemonSqueezyProvider.extractPaymentData(proOrderContext);
+    expect(res).toBeNull();
+  });
+
+  it('extractPaymentData() debe procesar subscription_payment_success para plan Pro', async () => {
+    process.env.LS_VARIANT_PRO = '999999';
+    const proSubContext: any = {
+      parsedBody: {
+        meta: { event_name: 'subscription_payment_success' },
+        data: {
+          id: 'sub_inv_456',
+          attributes: {
+            user_email: 'pro@test.com',
+            total: 2500,
+            currency: 'USD',
+            variant_id: 999999
+          }
+        }
+      }
+    };
+    const res = await lemonSqueezyProvider.extractPaymentData(proSubContext);
+    expect(res).not.toBeNull();
+    expect(res?.plan).toBe('pro');
+    expect(res?.externalId).toBe('sub_inv_456');
+    expect(res?.amount).toBe(25);
+  });
 });

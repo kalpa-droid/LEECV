@@ -1,0 +1,36 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest",
+        "--browser",
+        "msedge"
+      ]
+    },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ]
+    },
+    "github": {
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "C:\\Users\\Kalpa\\.mcp\\start-github-mcp.ps1"
+      ]
+    },
+    "gemini": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\Kalpa\\.mcp\\gemini-mcp.mjs"
+      ]
+    }
+  }
+}

@@ -133,3 +133,44 @@ LEECV es para gente común: tiene una impresora en casa o quiere llevar el archi
   2. **Matching estricto:** Anclar la búsqueda (`^...$`) cuando aplique, o usar palabras completas seguras (`\b`), en lugar de `.includes()` débiles para evitar falsos positivos ("Cosas de mi equipo" -> "equipo").
   3. **Trazabilidad obligatoria:** Toda invocación a una adivinanza/heurística debe reportarse (p. ej., `reportMessage`) para saber cuándo se invoca y detectar falsos positivos/negativos en uso real.
 
+## Regla 9 — División de Roles y Flujo de Trabajo Multi-Agente
+
+Para mantener la máxima seguridad, velocidad y orden arquitectónico en LEECV, el trabajo se distribuye entre 4 actores con responsabilidades y etapas estrictas:
+
+### 1. Mapa de Roles
+
+| Actor | Rol Principal | Responsabilidades Clave |
+|---|---|---|
+| **Kalpa** (Humano) | **Dueño del Producto y Codeowner** | • Define requisitos y prioridades de negocio.<br>• Aprueba o rechaza planes propuestos (**Regla 7**).<br>• Autoriza cualquier acción que afecte producción o secretos.<br>• Revisa y aprueba Pull Requests en GitHub (**Regla 6**). |
+| **Antigravity** (IA) | **Agente Ejecutor Principal y Orquestador** | • Crea y gestiona ramas de Git (`feat/...`).<br>• Implementa código, migraciones SQL y tests unitarios.<br>• Ejecuta la suite local de calidad (`npm run check-all`, `vitest`).<br>• Empuja cambios, abre PRs y registra sesiones en `SESSION_LOG.md`. |
+| **Claude** (IA) | **Auditor de Seguridad y Segunda Opinión** | • Audita arquitecturas críticas, RLS de PostgreSQL y seguridad de webhooks.<br>• Revisa edge-cases de concurrencia e idempotencia.<br>• Sugiere mejoras defensivas antes de promover a producción. |
+| **VS Code / Copilot / Gemini** (IDE) | **Entorno de Trabajo y Control Visual** | • Panel visual donde Kalpa inspecciona los diffs de código.<br>• Asistencia en caliente y autocompletado contextual durante la edición. |
+
+### 2. Flujo de Trabajo por Etapas (Lifecycle de Tareas)
+
+1. **Etapa 1: Definición y Planificación (Kalpa + Agente)**
+   - Se plantea la necesidad o plan de mejora.
+   - **Puerta de Control (Gate):** Kalpa debe dar el visto bueno explícito al plan antes de modificar código ("no mandarse de una", **Regla 7**).
+
+2. **Etapa 2: Aislamiento y Diagnóstico (Antigravity)**
+   - Creación de rama de trabajo descriptiva (`git checkout -b feat/...`). Nunca sobre `main`.
+   - Inspección previa del código existente, migraciones aplicadas y tests relacionados.
+
+3. **Etapa 3: Implementación Quirúrgica y Validación Local (Antigravity)**
+   - Escritura de código modular reutilizando motores canónicos (**Regla 1**).
+   - Desarrollo o actualización de tests unitarios y de integración con mocks seguros.
+   - Ejecución de `npm run check-all` hasta obtener **0 errores** (**Regla 0**).
+
+4. **Etapa 4: Auditoría Cruzada (Claude / Gemini)**
+   - En cambios sensibles (pagos, base de datos, seguridad, entitlements), se contrasta la solución con Claude para detectar posibles vectores de ataque o fallas de concurrencia.
+
+5. **Etapa 5: Apertura de Pull Request y Verificación en CI (Antigravity)**
+   - `git push origin <rama>` y apertura de Pull Request contra `main`.
+   - Verificación de que la suite `check-all` en GitHub Actions complete en verde.
+
+6. **Etapa 6: Aprobación Humana y Merge (Kalpa)**
+   - Kalpa inspecciona el diff en GitHub o VS Code.
+   - Kalpa aprueba como CODEOWNER y ejecuta el merge.
+   - Registro obligatorio en `SESSION_LOG.md`.
+
+

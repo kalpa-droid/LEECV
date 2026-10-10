@@ -25,35 +25,9 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
     throw new Error('applyPayment requiere exportToken, userId, o email para habilitar el servicio');
   }
 
-  // 1. Intentar registrar el pago primero para garantizar idempotencia atómica
-  if (externalId && metodoPago) {
-    try {
-      await serverDal.processedPayments.record({
-        provider: metodoPago,
-        external_id: externalId,
-        user_email: email || undefined,
-        user_id: userId || undefined,
-        plan,
-        amount: amount || undefined,
-        currency: currency || undefined,
-      });
-    } catch (err: any) {
-      if (
-        err.code === '23505' || 
-        String(err?.message).includes('unique constraint') || 
-        String(err?.message).includes('duplicate key') ||
-        String(err?.message).includes('unq_provider_external_id')
-      ) {
-        console.log(`[applyPayment] Transacción duplicada omitida (${metodoPago}: ${externalId})`);
-        return { type: 'already_processed', message: 'Payment already recorded' };
-      }
-      throw err;
-    }
-  }
-
   const planData = getPrice(plan);
 
-  // 1.5 Validar amount y currency
+  // 1. Validar amount y currency ANTES de registrar el pago
   if (planData && amount !== undefined && amount !== null && externalId && metodoPago !== 'manual') {
     let expectedAmount = 0;
     let expectedCurrency = 'USD';
@@ -100,6 +74,45 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
     }
   }
 
+  // 1.5 Intentar registrar el pago con estado inicial 'pending'
+  if (externalId && metodoPago) {
+    try {
+      await serverDal.processedPayments.record({
+        provider: metodoPago,
+        external_id: externalId,
+        user_email: email || undefined,
+        user_id: userId || undefined,
+        plan,
+        amount: amount || undefined,
+        currency: currency || undefined,
+        entitlement_status: 'pending',
+      });
+    } catch (err: any) {
+      if (
+        err.code === '23505' || 
+        String(err?.message).includes('unique constraint') || 
+        String(err?.message).includes('duplicate key') ||
+        String(err?.message).includes('unq_provider_external_id')
+      ) {
+        // Consultar si el derecho ya fue otorgado con éxito
+        const existing = await serverDal.processedPayments.getByProviderAndExternalId(metodoPago, externalId);
+        if (!existing) {
+          throw new Error(`[applyPayment] Violación de clave única 23505 pero no se pudo leer el registro existente (${metodoPago}: ${externalId})`);
+        }
+        if (existing.entitlement_status === 'completed') {
+          console.log(`[applyPayment] Transacción duplicada omitida (${metodoPago}: ${externalId})`);
+          return { type: 'already_processed', message: 'Payment already recorded' };
+        }
+        console.warn(`[applyPayment] Reintento de pago detectado con derecho pendiente (${metodoPago}: ${externalId}). Recuperando otorgamiento...`);
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  // Clave canónica de grant para evitar colisiones entre distintos proveedores
+  const grantPaymentId = externalId ? (metodoPago ? `${metodoPago}:${externalId}` : externalId) : null;
+
   // 2. Aplicar el pago basado en el plan (Invitado vs Packs/Pro)
   if (planData && planData.id !== 'single_pdf') {
     // Es un Pack o Pro (requieren cuenta/email)
@@ -134,22 +147,22 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
       return { type: 'pending_grant', message: 'Profile not found, grant held' };
     } else {
       if (planData.id === 'pro') {
-        // Otorgar suscripción Pro (añadir BILLING_CONFIG.PRO_PLAN_DAYS días o a partir de hoy)
-        const currentProfile = await supabaseAdmin.from('profiles').select('plan_vence').eq('id', profileId).single();
-        const currentVence = currentProfile.data?.plan_vence ? new Date(currentProfile.data.plan_vence) : new Date();
-        const now = new Date();
-        const baseDate = currentVence > now ? currentVence : now;
-        
-        const newVence = new Date(baseDate);
-        newVence.setDate(newVence.getDate() + BILLING_CONFIG.PRO_PLAN_DAYS);
+        // Otorgar suscripción Pro de forma atómica e idempotente vía RPC
+        const { error: proGrantError } = await supabaseAdmin.rpc('grant_pro_subscription', {
+          p_payment_id: grantPaymentId,
+          p_user_id: profileId,
+          p_days: BILLING_CONFIG.PRO_PLAN_DAYS
+        });
 
-        await serverDal.profiles.updateSubscription({ id: profileId }, { plan: 'pro', plan_vence: newVence.toISOString() });
-        console.log(`[applyPayment] Plan Pro otorgado a perfil ${profileId} hasta ${newVence.toISOString()}`);
+        if (proGrantError) {
+          throw new Error(`Error en grant_pro_subscription: ${proGrantError.message}`);
+        }
+        console.log(`[applyPayment] Plan Pro otorgado a perfil ${profileId} de forma idempotente`);
       } else if (planData.id === 'credits_pack_5' || planData.id === 'credits_pack_10') {
         // Otorgar tokens de exportación
         const creditsToGrant = planData.credits || (planData.id === 'credits_pack_5' ? 5 : 10);
         const { error: grantError } = await supabaseAdmin.rpc('grant_export_tokens', {
-          p_payment_id: externalId || null,
+          p_payment_id: grantPaymentId,
           p_user_id: profileId,
           p_amount: creditsToGrant,
           p_email: email
@@ -167,18 +180,44 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
       throw new Error('Se requiere exportToken para habilitar single_pdf');
     }
 
-    const { error: updateError } = await supabaseAdmin
+    const { data: updatedRows, error: updateError } = await supabaseAdmin
       .from('pdf_export_tokens')
       .update({ 
         paid: true, 
-        payment_id: externalId || null,
+        payment_id: grantPaymentId,
         email: email || undefined
       })
-      .eq('token', exportToken);
+      .eq('token', exportToken)
+      .select('token, paid, payment_id');
 
     if (updateError) {
       throw new Error(`Error actualizando pdf_export_tokens: ${updateError.message}`);
     }
+
+    if (!updatedRows || updatedRows.length === 0) {
+      // Verificar si el token ya había sido marcado como paid con este payment_id (reintento idempotente)
+      const { data: existingToken } = await supabaseAdmin
+        .from('pdf_export_tokens')
+        .select('token, paid, payment_id')
+        .eq('token', exportToken)
+        .maybeSingle();
+
+      const matchesPayment = existingToken?.paid && (
+        existingToken.payment_id === grantPaymentId || 
+        existingToken.payment_id === externalId
+      );
+
+      if (matchesPayment) {
+        console.log(`[applyPayment] Token ${exportToken} ya pagado previamente para pago ${grantPaymentId} (idempotente)`);
+      } else {
+        throw new Error(`[applyPayment] No se encontró el token de exportación especificado: ${exportToken}`);
+      }
+    }
+  }
+
+  // 2.3 Marcar derecho como completado en el registro de pago para garantizar recuperación idempotente
+  if (externalId && metodoPago) {
+    await serverDal.processedPayments.updateEntitlementStatus(metodoPago, externalId, 'completed');
   }
 
   // 2.5 Enviar recibo de compra

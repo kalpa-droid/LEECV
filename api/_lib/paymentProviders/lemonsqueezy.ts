@@ -90,6 +90,20 @@ export const lemonSqueezyProvider: PaymentProvider = {
     );
 
     const planToValidate = variantIdMap[rawVariantId] || customPlan;
+
+    // Salvaguarda P0: Evitar doble otorgamiento en suscripciones
+    // Para suscripciones recurrentes ('pro'), Lemon Squeezy emite tanto 'order_created' como 'subscription_payment_success'.
+    // Omitimos 'order_created' para 'pro' y procesamos la suscripción exclusivamente en 'subscription_payment_success'
+    // (que cubre tanto la compra inicial como todas las renovaciones futuras).
+    // Los productos de pago único (single_pdf, créditos) se procesan exclusivamente en 'order_created'.
+    if (eventName === 'order_created' && planToValidate === 'pro') {
+      console.log(`[lemonSqueezy] Omitiendo evento order_created para plan recurrente Pro (se procesa en subscription_payment_success)`);
+      return null;
+    }
+    if (eventName === 'subscription_payment_success' && planToValidate && planToValidate !== 'pro') {
+      console.log(`[lemonSqueezy] Omitiendo evento subscription_payment_success para plan no recurrente ${planToValidate}`);
+      return null;
+    }
     
     // We construct a JSON string to pass into parsePlanReference
     const refStr = JSON.stringify({ plan: planToValidate, exportToken, userId });
