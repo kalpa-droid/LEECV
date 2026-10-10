@@ -178,7 +178,7 @@ export function TemplateManagementTab() {
           <button
             onClick={handleSaveCurrentPreset}
             disabled={saving}
-            className={`px-4 py-2 bg-[var(--color-status-success-base)] hover:opacity-90 text-white font-extrabold text-xs rounded-[${radius.card}] ${elevationSystem.raised} transition flex items-center gap-1.5 cursor-pointer`}
+            className={`px-4 py-2 bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-status-success-on-base)] font-extrabold text-xs rounded-[${radius.card}] ${elevationSystem.raised} transition flex items-center gap-1.5 cursor-pointer`}
           >
             <Save className={`w-4 h-4 ${saving ? 'animate-spin' : ''}`} />
             <span>{saving ? 'Guardando...' : 'Guardar en Supabase'}</span>
@@ -535,8 +535,8 @@ export function TemplateManagementTab() {
 
         {/* RAW JSON GEOMETRY EDITOR */}
         {activeSubTab === 'json' && (
-          <div className={`space-y-3 bg-[var(--color-neutral-text-primary)] text-white p-4 rounded-[${radius.modal}] text-xs font-mono border border-white/10`}>
-            <div className="flex items-center justify-between text-white/60">
+          <div className={`space-y-3 bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] p-4 rounded-[${radius.modal}] text-xs font-mono border border-[var(--ui-border)]`}>
+            <div className="flex items-center justify-between text-[var(--ui-text-secondary)]">
               <span>Edición Avanzada de Geometría JSON (Sectores, Layout y Objetos Fijos)</span>
               <span className="text-[10px] text-[var(--color-status-warning-bright)] font-bold">⚠️ Se valida esquema al guardar</span>
             </div>
@@ -545,7 +545,7 @@ export function TemplateManagementTab() {
               value={jsonText}
               onChange={(e) => setJsonText(e.target.value)}
               rows={16}
-              className={`w-full bg-black/60 text-[var(--ui-on-dark-emerald)] p-4 rounded-[${radius.card}] border border-white/10 font-mono text-xs outline-none focus:border-[var(--color-accent-purple)] leading-relaxed resize-y`}
+              className={`w-full bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] p-4 rounded-[${radius.card}] border border-[var(--ui-border)] font-mono text-xs outline-none focus:border-[var(--color-accent-purple)] leading-relaxed resize-y`}
             />
           </div>
         )}

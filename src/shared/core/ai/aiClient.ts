@@ -2,7 +2,7 @@ import { apiClient } from '../utils/apiClient';
 import type { CVData } from '../../../types/cv';
 
 export interface AiTaskParams<T = any> {
-  taskId: 'improve_bullet' | 'generate_summary' | 'cover_letter' | 'generate_slogan' | 'explain_ats' | 'ats_analysis' | 'first_job_interview' | 'classify_raw_data';
+  taskId: 'improve_bullet' | 'generate_summary' | 'generate_objective' | 'suggest_competencies' | 'cover_letter' | 'generate_slogan' | 'explain_ats' | 'ats_analysis' | 'first_job_interview' | 'classify_raw_data';
   payload: T;
   cvData?: CVData;
   maxTokens?: number;

@@ -84,9 +84,18 @@ export interface ScannedCertificate {
 /** Firma digital del titular del CV — `EditorPanel.tsx`, pestaña "Firma Digital". */
 export interface SignatureData {
   dataUrl?: string;
+  signerName?: string;
   signerRole?: string;
   date?: string;
   signerCity?: string;
+}
+
+export interface CoverLetterBody {
+  salutation?: string;
+  hookParagraph?: string;
+  evidenceParagraph?: string;
+  closingParagraph?: string;
+  signoff?: string;
 }
 
 export interface LanguageItem {
@@ -177,6 +186,9 @@ export interface CVData {
   doc_type_id?: string;
   schemaVersion?: number;
   summary?: string;
+  objective?: string;
+  body?: CoverLetterBody;
+  date?: string;
   frase?: string;
   redes?: any[];
   projects?: any[];

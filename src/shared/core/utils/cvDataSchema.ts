@@ -71,6 +71,23 @@ export function sanitizeCvData(rawCvData: any = {}) {
     coverFeaturedEducationId: data.coverFeaturedEducationId ?? null,
     coverFeaturedProfessionId: data.coverFeaturedProfessionId ?? null,
     coverStyle: data.coverStyle || data.coverPresetId || undefined,
+    jobTarget: data.jobTarget && typeof data.jobTarget === 'object'
+      ? Object.fromEntries(
+          ['jobTitle', 'companyName', 'recipientName', 'jobDescription']
+            .filter((field) => typeof data.jobTarget[field] === 'string')
+            .map((field) => [field, data.jobTarget[field]])
+        )
+      : undefined,
+    body: data.body && typeof data.body === 'object'
+      ? {
+          salutation: typeof data.body.salutation === 'string' ? data.body.salutation : '',
+          hookParagraph: typeof data.body.hookParagraph === 'string' ? data.body.hookParagraph : '',
+          evidenceParagraph: typeof data.body.evidenceParagraph === 'string' ? data.body.evidenceParagraph : '',
+          closingParagraph: typeof data.body.closingParagraph === 'string' ? data.body.closingParagraph : '',
+          signoff: typeof data.body.signoff === 'string' ? data.body.signoff : ''
+        }
+      : undefined,
+    date: typeof data.date === 'string' ? data.date : undefined,
 
     personalInfo: {
       titlePrefix: data.personalInfo?.titlePrefix || '',
@@ -97,6 +114,7 @@ export function sanitizeCvData(rawCvData: any = {}) {
 
     roles: Array.isArray(data.roles) ? data.roles : [],
     summary: data.summary || '',
+    objective: data.objective || '',
     skills: Array.isArray(data.skills) ? data.skills : (Array.isArray(data.competencias) ? data.competencias : []),
     hardSkills: Array.isArray(data.hardSkills) ? data.hardSkills : [],
     languages: Array.isArray(data.languages) ? data.languages : [],

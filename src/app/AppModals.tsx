@@ -22,6 +22,7 @@ import { exportCVToJson } from '../shared/core/utils/jsonImporterExporter';
 import * as workspaceController from '../shared/core/documents/workspaceController';
 import { getOpenTabs } from '../shared/core/documents/tabStore';
 import { inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
+import { resolveActivePreset } from '../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { capabilitiesGate } from '../shared/core/documents/documentEngine/capabilitiesGate';
 import { useToast } from '../shared/core/ui/Toast';
 
@@ -243,8 +244,18 @@ export function AppModals(props: AppModalsProps) {
         <CoverLetterExportModal
           isOpen={isCoverLetterExportOpen}
           onClose={() => setIsCoverLetterExportOpen(false)}
-          cvData={cvData}
-          presetId={cvData?.activePresetId || 'carta-clasica'}
+          cvData={{
+            ...cvData,
+            activePresetId: activeDocType === 'cv' ? 'carta-clasica' : (cvData?.activePresetId || 'carta-clasica'),
+            ...(activeDocType === 'cv' ? { coverLetterStylePresetId: cvData?.activePresetId } : {}),
+            theme: activeDocType === 'cv'
+              ? {
+                  ...(cvData?.theme || {}),
+                  primaryColor: cvData?.theme?.primaryColor || resolveActivePreset(cvData).palette.primary
+                }
+              : cvData?.theme
+          }}
+          presetId={activeDocType === 'cv' ? 'carta-clasica' : (cvData?.activePresetId || 'carta-clasica')}
         />
       )}
 

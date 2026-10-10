@@ -22,6 +22,8 @@ import { PortafolioSection } from './editor/sections/PortafolioSection';
 import { HabilidadesSection } from './editor/sections/HabilidadesSection';
 import { FirmaSection } from './editor/sections/FirmaSection';
 import { JobTargetSection } from './editor/sections/JobTargetSection';
+import { ImportDataSection } from './editor/sections/ImportDataSection';
+import { ApplicationCoverLetterSection } from './editor/sections/ApplicationCoverLetterSection';
 import { FormatConfirmationModal, FormatApplicationMode } from './FormatConfirmationModal';
 import PersonalInfoSection from './editor/PersonalInfoSection';
 import { CardExtractSection } from './editor/sections/CardExtractSection';
@@ -50,7 +52,8 @@ export default function EditorPanel({
   docType = 'cv',
   onOpenPhotoCropper, 
   onOpenSignature,
-  onGenerateCoverLetterFromCV
+  onGenerateCoverLetterFromCV,
+  onExportCoverLetter
 }: any) {
   const { showSuccess, showError, showWarning } = useToast();
   const { confirm } = useConfirm();
@@ -211,6 +214,30 @@ export default function EditorPanel({
         {docType === 'cv' && activeTab === 'objetivo' && <ObjetivoSection cvData={cvData} setCvData={setCvData} />}
 
         {docType === 'cv' && activeTab === 'vacante' && <JobTargetSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'cv' && activeTab === 'carta' && (
+          cvData.sourceCvTabId ? (
+            <ApplicationCoverLetterSection
+              cvData={cvData}
+              setCvData={setCvData}
+              onExport={onExportCoverLetter}
+            />
+          ) : (
+            <div className="space-y-3 rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] p-4">
+              <h2 className="text-lg font-semibold text-[var(--ui-text-primary)]">Carta para una postulación</h2>
+              <p className="text-sm text-[var(--ui-text-secondary)]">
+                Para redactar una carta vinculada a una oferta sin modificar el CV base, primero creá una postulación independiente desde el panel Vacante.
+              </p>
+              <button
+                type="button"
+                onClick={() => changeActiveTab('vacante')}
+                className="rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] px-3 py-2 text-sm font-medium text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-card)]"
+              >
+                Ir a Vacante
+              </button>
+            </div>
+          )
+        )}
+        {docType === 'cv' && activeTab === 'importar_datos' && <ImportDataSection />}
 
         {docType === 'cv' && activeTab === 'logros' && <LogrosSection cvData={cvData} setCvData={setCvData} />}
 
