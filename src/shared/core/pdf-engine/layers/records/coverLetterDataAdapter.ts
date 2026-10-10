@@ -1,4 +1,5 @@
 export interface CoverLetterData {
+  coverLetterStylePresetId?: string;
   layout?: {
     paperSize?: string;
     pageSizeId?: string;

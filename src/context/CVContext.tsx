@@ -20,7 +20,7 @@ interface CVContextType {
   resetToBlankCV: (options?: { activePresetId?: string }) => CVData;
   loadCVData: (newCVData: CVData) => void;
   saveCV: () => Promise<any>;
-  saveCVAs: (versionLabel?: string) => Promise<any>;
+  saveCVAs: (versionLabel?: string, documentOverrides?: Partial<CVData>) => Promise<any>;
   isSaving: boolean;
   hasPendingChanges: boolean;
   isSwitchingDocument: boolean;
@@ -308,15 +308,15 @@ export function CVProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const saveCVAs = async (versionLabel?: string) => {
+  const saveCVAs = async (versionLabel?: string, documentOverrides: Partial<CVData> = {}) => {
     setIsSaving(true);
     try {
-      const confirmedData = markAsConfirmed(cvData);
+      const confirmedData = markAsConfirmed({ ...cvData, ...documentOverrides });
       const res = await saveCVAsStorage(confirmedData, versionLabel);
       if (res?.success && res.record?.id) {
         setCvDataState((prev: CVData) => {
           const copy: any = {
-            ...prev,
+            ...confirmedData,
             id: res.record!.id,
             ...(versionLabel ? { version_label: versionLabel, versionLabel } : {}),
           };

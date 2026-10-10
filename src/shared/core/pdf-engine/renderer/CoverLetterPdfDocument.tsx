@@ -2,7 +2,7 @@ import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { prepareCoverLetterRenderData, CoverLetterData } from '../layers/records/coverLetterDataAdapter';
 import { getCoverLetterPreset } from '../../presets/coverLetterPresetCatalog';
-import { getPreset } from '../layers/presets/presetRegistry';
+import { resolveActivePreset } from '../layers/presets/presetRegistry';
 import { resolveCoverLetterStyles } from '../layers/cover-letter/coverLetterStyleEngine';
 import { getPageSize } from '../layers/page/pageSizes';
 
@@ -23,8 +23,13 @@ export const CoverLetterPdfDocument: React.FC<CoverLetterPdfProps> = ({
 }) => {
   const renderData = prepareCoverLetterRenderData(data);
   const preset = getCoverLetterPreset(presetId);
-  const activePreset = getPreset(presetId);
-  const letterStyles = resolveCoverLetterStyles(activePreset, activePreset.palette.background);
+  const activePreset = resolveActivePreset(data.coverLetterStylePresetId
+    ? { ...data, activePresetId: data.coverLetterStylePresetId }
+    : data);
+  const stylePreset = theme.fontFamily
+    ? { ...activePreset, typography: { ...activePreset.typography, fontFamily: theme.fontFamily } }
+    : activePreset;
+  const letterStyles = resolveCoverLetterStyles(stylePreset, stylePreset.palette.background);
 
   const activePageSizeId = data.layout?.pageSizeId || data.layout?.paperSize || 'a4';
   const pageDef = getPageSize(activePageSizeId);
@@ -68,8 +73,10 @@ export const CoverLetterPdfDocument: React.FC<CoverLetterPdfProps> = ({
       marginBottom: 20
     },
     senderName: {
-      fontSize: 16,
-      fontFamily: 'Helvetica-Bold',
+      fontSize: letterStyles.senderName.fontSizePt,
+      fontFamily: letterStyles.senderName.fontFamily,
+      fontWeight: letterStyles.senderName.fontWeight,
+      fontStyle: letterStyles.senderName.fontStyle,
       color: primaryColor,
       marginBottom: 4,
       textTransform: 'uppercase'
@@ -87,8 +94,11 @@ export const CoverLetterPdfDocument: React.FC<CoverLetterPdfProps> = ({
       marginBottom: 20
     },
     recipientName: {
-      fontFamily: 'Helvetica-Bold',
-      fontSize: 11
+      fontFamily: letterStyles.recipientName.fontFamily,
+      fontSize: letterStyles.recipientName.fontSizePt,
+      fontWeight: letterStyles.recipientName.fontWeight,
+      fontStyle: letterStyles.recipientName.fontStyle,
+      color: letterStyles.recipientName.colorHex
     },
     recipientSub: {
       fontSize: letterStyles.recipientSub.fontSizePt,
@@ -123,8 +133,11 @@ export const CoverLetterPdfDocument: React.FC<CoverLetterPdfProps> = ({
       marginBottom: 6
     },
     signerName: {
-      fontFamily: 'Helvetica-Bold',
-      fontSize: 11
+      fontFamily: letterStyles.signerName.fontFamily,
+      fontSize: letterStyles.signerName.fontSizePt,
+      fontWeight: letterStyles.signerName.fontWeight,
+      fontStyle: letterStyles.signerName.fontStyle,
+      color: letterStyles.signerName.colorHex
     },
     signerRole: {
       fontSize: letterStyles.signerRole.fontSizePt,

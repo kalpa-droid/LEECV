@@ -21,17 +21,19 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
   const [total, setTotal] = useState(0);
   const [status, setStatus] = useState<'idle' | 'analyzing' | 'processing' | 'done' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const [pastedText, setPastedText] = useState('');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
+      setPastedText('');
       setStatus('idle');
       setErrorMsg('');
     }
   };
 
   const startImport = async () => {
-    if (!file) return;
+    if (!file && !pastedText.trim()) return;
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       setErrorMsg('Debes iniciar sesión para usar la importación con IA.');
@@ -44,15 +46,21 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
     try {
       let pagesToProcess: Array<{ kind: 'text'|'image', content: string }> = [];
       
-      if (file.type.startsWith('image/')) {
+      if (!file) {
+        pagesToProcess.push({ kind: 'text', content: pastedText.trim() });
+      } else if (file.type.startsWith('image/')) {
         // Una foto de cámara sin procesar puede pesar varios MB — se reduce y comprime ANTES
         // de mandarla, o el pedido supera el límite de tamaño de Vercel y la función se cae.
         const base64 = await encodeImageFileWithinBudget(file);
         pagesToProcess.push({ kind: 'image', content: base64 });
       } else if (file.type === 'application/pdf') {
         pagesToProcess = await processPdfPages(file);
+      } else if (file.type === 'text/plain' || file.name.toLowerCase().endsWith('.txt')) {
+        const text = await file.text();
+        if (!text.trim()) throw new Error('El archivo de texto está vacío.');
+        pagesToProcess.push({ kind: 'text', content: text });
       } else {
-        throw new Error('Formato no soportado. Usa PDF o imágenes (JPG, PNG).');
+        throw new Error('Formato no soportado. Usa PDF, una imagen o texto (.txt).');
       }
 
       setTotal(pagesToProcess.length);
@@ -135,19 +143,32 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
           <div className="flex flex-col items-center gap-4 py-8">
             <Bot size={48} color={colorSystem.accent.base} />
             <p className={`${typeScale.body} text-center`} style={{ color: colorSystem.neutral.textSecondary }}>
-              Subí tu CV en PDF, una foto, o el PDF de tu <b>Perfil de LinkedIn</b> (<i>Más &gt; Guardar en PDF</i>) para extraer tus datos.
+              Importá desde un PDF, una foto o texto. También podés pegar el contenido de tu CV.
             </p>
             <label className={`${button.base} ${button.primary} cursor-pointer inline-flex items-center gap-2`}>
               <Upload size={18} />
-              Seleccionar Archivo
-              <input type="file" accept="application/pdf,image/png,image/jpeg" className="hidden" onChange={handleFileChange} />
+              Seleccionar PDF, foto o texto
+              <input type="file" accept="application/pdf,image/png,image/jpeg,text/plain,.txt" className="hidden" onChange={handleFileChange} />
             </label>
             {file && (
               <div className="text-sm font-medium mt-2 flex items-center gap-2" style={{ color: colorSystem.neutral.textPrimary }}>
                 <FileText size={16} /> {file.name}
               </div>
             )}
-            {file && (
+            <label className="w-full text-left space-y-1">
+              <span className="block text-sm font-semibold text-[var(--ui-text-primary)]">O pegá el texto de tu CV</span>
+              <textarea
+                value={pastedText}
+                onChange={(event) => {
+                  setPastedText(event.target.value);
+                  if (event.target.value.trim()) setFile(null);
+                }}
+                rows={6}
+                placeholder="Pegá acá la información de tu experiencia, formación y habilidades..."
+                className="w-full rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-bg-input)] text-[var(--ui-text-primary)] p-3 text-sm"
+              />
+            </label>
+            {(file || pastedText.trim()) && (
               <button className={`${button.base} ${button.secondary} mt-4`} onClick={startImport}>
                 Comenzar Extracción
               </button>

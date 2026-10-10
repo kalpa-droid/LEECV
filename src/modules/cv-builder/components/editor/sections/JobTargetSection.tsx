@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Briefcase, Target, Plus, CheckCircle, AlertCircle, Wand2 } from 'lucide-react';
+import { Briefcase, Target, CheckCircle, AlertCircle, Wand2 } from 'lucide-react';
 import { Field } from '../../../../../shared/core/ui/Field';
 import { radius, button } from '../../../../../shared/core/uiDesignSystem';
 import { useCVContext } from '../../../../../context/CVContext';
@@ -13,13 +13,15 @@ import { AtsAiAnalysisModal } from '../../AtsAiAnalysisModal';
 
 export const JobTargetSection = ({ cvData, setCvData }: any) => {
   const { saveCVAs } = useCVContext();
-  const { showSuccess } = useToast();
+  const { showSuccess, showError } = useToast();
   const jobTarget = cvData.jobTarget || {};
   
   const [extractedData, setExtractedData] = useState<ExtractedJobData | null>(null);
   const [extractedKeywords, setExtractedKeywords] = useState<{word: string, found: boolean}[]>([]);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [cvTextForAi, setCvTextForAi] = useState('');
+  const [isCreatingApplication, setIsCreatingApplication] = useState(false);
+  const isApplicationVersion = Boolean(cvData.sourceCvTabId);
 
   useEffect(() => {
     if (jobTarget.jobDescription) {
@@ -54,6 +56,32 @@ export const JobTargetSection = ({ cvData, setCvData }: any) => {
     setIsAiModalOpen(true);
   };
 
+  const handleCreateApplication = async () => {
+    if (isCreatingApplication) return;
+    setIsCreatingApplication(true);
+    const sourceCvTabId = cvData.sourceCvTabId || cvData.id;
+    const result = await saveCVAs('Nueva postulación', {
+      ...cvData,
+      id: undefined,
+      doc_type_id: 'cv',
+      sourceCvTabId,
+      jobTarget: {},
+      body: {
+        salutation: '',
+        hookParagraph: '',
+        evidenceParagraph: '',
+        closingParagraph: '',
+        signoff: ''
+      }
+    });
+    setIsCreatingApplication(false);
+    if (!result?.success) {
+      showError('No se pudo crear la postulación. El CV base se conservó sin cambios.');
+      return;
+    }
+    showSuccess('Se creó una copia independiente. Completá la vacante en esta nueva postulación.');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 pb-2 border-b border-[var(--color-neutral-border)]">
@@ -61,6 +89,26 @@ export const JobTargetSection = ({ cvData, setCvData }: any) => {
         <h2 className="text-lg font-semibold text-[var(--color-neutral-text-primary)]">Vacante Objetivo</h2>
       </div>
 
+      {!isApplicationVersion ? (
+        <div className="space-y-4 rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] p-4">
+          <p className="text-sm text-[var(--ui-text-primary)]">
+            Primero creá una postulación independiente. Así, la información de la oferta y los cambios para adaptar el CV no se guardan en tu perfil maestro.
+          </p>
+          <button
+            type="button"
+            onClick={handleCreateApplication}
+            disabled={isCreatingApplication}
+            className={`${button.primary} w-full flex items-center justify-center gap-2`}
+          >
+            <Briefcase className="w-4 h-4" />
+            {isCreatingApplication ? 'Creando postulación…' : 'Crear postulación desde este CV'}
+          </button>
+        </div>
+      ) : (
+        <>
+      <div className="rounded-[var(--ui-radius-card)] border border-[var(--color-secondary-base)]/30 bg-[var(--color-secondary-muted)] p-3 text-sm text-[var(--color-secondary-text)]">
+        Esta versión está vinculada al CV de origen. La vacante y sus adaptaciones se guardan sólo aquí.
+      </div>
       <div className={`p-4 bg-[var(--color-primary-muted)] border border-[var(--color-primary-base)]/30 rounded-[${radius.card}] text-sm text-[var(--color-primary-text)] leading-relaxed space-y-2`}>
         <p>
           <strong>Alineá tu CV con una oferta real.</strong> Pegá el texto del aviso de trabajo acá. El sistema extraerá localmente las palabras clave más importantes (sin enviar datos a IA) y las comparará con tu CV para ver qué te falta.
@@ -151,23 +199,8 @@ export const JobTargetSection = ({ cvData, setCvData }: any) => {
         </div>
       )}
 
-      <div className="pt-4 mt-6 border-t border-[var(--color-neutral-border)]">
-        <button
-          onClick={async (e) => {
-            e.preventDefault();
-            const label = jobTarget.companyName ? `Para ${jobTarget.companyName}` : `Para ${jobTarget.jobTitle || 'Nueva Vacante'}`;
-            await saveCVAs(label);
-            showSuccess(`CV duplicado como: ${label}`);
-          }}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-[var(--color-primary-base)] text-white rounded-[var(--ui-radius-control)] font-medium text-sm hover:bg-[var(--color-primary-hover)] transition-colors"
-        >
-          <Briefcase className="w-4 h-4" />
-          Duplicar y Adaptar a esta Vacante
-        </button>
-        <p className="text-center text-xs text-[var(--color-neutral-text-secondary)] mt-2">
-          Crea una copia de este CV para no perder el original.
-        </p>
-      </div>
+      </>
+      )}
 
       <AtsAiAnalysisModal
         isOpen={isAiModalOpen}
