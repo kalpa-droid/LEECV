@@ -30,8 +30,12 @@ export function applyPresetLevel(cvData: any, level: PresetLevel, payload: Apply
     const targetPresetId = activePresetCompatible ? cvData.activePresetId : recPreset;
     const activePreset = resolveActivePreset({ ...cvData, activePresetId: targetPresetId });
 
-    const modeToApply: TemplateApplicationMode = payload.templateMode || 
-      (payload.applicationMode === 'reorder-only' ? 'template-order' : 'full-template');
+    const modeToApply: TemplateApplicationMode = payload.templateMode ||
+      (payload.applicationMode === 'reorder-only'
+        ? 'template-order'
+        : payload.applicationMode === 'full-20-sections'
+          ? 'all-sections'
+          : 'full-template');
 
     const newPresentation = applyTemplateMode(
       {
@@ -99,4 +103,3 @@ export function applyPresetLevel(cvData: any, level: PresetLevel, payload: Apply
 
   return cvData;
 }
-

@@ -150,4 +150,16 @@ describe('applyPresetLevel — Limpieza de theme.primaryColor', () => {
     expect(entry).toBeDefined();
     expect(entry?.defaultVisibleSections).toHaveLength(CANONICAL_SECTION_ORDER.length);
   });
+
+  it('15. applicationMode full-20-sections muestra también las secciones fuera del formato', () => {
+    const updated = applyPresetLevel(
+      { activePresetId: 'modern-corporate', sectionVisibility: {} },
+      'format',
+      { formatId: 'ats-one-column', applicationMode: 'full-20-sections' }
+    );
+
+    CANONICAL_SECTION_ORDER.filter(id => id !== 'firma').forEach((id) => {
+      expect(updated.sectionVisibility[id]).toBe(true);
+    });
+  });
 });
