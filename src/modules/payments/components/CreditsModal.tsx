@@ -99,7 +99,7 @@ export function CreditsModal({ isOpen, onClose, onOpenPricing }: CreditsModalPro
               }}
               className={`${button.primary} w-full flex-1 justify-center`}
             >
-              Comprar Plan Pro o Packs
+              Comprar packs de exportaciones
             </button>
           )}
           <button
