@@ -82,10 +82,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
               <FileText className="w-4 h-4" />
               {!isMobile && <span>{t.landing.nav.cv}</span>}
             </button>
-            <button onClick={() => onNavigate('/crear-carta')} className="flex items-center gap-1 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer" title={(t.landing.nav as any).cartas || 'Cartas de Presentación'}>
-              <Mail className="w-4 h-4" />
-              {!isMobile && <span>{(t.landing.nav as any).cartas || 'Cartas'}</span>}
-            </button>
             <button onClick={() => onNavigate('/crear-tarjeta')} className="flex items-center gap-1 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer" title={t.landing.nav.tarjetas}>
               <CreditCard className="w-4 h-4" />
               {!isMobile && <span>{t.landing.nav.tarjetas}</span>}
@@ -194,16 +190,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             ctaLabel={t.landing.products.cv.cta}
             onClick={() => onNavigate('/crear-cv')}
             reverse={false}
-          />
-
-          <ProductDetailBlock
-            title={((t.landing.products as any).cartas?.title || 'Cartas de Presentación & IA')}
-            description={((t.landing.products as any).cartas?.description || 'Cartas de presentación personalizadas por vacante, redactadas con asistencia de IA.')}
-            bullets={((t.landing.products as any).cartas?.bullets || []) as any as string[]}
-            image="/marketing/preview-carta-detail.webp"
-            ctaLabel={((t.landing.products as any).cartas?.cta || 'Crear Carta con IA')}
-            onClick={() => onNavigate('/crear-carta')}
-            reverse={true}
           />
 
           <ProductDetailBlock

@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
@@ -30,6 +30,11 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['@react-pdf/renderer']
+  },
+  test: {
+    pool: 'threads',
+    maxWorkers: 2,
+    fileParallelism: false
   },
   plugins: [
     react(),

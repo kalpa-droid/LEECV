@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FileText, Mail, CreditCard, BookOpen, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
+import { FileText, CreditCard, BookOpen, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
 import { radius, elevationSystem } from '../../uiDesignSystem';
 
 import { useText } from '../../../i18n/useText';
 
 export interface HeroCarouselSlide {
-  id: 'cv' | 'cartas' | 'tarjetas' | 'libros';
+  id: 'cv' | 'tarjetas' | 'libros';
   label: string;
   badge: string;
   title: string;
@@ -34,17 +34,6 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onNavigate }) => {
       route: '/crear-cv',
       ctaText: t.landing.products.cv.cta,
       features: [...t.landing.heroCarousel.cv.features],
-    },
-    {
-      id: 'cartas',
-      label: (t.landing.nav as any).cartas || 'Cartas de Presentación',
-      badge: t.landing.heroCarousel.cartas.badge,
-      title: t.landing.heroCarousel.cartas.title,
-      description: t.landing.heroCarousel.cartas.description,
-      image: '/marketing/preview-cv.webp',
-      route: '/crear-carta',
-      ctaText: t.landing.products.cartas.cta,
-      features: [...t.landing.heroCarousel.cartas.features],
     },
     {
       id: 'tarjetas',
@@ -89,8 +78,6 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onNavigate }) => {
 
   const getSlideIcon = (id: string) => {
     switch (id) {
-      case 'cartas':
-        return Mail;
       case 'tarjetas':
         return CreditCard;
       case 'libros':

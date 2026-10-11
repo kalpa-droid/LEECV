@@ -211,7 +211,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const [isPanelOpen, setIsPanelOpen] = useState(true);
 
   const activeDocType: 'cv' | 'business_card' | 'book' | 'cover_letter' | 'planner' =
-    currentRoute === '/crear-carta' || cvData?.activePresetId === 'carta-presentacion' || (cvData as any)?.docType === 'cover_letter'
+    cvData?.activePresetId === 'carta-presentacion' || (cvData as any)?.docType === 'cover_letter'
       ? 'cover_letter'
       : currentRoute === '/crear-agenda' || cvData?.activePresetId?.startsWith('planner-') || (cvData as any)?.docType === 'planner'
       ? 'planner'
@@ -966,15 +966,29 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 export default function App() {
   const [currentRoute, setCurrentRoute] = useState<string>(() => {
     const path = navigation.getPathname();
-    if (path === '/crear-cv' || path === '/crear-tarjeta' || path === '/crear-libro' || path === '/crear-carta' || path === '/crear-agenda' || path.startsWith('/blog')) {
+    if (path === '/crear-carta') return '/crear-cv';
+    if (path === '/crear-cv' || path === '/crear-tarjeta' || path === '/crear-libro' || path === '/crear-agenda' || path.startsWith('/blog')) {
       return path;
     }
     return '/';
   });
 
   useEffect(() => {
+    const syncRoute = () => {
+      const path = navigation.getPathname();
+      if (path === '/crear-carta') {
+        navigation.replace('/crear-cv');
+        setCurrentRoute('/crear-cv');
+        return;
+      }
+      setCurrentRoute(path);
+    };
+
+    if (navigation.getPathname() === '/crear-carta') {
+      navigation.replace('/crear-cv');
+    }
     const handlePopState = () => {
-      setCurrentRoute(navigation.getPathname());
+      syncRoute();
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -985,8 +999,9 @@ export default function App() {
   }, [currentRoute]);
 
   const navigateTo = (route: string) => {
-    navigation.push(route);
-    setCurrentRoute(route);
+    const targetRoute = route === '/crear-carta' ? '/crear-cv' : route;
+    navigation.push(targetRoute);
+    setCurrentRoute(targetRoute);
   };
 
   return (

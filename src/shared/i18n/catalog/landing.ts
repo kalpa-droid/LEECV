@@ -1,7 +1,6 @@
 export const landingCatalog = {
   nav: {
     cv: 'Creador de CV',
-    cartas: 'Cartas de Presentación',
     tarjetas: 'Tarjetas Personales',
     libros: 'Libros & Folletos',
     blog: 'Blog & Recursos',
@@ -10,7 +9,7 @@ export const landingCatalog = {
   },
   hero: {
     eyebrow: 'Todo para armar e imprimir tus documentos',
-    title: 'Currículums, cartas, tarjetas y libros listos para imprimir',
+    title: 'Currículums y postulaciones, tarjetas y libros listos para imprimir',
     lead: 'Armalos paso a paso, con ayuda de inteligencia artificial si querés. Después imprimilos en tu casa, en tu impresora, o llevalos a una imprenta.',
     primaryCta: 'Crear mi CV gratis',
     secondaryCta: 'Explorar productos',
@@ -25,12 +24,6 @@ export const landingCatalog = {
       title: 'Currículum listo para enviar e imprimir',
       description: 'Elegí un diseño moderno, completá tus datos en vivo y descargá tu PDF en segundos sin marcas de agua.',
       features: ['Lectura ATS garantizada', '100% Privado en tu navegador', 'Descarga instantánea'],
-    },
-    cartas: {
-      badge: 'Con Inteligencia Artificial',
-      title: 'Cartas de presentación personalizadas',
-      description: 'Redactá cartas formales adaptadas a cada puesto de trabajo con la ayuda de nuestra asistente de IA.',
-      features: ['Sincronizado con tu CV', 'IA de redacción profesional', 'Estilo unificado'],
     },
     tarjetas: {
       badge: 'Frente + Dorso',
@@ -53,26 +46,15 @@ export const landingCatalog = {
     cv: {
       badge: 'Lo Más Usado',
       title: 'Creador de Currículum',
-      tagline: 'Diseños que superan filtros ATS de selección',
-      description: 'Elegí un diseño, completá tus datos y mirá cómo va quedando mientras escribís. Cambiá los colores a tu gusto y guardá tu trabajo en la nube.',
+      tagline: 'Diseños claros para presentar tu experiencia',
+      description: 'Elegí un diseño, completá tus datos y mirá cómo va quedando mientras escribís. Después, prepará una postulación con una carta basada en tu CV y en la vacante.',
       bullets: [
         'Diseños pensados para que los sistemas de selección de personal lean bien tu currículum',
         'Se arma en tu navegador: tus datos son solo tuyos',
+        'Prepará una versión para cada vacante y su carta',
         'Sin marcas de agua, listo para enviar o imprimir',
       ],
       cta: 'Diseñar mi CV',
-    },
-    cartas: {
-      badge: 'IA Integrada',
-      title: 'Cartas de Presentación & IA',
-      tagline: 'Redacción asistida adaptada al puesto',
-      description: 'Cartas de presentación personalizadas por vacante, redactadas con asistencia de IA desde tu CV y la descripción del puesto.',
-      bullets: [
-        'Sincronización instantánea con los datos de tu CV activo o perfil de LinkedIn',
-        'Generación de párrafos a medida con IA según el puesto y la empresa objetiva',
-        'Mismo diseño cromático y tipográfico que tu CV para una postulación impecable',
-      ],
-      cta: 'Crear Carta con IA',
     },
     tarjetas: {
       badge: 'Varias por Hoja',
