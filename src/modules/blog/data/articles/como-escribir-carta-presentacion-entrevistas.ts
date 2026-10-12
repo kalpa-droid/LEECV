@@ -9,6 +9,6 @@ export const comoEscribirCartaPresentacionEntrevistas: Article = {
   "date": "18 de Septiembre, 2026",
   "author": "Equipo LEECV",
   "content": "Mientras que tu CV enumera tus logros pasados, la carta de presentación explica por qué te postulas al puesto.\n\n1. Saludo personalizado y gancho inicial.\n\n2. Evidencia concreta: Demuestra con métricas.\n\n3. Cierre proactivo.",
-  "ctaLabel": "Crear mi carta de presentación",
-  "ctaRoute": "/crear-carta"
+  "ctaLabel": "Preparar una postulación",
+  "ctaRoute": "/crear-cv"
 };

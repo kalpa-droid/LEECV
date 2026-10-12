@@ -80,6 +80,15 @@ export const navigation = {
   },
 
   /**
+   * Reemplaza la ruta actual sin añadir una entrada al historial.
+   */
+  replace(url: string): void {
+    if (typeof window !== 'undefined' && window.history?.replaceState) {
+      window.history.replaceState({}, '', url);
+    }
+  },
+
+  /**
    * Recarga la página actual de manera canónica.
    */
   reload(): void {
