@@ -89,4 +89,15 @@ describe('applyTemplateMode — separación en columnas primaria/secundaria', ()
     expect(result.sectionOrders.secundaria).toEqual([]);
     expect(result.sectionOrders.primaria.length).toBe(atsOneColumn.defaultVisibleSections.length);
   });
+
+  it('7. all-sections: muestra todas las secciones y prioriza las del formato', () => {
+    const result = applyTemplateMode(emptyState, atsOneColumn, modernCorporate, 'all-sections');
+    const allOrderedSections = [...result.sectionOrders.primaria, ...result.sectionOrders.secundaria];
+
+    expect(Object.values(result.sectionVisibility).every(Boolean)).toBe(true);
+    expect(allOrderedSections).toHaveLength(Object.keys(result.sectionVisibility).length);
+    expect(new Set(allOrderedSections).size).toBe(allOrderedSections.length);
+    expect(result.sectionOrders.primaria).toContain('proyectos');
+    expect(result.sectionOrders.primaria[0]).toBe('redes');
+  });
 });
