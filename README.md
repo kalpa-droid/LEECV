@@ -1,6 +1,6 @@
 # LEECV — Generador de Currículum Profesional
 
-LEECV es una plataforma web para diseñar, redactar y generar documentos profesionales (Currículum Vitae, Cartas de Presentación, Tarjetas Personales y Libros/Portafolios) con calidad de impresión y compatibilidad con sistemas ATS (Applicant Tracking Systems).
+LEECV es una plataforma web para diseñar currículums y preparar postulaciones con cartas de presentación integradas, además de crear tarjetas personales y libros/portafolios listos para imprimir.
 
 ## Características Principales
 

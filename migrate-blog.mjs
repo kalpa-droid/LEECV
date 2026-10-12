@@ -77,8 +77,8 @@ const articles = [
       '2. Evidencia concreta: Demuestra con métricas.',
       '3. Cierre proactivo.'
     ],
-    ctaLabel: 'Crear mi carta de presentación',
-    ctaRoute: '/crear-carta'
+    ctaLabel: 'Preparar una postulación',
+    ctaRoute: '/crear-cv'
   },
   {
     slug: 'carta-vs-cv-cuando-usar-cada-una',
@@ -122,8 +122,8 @@ const articles = [
       'Paso 2: Sincroniza tu CV.',
       'Paso 3: Ajusta el tono y personaliza.'
     ],
-    ctaLabel: 'Crear mi carta de presentación',
-    ctaRoute: '/crear-carta'
+    ctaLabel: 'Preparar una postulación',
+    ctaRoute: '/crear-cv'
   },
   {
     slug: 'manual-diseno-impresion-tarjetas-personales',

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, Mail, CreditCard, BookOpen, ArrowRight, Check, Sparkles, CalendarDays } from 'lucide-react';
+import { FileText, CreditCard, BookOpen, ArrowRight, Check, CalendarDays } from 'lucide-react';
 import { radius, elevationSystem } from '../../uiDesignSystem';
 
 import { useText } from '../../../i18n/useText';
@@ -23,19 +23,6 @@ export const PortalProductsGrid: React.FC<PortalProductsGridProps> = ({ onNaviga
       bullets: [...t.landing.products.cv.bullets],
       route: '/crear-cv',
       cta: t.landing.products.cv.cta,
-    },
-    {
-      id: 'cartas',
-      icon: Mail,
-      badge: t.landing.products.cartas.badge,
-      badgeColor: 'bg-[var(--color-accent-purple-muted)] text-[var(--color-accent-purple)] border-[var(--color-accent-purple)]/30',
-      title: t.landing.products.cartas.title,
-      badgeIcon: Sparkles,
-      tagline: t.landing.products.cartas.tagline,
-      description: t.landing.products.cartas.description,
-      bullets: [...t.landing.products.cartas.bullets],
-      route: '/crear-carta',
-      cta: t.landing.products.cartas.cta,
     },
     {
       id: 'tarjetas',
@@ -92,7 +79,6 @@ export const PortalProductsGrid: React.FC<PortalProductsGridProps> = ({ onNaviga
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {products.map((p) => {
           const Icon = p.icon;
-          const BadgeIcon = p.badgeIcon;
           return (
             <div
               key={p.id}
@@ -105,7 +91,6 @@ export const PortalProductsGrid: React.FC<PortalProductsGridProps> = ({ onNaviga
                     <Icon className="w-6 h-6 stroke-[2]" />
                   </div>
                   <span className={`inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border ${p.badgeColor}`}>
-                    {BadgeIcon && <BadgeIcon className="w-3.5 h-3.5" />}
                     {p.badge}
                   </span>
                 </div>

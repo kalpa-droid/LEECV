@@ -3,7 +3,7 @@ import { Preset } from './presetSchema';
 import { CANONICAL_SECTION_ORDER } from '../../../sections/canonicalSectionOrder';
 import { SECTION_CATALOG } from '../../../sectionRegistry';
 
-export type TemplateApplicationMode = 'full-template' | 'template-order' | 'no-filters';
+export type TemplateApplicationMode = 'full-template' | 'template-order' | 'no-filters' | 'all-sections';
 
 export interface PresentationState {
   sectionVisibility: Record<string, boolean>;
@@ -45,6 +45,23 @@ export function applyTemplateMode(
     return [...list.filter(id => id !== 'firma'), 'firma'];
   };
 
+  if (mode === 'all-sections') {
+    const prioritized = [...new Set(defaultVisible.filter(id => ALL_SECTION_IDS.includes(id)))];
+    const fullOrder = [...prioritized, ...ALL_SECTION_IDS.filter(id => !prioritized.includes(id))];
+    const visibility: Record<string, boolean> = {};
+    for (const id of ALL_SECTION_IDS) {
+      visibility[id] = true;
+    }
+
+    return {
+      sectionVisibility: visibility,
+      sectionOrders: {
+        primaria: ensureFirmaTerminalInPrimaria(fullOrder.filter(id => columnOf(id) === 'primaria')),
+        secundaria: fullOrder.filter(id => columnOf(id) === 'secundaria'),
+      },
+    };
+  }
+
   if (mode === 'full-template') {
     const visibility: Record<string, boolean> = {};
     for (const id of ALL_SECTION_IDS) {
@@ -75,4 +92,3 @@ export function applyTemplateMode(
     },
   };
 }
-

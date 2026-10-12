@@ -17,13 +17,13 @@ export const CoverLetterCrossSellBanner: React.FC<CoverLetterCrossSellBannerProp
         </div>
         <div className="space-y-1 min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="font-extrabold text-xs text-[var(--ui-text-primary)]">¿Querés una Carta de Presentación?</span>
+            <span className="font-extrabold text-xs text-[var(--ui-text-primary)]">Prepará una postulación con carta</span>
             <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] rounded-full flex items-center gap-1">
               <Sparkles className="w-2.5 h-2.5" /> 1-Clic
             </span>
           </div>
           <p className="text-xs text-[var(--ui-text-secondary)] leading-relaxed">
-            Complementá tu CV con una carta redactada a medida reutilizando tus datos personales.
+            Creá una versión de tu CV para una vacante y redactá una carta con esos mismos datos.
           </p>
         </div>
       </div>
@@ -33,7 +33,7 @@ export const CoverLetterCrossSellBanner: React.FC<CoverLetterCrossSellBannerProp
         onClick={onGenerateCoverLetter}
         className={`${button.primary} w-full py-2 px-3 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition`}
       >
-        <span>Crear Carta para este CV</span>
+        <span>Preparar postulación</span>
         <ArrowRight className="w-3.5 h-3.5" />
       </button>
     </div>

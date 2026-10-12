@@ -9,6 +9,6 @@ export const redactarCartaDePresentacionConIa: Article = {
   "date": "19 de Septiembre, 2026",
   "author": "Equipo LEECV",
   "content": "Paso 1: Define los requerimientos del puesto.\n\nPaso 2: Sincroniza tu CV.\n\nPaso 3: Ajusta el tono y personaliza.",
-  "ctaLabel": "Crear mi carta de presentación",
-  "ctaRoute": "/crear-carta"
+  "ctaLabel": "Preparar una postulación",
+  "ctaRoute": "/crear-cv"
 };
