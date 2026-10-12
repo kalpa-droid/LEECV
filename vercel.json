@@ -1,4 +1,11 @@
 {
+  "redirects": [
+    {
+      "source": "/crear-carta",
+      "destination": "/crear-cv",
+      "statusCode": 301
+    }
+  ],
   "functions": {
     "api/cv-import-api.ts": {
       "maxDuration": 60

@@ -1,6 +1,7 @@
+import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import { hasRealContent } from '../src/shared/core/documents/documentEngine/documentHelpers';
-import { getDocTypeForRoute } from '../src/shared/core/capabilities/capabilityRegistry';
+import { getDocTypeForRoute, getRouteForDocType } from '../src/shared/core/capabilities/capabilityRegistry';
 import { createBlankCVTemplate } from '../src/data/initialCVData';
 import { resolveMargins } from '../src/shared/core/pdf-engine/layers/margins/marginPresets';
 import { resolveSectionAnchor } from '../src/shared/core/pdf-engine/layers/anchors/pdfAnchorEngine';
@@ -39,10 +40,29 @@ describe('Cover Letter Integration & Route Sync', () => {
   });
 
   it('getDocTypeForRoute mapea correctamente rutas a tipo de documento', () => {
-    expect(getDocTypeForRoute('/crear-carta')).toBe('cover_letter');
+    expect(getDocTypeForRoute('/crear-carta')).toBe('cv');
+    expect(getDocTypeForRoute('/crear-carta?source=legacy')).toBe('cv');
+    expect(getDocTypeForRoute('/blog/redactar-carta-de-presentacion-con-ia')).toBe('cv');
     expect(getDocTypeForRoute('/crear-tarjeta')).toBe('business_card');
+    expect(getDocTypeForRoute('/crear-tarjeta/')).toBe('business_card');
     expect(getDocTypeForRoute('/crear-cv')).toBe('cv');
     expect(getDocTypeForRoute('/')).toBe('cv');
+  });
+
+  it('las cartas legacy se abren en la app de CV y no recuperan la ruta independiente', () => {
+    expect(getRouteForDocType('cover_letter')).toBe('/crear-cv');
+  });
+
+  it('la ruta retirada redirige permanentemente a CV y no aparece en el sitemap', () => {
+    const config = JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url), 'utf8'));
+    const sitemap = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
+
+    expect(config.redirects).toContainEqual({
+      source: '/crear-carta',
+      destination: '/crear-cv',
+      statusCode: 301,
+    });
+    expect(sitemap).not.toContain('https://leecv.app/crear-carta');
   });
 
   it('createBlankCVTemplate deriva el preset correcto según docType', () => {

@@ -1,4 +1,8 @@
-# Plan: Wiring Completo de Cartas de Presentación al Shell
+# Reemplazado: Plan de integración de cartas de presentación
+
+> Este documento quedó obsoleto. La carta ya está integrada en el flujo de postulaciones de la app de CV. No implementar la ruta `/crear-carta` ni montar una aplicación independiente a partir de este plan. Para cambios actuales, consultar el flujo y las pruebas vigentes del editor de CV.
+
+## Plan histórico (no ejecutar)
 
 Mismo patrón que ya usamos para que Book Studio dejara de ser una isla
 (`docs/plan_shell_unico.md`, ya implementado en producción) — esta vez

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Newspaper, ArrowLeft, Clock, User, FileText, BookOpen, Mail } from 'lucide-react';
+import { Newspaper, ArrowLeft, Clock, User, FileText, BookOpen } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { displayScale, elevationSystem, radius, button } from '../../shared/core/uiDesignSystem';
 import { FaqAccordion } from '../../shared/core/ui/marketing/FaqAccordion';
@@ -186,13 +186,6 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ initialSlug, onNavigateH
                     >
                       <FileText className="w-4 h-4" />
                       <span>Crear CV Profesional</span>
-                    </button>
-                    <button
-                      onClick={() => onNavigateProduct('/crear-carta')}
-                      className={`${button.base} ${button.secondary} flex items-center gap-2 px-6 py-3 text-sm`}
-                    >
-                      <Mail className="w-4 h-4" />
-                      <span>Crear Carta de Presentación</span>
                     </button>
                     <button
                       onClick={() => onNavigateProduct('/crear-libro')}

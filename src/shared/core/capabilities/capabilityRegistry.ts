@@ -371,11 +371,14 @@ export function hasCapability(docTypeId: string = 'cv', capabilityId: string): b
  * Motor Declarativo de Mapeo Ruta <-> Tipo de Documento <-> Título por Defecto
  */
 export function getDocTypeForRoute(route: string = '/'): DocumentTypeId {
-  const cleanRoute = (route || '/').toLowerCase().trim();
-  if (cleanRoute === '/crear-tarjeta' || cleanRoute.includes('tarjeta')) return 'business_card';
-  if (cleanRoute === '/crear-libro' || cleanRoute.includes('libro')) return 'book';
-  if (cleanRoute === '/crear-carta' || cleanRoute.includes('carta')) return 'cover_letter';
-  if (cleanRoute === '/crear-agenda' || cleanRoute.includes('agenda') || cleanRoute.includes('planner')) return 'planner';
+  const cleanRoute = (route || '/')
+    .split(/[?#]/, 1)[0]
+    .toLowerCase()
+    .trim()
+    .replace(/\/+$/, '') || '/';
+  if (cleanRoute === '/crear-tarjeta') return 'business_card';
+  if (cleanRoute === '/crear-libro') return 'book';
+  if (cleanRoute === '/crear-agenda') return 'planner';
   return 'cv';
 }
 
@@ -386,7 +389,7 @@ export function getRouteForDocType(docTypeId: string = 'cv'): string {
     case 'book':
       return '/crear-libro';
     case 'cover_letter':
-      return '/crear-carta';
+      return '/crear-cv';
     case 'planner':
       return '/crear-agenda';
     case 'cv':
