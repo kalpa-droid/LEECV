@@ -23,7 +23,7 @@ export const landingCatalog = {
       badge: 'Más Elegido',
       title: 'Currículum listo para enviar e imprimir',
       description: 'Elegí un diseño moderno, completá tus datos en vivo y descargá tu PDF en segundos sin marcas de agua.',
-      features: ['Lectura ATS garantizada', '100% Privado en tu navegador', 'Descarga instantánea'],
+      features: ['Lectura ATS garantizada', 'Privado por diseño (IA anónima)', 'Descarga instantánea'],
     },
     tarjetas: {
       badge: 'Frente + Dorso',
@@ -50,7 +50,7 @@ export const landingCatalog = {
       description: 'Elegí un diseño, completá tus datos y mirá cómo va quedando mientras escribís. Después, prepará una postulación con una carta basada en tu CV y en la vacante.',
       bullets: [
         'Diseños pensados para que los sistemas de selección de personal lean bien tu currículum',
-        'Se arma en tu navegador: tus datos son solo tuyos',
+        'Tus datos se editan en tu navegador y se anonimizan al usar IA',
         'Prepará una versión para cada vacante y su carta',
         'Sin marcas de agua, listo para enviar o imprimir',
       ],
@@ -112,7 +112,7 @@ export const landingCatalog = {
     q1: '¿Necesito crear una cuenta para probar LEECV?',
     a1: 'No. Podés ingresar directamente al editor, personalizar tus documentos y probar todas las plantillas antes de registrarte.',
     q2: '¿Mis datos personales quedan guardados en algún servidor?',
-    a2: 'Tus borradores se procesan 100% de forma local en tu navegador. Tus datos no se venden ni se comparten con terceros.',
+    a2: 'Tus borradores se procesan de forma local en tu navegador. Si usás las funciones de IA para redactar o adaptar tu postulación, tus datos de contacto se anonimizan automáticamente antes de enviarse. No vendemos ni compartimos tus datos con terceros.',
     q3: '¿El PDF exportado es compatible con filtros ATS de reclutamiento?',
     a3: 'Sí. Las plantillas ejecutivas de LEECV generan texto plano seleccionable y estructurado para pasar sin problemas los lectores automáticos de Selección.',
     q4: '¿Puedo cancelar mi suscripción Pro en cualquier momento?',
@@ -122,7 +122,7 @@ export const landingCatalog = {
     sectionTitle: 'Pensado para que te salga bien',
     speed: {
       title: 'Se arma en tu navegador',
-      description: 'No hace falta instalar nada. Tus datos quedan en tu equipo y todo funciona rápido.',
+      description: 'No hace falta instalar nada. Tus borradores se editan en tu equipo y, si usás IA, tus datos de contacto se anonimizan automáticamente.',
     },
     designSystem: {
       title: 'Colores y letras que combinan',
