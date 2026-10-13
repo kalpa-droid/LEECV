@@ -32,6 +32,7 @@ scratch/
 Logos/
 .vercel
 .env*
+supabase/.temp/
 
 # Leaked metadata
 .vercel_deployments.json

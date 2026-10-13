@@ -119,7 +119,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-full text-xs font-bold text-[var(--ui-text-primary)] shadow-sm">
             <span className="text-[var(--color-accent-amber-bright)]">⭐</span>
             <span>{t.landing.socialProof.line}</span>
-            <span className="text-[var(--ui-text-secondary)] font-normal hidden sm:inline">| 100% privado · Sin marcas de agua</span>
+            <span className="text-[var(--ui-text-secondary)] font-normal hidden sm:inline">| Privacidad protegida · Sin marcas de agua</span>
           </div>
 
           {/* Carrusel Interactivo de Productos */}
