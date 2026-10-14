@@ -1,7 +1,7 @@
 export const pricingCatalog = {
   sessionClosedSuccess: "Sesión cerrada correctamente. Puedes ingresar con otra cuenta.",
   modalTitle: "Mi Cuenta & Suscripciones LEECV",
-  sslSecurityBanner: "🔒 Todos los pagos están procesados con encriptación SSL de 256 bits a través de Mercado Pago, PayPal y Lemon Squeezy. Acceso instantáneo y transparente sin cargos ocultos.",
+  sslSecurityBanner: "🔒 Todos los pagos están procesados con encriptación SSL de 256 bits a través de Mercado Pago y PayPal. Acceso instantáneo y transparente sin cargos ocultos.",
   googleDriveLabel: "Google Drive (Próximamente):",
   upgradeToAgency: "Mejorar a Plan Agencia (",
   choosePerfectPlan: "Elige el Plan Perfecto para tu Escala",
@@ -28,13 +28,13 @@ export const pricingCatalog = {
   payPaypalUsd: "💳 Pagar con PayPal (USD)",
   subscribeLemonSqueezyUsd: "🌎 Suscribirse con Lemon Squeezy (USD)",
   activateMercadoPagoArgentine: "🇦🇷 Activar con Mercado Pago",
-  currencyExplanationNote: "🇦🇷 Con Mercado Pago pagás en Pesos Argentinos (ARS). 💳 Con PayPal o 🌎 Lemon Squeezy pagás en Dólares (USD). Todos los planes y paquetes de créditos pueden abonarse con cualquiera de las 3 pasarelas.",
+  currencyExplanationNote: "🇦🇷 Con Mercado Pago pagás en Pesos Argentinos (ARS). 💳 Con PayPal pagás en Dólares (USD). Todos los planes y paquetes de créditos pueden abonarse con cualquiera de las 2 pasarelas.",
   universalPaymentBadge: "Elegí tu medio de pago y moneda preferida",
-  payWithAnyGateway: "Disponible con Mercado Pago, PayPal y Lemon Squeezy",
+  payWithAnyGateway: "Disponible con Mercado Pago y PayPal",
   mercadoPagoLabel: "Mercado Pago",
   payPalLabel: "PayPal",
   lemonSqueezyLabel: "Lemon Squeezy",
-  currencyNoticeCompact: "🇦🇷 ARS con Mercado Pago • 💳/🌎 USD con PayPal o Lemon Squeezy",
+  currencyNoticeCompact: "🇦🇷 ARS con Mercado Pago • 💳 USD con PayPal",
 };
 
 export type PricingCatalog = typeof pricingCatalog;

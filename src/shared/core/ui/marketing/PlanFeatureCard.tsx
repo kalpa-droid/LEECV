@@ -11,7 +11,7 @@ export interface PlanFeatureCardProps {
   currency?: 'usd' | 'ars';
   ctaLabel?: string;
   onSelectPlan?: (planId: string) => void;
-  onSelectGateway?: (planId: PlanId, gateway: 'mercadopago' | 'paypal' | 'lemonsqueezy') => void;
+  onSelectGateway?: (planId: PlanId, gateway: 'mercadopago' | 'paypal') => void;
   loadingGateway?: string | null;
   children?: React.ReactNode;
 }

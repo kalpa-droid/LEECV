@@ -20,7 +20,7 @@ export function PricingModal({ isOpen, onClose, onOpenLogin }: PricingModalProps
   const { showSuccess, showError } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleCheckout = async (planId: 'credits_pack_5' | 'credits_pack_10', gateway: 'mercadopago' | 'paypal' | 'lemonsqueezy') => {
+  const handleCheckout = async (planId: 'credits_pack_5' | 'credits_pack_10', gateway: 'mercadopago' | 'paypal') => {
     if (!user) {
       onClose();
       onOpenLogin();
@@ -108,11 +108,11 @@ export function PricingModal({ isOpen, onClose, onOpenLogin }: PricingModalProps
                 <span className="font-black text-[11px]">{formatPrice('credits_pack_5', 'ars')}</span>
               </button>
               <button
-                onClick={() => handleCheckout('credits_pack_5', 'lemonsqueezy')}
+                onClick={() => handleCheckout('credits_pack_5', 'paypal')}
                 disabled={isProcessing}
-                className={`w-full p-2.5 ${button.providerBrand('lemonsqueezy')} rounded-[${radius.control}] flex items-center justify-between`}
+                className={`w-full p-2.5 ${button.providerBrand('paypal')} rounded-[${radius.control}] flex items-center justify-between`}
               >
-                <span className="font-bold text-[10px]">Internacional (USD)</span>
+                <span className="font-bold text-[10px]">PayPal (USD)</span>
                 <span className="font-black text-[11px]">{formatPrice('credits_pack_5', 'usd')}</span>
               </button>
             </div>

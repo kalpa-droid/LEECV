@@ -13,6 +13,10 @@ export async function createCheckoutForProvider(
   email: string,
   userId?: string
 ): Promise<CheckoutSessionResult> {
+  if (plan === 'pro') {
+    throw new Error('El plan Pro no está disponible para compra.');
+  }
+
   const planData = getPrice(plan);
   if (!planData) {
     throw new Error(`Plan desconocido: ${plan}`);
@@ -117,25 +121,7 @@ export async function createCheckoutForProvider(
     }
 
     case 'lemonsqueezy': {
-      const urlMap: Record<string, string | undefined> = {
-        single_pdf: env.LEMONSQUEEZY_URL_PDF1,
-        credits_pack_5: env.LEMONSQUEEZY_URL_PACK5,
-        credits_pack_10: env.LEMONSQUEEZY_URL_PACK10,
-        pro: env.LEMONSQUEEZY_URL_PRO,
-      };
-
-      const base = urlMap[plan] || env.LEMONSQUEEZY_CHECKOUT_URL;
-      if (!base) {
-        throw new Error('No está configurada la URL de checkout de Lemon Squeezy para este plan en el backend');
-      }
-
-      const url = new URL(base);
-      url.searchParams.set('checkout[email]', email);
-      if (exportToken) url.searchParams.set('checkout[custom][export_token]', exportToken);
-      if (userId) url.searchParams.set('checkout[custom][user_id]', userId);
-      url.searchParams.set('checkout[custom][plan]', plan);
-
-      return { checkoutUrl: url.toString() };
+      throw new Error('Lemon Squeezy no está habilitado como método de pago.');
     }
 
     default:

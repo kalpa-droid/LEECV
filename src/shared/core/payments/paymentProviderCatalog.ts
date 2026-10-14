@@ -48,7 +48,7 @@ export const PAYMENT_PROVIDER_CATALOG: PaymentProviderCatalogEntry[] = [
     emoji: '🌎',
     envVars: ['LEMONSQUEEZY_API_KEY', 'LEMONSQUEEZY_WEBHOOK_SECRET'],
     badgeClass: 'bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)] border-[var(--color-accent-purple)]/30',
-    checkoutSupported: true,
+    checkoutSupported: false,
   },
 ];
 

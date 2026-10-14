@@ -29,7 +29,7 @@ export default function PdfCheckoutModal({
 
   const { credits, refreshCredits, consumeCreditIfNeeded } = useExportEntitlement();
 
-  const handleCheckout = async (gateway: 'mercadopago' | 'paypal' | 'lemonsqueezy') => {
+  const handleCheckout = async (gateway: 'mercadopago' | 'paypal') => {
     if (!email || !isValidEmail(email)) {
       setErrorMsg('Ingresá un correo electrónico válido para recibir tu comprobante');
       return;
@@ -168,23 +168,6 @@ export default function PdfCheckoutModal({
               🌎 Pago en dólares
             </span>
             <div className="space-y-2.5">
-              <button
-                onClick={() => handleCheckout('lemonsqueezy')}
-                disabled={isProcessing}
-                className={`w-full p-3 ${button.providerBrand('lemonsqueezy')} rounded-[${radius.modal}] transition flex items-center justify-between cursor-pointer`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <CreditCard className="w-5 h-5 text-[var(--color-accent-purple-text)]" />
-                  <div className="text-left">
-                    <p className="leading-tight">{t.checkout.payLemonSqueezyTitle}</p>
-                    <p className="text-[10px] opacity-80 font-bold">{t.checkout.payLemonSqueezyDesc}</p>
-                  </div>
-                </div>
-                <span className={`px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] rounded-[${radius.control}] text-[10px] font-black`}>
-                  {formatPrice('single_pdf', 'usd')}
-                </span>
-              </button>
-
               <button
                 onClick={() => handleCheckout('paypal')}
                 disabled={isProcessing}
