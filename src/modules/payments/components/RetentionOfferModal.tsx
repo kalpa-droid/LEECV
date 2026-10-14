@@ -51,9 +51,6 @@ export const RetentionOfferModal: React.FC<RetentionOfferModalProps> = ({
   const handleCheckout = () => {
     if (onAcceptOffer) {
       onAcceptOffer();
-    } else {
-      const checkoutUrl = `https://leecv.lemonsqueezy.com/checkout/buy/pro?discount=RETENCION${discountPercent}&user_id=${encodeURIComponent(userId)}`;
-      window.open(checkoutUrl, '_blank');
     }
     onClose();
   };

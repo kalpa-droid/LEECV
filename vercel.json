@@ -101,10 +101,6 @@
       "destination": "/api/webhooks?provider=paypal"
     },
     {
-      "source": "/api/lemonsqueezy-webhook",
-      "destination": "/api/webhooks?provider=lemonsqueezy"
-    },
-    {
       "source": "/api/create-paypal-order",
       "destination": "/api/paypal-order?action=create"
     },

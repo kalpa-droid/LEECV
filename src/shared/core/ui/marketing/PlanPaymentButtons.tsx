@@ -6,7 +6,7 @@ import { radius, elevationSystem } from '../../uiDesignSystem';
 
 export interface PlanPaymentButtonsProps {
   planId: PlanId;
-  onSelectGateway: (gateway: 'mercadopago' | 'paypal' | 'lemonsqueezy') => void;
+  onSelectGateway: (gateway: 'mercadopago' | 'paypal') => void;
   loadingGateway?: string | null;
   disabled?: boolean;
   compact?: boolean;
@@ -70,28 +70,6 @@ export const PlanPaymentButtons: React.FC<PlanPaymentButtonsProps> = ({
           <span className="truncate">{t.pricing.payPalLabel}</span>
         </span>
         <span className="text-[10px] font-extrabold opacity-90 shrink-0 bg-black/10 px-2 py-0.5 rounded-full">
-          {priceUsd}
-        </span>
-      </button>
-
-      {/* Botón 3: Lemon Squeezy (Dólares USD) */}
-      <button
-        type="button"
-        onClick={() => onSelectGateway('lemonsqueezy')}
-        disabled={isCurrentlyDisabled}
-        className={`w-full ${
-          compact ? 'py-1.5 px-3 text-[10px]' : 'py-2 px-4 text-[11px]'
-        } rounded-[${radius.card}] bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-btn-neutral-hover)] text-[var(--ui-text-primary)] border border-[var(--ui-border)] font-bold transition cursor-pointer flex items-center justify-between gap-2 disabled:opacity-50`}
-      >
-        <span className="flex items-center gap-1.5 truncate">
-          {loadingGateway === 'lemonsqueezy' ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
-          ) : (
-            <span>🌎</span>
-          )}
-          <span className="truncate">{t.pricing.lemonSqueezyLabel}</span>
-        </span>
-        <span className="text-[10px] font-bold opacity-80 shrink-0 bg-[var(--ui-bg-card)] px-2 py-0.5 rounded-full border border-[var(--ui-border)]">
           {priceUsd}
         </span>
       </button>

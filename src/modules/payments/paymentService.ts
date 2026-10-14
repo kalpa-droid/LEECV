@@ -41,7 +41,7 @@ export async function iniciarPago(
  */
 export async function selectPaidPlan(
   plan: string,
-  gateway: 'mercadopago' | 'paypal' | 'lemonsqueezy',
+  gateway: 'mercadopago' | 'paypal',
   email: string,
   exportToken?: string,
   userId?: string,
