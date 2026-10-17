@@ -115,8 +115,8 @@ export const landingCatalog = {
     a2: 'Tus borradores se procesan de forma local en tu navegador. Si usás las funciones de IA para redactar o adaptar tu postulación, tus datos de contacto se anonimizan automáticamente antes de enviarse. No vendemos ni compartimos tus datos con terceros.',
     q3: '¿El PDF exportado es compatible con filtros ATS de reclutamiento?',
     a3: 'Sí. Las plantillas ejecutivas de LEECV generan texto plano seleccionable y estructurado para pasar sin problemas los lectores automáticos de Selección.',
-    q4: '¿Puedo cancelar mi suscripción Pro en cualquier momento?',
-    a4: 'Absolutamente. Podés gestionar o cancelar tu suscripción a 1-clic desde el panel de cuenta sin penalizaciones ni letras chicas.',
+    q4: '¿Los créditos de exportación tienen vencimiento?',
+    a4: 'No. Los créditos de exportación adquiridos no tienen fecha de vencimiento y podés usarlos cuando quieras para exportar tu CV o carta de presentación.',
   },
   features: {
     sectionTitle: 'Pensado para que te salga bien',
