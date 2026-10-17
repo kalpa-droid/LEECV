@@ -44,7 +44,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return paypalHandler(req, res);
   }
   if (provider === 'lemonsqueezy') {
-    return lsHandler(req, res);
+    return errorResponse(res, 410, 'El webhook de Lemon Squeezy ha sido deshabilitado');
   }
 
   return errorResponse(res, 400, 'Proveedor de webhook no válido o no especificado');

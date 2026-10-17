@@ -51,7 +51,7 @@ export function RefundPolicyPage() {
               Los créditos adquiridos mediante paquetes individuales ({getPacksSentence()}) no tienen fecha de caducidad y permanecen asociados indefinidamente a la cuenta del usuario.
             </p>
             <p>
-              Si un usuario realiza una compra por error y no ha consumido ninguno de los créditos del paquete adquirido, puede solicitar el reembolso total dentro de los primeros 14 días corridos desde la fecha de compra. El reembolso se procesará a través del mismo medio de pago (Mercado Pago, PayPal o Lemon Squeezy).
+              Si un usuario realiza una compra por error y no ha consumido ninguno de los créditos del paquete adquirido, puede solicitar el reembolso total dentro de los primeros 14 días corridos desde la fecha de compra. El reembolso se procesará a través del mismo medio de pago (Mercado Pago o PayPal).
             </p>
 
             <h3 className="text-sm font-black text-[var(--ui-text-primary)]">2. Suscripciones Recurrentes ({getRecurringPlansSentence()})</h3>

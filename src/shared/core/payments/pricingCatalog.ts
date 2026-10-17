@@ -26,7 +26,7 @@ export type PlanId = 'single_pdf' | 'credits_pack_5' | 'credits_pack_10' | 'pro'
 export interface PricingCatalogEntry {
   id: PlanId;
   label: string;
-  /** Precio de referencia en USD — lo cobran PayPal y Lemon Squeezy. */
+  /** Precio de referencia en USD — lo cobra PayPal. */
   usd: number;
   /** Precio en ARS — lo cobra Mercado Pago. */
   ars: number;
