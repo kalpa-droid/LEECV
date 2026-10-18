@@ -26,14 +26,12 @@ export const pricingCatalog = {
   agencyOneClickShareFeature: "Envío a WhatsApp & Telegram a 1-Clic",
   subscribeMercadoPagoArgentine: "🇦🇷 Suscribirse con Mercado Pago",
   payPaypalUsd: "💳 Pagar con PayPal (USD)",
-  subscribeLemonSqueezyUsd: "🌎 Suscribirse con Lemon Squeezy (USD)",
   activateMercadoPagoArgentine: "🇦🇷 Activar con Mercado Pago",
   currencyExplanationNote: "🇦🇷 Con Mercado Pago pagás en Pesos Argentinos (ARS). 💳 Con PayPal pagás en Dólares (USD). Todos los planes y paquetes de créditos pueden abonarse con cualquiera de las 2 pasarelas.",
   universalPaymentBadge: "Elegí tu medio de pago y moneda preferida",
   payWithAnyGateway: "Disponible con Mercado Pago y PayPal",
   mercadoPagoLabel: "Mercado Pago",
   payPalLabel: "PayPal",
-  lemonSqueezyLabel: "Lemon Squeezy",
   currencyNoticeCompact: "🇦🇷 ARS con Mercado Pago • 💳 USD con PayPal",
 };
 

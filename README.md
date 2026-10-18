@@ -25,7 +25,7 @@ LEECV es una plataforma web para diseñar currículums y preparar postulaciones 
 * **Estado y Almacenamiento**: Zustand, IndexedDB
 * **Backend y Base de Datos**: Vercel Serverless Functions, Supabase
 * **Inteligencia Artificial**: Google Gemini API
-* **Pagos**: MercadoPago, PayPal, LemonSqueezy
+* **Pagos**: MercadoPago, PayPal
 
 ## Configuración y Despliegue
 

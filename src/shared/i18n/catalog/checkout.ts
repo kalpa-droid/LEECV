@@ -11,8 +11,6 @@ export const checkoutCatalog = {
   payMercadoPagoDesc: "Tarjeta de Crédito / Débito, Mercado Pago, Transferencia",
   payPaypalTitle: "Pagar 1 Exportación con PayPal",
   payPaypalDesc: "Pago rápido con tu cuenta PayPal",
-  payLemonSqueezyTitle: "Pagar 1 Exportación con Lemon Squeezy",
-  payLemonSqueezyDesc: "Pago con tarjeta de crédito/débito",
   pack5Credits: "Pack 5 créditos —",
   pack10Credits: "Pack 10 créditos —",
   subscribeProPrefix: "Suscribirse a Plan Pro (",
