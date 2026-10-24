@@ -146,7 +146,7 @@ export const typeScale = {
  * - danger: solo eliminar / acciones irreversibles
  * - success: confirmar/activar algo positivo (activar plan, aprobar)
  * - warning: precaución no destructiva (re-comprobar, revisar antes de seguir)
- * - providerBrand: checkout de un proveedor de pago externo (Mercado Pago, PayPal, Lemon Squeezy)
+ * - providerBrand: checkout de un proveedor de pago externo (Mercado Pago, PayPal)
  */
 export const button = {
   base: 'rounded-[10px] font-medium text-[13px] px-4 py-2.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed',
@@ -156,14 +156,12 @@ export const button = {
   danger: `bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/30 text-[var(--color-status-danger-text)] hover:bg-[var(--color-status-danger-muted)]`,
   success: `bg-[var(--color-status-success-base)] text-[var(--color-status-success-on-base)] hover:opacity-95 active:scale-[0.98] shadow-md`,
   warning: `bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/40 text-[var(--color-status-warning-text)] hover:bg-[var(--color-status-warning-base)]/20`,
-  providerBrand: (provider: 'mercadopago' | 'paypal' | 'lemonsqueezy') => {
+  providerBrand: (provider: 'mercadopago' | 'paypal') => {
     switch (provider) {
       case 'mercadopago':
         return `bg-[var(--color-accent-amber)] text-black font-bold hover:opacity-95 shadow-md`;
       case 'paypal':
         return `bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 text-[var(--color-secondary-text)] font-bold hover:opacity-90`;
-      case 'lemonsqueezy':
-        return `bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/30 text-[var(--color-accent-purple-text)] font-bold hover:opacity-90`;
     }
   },
 } as const;

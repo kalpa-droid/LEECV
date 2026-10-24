@@ -44,7 +44,7 @@ export function CreditsModal({ isOpen, onClose, onOpenPricing }: CreditsModalPro
             <p className="text-xs font-bold text-[var(--ui-text-secondary)] uppercase tracking-wider">Plan Actual</p>
             <div className="flex items-center justify-between">
               <span className={`px-2 py-1 text-xs font-black rounded ${isPro ? 'bg-[var(--color-status-warning-base)] text-black' : 'bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-secondary)]'}`}>
-                {isPro ? 'PRO (Ilimitado)' : 'FREE / INVITADO'}
+                {isPro ? '✨ Ilimitado' : 'FREE / INVITADO'}
               </span>
             </div>
             {isPro && (

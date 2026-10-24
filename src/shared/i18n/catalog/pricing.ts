@@ -1,6 +1,6 @@
 export const pricingCatalog = {
   sessionClosedSuccess: "Sesión cerrada correctamente. Puedes ingresar con otra cuenta.",
-  modalTitle: "Mi Cuenta & Suscripciones LEECV",
+  modalTitle: "Mi Cuenta & Créditos LEECV",
   sslSecurityBanner: "🔒 Todos los pagos están procesados con encriptación SSL de 256 bits a través de Mercado Pago y PayPal. Acceso instantáneo y transparente sin cargos ocultos.",
   googleDriveLabel: "Google Drive (Próximamente):",
   upgradeToAgency: "Mejorar a Plan Agencia (",

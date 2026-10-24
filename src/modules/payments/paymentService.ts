@@ -7,7 +7,7 @@ import { ProviderId, getPaymentProvider } from '../../shared/core/payments/payme
 import { PlanId } from '../../shared/core/payments/pricingCatalog';
 
 /**
- * Iniciador unificado de pagos (Mercado Pago, PayPal, Lemon Squeezy) para Guest Checkout.
+ * Iniciador unificado de pagos (Mercado Pago, PayPal) para Guest Checkout.
  */
 export async function iniciarPago(
   providerId: ProviderId, 

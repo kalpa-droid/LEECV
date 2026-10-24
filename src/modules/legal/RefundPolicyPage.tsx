@@ -2,7 +2,7 @@ import React from 'react';
 import { CreditCard, ArrowLeft, RefreshCw } from 'lucide-react';
 import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
 import { navigation } from '../../shared/core/utils/navigation';
-import { getRecurringPlansSentence, getPacksSentence } from '../../shared/core/payments/legalCopyEngine';
+import { getPacksSentence } from '../../shared/core/payments/legalCopyEngine';
 
 export function RefundPolicyPage() {
   return (
@@ -36,13 +36,13 @@ export function RefundPolicyPage() {
       <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 lg:p-8">
         <div className={`bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.modal}] p-6 sm:p-8 ${elevationSystem.overlay}`}>
           <h1 className="text-xl font-black mb-1 text-[var(--ui-text-primary)]">Política de Cancelaciones y Reembolsos</h1>
-          <p className="text-xs text-[var(--ui-text-secondary)] mb-6">Última actualización: Septiembre 2026 — LEECV Inc. (https://leecv.app)</p>
+          <p className="text-xs text-[var(--ui-text-secondary)] mb-6">Última actualización: Octubre 2026 — LEECV Inc. (https://leecv.app)</p>
 
           <div className="space-y-4 text-xs text-[var(--ui-text-secondary)] leading-relaxed font-normal">
             <div className={`p-3 bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/30 rounded-[${radius.card}] flex items-start gap-3`}>
               <RefreshCw className="w-5 h-5 text-[var(--color-status-success-text)] flex-shrink-0 mt-0.5" />
               <p className="text-[11px] text-[var(--color-status-success-text)]">
-                Transparencia total en compras puntuales de paquetes de créditos y suscripciones recurrentes ({getRecurringPlansSentence()}).
+                Transparencia total en compras puntuales de paquetes de créditos de exportación ({getPacksSentence()}).
               </p>
             </div>
 
@@ -54,9 +54,9 @@ export function RefundPolicyPage() {
               Si un usuario realiza una compra por error y no ha consumido ninguno de los créditos del paquete adquirido, puede solicitar el reembolso total dentro de los primeros 14 días corridos desde la fecha de compra. El reembolso se procesará a través del mismo medio de pago (Mercado Pago o PayPal).
             </p>
 
-            <h3 className="text-sm font-black text-[var(--ui-text-primary)]">2. Suscripciones Recurrentes ({getRecurringPlansSentence()})</h3>
+            <h3 className="text-sm font-black text-[var(--ui-text-primary)]">2. Exportaciones Individuales</h3>
             <p>
-              Las suscripciones mensuales ({getRecurringPlansSentence()}) pueden cancelarse en cualquier momento desde el panel de usuario o comunicándose con soporte. La cancelación evita futuros cobros y mantiene el acceso a las funciones avanzadas y almacenamiento hasta la finalización del período contratado.
+              Las compras de exportación individual (1 crédito) son productos digitales de uso inmediato. Si el crédito no ha sido utilizado, puede solicitarse un reembolso dentro de los primeros 14 días corridos desde la compra contactando a soporte.
             </p>
 
             <h3 className="text-sm font-black text-[var(--ui-text-primary)]">3. Solicitud de Reembolso y Atención al Cliente</h3>

@@ -199,7 +199,7 @@ export default function Navbar({
               title="Mi Cuenta & Créditos"
             >
               <User className="w-4 h-4 flex-shrink-0 text-[var(--color-accent-blue-text)]" />
-              <span>{user ? (isPro ? 'PRO Ilimitado' : `🪙 ${pdfTokens} Créditos`) : 'Invitado'}</span>
+              <span>{user ? (isPro ? '✨ Ilimitado' : `🪙 ${pdfTokens} Créditos`) : 'Invitado'}</span>
             </button>
           )}
 
