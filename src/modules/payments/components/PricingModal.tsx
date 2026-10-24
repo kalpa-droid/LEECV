@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal } from '../../../shared/core/ui/Modal';
 import { useAuth } from '../../../shared/core/auth/AuthContext';
-import { Check, Zap } from 'lucide-react';
+import { Check, Zap, Sparkles } from 'lucide-react';
 import { radius, button } from '../../../shared/core/uiDesignSystem';
 import { formatPrice } from '../../../shared/core/payments/pricingCatalog';
 import { selectPaidPlan } from '../paymentService';
@@ -35,7 +35,7 @@ export function PricingModal({ isOpen, onClose, onOpenLogin }: PricingModalProps
       async () => {
         const data = await dal.pdfExportTokens.insert({ 
           email: user.email!,
-          doc_type: 'pack', // or 'pro', but doc_type here is just an indicator for the pack
+          doc_type: 'pack',
           user_id: user.id
         });
         if (!data) throw new Error('Error al generar token de pago');
@@ -64,7 +64,7 @@ export function PricingModal({ isOpen, onClose, onOpenLogin }: PricingModalProps
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={'Mejora tu cuenta'}
+      title={'Comprar Paquetes de Créditos'}
       icon={<Zap className="w-5 h-5 text-[var(--color-status-warning-text)]" />}
       size="lg"
     >
@@ -84,7 +84,7 @@ export function PricingModal({ isOpen, onClose, onOpenLogin }: PricingModalProps
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-4 max-w-lg mx-auto w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto w-full">
           
           {/* Pack 5 */}
           <div className={`p-4 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.card}] flex flex-col justify-between`}>
@@ -95,6 +95,7 @@ export function PricingModal({ isOpen, onClose, onOpenLogin }: PricingModalProps
               <ul className="space-y-2 mb-4 text-[11px] text-[var(--ui-text-secondary)]">
                 <li className="flex items-center gap-2"><Check className="w-3 h-3 text-[var(--color-status-success-text)]" /> Exportaciones en alta calidad</li>
                 <li className="flex items-center gap-2"><Check className="w-3 h-3 text-[var(--color-status-success-text)]" /> Sin marca de agua</li>
+                <li className="flex items-center gap-2"><Check className="w-3 h-3 text-[var(--color-status-success-text)]" /> Créditos permanentes</li>
               </ul>
             </div>
             
@@ -114,6 +115,43 @@ export function PricingModal({ isOpen, onClose, onOpenLogin }: PricingModalProps
               >
                 <span className="font-bold text-[10px]">PayPal (USD)</span>
                 <span className="font-black text-[11px]">{formatPrice('credits_pack_5', 'usd')}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Pack 10 */}
+          <div className={`p-4 bg-[var(--ui-bg-card)] border-2 border-[var(--color-accent-base)] rounded-[${radius.card}] flex flex-col justify-between relative`}>
+            <div className="absolute -top-2.5 right-3 bg-[var(--color-accent-base)] text-black text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+              <Sparkles className="w-2.5 h-2.5" />
+              <span>Mejor Valor</span>
+            </div>
+            <div>
+              <h3 className="font-black text-[var(--ui-text-primary)] text-sm mb-1">Pack 10 Créditos</h3>
+              <p className="text-[10px] text-[var(--ui-text-secondary)] mb-4">10 exportaciones PDF. No vencen.</p>
+              
+              <ul className="space-y-2 mb-4 text-[11px] text-[var(--ui-text-secondary)]">
+                <li className="flex items-center gap-2"><Check className="w-3 h-3 text-[var(--color-status-success-text)]" /> Exportaciones en alta calidad</li>
+                <li className="flex items-center gap-2"><Check className="w-3 h-3 text-[var(--color-status-success-text)]" /> Sin marca de agua</li>
+                <li className="flex items-center gap-2"><Check className="w-3 h-3 text-[var(--color-status-success-text)]" /> Mayor ahorro por crédito</li>
+              </ul>
+            </div>
+            
+            <div className="space-y-2 pt-3 border-t border-[var(--ui-border)]">
+              <button
+                onClick={() => handleCheckout('credits_pack_10', 'mercadopago')}
+                disabled={isProcessing}
+                className={`w-full p-2.5 ${button.providerBrand('mercadopago')} rounded-[${radius.control}] flex items-center justify-between`}
+              >
+                <span className="font-bold text-[10px]">MercadoPago (ARS)</span>
+                <span className="font-black text-[11px]">{formatPrice('credits_pack_10', 'ars')}</span>
+              </button>
+              <button
+                onClick={() => handleCheckout('credits_pack_10', 'paypal')}
+                disabled={isProcessing}
+                className={`w-full p-2.5 ${button.providerBrand('paypal')} rounded-[${radius.control}] flex items-center justify-between`}
+              >
+                <span className="font-bold text-[10px]">PayPal (USD)</span>
+                <span className="font-black text-[11px]">{formatPrice('credits_pack_10', 'usd')}</span>
               </button>
             </div>
           </div>
