@@ -1,7 +1,7 @@
 import React from 'react';
 import { Server } from 'lucide-react';
 import { radius } from '../core/uiDesignSystem';
-import { getAllPlansOfferingSentence, getPacksSentence } from '../core/payments/legalCopyEngine';
+import { getPacksSentence } from '../core/payments/legalCopyEngine';
 
 export function TermsOfServiceContent() {
   return (
@@ -9,7 +9,7 @@ export function TermsOfServiceContent() {
       <div className={`p-3 bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/30 rounded-[${radius.card}] flex items-start gap-3`}>
         <Server className="w-5 h-5 text-[var(--color-status-success-text)] flex-shrink-0 mt-0.5" />
         <p className="text-[11px] text-[var(--color-status-success-text)]">
-          Términos y condiciones de prestación del servicio de maquetación, almacenamiento en la nube y planes de LEECV.
+          Términos y condiciones de prestación del servicio de maquetación, almacenamiento en la nube y créditos de exportación de LEECV.
         </p>
       </div>
 
@@ -18,9 +18,9 @@ export function TermsOfServiceContent() {
         Al acceder y utilizar la plataforma LEECV (leecv.app), aceptas cumplir con los presentes Términos de Servicio. El servicio está destinado a la creación, maquetación y almacenamiento de documentos profesionales legales y currículums vitae.
       </p>
 
-      <h3 className="text-sm font-black text-[var(--ui-text-primary)]">2. Licencias de Suscripción y Créditos PDF</h3>
+      <h3 className="text-sm font-black text-[var(--ui-text-primary)]">2. Uso del Servicio y Créditos de Exportación</h3>
       <p>
-        LEECV ofrece {getAllPlansOfferingSentence()}. Las modalidades varían desde el uso gratuito con almacenamiento local o en la nube del usuario, pasando por paquetes de créditos para exportaciones específicas, hasta suscripciones ilimitadas.
+        LEECV ofrece un editor gratuito con almacenamiento local. Para exportar documentos en PDF se requieren créditos de exportación, disponibles mediante compras puntuales de exportación individual o paquetes de créditos ({getPacksSentence()}). Los créditos adquiridos no tienen fecha de caducidad.
       </p>
 
       <h3 className="text-sm font-black text-[var(--ui-text-primary)]">3. Responsabilidad del Contenido</h3>
@@ -28,9 +28,9 @@ export function TermsOfServiceContent() {
         El usuario es el único responsable de la veracidad, exactitud y legalidad de los datos, certificados y contenidos ingresados en sus currículums y perfiles postulados.
       </p>
 
-      <h3 className="text-sm font-black text-[var(--ui-text-primary)]">4. Cancelaciones, Reembolsos y Soporte</h3>
+      <h3 className="text-sm font-black text-[var(--ui-text-primary)]">4. Reembolsos y Soporte</h3>
       <p>
-        Las suscripciones mensuales pueden cancelarse en cualquier momento desde el panel de administración o enviando un correo a <a href="mailto:soporte@leecv.app" className="text-[var(--ui-text-primary)] underline font-bold">soporte@leecv.app</a>. Los créditos no consumidos de paquetes ({getPacksSentence()}) permanecen disponibles en la cuenta del usuario sin fecha de caducidad. En caso de solicitar un reembolso de compras de paquetes de créditos no utilizados dentro de los primeros 14 días corridos tras la transacción, el usuario puede comunicarse con nuestro equipo en <a href="mailto:soporte@leecv.app" className="text-[var(--ui-text-primary)] underline font-bold">soporte@leecv.app</a> indicando el número de transacción para procesar la devolución mediante el mismo medio de pago utilizado.
+        Los créditos no consumidos de paquetes ({getPacksSentence()}) permanecen disponibles en la cuenta del usuario sin fecha de caducidad. En caso de solicitar un reembolso de compras de paquetes de créditos no utilizados dentro de los primeros 14 días corridos tras la transacción, el usuario puede comunicarse con nuestro equipo en <a href="mailto:soporte@leecv.app" className="text-[var(--ui-text-primary)] underline font-bold">soporte@leecv.app</a> indicando el número de transacción para procesar la devolución mediante el mismo medio de pago utilizado.
       </p>
     </div>
   );

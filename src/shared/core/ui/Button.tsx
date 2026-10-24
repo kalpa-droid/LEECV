@@ -3,7 +3,7 @@ import { button as buttonTokens, radius } from '../uiDesignSystem';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children?: ReactNode;
-  variant?: 'primary' | 'secondary' | 'accent' | 'danger' | 'ghost' | 'success' | 'warning' | 'mercadopago' | 'paypal' | 'lemonsqueezy';
+  variant?: 'primary' | 'secondary' | 'accent' | 'danger' | 'ghost' | 'success' | 'warning' | 'mercadopago' | 'paypal';
   size?: 'sm' | 'md' | 'lg';
   className?: string;
   disabled?: boolean;
@@ -44,8 +44,6 @@ export function Button({
         return buttonTokens.providerBrand('mercadopago');
       case 'paypal':
         return buttonTokens.providerBrand('paypal');
-      case 'lemonsqueezy':
-        return buttonTokens.providerBrand('lemonsqueezy');
       default:
         return buttonTokens.primary;
     }

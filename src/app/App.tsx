@@ -110,7 +110,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     procesarRetornoPago()
       .then((res) => {
         if (res?.status === 'paypal_captured') {
-          showSuccess('¡Pago procesado con éxito vía PayPal! Tu suscripción o créditos han sido activados.');
+          showSuccess('¡Pago procesado con éxito vía PayPal! Tus créditos han sido activados.');
         } else if (res?.status === 'payment_success') {
           showSuccess('¡Pago confirmado! Tu cuenta ha sido actualizada.');
         }
