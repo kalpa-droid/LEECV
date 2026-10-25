@@ -2,6 +2,27 @@
 
 Este archivo documenta los cambios realizados en el repositorio por agentes de IA, para mantener un rastro histórico de qué se hizo, por qué y en qué momento.
 
+## [2026-10-25] - Control manual de exportación PDF, bandeja de pagos retenidos y acreditación idempotente
+
+**Resumen:**
+Se incorporó un interruptor administrativo de tres estados para la exportación PDF (`automatic` / `enabled` / `disabled`, es decir automático / permitido manual / bloqueado manual), con auditoría obligatoria y motivo, más una bandeja de pagos retenidos para los cobros que Mercado Pago y PayPal informan como pendientes o en revisión.
+
+**Acciones Tomadas:**
+- **Migración `20261014_admin_pdf_export_access.sql`**: agrega `profiles.pdf_export_access_mode`, columnas de resolución en `pending_grants`, índice de retenidos sin resolver y la RPC `check_and_consume_export_entitlement` (permitido manual devuelve `true` sin consumir créditos; bloqueado devuelve `false`; automático respeta plan pro y tokens pagos).
+- **Migración `20261025_pdf_export_access_hardening.sql`**: cierra un hueco crítico — `pdf_export_access_mode` no estaba protegido por `protect_privileged_columns`, por lo que cualquier usuario podía auto-habilitarse. Se agrega el trigger, las RPC `admin_set_pdf_export_access` y `admin_export_token_balances`, la vista de auditoría `pdf_status_logs` sobre `admin_audit_logs`, `hold_reason`/`export_token` en `pending_grants` y los checks de estado.
+- **Pagos retenidos**: `applyPayment` ahora retiene los pagos con `providerStatus === 'pending'` (motivo `provider_pending`) sin acreditar nada, y guarda `export_token` para poder resolver ventas individuales. Se suman los motivos `amount_mismatch` y `missing_profile`. Mercado Pago interpreta `pending`/`in_process`/`authorized`/`in_mediation`; PayPal interpreta `PAYMENT.CAPTURE.PENDING`.
+- **Acreditación idempotente**: el webhook de aprobación acredita el pago y luego resuelve automáticamente la retención previa (`resolveIfPending`), sin reabrir pagos ya completados. La limpieza fallida no tumba el webhook: se registra en Sentry y la fila queda resoluble a mano.
+- **Panel admin**: selector de modo con motivo obligatorio (5–500 caracteres), badge de modo, saldo real de exportaciones vía `admin_export_token_balances`, historial de acreditación y bandeja de retenidos (`PaymentsAdminTab`, `PendingGrantsTab`) con resolución manual de packs y de ventas `single_pdf`.
+- **Cliente**: `useExportEntitlement` lee el modo y llama a la RPC de consumo; `PdfCheckoutModal` decide el botón con `canExport` en lugar de `credits > 0` y muestra un mensaje específico cuando el acceso está bloqueado.
+- **Pruebas**: retención de pagos pendientes, no reapertura de un pago completado, extracción de estados pendientes de ambos proveedores y un test de integración local de los tres estados (incluido el bloqueo de auto-escalada y el registro de auditoría).
+
+**Validación:**
+- `npm run check-all`: aprobado; 258 pruebas OK, 2 omitidas por requerir Supabase local; typecheck, lint, gobernanza, build y SEO en verde.
+- `git diff --check`: sin errores de espacios.
+
+**Pendiente crítico antes de desplegar:**
+- La migración `20261025_pdf_export_access_hardening.sql` **no pudo aplicarse desde esta sesión**: `supabase migration list` devolvió `Invalid access token` (401). Debe aplicarse manualmente antes del deploy, porque el código nuevo ya lee `hold_reason` y llama a `admin_export_token_balances`. La `20261014_admin_pdf_export_access.sql` también debe estar aplicada.
+
 ## [2026-10-10] - Integración del flujo de postulaciones, cartas e importación revisable
 
 **Resumen:**

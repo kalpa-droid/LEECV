@@ -107,6 +107,47 @@ export async function listCustomers({ page = 0, limit = 50, q = '' } = {}) {
   return data;
 }
 
+export async function setPdfExportAccess(userId: string, accessMode: string, reason: string) {
+  const { ok, data, error } = await apiClient.post('/api/admin/set-pdf-export-access', {
+    userId,
+    accessMode,
+    reason,
+  });
+  if (!ok) throw new Error(error || 'Error al actualizar el acceso a exportación PDF');
+  return data;
+}
+
+export async function listPendingGrants({ page = 0, limit = 20 } = {}) {
+  const params = new URLSearchParams();
+  params.set('page', String(page));
+  params.set('limit', String(limit));
+
+  const { ok, data, error } = await apiClient.get(`/api/admin/list-pending-grants?${params.toString()}`);
+  if (!ok) throw new Error(error || 'Error al consultar pagos retenidos');
+  return data;
+}
+
+export async function resolvePendingGrant({
+  grantId,
+  targetEmail,
+  reason,
+  approveAmountMismatch,
+}: {
+  grantId: string;
+  targetEmail: string;
+  reason: string;
+  approveAmountMismatch: boolean;
+}) {
+  const { ok, data, error } = await apiClient.post('/api/admin/resolve-pending-grant', {
+    grantId,
+    targetEmail,
+    reason,
+    approveAmountMismatch,
+  });
+  if (!ok) throw new Error(error || 'Error al resolver el pago retenido');
+  return data;
+}
+
 export async function getAiProvidersStatus() {
   const env = (import.meta as any).env || {};
   const hasGroqKey = !!env.VITE_GROQ_API_KEY || (typeof process !== 'undefined' && !!process.env?.GROQ_API_KEY);

@@ -99,4 +99,23 @@ describe('PayPal Provider Contract', () => {
     expect(details?.currency).toBe('USD');
     expect(details?.metodoPago).toBe('paypal');
   });
+
+  it('extractPaymentData() debe interpretar PAYMENT.CAPTURE.PENDING como pago retenido', async () => {
+    const ctx: any = {
+      parsedBody: {
+        event_type: 'PAYMENT.CAPTURE.PENDING',
+        resource: {
+          id: 'CAP_PENDING_1',
+          custom_id: JSON.stringify({ email: 'pending@test.com', plan: 'credits_pack_10' }),
+          amount: { value: 17, currency_code: 'USD' },
+          payer: { email_address: 'pending@test.com' },
+        },
+      },
+    };
+
+    const details = await paypalProvider.extractPaymentData(ctx);
+    expect(details).not.toBeNull();
+    expect(details?.providerStatus).toBe('pending');
+    expect(details?.plan).toBe('credits_pack_10');
+  });
 });

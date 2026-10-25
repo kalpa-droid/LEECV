@@ -121,6 +121,18 @@
       "destination": "/api/admin-api?action=list-customers"
     },
     {
+      "source": "/api/admin/set-pdf-export-access",
+      "destination": "/api/admin-api?action=set-pdf-export-access"
+    },
+    {
+      "source": "/api/admin/list-pending-grants",
+      "destination": "/api/admin-api?action=list-pending-grants"
+    },
+    {
+      "source": "/api/admin/resolve-pending-grant",
+      "destination": "/api/admin-api?action=resolve-pending-grant"
+    },
+    {
       "source": "/api/approve-manual-claim",
       "destination": "/api/admin-api?action=approve-manual-claim"
     },

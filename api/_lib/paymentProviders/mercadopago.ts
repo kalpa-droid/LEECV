@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import type { PaymentProvider, ProviderStatus, WebhookVerifyContext } from './types.js';
-import type { PaymentDetails, PlanType } from '../applyPayment.js';
+import type { PaymentDetails } from '../applyPayment.js';
 import { parsePlanReference } from './planReference.js';
 import { env } from '../config/env.js';
 
@@ -96,9 +96,13 @@ export const mercadoPagoProvider: PaymentProvider = {
     const paymentRes = await fetch(`https://api.mercadopago.com/v1/payments/${data.id}`, {
       headers: { Authorization: `Bearer ${mpToken}` },
     });
+    if (!paymentRes.ok) return null;
     const payment: any = await paymentRes.json();
 
-    if (payment.status !== 'approved') return null;
+    // Estados que todavía no acreditan pero deben quedar en la bandeja de
+    // retenidos para reintentar cuando la pasarela confirme el cobro.
+    const pendingStatuses = new Set(['pending', 'in_process', 'authorized', 'in_mediation']);
+    if (payment.status !== 'approved' && !pendingStatuses.has(payment.status)) return null;
 
     const parsedRef = await parsePlanReference(payment.external_reference, 'mercadopago', String(payment.id));
     if (!parsedRef) {
@@ -118,6 +122,7 @@ export const mercadoPagoProvider: PaymentProvider = {
       amount: payment.transaction_amount,
       currency: payment.currency_id || 'ARS',
       details: payment,
+      providerStatus: payment.status === 'approved' ? 'approved' : 'pending',
     };
   },
 };

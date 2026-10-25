@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabaseAdmin } from './supabaseAdmin.js';
+import { serverDal } from './serverDal.js';
 import { applyPayment, PaymentDetails } from './applyPayment.js';
 import { errorResponse, successResponse } from './apiResponse.js';
 import { captureBackendException } from './sentryBackend.js';
@@ -69,6 +70,30 @@ export function createWebhookHandler(config: WebhookConfig) {
       }
 
       const result = await applyPayment(supabaseAdmin, paymentDetails);
+
+      // Si el pago se acreditó (o ya estaba acreditado), cualquier retención
+      // previa del mismo pago quedó resuelta por la pasarela.
+      if (
+        (result.type === 'payment_applied' || result.type === 'already_processed') &&
+        paymentDetails.externalId &&
+        paymentDetails.metodoPago
+      ) {
+        try {
+          await serverDal.pendingGrants.resolveIfPending(
+            paymentDetails.metodoPago,
+            paymentDetails.externalId,
+            'Acreditado automáticamente por la pasarela'
+          );
+        } catch (cleanupErr: any) {
+          // No se falla el webhook: el derecho ya fue otorgado y la fila puede
+          // resolverse manualmente desde el panel si esta limpieza no prospera.
+          console.error(`[WEBHOOK PENDING-GRANT CLEANUP - ${config.provider}]:`, cleanupErr?.message || cleanupErr);
+          await captureBackendException(cleanupErr, `webhook_pending_grant_cleanup:${config.provider}`, {
+            externalId: paymentDetails.externalId,
+          });
+        }
+      }
+
       return successResponse(res, { status: 'processed', result });
     } catch (err: any) {
       console.error(`[CRITICAL WEBHOOK ERROR - ${config.provider}]:`, err?.message || err, err?.stack);

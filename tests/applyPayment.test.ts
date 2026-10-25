@@ -203,6 +203,90 @@ describe('applyPayment Unit Tests', () => {
     expect(serverDal.pendingGrants.create).toHaveBeenCalled();
   });
 
+  it('debe retener un pago notificado como pendiente por la pasarela sin acreditar', async () => {
+    vi.mocked(serverDal.processedPayments.getByProviderAndExternalId).mockResolvedValueOnce(null as any);
+    vi.mocked(serverDal.pendingGrants.create).mockResolvedValueOnce(undefined as any);
+    vi.mocked(serverDal.adminNotifications.create).mockResolvedValueOnce(undefined as any);
+
+    const payment: PaymentDetails = {
+      exportToken: 'tok_pending_1',
+      email: 'pending@test.com',
+      plan: 'single_pdf',
+      metodoPago: 'mercadopago',
+      externalId: 'mp_pending_1',
+      amount: 3200,
+      currency: 'ARS',
+      providerStatus: 'pending',
+    };
+
+    const res = await applyPayment(fakeAdminClient, payment);
+
+    expect(res).toEqual({ type: 'held_for_review', message: 'Payment pending at provider' });
+    expect(serverDal.processedPayments.record).not.toHaveBeenCalled();
+    expect(fakeAdminClient.rpc).not.toHaveBeenCalled();
+    expect(serverDal.pendingGrants.create).toHaveBeenCalledWith(expect.objectContaining({
+      hold_reason: 'provider_pending',
+      export_token: 'tok_pending_1',
+      external_id: 'mp_pending_1',
+    }));
+  });
+
+  it('no debe reabrir una retención si el pago ya estaba acreditado', async () => {
+    vi.mocked(serverDal.processedPayments.getByProviderAndExternalId).mockResolvedValueOnce({
+      id: 'pay_1',
+      plan: 'credits_pack_5',
+      entitlement_status: 'completed',
+    } as any);
+
+    const payment: PaymentDetails = {
+      email: 'completed@test.com',
+      plan: 'credits_pack_5',
+      metodoPago: 'paypal',
+      externalId: 'pp_completed_1',
+      amount: 10,
+      currency: 'USD',
+      providerStatus: 'pending',
+    };
+
+    const res = await applyPayment(fakeAdminClient, payment);
+
+    expect(res).toEqual({ type: 'already_processed', message: 'Payment already completed' });
+    expect(serverDal.pendingGrants.create).not.toHaveBeenCalled();
+  });
+
+  it('debe acreditar tras aprobación administrativa explícita de una diferencia de importe', async () => {
+    vi.mocked(serverDal.processedPayments.record).mockResolvedValueOnce(undefined as any);
+    vi.mocked(serverDal.processedPayments.updateEntitlementStatus).mockResolvedValueOnce(undefined as any);
+    vi.mocked(serverDal.adminNotifications.create).mockResolvedValueOnce(undefined as any);
+
+    const payment: PaymentDetails = {
+      userId: 'user_manual_override',
+      email: 'manual-override@test.com',
+      plan: 'credits_pack_5',
+      metodoPago: 'paypal',
+      externalId: 'pp_manual_override_1',
+      amount: 1,
+      currency: 'USD',
+      adminApprovedAmountMismatch: true,
+    };
+
+    const res = await applyPayment(fakeAdminClient, payment);
+
+    expect(res).toEqual({ type: 'payment_applied', plan: 'credits_pack_5', exportToken: undefined });
+    expect(fakeAdminClient.rpc).toHaveBeenCalledWith('grant_export_tokens', expect.objectContaining({
+      p_payment_id: 'paypal:pp_manual_override_1',
+      p_user_id: 'user_manual_override',
+      p_amount: 5,
+      p_email: 'manual-override@test.com',
+    }));
+    expect(serverDal.processedPayments.updateEntitlementStatus).toHaveBeenCalledWith(
+      'paypal',
+      'pp_manual_override_1',
+      'completed'
+    );
+    expect(serverDal.pendingGrants.create).not.toHaveBeenCalled();
+  });
+
   it('debe propagar el error si pendingGrants.create falla al retener pago sin perfil', async () => {
     vi.mocked(serverDal.processedPayments.record).mockResolvedValueOnce(undefined as any);
     vi.mocked(serverDal.profiles.getByEmail).mockResolvedValueOnce(null as any);

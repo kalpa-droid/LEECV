@@ -100,7 +100,13 @@ export const paypalProvider: PaymentProvider = {
 
   extractPaymentData: async ({ parsedBody: event }: WebhookVerifyContext): Promise<PaymentDetails | null> => {
     const eventType = event?.event_type;
-    if (eventType !== 'PAYMENT.CAPTURE.COMPLETED' && eventType !== 'BILLING.SUBSCRIPTION.PAYMENT.COMPLETED') {
+    const approvedEvents = new Set([
+      'PAYMENT.CAPTURE.COMPLETED',
+      'BILLING.SUBSCRIPTION.PAYMENT.COMPLETED',
+    ]);
+    const pendingEvents = new Set(['PAYMENT.CAPTURE.PENDING']);
+
+    if (!approvedEvents.has(eventType) && !pendingEvents.has(eventType)) {
       return null;
     }
 
@@ -137,6 +143,7 @@ export const paypalProvider: PaymentProvider = {
       amount: amount,
       currency: currency,
       details: event,
+      providerStatus: pendingEvents.has(eventType) ? 'pending' : 'approved',
     };
   },
 };

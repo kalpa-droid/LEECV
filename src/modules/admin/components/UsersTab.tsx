@@ -1,6 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Search, Crown, ChevronLeft, ChevronRight, User } from 'lucide-react';
-import { radius, elevationSystem } from '../../../shared/core/uiDesignSystem';
+import { button, radius, elevationSystem } from '../../../shared/core/uiDesignSystem';
+import { Modal } from '../../../shared/core/ui/Modal';
+import { Field } from '../../../shared/core/ui/Field';
+import { useToast } from '../../../shared/core/ui/Toast';
+import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
 
 export function UsersTab({
   users,
@@ -10,12 +14,48 @@ export function UsersTab({
   setPage,
   totalCount,
   pageSize,
-  togglePremium
+  togglePremium,
+  setPdfExportAccess,
+  onPdfExportAccessUpdated
 }: any) {
+  const { showError, showSuccess } = useToast();
   const totalPages = Math.ceil(totalCount / pageSize);
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [accessMode, setAccessMode] = useState('automatic');
+  const [reason, setReason] = useState('');
+  const [savingAccess, setSavingAccess] = useState(false);
+
+  function openPdfAccessEditor(user: any) {
+    setEditingUser(user);
+    setAccessMode(user.pdfExportAccessMode || 'automatic');
+    setReason('');
+  }
+
+  async function savePdfAccess() {
+    if (!editingUser || reason.trim().length < 5) {
+      showError('Escribí un motivo de al menos 5 caracteres.');
+      return;
+    }
+
+    setSavingAccess(true);
+    await withErrorHandling(
+      async () => {
+        await setPdfExportAccess(editingUser.id, accessMode, reason.trim());
+        showSuccess(`Acceso PDF actualizado para ${editingUser.email}.`);
+        setEditingUser(null);
+        await onPdfExportAccessUpdated();
+      },
+      {
+        context: 'Actualización de acceso PDF',
+        errorMessage: 'No se pudo actualizar el acceso a exportación PDF.',
+        notify: (message) => showError(message),
+      }
+    );
+    setSavingAccess(false);
+  }
 
   return (
-    <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] space-y-4`}>
+    <div className={`bg-[var(--ui-bg-card)] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] space-y-4`} style={{ borderRadius: radius.modal }}>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-[var(--color-neutral-border)] pb-3 gap-3">
         <div className="flex items-center gap-2">
           <User className="w-5 h-5 text-[var(--color-accent-text)]" />
@@ -30,27 +70,27 @@ export function UsersTab({
               setSearchQuery(e.target.value);
               setPage(0);
             }}
-            className={`w-full pl-8 pr-3 py-1.5 text-xs bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] border border-[var(--color-neutral-border)] rounded-[${radius.control}] focus:outline-none focus:border-[var(--color-accent-base)] transition`}
+            className={`w-full pl-8 pr-3 py-1.5 text-xs bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-primary)] border border-[var(--color-neutral-border)] rounded-[10px] focus:outline-none focus:border-[var(--color-accent-base)] transition`}
           />
           <Search className="absolute left-2.5 top-2 w-3.5 h-3.5 text-[var(--color-neutral-text-muted)]" />
         </div>
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[600px]">
+        <table className="w-full text-left border-collapse min-w-[760px]">
           <thead>
             <tr className="border-b border-[var(--color-neutral-border)] text-xs text-[var(--color-neutral-text-secondary)]">
               <th className="py-2.5 px-3 font-extrabold">Usuario</th>
               <th className="py-2.5 px-3 font-extrabold">Rol</th>
               <th className="py-2.5 px-3 font-extrabold">Plan</th>
-              <th className="py-2.5 px-3 font-extrabold">Créditos</th>
+              <th className="py-2.5 px-3 font-extrabold">Créditos y acceso PDF</th>
               <th className="py-2.5 px-3 font-extrabold text-right">Acciones</th>
             </tr>
           </thead>
           <tbody className="text-xs divide-y divide-[var(--color-neutral-border)]">
             {users.length === 0 ? (
               <tr>
-                <td colSpan={4} className="py-6 text-center text-[var(--color-neutral-text-muted)] font-medium">
+                <td colSpan={5} className="py-6 text-center text-[var(--color-neutral-text-muted)] font-medium">
                   No se encontraron usuarios.
                 </td>
               </tr>
@@ -83,15 +123,35 @@ export function UsersTab({
                   </td>
                   <td className="py-3 px-3">
                     <div className="flex flex-col gap-1 text-[11px] font-medium text-[var(--color-neutral-text-secondary)]">
-                      <span>PDF: <strong className="text-[var(--color-neutral-text-primary)]">{user.pdfExportTokens || 0}</strong></span>
+                      <span>Disponibles: <strong className="text-[var(--color-neutral-text-primary)]">{user.pdfExportTokens || 0}</strong></span>
+                      <span className={`w-max rounded px-1.5 py-0.5 text-[9px] font-bold ${
+                        user.pdfExportAccessMode === 'enabled'
+                          ? 'bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)]'
+                          : user.pdfExportAccessMode === 'disabled'
+                          ? 'bg-[var(--color-status-danger-muted)] text-[var(--color-status-danger-text)]'
+                          : 'bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-secondary)]'
+                      }`}>
+                        {user.pdfExportAccessMode === 'enabled'
+                          ? 'PDF habilitado sin gastar créditos'
+                          : user.pdfExportAccessMode === 'disabled'
+                          ? 'PDF bloqueado manualmente'
+                          : 'Modo automático'}
+                      </span>
                     </div>
                   </td>
                   <td className="py-3 px-3 text-right">
                     <div className="flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openPdfAccessEditor(user)}
+                        className={`${button.secondary} px-2.5 py-1 text-[10px] font-black`}
+                      >
+                        Acceso PDF
+                      </button>
                       {user.plan !== 'pro' ? (
                         <button
                           onClick={() => togglePremium(user, 'pro')}
-                          className={`px-2.5 py-1 text-[10px] font-black bg-[var(--color-status-warning-base)] text-[var(--color-accent-on-base)] rounded-[${radius.control}] hover:opacity-90 transition flex items-center gap-1`}
+                          className={`px-2.5 py-1 text-[10px] font-black bg-[var(--color-status-warning-base)] text-[var(--color-accent-on-base)] rounded-[10px] hover:opacity-90 transition flex items-center gap-1`}
                         >
                           <Crown className="w-3 h-3" />
                           Hacer PRO
@@ -99,7 +159,7 @@ export function UsersTab({
                       ) : (
                         <button
                           onClick={() => togglePremium(user, 'free')}
-                          className={`px-2.5 py-1 text-[10px] font-black bg-[var(--color-neutral-surface)] border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] rounded-[${radius.control}] hover:bg-[var(--color-neutral-surface-muted)] transition`}
+                          className={`px-2.5 py-1 text-[10px] font-black bg-[var(--color-neutral-surface)] border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] rounded-[10px] hover:bg-[var(--color-neutral-surface-muted)] transition`}
                         >
                           Revocar PRO
                         </button>
@@ -137,6 +197,63 @@ export function UsersTab({
           </div>
         </div>
       )}
+
+      <Modal
+        isOpen={Boolean(editingUser)}
+        onClose={() => !savingAccess && setEditingUser(null)}
+        title="Control manual de exportación PDF"
+        size="md"
+        closeOnOverlayClick={!savingAccess}
+      >
+        {editingUser && (
+          <div className="space-y-4">
+            <p className="text-xs ui-text-secondary">
+              Usuario: <strong className="ui-text-primary">{editingUser.email}</strong>
+            </p>
+            <Field
+              as="select"
+              id="pdf-export-access-mode"
+              label="Estado de exportación"
+              value={accessMode}
+              onChange={(event: React.ChangeEvent<HTMLSelectElement>) => setAccessMode(event.target.value)}
+              disabled={savingAccess}
+            >
+              <option value="automatic">Automático: usar plan y créditos</option>
+              <option value="enabled">Habilitado manualmente: no consume créditos</option>
+              <option value="disabled">Bloqueado manualmente: no exporta con saldo</option>
+            </Field>
+            <Field
+              as="textarea"
+              id="pdf-export-access-reason"
+              label="Motivo obligatorio"
+              value={reason}
+              onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setReason(event.target.value)}
+              placeholder="Ej.: pago confirmado por la pasarela, acreditación demorada"
+              rows={3}
+              maxLength={500}
+              disabled={savingAccess}
+            />
+            <div className="flex justify-end gap-2 border-t border-[var(--color-neutral-border)] pt-4">
+              <button
+                type="button"
+                className={button.secondary}
+                onClick={() => setEditingUser(null)}
+                disabled={savingAccess}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className={button.primary}
+                onClick={savePdfAccess}
+                disabled={savingAccess || reason.trim().length < 5}
+              >
+                {savingAccess ? 'Guardando…' : 'Guardar estado'}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

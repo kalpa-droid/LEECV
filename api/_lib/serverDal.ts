@@ -1,5 +1,10 @@
 import { supabaseAdmin } from './supabaseAdmin.js';
 
+/** Escapa los comodines de LIKE/ILIKE para que un email no se comporte como patrón. */
+function escapeLikePattern(value: string): string {
+  return value.replace(/[\\%_]/g, '\\$&');
+}
+
 export const serverDal = {
   profiles: {
     async getRole(id: string): Promise<string | null> {
@@ -17,7 +22,7 @@ export const serverDal = {
       const { data, error } = await supabaseAdmin
         .from('profiles')
         .select('id')
-        .eq('email', email)
+        .ilike('email', escapeLikePattern(email))
         .maybeSingle();
 
       if (error || !data) return null;
@@ -28,8 +33,7 @@ export const serverDal = {
       let query = supabaseAdmin
         .from('profiles')
         .select(`
-          id, email, plan, role, created_at,
-          pdf_export_credits ( credits ),
+          id, email, plan, role, created_at, pdf_export_access_mode,
           user_credits ( ai_credits )
         `, { count: 'exact' });
         
@@ -42,7 +46,33 @@ export const serverDal = {
         .range(offset, offset + limit - 1);
 
       if (error) throw new Error(`Error listando clientes: ${error.message}`);
-      return { customers: data || [], totalCount: count || 0 };
+
+      const customers = data || [];
+      const userIds = customers.map((customer: any) => customer.id);
+      const tokenBalances = new Map<string, number>();
+
+      if (userIds.length > 0) {
+        const { data: balances, error: balanceError } = await supabaseAdmin.rpc(
+          'admin_export_token_balances',
+          { p_user_ids: userIds }
+        );
+
+        if (balanceError) {
+          throw new Error(`Error consultando saldos de exportación: ${balanceError.message}`);
+        }
+
+        for (const balance of balances || []) {
+          tokenBalances.set(balance.user_id, Number(balance.credits));
+        }
+      }
+
+      return {
+        customers: customers.map((customer: any) => ({
+          ...customer,
+          pdf_export_tokens: tokenBalances.get(customer.id) || 0,
+        })),
+        totalCount: count || 0,
+      };
     },
 
     async updateDriveStatus(
@@ -146,7 +176,16 @@ export const serverDal = {
   },
 
   pendingGrants: {
-    async create(data: { email?: string; provider: string; external_id: string; plan: string; amount?: number; currency?: string }): Promise<void> {
+    async create(data: {
+      email?: string;
+      provider: string;
+      external_id: string;
+      plan: string;
+      amount?: number;
+      currency?: string;
+      hold_reason?: 'amount_mismatch' | 'missing_profile' | 'provider_pending';
+      export_token?: string;
+    }): Promise<void> {
       const { error } = await supabaseAdmin.from('pending_grants').insert({
         ...data,
         created_at: new Date().toISOString()
@@ -162,6 +201,69 @@ export const serverDal = {
         }
         throw new Error(`[pendingGrants] Error creando pending grant: ${error.message}`);
       }
+    },
+
+    async listUnresolved(limit: number, offset: number) {
+      const { data, count, error } = await supabaseAdmin
+        .from('pending_grants')
+        .select('id, email, provider, external_id, plan, amount, currency, hold_reason, created_at', { count: 'exact' })
+        .is('resolved_at', null)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) throw new Error(`[pendingGrants] Error listando pagos retenidos: ${error.message}`);
+      return { grants: data || [], totalCount: count || 0 };
+    },
+
+    async getUnresolvedById(id: string) {
+      const { data, error } = await supabaseAdmin
+        .from('pending_grants')
+        .select('id, email, provider, external_id, plan, amount, currency, hold_reason, export_token, resolved_at')
+        .eq('id', id)
+        .is('resolved_at', null)
+        .maybeSingle();
+
+      if (error) throw new Error(`[pendingGrants] Error consultando pago retenido: ${error.message}`);
+      return data;
+    },
+
+    async markResolved(id: string, userId: string | null, adminId: string, reason: string): Promise<boolean> {
+      const { data, error } = await supabaseAdmin
+        .from('pending_grants')
+        .update({
+          resolved_at: new Date().toISOString(),
+          resolved_by: adminId,
+          resolved_user_id: userId,
+          resolution_reason: reason,
+          resolution_action: 'admin_resolved',
+        })
+        .eq('id', id)
+        .is('resolved_at', null)
+        .select('id')
+        .maybeSingle();
+
+      if (error) throw new Error(`[pendingGrants] Error resolviendo pago retenido: ${error.message}`);
+      return Boolean(data);
+    },
+
+    /**
+     * Cierra automáticamente una retención cuando el webhook de aprobación
+     * confirma el mismo pago. Evita que la bandeja quede con filas obsoletas
+     * después de una acreditación exitosa.
+     */
+    async resolveIfPending(provider: string, externalId: string, reason: string): Promise<void> {
+      const { error } = await supabaseAdmin
+        .from('pending_grants')
+        .update({
+          resolved_at: new Date().toISOString(),
+          resolution_reason: reason,
+          resolution_action: 'auto_resolved',
+        })
+        .eq('provider', provider)
+        .eq('external_id', externalId)
+        .is('resolved_at', null);
+
+      if (error) throw new Error(`[pendingGrants] Error resolviendo pago retenido automáticamente: ${error.message}`);
     }
   },
 

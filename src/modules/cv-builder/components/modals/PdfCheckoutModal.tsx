@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { selectPaidPlan } from '../../../payments/paymentService';
 import { CreditCard, Download, Check, AlertCircle } from 'lucide-react';
 import { Modal } from '../../../../shared/core/ui/Modal';
-import { supabase } from '../../../../shared/core/lib/supabaseClient';
 import { dal } from '../../../../shared/core/storage/dataAccessLayer';
 import { useAuth } from '../../../../shared/core/auth/AuthContext';
 
@@ -11,7 +10,6 @@ import { useExportEntitlement } from '../../../../shared/core/entitlements/useEx
 import { withErrorHandling } from '../../../../shared/core/utils/errorHandler';
 
 import { radius, button } from '../../../../shared/core/uiDesignSystem';
-import { UI_GLOSSARY } from '../../../../shared/core/ui/uiTextGlossary';
 import { formatPrice } from '../../../../shared/core/payments/pricingCatalog';
 import { useText } from '../../../../shared/i18n/useText';
 
@@ -27,7 +25,7 @@ export default function PdfCheckoutModal({
   const t = useText();
   const { user } = useAuth();
 
-  const { credits, refreshCredits, consumeCreditIfNeeded } = useExportEntitlement();
+  const { canExport, reason, consumeCreditIfNeeded } = useExportEntitlement();
 
   const handleCheckout = async (gateway: 'mercadopago' | 'paypal') => {
     if (!email || !isValidEmail(email)) {
@@ -73,6 +71,8 @@ export default function PdfCheckoutModal({
     setIsProcessing(false);
     if (consumed) {
       onConfirm();
+    } else if (reason === 'exportacion_bloqueada') {
+      setErrorMsg('La exportación está bloqueada para esta cuenta. Contactá a quien administra el sitio.');
     } else {
       setErrorMsg('No tienes créditos o token de exportación activos. Adquiere una exportación seleccionando un método de pago.');
     }
@@ -93,7 +93,7 @@ export default function PdfCheckoutModal({
           >
             {t.checkout.backToEditor}
           </button>
-          {credits > 0 && (
+          {canExport && (
             <button
               onClick={handleConfirmExport}
               disabled={isProcessing}
