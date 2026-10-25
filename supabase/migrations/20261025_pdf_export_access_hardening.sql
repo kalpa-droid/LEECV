@@ -260,7 +260,34 @@ revoke all on function public.admin_set_pdf_export_access(uuid, text, text, uuid
 grant execute on function public.admin_set_pdf_export_access(uuid, text, text, uuid) to service_role;
 
 -- ---------------------------------------------------------------------------
--- 4. Vista de auditoría normalizada
+-- 4. Registro de auditoría
+-- ---------------------------------------------------------------------------
+-- 20260820_protect_plan_columns_and_claims.sql nunca llegó a aplicarse completa
+-- en todas las bases: public.payment_claims existe, pero admin_audit_logs no.
+-- Se crea de forma idempotente con el mismo esquema original para que el RPC y
+-- la vista funcionen incluso en una base que salteó esa migración.
+create table if not exists public.admin_audit_logs (
+  id uuid primary key default gen_random_uuid(),
+  admin_id uuid not null references auth.users(id) on delete cascade,
+  action_type text not null,
+  target_user_id uuid references auth.users(id),
+  details jsonb,
+  created_at timestamptz not null default now()
+);
+
+alter table public.admin_audit_logs enable row level security;
+
+drop policy if exists "solo admin ve logs" on public.admin_audit_logs;
+create policy "solo admin ve logs"
+  on public.admin_audit_logs for select
+  using (public.is_admin(auth.uid()));
+
+-- La vista filtra por action_type; el índice evita escanear todo el historial.
+create index if not exists idx_admin_audit_logs_action_type
+  on public.admin_audit_logs (action_type, created_at desc);
+
+-- ---------------------------------------------------------------------------
+-- 5. Vista de auditoría normalizada
 -- ---------------------------------------------------------------------------
 -- No se crea una tabla paralela: admin_audit_logs sigue siendo el único
 -- registro de escritura. La vista sólo proyecta los campos que consume el panel.
