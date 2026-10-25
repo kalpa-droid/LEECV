@@ -16,9 +16,10 @@ Se incorporó un interruptor administrativo de tres estados para la exportación
 - **Cliente**: `useExportEntitlement` lee el modo y llama a la RPC de consumo; `PdfCheckoutModal` decide el botón con `canExport` en lugar de `credits > 0` y muestra un mensaje específico cuando el acceso está bloqueado.
 - **Pruebas**: retención de pagos pendientes, no reapertura de un pago completado, extracción de estados pendientes de ambos proveedores y un test de integración local de los tres estados (incluido el bloqueo de auto-escalada y el registro de auditoría).
 
-**Validación:**
-- `npm run check-all`: aprobado; 258 pruebas OK, 2 omitidas por requerir Supabase local; typecheck, lint, gobernanza, build y SEO en verde.
+**Validación y publicación:**
+- `npm run check-all`: aprobado en local y en el hook de pre-push; 258 pruebas OK, 2 omitidas por requerir Supabase local; typecheck, lint, gobernanza, build y SEO en verde.
 - `git diff --check`: sin errores de espacios.
+- Rama `feat/admin-credit-account-controls`, PR [#44](https://github.com/kalpa-droid/LEECV/pull/44) abierta contra `main`. Pendiente de aprobación del CODEOWNER y del check `check-all` en GitHub Actions.
 
 **Pendiente crítico antes de desplegar:**
 - La migración `20261025_pdf_export_access_hardening.sql` **no pudo aplicarse desde esta sesión**: `supabase migration list` devolvió `Invalid access token` (401). Debe aplicarse manualmente antes del deploy, porque el código nuevo ya lee `hold_reason` y llama a `admin_export_token_balances`. La `20261014_admin_pdf_export_access.sql` también debe estar aplicada.
