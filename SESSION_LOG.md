@@ -19,7 +19,8 @@ Se incorporó un interruptor administrativo de tres estados para la exportación
 **Validación y publicación:**
 - `npm run check-all`: aprobado en local y en el hook de pre-push; 258 pruebas OK, 2 omitidas por requerir Supabase local; typecheck, lint, gobernanza, build y SEO en verde.
 - `git diff --check`: sin errores de espacios.
-- Rama `feat/admin-credit-account-controls`, PR [#44](https://github.com/kalpa-droid/LEECV/pull/44) abierta contra `main`. Pendiente de aprobación del CODEOWNER y del check `check-all` en GitHub Actions.
+- Rama `feat/admin-credit-account-controls`, PR [#44](https://github.com/kalpa-droid/LEECV/pull/44) abierta contra `main`. `check-all` en GitHub Actions ✅.
+- PR #44 fusionada con squash el 2026-10-26. Commit de merge en `main`: `fd94f3b117e768cff70604628aaf7ce24b97c194`.
 
 **Despliegue de base de datos:**
 - Ambas migraciones quedaron aplicadas en el proyecto `gzsdmsiefswgnyycrmsk` (verificado con `supabase migration list`: `20261014` y `20261025` figuran en remoto).
