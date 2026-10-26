@@ -89,19 +89,24 @@ export const dal = {
       const res = await safeSupabaseCall(() => {
         let query = supabase.from('admin_audit_logs').select('*').order('created_at', { ascending: false });
         if (searchQuery) {
-          query = query.or(`action.ilike.%${searchQuery}%,performed_by.ilike.%${searchQuery}%`);
+          const filters = [`action_type.ilike.%${searchQuery}%`];
+          // admin_id es uuid: sólo se puede comparar por igualdad y con un uuid completo.
+          if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(searchQuery)) {
+            filters.push(`admin_id.eq.${searchQuery}`);
+          }
+          query = query.or(filters.join(','));
         }
         return query;
       }, []);
       return (res.data as any[]) || [];
     },
 
-    async log(performedBy: string, action: string, targetUserId: string | null = null, details: object = {}): Promise<boolean> {
+    async log(adminId: string, actionType: string, targetUserId: string | null = null, details: object = {}): Promise<boolean> {
       if (!supabase) return false;
       const res = await safeSupabaseCall(() =>
         supabase.from('admin_audit_logs').insert({
-          performed_by: performedBy,
-          action,
+          admin_id: adminId,
+          action_type: actionType,
           target_user_id: targetUserId,
           details,
         })
