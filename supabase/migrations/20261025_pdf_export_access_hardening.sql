@@ -282,6 +282,14 @@ create policy "solo admin ve logs"
   on public.admin_audit_logs for select
   using (public.is_admin(auth.uid()));
 
+-- Sin política de INSERT, el panel no puede registrar acciones: la tabla sólo
+-- tenía lectura. Se exige que el admin autenticado firme con su propio id.
+drop policy if exists "admin inserta logs" on public.admin_audit_logs;
+create policy "admin inserta logs"
+  on public.admin_audit_logs for insert
+  to authenticated
+  with check (public.is_admin(auth.uid()) and admin_id = auth.uid());
+
 -- La vista filtra por action_type; el índice evita escanear todo el historial.
 create index if not exists idx_admin_audit_logs_action_type
   on public.admin_audit_logs (action_type, created_at desc);
