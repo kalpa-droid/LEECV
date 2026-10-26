@@ -13,6 +13,21 @@ export function useExportEntitlement() {
     setLoading(true);
     try {
       if (user) {
+        const exportAccessMode = profile?.pdf_export_access_mode || 'automatic';
+        if (exportAccessMode === 'disabled') {
+          setCanExport(false);
+          setReason('exportacion_bloqueada');
+          setCredits(0);
+          return;
+        }
+
+        if (exportAccessMode === 'enabled') {
+          setCanExport(true);
+          setReason(null);
+          setCredits(0);
+          return;
+        }
+
         if (profile?.plan === 'pro') {
             setCanExport(true);
             setReason(null);

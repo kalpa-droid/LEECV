@@ -160,9 +160,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         plan: c.plan,
         role: c.role,
         createdAt: c.created_at,
-        pdfExportTokens: Array.isArray(c.pdf_export_credits) && c.pdf_export_credits.length > 0 
-          ? c.pdf_export_credits[0].credits 
-          : (c.pdf_export_credits?.credits || 0),
+        pdfExportTokens: c.pdf_export_tokens || 0,
+        pdfExportAccessMode: c.pdf_export_access_mode || 'automatic',
         aiCredits: Array.isArray(c.user_credits) && c.user_credits.length > 0 
           ? c.user_credits[0].ai_credits 
           : (c.user_credits?.ai_credits || 0)
@@ -178,6 +177,167 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.error('[CRITICAL ADMIN API ERROR - list-customers]:', err?.message || err, err?.stack);
       await captureBackendException(err, 'admin-api:list-customers');
       return errorResponse(res, 500, 'Error al consultar la lista de clientes');
+    }
+  }
+
+  if (action === 'set-pdf-export-access') {
+    if (req.method !== 'POST') return errorResponse(res, 405, 'Método HTTP no permitido');
+
+    const rateOk = await requireRateLimit(req, res, `admin:${admin.user.id}:set-pdf-export-access`, {
+      maxRequests: 20,
+      windowSeconds: 60,
+    });
+    if (!rateOk) return;
+
+    const body = validateBody<{
+      userId: string;
+      accessMode: string;
+      reason: string;
+    }>(req, res, ['userId', 'accessMode', 'reason']);
+    if (!body) return;
+
+    if (!['automatic', 'enabled', 'disabled'].includes(body.accessMode)) {
+      return errorResponse(res, 400, 'Modo de acceso PDF no válido');
+    }
+    if (body.reason.trim().length < 5 || body.reason.trim().length > 500) {
+      return errorResponse(res, 400, 'El motivo debe tener entre 5 y 500 caracteres');
+    }
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.userId)) {
+      return errorResponse(res, 400, 'Identificador de usuario no válido');
+    }
+
+    try {
+      const { data, error } = await supabaseAdmin.rpc('admin_set_pdf_export_access', {
+        p_target_user_id: body.userId,
+        p_access_mode: body.accessMode,
+        p_reason: body.reason.trim(),
+        p_admin_user_id: admin.user.id,
+      });
+      if (error) throw error;
+
+      const result = Array.isArray(data) ? data[0] : data;
+      if (!result) return errorResponse(res, 404, 'Perfil de usuario no encontrado');
+
+      return successResponse(res, {
+        success: true,
+        previousMode: result.previous_mode,
+        currentMode: result.current_mode,
+      });
+    } catch (err: any) {
+      console.error('[CRITICAL ADMIN API ERROR - set-pdf-export-access]:', err?.message || err, err?.stack);
+      await captureBackendException(err, 'admin-api:set-pdf-export-access');
+      return errorResponse(res, 500, 'Error al modificar el acceso a exportación PDF');
+    }
+  }
+
+  if (action === 'list-pending-grants') {
+    if (req.method !== 'GET') return errorResponse(res, 405, 'Método HTTP no permitido');
+
+    const rateOk = await requireRateLimit(req, res, `admin:${admin.user.id}:list-pending-grants`, {
+      maxRequests: 30,
+      windowSeconds: 60,
+    });
+    if (!rateOk) return;
+
+    const page = Math.max(0, parseInt((req.query.page as string) || '0', 10));
+    const limit = Math.min(100, Math.max(1, parseInt((req.query.limit as string) || '20', 10)));
+
+    try {
+      const { grants, totalCount } = await serverDal.pendingGrants.listUnresolved(limit, page * limit);
+      return successResponse(res, { grants, totalCount, page, pageSize: limit });
+    } catch (err: any) {
+      console.error('[CRITICAL ADMIN API ERROR - list-pending-grants]:', err?.message || err, err?.stack);
+      await captureBackendException(err, 'admin-api:list-pending-grants');
+      return errorResponse(res, 500, 'Error al consultar pagos retenidos');
+    }
+  }
+
+  if (action === 'resolve-pending-grant') {
+    if (req.method !== 'POST') return errorResponse(res, 405, 'Método HTTP no permitido');
+
+    const rateOk = await requireRateLimit(req, res, `admin:${admin.user.id}:resolve-pending-grant`, {
+      maxRequests: 10,
+      windowSeconds: 60,
+    });
+    if (!rateOk) return;
+
+    const body = validateBody<{
+      grantId: string;
+      targetEmail?: string;
+      reason: string;
+      approveAmountMismatch: boolean;
+    }>(req, res, ['grantId', 'reason']);
+    if (!body) return;
+
+    if (typeof body.approveAmountMismatch !== 'boolean') {
+      return errorResponse(res, 400, 'Debe indicar si autoriza una diferencia de importe o moneda');
+    }
+    if (body.reason.trim().length < 5 || body.reason.trim().length > 500) {
+      return errorResponse(res, 400, 'El motivo debe tener entre 5 y 500 caracteres');
+    }
+
+    try {
+      const grant = await serverDal.pendingGrants.getUnresolvedById(body.grantId);
+      if (!grant) return errorResponse(res, 404, 'Pago retenido no encontrado o ya resuelto');
+      if (!['mercadopago', 'paypal'].includes(grant.provider)) {
+        return errorResponse(res, 400, 'El proveedor de este pago retenido no admite resolución automática');
+      }
+
+      const payerEmail = (grant.email || '').trim().toLowerCase();
+      let targetEmail = '';
+      let profileId: string | null = null;
+      let exportToken: string | null = null;
+
+      if (grant.plan === 'single_pdf') {
+        // Venta individual sin cuenta: se acredita con el token de exportación
+        // que quedó guardado al momento de retener el pago.
+        exportToken = grant.export_token || null;
+        if (!exportToken) {
+          return errorResponse(res, 400, 'La venta individual no tiene un token de exportación asociado');
+        }
+      } else {
+        targetEmail = (body.targetEmail || '').trim().toLowerCase();
+        if (!payerEmail || targetEmail !== payerEmail) {
+          return errorResponse(res, 400, 'La cuenta de destino debe coincidir con el email registrado en el pago');
+        }
+
+        const profile = await serverDal.profiles.getByEmail(targetEmail);
+        if (!profile) return errorResponse(res, 404, 'No hay una cuenta registrada con el email del pago');
+        profileId = profile.id;
+      }
+
+      const result = await applyPayment(supabaseAdmin, {
+        email: grant.plan === 'single_pdf' ? grant.email || undefined : targetEmail,
+        userId: profileId || undefined,
+        exportToken,
+        plan: grant.plan,
+        metodoPago: grant.provider,
+        externalId: grant.external_id,
+        amount: grant.amount,
+        currency: grant.currency,
+        adminApprovedAmountMismatch: body.approveAmountMismatch,
+      });
+
+      if (result.type === 'held_for_review' || result.type === 'pending_grant') {
+        return errorResponse(res, 409, 'El pago sigue retenido; no se acreditó ningún beneficio');
+      }
+
+      const resolved = await serverDal.pendingGrants.markResolved(
+        grant.id,
+        profileId,
+        admin.user.id,
+        body.reason.trim()
+      );
+
+      if (!resolved) {
+        return errorResponse(res, 409, 'El pago ya fue resuelto por otra operación');
+      }
+
+      return successResponse(res, { success: true, result });
+    } catch (err: any) {
+      console.error('[CRITICAL ADMIN API ERROR - resolve-pending-grant]:', err?.message || err, err?.stack);
+      await captureBackendException(err, 'admin-api:resolve-pending-grant');
+      return errorResponse(res, 500, 'Error al resolver el pago retenido');
     }
   }
 

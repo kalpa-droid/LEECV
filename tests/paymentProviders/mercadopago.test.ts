@@ -94,4 +94,23 @@ describe('MercadoPago Provider Contract', () => {
     expect(details?.amount).toBe(1500);
     expect(details?.currency).toBe('ARS');
   });
+
+  it('extractPaymentData debe retener un pago pending sin tratarlo como aprobado', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: 12345678,
+        status: 'pending',
+        transaction_amount: 1500,
+        currency_id: 'ARS',
+        external_reference: JSON.stringify({ email: 'pending@test.com', plan: 'credits_pack_5' }),
+        payer: { email: 'pending@test.com' },
+      }),
+    }));
+
+    const details = await mercadoPagoProvider.extractPaymentData(validContext);
+    expect(details).not.toBeNull();
+    expect(details?.providerStatus).toBe('pending');
+    expect(details?.plan).toBe('credits_pack_5');
+  });
 });

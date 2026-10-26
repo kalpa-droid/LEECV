@@ -16,6 +16,13 @@ export interface PaymentDetails {
   amount?: number | null;
   currency?: string | null;
   details?: any;
+  adminApprovedAmountMismatch?: boolean;
+  /**
+   * Estado informado por la pasarela. Si es 'pending', el pago queda retenido
+   * para revisión y no se acredita ningún beneficio hasta que llegue el evento
+   * de aprobación. Ausente = comportamiento histórico (se trata como aprobado).
+   */
+  providerStatus?: 'approved' | 'pending';
 }
 
 export async function applyPayment(supabaseAdmin: SupabaseClient, payment: PaymentDetails) {
@@ -27,8 +34,48 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
 
   const planData = getPrice(plan);
 
+  // 0. La pasarela avisó que el pago todavía está pendiente / en revisión.
+  // No se acredita nada: se guarda en la bandeja de retenidos y el webhook de
+  // aprobación posterior se encarga de otorgar el beneficio y resolver la fila.
+  if (payment.providerStatus === 'pending') {
+    if (externalId && metodoPago) {
+      // Si el evento de aprobación llegó antes, no se reabre un pago ya acreditado.
+      const existing = await serverDal.processedPayments.getByProviderAndExternalId(metodoPago, externalId);
+      if (existing?.entitlement_status === 'completed') {
+        return { type: 'already_processed', message: 'Payment already completed' };
+      }
+
+      await serverDal.pendingGrants.create({
+        email: email || undefined,
+        provider: metodoPago,
+        external_id: externalId,
+        plan,
+        amount: amount || undefined,
+        currency: currency || undefined,
+        hold_reason: 'provider_pending',
+        export_token: exportToken || undefined,
+      });
+
+      await serverDal.adminNotifications.create({
+        type: 'payment_pending',
+        title: `Pago pendiente en la pasarela (${plan})`,
+        message: `${email ? `Email: ${email} ` : ''}${externalId ? `Ref: ${externalId}` : ''} — ${metodoPago}. Se reintentará automáticamente cuando la pasarela confirme el cobro.`,
+        metadata: { plan, metodoPago, externalId, amount, currency, exportToken, email, userId },
+      });
+    }
+
+    return { type: 'held_for_review', message: 'Payment pending at provider' };
+  }
+
   // 1. Validar amount y currency ANTES de registrar el pago
-  if (planData && amount !== undefined && amount !== null && externalId && metodoPago !== 'manual') {
+  if (
+    planData &&
+    amount !== undefined &&
+    amount !== null &&
+    externalId &&
+    metodoPago !== 'manual' &&
+    !payment.adminApprovedAmountMismatch
+  ) {
     let expectedAmount = 0;
     let expectedCurrency = 'USD';
     
@@ -66,7 +113,9 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
           external_id: externalId,
           plan,
           amount: amount || undefined,
-          currency: currency || undefined
+          currency: currency || undefined,
+          hold_reason: 'amount_mismatch',
+          export_token: exportToken || undefined
         });
 
         return { type: 'held_for_review', message: 'Payment held due to mismatch' };
@@ -134,7 +183,9 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
           external_id: externalId,
           plan,
           amount: amount || undefined,
-          currency: currency || undefined
+          currency: currency || undefined,
+          hold_reason: 'missing_profile',
+          export_token: exportToken || undefined
         });
 
         await serverDal.adminNotifications.create({
@@ -245,4 +296,3 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
 
   return { type: 'payment_applied', plan, exportToken };
 }
-

@@ -96,6 +96,42 @@ describe('useExportEntitlement', () => {
     expect(allowed).toBe(false);
   });
 
+  it('allows PDF export without consuming credits when manually enabled', async () => {
+    (useAuth as Mock).mockReturnValue({
+      user: { id: 'user-123' },
+      profile: { plan: 'free', pdf_export_access_mode: 'enabled' },
+    });
+
+    const { result } = renderHook(() => useExportEntitlement());
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.canExport).toBe(true);
+    expect(result.current.credits).toBe(0);
+    expect(supabase.from).not.toHaveBeenCalled();
+
+    (supabase.rpc as Mock).mockResolvedValueOnce({ data: true, error: null });
+    await expect(result.current.consumeCreditIfNeeded()).resolves.toBe(true);
+    expect(supabase.rpc).toHaveBeenCalledWith('check_and_consume_export_entitlement', {
+      p_user_id: 'user-123',
+    });
+  });
+
+  it('denies PDF export when manually disabled, even for Pro users', async () => {
+    (useAuth as Mock).mockReturnValue({
+      user: { id: 'user-123' },
+      profile: { plan: 'pro', pdf_export_access_mode: 'disabled' },
+    });
+
+    const { result } = renderHook(() => useExportEntitlement());
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.canExport).toBe(false);
+    expect(result.current.reason).toBe('exportacion_bloqueada');
+    expect(supabase.from).not.toHaveBeenCalled();
+  });
+
   it('allows export for guest users with valid token in localStorage', async () => {
     (useAuth as Mock).mockReturnValue({
       user: null,

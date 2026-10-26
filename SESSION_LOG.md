@@ -2,6 +2,32 @@
 
 Este archivo documenta los cambios realizados en el repositorio por agentes de IA, para mantener un rastro histórico de qué se hizo, por qué y en qué momento.
 
+## [2026-10-25] - Control manual de exportación PDF, bandeja de pagos retenidos y acreditación idempotente
+
+**Resumen:**
+Se incorporó un interruptor administrativo de tres estados para la exportación PDF (`automatic` / `enabled` / `disabled`, es decir automático / permitido manual / bloqueado manual), con auditoría obligatoria y motivo, más una bandeja de pagos retenidos para los cobros que Mercado Pago y PayPal informan como pendientes o en revisión.
+
+**Acciones Tomadas:**
+- **Migración `20261014_admin_pdf_export_access.sql`**: agrega `profiles.pdf_export_access_mode`, columnas de resolución en `pending_grants`, índice de retenidos sin resolver y la RPC `check_and_consume_export_entitlement` (permitido manual devuelve `true` sin consumir créditos; bloqueado devuelve `false`; automático respeta plan pro y tokens pagos).
+- **Migración `20261025_pdf_export_access_hardening.sql`**: cierra un hueco crítico — `pdf_export_access_mode` no estaba protegido por `protect_privileged_columns`, por lo que cualquier usuario podía auto-habilitarse. Se agrega el trigger, las RPC `admin_set_pdf_export_access` y `admin_export_token_balances`, la vista de auditoría `pdf_status_logs` sobre `admin_audit_logs`, `hold_reason`/`export_token` en `pending_grants` y los checks de estado.
+- **Pagos retenidos**: `applyPayment` ahora retiene los pagos con `providerStatus === 'pending'` (motivo `provider_pending`) sin acreditar nada, y guarda `export_token` para poder resolver ventas individuales. Se suman los motivos `amount_mismatch` y `missing_profile`. Mercado Pago interpreta `pending`/`in_process`/`authorized`/`in_mediation`; PayPal interpreta `PAYMENT.CAPTURE.PENDING`.
+- **Acreditación idempotente**: el webhook de aprobación acredita el pago y luego resuelve automáticamente la retención previa (`resolveIfPending`), sin reabrir pagos ya completados. La limpieza fallida no tumba el webhook: se registra en Sentry y la fila queda resoluble a mano.
+- **Panel admin**: selector de modo con motivo obligatorio (5–500 caracteres), badge de modo, saldo real de exportaciones vía `admin_export_token_balances`, historial de acreditación y bandeja de retenidos (`PaymentsAdminTab`, `PendingGrantsTab`) con resolución manual de packs y de ventas `single_pdf`.
+- **Cliente**: `useExportEntitlement` lee el modo y llama a la RPC de consumo; `PdfCheckoutModal` decide el botón con `canExport` en lugar de `credits > 0` y muestra un mensaje específico cuando el acceso está bloqueado.
+- **Pruebas**: retención de pagos pendientes, no reapertura de un pago completado, extracción de estados pendientes de ambos proveedores y un test de integración local de los tres estados (incluido el bloqueo de auto-escalada y el registro de auditoría).
+
+**Validación y publicación:**
+- `npm run check-all`: aprobado en local y en el hook de pre-push; 258 pruebas OK, 2 omitidas por requerir Supabase local; typecheck, lint, gobernanza, build y SEO en verde.
+- `git diff --check`: sin errores de espacios.
+- Rama `feat/admin-credit-account-controls`, PR [#44](https://github.com/kalpa-droid/LEECV/pull/44) abierta contra `main`. Pendiente de aprobación del CODEOWNER y del check `check-all` en GitHub Actions.
+
+**Despliegue de base de datos:**
+- Ambas migraciones quedaron aplicadas en el proyecto `gzsdmsiefswgnyycrmsk` (verificado con `supabase migration list`: `20261014` y `20261025` figuran en remoto).
+- Hallazgo durante la aplicación: la base no tenía `public.admin_audit_logs` porque `20260820_protect_plan_columns_and_claims.sql` nunca se aplicó completa (sólo existía `payment_claims`). La `20261025` ahora crea la tabla de forma idempotente con su RLS y política de lectura para admin, así que la vista `pdf_status_logs` y el RPC funcionan sin depender de esa migración vieja.
+- Prueba de humo ejecutada en una transacción revertida: `admin_set_pdf_export_access` devolvió `automatic -> enabled`, la vista registró el motivo y `admin_export_token_balances` respondió vacío. No quedaron cambios de datos.
+- Durante la verificación se corrigió el consumidor que ya existía roto: `dal.adminAuditLogs` (`src/shared/core/storage/dataAccessLayer.ts`) escribía y buscaba `performed_by`/`action`, pero el esquema canónico usa `admin_id`/`action_type`. Ahora inserta y lista con las columnas correctas; la búsqueda por admin compara `admin_id` por igualdad y solo con un uuid completo (la columna es uuid, no admite ILIKE).
+- Además, `admin_audit_logs` no tenía política de INSERT, así que el panel no podía registrar acciones aunque las columnas fueran correctas. Se agregó la política `admin inserta logs` para `authenticated` con `is_admin(auth.uid())` y `admin_id = auth.uid()`, y ya está aplicada en la base.
+
 ## [2026-10-10] - Integración del flujo de postulaciones, cartas e importación revisable
 
 **Resumen:**

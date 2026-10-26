@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   listUsers,
   setUserPlan,
+  setPdfExportAccess,
   getBasicStats,
   listPendingClaims, reviewManualClaim,
   listAdminNotifications, markNotificationRead,
@@ -11,7 +12,7 @@ import { getCurrentProfile, logout } from '../../shared/core/auth/authService';
 import AdminLogin from './AdminLogin';
 import { StorageDriveTab } from './components/StorageDriveTab';
 import { SentryReportsTab } from './components/SentryReportsTab';
-import { ProcessedPaymentsTab } from './components/ProcessedPaymentsTab';
+import { PaymentsAdminTab } from './components/PaymentsAdminTab';
 import { AiTelemetryTab } from './components/AiTelemetryTab';
 import { UsersTab } from './components/UsersTab';
 import { useToast } from '../../shared/core/ui/Toast';
@@ -113,7 +114,7 @@ export default function AdminDashboard() {
           listAdminNotifications()
         ]);
         setUsers(customersData.customers || []);
-        setTotalCount(customersData.customers?.length || 0);
+        setTotalCount(customersData.totalCount || 0);
         setStats(s || { totalUsers: 0, proUsers: 0, activeSubscriptions: 0 });
         setClaims(claimList || []);
         setNotifications(notifList || []);
@@ -356,11 +357,13 @@ export default function AdminDashboard() {
             totalCount={totalCount}
             pageSize={pageSize}
             togglePremium={togglePremium}
+            setPdfExportAccess={setPdfExportAccess}
+            onPdfExportAccessUpdated={loadEverything}
           />
         ) : adminTab === 'sentry' ? (
           <SentryReportsTab />
         ) : adminTab === 'payments' ? (
-          <ProcessedPaymentsTab />
+          <PaymentsAdminTab />
         ) : adminTab === 'storage' ? (
           <StorageDriveTab />
         ) : adminTab === 'aiTelemetry' ? (

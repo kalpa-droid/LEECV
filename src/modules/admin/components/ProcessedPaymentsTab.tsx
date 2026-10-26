@@ -105,13 +105,14 @@ export function ProcessedPaymentsTab() {
                 <th className="px-5 py-3">Ref. Externa / ID</th>
                 <th className="px-5 py-3">Usuario / Email</th>
                 <th className="px-5 py-3">Plan / Paquete</th>
+                <th className="px-5 py-3">Estado de acreditación</th>
                 <th className="px-5 py-3 text-right">Monto</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--color-neutral-border)]/60">
               {payments.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-8 text-center text-xs text-[var(--color-neutral-text-secondary)] font-medium">
+                  <td colSpan={7} className="px-5 py-8 text-center text-xs text-[var(--color-neutral-text-secondary)] font-medium">
                     {loading ? 'Cargando transacciones de pagos...' : 'No se encontraron pagos registrados con los filtros aplicados.'}
                   </td>
                 </tr>
@@ -140,6 +141,21 @@ export function ProcessedPaymentsTab() {
                     <td className="px-5 py-3 font-extrabold text-[var(--color-neutral-text-primary)]">
                       <span className="uppercase text-[10px] tracking-wide px-2 py-0.5 rounded bg-[var(--color-neutral-surface-muted)] border border-[var(--color-neutral-border)]">
                         {p.plan || 'pro'}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        p.entitlement_status === 'completed'
+                          ? 'bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)]'
+                          : p.entitlement_status === 'failed'
+                          ? 'bg-[var(--color-status-danger-muted)] text-[var(--color-status-danger-text)]'
+                          : 'bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)]'
+                      }`}>
+                        {p.entitlement_status === 'completed'
+                          ? 'Acreditado'
+                          : p.entitlement_status === 'failed'
+                          ? 'Falló'
+                          : 'Pendiente'}
                       </span>
                     </td>
                     <td className="px-5 py-3 text-right font-black text-[var(--color-neutral-text-primary)] whitespace-nowrap">
