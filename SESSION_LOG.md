@@ -25,7 +25,8 @@ Se incorporó un interruptor administrativo de tres estados para la exportación
 - Ambas migraciones quedaron aplicadas en el proyecto `gzsdmsiefswgnyycrmsk` (verificado con `supabase migration list`: `20261014` y `20261025` figuran en remoto).
 - Hallazgo durante la aplicación: la base no tenía `public.admin_audit_logs` porque `20260820_protect_plan_columns_and_claims.sql` nunca se aplicó completa (sólo existía `payment_claims`). La `20261025` ahora crea la tabla de forma idempotente con su RLS y política de lectura para admin, así que la vista `pdf_status_logs` y el RPC funcionan sin depender de esa migración vieja.
 - Prueba de humo ejecutada en una transacción revertida: `admin_set_pdf_export_access` devolvió `automatic -> enabled`, la vista registró el motivo y `admin_export_token_balances` respondió vacío. No quedaron cambios de datos.
-- Pendiente de decisión ajena a esta intervención: `dal.adminAuditLogs` (`src/shared/core/storage/dataAccessLayer.ts`) escribe y busca columnas `action`/`performed_by`, pero el esquema canónico usa `action_type`/`admin_id`; ese camino ya estaba roto antes y no se tocó acá.
+- Durante la verificación se corrigió el consumidor que ya existía roto: `dal.adminAuditLogs` (`src/shared/core/storage/dataAccessLayer.ts`) escribía y buscaba `performed_by`/`action`, pero el esquema canónico usa `admin_id`/`action_type`. Ahora inserta y lista con las columnas correctas; la búsqueda por admin compara `admin_id` por igualdad y solo con un uuid completo (la columna es uuid, no admite ILIKE).
+- Además, `admin_audit_logs` no tenía política de INSERT, así que el panel no podía registrar acciones aunque las columnas fueran correctas. Se agregó la política `admin inserta logs` para `authenticated` con `is_admin(auth.uid())` y `admin_id = auth.uid()`, y ya está aplicada en la base.
 
 ## [2026-10-10] - Integración del flujo de postulaciones, cartas e importación revisable
 
