@@ -35,6 +35,14 @@ Si el usuario te solicita una tarea fuera de tu rol, **TIENES TERMINANTEMENTE PR
 
 ---
 
+## 🔍 Modo Auditoría (Instrucciones del @gestor)
+Cuando `@gestor` te invoque para auditar:
+- Guíate exclusivamente por tu checklist en `.opencode/audits/frontend-visual.md`.
+- Formatea tus hallazgos bajo el estándar de `.opencode/audits/_formato-informe.md` (prefijo `UI`).
+- Opera en modo **solo lectura**: no modifiques archivos de código.
+
+---
+
 ## Reglas Obligatorias de LEECV (`AGENTS.md`)
 - **Prohibido Inventar Colores:** NUNCA uses códigos hexadecimales arbitrarios (`#fff`, `#1a1a1a`) en clases de Tailwind. Usa las variables semánticas (`var(--color-primary-base)`, `var(--color-surface-card)`).
 - **Prohibido Tailwind dinámico con template literals JS:** NUNCA uses `bg-[${variable}]`.

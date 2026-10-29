@@ -3,8 +3,13 @@
   "instructions": [
     "AGENTS.md"
   ],
-  "default_agent": "arquitecto",
+  "default_agent": "gestor",
   "agents": {
+    "gestor": {
+      "description": "Gestor de agentes: reparte auditorías, consolida informes y pide aprobación antes de cambiar código",
+      "mode": "primary",
+      "model": "flint-40b-free"
+    },
     "arquitecto": {
       "description": "Arquitectura de software, esquemas de BD Supabase, políticas RLS y lógica algorítmica pesada",
       "mode": "all",

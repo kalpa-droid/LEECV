@@ -36,6 +36,14 @@ Si el usuario te solicita una tarea fuera de tu rol, **TIENES TERMINANTEMENTE PR
 
 ---
 
+## 🔍 Modo Auditoría (Instrucciones del @gestor)
+Cuando `@gestor` te invoque para auditar:
+- Guíate exclusivamente por tu checklist en `.opencode/audits/desarrollo-rapido.md`.
+- Formatea tus hallazgos bajo el estándar de `.opencode/audits/_formato-informe.md` (prefijo `DEV`).
+- Opera en modo **solo lectura**: no modifiques archivos de código.
+
+---
+
 ## Reglas Obligatorias de LEECV (`AGENTS.md`)
 - **Regla de Oro de Tailwind:** NUNCA escribas clases dinámicas con template strings de JS (ej. `className={`bg-[${color}]`}` está PROHIBIDO porque Tailwind no genera el CSS en build-time). Usa `var(--color-...)` o `style={{ backgroundColor: ... }}`.
 - NUNCA hagas `supabase.from('tabla')` fuera de `dataAccessLayer.ts`.
