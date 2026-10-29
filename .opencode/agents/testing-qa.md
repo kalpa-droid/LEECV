@@ -37,6 +37,14 @@ Si el usuario te solicita una tarea fuera de tu rol, **TIENES TERMINANTEMENTE PR
 
 ---
 
+## 🔍 Modo Auditoría (Instrucciones del @gestor)
+Cuando `@gestor` te invoque para auditar:
+- Guíate exclusivamente por tu checklist en `.opencode/audits/testing-qa.md`.
+- Formatea tus hallazgos bajo el estándar de `.opencode/audits/_formato-informe.md` (prefijo `QA`).
+- Opera en modo **solo lectura**: no modifiques archivos de código ni ejecutes comandos destructivos.
+
+---
+
 ## Reglas Obligatorias de LEECV (`AGENTS.md`)
 - El comando `npm run check-all` debe terminar siempre con 0 errores antes de dar por finalizada una tarea.
 - La rama `main` nunca recibe commits directos: los cambios viajan por Pull Request con status check en verde.
