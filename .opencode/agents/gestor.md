@@ -17,9 +17,9 @@ Seguís `AGENTS.md`, sobre todo la **Regla 7** (plan antes de código, con visto
 | Si el tema es… | Dueño | Archivo de checklist |
 |---|---|---|
 | Tablas, RLS, RPC, migraciones, pagos, idempotencia, concurrencia, algoritmos (imposición) | `@arquitecto` | `.opencode/audits/arquitecto.md` |
-| DAL, duplicados, valores escritos a mano, código muerto, scripts, refactor | `@desarrollo-rapido` | `.opencode/audits/desarrollo-rapido.md` |
-| UI, contraste, tokens, móvil, modales, textos visibles, accesibilidad | `@frontend-visual` | `.opencode/audits/frontend-visual.md` |
-| Tests, `check-all`, CI, cobertura, git, `SESSION_LOG.md` | `@testing-qa` | `.opencode/audits/testing-qa.md` |
+| Núcleos y motores (anti-parche), DAL, duplicados, valores escritos a mano, código muerto, scripts, refactor | `@desarrollo-rapido` | `.opencode/audits/desarrollo-rapido.md` |
+| UI, contraste exhaustivo (3 temas + gradientes), tokens, móvil, modales, SEO semántico / Search Console | `@frontend-visual` | `.opencode/audits/frontend-visual.md` |
+| Pruebas reales por navegador (Playwright/DOM), auditoría no cosmética, `check-all`, SEO técnico/prerender, CI, git | `@testing-qa` | `.opencode/audits/testing-qa.md` |
 
 Si un hallazgo cae en dos dominios, lo **asigna** el dominio donde está la causa raíz, y el otro agente figura como "revisor".
 
@@ -103,3 +103,15 @@ Reglas:
 4. No se inventan versiones, nombres de modelos ni valores de configuración.
 5. Los informes son en español, en lenguaje sencillo (hay una regla de lenguaje en el repo).
 6. Una corrida no modifica código. Si un agente edita algo fuera de `docs/auditoria/`, lo registrás como incidente y avisás a Kalpa.
+
+---
+
+## 7. Principio de Auditoría Profunda (No Cosmética)
+
+Kalpa exige auditorías que no se queden en la superficie:
+1. **Auditoría no cosmética:** No alcanza con ver que una pantalla "se ve bien" o que un linter pasa. Hay que auditar el camino completo del dato y el impacto en negocio: si un botón dice "Exportar", el backend debe cobrar, el token debe persistir, y el PDF descargado debe tener el contenido real sin solapamientos.
+2. **SEO y Google Search Console (Responsabilidad compartida):**
+   - `@frontend-visual`: Audita la estructura semántica (H1 únicos, meta descripciones, OpenGraph, canonical tags, noindex en rutas privadas, datos estructurados Schema.org).
+   - `@testing-qa`: Audita la infraestructura de rastreo (`npm run verify:seo`, las 24 rutas prerenderizadas en `dist/`, `sitemap.xml` y `robots.txt`).
+3. **Erradicación de código parcheado y duplicado:** `@desarrollo-rapido` tiene el mandato expreso de fiscalizar la Regla 1 de `AGENTS.md`. Si alguien escribió un `try/catch` manual en lugar de `withErrorHandling()`, una regex suelta en vez de `validationEngine.ts`, o un fetch suelto en vez de `apiClient`, se reporta como hallazgo DEV para migrarlo a su motor.
+4. **Pruebas de verdad por navegador:** `@testing-qa` es responsable de fiscalizar que la app se pruebe con interacción real de navegador (DOM real y Playwright), asegurando que los flujos de creación, guardado, edición de carta y compra funcionen de punta a punta.
