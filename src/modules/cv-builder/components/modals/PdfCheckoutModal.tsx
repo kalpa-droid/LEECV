@@ -140,7 +140,7 @@ export default function PdfCheckoutModal({
           href={`https://wa.me/5493878342772?text=${encodeURIComponent('Hola LEECV, tengo dudas con el pago de mi exportación PDF.')}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full block p-3 bg-[var(--color-brand-whatsapp)]/10 border border-[var(--color-brand-whatsapp)]/30 text-[var(--color-brand-whatsapp)] rounded-[${radius.modal}] transition flex items-center gap-2 font-bold text-xs hover:bg-[var(--color-brand-whatsapp)]/20"
+          className="w-full block p-3 bg-[var(--color-brand-whatsapp)]/10 border border-[var(--color-brand-whatsapp)]/30 text-[var(--color-brand-whatsapp)] rounded-[10px] transition flex items-center gap-2 font-bold text-xs hover:bg-[var(--color-brand-whatsapp)]/20"
         >
           <span>📱</span>
           <span>¿Dudas con el pago? Escribile a soporte por WhatsApp (+5493878342772)</span>

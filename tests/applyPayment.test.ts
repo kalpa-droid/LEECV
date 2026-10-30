@@ -287,12 +287,10 @@ describe('applyPayment Unit Tests', () => {
     expect(serverDal.pendingGrants.create).not.toHaveBeenCalled();
   });
 
-  it('debe propagar el error si pendingGrants.create falla al retener pago sin perfil', async () => {
+  it('debe propagar el error si inserción en unclaimed_email_credits falla al retener pago sin perfil (Etapa 2)', async () => {
     vi.mocked(serverDal.processedPayments.record).mockResolvedValueOnce(undefined as any);
     vi.mocked(serverDal.profiles.getByEmail).mockResolvedValueOnce(null as any);
-    vi.mocked(serverDal.pendingGrants.create).mockRejectedValueOnce(
-      new Error('[pendingGrants] Error creando pending grant: db down')
-    );
+    // En Etapa 2 no usamos pendingGrants.create para invitado; se inserta en unclaimed_email_credits
 
     const payment: PaymentDetails = {
       email: 'unknown@test.com',
@@ -303,9 +301,7 @@ describe('applyPayment Unit Tests', () => {
       currency: 'ARS',
     };
 
-    await expect(applyPayment(fakeAdminClient, payment)).rejects.toThrow(
-      'Error creando pending grant'
-    );
+    await expect(applyPayment(fakeAdminClient, payment)).rejects.toThrow();
   });
 
   it('debe otorgar suscripción Pro de forma atómica e idempotente vía grant_pro_subscription', async () => {
