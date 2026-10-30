@@ -2,6 +2,46 @@
 
 Este archivo documenta los cambios realizados en el repositorio por agentes de IA, para mantener un rastro histórico de qué se hizo, por qué y en qué momento.
 
+## [2026-10-29] - Corrección de hallazgos de auditoría frontend-visual A–F (UI-001 a UI-016)
+
+**Resumen:**
+Se implementaron las correcciones de la auditoría UI en modo local (servidor preview sobre `dist`, 3 temas nativos `day`, `night`, `teal_ocean` y simulación móvil 360/390/412 px). Se corrigieron problemas de capas (z-index), contraste WCAG, consistencia de planes de pago, prerenderizado y robustecimiento de scripts de gobernanza.
+
+**Acciones Tomadas:**
+- **P1 (Bloqueos de compra y consistencia):**
+  - **UI-001** `Modal.tsx`: actualizado a `zIndex.modal` (9999) para evitar que el dock cubra los footers en pantallas de 360 px.
+  - **UI-002** `CreditsModal.tsx`: migración de variables inexistentes `--color-accent-blue-*` a tokens semánticos oficiales; el bloque de IA ahora es visible en tema default.
+  - **UI-003** `useExportEntitlement.ts`: chequeo de `plan_vence` antes de otorgar exportación ilimitada a planes vencidos.
+  - **UI-004** `scripts/prerender.mjs`: canonical tag individualizado por ruta (ya no todas apuntan al home).
+  - **UI-005** `scripts/prerenderMeta.mjs`: landing (`/`) incluida en prerenderizado estático con metadatos completos.
+  - **UI-006** `CreditsModal.tsx` y `PdfCheckoutModal.tsx`: aplicación de `button.base` (padding, radio y tipografía del sistema de diseño).
+  - **UI-007** `PersonalInfoFields.tsx` y `VectorDocViewer.tsx`: contraste corregido a ratios superiores a 4.5:1.
+- **P2 (SEO e integridad de textos):**
+  - **UI-008** `public/sitemap.xml`: agregados los 21 artículos del blog al sitemap canónico.
+  - **UI-009** `index.html`: remoción de `maximum-scale=1.0` (WCAG 1.4.4) y placeholder de verificación de Google; prevención de H1 duplicado en páginas legales.
+  - **UI-013** `pricing.ts`: corrección de paréntesis huérfano y traducción de términos técnicos a lenguaje sencillo.
+- **P3 (Reglas de prevención y scripts):**
+  - **UI-014**: Corrección de 8 interpolaciones rotas de `${elevationSystem.*}` con comillas simples a template literals reales.
+  - **UI-015**: Endurecimiento de `audit-ui-tokens.js` (ejecuta `RAW_HEX_REGEX`), `check-token-usage.js` y `check-contrast.js` (detecta variables CSS indefinidas).
+  - Creación de allowlist y baselines documentados (`scripts/ui-tokens-allowlist.json` y `scripts/contrast-baseline.json`).
+
+**Validación y publicación:**
+- `npm run check-all`: 0 errores en todas las suites.
+- PR [#49](https://github.com/kalpa-droid/LEECV/pull/49) fusionada con squash a `main`. Commit de merge: `ad3b2c40531acc1fc5af8b73c9226d8c91101ee1`.
+
+## [2026-10-29] - Suite de auditoría multiagente, SEO y fiscalización de núcleos
+
+**Resumen:**
+Se configuró el entorno OpenCode multiagente con delimitación estricta y checklists especializadas para LEECV (PR #46, #47, #48), estableciendo a `@gestor` como orquestador y asignando mandatos profundos de contraste, motores anti-parche, SEO técnico/semántico y pruebas de navegador.
+
+**Acciones Tomadas:**
+- Creación de `opencode.json` y `.opencode/agents/` (`gestor`, `arquitecto`, `desarrollo-rapido`, `frontend-visual`, `testing-qa`).
+- Integración del comando `/auditar` y checklists en `.opencode/audits/` con registro en `docs/auditoria/registro.md`.
+- Mandato a `@frontend-visual` para contraste en 3 temas, gradientes y SEO semántico / Google Search Console.
+- Mandato a `@desarrollo-rapido` para fiscalización de motores oficiales según Regla 1 de `AGENTS.md` (DAL, apiClient, navegación, withErrorHandling, validaciones).
+- Mandato a `@testing-qa` para auditoría no cosmética (validación de consecuencias de pagos en Supabase), DOM real y SEO técnico (prerender de 24 rutas, sitemap, robots).
+- PR [#48](https://github.com/kalpa-droid/LEECV/pull/48) fusionada con squash a `main`. Commit de merge: `5bc7a14ec12b59628aa4ffeb627bc80fb48c48a7`.
+
 ## [2026-10-25] - Control manual de exportación PDF, bandeja de pagos retenidos y acreditación idempotente
 
 **Resumen:**
