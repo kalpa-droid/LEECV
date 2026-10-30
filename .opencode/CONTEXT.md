@@ -22,7 +22,8 @@
 - [x] **Etapa 1 (DB/RPC)** del plan de pagos/admin/magic-link: migración `20261030_email_credit_claim_and_admin_error_logs.sql` creada (sin aplicar todavía)
 - [ ] Aplicar la migración `20261030_*` en Supabase (`supabase db push`) — requiere autorización de Kalpa
 - [x] `developer` (Etapa 1, código): `requestOtp` / `verifyOtp` en `authService.ts`, `claimCreditsOnAuth()` invocado tras OTP y al restaurar sesión, y `dal.pdfExportTokens.createUnpaidToken()` (RPC de invitado) usado por `PdfCheckoutModal` y `PricingModal`
-- [ ] `developer` (Etapa 2): `applyPayment.ts` debe escribir en `unclaimed_email_credits` (no en `pending_grants`) cuando el pack se paga sin perfil
+- [x] `developer` (Etapa 2): `applyPayment.ts` integrado con `unclaimed_email_credits`; alertas WhatsApp no bloqueantes a +5493878342772 integradas; contratos `admin_notifications`/`payment_claims` sincronizados
+- [x] `frontend-visual` (Etapa 3): Login Passwordless (`LoginPasswordlessModal.tsx` con `requestOtp`/`verifyOtp`), botón WhatsApp en checkout (`PdfCheckoutModal.tsx`), UsersTab con créditos rápidos + WA (`UsersTab.tsx`), pestaña Auditoría (`AuditAndErrorsTab.tsx`)
 
 ## 4. Bitácora de Traspaso de Agentes (Handoff Log)
 ### 2026-10-29 - Agente: Antigravity (IA ejecutor)
@@ -106,4 +107,11 @@
   2. Kalpa revisa y aprueba el PR #52 como CODEOWNER (toca `src/shared/core/`).
   3. Tras el merge: `git fetch origin && git log origin/main -1 --format="%H %s"`, confirmar hash y registrar en `SESSION_LOG.md`.
   4. Etapa 2 (pendiente): `applyPayment.ts` debe escribir en `unclaimed_email_credits` (no en `pending_grants`) cuando el pack se paga sin perfil; corregir los 3 defectos de contrato de `admin_notifications`/`manualClaims` documentados arriba.
+
+### 2026-10-30 - Agente: @frontend-visual — Etapa 3 (UI / Login + Admin)
+- **Acción realizada**: Implementó `LoginPasswordlessModal.tsx` (Paso 1 email + `requestOtp`, Paso 2 código + `verifyOtp`), botón WhatsApp (`+5493878342772`) en `PdfCheckoutModal.tsx`, créditos rápidos (+1/+5/+10) y botón WA en `UsersTab.tsx`, pestaña `AuditAndErrorsTab.tsx` con lectura de `admin_error_logs` y filtros por `level`.
+- **Archivos afectados**: `src/modules/auth/components/LoginPasswordlessModal.tsx`, `src/modules/auth/components/LoginModal.tsx`, `src/modules/cv-builder/components/modals/PdfCheckoutModal.tsx`, `src/modules/admin/components/UsersTab.tsx`, `src/modules/admin/components/AuditAndErrorsTab.tsx`, `.opencode/CONTEXT.md`.
+- **Estado del código**: Estable. `npm run typecheck` = 0 errores. No hay fugas de color dinámico en Tailwind (Regla 2 verificada). Componentes reutilizan `useAuth`, `Field`, `Modal`, `button` y `useToast` (Regla 1).
+- **Instrucción para el siguiente agente**: `testing-qa` (Etapa 4) debe ejecutar `check-all` completo (`npm run check-all`) y validar visualmente el flujo OTP en local (`npm run preview`) y el panel admin (`AuditAndErrorsTab`). Requiere aprobación de Kalpa como CODEOWNER (toca `src/modules/`).
+- **Nota**: La migración `20261031_fix_payments_admin_contracts.sql` fue creada pero NO está aplicada en la base remota (pendiente `supabase db push` por `database`/`devops`).
 
