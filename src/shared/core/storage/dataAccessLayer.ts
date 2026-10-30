@@ -431,16 +431,43 @@ export const dal = {
   },
 
   pdfExportTokens: {
-    async insert(payload: { email: string; doc_type?: string; user_id?: string }): Promise<{ token: string } | null> {
+    /**
+     * Crea el token impago del checkout y devuelve su uuid.
+     *
+     * - Con sesión iniciada el token se ata al usuario (`user_id`), así el saldo
+     *   lo ve `useExportEntitlement` cuando el pago se confirma.
+     * - Sin sesión (invitado) el uuid lo entrega el RPC
+     *   `create_guest_export_token`: la tabla no se puede leer, así que un
+     *   `insert().select('token')` no devolvería la fila recién creada.
+     */
+    async createUnpaidToken(payload: { email: string; doc_type?: string; user_id?: string }): Promise<{ token: string } | null> {
       if (!supabase) return null;
+
+      if (payload.user_id) {
+        const linked = await safeSupabaseCall(() =>
+          supabase
+            .from('pdf_export_tokens')
+            .insert({
+              email: payload.email,
+              doc_type: payload.doc_type,
+              user_id: payload.user_id,
+            })
+            .select('token')
+            .single()
+        );
+        const linkedToken = (linked.data as { token?: string } | null)?.token;
+        if (linkedToken) return { token: linkedToken };
+      }
+
       const res = await safeSupabaseCall(() =>
-        supabase
-          .from('pdf_export_tokens')
-          .insert(payload)
-          .select('token')
-          .single()
+        supabase.rpc('create_guest_export_token', {
+          p_email: payload.email,
+          p_doc_type: payload.doc_type ?? null,
+        })
       );
-      return (res.data as { token: string }) || null;
+      // El RPC devuelve el uuid suelto, no una fila.
+      const token = typeof res.data === 'string' ? res.data : null;
+      return token ? { token } : null;
     },
     async getAvailableTokens(email: string): Promise<any[]> {
       if (!supabase) return [];
