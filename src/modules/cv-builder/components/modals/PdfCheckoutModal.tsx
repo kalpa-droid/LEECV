@@ -40,7 +40,7 @@ export default function PdfCheckoutModal({
     let exportToken = '';
     const resToken = await withErrorHandling(
       async () => {
-        const data = await dal.pdfExportTokens.insert({ email, doc_type: 'cv' });
+        const data = await dal.pdfExportTokens.createUnpaidToken({ email, doc_type: 'cv' });
         if (!data) throw new Error('Error al generar token de pago');
         exportToken = data.token;
       },

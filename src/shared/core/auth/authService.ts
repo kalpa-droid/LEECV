@@ -1,8 +1,82 @@
 import { supabase } from '../lib/supabaseClient';
 import { UserProfile } from '../../../types/user';
 
+/** Fila que devuelve la función `claim_credits_on_auth` (siempre una sola). */
+export type ClaimCreditsResult = {
+  credits_claimed: number;
+  rows_claimed: number;
+  guest_tokens_linked: number;
+  matched_email: string;
+};
+
 /**
- * Inicia sesión con email y contraseña.
+ * Traslada a la cuenta los créditos que se pagaron con su email antes de que
+ * existiera la cuenta, y vincula los tokens de invitado del mismo email.
+ *
+ * Es idempotente: se puede llamar en cada inicio de sesión sin duplicar saldo.
+ * Nunca lanza ni bloquea el ingreso: si el reclamo falla (por ejemplo, porque
+ * la función todavía no está creada en la base) se registra el aviso y sigue.
+ */
+export async function claimCreditsOnAuth(
+  user: { id?: string | null; email?: string | null } | null | undefined
+): Promise<ClaimCreditsResult | null> {
+  if (!supabase || !user?.id || !user.email) return null;
+  try {
+    const { data, error } = await supabase
+      .rpc('claim_credits_on_auth', {
+        p_user_id: user.id,
+        p_email: user.email,
+      })
+      .maybeSingle();
+
+    if (error) {
+      console.warn('[auth] No se pudieron reclamar los créditos del email:', error.message);
+      return null;
+    }
+    return (data as ClaimCreditsResult | null) ?? null;
+  } catch (err) {
+    console.warn('[auth] Error inesperado al reclamar créditos:', err);
+    return null;
+  }
+}
+
+/**
+ * Envía un código de un solo uso al email, sin contraseña.
+ * Si el email todavía no tiene cuenta, se crea en ese momento.
+ * Lanza el error de Supabase si el envío falla, para que la pantalla pueda
+ * mostrar el motivo (email inválido, límite de envíos, etc.).
+ */
+export async function requestOtp(email: string) {
+  if (!supabase) throw new Error('Supabase no está configurado (faltan VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY)');
+  const { data, error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: true },
+  });
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Confirma el código recibido por email e inicia sesión.
+ * Después de validar el código se reclaman los créditos pendientes de ese email.
+ */
+export async function verifyOtp(email: string, token: string) {
+  if (!supabase) throw new Error('Supabase no está configurado (faltan VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY)');
+  const { data, error } = await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: 'email',
+  });
+  if (error) throw error;
+
+  const user = data.user ?? data.session?.user ?? null;
+  if (user) await claimCreditsOnAuth(user);
+
+  return { user, session: data.session };
+}
+
+/**
+ * Inicia sesión con email y contraseña (sólo para el panel de administración).
  */
 export async function login(email: string, password: string) {
   if (!supabase) throw new Error('Supabase no está configurado (faltan VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY)');
@@ -55,6 +129,10 @@ export async function getCurrentProfile(): Promise<UserProfile | null> {
   if (!supabase) return null;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
+
+  // Al restaurar la sesión (o al volver de un login) se reclaman los créditos
+  // pendientes del email. Es idempotente y no frena la lectura del perfil.
+  await claimCreditsOnAuth(user);
 
   let { data: profile, error } = await supabase
     .from('profiles')

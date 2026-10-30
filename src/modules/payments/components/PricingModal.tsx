@@ -33,7 +33,7 @@ export function PricingModal({ isOpen, onClose, onOpenLogin }: PricingModalProps
     let exportToken = '';
     const resToken = await withErrorHandling(
       async () => {
-        const data = await dal.pdfExportTokens.insert({ 
+        const data = await dal.pdfExportTokens.createUnpaidToken({ 
           email: user.email!,
           doc_type: 'pack',
           user_id: user.id
