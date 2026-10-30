@@ -58,7 +58,7 @@ export function PersonalInfoFields({
     }
 
     return (
-      <label className="flex items-center gap-1.5 mt-1.5 cursor-pointer text-[11px] font-medium transition hover:opacity-80" style={{ color: isVisible ? colorSystem.secondary.base : colorSystem.neutral.textMuted }}>
+      <label className="flex items-center gap-1.5 mt-1.5 cursor-pointer text-[11px] font-medium transition hover:opacity-80" style={{ color: isVisible ? colorSystem.secondary.text : colorSystem.neutral.textMuted }}>
         <input 
           type="checkbox" 
           checked={isVisible} 

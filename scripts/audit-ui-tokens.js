@@ -146,6 +146,9 @@ function runAudit(scopePath, allowlist) {
       while ((match = ARBITRARY_TAILWIND_HEX_REGEX.exec(line)) !== null) {
         leaks.push({ file, line: idx + 1, match: match[0], type: 'Arbitrary Tailwind Hex' });
       }
+      while ((match = RAW_HEX_REGEX.exec(line)) !== null) {
+        leaks.push({ file, line: idx + 1, match: match[0], type: 'Raw Hex' });
+      }
     });
   }
 

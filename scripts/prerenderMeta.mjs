@@ -2,12 +2,19 @@ import fs from 'fs';
 import path from 'path';
 
 export const ROUTES = [
+  '/',
   '/privacidad',
   '/terminos',
   '/reembolsos'
 ];
 
 const metaMap = {
+  '/': {
+    title: 'LEECV — Creador de Currículum Vitae listo para imprimir',
+    description: 'Crea tu Currículum Vitae en minutos y ten tu PDF listo para imprimir en casa o llevar a una imprenta. Plantillas profesionales, diseño de tarjetas, 100% privacidad y sin marca de agua.',
+    content: [],
+    type: 'WebPage'
+  },
   '/privacidad': {
     title: 'Política de Privacidad | LEECV',
     description: 'Política de privacidad y protección de datos de LEECV.',

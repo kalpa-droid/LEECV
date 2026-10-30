@@ -231,7 +231,7 @@ export default function SignatureModal({
             onClick={() => setActiveTab('draw')}
             className={`flex-1 py-2 text-xs font-black rounded-[${radius.control}] flex items-center justify-center gap-2 transition cursor-pointer ${
               activeTab === 'draw'
-                ? 'bg-[var(--color-accent-purple)] text-white ${elevationSystem.raised}'
+                ? `bg-[var(--color-accent-purple)] text-white ${elevationSystem.raised}`
                 : 'text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]'
             }`}
           >
@@ -242,7 +242,7 @@ export default function SignatureModal({
             onClick={() => setActiveTab('upload')}
             className={`flex-1 py-2 text-xs font-black rounded-[${radius.control}] flex items-center justify-center gap-2 transition cursor-pointer ${
               activeTab === 'upload'
-                ? 'bg-[var(--color-accent-purple)] text-white ${elevationSystem.raised}'
+                ? `bg-[var(--color-accent-purple)] text-white ${elevationSystem.raised}`
                 : 'text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]'
             }`}
           >

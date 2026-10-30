@@ -1,74 +1,52 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "description": "Allowlist de excepciones legítimas de colores no tokenizados en UI (con justificación obligatoria)",
   "allowedExceptions": [
     {
-      "file": "src/modules/admin/AdminLogin.tsx",
-      "pattern": "#4285F4|#34A853|#FBBC05|#EA4335",
-      "reason": "Colores oficiales de marca Google OAuth para el botón de inicio de sesión social"
-    },
-    {
-      "file": "src/modules/cv-builder/components/SignatureModal.tsx",
-      "pattern": "2d|canvas|2DContext|fillStyle|strokeStyle",
-      "reason": "Contexto de dibujo HTML5 Canvas de firmas manuscritas que requiere coordenadas RGB directo"
+      "file": "src/data/initialCVData.ts",
+      "reason": "Hex suelto preexistente en datos de ejemplo. Pendiente de migración a tokens de diseño (UI-015/UI-016)."
     },
     {
       "file": "src/modules/cv-builder/components/CertCropperModal.tsx",
-      "pattern": "2d|canvas|2DContext|fillStyle|strokeStyle",
-      "reason": "Contexto de dibujo HTML5 Canvas para recorte de imágenes de certificados escaneados"
+      "reason": "Hex suelto preexistente (#FFFFFF fondo de canvas de recorte). Pendiente de migración a tokens de diseño (UI-015/UI-016)."
     },
     {
-      "file": "src/modules/cv-builder/components/modals/ShareAppModal.tsx",
-      "pattern": "#25D366|#229ED9|#0A66C2",
-      "reason": "Colores oficiales de marca corporativa (WhatsApp, Telegram, LinkedIn) para botones de compartir en redes sociales"
+      "file": "src/modules/book-studio/components/LightboxModal.tsx",
+      "reason": "Hex suelto preexistente en componente de galería. Pendiente de migración a tokens de diseño (UI-015/UI-016)."
     },
     {
-      "file": "src/modules/dashboard/UserDashboard.tsx",
-      "reason": "Panel de control de usuario pro/enterprise con indicadores de estado dark mode (50GB, Drive sync)"
+      "file": "src/modules/book-studio/components/ThumbnailCard.tsx",
+      "reason": "Hex suelto preexistente en componente de galería. Pendiente de migración a tokens de diseño (UI-015/UI-016)."
     },
     {
-      "file": "src/modules/payments/components/RetentionOfferModal.tsx",
-      "reason": "Modal emergente de retención con gradiente y acento de descuento"
+      "file": "src/modules/cv-builder/components/CanvaIconDock.tsx",
+      "reason": "Hex suelto preexistente en dock de iconos. Pendiente de migración a tokens de diseño (UI-015/UI-016)."
     },
     {
-      "file": "src/shared/core/ui/GracePeriodBanner.tsx",
-      "reason": "Banner de advertencia preventivo de período de gracia (10 días) con acentos amber/gold"
+      "file": "src/modules/cv-builder/components/SignatureModal.tsx",
+      "reason": "Hex suelto preexistente (color de trazo de firma). Pendiente de migración a tokens de diseño (UI-015/UI-016)."
     },
     {
-      "file": "src/modules/book-studio/BookStudio.tsx",
-      "reason": "Módulo Studio de libros e imposición de imprenta con stepper y previsualización gráfica"
+      "file": "src/modules/planner-studio/PlannerStudioContent.tsx",
+      "reason": "Paletas de color predefinidas del planificador. Pendiente de migración a tokens de diseño (UI-015/UI-016)."
     },
     {
-      "file": "src/modules/book-studio/BookUploadStep.tsx",
-      "reason": "Módulo Studio de libros e imposición de imprenta con stepper y previsualización gráfica"
+      "file": "src/shared/core/book-engine/impositionEngine.ts",
+      "reason": "Colores de renderizado interno de motor de libros (canvas/PDF), no UI de usuario. Pendiente de migración a tokens (UI-015/UI-016)."
     },
     {
-      "file": "src/modules/book-studio/BookConfigStep.tsx",
-      "reason": "Módulo Studio de libros e imposición de imprenta con stepper y previsualización gráfica"
+      "file": "src/shared/core/capabilities/capabilityRegistry.ts",
+      "reason": "Colores de registro de capacidades internas. Pendiente de migración a tokens de diseño (UI-015/UI-016)."
     },
     {
-      "file": "src/modules/book-studio/BookPreviewStep.tsx",
-      "reason": "Módulo Studio de libros e imposición de imprenta con stepper y previsualización gráfica"
+      "file": "src/shared/core/presets/coverLetterPresetCatalog.ts",
+      "reason": "Catálogo de presets de carta de presentación (definiciones de paleta). Pendiente de migración a tokens de diseño (UI-015/UI-016)."
     },
     {
-      "file": "src/modules/book-studio/BookExportStep.tsx",
-      "reason": "Módulo Studio de libros e imposición de imprenta con stepper y previsualización gráfica"
+      "file": "src/shared/core/utils/canvasColorEngine.ts",
+      "reason": "Motor de color de canvas interno. Pendiente de migración a tokens de diseño (UI-015/UI-016)."
     },
     {
-      "file": "src/modules/landing/LandingPage.tsx",
-      "reason": "Landing page principal multi-producto con diseño hero y tarjetas interactivas"
-    },
-    {
-      "file": "src/modules/blog/BlogModule.tsx",
-      "reason": "Módulo de artículos educativos y guías visuales de empleabilidad e imprenta"
-    },
-    {
-      "file": "src/modules/cover-letter/components/CoverLetterDock.tsx",
-      "reason": "Muelle de cartas de presentación con distintivos cromáticos por categoría de vacante e IA"
-    },
-    {
-      "file": "src/modules/cover-letter/components/CoverLetterEditorPanel.tsx",
-      "reason": "Editor de cartas de presentación con selectores cromáticos de tono e indicadores de estado de generación"
+      "file": "src/shared/core/utils/cvDataSchema.ts",
+      "reason": "Esquema de datos con colores de ejemplo. Pendiente de migración a tokens de diseño (UI-015/UI-016)."
     }
   ]
 }

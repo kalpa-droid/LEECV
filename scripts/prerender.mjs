@@ -39,6 +39,10 @@ for (const route of ROUTES) {
   let ogUrl = document.querySelector('meta[property="og:url"]');
   if (ogUrl) ogUrl.setAttribute('content', `https://leecv.app${route}`);
 
+  // Actualizar canonical por ruta (evita que todas las páginas canonicen al home)
+  let canonical = document.querySelector('link[rel="canonical"]');
+  if (canonical) canonical.setAttribute('href', `https://leecv.app${route}`);
+
   // Inyectar JSON-LD
   const script = document.createElement('script');
   script.type = 'application/ld+json';
@@ -97,7 +101,12 @@ for (const route of ROUTES) {
         return `<p>${p}</p>`;
       }).join('');
     }
-    contentDiv.innerHTML = `<h1>${meta.title}</h1>` + contentHtml;
+    let headingHtml = `<h1>${meta.title}</h1>`;
+    const contentStartsWithH1 =
+      (typeof meta.content === 'string' && meta.content.trimStart().startsWith('<h1')) ||
+      (Array.isArray(meta.content) && meta.content.some(p => p.trimStart().startsWith('<h1')));
+    if (contentStartsWithH1) headingHtml = '';
+    contentDiv.innerHTML = headingHtml + contentHtml;
     root.appendChild(contentDiv);
   }
 

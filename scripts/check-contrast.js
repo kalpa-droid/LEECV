@@ -420,6 +420,9 @@ function evaluateBranchTokens(branchText, cssVarMap, inheritedBgHex) {
       if (ratio < 4.5) {
         violations.push({ bgToken: activeBgToken, textToken, bgHex: activeBgHex, textHex, ratio: ratio.toFixed(2) });
       }
+    } else if (textMatch && textToken.includes('var(')) {
+      // Var CSS referenciada pero no definida en index.css → contraste no verificable (fallo)
+      violations.push({ bgToken: activeBgToken, textToken, bgHex: activeBgHex, textHex: null, ratio: 0, reason: 'css_var_indefinida' });
     }
   }
   return violations;

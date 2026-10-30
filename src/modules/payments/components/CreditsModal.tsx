@@ -78,11 +78,11 @@ export function CreditsModal({ isOpen, onClose, onOpenPricing }: CreditsModalPro
             </div>
           )}
 
-          <div className={`bg-[var(--color-accent-blue-muted)] border border-[var(--color-accent-blue)]/20 rounded-[${radius.card}] p-4 flex items-start gap-3`}>
-            <Sparkles className="w-5 h-5 text-[var(--color-accent-blue-text)] shrink-0 mt-0.5" />
+          <div className={`bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/20 rounded-[${radius.card}] p-4 flex items-start gap-3`}>
+            <Sparkles className="w-5 h-5 text-[var(--color-accent-text)] shrink-0 mt-0.5" />
             <div>
-              <p className="text-xs font-bold text-[var(--color-accent-blue-text)]">Mejoras de IA</p>
-              <p className="text-[11px] text-[var(--color-accent-blue-text)]/80 mt-1">
+              <p className="text-xs font-bold text-[var(--color-accent-text)]">Mejoras de IA</p>
+              <p className="text-[11px] text-[var(--color-neutral-text-secondary)] mt-1">
                 La Inteligencia Artificial ahora es gratis e ilimitada para todos los usuarios.
               </p>
             </div>
@@ -97,14 +97,14 @@ export function CreditsModal({ isOpen, onClose, onOpenPricing }: CreditsModalPro
                 onClose();
                 onOpenPricing();
               }}
-              className={`${button.primary} w-full flex-1 justify-center`}
+              className={`${button.base} ${button.primary} w-full flex-1 justify-center`}
             >
               Comprar packs de exportaciones
             </button>
           )}
           <button
             onClick={onClose}
-            className={`${isPro ? button.primary : button.secondary} w-full flex-1 justify-center`}
+            className={`${button.base} ${isPro ? button.primary : button.secondary} w-full flex-1 justify-center`}
           >
             Cerrar
           </button>

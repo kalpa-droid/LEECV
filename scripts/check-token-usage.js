@@ -44,11 +44,9 @@ function main() {
   const orphanTokens = [];
 
   for (const tokenName of exportMatches) {
-    if (tokenName === 'uiThemePresets' || tokenName === 'colorSystem') {
-      const regex = new RegExp(`\\b${tokenName}\\b`, 'g');
-      if (!regex.test(allOtherContent)) {
-        orphanTokens.push(tokenName);
-      }
+    const regex = new RegExp(`\\b${tokenName}\\b`, 'g');
+    if (!regex.test(allOtherContent)) {
+      orphanTokens.push(tokenName);
     }
   }
 
