@@ -2,6 +2,29 @@
 
 Este archivo documenta los cambios realizados en el repositorio por agentes de IA, para mantener un rastro histórico de qué se hizo, por qué y en qué momento.
 
+## [2026-10-30] - Etapa 1: Autenticación Passwordless (OTP/Magic Link), Auto-Acreditación por Email y Bolsillo de Créditos (PR #51 y #52)
+
+**Resumen:**
+Se incorporó el plan maestro integral en `.opencode/plans/plan-pagos-admin-magic-link.md` (PR #51) y se completó la Etapa 1 de la arquitectura (PR #52) reemplazando la dependencia de contraseñas por autenticación OTP/Magic Link, creando el bolsillo de créditos de invitado en `unclaimed_email_credits` y asegurando la auto-acreditación inmediata al iniciar sesión.
+
+**Acciones Tomadas:**
+- **Plan Maestro (PR #51)**: Documentación de los 6 ejes canónicos: coherencia de precios PayPal/Mercado Pago, auto-acreditación por email, autenticación passwordless (Magic Link / OTP 6 dígitos), alertas WhatsApp (+5493878342772), auditoría nativa de errores y panel admin 360°.
+- **Autenticación Passwordless (PR #52)**:
+  - `src/shared/core/auth/authService.ts`: implementación de `requestOtp(email)` y `verifyOtp(email, token)` sobre Supabase Auth; función `claimCreditsOnAuth(user)` no bloqueante e idempotente.
+  - `src/shared/core/auth/AuthContext.tsx`: expone `requestOtp` y `verifyOtp` actualizando reactivamente la sesión y el perfil.
+  - `src/shared/core/storage/dataAccessLayer.ts`: nuevo método `dal.createUnpaidToken()` con fallback seguro a RPC para checkout sin sesión previa.
+  - Checkout de invitados en `PdfCheckoutModal.tsx` y `PricingModal.tsx` actualizado para usar la RPC de invitado.
+- **Base de Datos (`supabase/migrations/20261030_email_credit_claim_and_admin_error_logs.sql`)**:
+  - Tabla `unclaimed_email_credits` con índice único sobre `payment_id` (`<proveedor>:<external_id>`) y RLS estricto.
+  - Función transaccional y `SECURITY DEFINER` `claim_credits_on_auth()` que traspasa los créditos al balance real en el primer login.
+  - RPC `create_guest_export_token()` para emitir tokens pagables de invitado sin comprometer la tabla `pdf_export_tokens`.
+  - Tabla `admin_error_logs` con RLS para registro nativo de excepciones de frontend, webhooks y APIs.
+  - Políticas de RLS corregidas en `pdf_export_tokens` para permitir que el usuario consulte sus propios tokens válidos.
+
+**Validación y publicación:**
+- `npm run check-all`: 258 pruebas unitarias aprobadas, typecheck en verde, 0 violaciones de gobernanza, prerenderizado de 25 rutas completado.
+- PR [#52](https://github.com/kalpa-droid/LEECV/pull/52) aprobada y fusionada con squash a `main`. Commit de merge: `8681abdcf7dda6b1c87ff105447618e78e1651b0`.
+
 ## [2026-10-29] - Corrección de hallazgos de auditoría frontend-visual A–F (UI-001 a UI-016)
 
 **Resumen:**
