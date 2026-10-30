@@ -121,7 +121,7 @@ export default function WizardModal({
                 onClick={() => setCurrentStepIndex(idx)}
                 className={`px-3 py-1.5 rounded-[${radius.control}] text-xs font-bold flex items-center gap-1.5 flex-shrink-0 transition cursor-pointer ${
                   isActive
-                    ? 'bg-[var(--color-accent-purple)] text-white ${elevationSystem.raised}'
+                    ? `bg-[var(--color-accent-purple)] text-white ${elevationSystem.raised}`
                     : 'text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]'
                 }`}
               >

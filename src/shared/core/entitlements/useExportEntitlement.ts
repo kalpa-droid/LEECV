@@ -29,10 +29,19 @@ export function useExportEntitlement() {
         }
 
         if (profile?.plan === 'pro') {
+          const planVence = profile.plan_vence ? new Date(profile.plan_vence) : null;
+          const planVigente = !planVence || planVence > new Date();
+          if (planVigente) {
             setCanExport(true);
             setReason(null);
             setCredits(999);
             return;
+          }
+          // Plan Pro vencido: no se habilita exportación ilimitada.
+          setCanExport(false);
+          setReason('plan_vencido');
+          setCredits(0);
+          return;
         }
         
         // Count unconsumed paid tokens for this user

@@ -201,7 +201,7 @@ export function TemplateManagementTab() {
                 onClick={() => handleSelectPreset(p)}
                 className={`p-3 rounded-[${radius.modal}] border text-left transition cursor-pointer flex flex-col justify-between ${
                   isSelected
-                    ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-muted)] ${elevationSystem.raised} ring-2 ring-[var(--color-accent-base)]/30'
+                    ? `border-[var(--color-accent-base)] bg-[var(--color-accent-muted)] ${elevationSystem.raised} ring-2 ring-[var(--color-accent-base)]/30`
                     : 'border-[var(--color-neutral-border)] bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--ui-bg-card)] hover:border-[var(--color-neutral-border-strong)]'
                 }`}
               >
@@ -233,7 +233,7 @@ export function TemplateManagementTab() {
                 onClick={() => setActiveSubTab('visual')}
                 className={`px-3 py-1.5 text-xs font-extrabold rounded-[${radius.card}] transition cursor-pointer flex items-center gap-1.5 ${
                   activeSubTab === 'visual'
-                    ? 'bg-[var(--color-neutral-text-primary)] text-white ${elevationSystem.raised}'
+                    ? `bg-[var(--color-neutral-text-primary)] text-white ${elevationSystem.raised}`
                     : 'bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-secondary)] hover:bg-[var(--color-neutral-border)]'
                 }`}
               >
@@ -245,7 +245,7 @@ export function TemplateManagementTab() {
                 onClick={() => setActiveSubTab('json')}
                 className={`px-3 py-1.5 text-xs font-extrabold rounded-[${radius.card}] transition cursor-pointer flex items-center gap-1.5 ${
                   activeSubTab === 'json'
-                    ? 'bg-[var(--color-neutral-text-primary)] text-white ${elevationSystem.raised}'
+                    ? `bg-[var(--color-neutral-text-primary)] text-white ${elevationSystem.raised}`
                     : 'bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-secondary)] hover:bg-[var(--color-neutral-border)]'
                 }`}
               >

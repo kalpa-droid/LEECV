@@ -76,7 +76,7 @@ export function TemplateMenu({ activePresetId, onSelectPreset, cvData }: Templat
               onClick={() => onSelectPreset(preset.id)}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-[${radius.card}] text-xs font-bold transition-all duration-200 border ${
                 isActive
-                  ? 'bg-[var(--color-accent-purple)] text-white border-[var(--color-accent-purple)]/50 ${elevationSystem.floating} scale-[1.02]'
+                  ? `bg-[var(--color-accent-purple)] text-white border-[var(--color-accent-purple)]/50 ${elevationSystem.floating} scale-[1.02]`
                   // check-contrast-ignore-next-line
                   : 'bg-white/10 text-white/80 border-white/10 hover:bg-white/20 hover:text-white'
               }`}

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, ReactNode } from 'react';
 import { X } from 'lucide-react';
-import { elevationSystem, radius } from '../uiDesignSystem';
+import { elevationSystem, radius, zIndex } from '../uiDesignSystem';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -66,7 +66,7 @@ export function Modal({
     <div
       ref={overlayRef}
       onClick={handleOverlayClick}
-      className="fixed inset-0 z-[500] flex items-center justify-center bg-black/75 backdrop-blur-sm p-3 sm:p-5 animate-fade-in no-print select-none"
+      className={`fixed inset-0 z-[${zIndex.modal}] flex items-center justify-center bg-black/75 backdrop-blur-sm p-3 sm:p-5 animate-fade-in no-print select-none`}
     >
       <div
         data-ui-modal="true"

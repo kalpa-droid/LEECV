@@ -89,7 +89,7 @@ export default function PdfCheckoutModal({
         <div className="w-full flex items-center justify-between gap-2">
           <button
             onClick={onClose}
-            className={button.ghost}
+            className={`${button.base} ${button.ghost}`}
           >
             {t.checkout.backToEditor}
           </button>
@@ -97,7 +97,7 @@ export default function PdfCheckoutModal({
             <button
               onClick={handleConfirmExport}
               disabled={isProcessing}
-              className={`${button.success} flex items-center gap-2`}
+              className={`${button.base} ${button.success} flex items-center gap-2`}
             >
               <Check className="w-4 h-4" />
               <span>Confirmar Exportación</span>
@@ -189,7 +189,7 @@ export default function PdfCheckoutModal({
 
           <button
             onClick={() => { onClose(); if (onExportJson) onExportJson(); }}
-            className={`w-full p-2.5 ${button.secondary} text-xs font-bold rounded-[${radius.card}] transition flex items-center justify-center gap-2 cursor-pointer mt-4`}
+            className={`w-full p-2.5 ${button.base} ${button.secondary} text-xs font-bold rounded-[${radius.card}] transition flex items-center justify-center gap-2 cursor-pointer mt-4`}
           >
             <Download className="w-4 h-4 text-[var(--ui-btn-neutral-text)]" />
             <span>{t.checkout.downloadJsonFreeBtn}</span>
