@@ -97,3 +97,13 @@
   3. `developer` (siguiente etapa de UI): la pantalla de ingreso sin contraseña (pedir código → confirmar) debe usar `useAuth().requestOtp` / `useAuth().verifyOtp`; no hace falta volver a tocar `authService`.
   4. Los cambios están en el árbol de trabajo sobre `main` (sin commit). `devops` debe crear rama `feat/auth-otp-claim-credits`, commit y PR; toca `src/shared/core/` → requiere aprobación de Kalpa (CODEOWNERS).
 
+### 2026-10-30 - Agente: @gestor (orquestación) — Etapa 1 cerrada, PR #52 abierto
+- **Acción realizada**: Coordinó la Etapa 1 completa (DB/RPC con `database` + código de auth con `developer`). Creó la rama `feat/auth-otp-magic-link`, commiteó (`220c232`, 7 archivos, +617/−13) y abrió el PR **#52** contra `main`: https://github.com/kalpa-droid/LEECV/pull/52
+- **Archivos afectados**: `src/shared/core/auth/authService.ts`, `src/shared/core/auth/AuthContext.tsx`, `src/shared/core/storage/dataAccessLayer.ts`, `src/modules/cv-builder/components/modals/PdfCheckoutModal.tsx`, `src/modules/payments/components/PricingModal.tsx`, `supabase/migrations/20261030_email_credit_claim_and_admin_error_logs.sql`, `.opencode/CONTEXT.md`.
+- **Estado del código**: Estable. `npm run check-all` completo = 0 errores (258 tests, typecheck, lint, build, prerender 25 rutas, verify:* 60/60, SEO 40/40, PDF smoke 4/4, contraste/tokens, pricing-sync). Pre-commit y pre-push (husky) en verde.
+- **Instrucción para el siguiente agente**:
+  1. Kalpa autoriza y ejecuta `supabase db push` (proyecto `gzsdmsiefswgnyycrmsk`) — la migración NO está aplicada.
+  2. Kalpa revisa y aprueba el PR #52 como CODEOWNER (toca `src/shared/core/`).
+  3. Tras el merge: `git fetch origin && git log origin/main -1 --format="%H %s"`, confirmar hash y registrar en `SESSION_LOG.md`.
+  4. Etapa 2 (pendiente): `applyPayment.ts` debe escribir en `unclaimed_email_credits` (no en `pending_grants`) cuando el pack se paga sin perfil; corregir los 3 defectos de contrato de `admin_notifications`/`manualClaims` documentados arriba.
+
