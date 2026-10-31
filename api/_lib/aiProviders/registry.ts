@@ -7,4 +7,4 @@ export const AI_PROVIDERS: Record<string, AiProviderDefinition> = {
   gemini: geminiProvider
 };
 
-export const AI_PROVIDER_FALLBACK_ORDER = ['groq', 'gemini'];
+export const AI_PROVIDER_FALLBACK_ORDER = ['gemini', 'groq'];

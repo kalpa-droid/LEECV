@@ -28,6 +28,7 @@ export interface AiProviderDefinition {
   displayName: string;
   requiredEnvVars: string[];
   defaultModel: string;
+  supportsImages: boolean;
   complete: (req: AiCompletionRequest, apiKey: string, model?: string) => Promise<AiCompletionResponse>;
   ping: () => Promise<AiProviderPingResult>;
 }

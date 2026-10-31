@@ -26,6 +26,12 @@
 - [x] `frontend-visual` (Etapa 3): Login Passwordless (`LoginPasswordlessModal.tsx` con `requestOtp`/`verifyOtp`), botón WhatsApp en checkout (`PdfCheckoutModal.tsx`), UsersTab con créditos rápidos + WA (`UsersTab.tsx`), pestaña Auditoría (`AuditAndErrorsTab.tsx`)
 
 ## 4. Bitácora de Traspaso de Agentes (Handoff Log)
+### 2026-10-31 - Agente: @desarrollo-rapido (Plan Mejora IA + Show Password) — V2.4.0
+- **Acción realizada**: Plan `plan-mejora-ia-extraccion-y-show-password.md` ejecutado. Rama `feat/mejora-ia-show-password`. Eje 2 (show password) completo (`LoginModal.tsx`). Eje 1 (bugs IA críticos): `supportsImages` en providers, filtro por imagen, `requiresAuth: false`, retry JSON, `auxiliaryText`. Eje 3 (mejoras): prompt estricto, `maxTokens` 4000, `responseSchema` completo. Eje 4: 4 tests nuevos. Eje 5: `version.ts` V2.4.0.
+- **Archivos afectados**: `LoginModal.tsx`, `api/_lib/aiProviders/types.ts`, `gemini.ts`, `groq.ts`, `registry.ts`, `api/cv-import-api.ts`, `ImportCvAiModal.tsx`, `tests/*.test.ts`, `version.ts`.
+- **Estado**: Rama creada; cambios locales hechos. `npm run check-all` pendiente de confirmar final.
+- **Instrucción para siguiente agente**: Confirmar `npm run check-all` = 0 errores, hacer commit semántico (`feat: mejora IA extracción + show password V2.4.0`), push a `feat/mejora-ia-show-password`, abrir PR contra `main`, esperar check-all verde y aprobación CODEOWNER de Kalpa.
+
 ### 2026-10-31 - Agente: @desarrollo-rapido (Auth & IA Import) — V2.3.2
 - **Acción realizada**: Incorporado botón de "Iniciar sesión" en la Landing Page (header y hero). Resuelta la persistencia de sesión al registrarse o iniciar sesión (actualización síncrona de React en `AuthContext`, soporte dual para código OTP de 6 dígitos sin contraseñas y login por contraseña con feedback claro si requiere confirmación de email). Eliminado el bloqueo innecesario que impedía importar PDF con IA a usuarios invitados.
 - **Archivos afectados**: `src/modules/landing/LandingPage.tsx`, `src/app/App.tsx`, `src/app/AppModals.tsx`, `src/modules/auth/components/LoginModal.tsx`, `src/modules/cv-builder/components/modals/ImportCvAiModal.tsx`, `src/modules/payments/components/CreditsModal.tsx`, `src/shared/core/auth/AuthContext.tsx`, `src/shared/core/auth/authService.ts`, `src/shared/core/version.ts`.

@@ -5,6 +5,7 @@ export const groqProvider: AiProviderDefinition = {
   displayName: 'Groq Cloud (Llama 3.3 70B)',
   requiredEnvVars: ['GROQ_API_KEYS', 'GROQ_API_KEY'],
   defaultModel: 'llama-3.3-70b-versatile',
+  supportsImages: false,
 
   async complete(req: AiCompletionRequest, apiKey: string, model?: string): Promise<AiCompletionResponse> {
     const targetModel = model || this.defaultModel;

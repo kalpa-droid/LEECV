@@ -76,11 +76,15 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
         const pData = await apiClient.post('/api/cv-import-api?action=extract-page', {
           kind: page.kind,
           content: page.content,
-          contextSummary
-        });
-        
-        if (!pData || !pData.data || !pData.data.fragmentJson) {
-           throw new Error(`Error inesperado procesando página ${i+1}`);
+          contextSummary,
+          auxiliaryText: (page as any).auxiliaryText || ''
+        }, { requiresAuth: false });
+
+        if (!pData.ok) {
+          throw new Error(pData.error || `Error del servidor procesando página ${i+1}`);
+        }
+        if (!pData.data || !pData.data.fragmentJson) {
+          throw new Error(`Respuesta inesperada del servidor para página ${i+1}`);
         }
         fragments.push(pData.data.fragmentJson);
         setProgress(i + 1);
