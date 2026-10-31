@@ -2,6 +2,23 @@
 
 Este archivo documenta los cambios realizados en el repositorio por agentes de IA, para mantener un rastro histórico de qué se hizo, por qué y en qué momento.
 
+## [2026-10-31] - V2.3.3: Motor Canónico de Acreditación y Consumo de Créditos Unificado
+
+**Resumen:**
+Se eliminaron discrepancias entre el motor de visualización de créditos y el motor de consumo. `getTokenStats` en el DAL ahora consulta de forma unificada por `user_id` y `email`, `useEntitlements` sincroniza en tiempo real tanto los derechos como el balance visual ante consumos y recargas, y se conectó la auto-acreditación (`claimCreditsOnAuth`) inmediatamente al retornar de pasarelas de pago en `App.tsx`.
+
+**Acciones Tomadas:**
+- **Núcleo de Datos (`src/shared/core/storage/dataAccessLayer.ts`)**:
+  - `getTokenStats` adaptado para aceptar identificador compuesto (`{ userId?: string, email?: string }`) y realizar consulta combinada con `.or(user_id.eq,email.eq)`. Resuelve cualquier desfasaje por tokens acreditados a nivel UUID vs email.
+- **Motor de Derechos (`src/shared/core/entitlements/useEntitlements.ts`)**:
+  - `fetchStats` refactorizado con `useCallback` para consultar tokens por identidad canónica.
+  - `consumeExport` actualiza el balance de tokens localmente de inmediato tras cada exportación exitosa.
+  - `refreshEntitlements` ejecuta concurrentemente la actualización de derechos (`useExportEntitlement`) y el balance de tokens (`fetchStats`).
+- **Retorno de Pagos (`src/app/App.tsx`)**:
+  - `procesarRetornoPago` ahora invoca `claimCreditsOnAuth(user)` y `refreshEntitlements()` tras capturas de PayPal o confirmaciones de Mercado Pago, asegurando que los créditos aparezcan sin necesidad de refrescar el navegador.
+- **Gobernanza y Calidad**:
+  - Versión actualizada a `V2.3.3` en `src/shared/core/version.ts`.
+
 ## [2026-10-31] - V2.3.2: Botón de Iniciar Sesión en Landing Page, Login OTP/Contraseña Robusto y Extracción de PDF con IA sin Bloqueos
 
 **Resumen:**

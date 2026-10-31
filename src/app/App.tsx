@@ -48,6 +48,8 @@ import { DocumentTypeId } from '../types/document';
 import { useDocumentViewport } from '../shared/core/viewport';
 
 import { procesarRetornoPago } from '../modules/payments/paymentService';
+import { useAuth } from '../shared/core/auth/AuthContext';
+import { claimCreditsOnAuth } from '../shared/core/auth/authService';
 
 export const DEFAULT_PLANNER_PRESET_ID = 'planner-clasico';
 export const DEFAULT_BOOK_PRESET_ID = 'libro-standard';
@@ -68,6 +70,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const { showSuccess, showError, showInfo } = useToast();
   const { confirm } = useConfirm();
   const { inGracePeriod, graceEndsAt, refreshEntitlements } = useEntitlements();
+  const { user } = useAuth();
 
 
 
@@ -109,11 +112,15 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     syncPresetsFromStorage().catch(err => console.warn('Error sincronizando presets iniciales:', err));
 
     procesarRetornoPago()
-      .then((res) => {
+      .then(async (res) => {
         if (res?.status === 'paypal_captured') {
           showSuccess('¡Pago procesado con éxito vía PayPal! Tus créditos han sido activados.');
+          if (user) await claimCreditsOnAuth(user);
+          await refreshEntitlements();
         } else if (res?.status === 'payment_success') {
           showSuccess('¡Pago confirmado! Tu cuenta ha sido actualizada.');
+          if (user) await claimCreditsOnAuth(user);
+          await refreshEntitlements();
         }
       })
       .catch((err) => {

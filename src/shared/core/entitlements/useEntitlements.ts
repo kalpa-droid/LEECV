@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { dal } from '../storage/dataAccessLayer';
 
@@ -53,14 +53,27 @@ export function useEntitlements() {
   const [tokenStats, setTokenStats] = useState({ total: 0, used: 0, available: 0 });
   const exportEntitlement = useExportEntitlement();
 
-  useEffect(() => {
-    if (user?.email) {
-      dal.pdfExportTokens.getTokenStats(user.email).then(stats => {
+  const fetchStats = useCallback(async () => {
+    if (user?.id || user?.email) {
+      try {
+        const stats = await dal.pdfExportTokens.getTokenStats({
+          userId: user.id,
+          email: user.email || undefined
+        });
         setTokenStats(stats);
         setPdfTokens(stats.available);
-      }).catch(console.error);
+      } catch (err) {
+        console.error('Error fetching token stats:', err);
+      }
+    } else {
+      setTokenStats({ total: 0, used: 0, available: 0 });
+      setPdfTokens(0);
     }
   }, [user]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   const plan = profile?.plan || 'free';
   const features = PLAN_FEATURES[plan as keyof typeof PLAN_FEATURES] || PLAN_FEATURES.free;
@@ -79,9 +92,16 @@ export function useEntitlements() {
     unlimitedExports: features.unlimitedExports,
     cloudStorageGB: features.cloudStorageGB,
     canExport: exportEntitlement.canExport,
-    consumeExport: exportEntitlement.consumeCreditIfNeeded,
+    consumeExport: async () => {
+      const res = await exportEntitlement.consumeCreditIfNeeded();
+      await fetchStats();
+      return res;
+    },
     refreshEntitlements: async () => {
-      exportEntitlement.refreshCredits();
+      await Promise.all([
+        exportEntitlement.refreshCredits(),
+        fetchStats()
+      ]);
     }
   };
 }
