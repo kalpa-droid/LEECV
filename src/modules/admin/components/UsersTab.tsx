@@ -202,7 +202,7 @@ export function UsersTab({
                         target="_blank"
                         rel="noopener noreferrer"
                         title="Contactar por WhatsApp"
-                        className="px-1.5 py-0.5 text-[9px] font-black bg-[var(--color-brand-whatsapp)] text-white rounded hover:opacity-90 transition flex items-center gap-0.5"
+                        className="px-1.5 py-0.5 text-[9px] font-black bg-[var(--color-status-success-base)] text-[var(--color-accent-on-base)] rounded hover:opacity-90 transition flex items-center gap-0.5"
                       >
                         <span>WA</span>
                       </a>
