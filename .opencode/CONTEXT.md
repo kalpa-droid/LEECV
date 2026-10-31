@@ -125,3 +125,17 @@
   6. Despachador de alertas WhatsApp no bloqueante y tolerante a fallos.
 - **Resultado de pruebas**: 15/15 tests passing en la suite, 273/275 tests passing globales en Vitest (2 tests saltados por requerir conexión remota viva).
 - **Base de datos remota**: Confirmada la aplicación exitosa de ambas migraciones (`20261030` y `20261031`) en Supabase producción (`gzsdmsiefswgnyycrmsk`).
+
+### 2026-10-31 - Agente: @gestor (orquestación) — Etapa 5 (Certificación y cierre del plan maestro)
+- **Acción realizada**: Certificó el plan maestro completo. PRs #52, #54, #55 y #56 mergeados en `main`. Commits: `8681abd` (Etapa 1), `fd20051` (Etapas 2+3), `04c8f01` (docs), `1095196` (Etapa 4).
+- **Estado del código**: `npm run check-all` = 0 errores. Tests: 273 passing / 2 skipped (requieren conexión remota viva). Base de datos remota: migraciones aplicadas y verificadas. Despliegue: Vercel productivo actualizado.
+- **Instrucción para el siguiente agente**: El plan maestro está cerrado y certificado. Los únicos pasos restantes son la verificación manual contra la base de producción real (ver checklist en el último mensaje del usuario).
+
+### 2026-10-31 - Agente: @frontend-visual — Regla de Versionado (Nueva Gobernanza)
+- **Acción realizada**: Creó `src/shared/core/version.ts` con `LEECV_VERSION` canónico y actualizó los footers de `LandingPage.tsx` y `BlogModule.tsx` para mostrar la versión (`V2.3.0`) junto al copyright.
+- **Regla de versionado para todos los agentes** (agregar a `AGENTS.md`):
+  - **PATCH** (V2.x.y → V2.x.y+1): fixes, ajustes UI mínimos, correcciones de bug.
+  - **MINOR** (V2.x.y → V2.(x+1).0): nueva funcionalidad, componente nuevo, integración backend.
+  - **MAJOR** (V2.x.y → V3.0.0): cambio de arquitectura, nuevo esquema DB principal, nuevo eje del plan.
+  - Actualizar `src/shared/core/version.ts` ANTES del commit que aplica el cambio.
+- **Archivos afectados**: `src/shared/core/version.ts` (nuevo), `src/modules/landing/LandingPage.tsx`, `src/modules/blog/BlogModule.tsx`, `.opencode/CONTEXT.md`.
