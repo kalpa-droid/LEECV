@@ -13,6 +13,7 @@ import { PortalProductsGrid } from '../../shared/core/ui/marketing/PortalProduct
 import { ProductDetailBlock } from '../../shared/core/ui/marketing/ProductDetailBlock';
 import { PlanFeatureCard } from '../../shared/core/ui/marketing/PlanFeatureCard';
 import { FaqAccordion } from '../../shared/core/ui/marketing/FaqAccordion';
+import { LEECV_VERSION } from '../../shared/core/version';
 import { useIsMobile } from '../../shared/core/ui/useIsMobile';
 import { useJsonLd } from '../../shared/core/hooks/useJsonLd';
 
@@ -303,6 +304,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
           <div className="flex flex-col items-center sm:items-start gap-2">
             <Logo layout="isotipo" animatedRainbow={true} currentUiTheme={currentTheme} className="h-6" />
             <p>© 2026 LEECV Studio. {t.landing.footer.rights}</p>
+            <p className="text-[10px] opacity-60">{LEECV_VERSION.label}</p>
           </div>
           <div className="flex items-center gap-6">
             <a href="/privacidad" className="hover:text-[var(--ui-text-primary)] transition-colors">

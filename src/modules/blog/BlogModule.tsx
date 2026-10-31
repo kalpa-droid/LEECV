@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import { displayScale, elevationSystem, radius, button } from '../../shared/core/uiDesignSystem';
 import { FaqAccordion } from '../../shared/core/ui/marketing/FaqAccordion';
 import { useJsonLd } from '../../shared/core/hooks/useJsonLd';
+import { LEECV_VERSION } from '../../shared/core/version';
 
 
 interface Article {
@@ -250,7 +251,7 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ initialSlug, onNavigateH
 
       {/* Footer */}
       <footer className="bg-[var(--ui-bg-panel)] border-t border-[var(--ui-border)] py-8 text-center text-xs text-[var(--ui-text-secondary)]">
-        <p>© 2026 LEECV Studio. Todos los derechos reservados.</p>
+        <p>© 2026 LEECV Studio. {LEECV_VERSION.label}</p>
       </footer>
     </div>
   );
