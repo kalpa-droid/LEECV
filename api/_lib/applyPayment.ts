@@ -3,6 +3,7 @@ import { serverDal } from './serverDal.js';
 import { getPrice } from './paymentProviders/pricingCatalog.js';
 import { sendPurchaseReceipt } from './emails/sendPurchaseReceipt.js';
 import { BILLING_CONFIG } from './config/limits.js';
+import { dispatchWaAlert } from './whatsappAlert.js';
 
 export type PlanType = string;
 
@@ -57,11 +58,17 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
       });
 
       await serverDal.adminNotifications.create({
-        type: 'payment_pending',
+        type: 'payment_pending_review',
         title: `Pago pendiente en la pasarela (${plan})`,
         message: `${email ? `Email: ${email} ` : ''}${externalId ? `Ref: ${externalId}` : ''} — ${metodoPago}. Se reintentará automáticamente cuando la pasarela confirme el cobro.`,
         metadata: { plan, metodoPago, externalId, amount, currency, exportToken, email, userId },
       });
+
+      // Alerta WhatsApp al admin ante pago retenido — despacho no bloqueante.
+      dispatchWaAlert(
+        `⚠️ Pago RETENIDO: ${plan} via ${metodoPago} — ${email ?? 'sin email'} ref:${externalId ?? 'N/A'}`,
+        { plan, metodoPago, externalId, amount, currency, email, userId }
+      );
     }
 
     return { type: 'held_for_review', message: 'Payment pending at provider' };
@@ -101,11 +108,17 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
       if (isMismatch) {
         console.warn(`[applyPayment] Monto/moneda no coincide para ${plan}. Cobrado: ${amount} ${currency}, Esperado: ${expectedAmount} ${expectedCurrency}`);
         await serverDal.adminNotifications.create({
-          type: 'payment_mismatch',
+          type: 'payment_pending_review',
           title: `Pago sospechoso: ${plan} (Revisión manual requerida)`,
           message: `Cobrado: ${amount} ${currency}, Esperado: ${expectedAmount} ${expectedCurrency}. Ref: ${externalId}`,
           metadata: { plan, metodoPago, externalId, amount, currency, expectedAmount, expectedCurrency, email, userId }
         });
+
+        // Alerta WhatsApp al admin ante discrepancies de monto — despacho no bloqueante.
+        dispatchWaAlert(
+          `🔍 MONTO NO COINCIDE: ${plan} via ${metodoPago} — cobrado ${amount} ${currency}, esperado ${expectedAmount} ${expectedCurrency} ref:${externalId}`,
+          { plan, metodoPago, externalId, amount, currency, expectedAmount, expectedCurrency, email, userId }
+        );
         
         await serverDal.pendingGrants.create({
           email: email || undefined,
@@ -176,26 +189,49 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
 
     if (!profileId) {
       console.warn(`[applyPayment] Pago recibido para ${plan} pero no hay perfil para userId=${userId} ni email=${email}`);
-      if (externalId) {
-        await serverDal.pendingGrants.create({
-          email: email || undefined,
-          provider: metodoPago,
-          external_id: externalId,
-          plan,
-          amount: amount || undefined,
-          currency: currency || undefined,
-          hold_reason: 'missing_profile',
-          export_token: exportToken || undefined
-        });
 
-        await serverDal.adminNotifications.create({
-          type: 'pending_grant',
-          title: `Pago retenido sin perfil (${plan})`,
-          message: `Email: ${email} Ref: ${externalId}. Se creó un pending_grant.`,
-          metadata: { plan, metodoPago, externalId, email, userId }
-        });
+      // 🔑 ETAPA 2: escribir en unclaimed_email_credits (bolsillo de invitado)
+      // en lugar de pending_grants, para evitar bloqueos. La tabla acepta inserts
+      // de service_role sin política de INSERT definida (migración 20261030).
+      if (email) {
+        try {
+          await supabaseAdmin.from('unclaimed_email_credits').insert({
+            email,
+            credits: planData.credits ?? 0,
+            payment_id: grantPaymentId,
+            provider: metodoPago,
+            plan,
+            amount: amount || null,
+            currency: currency || null,
+            claim_payment_id: grantPaymentId,
+            created_at: new Date().toISOString(),
+          });
+        } catch (unclaimedErr: any) {
+          // Idempotente: si ya existe fila con este payment_id, no es error.
+          if (
+            unclaimedErr?.code !== '23505' &&
+            !String(unclaimedErr?.message || '').includes('unique constraint') &&
+            !String(unclaimedErr?.message || '').includes('duplicate key')
+          ) {
+            throw unclaimedErr;
+          }
+        }
       }
-      return { type: 'pending_grant', message: 'Profile not found, grant held' };
+
+      await serverDal.adminNotifications.create({
+        type: 'payment_pending_review',
+        title: `Pago retenido sin perfil (${plan})`,
+        message: `Email: ${email} Ref: ${externalId}. Crédito guardado en unclaimed_email_credits (invitado).`,
+        metadata: { plan, metodoPago, externalId, email, userId }
+      });
+
+      // Alerta WhatsApp al admin ante pago de invitado retenido — despacho no bloqueante.
+      dispatchWaAlert(
+        `👤 PAGO INVITADO SIN PERFIL: ${plan} via ${metodoPago} — ${email ?? 'sin email'} ref:${externalId ?? 'N/A'}`,
+        { plan, metodoPago, externalId, email, userId, credits: planData?.credits }
+      );
+
+      return { type: 'payment_applied', plan, exportToken, unclaimed: true };
     } else {
       if (planData.id === 'pro') {
         // Otorgar suscripción Pro de forma atómica e idempotente vía RPC

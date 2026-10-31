@@ -5,6 +5,7 @@ import { Modal } from '../../../shared/core/ui/Modal';
 import { Field } from '../../../shared/core/ui/Field';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
+import { supabase } from '../../../shared/core/lib/supabaseClient';
 
 export function UsersTab({
   users,
@@ -164,6 +165,47 @@ export function UsersTab({
                           Revocar PRO
                         </button>
                       )}
+                      {/* Botones rápidos +1 / +5 / +10 créditos — Etapa 3 */}
+                      <div className="flex items-center gap-1 ml-1">
+                        {[1, 5, 10].map((n) => (
+                          <button
+                            key={n}
+                            title={`+${n} créditos`}
+                            onClick={async () => {
+                              try {
+                                await withErrorHandling(
+                                  async () => {
+                                    const paymentId = `admin:manual:${user.id}:${n}:${new Date().toISOString()}`;
+                                    const { error } = await supabase.rpc('grant_export_tokens', {
+                                      p_payment_id: paymentId,
+                                      p_user_id: user.id,
+                                      p_amount: n,
+                                      p_email: user.email,
+                                    });
+                                    if (error) throw error;
+                                  },
+                                  { context: `Acreditación manual +${n}`, errorMessage: `No se pudo asignar +${n}` }
+                                );
+                                showSuccess(`+${n} créditos asignados a ${user.email}`);
+                              } catch {
+                                // error ya notificado por withErrorHandling
+                              }
+                            }}
+                            className={`px-1.5 py-0.5 text-[9px] font-black bg-[var(--color-brand-amber)] text-[var(--color-neutral-text-primary)] rounded hover:opacity-90 transition`}
+                          >
+                            +{n}
+                          </button>
+                        ))}
+                      </div>
+                      <a
+                        href={`https://wa.me/5493878342772?text=${encodeURIComponent(`Hola, necesito ayuda con la cuenta de ${user.email}`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Contactar por WhatsApp"
+                        className="px-1.5 py-0.5 text-[9px] font-black bg-[var(--color-status-success-base)] text-[var(--color-accent-on-base)] rounded hover:opacity-90 transition flex items-center gap-0.5"
+                      >
+                        <span>WA</span>
+                      </a>
                     </div>
                   </td>
                 </tr>

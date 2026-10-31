@@ -272,7 +272,11 @@ export const serverDal = {
       const { error } = await supabaseAdmin
         .from('admin_notifications')
         .insert({
-          ...data,
+          type: data.type,
+          title: data.title,
+          detail: data.message, // tabla usa 'detail', no 'message'
+          metadata: data.metadata,
+          user_id: data.user_id,
           created_at: new Date().toISOString()
         });
 
@@ -294,8 +298,9 @@ export const serverDal = {
     },
 
     async updateStatus(id: string, status: string, reviewedBy?: string): Promise<void> {
-      const patch: any = { status, updated_at: new Date().toISOString() };
+      const patch: any = { status };
       if (reviewedBy) patch.reviewed_by = reviewedBy;
+      patch.updated_at = new Date().toISOString(); // columna reconciliada en 20261026_reconcile_payment_claims
 
       const { error } = await supabaseAdmin
         .from('payment_claims')

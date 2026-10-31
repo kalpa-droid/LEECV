@@ -135,6 +135,17 @@ export default function PdfCheckoutModal({
           />
         </div>
 
+        {/* Botón de rescate / soporte WhatsApp — Etapa 3 */}
+        <a
+          href={`https://wa.me/5493878342772?text=${encodeURIComponent('Hola LEECV, tengo dudas con el pago de mi exportación PDF.')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full block p-3 bg-[var(--color-brand-whatsapp)]/10 border border-[var(--color-brand-whatsapp)]/30 text-[var(--color-brand-whatsapp)] rounded-[10px] transition flex items-center gap-2 font-bold text-xs hover:bg-[var(--color-brand-whatsapp)]/20"
+        >
+          <span>📱</span>
+          <span>¿Dudas con el pago? Escribile a soporte por WhatsApp (+5493878342772)</span>
+        </a>
+
         {/* Payment Gateways */}
         <div className="space-y-2.5">
           <span className="text-xs font-black text-[var(--color-status-warning-text)] uppercase tracking-wide block">
