@@ -34,12 +34,7 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
 
   const startImport = async () => {
     if (!file && !pastedText.trim()) return;
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      setErrorMsg('Debes iniciar sesión para usar la importación con IA.');
-      setStatus('error');
-      return;
-    }
+    // La importación con IA es libre y utiliza rate limit por IP en backend
     
     setStatus('analyzing');
     

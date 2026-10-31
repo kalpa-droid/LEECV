@@ -82,11 +82,13 @@ export async function login(email: string, password: string) {
   if (!supabase) throw new Error('Supabase no está configurado (faltan VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY)');
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
+  if (data.user) await claimCreditsOnAuth(data.user);
   return data.user;
 }
 
 /**
  * Registra un nuevo usuario con email y contraseña.
+ * Retorna el usuario y la sesión (si la sesión es null, Supabase espera confirmación de email).
  */
 export async function signup(email: string, password: string, fullName?: string) {
   if (!supabase) throw new Error('Supabase no está configurado');
@@ -100,7 +102,8 @@ export async function signup(email: string, password: string, fullName?: string)
     }
   });
   if (error) throw error;
-  return data.user;
+  if (data.user && data.session) await claimCreditsOnAuth(data.user);
+  return { user: data.user, session: data.session };
 }
 
 export async function logout(): Promise<void> {

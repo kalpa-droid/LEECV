@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Mail, CreditCard, BookOpen, Newspaper, Sparkles, ShieldCheck, Award, Zap, CalendarDays } from 'lucide-react';
+import { FileText, Mail, CreditCard, BookOpen, Newspaper, Sparkles, ShieldCheck, Award, Zap, CalendarDays, LogIn, User } from 'lucide-react';
 import { displayScale, elevationSystem, radius } from '../../shared/core/uiDesignSystem';
 import { ThemeToggleButton } from '../../shared/core/ui/ThemeToggleButton';
 import { getGlobalUiTheme, cycleGlobalUiTheme } from '../../shared/core/utils/globalThemePreference';
@@ -16,13 +16,16 @@ import { FaqAccordion } from '../../shared/core/ui/marketing/FaqAccordion';
 import { LEECV_VERSION } from '../../shared/core/version';
 import { useIsMobile } from '../../shared/core/ui/useIsMobile';
 import { useJsonLd } from '../../shared/core/hooks/useJsonLd';
+import { useAuth } from '../../shared/core/auth/AuthContext';
 
 interface LandingPageProps {
   onNavigate: (route: string) => void;
+  onOpenLogin?: () => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogin }) => {
   const t = useText();
+  const { user, profile } = useAuth();
   const isMobile = useIsMobile();
   const [currentTheme, setCurrentTheme] = useState<string>('day');
 
@@ -90,6 +93,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
           <div className="flex items-center gap-2 shrink-0">
             <ThemeToggleButton currentThemeId={currentTheme} onToggle={handleToggleTheme} size="md" />
 
+            {user ? (
+              <button
+                onClick={() => onNavigate('/crear-cv')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[var(--color-accent-base)]/40 bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] text-xs font-bold hover:opacity-90 transition cursor-pointer"
+                title="Ir a mi editor de CV"
+              >
+                <User className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{profile?.name || user.email?.split('@')[0] || 'Mi Cuenta'}</span>
+              </button>
+            ) : (
+              <button
+                onClick={onOpenLogin}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-xs font-bold hover:opacity-90 shadow-sm transition active:scale-95 cursor-pointer"
+                title="Iniciar sesión o registrarme"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Iniciar sesión</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -112,8 +134,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             {t.landing.hero.lead}
           </p>
 
-          <div className="flex justify-center gap-4 pb-2">
+          <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 pb-2">
             <MarketingCTA label={t.landing.hero.primaryCta} onClick={() => onNavigate('/crear-cv')} size="lg" variant="primary" />
+            {!user && onOpenLogin && (
+              <button
+                onClick={onOpenLogin}
+                className="px-5 py-2.5 rounded-full border border-[var(--ui-border)] bg-[var(--ui-bg-card)] hover:bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] font-bold text-xs sm:text-sm transition shadow-sm cursor-pointer flex items-center gap-2 active:scale-95"
+              >
+                <LogIn className="w-4 h-4 text-[var(--color-accent-text)]" />
+                <span>Iniciar sesión</span>
+              </button>
+            )}
           </div>
 
           {/* Barra de Prueba Social */}

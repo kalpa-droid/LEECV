@@ -295,6 +295,7 @@ export function AppModals(props: AppModalsProps) {
           isOpen={isCreditsModalOpen}
           onClose={() => setIsCreditsModalOpen(false)}
           onOpenPricing={() => setIsPricingModalOpen(true)}
+          onOpenLogin={() => setIsLoginModalOpen(true)}
         />
       )}
 

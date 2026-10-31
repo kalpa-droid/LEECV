@@ -2,6 +2,29 @@
 
 Este archivo documenta los cambios realizados en el repositorio por agentes de IA, para mantener un rastro histórico de qué se hizo, por qué y en qué momento.
 
+## [2026-10-31] - V2.3.2: Botón de Iniciar Sesión en Landing Page, Login OTP/Contraseña Robusto y Extracción de PDF con IA sin Bloqueos
+
+**Resumen:**
+Se incorporó el botón de "Iniciar sesión" en la cabecera y el hero de la Landing Page, se resolvió la persistencia de sesión al registrarse o iniciar sesión (sincronización síncrona en React y soporte a código OTP de 6 dígitos que entrega sesión activa sin trabas de confirmación de email), y se eliminó la restricción que bloqueaba la extracción de PDF con IA para usuarios invitados.
+
+**Acciones Tomadas:**
+- **Landing Page (`src/modules/landing/LandingPage.tsx`)**:
+  - Incorporado botón visible de "Iniciar sesión" en la barra de navegación superior (junto al selector de temas) y en la sección Hero como botón secundario. Si el usuario ya está autenticado, muestra una píldora con su nombre/correo y acceso a "Mi Cuenta".
+  - Enrutamiento y modal conectados en `src/app/App.tsx` mediante estado y callback `onOpenLogin`.
+- **Autenticación y Persistencia (`AuthContext.tsx`, `authService.ts`, `LoginModal.tsx`)**:
+  - `authService.ts`: `signup` devuelve tanto el usuario como la sesión (`{ user, session }`). Al hacer login con contraseña se ejecutan reclamos de créditos huérfanos con `claimCreditsOnAuth`.
+  - `AuthContext.tsx`: `initAuth` sincroniza `user` y `profile` de manera síncrona en React utilizando `supabase.auth.getUser()`. Las funciones `login`, `signup` y `logout` actualizan el estado de forma inmediata.
+  - `LoginModal.tsx`: selector de pestañas que permite el acceso rápido vía código por email (OTP de 6 dígitos) recomendado y acceso tradicional por contraseña. Si el registro con contraseña requiere confirmación de correo en Supabase, muestra mensaje instructivo claro sin cerrar el modal engañosamente.
+  - `CreditsModal.tsx`: botón de rescate "Iniciar sesión" para usuarios que abren el modal de créditos como invitados.
+- **Extracción de PDF con IA (`ImportCvAiModal.tsx`)**:
+  - Eliminado el bloqueo estricto que abortaba la importación si no existía sesión de Supabase previa. La extracción utiliza el rate limiting por IP del backend `cv-import-api.ts` y asocia las credenciales de sesión cuando están disponibles.
+- **Gobernanza y Control de Calidad**:
+  - Versión actualizada a `V2.3.2` en `src/shared/core/version.ts`.
+  - Typecheck: 0 errores.
+  - Pruebas unitarias: 273 pasadas, 0 fallidas.
+  - Auditoría de contraste WCAG 2.1 AA: 0 violaciones nuevas.
+  - Límites de módulos y lenguaje sencillo: 0 violaciones.
+
 ## [2026-10-31] - Etapas 2 y 3: Webhook Guest Credits, Alertas WhatsApp Admin (+5493878342772), Login OTP Passwordless y Panel Admin 360° (PR #54)
 
 **Resumen:**
