@@ -2,6 +2,29 @@
 
 Este archivo documenta los cambios realizados en el repositorio por agentes de IA, para mantener un rastro histórico de qué se hizo, por qué y en qué momento.
 
+## [2026-10-31] - Etapas 2 y 3: Webhook Guest Credits, Alertas WhatsApp Admin (+5493878342772), Login OTP Passwordless y Panel Admin 360° (PR #54)
+
+**Resumen:**
+Se completaron las Etapas 2 y 3 del plan maestro (`.opencode/plans/plan-pagos-admin-magic-link.md`): backend de pagos adaptado para escribir créditos huérfanos a `unclaimed_email_credits`, alertas automáticas de WhatsApp al administrador ante eventos críticos, modal de login passwordless (OTP/Magic Link de 6 dígitos) en 2 pasos, botón de rescate por WhatsApp en checkout de PDF, y panel administrativo con búsqueda instantánea de clientes, acreditación rápida de créditos con motivo obligatorio y visor de auditoría de errores `admin_error_logs`.
+
+**Acciones Tomadas:**
+- **Backend de Pagos y Webhooks (Etapa 2 - PR #54)**:
+  - `api/_lib/applyPayment.ts`: cuando un usuario invitado compra un pack (5 o 10 PDFs), los créditos se registran en `unclaimed_email_credits` con estado `held` en lugar de fallar o requerir sesión previa.
+  - `api/_lib/whatsappAlert.ts`: módulo no bloqueante para despacho de alertas a WhatsApp admin (`+5493878342772`) ante pagos huérfanos, incidencias o compras de invitados.
+  - `supabase/migrations/20261031_fix_payments_admin_contracts.sql`: corrección de contratos SQL: agregada columna `detail` y CHECK expandido en `admin_notifications` (incluye `'payment_held_guest'`), y columna `updated_at` en `payment_claims`.
+- **Frontend y Panel Admin (Etapa 3 - PR #54)**:
+  - `src/modules/auth/components/LoginPasswordlessModal.tsx`: interfaz passwordless en 2 pasos (ingreso de email con solicitud de OTP de 6 dígitos + ingreso de código con confirmación y auto-claim automático).
+  - `src/modules/cv/components/modals/PdfCheckoutModal.tsx`: agregado botón directo de rescate y consulta por WhatsApp contextual antes de abonar.
+  - `src/modules/admin/components/UsersTab.tsx`: buscador de usuarios por email, botones rápidos de acreditación manual (+1, +5, +10 créditos) con prompt de justificación obligatoria que invoca `grant_export_tokens`, y botón de contacto por WhatsApp.
+  - `src/modules/admin/components/AuditAndErrorsTab.tsx`: visor filtrable de `admin_error_logs` por nivel (ERROR, WARN, INFO), origen y fingerprint para trazabilidad y diagnóstico en tiempo real.
+- **Auditoría y Pruebas**:
+  - Corrección de pruebas en `tests/applyPayment.test.ts` para validar inserción en `unclaimed_email_credits`.
+  - Corrección de ratios de contraste WCAG AA en `AuditAndErrorsTab.tsx`, `LoginPasswordlessModal.tsx` y botón WhatsApp en `UsersTab.tsx`.
+
+**Validación y publicación:**
+- `npm run check-all`: 257 pruebas aprobadas, typecheck en verde, 0 violaciones de tokens y contraste (0 en modales), prerenderizado de 25 rutas completado.
+- PR [#54](https://github.com/kalpa-droid/LEECV/pull/54) aprobada y fusionada con squash a `main`. Commit de merge: `fd20051cc94bb2aca889f66510667d7f747a7286`.
+
 ## [2026-10-30] - Etapa 1: Autenticación Passwordless (OTP/Magic Link), Auto-Acreditación por Email y Bolsillo de Créditos (PR #51 y #52)
 
 **Resumen:**
