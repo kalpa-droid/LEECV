@@ -1,16 +1,20 @@
 import React from 'react';
 import { X, Crown, Sparkles, AlertCircle } from 'lucide-react';
 import { button, elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
+import { useAuth } from '../../../shared/core/auth/AuthContext';
+import { LogIn } from 'lucide-react';
 import { useEntitlements } from '../../../shared/core/entitlements/useEntitlements';
 
 interface CreditsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenPricing: () => void;
+  onOpenLogin?: () => void;
 }
 
-export function CreditsModal({ isOpen, onClose, onOpenPricing }: CreditsModalProps) {
+export function CreditsModal({ isOpen, onClose, onOpenPricing, onOpenLogin }: CreditsModalProps) {
   const { plan, pdfTokens, tokenStats, isPro } = useEntitlements();
+  const { user } = useAuth();
 
   if (!isOpen) return null;
 
@@ -43,7 +47,7 @@ export function CreditsModal({ isOpen, onClose, onOpenPricing }: CreditsModalPro
           <div className={`bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.card}] p-4 space-y-2`}>
             <p className="text-xs font-bold text-[var(--ui-text-secondary)] uppercase tracking-wider">Plan Actual</p>
             <div className="flex items-center justify-between">
-              <span className={`px-2 py-1 text-xs font-black rounded ${isPro ? 'bg-[var(--color-status-warning-base)] text-black' : 'bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-secondary)]'}`}>
+              <span className={`px-2 py-1 text-xs font-black rounded ${isPro ? 'bg-[var(--color-status-warning-base)] text-black' : 'bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)]'}`}>
                 {isPro ? '✨ Ilimitado' : 'FREE / INVITADO'}
               </span>
             </div>
@@ -82,11 +86,24 @@ export function CreditsModal({ isOpen, onClose, onOpenPricing }: CreditsModalPro
             <Sparkles className="w-5 h-5 text-[var(--color-accent-text)] shrink-0 mt-0.5" />
             <div>
               <p className="text-xs font-bold text-[var(--color-accent-text)]">Mejoras de IA</p>
-              <p className="text-[11px] text-[var(--color-neutral-text-secondary)] mt-1">
+              <p className="text-[11px] text-[var(--ui-text-secondary)] mt-1">
                 La Inteligencia Artificial ahora es gratis e ilimitada para todos los usuarios.
               </p>
             </div>
           </div>
+          {!user && onOpenLogin && (
+            <div className="p-3 bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/30 rounded-[var(--radius-card)] flex items-center justify-between gap-2">
+              <span className="text-xs text-[var(--ui-text-primary)]">¿Ya tienes cuenta o compraste créditos?</span>
+              <button
+                type="button"
+                onClick={() => { onClose(); onOpenLogin(); }}
+                className="px-3 py-1.5 rounded-full bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-xs font-bold hover:opacity-90 flex items-center gap-1.5 cursor-pointer"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Iniciar sesión</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Footer */}

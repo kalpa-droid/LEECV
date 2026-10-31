@@ -26,6 +26,12 @@
 - [x] `frontend-visual` (Etapa 3): Login Passwordless (`LoginPasswordlessModal.tsx` con `requestOtp`/`verifyOtp`), botón WhatsApp en checkout (`PdfCheckoutModal.tsx`), UsersTab con créditos rápidos + WA (`UsersTab.tsx`), pestaña Auditoría (`AuditAndErrorsTab.tsx`)
 
 ## 4. Bitácora de Traspaso de Agentes (Handoff Log)
+### 2026-10-31 - Agente: @desarrollo-rapido (Auth & IA Import) — V2.3.2
+- **Acción realizada**: Incorporado botón de "Iniciar sesión" en la Landing Page (header y hero). Resuelta la persistencia de sesión al registrarse o iniciar sesión (actualización síncrona de React en `AuthContext`, soporte dual para código OTP de 6 dígitos sin contraseñas y login por contraseña con feedback claro si requiere confirmación de email). Eliminado el bloqueo innecesario que impedía importar PDF con IA a usuarios invitados.
+- **Archivos afectados**: `src/modules/landing/LandingPage.tsx`, `src/app/App.tsx`, `src/app/AppModals.tsx`, `src/modules/auth/components/LoginModal.tsx`, `src/modules/cv-builder/components/modals/ImportCvAiModal.tsx`, `src/modules/payments/components/CreditsModal.tsx`, `src/shared/core/auth/AuthContext.tsx`, `src/shared/core/auth/authService.ts`, `src/shared/core/version.ts`.
+- **Estado del código**: Estable. `npm run typecheck` = 0 errores. Vitest: 273 pasadas. `npm run check-contrast` = 0 nuevas violaciones. `check-plain-language` = 0 violaciones.
+- **Instrucción para el siguiente agente**: Todo listo para mergear a main vía PR según reglas de gobernanza.
+
 ### 2026-10-29 - Agente: Antigravity (IA ejecutor)
 - **Acción realizada**: Ejecutó auditoría completa A–F e implementó todas las correcciones P1/P2 y la mayoría P3 en rama `feat/auditoria-ui-corregir-hallazgos`. Abrió PR #49 contra `main`.
 - **Archivos afectados**: 21 archivos (ver commit cb9e7af), entre ellos `src/shared/core/ui/Modal.tsx`, `useExportEntitlement.ts`, `scripts/audit-ui-tokens.js`, `scripts/check-contrast.js`, `scripts/check-token-usage.js`, `scripts/prerender.mjs`, `scripts/prerenderMeta.mjs`, `public/sitemap.xml`, `index.html`, `src/modules/payments/components/CreditsModal.tsx`, `PdfCheckoutModal.tsx`.

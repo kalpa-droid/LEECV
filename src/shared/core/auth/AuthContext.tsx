@@ -1,15 +1,16 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { UserProfile } from '../../../types/user';
+import { supabase } from '../lib/supabaseClient';
 import { getCurrentProfile, onAuthStateChange, login as authLogin, logout as authLogout, signup as authSignup, requestOtp as authRequestOtp, verifyOtp as authVerifyOtp } from './authService';
 
 interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   isLoading: boolean;
-  login: typeof authLogin;
-  signup: typeof authSignup;
-  logout: typeof authLogout;
+  login: (email: string, password: string) => Promise<User | null>;
+  signup: (email: string, password: string, fullName?: string) => Promise<{ user: User | null; session: any }>;
+  logout: () => Promise<void>;
   /** Envía el código de un solo uso al email (ingreso sin contraseña). */
   requestOtp: typeof authRequestOtp;
   /** Confirma el código recibido y deja la sesión iniciada. */
@@ -35,16 +36,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return result;
   }, []);
 
+  const login = useCallback(async (email: string, password: string) => {
+    const loggedUser = await authLogin(email, password);
+    if (loggedUser) {
+      setUser(loggedUser);
+      const p = await getCurrentProfile();
+      setProfile(p);
+    }
+    return loggedUser;
+  }, []);
+
+  const signup = useCallback(async (email: string, password: string, fullName?: string) => {
+    const result = await authSignup(email, password, fullName);
+    if (result.user && result.session) {
+      setUser(result.user);
+      const p = await getCurrentProfile();
+      setProfile(p);
+    }
+    return result;
+  }, []);
+
+  const logout = useCallback(async () => {
+    await authLogout();
+    setUser(null);
+    setProfile(null);
+  }, []);
+
   useEffect(() => {
     let mounted = true;
 
     const initAuth = async () => {
       try {
-        const currentProfile = await getCurrentProfile();
-        if (mounted) {
-          setProfile(currentProfile);
-          // Supabase's getCurrentProfile returns profile and user combined internally, but we need to fetch user separately if we want just the user object.
-          // Since getCurrentProfile relies on getUser(), we know the user is authenticated if profile is not null.
+        if (supabase) {
+          const { data: { user: currentUser } } = await supabase.auth.getUser();
+          if (mounted && currentUser) {
+            setUser(currentUser);
+            const currentProfile = await getCurrentProfile();
+            if (mounted) setProfile(currentProfile);
+          }
         }
       } catch (error) {
         console.error('Error in initAuth:', error);
@@ -80,9 +109,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         profile,
         isLoading,
-        login: authLogin,
-        signup: authSignup,
-        logout: authLogout,
+        login,
+        signup,
+        logout,
         requestOtp: authRequestOtp,
         verifyOtp,
       }}

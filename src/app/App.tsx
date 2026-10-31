@@ -10,6 +10,7 @@ import { generateDocumentId, computeAutoDocumentTitle, getDraftIdForDocType, isP
 import * as workspaceController from '../shared/core/documents/workspaceController';
 import { capabilitiesGate } from '../shared/core/documents/documentEngine/capabilitiesGate';
 import { AppShell } from '../shared/core/ui/AppShell';
+import { LoginModal } from '../modules/auth/components/LoginModal';
 const LandingPage = lazy(() => import('../modules/landing/LandingPage').then(m => ({ default: m.LandingPage })));
 const BookStudio = lazy(() => import('../modules/book-studio/BookStudio').then(m => ({ default: m.BookStudio })));
 const BlogModule = lazy(() => import('../modules/blog/BlogModule').then(m => ({ default: m.BlogModule })));
@@ -964,6 +965,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 }
 
 export default function App() {
+  const [isLandingLoginOpen, setIsLandingLoginOpen] = useState(false);
   const [currentRoute, setCurrentRoute] = useState<string>(() => {
     const path = navigation.getPathname();
     if (path === '/crear-carta') return '/crear-cv';
@@ -1016,7 +1018,17 @@ export default function App() {
         ) : currentRoute === '/' ? (
           <>
             <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando LEECV...</div>}>
-              <LandingPage onNavigate={(r) => navigateTo(r)} />
+              <LandingPage onNavigate={(r) => navigateTo(r)} onOpenLogin={() => setIsLandingLoginOpen(true)} />
+            {isLandingLoginOpen && (
+              <LoginModal
+                isOpen={isLandingLoginOpen}
+                onClose={() => setIsLandingLoginOpen(false)}
+                onSuccess={() => {
+                  setIsLandingLoginOpen(false);
+                  navigateTo('/crear-cv');
+                }}
+              />
+            )}
             </Suspense>
           </>
         ) : (

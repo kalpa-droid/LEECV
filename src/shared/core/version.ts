@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 2,
   minor: 3,
-  patch: 1,
-  label: 'V2.3.1',
+  patch: 2,
+  label: 'V2.3.2',
   lastUpdated: '2026-10-31',
   lastAgent: '@desarrollo-rapido',
-  stage: 'Parche de resiliencia en AdminDashboard (desacoplamiento de user_credits y fallback offline/local)',
+  stage: 'Botón de iniciar sesión en Landing Page, login OTP/contraseña robusto y extracción de PDF con IA sin bloqueos',
 } as const;
