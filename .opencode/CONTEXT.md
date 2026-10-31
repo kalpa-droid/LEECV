@@ -139,3 +139,9 @@
   - **MAJOR** (V2.x.y → V3.0.0): cambio de arquitectura, nuevo esquema DB principal, nuevo eje del plan.
   - Actualizar `src/shared/core/version.ts` ANTES del commit que aplica el cambio.
 - **Archivos afectados**: `src/shared/core/version.ts` (nuevo), `src/modules/landing/LandingPage.tsx`, `src/modules/blog/BlogModule.tsx`, `.opencode/CONTEXT.md`.
+
+### 2026-10-31 - Agente: @desarrollo-rapido & @arquitecto — Resiliencia en AdminDashboard (V2.3.1)
+- **Acción realizada**:
+  1. `api/_lib/serverDal.ts`: desacopló la consulta de `user_credits` en `listCustomers` para no depender de la relación PostgREST con `profiles` (consultas independientes y tolerantes a errores para saldos y créditos de IA).
+  2. `src/modules/admin/adminService.ts`: agregó fallback resiliente a Supabase DAL en `listCustomers` y respuestas por defecto seguras en `getIntegrationsStatus`, `listProcessedPayments` y `listPendingGrants`, permitiendo que el panel admin funcione tanto en `localhost` (sin Vercel Serverless activo) como en producción sin trabarse por alertas de red.
+  3. `src/shared/core/version.ts`: bump PATCH a V2.3.1 conforme a gobernanza.
