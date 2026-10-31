@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 2,
   minor: 3,
-  patch: 0,
-  label: 'V2.3.0',
+  patch: 1,
+  label: 'V2.3.1',
   lastUpdated: '2026-10-31',
-  lastAgent: '@gestor',
-  stage: 'Etapas 1 a 5 del plan maestro completadas y certificadas',
+  lastAgent: '@desarrollo-rapido',
+  stage: 'Parche de resiliencia en AdminDashboard (desacoplamiento de user_credits y fallback offline/local)',
 } as const;

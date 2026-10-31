@@ -32,10 +32,7 @@ export const serverDal = {
     async listCustomers(limit: number = 50, offset: number = 0, q: string = '') {
       let query = supabaseAdmin
         .from('profiles')
-        .select(`
-          id, email, plan, role, created_at, pdf_export_access_mode,
-          user_credits ( ai_credits )
-        `, { count: 'exact' });
+        .select('id, email, plan, role, created_at, pdf_export_access_mode', { count: 'exact' });
         
       if (q) {
         query = query.ilike('email', `%${q}%`);
@@ -50,25 +47,46 @@ export const serverDal = {
       const customers = data || [];
       const userIds = customers.map((customer: any) => customer.id);
       const tokenBalances = new Map<string, number>();
+      const aiCreditBalances = new Map<string, number>();
 
       if (userIds.length > 0) {
-        const { data: balances, error: balanceError } = await supabaseAdmin.rpc(
-          'admin_export_token_balances',
-          { p_user_ids: userIds }
-        );
+        // Consultar saldos de exportación PDF (no bloqueante)
+        try {
+          const { data: balances, error: balanceError } = await supabaseAdmin.rpc(
+            'admin_export_token_balances',
+            { p_user_ids: userIds }
+          );
 
-        if (balanceError) {
-          throw new Error(`Error consultando saldos de exportación: ${balanceError.message}`);
+          if (!balanceError && balances) {
+            for (const balance of balances) {
+              tokenBalances.set(balance.user_id, Number(balance.credits));
+            }
+          }
+        } catch (e) {
+          console.warn('[serverDal] Fallo no bloqueante al consultar saldos de exportación:', e);
         }
 
-        for (const balance of balances || []) {
-          tokenBalances.set(balance.user_id, Number(balance.credits));
+        // Consultar créditos de IA de forma desacoplada (sin requerir FK en PostgREST)
+        try {
+          const { data: creditsData } = await supabaseAdmin
+            .from('user_credits')
+            .select('user_id, ai_credits')
+            .in('user_id', userIds);
+
+          if (creditsData) {
+            for (const c of creditsData) {
+              aiCreditBalances.set(c.user_id, Number(c.ai_credits) || 0);
+            }
+          }
+        } catch (e) {
+          console.warn('[serverDal] Fallo no bloqueante al consultar créditos de IA:', e);
         }
       }
 
       return {
         customers: customers.map((customer: any) => ({
           ...customer,
+          user_credits: { ai_credits: aiCreditBalances.get(customer.id) || 0 },
           pdf_export_tokens: tokenBalances.get(customer.id) || 0,
         })),
         totalCount: count || 0,
