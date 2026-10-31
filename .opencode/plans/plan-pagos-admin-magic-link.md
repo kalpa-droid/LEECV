@@ -200,3 +200,13 @@ flowchart LR
 | Alertas automáticas WhatsApp al admin ante pagos retenidos | `@desarrollo-rapido` | **P1** | S | Control en tiempo real desde el celular |
 | Buscador de Clientes por Email con gestión de saldo en Admin | `@frontend-visual` | **P1** | M | Gestión ágil para cargar créditos o resolver casos |
 | Auditoría y registro de errores nativo en Admin | `@frontend-visual` + `@arquitecto` | **P2** | M | Diagnóstico completo sin depender de herramientas externas |
+
+## 6. Estado de Implementación y Certificación QA
+
+| Etapa | Responsable | Estado | Evidencia / Hash |
+|---|---|---|---|
+| **Etapa 1: DB/RPC & Auth OTP** | `@arquitecto` | **COMPLETO Y APLICADO** | Migraciones `20261030_*` y `20261031_*` ejecutadas con éxito en Supabase prod (`gzsdmsiefswgnyycrmsk`). PR #52 mergeado (`8681abd`). |
+| **Etapa 2: Webhooks & WhatsApp** | `@desarrollo-rapido` | **COMPLETO** | `applyPayment.ts` escribe a `unclaimed_email_credits` para invitados; `dispatchWaAlert` a `+5493878342772`. PR #54 mergeado (`fd20051`). |
+| **Etapa 3: UI Login & Admin 360** | `@frontend-visual` | **COMPLETO** | `LoginPasswordlessModal.tsx`, WhatsApp checkout en `PdfCheckoutModal.tsx`, `UsersTab.tsx` (+1/+5/+10), `AuditAndErrorsTab.tsx`. PR #54 mergeado (`fd20051`). |
+| **Etapa 4: Batería E2E / QA** | `@testing-qa` | **COMPLETO Y CERTIFICADO** | Suite integral en `tests/planPagosAdminMagicLink.integration.test.ts` (15/15 tests passing, 273/275 tests globales OK). |
+| **Etapa 5: Orquestación & Log** | `@gestor` | **COMPLETO** | Trazabilidad histórica asentada en `SESSION_LOG.md` (PR #53 y PR #55). |

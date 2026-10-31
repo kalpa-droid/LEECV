@@ -115,3 +115,13 @@
 - **Instrucción para el siguiente agente**: `testing-qa` (Etapa 4) debe ejecutar `check-all` completo (`npm run check-all`) y validar visualmente el flujo OTP en local (`npm run preview`) y el panel admin (`AuditAndErrorsTab`). Requiere aprobación de Kalpa como CODEOWNER (toca `src/modules/`).
 - **Nota**: La migración `20261031_fix_payments_admin_contracts.sql` fue creada pero NO está aplicada en la base remota (pendiente `supabase db push` por `database`/`devops`).
 
+### 2026-10-31 - Agente: @testing-qa — Etapa 4 (Batería E2E y Certificación Integral)
+- **Acción realizada**: Creó la suite de tests de integración de extremo a extremo `tests/planPagosAdminMagicLink.integration.test.ts` cubriendo:
+  1. Coherencia estricta de precios para los 3 niveles oficiales en Mercado Pago (ARS 3.200, 12.500, 21.000) y PayPal (USD 2.60, 10.00, 17.00).
+  2. Idempotencia de webhooks (mismo payment_id repetido no otorga duplicados).
+  3. Detección de discrepancias de monto (quarantine en pending_grants + alertas WhatsApp a +5493878342772).
+  4. Flujo de compra como invitado (guardado en unclaimed_email_credits con estado held).
+  5. Autenticación passwordless: requestOtp, verifyOtp y reclamo automático claimCreditsOnAuth.
+  6. Despachador de alertas WhatsApp no bloqueante y tolerante a fallos.
+- **Resultado de pruebas**: 15/15 tests passing en la suite, 273/275 tests passing globales en Vitest (2 tests saltados por requerir conexión remota viva).
+- **Base de datos remota**: Confirmada la aplicación exitosa de ambas migraciones (`20261030` y `20261031`) en Supabase producción (`gzsdmsiefswgnyycrmsk`).
