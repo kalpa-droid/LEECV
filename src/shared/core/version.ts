@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 2,
   minor: 3,
-  patch: 2,
-  label: 'V2.3.2',
+  patch: 3,
+  label: 'V2.3.3',
   lastUpdated: '2026-10-31',
   lastAgent: '@desarrollo-rapido',
-  stage: 'Botón de iniciar sesión en Landing Page, login OTP/contraseña robusto y extracción de PDF con IA sin bloqueos',
+  stage: 'Motor canónico de acreditación y consumo de créditos unificado (DAL getTokenStats UUID+Email, useEntitlements reactivo y auto-claim en retorno de pago)',
 } as const;

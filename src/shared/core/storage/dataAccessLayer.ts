@@ -481,15 +481,22 @@ export const dal = {
       );
       return (res.data as any[]) || [];
     },
-    async getTokenStats(email: string): Promise<{ total: number; used: number; available: number }> {
+    async getTokenStats(identifier: string | { email?: string; userId?: string }): Promise<{ total: number; used: number; available: number }> {
       if (!supabase) return { total: 0, used: 0, available: 0 };
-      const res = await safeSupabaseCall(() =>
-        supabase
-          .from('pdf_export_tokens')
-          .select('consumed')
-          .eq('email', email)
-          .eq('paid', true)
-      );
+      const email = typeof identifier === 'string' ? identifier : identifier.email;
+      const userId = typeof identifier === 'object' ? identifier.userId : undefined;
+
+      const res = await safeSupabaseCall(() => {
+        let query = supabase.from('pdf_export_tokens').select('consumed').eq('paid', true);
+        if (userId && email) {
+          query = query.or(`user_id.eq.${userId},email.eq.${email.toLowerCase().trim()}`);
+        } else if (userId) {
+          query = query.eq('user_id', userId);
+        } else if (email) {
+          query = query.eq('email', email.toLowerCase().trim());
+        }
+        return query;
+      });
       const tokens = (res.data as any[]) || [];
       const total = tokens.length;
       const used = tokens.filter(t => t.consumed).length;
