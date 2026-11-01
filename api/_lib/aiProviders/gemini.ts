@@ -5,6 +5,7 @@ export const geminiProvider: AiProviderDefinition = {
   displayName: 'Google Gemini (Gemini 2.5 Flash)',
   requiredEnvVars: ['GEMINI_API_KEYS', 'GEMINI_API_KEY'],
   defaultModel: 'gemini-2.5-flash',
+  supportsImages: true,
 
   async complete(req: AiCompletionRequest, apiKey: string, model?: string): Promise<AiCompletionResponse> {
     const targetModel = model || this.defaultModel;

@@ -25,39 +25,153 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return errorResponse(res, 400, 'Acción no válida');
   }
 
-  const { kind, content, contextSummary = '' } = req.body || {};
-  
+  const { kind, content, contextSummary = '', auxiliaryText = '' } = req.body || {};
+
   if (!content) {
     return errorResponse(res, 400, 'Faltan parámetros requeridos');
   }
 
   try {
-    const systemInstruction = `Eres un extractor experto de CVs y perfiles de LinkedIn. Extrae la información de la página provista a un objeto JSON que respete esta estructura:
+    const systemInstruction = `Eres un extractor experto de CVs, hojas de vida y perfiles de LinkedIn.
+Tu tarea es extraer TODA la información estructurada de la página provista a un objeto JSON.
+
+ESTRUCTURA DE SALIDA OBLIGATORIA:
 {
-  "personalInfo": { "fullName": "", "email": "", "phone": "", "role": "", "location": "", "summary": "", "dni": "", "cuit": "", "birthDate": "", "estadoCivil": "", "nacionalidad": "" },
-  "experience": [ { "company": "", "role": "", "startDate": "", "endDate": "", "description": "", "continuesFromPrevious": false } ],
-  "education": [ { "institution": "", "degree": "", "startDate": "", "endDate": "", "continuesFromPrevious": false } ],
-  "skills": [ { "name": "" } ],
-  "languages": [ { "language": "", "proficiency": "" } ]
+  "personalInfo": {
+    "fullName": "Nombre completo",
+    "email": "correo@ejemplo.com",
+    "phone": "+54 11 1234-5678",
+    "role": "Cargo o título profesional actual",
+    "location": "Ciudad, País",
+    "summary": "Resumen profesional o perfil (copiar textualmente si existe, o dejar vacío)",
+    "dni": "",
+    "cuit": "",
+    "birthDate": "YYYY-MM-DD si se encuentra",
+    "estadoCivil": "",
+    "nacionalidad": "",
+    "linkedin": "URL de LinkedIn si aparece",
+    "portfolio": "URL de portfolio/web personal si aparece"
+  },
+  "experience": [
+    {
+      "company": "Nombre de la empresa",
+      "role": "Puesto / Cargo",
+      "startDate": "YYYY-MM o texto original",
+      "endDate": "YYYY-MM, 'Presente' o 'Actual' si sigue vigente",
+      "description": "Descripción COMPLETA de responsabilidades y logros. NO resumir ni acortar. Copiar TODO el texto.",
+      "continuesFromPrevious": false
+    }
+  ],
+  "education": [
+    {
+      "institution": "Universidad / Instituto",
+      "degree": "Título obtenido o en curso",
+      "startDate": "",
+      "endDate": "",
+      "description": "Detalles adicionales si existen",
+      "continuesFromPrevious": false
+    }
+  ],
+  "skills": [
+    { "name": "Habilidad individual" }
+  ],
+  "languages": [
+    { "language": "Idioma", "proficiency": "Nivel (Nativo, Avanzado, Intermedio, Básico)" }
+  ]
 }
-El documento de entrada puede ser un CV tradicional o una exportación en PDF de un perfil de LinkedIn (que incluye secciones como "Licenses & Certifications", "Experience", etc). Mapea toda la información relevante a esta estructura central. Extrae explícitamente DNI, CUIT, fecha de nacimiento, estado civil y nacionalidad si los encuentras.
-REGLA CRITICA: Si un dato (ej. descripcion de experiencia) es la CONTINUACION exacta del texto de la pagina anterior y no un nuevo trabajo, debes poner "continuesFromPrevious": true en ese objeto de experiencia, para que sepamos que debemos concatenar ese texto al ultimo trabajo de la pagina anterior. Devuelve SOLO JSON valido.`;
+
+REGLAS CRÍTICAS:
+1. Extraer TODOS los datos que encuentres. No omitir ninguna experiencia ni educación.
+2. Las descripciones de experiencia deben copiarse TEXTUALMENTE y COMPLETAS. No resumir.
+3. Si un dato continúa de la página anterior (texto cortado), marcar "continuesFromPrevious": true.
+4. Si el documento es una exportación de LinkedIn, mapear "Licenses & Certifications" a education, y "Skills" a skills.
+5. Extraer DNI, CUIT, fecha de nacimiento, estado civil y nacionalidad si los encuentras.
+6. Si hay URLs de LinkedIn o portfolio, incluirlas en personalInfo.
+7. Las fechas deben normalizarse a formato YYYY-MM cuando sea posible.
+8. Las habilidades deben separarse individualmente (una por objeto, no agrupadas).
+9. Devolver ÚNICAMENTE el JSON válido, sin texto adicional ni explicaciones.`;
+
+    const userPromptBase = kind === 'text'
+      ? `Extrae los datos de este texto de CV:\n\n${content}`
+      : `Extrae los datos de la imagen de la página del CV provista.`;
+
+    const userPrompt = auxiliaryText
+      ? `${userPromptBase}\n\nTexto auxiliar extraído del PDF (usalo solo como referencia, priorizá lo que ves):\n${auxiliaryText}\n${contextSummary}`
+      : `${userPromptBase}\n${contextSummary}`;
 
     const request: AiCompletionRequest = {
       systemPrompt: systemInstruction,
-      userPrompt: kind === 'text' 
-        ? `Extrae los datos de este texto de CV:\n\n${content}\n${contextSummary}` 
-        : `Extrae los datos de la imagen de la página del CV provista.\n${contextSummary}`,
-      maxTokens: 2000,
+      userPrompt,
+      maxTokens: 4000,
       temperature: 0.1,
       responseSchema: {
         type: "object",
         properties: {
-          personalInfo: { type: "object", additionalProperties: true },
-          experience: { type: "array", items: { type: "object", additionalProperties: true } },
-          education: { type: "array", items: { type: "object", additionalProperties: true } },
-          skills: { type: "array", items: { type: "object", additionalProperties: true } },
-          languages: { type: "array", items: { type: "object", additionalProperties: true } }
+          personalInfo: {
+            type: "object",
+            properties: {
+              fullName: { type: "string" },
+              email: { type: "string" },
+              phone: { type: "string" },
+              role: { type: "string" },
+              location: { type: "string" },
+              summary: { type: "string" },
+              dni: { type: "string" },
+              cuit: { type: "string" },
+              birthDate: { type: "string" },
+              estadoCivil: { type: "string" },
+              nacionalidad: { type: "string" },
+              linkedin: { type: "string" },
+              portfolio: { type: "string" }
+            }
+          },
+          experience: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                company: { type: "string" },
+                role: { type: "string" },
+                startDate: { type: "string" },
+                endDate: { type: "string" },
+                description: { type: "string" },
+                continuesFromPrevious: { type: "boolean" }
+              }
+            }
+          },
+          education: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                institution: { type: "string" },
+                degree: { type: "string" },
+                startDate: { type: "string" },
+                endDate: { type: "string" },
+                description: { type: "string" },
+                continuesFromPrevious: { type: "boolean" }
+              }
+            }
+          },
+          skills: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string" }
+              }
+            }
+          },
+          languages: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                language: { type: "string" },
+                proficiency: { type: "string" }
+              }
+            }
+          }
         }
       }
     };
@@ -77,6 +191,7 @@ REGLA CRITICA: Si un dato (ej. descripcion de experiencia) es la CONTINUACION ex
     for (const providerId of AI_PROVIDER_FALLBACK_ORDER) {
       const provider = AI_PROVIDERS[providerId];
       if (!provider) continue;
+      if (kind === 'image' && !provider.supportsImages) continue;
 
       const apiKey = getNextAvailableKey(providerId);
       if (!apiKey) continue;
@@ -84,11 +199,11 @@ REGLA CRITICA: Si un dato (ej. descripcion de experiencia) es la CONTINUACION ex
       try {
         const result = await provider.complete(request, apiKey);
         completionText = result.content;
-        
+
         if (result.usage) {
           const cost = calculateAiCost(providerId, provider.defaultModel, result.usage.promptTokens, result.usage.completionTokens);
           serverDal.aiTelemetry.logUsage({
-            userId: '00000000-0000-0000-0000-000000000000', // Uso anónimo (sin cuentas)
+            userId: '00000000-0000-0000-0000-000000000000',
             provider: providerId,
             model: provider.defaultModel,
             endpoint: 'cv-import-stateless',
@@ -116,15 +231,33 @@ REGLA CRITICA: Si un dato (ej. descripcion de experiencia) es la CONTINUACION ex
         `No se pudo procesar con los proveedores de IA disponibles: ${lastError?.message || 'Servicios no disponibles'}`
       );
     }
-    
-    // Parse to ensure it's valid JSON
+
     let fragmentJson = {};
     try {
-      const cleanJsonStr = completionText.replace(/^```json/i, '').replace(/```$/, '').trim();
+      const cleanJsonStr = completionText.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
       fragmentJson = JSON.parse(cleanJsonStr);
     } catch (parseErr) {
-      console.error('Gemini no devolvió JSON válido', completionText);
-      return errorResponse(res, 500, 'Error procesando respuesta de IA (Formato inválido)');
+      try {
+        const retryRequest: AiCompletionRequest = {
+          systemPrompt: 'Recibes un texto que debería ser JSON pero tiene errores de sintaxis. Corregí el JSON y devolvelo SOLO como JSON válido, sin explicaciones.',
+          userPrompt: `Corregí este JSON:\n${completionText}`,
+          maxTokens: 4000,
+          temperature: 0.0,
+          responseSchema: request.responseSchema
+        };
+        const provider = AI_PROVIDERS[successfulProviderId];
+        const apiKey = getNextAvailableKey(successfulProviderId);
+        if (provider && apiKey) {
+          const retryResult = await provider.complete(retryRequest, apiKey);
+          const retryClean = retryResult.content.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
+          fragmentJson = JSON.parse(retryClean);
+        } else {
+          throw parseErr;
+        }
+      } catch {
+        console.error('AI no devolvió JSON válido ni en retry', completionText);
+        return errorResponse(res, 500, 'Error procesando respuesta de IA (Formato inválido tras reintento)');
+      }
     }
 
     return successResponse(res, { fragmentJson });

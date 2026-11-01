@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal } from '../../../shared/core/ui/Modal';
 import { useAuth } from '../../../shared/core/auth/AuthContext';
-import { LogIn, Mail, Lock, AlertCircle, CheckCircle, Send, KeyRound } from 'lucide-react';
+import { LogIn, Mail, Lock, AlertCircle, CheckCircle, Send, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { radius, button } from '../../../shared/core/uiDesignSystem';
 
 interface LoginModalProps {
@@ -25,6 +25,7 @@ export function LoginModal({ isOpen, onClose, onSuccess, defaultMode = 'login', 
   const [name, setName] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [otpStep, setOtpStep] = useState<'request' | 'verify'>('request');
+  const [showPassword, setShowPassword] = useState(false);
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -39,6 +40,7 @@ export function LoginModal({ isOpen, onClose, onSuccess, defaultMode = 'login', 
     setErrorMsg('');
     setInfoMsg('');
     setIsProcessing(false);
+    setShowPassword(false);
   };
 
   const handleClose = () => {
@@ -288,13 +290,22 @@ export function LoginModal({ isOpen, onClose, onSuccess, defaultMode = 'login', 
               <div className="relative">
                 <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ui-text-secondary)]" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={`w-full text-xs pl-9 pr-3 py-2.5 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] focus:border-[var(--color-accent-base)] outline-none transition`}
+                  className={`w-full text-xs pl-9 pr-10 py-2.5 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] focus:border-[var(--color-accent-base)] outline-none transition`}
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] transition-colors"
+                  tabIndex={-1}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
