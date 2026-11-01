@@ -13,6 +13,8 @@ import { PortalProductsGrid } from '../../shared/core/ui/marketing/PortalProduct
 import { ProductDetailBlock } from '../../shared/core/ui/marketing/ProductDetailBlock';
 import { PlanFeatureCard } from '../../shared/core/ui/marketing/PlanFeatureCard';
 import { FaqAccordion } from '../../shared/core/ui/marketing/FaqAccordion';
+import AtsAuditHeroWidget from './components/AtsAuditHeroWidget';
+import TransparencyComparisonTable from './components/TransparencyComparisonTable';
 import { LEECV_VERSION } from '../../shared/core/version';
 import { useIsMobile } from '../../shared/core/ui/useIsMobile';
 import { useJsonLd } from '../../shared/core/hooks/useJsonLd';
@@ -147,6 +149,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogi
             )}
           </div>
 
+          <div className="flex flex-wrap justify-center gap-3 mt-4">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/20 text-[var(--color-accent-text)] text-xs font-bold">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>{t.landing.hero.heroPills?.ats?.title || '100% Compatible con ATS'}</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/20 text-[var(--color-accent-text)] text-xs font-bold">
+              <Award className="w-3.5 h-3.5" />
+              <span>{t.landing.hero.heroPills?.privacy?.title || 'Privacidad Total'}</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--color-accent-muted)] border border[var(--color-accent-base)]/20 text-[var(--color-accent-text)] text-xs font-bold">
+              <CreditCard className="w-3.5 h-3.5" />
+              <span>{t.landing.hero.heroPills?.pricing?.title || 'Sin Suscripciones Trampa'}</span>
+            </div>
+          </div>
+
           {/* Barra de Prueba Social */}
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-full text-xs font-bold text-[var(--ui-text-primary)] shadow-sm">
             <span className="text-[var(--color-accent-amber-bright)]">⭐</span>
@@ -159,6 +176,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogi
         </div>
       </section>
 
+      {/* Auditor ATS en vivo */}
+      <MarketingSection>
+        <AtsAuditHeroWidget />
+      </MarketingSection>
 
       {/* 4. Gobernanza (Features Grid) */}
       <MarketingSection>
@@ -230,6 +251,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogi
             reverse={true}
           />
         </div>
+      </MarketingSection>
+
+      {/* Tabla Comparativa de Transparencia */}
+      <MarketingSection className="bg-[var(--ui-bg-card)] border-y border-[var(--ui-border)]">
+        <div className="text-center mb-8">
+          <h2 className={`${displayScale.sectionHeading} text-[var(--ui-text-primary)] mb-4`}>
+            {t.landing.hero.transparencyTable?.title || 'Transparencia sin trucos'}
+          </h2>
+          <p className="text-[var(--ui-text-secondary)] max-w-2xl mx-auto">
+            {t.landing.hero.transparencyTable?.subtitle || 'Compará cómo funciona LeeCV con los creadores tradicionales'}
+          </p>
+        </div>
+        <TransparencyComparisonTable rows={t.landing.hero.transparencyTable?.rows || []} />
       </MarketingSection>
 
       {/* 6. Precios en Vivo */}

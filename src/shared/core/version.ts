@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 2,
-  minor: 4,
+  minor: 5,
   patch: 0,
-  label: 'V2.4.0',
-  lastUpdated: '2026-10-31',
+  label: 'V2.5.0',
+  lastUpdated: '2026-11-01',
   lastAgent: '@desarrollo-rapido',
-  stage: 'Mejora IA extracción (hybrid image+text, retry, schema estricto) + show password + V2.4.0',
+  stage: 'Rediseño CRO Landing Page, Auditor ATS en vivo en cliente y Tabla Comparativa de Transparencia',
 } as const;
