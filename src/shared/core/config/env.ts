@@ -58,27 +58,22 @@ try {
   parsedEnv = envSchema.parse(rawEnv);
 } catch (error) {
   envError = error as Error;
-  if (isDev && typeof window !== 'undefined') {
-    console.error('[Config/Env] Variables de entorno inválidas o faltantes:', error);
-    throw new Error('Variables de entorno requeridas faltantes en desarrollo. Revisa la consola o tu archivo .env.');
+  console.warn('[Config/Env] Variables de entorno faltantes o incompletas. La aplicación funcionará en modo degradado (IndexedDB local):', error);
+  const safeResult = envSchema.safeParse(rawEnv);
+  if (!safeResult.success) {
+    // Fallback a un objeto que cumpla el contrato, usando strings vacíos para evitar crashes
+    parsedEnv = {
+      ...rawEnv,
+      VITE_SUPABASE_URL: rawEnv.VITE_SUPABASE_URL || '',
+      VITE_SUPABASE_ANON_KEY: rawEnv.VITE_SUPABASE_ANON_KEY || '',
+      POSTHOG_HOST: rawEnv.POSTHOG_HOST || 'https://app.posthog.com',
+      SENTRY_DSN: rawEnv.SENTRY_DSN || 'https://ee85a68c26a11080f175541ed2c2a593@o4512035779182592.ingest.us.sentry.io/4512035802251264',
+      IS_DEV: rawEnv.IS_DEV,
+      IS_PROD: rawEnv.IS_PROD,
+      MODE: rawEnv.MODE || (isDev ? 'development' : 'production')
+    } as unknown as EnvConfig;
   } else {
-    console.warn('[Config/Env] Variables de entorno inválidas. La app intentará funcionar en modo degradado.');
-    const safeResult = envSchema.safeParse(rawEnv);
-    if (!safeResult.success) {
-      // Fallback a un objeto que cumpla el contrato, usando strings vacíos para evitar crashes
-      parsedEnv = {
-        ...rawEnv,
-        VITE_SUPABASE_URL: rawEnv.VITE_SUPABASE_URL || '',
-        VITE_SUPABASE_ANON_KEY: rawEnv.VITE_SUPABASE_ANON_KEY || '',
-        POSTHOG_HOST: rawEnv.POSTHOG_HOST || 'https://app.posthog.com',
-        SENTRY_DSN: rawEnv.SENTRY_DSN || 'https://ee85a68c26a11080f175541ed2c2a593@o4512035779182592.ingest.us.sentry.io/4512035802251264',
-        IS_DEV: rawEnv.IS_DEV,
-        IS_PROD: rawEnv.IS_PROD,
-        MODE: rawEnv.MODE || 'production'
-      } as unknown as EnvConfig;
-    } else {
-      parsedEnv = safeResult.data;
-    }
+    parsedEnv = safeResult.data;
   }
 }
 

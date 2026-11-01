@@ -5,7 +5,10 @@ export const ROUTES = [
   '/',
   '/privacidad',
   '/terminos',
-  '/reembolsos'
+  '/reembolsos',
+  '/cv/marketing-digital',
+  '/cv/desarrollo-web',
+  '/cv/gestion-de-proyectos'
 ];
 
 const metaMap = {
@@ -32,7 +35,10 @@ const metaMap = {
     description: 'Política de devoluciones y reembolsos de LEECV.',
     content: ['<h1>Política de Reembolsos</h1>', '<p>Conoce nuestra política de reembolsos para cuentas premium y servicios adicionales.</p>'],
     type: 'WebPage'
-  }
+  },
+  '/cv/marketing-digital': { title: 'CV Marketing Digital | LEECV', description: 'Currículum optimizado para marketing digital.', content: ['<h1>Marketing Digital</h1>'], type: 'WebPage' },
+  '/cv/desarrollo-web': { title: 'CV Desarrollo Web | LEECV', description: 'Currículum técnico para desarrolladores.', content: ['<h1>Desarrollo Web</h1>'], type: 'WebPage' },
+  '/cv/gestion-de-proyectos': { title: 'CV Gestión de Proyectos | LEECV', description: 'CV para gestión de proyectos.', content: ['<h1>Gestión de Proyectos</h1>'], type: 'WebPage' }
 };
 
 const articlesDir = path.resolve(process.cwd(), 'src/modules/blog/data/articles');
