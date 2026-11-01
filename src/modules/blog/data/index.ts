@@ -19,3 +19,5 @@ export { comoAdaptarTuCv } from './articles/como-adaptar-tu-cv';
 export { cvProgramador } from './articles/cv-programador';
 export { cvEnfermeria } from './articles/cv-enfermeria';
 export { cvVentas } from './articles/cv-ventas';
+export { formulaAcrLogros } from './articles/formula-acr-logros';
+export { falloAtsHerramientasGraficas } from './articles/fallo-ats-herramientas-graficas';

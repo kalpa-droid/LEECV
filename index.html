@@ -9,6 +9,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#FFFFFF" />
 
+    <!-- Polyfill de compatibilidad temprana para interceptores de extensiones de navegador -->
+    <script>
+      (function() {
+        try {
+          var desc = Object.getOwnPropertyDescriptor(window, 'fetch') || Object.getOwnPropertyDescriptor(Object.getPrototypeOf(window), 'fetch');
+          if (!desc || (!desc.set && !desc.writable)) {
+            var originalFetch = window.fetch;
+            Object.defineProperty(window, 'fetch', {
+              get: function() { return originalFetch; },
+              set: function(fn) { originalFetch = fn; },
+              configurable: true,
+              enumerable: true
+            });
+          }
+        } catch (e) {}
+      })();
+    </script>
+
     <!-- SEO Canónico y Directivas de Google Search Console -->
     <title>LEECV — Creador de Currículum Vitae listo para imprimir</title>
     <meta name="description" content="Crea tu Currículum Vitae en minutos y ten tu PDF listo para imprimir en casa o llevar a una imprenta. Plantillas profesionales, diseño de tarjetas, 100% privacidad y sin marca de agua." />

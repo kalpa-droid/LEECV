@@ -27,6 +27,27 @@ if (typeof window !== 'undefined' && typeof Node !== 'undefined') {
     }
     return originalInsertBefore.call(this, newNode, referenceNode) as T;
   };
+
+  // Parche para extensiones de navegador que intentan sobreescribir window.fetch
+  // cuando window.fetch está configurado como accessor con solo getter
+  try {
+    const fetchDesc = Object.getOwnPropertyDescriptor(window, 'fetch');
+    if (fetchDesc && !fetchDesc.writable && !fetchDesc.set && fetchDesc.configurable) {
+      let currentFetch = window.fetch;
+      Object.defineProperty(window, 'fetch', {
+        get() {
+          return currentFetch;
+        },
+        set(newFetch) {
+          currentFetch = newFetch;
+        },
+        configurable: true,
+        enumerable: true
+      });
+    }
+  } catch {
+    // Si la redefinición falla por restricciones del entorno, ignorar silenciosamente
+  }
 }
 
 export {};

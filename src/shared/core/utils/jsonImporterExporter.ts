@@ -5,19 +5,21 @@ import { downloadBlob } from './downloadUtils';
 import { splitCvDataForDrive, reconstructCvDataFromParts } from '../storage/driveDocumentPackager';
 import { migrateCvData } from '../storage/cvMigrationEngine';
 
-export function exportCVToJson(cvData: CVData | null | undefined): void {
+export async function exportCVToJson(cvData: CVData | null | undefined): Promise<void> {
   if (!cvData) return;
 
+  const reconstructed = await reconstructCvDataFromParts(cvData);
+
   const candidateName = (
-    cvData?.personalInfo?.fullName || 
+    reconstructed?.personalInfo?.fullName ||
     'Postulante'
   ).trim();
 
   const exportPayload = {
     schemaVersion: 2,
     exportedAt: new Date().toISOString(),
-    id: cvData.id || `cv_${Date.now()}`,
-    cvData: cvData
+    id: reconstructed.id || cvData.id || `cv_${Date.now()}`,
+    cvData: reconstructed
   };
 
   const jsonStr = JSON.stringify(exportPayload, null, 2);

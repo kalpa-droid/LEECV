@@ -3,12 +3,15 @@ import { RecordFormSection } from '../../../../../shared/core/ui/RecordFormSecti
 import { SectionManualAdjustment } from '../SectionManualAdjustment';
 import { ClassifyItemModal } from '../../modals/ClassifyItemModal';
 import { FirstJobHelpModal } from '../../modals/FirstJobHelpModal';
-import { Sparkles, Briefcase } from 'lucide-react';
+import { Sparkles, Briefcase, Wand2 } from 'lucide-react';
 import { button } from '../../../../../shared/core/uiDesignSystem';
+import { apiFetch } from '../../../../../shared/core/utils/apiClient';
 
 export const ExperienciaSection = ({ cvData, setCvData }: any) => {
   const [isClassifyOpen, setIsClassifyOpen] = useState(false);
   const [isFirstJobOpen, setIsFirstJobOpen] = useState(false);
+  const [acrResponse, setAcrResponse] = useState<string | null>(null);
+  const [acrLoading, setAcrLoading] = useState(false);
 
   const guide = (
     <div className="space-y-2 mt-1">
@@ -50,6 +53,21 @@ export const ExperienciaSection = ({ cvData, setCvData }: any) => {
               </button>
               <button
                 type="button"
+                onClick={async () => {
+                  setAcrLoading(true); setAcrResponse(null);
+                  try {
+                    const res = await apiFetch('/api/ai-generate', { method: 'POST', body: JSON.stringify({ prompt: 'Redactá un logro en formato ACR (Acción + Contexto + Resultado cuantitativo) para experiencia laboral en marketing digital:', context: 'Experiencia Laboral' }) });
+                    setAcrResponse(res.data?.text || res.data?.response || 'Sugerencia generada por IA.');
+                  } catch { setAcrResponse('No se pudo conectar con el asistente ACR. Intentá de nuevo.'); }
+                  setAcrLoading(false);
+                }}
+                className={`${button.secondary} text-xs py-1.5 px-3 flex items-center gap-1.5`}
+              >
+                <Wand2 className="w-3.5 h-3.5 text-[var(--color-primary-base)]" />
+                Sugerir Logros (ACR)
+              </button>
+              <button
+                type="button"
                 onClick={() => setIsFirstJobOpen(true)}
                 className={`${button.secondary} text-xs py-1.5 px-3 flex items-center gap-1.5`}
               >
@@ -57,6 +75,13 @@ export const ExperienciaSection = ({ cvData, setCvData }: any) => {
                 Ayuda Primer Empleo
               </button>
             </div>
+            {acrLoading && <p className="text-xs text-[var(--ui-text-secondary)]">Generando fórmula ACR con IA...</p>}
+            {acrResponse && (
+              <div className="bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-lg p-3 text-sm text-[var(--ui-text-primary)]">
+                <p className="font-bold mb-1 text-[var(--color-primary-base)]">Sugerencia ACR (Acción + Contexto + Resultado):</p>
+                <p className="italic">{acrResponse}</p>
+              </div>
+            )}
           </div>
         }
       />

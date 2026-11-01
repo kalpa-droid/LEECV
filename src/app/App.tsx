@@ -14,6 +14,7 @@ import { LoginModal } from '../modules/auth/components/LoginModal';
 const LandingPage = lazy(() => import('../modules/landing/LandingPage').then(m => ({ default: m.LandingPage })));
 const BookStudio = lazy(() => import('../modules/book-studio/BookStudio').then(m => ({ default: m.BookStudio })));
 const BlogModule = lazy(() => import('../modules/blog/BlogModule').then(m => ({ default: m.BlogModule })));
+const JobRoleLandingPage = lazy(() => import('../modules/landing/components/JobRoleLandingPage').then(m => ({ default: m.default })));
 
 import { supabase } from '../shared/core/lib/supabaseClient';
 import { exportCVToJson, importCVFromJsonFile } from '../shared/core/utils/jsonImporterExporter';
@@ -1036,6 +1037,12 @@ export default function App() {
                 }}
               />
             )}
+            </Suspense>
+          </>
+        ) : currentRoute.startsWith('/cv/') ? (
+          <>
+            <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando página de rol...</div>}>
+              <JobRoleLandingPage />
             </Suspense>
           </>
         ) : (
