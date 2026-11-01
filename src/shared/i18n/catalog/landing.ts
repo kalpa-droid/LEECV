@@ -8,11 +8,37 @@ export const landingCatalog = {
     cta: 'Iniciar Ahora',
   },
   hero: {
-    eyebrow: 'Todo para armar e imprimir tus documentos',
-    title: 'Currículums y postulaciones, tarjetas y libros listos para imprimir',
-    lead: 'Armalos paso a paso, con ayuda de inteligencia artificial si querés. Después imprimilos en tu casa, en tu impresora, o llevalos a una imprenta.',
+    eyebrow: 'Superá los filtros ATS y conseguí entrevistas',
+    title: 'El currículum que supera los filtros ATS y te consigue entrevistas',
+    lead: 'Diseñado para que los sistemas de selección y los reclutadores lean cada palabra de tu experiencia. Privacidad blindada en tu navegador y sin suscripciones trampa.',
     primaryCta: 'Crear mi CV gratis',
     secondaryCta: 'Explorar productos',
+    heroPills: {
+      ats: { title: '100% Compatible con ATS', description: 'Texto estructurado limpio, sin capas gráficas rotas de Canva.' },
+      privacy: { title: 'Privacidad Total', description: 'Datos anonimizados en tu navegador, sin entrenar modelos de IA.' },
+      pricing: { title: 'Sin Suscripciones Trampa', description: 'Pagás solo cuando descargás, sin débitos mensuales automáticos.' },
+    },
+    atsAuditor: {
+      title: 'Auditor ATS en vivo',
+      subTitle: 'Subí tu PDF y sabé si pasás los filtros automáticos',
+      dropLabel: 'Arrastrá tu CV o imagen',
+      analyzing: 'Analizando capa de texto...',
+      scoreLabel: 'Compatibilidad ATS',
+      lowWarning: 'Capa de texto fragmentada o aplanada (típica de Canva/escaneos). Corregí con LeeCV.',
+      highSuccess: 'Texto estructurado y legible. Listo para enviar.',
+      cta: 'Corregir y optimizar con LeeCV',
+    },
+    transparencyTable: {
+      title: 'Transparencia sin trucos',
+      subtitle: 'Compará cómo funciona LeeCV con los creadores tradicionales',
+      headers: ['Característica', 'LeeCV.app', 'Creadores Tradicionales', 'Canva'],
+      rows: [
+        { feature: 'Modelo de cobro', lee: 'Pago único transparente', others: 'Prueba engañosa que renueva a $29.95/mes', canva: 'Plan Pro de diseño $15/mes' },
+        { feature: 'Lectura ATS', lee: '100% garantizada (texto plano)', others: 'Variable / bloqueado', canva: 'Elementos aplanados ilegibles' },
+        { feature: 'Privacidad', lee: 'Anonimizado en tu navegador', others: 'Datos en servidores de terceros', canva: 'Cuenta masiva de datos' },
+        { feature: 'Cancelación', lee: 'No hay nada que cancelar', others: 'Procesos deliberadamente complejos', canva: 'Requiere gestión de suscripción' },
+      ],
+    },
     beforeAfter: {
       before: 'Texto suelto',
       after: 'Listo para imprimir con máxima nitidez'
