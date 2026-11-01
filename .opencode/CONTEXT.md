@@ -29,7 +29,7 @@
 ### 2026-10-31 - Agente: @desarrollo-rapido (Plan Mejora IA + Show Password) — V2.4.0
 - **Acción realizada**: Plan `plan-mejora-ia-extraccion-y-show-password.md` ejecutado. Rama `feat/mejora-ia-show-password`. Eje 2 (show password) completo (`LoginModal.tsx`). Eje 1 (bugs IA críticos): `supportsImages` en providers, filtro por imagen, `requiresAuth: false`, retry JSON, `auxiliaryText`. Eje 3 (mejoras): prompt estricto, `maxTokens` 4000, `responseSchema` completo. Eje 4: 4 tests nuevos. Eje 5: `version.ts` V2.4.0.
 - **Archivos afectados**: `LoginModal.tsx`, `api/_lib/aiProviders/types.ts`, `gemini.ts`, `groq.ts`, `registry.ts`, `api/cv-import-api.ts`, `ImportCvAiModal.tsx`, `tests/*.test.ts`, `version.ts`.
-- **Estado**: Rama creada; cambios locales hechos. `npm run check-all` pendiente de confirmar final.
+- **Estado**: Rama creada; cambios locales hechos; push a `origin/feat/mejora-ia-show-password` confirmado (`b0f8419`). `npm run typecheck` = 0 errores; `npm test` = 278 passed / 2 skipped (4 nuevos); `check-contrast` = 0 nuevas; `check-module-boundaries` = 0 violations; `check-plain-language` = 0. Pre-commit (husky) pasó. Pendiente: abrir PR contra `main`, esperar `check-all` verde en GitHub Actions, y aprobación CODEOWNER (Kalpa) para merge.
 - **Instrucción para siguiente agente**: Confirmar `npm run check-all` = 0 errores, hacer commit semántico (`feat: mejora IA extracción + show password V2.4.0`), push a `feat/mejora-ia-show-password`, abrir PR contra `main`, esperar check-all verde y aprobación CODEOWNER de Kalpa.
 
 ### 2026-10-31 - Agente: @desarrollo-rapido (Auth & IA Import) — V2.3.2
