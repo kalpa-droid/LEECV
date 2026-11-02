@@ -105,7 +105,7 @@ export function CreditsModal({ isOpen, onClose, onOpenPricing, onOpenLogin }: Cr
               <button
                 type="button"
                 onClick={async () => { onClose(); await logout(); }}
-                className="px-3 py-1.5 rounded-full bg-[var(--color-status-danger-dark)] text-white text-xs font-bold hover:opacity-90 flex items-center gap-1.5 cursor-pointer transition"
+                className={`${button.base} ${button.danger} px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5`}
               >
                 <X className="w-3.5 h-3.5" />
                 <span>Cerrar sesión</span>
