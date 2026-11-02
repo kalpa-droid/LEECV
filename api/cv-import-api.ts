@@ -227,7 +227,7 @@ REGLAS CRÍTICAS:
       const allKeysMissing = AI_PROVIDER_FALLBACK_ORDER.every(pid => !getNextAvailableKey(pid));
       const allRateLimited = AI_PROVIDER_FALLBACK_ORDER.some(pid => {
         const k = getNextAvailableKey(pid);
-        return !!k && (lastError?.status === 429 || lastError?.message?.includes('429'));
+        return !!k && lastError?.message.includes('429');
       }) && !allKeysMissing;
 
       if (allKeysMissing) {
