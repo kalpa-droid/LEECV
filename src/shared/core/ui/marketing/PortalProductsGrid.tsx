@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, CreditCard, BookOpen, ArrowRight, Check, CalendarDays } from 'lucide-react';
+import { FileText, CreditCard, BookOpen, ArrowRight, Check, CalendarDays, Mail } from 'lucide-react';
 import { radius, elevationSystem } from '../../uiDesignSystem';
 
 import { useText } from '../../../i18n/useText';
@@ -59,6 +59,18 @@ export const PortalProductsGrid: React.FC<PortalProductsGridProps> = ({ onNaviga
       bullets: [...t.landing.products.agendas.bullets],
       route: '/crear-agenda',
       cta: t.landing.products.agendas.cta,
+    },
+    {
+      id: 'cartas',
+      icon: Mail,
+      badgeColor: 'bg-[var(--color-accent-amber-muted)] text-[var(--color-neutral-text-primary)] border-[var(--color-accent-amber-bright)]/30',
+      badge: 'Listo ATS',
+      title: t.landing.products.cartas.title,
+      tagline: t.landing.products.cartas.tagline,
+      description: t.landing.products.cartas.description,
+      bullets: [...t.landing.products.cartas.bullets],
+      route: '/crear-carta',
+      cta: t.landing.products.cartas.cta,
     },
   ];
 

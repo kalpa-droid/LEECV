@@ -14,7 +14,7 @@ interface CreditsModalProps {
 
 export function CreditsModal({ isOpen, onClose, onOpenPricing, onOpenLogin }: CreditsModalProps) {
   const { plan, pdfTokens, tokenStats, isPro } = useEntitlements();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   if (!isOpen) return null;
 
@@ -82,6 +82,14 @@ export function CreditsModal({ isOpen, onClose, onOpenPricing, onOpenLogin }: Cr
             </div>
           )}
 
+          {/* Email del usuario */}
+          {user?.email && (
+            <div className={`bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.card}] p-3 flex items-center gap-2`}>
+              <div className="w-2 h-2 rounded-full bg-[var(--color-status-success-base)] shrink-0" />
+              <p className="text-xs font-medium text-[var(--ui-text-primary)] truncate">{user.email}</p>
+            </div>
+          )}
+
           <div className={`bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/20 rounded-[${radius.card}] p-4 flex items-start gap-3`}>
             <Sparkles className="w-5 h-5 text-[var(--color-accent-text)] shrink-0 mt-0.5" />
             <div>
@@ -91,18 +99,32 @@ export function CreditsModal({ isOpen, onClose, onOpenPricing, onOpenLogin }: Cr
               </p>
             </div>
           </div>
-          {!user && onOpenLogin && (
-            <div className="p-3 bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/30 rounded-[var(--radius-card)] flex items-center justify-between gap-2">
-              <span className="text-xs text-[var(--ui-text-primary)]">¿Ya tienes cuenta o compraste créditos?</span>
+          {user ? (
+            <div className="p-3 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[var(--radius-card)] flex items-center justify-between gap-2">
+              <span className="text-xs text-[var(--ui-text-secondary)]">Sesión activa</span>
               <button
                 type="button"
-                onClick={() => { onClose(); onOpenLogin(); }}
-                className="px-3 py-1.5 rounded-full bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-xs font-bold hover:opacity-90 flex items-center gap-1.5 cursor-pointer"
+                onClick={async () => { onClose(); await logout(); }}
+                className={`${button.base} ${button.danger} px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5`}
               >
-                <LogIn className="w-3.5 h-3.5" />
-                <span>Iniciar sesión</span>
+                <X className="w-3.5 h-3.5" />
+                <span>Cerrar sesión</span>
               </button>
             </div>
+          ) : (
+            !user && onOpenLogin && (
+              <div className="p-3 bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/30 rounded-[var(--radius-card)] flex items-center justify-between gap-2">
+                <span className="text-xs text-[var(--ui-text-primary)]">¿Ya tienes cuenta o compraste créditos?</span>
+                <button
+                  type="button"
+                  onClick={() => { onClose(); onOpenLogin(); }}
+                  className="px-3 py-1.5 rounded-full bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-xs font-bold hover:opacity-90 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Iniciar sesión</span>
+                </button>
+              </div>
+            )
           )}
         </div>
 

@@ -46,11 +46,11 @@ export async function claimCreditsOnAuth(
  * Lanza el error de Supabase si el envío falla, para que la pantalla pueda
  * mostrar el motivo (email inválido, límite de envíos, etc.).
  */
-export async function requestOtp(email: string) {
+export async function requestOtp(email: string, shouldCreateUser = true) {
   if (!supabase) throw new Error('Supabase no está configurado (faltan VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY)');
   const { data, error } = await supabase.auth.signInWithOtp({
     email,
-    options: { shouldCreateUser: true },
+    options: { shouldCreateUser },
   });
   if (error) throw error;
   return data;
