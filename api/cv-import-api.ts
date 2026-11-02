@@ -224,12 +224,22 @@ REGLAS CRÍTICAS:
     }
 
     if (!completionText || !successfulProviderId) {
+      const allKeysMissing = AI_PROVIDER_FALLBACK_ORDER.every(pid => !getNextAvailableKey(pid));
+      const allRateLimited = AI_PROVIDER_FALLBACK_ORDER.some(pid => {
+        const k = getNextAvailableKey(pid);
+        return !!k && lastError?.message.includes('429');
+      }) && !allKeysMissing;
+
+      if (allKeysMissing) {
+        console.error('[cv-import] No hay claves de IA configuradas:', lastError);
+        return errorResponse(res, 503, 'ai_not_configured');
+      }
+      if (allRateLimited) {
+        console.error('[cv-import] Proveedores de IA limitados por tasa:', lastError);
+        return errorResponse(res, 429, 'ai_rate_limited');
+      }
       console.error('[cv-import] Error al procesar página:', lastError);
-      return errorResponse(
-        res,
-        502,
-        `No se pudo procesar con los proveedores de IA disponibles: ${lastError?.message || 'Servicios no disponibles'}`
-      );
+      return errorResponse(res, 502, 'ai_provider_error');
     }
 
     let fragmentJson = {};
