@@ -6,6 +6,7 @@ export const landingCatalog = {
     blog: 'Blog & Recursos',
     precios: 'Precios',
     cta: 'Iniciar Ahora',
+    cartas: 'Cartas de Presentación',
   },
   hero: {
     eyebrow: 'Superá los filtros ATS y conseguí entrevistas',
@@ -118,6 +119,19 @@ export const landingCatalog = {
       ],
       cta: 'Crear Agenda',
     },
+    cartas: {
+      badge: 'Listo ATS',
+      title: 'Cartas de Presentación',
+      tagline: 'Personalizadas y sin bloqueo ATS',
+      description: 'Escribí tu carta de presentación conectando tu experiencia con la vacante. Los sistemas ATS pueden leer cada palabra.',
+      bullets: [
+        'Redacción asistida por IA con fórmula ACR (Acción + Contexto + Resultado)',
+        'Texto estructurado que pasa los filtros automáticos',
+        'Sin marcas de agua ni capas gráficas rotas',
+        'Personalizá para cada vacante en minutos',
+      ],
+      cta: 'Escribir mi Carta',
+    },
   },
   portalIntro: {
     eyebrow: 'Cuatro herramientas independientes',
@@ -157,6 +171,18 @@ export const landingCatalog = {
     printReady: {
       title: 'Listo para imprimir',
       description: 'Tu archivo sale preparado para imprimirse bien, ya sea en tu impresora de casa o en una imprenta.',
+    },
+    coverLetter: {
+      title: 'Carta que pasa ATS',
+      description: 'Conectá tu experiencia con la vacante. La fórmula ACR (Acción + Contexto + Resultado) genera evidencia que los sistemas de selección leen sin bloqueo.',
+    },
+    professionalDesign: {
+      title: 'Maquetación profesional',
+      description: 'Tarjetas, libros y folletos listos para imprenta, sin InDesign ni Canva: páginas ordenadas, márgenes de doblado seguros y texto plano seleccionado.',
+    },
+    transparency: {
+      title: 'Sin suscripciones trampa',
+      description: 'Pagás una sola vez por la descarga. No hay renuevos automáticos ni procesos de cancelación complejos como en Canva o creadores tradicionales.',
     },
   },
   blogTeaser: {

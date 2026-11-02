@@ -212,6 +212,37 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogi
         <PortalProductsGrid onNavigate={onNavigate} />
       </MarketingSection>
 
+      {/* 4.6. Características de Valor (3 cards para resolver dolores de usuarios) */}
+      <MarketingSection className="bg-[var(--ui-bg-card)] border-t border-[var(--ui-border)] py-12">
+        <div className="text-center mb-12">
+          <h2 className={`${displayScale.sectionHeading} text-[var(--ui-text-primary)] mb-4`}>
+            ¿Qué te quita el sueño? Nosotros lo resolvemos.
+          </h2>
+          <p className="text-[var(--ui-text-secondary)] max-w-2xl mx-auto">
+            No más capas gráficas rotas, suscripciones trampa ni diseño genérico. 
+            Diseñá con confianza en tu navegador, sin suscripciones ni capas gráficas.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* 4.6.1. Carta que pasa ATS */}
+          <FeatureCard
+            icon={Mail}
+            title={t.landing.features.coverLetter.title}
+            description={t.landing.features.coverLetter.description}
+          />
+          <FeatureCard
+            icon={BookOpen}
+            title={t.landing.features.professionalDesign.title}
+            description={t.landing.features.professionalDesign.description}
+          />
+          <FeatureCard
+            icon={ShieldCheck}
+            title={t.landing.features.transparency.title}
+            description={t.landing.features.transparency.description}
+          />
+        </div>
+      </MarketingSection>
+
       {/* 5. Detalle de Productos en Zigzag */}
       <MarketingSection className="bg-[var(--ui-bg-card)]">
         <div className="text-center mb-16">

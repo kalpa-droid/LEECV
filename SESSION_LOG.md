@@ -190,3 +190,11 @@ Migración a una arquitectura de facturación stateless ("guest-first") donde el
 **Estado Actual:**
 - La base de código compila satisfactoriamente.
 - `npm run check-all` debe pasar exitosamente.
+
+---
+
+## [2026-11-01] — Registro Regla 6 paso 7 (Post-merge feat/estrategia-ats-cro)
+- **Merge confirmado**: `feat/estrategia-ats-cro` → `main` (hash `71c4f91`, mensaje: `Feat/estrategia ats cro (#64)`).
+- **Estado**: `main` = `71c4f91`; `origin/main` sincronizado. Working tree limpio.
+- **Verificación**: `npm run typecheck` = 0 errores; `npm test` = 284 passed / 2 skipped; `npm run build` = OK; `verify:seo` = 40/40.
+- **Acción**: Registro completado en `.opencode/CONTEXT.md` y `SESSION_LOG.md`. No requiere más acciones de merge.

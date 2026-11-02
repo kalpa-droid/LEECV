@@ -53,13 +53,13 @@ export function LoginModal({ isOpen, onClose, onSuccess, defaultMode = 'login', 
     e.preventDefault();
     setErrorMsg('');
     setInfoMsg('');
-    if (!email || !/^[^s@]+@[^s@]+.[^s@]+$/.test(email)) {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setErrorMsg('Ingresá un correo electrónico válido.');
       return;
     }
     setIsProcessing(true);
     try {
-      await requestOtp(email);
+      await requestOtp(email, mode === 'register');
       setOtpStep('verify');
       setInfoMsg('Te enviamos un código de 6 dígitos a tu correo. Ingrésalo a continuación:');
     } catch (err: any) {
@@ -221,7 +221,7 @@ export function LoginModal({ isOpen, onClose, onSuccess, defaultMode = 'login', 
                     type="tel"
                     required
                     maxLength={6}
-                    pattern="\\d{6}"
+                    pattern="^[0-9]{6}$"
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value.replace(/\\D/g, '').slice(0, 6))}
                     className={`w-full text-center text-lg tracking-widest font-mono p-2.5 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] focus:border-[var(--color-accent-base)] outline-none transition`}
