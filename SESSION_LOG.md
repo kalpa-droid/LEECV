@@ -1,5 +1,17 @@
 # Registro de Intervenciones de Agentes (SESSION_LOG)
 
+## [2026-11-01] - V2.5.0 (feat/hotfix-login-validaciones-v250): Hotfix validaciones + mejoras landing + artículos blog
+
+**Resumen (Fase A + Fase B + landing/blog):**
+- Fase A (hotfix): corregida regex email (`[^\s@]`) que bloqueaba correos con 's'; corregido patrón código (`^[0-9]{6}$`); `requestOtp` con `shouldCreateUser`.
+- Fase B (pestañas): modo `login` (`shouldCreateUser: false`) / `register` (`true`); sin alta silenciosa.
+- Landing: 3 FeatureCards (`coverLetter`, `professionalDesign`, `transparency`); Portal con `Cartas`; i18n actualizado.
+- Blog: artículos existentes cubren todos los dolores (`MANUAL_DOLORES_Y_BENEFICIOS.md`).
+
+**3 decisiones confirmadas:** 2 pestañas ✅ / no alta silenciosa ✅ / conservar CV local ✅
+
+**Estado:** rama `feat/hotfix-login-validaciones-v250` (`ade7449`); `check-all` 0 errores; build OK; 284 tests passed.
+
 Este archivo documenta los cambios realizados en el repositorio por agentes de IA, para mantener un rastro histórico de qué se hizo, por qué y en qué momento.
 
 ## [2026-10-31] - V2.3.3: Motor Canónico de Acreditación y Consumo de Créditos Unificado
