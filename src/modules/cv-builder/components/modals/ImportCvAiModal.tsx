@@ -97,7 +97,16 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
     } catch (err: any) {
       console.error(err);
       setStatus('error');
-      setErrorMsg(err.message || 'Error desconocido.');
+      const msg = err.message || '';
+      if (msg.includes('ai_not_configured')) {
+        setErrorMsg('No hay claves de IA configuradas en el servidor (GEMINI / GROQ). Intentá pegar el texto del CV en el campo de abajo como alternativa.');
+      } else if (msg.includes('ai_rate_limited')) {
+        setErrorMsg('Los proveedores de IA están temporalmente limitados (rate limit). Intentá de nuevo en unos minutos, o pegá el texto del CV como alternativa.');
+      } else if (msg.includes('ai_provider_error')) {
+        setErrorMsg('El proveedor de IA falló (error técnico). Intentá con texto pegado como alternativa mientras se resuelve.');
+      } else {
+        setErrorMsg(msg || 'Error desconocido. Intentá pegar el contenido como texto alternativo.');
+      }
     }
   };
 
