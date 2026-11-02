@@ -12,6 +12,15 @@
 
 **Estado:** rama `feat/hotfix-login-validaciones-v250` (`ade7449`); `check-all` 0 errores; build OK; 284 tests passed.
 
+## [2026-11-01 22:54] - Merge registrado: Fase D (`23c6702`) + Fase A/B (`ade7449`) sobre base `71c4f91`
+
+**Merge (Regla 6 paso 7 — confirmación de hash):**
+- `main` confirmado: `71c4f91` (`Feat/estrategia ats cro (#64)`)
+- Ramas lista para PR: `feat/hotfix-login-validaciones-v250` (`ade7449`) + `feat/panel-cuenta-creditos-fase-d` (`23c6702`)
+- No push directo a `main` (GitHub Ruleset `GH013` activo desde 2026-09-06).
+- `.opencode/CONTEXT.md`: creado con registro de traspaso completo (agente, archivos, decisiones, próxima acción: Fase C/E/F).
+- CV local conservado en logout confirmado: `authService.ts:109-128` solo limpia claves `sb-`/`auth-token`; IndexedDB y datos de editor no se tocan.
+
 Este archivo documenta los cambios realizados en el repositorio por agentes de IA, para mantener un rastro histórico de qué se hizo, por qué y en qué momento.
 
 ## [2026-10-31] - V2.3.3: Motor Canónico de Acreditación y Consumo de Créditos Unificado
