@@ -1,12 +1,10 @@
 import { mercadoPagoProvider } from './mercadopago.js';
 import { paypalProvider } from './paypal.js';
-import { lemonSqueezyProvider } from './lemonsqueezy.js';
 import type { PaymentProvider, ProviderStatus, ProviderId } from './types.js';
 
 export const PROVIDER_REGISTRY: Record<ProviderId, PaymentProvider> = {
   mercadopago: mercadoPagoProvider,
   paypal: paypalProvider,
-  lemonsqueezy: lemonSqueezyProvider,
 };
 
 export async function diagnoseAllProviders(forcePing: boolean): Promise<Record<ProviderId, ProviderStatus>> {

@@ -14,7 +14,7 @@ Personal access tokens) y generá uno nuevo si lo seguís necesitando.
 ```bash
 npm install crypto-js
 ```
-(en realidad `crypto` del webhook de Lemon Squeezy es built-in de Node, no hace falta instalar nada extra).
+(en realidad `crypto` para verificar firmas de webhooks es built-in de Node, no hace falta instalar nada extra).
 
 ## 3. Variables de entorno en Vercel (Project Settings → Environment Variables)
 | Variable | De dónde sale |
@@ -24,9 +24,8 @@ npm install crypto-js
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API → `service_role` (secreta, NUNCA la pongas con prefijo `VITE_`) |
 | `MP_ACCESS_TOKEN` | Mercado Pago → Tus integraciones → Credenciales de producción |
 | `MP_PRECIO_ARS` | Ej: `4999` |
+| `PAYPAL_CLIENT_ID` / `PAYPAL_CLIENT_SECRET` / `PAYPAL_WEBHOOK_ID` | PayPal Developer Dashboard |
 | `SITE_URL` | `https://tu-dominio.vercel.app` |
-| `LEMONSQUEEZY_WEBHOOK_SECRET` | Lemon Squeezy → Settings → Webhooks (al crear el webhook) |
-| `VITE_LEMONSQUEEZY_CHECKOUT_URL` | Lemon Squeezy → Products → tu producto → Share |
 
 ## 4. Habilitar login de usuarios
 En Supabase → Authentication → Providers, dejá activo "Email". Para crear tu primer usuario admin:
@@ -37,22 +36,11 @@ En Supabase → Authentication → Providers, dejá activo "Email". Para crear t
    update public.profiles set role = 'admin' where email = 'tu-email@ejemplo.com';
    ```
 
-## 5. Conectar el botón "Hacete Premium"
-En tu `Navbar.jsx` o donde tengas el botón de premium, llamá a:
-```js
-import { iniciarPagoMercadoPago, iniciarPagoLemonSqueezy } from '../services/paymentService';
-// según el país detectado o un selector, llamás a una u otra
-```
-
-## 6. Configurar el webhook en Mercado Pago
+## 5. Configurar el webhook en Mercado Pago
 Mercado Pago → Tus integraciones → Webhooks → agregar `https://tu-dominio.vercel.app/api/mercadopago-webhook`,
 evento "Pagos".
 
-## 7. Configurar el webhook en Lemon Squeezy
-Lemon Squeezy → Settings → Webhooks → agregar `https://tu-dominio.vercel.app/api/lemonsqueezy-webhook`,
-eventos `order_created` y `subscription_payment_success`. Copiá el "Signing secret" a `LEMONSQUEEZY_WEBHOOK_SECRET`.
-
-## 8. Ruta del panel de admin
+## 6. Ruta del panel de admin
 Como tu app no usa react-router, la forma más simple es renderizar `<AdminDashboard />` cuando la URL
 sea `/admin`. En tu `main.jsx`:
 ```js

@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 2,
   minor: 5,
-  patch: 0,
-  label: 'V2.5.0',
-  lastUpdated: '2026-11-01',
+  patch: 2,
+  label: 'V2.5.2',
+  lastUpdated: '2026-11-02',
   lastAgent: '@desarrollo-rapido',
-  stage: 'Rediseño CRO Landing Page, Auditor ATS en vivo en cliente y Tabla Comparativa de Transparencia',
+  stage: 'Acceso con enlace por email y pagos solo con Mercado Pago y PayPal',
 } as const;

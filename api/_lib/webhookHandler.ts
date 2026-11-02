@@ -6,7 +6,7 @@ import { errorResponse, successResponse } from './apiResponse.js';
 import { captureBackendException } from './sentryBackend.js';
 
 export interface WebhookConfig {
-  provider: 'mercadopago' | 'paypal' | 'lemonsqueezy';
+  provider: 'mercadopago' | 'paypal';
   rawBody?: boolean;
   verifySignature?: (ctx: { req: VercelRequest; rawBody?: string; parsedBody: any }) => Promise<boolean> | boolean;
   extractPaymentDetails: (ctx: { req: VercelRequest; rawBody?: string; parsedBody: any }) => Promise<PaymentDetails | null> | PaymentDetails | null;
@@ -25,7 +25,7 @@ async function readRawBody(req: VercelRequest): Promise<string> {
  * MOTOR CANÓNICO DE WEBHOOKS (createWebhookHandler)
  * 
  * Abstracta la verificación de firma, extracción de metadata e invocación idempotente de applyPayment.
- * Soporta `rawBody: true` para pasarelas como Lemon Squeezy que requieren verificar firmas byte-exactas.
+ * Soporta `rawBody: true` para verificar las firmas de los webhooks sobre el cuerpo original.
  */
 export function createWebhookHandler(config: WebhookConfig) {
   return async (req: VercelRequest, res: VercelResponse) => {

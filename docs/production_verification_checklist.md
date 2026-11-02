@@ -10,11 +10,11 @@ Este documento contiene la guía paso a paso para la verificación end-to-end an
 - [ ] Configurar credenciales en Vercel Environment Variables: `MP_ACCESS_TOKEN`, `MP_WEBHOOK_SECRET`.
 - [ ] Configurar URL de webhook en el panel de Mercado Pago: `https://leecv.app/api/webhooks?provider=mercadopago`.
 - [ ] Probar compra con usuario de prueba (Sandbox):
-  - [ ] Seleccionar Pack de Créditos o Suscripción Pro.
+  - [ ] Seleccionar un pack de créditos.
   - [ ] Verificar redirección o checkout de Mercado Pago.
   - [ ] Simular pago aprobado.
   - [ ] Confirmar recepción del webhook en Vercel Logs (`[CRITICAL WEBHOOK ERROR]` no debe aparecer).
-  - [ ] Verificar acreditación automática de créditos / badge Pro en el dashboard del usuario.
+  - [ ] Verificar acreditación automática de créditos en la cuenta del usuario.
 
 ### B. PayPal
 - [ ] Configurar variables de entorno: `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`.
@@ -23,14 +23,6 @@ Este documento contiene la guía paso a paso para la verificación end-to-end an
   - [ ] Completar flujo de orden con cuenta comprador Sandbox.
   - [ ] Confirmar webhook `PAYMENT.CAPTURE.COMPLETED`.
   - [ ] Verificar registro en la tabla `processed_payments` de Supabase.
-
-### C. Lemon Squeezy
-- [ ] Configurar variables de entorno: `LEMONSQUEEZY_API_KEY`, `LEMONSQUEEZY_WEBHOOK_SECRET`.
-- [ ] Configurar URL de webhook en Lemon Squeezy Dashboard: `https://leecv.app/api/webhooks?provider=lemonsqueezy`.
-- [ ] Probar flujo con tarjeta de prueba en Test Mode:
-  - [ ] Confirmar verificación de firma HMAC SHA-256 (rawBody).
-  - [ ] Verificar que no haya errores de firma en `[CRITICAL WEBHOOK ALERT - lemonsqueezy]`.
-  - [ ] Confirmar acreditación de credits / plan.
 
 ---
 

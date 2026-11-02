@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal } from '../../../shared/core/ui/Modal';
 import { useAuth } from '../../../shared/core/auth/AuthContext';
 import { LogIn, Mail, Lock, AlertCircle, CheckCircle, Send, KeyRound, Eye, EyeOff } from 'lucide-react';
@@ -13,18 +13,18 @@ interface LoginModalProps {
 }
 
 export function LoginModal({ isOpen, onClose, onSuccess, defaultMode = 'login', message }: LoginModalProps) {
-  const { login, signup, requestOtp, verifyOtp } = useAuth();
+  const { user, login, signup, requestOtp } = useAuth();
   
-  // Metodo de autenticacion: 'otp' (sin contrasena) o 'password'
-  const [authMethod, setAuthMethod] = useState<'otp' | 'password'>('otp');
+  // Metodo de autenticacion: enlace de acceso o contrasena
+  const [authMethod, setAuthMethod] = useState<'otp' | 'password'>('password');
   const [mode, setMode] = useState<'login' | 'register'>(defaultMode);
   
   // Campos
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [otpCode, setOtpCode] = useState('');
   const [otpStep, setOtpStep] = useState<'request' | 'verify'>('request');
+  const [waitingForMagicLink, setWaitingForMagicLink] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -35,8 +35,8 @@ export function LoginModal({ isOpen, onClose, onSuccess, defaultMode = 'login', 
     setEmail('');
     setPassword('');
     setName('');
-    setOtpCode('');
     setOtpStep('request');
+    setWaitingForMagicLink(false);
     setErrorMsg('');
     setInfoMsg('');
     setIsProcessing(false);
@@ -48,7 +48,21 @@ export function LoginModal({ isOpen, onClose, onSuccess, defaultMode = 'login', 
     onClose();
   };
 
-  // Enviar codigo OTP por email
+  useEffect(() => {
+    if (!isOpen || !waitingForMagicLink || !user) return;
+    onSuccess?.();
+    setEmail('');
+    setPassword('');
+    setName('');
+    setOtpStep('request');
+    setWaitingForMagicLink(false);
+    setErrorMsg('');
+    setInfoMsg('');
+    setShowPassword(false);
+    onClose();
+  }, [isOpen, user, waitingForMagicLink, onSuccess, onClose]);
+
+  // Enviar enlace de acceso por email
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
@@ -60,34 +74,12 @@ export function LoginModal({ isOpen, onClose, onSuccess, defaultMode = 'login', 
     setIsProcessing(true);
     try {
       await requestOtp(email, mode === 'register');
+      setWaitingForMagicLink(true);
       setOtpStep('verify');
-      setInfoMsg('Te enviamos un código de 6 dígitos a tu correo. Ingrésalo a continuación:');
+      setInfoMsg('Supabase te envió un correo con un enlace de acceso. Abrilo para ingresar; si no lo ves, revisá spam.');
     } catch (err: any) {
+      setWaitingForMagicLink(false);
       setErrorMsg(err.message || 'No se pudo enviar el código. Revisa tu correo e intenta de nuevo.');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // Verificar codigo OTP
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMsg('');
-    if (otpCode.length !== 6) {
-      setErrorMsg('El código debe tener 6 dígitos.');
-      return;
-    }
-    setIsProcessing(true);
-    try {
-      const res = await verifyOtp(email, otpCode);
-      if (res?.user) {
-        if (onSuccess) onSuccess();
-        handleClose();
-      } else {
-        setErrorMsg('No se pudo verificar el código. Intenta nuevamente.');
-      }
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Código inválido o vencido.');
     } finally {
       setIsProcessing(false);
     }
@@ -128,12 +120,12 @@ export function LoginModal({ isOpen, onClose, onSuccess, defaultMode = 'login', 
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title={authMethod === 'otp' ? 'Acceso rápido con código' : mode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
+      title={authMethod === 'otp' ? 'Ingresar con enlace de acceso' : mode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
       icon={<LogIn className="w-5 h-5 text-[var(--color-accent-text)]" />}
       size="sm"
     >
       <div className={`space-y-4 p-4 text-[var(--ui-text-primary)] bg-[var(--ui-bg-panel)] rounded-[${radius.modal}]`}>
-        {/* Selector de metodo: OTP vs Password */}
+        {/* Selector de metodo: enlace de acceso vs contrasena */}
         <div className="flex rounded-full bg-[var(--ui-bg-card)] border border-[var(--ui-border)] p-1 text-xs">
           <button
             type="button"
@@ -145,7 +137,7 @@ export function LoginModal({ isOpen, onClose, onSuccess, defaultMode = 'login', 
             }`}
           >
             <KeyRound className="w-3.5 h-3.5" />
-            <span>Código al email</span>
+            <span>No la recuerdo</span>
           </button>
           <button
             type="button"
@@ -181,13 +173,13 @@ export function LoginModal({ isOpen, onClose, onSuccess, defaultMode = 'login', 
           </div>
         )}
 
-        {/* METODO 1: OTP (Codigo de 6 digitos sin contrasena) */}
+        {/* METODO 1: enlace de acceso */}
         {authMethod === 'otp' && (
           <>
             {otpStep === 'request' ? (
               <form onSubmit={handleSendOtp} className="space-y-4">
                 <p className="text-xs text-[var(--ui-text-secondary)]">
-                  Te enviamos un código de acceso a tu correo. Sin contraseñas que recordar.
+                  Te enviaremos un correo de Supabase con un enlace de acceso. Abrilo para ingresar sin recordar tu contraseña.
                 </p>
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-[var(--ui-text-secondary)]">Correo electrónico</label>
@@ -210,45 +202,24 @@ export function LoginModal({ isOpen, onClose, onSuccess, defaultMode = 'login', 
                   className={`w-full ${button.primary} py-2.5 rounded-[${radius.control}] mt-2 flex items-center justify-center gap-2`}
                 >
                   <Send className="w-4 h-4" />
-                  {isProcessing ? 'Enviando código...' : 'Enviar código de 6 dígitos'}
+                  {isProcessing ? 'Enviando enlace...' : 'Enviar enlace de acceso'}
                 </button>
               </form>
             ) : (
-              <form onSubmit={handleVerifyOtp} className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-[var(--ui-text-secondary)]">Código de 6 dígitos</label>
-                  <input
-                    type="tel"
-                    required
-                    maxLength={6}
-                    pattern="^[0-9]{6}$"
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value.replace(/\\D/g, '').slice(0, 6))}
-                    className={`w-full text-center text-lg tracking-widest font-mono p-2.5 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] focus:border-[var(--color-accent-base)] outline-none transition`}
-                    placeholder="000000"
-                    autoFocus
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isProcessing || otpCode.length !== 6}
-                  className={`w-full ${button.primary} py-2.5 rounded-[${radius.control}] mt-2 flex items-center justify-center gap-2`}
-                >
-                  <CheckCircle className="w-4 h-4" />
-                  {isProcessing ? 'Verificando...' : 'Confirmar e ingresar'}
-                </button>
-
+              <div className="space-y-4">
+                <p className="text-xs text-[var(--ui-text-secondary)]">
+                  Abrí el enlace desde el mismo dispositivo. Es de un solo uso y puede vencer pronto.
+                </p>
                 <div className="text-center pt-2">
                   <button
                     type="button"
-                    onClick={() => { setOtpStep('request'); setOtpCode(''); }}
+                    onClick={() => { setOtpStep('request'); setWaitingForMagicLink(false); }}
                     className="text-xs text-[var(--color-accent-text)] hover:underline font-bold"
                   >
-                    ← Cambiar correo o reenviar código
+                    ← Cambiar correo o reenviar enlace
                   </button>
                 </div>
-              </form>
+              </div>
             )}
           </>
         )}

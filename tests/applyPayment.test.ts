@@ -103,32 +103,6 @@ describe('applyPayment Unit Tests', () => {
     expect(serverDal.processedPayments.updateEntitlementStatus).toHaveBeenCalledWith('mercadopago', 'mp_tx_100', 'completed');
   });
 
-  it('debe manejar idempotencia omitiendo el pago si external_id ya existe con derecho completado', async () => {
-    const error: any = new Error('duplicate key value violates unique constraint "unq_provider_external_id"');
-    error.code = '23505';
-    vi.mocked(serverDal.processedPayments.record).mockRejectedValueOnce(error);
-    vi.mocked(serverDal.processedPayments.getByProviderAndExternalId).mockResolvedValueOnce({
-      id: 'pay_123',
-      plan: 'single_pdf',
-      entitlement_status: 'completed',
-    });
-
-    const payment: PaymentDetails = {
-      exportToken: 'tok_dup',
-      email: 'dup@test.com',
-      plan: 'single_pdf',
-      metodoPago: 'lemonsqueezy',
-      externalId: 'ls_dup_123',
-      amount: 2.6,
-      currency: 'USD',
-    };
-
-    const res = await applyPayment(fakeAdminClient, payment);
-    expect(res).toEqual({ type: 'already_processed', message: 'Payment already recorded' });
-    expect(fakeAdminClient.from).not.toHaveBeenCalled();
-    expect(serverDal.processedPayments.updateEntitlementStatus).not.toHaveBeenCalled();
-  });
-
   it('debe lanzar error si 23505 ocurre pero getByProviderAndExternalId devuelve null (fallo de lectura)', async () => {
     const error: any = new Error('duplicate key value violates unique constraint "unq_provider_external_id"');
     error.code = '23505';

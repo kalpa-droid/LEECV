@@ -6,7 +6,7 @@
  * como por las funciones Serverless del backend (Vercel).
  */
 
-export type ProviderId = 'mercadopago' | 'paypal' | 'lemonsqueezy';
+export type ProviderId = 'mercadopago' | 'paypal';
 
 export interface PaymentProviderCatalogEntry {
   id: ProviderId;
@@ -39,16 +39,6 @@ export const PAYMENT_PROVIDER_CATALOG: PaymentProviderCatalogEntry[] = [
     envVars: ['PAYPAL_CLIENT_ID', 'PAYPAL_CLIENT_SECRET', 'PAYPAL_WEBHOOK_ID'],
     badgeClass: 'bg-[var(--color-secondary-muted)] text-[var(--color-secondary-text)] border-[var(--color-secondary-base)]/30',
     checkoutSupported: true,
-  },
-  {
-    id: 'lemonsqueezy',
-    name: 'Lemon Squeezy',
-    shortLabel: 'LS',
-    defaultCurrency: 'USD',
-    emoji: '🌎',
-    envVars: ['LEMONSQUEEZY_API_KEY', 'LEMONSQUEEZY_WEBHOOK_SECRET'],
-    badgeClass: 'bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)] border-[var(--color-accent-purple)]/30',
-    checkoutSupported: false,
   },
 ];
 
