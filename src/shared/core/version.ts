@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 2,
   minor: 5,
-  patch: 0,
-  label: 'V2.5.0',
-  lastUpdated: '2026-11-01',
+  patch: 1,
+  label: 'V2.5.1',
+  lastUpdated: '2026-11-02',
   lastAgent: '@desarrollo-rapido',
-  stage: 'Rediseño CRO Landing Page, Auditor ATS en vivo en cliente y Tabla Comparativa de Transparencia',
+  stage: 'Acceso con contraseña por defecto y enlace de acceso por email',
 } as const;
