@@ -12,7 +12,7 @@ export interface PaymentDetails {
   email?: string | null;
   userId?: string | null;
   plan: PlanType;
-  metodoPago: 'mercadopago' | 'paypal' | 'lemonsqueezy' | 'manual';
+  metodoPago: 'mercadopago' | 'paypal' | 'manual';
   externalId?: string | null;
   amount?: number | null;
   currency?: string | null;

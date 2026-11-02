@@ -3,7 +3,6 @@ import { errorResponse, successResponse } from './_lib/apiResponse.js';
 import { requireRateLimit } from './_lib/rateLimiter.js';
 import { createCheckoutForProvider } from './_lib/paymentProviders/checkoutInitiators.js';
 import { captureBackendException } from './_lib/sentryBackend.js';
-import type { ProviderId } from './_lib/paymentProviders/types.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return errorResponse(res, 405, 'Method not allowed');
@@ -21,9 +20,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!providerId || !email) {
     return errorResponse(res, 400, 'Faltan campos obligatorios: providerId, email');
   }
+  if (providerId !== 'mercadopago' && providerId !== 'paypal') {
+    return errorResponse(res, 400, 'Proveedor de pago no válido');
+  }
 
   try {
-    const result = await createCheckoutForProvider(providerId as ProviderId, plan, exportToken || '', email, userId);
+    const result = await createCheckoutForProvider(providerId, plan, exportToken || '', email, userId);
     return successResponse(res, { checkoutUrl: result.checkoutUrl });
   } catch (err: any) {
     console.error(`Error creando checkout [${providerId}]:`, err);

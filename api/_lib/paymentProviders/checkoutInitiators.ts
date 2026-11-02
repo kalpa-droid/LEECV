@@ -120,10 +120,6 @@ export async function createCheckoutForProvider(
       return { checkoutUrl: approveLink };
     }
 
-    case 'lemonsqueezy': {
-      throw new Error('Lemon Squeezy no está habilitado como método de pago.');
-    }
-
     default:
       throw new Error(`Inicio de pago backend no soportado para ${providerId}`);
   }

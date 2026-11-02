@@ -14,7 +14,7 @@ Empezá leyendo `_linea-base.md` y `supabase/migrations/` en orden de nombre.
 ## B. Pagos y derecho a exportar
 7. **Idempotencia**: recorré el camino `webhook → applyPayment → grant`. ¿Qué pasa si el mismo pago llega dos veces en paralelo? ¿Y si llega primero "pendiente" y después "aprobado"?
 8. **Una sola fuente de verdad del vencimiento de Pro**: ¿cuántas columnas o lógicas distintas deciden si alguien es Pro (cron, admin, SQL, front)? Debe haber una.
-9. **Validación de monto y moneda** contra `PRICING_CATALOG` en los tres proveedores (Mercado Pago, PayPal, Lemon Squeezy). ¿Hay tolerancia definida y escrita en un solo lugar?
+9. **Validación de monto y moneda** contra `PRICING_CATALOG` en las dos pasarelas activas (Mercado Pago y PayPal). ¿Hay tolerancia definida y escrita en un solo lugar?
 10. ¿Se puede acreditar un plan que no está en el catálogo, o con referencia mal formada? Revisá `planReference.ts` y cada proveedor.
 11. **Consumo de exportaciones**: las RPC de `consume_*` / `get_*` entitlement, ¿son atómicas? ¿Usan `FOR UPDATE SKIP LOCKED` o equivalente? ¿Respetan vencimiento del token de invitado y del token de cuenta?
 12. ¿Pagos que se cobran y no se entregan (usuario sin perfil, email distinto) quedan en `pending_grants` y alguien se entera (admin, Sentry)?

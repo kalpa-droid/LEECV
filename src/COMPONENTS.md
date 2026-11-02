@@ -60,8 +60,8 @@ Este documento sirve como registro vivo de la estructura de componentes, regla d
 
 | Componente | Ubicación | Qué hace | Consume de | Lo usan | Última Modificación |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `PricingModal.jsx` | `src/modules/payments/PricingModal.jsx` | Modal de 3 niveles de planes ($1 PDF, $19 Pro, $29 Enterprise) | `paymentService` | `App.jsx` | 2026-08-19 |
-| `paymentService.js` | `src/modules/payments/paymentService.js` | Conector a gateways de pago Mercado Pago / Lemon Squeezy | Vercel API | `PricingModal` | 2026-08-19 |
+| `PricingModal.tsx` | `src/modules/payments/components/PricingModal.tsx` | Compra de exportaciones y packs de créditos | API de checkout | `App.tsx` | 2026-11-02 |
+| `paymentProviderCatalog.ts` | `src/shared/core/payments/paymentProviderCatalog.ts` | Catálogo de pasarelas activas: Mercado Pago y PayPal | API de pagos | Paneles de pagos y administración | 2026-11-02 |
 
 ---
 

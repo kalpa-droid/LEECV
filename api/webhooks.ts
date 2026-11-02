@@ -2,7 +2,6 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createWebhookHandler } from './_lib/webhookHandler.js';
 import { mercadoPagoProvider } from './_lib/paymentProviders/mercadopago.js';
 import { paypalProvider } from './_lib/paymentProviders/paypal.js';
-import { lemonSqueezyProvider } from './_lib/paymentProviders/lemonsqueezy.js';
 import { errorResponse } from './_lib/apiResponse.js';
 import { requireRateLimit } from './_lib/rateLimiter.js';
 
@@ -22,13 +21,6 @@ const paypalHandler = createWebhookHandler({
   extractPaymentDetails: (ctx) => paypalProvider.extractPaymentData(ctx),
 });
 
-const lsHandler = createWebhookHandler({
-  provider: 'lemonsqueezy',
-  rawBody: true,
-  verifySignature: (ctx) => lemonSqueezyProvider.verifyWebhook(ctx),
-  extractPaymentDetails: (ctx) => lemonSqueezyProvider.extractPaymentData(ctx),
-});
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Rate limiter based on IP
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
@@ -43,9 +35,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (provider === 'paypal') {
     return paypalHandler(req, res);
   }
-  if (provider === 'lemonsqueezy') {
-    return errorResponse(res, 410, 'El webhook de Lemon Squeezy ha sido deshabilitado');
-  }
-
   return errorResponse(res, 400, 'Proveedor de webhook no válido o no especificado');
 }

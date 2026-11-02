@@ -72,26 +72,4 @@ describe('Payment Webhook Integration & Gateway Handlers', () => {
     });
   });
 
-
-
-  describe('Lemon Squeezy Webhook Flow', () => {
-    it('debe descartar un webhook duplicado de Lemon Squeezy sin re-acreditar créditos', async () => {
-      const duplicateErr: any = new Error('duplicate key');
-      duplicateErr.code = '23505';
-      vi.mocked(serverDal.processedPayments.record).mockRejectedValueOnce(duplicateErr);
-
-      const lsDuplicatePayload = {
-        exportToken: 'tok_ls_dup',
-        email: 'ls_dup@test.com',
-        plan: 'credits_pack_10',
-        metodoPago: 'lemonsqueezy' as const,
-        externalId: 'LS_ORDER_DUP_123',
-      };
-
-      const result = await applyPayment(fakeAdminClient, lsDuplicatePayload);
-
-      expect(result).toEqual({ type: 'already_processed', message: 'Payment already recorded' });
-      expect(fakeAdminClient.from).not.toHaveBeenCalled();
-    });
-  });
 });

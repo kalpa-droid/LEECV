@@ -487,7 +487,7 @@ export default function AdminDashboard() {
             </button>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             {PAYMENT_PROVIDER_CATALOG.map((p) => (
               <React.Fragment key={p.id}>
                 {renderGatewayCard(p.name, p.defaultCurrency, integrations?.[p.id])}
