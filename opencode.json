@@ -1,34 +1,29 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "instructions": [
-    "AGENTS.md"
-  ],
-  "default_agent": "gestor",
-  "agents": {
-    "gestor": {
-      "description": "Gestor de agentes: reparte auditorías, consolida informes y pide aprobación antes de cambiar código",
-      "mode": "primary",
-      "model": "flint-40b-free"
-    },
-    "arquitecto": {
-      "description": "Arquitectura de software, esquemas de BD Supabase, políticas RLS y lógica algorítmica pesada",
-      "mode": "all",
-      "model": "flint-40b-free"
-    },
-    "desarrollo-rapido": {
-      "description": "Escritura rápida de funciones intermedias, capa DAL (dataAccessLayer.ts), refactorización y scripts",
-      "mode": "all",
-      "model": "deepseek-v4.1-flash-free"
-    },
-    "frontend-visual": {
-      "description": "Diseño UI/UX, maquetación, diagnóstico multimodal de capturas y tokens de diseño",
-      "mode": "all",
-      "model": "nemotron-3.5-super-vl-free"
-    },
-    "testing-qa": {
-      "description": "Pruebas unitarias e integración en Vitest, check-all, logs de sesión y operaciones Git",
-      "mode": "all",
-      "model": "mimo-v2.6-flash-free"
+  "provider": {
+    "openrouter": {
+      "models": {
+        "openrouter/free": {},
+        "~anthropic/claude-sonnet-4-5-20251101": {},
+        "~google/gemini-2.5-pro-exp-03-25": {},
+        "~openai/gpt-4o": {},
+        "~deepseek/deepseek-chat-v3-0324": {},
+        "~meta-llama/llama-4-scout-17b-instruct": {},
+        "~qwen/qwen-2.5-coder-32b-instruct": {},
+        "~google/gemma-4-31b-it:free": {},
+        "~nvidia/nemotron-3-ultra:free": {},
+        "~nvidia/nemotron-3.5-super-vl:free": {},
+        "~cohere/north-mini-code:free": {},
+        "~poolside/laguna-s-2.1:free": {}
+      }
+    }
+  },
+  "model": "openrouter/~anthropic/claude-sonnet-4-5-20251101",
+  "options": {
+    "provider": {
+      "openrouter": {
+        "apiKey": "${OPENROUTER_API_KEY}"
+      }
     }
   }
 }
