@@ -1,5 +1,19 @@
 # Registro de Intervenciones de Agentes (SESSION_LOG)
 
+## [2026-11-09] - V2.5.2 (feat/ocr-fase1-v252): Fase 1 OCR Estabilizado — jobs async, polling, límite 10 páginas
+
+**Resumen:**
+- `api/cv-import-api.ts`: nueva ruta `job-status`, límite 10 páginas por job, creación/actualización de jobs en tabla `ocr_jobs`, errores (`ai_not_configured`, `ai_rate_limited`, `ai_provider_error`) marcan job como `failed`.
+- `api/_lib/serverDal.ts`: sección `ocrJobs` con 4 métodos (create, getById, update, listByUser) usando `supabaseAdmin`.
+- `src/shared/core/storage/dataAccessLayer.ts`: sección `ocrJobs` cliente con los mismos 4 métodos.
+- `ImportCvAiModal.tsx`: modo async con polling cada 3s, timeout 5 min, fallback sync, estados visuales "Procesando..." / done / error.
+
+**Flujo implementado:** PDF subido → job `processing` en Supabase → frontend polling 3s → `completed` muestra CV / `failed` muestra error traducido. PDF >10 páginas → mensaje inmediato + sólo primeras 10.
+
+**Estado:** rama `feat/ocr-fase1-v252` (`c7a35b6`); PR #68 abierta en https://github.com/kalpa-droid/LEECV/pull/68; `check-all` 0 errores (3× confirmado local + pre-push); GitHub Actions corriendo; pendiente aprobación CODEOWNER (toca `api/_lib/` y `src/shared/core/`).
+
+**Versión:** V2.5.1 → V2.5.2
+
 ## [2026-11-01] - V2.5.0 (feat/hotfix-login-validaciones-v250): Hotfix validaciones + mejoras landing + artículos blog
 
 **Resumen (Fase A + Fase B + landing/blog):**
