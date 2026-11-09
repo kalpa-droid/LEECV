@@ -430,6 +430,55 @@ export const dal = {
     }
   },
 
+  ocrJobs: {
+    /** Crear un nuevo job de OCR/IA */
+    async create(payload: { userId?: string; email: string; pagesTotal?: number; status?: 'pending' | 'processing' | 'completed' | 'failed' }): Promise<{ id: string } | null> {
+      if (!supabase) return null;
+      const res = await safeSupabaseCall(() =>
+        supabase.from('ocr_jobs').insert({
+          user_id: payload.userId,
+          email: payload.email,
+          pages_total: payload.pagesTotal,
+          status: payload.status ?? 'pending',
+          created_at: new Date().toISOString(),
+        }).select('id').single()
+      );
+      return (res.data as { id: string }) || null;
+    },
+
+    /** Consultar estado actual de un job */
+    async getById(jobId: string): Promise<{ id: string; user_id?: string; email?: string; pages_total?: number; status?: string; result_json?: any; error_message?: string; created_at?: string; completed_at?: string } | null> {
+      if (!supabase) return null;
+      const res = await safeSupabaseCall(() =>
+        supabase.from('ocr_jobs').select('*').eq('id', jobId).single()
+      );
+      return res.data || null;
+    },
+
+    /** Actualizar job (estado, resultado, marcas de tiempo) */
+    async update(jobId: string, payload: {
+      status?: 'pending' | 'processing' | 'completed' | 'failed';
+      result_json?: any;
+      error_message?: string;
+      completed_at?: string;
+    }): Promise<boolean> {
+      if (!supabase) return false;
+      const res = await safeSupabaseCall(() =>
+        supabase.from('ocr_jobs').update(payload).eq('id', jobId).select().single()
+      );
+      return res.success;
+    },
+
+    /** Listar jobs por usuario (opcional, para el panel de historial) */
+    async listByUser(userId: string, limit: number = 50): Promise<any[]> {
+      if (!supabase) return [];
+      const res = await safeSupabaseCall(() =>
+        supabase.from('ocr_jobs').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(limit)
+      );
+      return (res.data as any[]) || [];
+    },
+  },
+
   pdfExportTokens: {
     /**
      * Crea el token impago del checkout y devuelve su uuid.
