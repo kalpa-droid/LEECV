@@ -22,6 +22,8 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
   const [status, setStatus] = useState<'idle' | 'analyzing' | 'processing' | 'done' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const [pastedText, setPastedText] = useState('');
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [jobErrorCode, setJobErrorCode] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -37,6 +39,8 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
     // La importación con IA es libre y utiliza rate limit por IP en backend
     
     setStatus('analyzing');
+    setJobId(null);
+    setJobErrorCode(null);
     
     try {
       let pagesToProcess: Array<{ kind: 'text'|'image', content: string }> = [];
@@ -58,42 +62,105 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
         throw new Error('Formato no soportado. Usa PDF, una imagen o texto (.txt).');
       }
 
-      setTotal(pagesToProcess.length);
+      const totalPages = pagesToProcess.length;
+      setTotal(totalPages);
       setProgress(0);
       setStatus('processing');
 
-      // Process each page sequentially and collect fragments
-      const fragments: CVFragment[] = [];
-      for (let i = 0; i < pagesToProcess.length; i++) {
-        const page = pagesToProcess[i];
-        
-        let contextSummary = '';
-        if (fragments.length > 0) {
-          const summaries = fragments.map((f, idx) => `Página ${idx}: ${JSON.stringify(f)}`);
-          contextSummary = `\nContexto previo extraido:\n${summaries.join('\n')}\n`;
-        }
+      // NUEVO: Si hay más de 10 páginas, el backend ya devuelve jobId con frontPageLimit
+      // Enviamos la primera página para crear el job inicial
+      const firstPage = pagesToProcess[0];
+      let contextSummary = '';
+      const pData = await apiClient.post('/api/cv-import-api?action=extract-page', {
+        kind: firstPage.kind,
+        content: firstPage.content,
+        contextSummary,
+        auxiliaryText: (firstPage as any).auxiliaryText || ''
+      }, { requiresAuth: false });
 
-        const pData = await apiClient.post('/api/cv-import-api?action=extract-page', {
-          kind: page.kind,
-          content: page.content,
-          contextSummary,
-          auxiliaryText: (page as any).auxiliaryText || ''
-        }, { requiresAuth: false });
-
-        if (!pData.ok) {
-          throw new Error(pData.error || `Error del servidor procesando página ${i+1}`);
-        }
-        if (!pData.data || !pData.data.fragmentJson) {
-          throw new Error(`Respuesta inesperada del servidor para página ${i+1}`);
-        }
-        fragments.push(pData.data.fragmentJson);
-        setProgress(i + 1);
+      if (!pData.ok) {
+        throw new Error(pData.error || 'Error del servidor creando el job');
       }
 
-      const mergedCv = mergePageFragments(fragments);
-      setStatus('done');
-      onImportComplete(mergedCv);
-      
+      // El backend devuelve jobId (async) o directamente fragmentJson (sync)
+      if (pData.data?.jobId) {
+        // Modo async: hacer polling del estado del job
+        setJobId(pData.data.jobId);
+        setTotal(pData.data.pagesTotal ?? totalPages);
+        
+        const pollJob = async () => {
+          try {
+            const statusResp = await apiClient.get<{ job: any }>(
+              `/api/cv-import-api?action=job-status&jobId=${jobId}`,
+              { requiresAuth: false }
+            );
+            if (!statusResp.ok) throw new Error(statusResp.error || 'No se pudo consultar el estado del job');
+
+            const job = statusResp.data.job;
+            if (job.status === 'completed') {
+              setProgress(job.pagesTotal ?? totalPages);
+              setStatus('done');
+              onImportComplete(job.result_json || pData.data.fragmentJson);
+              return;
+            } else if (job.status === 'failed') {
+              setJobErrorCode(job.error_message || 'ai_provider_error');
+              setStatus('error');
+              setErrorMsg('Error procesando el CV. Intentá con “Pegar texto” como alternativa.');
+              return;
+            } else if (job.status === 'pages_limit_exceeded') {
+              setErrorMsg(job.message || 'PDF largo: se procesaron las primeras 10 páginas.');
+              setStatus('done');
+              onImportComplete(job.result_json || pData.data.fragmentJson);
+              return;
+            } else if (job.status === 'processing' || job.status === 'pending') {
+              // Seguir haciendo polling cada 3 segundos
+              setProgress(job.pagesProcessed ?? progress);
+              setTimeout(pollJob, 3000);
+            }
+          } catch (err: any) {
+            console.error('Polling error:', err);
+            setErrorMsg('No se pudo consultar el estado del procesamiento.');
+            setStatus('error');
+          }
+        };
+        pollJob();
+      } else if (pData.data?.fragmentJson) {
+        // Modo sync (fallback): procesar una página a la vez (lógica original)
+        const fragments: CVFragment[] = [pData.data.fragmentJson];
+        setProgress(1);
+
+        for (let i = 1; i < pagesToProcess.length; i++) {
+          const page = pagesToProcess[i];
+          let contextSummary = '';
+          if (fragments.length > 0) {
+            const summaries = fragments.map((f, idx) => `Página ${idx}: ${JSON.stringify(f)}`);
+            contextSummary = `\nContexto previo extraido:\n${summaries.join('\n')}\n`;
+          }
+
+          const pDataPage = await apiClient.post('/api/cv-import-api?action=extract-page', {
+            kind: page.kind,
+            content: page.content,
+            contextSummary,
+            auxiliaryText: (page as any).auxiliaryText || ''
+          }, { requiresAuth: false });
+
+          if (!pDataPage.ok) {
+            throw new Error(pDataPage.error || `Error del servidor procesando página ${i+1}`);
+          }
+          if (!pDataPage.data || !pDataPage.data.fragmentJson) {
+            throw new Error(`Respuesta inesperada del servidor para página ${i+1}`);
+          }
+          fragments.push(pDataPage.data.fragmentJson);
+          setProgress(i + 1);
+        }
+
+        const mergedCv = mergePageFragments(fragments);
+        setStatus('done');
+        onImportComplete(mergedCv);
+      } else {
+        throw new Error('Respuesta inesperada del servidor.');
+      }
+
     } catch (err: any) {
       console.error(err);
       setStatus('error');
@@ -104,6 +171,10 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
         setErrorMsg('Los proveedores de IA están temporalmente limitados (rate limit). Intentá de nuevo en unos minutos, o pegá el texto del CV como alternativa.');
       } else if (msg.includes('ai_provider_error')) {
         setErrorMsg('El proveedor de IA falló (error técnico). Intentá con texto pegado como alternativa mientras se resuelve.');
+      } else if (msg.includes('pages_limit_exceeded')) {
+        setErrorMsg('PDF largo: se procesarán las primeras 10 páginas.');
+        setStatus('done');
+        onImportComplete(null);
       } else {
         setErrorMsg(msg || 'Error desconocido. Intentá pegar el contenido como texto alternativo.');
       }
@@ -188,7 +259,7 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
           <div className="flex flex-col items-center gap-4 py-8">
             <Loader2 size={48} className="animate-spin" color={colorSystem.accent.base} />
             <h3 className={typeScale.sectionTitle}>
-              {status === 'analyzing' ? 'Analizando archivo...' : `Procesando página ${progress} de ${total}`}
+              {status === 'analyzing' ? 'Analizando archivo...' : 'Procesando...'}
             </h3>
             <div className="w-full bg-[var(--ui-border)] rounded-full h-2.5 mt-4">
               <div 
@@ -226,6 +297,17 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
             <p className={`${typeScale.body} text-center`} style={{ color: colorSystem.status.danger.text }}>
               {errorMsg}
             </p>
+            {jobErrorCode && (
+              <div className="flex items-start gap-2">
+                <AlertTriangle size={24} color={colorSystem.status.danger.base} />
+                <span className="text-sm font-medium">
+                  Error {jobErrorCode === 'ai_not_configured' ? 'de configuración de IA' : 
+                         jobErrorCode === 'ai_rate_limited' ? 'de tasa de IA' : 
+                         jobErrorCode === 'ai_provider_error' ? 'del proveedor' : 
+                         'de procesamiento'}
+                </span>
+              </div>
+            )}
             <button className={`${button.base} ${button.secondary}`} onClick={() => setStatus('idle')}>
               Intentar de nuevo
             </button>

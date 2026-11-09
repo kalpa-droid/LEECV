@@ -394,5 +394,63 @@ export const serverDal = {
         console.error(`[aiTelemetry] Error logging usage: ${error.message}`);
       }
     }
+  },
+
+  ocrJobs: {
+    /** Crear un nuevo job de OCR/IA */
+    async create(payload: { userId?: string; email: string; pagesTotal?: number; status?: 'pending' | 'processing' | 'completed' | 'failed' }): Promise<{ id: string } | null> {
+      if (!supabaseAdmin) return null;
+      const res = await supabaseAdmin
+        .from('ocr_jobs')
+        .insert({
+          user_id: payload.userId,
+          email: payload.email,
+          pages_total: payload.pagesTotal,
+          status: payload.status ?? 'pending',
+          created_at: new Date().toISOString(),
+        })
+        .select('id')
+        .single();
+      return res.data || null;
+    },
+
+    /** Consultar estado actual de un job */
+    async getById(jobId: string): Promise<any | null> {
+      if (!supabaseAdmin) return null;
+      const { data, error } = await supabaseAdmin
+        .from('ocr_jobs')
+        .select('*')
+        .eq('id', jobId)
+        .maybeSingle();
+      if (error) console.error(`[ocrJobs] Error consultando job ${jobId}: ${error.message}`);
+      return data || null;
+    },
+
+    /** Actualizar job (estado, resultado, marcas de tiempo) */
+    async update(jobId: string, payload: {
+      status?: 'pending' | 'processing' | 'completed' | 'failed';
+      result_json?: any;
+      error_message?: string;
+      completed_at?: string;
+    }): Promise<boolean> {
+      if (!supabaseAdmin) return false;
+      const { error } = await supabaseAdmin
+        .from('ocr_jobs')
+        .update(payload)
+        .eq('id', jobId);
+      return !error;
+    },
+
+    /** Listar jobs por usuario */
+    async listByUser(userId: string, limit: number = 50): Promise<any[]> {
+      if (!supabaseAdmin) return [];
+      const { data } = await supabaseAdmin
+        .from('ocr_jobs')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      return data || [];
+    },
   }
 };

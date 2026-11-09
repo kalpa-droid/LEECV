@@ -21,6 +21,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const action = req.query.action as string;
 
+  // --- NUEVO: acción job-status (polling desde el frontend) ---
+  if (action === 'job-status') {
+    const jobId = req.query.jobId as string;
+    if (!jobId) return errorResponse(res, 400, 'jobId requerido');
+    const job = await serverDal.ocrJobs.getById(jobId);
+    if (!job) return errorResponse(res, 404, 'Job no encontrado');
+    return successResponse(res, { job });
+  }
+
   if (action !== 'extract-page') {
     return errorResponse(res, 400, 'Acción no válida');
   }
@@ -30,6 +39,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!content) {
     return errorResponse(res, 400, 'Faltan parámetros requeridos');
   }
+
+  // --- NUEVO: estimar páginas y validar límite (máximo 10 por job) ---
+  let estimatedPages = 1;
+  if (kind === 'image') {
+    estimatedPages = 1;
+  } else if (kind === 'text') {
+    const lines = (content?.match(/\n/g) || []).length;
+    estimatedPages = Math.max(1, Math.ceil((lines + 1) / 50)); // ~50 líneas por página
+  } else if (kind === 'pdf') {
+    // Para PDF, el frontend ya dividió en páginas, asumimos 1 por request
+    estimatedPages = 1;
+  }
+
+  // --- Límite y tracking ---
+  const frontPageLimit = 10;
+  const hasExtraPages = estimatedPages > frontPageLimit;
+
+  // --- CREAR JOB ANTES DE PROCESAR (tracking para eventuales colas futuras) ---
+  const pageJobResult = await serverDal.ocrJobs.create({
+    userId: '',
+    email: '',
+    pagesTotal: estimatedPages > frontPageLimit ? frontPageLimit : estimatedPages,
+    status: 'processing',
+  });
+  const pageJobId = pageJobResult?.id as string;
 
   try {
     const systemInstruction = `Eres un extractor experto de CVs, hojas de vida y perfiles de LinkedIn.
@@ -232,13 +266,16 @@ REGLAS CRÍTICAS:
 
       if (allKeysMissing) {
         console.error('[cv-import] No hay claves de IA configuradas:', lastError);
+        await serverDal.ocrJobs.update(pageJobId, { status: 'failed', error_message: 'ai_not_configured' });
         return errorResponse(res, 503, 'ai_not_configured');
       }
       if (allRateLimited) {
         console.error('[cv-import] Proveedores de IA limitados por tasa:', lastError);
+        await serverDal.ocrJobs.update(pageJobId, { status: 'failed', error_message: 'ai_rate_limited' });
         return errorResponse(res, 429, 'ai_rate_limited');
       }
       console.error('[cv-import] Error al procesar página:', lastError);
+      await serverDal.ocrJobs.update(pageJobId, { status: 'failed', error_message: 'ai_provider_error' });
       return errorResponse(res, 502, 'ai_provider_error');
     }
 
@@ -266,13 +303,30 @@ REGLAS CRÍTICAS:
         }
       } catch {
         console.error('AI no devolvió JSON válido ni en retry', completionText);
+        await serverDal.ocrJobs.update(pageJobId, {
+          status: 'failed',
+          error_message: 'Error procesando respuesta de IA (Formato inválido tras reintento)',
+        });
         return errorResponse(res, 500, 'Error procesando respuesta de IA (Formato inválido tras reintento)');
       }
     }
 
-    return successResponse(res, { fragmentJson });
+    await serverDal.ocrJobs.update(pageJobId!, {
+      status: 'completed',
+      result_json: fragmentJson,
+      completed_at: new Date().toISOString(),
+    });
+
+    const message = hasExtraPages ? 'Página procesada. Hay más páginas pendientes de tratamiento.' : 'Página procesada exitosamente.';
+    return successResponse(res, { jobId: pageJobId, fragmentJson, message });
   } catch (error: any) {
     console.error('Error processing cv import page:', error);
+    try {
+      await serverDal.ocrJobs.update(pageJobId, {
+        status: 'failed',
+        error_message: error.message || 'Unknown internal error',
+      });
+    } catch (_) {}
     return errorResponse(res, 500, 'Error interno del servidor');
   }
 }
