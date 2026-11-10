@@ -36,6 +36,7 @@ import { useConfirm, ConfirmProvider } from '../shared/core/ui/ConfirmDialog';
 import { syncPresetsFromStorage, getPreset, resolveActivePreset } from '../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { cvDataToContentSections } from '../shared/core/pdf-engine/layers/records/cvDataAdapter';
 import { runAtsPreflightCheck, AtsPreflightResult } from '../shared/core/pdf-engine/layers/ats/atsPreflightCheck';
+import { useAtsLiveScore } from '../shared/core/ats/useAtsLiveScore';
 const PlannerStudioContent = lazy(() => import('../modules/planner-studio/PlannerStudioContent').then(m => ({ default: m.PlannerStudioContent })));
 import { loadCVById, loadDocumentById, saveCV } from '../shared/core/storage/documentStorageService';
 import { setPendingDocumentToOpen, getPendingDocumentToOpen, clearPendingDocumentToOpen } from '../shared/core/storage/pendingDocumentHandoff';
@@ -72,6 +73,8 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const { confirm } = useConfirm();
   const { inGracePeriod, graceEndsAt, refreshEntitlements } = useEntitlements();
   const { user } = useAuth();
+  const atsLive = useAtsLiveScore(cvData, cvData?.jobTarget?.jobDescription);
+  const atsLiveScore = atsLive.score;
 
 
 
@@ -261,6 +264,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const [isCoverLetterExportOpen, setIsCoverLetterExportOpen] = useState(false);
   const [isAtsModalOpen, setIsAtsModalOpen] = useState(false);
   const [atsResult, setAtsResult] = useState<AtsPreflightResult | null>(null);
+  const [isAtsLivePanelOpen, setIsAtsLivePanelOpen] = useState(false);
 
   // Gestión unificada y desacoplada de pestañas mediante el custom hook useDocumentTabs
   const { tabs, setTabs, activeCvId } = useDocumentTabs({
@@ -390,11 +394,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 
 
   const handleOpenAtsCheck = () => {
-    const preset = resolveActivePreset(cvData);
-    const sections = cvDataToContentSections(cvData);
-    const res = runAtsPreflightCheck(preset, sections, cvData, cvData?.jobTarget?.jobDescription);
-    setAtsResult(res);
-    setIsAtsModalOpen(true);
+    setIsAtsLivePanelOpen(true);
   };
 
   const handleExportAtsPdf = async (omitSensitiveData: boolean = false) => {
@@ -837,6 +837,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           onOpenJsonDownloadModal={() => setIsDownloadModalOpen(true)}
           onPrint={handleExportPDFClick}
           onOpenAtsCheck={handleOpenAtsCheck}
+          atsScore={atsLiveScore}
           onOpenPricing={() => setIsPricingModalOpen(true)}
           onOpenCreditsModal={() => setIsCreditsModalOpen(true)}
           onOpenShareAppModal={() => setIsShareAppModalOpen(true)}
@@ -943,6 +944,10 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           isDownloadModalOpen={isDownloadModalOpen} setIsDownloadModalOpen={setIsDownloadModalOpen}
           isPrivacyModalOpen={isPrivacyModalOpen} setIsPrivacyModalOpen={setIsPrivacyModalOpen}
           isAtsModalOpen={isAtsModalOpen} setIsAtsModalOpen={setIsAtsModalOpen}
+          isAtsLivePanelOpen={isAtsLivePanelOpen} setIsAtsLivePanelOpen={setIsAtsLivePanelOpen}
+          atsLiveResult={atsLive?.result ?? null}
+          activeTab={activeTab} setActiveTab={(tab) => { setActiveTab(tab); setIsPanelOpen(true); }}
+          isPanelOpen={isPanelOpen} setIsPanelOpen={setIsPanelOpen}
           isPricingModalOpen={isPricingModalOpen} setIsPricingModalOpen={setIsPricingModalOpen}
           isCreditsModalOpen={isCreditsModalOpen} setIsCreditsModalOpen={setIsCreditsModalOpen}
           isLoginModalOpen={isLoginModalOpen} setIsLoginModalOpen={setIsLoginModalOpen}

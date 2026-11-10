@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 2,
-  minor: 5,
-  patch: 2,
-  label: 'V2.5.2',
-  lastUpdated: '2026-11-02',
+  minor: 6,
+  patch: 0,
+  label: 'V2.6.0',
+  lastUpdated: '2026-11-09',
   lastAgent: '@desarrollo-rapido',
-  stage: 'Acceso con enlace por email y pagos solo con Mercado Pago y PayPal',
+  stage: 'Acceso con enlace por email, pagos con Mercado Pago y PayPal, Auditor ATS en vivo y catálogo pSEO masivo',
 } as const;

@@ -3,10 +3,19 @@ export interface JobRoleTemplate {
   title: string;
   description: string;
   sections: string[];
+  keywords?: string[];
+  acrExample?: string;
+  category?: string;
 }
 
-export const jobTemplatesCatalog: ReadonlyArray<JobRoleTemplate> = [
-  { slug: 'marketing-digital', title: 'Marketing Digital', description: 'CV optimizado para roles de marketing digital y crecimiento.', sections: ['Experiencia Laboral', 'Formación', 'Habilidades Técnicas', 'Certificaciones'] },
-  { slug: 'desarrollo-web', title: 'Desarrollo Web', description: 'CV técnico para desarrolladores frontend y backend.', sections: ['Experiencia Laboral', 'Proyectos', 'Educación', 'Herramientas'] },
-  { slug: 'gestion-de-proyectos', title: 'Gestión de Proyectos', description: 'CV orientado a coordinación de proyectos ágiles y tradicionales.', sections: ['Experiencia Laboral', 'Formación', 'Certificaciones', 'Idiomas'] },
-];
+import rawData from './jobTemplatesData.json';
+
+export const jobTemplatesCatalog: ReadonlyArray<JobRoleTemplate> = (rawData as JobRoleTemplate[]);
+
+export function getJobRoleBySlug(slug: string): JobRoleTemplate | undefined {
+  return jobTemplatesCatalog.find(r => r.slug === slug);
+}
+
+export function getAllJobRoles(): JobRoleTemplate[] {
+  return [...jobTemplatesCatalog];
+}

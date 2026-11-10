@@ -1,0 +1,1165 @@
+[
+  {
+    "slug": "desarrollador-frontend",
+    "title": "CV Desarrollador Frontend",
+    "category": "tecnologia",
+    "description": "Plantilla de currículum optimizada para sistemas ATS para desarrolladores frontend con experiencia en React, TypeScript y diseño de interfaces.",
+    "sections": [
+      "Experiencia Laboral",
+      "Habilidades Técnicas",
+      "Proyectos y Portafolio",
+      "Formación Académica"
+    ],
+    "keywords": [
+      "React",
+      "TypeScript",
+      "JavaScript",
+      "HTML5",
+      "CSS3",
+      "Tailwind",
+      "Vite",
+      "Design Systems",
+      "Accesibilidad"
+    ],
+    "acrExample": "Migración de componentes legacy a React + TypeScript, reduciendo 40% el tiempo de carga del sitio y un 25% los errores en producción."
+  },
+  {
+    "slug": "desarrollador-backend",
+    "title": "CV Desarrollador Backend",
+    "category": "tecnologia",
+    "description": "CV técnico orientado a sistemas ATS para desarrolladores backend especializados en APIs, bases de datos y arquitectura de servicios.",
+    "sections": [
+      "Experiencia Laboral",
+      "Habilidades Técnicas",
+      "Proyectos Destacados",
+      "Formación Académica"
+    ],
+    "keywords": [
+      "Node.js",
+      "PostgreSQL",
+      "APIs REST",
+      "Microservicios",
+      "Docker",
+      "AWS",
+      "SQL",
+      "Redis",
+      "CI/CD"
+    ],
+    "acrExample": "Rediseño de la API principal en Node.js con caché en Redis, reduciendo 60% la latencia media de respuesta y soportando 3x más tráfico."
+  },
+  {
+    "slug": "desarrollador-full-stack",
+    "title": "CV Desarrollador Full-Stack",
+    "category": "tecnologia",
+    "description": "Plantilla de CV compatible con ATS para desarrolladores full-stack con dominio del frontend, backend y bases de datos.",
+    "sections": [
+      "Experiencia Laboral",
+      "Habilidades Técnicas",
+      "Proyectos Integrales",
+      "Formación Académica"
+    ],
+    "keywords": [
+      "React",
+      "Node.js",
+      "TypeScript",
+      "PostgreSQL",
+      "Next.js",
+      "APIs REST",
+      "Docker",
+      "Git",
+      "Cloud"
+    ],
+    "acrExample": "Desarrollo end-to-end de un MVP en 6 semanas con React y Node.js, validando el producto con 2.000 usuarios activos."
+  },
+  {
+    "slug": "ingeniero-de-software",
+    "title": "CV Ingeniero de Software",
+    "category": "tecnologia",
+    "description": "CV orientado a ATS para ingenieros de software con experiencia en diseño de sistemas, código limpio y metodologías ágiles.",
+    "sections": [
+      "Experiencia Laboral",
+      "Habilidades Técnicas",
+      "Formación Académica",
+      "Certificaciones"
+    ],
+    "keywords": [
+      "Sistemas Distribuidos",
+      "Arquitectura de Software",
+      "APIs",
+      "Patrones de Diseño",
+      "Ágil",
+      "Testing",
+      "Code Review",
+      "Cloud"
+    ],
+    "acrExample": "Liderazgo técnico de 4 ingenieros en el rebuild del core de facturación, reduciendo 35% los bugs en producción post-release."
+  },
+  {
+    "slug": "analista-de-datos",
+    "title": "CV Analista de Datos",
+    "category": "tecnologia",
+    "description": "Plantilla de currículum optimizada para sistemas ATS orientada a análisis de datos, SQL y visualización de métricas de negocio.",
+    "sections": [
+      "Experiencia Laboral",
+      "Habilidades Técnicas",
+      "Proyectos y Modelos",
+      "Formación Académica"
+    ],
+    "keywords": [
+      "SQL",
+      "Python",
+      "Power BI",
+      "Tableau",
+      "ETL",
+      "Modelado Estadístico",
+      "Métricas de Negocio",
+      "Excel Avanzado"
+    ],
+    "acrExample": "Creación de dashboard de KPIs en Power BI que redujo 20% el tiempo de reporting mensual y unificó métricas de 3 áreas."
+  },
+  {
+    "slug": "cientifico-de-datos",
+    "title": "CV Científico de Datos",
+    "category": "tecnologia",
+    "description": "CV compatible con ATS para científicos de datos especializados en machine learning, estadística e ingeniería de features.",
+    "sections": [
+      "Experiencia Laboral",
+      "Habilidades Técnicas",
+      "Publicaciones y Proyectos",
+      "Formación Académica"
+    ],
+    "keywords": [
+      "Python",
+      "Machine Learning",
+      "TensorFlow",
+      "Pandas",
+      "Estadística",
+      "SQL",
+      "Feature Engineering",
+      "MLOps"
+    ],
+    "acrExample": "Modelo de churn en Python con XGBoost que identificó riesgo de abandono con 87% de precisión, salvando $120K en clientes."
+  },
+  {
+    "slug": "ingeniero-devops",
+    "title": "CV Ingeniero DevOps",
+    "category": "tecnologia",
+    "description": "Plantilla de CV orientada a ATS para ingenieros DevOps con experiencia en CI/CD, infraestructura como código y observabilidad.",
+    "sections": [
+      "Experiencia Laboral",
+      "Habilidades Técnicas",
+      "Certificaciones Cloud",
+      "Formación Académica"
+    ],
+    "keywords": [
+      "Kubernetes",
+      "Docker",
+      "Terraform",
+      "AWS",
+      "CI/CD",
+      "GitHub Actions",
+      "Observabilidad",
+      "Linux",
+      "SRE"
+    ],
+    "acrExample": "Automatización del pipeline de despliegue con GitHub Actions y Kubernetes, reduciendo 70% el tiempo de release y eliminando errores manuales."
+  },
+  {
+    "slug": "qa-engineer",
+    "title": "CV QA Engineer",
+    "category": "tecnologia",
+    "description": "CV optimizado para ATS orientado a control de calidad, automatización de pruebas y estrategias de testing.",
+    "sections": [
+      "Experiencia Laboral",
+      "Habilidades Técnicas",
+      "Certificaciones",
+      "Formación Académica"
+    ],
+    "keywords": [
+      "Testing Automatizado",
+      "Selenium",
+      "Cypress",
+      "Playwright",
+      "Pruebas de Regresión",
+      "ISTQB",
+      "CI/CD",
+      "API Testing"
+    ],
+    "acrExample": "Implementación de suite de pruebas automatizadas con Cypress, elevando cobertura de 45% a 82% y reduciendo 50% los bugs en releases."
+  },
+  {
+    "slug": "disenador-ux-ui",
+    "title": "CV Diseñador UX/UI",
+    "category": "tecnologia",
+    "description": "Plantilla de currículum compatible con ATS para diseñadores UX/UI orientados a investigación, prototipos y design systems.",
+    "sections": [
+      "Experiencia Laboral",
+      "Habilidades de Diseño",
+      "Portafolio y Casos de Estudio",
+      "Formación Académica"
+    ],
+    "keywords": [
+      "Figma",
+      "Design Systems",
+      "UX Research",
+      "Prototipado",
+      "Accesibilidad",
+      "Diseño de Interfaces",
+      "Wireframes",
+      "Usability Testing"
+    ],
+    "acrExample": "Rediseño del flujo de checkout con research y tests de usabilidad, aumentando 22% la conversión y reduciendo 35% los abandonos de carrito."
+  },
+  {
+    "slug": "especialista-ciberseguridad",
+    "title": "CV Especialista en Ciberseguridad",
+    "category": "tecnologia",
+    "description": "CV orientado a ATS para especialistas en ciberseguridad con experiencia en detección de amenazas, auditorías y cumplimiento.",
+    "sections": [
+      "Experiencia Laboral",
+      "Habilidades Técnicas",
+      "Certificaciones",
+      "Formación Académica"
+    ],
+    "keywords": [
+      "SOC",
+      "SIEM",
+      "Respuesta a Incidentes",
+      "Pentesting",
+      "Cumplimiento ISO 27001",
+      "Análisis de Vulnerabilidades",
+      "Zero Trust",
+      "Firewalls"
+    ],
+    "acrExample": "Respuesta y contención de incidente de seguridad en menos de 2 horas con playbooks documentados, evitando exposición de 50K registros."
+  },
+  {
+    "slug": "administrador-de-empresas",
+    "title": "CV Administrador de Empresas",
+    "category": "administracion-finanzas",
+    "description": "Plantilla de currículum optimizada para sistemas ATS para administradores con enfoque en gestión operativa, presupuestos y equipos.",
+    "sections": [
+      "Experiencia Laboral",
+      "Habilidades de Gestión",
+      "Formación Académica",
+      "Certificaciones"
+    ],
+    "keywords": [
+      "Gestión Operativa",
+      "Presupuestos",
+      "KPIs",
+      "Liderazgo de Equipos",
+      "Procesos Administrativos",
+      "ERP",
+      "Mejora Continua"
+    ],
+    "acrExample": "Reorganización de procesos administrativos que redujo 30% los tiempos de ciclo y ahorró 15% en costos operativos anuales."
+  },
+  {
+    "slug": "analista-contable",
+    "title": "CV Analista Contable",
+    "category": "administracion-finanzas",
+    "description": "CV compatible con ATS para analistas contables con experiencia en registros, conciliaciones y cierres contables.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Habilidades Técnicas",
+      "Certificaciones"
+    ],
+    "keywords": [
+      "Contabilidad General",
+      "Asientos Contables",
+      "Conciliación Bancaria",
+      "Cierres Mensuales",
+      "ERP Contable",
+      "Excel Avanzado",
+      "AFIP"
+    ],
+    "acrExample": "Automatización de conciliaciones bancarias con macros de Excel, reduciendo 60% el tiempo de cierre mensual."
+  },
+  {
+    "slug": "analista-financiero",
+    "title": "CV Analista Financiero",
+    "category": "administracion-finanzas",
+    "description": "Plantilla de CV orientada a ATS para analistas financieros especializados en valuación, proyecciones y reporting.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Habilidades Técnicas",
+      "Certificaciones"
+    ],
+    "keywords": [
+      "Análisis Financiero",
+      "Valuación",
+      "Flujo de Caja",
+      "Forecasting",
+      "Excel Avanzado",
+      "Modelado Financiero",
+      "Reportes Gerenciales"
+    ],
+    "acrExample": "Modelo de proyección financiera a 3 años que mejoró la precisión de forecast en 25% y apoyó decisión de inversión de $2M."
+  },
+  {
+    "slug": "tesorero",
+    "title": "CV Tesorero",
+    "category": "administracion-finanzas",
+    "description": "CV optimizado para ATS para tesoreros con experiencia en gestión de caja, medios de pago y relaciones bancarias.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Habilidades Técnicas",
+      "Certificaciones"
+    ],
+    "keywords": [
+      "Gestión de Tesorería",
+      "Cash Flow",
+      "Conciliación Bancaria",
+      "Financiamiento",
+      "Pagos y Cobranzas",
+      "Excel Avanzado",
+      "Relación con Bancos"
+    ],
+    "acrExample": "Renegociación de líneas de crédito con 3 bancos, ampliando límites en 40% y reduciendo 2 puntos el costo financiero."
+  },
+  {
+    "slug": "controller",
+    "title": "CV Controller",
+    "category": "administracion-finanzas",
+    "description": "Plantilla de currículum compatible con ATS para controllers de gestión especializados en control presupuestario y reporting.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Habilidades Técnicas",
+      "Certificaciones"
+    ],
+    "keywords": [
+      "Control de Gestión",
+      "Presupuestos",
+      "Reporting Gerencial",
+      "Análisis de Desvíos",
+      "Costos",
+      "ERP",
+      "Tableros de KPIs",
+      "SAP"
+    ],
+    "acrExample": "Implementación de tablero de control de costos que detectó desvíos por $80K trimestrales y habilitó re-presupuestación oportuna."
+  },
+  {
+    "slug": "asistente-administrativa",
+    "title": "CV Asistente Administrativa",
+    "category": "administracion-finanzas",
+    "description": "CV orientado a sistemas ATS para asistentes administrativas con experiencia en agenda, facturación y soporte de oficina.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Habilidades Técnicas",
+      "Idiomas"
+    ],
+    "keywords": [
+      "Gestión Administrativa",
+      "Facturación",
+      "Agenda Ejecutiva",
+      "Archival",
+      "Microsoft Office",
+      "Atención al Cliente",
+      "Organización"
+    ],
+    "acrExample": "Optimización del proceso de facturación que redujo 45% los errores y aceleró el cobro promedio en 12 días."
+  },
+  {
+    "slug": "contador-publico",
+    "title": "CV Contador Público",
+    "category": "administracion-finanzas",
+    "description": "Plantilla de CV compatible con ATS para contadores públicos con experiencia en impuestos, balances y auditoría.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Certificaciones",
+      "Habilidades Técnicas"
+    ],
+    "keywords": [
+      "Impuestos AFIP",
+      "Balances",
+      "Auditoría",
+      "Contabilidad",
+      "IVA",
+      "Ganancias",
+      "ERP Contable",
+      "NORMA CONTABLES"
+    ],
+    "acrExample": "Planificación tributaria integral que redujo 18% la carga fiscal legal de 30 clientes PYME sin riesgos de cumplimiento."
+  },
+  {
+    "slug": "analista-rrhh",
+    "title": "CV Analista de Recursos Humanos",
+    "category": "administracion-finanzas",
+    "description": "CV optimizado para ATS para analistas de RRHH con experiencia en reclutamiento, liquidación de sueldos y clima organizacional.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Habilidades Técnicas",
+      "Certificaciones"
+    ],
+    "keywords": [
+      "Reclutamiento",
+      "Liquidación de Sueldos",
+      "Gestión del Talento",
+      "Onboarding",
+      "Clima Laboral",
+      "Bases de Datos RRHH",
+      "AFIP"
+    ],
+    "acrExample": "Reingeniería del proceso de onboarding que redujo 40% el tiempo de incorporación y elevó la retención de nuevos ingresos en 28%."
+  },
+  {
+    "slug": "ejecutivo-de-ventas",
+    "title": "CV Ejecutivo de Ventas",
+    "category": "ventas-marketing",
+    "description": "Plantilla de CV optimizada para sistemas ATS orientada a cierres comerciales, pipeline y gestión de cuentas.",
+    "sections": [
+      "Experiencia Laboral",
+      "Logros Comerciales",
+      "Formación Académica",
+      "Idiomas"
+    ],
+    "keywords": [
+      "Ventas Consultivas",
+      "Pipeline Comercial",
+      "CRM",
+      "Cierre de Ventas",
+      "Cuentas Clave",
+      "Negociación",
+      "Prospección"
+    ],
+    "acrExample": "Superación del 135% del objetivo anual de ventas mediante prospección sistemática con CRM y demos personalizadas, cerrando $1.2M."
+  },
+  {
+    "slug": "marketing-digital",
+    "title": "CV Marketing Digital",
+    "category": "ventas-marketing",
+    "description": "Plantilla de currículum optimizada para sistemas ATS orientada a adquisición, performance y marketing de crecimiento.",
+    "sections": [
+      "Experiencia Laboral",
+      "Habilidades Técnicas",
+      "Certificaciones",
+      "Formación Académica"
+    ],
+    "keywords": [
+      "Meta Ads",
+      "Google Ads",
+      "Growth Marketing",
+      "Funnels",
+      "Email Marketing",
+      "Analytics",
+      "CRM",
+      "Marketing Automation"
+    ],
+    "acrExample": "Gestión de campañas de performance con ROAS 4.2, escalando inversión de $10K a $60K mensuales sin perder rentabilidad."
+  },
+  {
+    "slug": "community-manager",
+    "title": "CV Community Manager",
+    "category": "ventas-marketing",
+    "description": "CV compatible con ATS para community managers con experiencia en contenido, moderación y engagement en redes sociales.",
+    "sections": [
+      "Experiencia Laboral",
+      "Habilidades de Contenido",
+      "Formación Académica",
+      "Métricas y Portafolio"
+    ],
+    "keywords": [
+      "Instagram",
+      "TikTok",
+      "LinkedIn",
+      "Gestión de Redes",
+      "Calendarios Editoriales",
+      "Engagement",
+      "Copywriting",
+      "Analytics"
+    ],
+    "acrExample": "Estrategia de contenido para Instagram que duplicó el engagement (1.2% a 3.1%) y creció la comunidad 45% en 6 meses."
+  },
+  {
+    "slug": "analista-seo",
+    "title": "CV Analista SEO",
+    "category": "ventas-marketing",
+    "description": "CV optimizado para ATS para analistas SEO con experiencia en posicionamiento orgánico, contenido y autoridad de dominio.",
+    "sections": [
+      "Experiencia Laboral",
+      "Habilidades Técnicas",
+      "Certificaciones",
+      "Formación Académica"
+    ],
+    "keywords": [
+      "SEO On-Page",
+      "SEO Técnico",
+      "Keyword Research",
+      "Link Building",
+      "Google Search Console",
+      "Content Strategy",
+      "Schema.org"
+    ],
+    "acrExample": "Estrategia SEO técnico y de contenidos que incrementó 150% el tráfico orgánico y posicionó 25 keywords en top-3."
+  },
+  {
+    "slug": "gerente-de-ventas",
+    "title": "CV Gerente de Ventas",
+    "category": "ventas-marketing",
+    "description": "Plantilla de CV orientada a ATS para gerentes de ventas con experiencia liderando equipos comerciales y objetivos de revenue.",
+    "sections": [
+      "Experiencia Laboral",
+      "Logros y Resultados",
+      "Formación Académica",
+      "Certificaciones"
+    ],
+    "keywords": [
+      "Liderazgo Comercial",
+      "Gestión de Equipos",
+      "Forecast de Ventas",
+      "Revenue Growth",
+      "CRM",
+      "Negociación",
+      "Cuentas Estratégicas"
+    ],
+    "acrExample": "Liderazgo de equipo de 12 vendedores que alcanzó 120% del objetivo anual, expandiendo 35% el portafolio de cuentas enterprise."
+  },
+  {
+    "slug": "sdr-business-development",
+    "title": "CV SDR Business Development",
+    "category": "ventas-marketing",
+    "description": "CV optimizado para ATS para SDRs y business development con experiencia en prospección saliente y generación de oportunidades.",
+    "sections": [
+      "Experiencia Laboral",
+      "Logros Comerciales",
+      "Formación Académica",
+      "Idiomas"
+    ],
+    "keywords": [
+      "Prospección Outbound",
+      "Cold Outreach",
+      "HubSpot",
+      "Salesforce",
+      "Generación de Leads",
+      "Cadencias de Contacto",
+      "Discovery Calls"
+    ],
+    "acrExample": "Generación de 180 oportunidades calificadas anuales mediante cadencias multicanal, con tasa de conversión a reunión del 12%."
+  },
+  {
+    "slug": "content-manager",
+    "title": "CV Content Manager",
+    "category": "ventas-marketing",
+    "description": "CV compatible con ATS para content managers con experiencia en estrategia editorial, SEO de contenidos y liderazgo de redactores.",
+    "sections": [
+      "Experiencia Laboral",
+      "Habilidades de Contenido",
+      "Formación Académica",
+      "Portafolio"
+    ],
+    "keywords": [
+      "Estrategia de Contenidos",
+      "Copywriting",
+      "SEO Editorial",
+      "Guías de Estilo",
+      "Calendarios Editoriales",
+      "CMS",
+      "Storytelling"
+    ],
+    "acrExample": "Rediseño de estrategia editorial con foco en SEO que triplicó el tráfico orgánico del blog y generó 40% más leads calificados."
+  },
+  {
+    "slug": "email-marketing",
+    "title": "CV Especialista en Email Marketing",
+    "category": "ventas-marketing",
+    "description": "CV optimizado para ATS para especialistas en email marketing con experiencia en automatización, segmentación y conversión.",
+    "sections": [
+      "Experiencia Laboral",
+      "Habilidades Técnicas",
+      "Certificaciones",
+      "Formación Académica"
+    ],
+    "keywords": [
+      "Marketing Automation",
+      "Mailchimp",
+      "Klaviyo",
+      "Segmentación",
+      "A/B Testing",
+      "Lifecycle Marketing",
+      "CRM",
+      "Deliverability"
+    ],
+    "acrExample": "Reingeniería de flujos de automatización de email que elevó la conversión del canal 65% y duplicó el revenue atribuible."
+  },
+  {
+    "slug": "enfermero",
+    "title": "CV Enfermero",
+    "category": "salud",
+    "description": "Plantilla de currículum optimizada para sistemas ATS para profesionales de enfermería con experiencia en atención clínica y gestión de pacientes.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Certificaciones",
+      "Idiomas"
+    ],
+    "keywords": [
+      "Enfermería Clínica",
+      "Atención de Pacientes",
+      "Urgencias",
+      "Administración de Medicación",
+      "RCP",
+      "Historia Clínica",
+      "Trabajo en Equipo"
+    ],
+    "acrExample": "Coordinación del equipo de enfermería en guardia de alta demanda, atendiendo 80+ pacientes por turno con cero eventos adversos."
+  },
+  {
+    "slug": "medico-general",
+    "title": "CV Médico General",
+    "category": "salud",
+    "description": "CV compatible con ATS para médicos generales con experiencia en atención primaria, diagnóstico y seguimiento de pacientes.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Certificaciones",
+      "Docencia e Investigación"
+    ],
+    "keywords": [
+      "Medicina General",
+      "Atención Primaria",
+      "Diagnóstico Clínico",
+      "Consultorios Externos",
+      "Historia Clínica",
+      "Prevención",
+      "SAP"
+    ],
+    "acrExample": "Gestión de consultorio externo con 25 pacientes diarios, implementando protocolos de prevención que redujeron 20% las derivaciones evitables."
+  },
+  {
+    "slug": "kinesiologo",
+    "title": "CV Kinesiólogo",
+    "category": "salud",
+    "description": "Plantilla de CV orientada a ATS para kinesiólogos con experiencia en rehabilitación, fisioterapia y medicina deportiva.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Certificaciones",
+      "Habilidades Clínicas"
+    ],
+    "keywords": [
+      "Kinesiología Respiratoria",
+      "Rehabilitación",
+      "Fisioterapia Deportiva",
+      "Terapia Manual",
+      "Evaluación Funcional",
+      "Ejercicio Terapéutico"
+    ],
+    "acrExample": "Programa de rehabilitación post-quirúrgica que devolvió al 90% de pacientes a actividad plena en 8 semanas promedio."
+  },
+  {
+    "slug": "nutricionista",
+    "title": "CV Nutricionista",
+    "category": "salud",
+    "description": "CV optimizado para ATS para nutricionistas con experiencia en planes alimentarios, educación nutricional y gestión de servicios de alimentación.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Certificaciones",
+      "Idiomas"
+    ],
+    "keywords": [
+      "Planes Nutricionales",
+      "Educación Alimentaria",
+      "Evaluación Nutricional",
+      "Nutrición Clínica",
+      "Soporte Enteral",
+      "Consultorio",
+      "Charlas"
+    ],
+    "acrExample": "Diseño de programa de educación nutricional para 300 pacientes con diabetes tipo 2, logrando mejoras en HbA1c en 65% de adherentes."
+  },
+  {
+    "slug": "farmaceutico",
+    "title": "CV Farmacéutico",
+    "category": "salud",
+    "description": "CV compatible con ATS para farmacéuticos con experiencia en dispensación, farmacovigilancia y gestión de farmacia hospitalaria.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Certificaciones",
+      "Habilidades Técnicas"
+    ],
+    "keywords": [
+      "Dispensación",
+      "Farmacovigilancia",
+      "Gestión de Stock",
+      "Farmacia Hospitalaria",
+      "Interacciones Medicamentosas",
+      "Buenas Prácticas"
+    ],
+    "acrExample": "Implementación de sistema de farmacovigilancia que redujo 55% los errores de dispensación y mejoró el cumplimiento de recetas."
+  },
+  {
+    "slug": "psicologo",
+    "title": "CV Psicólogo",
+    "category": "salud",
+    "description": "Plantilla de currículum optimizada para sistemas ATS para psicólogos con experiencia en consultoría clínica, terapia y evaluación.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Certificaciones y Supervisiones",
+      "Idiomas"
+    ],
+    "keywords": [
+      "Terapia Cognitivo-Conductual",
+      "Consultoría Clínica",
+      "Evaluación Psicológica",
+      "Psicoterapia",
+      "Atención Individual",
+      "Informes",
+      "Intervención"
+    ],
+    "acrExample": "Atención de 40+ pacientes semanales en TCC con plan de alta del 75% en 6 meses promedio y seguimiento programado."
+  },
+  {
+    "slug": "tecnico-en-enfermeria",
+    "title": "CV Técnico en Enfermería",
+    "category": "salud",
+    "description": "CV orientado a sistemas ATS para técnicos en enfermería con experiencia en cuidados básicos, signos vitales y apoyo al equipo médico.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Certificaciones",
+      "Habilidades"
+    ],
+    "keywords": [
+      "Cuidados Básicos",
+      "Signos Vitales",
+      "Higiene del Paciente",
+      "Administración de Medicación",
+      "Movilización",
+      "Trabajo en Equipo",
+      "RCP"
+    ],
+    "acrExample": "Atención integral de 30 pacientes diarios en piso de clínica médica, con protocolos de seguridad que redujeron 40% caídas."
+  },
+  {
+    "slug": "odontologo",
+    "title": "CV Odontólogo",
+    "category": "salud",
+    "description": "CV compatible con ATS para odontólogos con experiencia en atención general, ortodoncia o rehabilitación oral.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Certificaciones",
+      "Habilidades Clínicas"
+    ],
+    "keywords": [
+      "Odontología General",
+      "Endodoncia",
+      "Ortodoncia",
+      "Cirugía Oral",
+      "Prótesis",
+      "Estética Dental",
+      "Consultorio",
+      "Radiografía"
+    ],
+    "acrExample": "Gestión de consultorio con 20 pacientes diarios y 98% de satisfacción en encuestas, aumentando 30% los tratamientos completados."
+  },
+  {
+    "slug": "supervisor-de-operaciones",
+    "title": "CV Supervisor de Operaciones",
+    "category": "operaciones-logistica",
+    "description": "Plantilla de CV optimizada para sistemas ATS para supervisores de operaciones con experiencia en equipos, turnos y productividad.",
+    "sections": [
+      "Experiencia Laboral",
+      "Habilidades de Gestión",
+      "Formación Académica",
+      "Certificaciones"
+    ],
+    "keywords": [
+      "Gestión de Operaciones",
+      "KPIs de Productividad",
+      "Supervisión de Equipos",
+      "Lean Manufacturing",
+      "Seguridad Industrial",
+      "Turnos",
+      "Mejora Continua"
+    ],
+    "acrExample": "Reducción de 25% en tiempos de ciclo mediante implementación de 5S y gestión visual, elevando productividad 18% con cero accidentes."
+  },
+  {
+    "slug": "analista-de-supply-chain",
+    "title": "CV Analista de Supply Chain",
+    "category": "operaciones-logistica",
+    "description": "CV compatible con ATS para analistas de supply chain con experiencia en planificación, compras y gestión de inventarios.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Habilidades Técnicas",
+      "Certificaciones"
+    ],
+    "keywords": [
+      "Supply Chain",
+      "Planificación de Demanda",
+      "Compras",
+      "Gestión de Inventarios",
+      "ERP",
+      "Forecasting",
+      "KPIs Logísticos",
+      "SAP/Oracle"
+    ],
+    "acrExample": "Optimización del inventario con modelo de punto de pedido que redujo 30% el stock inmovilizado y mejoró 25% el nivel de servicio."
+  },
+  {
+    "slug": "logistico",
+    "title": "CV Logístico",
+    "category": "operaciones-logistica",
+    "description": "Plantilla de CV orientada a ATS para profesionales de logística con experiencia en transporte, rutas y distribución.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Habilidades Técnicas",
+      "Licencias y Certificaciones"
+    ],
+    "keywords": [
+      "Logística de Distribución",
+      "Rutas y Fletes",
+      "Gestión de Transporte",
+      "Tracking",
+      "Documentación de Carga",
+      "SLA",
+      "Última Milla"
+    ],
+    "acrExample": "Reingeniería de ruteo con software de optimización que redujo 20% los kilómetros recorridos y 15% los costos de flete mensual."
+  },
+  {
+    "slug": "encargado-de-deposito",
+    "title": "CV Encargado de Depósito",
+    "category": "operaciones-logistica",
+    "description": "CV optimizado para sistemas ATS para encargados de depósito con experiencia en almacén, picking y seguridad de stock.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Habilidades Técnicas",
+      "Certificaciones"
+    ],
+    "keywords": [
+      "Gestión de Almacén",
+      "Picking y Packing",
+      "Control de Stock",
+      "WMS",
+      "Seguridad en Depósito",
+      "Movimientos",
+      "Inventario"
+    ],
+    "acrExample": "Rediseño del lay-out del depósito y picking por voz que elevó 35% la velocidad de despacho y eliminó quiebres de inventario."
+  },
+  {
+    "slug": "coordinador-de-produccion",
+    "title": "CV Coordinador de Producción",
+    "category": "operaciones-logistica",
+    "description": "CV compatible con ATS para coordinadores de producción con experiencia en planificación de planta y cumplimiento de entregas.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Habilidades Técnicas",
+      "Certificaciones"
+    ],
+    "keywords": [
+      "Planificación de Producción",
+      "MRP",
+      "Programación de Turnos",
+      "Calidad",
+      "Capacidad de Planta",
+      "OEE",
+      "MRi",
+      "Lean"
+    ],
+    "acrExample": "Coordinación de producción en planta de 3 turnos con OEE de 78% (+12 puntos) y cumplimiento del 98% en entregas a clientes."
+  },
+  {
+    "slug": "comercio-exterior",
+    "title": "CV Especialista en Comercio Exterior",
+    "category": "operaciones-logistica",
+    "description": "Plantilla de currículum optimizada para sistemas ATS para especialistas en comercio exterior, exportación e importación.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Idiomas",
+      "Certificaciones"
+    ],
+    "keywords": [
+      "Comercio Exterior",
+      "Exportación",
+      "Importación",
+      "Incoterms 2020",
+      "Documentación Aduanera",
+      "Flete Internacional",
+      "AFIP",
+      "Licencias"
+    ],
+    "acrExample": "Apertura de 3 corredores de exportación nuevos con gestión aduanera impecable, aumentando 40% el volumen despachado anual."
+  },
+  {
+    "slug": "supervisor-de-calidad",
+    "title": "CV Supervisor de Calidad",
+    "category": "operaciones-logistica",
+    "description": "CV orientado a sistemas ATS para supervisores de calidad con experiencia en ISO 9001, auditorías y control de procesos.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Certificaciones",
+      "Habilidades Técnicas"
+    ],
+    "keywords": [
+      "ISO 9001",
+      "Control de Calidad",
+      "Auditorías Internas",
+      "Acciones Correctivas",
+      "SPC",
+      "HACCP",
+      "Trazabilidad",
+      "FMEA"
+    ],
+    "acrExample": "Supervisión del sistema de calidad ISO 9001 con 3 auditorías superadas sin no conformidades mayores y rechazo interno reducido 50%."
+  },
+  {
+    "slug": "recepcionista",
+    "title": "CV Recepcionista",
+    "category": "servicios-hospitalidad",
+    "description": "Plantilla de currículum optimizada para sistemas ATS para recepcionistas con experiencia en atención al público, agenda y gestión de ingresos.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Idiomas",
+      "Habilidades"
+    ],
+    "keywords": [
+      "Atención al Público",
+      "Gestión de Agenda",
+      "Call Center",
+      "Registro de Visitantes",
+      "Facturación Básica",
+      "Microsoft Office",
+      "Inglés"
+    ],
+    "acrExample": "Gestión integral de recepción hotelera con check-in de 120+ huéspedes diarios y satisfacción promedio de 9.2/10 en encuestas."
+  },
+  {
+    "slug": "camarero",
+    "title": "CV Camarero",
+    "category": "servicios-hospitalidad",
+    "description": "CV compatible con ATS para camareros y mozos con experiencia en servicio de salón, atención al cliente y operación de comandas.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Habilidades",
+      "Idiomas"
+    ],
+    "keywords": [
+      "Servicio de Salón",
+      "Atención al Cliente",
+      "Comandas Digitales",
+      "Upselling",
+      "TPV",
+      "Trabajo en Equipo",
+      "Atención de Eventos"
+    ],
+    "acrExample": "Servicio en restaurante de alta demanda con 80 cubiertos por noche y promedio de 20% en ventas incrementales por sugerencias."
+  },
+  {
+    "slug": "cocinero",
+    "title": "CV Cocinero",
+    "category": "servicios-hospitalidad",
+    "description": "Plantilla de CV optimizada para sistemas ATS para cocineros con experiencia en cocina caliente, fría o pastelería y normas de higiene.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Certificaciones",
+      "Especialidades"
+    ],
+    "keywords": [
+      "Cocina Caliente",
+      "Cocina Fría",
+      "Pastelería",
+      "HACCP",
+      "Cartas de Menú",
+      "Mise en Place",
+      "Costos de Cocina",
+      "BPM"
+    ],
+    "acrExample": "Rediseño de carta en cocina de hotel que redujo 25% el desperdicio y elevó 30% el margen de contribución del restaurante."
+  },
+  {
+    "slug": "housekeeping",
+    "title": "CV Housekeeping",
+    "category": "servicios-hospitalidad",
+    "description": "CV orientado a sistemas ATS para personal de housekeeping con experiencia en limpieza de habitaciones, áreas comunes y control de amenities.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Habilidades",
+      "Certificaciones"
+    ],
+    "keywords": [
+      "Limpieza de Habitaciones",
+      "Estándares de Calidad",
+      "Control de Amenities",
+      "Áreas Comunes",
+      "Higiene y Seguridad",
+      "Trabajo en Equipo"
+    ],
+    "acrExample": "Coordinación de equipo de 15 camareras de piso que mantuvo 100% de ocupación con estándares impecables en 12 inspecciones."
+  },
+  {
+    "slug": "atencion-al-cliente",
+    "title": "CV Atención al Cliente",
+    "category": "servicios-hospitalidad",
+    "description": "CV compatible con ATS para agentes de atención al cliente con experiencia en soporte, reclamos y satisfacción NPS.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Habilidades",
+      "Idiomas"
+    ],
+    "keywords": [
+      "Customer Support",
+      "Gestión de Reclamos",
+      "CRM",
+      "NPS",
+      "Help Desk",
+      "Chat y Correo",
+      "Escalamiento de Casos",
+      "Zona de Confort"
+    ],
+    "acrExample": "Atención de 120+ tickets diarios con resolución en primera interacción del 85% y mejora del NPS de 62 a 78 puntos."
+  },
+  {
+    "slug": "chofer-profesional",
+    "title": "CV Chofer Profesional",
+    "category": "servicios-hospitalidad",
+    "description": "Plantilla de CV optimizada para sistemas ATS para choferes profesionales con experiencia en logística urbana o transporte de pasajeros.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Licencias y Antecedentes",
+      "Habilidades"
+    ],
+    "keywords": [
+      "Conducción Profesional",
+      "Transporte de Carga",
+      "Licencia Profesional",
+      "Rutas Urbanas",
+      "Mantenimiento Preventivo",
+      "GPS y Tracking",
+      "Seguridad Vial"
+    ],
+    "acrExample": "Registro impecable de 500K km sin siniestros con cumplimiento puntual del 99% en rutas de distribución nocturnas."
+  },
+  {
+    "slug": "docente-primario",
+    "title": "CV Docente Primario",
+    "category": "educacion",
+    "description": "Plantilla de currículum optimizada para sistemas ATS para docentes de primaria con experiencia en educación integral.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Certificaciones",
+      "Educación Social"
+    ],
+    "keywords": [
+      "Educación Primaria",
+      "Planificación Curricular",
+      "Evaluación Formativa",
+      "Inglés",
+      "Digitalización Educativa"
+    ],
+    "acrExample": "Diseño de currículo bilingüe que elevó el rendimiento de la clase en 15% y un 22% la pertinencia sociocultural del aprendizaje."
+  },
+  {
+    "slug": "docente-secundario",
+    "title": "CV Docente Secundario",
+    "category": "educacion",
+    "description": "Plantilla de CV orientada a ATS para docentes de secundaria con experiencia en inglés, matemáticas, física o lengua.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Certificaciones",
+      "Apoyo Educativo"
+    ],
+    "keywords": [
+      "Educación Secundaria",
+      "Inglés",
+      "Matemáticas",
+      "Tutorías",
+      "Innovación Educativa",
+      "Física",
+      "Lengua"
+    ],
+    "acrExample": "Programa de tutorías para pregrado que redujo 20% las suspensiones en rama STEM y mejoró la evolución del 78% de los alumnos."
+  },
+  {
+    "slug": "profesor-universitario",
+    "title": "CV Profesor Universitario",
+    "category": "educacion",
+    "description": "Plantilla de CV compatible con ATS para docentes universitarios con experiencia en investigación y docencia.",
+    "sections": [
+      "Experiencia Laboral",
+      "Investigación Académica",
+      "Docencia e Innovación",
+      "Formación Académica"
+    ],
+    "keywords": [
+      "Docencia Superior",
+      "Tesis",
+      "Publicaciones",
+      "PhD",
+      "Conferencias",
+      "Inglés Académico",
+      "Seminarios"
+    ],
+    "acrExample": "Gestión de seminario académico para 60+ especialistas con enfoque en innovación que impulsó la investigación de 5 tesis defendidas."
+  },
+  {
+    "slug": "capacitador-corporativo",
+    "title": "CV Capacitador Corporativo",
+    "category": "educacion",
+    "description": "CV optimizado para ATS para capacitadores corporativos con experiencia en programación de cursos y acompañamiento empírico.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Habilidades Pedagógicas",
+      "Certificaciones"
+    ],
+    "keywords": [
+      "Capacitación Empresarial",
+      "Talleres",
+      "Competencias Blandas",
+      "Acompañamiento Empírico",
+      "Evaluación Formativa",
+      "Toolkit"
+    ],
+    "acrExample": "Programa de Team Leadership con acompañamiento empírico que elevó 28% el resultado del programa en 9 meses y 40% el IP de equipos."
+  },
+  {
+    "slug": "coordinador-educativo",
+    "title": "CV Coordinador Educativo",
+    "category": "educacion",
+    "description": "Plantilla de currículum optimizada para sistemas ATS para coordinadores educativos con experiencia en planeación pedagógica y gestión escolar.",
+    "sections": [
+      "Experiencia Laboral",
+      "Formación Académica",
+      "Certificaciones",
+      "Gestión Pedagógica"
+    ],
+    "keywords": [
+      "Gestión Educativa",
+      "Planeación Pedagógica",
+      "Tutorías Escolares",
+      "Registros Académicos",
+      "Comunicación Escolar",
+      "Calificación"
+    ],
+    "acrExample": "Coordinación del plan pedagógico semestral con tutorías de recuperación que aumentaron 30% la retención de alumnos en riesgo."
+  }
+]

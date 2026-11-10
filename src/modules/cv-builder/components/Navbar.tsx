@@ -1,21 +1,18 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { 
-  FolderOpen, 
-  Save, 
-  User, 
-  Download, 
-  CopyPlus, 
-  FileArchive, 
-  LogIn, 
-  LogOut, 
-  Gem, 
-  Building2, 
-  Share2,
-  Palette,
+import {
+  FolderOpen,
+  Save,
+  User,
+  Download,
+  CopyPlus,
+  FileArchive,
+  LogIn,
+  LogOut,
   ShieldCheck,
   Globe,
   LayoutDashboard,
-  Sparkles,
+  CheckCircle2,
+  AlertTriangle,
   Eye,
   Edit3
 } from 'lucide-react';
@@ -44,6 +41,8 @@ export interface NavbarProps {
   onOpenJsonDownloadModal: () => void;
   onPrint: () => void;
   onOpenAtsCheck?: () => void;
+  /** Score ATS en tiempo real para mostrar en la píldora (0-100). */
+  atsScore?: number;
   onOpenPricing?: () => void;
   onOpenCreditsModal?: () => void;
   onOpenAgencyPanel?: () => void;
@@ -71,6 +70,7 @@ export default function Navbar({
   onOpenJsonDownloadModal,
   onPrint,
   onOpenAtsCheck,
+  atsScore,
   onOpenPricing,
   onOpenCreditsModal,
   onOpenAgencyPanel,
@@ -175,16 +175,26 @@ export default function Navbar({
         {/* CLUSTER DERECHO: Píldoras Ovaladas de Menús (ATS ✨ | Publicar 🌐 | Acciones 📁💾 | Cuenta 👤🔑) */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
 
-          {/* PÍLDORA ATS — visible en modo CV */}
-          {docType === 'cv' && typeof onOpenAtsCheck === 'function' && (
+          {/* Píldora ATS — score en tiempo real (desktop + móvil) */}
+          {(docType === 'cv') && typeof onOpenAtsCheck === 'function' && atsScore !== undefined && (
             <button
               type="button"
+              title="Diagnóstico ATS del CV"
               onClick={onOpenAtsCheck}
-              className="hidden sm:flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full border bg-[var(--ui-bg-panel)] border-[var(--color-status-warning-text)]/60 text-[var(--color-status-warning-text)] hover:bg-[var(--color-accent-amber-muted)] font-black text-xs shrink-0 transition active:scale-95 cursor-pointer"
-              title="Auditoría Predictiva ATS"
+              className={`flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full font-black text-xs shrink-0 transition active:scale-95 cursor-pointer border bg-[var(--ui-bg-panel)] ${
+                atsScore >= 85
+                  ? 'border-[var(--color-status-success-base)] text-[var(--color-status-success-text)] hover:bg-[var(--color-status-success-muted)]'
+                  : atsScore < 60
+                    ? 'border-[var(--color-status-danger-base)] text-[var(--color-status-danger-text)] hover:bg-[var(--color-status-danger-muted)]'
+                    : 'border-[var(--color-status-warning-base)] text-[var(--color-status-warning-text)] hover:bg-[var(--color-status-warning-muted)]'
+              }`}
             >
-              <Sparkles className="w-4 h-4 flex-shrink-0 text-[var(--color-status-warning-text)]" />
-              <span>ATS</span>
+              {atsScore >= 85 ? (
+                <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-[var(--color-status-success-text)]" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 flex-shrink-0 text-[var(--color-status-warning-text)]" />
+              )}
+              <span>ATS {atsScore}%</span>
             </button>
           )}
 
