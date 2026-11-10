@@ -12,6 +12,7 @@ import PrivacyModal from '../modules/cv-builder/components/PrivacyModal';
 import ShareAppModal from '../modules/cv-builder/components/modals/ShareAppModal';
 import EmailSaveModal from '../modules/cv-builder/components/modals/EmailSaveModal';
 import { AtsCheckModal } from '../modules/cv-builder/components/AtsCheckModal';
+import { AtsLiveAuditorPanel } from '../modules/cv-builder/components/AtsLiveAuditorPanel';
 import { CoverLetterExportModal } from '../modules/cover-letter/components/CoverLetterExportModal';
 import { UpdateToast } from '../shared/core/ui/UpdateToast';
 import { PricingModal } from '../modules/payments/components/PricingModal';
@@ -44,6 +45,11 @@ export interface AppModalsProps {
   isDownloadModalOpen: boolean; setIsDownloadModalOpen: (v: boolean) => void;
   isPrivacyModalOpen: boolean; setIsPrivacyModalOpen: (v: boolean) => void;
   isAtsModalOpen: boolean; setIsAtsModalOpen: (v: boolean) => void;
+  isAtsLivePanelOpen: boolean; setIsAtsLivePanelOpen: (v: boolean) => void;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  isPanelOpen: boolean;
+  setIsPanelOpen: (open: boolean) => void;
   isPricingModalOpen: boolean; setIsPricingModalOpen: (v: boolean) => void;
   isCreditsModalOpen: boolean; setIsCreditsModalOpen: (v: boolean) => void;
   isLoginModalOpen: boolean; setIsLoginModalOpen: (v: boolean) => void;
@@ -54,6 +60,7 @@ export interface AppModalsProps {
   isPdfComplete: boolean; setIsPdfComplete: (v: boolean) => void;
   updateBannerVisible: boolean; setUpdateBannerVisible: (v: boolean) => void;
   atsResult: any;
+  atsLiveResult?: any;
 
   // Document states & functions
   cvData: any;
@@ -92,6 +99,9 @@ export function AppModals(props: AppModalsProps) {
     isDownloadModalOpen, setIsDownloadModalOpen,
     isPrivacyModalOpen, setIsPrivacyModalOpen,
     isAtsModalOpen, setIsAtsModalOpen,
+    isAtsLivePanelOpen, setIsAtsLivePanelOpen,
+    activeTab, setActiveTab,
+    isPanelOpen, setIsPanelOpen,
     isPricingModalOpen, setIsPricingModalOpen,
     isCreditsModalOpen, setIsCreditsModalOpen,
     isLoginModalOpen, setIsLoginModalOpen,
@@ -101,6 +111,7 @@ export function AppModals(props: AppModalsProps) {
     isPdfComplete, setIsPdfComplete,
     updateBannerVisible, setUpdateBannerVisible,
     atsResult,
+    atsLiveResult,
 
     cvData, setCvData,
     activeDocType,
@@ -332,6 +343,40 @@ export function AppModals(props: AppModalsProps) {
               }
               setIsAtsModalOpen(false);
             }
+          }}
+        />
+      )}
+
+      {isAtsLivePanelOpen && (
+        <AtsLiveAuditorPanel
+          isOpen={isAtsLivePanelOpen}
+          onClose={() => setIsAtsLivePanelOpen(false)}
+          result={atsLiveResult || atsResult}
+          onJumpToSection={(sectionId) => {
+            setActiveTab(sectionId);
+            setIsPanelOpen(true);
+            setIsAtsLivePanelOpen(false);
+          }}
+          onHideSensitiveData={() => {
+            const pi = cvData?.personalInfo;
+            const toHide: string[] = [];
+            if (pi?.dni) toHide.push('dni');
+            if (pi?.cuit) toHide.push('cuit');
+            if (pi?.birthDate) toHide.push('birthDate');
+            if (pi?.estadoCivil) toHide.push('estadoCivil');
+            if (pi?.nacionalidad) toHide.push('nacionalidad');
+            if (toHide.length > 0) {
+              setCvData((prev: any) => ({
+                ...prev,
+                hiddenFields: Array.from(new Set([...(prev.hiddenFields || []), ...toHide]))
+              }));
+              showSuccess('Se han ocultado los datos sensibles.');
+            }
+          }}
+          onOpenAssist={() => {
+            setActiveTab('frase');
+            setIsPanelOpen(true);
+            setIsAtsLivePanelOpen(false);
           }}
         />
       )}

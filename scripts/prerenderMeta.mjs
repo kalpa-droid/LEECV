@@ -6,9 +6,9 @@ export const ROUTES = [
   '/privacidad',
   '/terminos',
   '/reembolsos',
-  '/cv/marketing-digital',
-  '/cv/desarrollo-web',
-  '/cv/gestion-de-proyectos'
+  '/crear-cv',
+  '/crear-tarjeta',
+  '/crear-libro'
 ];
 
 const metaMap = {
@@ -16,6 +16,24 @@ const metaMap = {
     title: 'LEECV — Creador de Currículum Vitae listo para imprimir',
     description: 'Crea tu Currículum Vitae en minutos y ten tu PDF listo para imprimir en casa o llevar a una imprenta. Plantillas profesionales, diseño de tarjetas, 100% privacidad y sin marca de agua.',
     content: [],
+    type: 'WebPage'
+  },
+  '/crear-cv': {
+    title: 'Crear CV Gratis y Compatible con ATS | LEECV',
+    description: 'Diseña tu currículum online en minutos y obtén un PDF listo para imprimir o enviar. Compatible con sistemas ATS. Plantillas para cada profesión.',
+    content: ['<h1>Crear tu Currículum Vitae</h1>'],
+    type: 'WebPage'
+  },
+  '/crear-tarjeta': {
+    title: 'Crear Tarjeta Personal | LEECV',
+    description: 'Crea tu tarjeta de presentación online con código QR y DESCÁRGALA en PDF listo para imprimir. Diseño profesional en segundos.',
+    content: ['<h1>Crear tu Tarjeta Personal</h1>'],
+    type: 'WebPage'
+  },
+  '/crear-libro': {
+    title: 'Crear Libro | LEECV',
+    description: 'Maqueta tu libro digital o impreso con herramientas profesionales. Exporta en PDF de alta calidad para imprenta o distribución digital.',
+    content: ['<h1>Crear tu Libro</h1>'],
     type: 'WebPage'
   },
   '/privacidad': {
@@ -35,10 +53,7 @@ const metaMap = {
     description: 'Política de devoluciones y reembolsos de LEECV.',
     content: ['<h1>Política de Reembolsos</h1>', '<p>Conoce nuestra política de reembolsos para cuentas premium y servicios adicionales.</p>'],
     type: 'WebPage'
-  },
-  '/cv/marketing-digital': { title: 'CV Marketing Digital | LEECV', description: 'Currículum optimizado para marketing digital.', content: ['<h1>Marketing Digital</h1>'], type: 'WebPage' },
-  '/cv/desarrollo-web': { title: 'CV Desarrollo Web | LEECV', description: 'Currículum técnico para desarrolladores.', content: ['<h1>Desarrollo Web</h1>'], type: 'WebPage' },
-  '/cv/gestion-de-proyectos': { title: 'CV Gestión de Proyectos | LEECV', description: 'CV para gestión de proyectos.', content: ['<h1>Gestión de Proyectos</h1>'], type: 'WebPage' }
+  }
 };
 
 const articlesDir = path.resolve(process.cwd(), 'src/modules/blog/data/articles');
@@ -63,6 +78,42 @@ if (fs.existsSync(articlesDir)) {
         console.error('Error parsing article file:', file);
       }
     }
+  }
+}
+
+// Masivas: carga las 52 rutas /cv/[slug] desde jobTemplatesData.json
+const jobTemplatesPath = path.resolve(process.cwd(), 'src/shared/core/seo/jobTemplatesData.json');
+if (fs.existsSync(jobTemplatesPath)) {
+  const jobTemplates = JSON.parse(fs.readFileSync(jobTemplatesPath, 'utf8'));
+  for (const role of jobTemplates) {
+    const slug = role.slug;
+    const route = `/cv/${slug}`;
+    ROUTES.push(route);
+    const keywordHtml = role.keywords?.length
+      ? `\n<div class="keywords"><h3>Palabras clave ATS</h3><ul><li>${role.keywords.join('</li><li>')}</li></ul></div>`
+      : '';
+    const sectionsHtml = role.sections?.length
+      ? `\n<div class="sections"><h3>Secciones esenciales</h3><ul><li>${role.sections.join('</li><li>')}</li></ul></div>`
+      : '';
+    const acrHtml = role.acrExample
+      ? `\n<div class="acr"><h3>Ejemplo con fórmula ACR (Acción-Contexto-Resultado)</h3><p>${role.acrExample}</p></div>`
+      : '';
+    metaMap[route] = {
+      title: `${role.title} | LEECV`,
+      description: role.description,
+      content: [
+        `<h1>${role.title}</h1>`,
+        `Diseña un currículum compatible con sistemas ATS para ${role.title.replace('CV ', '')}. ${role.description}`,
+        keywordHtml,
+        sectionsHtml,
+        acrHtml
+      ],
+      type: 'Article',
+      faq: [
+        { question: `¿Qué palabras clave esperan los sistemas ATS en un ${role.title.replace('CV ', '')}?`, answer: role.keywords?.length ? `Incluí estas palabras clave naturalmente en tu CV: ${role.keywords.join(', ')}.` : 'Consultá las recomendaciones de LEECV para tu profesión.' },
+        { question: '¿Cómo optimizo mi CV para pasar los filtros ATS?', answer: `Usá secciones estándar (${role.sections?.join(', ')}) y métricas cuantitativas en tus logros.` }
+      ]
+    };
   }
 }
 
