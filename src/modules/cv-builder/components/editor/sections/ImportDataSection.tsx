@@ -5,8 +5,9 @@ import { importLinkedinArchive } from '../../../../../shared/core/importers/link
 import { withErrorHandling } from '../../../../../shared/core/utils/errorHandler';
 import { button } from '../../../../../shared/core/uiDesignSystem';
 import { useToast } from '../../../../../shared/core/ui/Toast';
+import { dal } from '../../../../../shared/core/storage/dataAccessLayer';
 import type { ImportReviewSelections } from '../../../utils/cvImportReview';
-import { applyImportReview, normalizeImportedCvData } from '../../../utils/cvImportReview';
+import { applyImportReview, buildValidatedImportFragment, normalizeImportedCvData } from '../../../utils/cvImportReview';
 import ImportReviewDiffModal from '../../modals/ImportReviewDiffModal';
 
 const ImportCvAiModal = React.lazy(() => import('../../modals/ImportCvAiModal'));
@@ -17,10 +18,14 @@ export const ImportDataSection: React.FC = () => {
   const [isAiImportOpen, setIsAiImportOpen] = useState(false);
   const [isImportingLinkedIn, setIsImportingLinkedIn] = useState(false);
   const [reviewData, setReviewData] = useState<Record<string, any> | null>(null);
+  const [reviewJobId, setReviewJobId] = useState<string | null>(null);
   const [reviewKey, setReviewKey] = useState(0);
 
-  const openReview = (rawData: Record<string, any>) => {
-    setReviewData(normalizeImportedCvData(rawData));
+  const openReview = (rawData: Record<string, any> | null) => {
+    if (!rawData) return;
+    const { _jobId, ...rest } = rawData;
+    setReviewJobId(typeof _jobId === 'string' && _jobId.trim() ? _jobId : null);
+    setReviewData(normalizeImportedCvData(rest));
     setReviewKey((key) => key + 1);
   };
 
@@ -61,11 +66,23 @@ export const ImportDataSection: React.FC = () => {
     });
   };
 
-  const handleConfirmImport = (selections: ImportReviewSelections) => {
+  const handleConfirmImport = async (selections: ImportReviewSelections, editedFragment: Record<string, any>) => {
     if (!reviewData) return;
-    setCvData((previous) => applyImportReview(previous, reviewData, selections));
+    setCvData((previous) => applyImportReview(previous, editedFragment, selections));
+    const jobId = reviewJobId;
     setReviewData(null);
+    setReviewJobId(null);
     showSuccess('Se aplicaron los datos seleccionados al CV.');
+    if (!jobId) return;
+    await withErrorHandling(() => dal.ocrJobs.update(jobId, {
+      result_json: buildValidatedImportFragment(editedFragment, selections, cvData as Record<string, any>),
+      status: 'completed',
+      completed_at: new Date().toISOString()
+    }), {
+      context: 'ImportDataSection.persistOcrExtraction',
+      errorMessage: 'No se pudo guardar la versión corregida del documento.',
+      notify: (message, type) => type === 'error' && showError(message)
+    });
   };
 
   return (

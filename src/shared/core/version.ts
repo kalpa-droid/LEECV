@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 2,
-  minor: 6,
+  minor: 7,
   patch: 0,
-  label: 'V2.6.0',
-  lastUpdated: '2026-11-09',
+  label: 'V2.7.0',
+  lastUpdated: '2026-11-10',
   lastAgent: '@desarrollo-rapido',
-  stage: 'Acceso con enlace por email, pagos con Mercado Pago y PayPal, Auditor ATS en vivo y catálogo pSEO masivo',
+  stage: 'Revisión y reescritura con IA de la importación OCR + persistencia de corrección en ocr_jobs',
 } as const;
