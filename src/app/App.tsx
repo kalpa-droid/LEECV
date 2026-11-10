@@ -138,7 +138,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     const docType = cvData ? inferDocumentTypeId(cvData) : (initialPreset === 'tarjeta-personal' ? 'business_card' : 'cv');
     if (docType === 'business_card') return 'card_front';
     if (docType === 'cover_letter') return 'source_data';
-    if (docType === 'book') return 'grid_viewer';
+    if (docType === 'book') return 'book_source_type';
     if (docType === 'planner') return 'planner_design';
     if (cvData?.sourceCvTabId || cvData?.body?.hookParagraph) return 'carta';
     return 'personales';
@@ -153,8 +153,8 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         ? 'card_front' 
         : docType === 'cover_letter' 
         ? 'source_data' 
-        : docType === 'book' 
-        ? 'grid_viewer' 
+        : docType === 'book'
+        ? 'book_source_type'
         : docType === 'planner'
         ? 'planner_design'
         : cvData?.sourceCvTabId || cvData?.body?.hookParagraph
@@ -296,6 +296,30 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   }, [resetToBlankCV]);
 
   const prevRouteRef = useRef<string | undefined>(currentRoute);
+
+  // Crea la pestaña inicial del Studio (libro / agenda) cuando el usuario
+  // entra a una de esas rutas. Se hace en un efecto DESPUÉS del render, no
+  // dentro de la función del componente: un setState durante render gatilla
+  // "Cannot update a component while rendering a different component" y un
+  // bucle infinito de React (#error 301) con el contenido de CVProvider/Book.
+  useEffect(() => {
+    if (!currentRoute) return;
+    if (currentRoute === '/crear-libro') {
+      const hasBookTab = tabs.some(
+        (t) => t.docType === 'book' || inferDocumentTypeId(t) === 'book'
+      );
+      if (!hasBookTab) createBlankDocumentWithTab(DEFAULT_BOOK_PRESET_ID);
+      return;
+    }
+    if (currentRoute === '/crear-agenda') {
+      const hasPlannerTab = tabs.some(
+        (t) => t.docType === 'planner' || inferDocumentTypeId(t) === 'planner'
+      );
+      if (!hasPlannerTab) createBlankDocumentWithTab(DEFAULT_PLANNER_PRESET_ID);
+      return;
+    }
+  }, [currentRoute, tabs, createBlankDocumentWithTab]);
+
 
   // Paso 0: Resincronizar cvData con currentRoute cuando la ruta y el docType activo divergen,
   // y procesar intenciones explícitas de navegación (pendingDocumentToOpen)
@@ -578,7 +602,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           saveCV,
           () => {
             const created = createBlankDocumentWithTab('tarjeta-personal');
-            setActiveTab('personales');
+            setActiveTab('card_front');
             if (created) setPendingDocumentToOpen(created.id, created.docType);
             if (currentRoute !== '/crear-tarjeta') {
               if (onNavigate) {
@@ -606,7 +630,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           saveCV,
           () => {
             const created = createBlankDocumentWithTab('libro-standard');
-            setActiveTab('grid_viewer');
+            setActiveTab('book_source_type');
             if (created) setPendingDocumentToOpen(created.id, created.docType);
             if (currentRoute !== '/crear-libro') {
               if (onNavigate) {
@@ -749,11 +773,11 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   };
 
   if (currentRoute === '/crear-libro') {
-    let activeBookTab = tabs.find(t => t.docType === 'book' || inferDocumentTypeId(t) === 'book');
+    const activeBookTab = tabs.find(t => t.docType === 'book' || inferDocumentTypeId(t) === 'book');
     if (!activeBookTab) {
-      const created = createBlankDocumentWithTab(DEFAULT_BOOK_PRESET_ID);
-      const newTabs = getOpenTabs();
-      activeBookTab = newTabs.find(t => t.docType === 'book' || inferDocumentTypeId(t) === 'book') || (created ? { id: created.id, docType: 'book' } as any : undefined);
+      return (
+        <div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Creador de Libros...</div>
+      );
     }
     const activeBookTabId = activeBookTab?.id || activeBookTab?.cvId || cvData?.id || '';
     return (
@@ -785,11 +809,11 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   }
 
   if (currentRoute === '/crear-agenda') {
-    let activePlannerTab = tabs.find(t => t.docType === 'planner' || inferDocumentTypeId(t) === 'planner');
+    const activePlannerTab = tabs.find(t => t.docType === 'planner' || inferDocumentTypeId(t) === 'planner');
     if (!activePlannerTab) {
-      const created = createBlankDocumentWithTab(DEFAULT_PLANNER_PRESET_ID);
-      const newTabs = getOpenTabs();
-      activePlannerTab = newTabs.find(t => t.docType === 'planner' || inferDocumentTypeId(t) === 'planner') || (created ? { id: created.id, docType: 'planner' } as any : undefined);
+      return (
+        <div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Estudio de Agendas...</div>
+      );
     }
     const activePlannerTabId = activePlannerTab?.id || activePlannerTab?.cvId || cvData?.id || '';
     return (
