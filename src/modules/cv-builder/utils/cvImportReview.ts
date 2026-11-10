@@ -169,3 +169,65 @@ export function applyImportReview(
 
   return result;
 }
+
+function setValueForPath(data: Record<string, any>, path: string, value: any): void {
+  const parts = path.split('.');
+  let cursor = data;
+  for (let i = 0; i < parts.length - 1; i += 1) {
+    if (typeof cursor[parts[i]] !== 'object' || cursor[parts[i]] === null) {
+      cursor[parts[i]] = {};
+    }
+    cursor = cursor[parts[i]];
+  }
+  cursor[parts[parts.length - 1]] = value;
+}
+
+/**
+ * Construye el fragmento validado por el usuario para persistir en
+ * ocr_jobs.result_json: sólo los campos que aceptó (explícitamente o por
+ * defecto), con sus ediciones aplicadas. NO aplica el fragmento al CV;
+ * para eso está applyImportReview.
+ *
+ * Semántica de selección:
+ * - Escalar: se incluye si `scalarFields[path] === 'replace'`, o si está
+ *   indefinido y `current` está ausente/vacío (misma regla por defecto que
+ *   applyImportReview). 'keep' se excluye.
+ * - Ítem de lista: se incluye salvo `listItems['<field>:<index>'].action ===
+ *   'skip'`. Sin current, el índice de duplicado no se puede calcular y se
+ *   asume 'add'.
+ */
+export function buildValidatedImportFragment(
+  imported: Record<string, any>,
+  selections: ImportReviewSelections,
+  current?: Record<string, any>
+): Record<string, any> {
+  const fragment: Record<string, any> = {};
+
+  for (const path of scalarFields) {
+    const rawValue = valueForPath(imported, path);
+    if (typeof rawValue !== 'string' || !rawValue.trim()) continue;
+    const decision = selections.scalarFields[path];
+    const currentValue = current ? valueForPath(current, path) : undefined;
+    const include = decision === 'replace'
+      || (decision === undefined && (!current || !String(currentValue ?? '').trim()));
+    if (!include) continue;
+    setValueForPath(fragment, path, rawValue.trim());
+  }
+
+  for (const field of IMPORTABLE_LIST_FIELDS) {
+    const items = Array.isArray(imported[field]) ? imported[field] : [];
+    if (items.length === 0) continue;
+    const reference = current && Array.isArray(current[field]) ? current[field] : [];
+    const accepted: any[] = [];
+    items.forEach((item: any, index: number) => {
+      const selection = selections.listItems[`${field}:${index}`];
+      const action = selection?.action
+        ?? (findImportDuplicateIndex(field, reference, item) >= 0 ? 'skip' : 'add');
+      if (action === 'skip') return;
+      accepted.push(item);
+    });
+    if (accepted.length > 0) fragment[field] = accepted;
+  }
+
+  return fragment;
+}

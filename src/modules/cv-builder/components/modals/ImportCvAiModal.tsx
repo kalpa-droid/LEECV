@@ -22,7 +22,6 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
   const [status, setStatus] = useState<'idle' | 'analyzing' | 'processing' | 'done' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const [pastedText, setPastedText] = useState('');
-  const [jobId, setJobId] = useState<string | null>(null);
   const [jobErrorCode, setJobErrorCode] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,7 +38,6 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
     // La importación con IA es libre y utiliza rate limit por IP en backend
     
     setStatus('analyzing');
-    setJobId(null);
     setJobErrorCode(null);
     
     try {
@@ -82,25 +80,32 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
         throw new Error(pData.error || 'Error del servidor creando el job');
       }
 
-      // El backend devuelve jobId (async) o directamente fragmentJson (sync)
-      if (pData.data?.jobId) {
-        // Modo async: hacer polling del estado del job
-        setJobId(pData.data.jobId);
+      // Backend siempre crea ocr_jobs y devuelve jobId; el fallback sync es prácticamente nunca tomado.
+      const pageJobId = pData.data.jobId as string;
+      if (pageJobId) {
         setTotal(pData.data.pagesTotal ?? totalPages);
-        
+
         const pollJob = async () => {
           try {
             const statusResp = await apiClient.get<{ job: any }>(
-              `/api/cv-import-api?action=job-status&jobId=${jobId}`,
+              `/api/cv-import-api?action=job-status&jobId=${pageJobId}`,
               { requiresAuth: false }
             );
             if (!statusResp.ok) throw new Error(statusResp.error || 'No se pudo consultar el estado del job');
+
+            const parseFragment = (raw: any) => {
+              if (!raw) return {};
+              if (typeof raw === 'string') {
+                try { return JSON.parse(raw); } catch { return {}; }
+              }
+              return raw;
+            };
 
             const job = statusResp.data.job;
             if (job.status === 'completed') {
               setProgress(job.pagesTotal ?? totalPages);
               setStatus('done');
-              onImportComplete(job.result_json || pData.data.fragmentJson);
+              onImportComplete({ ...parseFragment(job.result_json || pData.data.fragmentJson), _jobId: pageJobId });
               return;
             } else if (job.status === 'failed') {
               setJobErrorCode(job.error_message || 'ai_provider_error');
@@ -110,7 +115,7 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
             } else if (job.status === 'pages_limit_exceeded') {
               setErrorMsg(job.message || 'PDF largo: se procesaron las primeras 10 páginas.');
               setStatus('done');
-              onImportComplete(job.result_json || pData.data.fragmentJson);
+              onImportComplete({ ...parseFragment(job.result_json || pData.data.fragmentJson), _jobId: pageJobId });
               return;
             } else if (job.status === 'processing' || job.status === 'pending') {
               // Seguir haciendo polling cada 3 segundos

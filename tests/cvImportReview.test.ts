@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyImportReview, findImportDuplicateIndex, normalizeImportedCvData } from '../src/modules/cv-builder/utils/cvImportReview';
+import { applyImportReview, buildValidatedImportFragment, findImportDuplicateIndex, normalizeImportedCvData } from '../src/modules/cv-builder/utils/cvImportReview';
 
 describe('CV import review', () => {
   it('preserves existing scalar values by default and completes empty values', () => {
@@ -63,6 +63,89 @@ describe('CV import review', () => {
     })).toMatchObject({
       experience: [],
       education: [{ institution: 'Universidad', degree: 'Licenciatura' }]
+    });
+  });
+
+  describe('buildValidatedImportFragment', () => {
+    it('includes user-edited scalar values even with no explicit replace selection', () => {
+      const fragment = buildValidatedImportFragment(
+        { summary: 'Editado a mano por la persona' },
+        { scalarFields: {}, listItems: {} },
+        { summary: '' }
+      );
+      expect(fragment.summary).toBe('Editado a mano por la persona');
+    });
+
+    it('excludes scalars the user kept and includes those explicitly replaced', () => {
+      const fragment = buildValidatedImportFragment(
+        {
+          summary: 'Resumen detectado editado',
+          objective: 'Objetivo detectado',
+          personalInfo: { fullName: 'Nombre detectado editado', email: 'correo@example.com' }
+        },
+        {
+          scalarFields: {
+            summary: 'replace',
+            objective: 'keep',
+            'personalInfo.fullName': 'replace',
+            'personalInfo.email': 'keep'
+          },
+          listItems: {}
+        },
+        { summary: 'Manual existente', objective: 'Objetivo manual' }
+      );
+
+      expect(fragment.summary).toBe('Resumen detectado editado');
+      expect(fragment.objective).toBeUndefined();
+      expect(fragment.personalInfo).toEqual({ fullName: 'Nombre detectado editado' });
+      expect(fragment.personalInfo.email).toBeUndefined();
+    });
+
+    it('includes edited list records the user accepted and drops skipped ones', () => {
+      const fragment = buildValidatedImportFragment(
+        {
+          experience: [
+            { role: 'Diseñadora Senior', company: 'Nueva Co', description: 'Descripción editada' },
+            { role: 'Pasante', company: 'Descartada' }
+          ],
+          skills: ['Figma', 'Trabajo descartado']
+        },
+        {
+          scalarFields: {},
+          listItems: {
+            'experience:0': { action: 'add' },
+            'experience:1': { action: 'skip' },
+            'skills:0': { action: 'add' },
+            'skills:1': { action: 'skip' }
+          }
+        }
+      );
+
+      expect(fragment.experience).toHaveLength(1);
+      expect(fragment.experience[0]).toMatchObject({ role: 'Diseñadora Senior', company: 'Nueva Co' });
+      expect(fragment.skills).toEqual(['Figma']);
+    });
+
+    it('persists nothing when the user rejected every detected value', () => {
+      const fragment = buildValidatedImportFragment(
+        { summary: 'Resumen detectado', experience: [{ role: 'CEO' }] },
+        {
+          scalarFields: { summary: 'keep' },
+          listItems: { 'experience:0': { action: 'skip' } }
+        },
+        { summary: 'Existente', experience: [{ role: 'Analista' }] }
+      );
+
+      expect(fragment).toEqual({});
+    });
+
+    it('bypasses duplicate-skip heuristic by default when no current CV exists and nothing was explicitly rejected', () => {
+      const fragment = buildValidatedImportFragment(
+        { experience: [{ role: 'Cualquier cosa' }] },
+        { scalarFields: {}, listItems: {} }
+      );
+
+      expect(fragment.experience).toHaveLength(1);
     });
   });
 });
