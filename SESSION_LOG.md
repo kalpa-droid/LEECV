@@ -10,9 +10,22 @@
 
 **Flujo implementado:** PDF subido → job `processing` en Supabase → frontend polling 3s → `completed` muestra CV / `failed` muestra error traducido. PDF >10 páginas → mensaje inmediato + sólo primeras 10.
 
-**Estado:** rama `feat/ocr-fase1-v252` (`c7a35b6`); PR #68 abierta en https://github.com/kalpa-droid/LEECV/pull/68; `check-all` 0 errores (3× confirmado local + pre-push); GitHub Actions corriendo; pendiente aprobación CODEOWNER (toca `api/_lib/` y `src/shared/core/`).
+**Estado:** ✅ MERGEADA — PR #68 mergeada a `main`. Hash confirmado: `356a682a3f31d37c97a51ff0e27aa159aaa3d32d`. CI ✅ / Vercel ✅.
 
 **Versión:** V2.5.1 → V2.5.2
+
+---
+
+## [2026-11-09/10] - V2.6.0 (feat/ats-cro-fase2-auditor-pseo): Auditor ATS en vivo + pSEO 52 profesiones
+
+**Resumen:**
+- **Eje 1 – Auditor ATS en vivo:** `useAtsLiveScore`, `AtsLiveAuditorPanel`, score pill en `Navbar`, wiring en `App.tsx`/`AppModals.tsx`.
+- **Eje 2 – pSEO masivo:** `jobTemplatesCatalog.ts`, `jobTemplatesData.json` (52 profesiones, 7 categorías), `prerenderMeta.mjs`, `JobRoleLandingPage.tsx` (hero AA-safe), sitemap actualizado (83 URLs).
+- **Eje 3 – Gobernanza:** bump de versión a `V2.6.0`, `tests/jobTemplatesCatalog.test.ts`, `tests/atsLiveAuditor.test.ts`, `check-all` 0 errores.
+
+**Estado:** PR #69 abierta https://github.com/kalpa-droid/LEECV/pull/69 — CI ✅ SUCCESS (1m21s) / Vercel ✅ — `mergeStateStatus: CLEAN` — pendiente aprobación CODEOWNER (toca `src/shared/core/`).
+
+**Versión:** V2.5.2 → V2.6.0
 
 ## [2026-11-01] - V2.5.0 (feat/hotfix-login-validaciones-v250): Hotfix validaciones + mejoras landing + artículos blog
 
