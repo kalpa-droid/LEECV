@@ -38,7 +38,7 @@ export const geminiProvider: AiProviderDefinition = {
           temperature: req.temperature ?? 0.1,
           maxOutputTokens: req.maxTokens || 4000,
           thinkingConfig: {
-            thinkingLevel: 'minimal' // Gemini 3.x usa thinkingLevel en vez de thinkingBudget
+            thinkingLevel: 'LOW' // Gemini 3.8 Flash solo soporta 'LOW', 'MEDIUM', 'HIGH' ('minimal' da 400 Bad Request)
           },
           ...(req.responseSchema ? { responseMimeType: 'application/json', responseSchema: req.responseSchema } : {})
         }
