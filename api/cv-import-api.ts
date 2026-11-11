@@ -48,33 +48,42 @@ REGLAS OBLIGATORIAS:
       temperature: 0.2,
     };
 
-    // Intentar Groq primero por velocidad ATS; si no hay clave, fallback a Gemini
+    // Intentar Groq primero por velocidad ATS; si no hay clave o falla, fallback a Gemini
+    const providersToTry: Array<{ providerId: string; provider: any; apiKey: string }> = [];
     const groqKey = getNextAvailableKey('groq');
-    const targetProviderId = groqKey && AI_PROVIDERS['groq'] ? 'groq' : 'gemini';
-    const targetProvider = AI_PROVIDERS[targetProviderId];
-    const apiKey = targetProviderId === 'groq' ? groqKey : getNextAvailableKey('gemini');
+    if (groqKey && AI_PROVIDERS['groq']) {
+      providersToTry.push({ providerId: 'groq', provider: AI_PROVIDERS['groq'], apiKey: groqKey });
+    }
+    const geminiKey = getNextAvailableKey('gemini');
+    if (geminiKey && AI_PROVIDERS['gemini']) {
+      providersToTry.push({ providerId: 'gemini', provider: AI_PROVIDERS['gemini'], apiKey: geminiKey });
+    }
 
-    if (!targetProvider || !apiKey) {
+    if (providersToTry.length === 0) {
       return errorResponse(res, 503, 'ai_not_configured');
     }
 
-    try {
-      const result = await targetProvider.complete(consolidationRequest, apiKey);
-      let consolidatedJson;
+    let lastConsolidationError: any = null;
+    for (const { providerId, provider, apiKey } of providersToTry) {
       try {
-        const cleanJsonStr = result.content.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
-        consolidatedJson = JSON.parse(cleanJsonStr);
-      } catch (parseErr) {
-        console.error('[cv-import] Error al parsear JSON consolidado:', parseErr);
-        console.error('[cv-import] Contenido devuelto:', result.content);
-        return errorResponse(res, 500, 'Error procesando respuesta de IA (Formato inválido en consolidación)');
+        const result = await provider.complete(consolidationRequest, apiKey);
+        let consolidatedJson: any;
+        try {
+          const cleanJsonStr = result.content.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
+          consolidatedJson = JSON.parse(cleanJsonStr);
+        } catch (parseErr) {
+          console.error(`[cv-import] Error al parsear JSON consolidado de ${providerId}:`, parseErr);
+          continue;
+        }
+        return successResponse(res, { consolidatedJson });
+      } catch (err: any) {
+        lastConsolidationError = err;
+        console.warn(`[cv-import] Falló consolidación con ${providerId}:`, err.message || err);
       }
-
-      return successResponse(res, { consolidatedJson });
-    } catch (err: any) {
-      console.error('[cv-import] Error al consolidar datos:', err);
-      return errorResponse(res, 502, 'Error del proveedor de IA durante consolidación');
     }
+
+    console.error('[cv-import] Error al consolidar datos en todos los proveedores:', lastConsolidationError);
+    return errorResponse(res, 502, 'Error del proveedor de IA durante consolidación');
   }
 
   if (action === 'job-status') {

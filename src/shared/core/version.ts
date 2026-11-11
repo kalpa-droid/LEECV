@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 2,
   minor: 8,
-  patch: 2,
-  label: 'V2.8.2',
+  patch: 3,
+  label: 'V2.8.3',
   lastUpdated: '2026-11-11',
   lastAgent: '@antigravity',
-  stage: 'Fix Gemini 3.8 Flash: thinkingLevel MINIMAL -> LOW (400 Bad Request en REST)',
+  stage: 'Resiliencia OCR: reducción de canvas a 1400px, reintentos con backoff, tolerancia a fallos parciales y fallback Gemini 2.0',
 } as const;

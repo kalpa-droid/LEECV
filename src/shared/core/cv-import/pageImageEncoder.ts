@@ -11,12 +11,12 @@
  */
 
 /** Lado más largo al que se reduce cualquier imagen antes de mandarla. Alcanza de sobra para que la IA lea el texto. */
-export const MAX_IMAGE_DIMENSION = 2000;
+export const MAX_IMAGE_DIMENSION = 1600;
 
 /** Margen de seguridad bien por debajo del límite real de 4.5 MB de Vercel (deja lugar al resto del JSON). */
-export const MAX_PAGE_PAYLOAD_BYTES = 3_500_000;
+export const MAX_PAGE_PAYLOAD_BYTES = 2_500_000;
 
-const QUALITY_STEPS = [0.82, 0.7, 0.55, 0.4] as const;
+const QUALITY_STEPS = [0.75, 0.62, 0.48, 0.35] as const;
 
 /** Tamaño aproximado en bytes que ocupa una cadena base64 (sin el prefijo "data:...,"). */
 export function estimateBase64Bytes(base64: string): number {
