@@ -38,7 +38,7 @@ export const geminiProvider: AiProviderDefinition = {
           temperature: req.temperature ?? 0.1,
           maxOutputTokens: req.maxTokens || 4000,
           thinkingConfig: {
-            thinkingBudget: 0 // Apaga el razonamiento interno que causaba los 60s de timeout
+            thinkingLevel: 'minimal' // Gemini 3.x usa thinkingLevel en vez de thinkingBudget
           },
           ...(req.responseSchema ? { responseMimeType: 'application/json', responseSchema: req.responseSchema } : {})
         }

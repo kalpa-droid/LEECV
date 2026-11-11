@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 2,
   minor: 8,
-  patch: 0,
-  label: 'V2.8.0',
+  patch: 1,
+  label: 'V2.8.1',
   lastUpdated: '2026-11-11',
-  lastAgent: '@desarrollo-rapido',
-  stage: 'Pipeline OCR HD secuencial, fix thinkingBudget Gemini, consolidación ATS con Groq y mapeo a 20+ secciones canónicas con activación automática',
+  lastAgent: '@antigravity',
+  stage: 'Fix Gemini 3.x: thinkingBudget → thinkingLevel (400 Bad Request en producción)',
 } as const;
