@@ -1,5 +1,38 @@
 # Registro de Intervenciones de Agentes (SESSION_LOG)
 
+## [2026-11-10] - V2.7.0 (feat/ocr-fase2-editor-ia): Revisión editable con IA del OCR
+
+**Resumen:**
+- `ImportReviewDiffModal`: los valores detectados por el OCR pasan a ser editables inline antes de confirmar la importación.
+- Botones de acción "Mejorar redacción con IA" (Sparkles) por viñeta de experiencia, resumen profesional y objetivo, integrando `executeAiTask` (`improve_bullet`, `generate_summary`, `generate_objective`).
+- `ImportDataSection`: al confirmar, persiste en `ocr_jobs.result_json` únicamente el fragmento validado por el usuario (`buildValidatedImportFragment`), protegiendo la privacidad y evitando sobreescribir el CV completo.
+- `ImportCvAiModal`: corrección de stale-closure en `pollJob` que llamaba a `job-status?jobId=null` derivando en error 400. Captura local de `pageJobId` y propagación segura de `_jobId`.
+- Cobertura de tests: 5 casos agregados para `buildValidatedImportFragment` en `cvImportReview.test.ts`.
+
+**Estado:** ✅ MERGEADA — PR #71 mergeada a `main`. Hash confirmado: `02591b0ef18c1ce0f7d337add0fcc36fb4890305`. CI `check-all` ✅ / Vercel ✅.
+
+**Versión:** V2.6.1 → V2.7.0
+
+---
+
+## [2026-11-10] - V2.6.1 (fix/5-bugs-produccion-v261): fix Studios #301 + nueva tarjeta abre en portada
+
+**Resumen:**
+- En producción, `/crear-libro` y `/crear-agenda` disparaban React #301 ("Cannot update a component while rendering a different component" + bucle infinito) porque la rama del render llamaba a `createBlankDocumentWithTab()` dentro del cuerpo del componente: `resetToBlankCV()` → `setCvDataState` durante el render re-gatillaba `AppContent` indefinidamente hasta que React aborta la sesión (#error 301).
+- La creación de la pestaña inicial se difiere a un `useEffect` post-commit: el render sólo lee de `tabs`; mientras tanto se muestra "Cargando Creador de Libros... / Cargando Estudio de Agendas...".
+- Bug 2: al hacer "Nueva tarjeta" se abría la tab `personales` del CV; ahora abre `card_front`.
+- Valor huérfano `grid_viewer` (default tab de libro en `getDefaultTabForDocType`) corregido a `book_source_type`.
+
+**Contexto de incidencia:**
+- Bugs 1, 3 y 5 de la incidencia eran de sólo configuración en Vercel (`VITE_*`/secciones) — sin cambios de código.
+- Instrumentación temporal residual (`DBG`, `setCvData` stack) eliminada; `CVContext.tsx` vuelve a `git diff` limpio.
+
+**Estado:** ✅ MERGEADA — PR #70 mergeada a `main` (squash). Hash confirmado: `7b22a63242a2dfdb069c935a678550ead6a49d94`. CI `check-all` ✅ 46s / Vercel ✅. No toca `src/shared/core/` ni `api/_lib/`.
+
+**Versión:** V2.6.0 → V2.6.1
+
+---
+
 ## [2026-11-09] - V2.5.2 (feat/ocr-fase1-v252): Fase 1 OCR Estabilizado — jobs async, polling, límite 10 páginas
 
 **Resumen:**
