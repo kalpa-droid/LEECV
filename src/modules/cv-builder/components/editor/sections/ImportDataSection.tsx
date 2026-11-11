@@ -6,6 +6,7 @@ import { withErrorHandling } from '../../../../../shared/core/utils/errorHandler
 import { button } from '../../../../../shared/core/uiDesignSystem';
 import { useToast } from '../../../../../shared/core/ui/Toast';
 import { dal } from '../../../../../shared/core/storage/dataAccessLayer';
+import { activateSection } from '../../../../../shared/core/sections/sectionActivationEngine';
 import type { ImportReviewSelections } from '../../../utils/cvImportReview';
 import { applyImportReview, buildValidatedImportFragment, normalizeImportedCvData } from '../../../utils/cvImportReview';
 import ImportReviewDiffModal from '../../modals/ImportReviewDiffModal';
@@ -68,7 +69,38 @@ export const ImportDataSection: React.FC = () => {
 
   const handleConfirmImport = async (selections: ImportReviewSelections, editedFragment: Record<string, any>) => {
     if (!reviewData) return;
-    setCvData((previous) => applyImportReview(previous, editedFragment, selections));
+    setCvData((previous) => {
+      let updated = applyImportReview(previous, editedFragment, selections);
+
+      const listSectionMapping: Record<string, string> = {
+        experience: 'experiencia',
+        education: 'formacion',
+        profession: 'profesion',
+        achievements: 'logros',
+        portfolio: 'portafolio',
+        coursesAndCertificates: 'cursos',
+        informatics: 'informatica',
+        projects: 'proyectos',
+        publications: 'publicaciones',
+        references: 'referencias',
+        hardSkills: 'habilidades',
+        skills: 'competencias',
+        languages: 'idiomas',
+        redes: 'redes'
+      };
+
+      Object.entries(listSectionMapping).forEach(([fieldKey, sectionId]) => {
+        if (Array.isArray(updated[fieldKey]) && updated[fieldKey].length > 0) {
+          updated = activateSection(updated, sectionId).updatedCvData;
+        }
+      });
+
+      if (updated.objective) updated = activateSection(updated, 'objetivo').updatedCvData;
+      if (updated.summary) updated = activateSection(updated, 'resumen').updatedCvData;
+      if (updated.frase) updated = activateSection(updated, 'frase').updatedCvData;
+
+      return updated;
+    });
     const jobId = reviewJobId;
     setReviewData(null);
     setReviewJobId(null);

@@ -147,5 +147,36 @@ describe('CV import review', () => {
 
       expect(fragment.experience).toHaveLength(1);
     });
+
+    it('normalizes and imports extended canonical list fields (projects, achievements, hardSkills, etc.)', () => {
+      const normalized = normalizeImportedCvData({
+        projects: [{ name: 'Portal Web', institucion: 'Tech SA', descripcion: 'Desarrollo en React', year: '2024' }],
+        achievements: [{ logro: 'Incremento 20%', empresa: 'Logística', metricas: '+20% eficiencia' }],
+        hardSkills: [{ title: 'TypeScript', level: 'Avanzado' }],
+        references: [{ persona: 'Juan Perez', cargo: 'Gerente', company: 'Tech SA', phone: '123456' }]
+      });
+
+      expect(normalized.projects[0]).toMatchObject({
+        title: 'Portal Web',
+        institution: 'Tech SA',
+        details: 'Desarrollo en React',
+        year: '2024'
+      });
+      expect(normalized.achievements[0]).toMatchObject({
+        title: 'Incremento 20%',
+        institution: 'Logística',
+        details: '+20% eficiencia'
+      });
+      expect(normalized.hardSkills[0]).toMatchObject({
+        name: 'TypeScript',
+        level: 'Avanzado'
+      });
+      expect(normalized.references[0]).toMatchObject({
+        personaReferencia: 'Juan Perez',
+        cargo: 'Gerente',
+        institution: 'Tech SA',
+        contactoReferencia: '123456'
+      });
+    });
   });
 });

@@ -7,7 +7,6 @@ import { ensurePdfjsWorkerConfigured } from '../../../../shared/core/pdf-engine/
 import { clampCanvasSize, encodeCanvasWithinBudget, encodeImageFileWithinBudget } from '../../../../shared/core/cv-import/pageImageEncoder';
 import { mergePageFragments, type CVFragment } from '../../../../shared/core/cv-import/mergeFragments';
 import { apiClient } from '../../../../shared/core/utils/apiClient';
-import { supabase } from '../../../../shared/core/lib/supabaseClient';
 
 interface ImportCvAiModalProps {
   isOpen: boolean;
@@ -35,137 +34,128 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
 
   const startImport = async () => {
     if (!file && !pastedText.trim()) return;
-    // La importación con IA es libre y utiliza rate limit por IP en backend
     
     setStatus('analyzing');
     setJobErrorCode(null);
+    setErrorMsg('');
     
     try {
-      let pagesToProcess: Array<{ kind: 'text'|'image', content: string }> = [];
-      
+      const fragments: CVFragment[] = [];
+      let totalPages = 1;
+
       if (!file) {
-        pagesToProcess.push({ kind: 'text', content: pastedText.trim() });
+        setTotal(1);
+        setStatus('processing');
+        const pData = await apiClient.post<{ fragmentJson?: any }>('/api/cv-import-api?action=extract-page', {
+          kind: 'text',
+          content: pastedText.trim()
+        }, { requiresAuth: false });
+        if (!pData.ok || !pData.data?.fragmentJson) {
+          throw new Error(pData.error || 'No se pudo procesar el texto.');
+        }
+        fragments.push(pData.data.fragmentJson);
+        setProgress(1);
       } else if (file.type.startsWith('image/')) {
-        // Una foto de cámara sin procesar puede pesar varios MB — se reduce y comprime ANTES
-        // de mandarla, o el pedido supera el límite de tamaño de Vercel y la función se cae.
+        setTotal(1);
+        setStatus('processing');
         const base64 = await encodeImageFileWithinBudget(file);
-        pagesToProcess.push({ kind: 'image', content: base64 });
-      } else if (file.type === 'application/pdf') {
-        pagesToProcess = await processPdfPages(file);
+        const pData = await apiClient.post<{ fragmentJson?: any }>('/api/cv-import-api?action=extract-page', {
+          kind: 'image',
+          content: base64
+        }, { requiresAuth: false });
+        if (!pData.ok || !pData.data?.fragmentJson) {
+          throw new Error(pData.error || 'No se pudo procesar la imagen.');
+        }
+        fragments.push(pData.data.fragmentJson);
+        setProgress(1);
       } else if (file.type === 'text/plain' || file.name.toLowerCase().endsWith('.txt')) {
+        setTotal(1);
+        setStatus('processing');
         const text = await file.text();
         if (!text.trim()) throw new Error('El archivo de texto está vacío.');
-        pagesToProcess.push({ kind: 'text', content: text });
+        const pData = await apiClient.post<{ fragmentJson?: any }>('/api/cv-import-api?action=extract-page', {
+          kind: 'text',
+          content: text
+        }, { requiresAuth: false });
+        if (!pData.ok || !pData.data?.fragmentJson) {
+          throw new Error(pData.error || 'No se pudo procesar el archivo de texto.');
+        }
+        fragments.push(pData.data.fragmentJson);
+        setProgress(1);
+      } else if (file.type === 'application/pdf') {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdfjsLib = ensurePdfjsWorkerConfigured();
+        const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+        totalPages = Math.min(pdf.numPages, 30);
+        setTotal(totalPages);
+        setStatus('processing');
+
+        for (let i = 1; i <= totalPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const rawText = textContent.items.map((item: any) => item.str).join(' ');
+
+          let pageKind: 'text' | 'image' = 'text';
+          let pageContent = rawText;
+          let auxiliaryText = '';
+
+          if (!isTextLayerCoherent(rawText)) {
+            pageKind = 'image';
+            auxiliaryText = rawText;
+            const unscaledViewport = page.getViewport({ scale: 1 });
+            const targetScale = Math.max(1.5, Math.min(2.5, 1800 / (unscaledViewport.height || 1000)));
+            const viewport = page.getViewport({ scale: targetScale });
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              await page.render({ canvasContext: ctx, viewport }).promise;
+              pageContent = encodeCanvasWithinBudget(clampCanvasSize(canvas));
+              // Liberar memoria gráfica inmediatamente
+              canvas.width = 0;
+              canvas.height = 0;
+            } else {
+              throw new Error('Canvas no soportado en este navegador.');
+            }
+          }
+
+          const pDataPage = await apiClient.post<{ fragmentJson?: any; message?: string }>('/api/cv-import-api?action=extract-page', {
+            kind: pageKind,
+            content: pageContent,
+            auxiliaryText
+          }, { requiresAuth: false });
+
+          if (!pDataPage.ok) {
+            throw new Error(pDataPage.error || `Error del servidor procesando página ${i}`);
+          }
+          if (!pDataPage.data || !pDataPage.data.fragmentJson) {
+            throw new Error(`Respuesta inesperada para página ${i}`);
+          }
+          fragments.push(pDataPage.data.fragmentJson);
+          setProgress(i);
+        }
       } else {
         throw new Error('Formato no soportado. Usa PDF, una imagen o texto (.txt).');
       }
 
-      const totalPages = pagesToProcess.length;
-      setTotal(totalPages);
-      setProgress(0);
-      setStatus('processing');
-
-      // NUEVO: Si hay más de 10 páginas, el backend ya devuelve jobId con frontPageLimit
-      // Enviamos la primera página para crear el job inicial
-      const firstPage = pagesToProcess[0];
-      let contextSummary = '';
-      const pData = await apiClient.post('/api/cv-import-api?action=extract-page', {
-        kind: firstPage.kind,
-        content: firstPage.content,
-        contextSummary,
-        auxiliaryText: (firstPage as any).auxiliaryText || ''
-      }, { requiresAuth: false });
-
-      if (!pData.ok) {
-        throw new Error(pData.error || 'Error del servidor creando el job');
-      }
-
-      // Backend siempre crea ocr_jobs y devuelve jobId; el fallback sync es prácticamente nunca tomado.
-      const pageJobId = pData.data.jobId as string;
-      if (pageJobId) {
-        setTotal(pData.data.pagesTotal ?? totalPages);
-
-        const pollJob = async () => {
-          try {
-            const statusResp = await apiClient.get<{ job: any }>(
-              `/api/cv-import-api?action=job-status&jobId=${pageJobId}`,
-              { requiresAuth: false }
-            );
-            if (!statusResp.ok) throw new Error(statusResp.error || 'No se pudo consultar el estado del job');
-
-            const parseFragment = (raw: any) => {
-              if (!raw) return {};
-              if (typeof raw === 'string') {
-                try { return JSON.parse(raw); } catch { return {}; }
-              }
-              return raw;
-            };
-
-            const job = statusResp.data.job;
-            if (job.status === 'completed') {
-              setProgress(job.pagesTotal ?? totalPages);
-              setStatus('done');
-              onImportComplete({ ...parseFragment(job.result_json || pData.data.fragmentJson), _jobId: pageJobId });
-              return;
-            } else if (job.status === 'failed') {
-              setJobErrorCode(job.error_message || 'ai_provider_error');
-              setStatus('error');
-              setErrorMsg('Error procesando el CV. Intentá con “Pegar texto” como alternativa.');
-              return;
-            } else if (job.status === 'pages_limit_exceeded') {
-              setErrorMsg(job.message || 'PDF largo: se procesaron las primeras 10 páginas.');
-              setStatus('done');
-              onImportComplete({ ...parseFragment(job.result_json || pData.data.fragmentJson), _jobId: pageJobId });
-              return;
-            } else if (job.status === 'processing' || job.status === 'pending') {
-              // Seguir haciendo polling cada 3 segundos
-              setProgress(job.pagesProcessed ?? progress);
-              setTimeout(pollJob, 3000);
-            }
-          } catch (err: any) {
-            console.error('Polling error:', err);
-            setErrorMsg('No se pudo consultar el estado del procesamiento.');
-            setStatus('error');
-          }
-        };
-        pollJob();
-      } else if (pData.data?.fragmentJson) {
-        // Modo sync (fallback): procesar una página a la vez (lógica original)
-        const fragments: CVFragment[] = [pData.data.fragmentJson];
-        setProgress(1);
-
-        for (let i = 1; i < pagesToProcess.length; i++) {
-          const page = pagesToProcess[i];
-          let contextSummary = '';
-          if (fragments.length > 0) {
-            const summaries = fragments.map((f, idx) => `Página ${idx}: ${JSON.stringify(f)}`);
-            contextSummary = `\nContexto previo extraido:\n${summaries.join('\n')}\n`;
-          }
-
-          const pDataPage = await apiClient.post('/api/cv-import-api?action=extract-page', {
-            kind: page.kind,
-            content: page.content,
-            contextSummary,
-            auxiliaryText: (page as any).auxiliaryText || ''
-          }, { requiresAuth: false });
-
-          if (!pDataPage.ok) {
-            throw new Error(pDataPage.error || `Error del servidor procesando página ${i+1}`);
-          }
-          if (!pDataPage.data || !pDataPage.data.fragmentJson) {
-            throw new Error(`Respuesta inesperada del servidor para página ${i+1}`);
-          }
-          fragments.push(pDataPage.data.fragmentJson);
-          setProgress(i + 1);
+      // Consolidar y optimizar con ATS (Groq) si hay múltiples fragmentos/páginas
+      let finalCv: any = null;
+      if (fragments.length > 1) {
+        const consResp = await apiClient.post<{ consolidatedJson?: any }>('/api/cv-import-api?action=consolidate-ats', {
+          fragments
+        }, { requiresAuth: false });
+        if (consResp.ok && consResp.data?.consolidatedJson) {
+          finalCv = consResp.data.consolidatedJson;
+        } else {
+          finalCv = mergePageFragments(fragments);
         }
-
-        const mergedCv = mergePageFragments(fragments);
-        setStatus('done');
-        onImportComplete(mergedCv);
-      } else {
-        throw new Error('Respuesta inesperada del servidor.');
+      } else if (fragments.length === 1) {
+        finalCv = fragments[0];
       }
 
+      setStatus('done');
+      onImportComplete(finalCv);
     } catch (err: any) {
       console.error(err);
       setStatus('error');
@@ -177,45 +167,13 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
       } else if (msg.includes('ai_provider_error')) {
         setErrorMsg('El proveedor de IA falló (error técnico). Intentá con texto pegado como alternativa mientras se resuelve.');
       } else if (msg.includes('pages_limit_exceeded')) {
-        setErrorMsg('PDF largo: se procesarán las primeras 10 páginas.');
+        setErrorMsg('PDF largo: se procesaron las primeras páginas.');
         setStatus('done');
         onImportComplete(null);
       } else {
         setErrorMsg(msg || 'Error desconocido. Intentá pegar el contenido como texto alternativo.');
       }
     }
-  };
-
-  const processPdfPages = async (pdfFile: File) => {
-    const arrayBuffer = await pdfFile.arrayBuffer();
-    const pdfjsLib = ensurePdfjsWorkerConfigured();
-    const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
-    const pages: Array<{ kind: 'text' | 'image', content: string }> = [];
-    
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const textContent = await page.getTextContent();
-      const rawText = textContent.items.map((item: any) => item.str).join(' ');
-      
-      if (isTextLayerCoherent(rawText)) {
-        pages.push({ kind: 'text', content: rawText });
-      } else {
-        // Render to canvas for image extraction
-        const viewport = page.getViewport({ scale: 1.5 });
-        const canvas = document.createElement('canvas');
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          await page.render({ canvasContext: ctx, viewport }).promise;
-          const base64 = encodeCanvasWithinBudget(clampCanvasSize(canvas));
-          pages.push({ kind: 'image', content: base64 });
-        } else {
-          throw new Error('Canvas no soportado en este navegador.');
-        }
-      }
-    }
-    return pages;
   };
 
   if (!isOpen) return null;
@@ -264,7 +222,11 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
           <div className="flex flex-col items-center gap-4 py-8">
             <Loader2 size={48} className="animate-spin" color={colorSystem.accent.base} />
             <h3 className={typeScale.sectionTitle}>
-              {status === 'analyzing' ? 'Analizando archivo...' : 'Procesando...'}
+              {status === 'analyzing'
+                ? 'Analizando archivo...'
+                : total > 1
+                  ? `Leyendo página ${progress} de ${total}...`
+                  : 'Procesando...'}
             </h3>
             <div className="w-full bg-[var(--ui-border)] rounded-full h-2.5 mt-4">
               <div 

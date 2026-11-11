@@ -35,11 +35,15 @@ export const geminiProvider: AiProviderDefinition = {
           }
         ],
         generationConfig: {
-          temperature: req.temperature ?? 0.7,
-          maxOutputTokens: req.maxTokens || 1200,
+          temperature: req.temperature ?? 0.1,
+          maxOutputTokens: req.maxTokens || 4000,
+          thinkingConfig: {
+            thinkingBudget: 0 // Apaga el razonamiento interno que causaba los 60s de timeout
+          },
           ...(req.responseSchema ? { responseMimeType: 'application/json', responseSchema: req.responseSchema } : {})
         }
-      })
+      }),
+      signal: AbortSignal.timeout(45000) // Salvaguarda antes de Vercel
     });
 
     if (!response.ok) {
