@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 2,
   minor: 7,
-  patch: 0,
-  label: 'V2.7.0',
-  lastUpdated: '2026-11-10',
+  patch: 1,
+  label: 'V2.7.1',
+  lastUpdated: '2026-11-11',
   lastAgent: '@desarrollo-rapido',
-  stage: 'Revisión y reescritura con IA de la importación OCR + persistencia de corrección en ocr_jobs',
+  stage: 'Actualizar proveedor Gemini a gemini-3.8-flash y soporte de GEMINI_MODEL configurable',
 } as const;
