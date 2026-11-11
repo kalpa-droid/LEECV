@@ -16,12 +16,67 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket?.remoteAddress || 'unknown-ip';
 
-  const rateLimitOk = await requireRateLimit(req, res, `cv_import_ip_${clientIp}`, { maxRequests: 20, windowSeconds: 3600 });
+  const rateLimitOk = await requireRateLimit(req, res, `cv_import_ip_${clientIp}`, { maxRequests: 80, windowSeconds: 3600 });
   if (!rateLimitOk) return;
 
   const action = req.query.action as string;
 
-  // --- NUEVO: acción job-status (polling desde el frontend) ---
+  // --- NUEVO: acción consolidate-ats (consolidar fragmentos de múltiples páginas) ---
+  if (action === 'consolidate-ats') {
+    const { fragments = [] } = req.body || {};
+    if (!Array.isArray(fragments) || fragments.length === 0) {
+      return errorResponse(res, 400, 'Faltan parámetros requeridos: fragments[]');
+    }
+
+    const consolidationSystemInstruction = `Eres un consultor experto en optimización de CVs y sistemas ATS (Applicant Tracking Systems).
+Tu tarea es consolidar y pulir los datos extraídos por OCR de múltiples páginas de un CV.
+
+REGLAS OBLIGATORIAS:
+1. CONTINUIDAD: Une descripciones u oraciones que se hayan cortado al cambiar de página sin duplicar palabras.
+2. ELIMINAR RUIDO: Remueve números de página, notas al pie de escaneo, folios, sellos repetitivos y cabeceras de página.
+3. IMPACTO ATS: Inicia los puntos de responsabilidad y logros con verbos de acción fuertes en tiempo pasado (ej. Implementó, Diseñó, Coordinó, Optimizó).
+4. CLASIFICACIÓN EXACTA: Mapea cada elemento a su categoría canónica de LEECV:
+   - personalInfo (fullName, email, phone, dni, cuit, birthDate, address, cityProvince, nacionalidad, estadoCivil)
+   - summary, objective, frase
+   - experience, education, profession, coursesAndCertificates, achievements, portfolio, projects, publications, references, hardSkills, skills, languages, informatics, redes.
+5. FORMATO: Devuelve ÚNICAMENTE un objeto JSON válido, sin delimitadores de código markdown ni texto adicional.`;
+
+    const consolidationRequest: AiCompletionRequest = {
+      systemPrompt: consolidationSystemInstruction,
+      userPrompt: `Consolida y optimiza para ATS los siguientes fragmentos de páginas:\n\n${JSON.stringify(fragments)}`,
+      maxTokens: 6000,
+      temperature: 0.2,
+    };
+
+    // Intentar Groq primero por velocidad ATS; si no hay clave, fallback a Gemini
+    const groqKey = getNextAvailableKey('groq');
+    const targetProviderId = groqKey && AI_PROVIDERS['groq'] ? 'groq' : 'gemini';
+    const targetProvider = AI_PROVIDERS[targetProviderId];
+    const apiKey = targetProviderId === 'groq' ? groqKey : getNextAvailableKey('gemini');
+
+    if (!targetProvider || !apiKey) {
+      return errorResponse(res, 503, 'ai_not_configured');
+    }
+
+    try {
+      const result = await targetProvider.complete(consolidationRequest, apiKey);
+      let consolidatedJson;
+      try {
+        const cleanJsonStr = result.content.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
+        consolidatedJson = JSON.parse(cleanJsonStr);
+      } catch (parseErr) {
+        console.error('[cv-import] Error al parsear JSON consolidado:', parseErr);
+        console.error('[cv-import] Contenido devuelto:', result.content);
+        return errorResponse(res, 500, 'Error procesando respuesta de IA (Formato inválido en consolidación)');
+      }
+
+      return successResponse(res, { consolidatedJson });
+    } catch (err: any) {
+      console.error('[cv-import] Error al consolidar datos:', err);
+      return errorResponse(res, 502, 'Error del proveedor de IA durante consolidación');
+    }
+  }
+
   if (action === 'job-status') {
     const jobId = req.query.jobId as string;
     if (!jobId) return errorResponse(res, 400, 'jobId requerido');

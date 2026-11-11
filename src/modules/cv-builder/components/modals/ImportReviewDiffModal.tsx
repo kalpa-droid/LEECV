@@ -40,7 +40,16 @@ const listLabels: Record<string, string> = {
   education: 'Formación',
   skills: 'Competencias',
   languages: 'Idiomas',
-  coursesAndCertificates: 'Cursos y certificados'
+  coursesAndCertificates: 'Cursos y certificados',
+  profession: 'Profesión',
+  achievements: 'Logros',
+  portfolio: 'Portafolio',
+  projects: 'Proyectos',
+  publications: 'Publicaciones',
+  references: 'Referencias',
+  hardSkills: 'Habilidades técnicas',
+  informatics: 'Informática',
+  redes: 'Redes profesionales'
 };
 
 type EditableFieldDef = { key: string; label: string; textarea?: boolean };
@@ -63,6 +72,51 @@ const editableRecordFields: Record<ImportableListField, EditableFieldDef[]> = {
   coursesAndCertificates: [
     { key: 'title', label: 'Curso / Certificado' },
     { key: 'institution', label: 'Institución / Entidad' }
+  ],
+  profession: [
+    { key: 'degree', label: 'Título / Grado' },
+    { key: 'institution', label: 'Institución' },
+    { key: 'year', label: 'Año' }
+  ],
+  achievements: [
+    { key: 'title', label: 'Logro / Título' },
+    { key: 'institution', label: 'Institución' },
+    { key: 'details', label: 'Descripción', textarea: true }
+  ],
+  portfolio: [
+    { key: 'title', label: 'Proyecto / Título' },
+    { key: 'institution', label: 'Institución' },
+    { key: 'details', label: 'Descripción', textarea: true }
+  ],
+  projects: [
+    { key: 'title', label: 'Proyecto / Título' },
+    { key: 'institution', label: 'Institución' },
+    { key: 'details', label: 'Descripción', textarea: true },
+    { key: 'year', label: 'Año' }
+  ],
+  publications: [
+    { key: 'title', label: 'Publicación / Título' },
+    { key: 'autor', label: 'Autor' },
+    { key: 'year', label: 'Año' }
+  ],
+  references: [
+    { key: 'personaReferencia', label: 'Persona de referencia' },
+    { key: 'cargo', label: 'Cargo' },
+    { key: 'institution', label: 'Institución' }
+  ],
+  hardSkills: [
+    { key: 'name', label: 'Habilidad' },
+    { key: 'level', label: 'Nivel' }
+  ],
+  informatics: [
+    { key: 'title', label: 'Curso / Tecnología' },
+    { key: 'course', label: 'Curso' },
+    { key: 'institution', label: 'Institución' }
+  ],
+  redes: [
+    { key: 'plataforma', label: 'Plataforma' },
+    { key: 'usuario', label: 'Usuario' },
+    { key: 'url', label: 'URL' }
   ]
 };
 

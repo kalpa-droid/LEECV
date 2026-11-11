@@ -3,7 +3,16 @@ export type ImportableListField =
   | 'education'
   | 'skills'
   | 'languages'
-  | 'coursesAndCertificates';
+  | 'coursesAndCertificates'
+  | 'profession'
+  | 'achievements'
+  | 'portfolio'
+  | 'projects'
+  | 'publications'
+  | 'references'
+  | 'hardSkills'
+  | 'informatics'
+  | 'redes';
 
 export type ImportListSelection = {
   action: 'add' | 'replace' | 'skip';
@@ -36,7 +45,16 @@ export const IMPORTABLE_LIST_FIELDS: ImportableListField[] = [
   'education',
   'skills',
   'languages',
-  'coursesAndCertificates'
+  'coursesAndCertificates',
+  'profession',
+  'achievements',
+  'portfolio',
+  'projects',
+  'publications',
+  'references',
+  'hardSkills',
+  'informatics',
+  'redes'
 ];
 
 const normalize = (value: string) =>
@@ -57,14 +75,50 @@ const duplicateKey = (field: ImportableListField, item: any): string => {
       ? item?.institution || item?.school
       : field === 'languages'
         ? item?.language || item?.name
-        : item?.title || item?.name;
+        : field === 'achievements'
+          ? item?.title || item?.name
+          : field === 'portfolio'
+            ? item?.title || item?.name
+            : field === 'projects'
+              ? item?.title || item?.name
+              : field === 'publications'
+                ? item?.title || item?.name
+                : field === 'references'
+                  ? item?.personaReferencia || item?.name
+                  : field === 'hardSkills'
+                    ? item?.name || item?.title
+                    : field === 'informatics'
+                      ? item?.title || item?.name
+                      : field === 'profession'
+                        ? item?.degree || item?.title || item?.name
+                        : field === 'redes'
+                          ? item?.plataforma || item?.name
+                          : item?.title || item?.name;
   const second = field === 'experience'
     ? item?.role || item?.title || item?.position
     : field === 'education'
       ? item?.degree || item?.title
       : field === 'languages'
         ? item?.proficiency || item?.level
-        : item?.institution || item?.authority;
+        : field === 'achievements'
+          ? item?.institution || item?.details
+          : field === 'portfolio'
+            ? item?.institution || item?.details
+            : field === 'projects'
+              ? item?.institution || item?.details
+              : field === 'publications'
+                ? item?.autor || item?.author
+                : field === 'references'
+                  ? item?.cargo || item?.title
+                  : field === 'hardSkills'
+                    ? item?.level || item?.institution
+                    : field === 'informatics'
+                      ? item?.course || item?.institution
+                      : field === 'profession'
+                        ? item?.institution || item?.year
+                        : field === 'redes'
+                          ? item?.usuario || item?.url
+                          : item?.institution || item?.authority;
 
   return [first, second].map((value) => normalize(String(value || ''))).filter(Boolean).join('|');
 };
@@ -113,6 +167,44 @@ export function normalizeImportedCvData(raw: Record<string, any>): Record<string
       } else if (field === 'coursesAndCertificates') {
         result.title = item.title || item.name || '';
         result.institution = item.institution || item.authority || '';
+      } else if (field === 'profession') {
+        result.degree = item.degree || item.title || item.tituloOGrado || '';
+        result.institution = item.institution || item.institucion || '';
+        result.year = item.year || '';
+      } else if (field === 'achievements') {
+        result.title = item.title || item.name || item.tituloOGrado || item.logro || '';
+        result.institution = item.institution || item.institucion || item.empresa || '';
+        result.details = item.details || item.description || item.descripcion || item.metricas || '';
+      } else if (field === 'portfolio') {
+        result.title = item.title || item.name || item.tituloOGrado || item.proyecto || '';
+        result.institution = item.institution || item.institucion || item.cliente || '';
+        result.details = item.details || item.description || item.descripcion || '';
+      } else if (field === 'projects') {
+        result.title = item.title || item.name || item.tituloOGrado || '';
+        result.institution = item.institution || item.institucion || '';
+        result.details = item.details || item.description || item.descripcion || '';
+        result.year = item.year || '';
+      } else if (field === 'publications') {
+        result.title = item.title || item.tituloOGrado || '';
+        result.autor = item.autor || item.author || '';
+        result.institution = item.institution || item.institucion || '';
+        result.year = item.year || '';
+      } else if (field === 'references') {
+        result.personaReferencia = item.personaReferencia || item.name || item.persona || '';
+        result.cargo = item.cargo || item.role || item.title || '';
+        result.institution = item.institution || item.company || item.institucion || '';
+        result.contactoReferencia = item.contactoReferencia || item.contact || item.phone || item.email || '';
+      } else if (field === 'hardSkills') {
+        result.name = item.name || item.title || '';
+        result.level = item.level || item.nivel || '';
+      } else if (field === 'informatics') {
+        result.title = item.title || item.course || item.name || '';
+        result.course = item.course || item.title || '';
+        result.institution = item.institution || item.institucion || '';
+      } else if (field === 'redes') {
+        result.plataforma = item.plataforma || item.platform || item.network || '';
+        result.usuario = item.usuario || item.username || item.user || '';
+        result.url = item.url || item.link || '';
       }
       return result;
     }).filter((item: any) => typeof item === 'string'
