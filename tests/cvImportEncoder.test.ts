@@ -57,24 +57,24 @@ function fakeCanvas(bytesByQuality: Record<number, number>) {
 }
 
 describe('pageImageEncoder — encodeCanvasWithinBudget', () => {
-  it('si la calidad más alta (0.82) ya entra en el presupuesto, no baja de más', () => {
-    const canvas = fakeCanvas({ 0.82: 500_000, 0.7: 300_000, 0.55: 200_000, 0.4: 100_000 });
+  it('si la calidad más alta (0.75) ya entra en el presupuesto, no baja de más', () => {
+    const canvas = fakeCanvas({ 0.75: 500_000, 0.62: 300_000, 0.48: 200_000, 0.35: 100_000 });
     const b64 = encodeCanvasWithinBudget(canvas, MAX_PAGE_PAYLOAD_BYTES);
     expect(estimateBase64Bytes(b64)).toBeLessThanOrEqual(MAX_PAGE_PAYLOAD_BYTES);
     expect(estimateBase64Bytes(b64)).toBeCloseTo(500_000, -3);
   });
 
   it('regresión: una "foto pesada" (todas las calidades por encima del presupuesto) igual sale bajo el límite', () => {
-    // Ninguna calidad entra por sí sola en 3.5MB — sin el arreglo esto es justo lo que
+    // Ninguna calidad entra por sí sola en 2.5MB — sin el arreglo esto es justo lo que
     // reventaba el límite de 4.5MB de Vercel. Se espera que elija la más chica que entre,
     // o si ninguna entra en la primera pasada, siga probando (no debe tirar de entrada).
-    const canvas = fakeCanvas({ 0.82: 6_000_000, 0.7: 4_800_000, 0.55: 3_000_000, 0.4: 2_000_000 });
+    const canvas = fakeCanvas({ 0.75: 6_000_000, 0.62: 4_800_000, 0.48: 3_000_000, 0.35: 2_000_000 });
     const b64 = encodeCanvasWithinBudget(canvas, MAX_PAGE_PAYLOAD_BYTES);
     expect(estimateBase64Bytes(b64)).toBeLessThanOrEqual(MAX_PAGE_PAYLOAD_BYTES);
   });
 
   it('si ni la calidad más baja entra, tira un error entendible en vez de mandar un pedido roto', () => {
-    const canvas = fakeCanvas({ 0.82: 9_000_000, 0.7: 8_000_000, 0.55: 7_000_000, 0.4: 6_000_000 });
+    const canvas = fakeCanvas({ 0.75: 9_000_000, 0.62: 8_000_000, 0.48: 7_000_000, 0.35: 6_000_000 });
     // scaleToCanvas (el intento de achicar dimensiones) usa document.createElement('canvas') real;
     // en este sandbox sin canvas 2D nativo, ese segundo intento también falla — lo relevante acá
     // es que el resultado sea SIEMPRE un error claro, nunca un base64 que exceda el presupuesto.

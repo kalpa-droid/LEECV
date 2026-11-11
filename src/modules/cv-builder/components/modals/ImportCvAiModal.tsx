@@ -17,6 +17,8 @@ interface ImportCvAiModalProps {
 export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: ImportCvAiModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [progress, setProgress] = useState(0);
+  const [currentReadingPage, setCurrentReadingPage] = useState(1);
+  const [retryNotice, setRetryNotice] = useState('');
   const [total, setTotal] = useState(0);
   const [status, setStatus] = useState<'idle' | 'analyzing' | 'processing' | 'done' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
@@ -29,6 +31,7 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
       setPastedText('');
       setStatus('idle');
       setErrorMsg('');
+      setRetryNotice('');
     }
   };
 
@@ -89,8 +92,43 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
         totalPages = Math.min(pdf.numPages, 30);
         setTotal(totalPages);
         setStatus('processing');
+        setProgress(0);
+        setCurrentReadingPage(1);
+
+        const extractWithRetry = async (
+          payload: { kind: 'text' | 'image'; content: string; auxiliaryText?: string },
+          pageNumber: number,
+          maxRetries = 2
+        ) => {
+          let lastError: any = null;
+          for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            if (attempt > 0) {
+              setRetryNotice(`Reintentando página ${pageNumber} (intento ${attempt + 1})...`);
+              await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
+            }
+            try {
+              const pDataPage = await apiClient.post<{ fragmentJson?: any; message?: string }>(
+                '/api/cv-import-api?action=extract-page',
+                payload,
+                { requiresAuth: false }
+              );
+              if (pDataPage.ok && pDataPage.data?.fragmentJson) {
+                setRetryNotice('');
+                return pDataPage.data.fragmentJson;
+              }
+              throw new Error(pDataPage.error || `Error en página ${pageNumber}`);
+            } catch (err: any) {
+              lastError = err;
+            }
+          }
+          setRetryNotice('');
+          throw lastError;
+        };
+
+        const failedPages: number[] = [];
 
         for (let i = 1; i <= totalPages; i++) {
+          setCurrentReadingPage(i);
           const page = await pdf.getPage(i);
           const textContent = await page.getTextContent();
           const rawText = textContent.items.map((item: any) => item.str).join(' ');
@@ -103,7 +141,7 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
             pageKind = 'image';
             auxiliaryText = rawText;
             const unscaledViewport = page.getViewport({ scale: 1 });
-            const targetScale = Math.max(1.5, Math.min(2.5, 1800 / (unscaledViewport.height || 1000)));
+            const targetScale = Math.max(1.2, Math.min(2.0, 1400 / (unscaledViewport.height || 1000)));
             const viewport = page.getViewport({ scale: targetScale });
             const canvas = document.createElement('canvas');
             canvas.width = viewport.width;
@@ -120,20 +158,23 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
             }
           }
 
-          const pDataPage = await apiClient.post<{ fragmentJson?: any; message?: string }>('/api/cv-import-api?action=extract-page', {
-            kind: pageKind,
-            content: pageContent,
-            auxiliaryText
-          }, { requiresAuth: false });
+          try {
+            const fragment = await extractWithRetry({
+              kind: pageKind,
+              content: pageContent,
+              auxiliaryText
+            }, i, 2);
+            fragments.push(fragment);
+          } catch (pageErr: any) {
+            console.warn(`Página ${i} falló tras reintentos:`, pageErr);
+            failedPages.push(i);
+          }
 
-          if (!pDataPage.ok) {
-            throw new Error(pDataPage.error || `Error del servidor procesando página ${i}`);
-          }
-          if (!pDataPage.data || !pDataPage.data.fragmentJson) {
-            throw new Error(`Respuesta inesperada para página ${i}`);
-          }
-          fragments.push(pDataPage.data.fragmentJson);
           setProgress(i);
+        }
+
+        if (fragments.length === 0) {
+          throw new Error('No se pudo extraer ninguna página del archivo.');
         }
       } else {
         throw new Error('Formato no soportado. Usa PDF, una imagen o texto (.txt).');
@@ -225,9 +266,14 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
               {status === 'analyzing'
                 ? 'Analizando archivo...'
                 : total > 1
-                  ? `Leyendo página ${progress} de ${total}...`
+                  ? `Leyendo página ${currentReadingPage} de ${total}...`
                   : 'Procesando...'}
             </h3>
+            {retryNotice && (
+              <p className={typeScale.helper} style={{ color: colorSystem.accent.base }}>
+                {retryNotice}
+              </p>
+            )}
             <div className="w-full bg-[var(--ui-border)] rounded-full h-2.5 mt-4">
               <div 
                 className="bg-[var(--color-accent-base)] h-2.5 rounded-full transition-all duration-300" 

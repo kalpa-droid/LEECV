@@ -8,64 +8,91 @@ export const geminiProvider: AiProviderDefinition = {
   supportsImages: true,
 
   async complete(req: AiCompletionRequest, apiKey: string, model?: string): Promise<AiCompletionResponse> {
-    const targetModel = model || process.env.GEMINI_MODEL || this.defaultModel;
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${apiKey}`;
+    const primaryModel = model || process.env.GEMINI_MODEL || this.defaultModel;
+    const modelCandidates = [primaryModel];
+    if (primaryModel === 'gemini-3.8-flash') {
+      modelCandidates.push('gemini-2.0-flash');
+    }
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: req.systemPrompt }]
-        },
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              ...(req.images || []).map(img => ({
-                inlineData: {
-                  mimeType: img.mimeType,
-                  data: img.base64
-                }
-              })),
-              { text: req.userPrompt }
-            ]
-          }
-        ],
-        generationConfig: {
-          temperature: req.temperature ?? 0.1,
-          maxOutputTokens: req.maxTokens || 4000,
-          thinkingConfig: {
-            thinkingLevel: 'LOW' // Gemini 3.8 Flash solo soporta 'LOW', 'MEDIUM', 'HIGH' ('minimal' da 400 Bad Request)
+    let lastError: any = null;
+
+    for (const currentModel of modelCandidates) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${apiKey}`;
+
+      const generationConfig: Record<string, any> = {
+        temperature: req.temperature ?? 0.1,
+        maxOutputTokens: req.maxTokens || 4000,
+        ...(req.responseSchema ? { responseMimeType: 'application/json', responseSchema: req.responseSchema } : {})
+      };
+
+      // thinkingConfig solo en modelos 3.x
+      if (currentModel.includes('3.')) {
+        generationConfig.thinkingConfig = {
+          thinkingLevel: 'LOW'
+        };
+      }
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
           },
-          ...(req.responseSchema ? { responseMimeType: 'application/json', responseSchema: req.responseSchema } : {})
+          body: JSON.stringify({
+            systemInstruction: {
+              parts: [{ text: req.systemPrompt }]
+            },
+            contents: [
+              {
+                role: 'user',
+                parts: [
+                  ...(req.images || []).map(img => ({
+                    inlineData: {
+                      mimeType: img.mimeType,
+                      data: img.base64
+                    }
+                  })),
+                  { text: req.userPrompt }
+                ]
+              }
+            ],
+            generationConfig
+          }),
+          signal: AbortSignal.timeout(28000) // 28s por intento, caben 2 intentos dentro de los 60s de Vercel
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          const errObj: any = new Error(`Gemini API Error (${response.status}) on ${currentModel}: ${errText}`);
+          errObj.status = response.status;
+          throw errObj;
         }
-      }),
-      signal: AbortSignal.timeout(45000) // Salvaguarda antes de Vercel
-    });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      const errObj: any = new Error(`Gemini API Error (${response.status}): ${errText}`);
-      errObj.status = response.status;
-      throw errObj;
+        const data = await response.json();
+        const content = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!content) {
+          throw new Error(`Respuesta vacía o inválida de Gemini API (${currentModel})`);
+        }
+
+        const usage = data?.usageMetadata ? {
+          promptTokens: data.usageMetadata.promptTokenCount || 0,
+          completionTokens: data.usageMetadata.candidatesTokenCount || 0,
+          totalTokens: data.usageMetadata.totalTokenCount || 0,
+        } : undefined;
+
+        return { content: content.trim(), usage };
+      } catch (err: any) {
+        lastError = err;
+        // Solo reintentar con el siguiente candidato si fue 503 (high demand) o timeout
+        const isTransient = err.status === 503 || err.name === 'TimeoutError' || err.message?.includes('timeout') || err.message?.includes('aborted');
+        if (!isTransient) {
+          throw err;
+        }
+        console.warn(`[geminiProvider] Falló ${currentModel} (${err.message}). Probando siguiente candidato si existe...`);
+      }
     }
 
-    const data = await response.json();
-    const content = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!content) {
-      throw new Error('Respuesta vacía o inválida de Gemini API');
-    }
-
-    const usage = data?.usageMetadata ? {
-      promptTokens: data.usageMetadata.promptTokenCount || 0,
-      completionTokens: data.usageMetadata.candidatesTokenCount || 0,
-      totalTokens: data.usageMetadata.totalTokenCount || 0,
-    } : undefined;
-
-    return { content: content.trim(), usage };
+    throw lastError;
   },
 
   async ping(): Promise<AiProviderPingResult> {
