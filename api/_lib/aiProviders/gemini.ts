@@ -2,13 +2,13 @@ import type { AiCompletionRequest, AiProviderDefinition, AiProviderPingResult, A
 
 export const geminiProvider: AiProviderDefinition = {
   id: 'gemini',
-  displayName: 'Google Gemini (Gemini 2.5 Flash)',
+  displayName: 'Google Gemini (Gemini 3.8 Flash)',
   requiredEnvVars: ['GEMINI_API_KEYS', 'GEMINI_API_KEY'],
-  defaultModel: 'gemini-2.5-flash',
+  defaultModel: process.env.GEMINI_MODEL || 'gemini-3.8-flash',
   supportsImages: true,
 
   async complete(req: AiCompletionRequest, apiKey: string, model?: string): Promise<AiCompletionResponse> {
-    const targetModel = model || this.defaultModel;
+    const targetModel = model || process.env.GEMINI_MODEL || this.defaultModel;
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${apiKey}`;
 
     const response = await fetch(url, {
