@@ -57,6 +57,73 @@ export const IMPORTABLE_LIST_FIELDS: ImportableListField[] = [
   'redes'
 ];
 
+export const SECTION_OPTIONS: Array<{ fieldKey: ImportableListField; label: string; sectionId: string }> = [
+  { fieldKey: 'experience', label: 'Experiencia laboral', sectionId: 'experiencia' },
+  { fieldKey: 'education', label: 'Formación académica', sectionId: 'formacion' },
+  { fieldKey: 'coursesAndCertificates', label: 'Cursos y capacitaciones', sectionId: 'cursos' },
+  { fieldKey: 'achievements', label: 'Logros y premios', sectionId: 'logros' },
+  { fieldKey: 'projects', label: 'Proyectos destacados', sectionId: 'proyectos' },
+  { fieldKey: 'publications', label: 'Publicaciones', sectionId: 'publicaciones' },
+  { fieldKey: 'references', label: 'Referencias laborales', sectionId: 'referencias' },
+  { fieldKey: 'hardSkills', label: 'Habilidades técnicas', sectionId: 'habilidades' },
+  { fieldKey: 'skills', label: 'Competencias / Habilidades blandas', sectionId: 'competencias' },
+  { fieldKey: 'informatics', label: 'Informática y software', sectionId: 'informatica' },
+  { fieldKey: 'languages', label: 'Idiomas', sectionId: 'idiomas' },
+  { fieldKey: 'portfolio', label: 'Portafolio y enlaces', sectionId: 'portafolio' },
+  { fieldKey: 'profession', label: 'Títulos profesionales', sectionId: 'profesion' },
+  { fieldKey: 'redes', label: 'Redes profesionales', sectionId: 'redes' }
+];
+
+export function reclassifyRecord(fromField: ImportableListField, toField: ImportableListField, item: any): any {
+  if (fromField === toField) return item;
+
+  const title = typeof item === 'string'
+    ? item
+    : item?.role || item?.degree || item?.title || item?.name || item?.course || item?.language || '';
+  const organization = typeof item === 'object'
+    ? item?.company || item?.institution || item?.school || item?.autor || item?.personaReferencia || ''
+    : '';
+  const description = typeof item === 'object'
+    ? item?.description || item?.details || ''
+    : '';
+  const dateOrYear = typeof item === 'object'
+    ? item?.year || item?.startDate || item?.endDate || ''
+    : '';
+
+  switch (toField) {
+    case 'coursesAndCertificates':
+      return { title, institution: organization, year: dateOrYear };
+    case 'experience':
+      return { role: title, company: organization, startDate: dateOrYear, endDate: '', description };
+    case 'education':
+      return { degree: title, institution: organization, startDate: dateOrYear, endDate: '', description };
+    case 'projects':
+      return { title, institution: organization, year: dateOrYear, details: description };
+    case 'achievements':
+      return { title, institution: organization, details: description };
+    case 'publications':
+      return { title, autor: organization, year: dateOrYear };
+    case 'references':
+      return { personaReferencia: title, cargo: organization, institution: '' };
+    case 'informatics':
+      return { title, course: title, institution: organization };
+    case 'hardSkills':
+      return { name: title, level: item?.level || 'Intermedio' };
+    case 'skills':
+      return { name: title };
+    case 'languages':
+      return { language: title, proficiency: item?.proficiency || item?.level || 'Intermedio' };
+    case 'portfolio':
+      return { title, institution: organization, details: description };
+    case 'profession':
+      return { degree: title, institution: organization, year: dateOrYear };
+    case 'redes':
+      return { plataforma: organization || 'Web', usuario: title, url: item?.url || '' };
+    default:
+      return { title, institution: organization, details: description };
+  }
+}
+
 const normalize = (value: string) =>
   value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 

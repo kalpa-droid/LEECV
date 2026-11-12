@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bot, Upload, FileText, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
 import { colorSystem, typeScale, elevationSystem, button } from '../../../../shared/core/uiDesignSystem';
 import { Modal } from '../../../../shared/core/ui/Modal';
@@ -24,6 +24,20 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
   const [errorMsg, setErrorMsg] = useState('');
   const [pastedText, setPastedText] = useState('');
   const [jobErrorCode, setJobErrorCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setFile(null);
+      setPastedText('');
+      setStatus('idle');
+      setErrorMsg('');
+      setRetryNotice('');
+      setProgress(0);
+      setTotal(0);
+      setCurrentReadingPage(1);
+      setJobErrorCode(null);
+    }
+  }, [isOpen]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -193,6 +207,18 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
         }
       } else if (fragments.length === 1) {
         finalCv = fragments[0];
+      }
+
+      if (typeof window !== 'undefined' && finalCv) {
+        try {
+          localStorage.setItem('leecv_last_imported_draft', JSON.stringify({
+            timestamp: Date.now(),
+            sourceName: file?.name || 'Texto pegado',
+            data: finalCv
+          }));
+        } catch (e) {
+          console.warn('No se pudo guardar el borrador en localStorage', e);
+        }
       }
 
       setStatus('done');
