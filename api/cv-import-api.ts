@@ -418,7 +418,7 @@ REGLAS CRÍTICAS:
       }
       console.error('[cv-import] Error al procesar página:', lastError);
       await serverDal.ocrJobs.update(pageJobId, { status: 'failed', error_message: 'ai_provider_error' });
-      return errorResponse(res, 502, 'ai_provider_error');
+      return errorResponse(res, 502, `ai_provider_error: ${lastError?.message || 'Error técnico del proveedor de IA'}`);
     }
 
     let fragmentJson = {};

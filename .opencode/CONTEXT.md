@@ -157,3 +157,14 @@
   1. `api/_lib/serverDal.ts`: desacopló la consulta de `user_credits` en `listCustomers` para no depender de la relación PostgREST con `profiles` (consultas independientes y tolerantes a errores para saldos y créditos de IA).
   2. `src/modules/admin/adminService.ts`: agregó fallback resiliente a Supabase DAL en `listCustomers` y respuestas por defecto seguras en `getIntegrationsStatus`, `listProcessedPayments` y `listPendingGrants`, permitiendo que el panel admin funcione tanto en `localhost` (sin Vercel Serverless activo) como en producción sin trabarse por alertas de red.
   3. `src/shared/core/version.ts`: bump PATCH a V2.3.1 conforme a gobernanza.
+
+### 2026-11-12 - Agente: @antigravity — Resiliencia Pipeline OCR Multimodal (V2.8.5)
+- **Acción realizada**: Implementó el plan `.opencode/plans/plan-ocr-multimodal-gemini-resilience.md` en la rama `feat/gemini-multimodal-resilience`:
+  1. `api/_lib/aiProviders/gemini.ts`: Reemplazado el suplente deprecado `gemini-2.0-flash` por la cascada activa `[primaryModel, 'gemini-3.5-flash', 'gemini-flash-lite-latest', 'gemini-3.1-flash-lite']`. Timeout reducido a 20s por candidato. `thinkingConfig` ahora solo aplica a modelos que incluyen `3.8`. Reintentos ante **cualquier** error de servidor (503/500/502/404/429/timeout/abort), abortando solo ante credenciales inválidas (401/403/API_KEY_INVALID).
+  2. `src/shared/core/version.ts`: bump a V2.8.5.
+  3. `api/cv-import-api.ts`: las respuestas 502 ahora incluyen el mensaje descriptivo del proveedor (`ai_provider_error: <message>`).
+  4. `src/modules/cv-builder/components/modals/ImportCvAiModal.tsx`: `extractWithRetry` elevado al alcance exterior de `startImport` (reutilizable para fotos y PDFs); las fotos directas ahora usan el mismo mecanismo de reintentos que los PDFs; feedback transparente en el estado `done` si alguna página no pudo leerse (cuenta, rango de páginas omitidas). Eliminada duplicación de lógica y variables sombra.
+  5. `tests/aiProviderImageSupport.test.ts`: actualizado para reflejar la cascada de fallback y el nuevo estado del proveedor Gemini.
+- **Estado**: `npm run test` = 300 passed / 2 skipped. `npm run typecheck` = 0 errores. `npm run typecheck:api` = OK. `npm run build` = OK. `npm run lint` = solo warnings preexistentes.
+- **Nota**: `tsconfig.tsbuildinfo` restaurado antes del commit para no ensuciar el PR. `SESSION_LOG.md` modificado por Kalpa, no se tocó.
+- **Instrucción para el siguiente agente**: Confirmar `npm run check-all` verde en GitHub Actions del PR contra `main`, aprobación CODEOWNER de Kalpa antes del merge.

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bot, Upload, FileText, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
-import { colorSystem, typeScale, elevationSystem, button } from '../../../../shared/core/uiDesignSystem';
+import { colorSystem, typeScale, button } from '../../../../shared/core/uiDesignSystem';
 import { Modal } from '../../../../shared/core/ui/Modal';
 import { isTextLayerCoherent } from '../../../../shared/core/cv-import/textCoherenceHeuristic';
 import { ensurePdfjsWorkerConfigured } from '../../../../shared/core/pdf-engine/pdfjsWorkerSetup';
@@ -24,6 +24,7 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
   const [errorMsg, setErrorMsg] = useState('');
   const [pastedText, setPastedText] = useState('');
   const [jobErrorCode, setJobErrorCode] = useState<string | null>(null);
+  const [failedPages, setFailedPages] = useState<number[]>([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -60,6 +61,38 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
       const fragments: CVFragment[] = [];
       let totalPages = 1;
 
+
+      // Función de extracción con reintentos (reutilizable para PDFs y fotos directas)
+      const extractWithRetry = async (
+        payload: { kind: 'text' | 'image'; content: string; auxiliaryText?: string },
+        pageNumber: number,
+        maxRetries = 2
+      ) => {
+        let lastError: any = null;
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+          if (attempt > 0) {
+            setRetryNotice(`Reintentando página ${pageNumber} (intento ${attempt + 1})...`);
+            await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
+          }
+          try {
+            const pDataPage = await apiClient.post<{ fragmentJson?: any; message?: string }>(
+              '/api/cv-import-api?action=extract-page',
+              payload,
+              { requiresAuth: false }
+            );
+            if (pDataPage.ok && pDataPage.data?.fragmentJson) {
+              setRetryNotice('');
+              return pDataPage.data.fragmentJson;
+            }
+            throw new Error(pDataPage.error || `Error en página ${pageNumber}`);
+          } catch (err: any) {
+            lastError = err;
+          }
+        }
+        setRetryNotice('');
+        throw lastError;
+      };
+
       if (!file) {
         setTotal(1);
         setStatus('processing');
@@ -76,14 +109,9 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
         setTotal(1);
         setStatus('processing');
         const base64 = await encodeImageFileWithinBudget(file);
-        const pData = await apiClient.post<{ fragmentJson?: any }>('/api/cv-import-api?action=extract-page', {
-          kind: 'image',
-          content: base64
-        }, { requiresAuth: false });
-        if (!pData.ok || !pData.data?.fragmentJson) {
-          throw new Error(pData.error || 'No se pudo procesar la imagen.');
-        }
-        fragments.push(pData.data.fragmentJson);
+        // Fotos directas usan la misma cascada de modelos con reintentos que los PDFs
+        const fragment = await extractWithRetry({ kind: 'image', content: base64 }, 1, 2);
+        fragments.push(fragment);
         setProgress(1);
       } else if (file.type === 'text/plain' || file.name.toLowerCase().endsWith('.txt')) {
         setTotal(1);
@@ -108,38 +136,6 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
         setStatus('processing');
         setProgress(0);
         setCurrentReadingPage(1);
-
-        const extractWithRetry = async (
-          payload: { kind: 'text' | 'image'; content: string; auxiliaryText?: string },
-          pageNumber: number,
-          maxRetries = 2
-        ) => {
-          let lastError: any = null;
-          for (let attempt = 0; attempt <= maxRetries; attempt++) {
-            if (attempt > 0) {
-              setRetryNotice(`Reintentando página ${pageNumber} (intento ${attempt + 1})...`);
-              await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
-            }
-            try {
-              const pDataPage = await apiClient.post<{ fragmentJson?: any; message?: string }>(
-                '/api/cv-import-api?action=extract-page',
-                payload,
-                { requiresAuth: false }
-              );
-              if (pDataPage.ok && pDataPage.data?.fragmentJson) {
-                setRetryNotice('');
-                return pDataPage.data.fragmentJson;
-              }
-              throw new Error(pDataPage.error || `Error en página ${pageNumber}`);
-            } catch (err: any) {
-              lastError = err;
-            }
-          }
-          setRetryNotice('');
-          throw lastError;
-        };
-
-        const failedPages: number[] = [];
 
         for (let i = 1; i <= totalPages; i++) {
           setCurrentReadingPage(i);
@@ -181,7 +177,7 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
             fragments.push(fragment);
           } catch (pageErr: any) {
             console.warn(`Página ${i} falló tras reintentos:`, pageErr);
-            failedPages.push(i);
+            setFailedPages(prev => [...prev, i]);
           }
 
           setProgress(i);
@@ -321,6 +317,14 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
             <p className={`${typeScale.body} text-center`} style={{ color: colorSystem.neutral.textSecondary }}>
               Tus datos han sido importados. Revisá la información en el editor para asegurarte de que todo está correcto.
             </p>
+            {failedPages.length > 0 && (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-[var(--color-warning-bg)] border border-[var(--color-warning-border)] w-full max-w-md">
+                <AlertTriangle size={20} color={colorSystem.status.warning.base} />
+                <span className="text-sm" style={{ color: colorSystem.status.warning.text }}>
+                  Se omitieron {failedPages.length} página{failedPages.length > 1 ? 's' : ''} que no pudieron leerse (páginas: {failedPages.join(', ')}).
+                </span>
+              </div>
+            )}
             <button className={`${button.base} ${button.primary}`} onClick={onClose}>
               Cerrar y Ver Resultados
             </button>

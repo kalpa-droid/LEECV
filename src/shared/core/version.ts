@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 2,
   minor: 8,
-  patch: 4,
-  label: 'V2.8.4',
+  patch: 5,
+  label: 'V2.8.5',
   lastUpdated: '2026-11-12',
   lastAgent: '@antigravity',
-  stage: 'Reclasificación interactiva a 20+ secciones, borrador persistente anti-pérdidas y extracción completa sin podas',
+  stage: 'Pipeline OCR multimodal resiliente: cascada activa Gemini 3.5/Flash-Lite, reintentos en fotos directas y feedback de páginas',
 } as const;
