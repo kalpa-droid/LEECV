@@ -29,7 +29,22 @@ export function mergePageFragments(fragments: CVFragment[]): CVFragment {
       }
     }
 
-    const arrayFields = ['experience', 'education', 'skills', 'languages'];
+    const arrayFields = [
+      'experience',
+      'education',
+      'skills',
+      'languages',
+      'coursesAndCertificates',
+      'projects',
+      'publications',
+      'achievements',
+      'references',
+      'hardSkills',
+      'informatics',
+      'portfolio',
+      'profession',
+      'redes'
+    ];
     for (const field of arrayFields) {
       if (Array.isArray(fragment[field])) {
         if (!merged[field]) merged[field] = [];

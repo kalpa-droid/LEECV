@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyImportReview, buildValidatedImportFragment, findImportDuplicateIndex, normalizeImportedCvData } from '../src/modules/cv-builder/utils/cvImportReview';
+import { applyImportReview, buildValidatedImportFragment, findImportDuplicateIndex, normalizeImportedCvData, reclassifyRecord, SECTION_OPTIONS } from '../src/modules/cv-builder/utils/cvImportReview';
 
 describe('CV import review', () => {
   it('preserves existing scalar values by default and completes empty values', () => {
@@ -177,6 +177,43 @@ describe('CV import review', () => {
         institution: 'Tech SA',
         contactoReferencia: '123456'
       });
+    });
+  });
+
+  describe('reclassifyRecord & SECTION_OPTIONS', () => {
+    it('contains at least 14 section options covering all canonical categories', () => {
+      expect(SECTION_OPTIONS.length).toBeGreaterThanOrEqual(14);
+      const keys = SECTION_OPTIONS.map((o) => o.fieldKey);
+      expect(keys).toContain('coursesAndCertificates');
+      expect(keys).toContain('experience');
+      expect(keys).toContain('projects');
+      expect(keys).toContain('education');
+    });
+
+    it('reclassifies an experience item to coursesAndCertificates adapting fields', () => {
+      const expItem = { role: 'Certificación Cloud', company: 'Google Cloud', startDate: '2023', description: 'Arquitectura' };
+      const reclassified = reclassifyRecord('experience', 'coursesAndCertificates', expItem);
+      expect(reclassified).toEqual({
+        title: 'Certificación Cloud',
+        institution: 'Google Cloud',
+        year: '2023'
+      });
+    });
+
+    it('reclassifies an education item to projects adapting fields', () => {
+      const eduItem = { degree: 'Tesis de Grado', institution: 'UBA', startDate: '2022', description: 'Sistema distribuido' };
+      const reclassified = reclassifyRecord('education', 'projects', eduItem);
+      expect(reclassified).toEqual({
+        title: 'Tesis de Grado',
+        institution: 'UBA',
+        year: '2022',
+        details: 'Sistema distribuido'
+      });
+    });
+
+    it('returns the same item if fromField === toField', () => {
+      const item = { role: 'Desarrollador', company: 'Tech' };
+      expect(reclassifyRecord('experience', 'experience', item)).toBe(item);
     });
   });
 });

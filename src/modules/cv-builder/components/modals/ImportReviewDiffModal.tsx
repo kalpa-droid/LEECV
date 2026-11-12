@@ -9,6 +9,8 @@ import {
   findImportDuplicateIndex,
   IMPORTABLE_LIST_FIELDS,
   IMPORTABLE_SCALAR_FIELDS,
+  SECTION_OPTIONS,
+  reclassifyRecord,
   type ImportableListField,
   type ImportListSelection,
   type ImportReviewSelections
@@ -192,6 +194,32 @@ export default function ImportReviewDiffModal({
     });
   };
 
+  const handleReclassify = (fromField: ImportableListField, index: number, toField: ImportableListField) => {
+    if (fromField === toField) return;
+    setEdited((prev) => {
+      const next = clone(prev);
+      const fromList = Array.isArray(next[fromField]) ? [...next[fromField]] : [];
+      const itemToMove = fromList[index];
+      if (!itemToMove) return prev;
+
+      fromList.splice(index, 1);
+      next[fromField] = fromList;
+
+      const adaptedItem = reclassifyRecord(fromField, toField, itemToMove);
+      const toList = Array.isArray(next[toField]) ? [...next[toField]] : [];
+      toList.push(adaptedItem);
+      next[toField] = toList;
+
+      return next;
+    });
+
+    setListItems((prev) => {
+      const next = { ...prev };
+      delete next[`${fromField}:${index}`];
+      return next;
+    });
+  };
+
   const mergedContext = { ...current, ...edited };
 
   return (
@@ -330,6 +358,24 @@ export default function ImportReviewDiffModal({
                       )}
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <label htmlFor={`reclassify-${key}`} className="text-xs font-semibold text-[var(--ui-text-secondary)] whitespace-nowrap">
+                          Sección:
+                        </label>
+                        <select
+                          id={`reclassify-${key}`}
+                          aria-label={`Sección de destino para ${recordLabel(field, item)}`}
+                          value={field}
+                          onChange={(event) => handleReclassify(field, index, event.target.value as ImportableListField)}
+                          className="rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-bg-input)] text-[var(--ui-text-primary)] px-2 py-2 text-sm font-medium"
+                        >
+                          {SECTION_OPTIONS.map((opt) => (
+                            <option key={opt.fieldKey} value={opt.fieldKey}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                       <select
                         aria-label={`Acción para ${listLabels[field]} ${index + 1}`}
                         value={selection.action}

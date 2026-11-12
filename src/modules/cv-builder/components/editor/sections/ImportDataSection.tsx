@@ -21,6 +21,25 @@ export const ImportDataSection: React.FC = () => {
   const [reviewData, setReviewData] = useState<Record<string, any> | null>(null);
   const [reviewJobId, setReviewJobId] = useState<string | null>(null);
   const [reviewKey, setReviewKey] = useState(0);
+  const [savedDraft, setSavedDraft] = useState<any>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const raw = localStorage.getItem('leecv_last_imported_draft');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const checkSavedDraft = () => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem('leecv_last_imported_draft');
+      setSavedDraft(raw ? JSON.parse(raw) : null);
+    } catch {
+      setSavedDraft(null);
+    }
+  };
 
   const openReview = (rawData: Record<string, any> | null) => {
     if (!rawData) return;
@@ -104,6 +123,12 @@ export const ImportDataSection: React.FC = () => {
     const jobId = reviewJobId;
     setReviewData(null);
     setReviewJobId(null);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('leecv_last_imported_draft');
+      } catch {}
+    }
+    setSavedDraft(null);
     showSuccess('Se aplicaron los datos seleccionados al CV.');
     if (!jobId) return;
     await withErrorHandling(() => dal.ocrJobs.update(jobId, {
@@ -125,6 +150,51 @@ export const ImportDataSection: React.FC = () => {
           Sumá información al CV desde una copia de LinkedIn, un archivo o texto pegado. Antes de aplicar cambios vas a poder revisar cada dato; lo que ya cargaste se conserva por defecto.
         </p>
       </header>
+
+      {savedDraft && !reviewData && (
+        <section className="rounded-[var(--ui-radius-card)] border border-[var(--color-primary-base)] bg-[var(--ui-bg-panel)] p-4 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-[var(--color-primary-bright)]" />
+                <h3 className="font-semibold text-[var(--ui-text-primary)]">
+                  Extracción reciente guardada {savedDraft.sourceName ? `(${savedDraft.sourceName})` : ''}
+                </h3>
+              </div>
+              <p className="text-sm text-[var(--ui-text-secondary)]">
+                Tenés datos extraídos disponibles para clasificar y agregar a tu CV sin volver a subir el archivo.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className={`${button.base} ${button.secondary} text-sm px-3 py-1.5`}
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    try {
+                      localStorage.removeItem('leecv_last_imported_draft');
+                    } catch {}
+                  }
+                  setSavedDraft(null);
+                }}
+              >
+                Descartar
+              </button>
+              <button
+                type="button"
+                className={`${button.base} ${button.primary} text-sm px-3 py-1.5`}
+                onClick={() => {
+                  if (savedDraft.data) {
+                    openReview(savedDraft.data);
+                  }
+                }}
+              >
+                Revisar y clasificar
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] p-4 space-y-3">
         <div className="flex items-center gap-2">
@@ -168,9 +238,13 @@ export const ImportDataSection: React.FC = () => {
       <Suspense fallback={null}>
         <ImportCvAiModal
           isOpen={isAiImportOpen}
-          onClose={() => setIsAiImportOpen(false)}
+          onClose={() => {
+            setIsAiImportOpen(false);
+            checkSavedDraft();
+          }}
           onImportComplete={(data) => {
             setIsAiImportOpen(false);
+            checkSavedDraft();
             openReview(data);
           }}
         />

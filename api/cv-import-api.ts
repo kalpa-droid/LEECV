@@ -32,14 +32,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 Tu tarea es consolidar y pulir los datos extraídos por OCR de múltiples páginas de un CV.
 
 REGLAS OBLIGATORIAS:
-1. CONTINUIDAD: Une descripciones u oraciones que se hayan cortado al cambiar de página sin duplicar palabras.
-2. ELIMINAR RUIDO: Remueve números de página, notas al pie de escaneo, folios, sellos repetitivos y cabeceras de página.
-3. IMPACTO ATS: Inicia los puntos de responsabilidad y logros con verbos de acción fuertes en tiempo pasado (ej. Implementó, Diseñó, Coordinó, Optimizó).
-4. CLASIFICACIÓN EXACTA: Mapea cada elemento a su categoría canónica de LEECV:
-   - personalInfo (fullName, email, phone, dni, cuit, birthDate, address, cityProvince, nacionalidad, estadoCivil)
+1. CONSERVAR EL 100% DE LOS REGISTROS: PROHIBIDO eliminar, descartar o recortar a un "top 3". Si en los fragmentos hay 25 cursos, 15 experiencias o 10 certificaciones, debes entregar absolutamente TODOS los cursos, experiencias y certificaciones intactos sin omitir ninguno.
+2. CONTINUIDAD: Une descripciones u oraciones que se hayan cortado al cambiar de página sin duplicar palabras.
+3. ELIMINAR RUIDO: Remueve números de página, notas al pie de escaneo, folios, sellos repetitivos y cabeceras de página.
+4. IMPACTO ATS: Inicia los puntos de responsabilidad y logros con verbos de acción fuertes en tiempo pasado (ej. Implementó, Diseñó, Coordinó, Optimizó).
+5. CLASIFICACIÓN EXACTA: Mapea cada elemento a su categoría canónica de LEECV:
+   - personalInfo (fullName, email, phone, dni, cuit, birthDate, address, cityProvince, nacionalidad, estadoCivil, linkedin, portfolio)
    - summary, objective, frase
    - experience, education, profession, coursesAndCertificates, achievements, portfolio, projects, publications, references, hardSkills, skills, languages, informatics, redes.
-5. FORMATO: Devuelve ÚNICAMENTE un objeto JSON válido, sin delimitadores de código markdown ni texto adicional.`;
+6. FORMATO: Devuelve ÚNICAMENTE un objeto JSON válido, sin delimitadores de código markdown ni texto adicional.`;
 
     const consolidationRequest: AiCompletionRequest = {
       systemPrompt: consolidationSystemInstruction,
@@ -175,19 +176,50 @@ ESTRUCTURA DE SALIDA OBLIGATORIA:
   ],
   "languages": [
     { "language": "Idioma", "proficiency": "Nivel (Nativo, Avanzado, Intermedio, Básico)" }
+  ],
+  "coursesAndCertificates": [
+    {
+      "title": "Nombre del curso, capacitación o certificado",
+      "institution": "Institución u organización emisora",
+      "year": "Año o fecha",
+      "hours": "Carga horaria si se menciona"
+    }
+  ],
+  "projects": [
+    {
+      "title": "Nombre del proyecto",
+      "institution": "Entidad, empresa o cliente",
+      "year": "Año",
+      "details": "Detalles o tecnologías"
+    }
+  ],
+  "publications": [
+    {
+      "title": "Título de la publicación o artículo",
+      "autor": "Autor o coautores",
+      "year": "Año"
+    }
+  ],
+  "achievements": [
+    {
+      "title": "Logro, premio o reconocimiento",
+      "institution": "Institución que lo otorgó",
+      "details": "Detalles"
+    }
   ]
 }
 
 REGLAS CRÍTICAS:
-1. Extraer TODOS los datos que encuentres. No omitir ninguna experiencia ni educación.
-2. Las descripciones de experiencia deben copiarse TEXTUALMENTE y COMPLETAS. No resumir.
-3. Si un dato continúa de la página anterior (texto cortado), marcar "continuesFromPrevious": true.
-4. Si el documento es una exportación de LinkedIn, mapear "Licenses & Certifications" a education, y "Skills" a skills.
-5. Extraer DNI, CUIT, fecha de nacimiento, estado civil y nacionalidad si los encuentras.
-6. Si hay URLs de LinkedIn o portfolio, incluirlas en personalInfo.
-7. Las fechas deben normalizarse a formato YYYY-MM cuando sea posible.
-8. Las habilidades deben separarse individualmente (una por objeto, no agrupadas).
-9. Devolver ÚNICAMENTE el JSON válido, sin texto adicional ni explicaciones.`;
+1. Extraer TODOS los datos que encuentres sin excepción: experiencias, títulos, cursos, diplomas, certificaciones, proyectos y logros. No omitir ninguno.
+2. Si la página contiene constancias de asistencia, certificados, capacitaciones o cursos, colocarlos en 'coursesAndCertificates'. NUNCA descartarlos.
+3. Las descripciones de experiencia deben copiarse TEXTUALMENTE y COMPLETAS. No resumir.
+4. Si un dato continúa de la página anterior (texto cortado), marcar "continuesFromPrevious": true.
+5. Si el documento es una exportación de LinkedIn, mapear "Licenses & Certifications" a coursesAndCertificates, y "Skills" a skills.
+6. Extraer DNI, CUIT, fecha de nacimiento, estado civil y nacionalidad si los encuentras.
+7. Si hay URLs de LinkedIn o portfolio, incluirlas en personalInfo.
+8. Las fechas deben normalizarse a formato YYYY-MM cuando sea posible.
+9. Las habilidades deben separarse individualmente (una por objeto, no agrupadas).
+10. Devolver ÚNICAMENTE el JSON válido, sin texto adicional ni explicaciones.`;
 
     const userPromptBase = kind === 'text'
       ? `Extrae los datos de este texto de CV:\n\n${content}`
@@ -267,6 +299,52 @@ REGLAS CRÍTICAS:
               properties: {
                 language: { type: "string" },
                 proficiency: { type: "string" }
+              }
+            }
+          },
+          coursesAndCertificates: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                title: { type: "string" },
+                institution: { type: "string" },
+                year: { type: "string" },
+                hours: { type: "string" }
+              }
+            }
+          },
+          projects: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                title: { type: "string" },
+                institution: { type: "string" },
+                year: { type: "string" },
+                details: { type: "string" }
+              }
+            }
+          },
+          publications: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                title: { type: "string" },
+                autor: { type: "string" },
+                year: { type: "string" }
+              }
+            }
+          },
+          achievements: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                title: { type: "string" },
+                institution: { type: "string" },
+                details: { type: "string" }
               }
             }
           }
