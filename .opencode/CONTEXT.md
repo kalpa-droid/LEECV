@@ -178,3 +178,14 @@
   4. **Versión**: V2.8.7 en `version.ts`. Tests actualizados (`aiProviderImageSupport.test.ts`).
 - **Estado del código**: `npm run check-all` pendiente de correr. `SESSION_LOG.md` y `mejoraocr.docx` no tocados.
 - **Instrucción para el siguiente agente**: confirmar check-all verde local y en la PR; merge solo por orden explícita de Kalpa (la web de GitHub fallaba con "server unable to perform this operation"; funcionó merge por REST `PUT /repos/{repo}/pulls/{n}/merge` con squash).
+
+### 2026-11-13 - Agente: @antigravity — Cooldown compartido de API keys (V2.9.0)
+- **Acción realizada**: Cooldowns de API keys de IA extraídos de la memoria del proceso a Supabase (rama `feat/shared-key-cooldown`):
+  1. Migración `supabase/migrations/20261113_ai_key_cooldowns.sql`: tabla `public.ai_key_cooldowns` (`provider`, `key_hash` SHA-256, `paused_until`, `updated_at` + trigger), PK `(provider, key_hash)`, RLS ON SIN policies (acceso solo service_role vía `supabaseAdmin`), índice en `paused_until`.
+  2. `keyRotation.ts` reescrito a híbrido async: `getNextAvailableKey`/`markKeyRateLimited` ahora `async`; lectura de cooldowns con timeout 1500 ms y fallback fail-safe a memoria local si la DB falla; `markKeyRateLimited` upsert en DB + memoria; nueva export `clearExpiredCooldowns()` y `hashKey()` (SHA-256, nunca la key en texto).
+  3. Call sites actualizados con `await`: `cv-import-api.ts` (×6, incl. `Promise.all` para diagnóstico `allKeysMissing/allRateLimited` y primer `keyAvailability`), `ai-generate.ts` (×2). `scripts/verify-ai-engine.ts` adaptado a async (top-level await, type: module).
+  4. Nuevo cron `api/cron-ai-keys-ping.ts`: borra cooldowns expirados y pinguea ambos providers vía `AI_PROVIDERS` + `ping()`; si alguno no está `active`, `captureBackendException` (Sentry). Registrado en `vercel.json` cada 6 h (`0 */6 * * *`), protegido por `CRON_SECRET`.
+  5. Versión V2.9.0; test nuevo `tests/keyRotation.test.ts` (supabaseAdmin mockeado: hashKey, lectura pausada en DB/memoria, fail-safe DB caída, upsert con hash, clearExpiredCooldowns).
+- **Estado del código**: `npm run check-all` exit 0 (312 tests passed / 2 skipped, 0 violations, 0 errores TS/lint).
+- **PENDIENTE — migración SQL NO aplicada**: la CLI de Supabase devolvió 401 `Invalid access token` (no hay MCP de Supabase en este entorno). La migración está commiteada pero el `CREATE TABLE` AÚN no corre en el proyecto remoto. Sin ella, el código funciona en modo fail-safe (memoria local) y loguea el error de la DB — no rompe el pipeline, pero NO comparte cooldowns entre instancias hasta aplicarla.
+- **Instrucción para el siguiente agente**: (1) aplicar la migración con token válido (`supabase login` + `supabase db push`) o que Kalpa la corra en el SQL Editor; (2) merge de la PR solo por orden explícita de Kalpa.

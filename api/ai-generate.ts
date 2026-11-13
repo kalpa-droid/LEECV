@@ -73,7 +73,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Rotar hasta agotar las claves disponibles del proveedor (salto con 429, como consolidate-ats)
     for (let keyAttempt = 0; keyAttempt < 8; keyAttempt++) {
-      const apiKey = getNextAvailableKey(providerId);
+      const apiKey = await getNextAvailableKey(providerId);
       if (!apiKey) break; // no quedan claves disponibles para este proveedor → siguiente proveedor
 
       try {
@@ -99,7 +99,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       } catch (err: any) {
         lastError = err;
         if (err.status === 429 || err.message?.includes('429')) {
-          markKeyRateLimited(providerId, apiKey, 60);
+          await markKeyRateLimited(providerId, apiKey, 60);
           console.warn(`[ai-generate] Clave de ${providerId} limitada (429). Rotando a la siguiente clave...`);
           continue; // siguiente clave del mismo proveedor
         }

@@ -72,7 +72,7 @@ REGLAS OBLIGATORIAS:
           console.warn('[cv-import] Presupuesto de tiempo de Vercel agotado durante consolidación.');
           break;
         }
-        const apiKey = getNextAvailableKey(providerId);
+        const apiKey = await getNextAvailableKey(providerId);
         if (!apiKey) break; // no quedan claves disponibles para este proveedor → siguiente proveedor
         attemptedKeys++;
 
@@ -105,7 +105,7 @@ REGLAS OBLIGATORIAS:
         } catch (err: any) {
           lastConsolidationError = err;
           if (err.status === 429 || err.message?.includes('429')) {
-            markKeyRateLimited(providerId, apiKey, 60);
+            await markKeyRateLimited(providerId, apiKey, 60);
             console.warn(`[cv-import] Clave de ${providerId} limitada (429). Rotando a la siguiente clave...`);
             continue;
           }
@@ -415,7 +415,7 @@ REGLAS CRÍTICAS:
       for (let keyAttempt = 0; keyAttempt < 8; keyAttempt++) {
         const attemptRemainingMs = requestDeadline - Date.now();
         if (attemptRemainingMs < 4000) break;
-        const apiKey = getNextAvailableKey(providerId);
+        const apiKey = await getNextAvailableKey(providerId);
         if (!apiKey) break; // no quedan claves disponibles para este proveedor → siguiente proveedor
 
         try {
@@ -441,7 +441,7 @@ REGLAS CRÍTICAS:
         } catch (err: any) {
           lastError = err;
           if (err.status === 429 || err.message?.includes('429')) {
-            markKeyRateLimited(providerId, apiKey, 60);
+            await markKeyRateLimited(providerId, apiKey, 60);
             console.warn(`[cv-import] Clave de ${providerId} limitada (429). Rotando a la siguiente clave...`);
             continue; // siguiente clave del mismo proveedor
           }
@@ -452,11 +452,9 @@ REGLAS CRÍTICAS:
     }
 
     if (!completionText || !successfulProviderId) {
-      const allKeysMissing = AI_PROVIDER_FALLBACK_ORDER.every(pid => !getNextAvailableKey(pid));
-      const allRateLimited = AI_PROVIDER_FALLBACK_ORDER.some(pid => {
-        const k = getNextAvailableKey(pid);
-        return !!k && lastError?.message.includes('429');
-      }) && !allKeysMissing;
+      const keyAvailability = await Promise.all(AI_PROVIDER_FALLBACK_ORDER.map(pid => getNextAvailableKey(pid)));
+      const allKeysMissing = keyAvailability.every(k => !k);
+      const allRateLimited = keyAvailability.some(k => !!k) && !!lastError?.message?.includes('429') && !allKeysMissing;
 
       if (allKeysMissing) {
         console.error('[cv-import] No hay claves de IA configuradas:', lastError);
@@ -487,7 +485,7 @@ REGLAS CRÍTICAS:
           responseSchema: request.responseSchema
         };
         const provider = AI_PROVIDERS[successfulProviderId];
-        const apiKey = getNextAvailableKey(successfulProviderId);
+        const apiKey = await getNextAvailableKey(successfulProviderId);
         if (provider && apiKey) {
           const retryResult = await provider.complete(retryRequest, apiKey);
           const retryClean = retryResult.content.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
