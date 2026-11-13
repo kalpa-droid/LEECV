@@ -1,5 +1,60 @@
 # Registro de Intervenciones de Agentes (SESSION_LOG)
 
+## [2026-11-12] - V2.8.4: Reclasificación Dinámica a 20+ Secciones, Borrador Persistente Anti-Pérdidas y Extracción Completa sin Podas
+
+**Resumen:**
+- `src/modules/cv-builder/components/modals/ImportReviewDiffModal.tsx`:
+  - Selector de sección por cada registro con dropdown con las 14 categorías canónicas (`SECTION_OPTIONS`).
+  - Reclasificación instantánea con adaptación dinámica de campos en vivo (`reclassifyRecord`).
+  - Activación automática de cada sección con registros asignados al aplicar (`activateSection`).
+- `src/modules/cv-builder/utils/cvImportReview.ts`:
+  - `SECTION_OPTIONS` y función `reclassifyRecord(fromField, toField, item)` que convierte atributos (cargo/empresa <-> curso/institución/año <-> proyecto, etc.).
+- `src/modules/cv-builder/components/modals/ImportCvAiModal.tsx`:
+  - Reinicio automático a `idle` en cada apertura/cierre (`isOpen`).
+  - Resguardo automático del borrador extraído en `localStorage` (`leecv_last_imported_draft`).
+- `src/modules/cv-builder/components/editor/sections/ImportDataSection.tsx`:
+  - Banner de rescate ante cierres accidentales: *"Extracción reciente guardada... [Revisar y clasificar] [Descartar]"*.
+  - Limpieza de borrador tras confirmación o descarte.
+- `api/cv-import-api.ts`:
+  - Ampliado el esquema de extracción y prompt para capturar `coursesAndCertificates`, `projects`, `publications`, `achievements`.
+  - Orden estricta a la IA: prohibido recortar a un "top 3"; conservar el 100% de los registros de todas las páginas.
+- `src/shared/core/cv-import/mergeFragments.ts` y `mergePageFragments.ts`:
+  - Cobertura completa de todas las listas en la fusión de páginas.
+- `tests/cvImportReview.test.ts` y `tests/mergeFragments.test.ts`:
+  - Pruebas unitarias de reclasificación y fusión multilínea (17/17 pasaron).
+- `src/shared/core/version.ts`:
+  - Bump a V2.8.4.
+
+**Merge (Regla 6 paso 7 — confirmación de hash):**
+- PR: #78 (`feat/ocr-reclassify-and-draft-v284`) mergeada a `main`.
+- Hash confirmado en `origin/main`: `bbee47e68aa2676711a9f8bd80abfdcc90184b23`.
+- CI GitHub Actions: ✅ `check-all` en 1m7s (0 errores).
+- Vercel Deployment: ✅ `Deployment has completed`.
+
+---
+
+## [2026-11-11] - V2.8.3: Resiliencia Total de OCR — canvas 1400px, reintentos con backoff, tolerancia a fallos y fallback Gemini 2.0
+
+**Resumen:**
+- `src/modules/cv-builder/components/modals/ImportCvAiModal.tsx`:
+  - Canvas optimizado: escala adaptativa con límite de altura a 1400px.
+  - Progreso transparente en tiempo real ("Leyendo página X de Y...").
+  - Reintentos con backoff y tolerancia a fallos parciales.
+- `src/shared/core/cv-import/pageImageEncoder.ts`:
+  - Calidad JPEG optimizada `[0.75, 0.62, 0.48, 0.35]`, imágenes livianas (~300KB) que Gemini procesa en 3-5 segundos.
+- `api/_lib/aiProviders/gemini.ts`:
+  - Timeout 28s y fallback automático a `gemini-2.0-flash` si Gemini 3.8 está saturado (503).
+- `api/cv-import-api.ts`:
+  - Consolidación ATS resiliente con Groq y fallback a Gemini.
+
+**Merge (Regla 6 paso 7 — confirmación de hash):**
+- PR: #77 (`feat/ocr-resilience-fast-pipeline`) mergeada a `main`.
+- Hash confirmado en `origin/main`: `ae92192e1998997ad28ece22b497f8b8edc3284d`.
+- CI GitHub Actions: ✅ `check-all` en 51s (0 errores).
+- Vercel Deployment: ✅ `Deployment has completed`.
+
+---
+
 ## [2026-11-09] - V2.5.2 (feat/ocr-fase1-v252): Fase 1 OCR Estabilizado — jobs async, polling, límite 10 páginas
 
 **Resumen:**
@@ -246,3 +301,12 @@ Migración a una arquitectura de facturación stateless ("guest-first") donde el
 - **Estado**: `main` = `71c4f91`; `origin/main` sincronizado. Working tree limpio.
 - **Verificación**: `npm run typecheck` = 0 errores; `npm test` = 284 passed / 2 skipped; `npm run build` = OK; `verify:seo` = 40/40.
 - **Acción**: Registro completado en `.opencode/CONTEXT.md` y `SESSION_LOG.md`. No requiere más acciones de merge.
+
+## [2026-11-13] â€” Registro Regla 6 paso 7 (Post-merge PR #79 â€” V2.8.6)
+- **Merge confirmado**: PR #79 (`feat/gemini-multimodal-resilience`) â†’ `main` vÃ­a squash. Hash: `1729cc28ccff4872569cbec5d2669928012615b8`. Mensaje: `feat(ai): pipeline OCR completo Groq Vision, multi-key rotation, presupuesto 50s, guardado progresivo (V2.8.6) (#79)`.
+- **VerificaciÃ³n post-merge**: `git fetch origin` â†’ `origin/main` = `1729cc2` (coincide con `mergeCommit.oid` devuelto por la API y con `mergedAt: 2026-11-13T01:35:08Z`).
+- **Contexto del merge**: la web de GitHub bloqueaba el merge con "Merge already in progress" y luego "The server is currently unable to perform this operation", sin incidente activo en githubstatus.com y con `mergeStateStatus: CLEAN`. `gh pr merge` (GraphQL) fallÃ³ con error 5xx genÃ©rico. Se completÃ³ vÃ­a REST `PUT /repos/kalpa-droid/LEECV/pulls/79/merge` con `merge_method=squash` (autenticado como kalpa-droid).
+- **Nota de protocolo**: la PR toca `src/shared/core/` y `api/`; el merge se hizo por orden directa de Kalpa en esta sesiÃ³n, **sin aprobaciÃ³n CODEOWNER registrada** en la PR (`reviewDecision` vacÃ­o).
+- **Estado del cÃ³digo**: `npm run check-all` en verde antes del push (tests 300 passed / 2 skipped, SEO 40/40, prerender 80 rutas). Checks de GitHub Actions y Vercel en verde sobre la PR.
+- **Working tree**: `SESSION_LOG.md` con cambios previos de Kalpa (V2.8.4) + esta entrada, sin commitear. `mejoraocr.docx` sigue sin trackear. Rama local `feat/gemini-multimodal-resilience` conservada en `68648a7`.
+
