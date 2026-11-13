@@ -21,6 +21,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const action = req.query.action as string;
 
+  // Presupuesto global por petición: Vercel corta a los 60s.
+  const requestDeadline = Date.now() + 50_000;
+
   // --- NUEVO: acción consolidate-ats (consolidar fragmentos de múltiples páginas) ---
   if (action === 'consolidate-ats') {
     const { fragments = [] } = req.body || {};
@@ -49,38 +52,57 @@ REGLAS OBLIGATORIAS:
       temperature: 0.2,
     };
 
-    // Intentar Groq primero por velocidad ATS; si no hay clave o falla, fallback a Gemini
-    const providersToTry: Array<{ providerId: string; provider: any; apiKey: string }> = [];
-    const groqKey = getNextAvailableKey('groq');
-    if (groqKey && AI_PROVIDERS['groq']) {
-      providersToTry.push({ providerId: 'groq', provider: AI_PROVIDERS['groq'], apiKey: groqKey });
-    }
-    const geminiKey = getNextAvailableKey('gemini');
-    if (geminiKey && AI_PROVIDERS['gemini']) {
-      providersToTry.push({ providerId: 'gemini', provider: AI_PROVIDERS['gemini'], apiKey: geminiKey });
-    }
+    // Intentar Groq primero por velocidad ATS; si sus claves fallan o están limitadas, fallback a Gemini.
+    // Rotación multi-key: ante 429 marcar la clave (60s) y seguir con la siguiente disponible en lugar de abortar.
+    const providersToTry = ['groq', 'gemini']
+      .map(providerId => ({ providerId, provider: AI_PROVIDERS[providerId] }))
+      .filter(({ provider }) => !!provider);
 
     if (providersToTry.length === 0) {
       return errorResponse(res, 503, 'ai_not_configured');
     }
 
     let lastConsolidationError: any = null;
-    for (const { providerId, provider, apiKey } of providersToTry) {
-      try {
-        const result = await provider.complete(consolidationRequest, apiKey);
-        let consolidatedJson: any;
-        try {
-          const cleanJsonStr = result.content.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
-          consolidatedJson = JSON.parse(cleanJsonStr);
-        } catch (parseErr) {
-          console.error(`[cv-import] Error al parsear JSON consolidado de ${providerId}:`, parseErr);
-          continue;
+    let attemptedKeys = 0;
+    for (const { providerId, provider } of providersToTry) {
+      // Rotar hasta agotar las claves disponibles de este proveedor (salto con 429 marcado como limitado)
+      for (let keyAttempt = 0; keyAttempt < 8; keyAttempt++) {
+        const remainingMs = requestDeadline - Date.now();
+        if (remainingMs < 4000) {
+          console.warn('[cv-import] Presupuesto de tiempo de Vercel agotado durante consolidación.');
+          break;
         }
-        return successResponse(res, { consolidatedJson });
-      } catch (err: any) {
-        lastConsolidationError = err;
-        console.warn(`[cv-import] Falló consolidación con ${providerId}:`, err.message || err);
+        const apiKey = getNextAvailableKey(providerId);
+        if (!apiKey) break; // no quedan claves disponibles para este proveedor → siguiente proveedor
+        attemptedKeys++;
+
+        try {
+          const result = await provider.complete(consolidationRequest, apiKey);
+          let consolidatedJson: any;
+          try {
+            const cleanJsonStr = result.content.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
+            consolidatedJson = JSON.parse(cleanJsonStr);
+          } catch (parseErr) {
+            console.error(`[cv-import] Error al parsear JSON consolidado de ${providerId}:`, parseErr);
+            break;
+          }
+          return successResponse(res, { consolidatedJson });
+        } catch (err: any) {
+          lastConsolidationError = err;
+          if (err.status === 429 || err.message?.includes('429')) {
+            markKeyRateLimited(providerId, apiKey, 60);
+            console.warn(`[cv-import] Clave de ${providerId} limitada (429). Rotando a la siguiente clave...`);
+            continue;
+          }
+          console.warn(`[cv-import] Falló consolidación con ${providerId}:`, err.message || err);
+          break; // error no recuperable para este proveedor → siguiente proveedor
+        }
       }
+    }
+
+    if (attemptedKeys === 0 && !lastConsolidationError) {
+      console.error('[cv-import] No hay claves de IA configuradas o todas están rate-limited.');
+      return errorResponse(res, 503, 'ai_not_configured');
     }
 
     console.error('[cv-import] Error al consolidar datos en todos los proveedores:', lastConsolidationError);
@@ -365,6 +387,11 @@ REGLAS CRÍTICAS:
     let lastError: Error | null = null;
 
     for (const providerId of AI_PROVIDER_FALLBACK_ORDER) {
+      const remainingMs = requestDeadline - Date.now();
+      if (remainingMs < 4000) {
+        console.warn('[cv-import] Presupuesto de tiempo de Vercel agotado. No se intenta con más proveedores.');
+        break;
+      }
       const provider = AI_PROVIDERS[providerId];
       if (!provider) continue;
       if (kind === 'image' && !provider.supportsImages) continue;

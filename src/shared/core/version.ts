@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 2,
   minor: 8,
-  patch: 5,
-  label: 'V2.8.5',
+  patch: 6,
+  label: 'V2.8.6',
   lastUpdated: '2026-11-12',
   lastAgent: '@antigravity',
-  stage: 'Pipeline OCR multimodal resiliente: cascada activa Gemini 3.5/Flash-Lite, reintentos en fotos directas y feedback de páginas',
+  stage: 'Pipeline OCR completo: Groq Visión fallback, rotación multi-key, presupuesto global 50s, guardado progresivo y reintento selectivo',
 } as const;

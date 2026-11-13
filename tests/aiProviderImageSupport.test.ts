@@ -11,7 +11,7 @@ describe('AI provider image support', () => {
   it('gemini has active fallback models cascade', () => {
     expect(AI_PROVIDERS.gemini.displayName).toBe('Google Gemini (Cascada Flash/Lite)');
   });
-  it('groq does not support images', () => {
-    expect(AI_PROVIDERS.groq.supportsImages).toBe(false);
+  it('groq supports images (Visión)', () => {
+    expect(AI_PROVIDERS.groq.supportsImages).toBe(true);
   });
 });

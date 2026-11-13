@@ -12,9 +12,19 @@ export const geminiProvider: AiProviderDefinition = {
     const fallbackPool = ['gemini-3.5-flash', 'gemini-flash-lite-latest', 'gemini-3.1-flash-lite'];
     const modelCandidates = [primaryModel, ...fallbackPool.filter(m => m !== primaryModel)];
 
+    // Presupuesto global por petición: Vercel corta a los 60s.
+    // Cada candidato toma como máximo 18s y nunca pisa la deadline global.
+    const requestDeadline = Date.now() + 50_000;
+
     let lastError: any = null;
 
     for (const currentModel of modelCandidates) {
+      const remainingMs = requestDeadline - Date.now();
+      if (remainingMs < 4000) {
+        console.warn('[geminiProvider] Presupuesto de tiempo de Vercel agotado. No hay margen para otro intento.');
+        break;
+      }
+      const attemptTimeoutMs = Math.min(18000, remainingMs);
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${apiKey}`;
 
       const generationConfig: Record<string, any> = {
@@ -56,7 +66,7 @@ export const geminiProvider: AiProviderDefinition = {
             ],
             generationConfig
           }),
-          signal: AbortSignal.timeout(20000) // 20s por candidato, caben 2-3 dentro de 60s de Vercel
+          signal: AbortSignal.timeout(attemptTimeoutMs)
         });
 
         if (!response.ok) {

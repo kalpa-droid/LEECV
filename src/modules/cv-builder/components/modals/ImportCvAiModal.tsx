@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Bot, Upload, FileText, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
 import { colorSystem, typeScale, button } from '../../../../shared/core/uiDesignSystem';
 import { Modal } from '../../../../shared/core/ui/Modal';
@@ -25,6 +25,92 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
   const [pastedText, setPastedText] = useState('');
   const [jobErrorCode, setJobErrorCode] = useState<string | null>(null);
   const [failedPages, setFailedPages] = useState<number[]>([]);
+  const fragmentsByPageRef = useRef<Map<number, CVFragment>>(new Map());
+
+  // Helper: arma el payload de una página del PDF (texto si la capa es coherente, imagen renderizada si no)
+  const buildPagePayload = async (pdf: any, pageNumber: number) => {
+    const page = await pdf.getPage(pageNumber);
+    const textContent = await page.getTextContent();
+    const rawText = textContent.items.map((item: any) => item.str).join(' ');
+
+    if (isTextLayerCoherent(rawText)) {
+      return { kind: 'text' as const, content: rawText };
+    }
+
+    const unscaledViewport = page.getViewport({ scale: 1 });
+    const targetScale = Math.max(1.2, Math.min(2.0, 1400 / (unscaledViewport.height || 1000)));
+    const viewport = page.getViewport({ scale: targetScale });
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas no soportado en este navegador.');
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    const content = encodeCanvasWithinBudget(clampCanvasSize(canvas));
+    // Liberar memoria gráfica inmediatamente
+    canvas.width = 0;
+    canvas.height = 0;
+    return { kind: 'image' as const, content, auxiliaryText: rawText };
+  };
+
+  // Helper: save draft to localStorage
+  const saveDraft = (draftData: any) => {
+    try {
+      localStorage.setItem('leecv_last_imported_draft', JSON.stringify({
+        timestamp: Date.now(),
+        sourceName: file?.name || 'Texto pegado',
+        data: draftData
+      }));
+    } catch (e) {
+      console.warn('No se pudo guardar el borrador en localStorage', e);
+    }
+  };
+
+  // Helper: extract with retry (now used for PDF pages and reintento selectivo)
+  const extractWithRetry = async (payload: { kind: 'text' | 'image'; content: string; auxiliaryText?: string }, 
+                                 pageNumber: number, 
+                                 maxRetries = 2) => {
+    let lastError: any = null;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      if (attempt > 0) {
+        setRetryNotice(`Reintentando página ${pageNumber} (intento ${attempt + 1})...`);
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
+      }
+      try {
+        const pDataPage = await apiClient.post<{ fragmentJson?: any; message?: string }>(
+          '/api/cv-import-api?action=extract-page',
+          payload,
+          { requiresAuth: false }
+        );
+        if (pDataPage.ok && pDataPage.data?.fragmentJson) {
+          setRetryNotice('');
+          return pDataPage.data.fragmentJson;
+        }
+        throw new Error(pDataPage.error || `Error en página ${pageNumber}`);
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`Error en extracción página ${pageNumber}:`, err.message || err);
+      }
+    }
+    setRetryNotice('');
+    throw lastError;
+  };
+
+  // Helper: consolidate fragments (for multi-page PDFs)
+  const consolidateFragments = async (fragments: CVFragment[]): Promise<any> => {
+    if (fragments.length === 0) return null;
+    if (fragments.length === 1) return fragments[0];
+
+    // Try ATS consolidation first
+    const consResp = await apiClient.post<{ consolidatedJson?: any }>(
+      '/api/cv-import-api?action=consolidate-ats',
+      { fragments }
+    );
+    if (consResp.ok && consResp.data?.consolidatedJson) {
+      return consResp.data.consolidatedJson;
+    }
+    return mergePageFragments(fragments);
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -37,6 +123,9 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
       setTotal(0);
       setCurrentReadingPage(1);
       setJobErrorCode(null);
+      setFailedPages([]);
+      // El mapa se resetea para que el reintento selectivo re-extraiga solo páginas fallidas
+      fragmentsByPageRef.current = new Map();
     }
   }, [isOpen]);
 
@@ -60,38 +149,6 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
     try {
       const fragments: CVFragment[] = [];
       let totalPages = 1;
-
-
-      // Función de extracción con reintentos (reutilizable para PDFs y fotos directas)
-      const extractWithRetry = async (
-        payload: { kind: 'text' | 'image'; content: string; auxiliaryText?: string },
-        pageNumber: number,
-        maxRetries = 2
-      ) => {
-        let lastError: any = null;
-        for (let attempt = 0; attempt <= maxRetries; attempt++) {
-          if (attempt > 0) {
-            setRetryNotice(`Reintentando página ${pageNumber} (intento ${attempt + 1})...`);
-            await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
-          }
-          try {
-            const pDataPage = await apiClient.post<{ fragmentJson?: any; message?: string }>(
-              '/api/cv-import-api?action=extract-page',
-              payload,
-              { requiresAuth: false }
-            );
-            if (pDataPage.ok && pDataPage.data?.fragmentJson) {
-              setRetryNotice('');
-              return pDataPage.data.fragmentJson;
-            }
-            throw new Error(pDataPage.error || `Error en página ${pageNumber}`);
-          } catch (err: any) {
-            lastError = err;
-          }
-        }
-        setRetryNotice('');
-        throw lastError;
-      };
 
       if (!file) {
         setTotal(1);
@@ -139,47 +196,17 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
 
         for (let i = 1; i <= totalPages; i++) {
           setCurrentReadingPage(i);
-          const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent();
-          const rawText = textContent.items.map((item: any) => item.str).join(' ');
-
-          let pageKind: 'text' | 'image' = 'text';
-          let pageContent = rawText;
-          let auxiliaryText = '';
-
-          if (!isTextLayerCoherent(rawText)) {
-            pageKind = 'image';
-            auxiliaryText = rawText;
-            const unscaledViewport = page.getViewport({ scale: 1 });
-            const targetScale = Math.max(1.2, Math.min(2.0, 1400 / (unscaledViewport.height || 1000)));
-            const viewport = page.getViewport({ scale: targetScale });
-            const canvas = document.createElement('canvas');
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-              await page.render({ canvasContext: ctx, viewport }).promise;
-              pageContent = encodeCanvasWithinBudget(clampCanvasSize(canvas));
-              // Liberar memoria gráfica inmediatamente
-              canvas.width = 0;
-              canvas.height = 0;
-            } else {
-              throw new Error('Canvas no soportado en este navegador.');
-            }
-          }
-
           try {
-            const fragment = await extractWithRetry({
-              kind: pageKind,
-              content: pageContent,
-              auxiliaryText
-            }, i, 2);
+            const payload = await buildPagePayload(pdf, i);
+            const fragment = await extractWithRetry(payload, i, 2);
             fragments.push(fragment);
+            fragmentsByPageRef.current.set(i, fragment);
+            // Guardado progresivo por página: si se corta la conexión, páginas ya leídas quedan resguardadas
+            saveDraft(mergePageFragments(Array.from(fragmentsByPageRef.current.entries()).sort((a, b) => a[0] - b[0]).map(([, f]) => f)));
           } catch (pageErr: any) {
             console.warn(`Página ${i} falló tras reintentos:`, pageErr);
             setFailedPages(prev => [...prev, i]);
           }
-
           setProgress(i);
         }
 
@@ -192,29 +219,19 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
 
       // Consolidar y optimizar con ATS (Groq) si hay múltiples fragmentos/páginas
       let finalCv: any = null;
-      if (fragments.length > 1) {
-        const consResp = await apiClient.post<{ consolidatedJson?: any }>('/api/cv-import-api?action=consolidate-ats', {
-          fragments
-        }, { requiresAuth: false });
-        if (consResp.ok && consResp.data?.consolidatedJson) {
-          finalCv = consResp.data.consolidatedJson;
-        } else {
-          finalCv = mergePageFragments(fragments);
-        }
+      const orderedFragments = Array.from(fragmentsByPageRef.current.entries()).sort((a, b) => a[0] - b[0]).map(([, f]) => f);
+      if (orderedFragments.length > 1) {
+        finalCv = await consolidateFragments(orderedFragments);
+      } else if (orderedFragments.length === 1) {
+        finalCv = orderedFragments[0];
+      } else if (fragments.length > 1) {
+        finalCv = await consolidateFragments(fragments);
       } else if (fragments.length === 1) {
         finalCv = fragments[0];
       }
 
-      if (typeof window !== 'undefined' && finalCv) {
-        try {
-          localStorage.setItem('leecv_last_imported_draft', JSON.stringify({
-            timestamp: Date.now(),
-            sourceName: file?.name || 'Texto pegado',
-            data: finalCv
-          }));
-        } catch (e) {
-          console.warn('No se pudo guardar el borrador en localStorage', e);
-        }
+      if (finalCv) {
+        saveDraft(finalCv);
       }
 
       setStatus('done');
@@ -239,7 +256,44 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
     }
   };
 
-  if (!isOpen) return null;
+  const retrySelectivePages = async () => {
+    if (!file || failedPages.length === 0) return;
+    setStatus('processing');
+    setProgress(0);
+    setCurrentReadingPage(1);
+
+    const arrayBuffer = await file.arrayBuffer();
+    const pdfjsLib = ensurePdfjsWorkerConfigured();
+    const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+    const totalPages = Math.min(pdf.numPages, 30);
+    setTotal(totalPages);
+
+    const mergedFragments = () => Array.from(fragmentsByPageRef.current.entries()).sort((a, b) => a[0] - b[0]).map(([, f]) => f);
+
+    // Re-extraer solo las páginas que siguen fallidas
+    for (let i = 1; i <= totalPages; i++) {
+      if (!failedPages.includes(i)) continue;
+      setCurrentReadingPage(i);
+      try {
+        const payload = await buildPagePayload(pdf, i);
+        const fragment = await extractWithRetry(payload, i, 2);
+        fragmentsByPageRef.current.set(i, fragment);
+      } catch (pageErr: any) {
+        console.warn(`Página ${i} sigue fallando tras reintento selectivo:`, pageErr);
+      }
+      // Guardado progresivo por página
+      saveDraft(mergePageFragments(mergedFragments()));
+      setProgress(i);
+    }
+
+    // Construir lista ordenada de fragmentos por página y consolidar
+    const finalCv = await consolidateFragments(mergedFragments());
+    if (finalCv) saveDraft(finalCv);
+
+    setFailedPages([]);
+    setStatus('done');
+    onImportComplete(finalCv);
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={status === 'processing' ? () => {} : onClose} title="Importar CV con IA">
@@ -324,6 +378,14 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
                   Se omitieron {failedPages.length} página{failedPages.length > 1 ? 's' : ''} que no pudieron leerse (páginas: {failedPages.join(', ')}).
                 </span>
               </div>
+            )}
+            {failedPages.length > 0 && (
+              <button
+                className={`${button.base} ${button.secondary}`}
+                onClick={retrySelectivePages}
+                disabled={false}>
+                Reintentar páginas fallidas
+              </button>
             )}
             <button className={`${button.base} ${button.primary}`} onClick={onClose}>
               Cerrar y Ver Resultados
