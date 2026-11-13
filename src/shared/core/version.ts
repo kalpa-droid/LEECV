@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 2,
-  minor: 8,
-  patch: 7,
-  label: 'V2.8.7',
+  minor: 9,
+  patch: 0,
+  label: 'V2.9.0',
   lastUpdated: '2026-11-13',
   lastAgent: '@antigravity',
-  stage: 'Pipeline OCR completo: Groq con modelos vigentes (GPT-OSS 120B / Qwen 3.8 Visión), reintento selectivo que conserva páginas fallidas, telemetría con modelo real',
+  stage: 'Cooldown compartido de API keys de IA en Supabase (ai_key_cooldowns + RLS), ping de salud cada 6h, persistencia entre lambdas y cold starts',
 } as const;

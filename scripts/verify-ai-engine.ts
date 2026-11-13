@@ -19,8 +19,8 @@ assert(!!AI_PROVIDERS.groq, 'Groq provider missing from AI_PROVIDERS');
 assert(!!AI_PROVIDERS.gemini, 'Gemini provider missing from AI_PROVIDERS');
 assert(AI_PROVIDER_FALLBACK_ORDER[0] === 'groq', 'Groq is not first in AI_PROVIDER_FALLBACK_ORDER');
 
-// 2. Key Rotation fallback when env vars empty
-const sampleKey = getNextAvailableKey('groq');
+// 2. Key Rotation fallback when env vars empty (async desde V2.9.0: store compartido en Supabase)
+const sampleKey = await getNextAvailableKey('groq');
 assert(sampleKey === null || typeof sampleKey === 'string', 'Key rotation returned invalid type');
 
 // 3. Document Type cover_letter in capability registry
