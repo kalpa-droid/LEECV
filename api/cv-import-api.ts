@@ -6,6 +6,7 @@ import { AI_PROVIDERS, AI_PROVIDER_FALLBACK_ORDER } from './_lib/aiProviders/reg
 import { getNextAvailableKey, markKeyRateLimited } from './_lib/aiProviders/keyRotation.js';
 import type { AiCompletionRequest } from './_lib/aiProviders/types.js';
 import { calculateAiCost } from './_lib/costCalculator.js';
+import { isFragmentEffectivelyEmpty } from './_lib/cvImportGate.js';
 
 export const maxDuration = 60;
 
@@ -136,7 +137,15 @@ REGLAS OBLIGATORIAS:
     return errorResponse(res, 400, 'Acción no válida');
   }
 
-  const { kind, content, contextSummary = '', auxiliaryText = '' } = req.body || {};
+  const { kind, content, contextSummary = '', auxiliaryText = '', mimeType: rawMimeType } = req.body || {};
+
+  // MIME real de la imagen (el frontend puede mandar WebP/PNG nítido en páginas digitales)
+  const allowedMimes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+  const imageMimeType = (allowedMimes.has(String(rawMimeType)) ? rawMimeType : 'image/jpeg') as 'image/jpeg' | 'image/png' | 'image/webp';
+
+  const contextBlock = typeof contextSummary === 'string' && contextSummary.trim()
+    ? `\n\nContexto de la página anterior (usalo para decidir si un bloque es continuación del último registro): ${contextSummary.trim()}`
+    : '';
 
   if (!content) {
     return errorResponse(res, 400, 'Faltan parámetros requeridos');
@@ -256,15 +265,23 @@ REGLAS CRÍTICAS:
 7. Si hay URLs de LinkedIn o portfolio, incluirlas en personalInfo.
 8. Las fechas deben normalizarse a formato YYYY-MM cuando sea posible.
 9. Las habilidades deben separarse individualmente (una por objeto, no agrupadas).
-10. Devolver ÚNICAMENTE el JSON válido, sin texto adicional ni explicaciones.`;
+10. Devolver ÚNICAMENTE el JSON válido, sin texto adicional ni explicaciones.
+
+PROTOCOLO DE LECTURA ESTRUCTURAL (seguilo ANTES de extraer):
+A. Segmentá la página: ¿una columna, dos columnas / barra lateral, tabla cronológica, o un certificado/diploma completo?
+B. En dos columnas o barra lateral: leé TODA una columna de arriba a abajo antes de pasar a la siguiente. Nunca mezcles un renglón izquierdo con uno derecho en un mismo registro.
+C. Si viene "Texto auxiliar extraído del PDF", usalo como ancla exacta: la imagen decide a qué sección pertenece cada bloque y el texto auxiliar copia sin errores emails, teléfonos, DNI, CUIT, enlaces y fechas.
+D. Barras de progreso, estrellas o puntos junto a idiomas/habilidades: NO inventes porcentajes. Mapeá a nivel (Básico, Intermedio, Avanzado) SOLO si es inequívoco; si no hay nivel explícito, omití proficiency.
+E. Si la página es un certificado, diploma o analítico completo: extraé título, institución, año y carga horaria completos en coursesAndCertificates o education. Nunca resumas ni omitas campos por parecer redundantes.
+F. TIPOS EXACTOS (Groq no valida el esquema automáticamente): experience, education, skills, languages, coursesAndCertificates, projects, publications y achievements son SIEMPRE arrays (usá [] si no hay datos); personalInfo es SIEMPRE un objeto con las llaves exactas indicadas; los strings van entre comillas; continuesFromPrevious es booleano estricto (true/false, nunca "true"); sin null ni undefined: usá "" o [] cuando falte un dato.`;
 
     const userPromptBase = kind === 'text'
       ? `Extrae los datos de este texto de CV:\n\n${content}`
       : `Extrae los datos de la imagen de la página del CV provista.`;
 
     const userPrompt = auxiliaryText
-      ? `${userPromptBase}\n\nTexto auxiliar extraído del PDF (usalo solo como referencia, priorizá lo que ves):\n${auxiliaryText}\n${contextSummary}`
-      : `${userPromptBase}\n${contextSummary}`;
+      ? `${userPromptBase}\n\nTexto auxiliar extraído del PDF (usalo como ancla exacta de caracteres ambiguos; priorizá la imagen para la estructura y las secciones):\n${auxiliaryText}${contextBlock}`
+      : `${userPromptBase}${contextBlock}`;
 
     const request: AiCompletionRequest = {
       systemPrompt: systemInstruction,
@@ -392,64 +409,70 @@ REGLAS CRÍTICAS:
     if (kind === 'image') {
       const base64Data = content.includes(',') ? content.split(',')[1] : content;
       request.images = [{
-        mimeType: 'image/jpeg',
+        mimeType: imageMimeType,
         base64: base64Data
       }];
+      // Alta resolución de medios para tablas, notas al pie y texto chico (respaldo seguro en gemini.ts)
+      request.mediaResolution = 'MEDIA_RESOLUTION_HIGH';
     }
 
-    let completionText: string | null = null;
-    let successfulProviderId: string | null = null;
     let lastError: Error | null = null;
 
-    for (const providerId of AI_PROVIDER_FALLBACK_ORDER) {
-      const remainingMs = requestDeadline - Date.now();
-      if (remainingMs < 4000) {
-        console.warn('[cv-import] Presupuesto de tiempo de Vercel agotado. No se intenta con más proveedores.');
-        break;
-      }
-      const provider = AI_PROVIDERS[providerId];
-      if (!provider) continue;
-      if (kind === 'image' && !provider.supportsImages) continue;
-
-      // Rotar hasta agotar las claves disponibles del proveedor (salto con 429 como en consolidate-ats)
-      for (let keyAttempt = 0; keyAttempt < 8; keyAttempt++) {
-        const attemptRemainingMs = requestDeadline - Date.now();
-        if (attemptRemainingMs < 4000) break;
-        const apiKey = await getNextAvailableKey(providerId);
-        if (!apiKey) break; // no quedan claves disponibles para este proveedor → siguiente proveedor
-
-        try {
-          const result = await provider.complete(request, apiKey);
-          completionText = result.content;
-
-          if (result.usage) {
-            const actualModel = result.modelUsed || provider.defaultModel;
-            const cost = calculateAiCost(providerId, actualModel, result.usage.promptTokens, result.usage.completionTokens);
-            serverDal.aiTelemetry.logUsage({
-              userId: '00000000-0000-0000-0000-000000000000',
-              provider: providerId,
-              model: actualModel,
-              endpoint: 'cv-import-stateless',
-              promptTokens: result.usage.promptTokens,
-              completionTokens: result.usage.completionTokens,
-              estimatedCostUsd: cost
-            }).catch(err => console.error('[aiTelemetry] Error logging usage in cv-import:', err));
-          }
-
-          successfulProviderId = providerId;
+    // Cascada de proveedores/claves. Reusable: la primera pasada y el reintento de verificación
+    // (Completeness Gate) comparten esta misma lógica.
+    const runCompletionCascade = async (reqToUse: AiCompletionRequest): Promise<{ content: string; providerId: string } | null> => {
+      for (const providerId of AI_PROVIDER_FALLBACK_ORDER) {
+        const remainingMs = requestDeadline - Date.now();
+        if (remainingMs < 4000) {
+          console.warn('[cv-import] Presupuesto de tiempo de Vercel agotado. No se intenta con más proveedores.');
           break;
-        } catch (err: any) {
-          lastError = err;
-          if (err.status === 429 || err.message?.includes('429')) {
-            await markKeyRateLimited(providerId, apiKey, 60);
-            console.warn(`[cv-import] Clave de ${providerId} limitada (429). Rotando a la siguiente clave...`);
-            continue; // siguiente clave del mismo proveedor
+        }
+        const provider = AI_PROVIDERS[providerId];
+        if (!provider) continue;
+        if (kind === 'image' && !provider.supportsImages) continue;
+
+        // Rotar hasta agotar las claves disponibles del proveedor (salto con 429 como en consolidate-ats)
+        for (let keyAttempt = 0; keyAttempt < 8; keyAttempt++) {
+          const attemptRemainingMs = requestDeadline - Date.now();
+          if (attemptRemainingMs < 4000) break;
+          const apiKey = await getNextAvailableKey(providerId);
+          if (!apiKey) break; // no quedan claves disponibles para este proveedor → siguiente proveedor
+
+          try {
+            const result = await provider.complete(reqToUse, apiKey);
+
+            if (result.usage) {
+              const actualModel = result.modelUsed || provider.defaultModel;
+              const cost = calculateAiCost(providerId, actualModel, result.usage.promptTokens, result.usage.completionTokens);
+              serverDal.aiTelemetry.logUsage({
+                userId: '00000000-0000-0000-0000-000000000000',
+                provider: providerId,
+                model: actualModel,
+                endpoint: 'cv-import-stateless',
+                promptTokens: result.usage.promptTokens,
+                completionTokens: result.usage.completionTokens,
+                estimatedCostUsd: cost
+              }).catch(err => console.error('[aiTelemetry] Error logging usage in cv-import:', err));
+            }
+
+            return { content: result.content, providerId };
+          } catch (err: any) {
+            lastError = err;
+            if (err.status === 429 || err.message?.includes('429')) {
+              await markKeyRateLimited(providerId, apiKey, 60);
+              console.warn(`[cv-import] Clave de ${providerId} limitada (429). Rotando a la siguiente clave...`);
+              continue; // siguiente clave del mismo proveedor
+            }
+            break; // error no recuperable para este proveedor → siguiente proveedor
           }
-          break; // error no recuperable para este proveedor → siguiente proveedor
         }
       }
-      if (completionText) break;
-    }
+      return null;
+    };
+
+    let cascadeResult = await runCompletionCascade(request);
+    let completionText: string | null = cascadeResult?.content ?? null;
+    let successfulProviderId: string | null = cascadeResult?.providerId ?? null;
 
     if (!completionText || !successfulProviderId) {
       const keyAvailability = await Promise.all(AI_PROVIDER_FALLBACK_ORDER.map(pid => getNextAvailableKey(pid)));
@@ -500,6 +523,34 @@ REGLAS CRÍTICAS:
           error_message: 'Error procesando respuesta de IA (Formato inválido tras reintento)',
         });
         return errorResponse(res, 500, 'Error procesando respuesta de IA (Formato inválido tras reintento)');
+      }
+    }
+
+    // --- Completeness Gate: página con contenido pero JSON vacío → UN reintento de verificación ---
+    const expectsRichContent =
+      kind === 'image' || (typeof auxiliaryText === 'string' && auxiliaryText.length > 400);
+
+    if (expectsRichContent && isFragmentEffectivelyEmpty(fragmentJson)) {
+      console.warn('[cv-import] Página con contenido pero JSON vacío; disparando reintento de verificación.');
+      const verifyRequest: AiCompletionRequest = {
+        ...request,
+        userPrompt: `${request.userPrompt}\n\nATENCIÓN: una primera pasada devolvió un JSON vacío pese a que la página contiene datos. Releé la página completa con atención y devolvé TODOS los datos encontrados, aunque parezcan menores. Nunca un objeto vacío.`,
+      };
+      const verifyResult = await runCompletionCascade(verifyRequest);
+      if (verifyResult) {
+        try {
+          const verifyClean = verifyResult.content.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
+          const verifiedJson = JSON.parse(verifyClean);
+          if (!isFragmentEffectivelyEmpty(verifiedJson)) {
+            fragmentJson = verifiedJson;
+          } else {
+            console.warn('[cv-import] El reintento de verificación también devolvió JSON vacío; se conserva el original.');
+          }
+        } catch (verifyErr) {
+          console.warn('[cv-import] El reintento de verificación no devolvió JSON válido; se conserva el original.', verifyErr);
+        }
+      } else {
+        console.warn('[cv-import] El reintento de verificación no obtuvo respuesta de ningún proveedor; se conserva el original.');
       }
     }
 

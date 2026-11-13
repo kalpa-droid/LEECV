@@ -2,8 +2,11 @@ import { describe, it, expect } from 'vitest';
 import {
   estimateBase64Bytes,
   computeScaledDimensions,
+  computeRenderScale,
   encodeCanvasWithinBudget,
+  JPEG_QUALITY_STEPS,
   MAX_PAGE_PAYLOAD_BYTES,
+  MAX_IMAGE_DIMENSION,
 } from '../src/shared/core/cv-import/pageImageEncoder';
 
 /**
@@ -23,8 +26,7 @@ describe('pageImageEncoder — computeScaledDimensions', () => {
     expect(computeScaledDimensions(800, 600, 2000)).toEqual({ width: 800, height: 600 });
   });
 
-  it('reduce proporcionalmente cuando el lado más largo excede el máximo (foto de celular típica)', () => {
-    // Una foto de 4000x3000 (12MP, común en celulares) con tope 2000 → factor 0.5
+  it('reduce proporcionalmente cuando el lado más largo excede el máximo', () => {
     expect(computeScaledDimensions(4000, 3000, 2000)).toEqual({ width: 2000, height: 1500 });
   });
 
@@ -39,45 +41,86 @@ describe('pageImageEncoder — computeScaledDimensions', () => {
   });
 });
 
+describe('pageImageEncoder — computeRenderScale', () => {
+  it('una hoja A4 apaisada apunta a ~1920px de lado mayor', () => {
+    // A4 landscape: 842x595 pt → escala 1920/842 ≈ 2.28
+    expect(computeRenderScale(842, 595)).toBeCloseTo(2.28, 1);
+  });
+
+  it('una hoja A4 vertical apunta a ~1920px de lado mayor', () => {
+    expect(computeRenderScale(595, 842)).toBeCloseTo(2.28, 1);
+  });
+
+  it('respeta el piso 1.5 en páginas diminutas y el techo 2.6', () => {
+    expect(computeRenderScale(100, 80)).toBe(2.6);
+    expect(computeRenderScale(2000, 1000)).toBe(1.5);
+  });
+
+  it('MAX_IMAGE_DIMENSION quedó en 1920 (óptimo lectura IA)', () => {
+    expect(MAX_IMAGE_DIMENSION).toBe(1920);
+  });
+});
+
 // Canvas falso: sin renderizar de verdad (este sandbox no tiene un canvas 2D real), pero con el
-// mismo contrato que usa encodeCanvasWithinBudget (.toDataURL según la calidad pedida). Cada
-// calidad devuelve una cadena de un tamaño distinto, simulando que más calidad = más pesado.
-function fakeCanvas(bytesByQuality: Record<number, number>) {
+// mismo contrato que usa encodeCanvasWithinBudget (.toDataURL según la calidad pedida).
+function fakeCanvas(bytesByQuality: Record<string, number>) {
   return {
     width: 1000,
     height: 1000,
-    toDataURL: (_type: string, quality: number) => {
-      const bytes = bytesByQuality[quality];
-      if (bytes === undefined) throw new Error(`calidad inesperada en el test: ${quality}`);
-      // base64 length ≈ bytes * 4/3 → despejamos length para simular ese peso exacto
+    toDataURL: (type: string, quality?: number) => {
+      const key = quality !== undefined ? String(quality) : type === 'image/png' ? 'png' : 'webp';
+      const bytes = bytesByQuality[key];
+      if (bytes === undefined) throw new Error(`calidad inesperada en el test: type=${type} quality=${quality}`);
       const base64Len = Math.ceil((bytes * 4) / 3);
-      return `data:image/jpeg;base64,${'A'.repeat(base64Len)}`;
+      return `data:${type};base64,${'A'.repeat(base64Len)}`;
     },
   } as unknown as HTMLCanvasElement;
 }
 
-describe('pageImageEncoder — encodeCanvasWithinBudget', () => {
-  it('si la calidad más alta (0.75) ya entra en el presupuesto, no baja de más', () => {
-    const canvas = fakeCanvas({ 0.75: 500_000, 0.62: 300_000, 0.48: 200_000, 0.35: 100_000 });
-    const b64 = encodeCanvasWithinBudget(canvas, MAX_PAGE_PAYLOAD_BYTES);
-    expect(estimateBase64Bytes(b64)).toBeLessThanOrEqual(MAX_PAGE_PAYLOAD_BYTES);
-    expect(estimateBase64Bytes(b64)).toBeCloseTo(500_000, -3);
+describe('pageImageEncoder — encodeCanvasWithinBudget (JPEG)', () => {
+  it('la escalera JPEG arranca en 0.88 (no degrada páginas livianas)', () => {
+    expect(JPEG_QUALITY_STEPS[0]).toBe(0.88);
+    const canvas = fakeCanvas({ '0.88': 400_000, '0.78': 300_000, '0.65': 200_000, '0.48': 100_000 });
+    const encoded = encodeCanvasWithinBudget(canvas, MAX_PAGE_PAYLOAD_BYTES);
+    expect(encoded.mimeType).toBe('image/jpeg');
+    expect(estimateBase64Bytes(encoded.base64)).toBeLessThanOrEqual(MAX_PAGE_PAYLOAD_BYTES);
+    expect(estimateBase64Bytes(encoded.base64)).toBeCloseTo(400_000, -3);
   });
 
-  it('regresión: una "foto pesada" (todas las calidades por encima del presupuesto) igual sale bajo el límite', () => {
-    // Ninguna calidad entra por sí sola en 2.5MB — sin el arreglo esto es justo lo que
-    // reventaba el límite de 4.5MB de Vercel. Se espera que elija la más chica que entre,
-    // o si ninguna entra en la primera pasada, siga probando (no debe tirar de entrada).
-    const canvas = fakeCanvas({ 0.75: 6_000_000, 0.62: 4_800_000, 0.48: 3_000_000, 0.35: 2_000_000 });
-    const b64 = encodeCanvasWithinBudget(canvas, MAX_PAGE_PAYLOAD_BYTES);
-    expect(estimateBase64Bytes(b64)).toBeLessThanOrEqual(MAX_PAGE_PAYLOAD_BYTES);
+  it('regresión: una "foto pesada" igual sale bajo el límite', () => {
+    const canvas = fakeCanvas({ '0.88': 6_000_000, '0.78': 4_800_000, '0.65': 3_000_000, '0.48': 2_000_000 });
+    const encoded = encodeCanvasWithinBudget(canvas, MAX_PAGE_PAYLOAD_BYTES);
+    expect(estimateBase64Bytes(encoded.base64)).toBeLessThanOrEqual(MAX_PAGE_PAYLOAD_BYTES);
   });
 
   it('si ni la calidad más baja entra, tira un error entendible en vez de mandar un pedido roto', () => {
-    const canvas = fakeCanvas({ 0.75: 9_000_000, 0.62: 8_000_000, 0.48: 7_000_000, 0.35: 6_000_000 });
+    const canvas = fakeCanvas({ '0.88': 9_000_000, '0.78': 8_000_000, '0.65': 7_000_000, '0.48': 6_000_000 });
     // scaleToCanvas (el intento de achicar dimensiones) usa document.createElement('canvas') real;
     // en este sandbox sin canvas 2D nativo, ese segundo intento también falla — lo relevante acá
     // es que el resultado sea SIEMPRE un error claro, nunca un base64 que exceda el presupuesto.
     expect(() => encodeCanvasWithinBudget(canvas, MAX_PAGE_PAYLOAD_BYTES)).toThrow();
+  });
+});
+
+describe('pageImageEncoder — encodeCanvasWithinBudget (página digital)', () => {
+  it('acepta WebP q0.9 si entra bajo 1.2MB (borde tipográfico perfecto)', () => {
+    const canvas = fakeCanvas({ '0.9': 600_000, png: 900_000 });
+    const encoded = encodeCanvasWithinBudget(canvas, MAX_PAGE_PAYLOAD_BYTES, { digitalPage: true });
+    expect(encoded.mimeType).toBe('image/webp');
+    expect(estimateBase64Bytes(encoded.base64)).toBeCloseTo(600_000, -3);
+  });
+
+  it('si WebP no entra bajo 1.2MB y PNG sí, devuelve PNG', () => {
+    const canvas = fakeCanvas({ '0.9': 2_000_000, png: 1_100_000 });
+    const encoded = encodeCanvasWithinBudget(canvas, MAX_PAGE_PAYLOAD_BYTES, { digitalPage: true });
+    expect(encoded.mimeType).toBe('image/png');
+    expect(estimateBase64Bytes(encoded.base64)).toBeCloseTo(1_100_000, -3);
+  });
+
+  it('si WebP y PNG exceden, cae a la escalera JPEG', () => {
+    const canvas = fakeCanvas({ '0.9': 2_000_000, png: 2_000_000, '0.88': 800_000 });
+    const encoded = encodeCanvasWithinBudget(canvas, MAX_PAGE_PAYLOAD_BYTES, { digitalPage: true });
+    expect(encoded.mimeType).toBe('image/jpeg');
+    expect(estimateBase64Bytes(encoded.base64)).toBeCloseTo(800_000, -3);
   });
 });
