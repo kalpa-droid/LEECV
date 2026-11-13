@@ -653,7 +653,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                         <SectionBannerCard
                           preset={preset}
                           titleText={displayTitle}
-                          iconId={sec.id}
+                          iconId={sec.iconId || sec.id}
                           designId={undefined}
                           rolesColor={sectorRolesColor}
                           typography={preset.typography}
@@ -677,7 +677,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                             <SectionBannerCard
                               preset={preset}
                               titleText={displayTitle}
-                              iconId={sec.id}
+                              iconId={sec.iconId || sec.id}
                               designId={customRecordCardDesigns?.education || preset.recordCardDesigns?.education}
                               rolesColor={sectorRolesColor}
                               typography={preset.typography}
@@ -698,7 +698,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                           <SectionBannerCard
                             preset={preset}
                             titleText={displayTitle}
-                            iconId={sec.id}
+                            iconId={sec.iconId || sec.id}
                             designId={customRecordCardDesigns?.education || preset.recordCardDesigns?.education}
                             rolesColor={sectorRolesColor}
                             typography={preset.typography}

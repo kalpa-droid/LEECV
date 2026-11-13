@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Sparkles, Check } from 'lucide-react';
+import { Check, LayoutTemplate, Ruler } from 'lucide-react';
 import { PanelSection } from '../../../../../shared/core/ui/PanelSection';
 import { PAGE_SIZES } from '../../../../../shared/core/pdf-engine/layers/page/pageSizes';
 import { getAllPresets } from '../../../../../shared/core/pdf-engine/layers/presets/presetRegistry';
@@ -28,7 +28,7 @@ export function CardSizeSection({ cvData, setCvData }: Props) {
   return (
     <div className="space-y-6">
       <div id="card-size-section">
-        <PanelSection icon={<Layout className="w-4 h-4" />} title="Tamaño de Tarjeta y Margen de Corte (sangrado y marcas de corte)">
+        <PanelSection icon={<Ruler className="w-4 h-4" />} title="Tamaño de Tarjeta y Margen de Corte (sangrado y marcas de corte)">
           <div className="p-4 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-4">
             <div className="space-y-1.5">
               <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">Elegí el tipo de tarjeta</label>
@@ -74,7 +74,7 @@ export function CardSizeSection({ cvData, setCvData }: Props) {
         </PanelSection>
 
         {/* Plantilla Base Predefinida */}
-        <PanelSection icon={<Sparkles className="w-4 h-4" />} title="Plantilla base predefinida">
+        <PanelSection icon={<LayoutTemplate className="w-4 h-4" />} title="Plantilla base predefinida">
           <div className="grid grid-cols-2 gap-2">
             {getAllPresets().map((preset) => {
               const isSelected = (cvData?.activePresetId || 'tarjeta-personal') === preset.id;

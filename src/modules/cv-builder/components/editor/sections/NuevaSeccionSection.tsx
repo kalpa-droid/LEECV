@@ -1,4 +1,4 @@
-import { AlertTriangle, Check, ChevronRight, Cloud, Download, FileText, Grid, Grid3X3, GripHorizontal, GripVertical, Image as ImageIcon, Layers, Layout, Monitor, Palette, Plus, RotateCcw, Sparkles, Trash2, User, X } from 'lucide-react';
+import { AlertTriangle, Check, ChevronRight, Cloud, Download, Grid, Grid3X3, GripHorizontal, GripVertical, Image as ImageIcon, Layers, Layout, Monitor, Palette, Plus, RotateCcw, FolderPlus, Trash2, User, X } from 'lucide-react';
 import { Field } from '../../../../../shared/core/ui/Field';
 import { FIELD_CATALOG } from '../../../../../shared/core/pdf-engine/layers/records/fieldCatalog';
 import React, { useState } from 'react';
@@ -34,7 +34,7 @@ export const NuevaSeccionSection = ({
       {activeTab === 'nueva_seccion' && (
           <div className="space-y-6">
             {/* 1. SECCIONES PREDISEÑADAS CON 1 CLIC */}
-            <PanelSection icon={<Sparkles className="w-4 h-4 text-[var(--ui-secondary)]" />} title="Secciones Prediseñadas">
+            <PanelSection icon={<FolderPlus className="w-4 h-4 text-[var(--ui-secondary)]" />} title="Secciones Prediseñadas">
               <div className={`p-3.5 bg-[var(--ui-bg-card)] rounded-[${radius.modal}] border-2 border-[var(--color-neutral-border)] space-y-3 ${elevationSystem.raised}`}>
                 <p className="text-[11px] text-[var(--color-neutral-text-secondary)] font-medium leading-relaxed">
                   Haz clic en cualquiera de estas secciones para agregarla instantáneamente a tu currículum con sus campos listos para completar:
@@ -158,6 +158,7 @@ export const NuevaSeccionSection = ({
                               ...prev,
                               sectionVisibility: { ...(prev.sectionVisibility || {}), [freeSlot]: true },
                               sectionTitleOverrides: { ...(prev.sectionTitleOverrides || {}), [freeSlot]: presetSec.titleText },
+                              sectionIconOverrides: { ...(prev.sectionIconOverrides || {}), [freeSlot]: presetSec.iconId || freeSlot },
                               sectionFieldSelection: { ...(prev.sectionFieldSelection || {}), [freeSlot]: presetSec.fields },
                               [freeSlot]: prev[freeSlot]?.length ? prev[freeSlot] : [{}],
                               layout: {

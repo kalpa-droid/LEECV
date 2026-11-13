@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, FileText, CreditCard, BookOpen, Mail, CalendarDays } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import { DomSectionIcon } from '../pdf-engine/layers/icons/DomSectionIcon';
+import { PRODUCT_ICON_IDS } from './iconCatalog';
 import { radius, elevationSystem } from '../uiDesignSystem';
 
 export interface NewDocumentMenuProps {
@@ -68,7 +70,7 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
             className="w-full text-left px-3 py-2 rounded-[10px] text-xs font-bold hover:bg-[var(--ui-btn-neutral-hover)] flex items-center gap-2.5 transition cursor-pointer group"
           >
             <div className={`p-1.5 rounded-[${radius.card}] bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)] group-hover:scale-105 transition`}>
-              <FileText className="w-4 h-4" />
+              <DomSectionIcon iconId={PRODUCT_ICON_IDS.cv} className="w-4 h-4" />
             </div>
             <div>
               <span className="block font-extrabold text-[var(--ui-text-primary)]">Nuevo Currículum Vitae</span>
@@ -85,7 +87,7 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
             className="w-full text-left px-3 py-2 rounded-[10px] text-xs font-bold hover:bg-[var(--ui-btn-neutral-hover)] flex items-center gap-2.5 transition cursor-pointer group"
           >
             <div className={`p-1.5 rounded-[${radius.card}] bg-[var(--color-secondary-muted)] text-[var(--color-secondary-bright)] group-hover:scale-105 transition`}>
-              <CreditCard className="w-4 h-4" />
+              <DomSectionIcon iconId={PRODUCT_ICON_IDS.tarjeta} className="w-4 h-4" />
             </div>
             <div>
               <span className="block font-extrabold text-[var(--ui-text-primary)]">Nueva Tarjeta Personal</span>
@@ -102,7 +104,7 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
             className="w-full text-left px-3 py-2 rounded-[10px] text-xs font-bold hover:bg-[var(--ui-btn-neutral-hover)] flex items-center gap-2.5 transition cursor-pointer group"
           >
             <div className={`p-1.5 rounded-[${radius.card}] bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)] group-hover:scale-105 transition`}>
-              <BookOpen className="w-4 h-4" />
+              <DomSectionIcon iconId={PRODUCT_ICON_IDS.libro} className="w-4 h-4" />
             </div>
             <div>
               <span className="block font-extrabold text-[var(--ui-text-primary)]">Nuevo Libro / Folleto</span>
@@ -120,7 +122,7 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
               className="w-full text-left px-3 py-2 rounded-[10px] text-xs font-bold hover:bg-[var(--ui-btn-neutral-hover)] flex items-center gap-2.5 transition cursor-pointer group"
             >
               <div className={`p-1.5 rounded-[${radius.card}] bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] group-hover:scale-105 transition`}>
-                <Mail className="w-4 h-4" />
+                <DomSectionIcon iconId={PRODUCT_ICON_IDS.carta} className="w-4 h-4" />
               </div>
               <div>
                 <span className="block font-extrabold text-[var(--ui-text-primary)]">Nueva Carta de Presentación</span>
@@ -139,7 +141,7 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
               className="w-full text-left px-3 py-2 rounded-[10px] text-xs font-bold hover:bg-[var(--ui-btn-neutral-hover)] flex items-center gap-2.5 transition cursor-pointer group"
             >
               <div className={`p-1.5 rounded-[${radius.card}] bg-[var(--color-accent-green-light)] text-[var(--color-accent-green-text)] group-hover:scale-105 transition`}>
-                <CalendarDays className="w-4 h-4" />
+                <DomSectionIcon iconId={PRODUCT_ICON_IDS.agenda} className="w-4 h-4" />
               </div>
               <div>
                 <span className="block font-extrabold text-[var(--ui-text-primary)]">Nueva Agenda / Planificador</span>

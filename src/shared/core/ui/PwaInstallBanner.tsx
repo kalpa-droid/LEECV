@@ -89,7 +89,7 @@ export function PwaInstallBanner() {
     >
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="flex items-center gap-2.5">
-          <div className={`w-10 h-10 rounded-[${radius.card}] bg-[var(--color-primary-base)] flex items-center justify-center text-[var(--color-primary-on-base)] shrink-0 ${elevationSystem.raised}`}>
+          <div className={`w-10 h-10 rounded-[${radius.card}] bg-[var(--color-accent-base)] flex items-center justify-center text-[var(--color-accent-on-base)] shrink-0 ${elevationSystem.raised}`}>
             <Smartphone className="w-5 h-5" />
           </div>
           <div>

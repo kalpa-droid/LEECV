@@ -39,6 +39,7 @@ todas documentadas con motivo en `scripts/*.js`), nunca lo ignores en silencio.
 | Cualquier cosa relacionada a generar un PDF (CV, tarjeta) | Un renderer nuevo desde cero | Las capas de `src/shared/core/pdf-engine/layers/` (page, márgenes, sectores, objetos fijos, registros, presets, bleed, imposición, colorSystem) + `presetRegistry.ts`. Un documento nuevo = un `Preset` nuevo, nunca un renderer nuevo. |
 | Decidir qué features tiene un usuario según su plan | Chequear `plan === 'pro'` a mano en el componente | `useEntitlements()` — `src/shared/core/entitlements/` |
 | Texto de UI: nombre de la entidad principal, verbo de exportar/eliminar/guardar | Palabras sueltas a criterio propio | `UI_GLOSSARY` — `src/shared/core/uiTextGlossary.ts` (lo audita `check-module-boundaries.js` automáticamente) |
+| Poner un ícono a una sección, producto o acción (Dock, Wizard, Navbar, PDF) | Elegir un ícono Lucide/SVG a ojo, o repetir un mismo ícono entre secciones/botones distintos | `iconCatalog.ts` + `ICON_REGISTRY` — `resolveSectionIconId()` para secciones; `PRODUCT_ICON_IDS` / `UI_ICON_IDS` para productos y acciones. Misma entidad = mismo ícono; entidades distintas = ícono distinto (cero colisiones; lo audita `scripts/check-icon-uniqueness.js`). |
 
 ## Regla 2 — La trampa de los colores dinámicos en clases de Tailwind
 

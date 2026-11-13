@@ -1,4 +1,4 @@
-import { AlertTriangle, Check, ChevronRight, Cloud, Download, FileText, Grid, Grid3X3, GripHorizontal, GripVertical, Image as ImageIcon, Layers, Layout, Monitor, Palette, Plus, RotateCcw, Sparkles, Trash2, User, X } from 'lucide-react';
+import { AlertTriangle, Check, ChevronRight, Cloud, Download, Grid, Grid3X3, GripHorizontal, GripVertical, Image as ImageIcon, Layers, Layout, Monitor, Palette, Plus, RotateCcw, Trash2, User, X, PanelTop } from 'lucide-react';
 import React from 'react';
 import { PanelSection } from '../../../../../shared/core/ui/PanelSection';
 
@@ -32,7 +32,7 @@ export const PortadaSection = ({
     <>
       {activeTab === 'portada' && (
           <div className="space-y-6">
-            <PanelSection icon={<Sparkles className="w-4 h-4" />} title="Portada">
+            <PanelSection icon={<PanelTop className="w-4 h-4" />} title="Portada">
               {/* Cover Page Toggle */}
               <div className={`flex items-center justify-between p-3 rounded-[${radius.card}] border transition ${
                 cvData.showCoverPage !== false 

@@ -1,4 +1,4 @@
-import { AlertTriangle, Check, ChevronRight, Cloud, Download, FileText, Grid, Grid3X3, GripHorizontal, GripVertical, Image as ImageIcon, Layers, Monitor, Palette, Plus, RotateCcw, Sparkles, Trash2, User, X } from 'lucide-react';
+import { AlertTriangle, Check, ChevronRight, Cloud, Download, Grid, Grid3X3, GripHorizontal, GripVertical, Image as ImageIcon, Info, Layers, LayoutTemplate, Monitor, Palette, Plus, RotateCcw, Trash2, Type, User, X, ALargeSmall } from 'lucide-react';
 import { getAllPresets, PRESET_COLORS, PRESET_TYPOGRAPHY, resolveActivePreset } from '../../../../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { applyPresetLevel } from '../../../../../shared/core/pdf-engine/layers/presets/presetHierarchyEngine';
 import { PAGE_SIZES } from '../../../../../shared/core/pdf-engine/layers/page/pageSizes';
@@ -74,7 +74,7 @@ export const DisenoSection = ({
             {/* Encabezado explicativo de Cascada de 3 Niveles */}
             <div className="p-3 bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[var(--radius-card)] text-xs text-[var(--color-neutral-text-secondary)] font-medium flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-[var(--color-accent-amber-bright)] flex-shrink-0" />
+                <Info className="w-4 h-4 text-[var(--color-accent-amber-bright)] flex-shrink-0" />
                 <span className="font-bold text-[var(--color-neutral-text-primary)]">
                   {getUiHint('cascadaDiseno')}
                 </span>
@@ -170,7 +170,7 @@ export const DisenoSection = ({
             )}
 
             {/* Tipografía Principal */}
-            <PanelSection icon={<FileText className="w-4 h-4" />} title="Tipografía">
+            <PanelSection icon={<Type className="w-4 h-4" />} title="Tipografía">
               <div className={`p-3 bg-[var(--ui-bg-card)] rounded-[${radius.card}] border border-[var(--color-neutral-border)]`}>
                 <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] mb-1.5">
                   Fuente Principal del Documento (Google Fonts)
@@ -330,7 +330,7 @@ export const DisenoSection = ({
             </PanelSection>
 
             {/* Escala Tipográfica */}
-            <PanelSection icon={<FileText className="w-4 h-4" />} title="Escala tipográfica armónica">
+            <PanelSection icon={<ALargeSmall className="w-4 h-4" />} title="Escala tipográfica armónica">
               <div className="grid grid-cols-2 gap-2">
                 {Object.entries(PRESET_TYPOGRAPHY).map(([key, typoPreset]) => {
                   const activePresetObj = resolveActivePreset(cvData);
@@ -360,7 +360,7 @@ export const DisenoSection = ({
 
             {/* Plantilla Base Predefinida */}
             {!isBusinessCard && (
-              <PanelSection icon={<Sparkles className="w-4 h-4" />} title="Plantilla base predefinida">
+              <PanelSection icon={<LayoutTemplate className="w-4 h-4" />} title="Plantilla base predefinida">
                 <div className="grid grid-cols-2 gap-2">
                   {getAllPresets().filter(p => p.id !== 'tarjeta-personal').map((preset) => {
                     const isSelected = (cvData?.activePresetId || 'cv-clasico') === preset.id;

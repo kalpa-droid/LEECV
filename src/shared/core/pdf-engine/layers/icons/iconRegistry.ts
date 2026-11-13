@@ -50,27 +50,25 @@ export const ICON_REGISTRY: Record<string, IconDefinition> = {
     id: 'profesion',
     viewBox: '0 0 24 24',
     paths: [
-      'M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16',
-      'M2 18h20',
-      'M6 10h12',
-      'M6 14h12'
+      'M12 15a6 6 0 1 0 0-12 6 6 0 0 0 0 12z',
+      'M8.8 13.4L6.5 21l5.5-3 5.5 3-2.3-7.6'
     ]
   },
   experiencia: {
     id: 'experiencia',
     viewBox: '0 0 24 24',
     paths: [
-      'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z',
-      'M14 2v6h6',
-      'M16 13H8',
-      'M16 17H8'
+      'M4 8h16a1 1 0 0 1 1 1v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a1 1 0 0 1 1-1z',
+      'M9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2',
+      'M3 13.5h18'
     ]
   },
   cursos: {
     id: 'cursos',
     viewBox: '0 0 24 24',
     paths: [
-      'M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20'
+      'M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z',
+      'M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z'
     ]
   },
   informatica: {
@@ -125,11 +123,10 @@ export const ICON_REGISTRY: Record<string, IconDefinition> = {
     id: 'resumen',
     viewBox: '0 0 24 24',
     paths: [
-      'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z',
-      'M14 2v6h6',
-      'M16 13H8',
-      'M16 17H8',
-      'M10 9H8'
+      'M4 6h16',
+      'M4 10h16',
+      'M4 14h10',
+      'M4 18h7'
     ]
   },
   proyectos: {
@@ -152,19 +149,22 @@ export const ICON_REGISTRY: Record<string, IconDefinition> = {
     id: 'competencias',
     viewBox: '0 0 24 24',
     paths: [
-      'M12 22a10 10 0 1 0-10-10 10 10 0 0 0 10 10z',
-      'M12 18a6 6 0 1 0-6-6 6 6 0 0 0 6 6z',
-      'M12 14a2 2 0 1 0-2-2 2 2 0 0 0 2 2z'
+      'M5 6h4',
+      'M5 12h8',
+      'M5 18h12',
+      'M13 6h.01',
+      'M17 12h.01',
+      'M21 18h.01'
     ]
   },
   publicaciones: {
     id: 'publicaciones',
     viewBox: '0 0 24 24',
     paths: [
-      'M4 19.5A2.5 2.5 0 0 1 6.5 17H20',
-      'M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z',
-      'M9 7h6',
-      'M9 11h6'
+      'M3 8h13v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+      'M16 11h3a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-3',
+      'M6.5 12h6',
+      'M6.5 15.5h6'
     ]
   },
   referencias: {
@@ -182,7 +182,7 @@ export const ICON_REGISTRY: Record<string, IconDefinition> = {
     viewBox: '0 0 24 24',
     paths: [
       'M5 8l6 6',
-      'M4 14e6 6 0 0 1 6-6h12',
+      'M4 14l6-6 2-3',
       'M2 5h12',
       'M7 2h1',
       'M22 22l-5-10-5 10',
@@ -261,27 +261,29 @@ export const ICON_REGISTRY: Record<string, IconDefinition> = {
     id: 'objetivo',
     viewBox: '0 0 24 24',
     paths: [
-      'M12 22a10 10 0 1 0-10-10 10 10 0 0 0 10 10z',
-      'M12 18a6 6 0 1 0-6-6 6 6 0 0 0 6 6z',
-      'M12 14a2 2 0 1 0-2-2 2 2 0 0 0 2 2z'
+      'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z',
+      'M15.5 8.5l-2 5-5 2 2-5z'
     ]
   },
   logros: {
     id: 'logros',
     viewBox: '0 0 24 24',
     paths: [
-      'M6 9H4.5a2.5 2.5 0 0 1 0-5H6',
-      'M18 9h1.5a2.5 2.5 0 0 0 0-5H18',
-      'M4 22h16',
-      'M18 2H6v7a6 6 0 0 0 12 0V2z'
+      'M5 21V4',
+      'M5 5h12l-2.5 4L17 13H5'
     ]
   },
   portafolio: {
     id: 'portafolio',
     viewBox: '0 0 24 24',
     paths: [
-      'M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16',
-      'M2 18h20'
+      'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+      'M8 12.5h.01',
+      'M12 12.5h.01',
+      'M16 12.5h.01',
+      'M8 16.5h.01',
+      'M12 16.5h.01',
+      'M16 16.5h.01'
     ]
   },
   card_size: {
@@ -304,29 +306,38 @@ export const ICON_REGISTRY: Record<string, IconDefinition> = {
     id: 'card_logo',
     viewBox: '0 0 24 24',
     paths: [
-      'M2 6h20v12H2z', 'M2 10h20'
+      'M3 6h18v12H3z',
+      'M8.5 10.5a1.5 1.5 0 1 0 0-.01z',
+      'M4 17l4.5-4.5L12 15.5 15 12.5 20 17'
     ]
   },
   card_front: {
     id: 'card_front',
     viewBox: '0 0 24 24',
     paths: [
-      'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2',
-      'M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'
+      'M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+      'M8.5 14.5a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5z',
+      'M13 10h4',
+      'M13 13.5h4',
+      'M13 17h2.5'
     ]
   },
   card_back: {
     id: 'card_back',
     viewBox: '0 0 24 24',
     paths: [
-      'M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20'
+      'M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z',
+      'M2 9.5h20',
+      'M5.5 15.5c1.2-1.8 2.3 1.8 3.5 0s2.3 1.8 3.5 0',
+      'M15.5 15.5h3.5'
     ]
   },
   card_qr: {
     id: 'card_qr',
     viewBox: '0 0 24 24',
     paths: [
-      'M3 3h6v6H3z', 'M15 3h6v6h-6z', 'M3 15h6v6H3z'
+      'M3 3h6v6H3z', 'M15 3h6v6h-6z', 'M3 15h6v6H3z',
+      'M14 14h3v3h-3z', 'M19 14h2v2h-2z', 'M14 19h2v2h-2z', 'M17 17h4v4h-4z'
     ]
   },
   fallback: {
@@ -334,6 +345,185 @@ export const ICON_REGISTRY: Record<string, IconDefinition> = {
     viewBox: '0 0 24 24',
     paths: [
       'M12 12m-6 0a6 6 0 1 0 12 0a6 6 0 1 0 -12 0'
+    ]
+  },
+  'datos-personales': {
+    id: 'datos-personales',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M9 2h6v3H9z',
+      'M9 4H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2',
+      'M12 17a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z',
+      'M9 20.5c.5-1.4 1.6-2.1 3-2.1s2.5.7 3 2.1'
+    ]
+  },
+  'personalizada-1': {
+    id: 'personalizada-1',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M12 3l7 9-7 9-7-9z',
+      'M12 11h.01'
+    ]
+  },
+  'personalizada-2': {
+    id: 'personalizada-2',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M12 4L21 20H3z',
+      'M12 10v4',
+      'M12 17h.01'
+    ]
+  },
+  'personalizada-3': {
+    id: 'personalizada-3',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M12 2.5l8 4.6v9.8l-8 4.6-8-4.6V7.1z',
+      'M12 8v8',
+      'M8.5 10l7 4',
+      'M15.5 10l-7 4'
+    ]
+  },
+  'personalizada-4': {
+    id: 'personalizada-4',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z',
+      'M7 12h3l2-3 2 5 1.5-2H17'
+    ]
+  },
+  'personalizada-5': {
+    id: 'personalizada-5',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z'
+    ]
+  },
+  carta: {
+    id: 'carta',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M4 2h16v20H4z',
+      'M8 7h5',
+      'M8 11h8',
+      'M8 15h8',
+      'M8 19h4'
+    ]
+  },
+  importar: {
+    id: 'importar',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M12 3v12',
+      'M7 10l5 5 5-5',
+      'M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2'
+    ]
+  },
+  exportar: {
+    id: 'exportar',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M12 21V9',
+      'M7 14l5-5 5 5',
+      'M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2'
+    ]
+  },
+  vacante: {
+    id: 'vacante',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M12 12L19 5',
+      'M12 3a9 9 0 0 1 9 9',
+      'M12 7a5 5 0 0 1 5 5',
+      'M12 12h.01'
+    ]
+  },
+  cv: {
+    id: 'cv',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z',
+      'M14 2v6h6',
+      'M9.25 13.25a1.75 1.75 0 1 0 0-3.5 1.75 1.75 0 0 0 0 3.5z',
+      'M7.5 17.5c.3-1.4 1-2 1.75-2s1.45.6 1.75 2',
+      'M13.5 11h4.5',
+      'M13.5 14.5h4.5',
+      'M13.5 18h3'
+    ]
+  },
+  tarjeta: {
+    id: 'tarjeta',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z',
+      'M6 9h4v3H6z',
+      'M12 10.5h6',
+      'M12 14h6'
+    ]
+  },
+  libro: {
+    id: 'libro',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20'
+    ]
+  },
+  agenda: {
+    id: 'agenda',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M8 2v4',
+      'M16 2v4',
+      'M3 10h18',
+      'M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z'
+    ]
+  },
+  ia: {
+    id: 'ia',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z',
+      'M19.5 4.5h.01',
+      'M4.5 19.5h.01'
+    ]
+  },
+  preview: {
+    id: 'preview',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z',
+      'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z'
+    ]
+  },
+  guardar: {
+    id: 'guardar',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z',
+      'M17 21v-8H7v8',
+      'M7 3v5h8'
+    ]
+  },
+  ats: {
+    id: 'ats',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M3 8V5a2 2 0 0 1 2-2h3',
+      'M16 3h3a2 2 0 0 1 2 2v3',
+      'M21 16v3a2 2 0 0 1-2 2h-3',
+      'M8 21H5a2 2 0 0 1-2-2v-3',
+      'M7 10h10',
+      'M7 13.5h7',
+      'M7 17h4'
+    ]
+  },
+  diseno: {
+    id: 'diseno',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M3 3h18v7H3z',
+      'M3 14h8v7H3z',
+      'M15 14h6v7h-6z'
     ]
   },
   custom: {

@@ -46,5 +46,7 @@ export interface ContentSection<K extends RecordKind = RecordKind> {
   id: string;
   titleText: string;
   records: ContentRecord<K>[];
+  /** Ícono canónico resuelto (CATALOG/ICON_REGISTRY) — lo asigna el adaptador de datos */
+  iconId?: string;
   breakBefore?: boolean;
 }

@@ -1,9 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
   FolderOpen,
-  Save,
   User,
-  Download,
   CopyPlus,
   FileArchive,
   LogIn,
@@ -13,9 +11,10 @@ import {
   LayoutDashboard,
   CheckCircle2,
   AlertTriangle,
-  Eye,
   Edit3
 } from 'lucide-react';
+import { DomSectionIcon } from '../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
+import { UI_ICON_IDS } from '../../../shared/core/ui/iconCatalog';
 import { elevationSystem, radius, UI_THEME_META, buttonUnavailable, button } from '../../../shared/core/uiDesignSystem';
 import { ThemeToggleButton } from '../../../shared/core/ui/ThemeToggleButton';
 
@@ -159,7 +158,7 @@ export default function Navbar({
               }`}
               title="Vista previa del documento"
             >
-              <Eye className="w-3.5 h-3.5" />
+              <DomSectionIcon iconId={UI_ICON_IDS.preview} className="w-3.5 h-3.5" />
               <span>Ver</span>
             </button>
           </div>
@@ -225,7 +224,7 @@ export default function Navbar({
               title={t.navbar.actionMenuTitle}
             >
               <FolderOpen className="w-4 h-4 text-[var(--color-secondary-bright)]" />
-              <Save className="w-4 h-4 text-[var(--color-accent-purple-bright)]" />
+              <DomSectionIcon iconId={UI_ICON_IDS.guardar} className="w-4 h-4 text-[var(--color-accent-purple-bright)]" />
             </button>
 
             {/* Dropdown de Acciones */}
@@ -259,7 +258,7 @@ export default function Navbar({
                       disabled={isSaving}
                       className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer disabled:opacity-50`}
                     >
-                      <Save className="w-4 h-4 text-[var(--color-accent-purple-bright)]" />
+                      <DomSectionIcon iconId={UI_ICON_IDS.guardar} className="w-4 h-4 text-[var(--color-accent-purple-bright)]" />
                       <span>{isSaving ? t.navbar.saveChangesSaving : t.navbar.saveChangesOverwrite}</span>
                     </button>
 
@@ -297,7 +296,7 @@ export default function Navbar({
                       title={docType === 'business_card' ? 'Las tarjetas se exportan en PDF, no se guardan como documento aparte' : 'Los libros se exportan en PDF, no se guardan como documento aparte'}
                       className={`${buttonUnavailable} w-full text-left px-3 py-2 text-xs flex items-center gap-2`}
                     >
-                      <Save className="w-4 h-4" />
+                      <DomSectionIcon iconId={UI_ICON_IDS.guardar} className="w-4 h-4" />
                       <span>{t.navbar.saveChangesOverwrite}</span>
                     </button>
 
@@ -334,7 +333,7 @@ export default function Navbar({
                   }}
                   className={`w-full text-left px-3 py-2 rounded-[${radius.card}] text-xs font-black flex items-center gap-2 transition cursor-pointer ${button.primary}`}
                 >
-                  <Download className="w-4 h-4" />
+                  <DomSectionIcon iconId={UI_ICON_IDS.exportar} className="w-4 h-4" />
                   <span>{t.navbar.exportPdf}</span>
                 </button>
 

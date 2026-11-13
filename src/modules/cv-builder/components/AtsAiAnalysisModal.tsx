@@ -110,13 +110,13 @@ export function AtsAiAnalysisModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Análisis ATS Inteligente"
-      icon={<Wand2 className="w-5 h-5 text-[var(--color-primary-base)]" />}
+      icon={<Wand2 className="w-5 h-5 text-[var(--color-accent-text)]" />}
       size="xl"
     >
       <div className="space-y-6">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-4 text-[var(--color-neutral-text-secondary)]">
-              <div className="w-8 h-8 border-4 border-[var(--color-primary-base)] border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-8 h-8 border-4 border-[var(--color-accent-base)] border-t-transparent rounded-full animate-spin"></div>
               <p>Analizando CV y vacante con IA...</p>
             </div>
           ) : result ? (

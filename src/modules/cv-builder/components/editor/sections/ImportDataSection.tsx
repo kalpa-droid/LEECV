@@ -152,7 +152,7 @@ export const ImportDataSection: React.FC = () => {
       </header>
 
       {savedDraft && !reviewData && (
-        <section className="rounded-[var(--ui-radius-card)] border border-[var(--color-primary-base)] bg-[var(--ui-bg-panel)] p-4 space-y-3">
+        <section className="rounded-[var(--ui-radius-card)] border border-[var(--color-accent-base)] bg-[var(--ui-bg-panel)] p-4 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="space-y-1">
               <div className="flex items-center gap-2">

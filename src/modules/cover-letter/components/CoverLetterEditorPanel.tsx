@@ -252,7 +252,7 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
           {/* Selector de CV */}
           <div className="p-4 rounded-[12px] border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] space-y-3">
             <h4 className="text-xs font-semibold text-[var(--ui-text-primary)] flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-[var(--color-primary-base)]" />
+              <CreditCard className="w-4 h-4 text-[var(--color-accent-text)]" />
               Vincular datos desde un Currículum (CV)
             </h4>
             {availableCvs.length === 0 ? (
@@ -268,7 +268,7 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
                 <button
                   type="button"
                   onClick={() => handleLinkCv(availableCvs[0].id)}
-                  className="px-3 py-1 bg-[var(--color-primary-base)] text-white text-xs font-semibold rounded-[8px] hover:opacity-90 transition-all"
+                  className="px-3 py-1 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-xs font-semibold rounded-[8px] hover:opacity-90 transition-all"
                 >
                   Vincular
                 </button>
@@ -300,7 +300,7 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
             <p className="text-xs text-[var(--ui-text-secondary)]">
               Obtén tu archivo ZIP en LinkedIn (Configuración &gt; Privacidad de datos &gt; Obtener una copia de tus datos).
             </p>
-            <label className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary-base)] text-white text-xs font-semibold rounded-[10px] cursor-pointer hover:opacity-90 transition-all">
+            <label className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-xs font-semibold rounded-[10px] cursor-pointer hover:opacity-90 transition-all">
               <Upload className="w-3.5 h-3.5" />
               <span>{isImporting ? 'Procesando ZIP...' : 'Seleccionar archivo .zip'}</span>
               <input type="file" accept=".zip" onChange={handleLinkedinUpload} disabled={isImporting} className="hidden" />
@@ -440,7 +440,7 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
                   onClick={() => setTone(t.id as any)}
                   className={`p-3 rounded-[12px] border text-left transition-all ${
                     tone === t.id
-                      ? 'border-[var(--color-primary-base)] bg-[var(--color-primary-muted)] text-[var(--ui-text-primary)] font-medium'
+                      ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-muted)] text-[var(--ui-text-primary)] font-medium'
                       : 'border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)] hover:border-[var(--ui-border-hover)]'
                   }`}
                 >
@@ -489,7 +489,7 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
               disabled={isExportingDocx}
               className="inline-flex items-center gap-2 px-3 py-1.5 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-[10px] text-xs font-semibold text-[var(--ui-text-primary)] hover:border-[var(--ui-border-hover)] transition-all"
             >
-              <Download className="w-3.5 h-3.5 text-[var(--color-primary-base)]" />
+              <Download className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
               <span>{isExportingDocx ? 'Generando DOCX...' : 'Descargar como Word (.docx)'}</span>
             </button>
           </div>
@@ -571,7 +571,7 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
               disabled={isExportingDocx}
               className="inline-flex items-center gap-2 px-3 py-1.5 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded-[10px] text-xs font-semibold text-[var(--ui-text-primary)] hover:border-[var(--ui-border-hover)] transition-all"
             >
-              <Download className="w-3.5 h-3.5 text-[var(--color-primary-base)]" />
+              <Download className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
               <span>{isExportingDocx ? 'Generando DOCX...' : 'Descargar como Word (.docx)'}</span>
             </button>
           </div>
@@ -613,7 +613,7 @@ export const CoverLetterEditorPanel: React.FC<CoverLetterEditorPanelProps> = ({
                 onClick={() => onSelectPreset(p.id)}
                 className={`p-4 rounded-[12px] border text-left transition-all ${
                   presetId === p.id
-                    ? 'border-[var(--color-primary-base)] bg-[var(--color-primary-muted)] text-[var(--ui-text-primary)] shadow-[var(--shadow-raised)]'
+                    ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-muted)] text-[var(--ui-text-primary)] shadow-[var(--shadow-raised)]'
                     : 'border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)] hover:border-[var(--ui-border-hover)]'
                 }`}
               >
