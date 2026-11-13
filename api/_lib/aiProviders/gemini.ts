@@ -2,21 +2,29 @@ import type { AiCompletionRequest, AiProviderDefinition, AiProviderPingResult, A
 
 export const geminiProvider: AiProviderDefinition = {
   id: 'gemini',
-  displayName: 'Google Gemini (Gemini 3.8 Flash)',
+  displayName: 'Google Gemini (Cascada Flash/Lite)',
   requiredEnvVars: ['GEMINI_API_KEYS', 'GEMINI_API_KEY'],
   defaultModel: process.env.GEMINI_MODEL || 'gemini-3.8-flash',
   supportsImages: true,
 
   async complete(req: AiCompletionRequest, apiKey: string, model?: string): Promise<AiCompletionResponse> {
     const primaryModel = model || process.env.GEMINI_MODEL || this.defaultModel;
-    const modelCandidates = [primaryModel];
-    if (primaryModel === 'gemini-3.8-flash') {
-      modelCandidates.push('gemini-2.0-flash');
-    }
+    const fallbackPool = ['gemini-3.5-flash', 'gemini-flash-lite-latest', 'gemini-3.1-flash-lite'];
+    const modelCandidates = [primaryModel, ...fallbackPool.filter(m => m !== primaryModel)];
+
+    // Presupuesto global por petición: Vercel corta a los 60s.
+    // Cada candidato toma como máximo 18s y nunca pisa la deadline global.
+    const requestDeadline = Date.now() + 50_000;
 
     let lastError: any = null;
 
     for (const currentModel of modelCandidates) {
+      const remainingMs = requestDeadline - Date.now();
+      if (remainingMs < 4000) {
+        console.warn('[geminiProvider] Presupuesto de tiempo de Vercel agotado. No hay margen para otro intento.');
+        break;
+      }
+      const attemptTimeoutMs = Math.min(18000, remainingMs);
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${apiKey}`;
 
       const generationConfig: Record<string, any> = {
@@ -25,8 +33,8 @@ export const geminiProvider: AiProviderDefinition = {
         ...(req.responseSchema ? { responseMimeType: 'application/json', responseSchema: req.responseSchema } : {})
       };
 
-      // thinkingConfig solo en modelos 3.x
-      if (currentModel.includes('3.')) {
+      // thinkingConfig solo en modelos 3.8 (no lite)
+      if (currentModel.includes('3.8')) {
         generationConfig.thinkingConfig = {
           thinkingLevel: 'LOW'
         };
@@ -58,7 +66,7 @@ export const geminiProvider: AiProviderDefinition = {
             ],
             generationConfig
           }),
-          signal: AbortSignal.timeout(28000) // 28s por intento, caben 2 intentos dentro de los 60s de Vercel
+          signal: AbortSignal.timeout(attemptTimeoutMs)
         });
 
         if (!response.ok) {
@@ -83,12 +91,12 @@ export const geminiProvider: AiProviderDefinition = {
         return { content: content.trim(), usage };
       } catch (err: any) {
         lastError = err;
-        // Solo reintentar con el siguiente candidato si fue 503 (high demand) o timeout
-        const isTransient = err.status === 503 || err.name === 'TimeoutError' || err.message?.includes('timeout') || err.message?.includes('aborted');
-        if (!isTransient) {
+        // Abortar solo si credenciales inválidas (401/403)
+        if (err.status === 401 || err.status === 403 || err.message?.includes('API_KEY_INVALID')) {
           throw err;
         }
-        console.warn(`[geminiProvider] Falló ${currentModel} (${err.message}). Probando siguiente candidato si existe...`);
+        // Cualquier otro error (503, 500, 502, 404, 429, timeout, abort) → probar siguiente candidato
+        console.warn(`[geminiProvider] Falló ${currentModel} (${err.status || err.message}). Probando siguiente candidato si existe...`);
       }
     }
 
