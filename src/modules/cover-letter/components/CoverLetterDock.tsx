@@ -61,7 +61,7 @@ export const CoverLetterDock: React.FC<CoverLetterDockProps> = ({
               onClick={() => onSelectTab(tab.id)}
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[10px] text-xs font-medium transition-all ${
                 isActive
-                  ? 'bg-[var(--color-primary-base)] text-white shadow-[var(--shadow-raised)]'
+                  ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] shadow-[var(--shadow-raised)]'
                   : 'text-[var(--ui-text-secondary)] hover:bg-[var(--ui-bg-hover)] hover:text-[var(--ui-text-primary)]'
               }`}
             >

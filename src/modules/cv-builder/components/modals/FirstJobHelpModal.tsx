@@ -71,7 +71,7 @@ export function FirstJobHelpModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Asistente para Primer Empleo"
-      icon={<Briefcase className="w-5 h-5 text-[var(--color-primary-base)]" />}
+      icon={<Briefcase className="w-5 h-5 text-[var(--color-accent-text)]" />}
       size="md"
       footer={
         <div className="w-full flex items-center justify-end gap-3">
@@ -104,7 +104,7 @@ export function FirstJobHelpModal({
       }
     >
       <div className="space-y-4">
-        <div className={`p-3 bg-[var(--color-primary-muted)] border border-[var(--color-primary-base)]/30 rounded-[${radius.card}] text-xs text-[var(--color-primary-text)] leading-relaxed`}>
+        <div className={`p-3 bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/30 rounded-[${radius.card}] text-xs text-[var(--color-accent-text)] leading-relaxed`}>
           <p>
             <strong>¿No tenés experiencia formal?</strong> No importa. 
             Contanos qué hacés en tu día a día (ayudar en un negocio familiar, organizar eventos, proyectos de la facultad, voluntariados, etc.) y la IA lo traducirá a habilidades profesionales.

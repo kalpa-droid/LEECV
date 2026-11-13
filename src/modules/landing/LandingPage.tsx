@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Mail, CreditCard, BookOpen, Newspaper, Sparkles, ShieldCheck, Award, Zap, CalendarDays, LogIn, User } from 'lucide-react';
+import { FileText, Mail, CreditCard, BookOpen, Newspaper, Sparkles, ShieldCheck, Award, Zap, CalendarDays, LogIn, User, ScanLine, Palette, Printer, Brush } from 'lucide-react';
 import { displayScale, elevationSystem, radius } from '../../shared/core/uiDesignSystem';
 import { ThemeToggleButton } from '../../shared/core/ui/ThemeToggleButton';
 import { getGlobalUiTheme, cycleGlobalUiTheme } from '../../shared/core/utils/globalThemePreference';
@@ -151,7 +151,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogi
 
           <div className="flex flex-wrap justify-center gap-3 mt-4">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/20 text-[var(--color-accent-text)] text-xs font-bold">
-              <ShieldCheck className="w-3.5 h-3.5" />
+              <ScanLine className="w-3.5 h-3.5" />
               <span>{t.landing.hero.heroPills?.ats?.title || '100% Compatible con ATS'}</span>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/20 text-[var(--color-accent-text)] text-xs font-bold">
@@ -195,12 +195,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogi
             description={t.landing.features.speed.description}
           />
           <FeatureCard
-            icon={ShieldCheck}
+            icon={Palette}
             title={t.landing.features.designSystem.title}
             description={t.landing.features.designSystem.description}
           />
           <FeatureCard
-            icon={Award}
+            icon={Printer}
             title={t.landing.features.printReady.title}
             description={t.landing.features.printReady.description}
           />
@@ -231,7 +231,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogi
             description={t.landing.features.coverLetter.description}
           />
           <FeatureCard
-            icon={BookOpen}
+            icon={Brush}
             title={t.landing.features.professionalDesign.title}
             description={t.landing.features.professionalDesign.description}
           />

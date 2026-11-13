@@ -15,7 +15,7 @@ export const ExperienciaSection = ({ cvData, setCvData }: any) => {
 
   const guide = (
     <div className="space-y-2 mt-1">
-      <p className="font-bold text-[var(--color-primary-base)]">¿Qué mira un reclutador acá?</p>
+      <p className="font-bold text-[var(--color-accent-text)]">¿Qué mira un reclutador acá?</p>
       <p>Busca resultados concretos, no un listado de responsabilidades genéricas. Usá la fórmula: <span className="font-medium">"Hice [tarea] usando [herramienta] logrando [resultado]"</span>.</p>
       <div className="bg-[var(--ui-bg-page)] p-2 rounded text-xs border border-[var(--color-neutral-border)]">
         <p className="text-[var(--color-danger-base)] font-medium">❌ Antes:</p>
@@ -48,7 +48,7 @@ export const ExperienciaSection = ({ cvData, setCvData }: any) => {
                 onClick={() => setIsClassifyOpen(true)}
                 className={`${button.secondary} text-xs py-1.5 px-3 flex items-center gap-1.5`}
               >
-                <Sparkles className="w-3.5 h-3.5 text-[var(--color-primary-base)]" />
+                <Sparkles className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
                 Extraer desde texto (IA)
               </button>
               <button
@@ -63,7 +63,7 @@ export const ExperienciaSection = ({ cvData, setCvData }: any) => {
                 }}
                 className={`${button.secondary} text-xs py-1.5 px-3 flex items-center gap-1.5`}
               >
-                <Wand2 className="w-3.5 h-3.5 text-[var(--color-primary-base)]" />
+                <Wand2 className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
                 Sugerir Logros (ACR)
               </button>
               <button
@@ -71,14 +71,14 @@ export const ExperienciaSection = ({ cvData, setCvData }: any) => {
                 onClick={() => setIsFirstJobOpen(true)}
                 className={`${button.secondary} text-xs py-1.5 px-3 flex items-center gap-1.5`}
               >
-                <Briefcase className="w-3.5 h-3.5 text-[var(--color-primary-base)]" />
+                <Briefcase className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
                 Ayuda Primer Empleo
               </button>
             </div>
             {acrLoading && <p className="text-xs text-[var(--ui-text-secondary)]">Generando fórmula ACR con IA...</p>}
             {acrResponse && (
               <div className="bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-lg p-3 text-sm text-[var(--ui-text-primary)]">
-                <p className="font-bold mb-1 text-[var(--color-primary-base)]">Sugerencia ACR (Acción + Contexto + Resultado):</p>
+                <p className="font-bold mb-1 text-[var(--color-accent-text)]">Sugerencia ACR (Acción + Contexto + Resultado):</p>
                 <p className="italic">{acrResponse}</p>
               </div>
             )}

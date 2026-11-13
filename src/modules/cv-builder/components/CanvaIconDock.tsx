@@ -1,6 +1,6 @@
 import React, { useMemo, useRef } from 'react';
 import { 
-  Palette, Menu, X, Plus, Sparkles, Database, Briefcase, FileText, Target, Mail
+  Palette, Menu, X, Plus, Sparkles, Database
 } from 'lucide-react';
 import { DomSectionIcon } from '../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
 import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
@@ -8,7 +8,7 @@ import { resolveActiveDockSections, DOCK_SPECIAL_TABS } from '../../../shared/co
 import { activateSection } from '../../../shared/core/sections/sectionActivationEngine';
 import { DocumentTypeId } from '../../../types/document';
 
-import { CreditCard, BookOpen, FileUp, Settings, Eye, Printer, Layers, BookMarked, Sliders, LayoutGrid, Hash, Calendar, CalendarDays, CheckSquare, User } from 'lucide-react';
+import { BookOpen, FileUp, Settings, Printer, Layers, BookMarked, Sliders, LayoutGrid, Hash, CalendarDays, CheckSquare, User, IdCard, FlipHorizontal2, QrCode, Image, Wallpaper, Radar } from 'lucide-react';
 
 export interface CanvaIconDockProps {
   cvData?: any;
@@ -34,15 +34,15 @@ const CARD_TABS_LARGE = [
 const CARD_TABS_SMALL = [
   { id: 'card_size', label: 'Tamaño y Corte', icon: Sliders },
   { id: 'card_extract', label: 'Extraer datos de CV', icon: FileUp },
-  { id: 'card_logo', label: 'Logotipo', icon: CreditCard },
-  { id: 'card_front', label: 'Datos Frente', icon: Settings },
-  { id: 'card_back', label: 'Datos Dorso', icon: BookMarked },
-  { id: 'card_qr', label: 'QR Interactivo', icon: Eye },
+  { id: 'card_logo', label: 'Logotipo', icon: Image },
+  { id: 'card_front', label: 'Datos Frente', icon: IdCard },
+  { id: 'card_back', label: 'Datos Dorso', icon: FlipHorizontal2 },
+  { id: 'card_qr', label: 'QR Interactivo', icon: QrCode },
 ] as const;
 
 const COVER_LETTER_TABS = [
   { id: 'source_data', label: '1. Origen de Datos', icon: Database },
-  { id: 'vacancy', label: '2. Vacante', icon: Briefcase },
+  { id: 'vacancy', label: '2. Vacante', icon: Radar },
   { id: 'letter_style', label: '3. Estilo', icon: Palette },
   { id: 'ai_editor', label: '4. Redacción IA', icon: Sparkles },
 ] as const;
@@ -61,7 +61,7 @@ const bookTabIcons: Record<string, any> = {
 
 const plannerTabIcons: Record<string, any> = {
   planner_design: Palette,
-  planner_background: LayoutGrid,
+  planner_background: Wallpaper,
   planner_structure: Settings,
   planner_sections: CheckSquare,
   planner_months: CalendarDays,
@@ -417,7 +417,7 @@ export default function CanvaIconDock({
                 }`}
                 title={coverLetterTab.label}
               >
-                <Mail className="w-4.5 h-4.5" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
+                <DomSectionIcon iconId={coverLetterTab.iconId} className="w-4.5 h-4.5" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
                 <span className={`absolute left-24 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
                   {coverLetterTab.label}
                 </span>
@@ -463,7 +463,7 @@ export default function CanvaIconDock({
                 }`}
                 title={importDataTab.label}
               >
-                <FileUp className="w-4.5 h-4.5" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
+                <DomSectionIcon iconId={importDataTab.iconId} className="w-4.5 h-4.5" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
                 <span className={`absolute left-24 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
                   {importDataTab.label}
                 </span>
@@ -486,7 +486,7 @@ export default function CanvaIconDock({
                 }`}
                 title={vacanteTab.label}
               >
-                <Target className="w-4.5 h-4.5" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
+                <DomSectionIcon iconId={vacanteTab.iconId} className="w-4.5 h-4.5" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
                 <span className={`absolute left-24 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[${radius.control}] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
                   {vacanteTab.label}
                 </span>
@@ -733,7 +733,7 @@ export default function CanvaIconDock({
               }`}
               title={coverLetterTab.label}
             >
-              <Mail className="w-4 h-4" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
+              <DomSectionIcon iconId={coverLetterTab.iconId} className="w-4 h-4" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
             </button>
           );
         })()}
@@ -752,7 +752,7 @@ export default function CanvaIconDock({
               }`}
               title={importDataTab.label}
             >
-              <FileUp className="w-4 h-4" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
+              <DomSectionIcon iconId={importDataTab.iconId} className="w-4 h-4" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
             </button>
           );
         })()}
@@ -790,7 +790,7 @@ export default function CanvaIconDock({
               }`}
               title={vacanteTab.label}
             >
-              <Target className="w-4 h-4" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
+              <DomSectionIcon iconId={vacanteTab.iconId} className="w-4 h-4" color={isActive ? 'var(--color-secondary-on-base)' : 'var(--color-secondary-bright)'} />
             </button>
           );
         })()}

@@ -85,7 +85,7 @@ export const JobTargetSection = ({ cvData, setCvData }: any) => {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 pb-2 border-b border-[var(--color-neutral-border)]">
-        <Target className="w-5 h-5 text-[var(--color-primary-base)]" />
+        <Target className="w-5 h-5 text-[var(--color-accent-text)]" />
         <h2 className="text-lg font-semibold text-[var(--color-neutral-text-primary)]">Vacante Objetivo</h2>
       </div>
 
@@ -109,7 +109,7 @@ export const JobTargetSection = ({ cvData, setCvData }: any) => {
       <div className="rounded-[var(--ui-radius-card)] border border-[var(--color-secondary-base)]/30 bg-[var(--color-secondary-muted)] p-3 text-sm text-[var(--color-secondary-text)]">
         Esta versión está vinculada al CV de origen. La vacante y sus adaptaciones se guardan sólo aquí.
       </div>
-      <div className={`p-4 bg-[var(--color-primary-muted)] border border-[var(--color-primary-base)]/30 rounded-[${radius.card}] text-sm text-[var(--color-primary-text)] leading-relaxed space-y-2`}>
+      <div className={`p-4 bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/30 rounded-[${radius.card}] text-sm text-[var(--color-accent-text)] leading-relaxed space-y-2`}>
         <p>
           <strong>Alineá tu CV con una oferta real.</strong> Pegá el texto del aviso de trabajo acá. El sistema extraerá localmente las palabras clave más importantes (sin enviar datos a IA) y las comparará con tu CV para ver qué te falta.
         </p>
@@ -135,7 +135,7 @@ export const JobTargetSection = ({ cvData, setCvData }: any) => {
             onChange={(e) => updateField('jobDescription', e.target.value)}
             placeholder="Pegá acá todo el texto del aviso (requisitos, tareas, beneficios...)"
             rows={6}
-            className={`w-full bg-[var(--ui-bg-input)] border border-[var(--ui-border)] rounded-[${radius.control}] p-2.5 text-sm focus:outline-none focus:border-[var(--color-primary-base)] resize-y min-h-[120px]`}
+            className={`w-full bg-[var(--ui-bg-input)] border border-[var(--ui-border)] rounded-[${radius.control}] p-2.5 text-sm focus:outline-none focus:border-[var(--color-accent-base)] resize-y min-h-[120px]`}
           />
         </div>
       </div>
@@ -145,7 +145,7 @@ export const JobTargetSection = ({ cvData, setCvData }: any) => {
           onClick={handleOpenAiAnalysis}
           className={`${button.secondary} py-2 px-4 flex items-center gap-2`}
         >
-          <Wand2 className="w-4 h-4 text-[var(--color-primary-base)]" />
+          <Wand2 className="w-4 h-4 text-[var(--color-accent-text)]" />
           Análisis Profundo con IA
         </button>
       </div>

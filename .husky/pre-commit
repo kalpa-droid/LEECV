@@ -9,6 +9,7 @@ npm run check-contrast:selftest && \
 npm run check-contrast && \
 npm run check-plain-language:selftest && \
 npm run check-plain-language && \
+npm run check-icon-uniqueness && \
 npx tsx scripts/check-module-boundaries.js
 
 if [ $? -ne 0 ]; then

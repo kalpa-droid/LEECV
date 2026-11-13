@@ -122,7 +122,7 @@ export function CardExtractSection({ cvData, setCvData }: Props) {
           <p className="text-xs text-[var(--color-neutral-text-secondary)] leading-relaxed">
             Subí tu archivo copia de seguridad de LinkedIn (.zip) para auto-completar tu nombre, empresa, puesto actual y vías de contacto en tu tarjeta personal.
           </p>
-          <label className="inline-flex items-center gap-2 px-3.5 py-2 bg-[var(--color-primary-base)] text-white text-xs font-semibold rounded-[var(--radius-button)] cursor-pointer hover:opacity-90 transition-all">
+          <label className="inline-flex items-center gap-2 px-3.5 py-2 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-xs font-semibold rounded-[var(--radius-button)] cursor-pointer hover:opacity-90 transition-all">
             <Upload className="w-3.5 h-3.5" />
             <span>{isImporting ? 'Procesando ZIP...' : 'Seleccionar archivo .zip de LinkedIn'}</span>
             <input type="file" accept=".zip" onChange={handleLinkedinUpload} disabled={isImporting} className="hidden" />

@@ -2,20 +2,11 @@ import React, { useState } from 'react';
 import { 
   ChevronRight, 
   ChevronLeft, 
-  Check, 
-  User, 
-  GraduationCap, 
-  Briefcase, 
-  FileText, 
-  BookOpen, 
-  Laptop, 
-  Leaf, 
-  Award, 
-  PenTool, 
-  Palette
+  Check
 } from 'lucide-react';
 import EditorPanel from './EditorPanel';
 import { Modal } from '../../../shared/core/ui/Modal';
+import { DomSectionIcon } from '../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
 
 import { elevationSystem, radius, button } from '../../../shared/core/uiDesignSystem';
 
@@ -30,16 +21,16 @@ export default function WizardModal({
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   const wizardSteps = [
-    { id: 'personales', title: '1. Datos Personales & Foto', icon: User },
-    { id: 'formacion', title: '2. Formación Académica', icon: GraduationCap },
-    { id: 'profesion', title: '3. Títulos Profesionales', icon: Briefcase },
-    { id: 'experiencia', title: '4. Experiencia Laboral', icon: FileText },
-    { id: 'cursos', title: '5. Cursos & Capacitaciones', icon: BookOpen },
-    { id: 'informatica', title: '6. Informática & TICs', icon: Laptop },
-    { id: 'ecologia', title: '7. Proyectos Comunitarios', icon: Leaf },
-    { id: 'certificados', title: '8. Certificados Escaneados', icon: Award },
-    { id: 'firma', title: '9. Firma Digital', icon: PenTool },
-    { id: 'diseno', title: '10. Diseño & Colores Globales', icon: Palette }
+    { id: 'personales', title: '1. Datos Personales & Foto', iconId: 'personales' },
+    { id: 'formacion', title: '2. Formación Académica', iconId: 'formacion' },
+    { id: 'profesion', title: '3. Títulos Profesionales', iconId: 'profesion' },
+    { id: 'experiencia', title: '4. Experiencia Laboral', iconId: 'experiencia' },
+    { id: 'cursos', title: '5. Cursos & Capacitaciones', iconId: 'cursos' },
+    { id: 'informatica', title: '6. Informática & TICs', iconId: 'informatica' },
+    { id: 'ecologia', title: '7. Proyectos Comunitarios', iconId: 'ecologia' },
+    { id: 'certificados', title: '8. Certificados Escaneados', iconId: 'certificados' },
+    { id: 'firma', title: '9. Firma Digital', iconId: 'firma' },
+    { id: 'diseno', title: '10. Diseño & Colores Globales', iconId: 'diseno' }
   ];
 
   const totalSteps = wizardSteps.length;
@@ -113,7 +104,6 @@ export default function WizardModal({
         {/* Wizard Step Selector Tabs Toolbar */}
         <div className={`flex border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] p-1.5 rounded-[${radius.card}] overflow-x-auto flex-shrink-0 no-scrollbar`}>
           {wizardSteps.map((step, idx) => {
-            const IconComp = step.icon;
             const isActive = idx === currentStepIndex;
             return (
               <button
@@ -125,7 +115,7 @@ export default function WizardModal({
                     : 'text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]'
                 }`}
               >
-                <IconComp className="w-3.5 h-3.5" />
+                <DomSectionIcon iconId={step.iconId} className="w-3.5 h-3.5" />
                 <span>{step.id.toUpperCase()}</span>
               </button>
             );

@@ -4,6 +4,7 @@ import { resolveActiveFormat, resolvePersonalFieldVisibility } from '../../../fo
 import { resolveDisplayName } from '../../../utils/cvDataSchema';
 import { resolveDateRange } from './dateRangeResolver';
 import { CANONICAL_SECTION_ORDER } from '../../../sections/canonicalSectionOrder';
+import { resolveSectionIconId } from '../../../ui/iconCatalog';
 
 const sortByYearDesc = (items: any[]) => {
   if (!Array.isArray(items)) return [];
@@ -551,6 +552,7 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
   const sectionPageBreaks = cvData?.layout?.sectionPageBreaks || cvData?.sectionPageBreaks || {};
   return orderedSections.map(sec => ({
     ...sec,
+    iconId: resolveSectionIconId(sec.id, cvData),
     breakBefore: !!sectionPageBreaks[sec.id]
   }));
 }

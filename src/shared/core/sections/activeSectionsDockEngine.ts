@@ -22,6 +22,7 @@
  */
 
 import { SECTION_CATALOG } from '../sectionRegistry';
+import { resolveSectionIconId } from '../ui/iconCatalog';
 
 export interface DockSectionItem {
   id: string;
@@ -42,8 +43,8 @@ export const DOCK_SPECIAL_TABS = {
   portada: { id: 'portada', label: 'Portada', iconId: 'portada' },
   coverLetter: { id: 'carta', label: 'Carta', iconId: 'carta' },
   personal: { id: 'personales', label: 'Personal', iconId: 'personales' },
-  importData: { id: 'importar_datos', label: 'Importar datos', iconId: 'import' },
-  vacante: { id: 'vacante', label: 'Vacante', iconId: 'target' }
+  importData: { id: 'importar_datos', label: 'Importar datos', iconId: 'importar' },
+  vacante: { id: 'vacante', label: 'Vacante', iconId: 'vacante' }
 };
 
 /**
@@ -117,7 +118,7 @@ export function resolveActiveDockSections(cvData: any): DockSectionItem[] {
     .map((cs: any) => ({
       id: cs.id,
       label: cs.titleText || 'Nueva Sección',
-      iconId: cs.iconId || 'custom',
+      iconId: cvData?.sectionIconOverrides?.[cs.id] || cs.iconId || 'custom',
       isCustom: true,
       tabId: 'custom',
       isUniversal: false,
@@ -134,7 +135,7 @@ export function resolveActiveDockSections(cvData: any): DockSectionItem[] {
       return {
         id: entry.id,
         label: customTitle || entry.shortLabel || entry.label,
-        iconId: entry.id,
+        iconId: resolveSectionIconId(entry.id, cvData),
         isCustom: isCustomSlot,
         tabId: entry.tabId,
         isUniversal: !!entry.isUniversal,

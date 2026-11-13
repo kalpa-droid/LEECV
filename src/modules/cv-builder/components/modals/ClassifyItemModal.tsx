@@ -120,7 +120,7 @@ export function ClassifyItemModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Añadir desde Texto Suelto (IA)"
-      icon={<Sparkles className="w-5 h-5 text-[var(--color-primary-base)]" />}
+      icon={<Sparkles className="w-5 h-5 text-[var(--color-accent-text)]" />}
       size="md"
       footer={
         <div className="w-full flex items-center justify-end gap-3">
