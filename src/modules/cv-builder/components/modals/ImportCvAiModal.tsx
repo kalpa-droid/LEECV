@@ -271,6 +271,7 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
     const mergedFragments = () => Array.from(fragmentsByPageRef.current.entries()).sort((a, b) => a[0] - b[0]).map(([, f]) => f);
 
     // Re-extraer solo las páginas que siguen fallidas
+    const stillFailed: number[] = [];
     for (let i = 1; i <= totalPages; i++) {
       if (!failedPages.includes(i)) continue;
       setCurrentReadingPage(i);
@@ -280,6 +281,7 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
         fragmentsByPageRef.current.set(i, fragment);
       } catch (pageErr: any) {
         console.warn(`Página ${i} sigue fallando tras reintento selectivo:`, pageErr);
+        stillFailed.push(i);
       }
       // Guardado progresivo por página
       saveDraft(mergePageFragments(mergedFragments()));
@@ -290,7 +292,7 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
     const finalCv = await consolidateFragments(mergedFragments());
     if (finalCv) saveDraft(finalCv);
 
-    setFailedPages([]);
+    setFailedPages(stillFailed);
     setStatus('done');
     onImportComplete(finalCv);
   };

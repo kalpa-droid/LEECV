@@ -88,7 +88,7 @@ export const geminiProvider: AiProviderDefinition = {
           totalTokens: data.usageMetadata.totalTokenCount || 0,
         } : undefined;
 
-        return { content: content.trim(), usage };
+        return { content: content.trim(), usage, modelUsed: currentModel };
       } catch (err: any) {
         lastError = err;
         // Abortar solo si credenciales inválidas (401/403)

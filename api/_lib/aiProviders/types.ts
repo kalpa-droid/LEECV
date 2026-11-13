@@ -21,6 +21,8 @@ export interface AiCompletionResponse {
     completionTokens: number;
     totalTokens: number;
   };
+  /** Modelo efectivo usado en la cascada (difiere de defaultModel cuando hay fallback). */
+  modelUsed?: string;
 }
 
 export interface AiProviderDefinition {

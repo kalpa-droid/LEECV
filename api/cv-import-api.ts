@@ -78,6 +78,21 @@ REGLAS OBLIGATORIAS:
 
         try {
           const result = await provider.complete(consolidationRequest, apiKey);
+
+          if (result.usage) {
+            const actualModel = result.modelUsed || provider.defaultModel;
+            const cost = calculateAiCost(providerId, actualModel, result.usage.promptTokens, result.usage.completionTokens);
+            serverDal.aiTelemetry.logUsage({
+              userId: '00000000-0000-0000-0000-000000000000',
+              provider: providerId,
+              model: actualModel,
+              endpoint: 'cv-import-consolidate-ats',
+              promptTokens: result.usage.promptTokens,
+              completionTokens: result.usage.completionTokens,
+              estimatedCostUsd: cost
+            }).catch(err => console.error('[aiTelemetry] Error logging usage in consolidate-ats:', err));
+          }
+
           let consolidatedJson: any;
           try {
             const cleanJsonStr = result.content.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
@@ -396,34 +411,44 @@ REGLAS CRÍTICAS:
       if (!provider) continue;
       if (kind === 'image' && !provider.supportsImages) continue;
 
-      const apiKey = getNextAvailableKey(providerId);
-      if (!apiKey) continue;
+      // Rotar hasta agotar las claves disponibles del proveedor (salto con 429 como en consolidate-ats)
+      for (let keyAttempt = 0; keyAttempt < 8; keyAttempt++) {
+        const attemptRemainingMs = requestDeadline - Date.now();
+        if (attemptRemainingMs < 4000) break;
+        const apiKey = getNextAvailableKey(providerId);
+        if (!apiKey) break; // no quedan claves disponibles para este proveedor → siguiente proveedor
 
-      try {
-        const result = await provider.complete(request, apiKey);
-        completionText = result.content;
+        try {
+          const result = await provider.complete(request, apiKey);
+          completionText = result.content;
 
-        if (result.usage) {
-          const cost = calculateAiCost(providerId, provider.defaultModel, result.usage.promptTokens, result.usage.completionTokens);
-          serverDal.aiTelemetry.logUsage({
-            userId: '00000000-0000-0000-0000-000000000000',
-            provider: providerId,
-            model: provider.defaultModel,
-            endpoint: 'cv-import-stateless',
-            promptTokens: result.usage.promptTokens,
-            completionTokens: result.usage.completionTokens,
-            estimatedCostUsd: cost
-          }).catch(err => console.error('[aiTelemetry] Error logging usage in cv-import:', err));
-        }
+          if (result.usage) {
+            const actualModel = result.modelUsed || provider.defaultModel;
+            const cost = calculateAiCost(providerId, actualModel, result.usage.promptTokens, result.usage.completionTokens);
+            serverDal.aiTelemetry.logUsage({
+              userId: '00000000-0000-0000-0000-000000000000',
+              provider: providerId,
+              model: actualModel,
+              endpoint: 'cv-import-stateless',
+              promptTokens: result.usage.promptTokens,
+              completionTokens: result.usage.completionTokens,
+              estimatedCostUsd: cost
+            }).catch(err => console.error('[aiTelemetry] Error logging usage in cv-import:', err));
+          }
 
-        successfulProviderId = providerId;
-        break;
-      } catch (err: any) {
-        lastError = err;
-        if (err.status === 429 || err.message?.includes('429')) {
-          markKeyRateLimited(providerId, apiKey, 60);
+          successfulProviderId = providerId;
+          break;
+        } catch (err: any) {
+          lastError = err;
+          if (err.status === 429 || err.message?.includes('429')) {
+            markKeyRateLimited(providerId, apiKey, 60);
+            console.warn(`[cv-import] Clave de ${providerId} limitada (429). Rotando a la siguiente clave...`);
+            continue; // siguiente clave del mismo proveedor
+          }
+          break; // error no recuperable para este proveedor → siguiente proveedor
         }
       }
+      if (completionText) break;
     }
 
     if (!completionText || !successfulProviderId) {

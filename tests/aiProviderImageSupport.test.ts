@@ -14,4 +14,10 @@ describe('AI provider image support', () => {
   it('groq supports images (Visión)', () => {
     expect(AI_PROVIDERS.groq.supportsImages).toBe(true);
   });
+  it('groq defaults to openai/gpt-oss-120b (vigente nov-2026)', () => {
+    expect(AI_PROVIDERS.groq.defaultModel).toBe('openai/gpt-oss-120b');
+  });
+  it('groq vision model uses vigentes, no deprecated previews', () => {
+    expect(AI_PROVIDERS.groq.displayName).toBe('Groq Cloud (GPT-OSS 120B + Qwen 3.8 Visión)');
+  });
 });

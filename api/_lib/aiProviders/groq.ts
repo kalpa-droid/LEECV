@@ -1,12 +1,17 @@
 import type { AiCompletionRequest, AiProviderDefinition, AiProviderPingResult, AiCompletionResponse } from './types.js';
 
-const GROQ_TEXT_MODEL = 'llama-3.3-70b-versatile';
-const GROQ_VISION_MODEL = 'llama-3.2-11b-vision-preview';
-const GROQ_VISION_FALLBACK = 'meta-llama/llama-4-scout-17b-16e-instruct';
+// Modelos vigentes en Groq al 2026-11-13 (revisado contra console.groq.com/docs/deprecations):
+// - llama-3.2-11b-vision-preview: shutdown 2025-04-14 (reemplazo: llama-4-scout).
+// - meta-llama/llama-4-scout-17b-16e-instruct: shutdown 2026-07-17 (reemplazo: gpt-oss-120b / qwen3.6-27b).
+// - llama-3.3-70b-versatile: shutdown 2026-08-16 para el tier free/developer (enterprise-only).
+// Mantener solo producción vigente en free/developer: GPT-OSS 120B (texto) y Qwen 3.8 27B (único vision).
+const GROQ_TEXT_MODEL = 'openai/gpt-oss-120b';
+const GROQ_VISION_MODEL = 'qwen/qwen3.8-27b';
+const GROQ_VISION_FALLBACK = process.env.GROQ_VISION_FALLBACK || 'qwen/qwen3.8-27b';
 
 export const groqProvider: AiProviderDefinition = {
   id: 'groq',
-  displayName: 'Groq Cloud (Llama 3.3 70B + Visión)',
+  displayName: 'Groq Cloud (GPT-OSS 120B + Qwen 3.8 Visión)',
   requiredEnvVars: ['GROQ_API_KEYS', 'GROQ_API_KEY'],
   defaultModel: GROQ_TEXT_MODEL,
   supportsImages: true,
@@ -92,7 +97,7 @@ export const groqProvider: AiProviderDefinition = {
           totalTokens: data.usage.total_tokens || 0,
         } : undefined;
 
-        return { content: content.trim(), usage };
+        return { content: content.trim(), usage, modelUsed: currentModel };
       } catch (err: any) {
         lastError = err;
         // Abortar solo si credenciales inválidas (401/403)
