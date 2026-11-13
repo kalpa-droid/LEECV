@@ -71,34 +71,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const provider = AI_PROVIDERS[providerId];
     if (!provider) continue;
 
-    const apiKey = getNextAvailableKey(providerId);
-    if (!apiKey) continue;
+    // Rotar hasta agotar las claves disponibles del proveedor (salto con 429, como consolidate-ats)
+    for (let keyAttempt = 0; keyAttempt < 8; keyAttempt++) {
+      const apiKey = getNextAvailableKey(providerId);
+      if (!apiKey) break; // no quedan claves disponibles para este proveedor → siguiente proveedor
 
-    try {
-      const result = await provider.complete(completionReq, apiKey);
-      completionText = result.content;
-      
-      if (result.usage) {
-        const cost = calculateAiCost(providerId, provider.defaultModel, result.usage.promptTokens, result.usage.completionTokens);
-        serverDal.aiTelemetry.logUsage({
-          userId: '00000000-0000-0000-0000-000000000000', // Anonymous usage
-          provider: providerId,
-          model: provider.defaultModel,
-          endpoint: 'ai-generate',
-          promptTokens: result.usage.promptTokens,
-          completionTokens: result.usage.completionTokens,
-          estimatedCostUsd: cost
-        }).catch(err => console.error('[aiTelemetry] Error logging usage in ai-generate:', err));
-      }
+      try {
+        const result = await provider.complete(completionReq, apiKey);
+        completionText = result.content;
 
-      successfulProviderId = providerId;
-      break;
-    } catch (err: any) {
-      lastError = err;
-      if (err.status === 429 || err.message?.includes('429')) {
-        markKeyRateLimited(providerId, apiKey, 60);
+        if (result.usage) {
+          const actualModel = result.modelUsed || provider.defaultModel;
+          const cost = calculateAiCost(providerId, actualModel, result.usage.promptTokens, result.usage.completionTokens);
+          serverDal.aiTelemetry.logUsage({
+            userId: '00000000-0000-0000-0000-000000000000', // Anonymous usage
+            provider: providerId,
+            model: actualModel,
+            endpoint: 'ai-generate',
+            promptTokens: result.usage.promptTokens,
+            completionTokens: result.usage.completionTokens,
+            estimatedCostUsd: cost
+          }).catch(err => console.error('[aiTelemetry] Error logging usage in ai-generate:', err));
+        }
+
+        successfulProviderId = providerId;
+        break;
+      } catch (err: any) {
+        lastError = err;
+        if (err.status === 429 || err.message?.includes('429')) {
+          markKeyRateLimited(providerId, apiKey, 60);
+          console.warn(`[ai-generate] Clave de ${providerId} limitada (429). Rotando a la siguiente clave...`);
+          continue; // siguiente clave del mismo proveedor
+        }
+        break; // error no recuperable para este proveedor → siguiente proveedor
       }
     }
+    if (completionText) break;
   }
 
   if (!completionText || !successfulProviderId) {

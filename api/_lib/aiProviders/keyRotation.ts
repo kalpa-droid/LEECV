@@ -1,5 +1,13 @@
 /**
  * Key Rotation & Rate-Limit Circuit Breaker Engine
+ *
+ * LIMITACIÓN CONOCIDA (V2.8.7): los cooldowns (`pausedUntil`) viven en un Map
+ * en memoria del proceso. En Vercel cada lambda tiene su propia copia: el estado
+ * no se comparte entre instancias, se pierde en cold starts, y no hay un cron de
+ * `ping()` que alerte sobre claves caídas. La mitigación aplicada (V2.8.5+) es
+ * elegir el punto de partida al azar por request; la solución definitiva
+ * (store compartido, p. ej. tabla Supabase + cron de ping, con RLS) queda
+ * planteada como trabajo aparte.
  */
 
 interface KeyStatus {

@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 2,
   minor: 8,
-  patch: 6,
-  label: 'V2.8.6',
-  lastUpdated: '2026-11-12',
+  patch: 7,
+  label: 'V2.8.7',
+  lastUpdated: '2026-11-13',
   lastAgent: '@antigravity',
-  stage: 'Pipeline OCR completo: Groq Visión fallback, rotación multi-key, presupuesto global 50s, guardado progresivo y reintento selectivo',
+  stage: 'Pipeline OCR completo: Groq con modelos vigentes (GPT-OSS 120B / Qwen 3.8 Visión), reintento selectivo que conserva páginas fallidas, telemetría con modelo real',
 } as const;
