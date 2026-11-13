@@ -80,7 +80,7 @@
     },
     {
       "path": "/api/cron-ai-keys-ping",
-      "schedule": "0 */6 * * *"
+      "schedule": "0 6 * * *"
     }
   ],
   "rewrites": [

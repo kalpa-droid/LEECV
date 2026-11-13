@@ -7,7 +7,7 @@ import { captureBackendException } from './_lib/sentryBackend.js';
 /**
  * Cron de salud de las API keys de IA (V2.9.0).
  *
- * Cada 6 h:
+ * Diario (0 6 * * *) — el plan Hobby de Vercel solo permite un cron al día:
  * 1. Borra de `ai_key_cooldowns` las filas cuyo paused_until ya expiró.
  * 2. Hace ping real a cada proveedor de IA configurado (AI_PROVIDERS) y reporta
  *    su estado. Si algún proveedor no está `active`, lo envía a Sentry para que
