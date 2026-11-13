@@ -316,3 +316,11 @@ Migración a una arquitectura de facturación stateless ("guest-first") donde el
 - **Verificación post-merge**: `git fetch` + `git pull --ff-only` → `main` = `6e7d8fe` (idéntico a `mergeCommit.oid`); `mergedAt: 2026-11-13T02:25:29Z`; checks verdes (check-all 50s, Vercel).
 - **Working tree**: limpio tras el merge. `mejoraocr.docx` eliminado (a Papelera) por orden de Kalpa.
 - **Nota de protocolo**: merge por orden directa de Kalpa (la web de GitHub fallaba; merge vía REST squash). Sin aprobación CODEOWNER registrada en la PR.
+
+## [2026-11-13] — Registro Regla 6 paso 7 (Post-merge PRs #82 y #83 — V2.9.0)
+- **Merge #82**: PR #82 (`docs/session-log-v2.8.7`) → `main` vía squash. Hash: `5705f8bf22bc73680108999332e7f8e2bba4aeca`. Registra el merge de #81 en `SESSION_LOG.md` (paso 7 de #81).
+- **Merge #83**: PR #83 (`feat/shared-key-cooldown`) → `main` vía squash. Hash: `d676f49d5716d96ef68eefc32fb9907ce31ab766`. Mensaje: `feat: cooldown compartido de API keys de IA en Supabase + cron de ping (V2.9.0) (#83)`. `mergedAt: 2026-11-13T03:56:48Z`.
+- **Contexto**: cooldowns de API keys de IA compartidos entre lambdas vía tabla `public.ai_key_cooldowns` (migración aplicada por Kalpa en el SQL Editor de Supabase antes del merge; CLI con token 401). RLS ON sin policies (solo service_role); se guarda únicamente SHA-256 de la key. `keyRotation.ts` híbrido async (timeout 1500 ms → fallback fail-safe a memoria local). Cron `api/cron-ai-keys-ping` diario `0 6 * * *` (plan Hobby de Vercel: máx. 1 cron/día; el schedule inicial de 6h hacía fallar el deploy) pinguea Gemini/Groq y reporta degradación a Sentry. Call sites con `await`; `scripts/verify-ai-engine.ts` adaptado a async. `version.ts` → V2.9.0.
+- **Verificación post-merge**: `git fetch` + `git pull --ff-only` → `main` = `d676f49` (idéntico a `mergeCommit.oid`). Checks verdes tras `gh pr update-branch` (check-all 1m18s; Vercel pass). Deploy de producción disparado por Vercel: `dpl_HQ8PWtUfoQSUhaXRkwzm19d14hJW` (BUILDING al momento del registro).
+- **Verificación extra post-deploy pendiente de Kalpa**: `curl -H "Authorization: Bearer $CRON_SECRET" https://leecv.app/api/cron-ai-keys-ping` → debe responder `200` con `success: true` y estado `active` de groq/gemini.
+- **Nota de protocolo**: merges por orden directa de Kalpa (web de GitHub fallaba; squash vía REST). Sin aprobación CODEOWNER registrada.
