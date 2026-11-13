@@ -1,5 +1,25 @@
 # Registro de Intervenciones de Agentes (SESSION_LOG)
 
+## [2026-11-13] - Iconos Unicos Canonicos + Blindaje de Contraste (PR #89, feat/unique-icons-contrast)
+
+**Resumen:**
+- **Nucleo (Fase 1):** `src/shared/core/ui/iconCatalog.ts` (nuevo) — catálogo central con `SECTION_ICON_IDS` (26 canónicas + `personalizada-1..5` + `card_*` + `social-*`), `PRODUCT_ICON_IDS`, `UI_ICON_IDS` y `resolveSectionIconId(sectionId, cvData)` puro (precedencia: `sectionIconOverrides[slot]` > `customSections[].iconId` > slot determinista > mapeo canónico > `fallback`; normaliza sufijo `-cont` de banners de contenedor).
+- `src/shared/core/pdf-engine/layers/icons/iconRegistry.ts`: 58 trazados SVG únicos, cero duplicados (eliminadas colisiones históricas: personales/card_front, cursos/card_back, competencias/objetivo, resumen/experiencia, profesion/portafolio, premios/logros, publicaciones/cursos).
+- Motor PDF respeta overrides/iconId: `cvDataAdapter.ts`, `recordTypes.ts`, `TemplateRenderer.tsx`; `activeSectionsDockEngine.ts` lee el resolver central.
+- **UI (Fase 2):** `CanvaIconDock.tsx` (desktop+móvil), `WizardModal.tsx`, `Navbar.tsx`, `NewDocumentMenu.tsx` consumen el catálogo; swaps en Portada/Diseno/NuevaSeccion/CardBack/CardSize/LandingPage/RecordFormSection (emoji fuera).
+- `NuevaSeccionSection.tsx` persiste `sectionIconOverrides` por slot: ícono determinista para `personalizada-N` sin preset.
+- **Contraste (Fase 3):** 25 usos de `--color-primary-*` fantasma corregidos a `--color-accent-*` reales en 10 archivos; 0 referencias restantes en `src/`.
+- **Gobernanza (Fase 4):** `scripts/check-icon-uniqueness.js` (Check A trazados duplicados, Check B cobertura canónica + card_* + social-*, Check C colisiones intra-mapa y entre familias) enganchado a `npm run check-all` y `.husky/pre-commit`; `tests/iconUniqueness.test.ts` (10 invariantes); fila nueva en AGENTS.md Regla 1.
+
+**Decisión tomada:** un solo PR para las 4 fases (aprobado por Kalpa, Regla 7). Misma entidad/acción = mismo ícono; entidades distintas = ícono distinto (cero colisiones).
+
+**Merge (Regla 6 paso 7 - confirmación de hash):**
+- PR: #89 (`feat/unique-icons-contrast`) mergeada a `main` (squash).
+- Hash confirmado en `origin/main`: `8bee26eada9481073f008f7f1ad365aeeedaa5fd`.
+- CI GitHub Actions: check-all en 59s (0 errores).
+- Vercel Deployment: Deployment has completed.
+
+---
 ## [2026-11-12] - V2.8.4: Reclasificación Dinámica a 20+ Secciones, Borrador Persistente Anti-Pérdidas y Extracción Completa sin Podas
 
 **Resumen:**
