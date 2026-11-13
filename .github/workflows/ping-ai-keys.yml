@@ -1,0 +1,61 @@
+# Ping de salud de las API keys de IA (V2.9.0) sin depender del plan de Vercel.
+#
+# Vercel Hobby solo permite un cron diario; este workflow pinguea
+# /api/cron-ai-keys-ping cada 6 h desde GitHub Actions (gratis en repo público
+# y dentro de la cuota de minutos para privados). El endpoint hace lo mismo que
+# el cron de Vercel: borra cooldowns expirados y pinguea Gemini/Groq; si alguno
+# degrada o responde distinto de 200, este job queda rojo y GitHub avisa.
+#
+# Requisito: cargá el secreto CRON_SECRET en
+# Settings > Secrets and variables > Actions del repo (es el mismo CRON_SECRET
+# de production en Vercel). Sin ese secreto, el job falla con un mensaje claro.
+
+name: Ping AI keys
+
+on:
+  schedule:
+    # Cada 6 horas en punto (minuto 0)
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    name: Ping /api/cron-ai-keys-ping
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping + verificación de respuesta
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET:-}" ]; then
+            echo "::error::CRON_SECRET no está configurado en GitHub Secrets (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+
+          response=$(curl -sS -w $'\n%{http_code}' -H "Authorization: Bearer $CRON_SECRET" https://www.leecv.app/api/cron-ai-keys-ping)
+          status=$(printf '%s' "$response" | tail -n 1)
+          body=$(printf '%s' "$response" | sed '$d')
+
+          echo "HTTP status: $status"
+          echo "Body: $body"
+
+          if [ "$status" != "200" ]; then
+            echo "::error::Respuesta no-200 ($status). Verificá el secreto y el estado del deploy en Vercel."
+            exit 1
+          fi
+
+          degraded=$(jq -r '.summary.degradedProviders // 0' <<< "$body")
+          providers=$(jq -c '.summary.providers // []' <<< "$body")
+          echo "degradedProviders=$degraded"
+          echo "providers=$providers"
+
+          if [ "$degraded" != "0" ]; then
+            echo "::error::$degraded proveedor(es) de IA degradados: $providers"
+            exit 1
+          fi
+
+          echo "OK: proveedores activos y cooldowns caducados borrados."
