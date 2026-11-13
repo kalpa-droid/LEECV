@@ -310,3 +310,9 @@ Migración a una arquitectura de facturación stateless ("guest-first") donde el
 - **Estado del cÃ³digo**: `npm run check-all` en verde antes del push (tests 300 passed / 2 skipped, SEO 40/40, prerender 80 rutas). Checks de GitHub Actions y Vercel en verde sobre la PR.
 - **Working tree**: `SESSION_LOG.md` con cambios previos de Kalpa (V2.8.4) + esta entrada, sin commitear. `mejoraocr.docx` sigue sin trackear. Rama local `feat/gemini-multimodal-resilience` conservada en `68648a7`.
 
+## [2026-11-13] — Registro Regla 6 paso 7 (Post-merge PR #81 — V2.8.7)
+- **Merge confirmado**: PR #81 (`fix/groq-live-models-retry`) → `main` vía squash. Hash: `6e7d8fea1e3f1b3026265de74dc9733361c7669a`. Mensaje: `fix: Groq con modelos vigentes (GPT-OSS 120B / Qwen 3.8 Vision), telemetria con modelo real, reintento selectivo persistente (V2.8.7) (#81)`.
+- **Contexto**: remediación de hallazgos post-V2.8.6 — las 3 referencias de modelo Groq estaban deprecadas para el tier free/developer (`llama-3.3-70b-versatile` shutdown 2026-08-16 → `openai/gpt-oss-120b`; `llama-3.2-11b-vision-preview` shutdown 2025-04-14 → `qwen/qwen3.8-27b`; fallback `llama-4-scout` shutdown 2026-07-17). Incluye: reintento selectivo conserva páginas que vuelven a fallar; rotación multi-key (8 claves/proveedor, salto con 429) en `extract-page` y `ai-generate`; telemetría con el modelo efectivo (`AiCompletionResponse.modelUsed`); `consolidate-ats` ahora loguea uso.
+- **Verificación post-merge**: `git fetch` + `git pull --ff-only` → `main` = `6e7d8fe` (idéntico a `mergeCommit.oid`); `mergedAt: 2026-11-13T02:25:29Z`; checks verdes (check-all 50s, Vercel).
+- **Working tree**: limpio tras el merge. `mejoraocr.docx` eliminado (a Papelera) por orden de Kalpa.
+- **Nota de protocolo**: merge por orden directa de Kalpa (la web de GitHub fallaba; merge vía REST squash). Sin aprobación CODEOWNER registrada en la PR.
