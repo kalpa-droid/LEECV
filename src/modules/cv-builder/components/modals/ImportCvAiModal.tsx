@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Bot, Upload, FileText, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
 import { colorSystem, typeScale, button } from '../../../../shared/core/uiDesignSystem';
 import { Modal } from '../../../../shared/core/ui/Modal';
-import { isTextLayerCoherent } from '../../../../shared/core/cv-import/textCoherenceHeuristic';
 import { ensurePdfjsWorkerConfigured } from '../../../../shared/core/pdf-engine/pdfjsWorkerSetup';
-import { clampCanvasSize, encodeCanvasWithinBudget, encodeImageFileWithinBudget } from '../../../../shared/core/cv-import/pageImageEncoder';
+import { analyzePdfPage } from '../../../../shared/core/cv-import/pdfPageLayout';
+import { clampCanvasSize, computeRenderScale, encodeCanvasWithinBudget, encodeImageFileWithinBudget, MAX_PAGE_PAYLOAD_BYTES, type EncodedImageMime } from '../../../../shared/core/cv-import/pageImageEncoder';
+import { buildContextSummary } from '../../../../shared/core/cv-import/cvContextSummary';
 import { mergePageFragments, type CVFragment } from '../../../../shared/core/cv-import/mergeFragments';
 import { apiClient } from '../../../../shared/core/utils/apiClient';
 
@@ -26,31 +27,39 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
   const [jobErrorCode, setJobErrorCode] = useState<string | null>(null);
   const [failedPages, setFailedPages] = useState<number[]>([]);
   const fragmentsByPageRef = useRef<Map<number, CVFragment>>(new Map());
+  // Contexto rodante entre páginas: nombre, idioma, última sección y último registro
+  const contextSummaryRef = useRef('');
 
-  // Helper: arma el payload de una página del PDF (texto si la capa es coherente, imagen renderizada si no)
+  // Helper: arma el payload de una página del PDF.
+  // 1 columna simple → texto estructurado con saltos de línea.
+  // Coherente con 2 columnas / diseño (Canva, Word moderno, Europass) → imagen + texto espacial reconstruido por bloques.
+  // Sin capa de texto (escaneado, curvas) → solo imagen.
   const buildPagePayload = async (pdf: any, pageNumber: number) => {
     const page = await pdf.getPage(pageNumber);
     const textContent = await page.getTextContent();
-    const rawText = textContent.items.map((item: any) => item.str).join(' ');
+    const baseViewport = page.getViewport({ scale: 1 });
+    const analysis = analyzePdfPage(textContent.items, baseViewport.width, baseViewport.height);
 
-    if (isTextLayerCoherent(rawText)) {
-      return { kind: 'text' as const, content: rawText };
+    if (analysis.mode === 'text') {
+      return { kind: 'text' as const, content: analysis.text };
     }
 
-    const unscaledViewport = page.getViewport({ scale: 1 });
-    const targetScale = Math.max(1.2, Math.min(2.0, 1400 / (unscaledViewport.height || 1000)));
-    const viewport = page.getViewport({ scale: targetScale });
+    const scale = computeRenderScale(baseViewport.width, baseViewport.height);
+    const viewport = page.getViewport({ scale });
     const canvas = document.createElement('canvas');
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Canvas no soportado en este navegador.');
+    // Fondo blanco opaco obligatorio antes de renderizar (evita fondo negro en PDFs con transparencias)
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     await page.render({ canvasContext: ctx, viewport }).promise;
-    const content = encodeCanvasWithinBudget(clampCanvasSize(canvas));
+    const encoded = encodeCanvasWithinBudget(clampCanvasSize(canvas), MAX_PAGE_PAYLOAD_BYTES, { digitalPage: true });
     // Liberar memoria gráfica inmediatamente
     canvas.width = 0;
     canvas.height = 0;
-    return { kind: 'image' as const, content, auxiliaryText: rawText };
+    return { kind: 'image' as const, content: encoded.base64, mimeType: encoded.mimeType, auxiliaryText: analysis.text };
   };
 
   // Helper: save draft to localStorage
@@ -67,8 +76,16 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
   };
 
   // Helper: extract with retry (now used for PDF pages and reintento selectivo)
-  const extractWithRetry = async (payload: { kind: 'text' | 'image'; content: string; auxiliaryText?: string }, 
-                                 pageNumber: number, 
+  interface PagePayload {
+    kind: 'text' | 'image';
+    content: string;
+    mimeType?: EncodedImageMime;
+    auxiliaryText?: string;
+    contextSummary?: string;
+  }
+
+  const extractWithRetry = async (payload: PagePayload,
+                                 pageNumber: number,
                                  maxRetries = 2) => {
     let lastError: any = null;
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -126,6 +143,7 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
       setFailedPages([]);
       // El mapa se resetea para que el reintento selectivo re-extraiga solo páginas fallidas
       fragmentsByPageRef.current = new Map();
+      contextSummaryRef.current = '';
     }
   }, [isOpen]);
 
@@ -165,9 +183,9 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
       } else if (file.type.startsWith('image/')) {
         setTotal(1);
         setStatus('processing');
-        const base64 = await encodeImageFileWithinBudget(file);
+        const encoded = await encodeImageFileWithinBudget(file);
         // Fotos directas usan la misma cascada de modelos con reintentos que los PDFs
-        const fragment = await extractWithRetry({ kind: 'image', content: base64 }, 1, 2);
+        const fragment = await extractWithRetry({ kind: 'image', content: encoded.base64, mimeType: encoded.mimeType }, 1, 2);
         fragments.push(fragment);
         setProgress(1);
       } else if (file.type === 'text/plain' || file.name.toLowerCase().endsWith('.txt')) {
@@ -198,9 +216,11 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
           setCurrentReadingPage(i);
           try {
             const payload = await buildPagePayload(pdf, i);
-            const fragment = await extractWithRetry(payload, i, 2);
+            const fragment = await extractWithRetry({ ...payload, contextSummary: contextSummaryRef.current }, i, 2);
             fragments.push(fragment);
             fragmentsByPageRef.current.set(i, fragment);
+            // Contexto rodante para la siguiente página (corta páginas peladas sin referencia)
+            contextSummaryRef.current = buildContextSummary(fragment, i);
             // Guardado progresivo por página: si se corta la conexión, páginas ya leídas quedan resguardadas
             saveDraft(mergePageFragments(Array.from(fragmentsByPageRef.current.entries()).sort((a, b) => a[0] - b[0]).map(([, f]) => f)));
           } catch (pageErr: any) {
@@ -277,8 +297,9 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
       setCurrentReadingPage(i);
       try {
         const payload = await buildPagePayload(pdf, i);
-        const fragment = await extractWithRetry(payload, i, 2);
+        const fragment = await extractWithRetry({ ...payload, contextSummary: contextSummaryRef.current }, i, 2);
         fragmentsByPageRef.current.set(i, fragment);
+        contextSummaryRef.current = buildContextSummary(fragment, i);
       } catch (pageErr: any) {
         console.warn(`Página ${i} sigue fallando tras reintento selectivo:`, pageErr);
         stillFailed.push(i);

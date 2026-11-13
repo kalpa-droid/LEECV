@@ -47,6 +47,14 @@
     {
       "file": "src/shared/core/utils/cvDataSchema.ts",
       "reason": "Esquema de datos con colores de ejemplo. Pendiente de migración a tokens de diseño (UI-015/UI-016)."
+    },
+    {
+      "file": "src/shared/core/cv-import/pageImageEncoder.ts",
+      "reason": "Fondo blanco opaco (#FFFFFF) del canvas de render del pipeline OCR/import (evita fondo negro en PDFs con transparencias). No es color de UI de usuario; el PDF requiere blanco puro."
+    },
+    {
+      "file": "src/modules/cv-builder/components/modals/ImportCvAiModal.tsx",
+      "reason": "Fondo blanco opaco (#FFFFFF) del canvas de rasterizado de páginas PDF para OCR/import. No es color de UI de usuario; el PDF requiere blanco puro."
     }
   ]
 }

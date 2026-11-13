@@ -62,7 +62,8 @@ export const groqProvider: AiProviderDefinition = {
           { role: 'user', content: userContent }
         ],
         max_tokens: req.maxTokens || 1200,
-        temperature: req.temperature ?? 0.7,
+        // JSON estructurado exige temperatura baja; 0.7 solo para texto libre sin esquema
+        temperature: req.temperature ?? (req.responseSchema ? 0.1 : 0.7),
         // Forzar JSON estructurado cuando el request lo requiere
         ...(req.responseSchema ? { response_format: { type: 'json_object' } } : {})
       };

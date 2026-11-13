@@ -3,9 +3,11 @@ export interface AiCompletionRequest {
   userPrompt: string;
   maxTokens?: number;
   temperature?: number;
-  images?: Array<{ mimeType: 'image/png' | 'image/jpeg'; base64: string }>;
+  images?: Array<{ mimeType: 'image/png' | 'image/jpeg' | 'image/webp'; base64: string }>;
   /** Pide a Gemini que devuelva JSON validado contra este esquema (no texto libre a interpretar). */
   responseSchema?: object;
+  /** Solo Gemini: resolución de medios para imágenes (p. ej. MEDIA_RESOLUTION_HIGH). Los demás proveedores lo ignoran. */
+  mediaResolution?: 'MEDIA_RESOLUTION_UNSPECIFIED' | 'MEDIA_RESOLUTION_LOW' | 'MEDIA_RESOLUTION_MEDIUM' | 'MEDIA_RESOLUTION_HIGH';
 }
 
 export interface AiProviderPingResult {

@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 2,
-  minor: 9,
+  minor: 10,
   patch: 0,
-  label: 'V2.9.0',
+  label: 'V2.10.0',
   lastUpdated: '2026-11-13',
   lastAgent: '@antigravity',
-  stage: 'Cooldown compartido de API keys de IA en Supabase (ai_key_cooldowns + RLS), ping de salud cada 6h, persistencia entre lambdas y cold starts',
+  stage: 'Pipeline OCR integral: motor espacial PDF (3 modos text/hybrid/image), render 1920px con fondo blanco, WebP/PNG para páginas digitales, contraste suave para fotos, protocolo de lectura estructural + contexto rodante + Completeness Gate en la nube, mediaResolution HIGH en Gemini',
 } as const;

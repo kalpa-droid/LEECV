@@ -40,7 +40,14 @@ export const geminiProvider: AiProviderDefinition = {
         };
       }
 
-      try {
+      const hasImages = !!req.images && req.images.length > 0;
+      if (hasImages) {
+        // Alta resolución de medios: tablas, notas al pie y texto chico legibles.
+        // Si un modelo lite antiguo rechaza el campo, el catch de abajo lo omite y reintenta una vez.
+        generationConfig.mediaResolution = req.mediaResolution || 'MEDIA_RESOLUTION_HIGH';
+      }
+
+      const runAttempt = async (config: Record<string, any>): Promise<AiCompletionResponse> => {
         const response = await fetch(url, {
           method: 'POST',
           headers: {
@@ -64,7 +71,7 @@ export const geminiProvider: AiProviderDefinition = {
                 ]
               }
             ],
-            generationConfig
+            generationConfig: config
           }),
           signal: AbortSignal.timeout(attemptTimeoutMs)
         });
@@ -73,6 +80,7 @@ export const geminiProvider: AiProviderDefinition = {
           const errText = await response.text();
           const errObj: any = new Error(`Gemini API Error (${response.status}) on ${currentModel}: ${errText}`);
           errObj.status = response.status;
+          errObj.responseBody = errText;
           throw errObj;
         }
 
@@ -89,7 +97,28 @@ export const geminiProvider: AiProviderDefinition = {
         } : undefined;
 
         return { content: content.trim(), usage, modelUsed: currentModel };
+      };
+
+      try {
+        return await runAttempt(generationConfig);
       } catch (err: any) {
+        // Fallback seguro: si el modelo rechaza mediaResolution (400), omitirlo y reintentar una vez
+        const rejectedMediaResolution =
+          err?.status === 400 &&
+          generationConfig.mediaResolution &&
+          /media.?resolution/i.test(String(err?.responseBody || err?.message || ''));
+
+        if (rejectedMediaResolution) {
+          console.warn(`[geminiProvider] ${currentModel} rechazó mediaResolution; reintentando sin el campo.`);
+          const configWithoutMediaResolution = { ...generationConfig };
+          delete configWithoutMediaResolution.mediaResolution;
+          try {
+            return await runAttempt(configWithoutMediaResolution);
+          } catch (retryErr: any) {
+            err = retryErr;
+          }
+        }
+
         lastError = err;
         // Abortar solo si credenciales inválidas (401/403)
         if (err.status === 401 || err.status === 403 || err.message?.includes('API_KEY_INVALID')) {
