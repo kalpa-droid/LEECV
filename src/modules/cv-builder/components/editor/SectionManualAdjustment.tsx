@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { Scissors, Check } from 'lucide-react';
-import { getSection } from '../../../../shared/core/sectionRegistry';
 import { radius, elevationSystem } from '../../../../shared/core/uiDesignSystem';
 import { SectionPositionControl } from '../../../../shared/core/ui/SectionPositionControl';
 
@@ -35,9 +34,6 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData, designKe
   const activeDesignKey = designKey || cleanSecId;
   const currentCardDesign = cvData.recordCardDesigns?.[activeDesignKey] || (activeDesignKey === 'resumen' ? 'accent-outline' : 'accent-card');
 
-  const catalogEntry = getSection(cleanSecId, cvData.customSections || []);
-  const assignableToColumns = catalogEntry ? catalogEntry.assignableToColumns !== false : true;
-
   const hasPageBreak = !!(cvData.layout?.sectionPageBreaks?.[cleanSecId] || cvData.sectionPageBreaks?.[cleanSecId]);
 
   const handleTogglePageBreak = () => {
@@ -66,9 +62,7 @@ export function SectionManualAdjustment({ sectionId, cvData, setCvData, designKe
   return (
     <div data-section-id={cleanSecId} className={`p-2.5 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] space-y-2 text-xs`}>
       {/* 1. Control Unificado de Ubicación (Columna) y Posición (Orden Relativo) */}
-      {assignableToColumns && (
-        <SectionPositionControl sectionKey={cleanSecId} cvData={cvData} setCvData={setCvData} />
-      )}
+      <SectionPositionControl sectionKey={cleanSecId} cvData={cvData} setCvData={setCvData} />
 
       {/* 2. Salto de Página Forzado & Selector de Estilo de Contenedor Unificado */}
       <div className="pt-1.5 border-t border-[var(--color-neutral-border)]/60 flex items-center justify-between gap-1 flex-wrap">

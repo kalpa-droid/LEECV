@@ -40,7 +40,6 @@ export const DisenoSection = ({
   showWarning,
   triggerPresetTransition,
   getEffectiveCoverFeaturedItems,
-  handleAddCustomSection,
   registerSection
 }: any) => {
   const isBusinessCard = docType === 'business_card';

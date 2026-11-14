@@ -76,20 +76,29 @@ export function AtsAiAnalysisModal({
   const [explainLoading, setExplainLoading] = useState(false);
   const { showSuccess, showError, showWarning } = useToast();
 
-  useEffect(() => {
-    if (isOpen && !result && loading) {
-      runAiAtsAnalysis(cvText, jobDescription)
-        .then(res => {
-          setResult(res);
-          setExplanation(null);
-          setLoading(false);
-        })
-        .catch(err => {
-          console.error(err);
-          showError('Error al analizar el CV con IA.');
-          onClose();
-        });
+  // Al abrir el modal — o si cambiaron el texto del CV o el de la vacante —
+  // el análisis anterior ya no representa el contenido actual: se empieza
+  // de cero (resultado, explicación y hallazgos aplicados se reinician).
+  const runAnalysis = async () => {
+    setResult(null);
+    setExplanation(null);
+    setAppliedIds(new Set());
+    setNotFoundIds(new Set());
+    setLoading(true);
+    try {
+      const res = await runAiAtsAnalysis(cvText, jobDescription);
+      setResult(res);
+    } catch (err) {
+      console.error(err);
+      showError('Error al analizar el CV con IA.');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    if (isOpen) runAnalysis();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, cvText, jobDescription]);
 
   if (!isOpen) return null;
@@ -165,6 +174,15 @@ export function AtsAiAnalysisModal({
                   <Wand2 className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
                   {explainLoading ? 'Explicando...' : 'Explicar con IA'}
                 </button>
+                <button
+                  type="button"
+                  onClick={runAnalysis}
+                  disabled={loading}
+                  className={`${button.secondary} flex items-center gap-1.5 text-xs py-1.5 px-3 ${loading ? 'opacity-60 cursor-not-allowed' : ''}`}
+                >
+                  <ArrowRight className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
+                  Volver a analizar
+                </button>
                 {explanation && (
                   <div className="w-full p-3 bg-[var(--ui-bg-page)] border border-[var(--ui-border)] rounded-[var(--ui-radius-card)] text-xs leading-relaxed text-[var(--color-neutral-text-primary)] whitespace-pre-wrap">
                     {explanation}
@@ -227,7 +245,15 @@ export function AtsAiAnalysisModal({
                 </div>
               )}
             </>
-          ) : null}
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 space-y-4 text-center text-[var(--color-neutral-text-secondary)]">
+              <AlertCircle className="w-8 h-8 text-[var(--color-warning-base)]" />
+              <p>No se pudo generar el análisis. Probá de nuevo.</p>
+              <button type="button" onClick={runAnalysis} className={`${button.primary} text-xs py-1.5 px-4`}>
+                Reintentar análisis
+              </button>
+            </div>
+          )}
       </div>
     </Modal>
   );

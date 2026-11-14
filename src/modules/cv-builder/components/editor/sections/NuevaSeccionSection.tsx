@@ -26,7 +26,7 @@ export const NuevaSeccionSection = ({
   triggerPresetTransition,
   getEffectiveCoverFeaturedItems,
   }: any) => {
-  const [selectedFields, setSelectedFields] = useState<string[]>([]);
+  const [selectedFields, setSelectedFields] = useState<string[]>(['tituloOGrado', 'institucion', 'periodo', 'descripcion']);
   const [newSectionTitle, setNewSectionTitle] = useState('');
 
   return (
@@ -266,6 +266,10 @@ export const NuevaSeccionSection = ({
                   onClick={() => {
                     if (!newSectionTitle.trim()) {
                       showWarning('Por favor ingresa un nombre para la sección.');
+                      return;
+                    }
+                    if (selectedFields.length === 0) {
+                      showWarning('Debes seleccionar al menos 1 campo para los registros de la sección.');
                       return;
                     }
                     const customSlots = ['personalizada-1', 'personalizada-2', 'personalizada-3', 'personalizada-4', 'personalizada-5'] as const;

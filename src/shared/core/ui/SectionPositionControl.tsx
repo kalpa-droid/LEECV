@@ -49,7 +49,7 @@ export function SectionPositionControl({ sectionKey, cvData, setCvData }: Sectio
   };
 
   const scrollToSectionInPdf = () => {
-    window.dispatchEvent(new CustomEvent('pdf-anchor-scroll', { detail: { tabId: cleanSecId } }));
+    window.dispatchEvent(new CustomEvent('pdf-anchor-scroll', { detail: { tabId: cleanSecId, forcePostRender: true } }));
   };
 
   const handleSectorChange = (newSector: SectorRoleType) => {

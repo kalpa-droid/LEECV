@@ -10,10 +10,14 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
 
   if (!cvData) return null;
 
-  const isVisible = cvData.sectionVisibility?.contacto !== false && cvData.sectionVisibility?.['datos-personales'] !== false;
+  const contactoVisible = cvData.sectionVisibility?.contacto !== false;
+  const datosPersonalesVisible = cvData.sectionVisibility?.['datos-personales'] !== false;
+  // Un formato ATS puede apagar "datos-personales" pero dejar "contacto" activado:
+  // el bloque Personal sigue editable y Nombre/Contacto siguen visibles.
+  const anyVisible = contactoVisible || datosPersonalesVisible;
 
   const togglePersonalGroup = () => {
-    const nextState = !isVisible;
+    const nextState = !anyVisible;
     setCvData((prev) => ({
       ...prev,
       sectionVisibility: {
@@ -29,7 +33,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
     <div className="space-y-4">
       {/* Header con Toggle */}
       <div className={`flex items-center justify-between p-2.5 rounded-[12px] border transition ${
-        isVisible 
+        anyVisible 
           ? `bg-[var(--ui-bg-card)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] ${elevationSystem.raised}` 
           : 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-muted)] opacity-75'
       }`}>
@@ -40,16 +44,16 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
           type="button"
           onClick={togglePersonalGroup}
           className={`px-3 py-1 rounded-full text-[11px] font-medium transition flex items-center gap-1.5 ${elevationSystem.raised} cursor-pointer ${
-            isVisible
+            anyVisible
               ? 'bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] hover:bg-[var(--color-secondary-hover)]'
               : 'bg-[var(--color-neutral-text-muted)] text-[var(--color-neutral-surface)] hover:opacity-80'
           }`}
         >
-          <span>{isVisible ? 'ACTIVADA' : 'DESACTIVADA'}</span>
+          <span>{anyVisible ? 'ACTIVADA' : 'DESACTIVADA'}</span>
         </button>
       </div>
 
-      {isVisible && (
+      {anyVisible && (
         <div className={`p-3 rounded-[8px] bg-[var(--color-status-info-muted)] border border-[var(--color-status-info-base)]/30 text-[var(--color-status-info-text)] text-[11px] leading-snug font-medium flex items-start gap-2`}>
           <Bot className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--color-status-info-base)]" />
           <p>
@@ -58,7 +62,7 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
         </div>
       )}
 
-      {isVisible && (
+      {anyVisible && (
         <PersonalInfoFields
           personalInfo={cvData.personalInfo}
           onChange={(patch) => {

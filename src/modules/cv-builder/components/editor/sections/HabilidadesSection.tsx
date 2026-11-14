@@ -19,7 +19,7 @@ export const HabilidadesSection: React.FC<HabilidadesSectionProps> = ({ cvData, 
   const handleSuggestSkill = async () => {
     setIsSuggesting(true);
     try {
-      const res = await executeAiTask<{ records: Array<{ name?: string; level?: string }>; missingInfo?: string | null }>({
+      const res = await executeAiTask<{ records: Array<Record<string, any>>; missingInfo?: string | null }>({
         taskId: 'suggest_records',
         payload: {
           sectionKind: 'skills',
@@ -29,12 +29,19 @@ export const HabilidadesSection: React.FC<HabilidadesSectionProps> = ({ cvData, 
         maxTokens: 600,
         temperature: 0.4
       });
-      const drafts = Array.isArray(res.data?.records) ? res.data.records.filter(r => r && typeof r.name === 'string' && r.name.trim()) : [];
+      const drafts = Array.isArray(res.data?.records)
+        ? res.data.records.filter(r => r && typeof r === 'object' && String(r.name || r.skill || r.habilidad || r.title || '').trim())
+        : [];
       if (!drafts.length) {
         showWarning(res.data?.missingInfo || 'La IA no pudo sugerir habilidades nuevas con los datos actuales del CV.');
         return;
       }
-      const normalized = drafts.map(d => ({ name: d.name.trim(), level: typeof d.level === 'string' ? d.level : '' }));
+      const now = Date.now();
+      const normalized = drafts.map((d, i) => ({
+        id: `rec_ai_hab_${now}_${i}_${Math.random().toString(36).substr(2, 4)}`,
+        name: String(d.name || d.skill || d.habilidad || d.title || '').trim(),
+        level: String(d.level || d.nivel || d.nivelDominio || '').trim()
+      }));
       setCvData((prev: any) => ({ ...prev, hardSkills: [...(Array.isArray(prev?.hardSkills) ? prev.hardSkills : []), ...normalized] }));
       showSuccess(`Agregamos ${normalized.length} habilidad${normalized.length > 1 ? 'es' : ''} sugerida${normalized.length > 1 ? 's' : ''} por IA. Revisá y ajustá lo que haga falta.`);
     } catch (err) {

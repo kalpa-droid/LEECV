@@ -56,11 +56,14 @@ describe('FASE 0 — Snapshots Baseline', () => {
     expect(fullRes.sectionOrders.primaria).toContain('contacto');
     expect(fullRes.sectionOrders.secundaria).toContain('idiomas');
 
-    // Modo 2: template-order (prioriza orden, mantiene visibilidad intacta)
+    // Modo 2: template-order (prioriza orden, mantiene visibilidad intacta,
+    // respeta la columna que la persona eligió a mano: 'contacto' estaba en
+    // primaria aunque el preset la ubique en el sidebar)
     const orderRes = applyTemplateMode(currentState, format, activePreset, 'template-order');
     expect(orderRes.sectionVisibility).toEqual(currentState.sectionVisibility);
     expect(orderRes.sectionOrders.primaria).toContain('experiencia');
-    expect(orderRes.sectionOrders.secundaria).toContain('contacto');
+    expect(orderRes.sectionOrders.primaria).toContain('contacto');
+    expect(orderRes.sectionOrders.secundaria).toContain('idiomas');
 
     // Modo 3: no-filters (preserva visibilidad y orden)
     const noFilterRes = applyTemplateMode(currentState, format, activePreset, 'no-filters');
@@ -80,8 +83,10 @@ describe('FASE 0 — Snapshots Baseline', () => {
 
     // modern-corporate tiene ['datos-personales', 'contacto', 'competencias', 'informatica'] en sidebar
     // ats-one-column visible: ['contacto', 'redes', 'resumen', 'experiencia', 'formacion', 'habilidades', 'idiomas', 'certificados']
+    // 'certificados' no se distribuye por columnas (assignableToColumns: false):
+    // lo ubica el motor de sectores por su rol canónico.
     expect(res.sectionOrders.secundaria).toEqual(['contacto']);
-    expect(res.sectionOrders.primaria).toEqual(['redes', 'resumen', 'experiencia', 'formacion', 'habilidades', 'idiomas', 'certificados']);
+    expect(res.sectionOrders.primaria).toEqual(['redes', 'resumen', 'experiencia', 'formacion', 'habilidades', 'idiomas']);
   });
 
   it('debe combinar fechas correctamente mediante resolveDateRange', () => {

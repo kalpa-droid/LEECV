@@ -47,6 +47,9 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
   const renderTokenRef = useRef(0);
   const anchorMapRef = useRef<Record<string, { startPage: number; startXRatio: number; startYRatio: number; endPage: number; endXRatio: number; endYRatio: number }>>({});
   const pendingScrollTabRef = useRef<string | undefined>(activeTab);
+  // Scroll explícito pedido por el usuario (p. ej. cambió columna/orden desde el panel):
+  // gana sobre el restore de posición relativa cuando el nuevo PDF termina de renderizar.
+  const pendingExplicitScrollRef = useRef(false);
 
   useEffect(() => {
     const myToken = ++renderTokenRef.current;
@@ -166,11 +169,13 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
             markRenderAsCompleted();
 
             const targetContainer = wrapperRef.current?.parentElement || wrapperRef.current || containerRef.current;
-            if (relativeScrollRatio > 0 && targetContainer) {
+            const forcePostRender = pendingExplicitScrollRef.current;
+            pendingExplicitScrollRef.current = false;
+            if (!forcePostRender && relativeScrollRatio > 0 && targetContainer) {
               targetContainer.scrollTop = Math.round(relativeScrollRatio * targetContainer.scrollHeight);
             }
             const finalTarget = pendingScrollTabRef.current || activeTab;
-            if (finalTarget && relativeScrollRatio === 0 && preset) {
+            if (finalTarget && (forcePostRender || relativeScrollRatio === 0) && preset) {
               scrollToPdfAnchor(targetContainer, finalTarget, sections, preset, layoutOverrides, anchorMapRef.current);
             }
           });
@@ -208,6 +213,9 @@ export function VectorDocViewer({ document, zoomLevel = 1, activeTab, sections =
       const customEvt = e as CustomEvent;
       const targetTab = customEvt.detail?.tabId || activeTab;
       pendingScrollTabRef.current = targetTab;
+      if (customEvt.detail?.forcePostRender) {
+        pendingExplicitScrollRef.current = true;
+      }
       if (!loading && targetTab && (wrapperRef.current || containerRef.current) && preset) {
         scrollToPdfAnchor(wrapperRef.current || containerRef.current, targetTab, sections, preset, layoutOverrides, anchorMapRef.current);
       }

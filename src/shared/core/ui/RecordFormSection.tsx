@@ -44,8 +44,68 @@ const AI_SUGGESTABLE_KINDS: Record<string, { sectionKind: string; labelSingular:
   references: { sectionKind: 'references', labelSingular: 'referencia' },
   informatics: { sectionKind: 'informatics', labelSingular: 'herramienta' },
   redes: { sectionKind: 'redes', labelSingular: 'enlace' },
-  achievements: { sectionKind: 'achievements', labelSingular: 'logro' }
+  achievements: { sectionKind: 'achievements', labelSingular: 'logro' },
+  portfolio: { sectionKind: 'projects', labelSingular: 'trabajo' }
 };
+
+/**
+ * Alias de campos que la IA devuelve con frecuencia → id canónico del catálogo.
+ * Se aplican SOLO si el campo canónico pertenece a la sección (o si la
+ * sección no declara el original pero sí el destino).
+ */
+const AI_FIELD_ALIASES: Record<string, string> = {
+  titulo: 'tituloOGrado',
+  title: 'tituloOGrado',
+  degree: 'tituloOGrado',
+  nombre: 'tituloOGrado',
+  proyecto: 'tituloOGrado',
+  nivel: 'nivelDominio',
+  level: 'nivelDominio',
+  dominio: 'nivelDominio',
+  persona: 'personaReferencia',
+  referencia: 'personaReferencia',
+  contacto: 'contactoReferencia',
+  email: 'contactoReferencia',
+  telefono: 'contactoReferencia',
+  empresa: 'institucion',
+  company: 'institucion',
+  organizacion: 'institucion',
+  fecha: 'periodo',
+  fechas: 'periodo',
+  description: 'descripcion',
+  resumen: 'descripcion',
+  metricas: 'logros'
+};
+
+/**
+ * Normaliza un borrador devuelto por la IA al esquema real de la sección:
+ * conserva claves válidas tal cual, traduce alias conocidos y descarta el
+ * resto (no inventa campos, no mete texto libre en claves desconocidas).
+ */
+export function normalizeAiDraftRecord(raw: any, validFields: readonly string[]): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!raw || typeof raw !== 'object') return out;
+  const put = (target: string, value: any) => {
+    if (value === undefined || value === null) return;
+    const text = String(value).trim();
+    if (text) out[target] = text;
+  };
+
+  // 1) Claves que ya coinciden con un campo válido de la sección
+  for (const [key, value] of Object.entries(raw)) {
+    const clean = String(key).trim();
+    if (validFields.includes(clean)) put(clean, value);
+  }
+  // 2) Alias conocidos (p. ej. nivel → nivelDominio si la sección usa nivelDominio)
+  for (const [key, value] of Object.entries(raw)) {
+    const clean = String(key).trim();
+    const lower = clean.toLowerCase();
+    if (validFields.includes(clean)) continue; // ya quedó en el paso 1
+    const aliased = AI_FIELD_ALIASES[clean] || AI_FIELD_ALIASES[lower];
+    if (aliased && validFields.includes(aliased) && out[aliased] === undefined) put(aliased, value);
+  }
+  return out;
+}
 
 export function RecordFormSection({
   sectionKey,
@@ -66,7 +126,11 @@ export function RecordFormSection({
   const fieldList = customFields && customFields.length > 0 ? customFields : (schema.defaultFields || ['tituloOGrado', 'institucion']);
 
   // Secciones con IA de sugerencia de registro (Fase F del plan de secciones).
-  const aiSuggestInfo = AI_SUGGESTABLE_KINDS[kindKey];
+  // Para secciones personalizadas la sugerencia también está disponible: se
+  // envían los campos elegidos por la persona para que la IA rellene solo esos.
+  const aiSuggestInfo = AI_SUGGESTABLE_KINDS[kindKey] || (customFields && customFields.length > 0
+    ? { sectionKind: 'custom', labelSingular: 'registro' }
+    : undefined);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const { showSuccess, showError, showWarning } = useToast();
 
@@ -78,6 +142,8 @@ export function RecordFormSection({
         taskId: 'suggest_records',
         payload: {
           sectionKind: aiSuggestInfo.sectionKind,
+          sectionTitle,
+          customFields: fieldList,
           existingRecords: Array.isArray(cvData?.[fieldName]) ? cvData[fieldName] : []
         },
         cvData,
@@ -89,11 +155,22 @@ export function RecordFormSection({
         showWarning(res.data?.missingInfo || 'La IA no pudo sugerir un registro nuevo con los datos actuales del CV.');
         return;
       }
+      const now = Date.now();
+      const normalized: Record<string, string>[] = [];
+      drafts.forEach((draft, i) => {
+        const clean = normalizeAiDraftRecord(draft, fieldList);
+        if (Object.keys(clean).length === 0) return;
+        normalized.push({ ...clean, id: `rec_ai_${now}_${i}_${Math.random().toString(36).substr(2, 4)}` });
+      });
+      if (!normalized.length) {
+        showWarning('La IA devolvió campos que no encajan con esta sección. Probá de nuevo con más contexto en el CV.');
+        return;
+      }
       setCvData((prev: any) => ({
         ...prev,
-        [fieldName]: [...(Array.isArray(prev?.[fieldName]) ? prev[fieldName] : []), ...drafts]
+        [fieldName]: [...(Array.isArray(prev?.[fieldName]) ? prev[fieldName] : []), ...normalized]
       }));
-      showSuccess(`Agregamos ${drafts.length} ${aiSuggestInfo.labelSingular}${drafts.length > 1 ? 's' : ''} sugerida${drafts.length > 1 ? 's' : ''} por IA. Revisá y ajustá lo que haga falta.`);
+      showSuccess(`Agregamos ${normalized.length} ${aiSuggestInfo.labelSingular}${normalized.length > 1 ? 's' : ''} sugerida${normalized.length > 1 ? 's' : ''} por IA. Revisá y ajustá lo que haga falta.`);
     } catch (err) {
       console.error(err);
       showError('No pudimos generar la sugerencia. Intentá de nuevo.');

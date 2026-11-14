@@ -117,4 +117,73 @@ describe('Datos Personales — la política de formato se respeta, el adapter no
     const sections = cvDataToContentSections(latam);
     expect(sections.find((s) => s.id === 'datos-personales')).toBeDefined();
   });
+
+  it('ATS apaga datos-personales pero no contacto: el adapter emite Contacto y omite Datos Personales', () => {
+    const atsData: any = {
+      ...initialCVData,
+      activeFormatId: 'latam-clasico',
+      sectionVisibility: { contacto: true, 'datos-personales': false },
+      personalInfo: {
+        ...initialCVData.personalInfo,
+        phone: '11-5555-5555',
+        email: 'maria@example.com',
+        dni: '33444555',
+        birthDate: '1992-07-14'
+      }
+    };
+    const sections = cvDataToContentSections(atsData);
+    expect(sections.find((s) => s.id === 'contacto')).toBeDefined();
+    expect(sections.find((s) => s.id === 'datos-personales')).toBeUndefined();
+  });
+});
+
+describe('Nivel preset — opcionales no universales apagadas sin contenido no se encienden (sin secciones fantasma)', () => {
+  it('preset no enciende logros/publicaciones/referencias/idiomas/redes que estaban apagadas y vacías', () => {
+    const sinNada: any = {
+      ...initialCVData,
+      languages: [],
+      redes: [],
+      publications: [],
+      references: [],
+      achievements: [],
+      sectionVisibility: {
+        ...(initialCVData.sectionVisibility || {}),
+        idiomas: false,
+        redes: false,
+        publicaciones: false,
+        referencias: false,
+        logros: false
+      }
+    };
+    const out: any = applyPresetLevel(sinNada, 'preset', { presetId: 'cv-clasico' });
+    expect(out.sectionVisibility['idiomas']).toBe(false);
+    expect(out.sectionVisibility['redes']).toBe(false);
+    expect(out.sectionVisibility['publicaciones']).toBe(false);
+    expect(out.sectionVisibility['referencias']).toBe(false);
+    expect(out.sectionVisibility['logros']).toBe(false);
+  });
+
+  it('preset sí enciende una opcional si estaba apagada pero tiene contenido real', () => {
+    const conIdiomas: any = {
+      ...initialCVData,
+      languages: [{ id: 'l1', idioma: 'Inglés', nivel: 'B2' }],
+      sectionVisibility: { ...(initialCVData.sectionVisibility || {}), idiomas: false }
+    };
+    const out: any = applyPresetLevel(conIdiomas, 'preset', { presetId: 'cv-clasico' });
+    expect(out.sectionVisibility['idiomas']).toBe(true);
+  });
+});
+
+describe('Nivel preset — activeFormatId se conserva si el formato recomienda ese preset', () => {
+  it('preset compatible con el formato activo: activeFormatId se conserva', () => {
+    const conFormato: any = { ...initialCVData, activeFormatId: 'europass' };
+    const out: any = applyPresetLevel(conFormato, 'preset', { presetId: 'modern-corporate' });
+    expect(out.activeFormatId).toBe('europass');
+  });
+
+  it('preset NO compatible con el formato activo: activeFormatId se re-resuelve', () => {
+    const conFormato: any = { ...initialCVData, activeFormatId: 'europass' };
+    const out: any = applyPresetLevel(conFormato, 'preset', { presetId: 'minimal-editorial' });
+    expect(out.activeFormatId).not.toBe('europass');
+  });
 });
