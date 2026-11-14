@@ -25,6 +25,7 @@ export type ImportReviewSelections = {
 };
 
 const scalarFields = [
+  'personalInfo.titlePrefix',
   'personalInfo.fullName',
   'personalInfo.givenNames',
   'personalInfo.surname',
@@ -34,8 +35,16 @@ const scalarFields = [
   'personalInfo.cityProvince',
   'personalInfo.website',
   'personalInfo.quote',
+  'personalInfo.dni',
+  'personalInfo.cuit',
+  'personalInfo.birthDate',
+  'personalInfo.nacionalidad',
+  'personalInfo.estadoCivil',
+  'personalInfo.disponibilidad',
+  'personalInfo.licenciaConducir',
   'summary',
-  'objective'
+  'objective',
+  'frase'
 ] as const;
 
 export const IMPORTABLE_SCALAR_FIELDS = scalarFields;
@@ -208,8 +217,91 @@ export function normalizeImportedCvData(raw: Record<string, any>): Record<string
     );
   }
 
-  for (const field of ['summary', 'objective'] as const) {
-    if (typeof raw[field] === 'string' && raw[field].trim()) normalized[field] = raw[field].trim();
+  // 1. Derivar fullName ↔ givenNames / surname y garantizar fields raíz
+  if (typeof normalized.personalInfo?.fullName === 'string' && normalized.personalInfo.fullName.trim()) {
+    const rawName = normalized.personalInfo.fullName.trim();
+    // Si ya vienen givenNames/surname (por traducción), reconstruir fullName
+    const hasGivenNames = typeof normalized.personalInfo?.givenNames === 'string' && normalized.personalInfo.givenNames.trim();
+    const hasSurname = typeof normalized.personalInfo?.surname === 'string' && normalized.personalInfo.surname.trim();
+    if (hasGivenNames && hasSurname) {
+      normalized.personalInfo.fullName = `${normalized.personalInfo.givenNames.trim()} ${normalized.personalInfo.surname.trim()}`.trim();
+    } else if (!hasGivenNames && !hasSurname) {
+      // Derivar: apellido = última palabra, resto = nombre(s)
+      const parts = rawName.split(/\s+/);
+      if (parts.length >= 2) {
+        normalized.personalInfo.surname = parts.pop()!;
+        normalized.personalInfo.givenNames = parts.join(' ').trim();
+      }
+    }
+  } else if (
+    typeof normalized.personalInfo?.givenNames === 'string' &&
+    typeof normalized.personalInfo?.surname === 'string'
+  ) {
+    // Reconstruir fullName si faltaba
+    normalized.personalInfo.fullName = `${normalized.personalInfo.givenNames.trim()} ${normalized.personalInfo.surname.trim()}`.trim();
+  }
+
+  // 2. cityProvince = cityProvince || location
+  if (
+    typeof normalized.personalInfo?.cityProvince !== 'string' ||
+    !normalized.personalInfo.cityProvince.trim()
+  ) {
+    normalized.personalInfo.cityProvince =
+      normalized.personalInfo.location || normalized.personalInfo.address || '';
+  }
+
+  // 3. quote = quote || role
+  if (
+    typeof normalized.personalInfo?.quote !== 'string' ||
+    !normalized.personalInfo.quote.trim()
+  ) {
+    normalized.personalInfo.quote = normalized.personalInfo.role || '';
+  }
+
+  // 4. linkedin / portfolio → redes y website
+  if (
+    typeof normalized.personalInfo?.linkedIn === 'string' &&
+    normalized.personalInfo.linkedIn.trim()
+  ) {
+    // Asegurar que redes[] exista y agregar LinkedIn si no hay duplicado
+    if (!Array.isArray(normalized.redes)) normalized.redes = [];
+    const already = normalized.redes.some(
+      (r: any) => typeof r === 'object' && r.url === normalized.personalInfo.linkedIn.trim()
+    );
+    if (!already) normalized.redes.push({ plataforma: 'LinkedIn', url: normalized.personalInfo.linkedIn.trim(), usuario: '' });
+  }
+  if (
+    typeof normalized.personalInfo?.portfolio === 'string' &&
+    normalized.personalInfo.portfolio.trim()
+  ) {
+    if (!Array.isArray(normalized.redes)) normalized.redes = [];
+    const already = normalized.redes.some(
+      (r: any) => typeof r === 'object' && r.url === normalized.personalInfo.portfolio.trim()
+    );
+    if (!already) normalized.redes.push({ plataforma: 'Portafolio', url: normalized.personalInfo.portfolio.trim(), usuario: '' });
+  }
+  // website = website || portfolio (si portfolio parece URL y website vacío)
+  if (
+    typeof normalized.personalInfo?.website !== 'string' ||
+    !normalized.personalInfo.website.trim()
+  ) {
+    normalized.personalInfo.website = normalized.personalInfo.portfolio || '';
+  }
+
+  // 5. summary / objective / frase al raíz (frase nueva)
+  for (const field of ['summary', 'objective', 'frase'] as const) {
+    if (typeof normalized.personalInfo?.[field] === 'string' && normalized.personalInfo[field].trim()) {
+      normalized[field] = normalized.personalInfo[field].trim();
+    }
+  }
+
+  // 6. languages: preservar proficiency → nivel también
+  if (Array.isArray(normalized.languages)) {
+    normalized.languages = normalized.languages.map((lang: any) => ({
+      ...lang,
+      nivel: lang.nivelDominio || lang.nivel || lang.proficiency || lang.level || '',
+      idioma: lang.idioma || lang.language || lang.title || lang.name || '',
+    }));
   }
 
   for (const field of IMPORTABLE_LIST_FIELDS) {

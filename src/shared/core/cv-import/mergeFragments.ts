@@ -9,7 +9,11 @@ export interface CVFragment {
 
 export function mergePageFragments(fragments: CVFragment[]): CVFragment {
   const merged: CVFragment = {
-    personalInfo: {},
+    personalInfo: {
+      summary: '',
+      objective: '',
+      frase: ''
+    },
     experience: [],
     education: [],
     skills: [],
@@ -29,6 +33,17 @@ export function mergePageFragments(fragments: CVFragment[]): CVFragment {
       }
     }
 
+    // Textos raíz (resumen, objetivo, frase) — el fusionado anterior los olvidaba
+    for (const field of ['summary', 'objective', 'frase'] as const) {
+      const value = (fragment as any)[field];
+      if (typeof value === 'string' && value.trim()) {
+        const existing = (merged as any)[field];
+        if (!existing || (typeof existing === 'string' && !existing.trim())) {
+          (merged as any)[field] = value.trim();
+        }
+      }
+    }
+
     const arrayFields = [
       'experience',
       'education',
@@ -43,7 +58,8 @@ export function mergePageFragments(fragments: CVFragment[]): CVFragment {
       'informatics',
       'portfolio',
       'profession',
-      'redes'
+      'redes',
+      'frase'
     ];
     for (const field of arrayFields) {
       if (Array.isArray(fragment[field])) {
