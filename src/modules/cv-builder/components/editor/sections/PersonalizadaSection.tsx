@@ -4,6 +4,7 @@ import { SectionManualAdjustment } from '../SectionManualAdjustment';
 import { Field } from '../../../../../shared/core/ui/Field';
 import { FIELD_CATALOG } from '../../../../../shared/core/pdf-engine/layers/records/fieldCatalog';
 import { radius, elevationSystem } from '../../../../../shared/core/uiDesignSystem';
+import { PresetSectionPicker } from './PresetSectionPicker';
 
 export const PersonalizadaSection = ({
   cvData,
@@ -23,10 +24,23 @@ export const PersonalizadaSection = ({
           const slotId = activeTab;
           const titleText = cvData?.sectionTitleOverrides?.[slotId] || `Sección Personalizada (${slotId})`;
           const activeFields = cvData?.sectionFieldSelection?.[slotId] || ['tituloOGrado', 'institucion', 'periodo', 'descripcion'];
+          // El slot "ya tiene contenido" si tiene título propio o registros —
+          // en ese caso el selector prediseñado arranca colapsado.
+          const slotConfigured = !!cvData?.sectionTitleOverrides?.[slotId]
+            || (Array.isArray(cvData?.[slotId]) && cvData[slotId].length > 0);
 
           return (
             <div className="space-y-4">
-              <div className={`p-3.5 bg-[var(--ui-bg-card)] rounded-[${radius.modal}] border-2 border-[var(--color-neutral-border)] space-y-3 ${elevationSystem.raised}`}>
+              <PresetSectionPicker
+                cvData={cvData}
+                setCvData={setCvData}
+                showSuccess={showSuccess}
+                changeActiveTab={changeActiveTab}
+                slotId={slotId}
+                defaultOpen={!slotConfigured}
+              />
+
+              <div id="slot-custom-editor" className={`p-3.5 bg-[var(--ui-bg-card)] rounded-[${radius.modal}] border-2 border-[var(--color-neutral-border)] space-y-3 ${elevationSystem.raised}`}>
                 <Field
                   label="Nombre de la Sección (así se ve en el PDF)"
                   value={cvData?.sectionTitleOverrides?.[slotId] || ''}
