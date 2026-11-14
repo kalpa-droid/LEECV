@@ -1,10 +1,11 @@
 import React from 'react';
-import { Columns, ArrowDownUp } from 'lucide-react';
+import { Columns, ArrowDownUp, Lock } from 'lucide-react';
 import { applyRelativeSectionPosition, SectorRoleType } from '../pdf-engine/layers/sectors/sectionOrderEngine';
 import { resolveEffectivePresetSectionOrder } from '../pdf-engine/layers/sectors/layoutResolutionEngine';
 import { resolveActivePreset } from '../pdf-engine/layers/presets/presetRegistry';
-import { getSectionLabel } from '../sectionRegistry';
+import { getSection, getSectionLabel } from '../sectionRegistry';
 import { cvDataToContentSections } from '../pdf-engine/layers/records/cvDataAdapter';
+import { useToast } from './Toast';
 
 interface SectionPositionControlProps {
   sectionKey: string;
@@ -13,9 +14,13 @@ interface SectionPositionControlProps {
 }
 
 export function SectionPositionControl({ sectionKey, cvData, setCvData }: SectionPositionControlProps) {
+  const { showSuccess } = useToast();
   if (!sectionKey || !cvData) return null;
 
   const cleanSecId = sectionKey.replace(/-cont$/, '');
+  const catalogEntry = getSection(cleanSecId, cvData?.customSections || []);
+  const assignableToColumns = catalogEntry ? catalogEntry.assignableToColumns : true;
+  const sectionTitle = catalogEntry?.label || cleanSecId;
   const activePreset = resolveActivePreset(cvData);
   const effectiveSectionOrders = resolveEffectivePresetSectionOrder(activePreset, cvData?.layout);
 
@@ -43,12 +48,20 @@ export function SectionPositionControl({ sectionKey, cvData, setCvData }: Sectio
     return getSectionLabel(id, cvData?.customSections || []);
   };
 
+  const scrollToSectionInPdf = () => {
+    window.dispatchEvent(new CustomEvent('pdf-anchor-scroll', { detail: { tabId: cleanSecId } }));
+  };
+
   const handleSectorChange = (newSector: SectorRoleType) => {
     setCvData((prev: any) => applyRelativeSectionPosition(prev, {
       sectionId: cleanSecId,
       targetSector: newSector,
       positionMode: 'end'
     }));
+    scrollToSectionInPdf();
+    showSuccess(newSector === 'secundaria'
+      ? `"${sectionTitle}" se movió a la barra lateral.`
+      : `"${sectionTitle}" se movió a la columna principal.`);
   };
 
   const handlePositionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -74,9 +87,32 @@ export function SectionPositionControl({ sectionKey, cvData, setCvData }: Sectio
         targetAfterId
       }));
     }
+    scrollToSectionInPdf();
+    showSuccess(`"${sectionTitle}" se reordenó en el CV.`);
   };
 
   const currentSelectValue = currentIdx === 0 ? 'start' : (currentAfterId ? `after:${currentAfterId}` : 'end');
+
+  // Secciones que no se pueden asignar a columna (certificados / firma):
+  // candado visible con la razón, en vez de un selector mudo.
+  if (!assignableToColumns) {
+    const reason = cleanSecId === 'certificados'
+      ? 'Los certificados escaneados van en sus propias páginas al final del CV.'
+      : 'La firma digital siempre va al final del CV.';
+    return (
+      <div className="p-3 bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[var(--radius-card)] space-y-2 text-xs">
+        <div className="flex items-center justify-between font-bold text-[var(--color-neutral-text-primary)]">
+          <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-[var(--color-secondary-bright)]">
+            <Lock className="w-3.5 h-3.5" /> Ubicación y Orden Relativo
+          </span>
+        </div>
+        <p className="text-[11px] text-[var(--color-neutral-text-secondary)] leading-snug flex items-start gap-1.5">
+          <Lock className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-[var(--color-neutral-text-secondary)]" aria-hidden="true" />
+          <span>Esta sección no se puede mover de columna. {reason}</span>
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-3 bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[var(--radius-card)] space-y-2 text-xs">

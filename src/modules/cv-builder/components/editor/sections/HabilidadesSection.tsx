@@ -1,9 +1,11 @@
-import React from 'react';
-import { Info } from 'lucide-react';
+import React, { useState } from 'react';
+import { Info, Sparkles } from 'lucide-react';
 import { RepeatableSection } from '../../../../../shared/core/ui/RepeatableSection';
 import { SectionManualAdjustment } from '../SectionManualAdjustment';
 import { Field } from '../../../../../shared/core/ui/Field';
-import { radius } from '../../../../../shared/core/uiDesignSystem';
+import { radius, button } from '../../../../../shared/core/uiDesignSystem';
+import { executeAiTask } from '../../../../../shared/core/ai/aiClient';
+import { useToast } from '../../../../../shared/core/ui/Toast';
 
 interface HabilidadesSectionProps {
   cvData: any;
@@ -11,6 +13,38 @@ interface HabilidadesSectionProps {
 }
 
 export const HabilidadesSection: React.FC<HabilidadesSectionProps> = ({ cvData, setCvData }) => {
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const { showSuccess, showError, showWarning } = useToast();
+
+  const handleSuggestSkill = async () => {
+    setIsSuggesting(true);
+    try {
+      const res = await executeAiTask<{ records: Array<{ name?: string; level?: string }>; missingInfo?: string | null }>({
+        taskId: 'suggest_records',
+        payload: {
+          sectionKind: 'skills',
+          existingRecords: Array.isArray(cvData?.hardSkills) ? cvData.hardSkills : []
+        },
+        cvData,
+        maxTokens: 600,
+        temperature: 0.4
+      });
+      const drafts = Array.isArray(res.data?.records) ? res.data.records.filter(r => r && typeof r.name === 'string' && r.name.trim()) : [];
+      if (!drafts.length) {
+        showWarning(res.data?.missingInfo || 'La IA no pudo sugerir habilidades nuevas con los datos actuales del CV.');
+        return;
+      }
+      const normalized = drafts.map(d => ({ name: d.name.trim(), level: typeof d.level === 'string' ? d.level : '' }));
+      setCvData((prev: any) => ({ ...prev, hardSkills: [...(Array.isArray(prev?.hardSkills) ? prev.hardSkills : []), ...normalized] }));
+      showSuccess(`Agregamos ${normalized.length} habilidad${normalized.length > 1 ? 'es' : ''} sugerida${normalized.length > 1 ? 's' : ''} por IA. Revisá y ajustá lo que haga falta.`);
+    } catch (err) {
+      console.error(err);
+      showError('No pudimos generar la sugerencia. Intentá de nuevo.');
+    } finally {
+      setIsSuggesting(false);
+    }
+  };
+
   return (
     <div className="space-y-3">
       <div className={`p-3 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 rounded-[${radius.card}] text-xs text-[var(--color-secondary-text)] flex items-start gap-2 leading-relaxed`}>
@@ -19,6 +53,17 @@ export const HabilidadesSection: React.FC<HabilidadesSectionProps> = ({ cvData, 
           <span className="font-bold block">💡 Ayuda Contextual — Habilidades Técnicas (Hard Skills):</span>
           <span>Incluye conocimientos técnicos específicos, herramientas informáticas, tecnologías, lenguajes o metodologías aplicadas.</span>
         </div>
+      </div>
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={handleSuggestSkill}
+          disabled={isSuggesting}
+          className={`${button.secondary} flex items-center gap-1.5 text-xs py-1.5 px-3 ${isSuggesting ? 'opacity-60 cursor-not-allowed' : ''}`}
+        >
+          <Sparkles className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
+          {isSuggesting ? 'Generando sugerencia...' : 'Sugerir con IA'}
+        </button>
       </div>
       <RepeatableSection
         sectionKey="habilidades"

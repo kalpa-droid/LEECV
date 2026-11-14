@@ -26,6 +26,19 @@
 - [x] `frontend-visual` (Etapa 3): Login Passwordless (`LoginPasswordlessModal.tsx` con `requestOtp`/`verifyOtp`), botón WhatsApp en checkout (`PdfCheckoutModal.tsx`), UsersTab con créditos rápidos + WA (`UsersTab.tsx`), pestaña Auditoría (`AuditAndErrorsTab.tsx`)
 
 ## 4. Bitácora de Traspaso de Agentes (Handoff Log)
+### [2026-11-14] - Agente: OpenCode (plan aprobado por Kalpa: "arranca plan completo")
+- **Acción realizada**: Implementar plan de modelo de plantillas/secciones/IA (Fases A–F) en rama `feat/modelo-plantillas-secciones-ia`.
+  - A: `applyTemplateMode` modo `full-template` conserva columna manual (solo reordena por prioridad del formato).
+  - B: banner inline en `PersonalInfoFields` cuando el formato oculta datos personales cargados (evita sesgos); adapter intacto.
+  - C: nivel `preset` ya no fuerza visibilidad de slots `personalizada-N` vacíos (anti botones fantasma); entrada única "Agregar Sección +" del dock ya unificada.
+  - D: `SectionPositionControl` dispara `pdf-anchor-scroll` + toast al cambiar columna/orden.
+  - E: candado visible con razón para `certificados` y `firma` (no asignables a columna).
+  - F: botón "Sugerir Logros (ACR" de ExperienciaSection reparado (fetch crudo sin taskId → `executeAiTask('suggest_achievement_acr')`); nuevas tareas `suggest_achievement_acr` y `suggest_records` en `api/_lib/aiTasks/catalog.ts`; botón "Sugerir con IA" en RecordFormSection (kinds sugeribles) y HabilidadesSection; prompt `ats_analysis` endurecido (citas literales, suggestedText reformula, sin inventar); `explain_ats` conectado al AtsAiAnalysisModal.
+  - Tests: `tests/templateSemantics.test.ts` (14 casos, verdes); scratch borrado.
+  - Versión: `src/shared/core/version.ts` → V2.11.0.
+- **Archivos afectados**: templateApplicationEngine.ts, presetHierarchyEngine.ts, SectionPositionControl.tsx, PersonalInfoFields.tsx, RecordFormSection.tsx, HabilidadesSection.tsx, ExperienciaSection.tsx, AtsAiAnalysisModal.tsx, aiClient.ts, catalog.ts, version.ts, tests/templateSemantics.test.ts.
+- **Estado del código**: typecheck ✅; `npm run check-all` corriendo en background al momento de esta nota.
+- **Instrucción para el siguiente agente**: si check-all da 0 → git push, PR contra main, esperar CI verde + aprobación CODEOWNER, merge squash, SESSION_LOG.md + CONTEXT.md. Si falla → arreglar el caso real, nunca saltear el chequeo.
 ### 2026-10-31 - Agente: @desarrollo-rapido (Plan Mejora IA + Show Password) — V2.4.0
 - **Acción realizada**: Plan `plan-mejora-ia-extraccion-y-show-password.md` ejecutado. Rama `feat/mejora-ia-show-password`. Eje 2 (show password) completo (`LoginModal.tsx`). Eje 1 (bugs IA críticos): `supportsImages` en providers, filtro por imagen, `requiresAuth: false`, retry JSON, `auxiliaryText`. Eje 3 (mejoras): prompt estricto, `maxTokens` 4000, `responseSchema` completo. Eje 4: 4 tests nuevos. Eje 5: `version.ts` V2.4.0.
 - **Archivos afectados**: `LoginModal.tsx`, `api/_lib/aiProviders/types.ts`, `gemini.ts`, `groq.ts`, `registry.ts`, `api/cv-import-api.ts`, `ImportCvAiModal.tsx`, `tests/*.test.ts`, `version.ts`.
@@ -211,4 +224,5 @@
 - **Tests**: nuevo `tests/importToPdfPipeline.test.ts` (11 tests contrato OCR->PDF end-to-end). Bugs propios encontrados y arreglados durante el test: (a) API devuelve `linkedin` minuscula; (b) summary/objective/frase leidos solo de personalInfo y no del raiz; (c) derivacion de nivel de idiomas corrida antes de que existiera normalized.languages (no-op); (d) el loop IMPORTABLE_LIST_FIELDS pisaba normalized.redes ya enriquecido -> bloque linkedin/portfolio movido DESPUES del loop; (e) normalizeImportedCvData crasheaba si raw no trae personalInfo (inicializado siempre a {}).
 - **Estado del codigo**: `npx tsc --noEmit` exit 0; vitest 363 passed / 2 skipped; `npm run check-all` exit 0 (SEO 40/40). Pre-push (husky check-all completo) corriendo en background al cerrar esta nota.
 - **MERGEADO (2026-11-14)**: PR #91 mergeada a `main` por orden explicita de Kalpa (squash). Hash confirmado en `origin/main`: `14aab1b3af06ba856e2ea555f4f2b7ffa3577172`. CI check-all 1m4s verde + Vercel deployment completed. Registro asentado en SESSION_LOG.md.
+- **CIERRE DE REGISTRO (2026-11-14)**: PR #92 (`docs/session-log-pr-91`, commit e5eac97) mergeada por orden explicita de Kalpa (squash, check-all 47s verde). Hash confirmado en `origin/main`: `8957ab3fbc399e66f7377517b5bacf25b64ad4a1`. Plan OCR-full-pdf-mapping COMPLETO en produccion: `main` = 8957ab3.
 - **Pendiente menor aparte (Kalpa)**: probar web Editor -> Importar CV con IA con PDF de 2 columnas y escaneado.

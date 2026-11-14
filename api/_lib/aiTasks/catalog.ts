@@ -213,7 +213,10 @@ Devolvé EXCLUSIVAMENTE un objeto JSON con esta forma exacta:
     }
   ]
 }
-Máximo 6 hallazgos, priorizando los de mayor impacto. Si el CV está sólido, devolvé menos hallazgos o un array vacío.`,
+Máximo 6 hallazgos, priorizando los de mayor impacto. Si el CV está sólido, devolvé menos hallazgos o un array vacío.
+REGLA 1: "originalText" debe existir EXACTAMENTE en el texto del CV. Si no podés citar texto literal del CV, usá null — nunca inventes la cita.
+REGLA 2: "suggestedText" debe ser una reformulación de "originalText" (misma información, mejor redacción). Nunca propongas números, métricas o logros que no estén en el CV.
+REGLA 3: No repitas hallazgos del mismo tipo (ej. dos bullets vagos): agrupá con un hallazgo "general" o quedate con el de mayor impacto.`,
     buildUserPrompt: (payload: any) => `TEXTO DEL CV:
 ${payload.cvText || 'Sin contenido detectado.'}
 
@@ -234,6 +237,92 @@ Devuelve EXCLUSIVAMENTE un JSON con esta estructura:
   "description": "Una descripción redactada profesionalmente destacando las tareas y habilidades transferibles en 1 o 2 oraciones."
 }`,
     buildUserPrompt: (payload: any) => `Actividad informal que realizo:\n"${payload.rawActivity}"`
+  },
+
+  suggest_achievement_acr: {
+    taskId: 'suggest_achievement_acr',
+    buildSystemPrompt: (cvContext: string, payload: any, formatContext?: string) => `Eres un reclutador experto en redacción de CVs.
+Tu objetivo es redactar UN solo logro profesional en formato ACR (Acción + Contexto + Resultado) para la experiencia laboral de una persona.
+REGLA 1: Empezá con un sustantivo de acción o participio ("Administración de...", "Liderazgo de...", "Rediseño de..."), NO con un verbo conjugado.
+REGLA 2: Usá ÚNICAMENTE el rol, la empresa y los datos que aparecen en el CV de la persona. NO inventes métricas, números ni porcentajes. Si no hay datos para cuantificar, el resultado va en términos cualitativos (ej. "reduciendo reprocesos") y debés avisar en "missingMetrics" qué dato convendría agregar.
+REGLA 3: Una sola oración, máximo 22 palabras. Sin adjetivos vacíos.
+Debes devolver un JSON válido.
+${formatContext ? `\nADAPTACIÓN AL FORMATO OBJETIVO:\n${formatContext}\nAjustá el tono para encajar con el estilo de este formato.` : ''}
+
+Aquí está el contexto del CV (solo para referencia, no inventes datos de él):
+<candidate_context>
+${cvContext}
+</candidate_context>`,
+    buildUserPrompt: (payload: any) => `Cargo: "${payload.role || 'Desconocido'}"
+Empresa: "${payload.company || 'Desconocida'}"
+Descripción actual (puede estar vacía):
+<current_description>
+${payload.currentDescription || ''}
+</current_description>
+
+Redactá UN logro en formato ACR coherente con esos datos.`,
+    responseSchema: {
+      type: "object",
+      properties: {
+        acrBullet: { type: "string" },
+        missingMetrics: { type: ["string", "null"] }
+      },
+      required: ["acrBullet"]
+    }
+  },
+
+  suggest_records: {
+    taskId: 'suggest_records',
+    buildSystemPrompt: (cvContext: string, payload: any, formatContext?: string) => {
+      const kind = payload?.sectionKind || 'record';
+      const kindLabels: Record<string, string> = {
+        course: 'un curso o capacitación (título, institución)',
+        education: 'un título o formación académica (título, institución)',
+        profession: 'un título profesional con matrícula (título, institución)',
+        languages: 'un idioma con nivel (idioma, nivel)',
+        projects: 'un proyecto (título, institución o enlace)',
+        publications: 'una publicación (título, autor, institución)',
+        references: 'una referencia profesional (persona, cargo, institución)',
+        informatics: 'una herramienta informática con nivel (herramienta, nivel)',
+        redes: 'un enlace profesional (plataforma, usuario, url)',
+        achievements: 'un logro cuantificable (título, descripción)',
+        skills: 'una habilidad técnica con nivel (name, level)'
+      };
+      const label = kindLabels[kind] || 'un registro';
+      return `Eres un asistente que completa el CV de una persona con sugerencias coherentes.
+Tu objetivo es proponer hasta 2 ${label} que tengan sentido con la trayectoria real de la persona.
+REGLA 1: Usá ÚNICAMENTE lo que aparece en el CV (industria, roles, estudios, herramientas). NO inventes títulos, instituciones, fechas, niveles ni nombres.
+REGLA 2: Si no alcanza para proponer algo concreto, devolvé un array vacío en "records" y explicá en "missingInfo" qué dato haría falta.
+REGLA 3: Cada objeto del array solo puede tener campos de texto simples (string). Si no sabés un campo, usá string vacía.
+Debes devolver un JSON válido.
+${formatContext ? `\nADAPTACIÓN AL FORMATO OBJETIVO:\n${formatContext}\nAjustá el tono para encajar con el estilo de este formato.` : ''}
+
+Aquí está el contexto del CV (solo para referencia, no inventes datos de él):
+<candidate_context>
+${cvContext}
+</candidate_context>`;
+    },
+    buildUserPrompt: (payload: any) => `Sección a sugerir: ${payload?.sectionKind || 'registro'}
+Ya existen estos registros (no los repitas):
+<existing_records>
+${JSON.stringify(payload?.existingRecords || [])}
+</existing_records>
+
+Proponé hasta 2 registros nuevos coherentes.`,
+    responseSchema: {
+      type: "object",
+      properties: {
+        records: {
+          type: "array",
+          items: {
+            type: "object",
+            additionalProperties: { type: "string" }
+          }
+        },
+        missingInfo: { type: ["string", "null"] }
+      },
+      required: ["records"]
+    }
   },
 
   classify_raw_data: {

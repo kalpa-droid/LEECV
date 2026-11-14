@@ -70,6 +70,22 @@ export function PersonalInfoFields({
     );
   };
 
+  const policyFieldLabels: Record<string, string> = {
+    dni: 'DNI',
+    cuit: 'CUIT / CUIL',
+    birthDate: 'fecha de nacimiento',
+    nacionalidad: 'nacionalidad',
+    estadoCivil: 'estado civil'
+  };
+  const policyHiddenWithData = (() => {
+    if (!cvData) return [] as string[];
+    const fmt = getCvFormat(cvData.activeFormatId);
+    if (!fmt) return [] as string[];
+    return ['dni', 'cuit', 'birthDate', 'nacionalidad', 'estadoCivil'].filter(
+      (id) => (personalInfo as any)?.[id] && fmt.personalFieldPolicy?.[id as keyof typeof fmt.personalFieldPolicy] === 'hide'
+    );
+  })();
+
   return (
     <>
       {/* 1. Titular Profesional & Título Honorífico */}
@@ -108,6 +124,15 @@ export function PersonalInfoFields({
         title="Datos Personales"
       >
         <div className="space-y-3 pt-1">
+          {policyHiddenWithData.length > 0 && (
+            <div className="text-[10px] flex items-start gap-1 leading-snug" style={{ color: colorSystem.status.warning.text }}>
+              <Info className="w-3 h-3 mt-0.5 flex-shrink-0" aria-hidden="true" />
+              <span>
+                El formato <strong>{getCvFormat(cvData.activeFormatId)?.name}</strong> oculta {policyHiddenWithData.map((id) => policyFieldLabels[id]).join(', ')} para evitar sesgos.
+                Por eso esta sección puede no aparecer en el PDF. Elegí otro formato si querés mostrarlos.
+              </span>
+            </div>
+          )}
           {/* Tarjeta Foto de Perfil */}
           <div
             className="flex items-center gap-4 p-3.5 rounded-[12px] border"

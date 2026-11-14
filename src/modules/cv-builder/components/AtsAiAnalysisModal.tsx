@@ -3,6 +3,7 @@ import { X, CheckCircle, AlertCircle, Wand2, ArrowRight } from 'lucide-react';
 import { button } from '../../../shared/core/uiDesignSystem';
 import { Modal } from '../../../shared/core/ui/Modal';
 import { runAiAtsAnalysis, AtsAiAnalysisResult, AtsAiFinding } from '../../../shared/core/pdf-engine/layers/ats/atsAiAnalysis';
+import { executeAiTask } from '../../../shared/core/ai/aiClient';
 import { useToast } from '../../../shared/core/ui/Toast';
 
 export interface AtsAiAnalysisModalProps {
@@ -71,6 +72,8 @@ export function AtsAiAnalysisModal({
   const [result, setResult] = useState<AtsAiAnalysisResult | null>(null);
   const [appliedIds, setAppliedIds] = useState<Set<string>>(new Set());
   const [notFoundIds, setNotFoundIds] = useState<Set<string>>(new Set());
+  const [explanation, setExplanation] = useState<string | null>(null);
+  const [explainLoading, setExplainLoading] = useState(false);
   const { showSuccess, showError, showWarning } = useToast();
 
   useEffect(() => {
@@ -78,6 +81,7 @@ export function AtsAiAnalysisModal({
       runAiAtsAnalysis(cvText, jobDescription)
         .then(res => {
           setResult(res);
+          setExplanation(null);
           setLoading(false);
         })
         .catch(err => {
@@ -89,6 +93,26 @@ export function AtsAiAnalysisModal({
   }, [isOpen, cvText, jobDescription]);
 
   if (!isOpen) return null;
+
+  const handleExplain = async () => {
+    if (!result) return;
+    setExplainLoading(true);
+    try {
+      const res = await executeAiTask<{ explanation: string }>({
+        taskId: 'explain_ats',
+        payload: { auditJson: JSON.stringify(result), cvText },
+        cvData,
+        maxTokens: 500,
+        temperature: 0.3
+      });
+      setExplanation(res.data.explanation || 'La IA no pudo explicar el resultado.');
+    } catch (err) {
+      console.error(err);
+      showError('No pudimos generar la explicación. Intentá de nuevo.');
+    } finally {
+      setExplainLoading(false);
+    }
+  };
 
   const handleApply = (finding: AtsAiFinding) => {
     if (!finding.originalText || !finding.suggestedText) return;
@@ -129,6 +153,23 @@ export function AtsAiAnalysisModal({
                 <div className={`text-2xl font-black ${result.semanticScore >= 80 ? 'text-[var(--color-success-base)]' : result.semanticScore >= 50 ? 'text-[var(--color-warning-base)]' : 'text-[var(--color-danger-base)]'}`}>
                   {result.semanticScore}%
                 </div>
+              </div>
+
+              <div className="flex flex-col items-end gap-2">
+                <button
+                  type="button"
+                  onClick={handleExplain}
+                  disabled={explainLoading}
+                  className={`${button.secondary} flex items-center gap-1.5 text-xs py-1.5 px-3 ${explainLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
+                >
+                  <Wand2 className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
+                  {explainLoading ? 'Explicando...' : 'Explicar con IA'}
+                </button>
+                {explanation && (
+                  <div className="w-full p-3 bg-[var(--ui-bg-page)] border border-[var(--ui-border)] rounded-[var(--ui-radius-card)] text-xs leading-relaxed text-[var(--color-neutral-text-primary)] whitespace-pre-wrap">
+                    {explanation}
+                  </div>
+                )}
               </div>
 
               {result.findings.length === 0 ? (

@@ -2,6 +2,7 @@ import { getCvFormat, resolveActiveFormatId } from '../../../formats/cvFormatReg
 import { applyTemplateMode, TemplateApplicationMode } from './templateApplicationEngine';
 import { resolveActivePreset } from './presetRegistry';
 import { CANONICAL_SECTION_ORDER } from '../../../sections/canonicalSectionOrder';
+import { checkSectionHasContent } from '../../../sections/activeSectionsDockEngine';
 
 export type PresetLevel = 'format' | 'preset' | 'override';
 
@@ -66,7 +67,14 @@ export function applyPresetLevel(cvData: any, level: PresetLevel, payload: Apply
   if (level === 'preset' && payload.presetId) {
     const allVisible: Record<string, boolean> = {};
     CANONICAL_SECTION_ORDER.forEach((id) => {
-      allVisible[id] = true;
+      // Los slots de sección personalizada vacíos NO se encienden por defecto:
+      // forzarlos visible dejaba botones fantasma en el dock y secciones sin
+      // contenido. Solo se prenden si ya estaban visibles o tienen datos.
+      if (id.startsWith('personalizada-')) {
+        allVisible[id] = cvData?.sectionVisibility?.[id] === true || checkSectionHasContent(cvData, id);
+      } else {
+        allVisible[id] = true;
+      }
     });
 
     const updated = {

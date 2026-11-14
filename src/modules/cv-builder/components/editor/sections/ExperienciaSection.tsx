@@ -5,7 +5,7 @@ import { ClassifyItemModal } from '../../modals/ClassifyItemModal';
 import { FirstJobHelpModal } from '../../modals/FirstJobHelpModal';
 import { Sparkles, Briefcase, Wand2 } from 'lucide-react';
 import { button } from '../../../../../shared/core/uiDesignSystem';
-import { apiFetch } from '../../../../../shared/core/utils/apiClient';
+import { executeAiTask } from '../../../../../shared/core/ai/aiClient';
 
 export const ExperienciaSection = ({ cvData, setCvData }: any) => {
   const [isClassifyOpen, setIsClassifyOpen] = useState(false);
@@ -56,8 +56,22 @@ export const ExperienciaSection = ({ cvData, setCvData }: any) => {
                 onClick={async () => {
                   setAcrLoading(true); setAcrResponse(null);
                   try {
-                    const res = await apiFetch('/api/ai-generate', { method: 'POST', body: JSON.stringify({ prompt: 'Redactá un logro en formato ACR (Acción + Contexto + Resultado cuantitativo) para experiencia laboral en marketing digital:', context: 'Experiencia Laboral' }) });
-                    setAcrResponse(res.data?.text || res.data?.response || 'Sugerencia generada por IA.');
+                    const experience = Array.isArray(cvData?.experience) ? cvData.experience : [];
+                    const lastItem = experience[experience.length - 1] || {};
+                    const res = await executeAiTask<{ acrBullet: string; missingMetrics: string | null }>({
+                      taskId: 'suggest_achievement_acr',
+                      payload: {
+                        role: lastItem?.cargo || experience[0]?.cargo || 'Profesional',
+                        company: lastItem?.institucion || lastItem?.empresa || '',
+                        currentDescription: lastItem?.descripcion || ''
+                      },
+                      cvData,
+                      maxTokens: 300,
+                      temperature: 0.4
+                    });
+                    const bullet = res.data.acrBullet || 'Sugerencia generada por IA.';
+                    const metricsNote = res.data.missingMetrics ? ` (Dato a sumar para cuantificar: ${res.data.missingMetrics})` : '';
+                    setAcrResponse(`${bullet}${metricsNote}`);
                   } catch { setAcrResponse('No se pudo conectar con el asistente ACR. Intentá de nuevo.'); }
                   setAcrLoading(false);
                 }}

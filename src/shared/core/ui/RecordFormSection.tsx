@@ -1,15 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { RepeatableSection } from './RepeatableSection';
 import { Field } from './Field';
 import { FIELD_CATALOG, BUILTIN_RECORD_KINDS } from '../pdf-engine/layers/records/fieldCatalog';
-import { elevationSystem } from '../uiDesignSystem';
+import { elevationSystem, button, radius } from '../uiDesignSystem';
 import { resolveLegacyFieldKey } from '../pdf-engine/layers/records/fieldAliasCatalog';
 import { getFieldLabelOptions } from '../pdf-engine/layers/records/fieldLabelOptions';
-import { Info } from 'lucide-react';
-import { radius } from '../uiDesignSystem';
+import { Info, Sparkles } from 'lucide-react';
 import { SectionPositionControl } from './SectionPositionControl';
 import { AIButton } from './AIButton';
 import { executeAiTask } from '../ai/aiClient';
+import { useToast } from './Toast';
 
 interface RecordFormSectionProps {
   sectionKey: string;
@@ -21,6 +21,7 @@ interface RecordFormSectionProps {
   fieldName: string;
   itemTitlePrefix: string;
   helpText?: React.ReactNode;
+
   /**
    * Para secciones creadas por la persona desde "Nueva Sección": la lista de
    * campos la eligió el usuario, no viene de BUILTIN_RECORD_KINDS. Cuando
@@ -32,6 +33,19 @@ interface RecordFormSectionProps {
   onDeleteSection?: () => void;
   renderTrailingSlot?: (sectionKey: string) => React.ReactNode;
 }
+
+const AI_SUGGESTABLE_KINDS: Record<string, { sectionKind: string; labelSingular: string }> = {
+  course: { sectionKind: 'course', labelSingular: 'curso' },
+  education: { sectionKind: 'education', labelSingular: 'título' },
+  profession: { sectionKind: 'profession', labelSingular: 'título profesional' },
+  languages: { sectionKind: 'languages', labelSingular: 'idioma' },
+  projects: { sectionKind: 'projects', labelSingular: 'proyecto' },
+  publications: { sectionKind: 'publications', labelSingular: 'publicación' },
+  references: { sectionKind: 'references', labelSingular: 'referencia' },
+  informatics: { sectionKind: 'informatics', labelSingular: 'herramienta' },
+  redes: { sectionKind: 'redes', labelSingular: 'enlace' },
+  achievements: { sectionKind: 'achievements', labelSingular: 'logro' }
+};
 
 export function RecordFormSection({
   sectionKey,
@@ -51,6 +65,43 @@ export function RecordFormSection({
   const schema = BUILTIN_RECORD_KINDS[kindKey] || BUILTIN_RECORD_KINDS['education'];
   const fieldList = customFields && customFields.length > 0 ? customFields : (schema.defaultFields || ['tituloOGrado', 'institucion']);
 
+  // Secciones con IA de sugerencia de registro (Fase F del plan de secciones).
+  const aiSuggestInfo = AI_SUGGESTABLE_KINDS[kindKey];
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const { showSuccess, showError, showWarning } = useToast();
+
+  const handleAiSuggest = async () => {
+    if (!aiSuggestInfo) return;
+    setIsSuggesting(true);
+    try {
+      const res = await executeAiTask<{ records: Record<string, string>[]; missingInfo?: string | null }>({
+        taskId: 'suggest_records',
+        payload: {
+          sectionKind: aiSuggestInfo.sectionKind,
+          existingRecords: Array.isArray(cvData?.[fieldName]) ? cvData[fieldName] : []
+        },
+        cvData,
+        maxTokens: 600,
+        temperature: 0.4
+      });
+      const drafts = Array.isArray(res.data?.records) ? res.data.records.filter(r => r && typeof r === 'object') : [];
+      if (!drafts.length) {
+        showWarning(res.data?.missingInfo || 'La IA no pudo sugerir un registro nuevo con los datos actuales del CV.');
+        return;
+      }
+      setCvData((prev: any) => ({
+        ...prev,
+        [fieldName]: [...(Array.isArray(prev?.[fieldName]) ? prev[fieldName] : []), ...drafts]
+      }));
+      showSuccess(`Agregamos ${drafts.length} ${aiSuggestInfo.labelSingular}${drafts.length > 1 ? 's' : ''} sugerida${drafts.length > 1 ? 's' : ''} por IA. Revisá y ajustá lo que haga falta.`);
+    } catch (err) {
+      console.error(err);
+      showError('No pudimos generar la sugerencia. Intentá de nuevo.');
+    } finally {
+      setIsSuggesting(false);
+    }
+  };
+
   return (
     <div className="space-y-3">
       {helpText && (
@@ -60,6 +111,20 @@ export function RecordFormSection({
             <span className="font-bold block">Ayuda contextual:</span>
             <span>{helpText}</span>
           </div>
+        </div>
+      )}
+
+      {aiSuggestInfo && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={handleAiSuggest}
+            disabled={isSuggesting}
+            className={`${button.secondary} flex items-center gap-1.5 text-xs py-1.5 px-3 ${isSuggesting ? 'opacity-60 cursor-not-allowed' : ''}`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
+            {isSuggesting ? 'Generando sugerencia...' : 'Sugerir con IA'}
+          </button>
         </div>
       )}
 
