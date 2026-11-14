@@ -10,7 +10,7 @@ export const blankCVBase = {
     showCoverPage: true,
     columnAssignments: {
       contacto: "secundaria",
-      personales: "secundaria",
+      "datos-personales": "secundaria",
       formacion: "primaria",
       profesion: "primaria",
       experiencia: "primaria",
@@ -20,13 +20,14 @@ export const blankCVBase = {
       ecologia: "primaria"
     },
     sectionOrders: {
-      secundaria: ["contacto", "personales", "informatica", "competencias"],
+      secundaria: ["contacto", "datos-personales", "informatica", "competencias"],
       primaria: ["formacion", "profesion", "experiencia", "cursos", "ecologia"]
     }
   },
   customSections: [],
   sectionVisibility: {
-    personales: true,
+    contacto: true,
+    "datos-personales": true,
     formacion: true,
     profesion: true,
     experiencia: true,

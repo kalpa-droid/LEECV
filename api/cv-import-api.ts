@@ -41,7 +41,7 @@ REGLAS OBLIGATORIAS:
 3. ELIMINAR RUIDO: Remueve números de página, notas al pie de escaneo, folios, sellos repetitivos y cabeceras de página.
 4. IMPACTO ATS: Inicia los puntos de responsabilidad y logros con verbos de acción fuertes en tiempo pasado (ej. Implementó, Diseñó, Coordinó, Optimizó).
 5. CLASIFICACIÓN EXACTA: Mapea cada elemento a su categoría canónica de LEECV:
-   - personalInfo (fullName, email, phone, dni, cuit, birthDate, address, cityProvince, nacionalidad, estadoCivil, linkedin, portfolio)
+   - personalInfo (titlePrefix, fullName, givenNames, surname, email, phone, address, cityProvince, website, quote, dni, cuit, birthDate, nacionalidad, estadoCivil, disponibilidad, licenciaConducir, linkedin, portfolio, location, role, summary)
    - summary, objective, frase
    - experience, education, profession, coursesAndCertificates, achievements, portfolio, projects, publications, references, hardSkills, skills, languages, informatics, redes.
 6. FORMATO: Devuelve ÚNICAMENTE un objeto JSON válido, sin delimitadores de código markdown ni texto adicional.`;
@@ -184,6 +184,8 @@ ESTRUCTURA DE SALIDA OBLIGATORIA:
 {
   "personalInfo": {
     "fullName": "Nombre completo",
+    "givenNames": "Nombre(s) de pila si aparecen por separado",
+    "surname": "Apellido(s) si aparecen por separado",
     "email": "correo@ejemplo.com",
     "phone": "+54 11 1234-5678",
     "role": "Cargo o título profesional actual",
@@ -252,6 +254,26 @@ ESTRUCTURA DE SALIDA OBLIGATORIA:
       "institution": "Institución que lo otorgó",
       "details": "Detalles"
     }
+  ],
+  "objective": "Objetivo profesional o meta (copiar textualmente si existe, o dejar vacío)",
+  "frase": "Frase, cita o lema personal si aparece",
+  "redes": [
+    { "plataforma": "LinkedIn / GitHub / Portfolio", "usuario": "Usuario o handle", "url": "URL completa" }
+  ],
+  "hardSkills": [
+    { "name": "Habilidad técnica", "level": "Nivel si aparece" }
+  ],
+  "informatics": [
+    { "title": "Programa / herramienta", "course": "Curso o certificación asociada", "institution": "Institución" }
+  ],
+  "profession": [
+    { "degree": "Título profesional", "institution": "Institución", "year": "Año" }
+  ],
+  "references": [
+    { "personaReferencia": "Nombre del referente", "cargo": "Cargo / relación", "institution": "Empresa / institución", "contactoReferencia": "Contacto" }
+  ],
+  "portfolio": [
+    { "title": "Proyecto / trabajo destacado", "institution": "Cliente / empresa", "details": "Detalles" }
   ]
 }
 
@@ -273,7 +295,7 @@ B. En dos columnas o barra lateral: leé TODA una columna de arriba a abajo ante
 C. Si viene "Texto auxiliar extraído del PDF", usalo como ancla exacta: la imagen decide a qué sección pertenece cada bloque y el texto auxiliar copia sin errores emails, teléfonos, DNI, CUIT, enlaces y fechas.
 D. Barras de progreso, estrellas o puntos junto a idiomas/habilidades: NO inventes porcentajes. Mapeá a nivel (Básico, Intermedio, Avanzado) SOLO si es inequívoco; si no hay nivel explícito, omití proficiency.
 E. Si la página es un certificado, diploma o analítico completo: extraé título, institución, año y carga horaria completos en coursesAndCertificates o education. Nunca resumas ni omitas campos por parecer redundantes.
-F. TIPOS EXACTOS (Groq no valida el esquema automáticamente): experience, education, skills, languages, coursesAndCertificates, projects, publications y achievements son SIEMPRE arrays (usá [] si no hay datos); personalInfo es SIEMPRE un objeto con las llaves exactas indicadas; los strings van entre comillas; continuesFromPrevious es booleano estricto (true/false, nunca "true"); sin null ni undefined: usá "" o [] cuando falte un dato.`;
+F. TIPOS EXACTOS (Groq no valida el esquema automáticamente): experience, education, skills, languages, coursesAndCertificates, projects, publications, achievements, redes, hardSkills, informatics, profession, references y portfolio son SIEMPRE arrays (usá [] si no hay datos); personalInfo es SIEMPRE un objeto con las llaves exactas indicadas; los strings van entre comillas; continuesFromPrevious es booleano estricto (true/false, nunca "true"); sin null ni undefined: usá "" o [] cuando falte un dato. Si el CV trae objetivo/frase, colocalos en objective/frase como strings.`;
 
     const userPromptBase = kind === 'text'
       ? `Extrae los datos de este texto de CV:\n\n${content}`
@@ -295,16 +317,24 @@ F. TIPOS EXACTOS (Groq no valida el esquema automáticamente): experience, educa
             type: "object",
             properties: {
               fullName: { type: "string" },
+              titlePrefix: { type: "string" },
+              givenNames: { type: "string" },
+              surname: { type: "string" },
               email: { type: "string" },
               phone: { type: "string" },
               role: { type: "string" },
               location: { type: "string" },
               summary: { type: "string" },
+              website: { type: "string" },
+              quote: { type: "string" },
+              address: { type: "string" },
               dni: { type: "string" },
               cuit: { type: "string" },
               birthDate: { type: "string" },
               estadoCivil: { type: "string" },
               nacionalidad: { type: "string" },
+              disponibilidad: { type: "string" },
+              licenciaConducir: { type: "string" },
               linkedin: { type: "string" },
               portfolio: { type: "string" }
             }
@@ -392,6 +422,75 @@ F. TIPOS EXACTOS (Groq no valida el esquema automáticamente): experience, educa
             }
           },
           achievements: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                title: { type: "string" },
+                institution: { type: "string" },
+                details: { type: "string" }
+              }
+            }
+          },
+          objective: { type: "string" },
+          frase: { type: "string" },
+          summary: { type: "string" },
+          redes: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                plataforma: { type: "string" },
+                usuario: { type: "string" },
+                url: { type: "string" }
+              }
+            }
+          },
+          hardSkills: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                level: { type: "string" }
+              }
+            }
+          },
+          informatics: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                title: { type: "string" },
+                course: { type: "string" },
+                institution: { type: "string" }
+              }
+            }
+          },
+          profession: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                degree: { type: "string" },
+                institution: { type: "string" },
+                year: { type: "string" }
+              }
+            }
+          },
+          references: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                personaReferencia: { type: "string" },
+                cargo: { type: "string" },
+                institution: { type: "string" },
+                contactoReferencia: { type: "string" }
+              }
+            }
+          },
+          portfolio: {
             type: "array",
             items: {
               type: "object",

@@ -24,6 +24,7 @@ interface ImportReviewDiffModalProps {
 }
 
 const scalarLabels: Record<string, string> = {
+  'personalInfo.titlePrefix': 'Prefijo (Lic., Dr., ...)',
   'personalInfo.fullName': 'Nombre completo',
   'personalInfo.givenNames': 'Nombres',
   'personalInfo.surname': 'Apellido',
@@ -33,8 +34,16 @@ const scalarLabels: Record<string, string> = {
   'personalInfo.cityProvince': 'Ciudad / Provincia',
   'personalInfo.website': 'Sitio web',
   'personalInfo.quote': 'Frase / titular',
+  'personalInfo.dni': 'DNI',
+  'personalInfo.cuit': 'CUIT',
+  'personalInfo.birthDate': 'Fecha de nacimiento',
+  'personalInfo.nacionalidad': 'Nacionalidad',
+  'personalInfo.estadoCivil': 'Estado civil',
+  'personalInfo.disponibilidad': 'Disponibilidad',
+  'personalInfo.licenciaConducir': 'Licencia de conducir',
   summary: 'Resumen profesional',
-  objective: 'Objetivo profesional'
+  objective: 'Objetivo profesional',
+  frase: 'Frase / lema'
 };
 
 const listLabels: Record<string, string> = {
@@ -220,6 +229,21 @@ export default function ImportReviewDiffModal({
     });
   };
 
+  const applyAllDetected = () => {
+    const nextScalars: Record<string, 'keep' | 'replace'> = {};
+    scalarEntries.forEach(({ path }) => {
+      nextScalars[path] = 'replace';
+    });
+    const nextLists: Record<string, ImportListSelection> = {};
+    listEntries.forEach(({ field, index, duplicateIndex }) => {
+      nextLists[`${field}:${index}`] = duplicateIndex >= 0
+        ? { action: 'replace', targetIndex: duplicateIndex }
+        : { action: 'add' };
+    });
+    setScalarFields(nextScalars);
+    setListItems(nextLists);
+  };
+
   const mergedContext = { ...current, ...edited };
 
   return (
@@ -231,6 +255,9 @@ export default function ImportReviewDiffModal({
       size="4xl"
       footer={
         <>
+          <button type="button" className={`${button.base} ${button.secondary}`} onClick={applyAllDetected}>
+            Usar todo lo detectado
+          </button>
           <button type="button" className={`${button.base} ${button.secondary}`} onClick={onCancel}>
             Cancelar
           </button>
