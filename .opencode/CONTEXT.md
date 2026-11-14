@@ -26,6 +26,11 @@
 - [x] `frontend-visual` (Etapa 3): Login Passwordless (`LoginPasswordlessModal.tsx` con `requestOtp`/`verifyOtp`), botón WhatsApp en checkout (`PdfCheckoutModal.tsx`), UsersTab con créditos rápidos + WA (`UsersTab.tsx`), pestaña Auditoría (`AuditAndErrorsTab.tsx`)
 
 ## 4. Bitácora de Traspaso de Agentes (Handoff Log)
+### [2026-11-14] - Agente: OpenCode (Post-merge PR #93 - V2.11.0)
+- **Acción realizada**: Push (`check-all` completo pre-push ✅ "push permitido"), PR #93 contra `main`, CI GitHub verde (`check-all` 1m19s; Vercel Preview + Deployment pass), merge squash con autorización CODEOWNER de Kalpa. Hash `cf573e97ea97ee918729b2e9785c7620fa606f5c`; `origin/main` sincronizado; working tree limpio; rama `feat/modelo-plantillas-secciones-ia` borrada en remote.
+- **Segunda PR docs** (permiso Regla 6 paso 7): SESSION_LOG.md y este CONTEXT.md actualizados vía rama `docs/registrar-merge-pr-93` → PR aparte (patrón #92/#90).
+- **Estado del código**: en `main`. `version.ts` = V2.11.0. Deploy de producción dispara Vercel desde `main`.
+- **Instrucción para el siguiente agente**: Pendiente del lado de Kalpa — probar Editor → Importar CV con IA con un PDF de 2 columnas y uno escaneado (no bloqueante). Si el import IA reporta hallazgos, revisar `ImportCvAiModal` / Completeness Gate.
 ### [2026-11-14] - Agente: OpenCode (plan aprobado por Kalpa: "arranca plan completo")
 - **Acción realizada**: Implementar plan de modelo de plantillas/secciones/IA (Fases A–F) en rama `feat/modelo-plantillas-secciones-ia`.
   - A: `applyTemplateMode` modo `full-template` conserva columna manual (solo reordena por prioridad del formato).
