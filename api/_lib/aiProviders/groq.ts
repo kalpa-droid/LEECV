@@ -1,4 +1,5 @@
 import type { AiCompletionRequest, AiProviderDefinition, AiProviderPingResult, AiCompletionResponse } from './types.js';
+import { describeResponseSchema } from './schemaGuide.js';
 
 // Modelos vigentes en Groq al 2026-11-13 (revisado contra console.groq.com/docs/deprecations):
 // - llama-3.2-11b-vision-preview: shutdown 2025-04-14 (reemplazo: llama-4-scout).
@@ -55,10 +56,18 @@ export const groqProvider: AiProviderDefinition = {
           ]
         : req.userPrompt;
 
+      // Groq fuerza json_object pero NO valida contra el esquema: la guía
+      // compacta de claves va inline en el systemPrompt (misma fiabilidad
+      // que Gemini, que sí valida con responseSchema).
+      const schemaGuide = req.responseSchema ? describeResponseSchema(req.responseSchema) : '';
+      const systemPrompt = schemaGuide
+        ? `${req.systemPrompt}\n\n${schemaGuide}`
+        : req.systemPrompt;
+
       const body: Record<string, any> = {
         model: currentModel,
         messages: [
-          { role: 'system', content: req.systemPrompt },
+          { role: 'system', content: systemPrompt },
           { role: 'user', content: userContent }
         ],
         max_tokens: req.maxTokens || 1200,

@@ -5,9 +5,8 @@ import { FIELD_CATALOG, BUILTIN_RECORD_KINDS } from '../pdf-engine/layers/record
 import { elevationSystem, button, radius } from '../uiDesignSystem';
 import { resolveLegacyFieldKey } from '../pdf-engine/layers/records/fieldAliasCatalog';
 import { getFieldLabelOptions } from '../pdf-engine/layers/records/fieldLabelOptions';
-import { Info, Sparkles } from 'lucide-react';
+import { Info, Sparkles, X } from 'lucide-react';
 import { SectionPositionControl } from './SectionPositionControl';
-import { AIButton } from './AIButton';
 import { executeAiTask } from '../ai/aiClient';
 import { useToast } from './Toast';
 
@@ -78,6 +77,21 @@ const AI_FIELD_ALIASES: Record<string, string> = {
 };
 
 /**
+ * Campos de texto libre que la IA puede reescribir (cualquier sección).
+ * Se normaliza (NFD + sin diacríticos) antes de comparar (Regla 8 del repo).
+ */
+export const IMPROVABLE_FIELD_IDS = ['descripcion', 'description', 'resumen'];
+
+export function isAiRewritableField(fieldId: string): boolean {
+  const normalized = String(fieldId)
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+  return IMPROVABLE_FIELD_IDS.includes(normalized);
+}
+
+/**
  * Normaliza un borrador devuelto por la IA al esquema real de la sección:
  * conserva claves válidas tal cual, traduce alias conocidos y descarta el
  * resto (no inventa campos, no mete texto libre en claves desconocidas).
@@ -133,6 +147,19 @@ export function RecordFormSection({
     : undefined);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const { showSuccess, showError, showWarning } = useToast();
+
+  // Revisión inline de sugerencias de IA (vista previa antes de aplicar)
+  const [fieldReview, setFieldReview] = useState<{ fieldId: string; legacyKey: string; text: string; note: string | null } | null>(null);
+  const [fieldBusy, setFieldBusy] = useState(false);
+  const [recordReview, setRecordReview] = useState<{ fields: Record<string, string>; note: string | null } | null>(null);
+  const [recordBusy, setRecordBusy] = useState(false);
+  const [recordFocus, setRecordFocus] = useState<'claridad' | 'ats' | 'breve'>('claridad');
+
+  const jobTargetStr = (() => {
+    const jt = cvData?.jobTarget || {};
+    const parts = [jt.jobTitle, jt.companyName, jt.jobDescription].filter((v: any) => typeof v === 'string' && v.trim());
+    return parts.length > 0 ? parts.join(' · ') : undefined;
+  })();
 
   const handleAiSuggest = async () => {
     if (!aiSuggestInfo) return;
@@ -254,36 +281,59 @@ export function RecordFormSection({
                 fDef.label
               );
 
-              const headerAiAction = (fDef.type === 'textarea' && (kindKey === 'experience' || fieldId === 'description')) ? (
-                <AIButton
-                  label="Sugerir Logros"
-                  onGenerate={async () => {
-                    const title = item.tituloOGrado || item.title || item.cargo || 'Profesional';
-                    const company = item.institucion || item.company || item.empresa || '';
-                    const res = await executeAiTask<{ improvedBullet: string; missingMetrics: string | null }>({
-                      taskId: 'improve_bullet',
-                      payload: { role: title, company: company, bulletText: currentValue || '' },
-                      maxTokens: 250,
-                      temperature: 0.4
-                    });
-                    
-                    if (res.data.missingMetrics) {
-                      // Se podría mostrar un toast o alerta, pero por ahora lo inyectamos o devolvemos el texto mejorado
-                      console.info('Métricas faltantes sugeridas por IA:', res.data.missingMetrics);
+              // Acción de IA por campo de texto libre: reescribe SOLO este campo
+              // con rewrite_record (respeta sección/kind y vacante) y abre
+              // revisión inline — nunca aplica sin que la persona elija.
+              const fieldAiAction = (fDef.type === 'textarea' && isAiRewritableField(fieldId)) ? (
+                <button
+                  type="button"
+                  disabled={fieldBusy}
+                  onClick={async () => {
+                    setFieldBusy(true);
+                    try {
+                      const cleanItem: Record<string, any> = {};
+                      Object.entries(item).forEach(([k, v]) => {
+                        if (k !== 'id' && k !== 'fieldLabelOverrides') cleanItem[k] = v;
+                      });
+                      const res = await executeAiTask<{ improvedFields: Record<string, string>; missingDataNote?: string | null }>({
+                        taskId: 'rewrite_record',
+                        payload: {
+                          sectionKind: aiSuggestInfo?.sectionKind || kindKey,
+                          sectionTitle,
+                          jobTarget: jobTargetStr,
+                          focus: 'claridad',
+                          currentRecord: cleanItem
+                        },
+                        cvData,
+                        maxTokens: 400,
+                        temperature: 0.3
+                      });
+                      const improved = res.data?.improvedFields || {};
+                      // El modelo responde con claves del esquema (canónicas);
+                      // si el campo de la sección usa un alias, se traduce.
+                      const canonical = AI_FIELD_ALIASES[fieldId] || AI_FIELD_ALIASES[String(fieldId).toLowerCase()] || fieldId;
+                      const text = typeof improved[canonical] === 'string' ? improved[canonical]
+                        : typeof improved[fieldId] === 'string' ? improved[fieldId] : '';
+                      if (!text || !text.trim()) {
+                        showWarning('La IA no devolvió texto para este campo. Probá de nuevo.');
+                        return;
+                      }
+                      setFieldReview({ fieldId, legacyKey, text, note: res.data?.missingDataNote || null });
+                    } catch (err: any) {
+                      console.error(err);
+                      showError(err?.message || 'No pudimos mejorar el texto. Intentá de nuevo.');
+                    } finally {
+                      setFieldBusy(false);
                     }
-                    return res.data.improvedBullet;
                   }}
-                  onSuccess={(generatedText) => {
-                    const newValue = currentValue ? `${currentValue}\n\n${generatedText}` : generatedText;
-                    updateField(fieldId, newValue);
-                    if (legacyKey !== fieldId) {
-                      updateField(legacyKey, newValue);
-                    }
-                  }}
-                />
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-black flex items-center gap-1 bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/40 text-[var(--color-accent-text)] hover:bg-[var(--color-accent-base)] hover:text-[var(--color-accent-on-base)] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  <Sparkles className="w-3 h-3" />
+                  {fieldBusy ? 'Mejorando...' : 'Mejorar texto'}
+                </button>
               ) : undefined;
 
-              let finalHeaderAction = headerAiAction;
+              let finalHeaderAction = fieldAiAction;
               if (fieldId === 'periodo') {
                 finalHeaderAction = (
                   <div className="flex gap-2 items-center">
@@ -302,7 +352,7 @@ export function RecordFormSection({
                     >
                       Solo Año
                     </button>
-                    {headerAiAction}
+                    {fieldAiAction}
                   </div>
                 ) as any;
               }
@@ -332,7 +382,7 @@ export function RecordFormSection({
                 );
               }
 
-              return (
+              const defaultField = (
                 <Field
                   key={fieldId}
                   label={labelElement}
@@ -349,7 +399,180 @@ export function RecordFormSection({
                   isTextArea={fDef.type === 'textarea'}
                 />
               );
+              if (!(fieldReview && fieldReview.fieldId === fieldId)) return defaultField;
+              return (
+                <div key={fieldId} className={`space-y-2 p-3 bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/40 rounded-[${radius.card}]`}>
+                  {defaultField}
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-black text-[var(--color-accent-text)]">Vista previa de la IA</p>
+                    <button
+                      type="button"
+                      onClick={() => setFieldReview(null)}
+                      aria-label="Descartar sugerencia"
+                      className="p-0.5 rounded text-[var(--color-neutral-text-secondary)] hover:text-[var(--color-neutral-text-primary)] transition cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <p className="text-xs leading-relaxed whitespace-pre-wrap bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[var(--ui-radius-card)] p-2 max-h-48 overflow-y-auto">
+                    {fieldReview.text}
+                  </p>
+                  {fieldReview.note && (
+                    <p className="text-[11px] text-[var(--color-neutral-text-secondary)] leading-snug">
+                      <span className="font-bold">Datos recomendados:</span> {fieldReview.note}
+                    </p>
+                  )}
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        updateField(fieldId, fieldReview.text);
+                        if (legacyKey !== fieldId) updateField(legacyKey, fieldReview.text);
+                        setFieldReview(null);
+                        showSuccess('Texto actualizado con la sugerencia de IA.');
+                      }}
+                      className="px-2.5 py-1 text-[11px] font-black rounded-md bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] hover:opacity-90 transition cursor-pointer"
+                    >
+                      Reemplazar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newValue = currentValue ? `${currentValue}\n\n${fieldReview.text}` : fieldReview.text;
+                        updateField(fieldId, newValue);
+                        if (legacyKey !== fieldId) updateField(legacyKey, newValue);
+                        setFieldReview(null);
+                        showSuccess('Texto agregado debajo del anterior.');
+                      }}
+                      className="px-2.5 py-1 text-[11px] font-black rounded-md bg-[var(--ui-bg-card)] border border-[var(--color-accent-base)]/40 text-[var(--color-accent-text)] hover:bg-[var(--color-accent-muted)] transition cursor-pointer"
+                    >
+                      Agregar debajo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFieldReview(null)}
+                      className="px-2.5 py-1 text-[11px] font-bold rounded-md border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-secondary)] hover:bg-[var(--color-neutral-surface-muted)] transition cursor-pointer"
+                    >
+                      Descartar
+                    </button>
+                  </div>
+                </div>
+              );
             })}
+
+            {/* Mejora del registro completo con IA (rewrite_record + revisión inline) */}
+            <div className="pt-2 space-y-2 border-t border-[var(--color-neutral-border)]/60">
+              <div className="flex flex-wrap items-center gap-2">
+                {(['claridad', 'ats', 'breve'] as const).map((f) => (
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => setRecordFocus(f)}
+                    className={`px-2 py-0.5 rounded-md text-[10px] font-black transition cursor-pointer ${
+                      recordFocus === f
+                        ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
+                        : 'bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-secondary)] hover:bg-[var(--color-neutral-surface-muted)]'
+                    }`}
+                  >
+                    {{ claridad: 'Claridad', ats: 'Impacto ATS', breve: 'Más breve' }[f]}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  disabled={recordBusy}
+                  onClick={async () => {
+                    setRecordBusy(true);
+                    try {
+                      const cleanItem: Record<string, any> = {};
+                      Object.entries(item).forEach(([k, v]) => {
+                        if (k !== 'id' && k !== 'fieldLabelOverrides') cleanItem[k] = v;
+                      });
+                      const res = await executeAiTask<{ improvedFields: Record<string, string>; missingDataNote?: string | null }>({
+                        taskId: 'rewrite_record',
+                        payload: {
+                          sectionKind: aiSuggestInfo?.sectionKind || kindKey,
+                          sectionTitle,
+                          jobTarget: jobTargetStr,
+                          focus: recordFocus,
+                          currentRecord: cleanItem
+                        },
+                        cvData,
+                        maxTokens: 800,
+                        temperature: 0.3
+                      });
+                      const normalized = normalizeAiDraftRecord(res.data?.improvedFields || {}, fieldList);
+                      if (!Object.keys(normalized).length) {
+                        showWarning('La IA no devolvió cambios útiles para este registro.');
+                        return;
+                      }
+                      setRecordReview({ fields: normalized, note: res.data?.missingDataNote || null });
+                    } catch (err: any) {
+                      console.error(err);
+                      showError(err?.message || 'No pudimos mejorar el registro. Intentá de nuevo.');
+                    } finally {
+                      setRecordBusy(false);
+                    }
+                  }}
+                  className={`ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-black bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/40 text-[var(--color-accent-text)] hover:bg-[var(--color-accent-base)] hover:text-[var(--color-accent-on-base)] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {recordBusy ? 'Mejorando...' : 'Mejorar registro con IA'}
+                </button>
+              </div>
+
+              {recordReview && (
+                <div className={`p-3 bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/40 rounded-[${radius.card}] space-y-2`}>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-black text-[var(--color-accent-text)]">Vista previa del registro mejorado</p>
+                    <button
+                      type="button"
+                      onClick={() => setRecordReview(null)}
+                      aria-label="Descartar sugerencia"
+                      className="p-0.5 rounded text-[var(--color-neutral-text-secondary)] hover:text-[var(--color-neutral-text-primary)] transition cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <ul className="space-y-1 max-h-48 overflow-y-auto bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[var(--ui-radius-card)] p-2">
+                    {Object.entries(recordReview.fields).map(([k, v]) => (
+                      <li key={k} className="text-[11px] leading-snug break-words">
+                        <span className="font-bold">{k}: </span>
+                        {v}
+                      </li>
+                    ))}
+                  </ul>
+                  {recordReview.note && (
+                    <p className="text-[11px] text-[var(--color-neutral-text-secondary)] leading-snug">
+                      <span className="font-bold">Datos recomendados:</span> {recordReview.note}
+                    </p>
+                  )}
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        Object.entries(recordReview.fields).forEach(([k, v]) => {
+                          updateField(k, v);
+                          const legacy = resolveLegacyFieldKey(k, fieldName);
+                          if (legacy !== k) updateField(legacy, v);
+                        });
+                        setRecordReview(null);
+                        showSuccess('Registro actualizado con la sugerencia de IA.');
+                      }}
+                      className="px-2.5 py-1 text-[11px] font-black rounded-md bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] hover:opacity-90 transition cursor-pointer"
+                    >
+                      Aplicar cambios
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRecordReview(null)}
+                      className="px-2.5 py-1 text-[11px] font-bold rounded-md border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-secondary)] hover:bg-[var(--color-neutral-surface-muted)] transition cursor-pointer"
+                    >
+                      Descartar
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       />

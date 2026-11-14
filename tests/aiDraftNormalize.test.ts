@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeAiDraftRecord } from '../src/shared/core/ui/RecordFormSection';
+import { isAiRewritableField, normalizeAiDraftRecord } from '../src/shared/core/ui/RecordFormSection';
 
 describe('normalizeAiDraftRecord — normalización de borradores devueltos por la IA', () => {
   const courseFields = ['tituloOGrado', 'institucion', 'periodo', 'cargaHoraria', 'descripcion'];
@@ -59,5 +59,26 @@ describe('normalizeAiDraftRecord — normalización de borradores devueltos por 
     const out = normalizeAiDraftRecord({ tituloOGrado: '  Curso  ', cargaHoraria: 40 }, courseFields);
     expect(out.tituloOGrado).toBe('Curso');
     expect(out.cargaHoraria).toBe('40');
+  });
+});
+
+describe('isAiRewritableField — campos de texto libre que la IA puede reescribir', () => {
+  it('acepta variantes de descripción en cualquier sección', () => {
+    expect(isAiRewritableField('descripcion')).toBe(true);
+    expect(isAiRewritableField('description')).toBe(true);
+    expect(isAiRewritableField('resumen')).toBe(true);
+  });
+
+  it('es case-insensitive y tolera espacios', () => {
+    expect(isAiRewritableField(' Descripción ')).toBe(true);
+    expect(isAiRewritableField('DESCRIPTION')).toBe(true);
+  });
+
+  it('rechaza campos no textuales (fechas, títulos, valores estructurados)', () => {
+    expect(isAiRewritableField('periodo')).toBe(false);
+    expect(isAiRewritableField('TituloOGrado')).toBe(false);
+    expect(isAiRewritableField('url')).toBe(false);
+    expect(isAiRewritableField('nivel')).toBe(false);
+    expect(isAiRewritableField('')).toBe(false);
   });
 });

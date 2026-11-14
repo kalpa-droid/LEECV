@@ -1,20 +1,17 @@
-import { AlertTriangle, Check, ChevronRight, Cloud, Download, Grid, Grid3X3, GripHorizontal, GripVertical, Image as ImageIcon, Layers, Layout, Monitor, Palette, Plus, RotateCcw, FolderPlus, Trash2, User, X } from 'lucide-react';
+import { FolderPlus, Plus } from 'lucide-react';
 import { Field } from '../../../../../shared/core/ui/Field';
 import { FIELD_CATALOG } from '../../../../../shared/core/pdf-engine/layers/records/fieldCatalog';
 import React, { useState } from 'react';
 import { PanelSection } from '../../../../../shared/core/ui/PanelSection';
 
-import { SectionManualAdjustment } from '../SectionManualAdjustment';
-import { GuardadosSection } from './GuardadosSection';
+import { PresetSectionPicker } from './PresetSectionPicker';
 
-import { 
+import {
   radius,
   elevationSystem,
-  typeScale as typography,
-  shadow as effects,
   button
 } from '../../../../../shared/core/uiDesignSystem';
-import { resolveActiveDockSections, checkSectionHasContent } from '../../../../../shared/core/sections/activeSectionsDockEngine';
+import { findFreeCustomSlot } from '../../../../../shared/core/sections/activeSectionsDockEngine';
 
 export const NuevaSeccionSection = ({
   cvData,
@@ -23,9 +20,7 @@ export const NuevaSeccionSection = ({
   changeActiveTab,
   showSuccess,
   showWarning,
-  triggerPresetTransition,
-  getEffectiveCoverFeaturedItems,
-  }: any) => {
+}: any) => {
   const [selectedFields, setSelectedFields] = useState<string[]>(['tituloOGrado', 'institucion', 'periodo', 'descripcion']);
   const [newSectionTitle, setNewSectionTitle] = useState('');
 
@@ -36,182 +31,14 @@ export const NuevaSeccionSection = ({
             {/* 1. SECCIONES PREDISEÑADAS CON 1 CLIC */}
             <PanelSection icon={<FolderPlus className="w-4 h-4 text-[var(--ui-secondary)]" />} title="Secciones Prediseñadas">
               <div className={`p-3.5 bg-[var(--ui-bg-card)] rounded-[${radius.modal}] border-2 border-[var(--color-neutral-border)] space-y-3 ${elevationSystem.raised}`}>
-                <p className="text-[11px] text-[var(--color-neutral-text-secondary)] font-medium leading-relaxed">
-                  Haz clic en cualquiera de estas secciones para agregarla instantáneamente a tu currículum con sus campos listos para completar:
-                </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                  {(() => {
-                    const PRESET_SECTIONS = [
-                      {
-                        id: 'redes',
-                        titleText: 'Redes Sociales & Presencia Digital',
-                        iconId: 'redes',
-                        desc: 'LinkedIn, GitHub, Behance, Portafolio, YouTube, etc.',
-                        fields: ['plataforma', 'usuario', 'url']
-                      },
-                      {
-                        id: 'publicaciones',
-                        titleText: 'Publicaciones y Artículos',
-                        iconId: 'publicaciones',
-                        desc: 'Libros, artículos científicos, prensa, ensayos.',
-                        fields: ['tituloOGrado', 'institucion', 'autor', 'periodo', 'url']
-                      },
-                      {
-                        id: 'referencias',
-                        titleText: 'Referencias Laborales',
-                        iconId: 'referencias',
-                        desc: 'Contactos y cartas de recomendación.',
-                        fields: ['personaReferencia', 'institucion', 'contactoReferencia']
-                      },
-                      {
-                        id: 'idiomas',
-                        titleText: 'Idiomas y Certificaciones',
-                        iconId: 'idiomas',
-                        desc: 'Lenguas extranjeras y grado de dominio (A1-C2).',
-                        fields: ['tituloOGrado', 'institucion', 'nivel']
-                      },
-                      {
-                        id: 'voluntariado',
-                        titleText: 'Voluntariado & ONG',
-                        iconId: 'voluntariado',
-                        desc: 'Acción social y trabajo comunitario.',
-                        fields: ['cargo', 'institucion', 'periodo', 'descripcion']
-                      },
-                      {
-                        id: 'premios',
-                        titleText: 'Premios & Distinciones',
-                        iconId: 'premios',
-                        desc: 'Menciones de honor y reconocimientos.',
-                        fields: ['tituloOGrado', 'institucion', 'periodo', 'descripcion']
-                      },
-                      {
-                        id: 'patentes',
-                        titleText: 'Patentes & Habilitaciones',
-                        iconId: 'patentes',
-                        desc: 'Propiedad intelectual, registros y matrículas.',
-                        fields: ['tituloOGrado', 'institucion', 'resolucion', 'periodo']
-                      },
-                      {
-                        id: 'ponencias',
-                        titleText: 'Ponencias & Congresos',
-                        iconId: 'ponencias',
-                        desc: 'Disertaciones, conferencias y jornadas.',
-                        fields: ['tituloOGrado', 'institucion', 'periodo', 'url']
-                      }
-                    ];
-
-                    const activeDockSections = resolveActiveDockSections(cvData);
-
-                    // Opción A: Excluir de la grilla cualquier sección que ya esté activa en el Dock lateral
-                    const availableSections = PRESET_SECTIONS.filter((presetSec) => {
-                      const isBuiltIn = ['redes', 'publicaciones', 'referencias', 'idiomas'].includes(presetSec.id);
-                      if (isBuiltIn) {
-                        const isDockActive = activeDockSections.some(sec => sec.id === presetSec.id && !sec.isDisabled);
-                        const isVisibilityTrue = cvData?.sectionVisibility?.[presetSec.id] === true;
-                        const hasContent = checkSectionHasContent(cvData, presetSec.id);
-                        return !isDockActive && !isVisibilityTrue && !hasContent;
-                      } else {
-                        const isTitleInDock = activeDockSections.some(sec => !sec.isDisabled && (sec.label === presetSec.titleText || cvData?.sectionTitleOverrides?.[sec.id] === presetSec.titleText));
-                        const isSlotUsed = (['personalizada-1', 'personalizada-2', 'personalizada-3', 'personalizada-4', 'personalizada-5'] as const).some(
-                          (slotId) => (cvData?.sectionTitleOverrides?.[slotId] === presetSec.titleText && cvData?.sectionVisibility?.[slotId] !== false)
-                        );
-                        const isCustomSecUsed = Array.isArray(cvData?.customSections) && cvData.customSections.some(
-                          (cs: any) => cs.titleText === presetSec.titleText && cvData?.sectionVisibility?.[cs.id] !== false
-                        );
-                        return !isTitleInDock && !isSlotUsed && !isCustomSecUsed;
-                      }
-                    });
-
-                    return availableSections.map((presetSec) => {
-                      const isBuiltIn = ['redes', 'publicaciones', 'referencias', 'idiomas'].includes(presetSec.id);
-
-                      return (
-                        <button
-                          key={presetSec.id}
-                          type="button"
-                          onClick={() => {
-                            if (isBuiltIn) {
-                              setCvData((prev: any) => ({
-                                ...prev,
-                                sectionVisibility: {
-                                  ...(prev.sectionVisibility || {}),
-                                  [presetSec.id]: true
-                                }
-                              }));
-                              showSuccess(`Sección '${presetSec.titleText}' activada.`);
-                              changeActiveTab(presetSec.id);
-                              return;
-                            }
-
-                            const customSlots = ['personalizada-1', 'personalizada-2', 'personalizada-3', 'personalizada-4', 'personalizada-5'] as const;
-                            const freeSlot = customSlots.find(
-                              (slotId) => cvData?.sectionVisibility?.[slotId] !== true && (!cvData?.[slotId] || cvData[slotId].length === 0) && !cvData?.sectionTitleOverrides?.[slotId]
-                            );
-
-                            if (!freeSlot) {
-                              showWarning('Ya utilizaste los 5 slots de secciones personalizadas disponibles en tu plan. Puedes reutilizar una sección cambiando su nombre.');
-                              return;
-                            }
-
-                            setCvData((prev: any) => ({
-                              ...prev,
-                              sectionVisibility: { ...(prev.sectionVisibility || {}), [freeSlot]: true },
-                              sectionTitleOverrides: { ...(prev.sectionTitleOverrides || {}), [freeSlot]: presetSec.titleText },
-                              sectionIconOverrides: { ...(prev.sectionIconOverrides || {}), [freeSlot]: presetSec.iconId || freeSlot },
-                              sectionFieldSelection: { ...(prev.sectionFieldSelection || {}), [freeSlot]: presetSec.fields },
-                              [freeSlot]: prev[freeSlot]?.length ? prev[freeSlot] : [{}],
-                              layout: {
-                                ...(prev.layout || {}),
-                                columnAssignments: {
-                                  ...(prev.layout?.columnAssignments || {}),
-                                  [freeSlot]: 'primaria'
-                                },
-                                sectionOrders: {
-                                  ...(prev.layout?.sectionOrders || {}),
-                                  primaria: [...(prev.layout?.sectionOrders?.primaria || []), freeSlot]
-                                }
-                              }
-                            }));
-
-                            showSuccess(`Sección '${presetSec.titleText}' incorporada en slot ${freeSlot}.`);
-                            changeActiveTab(freeSlot);
-                          }}
-                          className={`p-2.5 rounded-[${radius.card}] border text-left flex flex-col justify-between transition cursor-pointer bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] hover:border-[var(--color-accent-base)] hover:bg-[var(--ui-bg-card)]`}
-                        >
-                          <div className="space-y-1">
-                            <span className="text-xs font-black text-[var(--color-neutral-text-primary)] block">{presetSec.titleText}</span>
-                            <p className="text-[10px] text-[var(--color-neutral-text-secondary)] font-medium leading-tight">{presetSec.desc}</p>
-                          </div>
-                          <span className="text-[10px] font-black mt-2 self-end px-2 py-0.5 rounded bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]">
-                            + Incorporar
-                          </span>
-                        </button>
-                      );
-                    });
-                  })()}
-
-                  {/* 10ª Tarjeta para completar el par del grid (5 filas perfectas) */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      document.getElementById('custom-section-creator-form')?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className={`p-2.5 rounded-[${radius.card}] border-2 border-dashed border-[var(--color-accent-base)]/40 bg-[var(--color-accent-muted)] hover:opacity-90 text-left flex flex-col justify-between transition cursor-pointer`}
-                  >
-                    <div className="space-y-1">
-                      <span className="text-xs font-black text-[var(--color-accent-text)] flex items-center gap-1">
-                        <Plus className="w-3.5 h-3.5" /> Sección a Medida
-                      </span>
-                      <p className="text-[10px] text-[var(--color-neutral-text-secondary)] font-medium leading-tight">
-                        Crear sección personalizada seleccionando campos a medida.
-                      </p>
-                    </div>
-                    <span className="text-[10px] font-black mt-2 self-end px-2 py-0.5 rounded bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]">
-                      ↓ Ir a Creador
-                    </span>
-                  </button>
-                </div>
+                <PresetSectionPicker
+                  cvData={cvData}
+                  setCvData={setCvData}
+                  showSuccess={showSuccess}
+                  showWarning={showWarning}
+                  changeActiveTab={changeActiveTab}
+                  aMedidaAnchorId="custom-section-creator-form"
+                />
               </div>
             </PanelSection>
 
@@ -272,13 +99,10 @@ export const NuevaSeccionSection = ({
                       showWarning('Debes seleccionar al menos 1 campo para los registros de la sección.');
                       return;
                     }
-                    const customSlots = ['personalizada-1', 'personalizada-2', 'personalizada-3', 'personalizada-4', 'personalizada-5'] as const;
-                    const freeSlot = customSlots.find(
-                      (slotId) => cvData?.sectionVisibility?.[slotId] !== true && (!cvData?.[slotId] || cvData[slotId].length === 0) && !cvData?.sectionTitleOverrides?.[slotId]
-                    );
+                    const freeSlot = findFreeCustomSlot(cvData);
 
                     if (!freeSlot) {
-                      showWarning('Ya usaste las 5 secciones personalizadas disponibles. Puedes reutilizar una sección existente cambiando su nombre.');
+                      showWarning('Ya usaste las 5 secciones personalizadas disponibles. Podés reutilizar una existente cambiando su nombre.');
                       return;
                     }
 
@@ -315,7 +139,11 @@ export const NuevaSeccionSection = ({
               {/* Secciones Personalizadas Activas (Slots del Núcleo) */}
               {(() => {
                 const customSlots = ['personalizada-1', 'personalizada-2', 'personalizada-3', 'personalizada-4', 'personalizada-5'] as const;
-                const activeSlots = customSlots.filter(s => cvData?.sectionVisibility?.[s] === true || cvData?.sectionTitleOverrides?.[s]);
+                // Un slot "activo" es el que tiene título propio o registros —
+                // no alcanza con que un formato lo haya encendido vacío.
+                const activeSlots = customSlots.filter(
+                  (s) => !!cvData?.sectionTitleOverrides?.[s] || (Array.isArray(cvData?.[s]) && cvData[s].length > 0)
+                );
                 if (activeSlots.length === 0 && (!cvData?.customSections || cvData.customSections.length === 0)) return null;
 
                 return (

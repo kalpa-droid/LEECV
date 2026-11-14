@@ -60,4 +60,23 @@ describe('AI_TASKS_CATALOG — contrato de responseSchema para Gemini (OpenAPI 3
       expect.arrayContaining(['id', 'category', 'title', 'detail', 'originalText', 'suggestedText'])
     );
   });
+
+  it('rewrite_record: required = improvedFields, propiedades explícitas, missingDataNote nullable', () => {
+    const schema = (AI_TASKS_CATALOG as any).rewrite_record?.responseSchema;
+    expect(schema, 'rewrite_record sin responseSchema').toBeDefined();
+    expect(schema.required).toEqual(['improvedFields']);
+
+    // improvedFields es objeto con properties explícitas (nada de additionalProperties)
+    const improved = schema.properties.improvedFields;
+    expect(improved.type).toBe('object');
+    const props = Object.keys(improved.properties || {});
+    ['tituloOGrado', 'cargo', 'descripcion', 'logros', 'nivel', 'url'].forEach((id) =>
+      expect(props).toContain(id)
+    );
+    expect(schema.additionalProperties).toBeUndefined();
+    expect(improved.additionalProperties).toBeUndefined();
+
+    // missingDataNote admite null sin romper el contrato OpenAPI 3.0
+    expect(schema.properties.missingDataNote.nullable).toBe(true);
+  });
 });

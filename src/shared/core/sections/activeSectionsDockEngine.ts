@@ -109,6 +109,32 @@ export function checkSectionHasContent(cvData: any, sectionId: string): boolean 
   }
 }
 
+export const CUSTOM_SLOTS = ['personalizada-1', 'personalizada-2', 'personalizada-3', 'personalizada-4', 'personalizada-5'] as const;
+
+/**
+ * Devuelve el primer slot personalizada-N libre. Un slot está libre cuando no
+ * tiene título propio y no tiene registros — la visibilidad NO cuenta (un
+ * formato con todas las secciones enciende los 5 slots vacíos y no debe
+ * bloquear su uso).
+ */
+export function findFreeCustomSlot(cvData: any): string | undefined {
+  if (!cvData) return CUSTOM_SLOTS[0];
+  for (const slotId of CUSTOM_SLOTS) {
+    const hasRecords = Array.isArray(cvData?.[slotId]) && cvData[slotId].length > 0;
+    const hasTitle = !!cvData?.sectionTitleOverrides?.[slotId];
+    if (!hasRecords && !hasTitle) return slotId;
+  }
+  return undefined;
+}
+
+/** Un slot personalizada-N está "creado" si tiene título propio o contenido. */
+function isCustomSlotCreated(cvData: any, slotId: string): boolean {
+  if (!cvData) return false;
+  if (!!cvData?.sectionTitleOverrides?.[slotId]) return true;
+  const recs = cvData[slotId] || cvData[`personalizada${slotId.split('-')[1]}`];
+  return Array.isArray(recs) && recs.length > 0;
+}
+
 export function resolveActiveDockSections(cvData: any): DockSectionItem[] {
   const customSections = cvData?.customSections || [];
   const visibility = cvData?.sectionVisibility || {};
@@ -128,7 +154,17 @@ export function resolveActiveDockSections(cvData: any): DockSectionItem[] {
 
   const catalogItems: DockSectionItem[] = SECTION_CATALOG
     .filter((entry) => !ABSORBED_INTO_PERSONAL_TAB.has(entry.id))
-    .filter((entry) => entry.isUniversal || checkSectionHasContent(cvData, entry.id) || visibility[entry.id] === true)
+    .filter((entry) => {
+      if (entry.isUniversal) return true;
+      if (checkSectionHasContent(cvData, entry.id)) return true;
+      if (entry.isCustomSlot) {
+        // Opción 2: un slot personalizada-N vacío NO aparece en el dock
+        // (aunque un formato lo haya encendido) hasta que la persona cree
+        // la sección — título o contenido son la señal de "existe".
+        return isCustomSlotCreated(cvData, entry.id);
+      }
+      return visibility[entry.id] === true;
+    })
     .map((entry) => {
       const isCustomSlot = !!entry.isCustomSlot;
       const customTitle = isCustomSlot ? (cvData?.sectionTitleOverrides?.[entry.id] || cvData?.[`title_${entry.id}`]) : null;

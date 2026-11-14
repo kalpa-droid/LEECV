@@ -412,6 +412,80 @@ Proponé hasta 2 registros nuevos coherentes.`,
     }
   },
 
+  rewrite_record: {
+    taskId: 'rewrite_record',
+    buildSystemPrompt: (cvContext: string, payload: any, formatContext?: string) => {
+      const focus = ['claridad', 'ats', 'breve'].includes(payload?.focus) ? payload.focus : 'claridad';
+      const focusGuide: Record<string, string> = {
+        claridad: 'claridad y redacción profesional (mejorar la forma de decirlo sin cambiar los hechos)',
+        ats: 'mayor impacto para filtros automáticos: verbo de acción al inicio, palabras clave relevantes y orden lógico',
+        breve: 'brevedad máxima: acortá el texto a la mitad si se puede sin perder ningún hecho'
+      };
+      const sectionLabel = payload?.sectionTitle ? `"${payload.sectionTitle}"` : 'un registro';
+      return `Eres un editor profesional de currículums en español.
+Tu objetivo es reescribir ${sectionLabel} para que quede más fuerte, coherente y adaptado a la vacante.
+REGLA 1: NO inventes empresas, fechas, cargos, títulos, métricas ni logros que no estén en el registro ni en el CV.
+REGLA 2: Si haría falta un dato que no está (resultado, número, fecha), mantené el texto honesto y anotalo en "missingDataNote".
+REGLA 3: Respetá los hechos del registro original (mismas empresas, mismas fechas, mismos cargos); reescribís la FORMA, no el contenido.
+REGLA 4: "improvedFields" lleva SOLO las claves que reescribiste, con exactamente los mismos nombres de campo que recibiste. No agregues claves nuevas ni id propio.
+REGLA 5: El foco pedido es: ${focusGuide[focus]}.
+Debes devolver un JSON válido.
+${formatContext ? `\nADAPTACIÓN AL FORMATO OBJETIVO:\n${formatContext}\nAjustá el tono para encajar con el estilo de este formato.` : ''}
+
+Contexto del CV (solo para referencia, no inventes datos de él):
+<candidate_context>
+${cvContext}
+</candidate_context>`;
+    },
+    buildUserPrompt: (payload: any) => `Sección: "${payload?.sectionTitle || 'Registro'}" (tipo: ${payload?.sectionKind || 'custom'})
+Vacante objetivo: ${payload?.jobTarget || 'Sin vacante indicada'}
+Foco: ${payload?.focus || 'claridad'}
+
+Registro actual (JSON):
+<current_record>
+${JSON.stringify(payload?.currentRecord || {}, null, 2)}
+</current_record>
+
+Reescribí el registro. En "improvedFields" devolvé SOLO las claves que mejoraste, usando los mismos nombres de campo de entrada.`,
+    responseSchema: {
+      type: "object",
+      properties: {
+        improvedFields: {
+          type: "object",
+          properties: {
+            tituloOGrado: { type: "string" },
+            cargo: { type: "string" },
+            herramienta: { type: "string" },
+            institucion: { type: "string" },
+            periodo: { type: "string" },
+            nivel: { type: "string" },
+            nivelDominio: { type: "string" },
+            autor: { type: "string" },
+            url: { type: "string" },
+            idioma: { type: "string" },
+            personaReferencia: { type: "string" },
+            contactoReferencia: { type: "string" },
+            plataforma: { type: "string" },
+            usuario: { type: "string" },
+            name: { type: "string" },
+            level: { type: "string" },
+            descripcion: { type: "string" },
+            estado: { type: "string" },
+            promedio: { type: "string" },
+            cargaHoraria: { type: "string" },
+            modalidad: { type: "string" },
+            matricula: { type: "string" },
+            tomoFolio: { type: "string" },
+            resolucion: { type: "string" },
+            logros: { type: "string" }
+          }
+        },
+        missingDataNote: { type: "string", nullable: true }
+      },
+      required: ["improvedFields"]
+    }
+  },
+
   classify_raw_data: {
     taskId: 'classify_raw_data',
     buildSystemPrompt: () => `Eres un asistente inteligente para la extracción de datos de currículums.

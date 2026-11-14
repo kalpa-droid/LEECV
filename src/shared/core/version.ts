@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 2,
-  minor: 11,
-  patch: 1,
-  label: 'V2.11.1',
+  minor: 12,
+  patch: 0,
+  label: 'V2.12.0',
   lastUpdated: '2026-11-14',
   lastAgent: '@opencode',
-  stage: 'Correcciones de auditoria post-V2.11.0: candado visible en secciones no asignables (certificados/firma), scroll al ancla del PDF forzado post-render, contratos IA OpenAPI 3.0 validos para Gemini (suggest_records, explain_ats, ats_analysis aclarados), normalizacion de registros IA con alias canonicos, plantilla conserva columna manual en los 3 modos y persiste columnAssignments, certificados fuera de la distribucion por columnas, preset no enciende opcionales no universales vacias, Datos Personales con contacto y datos-personales independientes (formato ATS)',
+  stage: 'Bloques 2+3 del plan de IA/editor: tarea rewrite_record (Groq+Gemini+contexto con allowlist y guia de esquema inline), reescritura de registros con panel de revision Reemplazar/Agregar debajo/Descartar (nunca auto-append), dock con Opcion 2 (slots personalizada-N vacios ocultos; solo con titulo o registros aparecen), selector compartido PresetSectionPicker para alta y edicion de slot, findFreeCustomSlot ignora visibilidad para el alta.',
 } as const;
