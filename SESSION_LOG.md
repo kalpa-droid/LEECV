@@ -1,3 +1,25 @@
+## [2026-11-14] - OCR: Mapeo Completo IA->PDF sin Perdida de Datos (PR #91, feat/ocr-full-pdf-mapping)
+
+**Resumen:**
+- Cierra los 6 cortes de contrato diagnosticados por Kalpa en el flujo Importar CV con IA -> PDF:
+  1. Header del PDF con solo `fullName`: `TemplateRenderer` cae a `resolveDisplayName` (ya existia) y `resolveInitials` resuelve las iniciales en los 6 placeholders de foto (antes "CV" generico).
+  2. `IMPORTABLE_SCALAR_FIELDS` ampliado: `titlePrefix`, `dni`, `cuit`, `birthDate`, `nacionalidad`, `estadoCivil`, `disponibilidad`, `licenciaConducir`, `frase` ya no se descartan.
+  3. Aliases sin traductor resueltos en `normalizeImportedCvData`: `location->cityProvince`, `role->quote`, `linkedin/portfolio->redes+website` (API devuelve `linkedin` minuscula), `summary/objective/frase` raiz o dentro de `personalInfo` -> raiz.
+  4. `proficiency` de idiomas perdido: `cvDataAdapter.ts` lee `proficiency -> nivel`; normalizacion deriva `nivelDominio/nivel` dentro del loop de listas (no antes, donde `normalized.languages` no existia).
+  5. `extract-page` ampliado: schema + prompt piden `givenNames`/`surname` y las 9 secciones faltantes (`objective`, `frase`, `redes`, `hardSkills`, `informatics`, `profession`, `references`, `portfolio`); `consolidate-ats` alineado.
+  6. `mergePageFragments` fusiona `summary`/`objective`/`frase`; al confirmar la importacion se activan `contacto` y `datos-personales` (id canonico; `personales` es solo la pestaña del editor); `initialCVData.ts` alineado a `datos-personales`.
+- Bonus UX: boton "Usar todo lo detectado" en `ImportReviewDiffModal` (scalars=replace, listas=add o replace sobre duplicado detectado).
+- Nuevo contrato de tests `tests/importToPdfPipeline.test.ts` (11 tests end-to-end OCR->PDF). Durante el test se encontraron y arreglaron 5 bugs propios: `linkedIn` vs `linkedin`, copia de summary/objective/frase solo desde personalInfo, derivacion de nivel de idiomas no-op, loop IMPORTABLE_LIST_FIELDS pisando `redes` ya enriquecidas (bloque movido despues del loop) y crash si el raw no trae `personalInfo` (inicializado siempre a `{}`).
+- Versiones: Fase 1 commit `b0c1eaf`; Fases 2+3 commit `da7431d`.
+
+**Decision tomada:** un solo PR para las 3 fases (aprobado por Kalpa, Regla 7). `'personales'` es id de pestaña del editor, no seccion renderizable; el id canonico es `'datos-personales'`. Las políticas de formato (`us-resume` oculta dni/birthDate/estadoCivil/etc.) siguen vigentes al render: activar secciones no rompe políticas porque el adapter filtra campos con `resolvePersonalFieldVisibility`.
+
+**Merge (Regla 6 paso 7 - confirmacion de hash):**
+- PR: #91 (`feat/ocr-full-pdf-mapping`) mergeada a `main` (squash) por orden explicita de Kalpa.
+- Hash confirmado en `origin/main`: `14aab1b3af06ba856e2ea555f4f2b7ffa3577172`.
+- CI GitHub Actions: check-all en 1m4s (0 errores). Vercel: deployment completed (preview pass).
+- Local antes del push: `npx tsc --noEmit` exit 0; vitest 363 passed / 2 skipped; `npm run check-all` exit 0 (SEO 40/40).
+
 # Registro de Intervenciones de Agentes (SESSION_LOG)
 
 ## [2026-11-13] - Iconos Unicos Canonicos + Blindaje de Contraste (PR #89, feat/unique-icons-contrast)
