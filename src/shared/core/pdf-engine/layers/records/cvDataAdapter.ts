@@ -81,6 +81,20 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
   };
 
   const hasPersonalDetails = Object.values(personalDetailsFields).some((val) => !!val);
+  // Aviso en consola (no visible para la persona): datos detallados cargados
+  // que quedaron fuera del PDF por política de formato o preferencia manual.
+  const omittedPersonalFields = Object.entries({
+    dni: personalInfo.dni,
+    cuit: personalInfo.cuit,
+    birthDate: personalInfo.birthDate,
+    nacionalidad: personalInfo.nacionalidad,
+    estadoCivil: personalInfo.estadoCivil,
+    disponibilidad: personalInfo.disponibilidad,
+    licenciaConducir: personalInfo.licenciaConducir
+  }).filter(([id, value]) => !!value && !(personalDetailsFields as Record<string, string>)[id]);
+  if (omittedPersonalFields.length > 0) {
+    console.info('[cvDataAdapter] Datos personales cargados omitidos del PDF por política de formato o preferencia manual:', omittedPersonalFields.map(([id]) => id).join(', '));
+  }
   if (isVisible('datos-personales') && hasPersonalDetails) {
     sections.push({
       id: 'datos-personales',
@@ -324,7 +338,7 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         fieldLabelOverrides: inf.fieldLabelOverrides,
         fields: {
           ...inf,
-          title: inf.course || inf.title || inf.name || '',
+          title: inf.course || inf.title || inf.name || inf.herramienta || '',
           institution: inf.institution || inf.institucion || ''
         }
       }))

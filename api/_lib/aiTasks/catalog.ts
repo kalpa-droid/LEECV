@@ -32,7 +32,7 @@ Mejora esta viñeta aplicando las reglas.`,
       type: "object",
       properties: {
         improvedBullet: { type: "string" },
-        missingMetrics: { type: ["string", "null"] }
+        missingMetrics: { type: "string", nullable: true }
       },
       required: ["improvedBullet"]
     }
@@ -165,7 +165,22 @@ Contexto del CV del candidato:
 ${cvContext}`,
     buildUserPrompt: (payload: any) => `Escribe una carta de presentación para esta vacante:
 Vacante / Aviso:
-${payload.jobTargetText || 'No se especificó vacante.'}`
+${payload.jobTargetText || 'No se especificó vacante.'}`,
+    responseSchema: {
+      type: "object",
+      properties: {
+        jobTitle: { type: "string", nullable: true },
+        companyName: { type: "string", nullable: true },
+        recipientName: { type: "string", nullable: true },
+        salutation: { type: "string" },
+        hookParagraph: { type: "string" },
+        evidenceParagraph: { type: "string" },
+        closingParagraph: { type: "string" },
+        signoff: { type: "string" },
+        missingDataWarning: { type: "string", nullable: true }
+      },
+      required: ["salutation", "hookParagraph", "evidenceParagraph", "closingParagraph", "signoff"]
+    }
   },
   
   generate_slogan: {
@@ -175,7 +190,14 @@ Debes devolver un JSON con esta estructura:
 {
   "slogan": "el eslogan sugerido"
 }`,
-    buildUserPrompt: (payload: any) => `Profesión: ${payload.role}. Marca/Empresa: ${payload.brand}.`
+    buildUserPrompt: (payload: any) => `Profesión: ${payload.role}. Marca/Empresa: ${payload.brand}.`,
+    responseSchema: {
+      type: "object",
+      properties: {
+        slogan: { type: "string" }
+      },
+      required: ["slogan"]
+    }
   },
 
   explain_ats: {
@@ -191,7 +213,14 @@ Debes devolver un JSON con esta estructura:
 ${payload.auditJson}
 
 CV extraído en texto:
-${payload.cvText}`
+${payload.cvText}`,
+    responseSchema: {
+      type: "object",
+      properties: {
+        explanation: { type: "string" }
+      },
+      required: ["explanation"]
+    }
   },
 
   ats_analysis: {
@@ -223,7 +252,29 @@ ${payload.cvText || 'Sin contenido detectado.'}
 ${payload.jobDescription
     ? `VACANTE OBJETIVO:\n${payload.jobDescription}`
     : 'No se proveyó una vacante puntual: evaluá calidad general de redacción.'
-  }`
+  }`,
+    responseSchema: {
+      type: "object",
+      properties: {
+        semanticScore: { type: "number" },
+        findings: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              category: { type: "string", enum: ["keyword_gap", "weak_bullet", "quantification", "general"] },
+              title: { type: "string" },
+              detail: { type: "string" },
+              originalText: { type: "string", nullable: true },
+              suggestedText: { type: "string", nullable: true }
+            },
+            required: ["id", "category", "title", "detail"]
+          }
+        }
+      },
+      required: ["semanticScore", "findings"]
+    }
   },
 
   first_job_interview: {
@@ -236,7 +287,15 @@ Devuelve EXCLUSIVAMENTE un JSON con esta estructura:
   "professionalTitle": "Un título de puesto profesional sugerido (ej. Asistente de Ventas)",
   "description": "Una descripción redactada profesionalmente destacando las tareas y habilidades transferibles en 1 o 2 oraciones."
 }`,
-    buildUserPrompt: (payload: any) => `Actividad informal que realizo:\n"${payload.rawActivity}"`
+    buildUserPrompt: (payload: any) => `Actividad informal que realizo:\n"${payload.rawActivity}"`,
+    responseSchema: {
+      type: "object",
+      properties: {
+        professionalTitle: { type: "string" },
+        description: { type: "string" }
+      },
+      required: ["professionalTitle", "description"]
+    }
   },
 
   suggest_achievement_acr: {
@@ -265,7 +324,7 @@ Redactá UN logro en formato ACR coherente con esos datos.`,
       type: "object",
       properties: {
         acrBullet: { type: "string" },
-        missingMetrics: { type: ["string", "null"] }
+        missingMetrics: { type: "string", nullable: true }
       },
       required: ["acrBullet"]
     }
@@ -286,7 +345,9 @@ Redactá UN logro en formato ACR coherente con esos datos.`,
         informatics: 'una herramienta informática con nivel (herramienta, nivel)',
         redes: 'un enlace profesional (plataforma, usuario, url)',
         achievements: 'un logro cuantificable (título, descripción)',
-        skills: 'una habilidad técnica con nivel (name, level)'
+        portfolio: 'un trabajo destacado de portafolio (título, institución o enlace)',
+        skills: 'una habilidad técnica con nivel (name, level)',
+        custom: 'un registro de sección personalizada (usa los campos indicados)'
       };
       const label = kindLabels[kind] || 'un registro';
       return `Eres un asistente que completa el CV de una persona con sugerencias coherentes.
@@ -316,10 +377,36 @@ Proponé hasta 2 registros nuevos coherentes.`,
           type: "array",
           items: {
             type: "object",
-            additionalProperties: { type: "string" }
+            properties: {
+              tituloOGrado: { type: "string" },
+              cargo: { type: "string" },
+              herramienta: { type: "string" },
+              institucion: { type: "string" },
+              periodo: { type: "string" },
+              nivel: { type: "string" },
+              nivelDominio: { type: "string" },
+              autor: { type: "string" },
+              url: { type: "string" },
+              idioma: { type: "string" },
+              personaReferencia: { type: "string" },
+              contactoReferencia: { type: "string" },
+              plataforma: { type: "string" },
+              usuario: { type: "string" },
+              name: { type: "string" },
+              level: { type: "string" },
+              descripcion: { type: "string" },
+              estado: { type: "string" },
+              promedio: { type: "string" },
+              cargaHoraria: { type: "string" },
+              modalidad: { type: "string" },
+              matricula: { type: "string" },
+              tomoFolio: { type: "string" },
+              resolucion: { type: "string" },
+              logros: { type: "string" }
+            }
           }
         },
-        missingInfo: { type: ["string", "null"] }
+        missingInfo: { type: "string", nullable: true }
       },
       required: ["records"]
     }
@@ -343,10 +430,10 @@ No inventes datos. Extrae solo lo que está en el texto.`,
         extractedFields: {
           type: "object",
           properties: {
-            title: { type: ["string", "null"] },
-            subtitle: { type: ["string", "null"] },
-            dateRange: { type: ["string", "null"] },
-            description: { type: ["string", "null"] }
+            title: { type: "string", nullable: true },
+            subtitle: { type: "string", nullable: true },
+            dateRange: { type: "string", nullable: true },
+            description: { type: "string", nullable: true }
           }
         }
       },

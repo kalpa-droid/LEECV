@@ -8,17 +8,73 @@ export type TemplateApplicationMode = 'full-template' | 'template-order' | 'no-f
 export interface PresentationState {
   sectionVisibility: Record<string, boolean>;
   sectionOrders: { primaria: string[]; secundaria: string[] };
+  /**
+   * Asignación manual de columna por sección (la que eligió la persona a mano).
+   * Sobrevive a reaplicar plantilla incluso si la sección está oculta temporalmente.
+   */
+  columnAssignments?: Record<string, 'primaria' | 'secundaria'>;
 }
 
 export const ALL_SECTION_IDS = CANONICAL_SECTION_ORDER.filter(id => id !== 'firma');
 
 /**
  * NÚCLEO — MOTOR DE APLICACIÓN DE PLANTILLAS (templateApplicationEngine.ts)
- * 
+ *
  * Función pura que recalcula únicamente visibilidad y orden de presentación (dividido en 2 columnas: primaria y secundaria)
  * sin alterar los arreglos de datos subyacentes. Permite un ciclo infinito
  * de aplicar plantilla -> editar a mano -> re-aplicar plantilla sin pérdida.
  */
+
+/**
+ * Secciones que NO se distribuyen por columna (p. ej. 'certificados'): su
+ * ubicación la resuelve el motor de sectores por su rol canónico. Excluirlas
+ * acá evita que un reordenamiento las mueva de columna a mano.
+ */
+const isColumnAssignable = (id: string): boolean => {
+  const entry = SECTION_CATALOG.find(s => s.id === id);
+  return !entry || entry.assignableToColumns !== false;
+};
+
+/**
+ * Fusiona las dos fuentes de "columna elegida a mano": sectionOrders (gana,
+ * es el estado editable reciente) sobre columnAssignments (persistencia).
+ */
+const mergeManualColumns = (
+  columnAssignments: Record<string, 'primaria' | 'secundaria'> | undefined,
+  sectionOrders: { primaria?: string[]; secundaria?: string[] } | undefined
+): Map<string, 'primaria' | 'secundaria'> => {
+  const map = new Map<string, 'primaria' | 'secundaria'>();
+  Object.entries(columnAssignments || {}).forEach(([id, col]) => {
+    if (col === 'primaria' || col === 'secundaria') map.set(id, col);
+  });
+  (sectionOrders?.primaria || []).forEach(id => map.set(id, 'primaria'));
+  (sectionOrders?.secundaria || []).forEach(id => map.set(id, 'secundaria'));
+  return map;
+};
+
+/**
+ * Distribuye ids entre columnas respetando la elección manual; las secciones
+ * no asignables a columna (certificados) quedan fuera y las resuelve el
+ * motor de sectores por su rol canónico.
+ */
+const distributeByColumn = (
+  ids: string[],
+  columnOf: (id: string) => 'primaria' | 'secundaria',
+  manualColumn: Map<string, 'primaria' | 'secundaria'>
+): { primaria: string[]; secundaria: string[] } => {
+  const primaria: string[] = [];
+  const secundaria: string[] = [];
+  for (const id of ids) {
+    if (!isColumnAssignable(id)) continue;
+    const manual = manualColumn.get(id);
+    if (manual === 'secundaria') secundaria.push(id);
+    else if (manual) primaria.push(id);
+    else if (columnOf(id) === 'secundaria') secundaria.push(id);
+    else primaria.push(id);
+  }
+  return { primaria, secundaria };
+};
+
 export function applyTemplateMode(
   current: PresentationState,
   format: CvFormatDefinition | null | undefined,
@@ -45,6 +101,9 @@ export function applyTemplateMode(
     return [...list.filter(id => id !== 'firma'), 'firma'];
   };
 
+  const manualColumn = mergeManualColumns(current?.columnAssignments, current?.sectionOrders);
+  const persistAssignments = Object.fromEntries(manualColumn);
+
   if (mode === 'all-sections') {
     const prioritized = [...new Set(defaultVisible.filter(id => ALL_SECTION_IDS.includes(id)))];
     const fullOrder = [...prioritized, ...ALL_SECTION_IDS.filter(id => !prioritized.includes(id))];
@@ -52,13 +111,15 @@ export function applyTemplateMode(
     for (const id of ALL_SECTION_IDS) {
       visibility[id] = true;
     }
+    const { primaria, secundaria } = distributeByColumn(fullOrder, columnOf, manualColumn);
 
     return {
       sectionVisibility: visibility,
       sectionOrders: {
-        primaria: ensureFirmaTerminalInPrimaria(fullOrder.filter(id => columnOf(id) === 'primaria')),
-        secundaria: fullOrder.filter(id => columnOf(id) === 'secundaria'),
+        primaria: ensureFirmaTerminalInPrimaria(primaria),
+        secundaria,
       },
+      columnAssignments: persistAssignments,
     };
   }
 
@@ -71,46 +132,32 @@ export function applyTemplateMode(
     // columna que la persona eligió a mano: si una sección visible ya tenía
     // una asignación de columna en el estado actual, se respeta y solo se
     // reordena dentro de esa columna según la prioridad del formato.
-    const currentPrimaria = current?.sectionOrders?.primaria || [];
-    const currentSecundaria = current?.sectionOrders?.secundaria || [];
-    const manualColumn = new Map<string, 'primaria' | 'secundaria'>();
-    currentPrimaria.forEach(id => manualColumn.set(id, 'primaria'));
-    currentSecundaria.forEach(id => manualColumn.set(id, 'secundaria'));
-
     const visible = defaultVisible.filter(id => ALL_SECTION_IDS.includes(id)); // ya viene en el orden de prioridad del formato
-    const primaria: string[] = [];
-    const secundaria: string[] = [];
-    for (const id of visible) {
-      const manual = manualColumn.get(id);
-      if (manual) {
-        (manual === 'secundaria' ? secundaria : primaria).push(id);
-      } else if (columnOf(id) === 'secundaria') {
-        secundaria.push(id);
-      } else {
-        primaria.push(id);
-      }
-    }
+    const { primaria, secundaria } = distributeByColumn(visible, columnOf, manualColumn);
     return {
       sectionVisibility: visibility,
       sectionOrders: {
         primaria: ensureFirmaTerminalInPrimaria(primaria),
         secundaria,
       },
+      columnAssignments: persistAssignments,
     };
   }
 
   // template-order: nada se oculta, se prioriza el orden del formato,
   // el resto se agrega después — separado por columna, respetando la
-  // columna base de cada sección (no las mueve de columna, solo las ordena
+  // columna elegida a mano (no la mueve de columna, solo la ordena
   // dentro de la suya).
   const prioritized = defaultVisible;
   const rest = ALL_SECTION_IDS.filter(id => !prioritized.includes(id));
   const fullOrder = [...prioritized, ...rest];
+  const { primaria, secundaria } = distributeByColumn(fullOrder, columnOf, manualColumn);
   return {
     sectionVisibility: { ...(current?.sectionVisibility || {}) },
     sectionOrders: {
-      primaria: ensureFirmaTerminalInPrimaria(fullOrder.filter(id => columnOf(id) === 'primaria')),
-      secundaria: fullOrder.filter(id => columnOf(id) === 'secundaria'),
+      primaria: ensureFirmaTerminalInPrimaria(primaria),
+      secundaria,
     },
+    columnAssignments: persistAssignments,
   };
 }

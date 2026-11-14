@@ -6,12 +6,35 @@ import { FirstJobHelpModal } from '../../modals/FirstJobHelpModal';
 import { Sparkles, Briefcase, Wand2 } from 'lucide-react';
 import { button } from '../../../../../shared/core/uiDesignSystem';
 import { executeAiTask } from '../../../../../shared/core/ai/aiClient';
+import { useToast } from '../../../../../shared/core/ui/Toast';
 
 export const ExperienciaSection = ({ cvData, setCvData }: any) => {
   const [isClassifyOpen, setIsClassifyOpen] = useState(false);
   const [isFirstJobOpen, setIsFirstJobOpen] = useState(false);
   const [acrResponse, setAcrResponse] = useState<string | null>(null);
   const [acrLoading, setAcrLoading] = useState(false);
+  // Experiencia destino de la sugerencia ACR: por defecto la última cargada.
+  const [acrTargetIdx, setAcrTargetIdx] = useState<number | undefined>(undefined);
+  const { showSuccess } = useToast();
+
+  const experienceList = Array.isArray(cvData?.experience) ? cvData.experience : [];
+  const acrCurrentIdx = acrTargetIdx !== undefined && acrTargetIdx >= 0 && acrTargetIdx < experienceList.length
+    ? acrTargetIdx
+    : Math.max(0, experienceList.length - 1);
+
+  const applyAcrToSelected = () => {
+    if (!acrResponse) return;
+    setCvData((prev: any) => {
+      const list = Array.isArray(prev?.experience) ? [...prev.experience] : [];
+      const idx = Math.min(acrCurrentIdx, list.length - 1);
+      if (idx < 0 || !list[idx]) return prev;
+      const item = list[idx];
+      list[idx] = { ...item, descripcion: item.descripcion ? `${item.descripcion}\n\n${acrResponse}` : acrResponse };
+      return { ...prev, experience: list };
+    });
+    setAcrResponse(null);
+    showSuccess('Listo — logro ACR aplicado a la experiencia elegida. Revisá el texto y ajustá lo que haga falta.');
+  };
 
   const guide = (
     <div className="space-y-2 mt-1">
@@ -53,17 +76,18 @@ export const ExperienciaSection = ({ cvData, setCvData }: any) => {
               </button>
               <button
                 type="button"
+                disabled={acrLoading || !experienceList.length}
                 onClick={async () => {
+                  if (!experienceList.length) return;
                   setAcrLoading(true); setAcrResponse(null);
                   try {
-                    const experience = Array.isArray(cvData?.experience) ? cvData.experience : [];
-                    const lastItem = experience[experience.length - 1] || {};
+                    const target = experienceList[acrCurrentIdx] || {};
                     const res = await executeAiTask<{ acrBullet: string; missingMetrics: string | null }>({
                       taskId: 'suggest_achievement_acr',
                       payload: {
-                        role: lastItem?.cargo || experience[0]?.cargo || 'Profesional',
-                        company: lastItem?.institucion || lastItem?.empresa || '',
-                        currentDescription: lastItem?.descripcion || ''
+                        role: target.cargo || experienceList[0]?.cargo || 'Profesional',
+                        company: target.institucion || target.empresa || '',
+                        currentDescription: target.descripcion || ''
                       },
                       cvData,
                       maxTokens: 300,
@@ -75,7 +99,7 @@ export const ExperienciaSection = ({ cvData, setCvData }: any) => {
                   } catch { setAcrResponse('No se pudo conectar con el asistente ACR. Intentá de nuevo.'); }
                   setAcrLoading(false);
                 }}
-                className={`${button.secondary} text-xs py-1.5 px-3 flex items-center gap-1.5`}
+                className={`${button.secondary} text-xs py-1.5 px-3 flex items-center gap-1.5 ${(acrLoading || !experienceList.length) ? 'opacity-60 cursor-not-allowed' : ''}`}
               >
                 <Wand2 className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
                 Sugerir Logros (ACR)
@@ -94,6 +118,34 @@ export const ExperienciaSection = ({ cvData, setCvData }: any) => {
               <div className="bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-lg p-3 text-sm text-[var(--ui-text-primary)]">
                 <p className="font-bold mb-1 text-[var(--color-accent-text)]">Sugerencia ACR (Acción + Contexto + Resultado):</p>
                 <p className="italic">{acrResponse}</p>
+              </div>
+            )}
+            {experienceList.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="text-xs font-bold text-[var(--ui-text-secondary)]" htmlFor="acr-target">
+                  Experiencia destino:
+                </label>
+                <select
+                  id="acr-target"
+                  value={acrCurrentIdx}
+                  onChange={(e) => setAcrTargetIdx(Number(e.target.value))}
+                  disabled={acrLoading}
+                  className="text-xs px-2 py-1 rounded-md bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] outline-none cursor-pointer"
+                >
+                  {experienceList.map((exp: any, idx: number) => (
+                    <option key={exp.id || idx} value={idx}>
+                      {exp.cargo || exp.tituloOGrado || `Experiencia #${idx + 1}`} — {exp.institucion || exp.empresa || 'sin empresa'}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  disabled={!acrResponse || acrLoading}
+                  onClick={applyAcrToSelected}
+                  className={`${button.secondary} text-xs py-1.5 px-3 flex items-center gap-1.5 ${(!acrResponse || acrLoading) ? 'opacity-60 cursor-not-allowed' : ''}`}
+                >
+                  Aplicar a esta experiencia
+                </button>
               </div>
             )}
           </div>

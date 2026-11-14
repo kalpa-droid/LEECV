@@ -75,16 +75,36 @@ export function PersonalInfoFields({
     cuit: 'CUIT / CUIL',
     birthDate: 'fecha de nacimiento',
     nacionalidad: 'nacionalidad',
-    estadoCivil: 'estado civil'
+    estadoCivil: 'estado civil',
+    disponibilidad: 'disponibilidad',
+    licenciaConducir: 'licencia de conducir'
   };
+  const FORMAT_POLICY_FIELDS = ['dni', 'cuit', 'birthDate', 'nacionalidad', 'estadoCivil'] as const;
+  const MANUAL_HIDE_FIELDS = [...FORMAT_POLICY_FIELDS, 'disponibilidad', 'licenciaConducir'] as const;
+
   const policyHiddenWithData = (() => {
     if (!cvData) return [] as string[];
     const fmt = getCvFormat(cvData.activeFormatId);
     if (!fmt) return [] as string[];
-    return ['dni', 'cuit', 'birthDate', 'nacionalidad', 'estadoCivil'].filter(
+    return FORMAT_POLICY_FIELDS.filter(
       (id) => (personalInfo as any)?.[id] && fmt.personalFieldPolicy?.[id as keyof typeof fmt.personalFieldPolicy] === 'hide'
     );
   })();
+
+  // Ocultos por elección manual (personalFieldOverrides o hiddenFields legado)
+  // con datos cargados: la persona debe saber que esos datos no van al PDF.
+  const manuallyHiddenWithData = (() => {
+    if (!cvData) return [] as string[];
+    return MANUAL_HIDE_FIELDS.filter((id) => {
+      if (!(personalInfo as any)?.[id]) return false;
+      if (cvData?.personalFieldOverrides?.[id] === 'hide') return true;
+      if (Array.isArray(cvData?.hiddenFields) && cvData.hiddenFields.includes(id)) return true;
+      return false;
+    });
+  })();
+
+  const datosPersonalesSectionOff = cvData?.sectionVisibility?.['datos-personales'] === false;
+  const personalDetailsLoaded = MANUAL_HIDE_FIELDS.some((id) => !!(personalInfo as any)?.[id]);
 
   return (
     <>
@@ -130,6 +150,24 @@ export function PersonalInfoFields({
               <span>
                 El formato <strong>{getCvFormat(cvData.activeFormatId)?.name}</strong> oculta {policyHiddenWithData.map((id) => policyFieldLabels[id]).join(', ')} para evitar sesgos.
                 Por eso esta sección puede no aparecer en el PDF. Elegí otro formato si querés mostrarlos.
+              </span>
+            </div>
+          )}
+          {policyHiddenWithData.length === 0 && datosPersonalesSectionOff && personalDetailsLoaded && (
+            <div className="text-[10px] flex items-start gap-1 leading-snug" style={{ color: colorSystem.status.warning.text }}>
+              <Info className="w-3 h-3 mt-0.5 flex-shrink-0" aria-hidden="true" />
+              <span>
+                La sección <strong>Datos Personales</strong> está desactivada: lo que cargaste arriba no aparece en el PDF por ahora.
+                Podés reactivarla desde el interruptor de esta sección.
+              </span>
+            </div>
+          )}
+          {manuallyHiddenWithData.length > 0 && (
+            <div className="text-[10px] flex items-start gap-1 leading-snug" style={{ color: colorSystem.status.warning.text }}>
+              <Info className="w-3 h-3 mt-0.5 flex-shrink-0" aria-hidden="true" />
+              <span>
+                Elegiste ocultar {manuallyHiddenWithData.map((id) => policyFieldLabels[id]).join(', ')} para que no aparezcan en el PDF.
+                Podés mostrarlos con el interruptor debajo de cada campo.
               </span>
             </div>
           )}

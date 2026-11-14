@@ -295,6 +295,16 @@ export const BUILTIN_RECORD_KINDS = {
     kind: 'references',
     label: 'Referencias Laborales',
     defaultFields: ['personaReferencia', 'cargo', 'institucion', 'contactoReferencia']
+  },
+  achievements: {
+    kind: 'projects',
+    label: 'Logros Cuantificables y Métricas',
+    defaultFields: ['tituloOGrado', 'descripcion', 'periodo']
+  },
+  portfolio: {
+    kind: 'projects',
+    label: 'Portafolio / Trabajos Destacados',
+    defaultFields: ['tituloOGrado', 'institucion', 'url', 'descripcion']
   }
 } as const;
 

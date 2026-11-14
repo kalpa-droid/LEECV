@@ -41,7 +41,8 @@ export function applyPresetLevel(cvData: any, level: PresetLevel, payload: Apply
     const newPresentation = applyTemplateMode(
       {
         sectionVisibility: cvData?.sectionVisibility || {},
-        sectionOrders: cvData?.layout?.sectionOrders || { primaria: [], secundaria: [] }
+        sectionOrders: cvData?.layout?.sectionOrders || { primaria: [], secundaria: [] },
+        columnAssignments: cvData?.layout?.columnAssignments || {}
       },
       fmt,
       activePreset,
@@ -59,28 +60,39 @@ export function applyPresetLevel(cvData: any, level: PresetLevel, payload: Apply
       sectionVisibility: newPresentation.sectionVisibility,
       layout: {
         ...(cvData.layout || {}),
-        sectionOrders: newPresentation.sectionOrders
+        sectionOrders: newPresentation.sectionOrders,
+        // Se conservan las asignaciones manuales aunque una sección se oculte temporalmente
+        columnAssignments: newPresentation.columnAssignments || cvData?.layout?.columnAssignments || {}
       }
     };
   }
 
   if (level === 'preset' && payload.presetId) {
+    // Secciones opcionales no universales que NO se encienden por defecto si
+    // estaban apagadas y sin contenido (evita secciones fantasma sin datos).
+    const NON_UNIVERSAL_OPTIONAL = new Set(['logros', 'publicaciones', 'referencias', 'idiomas', 'redes']);
     const allVisible: Record<string, boolean> = {};
     CANONICAL_SECTION_ORDER.forEach((id) => {
       // Los slots de sección personalizada vacíos NO se encienden por defecto:
       // forzarlos visible dejaba botones fantasma en el dock y secciones sin
       // contenido. Solo se prenden si ya estaban visibles o tienen datos.
-      if (id.startsWith('personalizada-')) {
+      if (id.startsWith('personalizada-') || NON_UNIVERSAL_OPTIONAL.has(id)) {
         allVisible[id] = cvData?.sectionVisibility?.[id] === true || checkSectionHasContent(cvData, id);
       } else {
         allVisible[id] = true;
       }
     });
 
+    // Si el formato activo es compatible con el preset elegido, se conserva
+    // (no se pierde la elección de formato al cambiar de preset).
+    const activeFormatCompatible =
+      cvData?.activeFormatId &&
+      getCvFormat(cvData.activeFormatId)?.recommendedPresetIds?.includes(payload.presetId);
+
     const updated = {
       ...cvData,
       activePresetId: payload.presetId,
-      activeFormatId: undefined,
+      activeFormatId: activeFormatCompatible ? cvData.activeFormatId : undefined,
       colorPresetId: undefined,
       typographyPresetId: undefined,
       columnLayoutPresetId: undefined,
@@ -89,7 +101,7 @@ export function applyPresetLevel(cvData: any, level: PresetLevel, payload: Apply
     };
     return {
       ...updated,
-      activeFormatId: resolveActiveFormatId(updated)
+      activeFormatId: activeFormatCompatible ? cvData.activeFormatId : resolveActiveFormatId(updated)
     };
   }
 
