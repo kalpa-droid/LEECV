@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 2,
   minor: 11,
-  patch: 0,
-  label: 'V2.11.0',
+  patch: 1,
+  label: 'V2.11.1',
   lastUpdated: '2026-11-14',
   lastAgent: '@opencode',
-  stage: 'Modelo de plantillas y secciones: full-template respeta columnas elegidas a mano, preset no enciende slots personalizada vacíos, candado visible certificado/firma, scroll+aviso al reordenar, Datos Personales nunca desaparece en silencio, IA en secciones huérfanas (habilidades y registro genérico), botón Sugerir Logros ACR reparado, explicación ATS con IA',
+  stage: 'Correcciones de auditoria post-V2.11.0: candado visible en secciones no asignables (certificados/firma), scroll al ancla del PDF forzado post-render, contratos IA OpenAPI 3.0 validos para Gemini (suggest_records, explain_ats, ats_analysis aclarados), normalizacion de registros IA con alias canonicos, plantilla conserva columna manual en los 3 modos y persiste columnAssignments, certificados fuera de la distribucion por columnas, preset no enciende opcionales no universales vacias, Datos Personales con contacto y datos-personales independientes (formato ATS)',
 } as const;
