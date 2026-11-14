@@ -45,13 +45,16 @@ describe('FASE 0 — Snapshots Baseline', () => {
       sectionOrders: { primaria: ['contacto', 'experiencia'], secundaria: ['idiomas'] }
     };
 
-    // Modo 1: full-template (aplica visibilidad y clasifica por columna según activePreset)
+    // Modo 1: full-template (aplica visibilidad y reordena según el preset,
+    // pero RESPETA la columna que la persona eligió a mano: el estado actual
+    // tiene 'contacto' asignado a primaria e 'idiomas' a secundaria)
     const fullRes = applyTemplateMode(currentState, format, activePreset, 'full-template');
     expect(fullRes.sectionVisibility.contacto).toBe(true);
     expect(fullRes.sectionVisibility.experiencia).toBe(true);
     expect(fullRes.sectionVisibility.referencias).toBe(false);
     expect(fullRes.sectionOrders.primaria).toContain('experiencia');
-    expect(fullRes.sectionOrders.secundaria).toContain('contacto');
+    expect(fullRes.sectionOrders.primaria).toContain('contacto');
+    expect(fullRes.sectionOrders.secundaria).toContain('idiomas');
 
     // Modo 2: template-order (prioriza orden, mantiene visibilidad intacta)
     const orderRes = applyTemplateMode(currentState, format, activePreset, 'template-order');

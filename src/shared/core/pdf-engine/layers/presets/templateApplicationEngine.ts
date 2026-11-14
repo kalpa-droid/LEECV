@@ -67,12 +67,34 @@ export function applyTemplateMode(
     for (const id of ALL_SECTION_IDS) {
       visibility[id] = defaultVisible.includes(id);
     }
-    const visible = defaultVisible; // ya viene en el orden de prioridad del formato
+    // La plantilla decide QUÉ secciones se ven, pero NO sobrescribe la
+    // columna que la persona eligió a mano: si una sección visible ya tenía
+    // una asignación de columna en el estado actual, se respeta y solo se
+    // reordena dentro de esa columna según la prioridad del formato.
+    const currentPrimaria = current?.sectionOrders?.primaria || [];
+    const currentSecundaria = current?.sectionOrders?.secundaria || [];
+    const manualColumn = new Map<string, 'primaria' | 'secundaria'>();
+    currentPrimaria.forEach(id => manualColumn.set(id, 'primaria'));
+    currentSecundaria.forEach(id => manualColumn.set(id, 'secundaria'));
+
+    const visible = defaultVisible.filter(id => ALL_SECTION_IDS.includes(id)); // ya viene en el orden de prioridad del formato
+    const primaria: string[] = [];
+    const secundaria: string[] = [];
+    for (const id of visible) {
+      const manual = manualColumn.get(id);
+      if (manual) {
+        (manual === 'secundaria' ? secundaria : primaria).push(id);
+      } else if (columnOf(id) === 'secundaria') {
+        secundaria.push(id);
+      } else {
+        primaria.push(id);
+      }
+    }
     return {
       sectionVisibility: visibility,
       sectionOrders: {
-        primaria: ensureFirmaTerminalInPrimaria(visible.filter(id => columnOf(id) === 'primaria')),
-        secundaria: visible.filter(id => columnOf(id) === 'secundaria'),
+        primaria: ensureFirmaTerminalInPrimaria(primaria),
+        secundaria,
       },
     };
   }

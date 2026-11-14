@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 2,
-  minor: 10,
+  minor: 11,
   patch: 0,
-  label: 'V2.10.0',
-  lastUpdated: '2026-11-13',
-  lastAgent: '@antigravity',
-  stage: 'Pipeline OCR integral: motor espacial PDF (3 modos text/hybrid/image), render 1920px con fondo blanco, WebP/PNG para páginas digitales, contraste suave para fotos, protocolo de lectura estructural + contexto rodante + Completeness Gate en la nube, mediaResolution HIGH en Gemini',
+  label: 'V2.11.0',
+  lastUpdated: '2026-11-14',
+  lastAgent: '@opencode',
+  stage: 'Modelo de plantillas y secciones: full-template respeta columnas elegidas a mano, preset no enciende slots personalizada vacíos, candado visible certificado/firma, scroll+aviso al reordenar, Datos Personales nunca desaparece en silencio, IA en secciones huérfanas (habilidades y registro genérico), botón Sugerir Logros ACR reparado, explicación ATS con IA',
 } as const;
