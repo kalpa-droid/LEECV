@@ -61,7 +61,8 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
             email: personalInfo.email || '',
             address: personalInfo.address || '',
             cityProvince: personalInfo.cityProvince || '',
-            facebook: personalInfo.facebook || ''
+            facebook: personalInfo.facebook || '',
+            website: personalInfo.website || ''
           }
         }
       ]
@@ -240,7 +241,7 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
         fields: {
           ...lang,
           idioma: lang.idioma || lang.language || lang.title || lang.name || '',
-          nivel: lang.nivelDominio || lang.nivel || lang.level || ''
+          nivel: lang.nivelDominio || lang.nivel || lang.proficiency || lang.level || ''
         }
       }))
     });

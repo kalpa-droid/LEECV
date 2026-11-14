@@ -118,6 +118,18 @@ export const ImportDataSection: React.FC = () => {
       if (updated.summary) updated = activateSection(updated, 'resumen').updatedCvData;
       if (updated.frase) updated = activateSection(updated, 'frase').updatedCvData;
 
+      // Datos personales leídos por la IA deben mostrarse aunque venían desactivados.
+      // Las políticas explícitas de formato (ej. us-resume) ocultando campos siguen vigentes al render.
+      const hasPersonalData = Object.values(updated.personalInfo || {}).some(
+        (v: any) => typeof v === 'string' && v.trim().length > 0
+      );
+      if (hasPersonalData) {
+        // 'personales' es el id de pestaña del editor, no una sección del CV: el orden canónico usa 'datos-personales'.
+        ['contacto', 'datos-personales'].forEach((sectionId) => {
+          updated = activateSection(updated, sectionId).updatedCvData;
+        });
+      }
+
       return updated;
     });
     const jobId = reviewJobId;

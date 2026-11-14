@@ -49,6 +49,29 @@ function sanitizeSvgDataUrl(dataUrl?: string): string | undefined {
   return dataUrl;
 }
 
+/**
+ * Iniciales para el placeholder de foto: resuelve igual que resolveDisplayName,
+ * asi un CV importado con solo fullName (OCR/IA) nunca queda con 'CV' generico.
+ */
+function resolveInitials(personalInfo?: any): string {
+  if (!personalInfo) return 'CV';
+  const given = String(personalInfo.givenNames || '').trim();
+  const surname = String(personalInfo.surname || '').trim();
+  if (given || surname) {
+    const a = given ? given[0] : '';
+    const b = surname ? surname[0] : '';
+    return `${a}${b}`.toUpperCase() || 'CV';
+  }
+  const rawFull = String(personalInfo.fullName || '').trim();
+  if (rawFull) {
+    const parts = rawFull.split(/\s+/);
+    const a = parts[0]?.[0] || '';
+    const b = parts.length > 1 ? parts[parts.length - 1][0] : '';
+    return `${a}${b}`.toUpperCase() || 'CV';
+  }
+  return 'CV';
+}
+
 
 export interface TemplateRendererProps {
   preset: Preset;
@@ -600,7 +623,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                   ) : (
                     <View style={styles.profilePhotoPlaceholder}>
                       <Text style={{ fontSize: 20, fontFamily: 'Helvetica-Bold', color: getContrastRatio(isSidebar ? sectorRolesColor.primary : sectorRolesColor.background, '#ffffff') >= 4.5 ? '#ffffff' : (sectorRolesColor.primary || '#0f172a') }}>
-                        {`${(personalInfo?.givenNames || 'C')[0]}${(personalInfo?.surname || 'V')[0]}`}
+                        {resolveInitials(personalInfo)}
                       </Text>
                     </View>
                   )}
@@ -622,7 +645,11 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                     </>
                   )}
                   <Text style={styles.headerName}>
-                    {personalInfo.surname || ''} <Text style={styles.headerNameHighlight}>{personalInfo.givenNames || ''}</Text>
+                    {(personalInfo.givenNames || personalInfo.surname) ? (
+                      <>{personalInfo.surname || ''} <Text style={styles.headerNameHighlight}>{personalInfo.givenNames || ''}</Text></>
+                    ) : (
+                      resolveDisplayName(personalInfo)
+                    )}
                   </Text>
                   {(personalInfo.quote || personalInfo.profession) && (
                     <Text style={{ fontSize: headerSubtitleSpec.fontSizePt, fontFamily: headerSubtitleSpec.fontFamily, color: headerSubtitleSpec.colorHex, opacity: headerSubtitleSpec.opacity, marginTop: -4, marginBottom: 6 }}>
@@ -748,7 +775,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
               ) : (
                 <View style={[styles.coverPhotoPlaceholder, { borderColor: coverRolesColor.accent, backgroundColor: coverSubtleBoxBg }]}>
                   <Text style={{ fontSize: 24, fontFamily: coverFontBold, color: getContrastRatio(coverSubtleBoxBg, '#ffffff') >= 4.5 ? '#ffffff' : (coverRolesColor.primary || '#0f172a') }}>
-                    {`${(personalInfo?.givenNames || 'C')[0]}${(personalInfo?.surname || 'V')[0]}`}
+                    {resolveInitials(personalInfo)}
                   </Text>
                 </View>
               )
@@ -822,7 +849,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                 ) : (
                   <View style={{ width: 90, height: 110, borderRadius: 8, borderWidth: 2, borderColor: coverRolesColor.accent, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }}>
                     <Text style={{ fontSize: 22, fontFamily: coverFontBold, color: coverNameTextSpec.colorHex }}>
-                      {`${(personalInfo?.givenNames || 'C')[0]}${(personalInfo?.surname || 'V')[0]}`}
+                      {resolveInitials(personalInfo)}
                     </Text>
                   </View>
                 )
@@ -945,7 +972,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
               ) : (
                 <View style={[styles.coverPhotoPlaceholder, { borderRadius: 20, borderColor: coverRolesColor.accent, backgroundColor: coverSubtleBoxBg }]}>
                   <Text style={{ fontSize: 24, fontFamily: coverFontBold, color: coverNameTextSpec.colorHex }}>
-                    {`${(personalInfo?.givenNames || 'C')[0]}${(personalInfo?.surname || 'V')[0]}`}
+                    {resolveInitials(personalInfo)}
                   </Text>
                 </View>
               )
@@ -1020,7 +1047,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                 ) : (
                   <View style={[styles.coverPhotoPlaceholder, { width: 140, height: 175, borderWidth: 4, borderColor: coverRolesColor.accent, backgroundColor: coverSubtleBoxBg }]}>
                     <Text style={{ fontSize: 28, fontFamily: coverFontBold, color: coverNameTextSpec.colorHex }}>
-                      {`${(personalInfo?.givenNames || 'C')[0]}${(personalInfo?.surname || 'V')[0]}`}
+                      {resolveInitials(personalInfo)}
                     </Text>
                   </View>
                 )
@@ -1091,7 +1118,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
               ) : (
                 <View style={[styles.coverPhotoPlaceholder, { borderColor: coverRolesColor.accent, backgroundColor: coverSubtleBoxBg }]}>
                   <Text style={{ fontSize: 24, fontFamily: coverFontBold, color: coverNameTextSpec.colorHex }}>
-                    {`${(personalInfo?.givenNames || 'C')[0]}${(personalInfo?.surname || 'V')[0]}`}
+                    {resolveInitials(personalInfo)}
                   </Text>
                 </View>
               )

@@ -29,11 +29,16 @@ export interface ContactField {
 export const CONTACT_FIELDS: ContactField[] = [
   { key: 'phone', cvLabel: 'Tel:' },
   { key: 'email', cvLabel: 'Email:' },
+  { key: 'website', cvLabel: 'Web:' },
   { key: 'address', cvLabel: 'Dom:' },
   { key: 'cityProvince', cvLabel: 'Ubic.:', cardOmit: true, emphasize: true },
   { key: 'dni', cvLabel: 'DNI:', cardOmit: true, emphasize: true },
   { key: 'cuit', cvLabel: 'CUIT:', cardOmit: true, emphasize: true },
   { key: 'birthDate', cvLabel: 'Nac.:', cardOmit: true, emphasize: true },
+  { key: 'nacionalidad', cvLabel: 'Nac.:', cardOmit: true, emphasize: true },
+  { key: 'estadoCivil', cvLabel: 'Est. civil:', cardOmit: true, emphasize: true },
+  { key: 'disponibilidad', cvLabel: 'Disp.:', cardOmit: true, emphasize: true },
+  { key: 'licenciaConducir', cvLabel: 'Lic.:', cardOmit: true, emphasize: true },
 ];
 
 function humanizeCamelCase(key: string): string {

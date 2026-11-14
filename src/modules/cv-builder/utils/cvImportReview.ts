@@ -211,11 +211,11 @@ export function findImportDuplicateIndex(
 
 export function normalizeImportedCvData(raw: Record<string, any>): Record<string, any> {
   const normalized: Record<string, any> = {};
-  if (raw.personalInfo && typeof raw.personalInfo === 'object') {
-    normalized.personalInfo = Object.fromEntries(
-      Object.entries(raw.personalInfo).filter(([, value]) => typeof value === 'string' && value.trim())
-    );
-  }
+  normalized.personalInfo = raw.personalInfo && typeof raw.personalInfo === 'object'
+    ? Object.fromEntries(
+        Object.entries(raw.personalInfo).filter(([, value]) => typeof value === 'string' && value.trim())
+      )
+    : {};
 
   // 1. Derivar fullName ↔ givenNames / surname y garantizar fields raíz
   if (typeof normalized.personalInfo?.fullName === 'string' && normalized.personalInfo.fullName.trim()) {
@@ -258,50 +258,15 @@ export function normalizeImportedCvData(raw: Record<string, any>): Record<string
     normalized.personalInfo.quote = normalized.personalInfo.role || '';
   }
 
-  // 4. linkedin / portfolio → redes y website
-  if (
-    typeof normalized.personalInfo?.linkedIn === 'string' &&
-    normalized.personalInfo.linkedIn.trim()
-  ) {
-    // Asegurar que redes[] exista y agregar LinkedIn si no hay duplicado
-    if (!Array.isArray(normalized.redes)) normalized.redes = [];
-    const already = normalized.redes.some(
-      (r: any) => typeof r === 'object' && r.url === normalized.personalInfo.linkedIn.trim()
-    );
-    if (!already) normalized.redes.push({ plataforma: 'LinkedIn', url: normalized.personalInfo.linkedIn.trim(), usuario: '' });
-  }
-  if (
-    typeof normalized.personalInfo?.portfolio === 'string' &&
-    normalized.personalInfo.portfolio.trim()
-  ) {
-    if (!Array.isArray(normalized.redes)) normalized.redes = [];
-    const already = normalized.redes.some(
-      (r: any) => typeof r === 'object' && r.url === normalized.personalInfo.portfolio.trim()
-    );
-    if (!already) normalized.redes.push({ plataforma: 'Portafolio', url: normalized.personalInfo.portfolio.trim(), usuario: '' });
-  }
-  // website = website || portfolio (si portfolio parece URL y website vacío)
-  if (
-    typeof normalized.personalInfo?.website !== 'string' ||
-    !normalized.personalInfo.website.trim()
-  ) {
-    normalized.personalInfo.website = normalized.personalInfo.portfolio || '';
-  }
-
-  // 5. summary / objective / frase al raíz (frase nueva)
+  // 5. summary / objective / frase al raiz (la IA puede darlos en la raiz o dentro de personalInfo)
   for (const field of ['summary', 'objective', 'frase'] as const) {
-    if (typeof normalized.personalInfo?.[field] === 'string' && normalized.personalInfo[field].trim()) {
-      normalized[field] = normalized.personalInfo[field].trim();
+    const fromRoot = typeof raw?.[field] === 'string' ? String(raw[field]).trim() : '';
+    const fromPersonal = typeof normalized.personalInfo?.[field] === 'string' ? normalized.personalInfo[field].trim() : '';
+    const value = fromRoot || fromPersonal;
+    if (value) {
+      normalized[field] = value;
+      if (!fromPersonal) normalized.personalInfo = { ...normalized.personalInfo, [field]: value };
     }
-  }
-
-  // 6. languages: preservar proficiency → nivel también
-  if (Array.isArray(normalized.languages)) {
-    normalized.languages = normalized.languages.map((lang: any) => ({
-      ...lang,
-      nivel: lang.nivelDominio || lang.nivel || lang.proficiency || lang.level || '',
-      idioma: lang.idioma || lang.language || lang.title || lang.name || '',
-    }));
   }
 
   for (const field of IMPORTABLE_LIST_FIELDS) {
@@ -321,8 +286,11 @@ export function normalizeImportedCvData(raw: Record<string, any>): Record<string
         result.institution = item.institution || item.school || item.schoolName || '';
         result.degree = item.degree || item.title || '';
       } else if (field === 'languages') {
-        result.language = item.language || item.name || '';
+        result.language = item.language || item.name || item.idioma || '';
+        result.idioma = item.idioma || item.language || item.name || '';
         result.proficiency = item.proficiency || item.level || '';
+        result.nivelDominio = item.nivelDominio || item.nivel || item.proficiency || item.level || '';
+        result.nivel = item.nivel || item.nivelDominio || item.proficiency || item.level || '';
       } else if (field === 'coursesAndCertificates') {
         result.title = item.title || item.name || '';
         result.institution = item.institution || item.authority || '';
@@ -371,6 +339,36 @@ export function normalizeImportedCvData(raw: Record<string, any>): Record<string
       : Object.entries(item).some(([key, value]) =>
           key !== 'id' && typeof value === 'string' && value.trim().length > 0
         ));
+  }
+
+  // 4. linkedin / portfolio → redes y website
+  const linkedInUrl = String(
+    normalized.personalInfo?.linkedin || normalized.personalInfo?.linkedIn || ''
+  ).trim();
+  if (linkedInUrl) {
+    // Asegurar que redes[] exista y agregar LinkedIn si no hay duplicado
+    if (!Array.isArray(normalized.redes)) normalized.redes = [];
+    const already = normalized.redes.some(
+      (r: any) => typeof r === 'object' && r.url === linkedInUrl
+    );
+    if (!already) normalized.redes.push({ plataforma: 'LinkedIn', url: linkedInUrl, usuario: '' });
+  }
+  if (
+    typeof normalized.personalInfo?.portfolio === 'string' &&
+    normalized.personalInfo.portfolio.trim()
+  ) {
+    if (!Array.isArray(normalized.redes)) normalized.redes = [];
+    const already = normalized.redes.some(
+      (r: any) => typeof r === 'object' && r.url === normalized.personalInfo.portfolio.trim()
+    );
+    if (!already) normalized.redes.push({ plataforma: 'Portafolio', url: normalized.personalInfo.portfolio.trim(), usuario: '' });
+  }
+  // website = website || portfolio (si portfolio parece URL y website vacío)
+  if (
+    typeof normalized.personalInfo?.website !== 'string' ||
+    !normalized.personalInfo.website.trim()
+  ) {
+    normalized.personalInfo.website = normalized.personalInfo.portfolio || '';
   }
 
   return normalized;
