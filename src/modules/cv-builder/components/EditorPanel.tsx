@@ -37,6 +37,7 @@ import { PersonalizadaSection } from './editor/sections/PersonalizadaSection';
 import { DisenoSection } from './editor/sections/DisenoSection';
 import { PortadaSection } from './editor/sections/PortadaSection';
 import { CoverLetterEditorPanel } from '../../cover-letter/components/CoverLetterEditorPanel';
+import { FloatingAssistant } from './FloatingAssistant';
 import { CoverLetterCrossSellBanner } from './CoverLetterCrossSellBanner';
 import { Briefcase, CornerUpLeft, FileText } from 'lucide-react';
 import { isApplicationVariant } from '../../../shared/core/documents/applicationVariant';
@@ -402,6 +403,8 @@ export default function EditorPanel({
         )}
         
       </div>
+        {/* Asistente flotante Lidio — solo zona app (EditorPanel), nunca en landing/blog */}
+        <FloatingAssistant activeTab={activeTab} onNavigate={changeActiveTab} cvData={cvData} />
     </div>
   );
 }

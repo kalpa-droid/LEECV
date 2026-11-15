@@ -526,6 +526,16 @@ export const ICON_REGISTRY: Record<string, IconDefinition> = {
       'M15 14h6v7h-6z'
     ]
   },
+  assistant: {
+    id: 'assistant',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 6 8.38 8.38 0 0 1-3.8-.9L3 21l1.6-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z',
+      'M9.5 12h.01',
+      'M13 12h.01',
+      'M16.5 12h.01'
+    ]
+  },
   custom: {
     id: 'custom',
     viewBox: '0 0 24 24',
