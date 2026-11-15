@@ -3,11 +3,14 @@ import { Modal } from '../../../shared/core/ui/Modal';
 import { AlertCircle, AlertTriangle, Eye, ShieldOff, Sparkles, ArrowRight, FileText, X } from 'lucide-react';
 import { button } from '../../../shared/core/uiDesignSystem';
 import { AtsPreflightResult } from '../../../shared/core/pdf-engine/layers/ats/atsPreflightCheck';
+import { resolveRuleTargetTab } from '../../../shared/core/recruiter-rules/ruleTargetTabs';
 
 export interface AtsLiveAuditorPanelProps {
   isOpen: boolean;
   onClose: () => void;
   result?: AtsPreflightResult | null;
+  /** CV activo para resolver el destino exacto de reglas contextuales (p. ej. filler_words). */
+  cvData?: any;
   onJumpToSection?: (sectionId: string) => void;
   onHideSensitiveData?: () => void;
   onOpenAssist?: () => void;
@@ -19,6 +22,7 @@ export function AtsLiveAuditorPanel({
   isOpen,
   onClose,
   result,
+  cvData,
   onJumpToSection,
   onHideSensitiveData,
   onOpenAssist,
@@ -72,7 +76,7 @@ export function AtsLiveAuditorPanel({
             {onJumpToSection && (
               <button
                 type="button"
-                onClick={() => onJumpToSection('experience')}
+                onClick={() => onJumpToSection('experiencia')}
                 className={`${button.primary} px-4 py-2 font-black text-xs flex items-center gap-1.5`}
               >
                 <Eye className="w-4 h-4" />
@@ -164,7 +168,7 @@ export function AtsLiveAuditorPanel({
                 <button type="button" onClick={() => onHideSensitiveData()} className={`${button.primary} px-2.5 py-1 text-[10px] font-bold h-auto`}>Arreglar</button>
               )}
               {w.fixAction === 'edit_section' && onJumpToSection && (
-                <button type="button" onClick={() => onJumpToSection('experience')} className={`${button.primary} px-2.5 py-1 text-[10px] font-bold h-auto`}>Ir a corregir</button>
+                <button type="button" onClick={() => onJumpToSection(resolveRuleTargetTab(w.id, cvData))} className={`${button.primary} px-2.5 py-1 text-[10px] font-bold h-auto`}>Ir a corregir</button>
               )}
             </div>
           ))

@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 2,
   minor: 14,
-  patch: 0,
-  label: 'V2.14.0',
+  patch: 1,
+  label: 'V2.14.1',
   lastUpdated: '2026-11-15',
   lastAgent: '@opencode',
-  stage: 'Bloque 2 (tiradores continuos, reintentos IA, mojibake, defaults nuevo CV): tiradores continuos de tipografia/densidad reactivos en preview (motor de densidad continuo 0.50-1.35 + anclas enum), reintentos silenciosos de IA (3 intentos, backoff 500/1200 ms) con recuperacion de JSON en servidor y cliente, correccion de mojibake UTF-8 en presetCompositionInstances (18 lineas) con test de regresion, defaults de CV nuevo (pestana Importar datos + Hielo Nordico + tipografia compacta) y preservacion de typographyOverrides en sanitizeCvData.',
+  stage: 'Bloque 1 post-V2.14.0 (botones ATS + contraste blog): mapa canonico resolveRuleTargetTab para los botones Ir a corregir/Guia ACR de los modales ATS (antes saltaban a pestanas inexistentes como experience o frase y dejaban el panel en blanco), rama edit_section del modal de pre-exportacion, blog con prosa vinculada a los tokens de tema (.prose-leecv en vez de dark:prose-invert que obedece al SO), hover AA en titulos de articulos y ThemeToggleButton en el header del blog.',
 } as const;

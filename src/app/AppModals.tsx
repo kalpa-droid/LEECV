@@ -26,6 +26,7 @@ import { inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegis
 import { resolveActivePreset } from '../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { capabilitiesGate } from '../shared/core/documents/documentEngine/capabilitiesGate';
 import { useToast } from '../shared/core/ui/Toast';
+import { resolveRuleTargetTab, isValidPanelTab, FALLBACK_TAB } from '../shared/core/recruiter-rules/ruleTargetTabs';
 
 const CardExportModal = React.lazy(() => import('../modules/cv-builder/components/modals/CardExportModal').then(m => ({ default: m.CardExportModal })));
 
@@ -129,6 +130,18 @@ export function AppModals(props: AppModalsProps) {
     handleGenerateCoverLetterFromCV,
     goToLandingPage
   } = props;
+
+  // Salto canónico a una pestaña del editor desde un modal ATS (V2.14.1).
+  // Nunca emite una pestaña inexistente (cae en FALLBACK_TAB), abre el
+  // panel y fuerza el scroll al ancla del PDF aunque la pestaña no cambie.
+  const jumpToPanelTab = (tab: string | null | undefined) => {
+    const target = tab && isValidPanelTab(tab, cvData) ? tab : FALLBACK_TAB;
+    setActiveTab(target);
+    setIsPanelOpen(true);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('pdf-anchor-scroll', { detail: { tabId: target, forcePostRender: true } }));
+    }
+  };
 
   return (
     <Suspense fallback={null}>
@@ -342,6 +355,9 @@ export function AppModals(props: AppModalsProps) {
                 showSuccess('Se han ocultado los datos sensibles.');
               }
               setIsAtsModalOpen(false);
+            } else if (actionId === 'edit_section') {
+              jumpToPanelTab(resolveRuleTargetTab(ruleId, cvData));
+              setIsAtsModalOpen(false);
             }
           }}
         />
@@ -352,9 +368,9 @@ export function AppModals(props: AppModalsProps) {
           isOpen={isAtsLivePanelOpen}
           onClose={() => setIsAtsLivePanelOpen(false)}
           result={atsLiveResult || atsResult}
+          cvData={cvData}
           onJumpToSection={(sectionId) => {
-            setActiveTab(sectionId);
-            setIsPanelOpen(true);
+            jumpToPanelTab(sectionId);
             setIsAtsLivePanelOpen(false);
           }}
           onHideSensitiveData={() => {
@@ -374,8 +390,7 @@ export function AppModals(props: AppModalsProps) {
             }
           }}
           onOpenAssist={() => {
-            setActiveTab('frase');
-            setIsPanelOpen(true);
+            jumpToPanelTab('experiencia');
             setIsAtsLivePanelOpen(false);
           }}
         />
