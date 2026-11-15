@@ -33,6 +33,10 @@
       "reason": "Colores de renderizado interno de motor de libros (canvas/PDF), no UI de usuario. Pendiente de migración a tokens (UI-015/UI-016)."
     },
     {
+      "file": "src/shared/core/book-engine/canvasColors.ts",
+      "reason": "Tabla de respaldo hex para Canvas 2D (var(--token) no se resuelve en canvas/Worker/tests). No es UI de usuario. Pendiente de migración a tokens (UI-015/UI-016)."
+    },
+    {
       "file": "src/shared/core/capabilities/capabilityRegistry.ts",
       "reason": "Colores de registro de capacidades internas. Pendiente de migración a tokens de diseño (UI-015/UI-016)."
     },

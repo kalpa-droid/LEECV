@@ -33,6 +33,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
       coverStyle: 'monica-classic',
     }
   );
+  const [imageError, setImageError] = useState<string | null>(null);
 
   const handleCoverTypeChange = (type: 'source' | 'custom' | 'upload' | 'none') => {
     setCoverType(type);
@@ -59,14 +60,19 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const dataUrl = event.target?.result as string;
-        updateCoverField('imageUri', dataUrl);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setImageError('Ese archivo no es una imagen. Elegí un archivo PNG, JPG o WEBP.');
+      return;
     }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      setImageError(null);
+      updateCoverField('imageUri', dataUrl);
+    };
+    reader.onerror = () => setImageError('No pudimos leer el archivo. Probá con otro.');
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -128,6 +134,10 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
             onChange={handleImageUpload}
             className={`${input.base} cursor-pointer`}
           />
+
+          {imageError && (
+            <p className="text-xs font-semibold text-[var(--color-status-danger-text)]">{imageError}</p>
+          )}
 
           {coverData.imageUri && (
             <div className="space-y-4">

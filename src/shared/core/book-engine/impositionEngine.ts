@@ -2,6 +2,7 @@ import { PDFDocument, PageSizes } from 'pdf-lib';
 import { countBlanksBehindCover } from './impositionMath';
 import { getCoverPresetById } from '../pdf-engine/layers/presets/coverPresetCatalog';
 import { ensurePdfjsWorkerConfigured } from '../pdf-engine/pdfjsWorkerSetup';
+import { resolveCanvasColor, COVER_FALLBACK_BG, COVER_FALLBACK_TEXT } from './canvasColors';
 
 const pdfjsLib = typeof window !== 'undefined' ? ensurePdfjsWorkerConfigured() : (null as any);
 
@@ -83,9 +84,30 @@ export function getCoverCanvasSize(paperSize: 'A4' | 'A3' = 'A4'): { width: numb
   return paperSize === 'A3' ? { width: 2480, height: 3508 } : { width: 1748, height: 2480 };
 }
 
+/**
+ * Carga una imagen para tapa/contratapa. Si falla, RECHAZA con un error en
+ * español sencillo para que la UI lo muestre — nunca devuelve un canvas negro.
+ */
+function loadCoverImage(imageUri: string, kind: 'tapa' | 'contratapa'): Promise<HTMLImageElement> {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () =>
+      reject(
+        new Error(
+          kind === 'tapa'
+            ? 'No pudimos cargar la imagen de la tapa. Probá guardarla como PNG o JPG y subirla de nuevo.'
+            : 'No pudimos cargar la imagen de la contratapa. Probá guardarla como PNG o JPG y subirla de nuevo.'
+        )
+      );
+    img.src = imageUri;
+  });
+}
+
 export async function crearCanvasTapaCustom(
   coverConfig: CoverConfig | null,
-  canvasSize = { width: 1748, height: 2480 }
+  canvasSize = { width: 1748, height: 2480 },
+  renderScale = 1
 ): Promise<HTMLCanvasElement | null> {
   if (!coverConfig || coverConfig.type === 'none') return null;
   const width = canvasSize.width;
@@ -97,12 +119,11 @@ export async function crearCanvasTapaCustom(
   if (!ctx) return null;
 
   if (coverConfig.type === 'upload' && coverConfig.imageUri) {
-    const img = new Image();
-    img.src = coverConfig.imageUri;
-    await new Promise<void>((res) => {
-      img.onload = () => res();
-      img.onerror = () => res();
-    });
+    const img = await loadCoverImage(coverConfig.imageUri, 'tapa');
+
+    // Canvas transparente + export JPEG = negro puro. Garantizar fondo blanco.
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, width, height);
 
     const scaleX = width / (img.width || width);
     const scaleY = height / (img.height || height);
@@ -113,8 +134,6 @@ export async function crearCanvasTapaCustom(
       const scale = Math.min(scaleX, scaleY);
       const w = (img.width || width) * scale;
       const h = (img.height || height) * scale;
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(0, 0, width, height);
       ctx.drawImage(img, (width - w) / 2, (height - h) / 2, w, h);
     } else {
       const scale = Math.max(scaleX, scaleY);
@@ -139,20 +158,16 @@ export async function crearCanvasTapaCustom(
     // Mismo catálogo que gobierna la portada del CV (coverPresetCatalog.ts) —
     // un preset elegido acá y uno elegido en el editor de CV comparten
     // exactamente la misma identidad de color, no dos paletas parecidas.
+    // Los presets guardan var(--token), que Canvas no entiende: resolver siempre.
     const preset = coverStyle ? getCoverPresetById(coverStyle) : null;
-    const resolvedBgColor = bgColor || preset?.badgeBg || '#1a1a2e';
-    const resolvedTextColor = textColor || preset?.badgeTextColor || '#bafdc1';
+    const resolvedBgColor = resolveCanvasColor(bgColor || preset?.badgeBg || '', COVER_FALLBACK_BG);
+    const resolvedTextColor = resolveCanvasColor(textColor || preset?.badgeTextColor || '', COVER_FALLBACK_TEXT);
 
     ctx.fillStyle = resolvedBgColor;
     ctx.fillRect(0, 0, width, height);
 
     if (bgImageUri) {
-      const img = new Image();
-      img.src = bgImageUri;
-      await new Promise<void>((res) => {
-        img.onload = () => res();
-        img.onerror = () => res();
-      });
+      const img = await loadCoverImage(bgImageUri, 'tapa');
       const scale = Math.max(width / (img.width || width), height / (img.height || height));
       const w = (img.width || width) * scale;
       const h = (img.height || height) * scale;
@@ -164,13 +179,17 @@ export async function crearCanvasTapaCustom(
     ctx.fillStyle = resolvedTextColor;
     ctx.textAlign = 'center';
 
+    // Las miniaturas se renderizan a ~320px de ancho: las fuentes van a escala
+    // para que el texto no desborde (renderScale=1 en la exportación real).
+    const fontSizeScaled = Math.max(1, Math.round(fontSize * renderScale));
+
     const sideMargin = Math.round(width * 0.135);
     const maxWidth = width - sideMargin * 2;
 
     let currentY = Math.round(height * 0.28);
 
     if (title) {
-      ctx.font = `bold ${fontSize}px ${fontFamily}`;
+      ctx.font = `bold ${fontSizeScaled}px ${fontFamily}`;
       const words = title.split(' ');
       let currentLine = '';
       const titleLines: string[] = [];
@@ -187,7 +206,7 @@ export async function crearCanvasTapaCustom(
       }
       if (currentLine) titleLines.push(currentLine);
 
-      const lineStep = Math.round(fontSize * lineHeightMultiplier);
+      const lineStep = Math.round(fontSizeScaled * lineHeightMultiplier);
       titleLines.forEach((l) => {
         ctx.fillText(l, width / 2, currentY);
         currentY += lineStep;
@@ -195,14 +214,14 @@ export async function crearCanvasTapaCustom(
     }
 
     if (author) {
-      const authorFontSize = Math.round(fontSize * 0.55);
+      const authorFontSize = Math.round(fontSizeScaled * 0.55);
       ctx.font = `500 ${authorFontSize}px ${fontFamily}`;
-      const authorY = currentY + Math.round(fontSize * 0.4);
+      const authorY = currentY + Math.round(fontSizeScaled * 0.4);
       ctx.fillText(author, width / 2, authorY);
     }
 
     if (publisher) {
-      const publisherFontSize = Math.round(fontSize * 0.4);
+      const publisherFontSize = Math.round(fontSizeScaled * 0.4);
       ctx.font = `400 ${publisherFontSize}px ${fontFamily}`;
       ctx.fillText(publisher.toUpperCase(), width / 2, height * 0.9);
     }
@@ -213,7 +232,8 @@ export async function crearCanvasTapaCustom(
 
 export async function crearCanvasContratapaCustom(
   backCoverConfig: BackCoverConfig | null,
-  canvasSize = { width: 1748, height: 2480 }
+  canvasSize = { width: 1748, height: 2480 },
+  renderScale = 1
 ): Promise<HTMLCanvasElement | null> {
   if (!backCoverConfig || backCoverConfig.type === 'none') return null;
   const width = canvasSize.width;
@@ -225,12 +245,11 @@ export async function crearCanvasContratapaCustom(
   if (!ctx) return null;
 
   if (backCoverConfig.type === 'upload' && backCoverConfig.imageUri) {
-    const img = new Image();
-    img.src = backCoverConfig.imageUri;
-    await new Promise<void>((res) => {
-      img.onload = () => res();
-      img.onerror = () => res();
-    });
+    const img = await loadCoverImage(backCoverConfig.imageUri, 'contratapa');
+
+    // Canvas transparente + export JPEG = negro puro. Garantizar fondo blanco.
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, width, height);
 
     const scaleX = width / (img.width || width);
     const scaleY = height / (img.height || height);
@@ -241,8 +260,6 @@ export async function crearCanvasContratapaCustom(
       const scale = Math.min(scaleX, scaleY);
       const w = (img.width || width) * scale;
       const h = (img.height || height) * scale;
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(0, 0, width, height);
       ctx.drawImage(img, (width - w) / 2, (height - h) / 2, w, h);
     } else {
       const scale = Math.max(scaleX, scaleY);
@@ -264,19 +281,14 @@ export async function crearCanvasContratapaCustom(
     } = backCoverConfig;
 
     const preset = coverStyle ? getCoverPresetById(coverStyle) : null;
-    const resolvedBgColor = bgColor || preset?.badgeBg || '#1a1a2e';
-    const resolvedTextColor = textColor || preset?.badgeTextColor || '#bafdc1';
+    const resolvedBgColor = resolveCanvasColor(bgColor || preset?.badgeBg || '', COVER_FALLBACK_BG);
+    const resolvedTextColor = resolveCanvasColor(textColor || preset?.badgeTextColor || '', COVER_FALLBACK_TEXT);
 
     ctx.fillStyle = resolvedBgColor;
     ctx.fillRect(0, 0, width, height);
 
     if (bgImageUri) {
-      const img = new Image();
-      img.src = bgImageUri;
-      await new Promise<void>((res) => {
-        img.onload = () => res();
-        img.onerror = () => res();
-      });
+      const img = await loadCoverImage(bgImageUri, 'contratapa');
       const scale = Math.max(width / (img.width || width), height / (img.height || height));
       const w = (img.width || width) * scale;
       const h = (img.height || height) * scale;
@@ -288,15 +300,18 @@ export async function crearCanvasContratapaCustom(
     ctx.fillStyle = resolvedTextColor;
     ctx.textAlign = 'center';
 
+    // Miniaturas a ~320px: fuentes a escala (renderScale=1 en exportación real).
+    const fontSizeScaled = Math.max(1, Math.round(fontSize * renderScale));
+
     const sideMargin = Math.round(width * 0.135);
     const maxWidth = width - sideMargin * 2;
 
     if (synopsis) {
-      ctx.font = `500 ${fontSize}px ${fontFamily}`;
+      ctx.font = `500 ${fontSizeScaled}px ${fontFamily}`;
       const words = synopsis.split(' ');
       let line = '';
       let y = Math.round(height * 0.3);
-      const lineStep = Math.round(fontSize * 1.4);
+      const lineStep = Math.round(fontSizeScaled * 1.4);
 
       for (let n = 0; n < words.length; n++) {
         const testLine = line ? `${line} ${words[n]}` : words[n];
@@ -314,15 +329,15 @@ export async function crearCanvasContratapaCustom(
 
     if (isbn) {
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(width / 2 - 200, height * 0.8 - 45, 400, 90);
+      ctx.fillRect(width / 2 - 200 * renderScale, height * 0.8 - 45 * renderScale, 400 * renderScale, 90 * renderScale);
       ctx.fillStyle = '#000000';
-      ctx.font = 'bold 36px monospace';
-      ctx.fillText(`ISBN ${isbn}`, width / 2, height * 0.8 + 10);
+      ctx.font = `bold ${Math.round(36 * renderScale)}px monospace`;
+      ctx.fillText(`ISBN ${isbn}`, width / 2, height * 0.8 + 10 * renderScale);
     }
 
     if (publisher) {
-      ctx.fillStyle = textColor || '#bafdc1';
-      ctx.font = `400 38px ${fontFamily}`;
+      ctx.fillStyle = resolveCanvasColor(textColor || '', COVER_FALLBACK_TEXT);
+      ctx.font = `400 ${Math.round(38 * renderScale)}px ${fontFamily}`;
       ctx.fillText(publisher.toUpperCase(), width / 2, height * 0.92);
     }
   }

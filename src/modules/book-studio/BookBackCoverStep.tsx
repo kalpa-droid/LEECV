@@ -22,6 +22,7 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
       ? 'custom'
       : 'none'
   );
+  const [imageError, setImageError] = useState<string | null>(null);
 
   const [backCoverData, setBackCoverData] = useState<BackCoverConfig>(
     options.customBackCover || {
@@ -58,14 +59,19 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const dataUrl = event.target?.result as string;
-        updateBackCoverField('imageUri', dataUrl);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setImageError('Ese archivo no es una imagen. Elegí un archivo PNG, JPG o WEBP.');
+      return;
     }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      setImageError(null);
+      updateBackCoverField('imageUri', dataUrl);
+    };
+    reader.onerror = () => setImageError('No pudimos leer el archivo. Probá con otro.');
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -137,6 +143,10 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
             onChange={handleImageUpload}
             className={`${input.base} cursor-pointer`}
           />
+
+          {imageError && (
+            <p className="text-xs font-semibold text-[var(--color-status-danger-text)]">{imageError}</p>
+          )}
 
           {backCoverData.imageUri && (
             <div className={`relative w-full aspect-[1/1.4] max-w-[200px] mx-auto rounded-[${radius.control}] overflow-hidden border border-[var(--ui-border)] shadow-[var(--shadow-raised)]`}>
