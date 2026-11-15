@@ -5,6 +5,7 @@ import { successResponse, errorResponse } from './_lib/apiResponse.js';
 import { serverDal } from './_lib/serverDal.js';
 import { AI_PROVIDERS, AI_PROVIDER_FALLBACK_ORDER } from './_lib/aiProviders/registry.js';
 import { getNextAvailableKey, markKeyRateLimited } from './_lib/aiProviders/keyRotation.js';
+import { recoverJsonFromText } from './_lib/aiProviders/jsonRecovery.js';
 import type { AiCompletionRequest } from './_lib/aiProviders/types.js';
 import { calculateAiCost } from './_lib/costCalculator.js';
 import { AI_TASKS_CATALOG } from './_lib/aiTasks/catalog.js';
@@ -78,7 +79,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       try {
         const result = await provider.complete(completionReq, apiKey);
-        completionText = result.content;
+        let content = result.content;
+
+        // Si la tarea espera JSON, sanear/extraer el JSON en el servidor ANTES de darla por buena.
+        // Respuesta vacía o JSON roto/truncado = fallo recuperable: otra clave del mismo proveedor
+        // (y si se agotan, el siguiente proveedor) antes de devolver error.
+        if (taskDef.responseSchema) {
+          const recovered = recoverJsonFromText(content);
+          if (!recovered.ok) {
+            lastError = new Error(`Respuesta vacía o JSON inválido de ${providerId}`);
+            console.warn(`[ai-generate] ${providerId} devolvió JSON vacío/inválido (intento de clave ${keyAttempt + 1}).`);
+            continue; // siguiente clave del mismo proveedor
+          }
+          content = recovered.cleanText;
+        }
+
+        completionText = content;
 
         if (result.usage) {
           const actualModel = result.modelUsed || provider.defaultModel;

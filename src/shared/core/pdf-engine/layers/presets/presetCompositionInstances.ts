@@ -1,5 +1,5 @@
 ﻿/**
- * NÃšCLEO â€” INSTANCIAS DE COMPOSICIÃ“N DE PRESETS (presetCompositionInstances.ts)
+ * NÚCLEO — INSTANCIAS DE COMPOSICIÓN DE PRESETS (presetCompositionInstances.ts)
  * 
  * Instancias concretas reutilizables de ColorPreset, TypographyPreset y ColumnLayoutPreset
  * para ser consumidas por presetCompositionEngine.ts y presetRegistry.ts.
@@ -9,7 +9,7 @@ import { ColorPreset, TypographyPreset, ColumnLayoutPreset } from './presetSchem
 import { generateHarmoniousPalette } from '../colors/paletteHarmonyEngine';
 
 /**
- * Paletas de Color Curadas y ArmÃ³nicas (19 paletas: 7 originales + 12 nuevas)
+ * Paletas de Color Curadas y Armónicas (19 paletas: 7 originales + 12 nuevas)
  */
 export const PRESET_COLORS: Record<string, ColorPreset> = {
   sobrio: {
@@ -21,14 +21,14 @@ export const PRESET_COLORS: Record<string, ColorPreset> = {
   },
   joven: {
     id: 'color-joven',
-    name: 'Joven CarmesÃ­',
+    name: 'Joven Carmesí',
     seedHex: '#FF2E63',
     harmonyScheme: 'split-complementary',
     palette: generateHarmoniousPalette('#FF2E63', 'split-complementary')
   },
   clasico: {
     id: 'color-clasico',
-    name: 'ClÃ¡sico Ejecutivo',
+    name: 'Clásico Ejecutivo',
     seedHex: '#00655F',
     harmonyScheme: 'analogous',
     palette: generateHarmoniousPalette('#00655F', 'analogous')
@@ -49,7 +49,7 @@ export const PRESET_COLORS: Record<string, ColorPreset> = {
   },
   borgona: {
     id: 'color-borgona',
-    name: 'BorgoÃ±a Noble',
+    name: 'Borgoña Noble',
     seedHex: '#581825',
     harmonyScheme: 'split-complementary',
     palette: generateHarmoniousPalette('#581825', 'split-complementary')
@@ -61,10 +61,10 @@ export const PRESET_COLORS: Record<string, ColorPreset> = {
     harmonyScheme: 'analogous',
     palette: generateHarmoniousPalette('#3B1C5A', 'analogous')
   },
-  // 4 JÃ“VENES / VIBRANTES
+  // 4 JÓVENES / VIBRANTES
   'neon-coral': {
     id: 'color-neon-coral',
-    name: 'Coral NeÃ³n',
+    name: 'Coral Neón',
     seedHex: '#FF6B6B',
     harmonyScheme: 'split-complementary',
     palette: generateHarmoniousPalette('#FF6B6B', 'split-complementary')
@@ -78,14 +78,14 @@ export const PRESET_COLORS: Record<string, ColorPreset> = {
   },
   'cyber-indigo': {
     id: 'color-cyber-indigo',
-    name: 'Cyber Ãndigo',
+    name: 'Cyber Índigo',
     seedHex: '#6C5CE7',
     harmonyScheme: 'triadic',
     palette: generateHarmoniousPalette('#6C5CE7', 'triadic')
   },
   'amber-solar': {
     id: 'color-amber-solar',
-    name: 'Ãmbar Solar',
+    name: 'Ámbar Solar',
     seedHex: '#FDCB6E',
     harmonyScheme: 'split-complementary',
     palette: generateHarmoniousPalette('#FDCB6E', 'split-complementary')
@@ -93,14 +93,14 @@ export const PRESET_COLORS: Record<string, ColorPreset> = {
   // 4 EJECUTIVAS / CORPORATIVAS
   'navy-consul': {
     id: 'color-navy-consul',
-    name: 'Navy CÃ³nsul',
+    name: 'Navy Cónsul',
     seedHex: '#0C2440',
     harmonyScheme: 'monochromatic',
     palette: generateHarmoniousPalette('#0C2440', 'monochromatic')
   },
   'marron-tabaco': {
     id: 'color-marron-tabaco',
-    name: 'MarrÃ³n Tabaco',
+    name: 'Marrón Tabaco',
     seedHex: '#4A2E1B',
     harmonyScheme: 'analogous',
     palette: generateHarmoniousPalette('#4A2E1B', 'analogous')
@@ -129,7 +129,7 @@ export const PRESET_COLORS: Record<string, ColorPreset> = {
   },
   'hielo-nordico': {
     id: 'color-hielo-nordico',
-    name: 'Hielo NÃ³rdico',
+    name: 'Hielo Nórdico',
     seedHex: '#EBF3F5',
     harmonyScheme: 'analogous',
     palette: generateHarmoniousPalette('#EBF3F5', 'analogous')
@@ -150,14 +150,14 @@ export const PRESET_COLORS: Record<string, ColorPreset> = {
   },
   'terracota-calido': {
     id: 'color-terracota-calido',
-    name: 'Terracota CÃ¡lido',
+    name: 'Terracota Cálido',
     seedHex: '#C84B31',
     harmonyScheme: 'split-complementary',
     palette: generateHarmoniousPalette('#C84B31', 'split-complementary')
   },
   'carbon-monocromo': {
     id: 'color-carbon-monocromo',
-    name: 'CarbÃ³n Monocromo',
+    name: 'Carbón Monocromo',
     seedHex: '#181818',
     harmonyScheme: 'monochromatic',
     palette: generateHarmoniousPalette('#181818', 'monochromatic')
@@ -191,7 +191,7 @@ export const PRESET_COLORS: Record<string, ColorPreset> = {
 };
 
 /**
- * Escalas y JerarquÃ­as TipogrÃ¡ficas
+ * Escalas y Jerarquías Tipográficas
  */
 export const PRESET_TYPOGRAPHY: Record<'editorial' | 'moderna' | 'clasica' | 'condensada', TypographyPreset> = {
   editorial: {
@@ -236,7 +236,7 @@ export const PRESET_TYPOGRAPHY: Record<'editorial' | 'moderna' | 'clasica' | 'co
   },
   clasica: {
     id: 'typo-clasica',
-    name: 'ClÃ¡sica Tradicional',
+    name: 'Clásica Tradicional',
     typographyHarmonyScheme: 'majorThird',
     typography: {
       title: 24,
@@ -280,11 +280,11 @@ export function getColumnLayoutPresetName(key: string, sidebarWidthPercent: numb
   const clamped = Math.min(42, Math.max(32, sidebarWidthPercent));
   if (key === 'sidebar-left') return `Barra Izquierda (${clamped}%)`;
   if (key === 'sidebar-right') return `Barra Derecha (${clamped}%)`;
-  return 'Columna Ãšnica Completa (100%)';
+  return 'Columna Única Completa (100%)';
 }
 
 /**
- * Arquetipos de DisposiciÃ³n de Columnas
+ * Arquetipos de Disposición de Columnas
  */
 export const PRESET_COLUMNS: Record<'sidebar-left' | 'sidebar-right' | 'full-width', ColumnLayoutPreset> = {
   'sidebar-left': {

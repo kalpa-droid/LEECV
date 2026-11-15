@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 2,
-  minor: 13,
+  minor: 14,
   patch: 0,
-  label: 'V2.13.0',
-  lastUpdated: '2026-11-14',
+  label: 'V2.14.0',
+  lastUpdated: '2026-11-15',
   lastAgent: '@opencode',
-  stage: 'Bloque 1 (jerarquia tipografica y densidad): correccion del bug de unidades recordScaleRatios (pt confundidos con ratios) en presetCompositionInstances y typographyHarmonyEngine, cuerpo minimo 8.0 pt, quote-text en rol body con factor de extracto, motor de densidad central (compact/normal/relaxed) aplicado a banners y tarjetas, panel Ajustar tamanos y espacio en la hoja en Diseno.',
+  stage: 'Bloque 2 (tiradores continuos, reintentos IA, mojibake, defaults nuevo CV): tiradores continuos de tipografia/densidad reactivos en preview (motor de densidad continuo 0.50-1.35 + anclas enum), reintentos silenciosos de IA (3 intentos, backoff 500/1200 ms) con recuperacion de JSON en servidor y cliente, correccion de mojibake UTF-8 en presetCompositionInstances (18 lineas) con test de regresion, defaults de CV nuevo (pestana Importar datos + Hielo Nordico + tipografia compacta) y preservacion de typographyOverrides en sanitizeCvData.',
 } as const;

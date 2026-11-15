@@ -82,12 +82,19 @@ export interface TypographyScale {
 
 export type DensityMode = 'compact' | 'normal' | 'relaxed';
 
+/** Esquema de contraste entre niveles tipográficos (enum legado) o factor numérico continuo (1.08–1.32 recomendado). */
+export type ContrastSchemeValue = 'suave' | 'equilibrada' | 'marcada';
+/** Escala de títulos de sección (enum legado) o factor numérico continuo (0.75–1.20 recomendado). */
+export type SectionHeadingScaleValue = 'chico' | 'normal' | 'destacado';
+/** Escala del extracto/resumen en quote-text (enum legado) o factor numérico continuo (0.80–1.20 recomendado). */
+export type SummaryScaleValue = 'compacto' | 'igual-texto' | 'destacado';
+
 export interface TypographyOverrides {
-  bodyPt?: number; // Chico: 8.5, Equilibrado: 9.5, Grande: 10.5
-  contrastScheme?: 'suave' | 'equilibrada' | 'marcada'; // factor entre niveles
-  sectionHeadingScale?: 'chico' | 'normal' | 'destacado';
-  summaryScale?: 'compacto' | 'igual-texto' | 'destacado'; // solo para quote-text
-  densityMode?: DensityMode;
+  bodyPt?: number; // Chico: 8.5, Equilibrado: 9.5, Grande: 10.5 (tirador: 8.0–11.5)
+  contrastScheme?: ContrastSchemeValue | number; // factor entre niveles
+  sectionHeadingScale?: SectionHeadingScaleValue | number;
+  summaryScale?: SummaryScaleValue | number; // solo para quote-text
+  densityMode?: DensityMode | number; // 0.50 (compacto) – 1.35 (amplio), interpolación continua
 }
 
 export interface Preset {
@@ -173,8 +180,8 @@ export interface Preset {
   /** Overrides aplican después del preset base (en el motor de composición), nunca sobreescriben color/layout */
   typographyOverrides?: TypographyOverrides;
 
-  /** Modo de densidad para ajustar el aire vertical sin tocar pt/ratios */
-  densityMode?: DensityMode;
+  /** Modo de densidad para ajustar el aire vertical sin tocar pt/ratios. Número = factor continuo 0.50–1.35. */
+  densityMode?: DensityMode | number;
 }
 
 export type TemplatePreset = Preset;

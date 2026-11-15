@@ -236,6 +236,13 @@ export function sanitizeCvData(rawCvData: any = {}) {
       bgColor: data.theme?.bgColor || data.theme?.bgCorridor || data.theme?.primaryColor || '#1e3a8a',
       bgCorridor: data.theme?.bgColor || data.theme?.bgCorridor || data.theme?.primaryColor || '#1e3a8a',
       fontFamily: data.theme?.fontFamily || 'Helvetica'
-    }
+    },
+
+    // V2.14.0: los ajustes finos de tipografía/espacio (tiradores del panel Diseño)
+    // deben sobrevivir recargas y restaurados. Antes este campo se borraba en
+    // cada carga igual que theme.
+    typographyOverrides: (typeof data.typographyOverrides === 'object' && data.typographyOverrides !== null)
+      ? data.typographyOverrides
+      : undefined,
   };
 }
