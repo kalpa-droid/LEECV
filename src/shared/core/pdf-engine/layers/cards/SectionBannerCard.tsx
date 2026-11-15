@@ -2,10 +2,19 @@ import React from 'react';
 import { View, Text, StyleSheet } from '@react-pdf/renderer';
 import { CARD_DESIGNS, CardDesign } from './cardDesignSchema';
 import { ResolvedThemeRoles, getTypographyColorBinding } from '../colors/colorSystem';
-import { TypographyScale, Preset } from '../presets/presetSchema';
-import { PdfSectionIcon } from '../icons/PdfSectionIcon';
+import { TypographyScale, Preset, DensityMode } from '../presets/presetSchema';
 import { resolveDecorativeStyles } from '../decorations/decorativeLayerEngine';
 import { resolveUnifiedTextSpec } from '../typography/unifiedTextHierarchyEngine';
+import { resolveDensityFactors } from '../typography/densityEngine';
+import { PdfSectionIcon } from '../icons/PdfSectionIcon';
+
+/**
+ * CAPA 6 — OBJETOS BANNER DE SECCIÓN (SectionBannerCard)
+ * Renderiza los encabezados de sección ("FORMACIÓN ACADÉMICA", "DATOS PERSONALES")
+ * como objetos de primera clase en el motor de diseño, resolviendo su paleta mediante
+ * la Matriz de Traducción Cromática HSL (superficies claras u oscuras) y la Vincuación Tipográfica.
+ * Ajusta márgenes y paddings según densityMode para controlar el espacio vertical por hoja.
+ */
 
 interface SectionBannerCardProps {
   preset?: Preset;
@@ -18,12 +27,10 @@ interface SectionBannerCardProps {
   isSidebar?: boolean;
 }
 
-/**
- * CAPA 6 — OBJETOS BANNER DE SECCIÓN (SectionBannerCard)
- * Renderiza los encabezados de sección ("FORMACIÓN ACADÉMICA", "DATOS PERSONALES")
- * como objetos de primera clase en el motor de diseño, resolviendo su paleta mediante
- * la Matriz de Traducción Cromática HSL (superficies claras u oscuras) y la Vincuación Tipográfica.
- */
+/** Factores por densityMode (compact → menos aire, relaxed → más aire) */
+const DENSITY_BANNER_MARGIN_TOP_DEFAULT = 16;
+const DENSITY_BANNER_MARGIN_BOTTOM_DEFAULT = 8;
+
 export function SectionBannerCard({
   preset,
   titleText,
@@ -49,9 +56,13 @@ export function SectionBannerCard({
   const textSpec = resolveUnifiedTextSpec('title', effectiveSurfaceHex, rolesColor, typography, 'section-banner');
   const typographyBinding = getTypographyColorBinding(rolesColor, effectiveSurfaceHex);
 
-  const iconColor = iconStyle === 'minimal' 
-    ? (rolesColor.accent || textSpec.colorHex) 
+  const iconColor = iconStyle === 'minimal'
+    ? (rolesColor.accent || textSpec.colorHex)
     : textSpec.colorHex;
+
+  // --- Factores de densidad para márgenes/paddings ---
+  const densityMode = (preset && preset.densityMode) as DensityMode || 'normal';
+  const density = resolveDensityFactors(densityMode);
 
   if (isSidebar) {
     const sidebarFontSize = Math.max(8.5, typography.sectionHeading - 2.5);
@@ -64,8 +75,8 @@ export function SectionBannerCard({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 5,
-        marginTop: 14,
-        marginBottom: 6,
+        marginTop: Math.round(DENSITY_BANNER_MARGIN_TOP_DEFAULT * density.sectionBannerMarginFactor),
+        marginBottom: Math.round(6 * density.sectionBannerMarginFactor),
         paddingBottom: 4,
         borderBottomWidth: hasDivider ? (decStyles ? decStyles.dividerStyle.heightPt : 1) : 0,
         borderBottomColor: decStyles ? decStyles.dividerStyle.color : typographyBinding.border,
@@ -105,8 +116,12 @@ export function SectionBannerCard({
       paddingHorizontal: isTransparentBanner ? 0 : 10,
       paddingVertical: isTransparentBanner ? 4 : 5,
       borderRadius: isTransparentBanner ? 0 : (design.borderRadiusPt || 4),
-      marginTop: decStyles ? decStyles.dividerStyle.marginTopPt + 10 : 16,
-      marginBottom: decStyles ? decStyles.dividerStyle.marginBottomPt : 8,
+      marginTop: Math.round(
+        (decStyles ? decStyles.dividerStyle.marginTopPt + 10 : 16) * density.sectionBannerMarginFactor
+      ),
+      marginBottom: Math.round(
+        (decStyles ? decStyles.dividerStyle.marginBottomPt : 8) * density.sectionBannerMarginFactor
+      ),
       borderBottomWidth: isTransparentBanner && hasDivider ? (decStyles ? decStyles.dividerStyle.heightPt || 1.5 : 1.5) : 0,
       borderBottomColor: decStyles ? decStyles.dividerStyle.color : (rolesColor.accent || rolesColor.primary),
       borderLeftWidth: (!isTransparentBanner && design.borderWidthPt) ? Math.max(2, design.borderWidthPt) : 0,

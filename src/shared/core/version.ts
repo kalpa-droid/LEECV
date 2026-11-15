@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 2,
-  minor: 12,
+  minor: 13,
   patch: 0,
-  label: 'V2.12.0',
+  label: 'V2.13.0',
   lastUpdated: '2026-11-14',
   lastAgent: '@opencode',
-  stage: 'Bloques 2+3 del plan de IA/editor: tarea rewrite_record (Groq+Gemini+contexto con allowlist y guia de esquema inline), reescritura de registros con panel de revision Reemplazar/Agregar debajo/Descartar (nunca auto-append), dock con Opcion 2 (slots personalizada-N vacios ocultos; solo con titulo o registros aparecen), selector compartido PresetSectionPicker para alta y edicion de slot, findFreeCustomSlot ignora visibilidad para el alta.',
+  stage: 'Bloque 1 (jerarquia tipografica y densidad): correccion del bug de unidades recordScaleRatios (pt confundidos con ratios) en presetCompositionInstances y typographyHarmonyEngine, cuerpo minimo 8.0 pt, quote-text en rol body con factor de extracto, motor de densidad central (compact/normal/relaxed) aplicado a banners y tarjetas, panel Ajustar tamanos y espacio en la hoja en Diseno.',
 } as const;
