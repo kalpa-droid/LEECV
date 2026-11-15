@@ -5,6 +5,7 @@ import {
   crearCanvasTapaCustom,
   crearCanvasContratapaCustom,
 } from '../../../shared/core/book-engine/impositionEngine';
+import { bookAssetManager } from '../../../shared/core/book-engine/bookAssetManager';
 
 export interface CoverPreviewThumbnailProps {
   config: CoverConfig | BackCoverConfig | null | undefined;
@@ -15,9 +16,10 @@ export interface CoverPreviewThumbnailProps {
 
 /**
  * Miniatura de tapa/contratapa.
- * Nivel 1 de la arquitectura de 3 niveles: renderiza a ~320px de ancho,
- * no al tamaño real del pliego (1748×2480 / 2480×3508). Antes dibujaba el
- * canvas gigante por cada tecla y colgaba el navegador.
+ * Nivel 1 de la arquitectura de 3 niveles: para imágenes locales usa la
+ * miniatura liviana guardada al subir el archivo (sin reprocesar nada); para
+ * plantillas usa un canvas de ~320px de ancho, no el tamaño de fábrica del
+ * pliego (1748×2480 / 2480×3508).
  */
 export const CoverPreviewThumbnail: React.FC<CoverPreviewThumbnailProps> = ({
   config,
@@ -27,12 +29,28 @@ export const CoverPreviewThumbnail: React.FC<CoverPreviewThumbnailProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [loadError, setLoadError] = useState(false);
+  const [assetThumbUrl, setAssetThumbUrl] = useState<string | null>(null);
+  const assetId = (config as { assetId?: string } | null | undefined)?.assetId;
 
+  // Nivel 1: si la tapa/contratapa es un asset local, usar su miniatura.
+  useEffect(() => {
+    let cancelled = false;
+    if (assetId) {
+      bookAssetManager.getThumbUrl(assetId).then((url) => {
+        if (!cancelled) setAssetThumbUrl(url);
+      });
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [assetId]);
+
+  // Plantillas: re-renderizar a ~320px de ancho.
   useEffect(() => {
     let cancelled = false;
 
     const renderCoverCanvas = async () => {
-      if (!config || !canvasRef.current) return;
+      if (!config || assetId || !canvasRef.current) return;
       setLoadError(false);
 
       const fullWidth = paperSize === 'A3' ? 2480 : 1748;
@@ -73,7 +91,20 @@ export const CoverPreviewThumbnail: React.FC<CoverPreviewThumbnailProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [config, kind, paperSize]);
+  }, [config, kind, paperSize, assetId]);
+
+  if (assetId) {
+    if (assetThumbUrl) {
+      return (
+        <img
+          src={assetThumbUrl}
+          className={className}
+          alt={kind === 'cover' ? 'Miniatura de tapa' : 'Miniatura de contratapa'}
+        />
+      );
+    }
+    return <div className="w-full h-28 rounded border border-dashed border-[var(--ui-border)] bg-[var(--ui-bg-card)]" />;
+  }
 
   if (loadError) {
     return (

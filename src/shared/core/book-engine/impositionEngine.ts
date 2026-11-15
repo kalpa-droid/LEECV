@@ -8,6 +8,8 @@ const pdfjsLib = typeof window !== 'undefined' ? ensurePdfjsWorkerConfigured() :
 
 export interface CoverConfig {
   type: 'upload' | 'template' | 'none';
+  /** Ref de asset local ('asset:...') si la imagen se guarda vía bookAssetManager. Tiene prioridad sobre imageUri. */
+  assetId?: string;
   imageUri?: string;
   title?: string;
   author?: string;
@@ -25,6 +27,8 @@ export interface CoverConfig {
 
 export interface BackCoverConfig {
   type: 'upload' | 'template' | 'none';
+  /** Ref de asset local ('asset:...') si la imagen se guarda vía bookAssetManager. Tiene prioridad sobre imageUri. */
+  assetId?: string;
   imageUri?: string;
   synopsis?: string;
   publisher?: string;
@@ -53,6 +57,12 @@ export interface BookImpositionOptions {
   pageSplitOffsets?: Record<number, number>;
   customCover?: CoverConfig | null;
   customBackCover?: BackCoverConfig | null;
+  /**
+   * Resuelve una referencia de asset local ('asset:...') a una URL/DataURL
+   * descargable por Canvas. La inyecta la UI (bookAssetManager); el motor no
+   * toca IndexedDB directamente y sigue siendo puro/testeable.
+   */
+  assetResolver?: (ref: string) => Promise<string | null>;
   deletedPages?: (number | string)[];
   pageOrder?: (number | string)[];
   blankBehindCover?: boolean;
@@ -104,10 +114,50 @@ function loadCoverImage(imageUri: string, kind: 'tapa' | 'contratapa'): Promise<
   });
 }
 
+/**
+ * Toma la referencia de imagen de una config (assetId primero, imageUri después)
+ * y la convierte en algo cargable por Image(). Los assets locales se resuelven
+ * vía el resolver inyectado por la UI; nunca se duplica el PDF original.
+ */
+async function resolveCoverImageSrc(
+  config: { assetId?: string; imageUri?: string },
+  kind: 'tapa' | 'contratapa',
+  resolveAsset?: (ref: string) => Promise<string | null>
+): Promise<string> {
+  const raw = config.assetId || config.imageUri || '';
+  if (!raw) {
+    throw new Error(
+      kind === 'tapa'
+        ? 'Falta la imagen de la tapa. Subila de nuevo para continuar.'
+        : 'Falta la imagen de la contratapa. Subila de nuevo para continuar.'
+    );
+  }
+  if (raw.startsWith('asset:')) {
+    if (!resolveAsset) {
+      throw new Error(
+        kind === 'tapa'
+          ? 'No se pudo acceder a la imagen guardada de la tapa. Volvé a subirla.'
+          : 'No se pudo acceder a la imagen guardada de la contratapa. Volvé a subirla.'
+      );
+    }
+    const url = await resolveAsset(raw);
+    if (!url) {
+      throw new Error(
+        kind === 'tapa'
+          ? 'No encontramos la imagen guardada de la tapa en este equipo. Volvé a subirla.'
+          : 'No encontramos la imagen guardada de la contratapa en este equipo. Volvé a subirla.'
+      );
+    }
+    return url;
+  }
+  return raw;
+}
+
 export async function crearCanvasTapaCustom(
   coverConfig: CoverConfig | null,
   canvasSize = { width: 1748, height: 2480 },
-  renderScale = 1
+  renderScale = 1,
+  resolveAsset?: (ref: string) => Promise<string | null>
 ): Promise<HTMLCanvasElement | null> {
   if (!coverConfig || coverConfig.type === 'none') return null;
   const width = canvasSize.width;
@@ -118,8 +168,9 @@ export async function crearCanvasTapaCustom(
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
 
-  if (coverConfig.type === 'upload' && coverConfig.imageUri) {
-    const img = await loadCoverImage(coverConfig.imageUri, 'tapa');
+  if (coverConfig.type === 'upload' && (coverConfig.imageUri || coverConfig.assetId)) {
+    const imageSrc = await resolveCoverImageSrc(coverConfig, 'tapa', resolveAsset);
+    const img = await loadCoverImage(imageSrc, 'tapa');
 
     // Canvas transparente + export JPEG = negro puro. Garantizar fondo blanco.
     ctx.fillStyle = '#FFFFFF';
@@ -233,7 +284,8 @@ export async function crearCanvasTapaCustom(
 export async function crearCanvasContratapaCustom(
   backCoverConfig: BackCoverConfig | null,
   canvasSize = { width: 1748, height: 2480 },
-  renderScale = 1
+  renderScale = 1,
+  resolveAsset?: (ref: string) => Promise<string | null>
 ): Promise<HTMLCanvasElement | null> {
   if (!backCoverConfig || backCoverConfig.type === 'none') return null;
   const width = canvasSize.width;
@@ -244,8 +296,9 @@ export async function crearCanvasContratapaCustom(
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
 
-  if (backCoverConfig.type === 'upload' && backCoverConfig.imageUri) {
-    const img = await loadCoverImage(backCoverConfig.imageUri, 'contratapa');
+  if (backCoverConfig.type === 'upload' && (backCoverConfig.imageUri || backCoverConfig.assetId)) {
+    const imageSrc = await resolveCoverImageSrc(backCoverConfig, 'contratapa', resolveAsset);
+    const img = await loadCoverImage(imageSrc, 'contratapa');
 
     // Canvas transparente + export JPEG = negro puro. Garantizar fondo blanco.
     ctx.fillStyle = '#FFFFFF';
@@ -392,7 +445,7 @@ async function procesarComoImagenes(
 
   let effectiveRefPdfPage = refPdfPage;
   if (!hasCover && customCover && (customCover.type === 'upload' || customCover.type === 'template')) {
-    const coverCanvas = await crearCanvasTapaCustom(customCover, coverCanvasSize);
+    const coverCanvas = await crearCanvasTapaCustom(customCover, coverCanvasSize, 1, options.assetResolver);
     if (coverCanvas) {
       const coverImg = await newPdf.embedJpg(coverCanvas.toDataURL('image/jpeg', 0.92));
       const pageC = newPdf.addPage([coverCanvas.width, coverCanvas.height]);
@@ -666,7 +719,7 @@ export async function processBookImposition(
 
   let backCoverCanvas: HTMLCanvasElement | null = null;
   if (!hasBackCover && customBackCover && (customBackCover.type === 'upload' || customBackCover.type === 'template')) {
-    backCoverCanvas = await crearCanvasContratapaCustom(customBackCover, coverCanvasSize);
+    backCoverCanvas = await crearCanvasContratapaCustom(customBackCover, coverCanvasSize, 1, options.assetResolver);
   }
 
   if (hasBackCover && pagesDoc.getPageCount() > 1) {
