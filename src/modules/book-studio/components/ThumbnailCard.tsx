@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { RotateCw, Trash2, RotateCcw, ZoomIn, ArrowLeft, ArrowRight, Scissors } from 'lucide-react';
 import { radius, elevationSystem } from '../../../shared/core/uiDesignSystem';
+import { thumbnailRenderQueue } from './thumbnailRenderQueue';
 
 export interface ThumbnailCardProps {
   pageNum: number;
@@ -35,16 +36,40 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
   onSplitOffsetChange,
   onOpenLightbox,
 }) => {
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const renderTaskRef = useRef<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [renderError, setRenderError] = useState<boolean>(false);
+  // Nivel 1: solo renderizar la página cuando la tarjeta entra en viewport.
+  const [shouldRender, setShouldRender] = useState<boolean>(false);
+
+  useEffect(() => {
+    const node = wrapperRef.current;
+    if (!node) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setShouldRender(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setShouldRender(true);
+          observer.disconnect();
+        }
+      },
+      // Pre-renderizar con margen para que al hacer scroll ya esté lista.
+      { rootMargin: '400px 0px' }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     let isCancelled = false;
 
-    if (!pdfDoc) {
-      setIsLoading(false);
+    if (!pdfDoc || !shouldRender) {
+      if (!shouldRender) setIsLoading(true);
       return;
     }
 
@@ -64,7 +89,10 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         }
 
         const page = await pdfDoc.getPage(pageNum);
-        if (isCancelled) return;
+        if (isCancelled) {
+          try { page.cleanup?.(); } catch (e) { /* Ignore cleanup error */ }
+          return;
+        }
 
         // Render at compact scale for thumbnail (approx 180px width)
         const unscaledViewport = page.getViewport({ scale: 1.0 });
@@ -77,12 +105,18 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         const viewport = page.getViewport({ scale, rotation: totalAngle });
 
         const canvas = canvasRef.current;
-        if (!canvas) return;
+        if (!canvas) {
+          try { page.cleanup?.(); } catch (e) { /* Ignore cleanup error */ }
+          return;
+        }
 
         canvas.width = viewport.width;
         canvas.height = viewport.height;
         const ctx = canvas.getContext('2d');
-        if (!ctx) return;
+        if (!ctx) {
+          try { page.cleanup?.(); } catch (e) { /* Ignore cleanup error */ }
+          return;
+        }
 
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -92,19 +126,11 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         await task.promise;
         renderTaskRef.current = null;
 
-        // Overlay vertical split line if splitOffset is customized or in fotocopia mode
-        if ((isFotocopiaMode || splitOffset !== 50) && !isCancelled) {
-          const splitX = Math.round(canvas.width * (splitOffset / 100));
-          ctx.save();
-          ctx.strokeStyle = '#FF2E63';
-          ctx.lineWidth = 2;
-          ctx.setLineDash([4, 3]);
-          ctx.beginPath();
-          ctx.moveTo(splitX, 0);
-          ctx.lineTo(splitX, canvas.height);
-          ctx.stroke();
-          ctx.restore();
-        }
+        // Liberar la página de PDF.js (memoria/caché) tras dibujar.
+        try { page.cleanup?.(); } catch (e) { /* Ignore cleanup error */ }
+
+        // La línea de corte ya NO se dibuja en el canvas: es un overlay <div>
+        // para que mover el slider no vuelva a renderizar toda la página.
 
         if (!isCancelled) {
           setIsLoading(false);
@@ -121,7 +147,8 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
       }
     };
 
-    renderPageThumbnail();
+    // La cola limita la concurrencia a 2 renders en paralelo en toda la grilla.
+    thumbnailRenderQueue.enqueue(renderPageThumbnail);
 
     return () => {
       isCancelled = true;
@@ -133,10 +160,11 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         }
       }
     };
-  }, [pdfDoc, pageNum, rotation, splitOffset, isFotocopiaMode]);
+  }, [pdfDoc, pageNum, rotation, isFotocopiaMode, shouldRender]);
 
   return (
     <div
+      ref={wrapperRef}
       className={`group relative flex flex-col items-center rounded-[${radius.card}] border bg-[var(--ui-bg-card)] p-2 transition-all ${
         elevationSystem.raised
       } ${
@@ -191,6 +219,16 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         )}
         {!isLoading && renderError && (
           <span className="text-[10px] text-[var(--ui-text-secondary)]">Error Pág. {pageNum}</span>
+        )}
+
+        {/* Línea de corte como overlay (div), no dibujada en el canvas:
+            mover el slider no vuelve a renderizar la página del PDF. */}
+        {!isLoading && !renderError && (isFotocopiaMode || splitOffset !== 50) && (
+          <div
+            className="absolute inset-y-0 pointer-events-none border-l-2 border-dashed border-[var(--color-accent-base)]"
+            style={{ left: `${splitOffset}%` }}
+            title="Corte manual central"
+          />
         )}
 
         {/* Overlay Strikethrough cuando está eliminada */}
