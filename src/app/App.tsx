@@ -141,7 +141,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     if (docType === 'book') return 'book_source_type';
     if (docType === 'planner') return 'planner_design';
     if (cvData?.sourceCvTabId || cvData?.body?.hookParagraph) return 'carta';
-    return 'personales';
+    return 'importar_datos';
   });
 
   // Resetea activeTab al tab inicial correcto según el docType cuando cambia el documento activo (cvData.id)
@@ -159,7 +159,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         ? 'planner_design'
         : cvData?.sourceCvTabId || cvData?.body?.hookParagraph
         ? 'carta'
-        : 'personales';
+        : 'importar_datos';
       setActiveTab(defaultTab);
     }
     prevCvIdRef.current = cvData?.id;
@@ -575,7 +575,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           saveCV,
           () => {
             const created = createBlankDocumentWithTab();
-            setActiveTab('personales');
+            setActiveTab('importar_datos');
             if (created) setPendingDocumentToOpen(created.id, created.docType);
             if (currentRoute !== '/crear-cv' && currentRoute !== '/') {
               if (onNavigate) {

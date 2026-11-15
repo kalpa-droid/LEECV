@@ -110,6 +110,20 @@ export function createBlankCVTemplate(overrides?: Record<string, any>) {
 
   return {
     ...blankCVBase,
+    // Defaults de CV nuevo (V2.14.0): paleta Hielo Nórdico + tipografía compacta.
+    // Solo para docType 'cv' (inferido) — tarjetas, cartas y libros conservan
+    // su paleta neutra. Los enums son las anclas históricas del motor y los
+    // overrides del caller siempre ganan (se aplican después).
+    ...(docType === 'cv' ? {
+      colorPresetId: 'hielo-nordico',
+      typographyOverrides: {
+        bodyPt: 8.5,
+        contrastScheme: 'equilibrada',
+        sectionHeadingScale: 'chico',
+        summaryScale: 'compacto',
+        densityMode: 'compact',
+      },
+    } : {}),
     id,
     title: overrides?.title || deriveDocumentTitle(docType, { id }),
     doc_type_id: docType,
