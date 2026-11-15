@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 2,
-  minor: 15,
+  minor: 16,
   patch: 0,
-  label: 'V2.15.0',
+  label: 'V2.16.0',
   lastUpdated: '2026-11-15',
   lastAgent: '@opencode',
-  stage: 'Variantes de postulación (Parte 1 del plan integral): núcleo applicationVariant (buildApplicationVersionLabel "Puesto · Empresa", provisional "Nueva postulación", sourceCvTabId siempre al CV base original — nunca encadena, reset de carta / keepJobTarget), createApplicationVariant orquestador (saveAs + ensureDocumentTab siempre), flujo unico "Crear postulación" para los puntos de entrada (Vacante con mini-formulario, Carta bloqueada, banner Diseño, menú Nuevo, botón Carta en Guardados, Guardar copia), tira de identidad CV Base/Postulación en el panel con boton Volver al CV Base, auto-rename del label provisional al completar puesto/empresa, botón Editar vacante en la Carta, chips en Guardados.',
+  stage: 'Asistente flotante Lidio (Parte 3 del plan integral): FAB en el editor con tips 100% locales (inactividad ~20s primer tip, ~90s los siguientes, max 3 tips por sesion, silenciable), catalogo de tips por pestana incluyendo bloque de columnas (Columna Principal vs Barra Lateral, que conviene dejar siempre en la principal, candado en Certificados/Firma), chat explicito con IA via tarea app_guide_assistant (OpenAPI 3.0, responseSchema answer+suggestedActions, targetTab validado client-side con isValidPanelTab), icono assistant en ICON_REGISTRY/UI_ICON_IDS, estado en localStorage leecv.assistant (+ sessionStorage para el limite por sesion), animacion ui-assistant-pop con respeto a prefers-reduced-motion.',
 } as const;

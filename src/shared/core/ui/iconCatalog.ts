@@ -95,7 +95,8 @@ export const UI_ICON_IDS = {
   ats: 'ats',
   diseno: 'diseno',
   importar: 'importar',
-  vacante: 'vacante'
+  vacante: 'vacante',
+  assistant: 'assistant'
 } as const;
 
 export type UiIconKey = keyof typeof UI_ICON_IDS;

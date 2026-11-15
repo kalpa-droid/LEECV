@@ -712,3 +712,15 @@ html, body, #root {
   --tw-prose-invert-kbd: var(--ui-text-primary);
   --tw-prose-invert-kbd-shadows: var(--ui-border);
 }
+
+/* Asistente flotante Lidio: entrada suave */
+@keyframes uiAssistantPop {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.ui-assistant-pop { animation: uiAssistantPop 0.22s ease-out; }
+
+/* Respeta a quien prefiere menos movimiento en pantalla (accesibilidad) */
+@media (prefers-reduced-motion: reduce) {
+  .ui-assistant-pop { animation: none; }
+}
