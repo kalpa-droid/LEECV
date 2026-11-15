@@ -10,6 +10,8 @@ interface ApplicationCoverLetterSectionProps {
   cvData: any;
   setCvData: React.Dispatch<React.SetStateAction<any>>;
   onExport: () => void;
+  /** Vuelve al panel Vacante para editar puesto/empresa/aviso y la vacante se refleja acá. */
+  onEditVacante?: () => void;
 }
 
 const letterFields: Array<{ key: keyof CoverLetterBody; label: string; rows?: number }> = [
@@ -23,7 +25,8 @@ const letterFields: Array<{ key: keyof CoverLetterBody; label: string; rows?: nu
 export const ApplicationCoverLetterSection: React.FC<ApplicationCoverLetterSectionProps> = ({
   cvData,
   setCvData,
-  onExport
+  onExport,
+  onEditVacante
 }) => {
   const [suggestion, setSuggestion] = useState<CoverLetterBody | null>(null);
   const jobTarget = cvData.jobTarget || {};
@@ -85,10 +88,21 @@ export const ApplicationCoverLetterSection: React.FC<ApplicationCoverLetterSecti
       </header>
 
       <section className="space-y-2 rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] bg-[var(--ui-bg-panel)] p-3">
-        <h3 className="flex items-center gap-2 text-sm font-semibold text-[var(--color-neutral-text-primary)]">
-          <Briefcase className="h-4 w-4" />
-          Información de la vacante
-        </h3>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-[var(--color-neutral-text-primary)]">
+            <Briefcase className="h-4 w-4" />
+            Información de la vacante
+          </h3>
+          {onEditVacante && (
+            <button
+              type="button"
+              onClick={onEditVacante}
+              className="cursor-pointer text-xs font-bold text-[var(--color-accent-text)] hover:text-[var(--ui-text-primary)] transition-colors"
+            >
+              Editar vacante
+            </button>
+          )}
+        </div>
         <p className="text-sm text-[var(--color-neutral-text-primary)]">
           {jobTarget.jobTitle || 'Puesto sin especificar'}
           {jobTarget.companyName ? ` · ${jobTarget.companyName}` : ''}

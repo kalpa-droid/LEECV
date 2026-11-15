@@ -38,6 +38,9 @@ import { DisenoSection } from './editor/sections/DisenoSection';
 import { PortadaSection } from './editor/sections/PortadaSection';
 import { CoverLetterEditorPanel } from '../../cover-letter/components/CoverLetterEditorPanel';
 import { CoverLetterCrossSellBanner } from './CoverLetterCrossSellBanner';
+import { Briefcase, CornerUpLeft, FileText } from 'lucide-react';
+import { isApplicationVariant } from '../../../shared/core/documents/applicationVariant';
+import { button } from '../../../shared/core/uiDesignSystem';
 import { applyPresetLevel } from '../../../shared/core/pdf-engine/layers/presets/presetHierarchyEngine';
 import { triggerPresetTransition } from '../../../shared/core/pdf-engine/layers/presets/presetTransitionEngine';
 import { getEffectiveCoverFeaturedItems } from '../../../shared/core/pdf-engine/layers/sectors/coverFeaturedEngine';
@@ -53,7 +56,10 @@ export default function EditorPanel({
   onOpenPhotoCropper, 
   onOpenSignature,
   onGenerateCoverLetterFromCV,
-  onExportCoverLetter
+  onExportCoverLetter,
+  onCreateApplicationVariant,
+  onBackToBaseCV,
+  onEditVacante,
 }: any) {
   const { showSuccess, showError, showWarning } = useToast();
   const { confirm } = useConfirm();
@@ -166,6 +172,10 @@ export default function EditorPanel({
 
 
 
+  // Identidad del documento activo: CV base vs postulación (V2.15.0)
+  const isVariant = isApplicationVariant(cvData);
+  const variantLabel = String(cvData?.version_label || cvData?.versionLabel || '').trim();
+
   const updateTheme = (field: string, value: any) => {
     setCvData((prev: any) => ({
       ...prev,
@@ -182,6 +192,35 @@ export default function EditorPanel({
 
       {/* Tab Form Content Body */}
       <div className="flex-1 overflow-y-auto p-5 space-y-6">
+
+        {/* Tira de identidad: CV Base vs Postulación (V2.15.0) */}
+        {docType === 'cv' && (
+          isVariant ? (
+            <div className="-mt-1 flex items-center justify-between gap-2 rounded-[var(--ui-radius-card)] border border-[var(--color-secondary-base)]/40 bg-[var(--color-secondary-muted)]/60 px-3 py-1.5">
+              <div className="flex items-center gap-2 min-w-0">
+                <Briefcase className="w-4 h-4 shrink-0 text-[var(--color-secondary-bright)]" />
+                <span className="text-[11px] font-bold text-[var(--ui-text-primary)] truncate">
+                  Postulación{variantLabel ? ` · ${variantLabel}` : ''}
+                </span>
+              </div>
+              {typeof onBackToBaseCV === 'function' && (
+                <button
+                  type="button"
+                  onClick={onBackToBaseCV}
+                  className="flex shrink-0 items-center gap-1.5 text-[11px] font-bold text-[var(--color-accent-text)] hover:text-[var(--ui-text-primary)] transition-colors cursor-pointer"
+                >
+                  <CornerUpLeft className="w-3.5 h-3.5" />
+                  Volver al CV Base
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="-mt-1 flex items-center gap-2 px-1">
+              <FileText className="w-3.5 h-3.5 text-[var(--ui-text-secondary)]" />
+              <span className="text-[10px] uppercase tracking-[0.14em] font-extrabold text-[var(--ui-text-secondary)]">CV Base</span>
+            </div>
+          )
+        )}
 
         {/* ========================================================================= */}
         {/* TAB 1: DATOS PERSONALES */}
@@ -213,27 +252,40 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {docType === 'cv' && activeTab === 'objetivo' && <ObjetivoSection cvData={cvData} setCvData={setCvData} />}
 
-        {docType === 'cv' && activeTab === 'vacante' && <JobTargetSection cvData={cvData} setCvData={setCvData} />}
+        {docType === 'cv' && activeTab === 'vacante' && <JobTargetSection cvData={cvData} setCvData={setCvData} onCreateApplicationVariant={onCreateApplicationVariant} onBackToBaseCV={onBackToBaseCV} />}
         {docType === 'cv' && activeTab === 'carta' && (
           cvData.sourceCvTabId ? (
             <ApplicationCoverLetterSection
               cvData={cvData}
               setCvData={setCvData}
               onExport={onExportCoverLetter}
+              onEditVacante={onEditVacante || (() => changeActiveTab('vacante'))}
             />
           ) : (
             <div className="space-y-3 rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] p-4">
               <h2 className="text-lg font-semibold text-[var(--ui-text-primary)]">Carta para una postulación</h2>
               <p className="text-sm text-[var(--ui-text-secondary)]">
-                Para redactar una carta vinculada a una oferta sin modificar el CV base, primero creá una postulación independiente desde el panel Vacante.
+                Para redactar una carta vinculada a una oferta sin modificar el CV base, creá una postulación independiente.
               </p>
-              <button
-                type="button"
-                onClick={() => changeActiveTab('vacante')}
-                className="rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] px-3 py-2 text-sm font-medium text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-card)]"
-              >
-                Ir a Vacante
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                {typeof onCreateApplicationVariant === 'function' && (
+                  <button
+                    type="button"
+                    onClick={onCreateApplicationVariant}
+                    className={`${button.primary} inline-flex items-center gap-1.5 px-3 py-2 text-sm`}
+                  >
+                    <Briefcase className="w-4 h-4" />
+                    Crear postulación y escribir la carta
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => changeActiveTab('vacante')}
+                  className={`${button.secondary} px-3 py-2 text-sm`}
+                >
+                  Ir a Vacante
+                </button>
+              </div>
             </div>
           )
         )}

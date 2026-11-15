@@ -7,6 +7,7 @@ import { FileText, CreditCard, Palette, Plus, X, Sparkles, ChevronRight } from '
 import { getOpenTabs, openTab as addOpenTab, closeTab as removeOpenTab, updateTabTitle, OpenTab as OpenTabItem, TABS_CHANGED_EVENT } from '../shared/core/documents/tabStore';
 import { useDocumentTabs } from '../shared/core/documents/useDocumentTabs';
 import { generateDocumentId, computeAutoDocumentTitle, getDraftIdForDocType, isProvisionalDocument, markAsConfirmed, hasRealContent } from '../shared/core/documents/documentEngine';
+import { createApplicationVariant, buildApplicationVariantData } from '../shared/core/documents/applicationVariant';
 import * as workspaceController from '../shared/core/documents/workspaceController';
 import { capabilitiesGate } from '../shared/core/documents/documentEngine/capabilitiesGate';
 import { AppShell } from '../shared/core/ui/AppShell';
@@ -547,16 +548,16 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 
   const handleSaveCVAsClick = async (versionLabel: string) => {
     try {
-      const res = await saveCVAs(versionLabel);
-      if (res?.success) {
-        // La copia es un documento nuevo: registrarle su pestaña (el original conserva la suya).
-        const copyId = res.record?.id;
-        if (copyId) {
-          const copy = { ...cvData, id: copyId, version_label: versionLabel };
-          setTabs(workspaceController.ensureDocumentTab(copyId, inferDocumentTypeId(cvData) as any, copy));
-        }
-        showSuccess(`¡Nueva versión guardada! 📌 Título: "${res.title || versionLabel}"`);
-      } else {
+      // "Guardar copia" es la misma función que "Crear postulación" (decisión aprobada):
+      // copia fiel (texto y carta conservados), pestaña registrada y vinculada al origen.
+      const result = await createApplicationVariantFor({
+        versionLabel,
+        keepJobTarget: true,
+        resetLetterBody: false,
+        goTo: 'keep',
+        successMessage: `¡Nueva versión guardada! 📌 Título: "${versionLabel}"`,
+      });
+      if (!result) {
         showError('Hubo un inconveniente al crear la nueva versión.');
       }
     } catch (err) {
@@ -657,6 +658,55 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     }
   };
 
+  /**
+   * Flujo único de "Crear postulación" (V2.15.0): todos los puntos de entrada
+   * (Vacante, Carta bloqueada, banner de Diseño, menú "+", botón Carta en
+   * Guardados, Guardar copia) llaman a esta MISMA función — un motor, cero
+   * clones. Reglas:
+   * - sourceCvTabId siempre apunta al CV base original (nunca encadena).
+   * - version_label = "Puesto · Empresa" con datos; "Nueva postulación" si no.
+   * - SIEMPRE registra la pestaña del documento nuevo (ensureDocumentTab).
+   * - Aterriza en Vacante si la copia no tiene datos de oferta; en Carta si ya los tiene.
+   */
+  const createApplicationVariantFor = async (options: {
+    puesto?: string;
+    empresa?: string;
+    versionLabel?: string;
+    keepJobTarget?: boolean;
+    resetLetterBody?: boolean;
+    goTo?: 'carta' | 'vacante' | 'keep';
+    successMessage?: string;
+    sourceCvData?: any;
+  } = {}) => {
+    const source = options.sourceCvData || cvData;
+    if (!source) return null;
+    const sourceType = inferDocumentTypeId(source) || 'cv';
+    const built = buildApplicationVariantData(source, options);
+    const hasJobTarget = Boolean(
+      built.jobTarget?.jobTitle || built.jobTarget?.companyName || built.jobTarget?.jobDescription
+    );
+    const result = await createApplicationVariant(
+      { ...options, cvData: source, docType: sourceType },
+      {
+        saveAs: (data, label) => saveCVAs(label, data),
+        ensureTab: (id, docType, data) => workspaceController.ensureDocumentTab(id, docType, data),
+      }
+    );
+    if (!result.success) {
+      showError('No se pudo crear la postulación. El CV de origen se conservó sin cambios.');
+      return null;
+    }
+    setTabs(getOpenTabs());
+    if (sourceType === 'cv') {
+      navigateToCvBuilder();
+      if (options.goTo !== 'keep') {
+        setActiveTab(options.goTo ?? (hasJobTarget ? 'carta' : 'vacante'));
+      }
+    }
+    showSuccess(options.successMessage ?? 'Postulación creada. Completá la vacante y redactá la carta dentro de esta versión.');
+    return result;
+  };
+
   const handleNewCoverLetter = async () => {
     confirm({
       title: '¿Crear una nueva postulación?',
@@ -664,28 +714,8 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       confirmText: 'Crear postulación',
       variant: 'info',
       onConfirm: async () => {
-        const sourceCvTabId = cvData.sourceCvTabId || cvData.id;
-        const result = await saveCVAs('Nueva postulación', {
-          ...cvData,
-          id: undefined,
-          doc_type_id: 'cv',
-          sourceCvTabId,
-          jobTarget: {},
-          body: {
-            salutation: '',
-            hookParagraph: '',
-            evidenceParagraph: '',
-            closingParagraph: '',
-            signoff: ''
-          }
-        });
-        if (!result?.success) {
-          showError('No se pudo crear la postulación. El CV de origen sigue intacto.');
-          return;
-        }
-        navigateToCvBuilder();
-        setActiveTab('carta');
-        showSuccess('Postulación creada. Completá la vacante y redactá la carta dentro de esta versión.');
+        // Misma función canónica que "Crear postulación" desde Vacante (V2.15.0).
+        await createApplicationVariantFor({});
       }
     });
   };
@@ -719,36 +749,13 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   };
 
   const handleGenerateCoverLetterFromCV = async (sourceCvData?: any) => {
-    if (!sourceCvData || sourceCvData.id === cvData?.id) {
-      setActiveTab('carta');
-      return;
-    }
-
-    const sourceCvTabId = sourceCvData.sourceCvTabId || sourceCvData.id;
-    const label = sourceCvData.personalInfo?.fullName
-      ? `Postulación de ${sourceCvData.personalInfo.fullName}`
-      : 'Nueva postulación';
-    const result = await saveCVAs(label, {
-      ...sourceCvData,
-      id: undefined,
-      doc_type_id: 'cv',
-      sourceCvTabId,
-      jobTarget: sourceCvData.jobTarget || {},
-      body: {
-        salutation: '',
-        hookParagraph: '',
-        evidenceParagraph: '',
-        closingParagraph: '',
-        signoff: ''
-      }
+    // Un solo motor: crear postulación desde el CV activo o desde uno guardado.
+    // Si el origen ya trae vacante, aterriza en Carta; si no, en Vacante.
+    const fromSaved = Boolean(sourceCvData) && sourceCvData.id !== cvData?.id;
+    await createApplicationVariantFor({
+      ...(fromSaved ? { sourceCvData } : {}),
+      keepJobTarget: true,
     });
-    if (!result?.success) {
-      showError('No se pudo crear la postulación a partir de ese CV.');
-      return;
-    }
-    navigateToCvBuilder();
-    setActiveTab('carta');
-    showSuccess('Se creó una versión independiente para preparar la postulación y su carta.');
   };
 
   const handleImportJsonFile = async (e: any) => {
@@ -918,6 +925,8 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           onGenerateCoverLetterFromCV={handleGenerateCoverLetterFromCV}
           onExportCoverLetter={() => setIsCoverLetterExportOpen(true)}
           onRefreshCredits={refreshEntitlements}
+          onCreateApplicationVariant={() => createApplicationVariantFor({})}
+          onBackToBaseCV={() => { if (cvData?.sourceCvTabId) handleSwitchDocumentTab(cvData.sourceCvTabId, 'cv'); }}
         />
       }
       mainSlot={

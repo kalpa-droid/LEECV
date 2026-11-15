@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 2,
-  minor: 14,
-  patch: 1,
-  label: 'V2.14.1',
+  minor: 15,
+  patch: 0,
+  label: 'V2.15.0',
   lastUpdated: '2026-11-15',
   lastAgent: '@opencode',
-  stage: 'Bloque 1 post-V2.14.0 (botones ATS + contraste blog): mapa canonico resolveRuleTargetTab para los botones Ir a corregir/Guia ACR de los modales ATS (antes saltaban a pestanas inexistentes como experience o frase y dejaban el panel en blanco), rama edit_section del modal de pre-exportacion, blog con prosa vinculada a los tokens de tema (.prose-leecv en vez de dark:prose-invert que obedece al SO), hover AA en titulos de articulos y ThemeToggleButton en el header del blog.',
+  stage: 'Variantes de postulación (Parte 1 del plan integral): núcleo applicationVariant (buildApplicationVersionLabel "Puesto · Empresa", provisional "Nueva postulación", sourceCvTabId siempre al CV base original — nunca encadena, reset de carta / keepJobTarget), createApplicationVariant orquestador (saveAs + ensureDocumentTab siempre), flujo unico "Crear postulación" para los puntos de entrada (Vacante con mini-formulario, Carta bloqueada, banner Diseño, menú Nuevo, botón Carta en Guardados, Guardar copia), tira de identidad CV Base/Postulación en el panel con boton Volver al CV Base, auto-rename del label provisional al completar puesto/empresa, botón Editar vacante en la Carta, chips en Guardados.',
 } as const;

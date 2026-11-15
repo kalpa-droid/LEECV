@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Briefcase, Target, CheckCircle, AlertCircle, Wand2 } from 'lucide-react';
+import { Briefcase, Target, CheckCircle, AlertCircle, Wand2, CornerUpLeft } from 'lucide-react';
 import { Field } from '../../../../../shared/core/ui/Field';
-import { radius, button } from '../../../../../shared/core/uiDesignSystem';
+import { button } from '../../../../../shared/core/uiDesignSystem';
 import { useCVContext } from '../../../../../context/CVContext';
 import { useToast } from '../../../../../shared/core/ui/Toast';
 
@@ -10,8 +10,16 @@ import { runAtsPreflightCheck } from '../../../../../shared/core/pdf-engine/laye
 import { resolveActivePreset } from '../../../../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { cvDataToContentSections } from '../../../../../shared/core/pdf-engine/layers/records/cvDataAdapter';
 import { AtsAiAnalysisModal } from '../../AtsAiAnalysisModal';
+import {
+  buildApplicationVersionLabel,
+  computeApplicationRename,
+  createApplicationVariant,
+} from '../../../../../shared/core/documents/applicationVariant';
+import { ensureDocumentTab } from '../../../../../shared/core/documents/workspaceController';
+import { updateTabTitle } from '../../../../../shared/core/documents/tabStore';
+import { computeAutoDocumentTitle } from '../../../../../shared/core/documents/documentEngine';
 
-export const JobTargetSection = ({ cvData, setCvData }: any) => {
+export const JobTargetSection = ({ cvData, setCvData, onCreateApplicationVariant, onBackToBaseCV }: any) => {
   const { saveCVAs } = useCVContext();
   const { showSuccess, showError } = useToast();
   const jobTarget = cvData.jobTarget || {};
@@ -22,6 +30,10 @@ export const JobTargetSection = ({ cvData, setCvData }: any) => {
   const [cvTextForAi, setCvTextForAi] = useState('');
   const [isCreatingApplication, setIsCreatingApplication] = useState(false);
   const isApplicationVersion = Boolean(cvData.sourceCvTabId);
+
+  // Mini-formulario de la postulación nueva (CV base): Puesto + Empresa → label "Puesto · Empresa".
+  const [puestoInput, setPuestoInput] = useState('');
+  const [empresaInput, setEmpresaInput] = useState('');
 
   useEffect(() => {
     if (jobTarget.jobDescription) {
@@ -38,7 +50,26 @@ export const JobTargetSection = ({ cvData, setCvData }: any) => {
     }
   }, [jobTarget.jobDescription, cvData]);
 
+  // Auto-rename "Puesto · Empresa": sólo si el label actual es el provisional
+  // ("Nueva postulación"). Si venía un label manual, no se pisa.
   const updateField = (field: string, val: string) => {
+    const nextJobTarget = { ...jobTarget, [field]: val };
+    const currentLabel = cvData.version_label || cvData.versionLabel;
+    const nextLabel = computeApplicationRename(
+      currentLabel,
+      field === 'jobTitle' ? val : nextJobTarget.jobTitle,
+      field === 'companyName' ? val : nextJobTarget.companyName
+    );
+    if (nextLabel) {
+      updateTabTitle(cvData.id, computeAutoDocumentTitle('cv', { ...cvData, version_label: nextLabel }), nextLabel);
+      setCvData((prev: any) => ({
+        ...prev,
+        jobTarget: { ...(prev.jobTarget || {}), [field]: val },
+        version_label: nextLabel,
+        versionLabel: nextLabel,
+      }));
+      return;
+    }
     setCvData((prev: any) => ({
       ...prev,
       jobTarget: {
@@ -59,27 +90,34 @@ export const JobTargetSection = ({ cvData, setCvData }: any) => {
   const handleCreateApplication = async () => {
     if (isCreatingApplication) return;
     setIsCreatingApplication(true);
-    const sourceCvTabId = cvData.sourceCvTabId || cvData.id;
-    const result = await saveCVAs('Nueva postulación', {
-      ...cvData,
-      id: undefined,
-      doc_type_id: 'cv',
-      sourceCvTabId,
-      jobTarget: {},
-      body: {
-        salutation: '',
-        hookParagraph: '',
-        evidenceParagraph: '',
-        closingParagraph: '',
-        signoff: ''
+    const puesto = puestoInput.trim();
+    const empresa = empresaInput.trim();
+    try {
+      if (typeof onCreateApplicationVariant === 'function') {
+        // Vía principal: el handler de la app (crea, abre pestaña y aterriza donde corresponde).
+        await onCreateApplicationVariant({ puesto, empresa });
+        setPuestoInput('');
+        setEmpresaInput('');
+        return;
       }
-    });
-    setIsCreatingApplication(false);
-    if (!result?.success) {
-      showError('No se pudo crear la postulación. El CV base se conservó sin cambios.');
-      return;
+      // Fallback canónico (mismo motor) por si el contenedor no pasó el handler.
+      const result = await createApplicationVariant(
+        { cvData, puesto, empresa },
+        {
+          saveAs: (data, label) => saveCVAs(label, data),
+          ensureTab: (id, docType, data) => ensureDocumentTab(id, docType, data),
+        }
+      );
+      if (!result?.success) {
+        showError('No se pudo crear la postulación. El CV base se conservó sin cambios.');
+        return;
+      }
+      setPuestoInput('');
+      setEmpresaInput('');
+      showSuccess('Se creó una copia independiente. Completá la vacante en esta nueva postulación.');
+    } finally {
+      setIsCreatingApplication(false);
     }
-    showSuccess('Se creó una copia independiente. Completá la vacante en esta nueva postulación.');
   };
 
   return (
@@ -92,8 +130,22 @@ export const JobTargetSection = ({ cvData, setCvData }: any) => {
       {!isApplicationVersion ? (
         <div className="space-y-4 rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] p-4">
           <p className="text-sm text-[var(--ui-text-primary)]">
-            Primero creá una postulación independiente. Así, la información de la oferta y los cambios para adaptar el CV no se guardan en tu perfil maestro.
+            Creá una postulación independiente. Así, la información de la oferta y los cambios para adaptar el CV no se guardan en tu perfil maestro.
           </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field
+              label="Puesto"
+              value={puestoInput}
+              onChange={(e: any) => setPuestoInput(e.target.value)}
+              placeholder="Ej: Desarrollador Frontend Semi Senior"
+            />
+            <Field
+              label="Empresa"
+              value={empresaInput}
+              onChange={(e: any) => setEmpresaInput(e.target.value)}
+              placeholder="Ej: Mercado Libre"
+            />
+          </div>
           <button
             type="button"
             onClick={handleCreateApplication}
@@ -103,13 +155,28 @@ export const JobTargetSection = ({ cvData, setCvData }: any) => {
             <Briefcase className="w-4 h-4" />
             {isCreatingApplication ? 'Creando postulación…' : 'Crear postulación desde este CV'}
           </button>
+          {(puestoInput.trim() || empresaInput.trim()) && (
+            <p className="text-[11px] font-semibold text-[var(--ui-text-secondary)]">
+              Se llamará: "{buildApplicationVersionLabel(puestoInput, empresaInput)}"
+            </p>
+          )}
         </div>
       ) : (
         <>
-      <div className="rounded-[var(--ui-radius-card)] border border-[var(--color-secondary-base)]/30 bg-[var(--color-secondary-muted)] p-3 text-sm text-[var(--color-secondary-text)]">
-        Esta versión está vinculada al CV de origen. La vacante y sus adaptaciones se guardan sólo aquí.
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-[var(--ui-radius-card)] border border-[var(--color-secondary-base)]/30 bg-[var(--color-secondary-muted)] px-3 py-2 text-sm text-[var(--color-secondary-text)]">
+        <span>Esta versión está vinculada al CV de origen. La vacante y sus adaptaciones se guardan sólo aquí.</span>
+        {typeof onBackToBaseCV === 'function' && (
+          <button
+            type="button"
+            onClick={onBackToBaseCV}
+            className="flex shrink-0 items-center gap-1.5 font-bold text-[var(--color-accent-text)] hover:text-[var(--ui-text-primary)] transition-colors cursor-pointer"
+          >
+            <CornerUpLeft className="w-3.5 h-3.5" />
+            Volver al CV Base
+          </button>
+        )}
       </div>
-      <div className={`p-4 bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/30 rounded-[${radius.card}] text-sm text-[var(--color-accent-text)] leading-relaxed space-y-2`}>
+      <div className="p-4 bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/30 rounded-[12px] text-sm text-[var(--color-accent-text)] leading-relaxed space-y-2">
         <p>
           <strong>Alineá tu CV con una oferta real.</strong> Pegá el texto del aviso de trabajo acá. El sistema extraerá localmente las palabras clave más importantes (sin enviar datos a IA) y las comparará con tu CV para ver qué te falta.
         </p>
@@ -135,7 +202,7 @@ export const JobTargetSection = ({ cvData, setCvData }: any) => {
             onChange={(e) => updateField('jobDescription', e.target.value)}
             placeholder="Pegá acá todo el texto del aviso (requisitos, tareas, beneficios...)"
             rows={6}
-            className={`w-full bg-[var(--ui-bg-input)] border border-[var(--ui-border)] rounded-[${radius.control}] p-2.5 text-sm focus:outline-none focus:border-[var(--color-accent-base)] resize-y min-h-[120px]`}
+            className={`w-full bg-[var(--ui-bg-input)] border border-[var(--ui-border)] rounded-[10px] p-2.5 text-sm focus:outline-none focus:border-[var(--color-accent-base)] resize-y min-h-[120px]`}
           />
         </div>
       </div>
