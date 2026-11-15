@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Newspaper, ArrowLeft, Clock, User, FileText, BookOpen } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { displayScale, elevationSystem, radius, button } from '../../shared/core/uiDesignSystem';
+import { displayScale, elevationSystem, button } from '../../shared/core/uiDesignSystem';
 import { FaqAccordion } from '../../shared/core/ui/marketing/FaqAccordion';
 import { useJsonLd } from '../../shared/core/hooks/useJsonLd';
 import { LEECV_VERSION } from '../../shared/core/version';
+import { ThemeToggleButton } from '../../shared/core/ui/ThemeToggleButton';
+import { getGlobalUiTheme, cycleGlobalUiTheme } from '../../shared/core/utils/globalThemePreference';
 
 
 interface Article {
@@ -33,6 +35,17 @@ interface BlogModuleProps {
 }
 
 export const BlogModule: React.FC<BlogModuleProps> = ({ initialSlug, onNavigateHome, onNavigateProduct }) => {
+  const [currentTheme, setCurrentTheme] = useState<string>('day');
+
+  useEffect(() => {
+    setCurrentTheme(getGlobalUiTheme());
+  }, []);
+
+  const handleToggleTheme = () => {
+    const nextTheme = cycleGlobalUiTheme();
+    setCurrentTheme(nextTheme);
+  };
+
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(() => {
     if (initialSlug) {
       const found = articlesData.find(a => a.slug === initialSlug);
@@ -101,11 +114,11 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ initialSlug, onNavigateH
       <header className="sticky top-0 z-30 bg-[var(--ui-bg-panel)]/80 backdrop-blur-xl border-b border-[var(--ui-border)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer" onClick={onNavigateHome}>
-            <button className={`p-2 rounded-[${radius.control}] text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-card)] transition-colors cursor-pointer`}>
+            <button className="p-2 rounded-[10px] text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-card)] transition-colors cursor-pointer">
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2">
-              <div className={`p-2 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] rounded-[${radius.card}] font-black ${elevationSystem.raised}`}>
+              <div className={`p-2 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] rounded-[12px] font-black ${elevationSystem.raised}`}>
                 <Newspaper className="w-5 h-5" />
               </div>
               <span className="font-extrabold text-lg text-[var(--ui-text-primary)] tracking-tight">
@@ -114,7 +127,7 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ initialSlug, onNavigateH
             </div>
           </div>
           <div className="flex items-center gap-3">
-
+            <ThemeToggleButton currentThemeId={currentTheme} onToggle={handleToggleTheme} size="sm" />
           </div>
         </div>
       </header>
@@ -126,7 +139,7 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ initialSlug, onNavigateH
           <article className="space-y-8 max-w-3xl mx-auto">
             <button
               onClick={() => handleSelectArticle(null)}
-              className="flex items-center gap-2 text-sm font-semibold text-[var(--color-accent-text)] hover:text-[var(--color-accent-base)] transition-colors cursor-pointer"
+              className="flex items-center gap-2 text-sm font-semibold text-[var(--color-accent-text)] hover:text-[var(--ui-text-primary)] transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Volver a la lista de artículos</span>
@@ -153,7 +166,7 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ initialSlug, onNavigateH
               </div>
             </div>
 
-            <div className="prose dark:prose-invert max-w-none text-[var(--ui-text-secondary)]">
+            <div className="prose prose-leecv max-w-none text-[var(--ui-text-secondary)]">
               <ReactMarkdown>{selectedArticle.content}</ReactMarkdown>
             </div>
 
@@ -230,7 +243,7 @@ export const BlogModule: React.FC<BlogModuleProps> = ({ initialSlug, onNavigateH
                     </span>
                   </div>
 
-                  <h2 className={`${displayScale.cardTitle} text-[var(--ui-text-primary)] group-hover:text-[var(--color-accent-base)] transition-colors`}>
+                  <h2 className={`${displayScale.cardTitle} text-[var(--ui-text-primary)] group-hover:text-[var(--color-accent-text)] transition-colors`}>
                     {art.title}
                   </h2>
 

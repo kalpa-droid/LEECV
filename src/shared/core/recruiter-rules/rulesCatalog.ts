@@ -22,6 +22,18 @@ export interface RecruiterRule {
 
 import { extractJobData, checkKeywordInCV } from '../utils/keywordExtractor';
 
+/**
+ * Frases de relleno sin valor (shared canónico).
+ * La regla filler_words las busca en resumen y experiencia;
+ * ruleTargetTabs.ts las reutiliza para saltar a la pestaña correcta.
+ */
+export const FILLER_WORDS = [
+  'altamente motivado', 'excelente comunicador', 'trabajo bien en equipo',
+  'orientado a resultados', 'proactivo', 'detallista', 'perfeccionista',
+  'acostumbrado a trabajar bajo presión', 'amplia experiencia',
+  'buscando nuevos retos'
+];
+
 export const RULES_CATALOG: RecruiterRule[] = [
   // 1. Datos Personales
   {
@@ -174,12 +186,7 @@ export const RULES_CATALOG: RecruiterRule[] = [
     evaluate: (cvData) => {
       const summary = (cvData.summary || cvData.personalInfo?.summary || '').toLowerCase();
       let hasFiller = false;
-      const fillerWords = [
-        'altamente motivado', 'excelente comunicador', 'trabajo bien en equipo',
-        'orientado a resultados', 'proactivo', 'detallista', 'perfeccionista',
-        'acostumbrado a trabajar bajo presión', 'amplia experiencia',
-        'buscando nuevos retos'
-      ];
+      const fillerWords = FILLER_WORDS;
       
       if (fillerWords.some(fw => summary.includes(fw))) {
         hasFiller = true;
