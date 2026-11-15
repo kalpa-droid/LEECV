@@ -42,7 +42,7 @@ export function CardObjectRenderer({
   const design: CardDesign = CARD_DESIGNS[designId] || CARD_DESIGNS['primary-card'];
   const decStyles = preset ? resolveDecorativeStyles(preset, designId as any, rolesColor, sectorRole) : null;
   const recordScale = deriveRecordScale(typography, typography.recordScaleRatios);
-  const densityMode = preset?.densityMode || 'normal';
+  const densityMode = preset?.densityMode ?? 'normal';
   const spatialLayout = resolveRecordLayout(design.layoutTemplate, densityMode);
 
   const getRoleColor = (roleName: string) => {

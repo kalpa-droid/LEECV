@@ -49,7 +49,7 @@ export function estimateRecordHeightPt(
   layoutTemplate: RecordLayoutTemplate = 'stacked-clean',
   subColumnsCount: number = 1,
   isSidebar: boolean = false,
-  densityMode: DensityMode = 'normal'
+  densityMode: DensityMode | number = 'normal'
 ): RecordHeightEstimate {
   const structured = buildStructuredRecordLayout(record.fields || record);
   const arranged = arrangeRecordFields(structured, layoutTemplate);

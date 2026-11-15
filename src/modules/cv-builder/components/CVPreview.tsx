@@ -74,7 +74,9 @@ export default function CVPreview({
       debouncedCvData?.activePresetId,
       debouncedCvData?.colorPresetId,
       debouncedCvData?.typographyPresetId,
-      debouncedCvData?.columnLayoutPresetId
+      debouncedCvData?.columnLayoutPresetId,
+      debouncedCvData?.typographyOverrides,
+      debouncedCvData?.theme?.primaryColor
     ]
   );
   const sections = useMemo(() => cvDataToContentSections(debouncedCvData), [debouncedCvData]);

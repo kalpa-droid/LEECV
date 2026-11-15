@@ -73,7 +73,7 @@ export function resolveActivePreset(cvData: any): Preset {
     ? applyTypographyOverrides(resolved.typography, typographyOverrides)
     : resolved.typography;
 
-  const effectiveDensity = typographyOverrides?.densityMode || 'normal';
+  const effectiveDensity = typographyOverrides?.densityMode ?? 'normal';
 
   return {
     ...resolved,

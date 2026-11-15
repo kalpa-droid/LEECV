@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from '@react-pdf/renderer';
 import { CARD_DESIGNS, CardDesign } from './cardDesignSchema';
 import { ResolvedThemeRoles, getTypographyColorBinding } from '../colors/colorSystem';
-import { TypographyScale, Preset, DensityMode } from '../presets/presetSchema';
+import { TypographyScale, Preset } from '../presets/presetSchema';
 import { resolveDecorativeStyles } from '../decorations/decorativeLayerEngine';
 import { resolveUnifiedTextSpec } from '../typography/unifiedTextHierarchyEngine';
 import { resolveDensityFactors } from '../typography/densityEngine';
@@ -60,8 +60,8 @@ export function SectionBannerCard({
     ? (rolesColor.accent || textSpec.colorHex)
     : textSpec.colorHex;
 
-  // --- Factores de densidad para márgenes/paddings ---
-  const densityMode = (preset && preset.densityMode) as DensityMode || 'normal';
+  // --- Factores de densidad para márgenes/paddings (enum legado o factor numérico continuo) ---
+  const densityMode = preset?.densityMode ?? 'normal';
   const density = resolveDensityFactors(densityMode);
 
   if (isSidebar) {

@@ -10,6 +10,7 @@ import { resolveSubtleCardBackground } from '../layers/colors/surfaceAwareColorE
 import { buildStructuredRecordLayout } from '../layers/records/recordLayoutEngine';
 import { CardObjectRenderer } from '../layers/cards/CardObjectRenderer';
 import { PdfSectionIcon } from '../layers/icons/PdfSectionIcon';
+import { resolveDensityFactors } from '../layers/typography/densityEngine';
 
 function sanitizeSvgDataUrl(dataUrl?: string): string | undefined {
   if (!dataUrl || typeof dataUrl !== 'string') return dataUrl;
@@ -107,6 +108,8 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
         : containerStyle.borderColorRole === 'border'
           ? sectorRolesColor.border
           : 'transparent';
+    // Densidad continua: paddingVertical/margenes/lineHeight del extracto escalan con densityMode.
+    const density = resolveDensityFactors(preset?.densityMode);
 
     return (
       <View
@@ -116,11 +119,11 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
           backgroundColor: cardBg,
           borderLeftWidth: containerStyle.borderWidthPt > 0 ? Math.max(3, containerStyle.borderWidthPt) : 0,
           borderLeftColor: borderColor,
-          paddingVertical: 8,
+          paddingVertical: 8 * density.quoteTextPaddingFactor,
           paddingHorizontal: 12,
           borderRadius: 4,
-          marginBottom: 10,
-          marginTop: 4
+          marginBottom: 10 * density.quoteTextPaddingFactor,
+          marginTop: 4 * density.quoteTextPaddingFactor
         }}
       >
         <Text
@@ -129,7 +132,7 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
             fontFamily: quoteSpec.fontFamily,
             color: quoteSpec.colorHex,
             opacity: quoteSpec.opacity,
-            lineHeight: 1.35
+            lineHeight: 1.35 * density.lineHeightFactor
           }}
         >
           {String(f.text || '')}

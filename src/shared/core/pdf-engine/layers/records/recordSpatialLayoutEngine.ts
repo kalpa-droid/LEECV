@@ -27,7 +27,7 @@ import { resolveDensityFactors } from '../typography/densityEngine';
 
 export function resolveRecordLayout(
   template: RecordLayoutTemplate | undefined,
-  densityMode: DensityMode = 'normal'
+  densityMode: DensityMode | number = 'normal'
 ): ResolvedRecordLayout {
   const density = resolveDensityFactors(densityMode);
   const activeTemplate = template || 'stacked-clean';

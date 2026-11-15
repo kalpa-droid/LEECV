@@ -24,7 +24,56 @@ import {
   COVER_PRESETS,
   } from '../../../../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
 import { getCvFormat, getAllCvFormats, getFormatDefaultVisibility, resolveActiveFormatId, resolveActiveFormat } from '../../../../../shared/core/formats/cvFormatRegistry';
+import { CONTRAST_FACTORS, SECTION_HEADING_FACTORS, SUMMARY_FACTORS } from '../../../../../shared/core/pdf-engine/layers/typography/densityEngine';
 
+interface TypographySliderProps {
+  label: string;
+  hint: string;
+  min: number;
+  max: number;
+  step: number;
+  value: number;
+  display: string;
+  isSet: boolean;
+  onChange: (value: number) => void;
+  onReset: () => void;
+}
+
+/** Tirador continuo para un ajuste de tipografía/espacio (mismo estilo visual que "Ancho Sidebar"). */
+const TypographySlider: React.FC<TypographySliderProps> = ({ label, hint, min, max, step, value, display, isSet, onChange, onReset }) => (
+  <div>
+    <div className="flex items-start justify-between gap-2 mb-1.5">
+      <div className="min-w-0">
+        <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">{label}</label>
+        <p className="text-[10px] text-[var(--color-neutral-text-secondary)] leading-snug">{hint}</p>
+      </div>
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        <span className="text-[10px] px-1.5 py-0.5 rounded-full font-black bg-[var(--ui-bg-panel)] border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] whitespace-nowrap">
+          {display}
+        </span>
+        {isSet && (
+          <button
+            type="button"
+            title="Volver al valor por defecto"
+            onClick={onReset}
+            className="p-1 rounded hover:bg-[var(--ui-bg-panel)] text-[var(--color-neutral-text-secondary)] hover:text-[var(--color-accent-base)] transition cursor-pointer"
+          >
+            <RotateCcw className="w-3 h-3" />
+          </button>
+        )}
+      </div>
+    </div>
+    <input
+      type="range"
+      min={min}
+      max={max}
+      step={step}
+      value={value}
+      onChange={(e) => onChange(parseFloat(e.target.value))}
+      className="w-full h-1 bg-[var(--ui-bg-panel)] rounded-[10px] appearance-none cursor-pointer accent-[var(--color-secondary-base)]"
+    />
+  </div>
+);
 
 export const DisenoSection = ({
   cvData,
@@ -189,209 +238,116 @@ export const DisenoSection = ({
             {/* Ajustar tamaños y espacio en la hoja */}
             <PanelSection icon={<Layout className="w-4 h-4" />} title="Ajustar tamaños y espacio en la hoja">
               <div className="p-3 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-4">
-                {/* Tamaño de lectura */}
-                <div>
-                  <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] mb-1.5">
-                    Tamaño de lectura
-                  </label>
-                  <p className="text-[10px] text-[var(--color-neutral-text-secondary)] mb-2 leading-snug">
-                    Chico: más contenido por hoja. Equilibrado: valor por defecto. Grande: más aire y legible.
-                  </p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {([
-                      { label: 'Chico', value: 8.5 },
-                      { label: 'Equilibrado', value: 9.5 },
-                      { label: 'Grande', value: 10.5 },
-                    ] as const).map((opt) => {
-                      const current = cvData?.typographyOverrides?.bodyPt;
-                      const isSelected = current !== undefined && Math.abs(current - opt.value) < 0.1;
-                      return (
-                        <button
-                          key={String(opt.value)}
-                          onClick={() => setCvData((prev: any) => ({
-                            ...prev,
-                            typographyOverrides: {
-                              ...(prev?.typographyOverrides || {}),
-                              bodyPt: opt.value,
-                            },
-                          }))}
-                          className={`p-2 rounded-[var(--radius-card)] border text-center text-[11px] font-bold transition cursor-pointer ${
-                            isSelected
-                              ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 text-[var(--color-neutral-text-primary)]'
-                              : 'border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--ui-bg-panel)]'
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                {(() => {
+                  const ov: any = cvData?.typographyOverrides || {};
+                  const DENSITY_ENUM_TABLE: Record<string, number> = { compact: 0.5, normal: 1.0, relaxed: 1.35 };
+                  const toNum = (v: any, table: Record<string, number>, fallback: number): number => {
+                    if (typeof v === 'number' && Number.isFinite(v)) return v;
+                    if (typeof v === 'string' && table && table[v] !== undefined) return table[v];
+                    return fallback;
+                  };
+                  const setOverride = (key: string, value: number) => setCvData((prev: any) => ({
+                    ...prev,
+                    typographyOverrides: { ...(prev?.typographyOverrides || {}), [key]: value }
+                  }));
+                  const clearOverride = (key: string) => setCvData((prev: any) => {
+                    const next = { ...(prev?.typographyOverrides || {}) };
+                    delete next[key];
+                    return { ...prev, typographyOverrides: next };
+                  });
+                  const bodyPt = toNum(ov.bodyPt, {}, 9.5);
+                  const contrast = toNum(ov.contrastScheme, CONTRAST_FACTORS, 1.2);
+                  const sectionScale = toNum(ov.sectionHeadingScale, SECTION_HEADING_FACTORS, 1.0);
+                  const summaryScale = toNum(ov.summaryScale, SUMMARY_FACTORS, 1.0);
+                  const densityFactor = toNum(ov.densityMode, DENSITY_ENUM_TABLE, 1.0);
+                  const hasAnyOverride = ov.bodyPt !== undefined || ov.contrastScheme !== undefined || ov.sectionHeadingScale !== undefined || ov.summaryScale !== undefined || ov.densityMode !== undefined;
+                  return (
+                    <>
+                      {/* Tamaño de lectura */}
+                      <TypographySlider
+                        label="Tamaño de lectura"
+                        hint="Chico: más contenido por hoja. Equilibrado: valor por defecto. Grande: más aire y legible."
+                        min={8}
+                        max={11.5}
+                        step={0.5}
+                        value={bodyPt}
+                        display={`${bodyPt.toFixed(1)} pt · ${bodyPt < 9 ? 'Chico' : bodyPt <= 10 ? 'Equilibrado' : 'Grande'}`}
+                        isSet={ov.bodyPt !== undefined}
+                        onChange={(v) => setOverride('bodyPt', v)}
+                        onReset={() => clearOverride('bodyPt')}
+                      />
 
-                {/* Diferencia entre títulos y texto */}
-                <div>
-                  <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] mb-1.5">
-                    Diferencia entre títulos y texto
-                  </label>
-                  <p className="text-[10px] text-[var(--color-neutral-text-secondary)] mb-2 leading-snug">
-                    Suave: jerarquía discreta. Equilibrada: contraste clásico. Marcada: títulos bien protagonistas.
-                  </p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {([
-                      { label: 'Suave', value: 'suave' as const },
-                      { label: 'Equilibrada', value: 'equilibrada' as const },
-                      { label: 'Marcada', value: 'marcada' as const },
-                    ]).map((opt) => {
-                      const isSelected = cvData?.typographyOverrides?.contrastScheme === opt.value;
-                      return (
-                        <button
-                          key={opt.value}
-                          onClick={() => setCvData((prev: any) => ({
-                            ...prev,
-                            typographyOverrides: {
-                              ...(prev?.typographyOverrides || {}),
-                              contrastScheme: opt.value,
-                            },
-                          }))}
-                          className={`p-2 rounded-[var(--radius-card)] border text-center text-[11px] font-bold transition cursor-pointer ${
-                            isSelected
-                              ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 text-[var(--color-neutral-text-primary)]'
-                              : 'border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--ui-bg-panel)]'
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                      {/* Diferencia entre títulos y texto */}
+                      <TypographySlider
+                        label="Diferencia entre títulos y texto"
+                        hint="Suave: jerarquía discreta. Equilibrada: contraste clásico. Marcada: títulos bien protagonistas."
+                        min={1.08}
+                        max={1.32}
+                        step={0.02}
+                        value={contrast}
+                        display={`${contrast.toFixed(2)}x · ${contrast <= 1.16 ? 'Suave' : contrast <= 1.24 ? 'Equilibrada' : 'Marcada'}`}
+                        isSet={ov.contrastScheme !== undefined}
+                        onChange={(v) => setOverride('contrastScheme', v)}
+                        onReset={() => clearOverride('contrastScheme')}
+                      />
 
-                {/* Tamaño de títulos de sección */}
-                <div>
-                  <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] mb-1.5">
-                    Tamaño de títulos de sección
-                  </label>
-                  <p className="text-[10px] text-[var(--color-neutral-text-secondary)] mb-2 leading-snug">
-                    Chico: EXPERIENCIA LABORAL discreto. Normal: ajuste clásico. Destacado: banner más presente.
-                  </p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {([
-                      { label: 'Chico', value: 'chico' as const },
-                      { label: 'Normal', value: 'normal' as const },
-                      { label: 'Destacado', value: 'destacado' as const },
-                    ]).map((opt) => {
-                      const isSelected = cvData?.typographyOverrides?.sectionHeadingScale === opt.value;
-                      return (
-                        <button
-                          key={opt.value}
-                          onClick={() => setCvData((prev: any) => ({
-                            ...prev,
-                            typographyOverrides: {
-                              ...(prev?.typographyOverrides || {}),
-                              sectionHeadingScale: opt.value,
-                            },
-                          }))}
-                          className={`p-2 rounded-[var(--radius-card)] border text-center text-[11px] font-bold transition cursor-pointer ${
-                            isSelected
-                              ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 text-[var(--color-neutral-text-primary)]'
-                              : 'border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--ui-bg-panel)]'
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                      {/* Tamaño de títulos de sección */}
+                      <TypographySlider
+                        label="Tamaño de títulos de sección"
+                        hint="Chico: EXPERIENCIA LABORAL discreto. Normal: ajuste clásico. Destacado: banner más presente."
+                        min={0.75}
+                        max={1.2}
+                        step={0.05}
+                        value={sectionScale}
+                        display={`${sectionScale.toFixed(2)}x · ${sectionScale <= 0.925 ? 'Chico' : sectionScale <= 1.075 ? 'Normal' : 'Destacado'}`}
+                        isSet={ov.sectionHeadingScale !== undefined}
+                        onChange={(v) => setOverride('sectionHeadingScale', v)}
+                        onReset={() => clearOverride('sectionHeadingScale')}
+                      />
 
-                {/* Tamaño del Extracto / Resumen */}
-                <div>
-                  <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] mb-1.5">
-                    Tamaño del Extracto / Resumen
-                  </label>
-                  <p className="text-[10px] text-[var(--color-neutral-text-secondary)] mb-2 leading-snug">
-                    Compacto: menos aire. Igual al texto: como el cuerpo del documento. Destacado: perfil más visible.
-                  </p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {([
-                      { label: 'Compacto', value: 'compacto' as const },
-                      { label: 'Igual al texto', value: 'igual-texto' as const },
-                      { label: 'Destacado', value: 'destacado' as const },
-                    ]).map((opt) => {
-                      const isSelected = cvData?.typographyOverrides?.summaryScale === opt.value;
-                      return (
-                        <button
-                          key={opt.value}
-                          onClick={() => setCvData((prev: any) => ({
-                            ...prev,
-                            typographyOverrides: {
-                              ...(prev?.typographyOverrides || {}),
-                              summaryScale: opt.value,
-                            },
-                          }))}
-                          className={`p-2 rounded-[var(--radius-card)] border text-center text-[11px] font-bold transition cursor-pointer ${
-                            isSelected
-                              ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 text-[var(--color-neutral-text-primary)]'
-                              : 'border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--ui-bg-panel)]'
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                      {/* Tamaño del Extracto / Resumen */}
+                      <TypographySlider
+                        label="Tamaño del Extracto / Resumen"
+                        hint="Compacto: menos aire. Igual al texto: como el cuerpo del documento. Destacado: perfil más visible."
+                        min={0.8}
+                        max={1.2}
+                        step={0.05}
+                        value={summaryScale}
+                        display={`${summaryScale.toFixed(2)}x · ${summaryScale <= 0.95 ? 'Compacto' : summaryScale <= 1.075 ? 'Igual al texto' : 'Destacado'}`}
+                        isSet={ov.summaryScale !== undefined}
+                        onChange={(v) => setOverride('summaryScale', v)}
+                        onReset={() => clearOverride('summaryScale')}
+                      />
 
-                {/* Espacio entre bloques */}
-                <div>
-                  <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] mb-1.5">
-                    Espacio entre bloques
-                  </label>
-                  <p className="text-[10px] text-[var(--color-neutral-text-secondary)] mb-2 leading-snug">
-                    Compacto: entra más contenido. Equilibrado: ajuste clásico. Amplio: presentación o papel extra.
-                  </p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {([
-                      { label: 'Compacto', value: 'compact' as const },
-                      { label: 'Equilibrado', value: 'normal' as const },
-                      { label: 'Amplio', value: 'relaxed' as const },
-                    ]).map((opt) => {
-                      const isSelected = cvData?.typographyOverrides?.densityMode === opt.value || (!cvData?.typographyOverrides?.densityMode && opt.value === 'normal');
-                      return (
-                        <button
-                          key={opt.value}
-                          onClick={() => setCvData((prev: any) => ({
-                            ...prev,
-                            typographyOverrides: {
-                              ...(prev?.typographyOverrides || {}),
-                              densityMode: opt.value,
-                            },
-                          }))}
-                          className={`p-2 rounded-[var(--radius-card)] border text-center text-[11px] font-bold transition cursor-pointer ${
-                            isSelected
-                              ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 text-[var(--color-neutral-text-primary)]'
-                              : 'border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--ui-bg-panel)]'
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                      {/* Espacio entre bloques */}
+                      <TypographySlider
+                        label="Espacio entre bloques"
+                        hint="Compacto: entra más contenido. Equilibrado: ajuste clásico. Amplio: presentación o papel extra."
+                        min={0.5}
+                        max={1.35}
+                        step={0.05}
+                        value={densityFactor}
+                        display={`${densityFactor.toFixed(2)}x · ${densityFactor <= 0.75 ? 'Compacto' : densityFactor <= 1.15 ? 'Equilibrado' : 'Amplio'}`}
+                        isSet={ov.densityMode !== undefined}
+                        onChange={(v) => setOverride('densityMode', v)}
+                        onReset={() => clearOverride('densityMode')}
+                      />
 
-                {/* Resetear overrides */}
-                {(cvData?.typographyOverrides?.bodyPt || cvData?.typographyOverrides?.contrastScheme || cvData?.typographyOverrides?.sectionHeadingScale || cvData?.typographyOverrides?.summaryScale || cvData?.typographyOverrides?.densityMode) && (
-                  <button
-                    onClick={() => setCvData((prev: any) => {
-                      const { typographyOverrides, ...rest } = prev || {};
-                      return rest;
-                    })}
-                    className="w-full text-[11px] text-[var(--color-neutral-text-secondary)] hover:text-[var(--color-accent-base)] transition underline underline-offset-2 cursor-pointer"
-                  >
-                    Volver al ajuste de la plantilla
-                  </button>
-                )}
+                      {/* Resetear overrides */}
+                      {hasAnyOverride && (
+                        <button
+                          onClick={() => setCvData((prev: any) => {
+                            const { typographyOverrides, ...rest } = prev || {};
+                            return rest;
+                          })}
+                          className="w-full text-[11px] text-[var(--color-neutral-text-secondary)] hover:text-[var(--color-accent-base)] transition underline underline-offset-2 cursor-pointer"
+                        >
+                          Volver al ajuste de la plantilla
+                        </button>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </PanelSection>
 
@@ -486,7 +442,7 @@ export const DisenoSection = ({
                                   }
                                 }));
                               }}
-                              className={`w-full h-1 bg-[var(--ui-bg-panel)] rounded-[${radius.control}] appearance-none cursor-pointer accent-[var(--color-secondary-base)]`}
+                              className="w-full h-1 bg-[var(--ui-bg-panel)] rounded-[10px] appearance-none cursor-pointer accent-[var(--color-secondary-base)]"
                             />
                           </div>
                         ) : (
