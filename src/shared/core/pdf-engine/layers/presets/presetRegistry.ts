@@ -8,6 +8,7 @@ import { cartaClasicaPreset, cartaModernaPreset, cartaMinimalistaPreset } from '
 
 import { composePreset } from './presetCompositionEngine';
 import { PRESET_COLORS, PRESET_TYPOGRAPHY, PRESET_COLUMNS, getColumnLayoutPresetName } from './presetCompositionInstances';
+import { applyTypographyOverrides } from '../typography/densityEngine';
 
 export { PRESET_COLORS, PRESET_TYPOGRAPHY, PRESET_COLUMNS, getColumnLayoutPresetName };
 
@@ -44,27 +45,42 @@ export function resolveActivePreset(cvData: any): Preset {
   // Solo se activa si NO hay un colorPresetId válido del catálogo cerrado.
   const customHex = !customColor ? parseCustomHex(cvData?.theme?.primaryColor) : null;
 
-  if (!customColor && !customHex && !customTypo && !customLayout) {
-    return basePreset;
-  }
+  const resolved: Preset = (!customColor && !customHex && !customTypo && !customLayout)
+    ? basePreset
+    : (() => {
+        const effectiveColor = customColor || (customHex ? {
+          id: `custom-${customHex.replace('#', '')}`,
+          name: 'Personalizado',
+          seedHex: customHex,
+          harmonyScheme: 'analogous' as const,
+        } : undefined);
 
-  // Si hay un Hex personalizado sin colorPresetId, construimos un ColorPreset efímero
-  const effectiveColor = customColor || (customHex ? {
-    id: `custom-${customHex.replace('#', '')}`,
-    name: 'Personalizado',
-    seedHex: customHex,
-    harmonyScheme: 'analogous' as const,
-  } : undefined);
+        return composePreset({
+          seedHex: effectiveColor?.seedHex || basePreset.paletteSeed?.seedHex || basePreset.palette.primary,
+          basePreset,
+          colorPreset: effectiveColor,
+          typographyPreset: customTypo,
+          columnLayoutPreset: customLayout,
+          id: `${basePreset.id}-custom`,
+          name: `${basePreset.name} (Personalizado)`
+        });
+      })();
 
-  return composePreset({
-    seedHex: effectiveColor?.seedHex || basePreset.paletteSeed?.seedHex || basePreset.palette.primary,
-    basePreset,
-    colorPreset: effectiveColor,
-    typographyPreset: customTypo,
-    columnLayoutPreset: customLayout,
-    id: `${basePreset.id}-custom`,
-    name: `${basePreset.name} (Personalizado)`
-  });
+  // Capa typographyOverrides: ajuste granular del usuario (bodyPt, densityMode, etc.)
+  // Se aplica sobre el resolved para que queden en el documento final.
+  const typographyOverrides = cvData?.typographyOverrides;
+  const typography = typographyOverrides
+    ? applyTypographyOverrides(resolved.typography, typographyOverrides)
+    : resolved.typography;
+
+  const effectiveDensity = typographyOverrides?.densityMode || 'normal';
+
+  return {
+    ...resolved,
+    typography,
+    typographyOverrides: undefined,
+    densityMode: effectiveDensity,
+  };
 }
 
 import { plannerClasicoPreset } from './presets/planner-clasico';

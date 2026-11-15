@@ -29,6 +29,7 @@ export interface OverflowResult {
 import { deriveRecordScale } from '../typography/typographyHierarchyEngine';
 import { resolveRecordLayout, RecordLayoutTemplate } from '../records/recordSpatialLayoutEngine';
 import { arrangeRecordFields } from '../records/fieldPlacementEngine';
+import { DensityMode } from '../presets/presetSchema';
 
 export interface RecordHeightEstimate {
   atomicHeaderHeightPt: number;
@@ -47,12 +48,13 @@ export function estimateRecordHeightPt(
   typography: TypographyScale,
   layoutTemplate: RecordLayoutTemplate = 'stacked-clean',
   subColumnsCount: number = 1,
-  isSidebar: boolean = false
+  isSidebar: boolean = false,
+  densityMode: DensityMode = 'normal'
 ): RecordHeightEstimate {
   const structured = buildStructuredRecordLayout(record.fields || record);
   const arranged = arrangeRecordFields(structured, layoutTemplate);
   const scale = deriveRecordScale(typography, typography.recordScaleRatios);
-  const spatial = resolveRecordLayout(layoutTemplate);
+  const spatial = resolveRecordLayout(layoutTemplate, densityMode);
 
   let atomicH = 0;
 
@@ -90,8 +92,8 @@ export function estimateRecordHeightPt(
     descH += descLines * (scale.description * scale.lineHeightBody);
   }
 
-  const paddingVertical = 12;
-  const marginBottom = 6;
+  const paddingVertical = spatial.containerStyle.padding * 2; // padding top+bottom
+  const marginBottom = spatial.containerStyle.marginBottom;
 
   const cols = Math.max(1, subColumnsCount);
   const atomicHeaderHeightPt = Math.round((atomicH + paddingVertical + marginBottom) / cols);

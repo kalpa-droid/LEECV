@@ -43,31 +43,50 @@ export function deriveRecordScale(
   base: TypographyScale,
   ratios?: RecordScaleRatios
 ): RecordTypographyScale {
-  const bodySize = base.body || 9.5;
-  const subtitleRatio = ratios?.subtitle || 1.1;
-  const metaRatio = ratios?.meta || 0.92;
-  const extraRatio = ratios?.extra || 0.85;
+  // Ratios reales (proporciones adimensionales). Si alguien pasa un número > 2 asume pt y lo blindamos.
+  const safe = (v: unknown): number => {
+    const n = Number(v);
+    return Number.isFinite(n) && Math.abs(n) <= 2 ? n : 1;
+  };
+  const subtitleRatio = safe(ratios?.subtitle) || 1.1;
+  const metaRatio = safe(ratios?.meta) || 0.92;
+  const extraRatio = safe(ratios?.extra) || 0.85;
 
-  const titleSize = clamp(base.itemTitle || 10.5, 10.0, 20);
-  const subSize = clamp(bodySize * subtitleRatio, 9.0, 16);
-  const bodySizeClamped = clamp(bodySize, 10.0, 14);
-  const metaSize = clamp(bodySize * metaRatio, 7.5, 12);
-  const extraSize = clamp(bodySize * extraRatio, 7.5, 11);
+  // bodySize mínimo 8.0 pt para que escalas compactas (Condensada, Moderna) funcionen
+  const bodySize = Math.max(8.0, (base.body ?? 9.5));
+
+  const titleSize = clamp(base.itemTitle || 10.5, 8.0, 20);
+  const subSize = clamp(bodySize * subtitleRatio, 7.0, 16);
+  const bodySizeClamped = clamp(bodySize, 8.0, 14);
+  const metaSize = clamp(bodySize * metaRatio, 6.5, 12);
+  const extraSize = clamp(bodySize * extraRatio, 6.0, 11);
   const lh = base.lineHeightBody || 1.3;
 
+  // Invariante estricta por tarjeta: title > subtitle > body > badge > extra
+  // Ajuste suave si la multiplicación los invierte (fallback conservador)
+  const enforceHierarchy = (t: number, s: number, b: number, m: number, e: number): [number, number, number, number, number] => {
+    if (t <= s) t = s + 0.5;
+    if (s <= b) s = b + 0.5;
+    if (b <= m) b = m + 0.5;
+    if (m <= e) m = e + 0.5;
+    return [t, s, b, m, e];
+  };
+
+  const [ts, ss, bs, ms, es] = enforceHierarchy(titleSize, subSize, bodySizeClamped, metaSize, extraSize);
+
   return {
-    title: titleSize,
-    subtitle: subSize,
-    badge: metaSize,
-    description: bodySizeClamped,
-    extra: extraSize,
+    title: ts,
+    subtitle: ss,
+    badge: ms,
+    description: bs,
+    extra: es,
 
     // Aliases de compatibilidad
-    recordTitle: titleSize,
-    recordSubtitle: subSize,
-    recordBody: bodySizeClamped,
-    recordMeta: metaSize,
-    recordExtra: extraSize,
+    recordTitle: ts,
+    recordSubtitle: ss,
+    recordBody: bs,
+    recordMeta: ms,
+    recordExtra: es,
     lineHeightBody: lh
   };
 }

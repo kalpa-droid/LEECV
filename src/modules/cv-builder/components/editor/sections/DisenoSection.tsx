@@ -1,10 +1,10 @@
-import { AlertTriangle, Check, ChevronRight, Cloud, Download, Grid, Grid3X3, GripHorizontal, GripVertical, Image as ImageIcon, Info, Layers, LayoutTemplate, Monitor, Palette, Plus, RotateCcw, Trash2, Type, User, X, ALargeSmall } from 'lucide-react';
+import { AlertTriangle, Check, ChevronRight, Cloud, Download, Grid, Grid3X3, GripHorizontal, GripVertical, Image as ImageIcon, Info, Layers, Layout, LayoutTemplate, Monitor, Palette, Plus, RotateCcw, Trash2, Type, User, X, ALargeSmall } from 'lucide-react';
 import { getAllPresets, PRESET_COLORS, PRESET_TYPOGRAPHY, resolveActivePreset } from '../../../../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { applyPresetLevel } from '../../../../../shared/core/pdf-engine/layers/presets/presetHierarchyEngine';
 import { PAGE_SIZES } from '../../../../../shared/core/pdf-engine/layers/page/pageSizes';
 import { getUiHint } from '../../../../../shared/core/uiTextGlossary';
 import { UI_GLOSSARY } from '../../../../../shared/core/ui/uiTextGlossary';
-import { Globe, Columns3, Layout } from 'lucide-react';
+import { Globe, Columns3 } from 'lucide-react';
 import React from 'react';
 import { PanelSection } from '../../../../../shared/core/ui/PanelSection';
 import { loadGoogleFont } from '../../../../../shared/core/utils/fontLoader';
@@ -183,6 +183,215 @@ export const DisenoSection = ({
                     <option key={f.id} value={f.value}>{f.name}</option>
                   ))}
                 </select>
+              </div>
+            </PanelSection>
+
+            {/* Ajustar tamaños y espacio en la hoja */}
+            <PanelSection icon={<Layout className="w-4 h-4" />} title="Ajustar tamaños y espacio en la hoja">
+              <div className="p-3 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-4">
+                {/* Tamaño de lectura */}
+                <div>
+                  <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] mb-1.5">
+                    Tamaño de lectura
+                  </label>
+                  <p className="text-[10px] text-[var(--color-neutral-text-secondary)] mb-2 leading-snug">
+                    Chico: más contenido por hoja. Equilibrado: valor por defecto. Grande: más aire y legible.
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {([
+                      { label: 'Chico', value: 8.5 },
+                      { label: 'Equilibrado', value: 9.5 },
+                      { label: 'Grande', value: 10.5 },
+                    ] as const).map((opt) => {
+                      const current = cvData?.typographyOverrides?.bodyPt;
+                      const isSelected = current !== undefined && Math.abs(current - opt.value) < 0.1;
+                      return (
+                        <button
+                          key={String(opt.value)}
+                          onClick={() => setCvData((prev: any) => ({
+                            ...prev,
+                            typographyOverrides: {
+                              ...(prev?.typographyOverrides || {}),
+                              bodyPt: opt.value,
+                            },
+                          }))}
+                          className={`p-2 rounded-[var(--radius-card)] border text-center text-[11px] font-bold transition cursor-pointer ${
+                            isSelected
+                              ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 text-[var(--color-neutral-text-primary)]'
+                              : 'border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--ui-bg-panel)]'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Diferencia entre títulos y texto */}
+                <div>
+                  <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] mb-1.5">
+                    Diferencia entre títulos y texto
+                  </label>
+                  <p className="text-[10px] text-[var(--color-neutral-text-secondary)] mb-2 leading-snug">
+                    Suave: jerarquía discreta. Equilibrada: contraste clásico. Marcada: títulos bien protagonistas.
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {([
+                      { label: 'Suave', value: 'suave' as const },
+                      { label: 'Equilibrada', value: 'equilibrada' as const },
+                      { label: 'Marcada', value: 'marcada' as const },
+                    ]).map((opt) => {
+                      const isSelected = cvData?.typographyOverrides?.contrastScheme === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => setCvData((prev: any) => ({
+                            ...prev,
+                            typographyOverrides: {
+                              ...(prev?.typographyOverrides || {}),
+                              contrastScheme: opt.value,
+                            },
+                          }))}
+                          className={`p-2 rounded-[var(--radius-card)] border text-center text-[11px] font-bold transition cursor-pointer ${
+                            isSelected
+                              ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 text-[var(--color-neutral-text-primary)]'
+                              : 'border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--ui-bg-panel)]'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Tamaño de títulos de sección */}
+                <div>
+                  <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] mb-1.5">
+                    Tamaño de títulos de sección
+                  </label>
+                  <p className="text-[10px] text-[var(--color-neutral-text-secondary)] mb-2 leading-snug">
+                    Chico: EXPERIENCIA LABORAL discreto. Normal: ajuste clásico. Destacado: banner más presente.
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {([
+                      { label: 'Chico', value: 'chico' as const },
+                      { label: 'Normal', value: 'normal' as const },
+                      { label: 'Destacado', value: 'destacado' as const },
+                    ]).map((opt) => {
+                      const isSelected = cvData?.typographyOverrides?.sectionHeadingScale === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => setCvData((prev: any) => ({
+                            ...prev,
+                            typographyOverrides: {
+                              ...(prev?.typographyOverrides || {}),
+                              sectionHeadingScale: opt.value,
+                            },
+                          }))}
+                          className={`p-2 rounded-[var(--radius-card)] border text-center text-[11px] font-bold transition cursor-pointer ${
+                            isSelected
+                              ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 text-[var(--color-neutral-text-primary)]'
+                              : 'border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--ui-bg-panel)]'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Tamaño del Extracto / Resumen */}
+                <div>
+                  <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] mb-1.5">
+                    Tamaño del Extracto / Resumen
+                  </label>
+                  <p className="text-[10px] text-[var(--color-neutral-text-secondary)] mb-2 leading-snug">
+                    Compacto: menos aire. Igual al texto: como el cuerpo del documento. Destacado: perfil más visible.
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {([
+                      { label: 'Compacto', value: 'compacto' as const },
+                      { label: 'Igual al texto', value: 'igual-texto' as const },
+                      { label: 'Destacado', value: 'destacado' as const },
+                    ]).map((opt) => {
+                      const isSelected = cvData?.typographyOverrides?.summaryScale === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => setCvData((prev: any) => ({
+                            ...prev,
+                            typographyOverrides: {
+                              ...(prev?.typographyOverrides || {}),
+                              summaryScale: opt.value,
+                            },
+                          }))}
+                          className={`p-2 rounded-[var(--radius-card)] border text-center text-[11px] font-bold transition cursor-pointer ${
+                            isSelected
+                              ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 text-[var(--color-neutral-text-primary)]'
+                              : 'border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--ui-bg-panel)]'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Espacio entre bloques */}
+                <div>
+                  <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)] mb-1.5">
+                    Espacio entre bloques
+                  </label>
+                  <p className="text-[10px] text-[var(--color-neutral-text-secondary)] mb-2 leading-snug">
+                    Compacto: entra más contenido. Equilibrado: ajuste clásico. Amplio: presentación o papel extra.
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {([
+                      { label: 'Compacto', value: 'compact' as const },
+                      { label: 'Equilibrado', value: 'normal' as const },
+                      { label: 'Amplio', value: 'relaxed' as const },
+                    ]).map((opt) => {
+                      const isSelected = cvData?.typographyOverrides?.densityMode === opt.value || (!cvData?.typographyOverrides?.densityMode && opt.value === 'normal');
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => setCvData((prev: any) => ({
+                            ...prev,
+                            typographyOverrides: {
+                              ...(prev?.typographyOverrides || {}),
+                              densityMode: opt.value,
+                            },
+                          }))}
+                          className={`p-2 rounded-[var(--radius-card)] border text-center text-[11px] font-bold transition cursor-pointer ${
+                            isSelected
+                              ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-rose-muted)]/30 ring-2 ring-[var(--color-accent-base)]/30 text-[var(--color-neutral-text-primary)]'
+                              : 'border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] hover:bg-[var(--ui-bg-panel)]'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Resetear overrides */}
+                {(cvData?.typographyOverrides?.bodyPt || cvData?.typographyOverrides?.contrastScheme || cvData?.typographyOverrides?.sectionHeadingScale || cvData?.typographyOverrides?.summaryScale || cvData?.typographyOverrides?.densityMode) && (
+                  <button
+                    onClick={() => setCvData((prev: any) => {
+                      const { typographyOverrides, ...rest } = prev || {};
+                      return rest;
+                    })}
+                    className="w-full text-[11px] text-[var(--color-neutral-text-secondary)] hover:text-[var(--color-accent-base)] transition underline underline-offset-2 cursor-pointer"
+                  >
+                    Volver al ajuste de la plantilla
+                  </button>
+                )}
               </div>
             </PanelSection>
 

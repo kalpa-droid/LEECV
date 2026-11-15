@@ -93,7 +93,12 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
     const f = rec.fields;
     const designId = customRecordCardDesigns?.resumen || preset.recordCardDesigns?.resumen || 'accent-outline';
     const containerStyle = getContainerStyle(designId);
-    const quoteSpec = resolveUnifiedTextSpec('subtitle', surfaceHex, sectorRolesColor, preset.typography, 'quote-text');
+    const quoteSpecBase = resolveUnifiedTextSpec('body', surfaceHex, sectorRolesColor, preset.typography, 'quote-text');
+    const summaryScaleFactor = preset.typography.summaryScaleFactor || 1.0;
+    const quoteSpec = {
+      ...quoteSpecBase,
+      fontSizePt: Math.max(6.5, Math.min(16, quoteSpecBase.fontSizePt * summaryScaleFactor)),
+    } as typeof quoteSpecBase;
     const cardBg = containerStyle.hasBackground ? resolveSubtleCardBackground(isSidebarSector ? 'sidebar' : 'main', sectorRolesColor) : 'transparent';
     const borderColor = containerStyle.borderColorRole === 'accent'
       ? sectorRolesColor.accent

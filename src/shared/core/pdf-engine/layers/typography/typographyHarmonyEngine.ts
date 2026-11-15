@@ -62,10 +62,11 @@ export function generateHarmoniousTypographyScale(options: TypographyHarmonyOpti
   const sectionHeading = round1(itemTitle * ratio);
   const title = round1(sectionHeading * ratio);
 
-  // Escalas de registro
-  const subtitle = round1(itemTitle / Math.sqrt(ratio));
-  const meta = round1(body / Math.sqrt(ratio));
-  const extra = round1(caption);
+  // Escalas de registro — dividimos por body para obtener RATIOS reales (adimensionales),
+  // nunca pt. El motor deriveRecordScale espera ratios cercanos a 1.0 (subtitle), 0.9 (meta), 0.85 (extra).
+  const subtitleRatio = round1((itemTitle / Math.sqrt(ratio)) / body);
+  const metaRatio = round1((body / Math.sqrt(ratio)) / body);
+  const extraRatio = round1(caption / body);
 
   return {
     title,
@@ -77,9 +78,9 @@ export function generateHarmoniousTypographyScale(options: TypographyHarmonyOpti
     lineHeightBody,
     lineHeightHeading,
     recordScaleRatios: {
-      subtitle,
-      meta,
-      extra
+      subtitle: subtitleRatio,
+      meta: metaRatio,
+      extra: extraRatio
     },
     cover: {
       badge: round1(body),

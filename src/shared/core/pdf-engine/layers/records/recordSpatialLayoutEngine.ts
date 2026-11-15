@@ -22,16 +22,21 @@ export interface ResolvedRecordLayout {
   isBoxed: boolean;
 }
 
+import { DensityMode } from '../presets/presetSchema';
+import { resolveDensityFactors } from '../typography/densityEngine';
+
 export function resolveRecordLayout(
-  template: RecordLayoutTemplate | undefined
+  template: RecordLayoutTemplate | undefined,
+  densityMode: DensityMode = 'normal'
 ): ResolvedRecordLayout {
+  const density = resolveDensityFactors(densityMode);
   const activeTemplate = template || 'stacked-clean';
 
   switch (activeTemplate) {
     case 'split-date-left':
       return {
         template: 'split-date-left',
-        containerStyle: { padding: 6, marginBottom: 8, flexDirection: 'row' },
+        containerStyle: { padding: 6 * density.recordCardPaddingFactor, marginBottom: 8 * density.recordCardPaddingFactor, flexDirection: 'row' },
         isSplitLeft: true,
         isInlineCompact: false,
         isBoxed: false
@@ -40,7 +45,7 @@ export function resolveRecordLayout(
     case 'inline-compact':
       return {
         template: 'inline-compact',
-        containerStyle: { padding: 5, marginBottom: 6 },
+        containerStyle: { padding: 5 * density.recordCardPaddingFactor, marginBottom: 6 * density.recordCardPaddingFactor },
         isSplitLeft: false,
         isInlineCompact: true,
         isBoxed: false
@@ -49,7 +54,7 @@ export function resolveRecordLayout(
     case 'boxed-highlight':
       return {
         template: 'boxed-highlight',
-        containerStyle: { padding: 10, marginBottom: 10 },
+        containerStyle: { padding: 10 * density.recordCardPaddingFactor, marginBottom: 10 * density.recordCardPaddingFactor },
         isSplitLeft: false,
         isInlineCompact: false,
         isBoxed: true
@@ -59,7 +64,7 @@ export function resolveRecordLayout(
     default:
       return {
         template: 'stacked-clean',
-        containerStyle: { padding: 8, marginBottom: 8 },
+        containerStyle: { padding: 8 * density.recordCardPaddingFactor, marginBottom: 8 * density.recordCardPaddingFactor },
         isSplitLeft: false,
         isInlineCompact: false,
         isBoxed: false

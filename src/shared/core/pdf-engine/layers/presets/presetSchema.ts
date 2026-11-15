@@ -74,6 +74,20 @@ export interface TypographyScale {
     meta?: number;
     extra?: number;
   };
+  /** Factor específico para el tamaño del extracto / resumen (solo quote-text).
+   *  1.0 = igual al cuerpo de texto.
+   */
+  summaryScaleFactor?: number;
+}
+
+export type DensityMode = 'compact' | 'normal' | 'relaxed';
+
+export interface TypographyOverrides {
+  bodyPt?: number; // Chico: 8.5, Equilibrado: 9.5, Grande: 10.5
+  contrastScheme?: 'suave' | 'equilibrada' | 'marcada'; // factor entre niveles
+  sectionHeadingScale?: 'chico' | 'normal' | 'destacado';
+  summaryScale?: 'compacto' | 'igual-texto' | 'destacado'; // solo para quote-text
+  densityMode?: DensityMode;
 }
 
 export interface Preset {
@@ -155,6 +169,12 @@ export interface Preset {
     /** Opción para encender o apagar sangrado y marcas de corte al imprimir tarjetas */
     showCropMarksAndBleed?: boolean;
   };
+
+  /** Overrides aplican después del preset base (en el motor de composición), nunca sobreescriben color/layout */
+  typographyOverrides?: TypographyOverrides;
+
+  /** Modo de densidad para ajustar el aire vertical sin tocar pt/ratios */
+  densityMode?: DensityMode;
 }
 
 export type TemplatePreset = Preset;
