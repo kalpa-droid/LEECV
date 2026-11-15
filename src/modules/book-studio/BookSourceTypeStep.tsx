@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BookOpen, Copy, Upload, CheckCircle2, ChevronRight, FileText } from 'lucide-react';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
 import { ensurePdfjsWorkerConfigured } from '../../shared/core/pdf-engine/pdfjsWorkerSetup';
+import { bookAssetManager } from '../../shared/core/book-engine/bookAssetManager';
 import { PAGE_SIZES } from '../../shared/core/pdf-engine/layers/page/pageSizes';
 import { button, selectableCard, radius } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
@@ -16,6 +17,8 @@ interface BookSourceTypeStepProps {
   onPdfLoaded?: (doc: any) => void;
   onNextStep?: () => void;
   fileInputRef?: React.RefObject<HTMLInputElement | null>;
+  /** Expone el "elegir PDF por referencia" al contenedor (botón externo). */
+  pickerRef?: React.MutableRefObject<(() => Promise<void>) | null>;
 }
 
 export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
@@ -28,6 +31,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
   onPdfLoaded,
   onNextStep,
   fileInputRef,
+  pickerRef,
 }) => {
   const t = useText();
   const [isDragging, setIsDragging] = useState(false);
@@ -73,6 +77,19 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
       setIsLoadingFile(false);
     }
   };
+
+  // Expone al contenedor el "elegir PDF recordando la ubicación" (sin duplicar el archivo).
+  useEffect(() => {
+    if (!pickerRef) return;
+    pickerRef.current = async () => {
+      if (!bookAssetManager.isFileSystemAccessSupported()) return;
+      const file = await bookAssetManager.pickSourcePdf();
+      if (file) await handleFileChange(file);
+    };
+    return () => {
+      pickerRef.current = null;
+    };
+  });
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -214,13 +231,27 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
               : 'border-[var(--ui-border)] bg-[var(--ui-bg-surface)] hover:border-[var(--color-accent-base)]/50'
           }`}
         >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf"
-            onChange={(e) => e.target.files?.[0] && handleFileChange(e.target.files[0])}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          />
+          {/* El PDF nunca se duplica: solo se recuerda dónde está (File System Access). */}
+          {bookAssetManager.isFileSystemAccessSupported() ? (
+            <button
+              type="button"
+              aria-label="Elegir PDF del libro"
+              onClick={async () => {
+                setErrorMsg(null);
+                const file = await bookAssetManager.pickSourcePdf();
+                if (file) await handleFileChange(file);
+              }}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            />
+          ) : (
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf"
+              onChange={(e) => e.target.files?.[0] && handleFileChange(e.target.files[0])}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            />
+          )}
 
           {isLoadingFile ? (
             <div className="flex items-center justify-center gap-2 py-1">
@@ -251,6 +282,10 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
             </div>
           )}
         </div>
+
+        <p className="text-[10px] text-[var(--ui-text-secondary)] text-center leading-snug">
+          No guardamos una copia de tu PDF: solo recordamos dónde está. Si lo movés, te avisamos y lo podés volver a elegir.
+        </p>
 
         {errorMsg && (
           <div className={`p-2.5 bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/30 rounded-[${radius.control}] text-[var(--color-status-danger-text)] text-xs font-medium text-center`}>
