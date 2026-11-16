@@ -723,11 +723,29 @@ async function procesarComoImagenes(
   }
   const newPdf = await PDFDocument.create();
 
-  const pdf = await pdfjsLib.getDocument({
-    data: new Uint8Array(arrayBuffer),
-    cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/cmaps/',
-    cMapPacked: true,
-  }).promise;
+  // cMaps locales primero (mismo dominio, copiados desde pdfjs-dist en prebuild
+  // a /cmaps/); si no están, CDN como respaldo; y como último recurso sin
+  // cmaps (PDFs con fuentes CJK podrían no verse, el resto sigue funcionando).
+  const pdfBytes = new Uint8Array(arrayBuffer);
+  const loadDocument = async () => {
+    const attempts = [
+      { label: 'cmaps locales', params: { cMapUrl: '/cmaps/', cMapPacked: true } as Record<string, unknown> },
+      { label: 'cmaps CDN', params: { cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/cmaps/', cMapPacked: true } as Record<string, unknown> },
+      { label: 'sin cmaps', params: {} as Record<string, unknown> },
+    ];
+    let lastError: unknown = null;
+    for (const attempt of attempts) {
+      try {
+        // Copia fresca por intento: pdf.js transfiere el buffer al worker (lo invalida).
+        return await pdfjsLib.getDocument({ data: pdfBytes.slice(), ...attempt.params }).promise;
+      } catch (err) {
+        lastError = err;
+        console.warn(`[book] No se pudo abrir el PDF con ${attempt.label}:`, err);
+      }
+    }
+    throw lastError instanceof Error ? lastError : new Error('No se pudo abrir el PDF.');
+  };
+  const pdf = await loadDocument();
 
   const totalSourcePages = pdf.numPages;
   const renderDPI = totalSourcePages > 600 ? 150 : totalSourcePages > 300 ? 200 : 300;

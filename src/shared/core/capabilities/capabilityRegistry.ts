@@ -437,6 +437,7 @@ export function inferDocumentTypeId(docData: any): DocumentTypeId {
   if (presetId === 'tarjeta-personal') return 'business_card';
   if (presetId === 'carta-clasica' || presetId === 'carta-presentacion') return 'cover_letter';
   if (presetId.startsWith('planner-')) return 'planner';
+  if (presetId.startsWith('libro-') || presetId === 'book') return 'book';
   if (docData.bookMode) return 'book';
 
   return 'cv';

@@ -20,6 +20,22 @@
 - CI GitHub Actions: check-all en 1m4s (0 errores). Vercel: deployment completed (preview pass).
 - Local antes del push: `npx tsc --noEmit` exit 0; vitest 363 passed / 2 skipped; `npm run check-all` exit 0 (SEO 40/40).
 
+## [2026-11-16] - Book Studio / Lidio: Fase 1+2 — Apertura y Origen PDF (PR #118, fix/book-studio-lidio-integration)
+
+**Resumen:**
+- `inferDocumentTypeId` reconoce presets `libro-*`/`book` → docType `"book"` (`capabilityRegistry.ts`); guarda anti-bucle `lastCreatedTabIdRef` en `App.tsx` para `/crear-libro`.
+- Origen PDF híbrido: `canUseNativeFilePicker()` (iframe cross-origin → false) + `pickSourcePdf()` tipado (`picked | cancelled | fallback-required`) en `bookAssetManager.ts`; `BookSourceTypeStep.tsx` con `triggerPick` único (nativo → input de respaldo siempre montado).
+- Instancia ÚNICA de pdf.js en `BookStudioContent.tsx` (`loadSourcePdf`): arrayBuffer 1 vez, auto-rotación fotocopia, `pdfDoc` compartido con preview, conteo real persistido. Eliminado `handleFileSelect`.
+- `PdfPreviewStrip.tsx`: error de apertura visible + "Probar con otro PDF"; miniaturas por `assetId` (getThumbUrl).
+- cMaps locales: `impositionEngine.ts` usa `/cmaps/` → CDN → sin cMaps; `scripts/copy-pdfjs-cmaps.mjs` + `prebuild` copian `node_modules/pdfjs-dist/cmaps` a `public/cmaps/` (gitignored).
+- Tests nuevos: `inferDocumentTypeId('libro-standard') === 'book'` (+ inferencias existentes) y `pickSourcePdf` fallback en Node.
+
+**Estado:** PR #118 abierta (commit `a87e9e1`); pendiente CI verde + aprobación CODEOWNER (toca `src/shared/core/`). NO mergeada.
+
+**Validación local:** `npm run check-all` EXIT=0 (tests, typecheck, lint, gobernanza, build, SEO 40/40, plain-language OK, contraste 0 nuevas). Pre-commit/pre-push husky verdes. Artefactos (`tsconfig.tsbuildinfo`, `install-windows.ps1`) excluidos.
+
+**Siguiente paso:** Kalpa aprueba #118 → merge squash (sin `--delete-branch`) → verificar hash en `origin/main` → Fase 3 (paridad tapa/contratapa: retiro en blanco sin contratapa en `impositionEngine.ts:~1104`, `calculateFinalBookPageCount`, botón "sin tapa" en UI) en PR aparte.
+
 # Registro de Intervenciones de Agentes (SESSION_LOG)
 
 ## [2026-11-13] - Iconos Unicos Canonicos + Blindaje de Contraste (PR #89, feat/unique-icons-contrast)

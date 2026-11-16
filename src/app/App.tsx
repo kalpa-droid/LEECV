@@ -303,20 +303,36 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   // dentro de la función del componente: un setState durante render gatilla
   // "Cannot update a component while rendering a different component" y un
   // bucle infinito de React (#error 301) con el contenido de CVProvider/Book.
+  // La guarda `lastCreatedTabIdRef` evita re-crear la pestaña mientras el store
+  // todavía no la propagó a `tabs` (sincronización asíncrona): una vez que la
+  // pestaña existe en `tabs`, el usuario puede cerrarla y se vuelve a crear.
+  const lastCreatedTabIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (!currentRoute) return;
     if (currentRoute === '/crear-libro') {
       const hasBookTab = tabs.some(
-        (t) => t.docType === 'book' || inferDocumentTypeId(t) === 'book'
+        (t) =>
+          t.docType === 'book' ||
+          inferDocumentTypeId(t) === 'book' ||
+          t.id === lastCreatedTabIdRef.current
       );
-      if (!hasBookTab) createBlankDocumentWithTab(DEFAULT_BOOK_PRESET_ID);
+      if (!hasBookTab) {
+        const created = createBlankDocumentWithTab(DEFAULT_BOOK_PRESET_ID);
+        if (created?.id) lastCreatedTabIdRef.current = created.id;
+      }
       return;
     }
     if (currentRoute === '/crear-agenda') {
       const hasPlannerTab = tabs.some(
-        (t) => t.docType === 'planner' || inferDocumentTypeId(t) === 'planner'
+        (t) =>
+          t.docType === 'planner' ||
+          inferDocumentTypeId(t) === 'planner' ||
+          t.id === lastCreatedTabIdRef.current
       );
-      if (!hasPlannerTab) createBlankDocumentWithTab(DEFAULT_PLANNER_PRESET_ID);
+      if (!hasPlannerTab) {
+        const created = createBlankDocumentWithTab(DEFAULT_PLANNER_PRESET_ID);
+        if (created?.id) lastCreatedTabIdRef.current = created.id;
+      }
       return;
     }
   }, [currentRoute, tabs, createBlankDocumentWithTab]);

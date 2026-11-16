@@ -38,5 +38,8 @@ supabase/.temp/
 .vercel_deployments.json
 parse_message.py
 
+# cMaps de pdf.js: se copian de node_modules a public/ en `prebuild`
+public/cmaps/
+
 .vercel_deployments.json
 parse_message.py

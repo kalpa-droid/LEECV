@@ -32,7 +32,12 @@ describe('bookAssetManager — contratos puros', () => {
     expect(typeof bookAssetManager.restoreSourcePdf).toBe('function');
     expect(typeof bookAssetManager.requestSourcePdfPermission).toBe('function');
     expect(typeof bookAssetManager.saveSourcePdfCopy).toBe('function');
-    expect(typeof bookAssetManager.isFileSystemAccessSupported).toBe('function');
+    expect(typeof bookAssetManager.canUseNativeFilePicker).toBe('function');
+  });
+
+  it('en Node (sin showOpenFilePicker) pickSourcePdf devuelve fallback-required', async () => {
+    const result = await bookAssetManager.pickSourcePdf();
+    expect(result.status).toBe('fallback-required');
   });
 
   it('en Node (sin indexedDB) restaurar el PDF devuelve no-handle sin tirar', async () => {
