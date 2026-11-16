@@ -2,6 +2,7 @@ import React from 'react';
 import { BookOpen } from 'lucide-react';
 import { button, input, typeScale } from '../../shared/core/uiDesignSystem';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
+import { useText } from '../../shared/i18n/useText';
 
 interface BookImpositionStepProps {
   options: BookImpositionOptions;
@@ -19,21 +20,22 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({ options,
   const showGuides = options.showGuides ?? false;
   const zipByBooklet = options.zipByBooklet ?? false;
   const readingDirection = options.readingDirection ?? 'ltr';
+  const t = useText();
 
   return (
     <div dir={readingDirection === 'rtl' ? 'rtl' : 'ltr'} className="flex flex-col gap-6 p-4">
       <h2 className="text-xl font-bold flex items-center gap-2">
         <BookOpen className="w-6 h-6" />
-        <span>6. Armado y Guías</span>
+        <span>{t.bookStudio.impositionStep.title}</span>
       </h2>
 
       <p className="text-sm text-[var(--ui-text-secondary)] leading-relaxed">
-        Selecciona el destino de la cubierta (tapa) y el grosor del papel para el lomo. Si seleccionas "Sin grosor", el lomo será 0 (para encuadernación con anillado o guillotina). El modo de máxima calidad conserva el archivo original sin pérdida.
+        {t.bookStudio.impositionStep.description}
       </p>
 
       <div className="space-y-4">
         <label className="block">
-          <span className={typeScale.fieldLabel}>Destino de la Cubierta</span>
+          <span className={typeScale.fieldLabel}>{t.bookStudio.impositionStep.destinationLabel}</span>
           <div className="mt-2 flex gap-2">
             {(['A', 'B', 'C'] as const).map((d) => (
               <button
@@ -47,18 +49,18 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({ options,
             ))}
           </div>
           <p className="mt-1 text-xs text-[var(--ui-text-secondary)]">
-            A = cubierta dentro del mismo archivo, B = cubierta en un archivo aparte, C = cubierta continua con lomo (contratapa|lomo|tapa). B y C requieren cubierta personalizada; si no hay, se comportan como A.
+            {t.bookStudio.impositionStep.destinationHelp}
           </p>
         </label>
 
         <label className="block">
-          <span className={typeScale.fieldLabel}>Grosor de Papel para Lomo (mm)</span>
+          <span className={typeScale.fieldLabel}>{t.bookStudio.impositionStep.paperThicknessLabel}</span>
           <input
             type="number"
             value={paperThickness}
             onChange={(e) => setOptions((prev) => ({ ...prev, paperThicknessMm: Number(e.target.value) || 0 }))}
             className={`${input.base} mt-2 w-32`}
-            placeholder="0 (sin grosor)"
+            placeholder={t.bookStudio.impositionStep.paperThicknessPlaceholder}
             step="0.01"
           />
           <div className="mt-2 flex gap-2 text-xs text-[var(--ui-text-secondary)]">
@@ -67,21 +69,21 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({ options,
               onClick={() => setOptions((prev) => ({ ...prev, paperThicknessMm: 0.10 }))}
               className="underline cursor-pointer"
             >
-              Común (0.10)
+              {t.bookStudio.impositionStep.thicknessCommon}
             </button>
             <button
               type="button"
               onClick={() => setOptions((prev) => ({ ...prev, paperThicknessMm: 0.12 }))}
               className="underline cursor-pointer"
             >
-              Ahuesado (0.12)
+              {t.bookStudio.impositionStep.thicknessLight}
             </button>
             <button
               type="button"
               onClick={() => setOptions((prev) => ({ ...prev, paperThicknessMm: 0 }))}
               className="underline cursor-pointer"
             >
-              Sin grosor (guillotina/anillado)
+              {t.bookStudio.impositionStep.thicknessNone}
             </button>
           </div>
         </label>
@@ -93,21 +95,21 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({ options,
             onChange={(e) => setOptions((prev) => ({ ...prev, applyCreep: e.target.checked }))}
             className="h-4 w-4 accent-[var(--color-accent-base)]"
           />
-          <span className={typeScale.fieldLabel}>Aplicar compensación de creep (Adobe)</span>
+          <span className={typeScale.fieldLabel}>{t.bookStudio.impositionStep.creepCheckbox}</span>
           <p className="text-xs text-[var(--ui-text-secondary)]">
-            Calcula desplazamiento hacia el lomo para hojas internas. Si el papel no tiene grosor (0), no aplica.
+            {t.bookStudio.impositionStep.creepHelp}
           </p>
         </label>
 
         <label className="block">
-          <span className={typeScale.fieldLabel}>Modo de Exportación</span>
+          <span className={typeScale.fieldLabel}>{t.bookStudio.impositionStep.exportModeLabel}</span>
           <select
             value={exportMode}
             onChange={(e) => setOptions((prev) => ({ ...prev, exportMode: e.target.value as 'vector' | 'raster' }))}
             className={`${input.base} mt-2`}
           >
-            <option value="vector">Máxima calidad (sin pérdida, embedPage/copyPages)</option>
-            <option value="raster">Rasterizado (JPEG por página, para impresión doméstica)</option>
+            <option value="vector">{t.bookStudio.impositionStep.exportModeVector}</option>
+            <option value="raster">{t.bookStudio.impositionStep.exportModeRaster}</option>
           </select>
         </label>
 
@@ -118,9 +120,9 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({ options,
             onChange={(e) => setOptions((prev) => ({ ...prev, showGuides: e.target.checked }))}
             className="h-4 w-4 accent-[var(--color-accent-base)]"
           />
-          <span className={typeScale.fieldLabel}>Mostrar guías de armado</span>
+          <span className={typeScale.fieldLabel}>{t.bookStudio.impositionStep.guidesCheckbox}</span>
           <p className="text-xs text-[var(--ui-text-secondary)]">
-            Dibuja sobre cada hoja la línea del doblez, el margen de seguridad y las líneas guía para recortar (marcas de corte), para plegar y recortar a mano.
+            {t.bookStudio.impositionStep.guidesHelp}
           </p>
         </label>
 
@@ -131,35 +133,35 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({ options,
             onChange={(e) => setOptions((prev) => ({ ...prev, zipByBooklet: e.target.checked }))}
             className="h-4 w-4 accent-[var(--color-accent-base)]"
           />
-          <span className={typeScale.fieldLabel}>Un archivo en ZIP, uno por cada cuadernillo</span>
+          <span className={typeScale.fieldLabel}>{t.bookStudio.impositionStep.zipByBookletLabel}</span>
           <p className="text-xs text-[var(--ui-text-secondary)]">
-            Si el libro es largo y se arma en varias partes (cuadernillos), en lugar de un solo PDF se genera un ZIP con un PDF por cada parte. Solo aplica al modo normal con destino A.
+            {t.bookStudio.impositionStep.zipByBookletHelp}
           </p>
         </label>
 
         <label className="block">
-          <span className={typeScale.fieldLabel}>Dirección de lectura del libro</span>
+          <span className={typeScale.fieldLabel}>{t.bookStudio.impositionStep.readingDirectionLabel}</span>
           <select
             value={readingDirection}
             onChange={(e) => setOptions((prev) => ({ ...prev, readingDirection: e.target.value as 'ltr' | 'rtl' }))}
             className={`${input.base} mt-2`}
           >
-            <option value="ltr">De izquierda a derecha (español, inglés)</option>
-            <option value="rtl">De derecha a izquierda (árabe, hebreo)</option>
+            <option value="ltr">{t.bookStudio.impositionStep.readingDirectionLtr}</option>
+            <option value="rtl">{t.bookStudio.impositionStep.readingDirectionRtl}</option>
           </select>
           <p className="mt-1 text-xs text-[var(--ui-text-secondary)]">
-            Si el texto se lee de derecha a izquierda, las páginas se emparejan al revés para que el libro salga bien armado.
+            {t.bookStudio.impositionStep.readingDirectionHelp}
           </p>
         </label>
 
         <label className="block">
-          <span className={typeScale.fieldLabel}>Estilo de Cubierta (opcional)</span>
+          <span className={typeScale.fieldLabel}>{t.bookStudio.impositionStep.coverStyleLabel}</span>
           <input
             type="text"
             value={coverStyle}
             onChange={(e) => setOptions((prev) => ({ ...prev, coverStyle: e.target.value }))}
             className={`${input.base} mt-2`}
-            placeholder="Ej: monica-classic, o vacío para usar el preset del editor de CV"
+            placeholder={t.bookStudio.impositionStep.coverStylePlaceholder}
           />
         </label>
 
@@ -169,14 +171,14 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({ options,
             onClick={onPrevStep}
             className={`${button.base} bg-[var(--ui-bg-card)] border border-[var(--ui-border)] text-[var(--ui-text-secondary)]`}
           >
-            Anterior
+            {t.bookStudio.previousStep}
           </button>
           <button
             type="button"
             onClick={onNextStep}
             className={`${button.base} bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]`}
           >
-            Siguiente → Vista Previa
+            {t.bookStudio.impositionStep.nextStep}
           </button>
         </div>
       </div>

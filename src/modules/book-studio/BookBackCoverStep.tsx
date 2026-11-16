@@ -107,7 +107,7 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
       <div className="space-y-1">
         <h2 className="text-xl font-bold tracking-tight text-[var(--ui-text-primary)] flex items-center gap-2">
           <BookMarked className="w-5 h-5 text-[var(--color-accent-text)]" />
-          <span>4. Contratapa</span>
+          <span>{t.bookStudio.backCoverStep.title}</span>
         </h2>
         <p className="text-xs text-[var(--ui-text-secondary)]">
           {t.bookStudio.backCoverStep.description}
@@ -337,7 +337,7 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
             className={`${button.base} ${button.secondary} flex items-center gap-1.5 text-xs font-bold`}
           >
             <ChevronLeft className="w-4 h-4" />
-            <span>Volver</span>
+            <span>{t.bookStudio.backStep}</span>
           </button>
         ) : <div />}
 
@@ -347,7 +347,7 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
             onClick={onNextStep}
             className={`${button.base} ${button.primary} flex items-center gap-1.5 text-xs font-bold`}
           >
-            <span>Siguiente: 5. Foliado</span>
+            <span>{t.bookStudio.backCoverStep.nextStep}</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         )}

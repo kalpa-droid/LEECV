@@ -184,7 +184,7 @@ export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
             className={`${button.base} ${button.ghost} flex items-center gap-1.5`}
           >
             <ChevronLeft className="w-4 h-4" />
-            <span>Volver</span>
+            <span>{t.bookStudio.backStep}</span>
           </button>
         ) : <div />}
 
@@ -194,7 +194,7 @@ export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
             onClick={onNextStep}
             className={`${button.base} ${button.primary} flex items-center gap-1.5`}
           >
-            <span>Siguiente</span>
+            <span>{t.bookStudio.organizeStep.nextStep}</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         )}

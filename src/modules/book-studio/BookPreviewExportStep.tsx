@@ -382,7 +382,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
             className={`py-2 px-4 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] text-xs font-bold text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] transition flex items-center gap-1.5 cursor-pointer`}
           >
             <ChevronLeft className="w-4 h-4" />
-            <span>Volver</span>
+            <span>{t.bookStudio.backStep}</span>
           </button>
         </div>
       )}

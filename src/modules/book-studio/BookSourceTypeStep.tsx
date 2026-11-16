@@ -282,7 +282,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
         </div>
 
         <p className="text-[10px] text-[var(--ui-text-secondary)] text-center leading-snug">
-          No guardamos una copia de tu PDF: solo recordamos dónde está. Si lo movés, te avisamos y lo podés volver a elegir.
+          {t.bookStudio.sourceStep.pdfPolicyNote}
         </p>
 
         {errorMsg && (
