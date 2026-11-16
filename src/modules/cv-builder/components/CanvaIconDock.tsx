@@ -8,7 +8,7 @@ import { resolveActiveDockSections, DOCK_SPECIAL_TABS } from '../../../shared/co
 import { activateSection } from '../../../shared/core/sections/sectionActivationEngine';
 import { DocumentTypeId } from '../../../types/document';
 
-import { BookOpen, FileUp, Settings, Printer, Layers, BookMarked, Sliders, LayoutGrid, Hash, CalendarDays, CheckSquare, User, IdCard, FlipHorizontal2, QrCode, Image, Wallpaper, Radar } from 'lucide-react';
+import { BookOpen, FileUp, Settings, Printer, Layers, BookMarked, Sliders, LayoutGrid, Hash, CalendarDays, CheckSquare, User, IdCard, FlipHorizontal2, QrCode, Image, Wallpaper, Radar, Scissors } from 'lucide-react';
 
 export interface CanvaIconDockProps {
   cvData?: any;
@@ -56,6 +56,7 @@ const bookTabIcons: Record<string, any> = {
   book_cover: BookOpen,
   book_back_cover: BookMarked,
   book_foliado: Hash,
+  book_imposition: Scissors,
   book_preview_export: Printer,
 };
 

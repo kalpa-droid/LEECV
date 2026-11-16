@@ -6,6 +6,7 @@ import { BookImpositionOptions, DEFAULT_BOOK_IMPOSITION_OPTIONS } from '../../sh
 import { BookSourceTypeStep } from './BookSourceTypeStep';
 import { BookOrganizeStep } from './BookOrganizeStep';
 import { BookFoliadoStep } from './BookFoliadoStep';
+import { BookImpositionStep } from './BookImpositionStep';
 import { BookCoverStep } from './BookCoverStep';
 import { BookBackCoverStep } from './BookBackCoverStep';
 import { BookPreviewExportStep } from './BookPreviewExportStep';
@@ -356,6 +357,15 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
             />
           )}
 
+          {activeStepTab === 'book_imposition' && (
+            <BookImpositionStep
+              options={options}
+              setOptions={handleOptionsChange}
+              onNextStep={() => handleNavigateNextStep('book_imposition')}
+              onPrevStep={() => handleNavigatePrevStep('book_imposition')}
+            />
+          )}
+
           {activeStepTab === 'book_preview_export' && (
             <BookPreviewExportStep
               options={options}
@@ -363,6 +373,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               pdfPageCount={pdfPageCount}
               onPrevStep={() => handleNavigatePrevStep('book_preview_export')}
               assetResolver={(ref) => bookAssetManager.getBlobUrl(ref)}
+              setOptions={handleOptionsChange}
             />
           )}
         </div>
