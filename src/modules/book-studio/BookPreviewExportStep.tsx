@@ -31,6 +31,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   const [progressPercent, setProgressPercent] = useState(0);
   const [statusMessage, setStatusMessage] = useState('');
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
+  const [lastOutputIsZip, setLastOutputIsZip] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (!selectedFile) {
@@ -82,15 +83,20 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
         },
       });
 
-      const blob = new Blob([pdfBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
+      // El motor devuelve PDF normalmente; devuelve un ZIP cuando el usuario
+      // pide un PDF por cuadernillo o la cubierta aparte (destinos B/C).
+      const isZip = pdfBytes[0] === 0x50 && pdfBytes[1] === 0x4b;
+      setLastOutputIsZip(isZip);
+
+      const blob = new Blob([pdfBytes.buffer as ArrayBuffer], { type: isZip ? 'application/zip' : 'application/pdf' });
       const url = URL.createObjectURL(blob);
       setPdfBlobUrl(url);
 
       // Disparar descarga automática
       const a = document.createElement('a');
       a.href = url;
-      const cleanName = selectedFile.name.replace(/\.pdf$/i, '');
-      a.download = `${cleanName}_IMPRESION_LIBRO.pdf`;
+      const cleanName = selectedFile.name.replace(/\.(pdf|zip)$/i, '');
+      a.download = `${cleanName}_IMPRESION_LIBRO${isZip ? '.zip' : '.pdf'}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -232,7 +238,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
             <div className="flex gap-2">
               <a
                 href={pdfBlobUrl}
-                download={`${selectedFile.name.replace(/\.pdf$/i, '')}_IMPRESION_LIBRO.pdf`}
+                download={`${selectedFile.name.replace(/\.(pdf|zip)$/i, '')}_IMPRESION_LIBRO${lastOutputIsZip ? '.zip' : '.pdf'}`}
                 className={`flex-1 py-2 px-4 rounded-[${radius.control}] text-xs font-bold border border-[var(--color-accent-text)] text-[var(--color-accent-text)] flex items-center justify-center gap-1.5`}
               >
                 <Download className="w-3.5 h-3.5" />

@@ -17,6 +17,7 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({ options,
   const exportMode = options.exportMode || 'vector';
   const coverStyle = options.coverStyle || 'monica-classic';
   const showGuides = options.showGuides ?? false;
+  const zipByBooklet = options.zipByBooklet ?? false;
 
   return (
     <div className="flex flex-col gap-6 p-4">
@@ -45,7 +46,7 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({ options,
             ))}
           </div>
           <p className="mt-1 text-xs text-[var(--ui-text-secondary)]">
-            A = mismo papel que el documento, B = archivo de cubierta separado, C = cubierta envolvente (contratapa|lomo|tapa continua)
+            A = cubierta dentro del mismo archivo, B = cubierta en un archivo aparte, C = cubierta continua con lomo (contratapa|lomo|tapa). B y C requieren cubierta personalizada; si no hay, se comportan como A.
           </p>
         </label>
 
@@ -119,6 +120,19 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({ options,
           <span className={typeScale.fieldLabel}>Mostrar guías de armado</span>
           <p className="text-xs text-[var(--ui-text-secondary)]">
             Dibuja sobre cada hoja la línea del doblez, el margen de seguridad y las líneas guía para recortar (marcas de corte), para plegar y recortar a mano.
+          </p>
+        </label>
+
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={zipByBooklet}
+            onChange={(e) => setOptions((prev) => ({ ...prev, zipByBooklet: e.target.checked }))}
+            className="h-4 w-4 accent-[var(--color-accent-base)]"
+          />
+          <span className={typeScale.fieldLabel}>Un archivo en ZIP, uno por cada cuadernillo</span>
+          <p className="text-xs text-[var(--ui-text-secondary)]">
+            Si el libro es largo y se arma en varias partes (cuadernillos), en lugar de un solo PDF se genera un ZIP con un PDF por cada parte. Solo aplica al modo normal con destino A.
           </p>
         </label>
 

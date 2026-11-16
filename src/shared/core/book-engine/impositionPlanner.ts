@@ -81,6 +81,26 @@ export function planBookletSignatures(
   return { signatures, totalPages: padded, blanksAdded, totalSheets };
 }
 
+/**
+ * Pares de páginas por hoja dentro de un cuadernillo, en orden de impresión.
+ * Devuelve un par [izquierda, derecha] por hoja, con índice global (0-based).
+ * @param signatureLength Páginas del cuadernillo (múltiplo de 4).
+ * @param offset Índice global donde arranca el cuadernillo.
+ */
+export function getSignatureSheetPairs(signatureLength: number, offset = 0): Array<[number, number]> {
+  if (!Number.isFinite(signatureLength) || signatureLength <= 0 || signatureLength % 4 !== 0) {
+    return [];
+  }
+  const pairs: Array<[number, number]> = [];
+  for (let i = 0; i < signatureLength / 2; i++) {
+    const isFront = i % 2 === 0;
+    const left = isFront ? offset + signatureLength - 1 - i : offset + i;
+    const right = isFront ? offset + i : offset + signatureLength - 1 - i;
+    pairs.push([left, right]);
+  }
+  return pairs;
+}
+
 /* ------------------------------------------------------------------ */
 /* Cuarto y Octavo (doblez en cruz): matrices de imposición            */
 /* ------------------------------------------------------------------ */

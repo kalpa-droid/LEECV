@@ -3,7 +3,7 @@ import { countBlanksBehindCover } from './impositionMath';
 import { getCoverPresetById } from '../pdf-engine/layers/presets/coverPresetCatalog';
 import { ensurePdfjsWorkerConfigured } from '../pdf-engine/pdfjsWorkerSetup';
 import { resolveCanvasColor, COVER_FALLBACK_BG, COVER_FALLBACK_TEXT } from './canvasColors';
-import { calculateSpineWidth, calculateCreepOffset } from './impositionPlanner';
+import { calculateSpineWidth, calculateCreepOffset, planBookletSignatures, getSignatureSheetPairs } from './impositionPlanner';
 
 const pdfjsLib = typeof window !== 'undefined' ? ensurePdfjsWorkerConfigured() : (null as any);
 
@@ -88,6 +88,11 @@ export interface BookImpositionOptions {
    * Mostrar guías vectoriales en la hoja final (línea de doblez, margen de seguridad, marcas de corte).
    */
   showGuides?: boolean;
+  /**
+   * Generar un PDF por cuadernillo dentro de un ZIP, en vez de un solo PDF.
+   * Solo aplica en modo 'normal' y cuando el libro tiene más de un cuadernillo.
+   */
+  zipByBooklet?: boolean;
   deletedPages?: (number | string)[];
   pageOrder?: (number | string)[];
   blankBehindCover?: boolean;
@@ -119,6 +124,7 @@ export const DEFAULT_BOOK_IMPOSITION_OPTIONS: BookImpositionOptions = {
   applyCreep: true,
   coverStyle: 'monica-classic',
   showGuides: false,
+  zipByBooklet: false,
 };
 
 export function getCoverCanvasSize(paperSize: 'A4' | 'A3' = 'A4'): { width: number; height: number } {
@@ -429,6 +435,178 @@ export async function crearCanvasContratapaCustom(
   return canvas;
 }
 
+/**
+ * Construye la cubierta envolvente (contratapa | lomo | tapa, continua) como
+ * un canvas ancho. Se usa en destino 'C' (va al final del mismo PDF) y en
+ * destino 'B' (archivo aparte dentro del ZIP).
+ */
+async function buildWrapCoverCanvas(
+  customCover: CoverConfig | null,
+  customBackCover: BackCoverConfig | null,
+  coverCanvasSize: { width: number; height: number },
+  spineWidthMm: number,
+  paperSize: 'A4' | 'A3',
+  coverStyle: string | undefined,
+  assetResolver?: (ref: string) => Promise<string | null>
+): Promise<HTMLCanvasElement> {
+  const paperWidthMm = paperSize === 'A3' ? 297 : 210;
+  const pxPerMm = coverCanvasSize.width / paperWidthMm;
+  const spinePx = Math.max(0, Math.round(spineWidthMm * pxPerMm));
+
+  const wrap = document.createElement('canvas');
+  wrap.width = coverCanvasSize.width * 2 + spinePx;
+  wrap.height = coverCanvasSize.height;
+  const ctx = wrap.getContext('2d');
+  if (!ctx) throw new Error('No se pudo preparar la cubierta envolvente.');
+
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, wrap.width, wrap.height);
+
+  // Contratapa (tercio izquierdo).
+  const backCanvas =
+    customBackCover && (customBackCover.type === 'upload' || customBackCover.type === 'template')
+      ? await crearCanvasContratapaCustom(customBackCover, coverCanvasSize, 1, assetResolver)
+      : null;
+  if (backCanvas) {
+    ctx.drawImage(backCanvas, 0, 0, coverCanvasSize.width, coverCanvasSize.height);
+    backCanvas.width = 0;
+    backCanvas.height = 0;
+  }
+
+  // Lomo (franja central), con el color del preset elegido.
+  if (spinePx > 0) {
+    const preset = coverStyle ? getCoverPresetById(coverStyle) : null;
+    const spineBg = resolveCanvasColor(preset?.badgeBg || '', COVER_FALLBACK_BG);
+    const spineFg = resolveCanvasColor(preset?.badgeTextColor || '', COVER_FALLBACK_TEXT);
+    ctx.fillStyle = spineBg;
+    ctx.fillRect(coverCanvasSize.width, 0, spinePx, wrap.height);
+    ctx.fillStyle = spineFg;
+    ctx.globalAlpha = 0.4;
+    ctx.fillRect(coverCanvasSize.width, 0, 1, wrap.height);
+    ctx.fillRect(coverCanvasSize.width + spinePx - 1, 0, 1, wrap.height);
+    ctx.globalAlpha = 1;
+  }
+
+  // Tapa (tercio derecho).
+  const frontCanvas =
+    customCover && (customCover.type === 'upload' || customCover.type === 'template')
+      ? await crearCanvasTapaCustom(customCover, coverCanvasSize, 1, assetResolver)
+      : null;
+  if (frontCanvas) {
+    ctx.drawImage(frontCanvas, coverCanvasSize.width + spinePx, 0, coverCanvasSize.width, coverCanvasSize.height);
+    frontCanvas.width = 0;
+    frontCanvas.height = 0;
+  }
+
+  return wrap;
+}
+
+/**
+ * Dibuja una hoja con dos páginas enfrentadas (pares impares del cuadernillo).
+ * Si showGuides está activo, agrega la línea de doblez, el margen de seguridad
+ (~5 mm) y las marcas de corte.
+ */
+async function drawBookletSheet(
+  bookletDoc: PDFDocument,
+  pagesDoc: PDFDocument,
+  leftIndex: number,
+  rightIndex: number,
+  paperSize: 'A4' | 'A3',
+  showGuides: boolean
+): Promise<void> {
+  const [leftPage] = await bookletDoc.copyPages(pagesDoc, [leftIndex]);
+  const [rightPage] = await bookletDoc.copyPages(pagesDoc, [rightIndex]);
+
+  const paperPageSize = PageSizes[paperSize] || PageSizes.A4;
+  const sheetWidth = paperPageSize[1];
+  const sheetHeight = paperPageSize[0];
+  const sheet = bookletDoc.addPage([sheetWidth, sheetHeight]);
+
+  const embedL = await bookletDoc.embedPage(leftPage);
+  const embedR = await bookletDoc.embedPage(rightPage);
+
+  const halfWidth = sheetWidth / 2;
+  const MARGIN_PT = 2.83465; // 1mm en puntos PDF
+
+  const scaleL = Math.min((halfWidth - MARGIN_PT * 2) / embedL.width, (sheetHeight - MARGIN_PT * 2) / embedL.height);
+  const scaledWidthL = embedL.width * scaleL;
+  const scaledHeightL = embedL.height * scaleL;
+
+  const scaleR = Math.min((halfWidth - MARGIN_PT * 2) / embedR.width, (sheetHeight - MARGIN_PT * 2) / embedR.height);
+  const scaledWidthR = embedR.width * scaleR;
+  const scaledHeightR = embedR.height * scaleR;
+
+  sheet.drawPage(embedL, {
+    x: (halfWidth - scaledWidthL) / 2,
+    y: (sheetHeight - scaledHeightL) / 2,
+    width: scaledWidthL,
+    height: scaledHeightL,
+  });
+
+  sheet.drawPage(embedR, {
+    x: halfWidth + (halfWidth - scaledWidthR) / 2,
+    y: (sheetHeight - scaledHeightR) / 2,
+    width: scaledWidthR,
+    height: scaledHeightR,
+  });
+
+  // Guías de armado (solo si el usuario las activa): línea de doblez al
+  // centro, margen de seguridad (~5 mm) y marcas de corte por página.
+  if (showGuides) {
+    const guideColor = rgb(0.85, 0.1, 0.1);
+    const clampX = (x: number) => Math.max(0, Math.min(sheetWidth, x));
+    const clampY = (y: number) => Math.max(0, Math.min(sheetHeight, y));
+
+    sheet.drawLine({
+      start: { x: clampX(halfWidth), y: 0 },
+      end: { x: clampX(halfWidth), y: sheetHeight },
+      thickness: 0.5,
+      color: guideColor,
+      dashArray: [6, 4],
+    });
+
+    const safetyPt = 5 * 2.83465; // 5 mm en puntos PDF
+    const pageRects = [
+      { x: (halfWidth - scaledWidthL) / 2, y: (sheetHeight - scaledHeightL) / 2, w: scaledWidthL, h: scaledHeightL },
+      { x: halfWidth + (halfWidth - scaledWidthR) / 2, y: (sheetHeight - scaledHeightR) / 2, w: scaledWidthR, h: scaledHeightR },
+    ];
+
+    for (const rect of pageRects) {
+      sheet.drawRectangle({
+        x: rect.x + safetyPt,
+        y: rect.y + safetyPt,
+        width: Math.max(0, rect.w - safetyPt * 2),
+        height: Math.max(0, rect.h - safetyPt * 2),
+        borderColor: guideColor,
+        borderWidth: 0.5,
+        borderDashArray: [2, 2],
+      });
+
+      const tick = 12;
+      const corners = [
+        { x: rect.x, y: rect.y + rect.h },
+        { x: rect.x + rect.w, y: rect.y + rect.h },
+        { x: rect.x, y: rect.y },
+        { x: rect.x + rect.w, y: rect.y },
+      ];
+      for (const corner of corners) {
+        sheet.drawLine({
+          start: { x: clampX(corner.x - tick), y: corner.y },
+          end: { x: clampX(corner.x + tick), y: corner.y },
+          thickness: 0.5,
+          color: guideColor,
+        });
+        sheet.drawLine({
+          start: { x: corner.x, y: clampY(corner.y - tick) },
+          end: { x: corner.x, y: clampY(corner.y + tick) },
+          thickness: 0.5,
+          color: guideColor,
+        });
+      }
+    }
+  }
+}
+
 async function procesarComoImagenes(
   file: File | ArrayBuffer,
   mode: 'normal' | 'fotocopia' = 'normal',
@@ -437,6 +615,7 @@ async function procesarComoImagenes(
 ): Promise<PDFDocument> {
   const {
     exportMode = 'vector',
+    destination = 'A',
     hasCover = false,
     coverSide = 'derecha',
     refPdfPage = 0,
@@ -475,7 +654,8 @@ async function procesarComoImagenes(
     }
 
     let effectiveRefPdfPage = refPdfPage;
-    if (!hasCover && customCover && (customCover.type === 'upload' || customCover.type === 'template')) {
+    const embedCustomCoverInDoc = destination === 'A';
+    if (embedCustomCoverInDoc && !hasCover && customCover && (customCover.type === 'upload' || customCover.type === 'template')) {
       const coverCanvas = await crearCanvasTapaCustom(customCover, coverCanvasSize, 1, options.assetResolver);
       if (coverCanvas) {
         const coverImg = await newPdf.embedJpg(coverCanvas.toDataURL('image/jpeg', 0.92));
@@ -548,7 +728,8 @@ async function procesarComoImagenes(
   };
 
   let effectiveRefPdfPage = refPdfPage;
-  if (!hasCover && customCover && (customCover.type === 'upload' || customCover.type === 'template')) {
+  const embedCustomCoverInDoc = destination === 'A';
+  if (embedCustomCoverInDoc && !hasCover && customCover && (customCover.type === 'upload' || customCover.type === 'template')) {
     const coverCanvas = await crearCanvasTapaCustom(customCover, coverCanvasSize, 1, options.assetResolver);
     if (coverCanvas) {
       const coverImg = await newPdf.embedJpg(coverCanvas.toDataURL('image/jpeg', 0.92));
@@ -809,6 +990,7 @@ export async function processBookImposition(
     mode = 'normal',
     paperSize = 'A4',
     hasBackCover = false,
+    customCover = null,
     customBackCover = null,
     blankInFrontBackCover = true,
     exportMode = 'vector',
@@ -817,6 +999,7 @@ export async function processBookImposition(
     applyCreep = true,
     coverStyle,
     showGuides = false,
+    zipByBooklet = false,
     onProgress,
   } = options;
 
@@ -851,11 +1034,35 @@ export async function processBookImposition(
   }
 
   let backCoverCanvas: HTMLCanvasElement | null = null;
-  if (!hasBackCover && customBackCover && (customBackCover.type === 'upload' || customBackCover.type === 'template')) {
+
+  // Destinos de cubierta:
+  //  - 'A' (mismo papel que el documento): la cubierta viaja dentro del flujo de páginas.
+  //  - 'B' (archivo de cubierta separado) y 'C' (cubierta envolvente contratapa|lomo|tapa):
+  //    la cubierta NO entra en el interior; se arma aparte con buildWrapCoverCanvas.
+  // Si no hay cubierta personalizada (las tapas vienen del PDF original),
+  // no hay nada que separar: se conserva el comportamiento del destino 'A'.
+  const hasAnyCustomCover = Boolean(
+    (customCover && (customCover.type === 'upload' || customCover.type === 'template')) ||
+    (customBackCover && (customBackCover.type === 'upload' || customBackCover.type === 'template'))
+  );
+  const separateCover = destination !== 'A' && hasAnyCustomCover;
+  if (destination !== 'A' && !hasAnyCustomCover && onProgress) {
+    onProgress('Sin cubierta personalizada: la cubierta viaja dentro del archivo, como en destino A.', 9);
+  }
+
+  if (!separateCover && !hasBackCover && customBackCover && (customBackCover.type === 'upload' || customBackCover.type === 'template')) {
     backCoverCanvas = await crearCanvasContratapaCustom(customBackCover, coverCanvasSize, 1, options.assetResolver);
   }
 
-  if (hasBackCover && pagesDoc.getPageCount() > 1) {
+  if (separateCover) {
+    // El interior no lleva cubiertas: solo rellenar hasta múltiplo de 4.
+    const currentCount = pagesDoc.getPageCount();
+    const remainder = (4 - (currentCount % 4)) % 4;
+    for (let i = 0; i < remainder; i++) {
+      const blank = pagesDoc.addPage([coverCanvasSize.width, coverCanvasSize.height]);
+      blank.drawRectangle({ x: 0, y: 0, width: 0, height: 0 });
+    }
+  } else if (hasBackCover && pagesDoc.getPageCount() > 1) {
     const lastIdx = pagesDoc.getPageCount() - 1;
     const tempBCDoc = await PDFDocument.create();
     const [extractedBC] = await tempBCDoc.copyPages(pagesDoc, [lastIdx]);
@@ -900,116 +1107,87 @@ export async function processBookImposition(
     }
   }
 
-  const bookletDoc = await PDFDocument.create();
+  // ============================================================
+  // Salida: un solo PDF, un PDF por cuadernillo (ZIP) o cubierta aparte.
+  // ============================================================
   const totalPages = pagesDoc.getPageCount();
-  const totalHojasImpresas = totalPages / 2;
 
-  for (let i = 0; i < totalHojasImpresas; i++) {
-    if (onProgress) {
-      const avance = 60 + Math.floor((i / totalHojasImpresas) * 35);
-      onProgress(`Armando la hoja ${i + 1} de ${totalHojasImpresas}...`, avance);
-    }
-    if (i % 5 === 0) await new Promise((r) => setTimeout(r, 15));
+  // Modo ZIP por cuadernillo: solo modo normal con destino A y más de un cuadernillo.
+  const signaturePlan =
+    destination === 'A' && zipByBooklet && mode === 'normal'
+      ? planBookletSignatures(totalPages, 'multi-balanced', 4)
+      : null;
+  const multiBooklet = Boolean(signaturePlan && signaturePlan.signatures.length > 1);
 
-    const isFront = i % 2 === 0;
-    const leftIndex = isFront ? totalPages - 1 - i : i;
-    const rightIndex = isFront ? i : totalPages - 1 - i;
+  const bookletDoc = await PDFDocument.create();
+  let output: Uint8Array;
+  let outputIsZip = false;
 
-    const [leftPage] = await bookletDoc.copyPages(pagesDoc, [leftIndex]);
-    const [rightPage] = await bookletDoc.copyPages(pagesDoc, [rightIndex]);
-
-    const paperPageSize = PageSizes[paperSize] || PageSizes.A4;
-    const sheetWidth = paperPageSize[1];
-    const sheetHeight = paperPageSize[0];
-    const sheet = bookletDoc.addPage([sheetWidth, sheetHeight]);
-
-    const embedL = await bookletDoc.embedPage(leftPage);
-    const embedR = await bookletDoc.embedPage(rightPage);
-
-    const halfWidth = sheetWidth / 2;
-    const MARGIN_PT = 2.83465; // 1mm en puntos PDF
-
-    const scaleL = Math.min((halfWidth - MARGIN_PT * 2) / embedL.width, (sheetHeight - MARGIN_PT * 2) / embedL.height);
-    const scaledWidthL = embedL.width * scaleL;
-    const scaledHeightL = embedL.height * scaleL;
-
-    const scaleR = Math.min((halfWidth - MARGIN_PT * 2) / embedR.width, (sheetHeight - MARGIN_PT * 2) / embedR.height);
-    const scaledWidthR = embedR.width * scaleR;
-    const scaledHeightR = embedR.height * scaleR;
-
-    sheet.drawPage(embedL, {
-      x: (halfWidth - scaledWidthL) / 2,
-      y: (sheetHeight - scaledHeightL) / 2,
-      width: scaledWidthL,
-      height: scaledHeightL,
-    });
-
-    sheet.drawPage(embedR, {
-      x: halfWidth + (halfWidth - scaledWidthR) / 2,
-      y: (sheetHeight - scaledHeightR) / 2,
-      width: scaledWidthR,
-      height: scaledHeightR,
-    });
-
-    // Guías de armado (solo si el usuario las activa): línea de doblez al
-    // centro, margen de seguridad (~5 mm) y marcas de corte por página.
-    if (showGuides) {
-      const guideColor = rgb(0.85, 0.1, 0.1);
-      const clampX = (x: number) => Math.max(0, Math.min(sheetWidth, x));
-      const clampY = (y: number) => Math.max(0, Math.min(sheetHeight, y));
-
-      sheet.drawLine({
-        start: { x: clampX(halfWidth), y: 0 },
-        end: { x: clampX(halfWidth), y: sheetHeight },
-        thickness: 0.5,
-        color: guideColor,
-        dashArray: [6, 4],
-      });
-
-      const safetyPt = 5 * 2.83465; // 5 mm en puntos PDF
-      const pageRects = [
-        { x: (halfWidth - scaledWidthL) / 2, y: (sheetHeight - scaledHeightL) / 2, w: scaledWidthL, h: scaledHeightL },
-        { x: halfWidth + (halfWidth - scaledWidthR) / 2, y: (sheetHeight - scaledHeightR) / 2, w: scaledWidthR, h: scaledHeightR },
-      ];
-
-      for (const rect of pageRects) {
-        sheet.drawRectangle({
-          x: rect.x + safetyPt,
-          y: rect.y + safetyPt,
-          width: Math.max(0, rect.w - safetyPt * 2),
-          height: Math.max(0, rect.h - safetyPt * 2),
-          borderColor: guideColor,
-          borderWidth: 0.5,
-          borderDashArray: [2, 2],
-        });
-
-        const tick = 12;
-        const corners = [
-          { x: rect.x, y: rect.y + rect.h },
-          { x: rect.x + rect.w, y: rect.y + rect.h },
-          { x: rect.x, y: rect.y },
-          { x: rect.x + rect.w, y: rect.y },
-        ];
-        for (const corner of corners) {
-          sheet.drawLine({
-            start: { x: clampX(corner.x - tick), y: corner.y },
-            end: { x: clampX(corner.x + tick), y: corner.y },
-            thickness: 0.5,
-            color: guideColor,
-          });
-          sheet.drawLine({
-            start: { x: corner.x, y: clampY(corner.y - tick) },
-            end: { x: corner.x, y: clampY(corner.y + tick) },
-            thickness: 0.5,
-            color: guideColor,
-          });
-        }
+  if (multiBooklet && signaturePlan) {
+    const { default: JSZip } = await import('jszip');
+    const zip = new JSZip();
+    let offset = 0;
+    let sigNumber = 0;
+    for (const sigLength of signaturePlan.signatures) {
+      sigNumber += 1;
+      if (onProgress) {
+        onProgress(`Armando cuadernillo ${sigNumber} de ${signaturePlan.signatures.length}...`, 60 + Math.round((sigNumber / signaturePlan.signatures.length) * 35));
       }
+      const sigDoc = await PDFDocument.create();
+      for (const [leftIndex, rightIndex] of getSignatureSheetPairs(sigLength, offset)) {
+        await drawBookletSheet(sigDoc, pagesDoc, leftIndex, rightIndex, paperSize, showGuides);
+      }
+      zip.file(`cuadernillo_${sigNumber}.pdf`, await sigDoc.save());
+      offset += sigLength;
+    }
+    output = await zip.generateAsync({ type: 'uint8array' });
+    outputIsZip = true;
+  } else {
+    const pairs = getSignatureSheetPairs(totalPages, 0);
+    for (const [i, [leftIndex, rightIndex]] of pairs.entries()) {
+      if (onProgress) {
+        const avance = 60 + Math.floor((i / pairs.length) * 35);
+        onProgress(`Armando la hoja ${i + 1} de ${pairs.length}...`, avance);
+      }
+      if (i % 5 === 0) await new Promise((r) => setTimeout(r, 15));
+
+      await drawBookletSheet(bookletDoc, pagesDoc, leftIndex, rightIndex, paperSize, showGuides);
+    }
+    output = await bookletDoc.save();
+  }
+
+  // ============================================================
+  // Cubierta envolvente (destinos B y C)
+  // ============================================================
+  let finalBytes: Uint8Array = output;
+  if (separateCover) {
+    if (onProgress) onProgress('Armando la cubierta envolvente (contratapa | lomo | tapa)...', 95);
+    const wrapCanvas = await buildWrapCoverCanvas(customCover, customBackCover, coverCanvasSize, spineWidthMm, paperSize, coverStyle, options.assetResolver);
+    const coverDoc = await PDFDocument.create();
+    const coverImg = await coverDoc.embedJpg(wrapCanvas.toDataURL('image/jpeg', 0.92));
+    const coverPage = coverDoc.addPage([wrapCanvas.width, wrapCanvas.height]);
+    coverPage.drawImage(coverImg, { x: 0, y: 0, width: wrapCanvas.width, height: wrapCanvas.height });
+    const coverBytes = await coverDoc.save();
+    wrapCanvas.width = 0;
+    wrapCanvas.height = 0;
+
+    if (destination === 'C') {
+      // La hoja envolvente cierra el mismo PDF (contratapa | lomo | tapa).
+      const [wrapPage] = await bookletDoc.copyPages(coverDoc, [0]);
+      bookletDoc.addPage(wrapPage);
+      finalBytes = await bookletDoc.save();
+    } else {
+      // Destino 'B': ZIP con el interior y la cubierta como archivo aparte.
+      const { default: JSZip } = await import('jszip');
+      const zip = new JSZip();
+      zip.file('libro_interior.pdf', output);
+      zip.file('cubierta_envolvente.pdf', coverBytes);
+      finalBytes = await zip.generateAsync({ type: 'uint8array' });
+      outputIsZip = true;
     }
   }
 
   if (onProgress) onProgress('Finalizando documento...', 98);
-  const pdfBytes = await bookletDoc.save();
-  if (onProgress) onProgress('¡Completado!', 100);
-  return pdfBytes;
+  if (onProgress) onProgress(outputIsZip ? '¡Completado! (archivo ZIP)' : '¡Completado!', 100);
+  return finalBytes;
 }

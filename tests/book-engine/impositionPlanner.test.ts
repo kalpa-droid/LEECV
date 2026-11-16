@@ -4,6 +4,7 @@ import {
   countBlanksForPadding,
   isBlankPageNumber,
   planBookletSignatures,
+  getSignatureSheetPairs,
   getQuarterSheet,
   getOctavoSheet,
   cutAndStackPlan,
@@ -218,5 +219,38 @@ describe('checkHomePrinterMargins', () => {
       unprintableMarginMm: 6,
     });
     expect(result.fits).toBe(false);
+  });
+});
+
+describe('getSignatureSheetPairs', () => {
+  it('cuadernillo de 8 páginas: empareja como lo haría un cuadernillo real', () => {
+    expect(getSignatureSheetPairs(8, 0)).toEqual([
+      [7, 0],
+      [1, 6],
+      [5, 2],
+      [3, 4],
+    ]);
+  });
+
+  it('respeta el offset global del cuadernillo siguiente', () => {
+    expect(getSignatureSheetPairs(8, 8)).toEqual([
+      [15, 8],
+      [9, 14],
+      [13, 10],
+      [11, 12],
+    ]);
+  });
+
+  it('cuadernillo de 4 páginas: una sola hoja, frente y dorso', () => {
+    expect(getSignatureSheetPairs(4, 0)).toEqual([
+      [3, 0],
+      [1, 2],
+    ]);
+  });
+
+  it('entrada inválida (no múltiplo de 4) devuelve vacío', () => {
+    expect(getSignatureSheetPairs(6, 0)).toEqual([]);
+    expect(getSignatureSheetPairs(0, 0)).toEqual([]);
+    expect(getSignatureSheetPairs(NaN, 0)).toEqual([]);
   });
 });
