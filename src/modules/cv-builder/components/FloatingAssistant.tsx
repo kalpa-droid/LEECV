@@ -234,17 +234,17 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab,
             </header>
 
             <div className="flex border-b border-[var(--ui-border)]" role="tablist">
-              <button type="button" role="tab" aria-label="Tips" title="Tips" aria-selected={view === 'tips'} onClick={() => setView('tips')} className={`flex flex-1 items-center justify-center px-3 py-2 cursor-pointer ${view === 'tips' ? 'bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)]' : 'text-[var(--ui-text-secondary)] hover:bg-[var(--ui-bg-hover)]'}`}>
+              <button type="button" role="tab" aria-label="Tips" title="Tips" aria-selected={view === 'tips'} onClick={() => setView('tips')} className={`flex h-9 flex-1 items-center justify-center px-3 cursor-pointer ${view === 'tips' ? 'bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)]' : 'text-[var(--ui-text-secondary)] hover:bg-[var(--ui-bg-hover)]'}`}>
                 <Lightbulb className="h-4 w-4" />
               </button>
-              <button type="button" role="tab" aria-label="Preguntar" title="Preguntar" aria-selected={view === 'chat'} onClick={() => setView('chat')} className={`flex flex-1 items-center justify-center px-3 py-2 cursor-pointer ${view === 'chat' ? 'bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)]' : 'text-[var(--ui-text-secondary)] hover:bg-[var(--ui-bg-hover)]'}`}>
+              <button type="button" role="tab" aria-label="Preguntar" title="Preguntar" aria-selected={view === 'chat'} onClick={() => setView('chat')} className={`flex h-9 flex-1 items-center justify-center px-3 cursor-pointer ${view === 'chat' ? 'bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)]' : 'text-[var(--ui-text-secondary)] hover:bg-[var(--ui-bg-hover)]'}`}>
                 <MessageCircleQuestion className="h-4 w-4" />
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-3 text-[12px] leading-relaxed">
               {view === 'tips' ? (
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {currentTip ? (
                     <div className="space-y-1.5 rounded-[var(--ui-radius-card)] border border-[var(--color-accent-base)]/30 bg-[var(--color-accent-muted)] p-3">
                       <div className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-[var(--color-accent-text)]">
@@ -264,9 +264,14 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab,
                       </div>
                     </div>
                   ) : (
-                    <p className="text-[var(--ui-text-secondary)]">
-                      Sin tips nuevos por ahora. Vuelvo a avisar si hay algo útil mientras trabajás.
-                    </p>
+                    <div className="space-y-2 rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] p-3">
+                      <p className="text-[12px] font-bold text-[var(--ui-text-primary)]">Estás al día</p>
+                      <p className="text-[11px] text-[var(--ui-text-secondary)]">Vuelvo a avisar solo si hay algo útil. Mientras tanto:</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        <button type="button" onClick={() => setShowAllTips(true)} className={`${button.secondary} cursor-pointer px-2 py-1 text-[11px]`}>Ver todos los tips</button>
+                        <button type="button" onClick={() => setView('chat')} className={`${button.ghost} cursor-pointer px-2 py-1 text-[11px]`}>Preguntarle a Lidio</button>
+                      </div>
+                    </div>
                   )}
 
                   <button type="button" onClick={() => setShowAllTips((s) => !s)} aria-label={`${showAllTips ? 'Ocultar' : 'Ver'} todos los tips`} title={`${showAllTips ? 'Ocultar' : 'Ver'} todos los tips`} className="flex cursor-pointer items-center gap-1.5 rounded-[10px] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] px-2.5 py-1.5 text-[11px] font-bold text-[var(--color-accent-text)] hover:bg-[var(--ui-bg-hover)]">
