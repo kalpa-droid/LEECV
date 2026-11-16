@@ -93,6 +93,16 @@ export interface BookImpositionOptions {
    * Solo aplica en modo 'normal' y cuando el libro tiene más de un cuadernillo.
    */
   zipByBooklet?: boolean;
+  /**
+   * Dirección de lectura del libro: 'ltr' (español, inglés) o 'rtl' (árabe, hebreo).
+   * RTL espeja el emparejamiento de páginas de cada hoja.
+   */
+  readingDirection?: 'ltr' | 'rtl';
+  /**
+   * Perfil de impresora casera: margen no imprimible en mm (por defecto 5).
+   * 0 = la impresora llega hasta el borde (como una imprenta).
+   */
+  unprintableMarginMm?: number;
   deletedPages?: (number | string)[];
   pageOrder?: (number | string)[];
   blankBehindCover?: boolean;
@@ -125,6 +135,8 @@ export const DEFAULT_BOOK_IMPOSITION_OPTIONS: BookImpositionOptions = {
   coverStyle: 'monica-classic',
   showGuides: false,
   zipByBooklet: false,
+  readingDirection: 'ltr',
+  unprintableMarginMm: 5,
 };
 
 export function getCoverCanvasSize(paperSize: 'A4' | 'A3' = 'A4'): { width: number; height: number } {
@@ -512,7 +524,8 @@ async function drawBookletSheet(
   leftIndex: number,
   rightIndex: number,
   paperSize: 'A4' | 'A3',
-  showGuides: boolean
+  showGuides: boolean,
+  unprintableMarginMm = 5
 ): Promise<void> {
   const [leftPage] = await bookletDoc.copyPages(pagesDoc, [leftIndex]);
   const [rightPage] = await bookletDoc.copyPages(pagesDoc, [rightIndex]);
@@ -527,12 +540,15 @@ async function drawBookletSheet(
 
   const halfWidth = sheetWidth / 2;
   const MARGIN_PT = 2.83465; // 1mm en puntos PDF
+  // Perfil impresora casera: el contenido nunca entra en el borde no imprimible.
+  // 0 mm = imprime hasta el borde (imprenta).
+  const effectiveMarginPt = Math.max(MARGIN_PT, unprintableMarginMm * 2.83465);
 
-  const scaleL = Math.min((halfWidth - MARGIN_PT * 2) / embedL.width, (sheetHeight - MARGIN_PT * 2) / embedL.height);
+  const scaleL = Math.min((halfWidth - effectiveMarginPt * 2) / embedL.width, (sheetHeight - effectiveMarginPt * 2) / embedL.height);
   const scaledWidthL = embedL.width * scaleL;
   const scaledHeightL = embedL.height * scaleL;
 
-  const scaleR = Math.min((halfWidth - MARGIN_PT * 2) / embedR.width, (sheetHeight - MARGIN_PT * 2) / embedR.height);
+  const scaleR = Math.min((halfWidth - effectiveMarginPt * 2) / embedR.width, (sheetHeight - effectiveMarginPt * 2) / embedR.height);
   const scaledWidthR = embedR.width * scaleR;
   const scaledHeightR = embedR.height * scaleR;
 
@@ -1000,6 +1016,8 @@ export async function processBookImposition(
     coverStyle,
     showGuides = false,
     zipByBooklet = false,
+    readingDirection = 'ltr',
+    unprintableMarginMm = 5,
     onProgress,
   } = options;
 
@@ -1134,8 +1152,8 @@ export async function processBookImposition(
         onProgress(`Armando cuadernillo ${sigNumber} de ${signaturePlan.signatures.length}...`, 60 + Math.round((sigNumber / signaturePlan.signatures.length) * 35));
       }
       const sigDoc = await PDFDocument.create();
-      for (const [leftIndex, rightIndex] of getSignatureSheetPairs(sigLength, offset)) {
-        await drawBookletSheet(sigDoc, pagesDoc, leftIndex, rightIndex, paperSize, showGuides);
+      for (const [leftIndex, rightIndex] of getSignatureSheetPairs(sigLength, offset, readingDirection)) {
+        await drawBookletSheet(sigDoc, pagesDoc, leftIndex, rightIndex, paperSize, showGuides, unprintableMarginMm);
       }
       zip.file(`cuadernillo_${sigNumber}.pdf`, await sigDoc.save());
       offset += sigLength;
@@ -1143,7 +1161,7 @@ export async function processBookImposition(
     output = await zip.generateAsync({ type: 'uint8array' });
     outputIsZip = true;
   } else {
-    const pairs = getSignatureSheetPairs(totalPages, 0);
+    const pairs = getSignatureSheetPairs(totalPages, 0, readingDirection);
     for (const [i, [leftIndex, rightIndex]] of pairs.entries()) {
       if (onProgress) {
         const avance = 60 + Math.floor((i / pairs.length) * 35);
@@ -1151,7 +1169,7 @@ export async function processBookImposition(
       }
       if (i % 5 === 0) await new Promise((r) => setTimeout(r, 15));
 
-      await drawBookletSheet(bookletDoc, pagesDoc, leftIndex, rightIndex, paperSize, showGuides);
+      await drawBookletSheet(bookletDoc, pagesDoc, leftIndex, rightIndex, paperSize, showGuides, unprintableMarginMm);
     }
     output = await bookletDoc.save();
   }

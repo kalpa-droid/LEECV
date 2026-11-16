@@ -93,4 +93,34 @@ describe('processBookImposition — integración headless (camino vectorial)', (
     const pdfWith = await PDFDocument.load(withGuides);
     expect(pdfWith.getPageCount()).toBe(pdfWithout.getPageCount());
   }, 30000);
+
+  it('RTL arma el mismo número de hojas (dirección solo espeja el emparejamiento)', async () => {
+    const src = await makePdf(8);
+    const out = await processBookImposition(toArrayBuffer(src), {
+      ...DEFAULT_BOOK_IMPOSITION_OPTIONS,
+      exportMode: 'vector',
+      blankInFrontBackCover: false,
+      readingDirection: 'rtl',
+    });
+
+    expect(isPdf(out)).toBe(true);
+    const loaded = await PDFDocument.load(out);
+    expect(loaded.getPageCount()).toBe(4);
+  }, 30000);
+
+  it('unprintableMarginMm 0 (hasta el borde) y 5 mm producen la misma cantidad de hojas', async () => {
+    const src = await makePdf(8);
+    const base = {
+      ...DEFAULT_BOOK_IMPOSITION_OPTIONS,
+      exportMode: 'vector' as const,
+      blankInFrontBackCover: false,
+    };
+
+    const edge = await processBookImposition(toArrayBuffer(src), { ...base, unprintableMarginMm: 0 });
+    const home = await processBookImposition(toArrayBuffer(src), { ...base, unprintableMarginMm: 5 });
+
+    const pdfEdge = await PDFDocument.load(edge);
+    const pdfHome = await PDFDocument.load(home);
+    expect(pdfHome.getPageCount()).toBe(pdfEdge.getPageCount());
+  }, 30000);
 });

@@ -18,9 +18,10 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({ options,
   const coverStyle = options.coverStyle || 'monica-classic';
   const showGuides = options.showGuides ?? false;
   const zipByBooklet = options.zipByBooklet ?? false;
+  const readingDirection = options.readingDirection ?? 'ltr';
 
   return (
-    <div className="flex flex-col gap-6 p-4">
+    <div dir={readingDirection === 'rtl' ? 'rtl' : 'ltr'} className="flex flex-col gap-6 p-4">
       <h2 className="text-xl font-bold flex items-center gap-2">
         <BookOpen className="w-6 h-6" />
         <span>6. Armado y Guías</span>
@@ -133,6 +134,21 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({ options,
           <span className={typeScale.fieldLabel}>Un archivo en ZIP, uno por cada cuadernillo</span>
           <p className="text-xs text-[var(--ui-text-secondary)]">
             Si el libro es largo y se arma en varias partes (cuadernillos), en lugar de un solo PDF se genera un ZIP con un PDF por cada parte. Solo aplica al modo normal con destino A.
+          </p>
+        </label>
+
+        <label className="block">
+          <span className={typeScale.fieldLabel}>Dirección de lectura del libro</span>
+          <select
+            value={readingDirection}
+            onChange={(e) => setOptions((prev) => ({ ...prev, readingDirection: e.target.value as 'ltr' | 'rtl' }))}
+            className={`${input.base} mt-2`}
+          >
+            <option value="ltr">De izquierda a derecha (español, inglés)</option>
+            <option value="rtl">De derecha a izquierda (árabe, hebreo)</option>
+          </select>
+          <p className="mt-1 text-xs text-[var(--ui-text-secondary)]">
+            Si el texto se lee de derecha a izquierda, las páginas se emparejan al revés para que el libro salga bien armado.
           </p>
         </label>
 

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { BookOpen, CheckCircle2, AlertTriangle, Printer, Sparkles, Download, AlertCircle, ChevronLeft } from 'lucide-react';
+import { BookOpen, CheckCircle2, AlertTriangle, Printer, Sparkles, Download, AlertCircle, ChevronLeft, FileText, Layers, Languages } from 'lucide-react';
 import { BookImpositionOptions, processBookImposition } from '../../shared/core/book-engine/impositionEngine';
 import { calculateFinalBookPageCount } from '../../shared/core/book-engine/bookPageCount';
+import { calculateSpineWidth, calculateCreepOffset, planBookletSignatures } from '../../shared/core/book-engine/impositionPlanner';
 import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 
@@ -15,6 +16,8 @@ interface BookPreviewExportStepProps {
   onPrevStep?: () => void;
   /** Resuelve refs de assets locales ('asset:...') a URLs cargables por Canvas. */
   assetResolver?: (ref: string) => Promise<string | null>;
+  /** Necesario para editar el perfil de impresora casera desde este paso. */
+  setOptions?: React.Dispatch<React.SetStateAction<BookImpositionOptions>>;
 }
 
 export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
@@ -23,6 +26,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   pdfPageCount,
   onPrevStep,
   assetResolver,
+  setOptions,
 }) => {
   const t = useText();
   const { consumeCreditIfNeeded, loading: isGating } = useExportEntitlement();
@@ -60,6 +64,41 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   );
 
   const totalSheetsToPrint = finalPageCount / 2;
+
+  // Resumen pre-impresión: derivaciones en texto sencillo (zonas técnicas entre paréntesis).
+  const readingDirection = options.readingDirection ?? 'ltr';
+  const unprintableMarginMm = options.unprintableMarginMm ?? 5;
+  const homePrinter = unprintableMarginMm > 0;
+  const isA3 = options.paperSize === 'A3';
+  const isNormalMode = options.mode !== 'fotocopia';
+  const spineWidthMm = calculateSpineWidth(finalPageCount, { paperThicknessMm: options.paperThicknessMm ?? 0 });
+  const sheetsInSignature = Math.max(1, Math.floor(finalPageCount / 4));
+  const creepMaxMm = options.applyCreep !== false
+    ? calculateCreepOffset(0, sheetsInSignature, options.paperThicknessMm ?? 0)
+    : 0;
+  const zipPlan =
+    options.zipByBooklet && (options.destination ?? 'A') === 'A' && isNormalMode
+      ? planBookletSignatures(finalPageCount, 'multi-balanced', 4)
+      : null;
+  const multiSigs = zipPlan && zipPlan.signatures.length > 1 ? zipPlan.signatures : null;
+  const destinationLabel =
+    (options.destination ?? 'A') === 'A'
+      ? 'A: la cubierta va dentro del mismo archivo'
+      : (options.destination ?? 'A') === 'B'
+        ? 'B: la cubierta en un archivo aparte'
+        : 'C: cubierta continua con lomo (contratapa|lomo|tapa)';
+
+  const handleDownloadOriginal = () => {
+    if (!selectedFile) return;
+    const url = URL.createObjectURL(selectedFile);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = selectedFile.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const handleStartExport = async () => {
     const allowed = await consumeCreditIfNeeded();
@@ -110,7 +149,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   };
 
   return (
-    <div className="space-y-6 text-[var(--ui-text-primary)]">
+    <div dir={readingDirection === 'rtl' ? 'rtl' : 'ltr'} className="space-y-6 text-[var(--ui-text-primary)]">
       <div className="space-y-1">
         <h2 className="text-xl font-bold tracking-tight text-[var(--ui-text-primary)] flex items-center gap-2">
           <Printer className="w-5 h-5 text-[var(--color-accent-text)]" />
@@ -182,6 +221,70 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
           </div>
         </div>
 
+        {/* Resumen de armado (antes de descargar) */}
+        <div className="space-y-1.5 pt-2 border-t border-[var(--ui-border)] text-xs">
+          <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
+            <Languages className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] shrink-0" />
+            <span>Dirección de lectura: <strong>{readingDirection === 'rtl' ? 'De derecha a izquierda' : 'De izquierda a derecha'}</strong></span>
+          </div>
+          <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
+            <FileText className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] shrink-0" />
+            <span>Destino de la cubierta: <strong>{destinationLabel}</strong></span>
+          </div>
+          <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
+            <CheckCircle2 className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] shrink-0" />
+            <span>Lomo: <strong>{spineWidthMm.toFixed(1)} mm{spineWidthMm === 0 ? ' (sin grosor, para anillado o guillotina)' : ''}</strong></span>
+          </div>
+          <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
+            <CheckCircle2 className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] shrink-0" />
+            <span>Compensación para las hojas de adentro (creep): <strong>{creepMaxMm > 0 ? `hasta ${creepMaxMm.toFixed(1)} mm` : 'no aplica'}</strong></span>
+          </div>
+          <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
+            <CheckCircle2 className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] shrink-0" />
+            <span>Guías de armado: <strong>{options.showGuides ? 'sí' : 'no'}</strong></span>
+          </div>
+          {multiSigs && (
+            <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
+              <Layers className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] shrink-0" />
+              <span>Se baja un ZIP con <strong>{multiSigs.length} partes (cuadernillos)</strong>: {multiSigs.join(' + ')} páginas</span>
+            </div>
+          )}
+        </div>
+
+        {/* Perfil de impresora casera (aplicable solo al papel grande de casa: A4) */}
+        {!isA3 && setOptions && (
+          <div className="space-y-2 pt-2 border-t border-[var(--ui-border)]">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={homePrinter}
+                onChange={(e) => setOptions((prev) => ({ ...prev, unprintableMarginMm: e.target.checked ? 5 : 0 }))}
+                className="h-4 w-4 accent-[var(--color-accent-base)]"
+              />
+              <span className="text-xs font-bold text-[var(--ui-text-primary)]">Mi impresora de casa no imprime hasta el borde</span>
+            </label>
+            {homePrinter && (
+              <label className="flex flex-wrap items-center gap-2 text-xs text-[var(--ui-text-secondary)]">
+                <span>Margen mínimo que respeta tu impresora (mm):</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={10}
+                  step={0.5}
+                  value={unprintableMarginMm}
+                  onChange={(e) => setOptions((prev) => ({ ...prev, unprintableMarginMm: Number(e.target.value) || 5 }))}
+                  className="w-20 px-2 py-1 rounded-[var(--radius-control,8px)] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)]"
+                />
+              </label>
+            )}
+            <p className="text-[11px] text-[var(--ui-text-secondary)]">
+              {homePrinter
+                ? `El contenido se achica para no usar los ${unprintableMarginMm} mm del borde y que no se corte nada.`
+                : 'La impresora llega hasta el borde (perfil de imprenta o de borde a borde).'}
+            </p>
+          </div>
+        )}
+
         {/* Aviso de Imprenta */}
         <div className={`p-3 bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/30 rounded-[${radius.control}] flex items-start gap-2 text-xs text-[var(--color-status-warning-text)]`}>
           <AlertTriangle className="w-4 h-4 text-[var(--color-status-warning-text)] shrink-0 mt-0.5" />
@@ -233,6 +336,17 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
             <span>{isGating ? 'Verificando créditos...' : `Descargar para imprimir (${totalSheetsToPrint} hojas)`}</span>
             <Sparkles className="w-4 h-4" />
           </button>
+
+          {isNormalMode && (
+            <button
+              type="button"
+              onClick={handleDownloadOriginal}
+              className={`w-full py-2.5 px-4 rounded-[${radius.control}] text-xs font-bold border border-[var(--ui-border)] text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-card)] transition flex items-center justify-center gap-2`}
+            >
+              <Download className="w-4 h-4" />
+              <span>Descargar el PDF original (tal cual lo subiste)</span>
+            </button>
+          )}
 
           {pdfBlobUrl && (
             <div className="flex gap-2">

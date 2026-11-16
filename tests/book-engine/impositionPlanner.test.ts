@@ -254,3 +254,27 @@ describe('getSignatureSheetPairs', () => {
     expect(getSignatureSheetPairs(NaN, 0)).toEqual([]);
   });
 });
+
+describe('getSignatureSheetPairs — dirección de lectura', () => {
+  it('RTL espeja los pares de cada hoja (la primera página a la izquierda)', () => {
+    expect(getSignatureSheetPairs(8, 0, 'rtl')).toEqual([
+      [0, 7],
+      [6, 1],
+      [2, 5],
+      [4, 3],
+    ]);
+  });
+
+  it('LTR explícito es idéntico al comportamiento por defecto', () => {
+    expect(getSignatureSheetPairs(8, 0, 'ltr')).toEqual(getSignatureSheetPairs(8, 0));
+  });
+
+  it('RTL también respeta el offset global del cuadernillo siguiente', () => {
+    expect(getSignatureSheetPairs(8, 8, 'rtl')).toEqual([
+      [8, 15],
+      [14, 9],
+      [10, 13],
+      [12, 11],
+    ]);
+  });
+});

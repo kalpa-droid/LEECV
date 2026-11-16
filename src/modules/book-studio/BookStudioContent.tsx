@@ -373,6 +373,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               pdfPageCount={pdfPageCount}
               onPrevStep={() => handleNavigatePrevStep('book_preview_export')}
               assetResolver={(ref) => bookAssetManager.getBlobUrl(ref)}
+              setOptions={handleOptionsChange}
             />
           )}
         </div>

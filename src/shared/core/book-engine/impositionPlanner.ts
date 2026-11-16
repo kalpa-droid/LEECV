@@ -86,8 +86,13 @@ export function planBookletSignatures(
  * Devuelve un par [izquierda, derecha] por hoja, con índice global (0-based).
  * @param signatureLength Páginas del cuadernillo (múltiplo de 4).
  * @param offset Índice global donde arranca el cuadernillo.
+ * @param readingDirection En 'rtl' se espeja cada par para que el libro se lea de derecha a izquierda.
  */
-export function getSignatureSheetPairs(signatureLength: number, offset = 0): Array<[number, number]> {
+export function getSignatureSheetPairs(
+  signatureLength: number,
+  offset = 0,
+  readingDirection: 'ltr' | 'rtl' = 'ltr'
+): Array<[number, number]> {
   if (!Number.isFinite(signatureLength) || signatureLength <= 0 || signatureLength % 4 !== 0) {
     return [];
   }
@@ -96,7 +101,7 @@ export function getSignatureSheetPairs(signatureLength: number, offset = 0): Arr
     const isFront = i % 2 === 0;
     const left = isFront ? offset + signatureLength - 1 - i : offset + i;
     const right = isFront ? offset + i : offset + signatureLength - 1 - i;
-    pairs.push([left, right]);
+    pairs.push(readingDirection === 'rtl' ? [right, left] : [left, right]);
   }
   return pairs;
 }
