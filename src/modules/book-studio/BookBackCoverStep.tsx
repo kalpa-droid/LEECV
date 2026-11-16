@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { BookMarked, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BookMarked, ChevronLeft, ChevronRight, Palette, Check } from 'lucide-react';
 import { BookImpositionOptions, BackCoverConfig } from '../../shared/core/book-engine/impositionEngine';
+import { COVER_PRESETS } from '../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
 import { bookAssetManager } from '../../shared/core/book-engine/bookAssetManager';
 import { radius, typeScale, button, selectableCard, input } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
@@ -176,20 +177,99 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
           )}
 
           {(backCoverData.imageUri || thumbUri) && (
-            <div className={`relative w-full aspect-[1/1.4] max-w-[200px] mx-auto rounded-[${radius.control}] overflow-hidden border border-[var(--ui-border)] shadow-[var(--shadow-raised)]`}>
-              <img src={(backCoverData.imageUri || thumbUri) as string} alt="Vista previa contratapa subida" className="w-full h-full object-cover" />
+            <div className="space-y-4">
+              <div className={`relative w-full aspect-[1/1.41] max-w-[200px] mx-auto rounded-[${radius.control}] overflow-hidden border border-[var(--ui-border)] shadow-[var(--shadow-raised)] bg-[var(--ui-bg-hover)]`}>
+                <img
+                  src={(backCoverData.imageUri || thumbUri) as string}
+                  alt="Vista previa contratapa subida"
+                  className={`w-full h-full ${
+                    backCoverData.imageFit === 'stretch' ? '' :
+                    backCoverData.imageFit === 'fit' ? 'object-contain' : 'object-cover'
+                  }`}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className={typeScale.fieldLabel}>Opciones de Ajuste de Imagen</label>
+                <div className="flex flex-col gap-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="backCoverImageFit"
+                      value="crop"
+                      checked={!backCoverData.imageFit || backCoverData.imageFit === 'crop'}
+                      onChange={() => updateBackCoverField('imageFit', 'crop')}
+                      className="accent-[var(--color-accent-base)]"
+                    />
+                    <span className="text-xs">Recortar para llenar (Cover)</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="backCoverImageFit"
+                      value="fit"
+                      checked={backCoverData.imageFit === 'fit'}
+                      onChange={() => updateBackCoverField('imageFit', 'fit')}
+                      className="accent-[var(--color-accent-base)]"
+                    />
+                    <span className="text-xs">Ajustar sin deformar (Contain)</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="backCoverImageFit"
+                      value="stretch"
+                      checked={backCoverData.imageFit === 'stretch'}
+                      onChange={() => updateBackCoverField('imageFit', 'stretch')}
+                      className="accent-[var(--color-accent-base)]"
+                    />
+                    <span className="text-xs">Estirar para llenar (Deformar)</span>
+                  </label>
+                </div>
+              </div>
             </div>
           )}
         </div>
       )}
 
       {backCoverType === 'custom' && (
-        <div className={`space-y-4 p-4 rounded-[${radius.card}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)]`}>
-          <p className="text-xs text-[var(--ui-text-secondary)]">
-            La contratapa hereda automáticamente el preset visual elegido en la tapa para mantener la coherencia de diseño.
-          </p>
+        <div className={`space-y-5 p-4 rounded-[${radius.card}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)]`}>
+          {/* Selector de Presets de Portada (mismo catálogo del CV y de la tapa) */}
+          <div className="space-y-2">
+            <label className={`${typeScale.fieldLabel} flex items-center gap-1.5`}>
+              <Palette className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
+              Estilo Visual de Contratapa (Catálogo de Portadas)
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {COVER_PRESETS.map((preset) => {
+                const isSelected = (backCoverData.coverStyle || 'monica-classic') === preset.id;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => updateBackCoverField('coverStyle', preset.id)}
+                    className={`${selectableCard.base} ${
+                      isSelected ? selectableCard.selected : selectableCard.unselected
+                    } flex items-center justify-between p-2.5 text-xs`}
+                  >
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <div
+                        className="w-4 h-4 rounded-full border border-black/20 shrink-0"
+                        style={{ backgroundColor: preset.badgeBg }}
+                      />
+                      <span className="truncate font-medium">{preset.name}</span>
+                    </div>
+                    {isSelected && <Check className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-[var(--ui-text-secondary)]">
+              Si no elegís uno, la contratapa hereda el estilo de la tapa para mantener la coherencia de diseño.
+            </p>
+          </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 pt-2">
             <div>
               <label className={typeScale.fieldLabel}>Sinopsis / Texto de Contratapa</label>
               <textarea
@@ -198,6 +278,17 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
                 onChange={(e) => updateBackCoverField('synopsis', e.target.value)}
                 placeholder="Breve reseña del contenido o dedicatoria..."
                 className={`${input.base} ${input.focus} resize-none`}
+              />
+            </div>
+
+            <div>
+              <label className={typeScale.fieldLabel}>Editorial / Edición (opcional)</label>
+              <input
+                type="text"
+                value={backCoverData.publisher || ''}
+                onChange={(e) => updateBackCoverField('publisher', e.target.value)}
+                placeholder="Ej. Ediciones Kalpagráfica"
+                className={`${input.base} ${input.focus}`}
               />
             </div>
 

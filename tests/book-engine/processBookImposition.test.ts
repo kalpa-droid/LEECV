@@ -94,6 +94,34 @@ describe('processBookImposition — integración headless (camino vectorial)', (
     expect(pdfWith.getPageCount()).toBe(pdfWithout.getPageCount());
   }, 30000);
 
+  it('sin tapa ni contratapa configuradas NO inyecta hoja en blanco fantasma (retiro)', async () => {
+    const src = await makePdf(8);
+    const out = await processBookImposition(toArrayBuffer(src), {
+      ...DEFAULT_BOOK_IMPOSITION_OPTIONS,
+      exportMode: 'vector',
+      // blankInFrontBackCover viene true por defecto — sin contratapa debe ignorarse.
+    });
+
+    expect(isPdf(out)).toBe(true);
+    const loaded = await PDFDocument.load(out);
+    expect(loaded.getPageCount()).toBe(4);
+  }, 30000);
+
+  it('con contratapa del PDF, el retiro delante sí se inyecta y el total cuadra', async () => {
+    const src = await makePdf(8);
+    const out = await processBookImposition(toArrayBuffer(src), {
+      ...DEFAULT_BOOK_IMPOSITION_OPTIONS,
+      exportMode: 'vector',
+      hasBackCover: true,
+      blankInFrontBackCover: true,
+    });
+
+    expect(isPdf(out)).toBe(true);
+    const loaded = await PDFDocument.load(out);
+    // 8 páginas: retira la última, +retiro, relleno a múltiplo de 4, re-coloca la contratapa → 12 hojas interiores → 6 hojas armadas.
+    expect(loaded.getPageCount()).toBe(6);
+  }, 30000);
+
   it('RTL arma el mismo número de hojas (dirección solo espeja el emparejamiento)', async () => {
     const src = await makePdf(8);
     const out = await processBookImposition(toArrayBuffer(src), {

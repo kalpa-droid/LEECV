@@ -1120,7 +1120,12 @@ export async function processBookImposition(
     const [bcBack] = await pagesDoc.copyPages(tempBCDoc, [0]);
     pagesDoc.addPage(bcBack);
   } else {
-    if (blankInFrontBackCover) {
+    // Retiro de contratapa: solo si hay una contratapa real embebida (canvas).
+    // Sin contratapa configurada NO se inyecta hoja en blanco fantasma — antes
+    // esta rama agregaba la hoja igual y el libro terminaba con una página en
+    // blanco de más (y el conteo/crédito descuadrado).
+    const hayContratapa = Boolean(backCoverCanvas);
+    if (blankInFrontBackCover && hayContratapa) {
       const blankInFront = pagesDoc.addPage([coverCanvasSize.width, coverCanvasSize.height]);
       blankInFront.drawRectangle({ x: 0, y: 0, width: 0, height: 0 });
     }

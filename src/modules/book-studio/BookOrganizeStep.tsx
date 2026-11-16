@@ -1,7 +1,7 @@
 import React from 'react';
 import { LayoutGrid, RotateCcw, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
-import { calculateFinalBookPageCount } from '../../shared/core/book-engine/bookPageCount';
+import { calculateFinalBookPageCount, effectiveSourcePageCount, hasCustomCoverConfig } from '../../shared/core/book-engine/bookPageCount';
 import { radius, elevationSystem, button } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 
@@ -24,11 +24,23 @@ export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
   const deletedCount = (options.deletedPages || []).length;
   const rotatedCount = Object.values(options.pageRotations || {}).filter((r) => r > 0).length;
 
-  const finalPageCount = calculateFinalBookPageCount(
-    pdfPageCount,
-    Boolean(options.customCover && options.customCover.type !== 'none'),
-    Boolean(options.customBackCover && options.customBackCover.type !== 'none')
-  );
+  const sourcePages = effectiveSourcePageCount(pdfPageCount, options.deletedPages, options.pageOrder);
+  const separateCover =
+    (options.destination ?? 'A') !== 'A' &&
+    (hasCustomCoverConfig(options.customCover) || hasCustomCoverConfig(options.customBackCover));
+  const finalPageCount = calculateFinalBookPageCount({
+    sourcePageCount: sourcePages,
+    hasSourceCover: options.hasCover,
+    hasCustomCover: hasCustomCoverConfig(options.customCover),
+    hasCustomBackCover: hasCustomCoverConfig(options.customBackCover),
+    hasSourceBackCover: options.hasBackCover,
+    blankBehindCover: options.blankBehindCover,
+    blankInFrontBackCover: options.blankInFrontBackCover,
+    separateCover,
+    refPdfPage: options.refPdfPage,
+    refBookPage: options.refBookPage,
+    refPageSide: options.refPageSide,
+  });
   const totalSheetsToPrint = finalPageCount / 2;
 
   const handleRotateAllLeft90 = () => {
