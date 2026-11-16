@@ -85,7 +85,7 @@ export type ProductIconKey = keyof typeof PRODUCT_ICON_IDS;
 
 /**
  * Acciones globales de UI. Ejemplos: IA siempre es 'ia' (Sparkles vectorial),
-  * Guardar siempre 'guardar', Vista previa siempre 'preview', etc.
+ *   Guardar siempre 'guardar', Vista previa siempre 'preview', etc.
  */
 export const UI_ICON_IDS = {
   ia: 'ia',
@@ -96,7 +96,18 @@ export const UI_ICON_IDS = {
   diseno: 'diseno',
   importar: 'importar',
   vacante: 'vacante',
-  assistant: 'assistant'
+  assistant: 'assistant',
+  // Nuevos íconos para la UI minimalista de Lidio (macOS-style)
+  list: 'list',
+  book: 'book',
+  bell: 'bell',
+  bellOff: 'bellOff',
+  messageCircle: 'messageCircle',
+  send: 'send',
+  rotateCcw: 'rotateCcw',
+  arrowUpRight: 'arrowUpRight',
+  x: 'x',
+  lightbulb: 'lightbulb'
 } as const;
 
 export type UiIconKey = keyof typeof UI_ICON_IDS;

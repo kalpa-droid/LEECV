@@ -61,6 +61,7 @@ export default function EditorPanel({
   onCreateApplicationVariant,
   onBackToBaseCV,
   onEditVacante,
+  atsScore,
 }: any) {
   const { showSuccess, showError, showWarning } = useToast();
   const { confirm } = useConfirm();
@@ -404,7 +405,7 @@ export default function EditorPanel({
         
       </div>
         {/* Asistente flotante Lidio — solo zona app (EditorPanel), nunca en landing/blog */}
-        <FloatingAssistant activeTab={activeTab} onNavigate={changeActiveTab} cvData={cvData} />
+        <FloatingAssistant activeTab={activeTab} onNavigate={changeActiveTab} cvData={cvData} atsScore={atsScore} />
     </div>
   );
 }

@@ -713,14 +713,50 @@ html, body, #root {
   --tw-prose-invert-kbd-shadows: var(--ui-border);
 }
 
-/* Asistente flotante Lidio: entrada suave */
+/* Asistente flotante Lidio: panel emerge con curva suave tipo macOS */
 @keyframes uiAssistantPop {
-  from { opacity: 0; transform: translateY(8px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
-.ui-assistant-pop { animation: uiAssistantPop 0.22s ease-out; }
+.ui-assistant-pop { animation: uiAssistantPop 0.28s cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* Notificación toast: entra desde la derecha con rebote sutil */
+@keyframes uiAssistantNotifEnter {
+  from { opacity: 0; transform: translateX(24px) scale(0.96); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+.ui-assistant-notif-enter { animation: uiAssistantNotifEnter 0.32s cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* Notificación toast: sale desvaneciendo (se aplica antes de desmontar) */
+@keyframes uiAssistantNotifExit {
+  from { opacity: 1; transform: translateX(0) scale(1); }
+  to   { opacity: 0; transform: translateX(12px) scale(0.98); }
+}
+.ui-assistant-notif-exit { animation: uiAssistantNotifExit 0.28s ease-in forwards; }
+
+/* Puntos de "está escribiendo" del chat */
+@keyframes uiAssistantTypingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.45; }
+  30%           { transform: translateY(-3px); opacity: 1; }
+}
+.ui-assistant-typing-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--ui-text-secondary);
+  animation: uiAssistantTypingBounce 1.2s ease-in-out infinite;
+}
+.ui-assistant-typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.ui-assistant-typing-dot:nth-child(3) { animation-delay: 0.3s; }
 
 /* Respeta a quien prefiere menos movimiento en pantalla (accesibilidad) */
 @media (prefers-reduced-motion: reduce) {
-  .ui-assistant-pop { animation: none; }
+  .ui-assistant-pop,
+  .ui-assistant-notif-enter,
+  .ui-assistant-notif-exit,
+  .ui-assistant-typing-dot {
+    animation: none;
+  }
+  .ui-assistant-typing-dot { opacity: 1; }
 }
