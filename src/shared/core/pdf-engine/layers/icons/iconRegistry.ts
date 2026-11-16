@@ -543,6 +543,96 @@ export const ICON_REGISTRY: Record<string, IconDefinition> = {
       'M4 4h16v16H4z',
       'M9 9h6v6H9z'
     ]
+  },
+  // Nuevos íconos para la UI minimalista de Lidio (macOS-style)
+  list: {
+    id: 'list',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M8 6h13',
+      'M8 12h13',
+      'M8 18h13',
+      'M3 6h.01',
+      'M3 12h.01',
+      'M3 18h.01'
+    ]
+  },
+  book: {
+    id: 'book',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20',
+      'M12 5v14'
+    ]
+  },
+  bell: {
+    id: 'bell',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M13 22a2 2 0 0 1-2-2 9 9 0 0 1 18 0 2 2 0 0 1-2 2',
+      'M18 14a6 6 0 0 0-12 0',
+      'M15 19h6'
+    ]
+  },
+  bellOff: {
+    id: 'bellOff',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M13 22a2 2 0 0 1-2-2 9 9 0 0 1 18 0 2 2 0 0 1-2 2',
+      'M18 14a6 6 0 0 0-12 0',
+      'M15 19h6',
+      'M3 3l18 18'
+    ]
+  },
+  messageCircle: {
+    id: 'messageCircle',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'
+    ]
+  },
+  send: {
+    id: 'send',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M22 2L11 13',
+      'M22 2l-7 20-4-9-9-4 20-7z'
+    ]
+  },
+  rotateCcw: {
+    id: 'rotateCcw',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M21 12a9 9 0 1 1-6.2-8.6',
+      'M21 3v6h-6'
+    ]
+  },
+  arrowUpRight: {
+    id: 'arrowUpRight',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M7 17h10',
+      'M17 7l-10 10',
+      'M7 7h10v10'
+    ]
+  },
+  x: {
+    id: 'x',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M18 6L6 18',
+      'M6 6l12 12'
+    ]
+  },
+  lightbulb: {
+    id: 'lightbulb',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M15 14h-2v4h2v-4z',
+      'M13 18h-2v2h2v-2z',
+      'M9 13h6l1 5H8z',
+      'M12 2a5 5 0 0 1 5 5c0 2.5-2 4-2 5H9c0-1-2-2.5-2-5a5 5 0 0 1 5-5z'
+    ]
   }
 };
 

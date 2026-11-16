@@ -13,6 +13,51 @@
  * vive en FloatingAssistant.tsx.
  */
 import { isValidPanelTab } from '../recruiter-rules/ruleTargetTabs';
+import { isApplicationVariant } from '../documents/applicationVariant';
+import { resolveActiveFormatId } from '../formats/cvFormatRegistry';
+
+/**
+ * Crea un resumen estructural seguro del estado del editor.
+ * NO contiene PII (datos personales sensibles).
+ */
+export interface AssistantEditorSnapshot {
+  isBaseCV: boolean;
+  activeFormatId: string;
+  visibleSections: string[];
+  hasVacante: boolean;
+  atsScore?: number;
+}
+
+export function buildAssistantEditorSnapshot(
+  cvData: any,
+  activeTab: string,
+  atsScore?: number,
+): AssistantEditorSnapshot {
+  const isBaseCV = !isApplicationVariant(cvData);
+  let activeFormatId = 'modern-corporate';
+  try {
+    activeFormatId = resolveActiveFormatId(cvData) || activeFormatId;
+  } catch {
+    /* derivación defensiva: si falla, queda el formato por defecto */
+  }
+  const orders = cvData?.layout?.sectionOrders || {};
+  const ids: string[] = [
+    ...(Array.isArray(orders.primaria) ? orders.primaria : []),
+    ...(Array.isArray(orders.secundaria) ? orders.secundaria : []),
+  ];
+  const visibility = cvData?.sectionVisibility || {};
+  const visibleSections = ids.filter((id: string) => visibility[id] !== false);
+
+  const hasVacante = !!(cvData?.jobTarget?.position || cvData?.jobTarget?.company);
+
+  return {
+    isBaseCV,
+    activeFormatId,
+    visibleSections,
+    hasVacante,
+    atsScore,
+  };
+}
 
 export const ASSISTANT_NAME = 'Lidio';
 export const ASSISTANT_TAGLINE = 'Te doy una mano con tu CV';
@@ -76,41 +121,46 @@ export function filterSuggestedActions(
   return out;
 }
 
-/** Tips por pestaña del editor (docType 'cv'). Cada uno es independiente y desordenable. */
+/** Tips por pestaña del editor (docType 'cv'). */
 export const TAB_TIPS: Record<string, AssistantTip[]> = {
   personales: [
     {
       id: 'tip-personales-1',
-      title: 'Nombre y contacto al día',
-      body: 'Empezá por esta parte: si el teléfono o el correo tienen un error, todo lo demás se lee en vano. Verificalos antes de exportar.',
+      title: 'Nombre y contacto',
+      body: 'Verificá que el teléfono y el correo estén al día.',
+    },
+    {
+      id: 'tip-privacidad-1',
+      title: 'Privacidad de datos',
+      body: 'Podés ocultar DNI, fecha de nacimiento o estado civil en el PDF desde los interruptores de esta sección.',
     },
   ],
   redes: [
     {
       id: 'tip-redes-1',
       title: 'Menos perfiles, mejor',
-      body: 'Dejá solo los perfiles que tengas al día (por ejemplo LinkedIn). Un enlace vacío o viejo resta más que no poner nada.',
+      body: 'Dejá solo los que tengas al día, como LinkedIn.',
     },
   ],
   resumen: [
     {
       id: 'tip-resumen-1',
-      title: '3 o 4 líneas reales',
-      body: 'En vez de “proactivo y orientado a resultados”: tu rol + tu fuerte con algo comprobable, por ejemplo “Vendedor B2B, 8 años, cartera de 40 cuentas”.',
+      title: 'Tu esencia en 4 líneas',
+      body: 'Tu rol + tu fuerte con algo comprobable (ej. "Vendedor B2B, 8 años, 40 cuentas").',
     },
   ],
   objetivo: [
     {
       id: 'tip-objetivo-1',
-      title: 'Solo si cambiás de rumbo',
-      body: 'El objetivo profesional sirve cuando cambiás de rubro o buscás tu primer empleo. Si tu perfil ya es claro, podés dejarlo vacío sin problema.',
+      title: 'Solo para cambios de rumbo',
+      body: 'Si tu perfil ya es claro, podés dejarlo vacío.',
     },
   ],
   vacante: [
     {
       id: 'tip-vacante-1',
       title: 'Pegá la oferta acá',
-      body: 'Cargá el puesto y la empresa de la oferta: la pestaña de postulación se llama “Puesto · Empresa” y la carta se escribe contra esa vacante.',
+      body: 'Cargá puesto y empresa: la carta se escribirá contra esta vacante.',
       targetTab: 'vacante',
     },
     {
@@ -124,13 +174,13 @@ export const TAB_TIPS: Record<string, AssistantTip[]> = {
     {
       id: 'tip-carta-1',
       title: 'La carta no repite el CV',
-      body: 'Contá en 3 párrafos por qué este puesto es para vos: quién sos, qué lograste y qué aportás ahí. Nada de copiar viñetas.',
+      body: 'Contá en 3 párrafos por qué este puesto es para vos: quién sos, qué lograste y qué aportás.',
       targetTab: 'carta',
     },
     {
       id: 'tip-carta-2',
       title: 'Primer borrador con IA',
-      body: 'Con el botón de IA podés generar un primer borrador de la carta y después ajustarlo con tu voz. Nunca se guarda sin que lo confirmes.',
+      body: 'Generá una base con IA y después ajustala con tu voz.',
       targetTab: 'carta',
     },
   ],
@@ -138,73 +188,77 @@ export const TAB_TIPS: Record<string, AssistantTip[]> = {
     {
       id: 'tip-experiencia-1',
       title: 'Verbo + número',
-      body: 'Empezá cada viñeta con un verbo en pasado y, si podés, un número: “Reduje 20% la mora”, “Coordiné 6 personas”.',
+      body: 'Empezá con verbos en pasado y números: “Reduje 20% los costos”.',
+      targetTab: 'experiencia',
+    },
+    {
+      id: 'tip-experiencia-2',
+      title: 'IA en Experiencia',
+      body: 'Probá "Sugerir Logros ACR" o "Reescritura por foco" en cada registro.',
       targetTab: 'experiencia',
     },
   ],
-  logros: [
+  portada: [
     {
-      id: 'tip-logros-1',
-      title: 'Logros medibles',
-      body: 'Un logro con número vale más que tres responsabilidades. Si no tenés número, usá alcance: “en 3 sucursales”, “con equipo de 6”.',
-      targetTab: 'logros',
-    },
-  ],
-  habilidades: [
-    {
-      id: 'tip-habilidades-1',
-      title: 'Las de la oferta primero',
-      body: 'Poné arriba las habilidades que pedía la oferta: el Diagnóstico ATS compara tu CV contra esas palabras.',
-      targetTab: 'habilidades',
-    },
-  ],
-  idiomas: [
-    {
-      id: 'tip-idiomas-1',
-      title: 'Nivel honesto',
-      body: 'Una entrevista te puede exponer: poné el nivel real (por ejemplo “Inglés B2 — conversación fluida”) y no uno inflado.',
-      targetTab: 'idiomas',
+      id: 'tip-portada-1',
+      title: 'Portada sí o no',
+      body: 'Podés activar o desactivar la portada desde acá y elegir un estilo que destaque tus títulos.',
+      targetTab: 'portada',
     },
   ],
   diseno: [
     {
       id: 'tip-diseno-1',
-      title: 'Plantilla primero, ajuste después',
-      body: 'Elegí la plantilla y el espacio entre bloques antes de retoques finos: cambiar la estructura después desordena tus ajustes.',
+      title: 'Ajustes finos',
+      body: 'Usá los tiradores de "Ajustar tamaños y espacio" para darle tu toque personal a la tipografía y densidad.',
       targetTab: 'diseno',
+    },
+    {
+      id: 'tip-diseno-2',
+      title: 'Formato regional',
+      body: 'Podés cambiar entre 6 formatos regionales (como ATS o Europass) desde el selector.',
+      targetTab: 'diseno',
+    },
+  ],
+  nueva_seccion: [
+    {
+      id: 'tip-secciones-1',
+      title: 'Secciones a Medida',
+      body: 'Creá hasta 5 secciones personalizadas (como Patentes o Ponencias) desde el botón +.',
+      targetTab: 'nueva_seccion',
     },
   ],
   importar_datos: [
     {
       id: 'tip-importar-1',
       title: '¿Tenés un CV viejo?',
-      body: 'Subilo en Importar datos y la IA trae tu información a estas secciones; después revisás y guardás.',
+      body: 'Subilo acá y la IA traerá tu información a las secciones.',
       targetTab: 'importar_datos',
     },
   ],
 };
 
-/** Tips transversales (aparecen en cualquier pestaña). Incluye el bloque de columnas aprobado. */
+/** Tips transversales (aparecen en cualquier pestaña). */
 export const ALWAYS_TIPS: AssistantTip[] = [
   {
     id: 'tip-columnas-1',
-    title: '2 columnas, un CV',
+    title: '2 columnas',
     body: 'Tu CV se arma en Columna Principal (derecha, lectura prioritaria) y Barra Lateral (izquierda, escaneo rápido). En cada sección, “Ubicación y Orden Relativo” te mueve de una a otra y cambia el orden.',
   },
   {
     id: 'tip-columnas-2',
-    title: 'En la principal siempre',
-    body: 'Experiencia, Resumen/Extracto y Objetivo: es lo primero que el reclutador lee. Si hay espacio, sumá Formación y Proyectos.',
+    title: 'Orden estratégico',
+    body: 'Experiencia y Resumen SIEMPRE en la principal. Habilidades y Cursos van perfecto en la lateral.',
   },
   {
     id: 'tip-columnas-3',
-    title: 'Lo que rinde en la barra lateral',
-    body: 'Habilidades, Idiomas, Informática, Cursos y Redes se leen rápido y van perfectos a un costado: liberás espacio en la principal sin perder información.',
+    title: 'Candado en Certificados',
+    body: 'Certificados y Firma van al final del CV por su propio formato: no se pueden mover.',
   },
   {
-    id: 'tip-columnas-4',
-    title: 'Dos secciones tienen candado',
-    body: 'Certificados escaneados y Firma digital no se pueden mover de columna: van al final del CV por su propio formato, y el candado te lo avisa.',
+    id: 'tip-ats-1',
+    title: 'Diagnóstico ATS',
+    body: 'Revisá la píldora en vivo en la barra superior: si marca baja, seguí el consejo para mejorar tu puntaje.',
   },
 ];
 

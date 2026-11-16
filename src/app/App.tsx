@@ -925,6 +925,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
           onGenerateCoverLetterFromCV={handleGenerateCoverLetterFromCV}
           onExportCoverLetter={() => setIsCoverLetterExportOpen(true)}
           onRefreshCredits={refreshEntitlements}
+          atsScore={atsLiveScore}
           onCreateApplicationVariant={() => createApplicationVariantFor({})}
           onBackToBaseCV={() => { if (cvData?.sourceCvTabId) handleSwitchDocumentTab(cvData.sourceCvTabId, 'cv'); }}
         />
