@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 2,
-  minor: 16,
+  minor: 17,
   patch: 0,
-  label: 'V2.16.0',
-  lastUpdated: '2026-11-15',
+  label: 'V2.17.0',
+  lastUpdated: '2026-11-16',
   lastAgent: '@opencode',
-  stage: 'Asistente flotante Lidio (Parte 3 del plan integral): FAB en el editor con tips 100% locales (inactividad ~20s primer tip, ~90s los siguientes, max 3 tips por sesion, silenciable), catalogo de tips por pestana incluyendo bloque de columnas (Columna Principal vs Barra Lateral, que conviene dejar siempre en la principal, candado en Certificados/Firma), chat explicito con IA via tarea app_guide_assistant (OpenAPI 3.0, responseSchema answer+suggestedActions, targetTab validado client-side con isValidPanelTab), icono assistant en ICON_REGISTRY/UI_ICON_IDS, estado en localStorage leecv.assistant (+ sessionStorage para el limite por sesion), animacion ui-assistant-pop con respeto a prefers-reduced-motion.',
+  stage: 'Motor Editorial completo en Book Studio (Fases 0-4 del plan integral): armar libros en cuadernillos de 4/8/16 hojas con calculo de lomo y desplazamiento por hoja (creep), cubierta envolvente o aparte (destinos B y C), paginas copiadas tal cual sin conversion para el modo normal (copyPages), guias de armado dibujadas en la hoja (linea de doblez, margen de seguridad, lineas guia para recortar (marcas de corte)), ZIP por cuadernillo, perfil de impresora casera con margen no imprimible configurable (0 = imprimir hasta el borde), direccion de lectura RTL/LTR (parejo de hojas espejado y contenedor dir=rtl), resumen previo a la impresion ampliado y segundo boton "Descargar el PDF original (tal cual lo subiste)" sin consumir credito; memoria local del PDF y biblioteca de imagenes en IndexedDB (Fase 1), grilla de miniaturas y visor grande mas rapidos (Fase 2), tapas y contratapas negras en canvas corregidas (Fase 0).',
 } as const;
