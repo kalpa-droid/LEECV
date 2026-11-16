@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { BookOpen, Copy, Upload, CheckCircle2, ChevronRight, FileText } from 'lucide-react';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
-import { ensurePdfjsWorkerConfigured } from '../../shared/core/pdf-engine/pdfjsWorkerSetup';
 import { bookAssetManager } from '../../shared/core/book-engine/bookAssetManager';
 import { PAGE_SIZES } from '../../shared/core/pdf-engine/layers/page/pageSizes';
 import { button, selectableCard, radius } from '../../shared/core/uiDesignSystem';
@@ -11,13 +10,12 @@ interface BookSourceTypeStepProps {
   options: BookImpositionOptions;
   setOptions: React.Dispatch<React.SetStateAction<BookImpositionOptions>>;
   selectedFile: File | null;
-  setSelectedFile: (file: File | null) => void;
   pdfPageCount: number;
-  setPdfPageCount: (count: number) => void;
-  onPdfLoaded?: (doc: any) => void;
+  /** Carga el PDF completo (instancia pdf.js única en el contenedor). Lanza si no se puede abrir. El retorno (el doc cargado) es opcional para el llamador. */
+  onFileConfirmed: (file: File) => Promise<unknown>;
   onNextStep?: () => void;
   fileInputRef?: React.RefObject<HTMLInputElement | null>;
-  /** Expone el "elegir PDF por referencia" al contenedor (botón externo). */
+  /** Expone el "elegir PDF" (con fallback a input) al contenedor (botón externo). */
   pickerRef?: React.MutableRefObject<(() => Promise<void>) | null>;
 }
 
@@ -25,10 +23,8 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
   options,
   setOptions,
   selectedFile,
-  setSelectedFile,
   pdfPageCount,
-  setPdfPageCount,
-  onPdfLoaded,
+  onFileConfirmed,
   onNextStep,
   fileInputRef,
   pickerRef,
@@ -46,30 +42,9 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
 
     setErrorMsg(null);
     setIsLoadingFile(true);
-    setSelectedFile(file);
 
     try {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdfjsLib = ensurePdfjsWorkerConfigured();
-      const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
-      setPdfPageCount(pdf.numPages);
-
-      // Auto-detección: Si es modo fotocopia y la página viene vertical (alto > ancho), aplicar 90° global
-      try {
-        const firstPage = await pdf.getPage(1);
-        const vp = firstPage.getViewport({ scale: 1.0 });
-        if (options.mode === 'fotocopia' && vp.height > vp.width) {
-          const autoRotations: Record<number, number> = {};
-          for (let i = 1; i <= pdf.numPages; i++) {
-            autoRotations[i] = 90;
-          }
-          setOptions((prev) => ({ ...prev, pageRotations: autoRotations }));
-        }
-      } catch (e) {
-        console.warn('Auto-detection orientation check:', e);
-      }
-
-      onPdfLoaded?.(pdf);
+      await onFileConfirmed(file);
     } catch (err) {
       console.error(err);
       setErrorMsg(t.bookStudio.sourceStep.errorReadFile);
@@ -78,24 +53,42 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
     }
   };
 
-  // Expone al contenedor el "elegir PDF recordando la ubicación" (sin duplicar el archivo).
+  // Ref a la última versión de handleFileChange: las funciones que se exponen
+  // hacia afuera (pickerRef, onClick de la tarjeta) no quedan atadas a un
+  // closure viejo de cada render.
+  const handleFileChangeRef = useRef(handleFileChange);
+  useEffect(() => {
+    handleFileChangeRef.current = handleFileChange;
+  });
+
+  // Un solo punto de decisión: selector nativo si el navegador lo permite y
+  // el entorno no es un iframe cross-origin; si no, input file de respaldo.
+  const triggerPick = async () => {
+    setErrorMsg(null);
+    const result = await bookAssetManager.pickSourcePdf();
+    if (result.status === 'picked') {
+      await handleFileChangeRef.current(result.file);
+    } else if (result.status === 'fallback-required') {
+      fileInputRef?.current?.click();
+    }
+    // 'cancelled' = el usuario cerró el diálogo: no hay nada que hacer.
+  };
+
+  // Expone al contenedor el "elegir PDF" (con fallback) para "Cargar PDF Ahora".
   useEffect(() => {
     if (!pickerRef) return;
-    pickerRef.current = async () => {
-      if (!bookAssetManager.isFileSystemAccessSupported()) return;
-      const file = await bookAssetManager.pickSourcePdf();
-      if (file) await handleFileChange(file);
-    };
+    pickerRef.current = triggerPick;
     return () => {
       pickerRef.current = null;
     };
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pickerRef]);
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileChange(e.dataTransfer.files[0]);
+      handleFileChangeRef.current(e.dataTransfer.files[0]);
     }
   };
 
@@ -217,13 +210,23 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
       {/* 3. Carga de Archivo PDF */}
       <div className="pt-2 border-t border-[var(--ui-border)] space-y-2">
         <div
+          onClick={triggerPick}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              triggerPick();
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label="Elegir PDF del libro"
           onDragOver={(e) => {
             e.preventDefault();
             setIsDragging(true);
           }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={onDrop}
-          className={`relative border-2 border-dashed rounded-[${radius.card}] p-3 text-center transition-all cursor-pointer ${
+          className={`relative border-2 border-dashed rounded-[${radius.card}] p-3 text-center transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-base)] ${
             isDragging
               ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-light)]/20 scale-[1.01]'
               : selectedFile
@@ -231,27 +234,22 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
               : 'border-[var(--ui-border)] bg-[var(--ui-bg-surface)] hover:border-[var(--color-accent-base)]/50'
           }`}
         >
-          {/* El PDF nunca se duplica: solo se recuerda dónde está (File System Access). */}
-          {bookAssetManager.isFileSystemAccessSupported() ? (
-            <button
-              type="button"
-              aria-label="Elegir PDF del libro"
-              onClick={async () => {
-                setErrorMsg(null);
-                const file = await bookAssetManager.pickSourcePdf();
-                if (file) await handleFileChange(file);
-              }}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            />
-          ) : (
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf"
-              onChange={(e) => e.target.files?.[0] && handleFileChange(e.target.files[0])}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            />
-          )}
+          {/* El PDF nunca se duplica: solo se recuerda dónde está (File System Access).
+              El input de respaldo siempre está montado (fuera de pantalla): si el
+              selector nativo no existe, está prohibido o falla, se dispara por click(). */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,application/pdf"
+            tabIndex={-1}
+            aria-hidden="true"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = '';
+              if (file) handleFileChangeRef.current(file);
+            }}
+            className="absolute -left-[9999px] top-0 h-px w-px opacity-0"
+          />
 
           {isLoadingFile ? (
             <div className="flex items-center justify-center gap-2 py-1">

@@ -84,19 +84,56 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   const [pdfNotice, setPdfNotice] = useState<'moved' | 'restore-available' | null>(null);
   const [confirmClearAssets, setConfirmClearAssets] = useState(false);
 
-  const attachSourcePdf = (file: File) => {
-    setSelectedFile(file);
+  // Refs espejo: loadSourcePdf se define una sola vez y siempre lee el estado
+  // fresco (modo/opciones) sin depender del closure del primer render.
+  const optionsRef = useRef(options);
+  useEffect(() => { optionsRef.current = options; }, [options]);
+  const pdfDocRef = useRef<any>(null);
+  useEffect(() => {
+    return () => {
+      pdfDocRef.current?.destroy?.();
+      pdfDocRef.current = null;
+    };
+  }, []);
+
+  /**
+   * Instancia ÚNICA de PDF.js para todo el estudio: lee el arrayBuffer una
+   * sola vez, crea el pdfDoc, cuenta páginas, aplica auto-rotación en modo
+   * fotocopia y persiste el conteo REAL recién leído. El doc se comparte con
+   * BookPreviewStep / PdfPreviewStrip (nada vuelve a parsear el archivo).
+   */
+  const loadSourcePdf = async (file: File) => {
     setPdfNotice(null);
-    file.arrayBuffer().then((buf) => {
-      ensurePdfjsWorkerConfigured()
-        .getDocument({ data: new Uint8Array(buf) }).promise
-        .then((doc: any) => {
-          setPdfPageCount(doc.numPages);
-          doc.destroy();
-        })
-        .catch(() => setPdfPageCount(0));
-    });
-    persistBookState(file, options);
+    setSelectedFile(file);
+    const arrayBuffer = await file.arrayBuffer();
+    const pdfjsLib = ensurePdfjsWorkerConfigured();
+    const doc = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+    const numPages = doc.numPages;
+
+    // Auto-detección: modo fotocopia + página vertical (alto > ancho) → 90° global.
+    try {
+      const firstPage = await doc.getPage(1);
+      const vp = firstPage.getViewport({ scale: 1.0 });
+      if (optionsRef.current.mode === 'fotocopia' && vp.height > vp.width) {
+        const autoRotations: Record<number, number> = {};
+        for (let i = 1; i <= numPages; i++) autoRotations[i] = 90;
+        setOptions((prev) => ({ ...prev, pageRotations: autoRotations }));
+      }
+    } catch {
+      // la rotación automática es un plus: no bloquea la carga del PDF
+    }
+
+    setPdfPageCount(numPages);
+    pdfDocRef.current?.destroy?.();
+    pdfDocRef.current = doc;
+    setPdfDoc(doc);
+    persistBookState(file, optionsRef.current, numPages);
+    return doc;
+  };
+
+  // Wrapper defensivo para flujos automáticos (restaurar al entrar, permiso).
+  const attachSourcePdf = (file: File) => {
+    loadSourcePdf(file).catch(() => setPdfPageCount(0));
   };
 
   // Restaurar la referencia local del PDF original (sin duplicar el archivo).
@@ -140,7 +177,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
     onTabsChanged
   });
 
-  const persistBookState = (file: File | null, opts: BookImpositionOptions) => {
+  const persistBookState = (file: File | null, opts: BookImpositionOptions, pageCount: number) => {
     const id = bookId || generateDocumentId('book');
     const name = file ? file.name.replace(/\.[^/.]+$/, '') : 'Mi Libro / Folleto';
     if (!bookId) {
@@ -152,24 +189,16 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
       id,
       name,
       fileName: file?.name,
-      pdfPageCount,
+      pdfPageCount: pageCount,
       options: opts,
       updatedAt: new Date().toISOString(),
     });
   };
 
-  const handleFileSelect = (file: File | null) => {
-    setSelectedFile(file);
-    if (!file) setPdfDoc(null);
-    if (file) {
-      persistBookState(file, options);
-    }
-  };
-
   const handleOptionsChange: React.Dispatch<React.SetStateAction<BookImpositionOptions>> = (action) => {
     setOptions((prev) => {
       const nextOpts = typeof action === 'function' ? action(prev) : action;
-      persistBookState(selectedFile, nextOpts);
+      persistBookState(selectedFile, nextOpts, pdfPageCount);
       return nextOpts;
     });
   };
@@ -185,7 +214,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   const handleTriggerFileInput = () => {
     setActiveStepTab('book_source_type');
     setTimeout(() => {
-      if (bookAssetManager.isFileSystemAccessSupported() && sourcePdfPickerRef.current) {
+      if (sourcePdfPickerRef.current) {
         sourcePdfPickerRef.current();
       } else {
         fileInputRef.current?.click();
@@ -204,7 +233,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
           currentCvData={{}}
           currentUiTheme={currentUiTheme}
           onOpenSavedCVsModal={onOpenSavedCVsModal || (() => {})}
-          onSaveCVClick={() => persistBookState(selectedFile, options)}
+          onSaveCVClick={() => persistBookState(selectedFile, options, pdfPageCount)}
           onOpenSaveAsModal={onOpenSaveAsModal || (() => {})}
           onOpenJsonDownloadModal={onOpenJsonDownloadModal || (() => {})}
           onPrint={() => setActiveStepTab('book_preview_export')}
@@ -237,8 +266,13 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               <button
                 type="button"
                 onClick={async () => {
-                  const file = await bookAssetManager.pickSourcePdf();
-                  if (file) attachSourcePdf(file);
+                  const result = await bookAssetManager.pickSourcePdf();
+                  if (result.status === 'picked') {
+                    attachSourcePdf(result.file);
+                  } else if (result.status === 'fallback-required') {
+                    handleTriggerFileInput();
+                  }
+                  // 'cancelled' = el usuario cerró el diálogo: nada que hacer.
                 }}
                 className={`px-3 py-1.5 text-xs font-bold rounded-[${radius.control}] bg-[var(--color-status-danger-base)] text-[var(--color-status-on-base)] cursor-pointer`}
               >
@@ -309,10 +343,8 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               options={options}
               setOptions={handleOptionsChange}
               selectedFile={selectedFile}
-              setSelectedFile={handleFileSelect}
               pdfPageCount={pdfPageCount}
-              setPdfPageCount={setPdfPageCount}
-              onPdfLoaded={(doc) => setPdfDoc(doc)}
+              onFileConfirmed={loadSourcePdf}
               onNextStep={() => handleNavigateNextStep('book_source_type')}
               fileInputRef={fileInputRef}
               pickerRef={sourcePdfPickerRef}
@@ -391,6 +423,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
                 pdfDoc={pdfDoc}
                 onConfirm={() => setActiveStepTab('book_preview_export')}
                 activeStep={activeStepTab}
+                onRequestAnotherPdf={handleTriggerFileInput}
               />
             </div>
           ) : (

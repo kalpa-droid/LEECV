@@ -11,6 +11,8 @@ interface BookPreviewStepProps {
   pdfDoc?: any;
   onConfirm: () => void;
   activeStep?: string;
+  /** Vuelve al paso "Origen" para elegir otro PDF (error de apertura). */
+  onRequestAnotherPdf?: () => void;
 }
 
 export const BookPreviewStep: React.FC<BookPreviewStepProps> = ({
@@ -21,6 +23,7 @@ export const BookPreviewStep: React.FC<BookPreviewStepProps> = ({
   zoomScale = 1.0,
   pdfDoc,
   activeStep,
+  onRequestAnotherPdf,
 }) => {
   return (
     <div className="w-full h-full flex flex-col space-y-4 overflow-y-auto p-4 text-[var(--ui-text-primary)]">
@@ -34,6 +37,7 @@ export const BookPreviewStep: React.FC<BookPreviewStepProps> = ({
           zoomScale={zoomScale}
           pdfDoc={pdfDoc}
           activeStep={activeStep}
+          onRequestAnotherPdf={onRequestAnotherPdf}
         />
       </div>
     </div>

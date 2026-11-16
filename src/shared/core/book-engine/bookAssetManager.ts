@@ -248,24 +248,51 @@ export const bookAssetManager = {
     return meta.length;
   },
 
-  isFileSystemAccessSupported(): boolean {
-    return typeof window !== 'undefined' && 'showOpenFilePicker' in window;
+  /**
+   * ¿El navegador permite el selector nativo de archivos para lo que pide el
+   * estudio? La API existe dentro de iframes cross-origin pero está prohibida:
+   * sin esta guarda el botón parecía funcionar y fallaba en silencio.
+   * Leer window.top.location.href cross-origin lanza SecurityError → fallback.
+   */
+  canUseNativeFilePicker(): boolean {
+    if (typeof window === 'undefined' || !('showOpenFilePicker' in window)) return false;
+    try {
+      if (window.self !== window.top) {
+        // Acceso permitido solo si el iframe es same-origin.
+        return typeof window.top?.location?.href === 'string';
+      }
+      return true;
+    } catch {
+      return false;
+    }
   },
 
-  async pickSourcePdf(): Promise<File | null> {
-    if (!this.isFileSystemAccessSupported()) return null;
+  /**
+   * Abre el selector nativo. Resultado tipado:
+   *  - picked: hay archivo (y quedó guardado el FileSystemFileHandle).
+   *  - cancelled: el usuario cerró el diálogo (AbortError). No es un error.
+   *  - fallback-required: no se puede usar el nativo (no soportado, iframe o
+   *    SecurityError/NotAllowedError) → el llamador debe usar el input <file>.
+   */
+  async pickSourcePdf(): Promise<
+    { status: 'picked'; file: File } | { status: 'cancelled' } | { status: 'fallback-required' }
+  > {
+    if (!this.canUseNativeFilePicker()) return { status: 'fallback-required' };
     try {
       const [handle] = await (window as any).showOpenFilePicker({
         types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }],
         multiple: false,
       });
-      if (!handle) return null;
+      if (!handle) return { status: 'cancelled' };
       const file: File = await handle.getFile();
       await tx('readwrite', STORE_META, (s) => s.put({ id: SOURCE_PDF_META_KEY, handle }));
-      return file;
-    } catch {
-      // usuario canceló o navegador sin API: no es error bloqueante
-      return null;
+      return { status: 'picked', file };
+    } catch (err: unknown) {
+      const name = (err as { name?: string } | null)?.name;
+      // AbortError = el usuario canceló el diálogo: no es un error bloqueante.
+      if (name === 'AbortError') return { status: 'cancelled' };
+      // SecurityError / NotAllowedError = iframe o permiso denegado: usar input de respaldo.
+      return { status: 'fallback-required' };
     }
   },
 
@@ -287,7 +314,7 @@ export const bookAssetManager = {
     | { status: 'denied' }
     | { status: 'no-handle' }
   > {
-    if (!this.isFileSystemAccessSupported()) return { status: 'no-handle' };
+    if (!this.canUseNativeFilePicker()) return { status: 'no-handle' };
     try {
       const meta = await tx('readonly', STORE_META, (s) => s.get(SOURCE_PDF_META_KEY));
       const handle = meta?.handle;
@@ -308,7 +335,7 @@ export const bookAssetManager = {
   },
 
   async requestSourcePdfPermission(): Promise<File | null> {
-    if (!this.isFileSystemAccessSupported()) return null;
+    if (!this.canUseNativeFilePicker()) return null;
     try {
       const meta = await tx('readonly', STORE_META, (s) => s.get(SOURCE_PDF_META_KEY));
       const handle = meta?.handle;

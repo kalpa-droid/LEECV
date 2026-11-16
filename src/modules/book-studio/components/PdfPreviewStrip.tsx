@@ -3,8 +3,9 @@ import { ThumbnailCard } from './ThumbnailCard';
 import { LightboxModal } from './LightboxModal';
 import { CoverPreviewThumbnail } from './CoverPreviewThumbnail';
 import { BookImpositionOptions } from '../../../shared/core/book-engine/impositionEngine';
+import { bookAssetManager } from '../../../shared/core/book-engine/bookAssetManager';
 import { radius } from '../../../shared/core/uiDesignSystem';
-import { RefreshCw, FileText, Trash2 } from 'lucide-react';
+import { RefreshCw, FileText, Trash2, AlertTriangle } from 'lucide-react';
 import { ensurePdfjsWorkerConfigured } from '../../../shared/core/pdf-engine/pdfjsWorkerSetup';
 
 export interface PdfPreviewStripProps {
@@ -15,6 +16,8 @@ export interface PdfPreviewStripProps {
   zoomScale?: number;
   pdfDoc?: any;
   activeStep?: string;
+  /** Vuelve al paso "Origen" para elegir otro PDF (la instancia única la carga el contenedor). */
+  onRequestAnotherPdf?: () => void;
 }
 
 export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
@@ -25,11 +28,35 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
   zoomScale = 1.0,
   pdfDoc: pdfDocProp,
   activeStep = '',
+  onRequestAnotherPdf,
 }) => {
   const [internalPdfDoc, setInternalPdfDoc] = useState<any>(null);
   const [isLoadingPdfDoc, setIsLoadingPdfDoc] = useState<boolean>(false);
+  const [pdfLoadError, setPdfLoadError] = useState<string | null>(null);
   const [activeLightboxPage, setActiveLightboxPage] = useState<number | null>(null);
   const [showDeletedPages, setShowDeletedPages] = useState<boolean>(false);
+
+  // Miniaturas de tapa/contratapa: el assetId (referencia local) tiene prioridad
+  // sobre imageUri (heredado). Igual que en CoverPreviewThumbnail.
+  const [coverThumbUri, setCoverThumbUri] = useState<string | null>(null);
+  const [backCoverThumbUri, setBackCoverThumbUri] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    const id = options.customCover?.assetId;
+    if (!id) { setCoverThumbUri(null); return; }
+    bookAssetManager.getThumbUrl(id).then((url) => { if (alive) setCoverThumbUri(url); });
+    return () => { alive = false; };
+  }, [options.customCover?.assetId]);
+  useEffect(() => {
+    let alive = true;
+    const id = options.customBackCover?.assetId;
+    if (!id) { setBackCoverThumbUri(null); return; }
+    bookAssetManager.getThumbUrl(id).then((url) => { if (alive) setBackCoverThumbUri(url); });
+    return () => { alive = false; };
+  }, [options.customBackCover?.assetId]);
+
+  const coverImgSrc = coverThumbUri || options.customCover?.imageUri || null;
+  const backCoverImgSrc = backCoverThumbUri || options.customBackCover?.imageUri || null;
 
   const pdfDoc = pdfDocProp || internalPdfDoc;
 
@@ -45,6 +72,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
     const loadPdfDocInstance = async () => {
       try {
         setIsLoadingPdfDoc(true);
+        setPdfLoadError(null);
         const arrayBuffer = await selectedFile.arrayBuffer();
         const pdfjsLib = ensurePdfjsWorkerConfigured();
         const doc = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
@@ -53,8 +81,13 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
           setIsLoadingPdfDoc(false);
         }
       } catch (err) {
+        // Error visible en UI (no solo consola): el PDF existe pero no se pudo
+        // abrir/parsear. Se ofrece reintentar con otro archivo.
         console.error('Error loading PDF document instance for thumbnails:', err);
-        if (!isCancelled) setIsLoadingPdfDoc(false);
+        if (!isCancelled) {
+          setPdfLoadError('No pudimos abrir este PDF. Probá con otro archivo o volvé al paso "Origen".');
+          setIsLoadingPdfDoc(false);
+        }
       }
     };
 
@@ -74,6 +107,31 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
         <p className="text-xs text-[var(--ui-text-secondary)] max-w-sm">
           Carga un archivo PDF en la pestaña "1. Origen" para ver y organizar las miniaturas de sus páginas.
         </p>
+      </div>
+    );
+  }
+
+  if (pdfLoadError) {
+    return (
+      <div className={`p-4 bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/30 rounded-[${radius.card}] space-y-3 w-full`}>
+        <div className="flex items-start gap-2">
+          {/* check-contrast-ignore-next-line: ícono decorativo grande, no es texto de lectura */}
+          <AlertTriangle className="w-5 h-5 text-[var(--color-status-danger-text)] shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <h3 className="text-sm font-bold text-[var(--color-status-danger-text)]">No pudimos abrir este PDF</h3>
+            <p className="text-xs text-[var(--color-status-danger-text)]">{pdfLoadError}</p>
+          </div>
+        </div>
+        {onRequestAnotherPdf && (
+          <button
+            type="button"
+            onClick={onRequestAnotherPdf}
+            className={`px-3 py-1.5 text-xs font-bold rounded-[${radius.control}] bg-[var(--color-status-danger-base)] text-[var(--color-status-on-base)] cursor-pointer flex items-center gap-1.5`}
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Probar con otro PDF
+          </button>
+        )}
       </div>
     );
   }
@@ -232,8 +290,8 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
             <span className="px-2 py-0.5 rounded bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold text-[10px] uppercase tracking-wider">
               Portada / Tapa
             </span>
-            {options.customCover?.imageUri ? (
-              <img src={options.customCover.imageUri} alt="Tapa" className={`w-full h-auto aspect-[1/1.41] rounded border border-[var(--ui-border)] ${options.customCover.imageFit === 'stretch' ? '' : options.customCover.imageFit === 'fit' ? 'object-contain bg-white' : 'object-cover'}`} />
+            {coverImgSrc ? (
+              <img src={coverImgSrc} alt="Tapa" className={`w-full h-auto aspect-[1/1.41] rounded border border-[var(--ui-border)] ${options.customCover?.imageFit === 'stretch' ? '' : options.customCover?.imageFit === 'fit' ? 'object-contain bg-white' : 'object-cover'}`} />
             ) : options.customCover?.type === 'template' ? (
               <CoverPreviewThumbnail
                 config={options.customCover}
@@ -341,8 +399,8 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
             <span className="px-2 py-0.5 rounded bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] font-bold text-[10px] uppercase tracking-wider">
               Contratapa
             </span>
-            {options.customBackCover?.imageUri ? (
-              <img src={options.customBackCover.imageUri} alt="Contratapa" className={`w-full h-auto aspect-[1/1.41] rounded border border-[var(--ui-border)] ${options.customBackCover.imageFit === 'stretch' ? '' : options.customBackCover.imageFit === 'fit' ? 'object-contain bg-white' : 'object-cover'}`} />
+            {backCoverImgSrc ? (
+              <img src={backCoverImgSrc} alt="Contratapa" className={`w-full h-auto aspect-[1/1.41] rounded border border-[var(--ui-border)] ${options.customBackCover?.imageFit === 'stretch' ? '' : options.customBackCover?.imageFit === 'fit' ? 'object-contain bg-white' : 'object-cover'}`} />
             ) : options.customBackCover?.type === 'template' ? (
               <CoverPreviewThumbnail
                 config={options.customBackCover}
