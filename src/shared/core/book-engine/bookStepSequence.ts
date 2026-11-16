@@ -45,9 +45,16 @@ export const BOOK_STEP_SEQUENCE: BookStepItem[] = [
     description: 'Calibración de numeración real',
   },
   {
-    id: 'book_preview_export',
+    id: 'book_imposition',
     stepNumber: 6,
-    label: '6. Exportar PDF Final',
+    label: '6. Armado y Guías',
+    shortLabel: 'Armado',
+    description: 'Destino de cubierta, lomo y modo de exportación',
+  },
+  {
+    id: 'book_preview_export',
+    stepNumber: 7,
+    label: '7. Exportar PDF Final',
     shortLabel: 'Exportar',
     description: 'Montaje final e impresión',
   },

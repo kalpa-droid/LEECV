@@ -63,6 +63,26 @@ export interface BookImpositionOptions {
    * toca IndexedDB directamente y sigue siendo puro/testeable.
    */
   assetResolver?: (ref: string) => Promise<string | null>;
+  /**
+   * Modo de exportación: 'vector' (embedPage/copyPages) o 'raster' (JPEG por página)
+   */
+  exportMode: 'vector' | 'raster';
+  /**
+   * Destino de la cubierta: 'A' (mismo papel que documento), 'B' (archivo de cubierta separado), 'C' (cubierta envolvente con lomo)
+   */
+  destination: 'A' | 'B' | 'C';
+  /**
+   * Grosor de papel para lomo (mm): 0.10 común, 0.12 ahuesado, 0 (sin grosor para guillotina/anillado)
+   */
+  paperThicknessMm?: number;
+  /**
+   * Aplicar compensación de creep (Adobe): calcula desplazamiento hacia el lomo para pliegos internos
+   */
+  applyCreep: boolean;
+  /**
+   * Estilo de cubierta (opcional): preset para definir colores y diseño específico
+   */
+  coverStyle?: string;
   deletedPages?: (number | string)[];
   pageOrder?: (number | string)[];
   blankBehindCover?: boolean;
@@ -88,6 +108,11 @@ export const DEFAULT_BOOK_IMPOSITION_OPTIONS: BookImpositionOptions = {
   pageOrder: [],
   blankBehindCover: true,
   blankInFrontBackCover: true,
+  exportMode: 'vector',
+  destination: 'A',
+  paperThicknessMm: 0,
+  applyCreep: true,
+  coverStyle: 'monica-classic',
 };
 
 export function getCoverCanvasSize(paperSize: 'A4' | 'A3' = 'A4'): { width: number; height: number } {
@@ -401,7 +426,7 @@ export async function crearCanvasContratapaCustom(
 async function procesarComoImagenes(
   file: File | ArrayBuffer,
   mode: 'normal' | 'fotocopia' = 'normal',
-  options: BookImpositionOptions = {},
+  options: BookImpositionOptions = DEFAULT_BOOK_IMPOSITION_OPTIONS,
   onProgress?: (message: string, percent: number) => void
 ): Promise<PDFDocument> {
   const {
@@ -701,7 +726,7 @@ async function procesarComoImagenes(
 
 export async function processBookImposition(
   file: File | ArrayBuffer,
-  options: BookImpositionOptions = {}
+  options: BookImpositionOptions = DEFAULT_BOOK_IMPOSITION_OPTIONS,
 ): Promise<Uint8Array> {
   const {
     mode = 'normal',
