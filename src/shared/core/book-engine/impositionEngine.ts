@@ -3,6 +3,7 @@ import { countBlanksBehindCover } from './impositionMath';
 import { getCoverPresetById } from '../pdf-engine/layers/presets/coverPresetCatalog';
 import { ensurePdfjsWorkerConfigured } from '../pdf-engine/pdfjsWorkerSetup';
 import { resolveCanvasColor, COVER_FALLBACK_BG, COVER_FALLBACK_TEXT } from './canvasColors';
+import { calculateSpineWidth, calculateCreepOffset } from './impositionPlanner';
 
 const pdfjsLib = typeof window !== 'undefined' ? ensurePdfjsWorkerConfigured() : (null as any);
 
@@ -734,13 +735,43 @@ export async function processBookImposition(
     hasBackCover = false,
     customBackCover = null,
     blankInFrontBackCover = true,
+    exportMode = 'vector',
+    destination = 'A',
+    paperThicknessMm = 0,
+    applyCreep = true,
+    coverStyle,
     onProgress,
   } = options;
 
+  // Propagar el estilo de cubierta elegido en la UI a las configs si no lo traen.
+  const effectiveOptions: BookImpositionOptions = {
+    ...options,
+    customCover: options.customCover
+      ? { ...options.customCover, coverStyle: options.customCover.coverStyle || coverStyle }
+      : options.customCover,
+    customBackCover: options.customBackCover
+      ? { ...options.customBackCover, coverStyle: options.customBackCover.coverStyle || coverStyle }
+      : options.customBackCover,
+  };
+
   if (onProgress) onProgress('Procesando páginas del PDF...', 5);
 
-  const pagesDoc = await procesarComoImagenes(file, mode, options, onProgress);
+  const pagesDoc = await procesarComoImagenes(file, mode, effectiveOptions, onProgress);
   const coverCanvasSize = getCoverCanvasSize(paperSize);
+
+  // Información de armado editorial (lomo y creep) para la UI.
+  const finalPageCount = pagesDoc.getPageCount();
+  const spineWidthMm = calculateSpineWidth(finalPageCount, { paperThicknessMm });
+  const sheetsInSignature = Math.max(1, Math.floor(finalPageCount / 4));
+  const creepMaxMm = applyCreep
+    ? calculateCreepOffset(0, sheetsInSignature, paperThicknessMm)
+    : 0;
+  if (onProgress) {
+    onProgress(
+      `Armado: ${destination === 'A' ? 'cubierta en el mismo archivo' : destination === 'B' ? 'cubierta aparte' : 'cubierta envolvente'} • lomo ${spineWidthMm.toFixed(1)} mm • creep ${creepMaxMm.toFixed(1)} mm • modo ${exportMode === 'vector' ? 'máxima calidad' : 'JPEG'}`,
+      8
+    );
+  }
 
   let backCoverCanvas: HTMLCanvasElement | null = null;
   if (!hasBackCover && customBackCover && (customBackCover.type === 'upload' || customBackCover.type === 'template')) {
