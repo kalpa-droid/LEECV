@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BookOpen, CheckCircle2, AlertTriangle, Printer, Sparkles, Download, AlertCircle, ChevronLeft, FileText, Layers, Languages } from 'lucide-react';
 import { BookImpositionOptions, processBookImposition } from '../../shared/core/book-engine/impositionEngine';
-import { calculateFinalBookPageCount } from '../../shared/core/book-engine/bookPageCount';
+import { calculateFinalBookPageCount, effectiveSourcePageCount, hasCustomCoverConfig } from '../../shared/core/book-engine/bookPageCount';
 import { calculateSpineWidth, calculateCreepOffset, planBookletSignatures } from '../../shared/core/book-engine/impositionPlanner';
 import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
@@ -57,11 +57,21 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   const hasCover = options.hasCover || (options.customCover && options.customCover.type !== 'none');
   const hasBackCover = options.hasBackCover || (options.customBackCover && options.customBackCover.type !== 'none');
 
-  const finalPageCount = calculateFinalBookPageCount(
-    pdfPageCount,
-    Boolean(options.customCover && options.customCover.type !== 'none'),
-    Boolean(options.customBackCover && options.customBackCover.type !== 'none')
-  );
+  const finalPageCount = calculateFinalBookPageCount({
+    sourcePageCount: effectiveSourcePageCount(pdfPageCount, options.deletedPages, options.pageOrder),
+    hasSourceCover: options.hasCover,
+    hasCustomCover: hasCustomCoverConfig(options.customCover),
+    hasCustomBackCover: hasCustomCoverConfig(options.customBackCover),
+    hasSourceBackCover: options.hasBackCover,
+    blankBehindCover: options.blankBehindCover,
+    blankInFrontBackCover: options.blankInFrontBackCover,
+    separateCover:
+      (options.destination ?? 'A') !== 'A' &&
+      (hasCustomCoverConfig(options.customCover) || hasCustomCoverConfig(options.customBackCover)),
+    refPdfPage: options.refPdfPage,
+    refBookPage: options.refBookPage,
+    refPageSide: options.refPageSide,
+  });
 
   const totalSheetsToPrint = finalPageCount / 2;
 

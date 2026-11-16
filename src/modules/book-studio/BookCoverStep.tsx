@@ -115,7 +115,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <button
           type="button"
           onClick={() => handleCoverTypeChange('source')}
@@ -144,6 +144,16 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
           } text-xs font-bold text-center py-2.5 px-2`}
         >
           Subir mi Tapa
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleCoverTypeChange('none')}
+          className={`${selectableCard.base} ${
+            coverType === 'none' ? selectableCard.selected : selectableCard.unselected
+          } text-xs font-bold text-center py-2.5 px-2`}
+        >
+          Sin Tapa
         </button>
       </div>
 
