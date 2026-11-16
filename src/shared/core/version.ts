@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 2,
-  minor: 17,
+  minor: 18,
   patch: 0,
-  label: 'V2.17.0',
+  label: 'V2.18.0',
   lastUpdated: '2026-11-16',
   lastAgent: '@opencode',
-  stage: 'Motor Editorial completo en Book Studio (Fases 0-4 del plan integral): armar libros en cuadernillos de 4/8/16 hojas con calculo de lomo y desplazamiento por hoja (creep), cubierta envolvente o aparte (destinos B y C), paginas copiadas tal cual sin conversion para el modo normal (copyPages), guias de armado dibujadas en la hoja (linea de doblez, margen de seguridad, lineas guia para recortar (marcas de corte)), ZIP por cuadernillo, perfil de impresora casera con margen no imprimible configurable (0 = imprimir hasta el borde), direccion de lectura RTL/LTR (parejo de hojas espejado y contenedor dir=rtl), resumen previo a la impresion ampliado y segundo boton "Descargar el PDF original (tal cual lo subiste)" sin consumir credito; memoria local del PDF y biblioteca de imagenes en IndexedDB (Fase 1), grilla de miniaturas y visor grande mas rapidos (Fase 2), tapas y contratapas negras en canvas corregidas (Fase 0).',
+  stage: 'Lidio, el asistente flotante del editor, rediseñado al estilo macOS minimal y contextual (V2.18.0): notificacion toast independiente (AssistantNotificationToast) que aparece sola por inactividad, ~9s auto-descarte (pausa en hover/focus), cola apuntando al boton flotante, acciones solo-icono (Ir/Silenciar/Cerrar), backdrop-blur, variables CSS del tema, prefers-reduced-motion y print:hidden. Panel rediseñado sin tagline: header limpio con mute Bell/BellOff, tabs solo-icono (Tips/Preguntar), toggle de todos los tips con badge de contador, chips de preguntas rapidas en el chat, puntos de "escribiendo". app_guide_assistant enriquecida con el conocimiento V2.17.0 (cascada de diseño, 6 formatos regionales, tiradores, portada, secciones a medida, importar CV, privacidad por campo, candados, flujo CV -> Vacante -> Postulacion -> Carta, ATS en vivo, Deshacer/Rehacer, temas), editorState estructural SIN datos personales (isBaseCV, formato activo, secciones visibles, vacante, puntaje ATS) y los ultimos 4 turnos del chat como datos escapados; responseSchema OpenAPI 3.0 sin cambios. Tips 100% locales (sin IA); nueva notificacion y panel usan solo tokens del design system.',
 } as const;
