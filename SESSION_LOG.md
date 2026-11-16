@@ -531,3 +531,10 @@ Migración a una arquitectura de facturación stateless ("guest-first") donde el
 - **Versión**: V2.17.0 → V2.18.0 (MINOR; el bump se asienta en esta PR docs, precedente V2.17.0).
 - **Diferencial PR #114**: 9 archivos, +582/-269. `tsconfig.tsbuildinfo` e `install-windows.ps1` excluidos (artefactos; nunca commitear).
 - **Pendiente NUEVO**: Kalpa — probar Lidio en producción (toast de inactividad, chat, acciones sugeridas, silenciado y badge). Pendiente histórico no bloqueante: Editor → Importar CV con IA con PDF escaneado / 2 columnas. Pendiente del Book Studio: armar un libro de 16-32 páginas.
+
+## [2026-11-16] - Registro Regla 6 paso 7 (Post-merge pulido visual Lidio PR #116 - V2.18.1)
+- **Merge #116 confirmado** (`feat/lidio-panel-polish`): `main` -> hash `027d7be50b8cbfcf19963ec7aa674af660f0dd09`. Mensaje (squash): `fix(lidio): compactar banda de tabs y enriquecer estado vacio de tips (#116)`. CI `check-all` success (run 43906745681, 54s), Vercel pass. Verificado post-merge: `git log origin/main -1 --format="%H %s"` = `027d7be50b8cbfcf19963ec7aa674af660f0dd09` (identico al squash de la API).
+- **Autorizacion**: Kalpa dio OK explicito en sesion ("Mergea vos (squash)") tras CI verde. La PR solo tocaba `src/modules/cv-builder/components/FloatingAssistant.tsx` (sin `src/shared/core/` ni `api/_lib/` -> no requeria CODEOWNER formal).
+- **Contenido (pulido visual post V2.18.0)**: banda de tabs icon-only compacta (`py-2` -> `h-9` fija, 36px - dejaba de verse como losa oscura); estado vacio de Tips convertido en mini-tarjeta con acciones visibles ("Ver todos los tips" / "Preguntarle a Lidio"); stack del contenido mas denso (`space-y-2.5`). Sin cambios de logica, motor de tips ni IA. Diferencial: 1 archivo (+11/-6).
+- **Version**: V2.18.0 -> V2.18.1 (PATCH; ajuste UI minimo - asentada en esta PR docs, precedente V2.17.0).
+- **Pendiente NUEVO**: Kalpa - probar el panel pulido en produccion (tabs compactos, estado vacio accionable). Pendientes previos sin cambios.
