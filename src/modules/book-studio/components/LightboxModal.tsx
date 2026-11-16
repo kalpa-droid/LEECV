@@ -94,7 +94,10 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
       try {
         setIsLoading(true);
         const page = await pdfDoc.getPage(pageNum);
-        if (isCancelled) return;
+        if (isCancelled) {
+          try { page.cleanup?.(); } catch (e) { /* Ignore cleanup error */ }
+          return;
+        }
 
         const unscaledViewport = page.getViewport({ scale: 1.0 });
         const isVertical = unscaledViewport.height > unscaledViewport.width;
@@ -118,27 +121,14 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
 
         await page.render({ canvasContext: ctx, viewport }).promise;
 
-        // Draw red dashed split line overlay at localSplitOffset only in fotocopia mode
-        if (!isCancelled && ctx && isFotocopiaMode) {
-          const splitX = Math.round(canvas.width * (localSplitOffset / 100));
-          ctx.save();
-          ctx.strokeStyle = '#FF2E63';
-          ctx.lineWidth = 3;
-          ctx.setLineDash([8, 6]);
-          ctx.beginPath();
-          ctx.moveTo(splitX, 0);
-          ctx.lineTo(splitX, canvas.height);
-          ctx.stroke();
-
-          // Draw scissors badge at top of line
-          ctx.fillStyle = '#FF2E63';
-          ctx.fillRect(splitX - 16, 4, 32, 18);
-          ctx.fillStyle = '#FFFFFF';
-          ctx.font = 'bold 11px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText(`✂ ${localSplitOffset}%`, splitX, 17);
-          ctx.restore();
+        // Liberar la página de PDF.js (memoria/caché) tras dibujar.
+        if (!isCancelled) {
+          try { page.cleanup?.(); } catch (e) { /* Ignore cleanup error */ }
         }
+
+        // La línea de corte y su insignia ahora son un overlay <div>
+        // (antes se dibujaban en el canvas y mover el slider re-renderizaba
+        // toda la página en alta resolución).
 
         if (!isCancelled) setIsLoading(false);
       } catch (err) {
@@ -152,7 +142,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
     return () => {
       isCancelled = true;
     };
-  }, [isOpen, pdfDoc, pageNum, rotation, localSplitOffset, isFotocopiaMode]);
+  }, [isOpen, pdfDoc, pageNum, rotation, isFotocopiaMode]);
 
   if (!isOpen) return null;
 
@@ -252,12 +242,30 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
             </div>
           )}
 
-          <canvas
-            ref={canvasRef}
-            className={`max-w-full max-h-[70vh] object-contain shadow-[var(--shadow-overlay)] rounded-sm ${
-              isLoading ? 'hidden' : 'block'
-            } ${isDeleted ? 'opacity-50 grayscale' : ''}`}
-          />
+          <div className="relative inline-flex max-w-full">
+            <canvas
+              ref={canvasRef}
+              className={`max-w-full max-h-[70vh] object-contain shadow-[var(--shadow-overlay)] rounded-sm ${
+                isLoading ? 'hidden' : 'block'
+              } ${isDeleted ? 'opacity-50 grayscale' : ''}`}
+            />
+
+            {/* Línea de corte como overlay (div): mover el slider ya no vuelve
+                a renderizar la página en alta resolución. */}
+            {!isLoading && isFotocopiaMode && (
+              <div
+                className="absolute inset-y-0 pointer-events-none"
+                style={{ left: `${localSplitOffset}%` }}
+                title="Corte manual central"
+              >
+                <div className="h-full border-l-[3px] border-dashed border-[var(--color-accent-base)]" />
+                <div className={`absolute top-0 left-0 -translate-x-1/2 flex items-center gap-1 px-1.5 py-0.5 rounded-[${radius.control}] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-[9px] font-bold shadow-[var(--shadow-raised)]`}>
+                  <Scissors className="w-2.5 h-2.5" />
+                  <span>{localSplitOffset}%</span>
+                </div>
+              </div>
+            )}
+          </div>
 
           {isDeleted && (
             <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-[${radius.control}] bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/40 text-[var(--color-status-danger-text)] font-bold text-xs shadow-[var(--shadow-raised)]`}>
