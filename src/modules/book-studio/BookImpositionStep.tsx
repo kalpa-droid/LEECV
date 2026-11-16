@@ -16,6 +16,7 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({ options,
   const applyCreep = options.applyCreep ?? true;
   const exportMode = options.exportMode || 'vector';
   const coverStyle = options.coverStyle || 'monica-classic';
+  const showGuides = options.showGuides ?? false;
 
   return (
     <div className="flex flex-col gap-6 p-4">
@@ -106,6 +107,19 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({ options,
             <option value="vector">Máxima calidad (sin pérdida, embedPage/copyPages)</option>
             <option value="raster">Rasterizado (JPEG por página, para impresión doméstica)</option>
           </select>
+        </label>
+
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={showGuides}
+            onChange={(e) => setOptions((prev) => ({ ...prev, showGuides: e.target.checked }))}
+            className="h-4 w-4 accent-[var(--color-accent-base)]"
+          />
+          <span className={typeScale.fieldLabel}>Mostrar guías de armado</span>
+          <p className="text-xs text-[var(--ui-text-secondary)]">
+            Dibuja sobre cada hoja la línea del doblez, el margen de seguridad y las líneas guía para recortar (marcas de corte), para plegar y recortar a mano.
+          </p>
         </label>
 
         <label className="block">

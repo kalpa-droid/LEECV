@@ -1,4 +1,4 @@
-import { PDFDocument, PageSizes } from 'pdf-lib';
+import { PDFDocument, PageSizes, rgb } from 'pdf-lib';
 import { countBlanksBehindCover } from './impositionMath';
 import { getCoverPresetById } from '../pdf-engine/layers/presets/coverPresetCatalog';
 import { ensurePdfjsWorkerConfigured } from '../pdf-engine/pdfjsWorkerSetup';
@@ -84,6 +84,10 @@ export interface BookImpositionOptions {
    * Estilo de cubierta (opcional): preset para definir colores y diseño específico
    */
   coverStyle?: string;
+  /**
+   * Mostrar guías vectoriales en la hoja final (línea de doblez, margen de seguridad, marcas de corte).
+   */
+  showGuides?: boolean;
   deletedPages?: (number | string)[];
   pageOrder?: (number | string)[];
   blankBehindCover?: boolean;
@@ -114,6 +118,7 @@ export const DEFAULT_BOOK_IMPOSITION_OPTIONS: BookImpositionOptions = {
   paperThicknessMm: 0,
   applyCreep: true,
   coverStyle: 'monica-classic',
+  showGuides: false,
 };
 
 export function getCoverCanvasSize(paperSize: 'A4' | 'A3' = 'A4'): { width: number; height: number } {
@@ -811,6 +816,7 @@ export async function processBookImposition(
     paperThicknessMm = 0,
     applyCreep = true,
     coverStyle,
+    showGuides = false,
     onProgress,
   } = options;
 
@@ -944,6 +950,62 @@ export async function processBookImposition(
       width: scaledWidthR,
       height: scaledHeightR,
     });
+
+    // Guías de armado (solo si el usuario las activa): línea de doblez al
+    // centro, margen de seguridad (~5 mm) y marcas de corte por página.
+    if (showGuides) {
+      const guideColor = rgb(0.85, 0.1, 0.1);
+      const clampX = (x: number) => Math.max(0, Math.min(sheetWidth, x));
+      const clampY = (y: number) => Math.max(0, Math.min(sheetHeight, y));
+
+      sheet.drawLine({
+        start: { x: clampX(halfWidth), y: 0 },
+        end: { x: clampX(halfWidth), y: sheetHeight },
+        thickness: 0.5,
+        color: guideColor,
+        dashArray: [6, 4],
+      });
+
+      const safetyPt = 5 * 2.83465; // 5 mm en puntos PDF
+      const pageRects = [
+        { x: (halfWidth - scaledWidthL) / 2, y: (sheetHeight - scaledHeightL) / 2, w: scaledWidthL, h: scaledHeightL },
+        { x: halfWidth + (halfWidth - scaledWidthR) / 2, y: (sheetHeight - scaledHeightR) / 2, w: scaledWidthR, h: scaledHeightR },
+      ];
+
+      for (const rect of pageRects) {
+        sheet.drawRectangle({
+          x: rect.x + safetyPt,
+          y: rect.y + safetyPt,
+          width: Math.max(0, rect.w - safetyPt * 2),
+          height: Math.max(0, rect.h - safetyPt * 2),
+          borderColor: guideColor,
+          borderWidth: 0.5,
+          borderDashArray: [2, 2],
+        });
+
+        const tick = 12;
+        const corners = [
+          { x: rect.x, y: rect.y + rect.h },
+          { x: rect.x + rect.w, y: rect.y + rect.h },
+          { x: rect.x, y: rect.y },
+          { x: rect.x + rect.w, y: rect.y },
+        ];
+        for (const corner of corners) {
+          sheet.drawLine({
+            start: { x: clampX(corner.x - tick), y: corner.y },
+            end: { x: clampX(corner.x + tick), y: corner.y },
+            thickness: 0.5,
+            color: guideColor,
+          });
+          sheet.drawLine({
+            start: { x: corner.x, y: clampY(corner.y - tick) },
+            end: { x: corner.x, y: clampY(corner.y + tick) },
+            thickness: 0.5,
+            color: guideColor,
+          });
+        }
+      }
+    }
   }
 
   if (onProgress) onProgress('Finalizando documento...', 98);
