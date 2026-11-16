@@ -11,6 +11,8 @@ import { BookBackCoverStep } from './BookBackCoverStep';
 import { BookPreviewExportStep } from './BookPreviewExportStep';
 import { BookPreviewStep } from './BookPreviewStep';
 import { getNextBookStepId, getPrevBookStepId } from '../../shared/core/book-engine/bookStepSequence';
+import { bookAssetManager, STORAGE_WARN_BYTES } from '../../shared/core/book-engine/bookAssetManager';
+import { ensurePdfjsWorkerConfigured } from '../../shared/core/pdf-engine/pdfjsWorkerSetup';
 import { saveBook } from '../../shared/core/storage/documentStorageService';
 import { openTab, OpenTab } from '../../shared/core/documents/tabStore';
 import { useRegisterDocumentTab, resolveDocumentIdWithHandoff, generateDocumentId } from '../../shared/core/documents/documentEngine';
@@ -74,8 +76,57 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
     zoomLevel: viewport.zoomLevel
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const sourcePdfPickerRef = useRef<(() => Promise<void>) | null>(null);
 
   const [options, setOptions] = useState<BookImpositionOptions>(DEFAULT_BOOK_IMPOSITION_OPTIONS);
+  const [storageUsage, setStorageUsage] = useState<{ bytes: number; count: number } | null>(null);
+  const [pdfNotice, setPdfNotice] = useState<'moved' | 'restore-available' | null>(null);
+  const [confirmClearAssets, setConfirmClearAssets] = useState(false);
+
+  const attachSourcePdf = (file: File) => {
+    setSelectedFile(file);
+    setPdfNotice(null);
+    file.arrayBuffer().then((buf) => {
+      ensurePdfjsWorkerConfigured()
+        .getDocument({ data: new Uint8Array(buf) }).promise
+        .then((doc: any) => {
+          setPdfPageCount(doc.numPages);
+          doc.destroy();
+        })
+        .catch(() => setPdfPageCount(0));
+    });
+    persistBookState(file, options);
+  };
+
+  // Restaurar la referencia local del PDF original (sin duplicar el archivo).
+  useEffect(() => {
+    let alive = true;
+    bookAssetManager.restoreSourcePdf().then((result) => {
+      if (!alive) return;
+      if (result.status === 'restored') {
+        attachSourcePdf(result.file);
+      } else if (result.status === 'moved') {
+        setPdfNotice('moved');
+      } else if (result.status === 'denied') {
+        setPdfNotice('restore-available');
+      }
+    });
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Aviso de almacenamiento local (~1 GB).
+  useEffect(() => {
+    let alive = true;
+    bookAssetManager.estimateUsage().then((usage) => {
+      if (alive) setStorageUsage(usage);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [options.customCover?.assetId, options.customBackCover?.assetId]);
 
   const bookTitle = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, '') : 'Mi Libro / Folleto';
 
@@ -133,7 +184,11 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   const handleTriggerFileInput = () => {
     setActiveStepTab('book_source_type');
     setTimeout(() => {
-      fileInputRef.current?.click();
+      if (bookAssetManager.isFileSystemAccessSupported() && sourcePdfPickerRef.current) {
+        sourcePdfPickerRef.current();
+      } else {
+        fileInputRef.current?.click();
+      }
     }, 100);
   };
 
@@ -173,6 +228,81 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
       }
       panelSlot={
         <div className="p-4 pb-24 sm:pb-16 space-y-6 overflow-y-auto h-full max-h-full text-[var(--ui-text-primary)]">
+          {pdfNotice === 'moved' && (
+            <div className={`p-3 bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/30 rounded-[${radius.control}] space-y-2`}>
+              <p className="text-xs font-semibold text-[var(--color-status-danger-text)]">
+                No encontramos tu PDF en la ubicación de antes (lo moviste o lo borraste). El proyecto del libro sigue intacto.
+              </p>
+              <button
+                type="button"
+                onClick={async () => {
+                  const file = await bookAssetManager.pickSourcePdf();
+                  if (file) attachSourcePdf(file);
+                }}
+                className={`px-3 py-1.5 text-xs font-bold rounded-[${radius.control}] bg-[var(--color-status-danger-base)] text-[var(--color-status-on-base)] cursor-pointer`}
+              >
+                Buscar el PDF de nuevo
+              </button>
+            </div>
+          )}
+
+          {pdfNotice === 'restore-available' && (
+            <div className={`p-3 bg-[var(--color-accent-light)]/20 border border-[var(--color-accent-base)]/30 rounded-[${radius.control}] space-y-2`}>
+              <p className="text-xs font-semibold text-[var(--color-accent-text)]">
+                Recordamos dónde está tu PDF. No guardamos una copia: solo la ubicación.
+              </p>
+              <button
+                type="button"
+                onClick={async () => {
+                  const file = await bookAssetManager.requestSourcePdfPermission();
+                  if (file) attachSourcePdf(file);
+                }}
+                className={`px-3 py-1.5 text-xs font-bold rounded-[${radius.control}] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] cursor-pointer`}
+              >
+                Reabrir mi PDF
+              </button>
+            </div>
+          )}
+
+          {storageUsage && storageUsage.bytes > STORAGE_WARN_BYTES && (
+            <div className={`p-3 bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/30 rounded-[${radius.control}] space-y-2`}>
+              <p className="text-xs font-semibold text-[var(--color-status-warning-text)]">
+                Las imágenes guardadas en la app ya pesan más de 1 GB en este navegador. Podés borrarlas para liberar lugar (tu PDF original nunca se toca).
+              </p>
+              {confirmClearAssets ? (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await bookAssetManager.clearAll();
+                      setConfirmClearAssets(false);
+                      const usage = await bookAssetManager.estimateUsage();
+                      setStorageUsage(usage);
+                    }}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-[${radius.control}] bg-[var(--color-status-danger-base)] text-[var(--color-status-on-base)] cursor-pointer`}
+                  >
+                    Sí, borrar imágenes guardadas
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmClearAssets(false)}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] text-[var(--ui-text-secondary)] cursor-pointer`}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmClearAssets(true)}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-[${radius.control}] border border-[var(--color-status-warning-base)]/40 text-[var(--color-status-warning-text)] cursor-pointer`}
+                >
+                  Ver y liberar espacio
+                </button>
+              )}
+            </div>
+          )}
+
           {activeStepTab === 'book_source_type' && (
             <BookSourceTypeStep
               options={options}
@@ -184,6 +314,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               onPdfLoaded={(doc) => setPdfDoc(doc)}
               onNextStep={() => handleNavigateNextStep('book_source_type')}
               fileInputRef={fileInputRef}
+              pickerRef={sourcePdfPickerRef}
             />
           )}
 
@@ -231,6 +362,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               selectedFile={selectedFile}
               pdfPageCount={pdfPageCount}
               onPrevStep={() => handleNavigatePrevStep('book_preview_export')}
+              assetResolver={(ref) => bookAssetManager.getBlobUrl(ref)}
             />
           )}
         </div>

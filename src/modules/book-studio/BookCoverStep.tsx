@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BookOpen, Check, Palette, ChevronLeft, ChevronRight } from 'lucide-react';
 import { BookImpositionOptions, CoverConfig } from '../../shared/core/book-engine/impositionEngine';
 import { COVER_PRESETS } from '../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
+import { bookAssetManager } from '../../shared/core/book-engine/bookAssetManager';
 import { radius, typeScale, button, selectableCard, input } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 
@@ -34,6 +35,22 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
     }
   );
   const [imageError, setImageError] = useState<string | null>(null);
+  const [thumbUri, setThumbUri] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const currentAssetId = options.customCover?.assetId;
+    if (currentAssetId && !thumbUri) {
+      bookAssetManager.getThumbUrl(currentAssetId).then((url) => {
+        if (!cancelled) setThumbUri(url);
+      });
+    }
+    return () => {
+      cancelled = true;
+    };
+    // Solo cuando cambia la ref del asset, no en cada tecla.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [options.customCover?.assetId]);
 
   const handleCoverTypeChange = (type: 'source' | 'custom' | 'upload' | 'none') => {
     setCoverType(type);
@@ -46,6 +63,11 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
       const updated = { ...coverData, type: 'upload' as const };
       setOptions((prev) => ({ ...prev, hasCover: false, customCover: updated }));
     } else {
+      // Sin tapa: borrar también la imagen local guardada, no dejar basura.
+      if (options.customCover?.assetId) {
+        bookAssetManager.remove(options.customCover.assetId);
+      }
+      setThumbUri(null);
       setOptions((prev) => ({ ...prev, hasCover: false, customCover: null }));
     }
   };
@@ -58,21 +80,27 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
       setImageError('Ese archivo no es una imagen. Elegí un archivo PNG, JPG o WEBP.');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
+    try {
+      const { assetId } = await bookAssetManager.putFile(file, 'cover');
+      // Evitar duplicados huérfanos: la imagen anterior se borra.
+      if (coverData.assetId && coverData.assetId !== assetId) {
+        bookAssetManager.remove(coverData.assetId);
+      }
+      setThumbUri(null);
+      const updated: CoverConfig = { ...coverData, type: 'upload' as const, assetId, imageUri: undefined };
+      setCoverData(updated);
       setImageError(null);
-      updateCoverField('imageUri', dataUrl);
-    };
-    reader.onerror = () => setImageError('No pudimos leer el archivo. Probá con otro.');
-    reader.readAsDataURL(file);
+      setOptions((prev) => ({ ...prev, customCover: updated }));
+    } catch {
+      setImageError('No pudimos guardar la imagen en este equipo. Probá con otra imagen.');
+    }
   };
 
   return (
@@ -139,11 +167,11 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
             <p className="text-xs font-semibold text-[var(--color-status-danger-text)]">{imageError}</p>
           )}
 
-          {coverData.imageUri && (
+          {(coverData.imageUri || thumbUri) && (
             <div className="space-y-4">
               <div className={`relative w-full aspect-[1/1.41] max-w-[200px] mx-auto rounded-[${radius.control}] overflow-hidden border border-[var(--ui-border)] shadow-[var(--shadow-raised)] bg-[var(--ui-bg-hover)]`}>
                 <img 
-                  src={coverData.imageUri} 
+                  src={(coverData.imageUri || thumbUri) as string} 
                   alt="Vista previa tapa subida" 
                   className={`w-full h-full ${
                     coverData.imageFit === 'stretch' ? '' :

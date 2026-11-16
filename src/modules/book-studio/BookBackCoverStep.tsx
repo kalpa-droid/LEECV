@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BookMarked, ChevronLeft, ChevronRight } from 'lucide-react';
 import { BookImpositionOptions, BackCoverConfig } from '../../shared/core/book-engine/impositionEngine';
+import { bookAssetManager } from '../../shared/core/book-engine/bookAssetManager';
 import { radius, typeScale, button, selectableCard, input } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 
@@ -23,6 +24,21 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
       : 'none'
   );
   const [imageError, setImageError] = useState<string | null>(null);
+  const [thumbUri, setThumbUri] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const currentAssetId = options.customBackCover?.assetId;
+    if (currentAssetId && !thumbUri) {
+      bookAssetManager.getThumbUrl(currentAssetId).then((url) => {
+        if (!cancelled) setThumbUri(url);
+      });
+    }
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [options.customBackCover?.assetId]);
 
   const [backCoverData, setBackCoverData] = useState<BackCoverConfig>(
     options.customBackCover || {
@@ -45,6 +61,11 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
       const updated = { ...backCoverData, type: 'upload' as const };
       setOptions((prev) => ({ ...prev, hasBackCover: false, customBackCover: updated }));
     } else {
+      // Sin contratapa: borrar también la imagen local guardada, no dejar basura.
+      if (options.customBackCover?.assetId) {
+        bookAssetManager.remove(options.customBackCover.assetId);
+      }
+      setThumbUri(null);
       setOptions((prev) => ({ ...prev, hasBackCover: false, customBackCover: null }));
     }
   };
@@ -57,21 +78,27 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
       setImageError('Ese archivo no es una imagen. Elegí un archivo PNG, JPG o WEBP.');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
+    try {
+      const { assetId } = await bookAssetManager.putFile(file, 'backCover');
+      // Evitar duplicados huérfanos: la imagen anterior se borra.
+      if (backCoverData.assetId && backCoverData.assetId !== assetId) {
+        bookAssetManager.remove(backCoverData.assetId);
+      }
+      setThumbUri(null);
+      const updated: BackCoverConfig = { ...backCoverData, type: 'upload' as const, assetId, imageUri: undefined };
+      setBackCoverData(updated);
       setImageError(null);
-      updateBackCoverField('imageUri', dataUrl);
-    };
-    reader.onerror = () => setImageError('No pudimos leer el archivo. Probá con otro.');
-    reader.readAsDataURL(file);
+      setOptions((prev) => ({ ...prev, customBackCover: updated }));
+    } catch {
+      setImageError('No pudimos guardar la imagen en este equipo. Probá con otra imagen.');
+    }
   };
 
   return (
@@ -148,9 +175,9 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
             <p className="text-xs font-semibold text-[var(--color-status-danger-text)]">{imageError}</p>
           )}
 
-          {backCoverData.imageUri && (
+          {(backCoverData.imageUri || thumbUri) && (
             <div className={`relative w-full aspect-[1/1.4] max-w-[200px] mx-auto rounded-[${radius.control}] overflow-hidden border border-[var(--ui-border)] shadow-[var(--shadow-raised)]`}>
-              <img src={backCoverData.imageUri} alt="Vista previa contratapa subida" className="w-full h-full object-cover" />
+              <img src={(backCoverData.imageUri || thumbUri) as string} alt="Vista previa contratapa subida" className="w-full h-full object-cover" />
             </div>
           )}
         </div>

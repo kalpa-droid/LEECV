@@ -13,6 +13,8 @@ interface BookPreviewExportStepProps {
   selectedFile: File | null;
   pdfPageCount: number;
   onPrevStep?: () => void;
+  /** Resuelve refs de assets locales ('asset:...') a URLs cargables por Canvas. */
+  assetResolver?: (ref: string) => Promise<string | null>;
 }
 
 export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
@@ -20,6 +22,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   selectedFile,
   pdfPageCount,
   onPrevStep,
+  assetResolver,
 }) => {
   const t = useText();
   const { consumeCreditIfNeeded, loading: isGating } = useExportEntitlement();
@@ -72,6 +75,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
 
       const pdfBytes = await processBookImposition(selectedFile, {
         ...options,
+        assetResolver,
         onProgress: (msg, pct) => {
           setStatusMessage(msg);
           setProgressPercent(pct);
