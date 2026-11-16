@@ -431,6 +431,7 @@ async function procesarComoImagenes(
   onProgress?: (message: string, percent: number) => void
 ): Promise<PDFDocument> {
   const {
+    exportMode = 'vector',
     hasCover = false,
     coverSide = 'derecha',
     refPdfPage = 0,
@@ -445,9 +446,81 @@ async function procesarComoImagenes(
     blankBehindCover = true,
   } = options;
 
-  const coverCanvasSize = getCoverCanvasSize(paperSize);
-  const newPdf = await PDFDocument.create();
   const arrayBuffer = file instanceof File ? await file.arrayBuffer() : file;
+  const coverCanvasSize = getCoverCanvasSize(paperSize);
+
+  // Camino vectorial: se copia la página tal cual con copyPages, sin renderizar.
+  // Solo aplica a modo normal sin rotaciones ni cortes (los recortes requieren canvas).
+  const hasSplitIds =
+    mode === 'fotocopia' &&
+    pageOrder &&
+    pageOrder.length > 0 &&
+    String(pageOrder[0]).includes('_');
+  const hasUserRotations = pageRotations && Object.keys(pageRotations).length > 0;
+  const useVectorPath = exportMode === 'vector' && mode === 'normal' && !hasSplitIds && !hasUserRotations;
+
+  if (useVectorPath) {
+    const newPdf = await PDFDocument.create();
+    const sourcePdf = await PDFDocument.load(arrayBuffer);
+
+    // Valida que haya páginas reales; si está vacío, falls back a rasterizar.
+    const totalSourcePages = sourcePdf.getPageCount();
+    if (totalSourcePages === 0) {
+      throw new Error('El PDF está vacío o no se pudo leer.');
+    }
+
+    let effectiveRefPdfPage = refPdfPage;
+    if (!hasCover && customCover && (customCover.type === 'upload' || customCover.type === 'template')) {
+      const coverCanvas = await crearCanvasTapaCustom(customCover, coverCanvasSize, 1, options.assetResolver);
+      if (coverCanvas) {
+        const coverImg = await newPdf.embedJpg(coverCanvas.toDataURL('image/jpeg', 0.92));
+        const pageC = newPdf.addPage([coverCanvas.width, coverCanvas.height]);
+        pageC.drawImage(coverImg, { x: 0, y: 0, width: coverCanvas.width, height: coverCanvas.height });
+        if (effectiveRefPdfPage > 0) effectiveRefPdfPage += 1;
+
+        const blanksNeeded = countBlanksBehindCover(blankBehindCover, effectiveRefPdfPage, refBookPage, refPageSide);
+        for (let i = 0; i < blanksNeeded; i++) {
+          const blankPage = newPdf.addPage([coverCanvas.width, coverCanvas.height]);
+          blankPage.drawRectangle({ x: 0, y: 0, width: 0, height: 0 });
+        }
+        coverCanvas.width = 0;
+        coverCanvas.height = 0;
+      }
+    }
+
+    const blanksBehindSourceCover = hasCover
+      ? countBlanksBehindCover(blankBehindCover, effectiveRefPdfPage, refBookPage, refPageSide)
+      : 0;
+
+    const effectivePageOrder =
+      pageOrder && pageOrder.length > 0
+        ? pageOrder.map((x) => Number(String(x).split('_')[0])).filter((n) => !isNaN(n))
+        : Array.from({ length: totalSourcePages }, (_, i) => i + 1);
+
+    for (let idx = 0; idx < effectivePageOrder.length; idx++) {
+      const pageNum = effectivePageOrder[idx];
+      if (deletedPages && deletedPages.includes(pageNum)) continue;
+
+      if (onProgress) {
+        const avance = 10 + Math.floor(((idx + 1) / effectivePageOrder.length) * 45);
+        onProgress(`Copiando página ${idx + 1} de ${effectivePageOrder.length}...`, avance);
+      }
+
+      const [copiedPage] = await newPdf.copyPages(sourcePdf, [pageNum - 1]);
+      newPdf.addPage(copiedPage);
+
+      if (pageNum === 1 && hasCover) {
+        const blanks = blanksBehindSourceCover;
+        for (let i = 0; i < blanks; i++) {
+          const blankPage = newPdf.addPage([copiedPage.getWidth(), copiedPage.getHeight()]);
+          blankPage.drawRectangle({ x: 0, y: 0, width: 0, height: 0 });
+        }
+      }
+    }
+
+    return newPdf;
+  }
+  const newPdf = await PDFDocument.create();
 
   const pdf = await pdfjsLib.getDocument({
     data: new Uint8Array(arrayBuffer),
@@ -492,8 +565,6 @@ async function procesarComoImagenes(
   const blanksBehindSourceCover = hasCover
     ? countBlanksBehindCover(blankBehindCover, effectiveRefPdfPage, refBookPage, refPageSide)
     : 0;
-
-  const hasSplitIds = mode === 'fotocopia' && pageOrder && pageOrder.length > 0 && String(pageOrder[0]).includes('_');
 
   if (hasSplitIds) {
     const cachedSheetCanvases: Record<number, HTMLCanvasElement> = {};
