@@ -281,7 +281,10 @@ export const bookAssetManager = {
   async pickSourcePdf(bookId?: string): Promise<
     { status: 'picked'; file: File } | { status: 'cancelled' } | { status: 'fallback-required' }
   > {
-    if (!this.canUseNativeFilePicker()) return { status: 'fallback-required' };
+    if (!this.canUseNativeFilePicker()) {
+      markNativePickerFailedSession();
+      return { status: 'fallback-required' };
+    }
     try {
       const [handle] = await (window as any).showOpenFilePicker({
         types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }],
@@ -304,6 +307,7 @@ export const bookAssetManager = {
       // AbortError = el usuario canceló el diálogo: no es un error bloqueante.
       if (name === 'AbortError') return { status: 'cancelled' };
       // SecurityError / NotAllowedError = iframe o permiso denegado: usar input de respaldo.
+      markNativePickerFailedSession();
       return { status: 'fallback-required' };
     }
   },
@@ -367,3 +371,23 @@ export const bookAssetManager = {
     }
   },
 };
+
+/**
+ * ¿El selector nativo falló en esta sesión? Si fue así, la UI cae al
+ * <label> nativo (siempre funciona, sin JS) en vez de reintentar
+ * showOpenFilePicker() en cada clic (que además puede fallar en silencio
+ * de nuevo). Vive en memoria: al recargar la página se vuelve a intentar.
+ */
+let nativePickerFailedThisSession = false;
+
+export function markNativePickerFailedSession(): void {
+  nativePickerFailedThisSession = true;
+}
+
+export function isNativePickerFailedSession(): boolean {
+  return nativePickerFailedThisSession;
+}
+
+export function resetNativePickerFailedSession(): void {
+  nativePickerFailedThisSession = false;
+}
