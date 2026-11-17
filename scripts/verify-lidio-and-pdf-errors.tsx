@@ -171,7 +171,7 @@ function verifyPdfWiring() {
 
   const content = readSource('src/modules/book-studio/BookStudioContent.tsx');
   const missingContent = containsAll(content, [
-    "PDFDocument.load(arrayBuffer, { ignoreEncryption: true })", // detección de protección en la carga
+    "PDFDocument.load(arrayBuffer.slice(0), { ignoreEncryption: true })", // detección de protección en la carga (copia para no invalidar el buffer de pdf.js)
     "exportMode: isEncrypted ? 'raster'",                       // conmutación automática a imágenes
     'passwordChallenge',                                         // cuadro inline de contraseña
     "type=\"password\"",                                         // input de contraseña (sin window.prompt)
@@ -204,10 +204,24 @@ function verifyPdfWiring() {
     '/encrypt/i.test(msg)',           // red de seguridad del camino vectorial
     'Imágenes compatibles',           // mensaje de rescate en lenguaje sencillo
     'pdfPassword?: string | null',    // firma de processBookImposition
-    '...(pdfPassword ? { password: pdfPassword } : {})', // camino raster con clave
+    'loadPdfDocumentWithCmaps',       // camino raster/compartido con la UI
   ]);
   expectTrue(missingEngine.length === 0, 'impositionEngine: rescate vectorial + contraseña en el camino raster',
     missingEngine.length ? `falta: ${missingEngine.join(', ')}` : 'todo presente');
+
+  // La carga real de pdf.js vive en el helper compartido (cMaps locales → CDN):
+  // allí deben estar el orden de intentos, la copia fresca por intento y la
+  // contraseña SOLO en memoria.
+  const loader = readSource('src/shared/core/pdf-engine/pdfjsWorkerSetup.ts');
+  const missingLoader = containsAll(loader, [
+    'loadPdfDocumentWithCmaps',
+    '/cmaps/',                        // cMaps locales primero
+    'cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/cmaps/', // CDN como respaldo
+    'data: new Uint8Array(data).slice()', // copia fresca por intento (buffer intacto para pdf-lib)
+    '...(password ? { password } : {})',  // la clave viaja solo en memoria
+  ]);
+  expectTrue(missingLoader.length === 0, 'pdfjsWorkerSetup: carga cMaps local→CDN con copia fresca por intento y clave en memoria',
+    missingLoader.length ? `falta: ${missingLoader.join(', ')}` : 'todo presente');
 
   const exportStep = readSource('src/modules/book-studio/BookPreviewExportStep.tsx');
   const missingExport = containsAll(exportStep, [

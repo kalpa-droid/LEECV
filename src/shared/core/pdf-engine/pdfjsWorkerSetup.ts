@@ -26,3 +26,37 @@ export function ensurePdfjsWorkerConfigured(): typeof pdfjsLib {
   }
   return pdfjsLib;
 }
+
+/**
+ * Abre un PDF con pdf.js igual que el motor de imposición: cMaps locales
+ * primero (mismo dominio, /cmaps/), CDN como respaldo y sin cMaps de último
+ * recurso. Recibe los bytes CRUDOS y hace su propia copia fresca por intento
+ * (pdf.js transfiere el buffer al worker y lo invalida), así el ArrayBuffer
+ * del llamador sigue válido para pdf-lib u otro consumidor después.
+ * La contraseña (si el PDF origen estaba protegido) viaja solo en memoria.
+ */
+export async function loadPdfDocumentWithCmaps(
+  data: ArrayBuffer | Uint8Array,
+  password?: string
+): Promise<any> {
+  const pdfjsLib = ensurePdfjsWorkerConfigured();
+  const attempts = [
+    { label: 'cmaps locales', params: { cMapUrl: '/cmaps/', cMapPacked: true } as Record<string, unknown> },
+    { label: 'cmaps CDN', params: { cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/cmaps/', cMapPacked: true } as Record<string, unknown> },
+    { label: 'sin cmaps', params: {} as Record<string, unknown> },
+  ];
+  let lastError: unknown = null;
+  for (const attempt of attempts) {
+    try {
+      return await pdfjsLib.getDocument({
+        data: new Uint8Array(data).slice(),
+        ...(password ? { password } : {}),
+        ...attempt.params,
+      }).promise;
+    } catch (err) {
+      lastError = err;
+      console.warn(`[pdf.js] No se pudo abrir el PDF con ${attempt.label}:`, err);
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error('No se pudo abrir el PDF.');
+}

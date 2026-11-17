@@ -1,11 +1,9 @@
 import { PDFDocument, PageSizes, rgb } from 'pdf-lib';
 import { countBlanksBehindCover } from './impositionMath';
 import { getCoverPresetById } from '../pdf-engine/layers/presets/coverPresetCatalog';
-import { ensurePdfjsWorkerConfigured } from '../pdf-engine/pdfjsWorkerSetup';
+import { loadPdfDocumentWithCmaps } from '../pdf-engine/pdfjsWorkerSetup';
 import { resolveCanvasColor, COVER_FALLBACK_BG, COVER_FALLBACK_TEXT } from './canvasColors';
 import { calculateSpineWidth, calculateCreepOffset, planBookletSignatures, getSignatureSheetPairs } from './impositionPlanner';
-
-const pdfjsLib = typeof window !== 'undefined' ? ensurePdfjsWorkerConfigured() : (null as any);
 
 export interface CoverConfig {
   type: 'upload' | 'template' | 'none';
@@ -743,29 +741,8 @@ async function procesarComoImagenes(
   // a /cmaps/); si no están, CDN como respaldo; y como último recurso sin
   // cmaps (PDFs con fuentes CJK podrían no verse, el resto sigue funcionando).
   const pdfBytes = new Uint8Array(arrayBuffer);
-  const loadDocument = async () => {
-    const attempts = [
-      { label: 'cmaps locales', params: { cMapUrl: '/cmaps/', cMapPacked: true } as Record<string, unknown> },
-      { label: 'cmaps CDN', params: { cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/cmaps/', cMapPacked: true } as Record<string, unknown> },
-      { label: 'sin cmaps', params: {} as Record<string, unknown> },
-    ];
-    let lastError: unknown = null;
-    for (const attempt of attempts) {
-      try {
-        // Copia fresca por intento: pdf.js transfiere el buffer al worker (lo invalida).
-        // La contraseña (si el PDF origen estaba protegido) viaja solo en memoria.
-        return await pdfjsLib.getDocument({
-          data: pdfBytes.slice(),
-          ...(pdfPassword ? { password: pdfPassword } : {}),
-          ...attempt.params,
-        }).promise;
-      } catch (err) {
-        lastError = err;
-        console.warn(`[book] No se pudo abrir el PDF con ${attempt.label}:`, err);
-      }
-    }
-    throw lastError instanceof Error ? lastError : new Error('No se pudo abrir el PDF.');
-  };
+  // Camino único de carga compartido con la UI (cMaps locales → CDN → sin cmaps).
+  const loadDocument = () => loadPdfDocumentWithCmaps(pdfBytes, pdfPassword);
   const pdf = await loadDocument();
 
   const totalSourcePages = pdf.numPages;

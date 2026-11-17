@@ -8,7 +8,7 @@ import { planBookletSignatures, getSignatureSheetPairs } from '../../../shared/c
 import { bookAssetManager } from '../../../shared/core/book-engine/bookAssetManager';
 import { radius } from '../../../shared/core/uiDesignSystem';
 import { RefreshCw, FileText, Trash2, AlertTriangle } from 'lucide-react';
-import { ensurePdfjsWorkerConfigured } from '../../../shared/core/pdf-engine/pdfjsWorkerSetup';
+import { loadPdfDocumentWithCmaps } from '../../../shared/core/pdf-engine/pdfjsWorkerSetup';
 import { useText } from '../../../shared/i18n/useText';
 
 export interface PdfPreviewStripProps {
@@ -105,8 +105,9 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
         setIsLoadingPdfDoc(true);
         setPdfLoadError(null);
         const arrayBuffer = await selectedFile.arrayBuffer();
-        const pdfjsLib = ensurePdfjsWorkerConfigured();
-        const doc = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+        // Mismo camino de carga del motor (cMaps locales → CDN → sin cmaps)
+        // y con copia interna: el arrayBuffer del archivo queda intacto.
+        const doc = await loadPdfDocumentWithCmaps(arrayBuffer);
         if (!isCancelled) {
           setInternalPdfDoc(doc);
           setIsLoadingPdfDoc(false);
