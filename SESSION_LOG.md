@@ -590,3 +590,10 @@ Migración a una arquitectura de facturación stateless ("guest-first") donde el
 - **Merge #122 confirmado** (`docs/release-v2.19.0`, head `fd2335f` ya en remote): `main` -> hash `dec82a03fa021f183dc95459decee218e76eca9c`. Squash msg: `docs(release): V2.19.0 — cierre del plan Book Studio/Lidio (#122)`. CI `check-all` success (run 44009832828, 1m29s), Vercel pass. Verificado post-merge: `git log origin/main -1` = `dec82a03...` (identico al mergeCommit de la API). Rama NO borrada (sin `--delete-branch`).
 - **Autorizacion CODEOWNER**: Kalpa dio OK explicito en sesion (pregunta en chat tras CI verde). La PR tocaba `src/shared/core/version.ts` -> aprobacion requerida y otorgada.
 - **Contenido**: bump MINOR V2.18.1 -> V2.19.0 en `src/shared/core/version.ts` (stage resume las 5 fases: PR 118/119/120/121); asientos en `SESSION_LOG.md` + `.opencode/CONTEXT.md`. Plan Book Studio/Lidio de 5 fases COMPLETO y en produccion.
+- **COMPLETADO**: ver entrada post-merge Docs PR #123 al final de este archivo.
+
+## [2026-11-17] - Regla 6 paso 7 (Post-merge Docs PR #123 — asiento final del ciclo V2.19.0)
+- **Merge #123 confirmado** (`docs/handoff-v219-post-merge`, head `9cfb8a7` ya en remote): `main` -> hash `e5b4561c4532c559da00a60dc842ea9e1b6d027e`. Squash msg: `docs(handoff): post-merge V2.19.0 (PR #122) en SESSION_LOG y CONTEXT (#123)`. CI `check-all` success (run 44011586324, 1m22s), Vercel pass. Verificado post-merge: `git log origin/main -1` = `e5b4561c...` (identico al mergeCommit de la API). Rama NO borrada (sin `--delete-branch`).
+- **Autorizacion CODEOWNER**: Kalpa dio OK explicito en sesion. La PR era docs-only (no tocaba nucleos) -> aprobacion otorgada igual por consistencia de proceso.
+- **Contenido**: asiento de post-merge de #122; `SESSION_LOG.md` y `.opencode/CONTEXT.md` quedan con el ciclo completo cerrado.
+- **Ciclo cerrado**: plan Book Studio/Lidio 5 fases (#118, #119, #120, #121) + release V2.19.0 (#122) + asientos de handoff (#123). `version.ts` = V2.19.0; `main` = `e5b4561c`.
