@@ -24,6 +24,12 @@ interface CardObjectRendererProps {
   rolesColor: ResolvedThemeRoles;
   typography: TypographyScale;
   sectorRole?: 'sidebar' | 'main';
+  /**
+   * Último registro de la última sección del sector: anula el marginBottom terminal.
+   * Sin esto, el margen residual del último registro puede no entrar en la página y
+   * arrastrar una caja casi vacía a una página nueva (hoja fantasma en blanco).
+   */
+  isTrailingRecord?: boolean;
 }
 
 export function CardObjectRenderer({
@@ -38,6 +44,7 @@ export function CardObjectRenderer({
   rolesColor,
   typography,
   sectorRole = 'main',
+  isTrailingRecord = false,
 }: CardObjectRendererProps) {
   const design: CardDesign = CARD_DESIGNS[designId] || CARD_DESIGNS['primary-card'];
   const decStyles = preset ? resolveDecorativeStyles(preset, designId as any, rolesColor, sectorRole) : null;
@@ -110,7 +117,7 @@ export function CardObjectRenderer({
   const styles = StyleSheet.create({
     cardContainer: {
       padding: spatialLayout.containerStyle.padding,
-      marginBottom: spatialLayout.containerStyle.marginBottom,
+      marginBottom: isTrailingRecord ? 0 : spatialLayout.containerStyle.marginBottom,
       borderLeftWidth: decStyles?.cardContainerStyle?.borderWidthPt ?? design.borderWidthPt,
       borderLeftColor: decStyles?.cardContainerStyle?.borderColor ?? resolvedAccent.leftRuleColor ?? borderColor,
       borderLeftStyle: 'solid',
