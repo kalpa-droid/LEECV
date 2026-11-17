@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { RotateCw, Trash2, RotateCcw, ZoomIn, ArrowLeft, ArrowRight, Scissors } from 'lucide-react';
 import { radius, elevationSystem } from '../../../shared/core/uiDesignSystem';
 import { thumbnailRenderQueue } from './thumbnailRenderQueue';
+import { useText } from '../../../shared/i18n/useText';
 
 export interface ThumbnailCardProps {
   pageNum: number;
@@ -43,6 +44,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
   const [renderError, setRenderError] = useState<boolean>(false);
   // Nivel 1: solo renderizar la página cuando la tarjeta entra en viewport.
   const [shouldRender, setShouldRender] = useState<boolean>(false);
+  const t = useText();
 
   useEffect(() => {
     const node = wrapperRef.current;
@@ -184,7 +186,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         </span>
         <div className="flex items-center gap-1">
           {splitOffset !== 50 && (
-            <span className="text-[10px] text-[var(--color-secondary-bright)] font-mono font-bold" title="Corte manual central">
+            <span className="text-[10px] text-[var(--color-secondary-bright)] font-mono font-bold" title={t.bookStudio.thumbnailCard.cutTitle}>
               ✂ {splitOffset}%
             </span>
           )}
@@ -227,7 +229,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
           <div
             className="absolute inset-y-0 pointer-events-none border-l-2 border-dashed border-[var(--color-accent-base)]"
             style={{ left: `${splitOffset}%` }}
-            title="Corte manual central"
+            title={t.bookStudio.thumbnailCard.cutTitle}
           />
         )}
 
@@ -256,11 +258,11 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
             type="button"
             onClick={() => onSplitOffsetChange(pageNum, Math.max(30, splitOffset - 1))}
             className="px-1.5 hover:bg-[var(--ui-border)] rounded text-[var(--ui-text-primary)] cursor-pointer"
-            title="Mover corte 1% a la izquierda"
+            title={t.bookStudio.thumbnailCard.moveCutLeftTitle}
           >
             ◄
           </button>
-          <span className="text-[10px] text-[var(--ui-text-primary)] font-mono flex items-center gap-0.5" title="Ajuste manual de corte central">
+          <span className="text-[10px] text-[var(--ui-text-primary)] font-mono flex items-center gap-0.5" title={t.bookStudio.thumbnailCard.splitOffsetTitle}>
             <Scissors className="w-3 h-3 text-[var(--color-secondary-bright)]" />
             <span>{splitOffset}%</span>
           </span>
@@ -268,7 +270,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
             type="button"
             onClick={() => onSplitOffsetChange(pageNum, Math.min(70, splitOffset + 1))}
             className="px-1.5 hover:bg-[var(--ui-border)] rounded text-[var(--ui-text-primary)] cursor-pointer"
-            title="Mover corte 1% a la derecha"
+            title={t.bookStudio.thumbnailCard.moveCutRightTitle}
           >
             ►
           </button>
@@ -282,7 +284,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
             type="button"
             disabled={!canMoveLeft}
             onClick={() => onMoveLeft(pageNum)}
-            title="Mover página a la izquierda"
+            title={t.bookStudio.thumbnailCard.movePageLeftTitle}
             className="p-1 rounded hover:bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)] disabled:opacity-30 cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
@@ -292,7 +294,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         <button
           type="button"
           onClick={() => onRotate(pageNum)}
-          title="Girar 180°"
+          title={t.bookStudio.organizeStep.rotate}
           className="p-1 rounded hover:bg-[var(--ui-bg-panel)] text-[var(--color-secondary-bright)] cursor-pointer"
         >
           <RotateCw className="w-3.5 h-3.5" />
@@ -301,7 +303,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         <button
           type="button"
           onClick={() => onToggleDelete(pageNum)}
-          title={isDeleted ? 'Restaurar página' : 'Eliminar página'}
+          title={isDeleted ? t.bookStudio.organizeStep.restorePage : t.bookStudio.organizeStep.deletePage}
           className={`p-1 rounded cursor-pointer ${
             isDeleted
               ? 'hover:bg-[var(--color-status-success-muted)] text-[var(--color-status-success-bright)]'
@@ -316,7 +318,7 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
             type="button"
             disabled={!canMoveRight}
             onClick={() => onMoveRight(pageNum)}
-            title="Mover página a la derecha"
+            title={t.bookStudio.thumbnailCard.movePageRightTitle}
             className="p-1 rounded hover:bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)] disabled:opacity-30 cursor-pointer"
           >
             <ArrowRight className="w-3.5 h-3.5" />

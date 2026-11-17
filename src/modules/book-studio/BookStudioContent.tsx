@@ -21,6 +21,7 @@ import { radius, button } from '../../shared/core/uiDesignSystem';
 import { useDocumentViewport, useViewportGestures } from '../../shared/core/viewport';
 import { DocumentTypeId } from '../../types/document';
 import { FloatingAssistant } from '../cv-builder/components/FloatingAssistant';
+import { useText } from '../../shared/i18n/useText';
 
 interface BookStudioContentProps {
   currentUiTheme?: string;
@@ -59,6 +60,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   onOpenShareAppModal,
   onOpenPrivacy,
 }) => {
+  const t = useText();
   const [activeStepTab, setActiveStepTab] = useState<string>('book_source_type');
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -430,9 +432,9 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
             </div>
           ) : (
             <div className={`text-center p-10 bg-[var(--ui-bg-card)] rounded-[${radius.modal}] border-2 border-dashed border-[var(--ui-border)] max-w-md space-y-3`}>
-              <h3 className="text-base font-bold text-[var(--ui-text-primary)]">Ningún PDF cargado aún</h3>
+              <h3 className="text-base font-bold text-[var(--ui-text-primary)]">{t.bookStudio.previewExportStep.emptyTitle}</h3>
               <p className="text-xs text-[var(--ui-text-secondary)]">
-                Carga un archivo PDF en la pestaña lateral para comenzar el montaje en caballete o imprenta.
+                {t.bookStudio.studioShell.emptyBody}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mt-4">
                 <button
@@ -440,7 +442,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
                   onClick={handleTriggerFileInput}
                   className={`px-5 py-2.5 font-bold text-xs rounded-[${radius.card}] transition cursor-pointer ${button.primary}`}
                 >
-                  Cargar PDF Ahora
+                  {t.bookStudio.studioShell.loadPdfNow}
                 </button>
                 {onOpenSavedCVsModal && (
                   <button
@@ -448,7 +450,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
                     onClick={onOpenSavedCVsModal}
                     className={`px-5 py-2.5 font-bold text-xs rounded-[${radius.card}] transition cursor-pointer ${button.secondary}`}
                   >
-                    Mis Libros Guardados
+                    {t.bookStudio.studioShell.mySavedBooks}
                   </button>
                 )}
               </div>

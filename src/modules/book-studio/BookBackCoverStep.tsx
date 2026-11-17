@@ -83,7 +83,7 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      setImageError('Ese archivo no es una imagen. Elegí un archivo PNG, JPG o WEBP.');
+      setImageError(t.bookStudio.sharedBody.notImageFile);
       return;
     }
     try {
@@ -98,7 +98,7 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
       setImageError(null);
       setOptions((prev) => ({ ...prev, customBackCover: updated }));
     } catch {
-      setImageError('No pudimos guardar la imagen en este equipo. Probá con otra imagen.');
+      setImageError(t.bookStudio.sharedBody.saveImageFailed);
     }
   };
 
@@ -122,7 +122,7 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
             backCoverType === 'source' ? selectableCard.selected : selectableCard.unselected
           } text-xs font-bold text-center py-2.5 px-2`}
         >
-          Última pág. del PDF
+          {t.bookStudio.backCoverStep.lastPdfPage}
         </button>
 
         <button
@@ -132,7 +132,7 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
             backCoverType === 'custom' ? selectableCard.selected : selectableCard.unselected
           } text-xs font-bold text-center py-2.5 px-2`}
         >
-          Contratapa Custom
+          {t.bookStudio.backCoverStep.customMode}
         </button>
 
         <button
@@ -142,7 +142,7 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
             backCoverType === 'upload' ? selectableCard.selected : selectableCard.unselected
           } text-xs font-bold text-center py-2.5 px-2`}
         >
-          Subir mi Contratapa
+          {t.bookStudio.backCoverStep.uploadMode}
         </button>
 
         <button
@@ -152,16 +152,16 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
             backCoverType === 'none' ? selectableCard.selected : selectableCard.unselected
           } text-xs font-bold text-center py-2.5 px-2`}
         >
-          Sin Contratapa
+          {t.bookStudio.backCoverStep.noBackCoverMode}
         </button>
       </div>
 
       {backCoverType === 'upload' && (
         <div className={`space-y-4 p-4 rounded-[${radius.card}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)]`}>
           <div className="space-y-1">
-            <label className={typeScale.fieldLabel}>Archivo de Imagen de Contratapa (JPG o PNG)</label>
+            <label className={typeScale.fieldLabel}>{t.bookStudio.backCoverStep.uploadLabel}</label>
             <p className="text-xs text-[var(--ui-text-secondary)]">
-              Sube una imagen diseñada para la contratapa de tu libro.
+              {t.bookStudio.backCoverStep.uploadHint}
             </p>
           </div>
 
@@ -181,7 +181,7 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
               <div className={`relative w-full aspect-[1/1.41] max-w-[200px] mx-auto rounded-[${radius.control}] overflow-hidden border border-[var(--ui-border)] shadow-[var(--shadow-raised)] bg-[var(--ui-bg-hover)]`}>
                 <img
                   src={(backCoverData.imageUri || thumbUri) as string}
-                  alt="Vista previa contratapa subida"
+                  alt={t.bookStudio.backCoverStep.uploadPreviewAlt} 
                   className={`w-full h-full ${
                     backCoverData.imageFit === 'stretch' ? '' :
                     backCoverData.imageFit === 'fit' ? 'object-contain' : 'object-cover'
@@ -190,7 +190,7 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
               </div>
 
               <div className="space-y-2">
-                <label className={typeScale.fieldLabel}>Opciones de Ajuste de Imagen</label>
+                <label className={typeScale.fieldLabel}>{t.bookStudio.sharedBody.imageFitLabel}</label>
                 <div className="flex flex-col gap-2">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -201,7 +201,7 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
                       onChange={() => updateBackCoverField('imageFit', 'crop')}
                       className="accent-[var(--color-accent-base)]"
                     />
-                    <span className="text-xs">Recortar para llenar (Cover)</span>
+                    <span className="text-xs">{t.bookStudio.sharedBody.imageFitCrop}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -212,7 +212,7 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
                       onChange={() => updateBackCoverField('imageFit', 'fit')}
                       className="accent-[var(--color-accent-base)]"
                     />
-                    <span className="text-xs">Ajustar sin deformar (Contain)</span>
+                    <span className="text-xs">{t.bookStudio.sharedBody.imageFitContain}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -223,7 +223,7 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
                       onChange={() => updateBackCoverField('imageFit', 'stretch')}
                       className="accent-[var(--color-accent-base)]"
                     />
-                    <span className="text-xs">Estirar para llenar (Deformar)</span>
+                    <span className="text-xs">{t.bookStudio.sharedBody.imageFitStretch}</span>
                   </label>
                 </div>
               </div>
@@ -238,7 +238,7 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
           <div className="space-y-2">
             <label className={`${typeScale.fieldLabel} flex items-center gap-1.5`}>
               <Palette className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
-              Estilo Visual de Contratapa (Catálogo de Portadas)
+              {t.bookStudio.backCoverStep.presetHeading}
             </label>
             <div className="grid grid-cols-2 gap-2">
               {COVER_PRESETS.map((preset) => {
@@ -265,40 +265,40 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
               })}
             </div>
             <p className="text-[10px] text-[var(--ui-text-secondary)]">
-              Si no elegís uno, la contratapa hereda el estilo de la tapa para mantener la coherencia de diseño.
+              {t.bookStudio.backCoverStep.inheritStyleNote}
             </p>
           </div>
 
           <div className="space-y-3 pt-2">
             <div>
-              <label className={typeScale.fieldLabel}>Sinopsis / Texto de Contratapa</label>
+              <label className={typeScale.fieldLabel}>{t.bookStudio.backCoverStep.synopsisLabel}</label>
               <textarea
                 rows={3}
                 value={backCoverData.synopsis || ''}
                 onChange={(e) => updateBackCoverField('synopsis', e.target.value)}
-                placeholder="Breve reseña del contenido o dedicatoria..."
+                placeholder={t.bookStudio.backCoverStep.synopsisPlaceholder}
                 className={`${input.base} ${input.focus} resize-none`}
               />
             </div>
 
             <div>
-              <label className={typeScale.fieldLabel}>Editorial / Edición (opcional)</label>
+              <label className={typeScale.fieldLabel}>{t.bookStudio.sharedBody.publisherLabel}</label>
               <input
                 type="text"
                 value={backCoverData.publisher || ''}
                 onChange={(e) => updateBackCoverField('publisher', e.target.value)}
-                placeholder="Ej. Ediciones Kalpagráfica"
+                placeholder={t.bookStudio.sharedBody.publisherPlaceholder}
                 className={`${input.base} ${input.focus}`}
               />
             </div>
 
             <div>
-              <label className={typeScale.fieldLabel}>ISBN / Código (opcional)</label>
+              <label className={typeScale.fieldLabel}>{t.bookStudio.backCoverStep.isbnLabel}</label>
               <input
                 type="text"
                 value={backCoverData.isbn || ''}
                 onChange={(e) => updateBackCoverField('isbn', e.target.value)}
-                placeholder="Ej. 978-987-0000-00-0"
+                placeholder={t.bookStudio.backCoverStep.isbnPlaceholder}
                 className={`${input.base} ${input.focus}`}
               />
             </div>
@@ -309,14 +309,14 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
       {/* Retiro de Contratapa y Hoja en Blanco Anterior */}
       <div className={`space-y-4 p-4 rounded-[${radius.card}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)]`}>
         <h3 className="text-xs font-bold text-[var(--ui-text-primary)] uppercase tracking-wider block">
-          Ajustes de Retiro de Contratapa
+          {t.bookStudio.backCoverStep.retiroHeading}
         </h3>
 
         <label className={`flex items-center justify-between p-3 rounded-[${radius.control}] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] cursor-pointer hover:border-[var(--ui-dock-border)] transition-all`}>
           <div className="space-y-0.5 pr-4">
-            <span className="font-bold block text-xs text-[var(--ui-text-primary)]">Hoja en blanco delante de la Contratapa</span>
+            <span className="font-bold block text-xs text-[var(--ui-text-primary)]">{t.bookStudio.backCoverStep.blankInFrontLabel}</span>
             <span className="text-[10px] text-[var(--ui-text-secondary)] block">
-              Asegura que el reverso de la última hoja del cuerpo quede limpio antes de la contratapa.
+              {t.bookStudio.backCoverStep.blankInFrontHelper}
             </span>
           </div>
           <input

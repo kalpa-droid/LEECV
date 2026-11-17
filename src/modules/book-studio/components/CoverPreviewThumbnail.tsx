@@ -6,6 +6,7 @@ import {
   crearCanvasContratapaCustom,
 } from '../../../shared/core/book-engine/impositionEngine';
 import { bookAssetManager } from '../../../shared/core/book-engine/bookAssetManager';
+import { useText } from '../../../shared/i18n/useText';
 
 export interface CoverPreviewThumbnailProps {
   config: CoverConfig | BackCoverConfig | null | undefined;
@@ -28,6 +29,7 @@ export const CoverPreviewThumbnail: React.FC<CoverPreviewThumbnailProps> = ({
   className = 'w-full h-28 object-contain rounded border border-[var(--ui-border)]',
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const t = useText();
   const [loadError, setLoadError] = useState(false);
   const [assetThumbUrl, setAssetThumbUrl] = useState<string | null>(null);
   const assetId = (config as { assetId?: string } | null | undefined)?.assetId;
@@ -99,7 +101,7 @@ export const CoverPreviewThumbnail: React.FC<CoverPreviewThumbnailProps> = ({
         <img
           src={assetThumbUrl}
           className={className}
-          alt={kind === 'cover' ? 'Miniatura de tapa' : 'Miniatura de contratapa'}
+          alt={kind === 'cover' ? t.bookStudio.coverThumbnail.altCover : t.bookStudio.coverThumbnail.altBackCover}
         />
       );
     }
@@ -110,7 +112,7 @@ export const CoverPreviewThumbnail: React.FC<CoverPreviewThumbnailProps> = ({
     return (
       <div className="w-full h-28 flex items-center justify-center text-center px-2 rounded border border-dashed border-[var(--ui-border)] bg-[var(--ui-bg-card)]">
         <p className="text-[11px] leading-snug text-[var(--ui-text-secondary)]">
-          No pudimos cargar esta imagen. Guardala como PNG o JPG y subila de nuevo.
+          {t.bookStudio.coverThumbnail.loadError}
         </p>
       </div>
     );
