@@ -20,6 +20,7 @@ import { useRegisterDocumentTab, resolveDocumentIdWithHandoff, generateDocumentI
 import { radius, button } from '../../shared/core/uiDesignSystem';
 import { useDocumentViewport, useViewportGestures } from '../../shared/core/viewport';
 import { DocumentTypeId } from '../../types/document';
+import { FloatingAssistant } from '../cv-builder/components/FloatingAssistant';
 
 interface BookStudioContentProps {
   currentUiTheme?: string;
@@ -223,8 +224,9 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   };
 
   return (
-    <AppShell
-      docType="book"
+    <>
+      <AppShell
+        docType="book"
       isPanelOpen={isPanelOpen}
       containerRef={viewport.containerRef}
       navbarSlot={
@@ -466,6 +468,13 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
         onNewBook: onNewBook,
         onClose: (e, id) => onCloseTab(id),
       }}
-    />
+      />
+      <FloatingAssistant
+        docType="book"
+        activeTab={activeStepTab}
+        onNavigate={setActiveStepTab}
+        bookOptions={options}
+      />
+    </>
   );
 };

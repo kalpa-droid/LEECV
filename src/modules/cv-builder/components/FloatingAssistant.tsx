@@ -11,11 +11,11 @@ import { DomSectionIcon } from '../../../shared/core/pdf-engine/layers/icons/Dom
 import { UI_ICON_IDS } from '../../../shared/core/ui/iconCatalog';
 import { elevationSystem, zIndex, button } from '../../../shared/core/uiDesignSystem';
 import {
-  ASSISTANT_NAME, ASSISTANT_SESSION_KEY, ASSISTANT_STORAGE_KEY, ALL_TIPS,
-  AssistantTip, SuggestedAssistantAction, canShowMoreTips, countSeen,
-  filterSuggestedActions, markTipSeen, parseAssistantState, parseSessionCount,
-  pickNextTip, serializeAssistantState, FIRST_TIP_IDLE_MS, NEXT_TIP_IDLE_MS,
-  validateAssistantTargetTab, buildAssistantEditorSnapshot,
+  ASSISTANT_NAME, AssistantDocType, AssistantTip, SuggestedAssistantAction,
+  canShowMoreTips, countSeen, filterSuggestedActions, getAllTips,
+  getAssistantSessionKey, getAssistantStorageKey, markTipSeen, parseAssistantState,
+  parseSessionCount, pickNextTip, serializeAssistantState, FIRST_TIP_IDLE_MS, NEXT_TIP_IDLE_MS,
+  validateAssistantTargetTab, buildAssistantEditorSnapshot, buildAssistantBookSnapshot,
 } from '../../../shared/core/assistant/assistantTips';
 import { executeAiTask } from '../../../shared/core/ai/aiClient';
 import { useToast } from '../../../shared/core/ui/Toast';
@@ -26,6 +26,10 @@ interface FloatingAssistantProps {
   onNavigate: (tabId: string) => void;
   cvData?: any;
   atsScore?: number;
+  /** Tipo de documento del editor que monta el asistente. Default 'cv'. */
+  docType?: AssistantDocType;
+  /** Opciones del libro (Book Studio); solo se leen campos estructurales, sin PII. */
+  bookOptions?: any;
 }
 
 interface ChatMessage {
@@ -34,19 +38,31 @@ interface ChatMessage {
   actions?: SuggestedAssistantAction[];
 }
 
-const QUICK_QUESTIONS = ['¿Cómo me postulo?', 'Mejorar mi ATS', 'Cambiar diseño'];
+const QUICK_QUESTIONS_BY_DOC: Record<AssistantDocType, string[]> = {
+  cv: ['¿Cómo me postulo?', 'Mejorar mi ATS', 'Cambiar diseño'],
+  book: ['¿Cómo armo mi libro?', 'Tapa y contratapa', '¿Cómo lo imprimo?'],
+};
 
-const loadState = () => (typeof window === 'undefined'
+const loadState = (docType: AssistantDocType) => (typeof window === 'undefined'
   ? { seenTipIds: [] as string[], doNotDisturb: false }
-  : parseAssistantState(localStorage.getItem(ASSISTANT_STORAGE_KEY)));
-const loadSessionCount = () => (typeof window === 'undefined' ? 0 : parseSessionCount(sessionStorage.getItem(ASSISTANT_SESSION_KEY)));
+  : parseAssistantState(localStorage.getItem(getAssistantStorageKey(docType))));
+const loadSessionCount = (docType: AssistantDocType) => (typeof window === 'undefined'
+  ? 0
+  : parseSessionCount(sessionStorage.getItem(getAssistantSessionKey(docType))));
 
-export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab, onNavigate, cvData, atsScore }) => {
+export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
+  activeTab,
+  onNavigate,
+  cvData,
+  atsScore,
+  docType = 'cv',
+  bookOptions,
+}) => {
   const { showError } = useToast();
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<'tips' | 'chat'>('tips');
-  const [stored, setStored] = useState(loadState);
-  const [sessionCount, setSessionCount] = useState(loadSessionCount);
+  const [stored, setStored] = useState(() => loadState(docType));
+  const [sessionCount, setSessionCount] = useState(() => loadSessionCount(docType));
   const [currentTip, setCurrentTip] = useState<AssistantTip | null>(null);
   const [showAllTips, setShowAllTips] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -72,13 +88,13 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab,
 
   const persistStored = useCallback((next: typeof stored) => {
     setStored(next);
-    try { localStorage.setItem(ASSISTANT_STORAGE_KEY, serializeAssistantState(next)); } catch { }
-  }, []);
+    try { localStorage.setItem(getAssistantStorageKey(docType), serializeAssistantState(next)); } catch { }
+  }, [docType]);
 
   const persistSessionCount = useCallback((n: number) => {
     setSessionCount(n);
-    try { sessionStorage.setItem(ASSISTANT_SESSION_KEY, String(n)); } catch { }
-  }, []);
+    try { sessionStorage.setItem(getAssistantSessionKey(docType), String(n)); } catch { }
+  }, [docType]);
 
   const canTip = useCallback(
     () => canShowMoreTips(storedRef.current.doNotDisturb, sessionCountRef.current),
@@ -96,7 +112,7 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab,
     if (openRef.current) { tipDelay.current = NEXT_TIP_IDLE_MS; scheduleNext(); return; }
     if (!canTip()) return;
     if (currentTipRef.current) { tipDelay.current = NEXT_TIP_IDLE_MS; scheduleNext(); return; }
-    const tip = pickNextTip(activeTabRef.current, storedRef.current.seenTipIds);
+    const tip = pickNextTip(activeTabRef.current, storedRef.current.seenTipIds, docType);
     if (!tip) return;
     const updated = { ...storedRef.current, seenTipIds: markTipSeen(storedRef.current.seenTipIds, tip.id) };
     persistStored(updated);
@@ -106,7 +122,7 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab,
     tipDelay.current = NEXT_TIP_IDLE_MS;
     if (canShowMoreTips(updated.doNotDisturb, sessionCountRef.current + 1)) scheduleNext();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canTip, persistStored, persistSessionCount, scheduleNext]);
+  }, [canTip, persistStored, persistSessionCount, scheduleNext, docType]);
 
   // Inactividad: cualquier interacción "resetea" el reloj del próximo tip
   useEffect(() => {
@@ -139,12 +155,12 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab,
   }, [messages.length]);
 
   const goToTab = useCallback((tabId: string) => {
-    const dest = validateAssistantTargetTab(tabId, cvData);
+    const dest = validateAssistantTargetTab(tabId, cvData, docType);
     if (dest) {
       onNavigate(dest);
       setOpen(false);
     }
-  }, [cvData, onNavigate]);
+  }, [cvData, onNavigate, docType]);
 
   const dismissToast = useCallback(() => {
     setToastTip(null);
@@ -164,12 +180,14 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab,
     setMessages((m) => [...m, userTurn]);
     setSending(true);
     try {
-      const editorState = buildAssistantEditorSnapshot(cvData, activeTab, atsScore);
+      const editorState = docType === 'book'
+        ? buildAssistantBookSnapshot(bookOptions, activeTab)
+        : buildAssistantEditorSnapshot(cvData, activeTab, atsScore);
       const res = await executeAiTask<{ answer: string; suggestedActions?: SuggestedAssistantAction[] }>({
         taskId: 'app_guide_assistant',
-        payload: { question, activeTab, docType: 'cv', editorState, history: messages },
+        payload: { question, activeTab, docType, editorState, history: messages },
       });
-      const actions = filterSuggestedActions(res.data?.suggestedActions, cvData);
+      const actions = filterSuggestedActions(res.data?.suggestedActions, cvData, docType);
       setMessages((m) => [...m, { role: 'ia', text: res.data?.answer || 'Sin respuesta.', actions }]);
     } catch (err) {
       console.error('[Lidio] chat error:', err);
@@ -178,8 +196,9 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab,
       setSending(false);
       inputRef.current?.focus();
     }
-  }, [input, sending, activeTab, cvData, atsScore, messages, showError]);
+  }, [input, sending, activeTab, cvData, atsScore, messages, showError, docType, bookOptions]);
 
+  const allTips = getAllTips(docType);
   const seenCount = countSeen(stored.seenTipIds);
 
   return (
@@ -187,7 +206,7 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab,
       <div className="fixed bottom-5 right-5 z-50">
         <button
           type="button"
-          aria-label={`Abrir ${ASSISTANT_NAME}, el asistente del editor`}
+          aria-label={`Abrir ${ASSISTANT_NAME}, ${docType === 'book' ? 'el asistente del estudio' : 'el asistente del editor'}`}
           aria-expanded={open}
           onClick={() => { setOpen((o) => !o); setToastTip(null); }}
           className={`flex h-12 w-12 items-center justify-center rounded-full border border-[var(--color-accent-base)]/30 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-base)] ${elevationSystem.floating}`}
@@ -211,7 +230,7 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab,
               </span>
               <div className="min-w-0 flex-1">
                 <div className="text-[13px] font-extrabold leading-tight">{ASSISTANT_NAME}</div>
-                <div className="truncate text-[10px] text-[var(--ui-text-secondary)]">Asistente del editor</div>
+                <div className="truncate text-[10px] text-[var(--ui-text-secondary)]">{docType === 'book' ? 'Asistente del estudio' : 'Asistente del editor'}</div>
               </div>
               <button
                 type="button"
@@ -253,7 +272,7 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab,
                       <div className="text-[13px] font-bold">{currentTip.title}</div>
                       <p className="text-[var(--ui-text-secondary)]">{currentTip.body}</p>
                       <div className="flex flex-wrap gap-2 pt-1">
-                        {validateAssistantTargetTab(currentTip.targetTab, cvData) && (
+                        {validateAssistantTargetTab(currentTip.targetTab, cvData, docType) && (
                           <button type="button" onClick={() => currentTip.targetTab && goToTab(currentTip.targetTab)} className={`${button.secondary} cursor-pointer px-2.5 py-1 text-[11px]`}>
                             Ir
                           </button>
@@ -277,12 +296,12 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab,
                   <button type="button" onClick={() => setShowAllTips((s) => !s)} aria-label={`${showAllTips ? 'Ocultar' : 'Ver'} todos los tips`} title={`${showAllTips ? 'Ocultar' : 'Ver'} todos los tips`} className="flex cursor-pointer items-center gap-1.5 rounded-[10px] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] px-2.5 py-1.5 text-[11px] font-bold text-[var(--color-accent-text)] hover:bg-[var(--ui-bg-hover)]">
                     <List className="h-3.5 w-3.5" />
                     {showAllTips ? 'Ocultar' : 'Ver'} todos los tips
-                    <span className="rounded-full bg-[var(--color-accent-muted)] px-1.5 py-0.5 text-[10px] text-[var(--color-accent-text)]">{seenCount}/{ALL_TIPS.length}</span>
+                    <span className="rounded-full bg-[var(--color-accent-muted)] px-1.5 py-0.5 text-[10px] text-[var(--color-accent-text)]">{seenCount}/{allTips.length}</span>
                   </button>
 
                   {showAllTips && (
                     <ul className="space-y-2">
-                      {ALL_TIPS.map((tip) => (
+                      {allTips.map((tip) => (
                         <li key={tip.id} className="flex items-start gap-2 rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] p-2">
                           <span className="mt-0.5 shrink-0 text-[var(--ui-text-secondary)]">
                             {stored.seenTipIds.includes(tip.id) ? <Check className="h-3.5 w-3.5" /> : <Lightbulb className="h-3.5 w-3.5" />}
@@ -290,7 +309,7 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab,
                           <div className="min-w-0 flex-1">
                             <div className="text-[11px] font-bold">{tip.title}</div>
                             <p className="text-[11px] text-[var(--ui-text-secondary)]">{tip.body}</p>
-                            {validateAssistantTargetTab(tip.targetTab, cvData) && (
+                            {validateAssistantTargetTab(tip.targetTab, cvData, docType) && (
                               <button type="button" onClick={() => tip.targetTab && goToTab(tip.targetTab)} className="mt-1 cursor-pointer text-[10px] font-bold text-[var(--color-accent-text)] hover:underline">Ir a la sección</button>
                             )}
                           </div>
@@ -307,7 +326,7 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({ activeTab,
                         Preguntale a {ASSISTANT_NAME} cómo usar la app: dónde está cada cosa, cómo mover secciones entre columna principal y barra lateral, qué es una postulación o cómo pasa el Diagnóstico ATS.
                       </p>
                       <div className="flex flex-wrap gap-1.5">
-                        {QUICK_QUESTIONS.map((q) => (
+                        {QUICK_QUESTIONS_BY_DOC[docType].map((q) => (
                           <button key={q} type="button" onClick={() => sendChat(q)} className={`${button.secondary} cursor-pointer px-2 py-1 text-[11px]`}>{q}</button>
                         ))}
                       </div>
