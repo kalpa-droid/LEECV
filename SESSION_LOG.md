@@ -584,3 +584,9 @@ Migración a una arquitectura de facturación stateless ("guest-first") donde el
 - **Version**: V2.18.1 -> V2.19.0 (MINOR; 5 fases del plan Book Studio/Lidio entregadas: #118 Fases 1+2, #119 Fase 3, #120 Fase 4, #121 Fase 5). Bump en `src/shared/core/version.ts` (minor 19, label V2.19.0, lastUpdated 2026-11-17, stage con resumen de las 5 fases). Rama `docs/release-v2.19.0` desde `main` `3bc95793`. Incluye asiento post-merge de #121 en SESSION_LOG.md y en `.opencode/CONTEXT.md`.
 - **Verificacion**: `npm run check-all` EXIT=0 (corrida local en esta sesion); cambios sin comportamiento nuevo (docs/versionado).
 - **Siguiente paso recomendado**: CI verde en la PR -> OK CODEOWNER de Kalpa (toca `src/shared/core/version.ts`) -> squash-merge sin `--delete-branch` -> verificar hash post-merge -> registrar aqui.
+- **COMPLETADO**: ver entrada post-merge Docs PR #122 al final de este archivo.
+
+## [2026-11-17] - Regla 6 paso 7 (Post-merge Docs PR #122 - V2.19.0 en produccion)
+- **Merge #122 confirmado** (`docs/release-v2.19.0`, head `fd2335f` ya en remote): `main` -> hash `dec82a03fa021f183dc95459decee218e76eca9c`. Squash msg: `docs(release): V2.19.0 — cierre del plan Book Studio/Lidio (#122)`. CI `check-all` success (run 44009832828, 1m29s), Vercel pass. Verificado post-merge: `git log origin/main -1` = `dec82a03...` (identico al mergeCommit de la API). Rama NO borrada (sin `--delete-branch`).
+- **Autorizacion CODEOWNER**: Kalpa dio OK explicito en sesion (pregunta en chat tras CI verde). La PR tocaba `src/shared/core/version.ts` -> aprobacion requerida y otorgada.
+- **Contenido**: bump MINOR V2.18.1 -> V2.19.0 en `src/shared/core/version.ts` (stage resume las 5 fases: PR 118/119/120/121); asientos en `SESSION_LOG.md` + `.opencode/CONTEXT.md`. Plan Book Studio/Lidio de 5 fases COMPLETO y en produccion.
