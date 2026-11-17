@@ -37,6 +37,10 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
   const [imageError, setImageError] = useState<string | null>(null);
   const [thumbUri, setThumbUri] = useState<string | null>(null);
 
+  // El retiro detrás de la tapa solo tiene sentido si hay alguna tapa (del PDF
+  // o personalizada). Con "Sin tapa" el motor no inyecta hojas en blanco.
+  const hasCoverChosen = options.hasCover || Boolean(options.customCover);
+
   useEffect(() => {
     let cancelled = false;
     const currentAssetId = options.customCover?.assetId;
@@ -305,7 +309,8 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
         </div>
       )}
 
-      {/* Retiro de Tapa y Hoja en Blanco Posterior */}
+      {/* Retiro de Tapa y Hoja en Blanco Posterior (solo con tapa: del PDF o personalizada) */}
+      {hasCoverChosen && (
       <div className={`space-y-4 p-4 rounded-[${radius.card}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)]`}>
         <label className={`flex items-center justify-between p-3 rounded-[${radius.control}] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] cursor-pointer hover:border-[var(--ui-dock-border)] transition-all`}>
           <div className="space-y-0.5 pr-4">
@@ -322,6 +327,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
           />
         </label>
       </div>
+      )}
 
       {/* Navegación Bidireccional */}
       <div className="pt-4 border-t border-[var(--ui-border)] flex items-center justify-between gap-3">
