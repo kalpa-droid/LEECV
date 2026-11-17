@@ -2,6 +2,7 @@ import React from 'react';
 import { Hash, CheckCircle2, RefreshCw, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
 import { radius, elevationSystem, button } from '../../shared/core/uiDesignSystem';
+import { useText } from '../../shared/i18n/useText';
 
 interface BookFoliadoStepProps {
   pdfPageCount: number;
@@ -17,6 +18,7 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
   onNextStep,
   onPrevStep,
 }) => {
+  const t = useText();
   const refPdfPage = options.refPdfPage || 0;
   const refBookPage = options.refBookPage || 0;
   const refPageSide = options.refPageSide || 'derecha';
@@ -37,10 +39,10 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
       <div className="space-y-1">
         <h2 className="text-xl font-bold tracking-tight text-[var(--ui-text-primary)] flex items-center gap-2">
           <Hash className="w-5 h-5 text-[var(--color-secondary-bright)]" />
-          <span>5. Encuentro un número</span>
+          <span>{t.bookStudio.foliadoStep.title}</span>
         </h2>
         <p className="text-xs text-[var(--ui-text-secondary)] leading-relaxed">
-          Necesitamos que solo encuentres un número de página y lo escribas en la vista previa del visor. No necesitamos más.
+          {t.bookStudio.foliadoStep.description}
         </p>
       </div>
 
@@ -63,7 +65,7 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
           <div className="flex items-start gap-2.5">
             <CheckCircle2 className="w-5 h-5 text-[var(--color-status-success-bright)] shrink-0 mt-0.5" />
             <div className="space-y-1 text-xs">
-              <h3 className="font-bold text-sm">Número Calibrado</h3>
+              <h3 className="font-bold text-sm">{t.bookStudio.foliadoStep.calibratedTitle}</h3>
               <p>
                 Pág. PDF #{refPdfPage} ➔ Pág. Impresa #{refBookPage}.
               </p>
@@ -75,7 +77,7 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
             className={`${button.base} ${button.ghost} w-full flex items-center justify-center gap-1.5 text-xs text-[var(--color-status-danger-text)] mt-2`}
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>Eliminar Calibración</span>
+            <span>{t.bookStudio.foliadoStep.removeCalibration}</span>
           </button>
         </div>
       )}
@@ -89,7 +91,7 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
             className={`${button.base} ${button.secondary} flex items-center gap-1.5 text-xs font-bold`}
           >
             <ChevronLeft className="w-4 h-4" />
-            <span>Volver</span>
+            <span>{t.bookStudio.backStep}</span>
           </button>
         ) : <div />}
 
@@ -99,7 +101,7 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
             onClick={onNextStep}
             className={`${button.base} ${button.primary} flex items-center gap-1.5 text-xs font-bold`}
           >
-            <span>Siguiente: 6. Exportar</span>
+            <span>{t.bookStudio.foliadoStep.nextStep}</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         )}
