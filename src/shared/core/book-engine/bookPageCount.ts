@@ -45,6 +45,53 @@ export function hasCustomCoverConfig(custom: { type?: string } | null | undefine
 }
 
 /**
+ * Opciones estructurales que necesita el conteo del libro final. Es un tipo
+ * estructural (sin importar BookImpositionOptions) para no atar el módulo
+ * de conteo al motor de imposición.
+ */
+export interface BookFinalPageCountOptions {
+  deletedPages?: (number | string)[];
+  pageOrder?: (number | string)[];
+  hasCover?: boolean;
+  hasBackCover?: boolean;
+  blankBehindCover?: boolean;
+  blankInFrontBackCover?: boolean;
+  destination?: string;
+  customCover?: { type?: string } | null;
+  customBackCover?: { type?: string } | null;
+  refPdfPage?: number;
+  refBookPage?: number;
+  refPageSide?: 'derecha' | 'izquierda';
+}
+
+/**
+ * Número de páginas del libro final para un PDF ya subido. Replica el
+ * armado real del motor: es la fuente de verdad para el consumo de créditos
+ * (Paso 7), la pill de lomo estimado (Paso 6) y el preview de la imposición
+ * en el visor. NO devuelve un estimado: devuelve el conteo exacto.
+ */
+export function computeBookFinalPageCount(
+  options: BookFinalPageCountOptions,
+  pdfPageCount: number
+): number {
+  return calculateFinalBookPageCount({
+    sourcePageCount: effectiveSourcePageCount(pdfPageCount, options.deletedPages, options.pageOrder),
+    hasSourceCover: options.hasCover,
+    hasCustomCover: hasCustomCoverConfig(options.customCover),
+    hasCustomBackCover: hasCustomCoverConfig(options.customBackCover),
+    hasSourceBackCover: options.hasBackCover,
+    blankBehindCover: options.blankBehindCover,
+    blankInFrontBackCover: options.blankInFrontBackCover,
+    separateCover:
+      (options.destination ?? 'A') !== 'A' &&
+      (hasCustomCoverConfig(options.customCover) || hasCustomCoverConfig(options.customBackCover)),
+    refPdfPage: options.refPdfPage,
+    refBookPage: options.refBookPage,
+    refPageSide: options.refPageSide,
+  });
+}
+
+/**
  * Páginas efectivas del interior según el motor:
  *  - pageOrder definido y no vacío: cada registro aporta una página (los
  *    borrados se aplican sobre el número base del registro).

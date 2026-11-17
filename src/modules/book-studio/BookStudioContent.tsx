@@ -571,6 +571,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               options={options}
               setOptions={handleOptionsChange}
               sourceProtected={pdfProtection === 'protected'}
+              pdfPageCount={pdfPageCount}
               onNextStep={() => handleNavigateNextStep('book_imposition')}
               onPrevStep={() => handleNavigatePrevStep('book_imposition')}
             />

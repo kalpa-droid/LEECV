@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ThumbnailCard } from './ThumbnailCard';
 import { LightboxModal } from './LightboxModal';
 import { CoverPreviewThumbnail } from './CoverPreviewThumbnail';
 import { BookImpositionOptions } from '../../../shared/core/book-engine/impositionEngine';
+import { computeBookFinalPageCount } from '../../../shared/core/book-engine/bookPageCount';
+import { planBookletSignatures, getSignatureSheetPairs } from '../../../shared/core/book-engine/impositionPlanner';
 import { bookAssetManager } from '../../../shared/core/book-engine/bookAssetManager';
 import { radius } from '../../../shared/core/uiDesignSystem';
 import { RefreshCw, FileText, Trash2, AlertTriangle } from 'lucide-react';
@@ -37,6 +39,33 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
   const [activeLightboxPage, setActiveLightboxPage] = useState<number | null>(null);
   const [showDeletedPages, setShowDeletedPages] = useState<boolean>(false);
   const t = useText();
+
+  // Vista del libro: orden lineal (grilla de miniaturas) vs pares de hoja
+  // doblada (cómo salen las páginas impresas en cada hoja física).
+  const [impositionView, setImpositionView] = useState<'lineal' | 'folded'>('lineal');
+
+  // Mismo cálculo que el motor: ZIP por cuadernillo -> firmas multi-balanceadas;
+  // si no, una sola firma con el total final (ya múltiplo de 4).
+  const foldedPlan = useMemo(() => {
+    if (impositionView !== 'folded') return null;
+    const finalPageCount = computeBookFinalPageCount(options, pdfPageCount);
+    if (finalPageCount <= 0) return [];
+    const readingDirection = options.readingDirection ?? 'ltr';
+    const useSignatures =
+      options.zipByBooklet && (options.destination ?? 'A') === 'A' && options.mode !== 'fotocopia';
+    const signatures = useSignatures
+      ? planBookletSignatures(finalPageCount, 'multi-balanced', 4).signatures
+      : [finalPageCount];
+    let offset = 0;
+    return signatures.map((sigLength, sigIdx) => {
+      const pairs = getSignatureSheetPairs(sigLength, offset, readingDirection);
+      offset += sigLength;
+      return {
+        index: sigIdx,
+        sheets: pairs.map(([l, r], i) => ({ sheet: i + 1, front: i % 2 === 0, left: l + 1, right: r + 1 })),
+      };
+    });
+  }, [impositionView, options, pdfPageCount]);
 
   // Miniaturas de tapa/contratapa: el assetId (referencia local) tiene prioridad
   // sobre imageUri (heredado). Igual que en CoverPreviewThumbnail.
@@ -284,6 +313,90 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
         </div>
       </div>
 
+      {/* Vista del libro: orden lineal vs pares de hoja doblada */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="text-[11px] font-bold uppercase tracking-wide text-[var(--ui-text-secondary)]">
+          {t.bookStudio.pdfStrip.impositionViewLabel}
+        </span>
+        <div className="inline-flex rounded-[10px] border border-[var(--ui-border)] overflow-hidden">
+          {(['lineal', 'folded'] as const).map((view) => {
+            const selected = impositionView === view;
+            return (
+              <button
+                key={view}
+                type="button"
+                onClick={() => setImpositionView(view)}
+                aria-pressed={selected}
+                className={`px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer ${
+                  selected
+                    ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
+                    : 'bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-surface)]'
+                }`}
+              >
+                {view === 'lineal'
+                  ? t.bookStudio.pdfStrip.impositionLinear
+                  : t.bookStudio.pdfStrip.impositionFolded}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      {impositionView === 'folded' && (
+        <p className="text-[11px] text-[var(--ui-text-secondary)]">{t.bookStudio.pdfStrip.impositionFoldedHelp}</p>
+      )}
+
+      {impositionView === 'folded' ? (
+        <div className="space-y-3">
+          {(foldedPlan ?? []).map((sig) => (
+            <div key={sig.index} className="space-y-2">
+              {(foldedPlan?.length ?? 0) > 1 && (
+                <span className="text-[11px] font-bold uppercase text-[var(--ui-text-secondary)]">
+                  {t.bookStudio.pdfStrip.foldedBooklet.replace('{n}', String(sig.index + 1))}
+                </span>
+              )}
+              <div
+                className="grid gap-2"
+                style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${Math.max(170 * zoomScale, 140)}px, 1fr))` }}
+              >
+                {sig.sheets.map((sheet) => (
+                  <div
+                    key={sheet.sheet}
+                    className={`p-2 rounded-[${radius.card}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)] space-y-1.5`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase text-[var(--ui-text-secondary)]">
+                        {t.bookStudio.pdfStrip.foldedSheet.replace('{n}', String(sheet.sheet))}
+                      </span>
+                      <span
+                        className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${
+                          sheet.front
+                            ? 'bg-[var(--color-accent-muted)] text-[var(--color-accent-text)]'
+                            : 'bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)]'
+                        }`}
+                      >
+                        {sheet.front ? t.bookStudio.pdfStrip.foldedFront : t.bookStudio.pdfStrip.foldedBack}
+                      </span>
+                    </div>
+                    <div className="flex items-stretch">
+                      <div className="flex-1 text-center py-2">
+                        <div className="text-[9px] uppercase text-[var(--ui-text-secondary)]">{t.bookStudio.pdfStrip.foldedLeft}</div>
+                        <div className="text-xl font-black text-[var(--ui-text-primary)]">{sheet.left}</div>
+                      </div>
+                      <div className="w-0 border-l border-dashed border-[var(--ui-border)]" />
+                      <div className="flex-1 text-center py-2">
+                        <div className="text-[9px] uppercase text-[var(--ui-text-secondary)]">{t.bookStudio.pdfStrip.foldedRight}</div>
+                        <div className="text-xl font-black text-[var(--ui-text-primary)]">{sheet.right}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+          <p className="text-[10px] text-[var(--ui-text-secondary)]">{t.bookStudio.pdfStrip.foldedNote}</p>
+        </div>
+      ) : (
+      <>
       {/* Grilla de Miniaturas Responsive con Escala Zoom */}
       <div
         className="grid gap-3 transition-transform duration-200 origin-top-left"
@@ -425,6 +538,8 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
           </div>
         )}
       </div>
+      </>
+      )}
 
       {/* Modal Lightbox */}
       {activeLightboxPage !== null && (
