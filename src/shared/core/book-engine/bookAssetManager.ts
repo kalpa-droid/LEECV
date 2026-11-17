@@ -24,6 +24,9 @@ export const STORAGE_WARN_BYTES = 1_000_000_000; // ~1 GB
 const THUMB_MAX_WIDTH = 320;
 const THUMB_JPEG_QUALITY = 0.72;
 const SOURCE_PDF_META_KEY = 'source-pdf-handle';
+/** Clave por libro (bookId); la global queda como fallback legada. */
+const sourcePdfMetaKeyFor = (bookId?: string) =>
+  bookId ? `${SOURCE_PDF_META_KEY}:${bookId}` : SOURCE_PDF_META_KEY;
 
 export type BookAssetKind = 'cover' | 'backCover' | 'source-pdf-copy' | 'other';
 
@@ -275,7 +278,7 @@ export const bookAssetManager = {
    *  - fallback-required: no se puede usar el nativo (no soportado, iframe o
    *    SecurityError/NotAllowedError) → el llamador debe usar el input <file>.
    */
-  async pickSourcePdf(): Promise<
+  async pickSourcePdf(bookId?: string): Promise<
     { status: 'picked'; file: File } | { status: 'cancelled' } | { status: 'fallback-required' }
   > {
     if (!this.canUseNativeFilePicker()) return { status: 'fallback-required' };
@@ -291,7 +294,7 @@ export const bookAssetManager = {
       // (modo incógnito, cuota o restricción del navegador), el archivo es
       // válido igual; solo no se podrá reabrir sin volver a elegirlo.
       try {
-        await tx('readwrite', STORE_META, (s) => s.put({ id: SOURCE_PDF_META_KEY, handle }));
+        await tx('readwrite', STORE_META, (s) => s.put({ id: sourcePdfMetaKeyFor(bookId), handle }));
       } catch {
         // Sin handle persistente: se continúa con el archivo en memoria.
       }
@@ -316,8 +319,11 @@ export const bookAssetManager = {
   /**
    * Restaura el PDF original desde la referencia guardada.
    * NUNCA duplica el archivo: solo pide permiso de lectura al handle.
+   * Si se pasa bookId, lee la referencia de ESE libro; si no existe, cae a
+   * la clave global legada (comportamiento anterior) para no perder lo ya
+   * guardado.
    */
-  async restoreSourcePdf(): Promise<
+  async restoreSourcePdf(bookId?: string): Promise<
     | { status: 'restored'; file: File }
     | { status: 'moved' }
     | { status: 'denied' }
@@ -325,7 +331,8 @@ export const bookAssetManager = {
   > {
     if (!this.canUseNativeFilePicker()) return { status: 'no-handle' };
     try {
-      const meta = await tx('readonly', STORE_META, (s) => s.get(SOURCE_PDF_META_KEY));
+      const scoped = bookId ? await tx('readonly', STORE_META, (s) => s.get(sourcePdfMetaKeyFor(bookId))) : null;
+      const meta = scoped?.handle ? scoped : (await tx('readonly', STORE_META, (s) => s.get(SOURCE_PDF_META_KEY)));
       const handle = meta?.handle;
       if (!handle) return { status: 'no-handle' };
       const perm = await handle.queryPermission?.({ mode: 'read' });
@@ -343,10 +350,11 @@ export const bookAssetManager = {
     }
   },
 
-  async requestSourcePdfPermission(): Promise<File | null> {
+  async requestSourcePdfPermission(bookId?: string): Promise<File | null> {
     if (!this.canUseNativeFilePicker()) return null;
     try {
-      const meta = await tx('readonly', STORE_META, (s) => s.get(SOURCE_PDF_META_KEY));
+      const scoped = bookId ? await tx('readonly', STORE_META, (s) => s.get(sourcePdfMetaKeyFor(bookId))) : null;
+      const meta = scoped?.handle ? scoped : (await tx('readonly', STORE_META, (s) => s.get(SOURCE_PDF_META_KEY)));
       const handle = meta?.handle;
       if (!handle) return null;
       const perm = await handle.requestPermission?.({ mode: 'read' });

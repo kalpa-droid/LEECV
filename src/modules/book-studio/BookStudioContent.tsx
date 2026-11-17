@@ -16,6 +16,7 @@ import { BookPreviewStep } from './BookPreviewStep';
 import { getNextBookStepId, getPrevBookStepId } from '../../shared/core/book-engine/bookStepSequence';
 import { bookAssetManager, STORAGE_WARN_BYTES } from '../../shared/core/book-engine/bookAssetManager';
 import { loadPdfDocumentWithCmaps } from '../../shared/core/pdf-engine/pdfjsWorkerSetup';
+import { loadBookById } from '../../shared/core/storage/documentStorageService';
 import { saveBook } from '../../shared/core/storage/documentStorageService';
 import { openTab, OpenTab } from '../../shared/core/documents/tabStore';
 import { useRegisterDocumentTab, resolveDocumentIdWithHandoff, generateDocumentId } from '../../shared/core/documents/documentEngine';
@@ -97,6 +98,8 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   const [pdfProtection, setPdfProtection] = useState<'none' | 'protected'>('none');
   /** Código de error de la carga (flujo de restauración automática, sin paso 1 abierto). */
   const [pdfLoadErrorCode, setPdfLoadErrorCode] = useState<PdfSourceErrorCode | null>(null);
+  /** Nombre guardado del libro (de "Mis Libros Guardados") cuando aún no hay PDF cargado. */
+  const [savedBookName, setSavedBookName] = useState<string | null>(null);
 
   // Refs espejo: loadSourcePdf se define una sola vez y siempre lee el estado
   // fresco (modo/opciones) sin depender del closure del primer render.
@@ -238,7 +241,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   // Restaurar la referencia local del PDF original (sin duplicar el archivo).
   useEffect(() => {
     let alive = true;
-    bookAssetManager.restoreSourcePdf().then((result) => {
+    bookAssetManager.restoreSourcePdf(bookId || undefined).then((result) => {
       if (!alive) return;
       if (result.status === 'restored') {
         attachSourcePdf(result.file);
@@ -254,6 +257,37 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Hidratación de libro guardado al cambiar de pestaña ("Mis Libros Guardados"
+  // o conmutar tabs): mismas opciones y conteo exacto; si hay handle por bookId
+  // se reabre el PDF sin duplicar (solo permiso de lectura), si no, aviso de
+  // "volvelo a elegir" y el proyecto queda abierto con sus opciones.
+  useEffect(() => {
+    if (!activeTabId || activeTabId === bookId) return;
+    let alive = true;
+    (async () => {
+      const loaded = await loadBookById(activeTabId);
+      if (!alive || !loaded || !loaded.options) return;
+      const id = loaded.id || activeTabId;
+      setBookId(id);
+      setOptions({ ...DEFAULT_BOOK_IMPOSITION_OPTIONS, ...loaded.options });
+      if (Number.isFinite(loaded.pdfPageCount)) setPdfPageCount(loaded.pdfPageCount);
+      if (loaded.name) setSavedBookName(loaded.name);
+      const restored = await bookAssetManager.restoreSourcePdf(id);
+      if (!alive) return;
+      if (restored.status === 'restored') {
+        attachSourcePdf(restored.file);
+      } else if (restored.status === 'moved') {
+        setPdfNotice('moved');
+      } else {
+        // 'denied' o 'no-handle': el PDF sigue en el disco de la persona;
+        // el proyecto del libro ya quedó abierto con sus opciones guardadas.
+        setPdfNotice('restore-available');
+      }
+    })();
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTabId]);
+
   // Aviso de almacenamiento local (~1 GB).
   useEffect(() => {
     let alive = true;
@@ -265,7 +299,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
     };
   }, [options.customCover?.assetId, options.customBackCover?.assetId]);
 
-  const bookTitle = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, '') : 'Mi Libro / Folleto';
+  const bookTitle = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, '') : (savedBookName || 'Mi Libro / Folleto');
 
   // Garantizar que la pestaña activa sea "Mi Libro / Folleto" desde la carga inicial
   useRegisterDocumentTab({
@@ -384,7 +418,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               <button
                 type="button"
                 onClick={async () => {
-                  const result = await bookAssetManager.pickSourcePdf();
+                  const result = await bookAssetManager.pickSourcePdf(bookId || undefined);
                   if (result.status === 'picked') {
                     attachSourcePdf(result.file);
                   } else if (result.status === 'fallback-required') {
@@ -407,7 +441,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               <button
                 type="button"
                 onClick={async () => {
-                  const file = await bookAssetManager.requestSourcePdfPermission();
+                  const file = await bookAssetManager.requestSourcePdfPermission(bookId || undefined);
                   if (file) attachSourcePdf(file);
                 }}
                 className={`px-3 py-1.5 text-xs font-bold rounded-[${radius.control}] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] cursor-pointer`}
@@ -532,6 +566,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               onNextStep={() => handleNavigateNextStep('book_source_type')}
               fileInputRef={fileInputRef}
               pickerRef={sourcePdfPickerRef}
+              bookId={bookId}
             />
           )}
 

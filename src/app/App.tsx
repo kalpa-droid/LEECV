@@ -224,7 +224,9 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const [isPanelOpen, setIsPanelOpen] = useState(true);
 
   const activeDocType: 'cv' | 'business_card' | 'book' | 'cover_letter' | 'planner' =
-    cvData?.activePresetId === 'carta-presentacion' || (cvData as any)?.docType === 'cover_letter'
+    currentRoute === '/crear-libro' || (cvData?.activePresetId?.startsWith('libro-') ?? false) || (cvData as any)?.docType === 'book'
+      ? 'book'
+      : cvData?.activePresetId === 'carta-presentacion' || (cvData as any)?.docType === 'cover_letter'
       ? 'cover_letter'
       : currentRoute === '/crear-agenda' || cvData?.activePresetId?.startsWith('planner-') || (cvData as any)?.docType === 'planner'
       ? 'planner'
@@ -795,8 +797,60 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     }
   };
 
+  // Modales de la app (Mis Libros Guardados, Guardar como, JSON, Compartir, etc.).
+  // Se definen UNA sola vez y se montan tanto en la vista principal como en la
+  // vista de Libro/Agenda (early returns): sin esto, los botones que abren
+  // estos modales en /crear-libro no tienen dónde renderizarse.
+  const appModals = (
+    <AppModals
+      isPhotoCropperOpen={isPhotoCropperOpen} setIsPhotoCropperOpen={setIsPhotoCropperOpen}
+      isSignatureOpen={isSignatureOpen} setIsSignatureOpen={setIsSignatureOpen}
+      isWizardOpen={isWizardOpen} setIsWizardOpen={setIsWizardOpen}
+      isSavedCVsOpen={isSavedCVsOpen} setIsSavedCVsOpen={setIsSavedCVsOpen}
+      isSaveModalOpen={isSaveModalOpen} setIsSaveModalOpen={setIsSaveModalOpen}
+      isSaveAsModalOpen={isSaveAsModalOpen} setIsSaveAsModalOpen={setIsSaveAsModalOpen}
+      initialSaveAsOpen={initialSaveAsOpen} setInitialSaveAsOpen={setInitialSaveAsOpen}
+      isShareAppModalOpen={isShareAppModalOpen} setIsShareAppModalOpen={setIsShareAppModalOpen}
+      isPdfCheckoutOpen={isPdfCheckoutOpen} setIsPdfCheckoutOpen={setIsPdfCheckoutOpen}
+      isCardExportOpen={isCardExportOpen} setIsCardExportOpen={setIsCardExportOpen}
+      isCoverLetterExportOpen={isCoverLetterExportOpen} setIsCoverLetterExportOpen={setIsCoverLetterExportOpen}
+      isDownloadModalOpen={isDownloadModalOpen} setIsDownloadModalOpen={setIsDownloadModalOpen}
+      isPrivacyModalOpen={isPrivacyModalOpen} setIsPrivacyModalOpen={setIsPrivacyModalOpen}
+      isAtsModalOpen={isAtsModalOpen} setIsAtsModalOpen={setIsAtsModalOpen}
+      isAtsLivePanelOpen={isAtsLivePanelOpen} setIsAtsLivePanelOpen={setIsAtsLivePanelOpen}
+      atsLiveResult={atsLive?.result ?? null}
+      activeTab={activeTab} setActiveTab={(tab) => { setActiveTab(tab); setIsPanelOpen(true); }}
+      isPanelOpen={isPanelOpen} setIsPanelOpen={setIsPanelOpen}
+      isPricingModalOpen={isPricingModalOpen} setIsPricingModalOpen={setIsPricingModalOpen}
+      isCreditsModalOpen={isCreditsModalOpen} setIsCreditsModalOpen={setIsCreditsModalOpen}
+      isLoginModalOpen={isLoginModalOpen} setIsLoginModalOpen={setIsLoginModalOpen}
+      pdfCheckoutPurpose={pdfCheckoutPurpose}
+      isGeneratingPDF={isGeneratingPDF}
+      isPdfComplete={isPdfComplete} setIsPdfComplete={setIsPdfComplete}
+      updateBannerVisible={updateBannerVisible} setUpdateBannerVisible={setUpdateBannerVisible}
+      atsResult={atsResult}
+      cvData={cvData}
+      setCvData={setCvData}
+      activeDocType={activeDocType}
+      isSaving={isSaving}
+      hasPendingChanges={hasPendingChanges}
+      activeCvId={activeCvId}
+      setTabs={setTabs}
+      handleSaveCVClick={handleSaveCVClick}
+      handleSaveCVAsClick={handleSaveCVAsClick}
+      handleExportAtsPdf={handleExportAtsPdf}
+      proceedWithExport={proceedWithExport}
+      triggerPdfGeneration={triggerPdfGeneration}
+      handleImportJsonFile={handleImportJsonFile}
+      handleGenerateCoverLetterFromCV={handleGenerateCoverLetterFromCV}
+      goToLandingPage={goToLandingPage}
+    />
+  );
+
   if (currentRoute === '/crear-libro') {
-    const activeBookTab = tabs.find(t => t.docType === 'book' || inferDocumentTypeId(t) === 'book');
+    const activeBookTab =
+      tabs.find(t => (t.id === cvData?.id || t.cvId === cvData?.id) && (t.docType === 'book' || inferDocumentTypeId(t) === 'book')) ||
+      tabs.find(t => t.docType === 'book' || inferDocumentTypeId(t) === 'book');
     if (!activeBookTab) {
       return (
         <div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Creador de Libros...</div>
@@ -804,30 +858,33 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     }
     const activeBookTabId = activeBookTab?.id || activeBookTab?.cvId || cvData?.id || '';
     return (
-      <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Creador de Libros...</div>}>
-        <BookStudio
-          currentUiTheme={globalUiTheme}
-          onBackToHome={() => onNavigate?.('/')}
-          documentTabs={tabs}
-          activeTabId={activeBookTabId}
-          onSelectTab={handleSwitchDocumentTab}
-          onCloseTab={(id) => {
-            const tab = tabs.find(t => t.id === id || t.cvId === id);
-            handleCloseFooterTab({ stopPropagation: () => {} } as any, id, tab?.title || 'Documento');
-          }}
-          onNavigateToDocument={(targetDocType, id) => handleNavigateToDocumentTab(targetDocType, id)}
-          onTabsChanged={setTabs}
-          onNewCV={handleNewCV}
-          onNewCard={handleNewCard}
-          onNewBook={handleNewBook}
-          cycleUITheme={cycleUITheme}
-          onOpenSavedCVsModal={() => setIsSavedCVsOpen(true)}
-          onOpenSaveAsModal={() => setIsSaveAsModalOpen(true)}
-          onOpenJsonDownloadModal={() => setIsDownloadModalOpen(true)}
-          onOpenShareAppModal={() => setIsShareAppModalOpen(true)}
-          onOpenPrivacy={() => setIsPrivacyModalOpen(true)}
-        />
-      </Suspense>
+      <>
+        <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando Creador de Libros...</div>}>
+          <BookStudio
+            currentUiTheme={globalUiTheme}
+            onBackToHome={() => onNavigate?.('/')}
+            documentTabs={tabs}
+            activeTabId={activeBookTabId}
+            onSelectTab={handleSwitchDocumentTab}
+            onCloseTab={(id) => {
+              const tab = tabs.find(t => t.id === id || t.cvId === id);
+              handleCloseFooterTab({ stopPropagation: () => {} } as any, id, tab?.title || 'Documento');
+            }}
+            onNavigateToDocument={(targetDocType, id) => handleNavigateToDocumentTab(targetDocType, id)}
+            onTabsChanged={setTabs}
+            onNewCV={handleNewCV}
+            onNewCard={handleNewCard}
+            onNewBook={handleNewBook}
+            cycleUITheme={cycleUITheme}
+            onOpenSavedCVsModal={() => setIsSavedCVsOpen(true)}
+            onOpenSaveAsModal={() => setIsSaveAsModalOpen(true)}
+            onOpenJsonDownloadModal={() => setIsDownloadModalOpen(true)}
+            onOpenShareAppModal={() => setIsShareAppModalOpen(true)}
+            onOpenPrivacy={() => setIsPrivacyModalOpen(true)}
+          />
+        </Suspense>
+        {appModals}
+      </>
     );
   }
 
@@ -978,51 +1035,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         onNewPlanner: handleNewPlanner,
         onClose: handleCloseFooterTab
       }}
-      modalsSlot={
-        <AppModals
-          isPhotoCropperOpen={isPhotoCropperOpen} setIsPhotoCropperOpen={setIsPhotoCropperOpen}
-          isSignatureOpen={isSignatureOpen} setIsSignatureOpen={setIsSignatureOpen}
-          isWizardOpen={isWizardOpen} setIsWizardOpen={setIsWizardOpen}
-          isSavedCVsOpen={isSavedCVsOpen} setIsSavedCVsOpen={setIsSavedCVsOpen}
-          isSaveModalOpen={isSaveModalOpen} setIsSaveModalOpen={setIsSaveModalOpen}
-          isSaveAsModalOpen={isSaveAsModalOpen} setIsSaveAsModalOpen={setIsSaveAsModalOpen}
-          initialSaveAsOpen={initialSaveAsOpen} setInitialSaveAsOpen={setInitialSaveAsOpen}
-          isShareAppModalOpen={isShareAppModalOpen} setIsShareAppModalOpen={setIsShareAppModalOpen}
-          isPdfCheckoutOpen={isPdfCheckoutOpen} setIsPdfCheckoutOpen={setIsPdfCheckoutOpen}
-          isCardExportOpen={isCardExportOpen} setIsCardExportOpen={setIsCardExportOpen}
-          isCoverLetterExportOpen={isCoverLetterExportOpen} setIsCoverLetterExportOpen={setIsCoverLetterExportOpen}
-          isDownloadModalOpen={isDownloadModalOpen} setIsDownloadModalOpen={setIsDownloadModalOpen}
-          isPrivacyModalOpen={isPrivacyModalOpen} setIsPrivacyModalOpen={setIsPrivacyModalOpen}
-          isAtsModalOpen={isAtsModalOpen} setIsAtsModalOpen={setIsAtsModalOpen}
-          isAtsLivePanelOpen={isAtsLivePanelOpen} setIsAtsLivePanelOpen={setIsAtsLivePanelOpen}
-          atsLiveResult={atsLive?.result ?? null}
-          activeTab={activeTab} setActiveTab={(tab) => { setActiveTab(tab); setIsPanelOpen(true); }}
-          isPanelOpen={isPanelOpen} setIsPanelOpen={setIsPanelOpen}
-          isPricingModalOpen={isPricingModalOpen} setIsPricingModalOpen={setIsPricingModalOpen}
-          isCreditsModalOpen={isCreditsModalOpen} setIsCreditsModalOpen={setIsCreditsModalOpen}
-          isLoginModalOpen={isLoginModalOpen} setIsLoginModalOpen={setIsLoginModalOpen}
-          pdfCheckoutPurpose={pdfCheckoutPurpose}
-          isGeneratingPDF={isGeneratingPDF}
-          isPdfComplete={isPdfComplete} setIsPdfComplete={setIsPdfComplete}
-          updateBannerVisible={updateBannerVisible} setUpdateBannerVisible={setUpdateBannerVisible}
-          atsResult={atsResult}
-          cvData={cvData}
-          setCvData={setCvData}
-          activeDocType={activeDocType}
-          isSaving={isSaving}
-          hasPendingChanges={hasPendingChanges}
-          activeCvId={activeCvId}
-          setTabs={setTabs}
-          handleSaveCVClick={handleSaveCVClick}
-          handleSaveCVAsClick={handleSaveCVAsClick}
-          handleExportAtsPdf={handleExportAtsPdf}
-          proceedWithExport={proceedWithExport}
-          triggerPdfGeneration={triggerPdfGeneration}
-          handleImportJsonFile={handleImportJsonFile}
-          handleGenerateCoverLetterFromCV={handleGenerateCoverLetterFromCV}
-          goToLandingPage={goToLandingPage}
-        />
-      }
+      modalsSlot={appModals}
     />
   );
 }
