@@ -15,7 +15,7 @@ import { BookPreviewExportStep } from './BookPreviewExportStep';
 import { BookPreviewStep } from './BookPreviewStep';
 import { getNextBookStepId, getPrevBookStepId } from '../../shared/core/book-engine/bookStepSequence';
 import { bookAssetManager, STORAGE_WARN_BYTES } from '../../shared/core/book-engine/bookAssetManager';
-import { ensurePdfjsWorkerConfigured } from '../../shared/core/pdf-engine/pdfjsWorkerSetup';
+import { loadPdfDocumentWithCmaps } from '../../shared/core/pdf-engine/pdfjsWorkerSetup';
 import { saveBook } from '../../shared/core/storage/documentStorageService';
 import { openTab, OpenTab } from '../../shared/core/documents/tabStore';
 import { useRegisterDocumentTab, resolveDocumentIdWithHandoff, generateDocumentId } from '../../shared/core/documents/documentEngine';
@@ -130,13 +130,12 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
       throw new PdfSourceError('empty-file');
     }
     const arrayBuffer = await file.arrayBuffer();
-    const pdfjsLib = ensurePdfjsWorkerConfigured();
+    // Una sola lectura compartida: pdf.js abre con cMaps (helper del motor);
+    // el probe de pdf-lib recibe una copia para que la transferencia del
+    // worker al hilo de pdf.js nunca invalide el buffer del otro consumidor.
     let doc: any;
     try {
-      doc = await pdfjsLib.getDocument({
-        data: new Uint8Array(arrayBuffer),
-        ...(password ? { password } : {}),
-      }).promise;
+      doc = await loadPdfDocumentWithCmaps(arrayBuffer, password);
     } catch (err) {
       throw pdfSourceErrorFromUnknown(err, file.size);
     }
@@ -151,7 +150,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
     // corruptas), así que el rescate es SIEMPRE el modo imágenes.
     let isEncrypted = false;
     try {
-      const probe = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+      const probe = await PDFDocument.load(arrayBuffer.slice(0), { ignoreEncryption: true });
       isEncrypted = Boolean((probe as { isEncrypted?: boolean }).isEncrypted);
     } catch {
       // Si hasta el diagnóstico estructural falla, lo tratamos como protegido.
@@ -313,13 +312,21 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
 
   const handleTriggerFileInput = () => {
     setActiveStepTab('book_source_type');
-    setTimeout(() => {
+    const pick = () => {
       if (sourcePdfPickerRef.current) {
-        sourcePdfPickerRef.current();
-      } else {
-        fileInputRef.current?.click();
+        // El picker nativo arranca dentro del mismo gesto de clic.
+        void sourcePdfPickerRef.current();
+        return;
       }
-    }, 100);
+      fileInputRef.current?.click();
+    };
+    if (sourcePdfPickerRef.current || fileInputRef.current) {
+      pick();
+    } else {
+      // El paso 1 todavía no montó; un tick, dentro de la ventana de
+      // activación transitoria del clic (sin esperar 100 ms).
+      setTimeout(pick, 0);
+    }
   };
 
   /** Texto visible por código tipado de error de carga (lenguaje sencillo). */

@@ -80,8 +80,14 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
 
   // Un solo punto de decisión: selector nativo si el navegador lo permite y
   // el entorno no es un iframe cross-origin; si no, input file de respaldo.
+  // La rama de respaldo es SÍNCRONA: ningún await antes del .click() que
+  // rompa el gesto del usuario en políticas estrictas o dentro de iframes.
   const triggerPick = async () => {
     setErrorMsg(null);
+    if (!bookAssetManager.canUseNativeFilePicker()) {
+      fileInputRef?.current?.click();
+      return;
+    }
     const result = await bookAssetManager.pickSourcePdf();
     if (result.status === 'picked') {
       await handleFileChangeRef.current(result.file);
@@ -260,6 +266,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
             accept=".pdf,application/pdf"
             tabIndex={-1}
             aria-hidden="true"
+            onClick={(e) => e.stopPropagation()}
             onChange={(e) => {
               const file = e.target.files?.[0];
               e.target.value = '';
