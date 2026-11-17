@@ -45,9 +45,9 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
           <Printer className="w-8 h-8" />
         </div>
         <div className="space-y-1 max-w-sm mx-auto">
-          <h3 className="text-base font-bold text-[var(--ui-text-primary)]">Ningún PDF cargado aún</h3>
+          <h3 className="text-base font-bold text-[var(--ui-text-primary)]">{t.bookStudio.previewExportStep.emptyTitle}</h3>
           <p className="text-xs text-[var(--ui-text-secondary)]">
-            Por favor carga un archivo PDF en la pestaña "1. Cargar PDF" para poder previsualizar y descargar tu libro.
+            {t.bookStudio.previewExportStep.emptyDescription}
           </p>
         </div>
       </div>
@@ -93,10 +93,10 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   const multiSigs = zipPlan && zipPlan.signatures.length > 1 ? zipPlan.signatures : null;
   const destinationLabel =
     (options.destination ?? 'A') === 'A'
-      ? 'A: la cubierta va dentro del mismo archivo'
+      ? t.bookStudio.previewExportStep.destinationA
       : (options.destination ?? 'A') === 'B'
-        ? 'B: la cubierta en un archivo aparte'
-        : 'C: cubierta continua con lomo (contratapa|lomo|tapa)';
+        ? t.bookStudio.previewExportStep.destinationB
+        : t.bookStudio.previewExportStep.destinationC;
 
   const handleDownloadOriginal = () => {
     if (!selectedFile) return;
@@ -113,7 +113,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   const handleStartExport = async () => {
     const allowed = await consumeCreditIfNeeded();
     if (!allowed) {
-      setErrorMsg('No tenés créditos suficientes.');
+      setErrorMsg(t.bookStudio.previewExportStep.insufficientCredits);
       setIsCheckoutOpen(true);
       return;
     }
@@ -153,7 +153,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
       setIsProcessing(false);
     } catch (err) {
       console.error('Error al generar el libro imposicionado:', err);
-      setErrorMsg(err instanceof Error ? err.message : 'Ocurrió un error inesperado al procesar el libro.');
+      setErrorMsg(err instanceof Error ? err.message : t.bookStudio.previewExportStep.exportFailed);
       setIsProcessing(false);
     }
   };
@@ -180,12 +180,14 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
             <div>
               <h3 className="text-sm font-bold text-[var(--ui-text-primary)]">{selectedFile.name}</h3>
               <p className="text-xs text-[var(--ui-text-secondary)]">
-                Modo: {options.mode === 'fotocopia' ? 'Escaneo 2 págs./hoja' : 'PDF 1 pág./hoja'} • Se imprime {options.paperSize === 'A3' ? 'en una imprenta (A3)' : 'en tu casa (A4)'}
+                {t.bookStudio.previewExportStep.modeSummaryLine
+                  .replace('{mode}', options.mode === 'fotocopia' ? t.bookStudio.previewExportStep.modeFotocopiaShort : t.bookStudio.previewExportStep.modeStandardShort)
+                  .replace('{where}', options.paperSize === 'A3' ? t.bookStudio.previewExportStep.printAtImprenta : t.bookStudio.previewExportStep.printAtHome)}
               </p>
             </div>
           </div>
           <span className="px-3 py-1 rounded-full bg-[var(--color-accent-light)]/20 text-[var(--color-accent-text)] font-bold text-[10px] uppercase">
-            Listo
+            {t.bookStudio.previewExportStep.readyBadge}
           </span>
         </div>
 
@@ -193,7 +195,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
         <div className="grid grid-cols-3 gap-3">
           <div className={`p-3 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)]`}>
             <span className="text-[10px] font-semibold text-[var(--ui-text-secondary)] block uppercase">
-              Págs. PDF
+              {t.bookStudio.previewExportStep.metricPdfPages}
             </span>
             <span className="text-xl font-bold text-[var(--ui-text-primary)] mt-0.5 block">
               {pdfPageCount}
@@ -202,7 +204,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
 
           <div className={`p-3 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)]`}>
             <span className="text-[10px] font-semibold text-[var(--ui-text-secondary)] block uppercase">
-              Págs. Libro (Mult. 4)
+              {t.bookStudio.previewExportStep.metricBookPages}
             </span>
             <span className="text-xl font-bold text-[var(--color-secondary-bright)] mt-0.5 block">
               {finalPageCount}
@@ -211,10 +213,10 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
 
           <div className={`p-3 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)]`}>
             <span className="text-[10px] font-semibold text-[var(--ui-text-secondary)] block uppercase">
-              Hojas a imprimir
+              {t.bookStudio.previewExportStep.metricSheets}
             </span>
             <span className="text-xl font-bold text-[var(--color-secondary-bright)] mt-0.5 block">
-              {totalSheetsToPrint} <span className="text-xs font-normal text-[var(--ui-text-secondary)]">hojas</span>
+              {totalSheetsToPrint} <span className="text-xs font-normal text-[var(--ui-text-secondary)]">{t.bookStudio.previewExportStep.sheetsUnit}</span>
             </span>
           </div>
         </div>
@@ -223,11 +225,11 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
         <div className="space-y-1.5 pt-1 text-xs">
           <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
             <CheckCircle2 className="w-3.5 h-3.5 text-[var(--color-secondary-bright)] shrink-0" />
-            <span>Tapa: <strong>{hasCover ? (options.customCover ? 'Tapa Custom con Preset' : 'Página 1 del PDF') : 'Sin Tapa'}</strong></span>
+            <span>{t.bookStudio.previewExportStep.coverRowLabel} <strong>{hasCover ? (options.customCover ? t.bookStudio.previewExportStep.coverCustomPreset : t.bookStudio.previewExportStep.sourceCoverPage) : t.bookStudio.previewExportStep.noCover}</strong></span>
           </div>
           <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
             <CheckCircle2 className="w-3.5 h-3.5 text-[var(--color-secondary-bright)] shrink-0" />
-            <span>Contratapa: <strong>{hasBackCover ? (options.customBackCover ? 'Contratapa Custom' : 'Última pág. del PDF') : 'Sin Contratapa'}</strong></span>
+            <span>{t.bookStudio.previewExportStep.backCoverRowLabel} <strong>{hasBackCover ? (options.customBackCover ? t.bookStudio.previewExportStep.backCoverCustom : t.bookStudio.previewExportStep.sourceBackCoverPage) : t.bookStudio.previewExportStep.noBackCover}</strong></span>
           </div>
         </div>
 
@@ -235,28 +237,28 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
         <div className="space-y-1.5 pt-2 border-t border-[var(--ui-border)] text-xs">
           <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
             <Languages className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] shrink-0" />
-            <span>Dirección de lectura: <strong>{readingDirection === 'rtl' ? 'De derecha a izquierda' : 'De izquierda a derecha'}</strong></span>
+            <span>{t.bookStudio.previewExportStep.readingDirectionRow} <strong>{readingDirection === 'rtl' ? t.bookStudio.previewExportStep.rtlValue : t.bookStudio.previewExportStep.ltrValue}</strong></span>
           </div>
           <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
             <FileText className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] shrink-0" />
-            <span>Destino de la cubierta: <strong>{destinationLabel}</strong></span>
+            <span>{t.bookStudio.previewExportStep.destinationRowLabel} <strong>{destinationLabel}</strong></span>
           </div>
           <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
             <CheckCircle2 className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] shrink-0" />
-            <span>Lomo: <strong>{spineWidthMm.toFixed(1)} mm{spineWidthMm === 0 ? ' (sin grosor, para anillado o guillotina)' : ''}</strong></span>
+            <span>{t.bookStudio.previewExportStep.spineRowLabel} <strong>{spineWidthMm.toFixed(1)} mm{spineWidthMm === 0 ? t.bookStudio.previewExportStep.spineNoThickness : ''}</strong></span>
           </div>
           <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
             <CheckCircle2 className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] shrink-0" />
-            <span>Compensación para las hojas de adentro (creep): <strong>{creepMaxMm > 0 ? `hasta ${creepMaxMm.toFixed(1)} mm` : 'no aplica'}</strong></span>
+            <span>{t.bookStudio.previewExportStep.creepRowLabel} <strong>{creepMaxMm > 0 ? t.bookStudio.previewExportStep.creepUpTo.replace('{max}', creepMaxMm.toFixed(1)) : t.bookStudio.previewExportStep.creepNotApply}</strong></span>
           </div>
           <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
             <CheckCircle2 className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] shrink-0" />
-            <span>Guías de armado: <strong>{options.showGuides ? 'sí' : 'no'}</strong></span>
+            <span>{t.bookStudio.previewExportStep.guidesRowLabel} <strong>{options.showGuides ? t.bookStudio.previewExportStep.guidesYes : t.bookStudio.previewExportStep.guidesNo}</strong></span>
           </div>
           {multiSigs && (
             <div className="flex items-center gap-2 text-[var(--ui-text-primary)]">
               <Layers className="w-3.5 h-3.5 text-[var(--ui-text-secondary)] shrink-0" />
-              <span>Se baja un ZIP con <strong>{multiSigs.length} partes (cuadernillos)</strong>: {multiSigs.join(' + ')} páginas</span>
+              <span>{t.bookStudio.previewExportStep.zipPartsLead}<strong>{t.bookStudio.previewExportStep.zipPartsCount.replace('{count}', String(multiSigs.length))}</strong>: {multiSigs.join(' + ')}{t.bookStudio.previewExportStep.zipPagesJoin}</span>
             </div>
           )}
         </div>
@@ -271,11 +273,11 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
                 onChange={(e) => setOptions((prev) => ({ ...prev, unprintableMarginMm: e.target.checked ? 5 : 0 }))}
                 className="h-4 w-4 accent-[var(--color-accent-base)]"
               />
-              <span className="text-xs font-bold text-[var(--ui-text-primary)]">Mi impresora de casa no imprime hasta el borde</span>
+              <span className="text-xs font-bold text-[var(--ui-text-primary)]">{t.bookStudio.previewExportStep.homePrinterNoBorders}</span>
             </label>
             {homePrinter && (
               <label className="flex flex-wrap items-center gap-2 text-xs text-[var(--ui-text-secondary)]">
-                <span>Margen mínimo que respeta tu impresora (mm):</span>
+                <span>{t.bookStudio.previewExportStep.homePrinterMinMargin}</span>
                 <input
                   type="number"
                   min={1}
@@ -289,8 +291,8 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
             )}
             <p className="text-[11px] text-[var(--ui-text-secondary)]">
               {homePrinter
-                ? `El contenido se achica para no usar los ${unprintableMarginMm} mm del borde y que no se corte nada.`
-                : 'La impresora llega hasta el borde (perfil de imprenta o de borde a borde).'}
+                ? t.bookStudio.previewExportStep.homePrinterShrinks.replace('{mm}', String(unprintableMarginMm))
+                : t.bookStudio.previewExportStep.homePrinterToEdge}
             </p>
           </div>
         )}
@@ -299,9 +301,9 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
         <div className={`p-3 bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/30 rounded-[${radius.control}] flex items-start gap-2 text-xs text-[var(--color-status-warning-text)]`}>
           <AlertTriangle className="w-4 h-4 text-[var(--color-status-warning-text)] shrink-0 mt-0.5" />
           <div>
-            <span className="font-bold block">Documento para Imprimir y Doblar</span>
+            <span className="font-bold block">{t.bookStudio.previewExportStep.printFoldHeading}</span>
             <span className="text-[11px] opacity-90 block">
-              El archivo trae las hojas ya ordenadas. Imprimí de ambos lados y doblá por la mitad.
+              {t.bookStudio.previewExportStep.printFoldHint}
             </span>
           </div>
         </div>
@@ -312,7 +314,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
         <div className={`p-6 rounded-[${radius.card}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)] text-center space-y-4`}>
           <div className="w-8 h-8 border-3 border-[var(--color-accent-base)] border-t-transparent rounded-full animate-spin mx-auto"></div>
           <div className="space-y-1">
-            <p className="text-sm font-bold text-[var(--ui-text-primary)]">Generando PDF de Imprenta...</p>
+            <p className="text-sm font-bold text-[var(--ui-text-primary)]">{t.bookStudio.previewExportStep.generatingPdf}</p>
             <p className="text-xs text-[var(--ui-text-secondary)]">{statusMessage}</p>
           </div>
           <div className="w-full bg-[var(--ui-bg-card)] h-2 rounded-full overflow-hidden border border-[var(--ui-border)]">
@@ -331,7 +333,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
             onClick={handleStartExport}
             className={`px-4 py-2 text-xs font-bold bg-[var(--color-status-danger-muted)] text-[var(--color-status-danger-text)] border border-[var(--color-status-danger-base)]/40 rounded-[${radius.control}]`}
           >
-            Reintentar Exportación
+            {t.bookStudio.previewExportStep.retryExport}
           </button>
         </div>
       ) : (
@@ -343,7 +345,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
             className={`w-full py-3.5 px-6 rounded-[${radius.control}] font-bold text-sm bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] hover:opacity-90 disabled:opacity-50 transition flex items-center justify-center gap-2 ${elevationSystem.floating}`}
           >
             <Printer className="w-4 h-4" />
-            <span>{isGating ? 'Verificando créditos...' : `Descargar para imprimir (${totalSheetsToPrint} hojas)`}</span>
+            <span>{isGating ? t.bookStudio.previewExportStep.verifyingCredits : t.bookStudio.previewExportStep.downloadPrints.replace('{sheets}', String(totalSheetsToPrint))}</span>
             <Sparkles className="w-4 h-4" />
           </button>
 
@@ -354,7 +356,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
               className={`w-full py-2.5 px-4 rounded-[${radius.control}] text-xs font-bold border border-[var(--ui-border)] text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-card)] transition flex items-center justify-center gap-2`}
             >
               <Download className="w-4 h-4" />
-              <span>Descargar el PDF original (tal cual lo subiste)</span>
+              <span>{t.bookStudio.previewExportStep.downloadOriginal}</span>
             </button>
           )}
 
@@ -366,7 +368,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
                 className={`flex-1 py-2 px-4 rounded-[${radius.control}] text-xs font-bold border border-[var(--color-accent-text)] text-[var(--color-accent-text)] flex items-center justify-center gap-1.5`}
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>Volver a Descargar</span>
+                <span>{t.bookStudio.previewExportStep.downloadAgain}</span>
               </a>
             </div>
           )}

@@ -84,7 +84,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      setImageError('Ese archivo no es una imagen. Elegí un archivo PNG, JPG o WEBP.');
+      setImageError(t.bookStudio.sharedBody.notImageFile);
       return;
     }
     try {
@@ -99,7 +99,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
       setImageError(null);
       setOptions((prev) => ({ ...prev, customCover: updated }));
     } catch {
-      setImageError('No pudimos guardar la imagen en este equipo. Probá con otra imagen.');
+      setImageError(t.bookStudio.sharedBody.saveImageFailed);
     }
   };
 
@@ -123,7 +123,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
             coverType === 'source' ? selectableCard.selected : selectableCard.unselected
           } text-xs font-bold text-center py-2.5 px-2`}
         >
-          Pág. 1 del PDF
+          {t.bookStudio.coverStep.pdfFirstPage}
         </button>
 
         <button
@@ -133,7 +133,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
             coverType === 'custom' ? selectableCard.selected : selectableCard.unselected
           } text-xs font-bold text-center py-2.5 px-2`}
         >
-          Tapa con Preset
+          {t.bookStudio.coverStep.presetMode}
         </button>
 
         <button
@@ -143,7 +143,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
             coverType === 'upload' ? selectableCard.selected : selectableCard.unselected
           } text-xs font-bold text-center py-2.5 px-2`}
         >
-          Subir mi Tapa
+          {t.bookStudio.coverStep.uploadMode}
         </button>
 
         <button
@@ -153,16 +153,16 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
             coverType === 'none' ? selectableCard.selected : selectableCard.unselected
           } text-xs font-bold text-center py-2.5 px-2`}
         >
-          Sin Tapa
+          {t.bookStudio.coverStep.noCoverMode}
         </button>
       </div>
 
       {coverType === 'upload' && (
         <div className={`space-y-4 p-4 rounded-[${radius.card}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)]`}>
           <div className="space-y-1">
-            <label className={typeScale.fieldLabel}>Archivo de Imagen de Tapa (JPG o PNG)</label>
+            <label className={typeScale.fieldLabel}>{t.bookStudio.coverStep.uploadLabel}</label>
             <p className="text-xs text-[var(--ui-text-secondary)]">
-              Sube una imagen diseñada para la portada completa de tu libro. Se escalará para cubrir la hoja.
+              {t.bookStudio.coverStep.uploadHint}
             </p>
           </div>
 
@@ -182,7 +182,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
               <div className={`relative w-full aspect-[1/1.41] max-w-[200px] mx-auto rounded-[${radius.control}] overflow-hidden border border-[var(--ui-border)] shadow-[var(--shadow-raised)] bg-[var(--ui-bg-hover)]`}>
                 <img 
                   src={(coverData.imageUri || thumbUri) as string} 
-                  alt="Vista previa tapa subida" 
+                  alt={t.bookStudio.coverStep.uploadPreviewAlt} 
                   className={`w-full h-full ${
                     coverData.imageFit === 'stretch' ? '' :
                     coverData.imageFit === 'fit' ? 'object-contain' : 'object-cover'
@@ -191,7 +191,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
               </div>
 
               <div className="space-y-2">
-                <label className={typeScale.fieldLabel}>Opciones de Ajuste de Imagen</label>
+                <label className={typeScale.fieldLabel}>{t.bookStudio.sharedBody.imageFitLabel}</label>
                 <div className="flex flex-col gap-2">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -202,7 +202,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
                       onChange={() => updateCoverField('imageFit', 'crop')}
                       className="accent-[var(--color-accent-base)]"
                     />
-                    <span className="text-xs">Recortar para llenar (Cover)</span>
+                    <span className="text-xs">{t.bookStudio.sharedBody.imageFitCrop}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -213,7 +213,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
                       onChange={() => updateCoverField('imageFit', 'fit')}
                       className="accent-[var(--color-accent-base)]"
                     />
-                    <span className="text-xs">Ajustar sin deformar (Contain)</span>
+                    <span className="text-xs">{t.bookStudio.sharedBody.imageFitContain}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -224,7 +224,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
                       onChange={() => updateCoverField('imageFit', 'stretch')}
                       className="accent-[var(--color-accent-base)]"
                     />
-                    <span className="text-xs">Estirar para llenar (Deformar)</span>
+                    <span className="text-xs">{t.bookStudio.sharedBody.imageFitStretch}</span>
                   </label>
                 </div>
               </div>
@@ -239,7 +239,7 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
           <div className="space-y-2">
             <label className={`${typeScale.fieldLabel} flex items-center gap-1.5`}>
               <Palette className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
-              Estilo Visual de Tapa (Catálogo de Portadas)
+              {t.bookStudio.coverStep.presetHeading}
             </label>
             <div className="grid grid-cols-2 gap-2">
               {COVER_PRESETS.map((preset) => {
@@ -270,34 +270,34 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
           {/* Campos de Texto para la Tapa */}
           <div className="space-y-3 pt-2">
             <div>
-              <label className={typeScale.fieldLabel}>Título del Libro</label>
+              <label className={typeScale.fieldLabel}>{t.bookStudio.coverStep.titleLabel}</label>
               <input
                 type="text"
                 value={coverData.title || ''}
                 onChange={(e) => updateCoverField('title', e.target.value)}
-                placeholder="Ej. Antología Poética 2026"
+                placeholder={t.bookStudio.coverStep.titlePlaceholder}
                 className={`${input.base} ${input.focus}`}
               />
             </div>
 
             <div>
-              <label className={typeScale.fieldLabel}>Autor / Compilador</label>
+              <label className={typeScale.fieldLabel}>{t.bookStudio.coverStep.authorCompileLabel}</label>
               <input
                 type="text"
                 value={coverData.author || ''}
                 onChange={(e) => updateCoverField('author', e.target.value)}
-                placeholder="Ej. María Daniela Burgos"
+                placeholder={t.bookStudio.coverStep.authorPlaceholder}
                 className={`${input.base} ${input.focus}`}
               />
             </div>
 
             <div>
-              <label className={typeScale.fieldLabel}>Editorial / Edición (opcional)</label>
+              <label className={typeScale.fieldLabel}>{t.bookStudio.sharedBody.publisherLabel}</label>
               <input
                 type="text"
                 value={coverData.publisher || ''}
                 onChange={(e) => updateCoverField('publisher', e.target.value)}
-                placeholder="Ej. Ediciones Kalpagráfica"
+                placeholder={t.bookStudio.sharedBody.publisherPlaceholder}
                 className={`${input.base} ${input.focus}`}
               />
             </div>
@@ -309,9 +309,9 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
       <div className={`space-y-4 p-4 rounded-[${radius.card}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)]`}>
         <label className={`flex items-center justify-between p-3 rounded-[${radius.control}] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] cursor-pointer hover:border-[var(--ui-dock-border)] transition-all`}>
           <div className="space-y-0.5 pr-4">
-            <span className="font-bold block text-xs text-[var(--ui-text-primary)]">Hoja en blanco detrás de la Tapa</span>
+            <span className="font-bold block text-xs text-[var(--ui-text-primary)]">{t.bookStudio.coverStep.blankBehindLabel}</span>
             <span className="text-[10px] text-[var(--ui-text-secondary)] block">
-              Deja la cara posterior (retiro) de la portada limpia sin texto del cuerpo.
+              {t.bookStudio.coverStep.blankBehindHelper}
             </span>
           </div>
           <input

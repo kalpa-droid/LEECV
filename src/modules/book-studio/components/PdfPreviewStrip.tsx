@@ -7,6 +7,7 @@ import { bookAssetManager } from '../../../shared/core/book-engine/bookAssetMana
 import { radius } from '../../../shared/core/uiDesignSystem';
 import { RefreshCw, FileText, Trash2, AlertTriangle } from 'lucide-react';
 import { ensurePdfjsWorkerConfigured } from '../../../shared/core/pdf-engine/pdfjsWorkerSetup';
+import { useText } from '../../../shared/i18n/useText';
 
 export interface PdfPreviewStripProps {
   selectedFile: File | null;
@@ -35,6 +36,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
   const [pdfLoadError, setPdfLoadError] = useState<string | null>(null);
   const [activeLightboxPage, setActiveLightboxPage] = useState<number | null>(null);
   const [showDeletedPages, setShowDeletedPages] = useState<boolean>(false);
+  const t = useText();
 
   // Miniaturas de tapa/contratapa: el assetId (referencia local) tiene prioridad
   // sobre imageUri (heredado). Igual que en CoverPreviewThumbnail.
@@ -85,7 +87,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
         // abrir/parsear. Se ofrece reintentar con otro archivo.
         console.error('Error loading PDF document instance for thumbnails:', err);
         if (!isCancelled) {
-          setPdfLoadError('No pudimos abrir este PDF. Probá con otro archivo o volvé al paso "Origen".');
+          setPdfLoadError(t.bookStudio.pdfStrip.loadError);
           setIsLoadingPdfDoc(false);
         }
       }
@@ -103,9 +105,9 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
       <div className={`flex flex-col items-center justify-center py-16 px-4 text-center space-y-3 bg-[var(--ui-bg-card)] rounded-[${radius.modal}] border-2 border-dashed border-[var(--ui-border)] w-full`}>
         {/* check-contrast-ignore-next-line: ícono decorativo grande, no es texto de lectura */}
         <FileText className="w-12 h-12 text-[var(--ui-text-muted)]" />
-        <h3 className="text-base font-bold text-[var(--ui-text-primary)]">Ningún PDF Cargado</h3>
+        <h3 className="text-base font-bold text-[var(--ui-text-primary)]">{t.bookStudio.pdfStrip.emptyTitle}</h3>
         <p className="text-xs text-[var(--ui-text-secondary)] max-w-sm">
-          Carga un archivo PDF en la pestaña "1. Origen" para ver y organizar las miniaturas de sus páginas.
+          {t.bookStudio.pdfStrip.emptyDescription}
         </p>
       </div>
     );
@@ -118,7 +120,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
           {/* check-contrast-ignore-next-line: ícono decorativo grande, no es texto de lectura */}
           <AlertTriangle className="w-5 h-5 text-[var(--color-status-danger-text)] shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <h3 className="text-sm font-bold text-[var(--color-status-danger-text)]">No pudimos abrir este PDF</h3>
+            <h3 className="text-sm font-bold text-[var(--color-status-danger-text)]">{t.bookStudio.pdfStrip.loadErrorTitle}</h3>
             <p className="text-xs text-[var(--color-status-danger-text)]">{pdfLoadError}</p>
           </div>
         </div>
@@ -129,7 +131,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
             className={`px-3 py-1.5 text-xs font-bold rounded-[${radius.control}] bg-[var(--color-status-danger-base)] text-[var(--color-status-on-base)] cursor-pointer flex items-center gap-1.5`}
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            Probar con otro PDF
+            {t.bookStudio.pdfStrip.tryAnotherPdf}
           </button>
         )}
       </div>
@@ -141,7 +143,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
       <div className="flex flex-col items-center justify-center py-16 text-center space-y-3 w-full">
         <div className="w-10 h-10 border-3 border-[var(--color-accent-base)] border-t-transparent rounded-full animate-spin" />
         <p className="text-xs font-semibold text-[var(--ui-text-secondary)]">
-          Generando grilla de miniaturas para {selectedFile.name}...
+          {t.bookStudio.pdfStrip.generatingGrid.replace('{name}', selectedFile.name)}
         </p>
       </div>
     );
@@ -250,10 +252,12 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
       <div className={`p-3 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.card}] flex flex-wrap items-center justify-between gap-3 text-xs`}>
         <div className="flex items-center gap-2">
           <span className="font-bold text-[var(--ui-text-primary)]">
-            Organizador de Páginas
+            {t.bookStudio.pdfStrip.organizerHeading}
           </span>
           <span className="px-2 py-0.5 rounded-full bg-[var(--color-accent-light)]/20 text-[var(--color-accent-text)] font-bold text-[10px]">
-            {displayPages.length - deletedPagesSet.size} activas / {deletedPagesSet.size} eliminadas
+            {t.bookStudio.pdfStrip.activeDeletedBadge
+              .replace('{active}', String(displayPages.length - deletedPagesSet.size))
+              .replace('{deleted}', String(deletedPagesSet.size))}
           </span>
         </div>
 
@@ -264,14 +268,17 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
               onClick={() => setShowDeletedPages(!showDeletedPages)}
               className={`px-2.5 py-1 rounded-[${radius.control}] bg-[var(--ui-bg-surface)] hover:bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-xs font-semibold text-[var(--ui-text-primary)] transition cursor-pointer flex items-center gap-1.5`}
             >
-              {showDeletedPages ? 'Ocultar eliminadas' : 'Ver páginas eliminadas'}
+              {showDeletedPages ? t.bookStudio.pdfStrip.hideDeleted : t.bookStudio.pdfStrip.showDeleted}
             </button>
           )}
 
           {options.refBookPage ? (
             <div className="flex items-center gap-1.5 text-[11px] text-[var(--color-status-success-bright)] font-semibold">
               <RefreshCw className="w-3.5 h-3.5" />
-              <span>Ref: Pág. {options.refPdfPage} PDF → Impresa {options.refBookPage} ({options.refPageSide})</span>
+              <span>{t.bookStudio.pdfStrip.refBadge
+                .replace('{pdf}', String(options.refPdfPage))
+                .replace('{book}', String(options.refBookPage))
+                .replace('{side}', options.refPageSide ?? 'derecha')}</span>
             </div>
           ) : null}
         </div>
@@ -288,10 +295,10 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
         {(options.hasCover || options.customCover) && (
           <div className={`p-3 bg-[var(--ui-bg-surface)] border-2 border-[var(--color-accent-base)] rounded-[${radius.card}] flex flex-col items-center justify-between text-center min-h-[200px] space-y-2 relative shadow-[var(--shadow-raised)] select-none`}>
             <span className="px-2 py-0.5 rounded bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold text-[10px] uppercase tracking-wider">
-              Portada / Tapa
+              {t.bookStudio.pdfStrip.coverBadge}
             </span>
             {coverImgSrc ? (
-              <img src={coverImgSrc} alt="Tapa" className={`w-full h-auto aspect-[1/1.41] rounded border border-[var(--ui-border)] ${options.customCover?.imageFit === 'stretch' ? '' : options.customCover?.imageFit === 'fit' ? 'object-contain bg-white' : 'object-cover'}`} />
+              <img src={coverImgSrc} alt={t.bookStudio.pdfStrip.coverAlt} className={`w-full h-auto aspect-[1/1.41] rounded border border-[var(--ui-border)] ${options.customCover?.imageFit === 'stretch' ? '' : options.customCover?.imageFit === 'fit' ? 'object-contain bg-white' : 'object-cover'}`} />
             ) : options.customCover?.type === 'template' ? (
               <CoverPreviewThumbnail
                 config={options.customCover}
@@ -302,7 +309,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center p-2 rounded bg-[var(--ui-bg-card)] border border-[var(--ui-border)] w-full aspect-[1/1.41]">
                 <span className="text-[11px] font-bold text-[var(--ui-text-primary)] line-clamp-2">
-                  {options.customCover?.title || 'Tapa del PDF (Página 1)'}
+                  {options.customCover?.title || t.bookStudio.pdfStrip.coverPdfFallback}
                 </span>
                 {options.customCover?.author && (
                   <span className="text-[9px] text-[var(--ui-text-secondary)] mt-1">{options.customCover.author}</span>
@@ -316,13 +323,13 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
         {(options.hasCover || options.customCover) && options.blankBehindCover !== false && (
           <div className={`p-3 bg-[var(--ui-bg-surface)] border-2 border-dashed border-[var(--ui-border)] rounded-[${radius.card}] flex flex-col items-center justify-between text-center min-h-[200px] space-y-2 relative shadow-[var(--shadow-raised)] select-none opacity-80`}>
             <span className="px-2 py-0.5 rounded bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] font-bold text-[10px] tracking-wider border border-[var(--ui-border)]">
-              HOJA EN BLANCO
+              {t.bookStudio.pdfStrip.blankSheetBadge}
             </span>
             <div className="flex-1 w-full aspect-[1/1.41] bg-white border border-dashed border-black/20 rounded opacity-50 flex items-center justify-center">
-              <span className="text-[10px] text-black/70 rotate-[-45deg] font-bold">Retiro Tapa</span>
+              <span className="text-[10px] text-black/70 rotate-[-45deg] font-bold">{t.bookStudio.pdfStrip.retiroCoverRotated}</span>
             </div>
             <span className="text-[9px] text-[var(--ui-text-secondary)] font-semibold">
-              Retiro de Portada
+              {t.bookStudio.pdfStrip.retiroCoverCaption}
             </span>
           </div>
         )}
@@ -339,10 +346,10 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
                 className={`p-3 bg-[var(--ui-bg-surface)] border-2 border-dashed border-[var(--ui-border)] rounded-[${radius.card}] flex flex-col items-center justify-between text-center min-h-[200px] space-y-2 relative select-none`}
               >
                 <span className="px-2 py-0.5 rounded bg-[var(--color-secondary-muted)] text-[var(--color-secondary-bright)] font-bold text-[10px]">
-                  HOJA EN BLANCO
+                  {t.bookStudio.pdfStrip.blankSheetBadge}
                 </span>
                 <div className="flex-1 flex flex-col items-center justify-center text-[10px] text-[var(--ui-text-secondary)]">
-                  Página insertada en blanco
+                  {t.bookStudio.pdfStrip.insertedBlankPage}
                 </div>
                 <button
                   type="button"
@@ -350,7 +357,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
                   className="px-2 py-1 rounded bg-[var(--color-status-danger-muted)] text-[var(--color-status-danger-text)] text-[10px] font-bold flex items-center gap-1 hover:opacity-80 transition cursor-pointer"
                 >
                   <Trash2 className="w-3 h-3" />
-                  <span>Eliminar</span>
+                  <span>{t.common.actions.delete}</span>
                 </button>
               </div>
             );
@@ -382,13 +389,13 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
         {(options.hasBackCover || options.customBackCover) && options.blankInFrontBackCover !== false && (
           <div className={`p-3 bg-[var(--ui-bg-surface)] border-2 border-dashed border-[var(--ui-border)] rounded-[${radius.card}] flex flex-col items-center justify-between text-center min-h-[200px] space-y-2 relative shadow-[var(--shadow-raised)] select-none opacity-80`}>
             <span className="px-2 py-0.5 rounded bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] font-bold text-[10px] tracking-wider border border-[var(--ui-border)]">
-              HOJA EN BLANCO
+              {t.bookStudio.pdfStrip.blankSheetBadge}
             </span>
             <div className="flex-1 w-full aspect-[1/1.41] bg-white border border-dashed border-black/20 rounded opacity-50 flex items-center justify-center">
-              <span className="text-[10px] text-black/70 rotate-[-45deg] font-bold">Retiro Contratapa</span>
+              <span className="text-[10px] text-black/70 rotate-[-45deg] font-bold">{t.bookStudio.pdfStrip.retiroBackCoverRotated}</span>
             </div>
             <span className="text-[9px] text-[var(--ui-text-secondary)] font-semibold">
-              Retiro de Contratapa
+              {t.bookStudio.pdfStrip.retiroBackCoverCaption}
             </span>
           </div>
         )}
@@ -397,10 +404,10 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
         {(options.hasBackCover || options.customBackCover) && (
           <div className={`p-3 bg-[var(--ui-bg-surface)] border-2 border-[var(--color-secondary-base)] rounded-[${radius.card}] flex flex-col items-center justify-between text-center min-h-[200px] space-y-2 relative shadow-[var(--shadow-raised)] select-none`}>
             <span className="px-2 py-0.5 rounded bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] font-bold text-[10px] uppercase tracking-wider">
-              Contratapa
+              {t.bookStudio.pdfStrip.backCoverBadge}
             </span>
             {backCoverImgSrc ? (
-              <img src={backCoverImgSrc} alt="Contratapa" className={`w-full h-auto aspect-[1/1.41] rounded border border-[var(--ui-border)] ${options.customBackCover?.imageFit === 'stretch' ? '' : options.customBackCover?.imageFit === 'fit' ? 'object-contain bg-white' : 'object-cover'}`} />
+              <img src={backCoverImgSrc} alt={t.bookStudio.pdfStrip.backCoverAlt} className={`w-full h-auto aspect-[1/1.41] rounded border border-[var(--ui-border)] ${options.customBackCover?.imageFit === 'stretch' ? '' : options.customBackCover?.imageFit === 'fit' ? 'object-contain bg-white' : 'object-cover'}`} />
             ) : options.customBackCover?.type === 'template' ? (
               <CoverPreviewThumbnail
                 config={options.customBackCover}
@@ -411,7 +418,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center p-2 rounded bg-[var(--ui-bg-card)] border border-[var(--ui-border)] w-full aspect-[1/1.41]">
                 <span className="text-[11px] font-bold text-[var(--ui-text-primary)] line-clamp-2">
-                  {options.customBackCover?.synopsis || 'Contratapa del PDF'}
+                  {options.customBackCover?.synopsis || t.bookStudio.pdfStrip.backCoverPdfFallback}
                 </span>
               </div>
             )}

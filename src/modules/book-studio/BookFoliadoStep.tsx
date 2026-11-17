@@ -50,10 +50,10 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
       <div className="p-4 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[12px] space-y-2">
         <h4 className="text-xs font-bold text-[var(--ui-text-primary)] flex items-center gap-1.5">
           <ZoomIn className="w-4 h-4 text-[var(--color-accent-text)]" />
-          <span>¿Cómo ingresar el número?</span>
+          <span>{t.bookStudio.foliadoStep.howToTitle}</span>
         </h4>
         <p className="text-xs text-[var(--ui-text-secondary)] leading-relaxed">
-          Haz clic en cualquier miniatura de página en el visor principal para abrirla a pantalla completa, escribe el número que ves impreso en ella y presiona <strong>Encontrado</strong>.
+          {t.bookStudio.foliadoStep.howToIntro} <strong>{t.bookStudio.foliadoStep.foundButton}</strong>.
         </p>
       </div>
 
@@ -67,7 +67,9 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
             <div className="space-y-1 text-xs">
               <h3 className="font-bold text-sm">{t.bookStudio.foliadoStep.calibratedTitle}</h3>
               <p>
-                Pág. PDF #{refPdfPage} ➔ Pág. Impresa #{refBookPage}.
+                {t.bookStudio.foliadoStep.calibratedLine
+                  .replace('{pdf}', String(refPdfPage))
+                  .replace('{book}', String(refBookPage))}
               </p>
             </div>
           </div>

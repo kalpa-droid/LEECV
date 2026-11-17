@@ -14,6 +14,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { radius, elevationSystem, button, input } from '../../../shared/core/uiDesignSystem';
+import { useText } from '../../../shared/i18n/useText';
 
 export interface LightboxModalProps {
   isOpen: boolean;
@@ -64,6 +65,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
   onMoveLeft,
   onMoveRight,
 }) => {
+  const t = useText();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -216,10 +218,10 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
               type="button"
               onClick={() => onNavigate(prevPage)}
               className={`absolute left-3 top-1/2 -translate-y-1/2 z-10 px-3 py-2 rounded-[${radius.control}] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold text-xs flex items-center gap-1 hover:opacity-90 transition cursor-pointer shadow-[var(--shadow-floating)]`}
-              title={`Ir a página ${prevPage}`}
+              title={t.bookStudio.lightboxModal.goToPageTitle.replace('{page}', String(prevPage))}
             >
               <ChevronLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">Anterior ({prevPage})</span>
+              <span className="hidden sm:inline">{t.bookStudio.lightboxModal.navPrevPage.replace('{page}', String(prevPage))}</span>
             </button>
           )}
 
@@ -228,9 +230,9 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
               type="button"
               onClick={() => onNavigate(nextPage)}
               className={`absolute right-3 top-1/2 -translate-y-1/2 z-10 px-3 py-2 rounded-[${radius.control}] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold text-xs flex items-center gap-1 hover:opacity-90 transition cursor-pointer shadow-[var(--shadow-floating)]`}
-              title={`Ir a página ${nextPage}`}
+              title={t.bookStudio.lightboxModal.goToPageTitle.replace('{page}', String(nextPage))}
             >
-              <span className="hidden sm:inline">Siguiente ({nextPage})</span>
+              <span className="hidden sm:inline">{t.bookStudio.lightboxModal.navNextPage.replace('{page}', String(nextPage))}</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           )}
@@ -238,7 +240,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
           {isLoading && (
             <div className="flex flex-col items-center gap-2 text-[var(--ui-text-secondary)]">
               <div className="w-8 h-8 border-3 border-[var(--color-accent-base)] border-t-transparent rounded-full animate-spin" />
-              <span className="text-xs">Cargando vista previa en alta resolución...</span>
+              <span className="text-xs">{t.bookStudio.lightboxModal.loadingHighRes}</span>
             </div>
           )}
 
@@ -256,7 +258,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
               <div
                 className="absolute inset-y-0 pointer-events-none"
                 style={{ left: `${localSplitOffset}%` }}
-                title="Corte manual central"
+                title={t.bookStudio.lightboxModal.cutManualTitle}
               >
                 <div className="h-full border-l-[3px] border-dashed border-[var(--color-accent-base)]" />
                 <div className={`absolute top-0 left-0 -translate-x-1/2 flex items-center gap-1 px-1.5 py-0.5 rounded-[${radius.control}] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-[9px] font-bold shadow-[var(--shadow-raised)]`}>
@@ -269,7 +271,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
 
           {isDeleted && (
             <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-[${radius.control}] bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/40 text-[var(--color-status-danger-text)] font-bold text-xs shadow-[var(--shadow-raised)]`}>
-              PÁGINA ELIMINADA
+              {t.bookStudio.lightboxModal.deletedBadge}
             </div>
           )}
         </div>
@@ -281,21 +283,21 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
             <div className="space-y-4">
               <div className="space-y-1">
                 <span className="px-2.5 py-1 rounded-full bg-[var(--color-accent-light)]/20 text-[var(--color-secondary-bright)] font-bold text-[10px] uppercase">
-                  Página {pageNum} del PDF
+                  {t.bookStudio.lightboxModal.pageOfPdf.replace('{page}', String(pageNum))}
                 </span>
                 <h3 className="text-base font-bold text-[var(--ui-text-primary)] flex items-center gap-1.5 pt-1">
                   <Bookmark className="w-4 h-4 text-[var(--color-secondary-bright)]" />
-                  <span>5. Encuentro un número</span>
+                  <span>{t.bookStudio.foliadoStep.title}</span>
                 </h3>
                 <p className="text-xs text-[var(--ui-text-secondary)] leading-relaxed">
-                  Busca en la vista previa el número impreso en esta página y escríbelo a continuación.
+                  {t.bookStudio.lightboxModal.foliadoInstruction}
                 </p>
               </div>
 
               <form onSubmit={handleApplyReference} className="space-y-3 pt-2 border-t border-[var(--ui-border)]">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-[var(--ui-text-primary)] block">
-                    En esta hoja veo el número de página:
+                    {t.bookStudio.lightboxModal.foliadoFieldLabel}
                   </label>
                 </div>
 
@@ -308,7 +310,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
                     className={`${input.base} ${input.focus} w-24 text-center font-bold text-sm`}
                   />
                   <div className="flex-1 px-2.5 py-2 rounded-[10px] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] text-xs font-semibold text-center">
-                    {inputPageSide === 'derecha' ? 'Derecha (Impar)' : 'Izquierda (Par)'}
+                    {inputPageSide === 'derecha' ? t.bookStudio.lightboxModal.sideRightOdd : t.bookStudio.lightboxModal.sideLeftEven}
                   </div>
                 </div>
 
@@ -317,18 +319,18 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
                   className={`${button.base} ${button.primary} w-full flex items-center justify-center gap-1.5 text-xs font-bold`}
                 >
                   <Check className="w-4 h-4" />
-                  <span>Encontrado</span>
+                  <span>{t.bookStudio.foliadoStep.foundButton}</span>
                 </button>
 
                 {isSavedNotice && (
                   <div className="p-2 bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-bright)]/30 rounded-[10px] text-[var(--color-status-success-text)] text-xs font-bold text-center animate-fadeIn">
-                    ✓ Guardado correctamente
+                    {t.bookStudio.lightboxModal.savedNotice}
                   </div>
                 )}
 
                 {isCurrentReference && (
                   <div className="p-2 bg-[var(--color-accent-light)]/20 border border-[var(--color-accent-base)]/30 rounded-[10px] text-[var(--color-accent-text)] text-[11px] font-semibold text-center">
-                    ★ Referencia activa del libro
+                    {t.bookStudio.lightboxModal.activeReference}
                   </div>
                 )}
               </form>
@@ -338,14 +340,14 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
             <div className="space-y-4">
               <div className="space-y-1">
                 <span className="px-2.5 py-1 rounded-full bg-[var(--color-accent-light)]/20 text-[var(--color-secondary-bright)] font-bold text-[10px] uppercase">
-                  Página {pageNum} del PDF
+                  {t.bookStudio.lightboxModal.pageOfPdf.replace('{page}', String(pageNum))}
                 </span>
                 <h3 className="text-base font-bold text-[var(--ui-text-primary)] flex items-center gap-1.5 pt-1">
                   <Bookmark className="w-4 h-4 text-[var(--color-secondary-bright)]" />
-                  <span>Inspección & Foliado</span>
+                  <span>{t.bookStudio.lightboxModal.sectionTitle}</span>
                 </h3>
                 <p className="text-xs text-[var(--ui-text-secondary)] leading-relaxed">
-                  Vista previa de alta resolución y calibración de número de página.
+                  {t.bookStudio.lightboxModal.sectionDescription}
                 </p>
               </div>
 
@@ -353,10 +355,10 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
               <form onSubmit={handleApplyReference} className="space-y-3 pt-2 border-t border-[var(--ui-border)]">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-[var(--ui-text-primary)] block">
-                    Número de Página Impreso
+                    {t.bookStudio.lightboxModal.fieldLabel}
                   </label>
                   <p className="text-[11px] text-[var(--ui-text-secondary)]">
-                    Asigna el número de página visible en el libro original.
+                    {t.bookStudio.lightboxModal.fieldHint}
                   </p>
                 </div>
 
@@ -369,7 +371,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
                     className={`${input.base} ${input.focus} w-24 text-center font-bold text-sm`}
                   />
                   <div className="flex-1 px-2.5 py-2 rounded-[10px] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] text-xs font-semibold text-center">
-                    {inputPageSide === 'derecha' ? 'Derecha (Impar)' : 'Izquierda (Par)'}
+                    {inputPageSide === 'derecha' ? t.bookStudio.lightboxModal.sideRightOdd : t.bookStudio.lightboxModal.sideLeftEven}
                   </div>
                 </div>
 
@@ -378,18 +380,18 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
                   className={`${button.base} ${button.primary} w-full flex items-center justify-center gap-1.5 text-xs font-bold`}
                 >
                   <Bookmark className="w-3.5 h-3.5" />
-                  <span>Guardar Referencia</span>
+                  <span>{t.bookStudio.lightboxModal.saveReference}</span>
                 </button>
 
                 {isSavedNotice && (
                   <div className="p-2 bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-bright)]/30 rounded-[10px] text-[var(--color-status-success-text)] text-xs font-bold text-center animate-fadeIn">
-                    ✓ Guardado correctamente
+                    {t.bookStudio.lightboxModal.savedNotice}
                   </div>
                 )}
 
                 {isCurrentReference && (
                   <div className="p-2 bg-[var(--color-accent-light)]/20 border border-[var(--color-accent-base)]/30 rounded-[10px] text-[var(--color-accent-text)] text-[11px] font-semibold text-center">
-                    ★ Referencia activa del libro
+                    {t.bookStudio.lightboxModal.activeReference}
                   </div>
                 )}
               </form>
@@ -402,7 +404,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
                   <div className="flex items-center justify-between text-xs font-bold text-[var(--ui-text-primary)]">
                     <span className="flex items-center gap-1">
                       <Scissors className="w-4 h-4 text-[var(--color-secondary-bright)]" />
-                      <span>Corte Central Manual</span>
+                      <span>{t.bookStudio.lightboxModal.cutManualLabel}</span>
                     </span>
                     <span className="font-mono text-[var(--color-secondary-bright)]">{localSplitOffset}%</span>
                   </div>
@@ -417,9 +419,9 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
                   />
 
                   <div className="flex items-center justify-between text-[10px] text-[var(--ui-text-secondary)]">
-                    <span>Izquierda 30%</span>
-                    <span>Centro 50%</span>
-                    <span>Derecha 70%</span>
+                    <span>{t.bookStudio.lightboxModal.cutLeft30}</span>
+                    <span>{t.bookStudio.lightboxModal.cutCenter50}</span>
+                    <span>{t.bookStudio.lightboxModal.cutRight70}</span>
                   </div>
                 </div>
               )}
@@ -427,17 +429,17 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
               {/* Botones de Organización SOLO en modo Normal */}
               {!isFotocopiaMode && (
                 <div className="space-y-2 pt-3 border-t border-[var(--ui-border)]">
-                  <label className="text-xs font-bold text-[var(--ui-text-primary)] block">Acciones de Página</label>
+                  <label className="text-xs font-bold text-[var(--ui-text-primary)] block">{t.bookStudio.lightboxModal.pageActionsLabel}</label>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     {onRotate && (
                       <button
                         type="button"
                         onClick={() => onRotate(pageNum)}
                         className={`${button.base} ${button.secondary} flex items-center justify-center gap-1.5 py-2`}
-                        title="Rotar 180°"
+                        title={t.bookStudio.lightboxModal.rotate180}
                       >
                         <RotateCw className="w-3.5 h-3.5" />
-                        <span>Rotar 180°</span>
+                        <span>{t.bookStudio.lightboxModal.rotate180}</span>
                       </button>
                     )}
 
@@ -448,10 +450,10 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
                         className={`${button.base} ${
                           isDeleted ? button.primary : button.secondary
                         } flex items-center justify-center gap-1.5 py-2`}
-                        title={isDeleted ? 'Restaurar Página' : 'Eliminar Página'}
+                        title={isDeleted ? t.bookStudio.lightboxModal.restorePageTitle : t.bookStudio.lightboxModal.deletePageTitle}
                       >
                         {isDeleted ? <Undo2 className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5 text-[var(--color-status-danger-text)]" />}
-                        <span>{isDeleted ? 'Restaurar' : 'Eliminar'}</span>
+                        <span>{isDeleted ? t.bookStudio.lightboxModal.restoreShort : t.bookStudio.lightboxModal.deleteShort}</span>
                       </button>
                     )}
 
@@ -460,10 +462,10 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
                         type="button"
                         onClick={() => onMoveLeft(pageNum)}
                         className={`${button.base} ${button.secondary} flex items-center justify-center gap-1 py-2`}
-                        title="Mover a la izquierda"
+                        title={t.bookStudio.lightboxModal.moveLeftTitle}
                       >
                         <ArrowLeft className="w-3.5 h-3.5" />
-                        <span>Mover Izq</span>
+                        <span>{t.bookStudio.lightboxModal.moveLeft}</span>
                       </button>
                     )}
 
@@ -472,9 +474,9 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
                         type="button"
                         onClick={() => onMoveRight(pageNum)}
                         className={`${button.base} ${button.secondary} flex items-center justify-center gap-1 py-2`}
-                        title="Mover a la derecha"
+                        title={t.bookStudio.lightboxModal.moveRightTitle}
                       >
-                        <span>Mover Der</span>
+                        <span>{t.bookStudio.lightboxModal.moveRight}</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     )}
@@ -488,7 +490,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
             {isFotocopiaMode && !isFoliadoStep && (
               <div className="flex items-center gap-2 text-[11px] text-[var(--ui-text-secondary)]">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0 text-[var(--color-secondary-bright)]" />
-                <span>La línea roja punteada ✂ indica por dónde cortará el motor.</span>
+                <span>{t.bookStudio.lightboxModal.cutRedLineHint}</span>
               </div>
             )}
             <button
@@ -497,7 +499,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
               className={`${button.base} ${button.secondary} w-full flex items-center justify-center gap-1.5 text-xs font-bold`}
             >
               <Check className="w-4 h-4" />
-              <span>Cerrar</span>
+              <span>{t.common.actions.close}</span>
             </button>
           </div>
         </div>

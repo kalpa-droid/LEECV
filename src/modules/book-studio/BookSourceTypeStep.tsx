@@ -219,7 +219,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
           }}
           role="button"
           tabIndex={0}
-          aria-label="Elegir PDF del libro"
+          aria-label={t.bookStudio.sourceStep.ariaPickPdf}
           onDragOver={(e) => {
             e.preventDefault();
             setIsDragging(true);
