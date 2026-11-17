@@ -18,6 +18,8 @@ interface BookSourceTypeStepProps {
   fileInputRef?: React.RefObject<HTMLInputElement | null>;
   /** Expone el "elegir PDF" (con fallback a input) al contenedor (botón externo). */
   pickerRef?: React.MutableRefObject<(() => Promise<void>) | null>;
+  /** Libro activo: el handle del PDF se guarda asociado a este id (con fallback a la clave global). */
+  bookId?: string;
 }
 
 export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
@@ -29,6 +31,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
   onNextStep,
   fileInputRef,
   pickerRef,
+  bookId,
 }) => {
   const t = useText();
   const [isDragging, setIsDragging] = useState(false);
@@ -88,7 +91,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
       fileInputRef?.current?.click();
       return;
     }
-    const result = await bookAssetManager.pickSourcePdf();
+    const result = await bookAssetManager.pickSourcePdf(bookId);
     if (result.status === 'picked') {
       await handleFileChangeRef.current(result.file);
     } else if (result.status === 'fallback-required') {
