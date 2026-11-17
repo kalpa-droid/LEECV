@@ -27,6 +27,10 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
   const [imageError, setImageError] = useState<string | null>(null);
   const [thumbUri, setThumbUri] = useState<string | null>(null);
 
+  // El retiro delante de la contratapa solo tiene sentido si hay alguna
+  // contratapa (del PDF o personalizada). Sin contratapa el motor no inyecta.
+  const hasBackCoverChosen = options.hasBackCover || Boolean(options.customBackCover);
+
   useEffect(() => {
     let cancelled = false;
     const currentAssetId = options.customBackCover?.assetId;
@@ -306,7 +310,8 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
         </div>
       )}
 
-      {/* Retiro de Contratapa y Hoja en Blanco Anterior */}
+      {/* Retiro de Contratapa y Hoja en Blanco Anterior (solo con contratapa: del PDF o personalizada) */}
+      {hasBackCoverChosen && (
       <div className={`space-y-4 p-4 rounded-[${radius.card}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)]`}>
         <h3 className="text-xs font-bold text-[var(--ui-text-primary)] uppercase tracking-wider block">
           {t.bookStudio.backCoverStep.retiroHeading}
@@ -327,6 +332,7 @@ export const BookBackCoverStep: React.FC<BookBackCoverStepProps> = ({ options, s
           />
         </label>
       </div>
+      )}
 
       {/* Navegación Bidireccional */}
       <div className="pt-4 border-t border-[var(--ui-border)] flex items-center justify-between gap-3">

@@ -269,7 +269,8 @@ export const bookAssetManager = {
 
   /**
    * Abre el selector nativo. Resultado tipado:
-   *  - picked: hay archivo (y quedó guardado el FileSystemFileHandle).
+   *  - picked: hay archivo (se guarda el FileSystemFileHandle si el navegador
+   *    lo permitió; si no, se sigue con el archivo en memoria sin perderlo).
    *  - cancelled: el usuario cerró el diálogo (AbortError). No es un error.
    *  - fallback-required: no se puede usar el nativo (no soportado, iframe o
    *    SecurityError/NotAllowedError) → el llamador debe usar el input <file>.
@@ -285,7 +286,15 @@ export const bookAssetManager = {
       });
       if (!handle) return { status: 'cancelled' };
       const file: File = await handle.getFile();
-      await tx('readwrite', STORE_META, (s) => s.put({ id: SOURCE_PDF_META_KEY, handle }));
+      // Guardar el permiso (FileSystemFileHandle) para reabrir el libro después
+      // nunca debe descartar el archivo ya elegido: si el guardado falla
+      // (modo incógnito, cuota o restricción del navegador), el archivo es
+      // válido igual; solo no se podrá reabrir sin volver a elegirlo.
+      try {
+        await tx('readwrite', STORE_META, (s) => s.put({ id: SOURCE_PDF_META_KEY, handle }));
+      } catch {
+        // Sin handle persistente: se continúa con el archivo en memoria.
+      }
       return { status: 'picked', file };
     } catch (err: unknown) {
       const name = (err as { name?: string } | null)?.name;
