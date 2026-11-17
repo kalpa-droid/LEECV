@@ -18,6 +18,10 @@ interface BookPreviewExportStepProps {
   assetResolver?: (ref: string) => Promise<string | null>;
   /** Necesario para editar el perfil de impresora casera desde este paso. */
   setOptions?: React.Dispatch<React.SetStateAction<BookImpositionOptions>>;
+  /** Contraseña de apertura del PDF origen (protegido): solo memoria de sesión, JAMÁS se persiste. */
+  pdfPassword?: string | null;
+  /** El PDF origen está protegido contra edición: la salida automática es imágenes de alta nitidez. */
+  sourceProtected?: boolean;
 }
 
 export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
@@ -27,6 +31,8 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   onPrevStep,
   assetResolver,
   setOptions,
+  pdfPassword,
+  sourceProtected = false,
 }) => {
   const t = useText();
   const { consumeCreditIfNeeded, loading: isGating } = useExportEntitlement();
@@ -130,7 +136,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
           setStatusMessage(msg);
           setProgressPercent(pct);
         },
-      });
+      }, pdfPassword);
 
       // El motor devuelve PDF normalmente; devuelve un ZIP cuando el usuario
       // pide un PDF por cuadernillo o la cubierta aparte (destinos B/C).
@@ -169,6 +175,14 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
           {t.bookStudio.previewExportStep.description}
         </p>
       </div>
+
+      {sourceProtected && (
+        <div className={`p-3 bg-[var(--color-accent-light)]/20 border border-[var(--color-accent-base)]/30 rounded-[${radius.control}]`}>
+          <p className="text-xs font-semibold text-[var(--color-accent-text)]">
+            {t.bookStudio.previewExportStep.protectionNotice}
+          </p>
+        </div>
+      )}
 
       {/* Tarjeta Informativa Principal */}
       <div className={`p-5 rounded-[${radius.card}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)] space-y-4 ${elevationSystem.raised}`}>

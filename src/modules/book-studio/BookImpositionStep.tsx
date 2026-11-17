@@ -7,11 +7,13 @@ import { useText } from '../../shared/i18n/useText';
 interface BookImpositionStepProps {
   options: BookImpositionOptions;
   setOptions: React.Dispatch<React.SetStateAction<BookImpositionOptions>>;
+  /** El PDF origen está protegido contra edición: la salida forzada es imágenes (sin elección). */
+  sourceProtected?: boolean;
   onNextStep: () => void;
   onPrevStep: () => void;
 }
 
-export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({ options, setOptions, onNextStep, onPrevStep }) => {
+export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({ options, setOptions, sourceProtected = false, onNextStep, onPrevStep }) => {
   const dest = options.destination || 'A';
   const paperThickness = options.paperThicknessMm ?? 0;
   const applyCreep = options.applyCreep ?? true;
@@ -106,11 +108,17 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({ options,
           <select
             value={exportMode}
             onChange={(e) => setOptions((prev) => ({ ...prev, exportMode: e.target.value as 'vector' | 'raster' }))}
-            className={`${input.base} mt-2`}
+            disabled={sourceProtected}
+            className={`${input.base} mt-2 ${sourceProtected ? 'opacity-60 cursor-not-allowed' : ''}`}
           >
             <option value="vector">{t.bookStudio.impositionStep.exportModeVector}</option>
             <option value="raster">{t.bookStudio.impositionStep.exportModeRaster}</option>
           </select>
+          {sourceProtected && (
+            <p className="mt-1 text-xs font-semibold text-[var(--color-accent-text)]">
+              {t.bookStudio.impositionStep.protectionAutoRaster}
+            </p>
+          )}
         </label>
 
         <label className="flex items-center gap-2">

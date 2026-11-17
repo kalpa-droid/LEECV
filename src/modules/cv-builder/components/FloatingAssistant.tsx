@@ -6,7 +6,7 @@
  * Zona app solamente.
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { X, Send, Lightbulb, MessageCircleQuestion, Bell, BellOff, Check, List } from 'lucide-react';
+import { X, Send, Lightbulb, MessageCircleQuestion, Bell, BellOff, Check, List, RefreshCw } from 'lucide-react';
 import { DomSectionIcon } from '../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
 import { UI_ICON_IDS } from '../../../shared/core/ui/iconCatalog';
 import { elevationSystem, zIndex, button } from '../../../shared/core/uiDesignSystem';
@@ -14,7 +14,8 @@ import {
   ASSISTANT_NAME, AssistantDocType, AssistantTip, SuggestedAssistantAction,
   canShowMoreTips, countSeen, filterSuggestedActions, getAllTips,
   getAssistantSessionKey, getAssistantStorageKey, markTipSeen, parseAssistantState,
-  parseSessionCount, pickNextTip, serializeAssistantState, FIRST_TIP_IDLE_MS, NEXT_TIP_IDLE_MS,
+  parseSessionCount, pickAlwaysTip, pickNextTip, pickNextTipCycled, serializeAssistantState,
+  FIRST_TIP_IDLE_MS, NEXT_TIP_IDLE_MS,
   validateAssistantTargetTab, buildAssistantEditorSnapshot, buildAssistantBookSnapshot,
 } from '../../../shared/core/assistant/assistantTips';
 import { executeAiTask } from '../../../shared/core/ai/aiClient';
@@ -77,6 +78,8 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
   const sessionCountRef = useRef(sessionCount);
   const currentTipRef = useRef(currentTip);
   const openRef = useRef(open);
+  const viewRef = useRef(view);
+  const lastShownTipRef = useRef<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -85,6 +88,8 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
   useEffect(() => { sessionCountRef.current = sessionCount; }, [sessionCount]);
   useEffect(() => { currentTipRef.current = currentTip; }, [currentTip]);
   useEffect(() => { openRef.current = open; }, [open]);
+  useEffect(() => { viewRef.current = view; }, [view]);
+  useEffect(() => { if (currentTip) lastShownTipRef.current = currentTip.id; }, [currentTip]);
 
   const persistStored = useCallback((next: typeof stored) => {
     setStored(next);
@@ -112,8 +117,10 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
     if (openRef.current) { tipDelay.current = NEXT_TIP_IDLE_MS; scheduleNext(); return; }
     if (!canTip()) return;
     if (currentTipRef.current) { tipDelay.current = NEXT_TIP_IDLE_MS; scheduleNext(); return; }
-    const tip = pickNextTip(activeTabRef.current, storedRef.current.seenTipIds, docType);
-    if (!tip) return;
+    // LIDIO SIEMPRE CON TIP: si el catálogo no visto se agotó, pickAlwaysTip
+    // entra en modo repaso (rotación del catálogo) y JAMÁS devuelve null.
+    const tip = pickNextTip(activeTabRef.current, storedRef.current.seenTipIds, docType)
+      ?? pickAlwaysTip(activeTabRef.current, storedRef.current.seenTipIds, docType);
     const updated = { ...storedRef.current, seenTipIds: markTipSeen(storedRef.current.seenTipIds, tip.id) };
     persistStored(updated);
     persistSessionCount(sessionCountRef.current + 1);
@@ -123,6 +130,35 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
     if (canShowMoreTips(updated.doNotDisturb, sessionCountRef.current + 1)) scheduleNext();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canTip, persistStored, persistSessionCount, scheduleNext, docType]);
+
+  /** Cierra el panel y libera el tip activo: al reabrir se resuelve uno fresco. */
+  const closePanel = useCallback(() => {
+    setOpen(false);
+    setToastTip(null);
+    setCurrentTip(null);
+  }, []);
+
+  /**
+   * Resuelve un tip al instante cuando el panel se abre (o se entra a la vista
+   * Tips) sin uno activo: nunca se ve un panel vacío esperando el timer de
+   * 20s. No cuenta para el tope por sesión ni dispara toast (es la vista que
+   * pidió el usuario, no un empujón automático). En modo repaso (todo visto)
+   * rota desde el último tip mostrado: cada apertura avanza el ciclo.
+   */
+  const resolveTipForPanel = useCallback(() => {
+    if (currentTipRef.current) return;
+    const tip = pickAlwaysTip(activeTabRef.current, storedRef.current.seenTipIds, docType, lastShownTipRef.current);
+    persistStored({ ...storedRef.current, seenTipIds: markTipSeen(storedRef.current.seenTipIds, tip.id) });
+    setCurrentTip(tip);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [docType, persistStored]);
+
+  const handleToggleOpen = useCallback(() => {
+    const next = !openRef.current;
+    setOpen(next);
+    setToastTip(null);
+    if (next && viewRef.current === 'tips') resolveTipForPanel();
+  }, [resolveTipForPanel]);
 
   // Inactividad: cualquier interacción "resetea" el reloj del próximo tip
   useEffect(() => {
@@ -144,10 +180,10 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
   // Escape cierra el panel
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closePanel(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [open]);
+  }, [open, closePanel]);
 
   // Autoscroll del chat
   useEffect(() => {
@@ -158,15 +194,30 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
     const dest = validateAssistantTargetTab(tabId, cvData, docType);
     if (dest) {
       onNavigate(dest);
-      setOpen(false);
+      closePanel();
     }
-  }, [cvData, onNavigate, docType]);
+  }, [cvData, onNavigate, docType, closePanel]);
 
   const dismissToast = useCallback(() => {
     setToastTip(null);
     setCurrentTip(null);
     if (canTip()) { tipDelay.current = NEXT_TIP_IDLE_MS; scheduleNext(); }
   }, [canTip, scheduleNext]);
+
+  /** "Otro tip": avance manual por el catálogo, sin tope de sesión ni toast. */
+  const showAnotherTip = useCallback(() => {
+    const next = pickNextTipCycled(currentTipRef.current?.id, storedRef.current.seenTipIds, docType);
+    if (!next || next.id === currentTipRef.current?.id) return;
+    persistStored({ ...storedRef.current, seenTipIds: markTipSeen(storedRef.current.seenTipIds, next.id) });
+    setCurrentTip(next);
+  }, [docType, persistStored]);
+
+  /** "Entendido": descarta el activo y precarga el siguiente dentro del panel. */
+  const acknowledgeTip = useCallback(() => {
+    const next = pickNextTipCycled(currentTipRef.current?.id, storedRef.current.seenTipIds, docType);
+    setCurrentTip(next && next.id !== currentTipRef.current?.id ? next : null);
+    if (canTip()) { tipDelay.current = NEXT_TIP_IDLE_MS; scheduleNext(); }
+  }, [docType, canTip, scheduleNext]);
 
   const toggleDoNotDisturb = useCallback(() => {
     persistStored({ ...storedRef.current, doNotDisturb: !storedRef.current.doNotDisturb });
@@ -208,7 +259,7 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
           type="button"
           aria-label={`Abrir ${ASSISTANT_NAME}, ${docType === 'book' ? 'el asistente del estudio' : 'el asistente del editor'}`}
           aria-expanded={open}
-          onClick={() => { setOpen((o) => !o); setToastTip(null); }}
+          onClick={handleToggleOpen}
           className={`flex h-12 w-12 items-center justify-center rounded-full border border-[var(--color-accent-base)]/30 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-base)] ${elevationSystem.floating}`}
         >
           <DomSectionIcon iconId={UI_ICON_IDS.assistant} className="h-5 w-5" color="currentColor" />
@@ -245,7 +296,7 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
               <button
                 type="button"
                 aria-label="Cerrar asistente"
-                onClick={() => setOpen(false)}
+                onClick={closePanel}
                 className={`${button.ghost} cursor-pointer rounded-[10px] p-1.5`}
               >
                 <X className="h-4 w-4" />
@@ -253,7 +304,7 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
             </header>
 
             <div className="flex border-b border-[var(--ui-border)]" role="tablist">
-              <button type="button" role="tab" aria-label="Tips" title="Tips" aria-selected={view === 'tips'} onClick={() => setView('tips')} className={`flex h-9 flex-1 items-center justify-center px-3 cursor-pointer ${view === 'tips' ? 'bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)]' : 'text-[var(--ui-text-secondary)] hover:bg-[var(--ui-bg-hover)]'}`}>
+              <button type="button" role="tab" aria-label="Tips" title="Tips" aria-selected={view === 'tips'} onClick={() => { setView('tips'); resolveTipForPanel(); }} className={`flex h-9 flex-1 items-center justify-center px-3 cursor-pointer ${view === 'tips' ? 'bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)]' : 'text-[var(--ui-text-secondary)] hover:bg-[var(--ui-bg-hover)]'}`}>
                 <Lightbulb className="h-4 w-4" />
               </button>
               <button type="button" role="tab" aria-label="Preguntar" title="Preguntar" aria-selected={view === 'chat'} onClick={() => setView('chat')} className={`flex h-9 flex-1 items-center justify-center px-3 cursor-pointer ${view === 'chat' ? 'bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)]' : 'text-[var(--ui-text-secondary)] hover:bg-[var(--ui-bg-hover)]'}`}>
@@ -277,7 +328,10 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
                             Ir
                           </button>
                         )}
-                        <button type="button" onClick={() => { setCurrentTip(null); if (canTip()) { tipDelay.current = NEXT_TIP_IDLE_MS; scheduleNext(); } }} className={`${button.ghost} cursor-pointer px-2.5 py-1 text-[11px]`}>
+                        <button type="button" onClick={showAnotherTip} className={`${button.secondary} cursor-pointer px-2.5 py-1 text-[11px]`} aria-label="Mostrar otro tip">
+                          <RefreshCw className="mr-1 inline h-3 w-3" /> Otro tip
+                        </button>
+                        <button type="button" onClick={acknowledgeTip} className={`${button.ghost} cursor-pointer px-2.5 py-1 text-[11px]`}>
                           <Check className="mr-1 inline h-3 w-3" /> Entendido
                         </button>
                       </div>

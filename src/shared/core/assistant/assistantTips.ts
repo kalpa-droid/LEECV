@@ -364,12 +364,30 @@ export const BOOK_TAB_TIPS: Record<string, AssistantTip[]> = {
       body: 'Elegí máxima calidad (sin pérdida, conserva el archivo original) o rasterizado (JPEG) para impresión doméstica.',
       targetTab: 'book_imposition',
     },
+    {
+      id: 'tip-book-imposition-4',
+      title: 'Cuadernillos al doblar',
+      body: 'Al doblar muchas hojas, las del medio sobresalen un poco. "Compensar páginas internas (creep)" corre los márgenes para que el texto vuelva a quedar centrado. Déjalo activado en libros de muchas hojas.',
+      targetTab: 'book_imposition',
+    },
+    {
+      id: 'tip-book-imposition-5',
+      title: 'Guías para doblar y recortar',
+      body: '"Guías de doblez y recorte (marcas de corte)" dibuja líneas finas en los bordes: marcan por dónde doblar y por dónde cortar. Útiles si llevás el libro a una imprenta con guillotina; para armarlo a mano en casa podés dejarlas apagadas.',
+      targetTab: 'book_imposition',
+    },
   ],
   book_preview_export: [
     {
       id: 'tip-book-preview-1',
       title: 'Revisá el resumen',
       body: 'Antes de descargar, verificá que el número de páginas y el tipo de armado sean correctos.',
+      targetTab: 'book_preview_export',
+    },
+    {
+      id: 'tip-book-preview-2',
+      title: 'Doble cara: voltear por el borde corto',
+      body: 'Si imprimís en casa a doble cara, configurá la impresora en "Voltear por el borde corto": así las páginas del dorso no quedan al revés. Hacé una prueba con 2 hojas antes de imprimir todo.',
       targetTab: 'book_preview_export',
     },
   ],
@@ -448,6 +466,64 @@ export function pickNextTip(
   const seen = new Set(seenTipIds || []);
   const candidates = getTipsForTab(activeTab, docType);
   return candidates.find((tip) => !seen.has(tip.id)) ?? null;
+}
+
+/**
+ * LIDIO SIEMPRE CON TIP: devuelve un tip JAMÁS null.
+ * Prioridad: (1) primer tip no visto de la pestaña/paso activo, (2) primer
+ * transversal no visto, (3) repaso: rota por los tips de la pestaña activa
+ * (o los transversales si esa pestaña no tiene). Con afterTipId, en repaso
+ * devuelve el tip siguiente al actual dentro del ciclo (para que "Entendido"
+ * precargue uno distinto incluso con todo el catálogo ya visto).
+ */
+export function pickAlwaysTip(
+  activeTab: string | null | undefined,
+  seenTipIds: string[],
+  docType: AssistantDocType = 'cv',
+  afterTipId?: string | null,
+): AssistantTip {
+  const seen = new Set(seenTipIds || []);
+  const specific = (activeTab && (docType === 'book' ? BOOK_TAB_TIPS[activeTab] : TAB_TIPS[activeTab])) || [];
+  const always = docType === 'book' ? BOOK_ALWAYS_TIPS : ALWAYS_TIPS;
+
+  const unseenSpecific = specific.find((tip) => !seen.has(tip.id));
+  if (unseenSpecific) return unseenSpecific;
+  const unseenAlways = always.find((tip) => !seen.has(tip.id));
+  if (unseenAlways) return unseenAlways;
+
+  const cycle = specific.length > 0 ? specific : always;
+  if (afterTipId) {
+    const idx = cycle.findIndex((tip) => tip.id === afterTipId);
+    if (idx >= 0) return cycle[(idx + 1) % cycle.length];
+  }
+  const offset = (seenTipIds?.length || 0) % cycle.length;
+  return cycle[offset];
+}
+
+/**
+ * Avance manual ("Otro tip" / precarga tras "Entendido"): siguiente tip del
+ * catálogo completo del docType, circular y preferentemente no visto. Con
+ * catálogos de 2+ tips nunca repite el actual de inmediato.
+ */
+export function pickNextTipCycled(
+  currentTipId: string | null | undefined,
+  seenTipIds: string[],
+  docType: AssistantDocType = 'cv',
+): AssistantTip | null {
+  const catalog = getAllTips(docType);
+  if (catalog.length === 0) return null;
+  const seen = new Set(seenTipIds || []);
+  const start = currentTipId ? catalog.findIndex((tip) => tip.id === currentTipId) : -1;
+  if (start >= 0) {
+    for (let step = 1; step <= catalog.length; step++) {
+      const candidate = catalog[(start + step) % catalog.length];
+      if (!seen.has(candidate.id)) return candidate;
+    }
+  }
+  const unseen = catalog.find((tip) => !seen.has(tip.id));
+  if (unseen) return unseen;
+  if (start >= 0) return catalog[(start + 1) % catalog.length];
+  return catalog[0];
 }
 
 export function markTipSeen(seenTipIds: string[], tipId: string): string[] {

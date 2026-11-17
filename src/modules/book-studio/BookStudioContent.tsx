@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { PDFDocument } from 'pdf-lib';
 import { AppShell } from '../../shared/core/ui/AppShell';
 import Navbar from '../cv-builder/components/Navbar';
 import CanvaIconDock from '../cv-builder/components/CanvaIconDock';
 import { BookImpositionOptions, DEFAULT_BOOK_IMPOSITION_OPTIONS } from '../../shared/core/book-engine/impositionEngine';
+import { PdfSourceError, PdfSourceErrorCode, isPdfSourceError, pdfSourceErrorFromUnknown } from '../../shared/core/book-engine/pdfSourceClassifier';
 import { BookSourceTypeStep } from './BookSourceTypeStep';
 import { BookOrganizeStep } from './BookOrganizeStep';
 import { BookFoliadoStep } from './BookFoliadoStep';
@@ -86,6 +88,15 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   const [storageUsage, setStorageUsage] = useState<{ bytes: number; count: number } | null>(null);
   const [pdfNotice, setPdfNotice] = useState<'moved' | 'restore-available' | null>(null);
   const [confirmClearAssets, setConfirmClearAssets] = useState(false);
+  // PDFs problemáticos: contraseña de apertura (challenge en pantalla) y
+  // protección contra edición (rescate automático a imágenes de alta nitidez).
+  const [passwordChallenge, setPasswordChallenge] = useState<{ fileName: string; wrongPassword: boolean } | null>(null);
+  const [passwordInput, setPasswordInput] = useState('');
+  const pendingPasswordFileRef = useRef<File | null>(null);
+  const [pdfPassword, setPdfPassword] = useState<string | null>(null);
+  const [pdfProtection, setPdfProtection] = useState<'none' | 'protected'>('none');
+  /** Código de error de la carga (flujo de restauración automática, sin paso 1 abierto). */
+  const [pdfLoadErrorCode, setPdfLoadErrorCode] = useState<PdfSourceErrorCode | null>(null);
 
   // Refs espejo: loadSourcePdf se define una sola vez y siempre lee el estado
   // fresco (modo/opciones) sin depender del closure del primer render.
@@ -104,23 +115,60 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
    * sola vez, crea el pdfDoc, cuenta páginas, aplica auto-rotación en modo
    * fotocopia y persiste el conteo REAL recién leído. El doc se comparte con
    * BookPreviewStep / PdfPreviewStrip (nada vuelve a parsear el archivo).
+   *
+   * PDFs problemáticos (lenguaje sencillo, aviso por código):
+   * - 0 bytes / dañado / sin páginas → PdfSourceError tipado (ver pdfSourceClassifier).
+   * - Contraseña de apertura → PdfSourceError('password'): el paso 1 muestra
+   *   el cuadro inline y se reintenta con la clave (solo en memoria de sesión).
+   * - Protegido contra edición → detección con pdf-lib (ignoreEncryption):
+   *   se conmuta SOLO a exportMode 'raster' (páginas como imágenes de alta
+   *   nitidez, pdf.js sí puede abrirlas) y se avisa en los pasos 1, 6 y 7.
    */
-  const loadSourcePdf = async (file: File) => {
+  const loadSourcePdf = async (file: File, password?: string): Promise<any> => {
     setPdfNotice(null);
-    setSelectedFile(file);
+    if (file.size === 0) {
+      throw new PdfSourceError('empty-file');
+    }
     const arrayBuffer = await file.arrayBuffer();
     const pdfjsLib = ensurePdfjsWorkerConfigured();
-    const doc = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+    let doc: any;
+    try {
+      doc = await pdfjsLib.getDocument({
+        data: new Uint8Array(arrayBuffer),
+        ...(password ? { password } : {}),
+      }).promise;
+    } catch (err) {
+      throw pdfSourceErrorFromUnknown(err, file.size);
+    }
     const numPages = doc.numPages;
+    if (!Number.isFinite(numPages) || numPages <= 0) {
+      throw new PdfSourceError('empty-pdf');
+    }
+
+    // Detección de protección contra edición: pdf-lib con ignoreEncryption
+    // carga la estructura sin lanzar y deja isEncrypted=true. El camino
+    // vectorial no puede copiar páginas de un PDF encriptado (saldrían
+    // corruptas), así que el rescate es SIEMPRE el modo imágenes.
+    let isEncrypted = false;
+    try {
+      const probe = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+      isEncrypted = Boolean((probe as { isEncrypted?: boolean }).isEncrypted);
+    } catch {
+      // Si hasta el diagnóstico estructural falla, lo tratamos como protegido.
+      isEncrypted = true;
+    }
 
     // Auto-detección: modo fotocopia + página vertical (alto > ancho) → 90° global.
+    // Se computa sobre el estado fresco (optionsRef) y viaja dentro de
+    // effectiveOpts: un solo setOptions al final (sin updaters que se pisen).
+    let effectiveOpts: BookImpositionOptions = { ...optionsRef.current };
     try {
       const firstPage = await doc.getPage(1);
       const vp = firstPage.getViewport({ scale: 1.0 });
       if (optionsRef.current.mode === 'fotocopia' && vp.height > vp.width) {
         const autoRotations: Record<number, number> = {};
         for (let i = 1; i <= numPages; i++) autoRotations[i] = 90;
-        setOptions((prev) => ({ ...prev, pageRotations: autoRotations }));
+        effectiveOpts = { ...effectiveOpts, pageRotations: autoRotations };
       }
     } catch {
       // la rotación automática es un plus: no bloquea la carga del PDF
@@ -130,13 +178,62 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
     pdfDocRef.current?.destroy?.();
     pdfDocRef.current = doc;
     setPdfDoc(doc);
-    persistBookState(file, optionsRef.current, numPages);
+    setSelectedFile(file);
+    if (password) setPdfPassword(password);
+    pendingPasswordFileRef.current = null;
+    setPasswordChallenge(null);
+    setPdfLoadErrorCode(null);
+    setPdfProtection(isEncrypted ? 'protected' : 'none');
+    effectiveOpts = { ...effectiveOpts, exportMode: isEncrypted ? 'raster' : effectiveOpts.exportMode };
+    setOptions(effectiveOpts);
+    persistBookState(file, effectiveOpts, numPages);
     return doc;
+  };
+
+  /**
+   * Puerta de entrada única para los archivos elegidos/restaurados: atrapa el
+   * challenge de contraseña (paso 1 muestra el cuadro inline) y clasifica el
+   * resto de los errores con su código para el aviso correspondiente.
+   */
+  const confirmSourceFile = async (file: File, password?: string): Promise<any> => {
+    try {
+      return await loadSourcePdf(file, password);
+    } catch (err) {
+      if (isPdfSourceError(err)) {
+        if (err.code === 'password') {
+          pendingPasswordFileRef.current = file;
+          setPasswordChallenge({ fileName: file.name, wrongPassword: Boolean(password) });
+        } else {
+          pendingPasswordFileRef.current = null;
+          setPdfLoadErrorCode(err.code);
+        }
+        throw err;
+      }
+      setPdfLoadErrorCode('unknown');
+      throw err;
+    }
   };
 
   // Wrapper defensivo para flujos automáticos (restaurar al entrar, permiso).
   const attachSourcePdf = (file: File) => {
-    loadSourcePdf(file).catch(() => setPdfPageCount(0));
+    confirmSourceFile(file).catch(() => {
+      // Sin contraseña pendiente ni PDF cargado: el aviso tipado ya quedó
+      // en pantalla (pdfLoadErrorCode); el conteo previo deja de valer.
+      if (!pendingPasswordFileRef.current && !pdfDocRef.current) setPdfPageCount(0);
+    });
+  };
+
+  const handlePasswordSubmit = (password: string) => {
+    const file = pendingPasswordFileRef.current;
+    if (!file) return;
+    attachSourcePdfWithPassword(file, password);
+  };
+
+  // Igual que attachSourcePdf pero conservando el challenge si la clave falla.
+  const attachSourcePdfWithPassword = (file: File, password: string) => {
+    confirmSourceFile(file, password).catch(() => {
+      // wrongPassword ya quedó seteado por confirmSourceFile.
+    });
   };
 
   // Restaurar la referencia local del PDF original (sin duplicar el archivo).
@@ -225,6 +322,16 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
     }, 100);
   };
 
+  /** Texto visible por código tipado de error de carga (lenguaje sencillo). */
+  const PDF_LOAD_ERROR_TEXT: Record<PdfSourceErrorCode, string> = {
+    'empty-file': t.bookStudio.sourceStep.errorEmptyFile,
+    password: t.bookStudio.sourceStep.passwordRequiredTitle,
+    corrupt: t.bookStudio.sourceStep.errorCorrupt,
+    missing: t.bookStudio.sourceStep.errorMissing,
+    'empty-pdf': t.bookStudio.sourceStep.errorEmptyPdf,
+    unknown: t.bookStudio.sourceStep.errorUnknown,
+  };
+
   return (
     <>
       <AppShell
@@ -303,6 +410,72 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
             </div>
           )}
 
+          {passwordChallenge && (
+            <div className={`p-3 bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/30 rounded-[${radius.control}] space-y-2`}>
+              <p className="text-xs font-bold text-[var(--color-status-danger-text)]">
+                {t.bookStudio.sourceStep.passwordRequiredTitle}
+              </p>
+              <p className="text-xs text-[var(--color-status-danger-text)]">
+                {t.bookStudio.sourceStep.passwordRequiredHint}
+              </p>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!passwordInput.trim()) return;
+                  handlePasswordSubmit(passwordInput);
+                }}
+                className="flex flex-col sm:flex-row gap-2"
+              >
+                <input
+                  type="password"
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  placeholder={t.bookStudio.sourceStep.passwordPlaceholder}
+                  aria-label={t.bookStudio.sourceStep.passwordLabel}
+                  autoFocus
+                  className="min-w-0 flex-1 px-2.5 py-1.5 text-xs rounded-[10px] border border-[var(--color-status-danger-base)]/40 bg-[var(--ui-bg-input)] text-[var(--ui-text-primary)] focus:outline-none focus:border-[var(--color-accent-base)]"
+                />
+                <button
+                  type="submit"
+                  disabled={!passwordInput.trim()}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-[${radius.control}] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {t.bookStudio.sourceStep.passwordSubmit}
+                </button>
+              </form>
+              {passwordChallenge.wrongPassword && (
+                <p className="text-[11px] font-bold text-[var(--color-status-danger-text)]">
+                  {t.bookStudio.sourceStep.passwordWrong}
+                </p>
+              )}
+            </div>
+          )}
+
+          {pdfLoadErrorCode && !passwordChallenge && (
+            <div className={`p-3 bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/30 rounded-[${radius.control}] space-y-2`}>
+              <p className="text-xs font-semibold text-[var(--color-status-danger-text)]">
+                {PDF_LOAD_ERROR_TEXT[pdfLoadErrorCode]}
+              </p>
+              <button
+                type="button"
+                onClick={handleTriggerFileInput}
+                className={`px-3 py-1.5 text-xs font-bold rounded-[${radius.control}] bg-[var(--color-status-danger-base)] text-[var(--color-status-on-base)] cursor-pointer`}
+              >
+                {t.bookStudio.pdfStrip.tryAnotherPdf}
+              </button>
+            </div>
+          )}
+
+          {pdfProtection === 'protected' && (
+            <div className={`p-3 bg-[var(--color-accent-light)]/20 border border-[var(--color-accent-base)]/30 rounded-[${radius.control}]`}>
+              <p className="text-xs font-semibold text-[var(--color-accent-text)]">
+                {pdfPassword
+                  ? t.bookStudio.sourceStep.protectionNoticeUnlocked
+                  : t.bookStudio.sourceStep.protectionNotice}
+              </p>
+            </div>
+          )}
+
           {storageUsage && storageUsage.bytes > STORAGE_WARN_BYTES && (
             <div className={`p-3 bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/30 rounded-[${radius.control}] space-y-2`}>
               <p className="text-xs font-semibold text-[var(--color-status-warning-text)]">
@@ -348,7 +521,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               setOptions={handleOptionsChange}
               selectedFile={selectedFile}
               pdfPageCount={pdfPageCount}
-              onFileConfirmed={loadSourcePdf}
+              onFileConfirmed={confirmSourceFile}
               onNextStep={() => handleNavigateNextStep('book_source_type')}
               fileInputRef={fileInputRef}
               pickerRef={sourcePdfPickerRef}
@@ -397,6 +570,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
             <BookImpositionStep
               options={options}
               setOptions={handleOptionsChange}
+              sourceProtected={pdfProtection === 'protected'}
               onNextStep={() => handleNavigateNextStep('book_imposition')}
               onPrevStep={() => handleNavigatePrevStep('book_imposition')}
             />
@@ -410,6 +584,8 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               onPrevStep={() => handleNavigatePrevStep('book_preview_export')}
               assetResolver={(ref) => bookAssetManager.getBlobUrl(ref)}
               setOptions={handleOptionsChange}
+              pdfPassword={pdfPassword}
+              sourceProtected={pdfProtection === 'protected'}
             />
           )}
         </div>
