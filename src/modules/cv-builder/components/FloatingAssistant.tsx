@@ -323,7 +323,9 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
                   {messages.length === 0 && !sending && (
                     <div className="space-y-2">
                       <p className="text-[var(--ui-text-secondary)]">
-                        Preguntale a {ASSISTANT_NAME} cómo usar la app: dónde está cada cosa, cómo mover secciones entre columna principal y barra lateral, qué es una postulación o cómo pasa el Diagnóstico ATS.
+                        {docType === 'book'
+                          ? `Preguntale a ${ASSISTANT_NAME} cómo usar el estudio: cargar tu PDF, ordenar las páginas, armar tapa y contratapa, calibrar un número o exportar tu libro listo para imprimir.`
+                          : `Preguntale a ${ASSISTANT_NAME} cómo usar la app: dónde está cada cosa, cómo mover secciones entre columna principal y barra lateral, qué es una postulación o cómo pasa el Diagnóstico ATS.`}
                       </p>
                       <div className="flex flex-wrap gap-1.5">
                         {QUICK_QUESTIONS_BY_DOC[docType].map((q) => (
