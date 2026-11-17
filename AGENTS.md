@@ -105,6 +105,29 @@ los 7 pasos. Un push directo rechazado por GitHub (paso 2 sobre `main`
 directamente) no es un error a resolver reintentando — es la señal de que
 hay que abrir una rama y una PR en su lugar.
 
+### Versionado obligatorio en cada cambio (desde 2026-11-17, V2.19.1)
+
+**Toda PR que modifique código de producto (`src/` o `api/`) DEBE incluir
+el bump de `src/shared/core/version.ts` EN EL MISMO COMMIT que aplica el
+cambio** — es lo que ya exigía el encabezado de `version.ts` ("El archivo
+debe ser actualizado ANTES del commit que aplica el cambio"); ahora lo
+hace cumplir la máquina:
+
+- Fix / ajuste mínimo → incrementa **PATCH** (V2.19.0 → V2.19.1).
+- Funcionalidad nueva → incrementa **MINOR** (V2.19.x → V2.20.0).
+- Cambio de arquitectura / nuevo esquema / nuevo eje del plan → **MAJOR**
+  (V2.x → V3.0).
+- El bump viaja con el cambio (no en una PR de release aparte) y cuenta como
+  suyo: una PR con N commits de código y un solo bump es válida.
+- PRs solo de docs/CI/scripts no requieren bump (no tocan `src/` ni `api/`).
+- Lo audita `scripts/check-version-bump.js`, cableado a `npm run check-all`
+  y por lo tanto al pre-push, al workflow `check-all` de GitHub Actions
+  (que hace checkout con `fetch-depth: 0` para poder comparar contra
+  `origin/main`): una PR de código sin bump **no pasa** `check-all` y no se
+  puede mergear.
+- La edición de `version.ts` toca `src/shared/core/`: el PR que la incluya
+  sigue requiriendo la aprobación del dueño del repo (paso 5).
+
 ## Regla 7 — Planificación previa obligatoria antes de modificar código
 
 Cada vez que hablemos o se plantee un cambio o nueva funcionalidad para la web:

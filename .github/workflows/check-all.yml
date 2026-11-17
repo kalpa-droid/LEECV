@@ -12,6 +12,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Historia completa: check-version-bump compara la PR contra
+          # origin/main (merge-base). Con fetch-depth 1 el merge-base no
+          # existe y el chequeo fallaría (CI fail-closed por diseño).
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:

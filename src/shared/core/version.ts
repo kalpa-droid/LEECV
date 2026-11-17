@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 2,
   minor: 19,
-  patch: 0,
-  label: 'V2.19.0',
+  patch: 1,
+  label: 'V2.19.1',
   lastUpdated: '2026-11-17',
   lastAgent: '@opencode',
-  stage: 'Plan Book Studio/Lidio completo (V2.19.0, 5 fases): PR 118 Fases 1+2 (carga de PDF con boton nativo y extensiones .pdf, persistencia de libros, cMaps locales pdf.js con fallback CDN, verificacion de tipo de documento), PR 119 Fase 3 (paridad tapa/contratapa: presets COVER_PRESETS, publisher, imageFit, fix retiro fantasma, conteo final de paginas reescrito y verificado contra el motor), PR 120 Fase 4 (flujo pasos 1-7 coherente con la secuencia real i18n y labels migrados a t.bookStudio.*), PR 121 Fase 5 (Lidio en Book Studio: prop docType cv|book, tips y destinos book_* validados contra BOOK_STEP_SEQUENCE, storage keys leecv.assistant.book, editorState estructural sin PII, app_guide_assistant con bloque Book Studio - responseSchema OpenAPI 3.0 intacto, 12 tests nuevos). UI zona app en lenguaje sencillo; nada de jerga en zona publica.',
+  stage: 'Bug report Book Studio cerrado (V2.19.1): PR 130 (carga de PDF en /crear-libro: picker nativo y respaldo input dentro del gesto del clic, sin doble disparo, ArrayBuffer intacto para pdf-lib, helper canonico loadPdfDocumentWithCmaps cMaps locales->CDN->sin cmaps, PDF normal ya no se clasifica como protegido, buffer .slice(0) para pdf-lib), PR 131 (/crear-libro monta <AppModals/>: "Mis Libros Guardados" lista y abre LIBROS por docType book, hidratacion al cambiar de pestaña con opciones guardadas ganando sobre DEFAULT, pdfPageCount exacto, titulo del libro, PDF reabierto sin duplicar via handle FileSystemFileHandle por bookId con fallback a la clave global legada). Regla nueva desde esta version: TODA PR de trabajo incluye el bump de version.ts EN EL MISMO COMMIT que aplica el cambio (fix->PATCH, funcionalidad->MINOR, arquitectura->MAJOR); la exige scripts/check-version-bump.js en check-all y en CI (fetch-depth: 0).',
 } as const;
