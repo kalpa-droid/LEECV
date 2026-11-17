@@ -627,7 +627,9 @@ async function procesarComoImagenes(
   file: File | ArrayBuffer,
   mode: 'normal' | 'fotocopia' = 'normal',
   options: BookImpositionOptions = DEFAULT_BOOK_IMPOSITION_OPTIONS,
-  onProgress?: (message: string, percent: number) => void
+  onProgress?: (message: string, percent: number) => void,
+  /** Contraseña de apertura si el PDF origen estaba protegido (solo en memoria de sesión; JAMÁS se persiste). */
+  pdfPassword?: string | null,
 ): Promise<PDFDocument> {
   const {
     exportMode = 'vector',
@@ -661,7 +663,21 @@ async function procesarComoImagenes(
 
   if (useVectorPath) {
     const newPdf = await PDFDocument.create();
-    const sourcePdf = await PDFDocument.load(arrayBuffer);
+    let sourcePdf: PDFDocument;
+    try {
+      sourcePdf = await PDFDocument.load(arrayBuffer);
+    } catch (err) {
+      // Red de seguridad: la detección de protección ocurre en la carga del
+      // PDF origen (la UI conmuta sola a modo imágenes). Si igualmente se
+      // llega acá con un PDF encriptado, el mensaje explica el rescate.
+      const msg = err instanceof Error ? err.message : String(err);
+      if (/encrypt/i.test(msg)) {
+        throw new Error(
+          'Este PDF está protegido contra edición. Volvé al paso 6 y elegí "Imágenes compatibles" (páginas como imágenes de alta nitidez), o volvé a cargar el PDF para procesarlo automáticamente como imágenes.'
+        );
+      }
+      throw err;
+    }
 
     // Valida que haya páginas reales; si está vacío, falls back a rasterizar.
     const totalSourcePages = sourcePdf.getPageCount();
@@ -737,7 +753,12 @@ async function procesarComoImagenes(
     for (const attempt of attempts) {
       try {
         // Copia fresca por intento: pdf.js transfiere el buffer al worker (lo invalida).
-        return await pdfjsLib.getDocument({ data: pdfBytes.slice(), ...attempt.params }).promise;
+        // La contraseña (si el PDF origen estaba protegido) viaja solo en memoria.
+        return await pdfjsLib.getDocument({
+          data: pdfBytes.slice(),
+          ...(pdfPassword ? { password: pdfPassword } : {}),
+          ...attempt.params,
+        }).promise;
       } catch (err) {
         lastError = err;
         console.warn(`[book] No se pudo abrir el PDF con ${attempt.label}:`, err);
@@ -1019,6 +1040,8 @@ async function procesarComoImagenes(
 export async function processBookImposition(
   file: File | ArrayBuffer,
   options: BookImpositionOptions = DEFAULT_BOOK_IMPOSITION_OPTIONS,
+  /** Contraseña de apertura del PDF origen (PDF protegido): solo en memoria de sesión. */
+  pdfPassword?: string | null,
 ): Promise<Uint8Array> {
   const {
     mode = 'normal',
@@ -1052,7 +1075,7 @@ export async function processBookImposition(
 
   if (onProgress) onProgress('Procesando páginas del PDF...', 5);
 
-  const pagesDoc = await procesarComoImagenes(file, mode, effectiveOptions, onProgress);
+  const pagesDoc = await procesarComoImagenes(file, mode, effectiveOptions, onProgress, pdfPassword);
   const coverCanvasSize = getCoverCanvasSize(paperSize);
 
   // Información de armado editorial (lomo y creep) para la UI.

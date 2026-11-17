@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { BookOpen, Copy, Upload, CheckCircle2, ChevronRight, FileText } from 'lucide-react';
 import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
+import { PdfSourceErrorCode, isPdfSourceError } from '../../shared/core/book-engine/pdfSourceClassifier';
 import { bookAssetManager } from '../../shared/core/book-engine/bookAssetManager';
 import { PAGE_SIZES } from '../../shared/core/pdf-engine/layers/page/pageSizes';
 import { button, selectableCard, radius } from '../../shared/core/uiDesignSystem';
@@ -34,6 +35,16 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
   const [isLoadingFile, setIsLoadingFile] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  /** Texto visible por código tipado (pdfSourceClassifier): cada PDF problemático con SU aviso. */
+  const PDF_SOURCE_ERROR_TEXT: Record<PdfSourceErrorCode, string> = {
+    'empty-file': t.bookStudio.sourceStep.errorEmptyFile,
+    password: t.bookStudio.sourceStep.passwordRequiredTitle,
+    corrupt: t.bookStudio.sourceStep.errorCorrupt,
+    missing: t.bookStudio.sourceStep.errorMissing,
+    'empty-pdf': t.bookStudio.sourceStep.errorEmptyPdf,
+    unknown: t.bookStudio.sourceStep.errorUnknown,
+  };
+
   const handleFileChange = async (file: File) => {
     if (!file.name.toLowerCase().endsWith('.pdf')) {
       setErrorMsg(t.bookStudio.sourceStep.errorInvalidFile);
@@ -47,7 +58,13 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
       await onFileConfirmed(file);
     } catch (err) {
       console.error(err);
-      setErrorMsg(t.bookStudio.sourceStep.errorReadFile);
+      // 'password' no se muestra acá: el contenedor despliega el cuadro inline
+      // de contraseña (challenge) con su propio aviso y reintento.
+      if (isPdfSourceError(err)) {
+        if (err.code !== 'password') setErrorMsg(PDF_SOURCE_ERROR_TEXT[err.code]);
+      } else {
+        setErrorMsg(t.bookStudio.sourceStep.errorUnknown);
+      }
     } finally {
       setIsLoadingFile(false);
     }

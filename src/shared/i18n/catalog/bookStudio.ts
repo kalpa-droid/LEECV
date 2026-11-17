@@ -18,7 +18,6 @@ export const bookStudioCatalog = {
   sourceStep: {
     title: '1. Origen',
     errorInvalidFile: 'Por favor selecciona un archivo PDF válido.',
-    errorReadFile: 'No se pudo leer el archivo PDF. Verifica que no esté protegido o dañado.',
 
     modeQuestionLabel: '1.a. Tu PDF es:',
     modeStandardTitle: 'PDF Estándar (1 pág/hoja)',
@@ -42,6 +41,26 @@ export const bookStudioCatalog = {
     nextStepOrganize: 'Siguiente: 2. Organización de Páginas',
     nextStepCover: 'Siguiente: 3. Tapa',
     ariaPickPdf: 'Elegir PDF del libro',
+
+    // Errores tipados de carga (pdfSourceClassifier.ts): cada código muestra SU aviso.
+    errorEmptyFile: 'El archivo está vacío (0 MB). Elegí el PDF correcto de tu libro.',
+    errorCorrupt: 'Este archivo parece dañado o incompleto, y no es un PDF válido. Probá abrirlo en tu equipo para verificarlo, o elegí otro PDF.',
+    errorMissing: 'No encontramos el PDF en la ubicación elegida. Probá elegirlo de nuevo.',
+    errorEmptyPdf: 'El PDF se abrió pero no tiene páginas. Probá regenerarlo o elegir otro archivo.',
+    errorUnknown: 'No se pudo leer el archivo PDF. Verifica que no esté protegido o dañado.',
+
+    // Contraseña de apertura (PDF protegido con clave).
+    passwordRequiredTitle: 'Este PDF tiene contraseña de apertura',
+    passwordRequiredHint: 'Escribila para continuar: queda solo en tu navegador, no la guardamos.',
+    passwordLabel: 'Contraseña del PDF',
+    passwordPlaceholder: 'Escribí la contraseña del PDF',
+    passwordSubmit: 'Abrir mi PDF',
+    passwordWrong: 'La contraseña no es correcta. Probá de nuevo.',
+
+    // Aviso de PDF protegido contra edición (permisos, sin contraseña de apertura).
+    protectionNotice: 'Este PDF está protegido contra edición (se puede leer, pero no modificar). Lo convertimos a imágenes de alta nitidez por página para armar tu libro sin bloqueos. La calidad de impresión sigue siendo excelente.',
+    protectionNoticeUnlocked: 'Listo: abrimos tu PDF con la contraseña. Como estaba protegido, lo procesamos como imágenes de alta nitidez por página.',
+    protectionBadge: 'PDF protegido',
   },
   organizeStep: {
     title: '2. Organización de Páginas',
@@ -167,6 +186,7 @@ export const bookStudioCatalog = {
     readingDirectionHelp: 'Si el texto se lee de derecha a izquierda, las páginas se emparejan al revés para que el libro salga bien armado.',
     coverStyleLabel: 'Estilo de Cubierta (opcional)',
     coverStylePlaceholder: 'Ej: monica-classic, o vacío para usar el preset del editor de CV',
+    protectionAutoRaster: 'Tu PDF está protegido contra edición: la salida es en imágenes de alta nitidez por página (automático).',
     nextStep: 'Siguiente: 7. Exportar PDF Final',
   },
   previewExportStep: {
@@ -185,6 +205,7 @@ export const bookStudioCatalog = {
     insufficientCredits: 'No tenés créditos suficientes.',
     exportFailed: 'Ocurrió un error inesperado al procesar el libro.',
     retryExport: 'Reintentar Exportación',
+    protectionNotice: 'Tu PDF está protegido contra edición. Lo procesamos como imágenes de alta nitidez por página: imprimís igual de bien y sin bloqueos.',
     readyBadge: 'Listo',
     modeSummaryLine: 'Modo: {mode} • Se imprime {where}',
     modeFotocopiaShort: 'Escaneo 2 págs./hoja',

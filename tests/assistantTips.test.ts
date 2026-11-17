@@ -5,6 +5,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import {
+  ALL_BOOK_TIPS,
   ALL_TIPS,
   ALWAYS_TIPS,
   MAX_TIPS_PER_SESSION,
@@ -16,7 +17,9 @@ import {
   markTipSeen,
   parseAssistantState,
   parseSessionCount,
+  pickAlwaysTip,
   pickNextTip,
+  pickNextTipCycled,
   serializeAssistantState,
   validateAssistantTargetTab,
 } from '../src/shared/core/assistant/assistantTips';
@@ -47,6 +50,82 @@ describe('pickNextTip', () => {
   it('devuelve null cuando ya se vieron todos', () => {
     const all = ALL_TIPS.map((t) => t.id);
     expect(pickNextTip('vacante', all)).toBeNull();
+  });
+});
+
+describe('pickAlwaysTip — Lidio siempre con tip (JAMÁS null)', () => {
+  it('prioridad 1: primer tip no visto de la pestaña activa', () => {
+    expect(pickAlwaysTip('vacante', [])?.id).toBe('tip-vacante-1');
+  });
+  it('prioridad 2: primer transversal no visto', () => {
+    const seen = ['tip-vacante-1', 'tip-vacante-2'];
+    expect(pickAlwaysTip('vacante', seen)?.id).toBe(ALWAYS_TIPS[0].id);
+  });
+  it('prioridad 3 (repaso): con TODO visto rota por los tips de la pestaña activa', () => {
+    const all = ALL_TIPS.map((t) => t.id);
+    const tip = pickAlwaysTip('vacante', all);
+    expect(tip).not.toBeNull();
+    expect(TAB_TIPS.vacante.map((t) => t.id)).toContain(tip.id);
+  });
+  it('repaso con afterTipId: devuelve el SIGUIENTE dentro del ciclo de la pestaña', () => {
+    const all = ALL_TIPS.map((t) => t.id);
+    const next = pickAlwaysTip('vacante', all, 'cv', 'tip-vacante-1');
+    expect(next.id).toBe('tip-vacante-2');
+    expect(next.id).not.toBe('tip-vacante-1');
+  });
+  it('pestaña sin tips propios: repaso por los transversales', () => {
+    const all = ALL_TIPS.map((t) => t.id);
+    const tip = pickAlwaysTip('guardados', all);
+    expect(ALWAYS_TIPS.map((t) => t.id)).toContain(tip.id);
+  });
+  it('JAMÁS devuelve null en ningún estado (pestañas reales + todo visto + entrada sucia)', () => {
+    const all = ALL_TIPS.map((t) => t.id);
+    for (const tab of [...Object.keys(TAB_TIPS), 'pestaña-inexistente', undefined, null]) {
+      for (const seen of [[], all, ['id-inventado']]) {
+        expect(pickAlwaysTip(tab, seen)).toBeTruthy();
+      }
+    }
+  });
+});
+
+describe('pickNextTipCycled — avance manual ("Otro tip")', () => {
+  it('sin vistos: devuelve el primer tip no visto después del actual', () => {
+    const next = pickNextTipCycled('tip-vacante-1', [], 'cv');
+    expect(next).not.toBeNull();
+    expect(next!.id).not.toBe('tip-vacante-1');
+    expect(ALL_TIPS.map((t) => t.id)).toContain(next!.id);
+  });
+  it('con todo visto: avanza circular al siguiente del catálogo (nunca repite el actual)', () => {
+    const all = ALL_TIPS.map((t) => t.id);
+    const next = pickNextTipCycled('tip-vacante-1', all, 'cv');
+    expect(next).not.toBeNull();
+    expect(next!.id).not.toBe('tip-vacante-1');
+  });
+  it('sin tip actual: primer no visto del catálogo', () => {
+    const seen = ALL_TIPS.map((t) => t.id).slice(1);
+    expect(pickNextTipCycled(null, seen, 'cv')?.id).toBe(ALL_TIPS[0].id);
+    expect(pickNextTipCycled(undefined, [], 'cv')?.id).toBe(ALL_TIPS[0].id);
+  });
+  it('recorre el catálogo completo sin repetir hasta dar la vuelta', () => {
+    const all = ALL_TIPS.map((t) => t.id);
+    let current: string | null = all[0];
+    const visited = new Set<string>([current]);
+    for (let i = 0; i < all.length - 1; i++) {
+      const next = pickNextTipCycled(current, all, 'cv');
+      expect(next).not.toBeNull();
+      expect(visited.has(next!.id)).toBe(false);
+      visited.add(next!.id);
+      current = next!.id;
+    }
+    // Al completar el círculo, el siguiente es el inicial.
+    expect(pickNextTipCycled(current, all, 'cv')?.id).toBe(all[0]);
+  });
+  it('respeta docType: book nunca recibe tips cv y viceversa', () => {
+    const next = pickNextTipCycled(null, [], 'book');
+    expect(ALL_BOOK_TIPS.map((t) => t.id)).toContain(next!.id);
+  });
+  it('tip actual inexistente en el catálogo: cae al primer no visto (defensivo)', () => {
+    expect(pickNextTipCycled('id-inventado', [], 'book')).not.toBeNull();
   });
 });
 

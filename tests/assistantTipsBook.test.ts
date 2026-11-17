@@ -16,7 +16,9 @@ import {
   getAssistantSessionKey,
   getAssistantStorageKey,
   getTipsForTab,
+  pickAlwaysTip,
   pickNextTip,
+  pickNextTipCycled,
   validateAssistantTargetTab,
 } from '../src/shared/core/assistant/assistantTips';
 import { BOOK_STEP_SEQUENCE } from '../src/shared/core/book-engine/bookStepSequence';
@@ -66,6 +68,39 @@ describe('Fase 5 — Lidio en Book Studio', () => {
     expect(cvNext).not.toBeNull();
     expect(cvNext!.id.startsWith('book_')).toBe(false);
     expect(ALL_TIPS.map((t) => t.id)).toContain(cvNext!.id);
+  });
+
+  it('pickAlwaysTip JAMÁS devuelve null (Lidio siempre con tip) y cubre los 3 huecos de contenido', () => {
+    const all = ALL_BOOK_TIPS.map((t) => t.id);
+    for (const step of Object.keys(BOOK_TAB_TIPS)) {
+      expect(pickAlwaysTip(step, [], 'book')).toBeTruthy();
+      expect(pickAlwaysTip(step, all, 'book')).toBeTruthy();
+    }
+    // Huecos de contenido auditados: creep, doble cara/borde corto, guías de armado.
+    const bodies = ALL_BOOK_TIPS.map((t) => `${t.title} ${t.body}`).join(' ');
+    expect(bodies).toContain('creep');
+    expect(bodies).toContain('borde corto');
+    expect(bodies).toContain('marcas de corte');
+  });
+
+  it('pickAlwaysTip con afterTipId rota el repaso dentro del ciclo del paso', () => {
+    const all = ALL_BOOK_TIPS.map((t) => t.id);
+    const next = pickAlwaysTip('book_imposition', all, 'book', 'tip-book-imposition-1');
+    expect(next.id).toBe('tip-book-imposition-2');
+  });
+
+  it('pickNextTipCycled en book recorre TODO el catálogo sin repetir hasta cerrar el ciclo', () => {
+    const all = ALL_BOOK_TIPS.map((t) => t.id);
+    let current: string | null = all[0];
+    const visited = new Set<string>([current]);
+    for (let i = 0; i < all.length - 1; i++) {
+      const next = pickNextTipCycled(current, all, 'book');
+      expect(next).not.toBeNull();
+      expect(visited.has(next!.id)).toBe(false);
+      visited.add(next!.id);
+      current = next!.id;
+    }
+    expect(pickNextTipCycled(current, all, 'book')?.id).toBe(all[0]);
   });
 
   it('validateAssistantTargetTab valida destinos book_* solo para docType book', () => {
