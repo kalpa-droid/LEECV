@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 2,
-  minor: 18,
-  patch: 1,
-  label: 'V2.18.1',
-  lastUpdated: '2026-11-16',
+  minor: 19,
+  patch: 0,
+  label: 'V2.19.0',
+  lastUpdated: '2026-11-17',
   lastAgent: '@opencode',
-  stage: 'Lidio, el asistente flotante del editor, rediseñado al estilo macOS minimal y contextual (V2.18.0): notificacion toast independiente (AssistantNotificationToast) que aparece sola por inactividad, ~9s auto-descarte (pausa en hover/focus), cola apuntando al boton flotante, acciones solo-icono (Ir/Silenciar/Cerrar), backdrop-blur, variables CSS del tema, prefers-reduced-motion y print:hidden. Panel rediseñado sin tagline: header limpio con mute Bell/BellOff, tabs solo-icono (Tips/Preguntar), toggle de todos los tips con badge de contador, chips de preguntas rapidas en el chat, puntos de "escribiendo". app_guide_assistant enriquecida con el conocimiento V2.17.0 (cascada de diseño, 6 formatos regionales, tiradores, portada, secciones a medida, importar CV, privacidad por campo, candados, flujo CV -> Vacante -> Postulacion -> Carta, ATS en vivo, Deshacer/Rehacer, temas), editorState estructural SIN datos personales (isBaseCV, formato activo, secciones visibles, vacante, puntaje ATS) y los ultimos 4 turnos del chat como datos escapados; responseSchema OpenAPI 3.0 sin cambios. Tips 100% locales (sin IA); nueva notificacion y panel usan solo tokens del design system. V2.18.1: pulido visual del panel - banda de tabs icon-only compacta (h-9, 36px fijos) y estado vacio de Tips convertido en mini-tarjeta con acciones visibles (Ver todos los tips / Preguntarle a Lidio).',
+  stage: 'Plan Book Studio/Lidio completo (V2.19.0, 5 fases): PR 118 Fases 1+2 (carga de PDF con boton nativo y extensiones .pdf, persistencia de libros, cMaps locales pdf.js con fallback CDN, verificacion de tipo de documento), PR 119 Fase 3 (paridad tapa/contratapa: presets COVER_PRESETS, publisher, imageFit, fix retiro fantasma, conteo final de paginas reescrito y verificado contra el motor), PR 120 Fase 4 (flujo pasos 1-7 coherente con la secuencia real i18n y labels migrados a t.bookStudio.*), PR 121 Fase 5 (Lidio en Book Studio: prop docType cv|book, tips y destinos book_* validados contra BOOK_STEP_SEQUENCE, storage keys leecv.assistant.book, editorState estructural sin PII, app_guide_assistant con bloque Book Studio - responseSchema OpenAPI 3.0 intacto, 12 tests nuevos). UI zona app en lenguaje sencillo; nada de jerga en zona publica.',
 } as const;
