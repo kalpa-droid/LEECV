@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { BookOpen, CheckCircle2, AlertTriangle, Printer, Sparkles, Download, AlertCircle, ChevronLeft, FileText, Layers, Languages } from 'lucide-react';
 import { BookImpositionOptions, processBookImposition } from '../../shared/core/book-engine/impositionEngine';
-import { calculateFinalBookPageCount, effectiveSourcePageCount, hasCustomCoverConfig } from '../../shared/core/book-engine/bookPageCount';
 import { calculateSpineWidth, calculateCreepOffset, planBookletSignatures } from '../../shared/core/book-engine/impositionPlanner';
+import { computeBookFinalPageCount } from '../../shared/core/book-engine/bookPageCount';
 import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 
@@ -63,21 +63,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   const hasCover = options.hasCover || (options.customCover && options.customCover.type !== 'none');
   const hasBackCover = options.hasBackCover || (options.customBackCover && options.customBackCover.type !== 'none');
 
-  const finalPageCount = calculateFinalBookPageCount({
-    sourcePageCount: effectiveSourcePageCount(pdfPageCount, options.deletedPages, options.pageOrder),
-    hasSourceCover: options.hasCover,
-    hasCustomCover: hasCustomCoverConfig(options.customCover),
-    hasCustomBackCover: hasCustomCoverConfig(options.customBackCover),
-    hasSourceBackCover: options.hasBackCover,
-    blankBehindCover: options.blankBehindCover,
-    blankInFrontBackCover: options.blankInFrontBackCover,
-    separateCover:
-      (options.destination ?? 'A') !== 'A' &&
-      (hasCustomCoverConfig(options.customCover) || hasCustomCoverConfig(options.customBackCover)),
-    refPdfPage: options.refPdfPage,
-    refBookPage: options.refBookPage,
-    refPageSide: options.refPageSide,
-  });
+  const finalPageCount = computeBookFinalPageCount(options, pdfPageCount);
 
   const totalSheetsToPrint = finalPageCount / 2;
 
@@ -165,7 +151,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   };
 
   return (
-    <div dir={readingDirection === 'rtl' ? 'rtl' : 'ltr'} className="space-y-6 text-[var(--ui-text-primary)]">
+    <div className="space-y-6 text-[var(--ui-text-primary)]">
       <div className="space-y-1">
         <h2 className="text-xl font-bold tracking-tight text-[var(--ui-text-primary)] flex items-center gap-2">
           <Printer className="w-5 h-5 text-[var(--color-accent-text)]" />
