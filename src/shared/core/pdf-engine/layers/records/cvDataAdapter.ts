@@ -484,12 +484,22 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
   }
 
   // Firma Digital (Main)
+  // Regla de emisión: la firma aparece si hay imagen dibujada, un nombre explícito
+  // guardado, o datos personales con nombre real. El nombre del registro se resuelve
+  // EN VIVO desde personalInfo en cada render (nunca queda congelado el firmante) y
+  // el fallback 'Postulante' de resolveDisplayName nunca se imprime en el PDF.
   const autoSignerName = resolveDisplayName(personalInfo);
+  const hasRealSignerName = Boolean(
+    String(personalInfo.givenNames || '').trim() ||
+    String(personalInfo.surname || '').trim() ||
+    String(personalInfo.fullName || '').trim()
+  );
+  const explicitSignerName = String(signature?.signerName || '').trim();
   const selectedRole = signature?.signerRole || (sortedProfession?.[0]?.degree || sortedEducation?.[0]?.degree || '');
   const todayISO = new Date().toISOString().split('T')[0];
   const sigDate = signature?.date || todayISO;
 
-  if (isVisible('firma') && (signature?.dataUrl || signature?.signerName)) {
+  if (isVisible('firma') && (signature?.dataUrl || explicitSignerName || hasRealSignerName)) {
     sections.push({
       id: 'firma',
       titleText: 'FIRMA REGISTRADA',
@@ -498,10 +508,10 @@ export function cvDataToContentSections(cvData: any): ContentSection<CvRecordKin
           id: 'rec-sig',
           kind: 'freeform',
           fields: {
-            signerName: autoSignerName,
+            signerName: hasRealSignerName ? autoSignerName : explicitSignerName,
             signerRole: selectedRole,
             date: sigDate,
-            dataUrl: signature.dataUrl
+            dataUrl: signature?.dataUrl
           }
         }
       ]

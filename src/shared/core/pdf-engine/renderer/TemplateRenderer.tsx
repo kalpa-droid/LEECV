@@ -523,7 +523,8 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   const renderRecord = (
     rec: ContentRecord<CvRecordKind>, 
     isSidebarSector: boolean = false, 
-    sectorRolesColor: ResolvedThemeRoles = mainRolesColor
+    sectorRolesColor: ResolvedThemeRoles = mainRolesColor,
+    isTrailingRecord: boolean = false
   ) => {
     const surfaceHex = isSidebarSector ? sidebarRolesColor.primary : mainRolesColor.background;
     const ctx: CvRenderContext = {
@@ -535,7 +536,8 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
       preset,
       styles,
       customRecordCardDesigns,
-      sidebarContactSpec
+      sidebarContactSpec,
+      isTrailingRecord
     };
 
     const renderer = CV_RECORD_RENDERERS[rec.kind];
@@ -665,11 +667,14 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                 </View>
               )}
 
-              {sectorSections.map((sec) => {
+              {sectorSections.map((sec, secIdx) => {
                 const isFirma = sec.id === 'firma' || sec.id.startsWith('firma');
                 const sectionStyle = isFirma ? { marginTop: 16 } : undefined;
                 const baseSecId = sec.id.replace(/-cont$/, '');
                 const displayTitle = atsMode ? (resolveCanonicalSection({ sectionId: sec.id, titleText: sec.titleText }) ?? sec.titleText) : sec.titleText;
+                // Último registro de la última sección del sector: anula su marginBottom
+                // terminal para que el margen residual no genere una hoja fantasma en blanco.
+                const isLastSectionOfSector = secIdx === sectorSections.length - 1;
 
                 if (isSidebar) {
                   // Sidebar: la sección completa es un bloque atómico (wrap={false})
@@ -687,7 +692,12 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                           isSidebar={isSidebar}
                         />
                       )}
-                      {sec.records.map(rec => renderRecord(rec, isSidebar, sectorRolesColor))}
+                      {sec.records.map((rec, recIdx) => renderRecord(
+                        rec,
+                        isSidebar,
+                        sectorRolesColor,
+                        isLastSectionOfSector && recIdx === sec.records.length - 1
+                      ))}
                       {interactiveAnchors && <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>{`ANCHOR_END:${baseSecId}`}</Text>}
                     </View>
                   );
@@ -711,11 +721,21 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
                               isSidebar={isSidebar}
                             />
                           )}
-                          {renderRecord(sec.records[0], isSidebar, sectorRolesColor)}
+                          {renderRecord(
+                            sec.records[0],
+                            isSidebar,
+                            sectorRolesColor,
+                            isLastSectionOfSector && sec.records.length === 1
+                          )}
                         </View>
-                        {sec.records.slice(1).map(rec => (
-                          <View key={rec.id || `rec-${Math.random()}`} wrap={false}>
-                            {renderRecord(rec, isSidebar, sectorRolesColor)}
+                        {sec.records.slice(1).map((rec, recIdx) => (
+                          <View key={rec.id || `rec-${recIdx + 1}`} wrap={false}>
+                            {renderRecord(
+                              rec,
+                              isSidebar,
+                              sectorRolesColor,
+                              isLastSectionOfSector && recIdx === sec.records.length - 2
+                            )}
                           </View>
                         ))}
                       </>

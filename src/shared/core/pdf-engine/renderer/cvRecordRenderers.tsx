@@ -41,12 +41,18 @@ export interface CvRenderContext {
   styles: any;
   customRecordCardDesigns?: Record<string, string>;
   sidebarContactSpec: any;
+  /**
+   * Último registro de la última sección del sector: los renderers anulan su
+   * marginBottom terminal para que el margen residual no genere una hoja
+   * fantasma en blanco al final del documento.
+   */
+  isTrailingRecord?: boolean;
 }
 
 export type CvRecordRenderFn = (rec: ContentRecord<CvRecordKind>, ctx: CvRenderContext) => React.ReactNode;
 
 const cvCatalogCardRenderer: CvRecordRenderFn = (rec, ctx) => {
-  const { isSidebarSector, sectorRolesColor, preset, customRecordCardDesigns } = ctx;
+  const { isSidebarSector, sectorRolesColor, preset, customRecordCardDesigns, isTrailingRecord } = ctx;
   const f = rec.fields;
   const designId = customRecordCardDesigns?.[rec.kind] || preset.recordCardDesigns?.[rec.kind] || 'accent-card';
   const layout = buildStructuredRecordLayout(rec);
@@ -64,22 +70,30 @@ const cvCatalogCardRenderer: CvRecordRenderFn = (rec, ctx) => {
       rolesColor={sectorRolesColor}
       typography={preset.typography}
       sectorRole={isSidebarSector ? 'sidebar' : 'main'}
+      isTrailingRecord={isTrailingRecord}
     />
   );
 };
 
 export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
   'contact-item': (rec, ctx) => {
-    const { isSidebarSector, sectorRolesColor, surfaceHex, preset, styles } = ctx;
+    const { isSidebarSector, sectorRolesColor, surfaceHex, preset, styles, isTrailingRecord } = ctx;
     const contactSpec = resolveUnifiedTextSpec('body', surfaceHex, sectorRolesColor, preset.typography, isSidebarSector ? 'sidebar-contact' : 'main-body');
     const fields = getPresentContactFields(rec, 'document');
     if (fields.length === 0) return null;
     
     return (
       <View key={rec.id}>
-        {fields.map((f) => (
+        {fields.map((f, fieldIdx) => (
           <React.Fragment key={f.key}>
-            <Text wrap={false} style={[styles.sidebarItemText, { color: contactSpec.colorHex, opacity: contactSpec.opacity }]}>
+            <Text
+              wrap={false}
+              style={[
+                styles.sidebarItemText,
+                { color: contactSpec.colorHex, opacity: contactSpec.opacity },
+                isTrailingRecord && fieldIdx === fields.length - 1 ? { marginBottom: 0 } : null
+              ]}
+            >
               {f.cvLabel}{' '}
               {f.emphasize ? <Text style={styles.sidebarItemBold}>{f.value}</Text> : f.value}
             </Text>
@@ -90,7 +104,7 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
   },
 
   'quote-text': (rec, ctx) => {
-    const { isSidebarSector, sectorRolesColor, surfaceHex, preset, customRecordCardDesigns } = ctx;
+    const { isSidebarSector, sectorRolesColor, surfaceHex, preset, customRecordCardDesigns, isTrailingRecord } = ctx;
     const f = rec.fields;
     const designId = customRecordCardDesigns?.resumen || preset.recordCardDesigns?.resumen || 'accent-outline';
     const containerStyle = getContainerStyle(designId);
@@ -122,7 +136,7 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
           paddingVertical: 8 * density.quoteTextPaddingFactor,
           paddingHorizontal: 12,
           borderRadius: 4,
-          marginBottom: 10 * density.quoteTextPaddingFactor,
+          marginBottom: isTrailingRecord ? 0 : 10 * density.quoteTextPaddingFactor,
           marginTop: 4 * density.quoteTextPaddingFactor
         }}
       >
@@ -142,7 +156,7 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
   },
 
   'skill': (rec, ctx) => {
-    const { sectorRolesColor, surfaceHex, preset, styles } = ctx;
+    const { sectorRolesColor, surfaceHex, preset, styles, isTrailingRecord } = ctx;
     const f = rec.fields;
     const itemSpec = resolveUnifiedTextSpec('body', surfaceHex, sectorRolesColor, preset.typography, 'skill');
     const name = String(f.name || '');
@@ -158,7 +172,8 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
             opacity: itemSpec.opacity,
             fontSize: itemSpec.fontSizePt,
             fontFamily: itemSpec.fontFamily
-          }
+          },
+          isTrailingRecord ? { marginBottom: 0 } : null
         ]}
       >
         • {label}
@@ -167,7 +182,7 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
   },
 
   'languages': (rec, ctx) => {
-    const { sectorRolesColor, surfaceHex, preset, styles } = ctx;
+    const { sectorRolesColor, surfaceHex, preset, styles, isTrailingRecord } = ctx;
     const f = rec.fields;
     const itemSpec = resolveUnifiedTextSpec('body', surfaceHex, sectorRolesColor, preset.typography, 'skill');
     const mainLabel = `${f.idioma || f.name || ''}${f.nivel ? ` (${f.nivel})` : ''}`;
@@ -187,7 +202,8 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
             opacity: itemSpec.opacity,
             fontSize: itemSpec.fontSizePt,
             fontFamily: itemSpec.fontFamily
-          }
+          },
+          isTrailingRecord ? { marginBottom: 0 } : null
         ]}
       >
         • {label}
@@ -201,7 +217,7 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
   'references': cvCatalogCardRenderer,
 
   'experience': (rec, ctx) => {
-    const { isSidebarSector, sectorRolesColor, preset, customRecordCardDesigns } = ctx;
+    const { isSidebarSector, sectorRolesColor, preset, customRecordCardDesigns, isTrailingRecord } = ctx;
     const f = rec.fields;
     const designId = customRecordCardDesigns?.experience || preset.recordCardDesigns?.experience || 'primary-card';
     const layout = buildStructuredRecordLayout(rec);
@@ -219,12 +235,13 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
         rolesColor={sectorRolesColor}
         typography={preset.typography}
         sectorRole={isSidebarSector ? 'sidebar' : 'main'}
+        isTrailingRecord={isTrailingRecord}
       />
     );
   },
 
   'course': (rec, ctx) => {
-    const { isSidebarSector, sectorRolesColor, surfaceHex, preset, styles, customRecordCardDesigns, sidebarContactSpec } = ctx;
+    const { isSidebarSector, sectorRolesColor, surfaceHex, preset, styles, customRecordCardDesigns, sidebarContactSpec, isTrailingRecord } = ctx;
     const f = rec.fields;
     const layout = buildStructuredRecordLayout(rec);
 
@@ -233,7 +250,7 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
       const subSpec = resolveUnifiedTextSpec('meta', surfaceHex, sectorRolesColor, preset.typography, 'course-institution');
 
       return (
-        <View key={rec.id} style={{ marginBottom: 6 }} wrap={false}>
+        <View key={rec.id} style={{ marginBottom: isTrailingRecord ? 0 : 6 }} wrap={false}>
           <Text style={[styles.sidebarItemText, styles.sidebarItemBold, { color: titleSpec.colorHex, opacity: titleSpec.opacity }]}>
             {layout.header || String(f.title || f.name || '')}
           </Text>
@@ -269,16 +286,17 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
         rolesColor={sectorRolesColor}
         typography={preset.typography}
         sectorRole="main"
+        isTrailingRecord={isTrailingRecord}
       />
     );
   },
 
   'social-link': (rec, ctx) => {
-    const { sectorRolesColor, surfaceHex, preset, styles } = ctx;
+    const { sectorRolesColor, surfaceHex, preset, styles, isTrailingRecord } = ctx;
     const f = rec.fields;
     const linkSpec = resolveUnifiedTextSpec('body', surfaceHex, sectorRolesColor, preset.typography, 'social-link');
     return (
-      <View key={rec.id} style={{ marginBottom: 4, flexDirection: 'row', alignItems: 'center', gap: 5 }} wrap={false}>
+      <View key={rec.id} style={{ marginBottom: isTrailingRecord ? 0 : 4, flexDirection: 'row', alignItems: 'center', gap: 5 }} wrap={false}>
         <PdfSectionIcon iconId={String(f.icon || 'social-web')} color={linkSpec.colorHex} size={10} />
         <View style={{ flex: 1 }}>
           <Text style={[styles.sidebarItemText, { color: linkSpec.colorHex, opacity: linkSpec.opacity, marginBottom: 0 }]}>
@@ -295,11 +313,11 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
   },
 
   'qr': (rec, ctx) => {
-    const { sectorRolesColor, surfaceHex, preset, styles } = ctx;
+    const { sectorRolesColor, surfaceHex, preset, styles, isTrailingRecord } = ctx;
     const f = rec.fields;
     const captionSpec = resolveUnifiedTextSpec('meta', surfaceHex, sectorRolesColor, preset.typography, 'qr-caption');
     return (
-      <View key={rec.id} wrap={false} style={{ alignItems: 'center', marginVertical: 8 }}>
+      <View key={rec.id} wrap={false} style={{ alignItems: 'center', marginTop: 8, marginBottom: isTrailingRecord ? 0 : 8 }}>
         {f.dataUrl || f.url ? (
           <Image src={String(f.dataUrl || f.url)} style={{ width: 64, height: 64, borderRadius: 4 }} />
         ) : null}
@@ -332,7 +350,7 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
   },
 
   'custom': (rec, ctx) => {
-    const { preset, customRecordCardDesigns } = ctx;
+    const { preset, customRecordCardDesigns, isTrailingRecord } = ctx;
     const f = rec.fields;
     const layout = buildStructuredRecordLayout(rec);
 
@@ -349,6 +367,7 @@ export const CV_RECORD_RENDERERS: Record<CvRecordKind, CvRecordRenderFn> = {
         rolesColor={ctx.sectorRolesColor}
         typography={preset.typography}
         sectorRole={ctx.isSidebarSector ? 'sidebar' : 'main'}
+        isTrailingRecord={isTrailingRecord}
       />
     );
   }
