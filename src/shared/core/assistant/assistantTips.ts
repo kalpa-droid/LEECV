@@ -15,6 +15,10 @@
 import { isValidPanelTab } from '../recruiter-rules/ruleTargetTabs';
 import { isApplicationVariant } from '../documents/applicationVariant';
 import { resolveActiveFormatId } from '../formats/cvFormatRegistry';
+import { BOOK_STEP_SEQUENCE } from '../book-engine/bookStepSequence';
+
+/** Tipo de documento del editor que monta a Lidio: currículum (cv) o libro (book). */
+export type AssistantDocType = 'cv' | 'book';
 
 /**
  * Crea un resumen estructural seguro del estado del editor.
@@ -59,11 +63,59 @@ export function buildAssistantEditorSnapshot(
   };
 }
 
+/**
+ * Resumen estructural seguro del estado de un libro (Book Studio).
+ * NO contiene PII: sin nombre de archivo, sin texto libre, sin assetIds.
+ */
+export interface AssistantBookSnapshot {
+  docType: 'book';
+  activeStepId: string;
+  mode: string;
+  hasCustomCover: boolean;
+  hasCustomBackCover: boolean;
+  hasRefCalibration: boolean;
+  destination: string;
+  exportMode: string;
+  applyCreep: boolean;
+  zipByBooklet: boolean;
+  showGuides: boolean;
+  readingDirection: string;
+  pdfPageCount: number;
+}
+
+export function buildAssistantBookSnapshot(
+  options: any,
+  activeStepId?: string | null,
+  pdfPageCount?: number,
+): AssistantBookSnapshot {
+  return {
+    docType: 'book',
+    activeStepId: activeStepId || 'book_source_type',
+    mode: options?.mode === 'fotocopia' ? 'fotocopia' : 'normal',
+    hasCustomCover: !!(options?.customCover && (options.customCover.type || options.customCover.assetId)),
+    hasCustomBackCover: !!(options?.customBackCover && (options.customBackCover.type || options.customBackCover.assetId)),
+    hasRefCalibration: !!(options?.refPdfPage > 0 && options?.refBookPage > 0),
+    destination: options?.destination || 'A',
+    exportMode: options?.exportMode || 'vector',
+    applyCreep: options?.applyCreep ?? true,
+    zipByBooklet: options?.zipByBooklet ?? false,
+    showGuides: options?.showGuides ?? false,
+    readingDirection: options?.readingDirection || 'ltr',
+    pdfPageCount: Number.isFinite(pdfPageCount) ? Number(pdfPageCount) : 0,
+  };
+}
+
 export const ASSISTANT_NAME = 'Lidio';
 export const ASSISTANT_TAGLINE = 'Te doy una mano con tu CV';
 
 export const ASSISTANT_STORAGE_KEY = 'leecv.assistant';
 export const ASSISTANT_SESSION_KEY = 'leecv.assistant.session';
+
+/** Keys de storage por tipo de documento: cada docType tiene su propio estado de tips. */
+export const getAssistantStorageKey = (docType: AssistantDocType = 'cv'): string =>
+  docType === 'book' ? 'leecv.assistant.book' : ASSISTANT_STORAGE_KEY;
+export const getAssistantSessionKey = (docType: AssistantDocType = 'cv'): string =>
+  docType === 'book' ? 'leecv.assistant.session.book' : ASSISTANT_SESSION_KEY;
 
 export const FIRST_TIP_IDLE_MS = 20_000;
 export const NEXT_TIP_IDLE_MS = 90_000;
@@ -73,7 +125,7 @@ export interface AssistantTip {
   id: string;
   title: string;
   body: string;
-  /** Pestaña del editor a la que lleva la CTA "Ir". Opcional y validada con isValidPanelTab. */
+  /** Pestaña del editor a la que lleva la CTA "Ir". Opcional y validada con isValidPanelTab (cv) o contra los pasos reales (book). */
   targetTab?: string;
 }
 
@@ -91,8 +143,13 @@ export const DEFAULT_ASSISTANT_STATE: AssistantStoredState = {
 export function validateAssistantTargetTab(
   targetTab: string | null | undefined,
   cvData?: any,
+  docType: AssistantDocType = 'cv',
 ): string | null {
   if (!targetTab) return null;
+  if (docType === 'book') {
+    const ids = new Set(BOOK_STEP_SEQUENCE.map((step) => step.id));
+    return ids.has(targetTab) ? String(targetTab) : null;
+  }
   return isValidPanelTab(targetTab, cvData) ? String(targetTab) : null;
 }
 
@@ -108,13 +165,14 @@ export interface SuggestedAssistantAction {
 export function filterSuggestedActions(
   actions: SuggestedAssistantAction[] | null | undefined,
   cvData?: any,
+  docType: AssistantDocType = 'cv',
 ): SuggestedAssistantAction[] {
   if (!Array.isArray(actions)) return [];
   const out: SuggestedAssistantAction[] = [];
   for (const raw of actions) {
     if (!raw || typeof raw.label !== 'string' || !raw.label.trim()) continue;
     const label = raw.label.trim().slice(0, 80);
-    const tab = validateAssistantTargetTab(raw.targetTab, cvData);
+    const tab = validateAssistantTargetTab(raw.targetTab, cvData, docType);
     out.push(tab ? { label, targetTab: tab } : { label });
     if (out.length >= 2) break;
   }
@@ -238,7 +296,86 @@ export const TAB_TIPS: Record<string, AssistantTip[]> = {
   ],
 };
 
-/** Tips transversales (aparecen en cualquier pestaña). */
+/** Tips por paso del libro (docType 'book'). Destinos son pasos reales de BOOK_STEP_SEQUENCE. */
+export const BOOK_STEP_IDS: string[] = BOOK_STEP_SEQUENCE.map((s) => s.id);
+export const BOOK_TAB_TIPS: Record<string, AssistantTip[]> = {
+  book_source_type: [
+    {
+      id: 'tip-book-source-1',
+      title: 'Tu archivo y dónde lo vas a imprimir',
+      body: 'Elegí imprimir en tu impresora de casa o llevalo a una imprenta. No guardamos una copia del PDF: solo recordamos dónde está. Si lo movés, te avisamos y lo podés volver a elegir.',
+      targetTab: 'book_source_type',
+    },
+    {
+      id: 'tip-book-source-2',
+      title: 'Impresión en hojas comunes o grandes',
+      body: 'Hoja común (A4): libro chico, cómodo de llevar. Hoja grande (A3): libro más grande, ideal para llevar a una imprenta.',
+      targetTab: 'book_source_type',
+    },
+  ],
+  book_organize: [
+    {
+      id: 'tip-book-organize-1',
+      title: 'Organizá las páginas',
+      body: 'Revisá el orden visual, rotá páginas desalineadas o insertá hojas en blanco para completar el libro.',
+      targetTab: 'book_organize',
+    },
+  ],
+  book_cover: [
+    {
+      id: 'tip-book-cover-1',
+      title: 'Diseño de tapa',
+      body: 'Podés usar un diseño preset, subir tu propia imagen o dejar la tapa sin diseño especial.',
+      targetTab: 'book_cover',
+    },
+  ],
+  book_back_cover: [
+    {
+      id: 'tip-book-back-cover-1',
+      title: 'Contratapa',
+      body: 'La contratapa es opcional: podés agregar un texto descriptivo o una imagen para el cierre del libro.',
+      targetTab: 'book_back_cover',
+    },
+  ],
+  book_foliado: [
+    {
+      id: 'tip-book-foliado-1',
+      title: 'Calibrar un número',
+      body: 'Solo necesitás encontrar un número de página en una miniatura y escribirlo. No necesitás más.',
+      targetTab: 'book_foliado',
+    },
+  ],
+  book_imposition: [
+    {
+      id: 'tip-book-imposition-1',
+      title: 'Destino de la cubierta',
+      body: 'Seleccioná si la cubierta va en el mismo archivo, en un archivo aparte o si es continua con el lomo.',
+      targetTab: 'book_imposition',
+    },
+    {
+      id: 'tip-book-imposition-2',
+      title: 'Grosor de lomo',
+      body: 'Elegí el grosor del papel para el lomo: sin grosor (guillotina/anillado) o valores como 0.10 mm y 0.12 mm.',
+      targetTab: 'book_imposition',
+    },
+    {
+      id: 'tip-book-imposition-3',
+      title: 'Modo de exportación',
+      body: 'Elegí máxima calidad (sin pérdida, conserva el archivo original) o rasterizado (JPEG) para impresión doméstica.',
+      targetTab: 'book_imposition',
+    },
+  ],
+  book_preview_export: [
+    {
+      id: 'tip-book-preview-1',
+      title: 'Revisá el resumen',
+      body: 'Antes de descargar, verificá que el número de páginas y el tipo de armado sean correctos.',
+      targetTab: 'book_preview_export',
+    },
+  ],
+};
+
+/** Tips transversales (aparecen en cualquier pestaña del CV). */
 export const ALWAYS_TIPS: AssistantTip[] = [
   {
     id: 'tip-columnas-1',
@@ -262,13 +399,42 @@ export const ALWAYS_TIPS: AssistantTip[] = [
   },
 ];
 
+/** Tips transversales del libro (aparecen en cualquier paso del Book Studio). */
+export const BOOK_ALWAYS_TIPS: AssistantTip[] = [
+  {
+    id: 'tip-book-privacidad-1',
+    title: 'Tu PDF no sale de tu equipo',
+    body: 'Todo el trabajo se hace en tu navegador: el PDF nunca se sube a internet y no guardamos una copia, solo recordamos dónde está.',
+  },
+  {
+    id: 'tip-book-resumir-1',
+    title: 'El libro sigue acá',
+    body: 'Si cerrás y volvés al estudio, tu proyecto está intacto: opciones de tapa, contratapa y armado se recuerdan.',
+  },
+];
+
 export const ALL_TIPS: AssistantTip[] = [
   ...Object.values(TAB_TIPS).flat(),
   ...ALWAYS_TIPS,
 ];
 
+export const ALL_BOOK_TIPS: AssistantTip[] = [
+  ...Object.values(BOOK_TAB_TIPS).flat(),
+  ...BOOK_ALWAYS_TIPS,
+];
+
+export const getAllTips = (docType: AssistantDocType = 'cv'): AssistantTip[] =>
+  docType === 'book' ? ALL_BOOK_TIPS : ALL_TIPS;
+
 /** Tips para la pestaña activa (primero los específicos, después los transversales). */
-export function getTipsForTab(activeTab?: string | null): AssistantTip[] {
+export function getTipsForTab(
+  activeTab?: string | null,
+  docType: AssistantDocType = 'cv',
+): AssistantTip[] {
+  if (docType === 'book') {
+    const specific = (activeTab && BOOK_TAB_TIPS[activeTab]) || [];
+    return [...specific, ...BOOK_ALWAYS_TIPS];
+  }
   const specific = (activeTab && TAB_TIPS[activeTab]) || [];
   return [...specific, ...ALWAYS_TIPS];
 }
@@ -277,9 +443,10 @@ export function getTipsForTab(activeTab?: string | null): AssistantTip[] {
 export function pickNextTip(
   activeTab: string | null | undefined,
   seenTipIds: string[],
+  docType: AssistantDocType = 'cv',
 ): AssistantTip | null {
   const seen = new Set(seenTipIds || []);
-  const candidates = getTipsForTab(activeTab);
+  const candidates = getTipsForTab(activeTab, docType);
   return candidates.find((tip) => !seen.has(tip.id)) ?? null;
 }
 
