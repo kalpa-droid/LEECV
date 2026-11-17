@@ -49,6 +49,10 @@ export const bookStudioCatalog = {
     errorEmptyPdf: 'El PDF se abrió pero no tiene páginas. Probá regenerarlo o elegir otro archivo.',
     errorUnknown: 'No se pudo leer el archivo PDF. Verifica que no esté protegido o dañado.',
 
+    // "Reabrir mi PDF" cuando el navegador no devuelve el archivo/permiso.
+    reopenFailedNotice: 'No pudimos reabrir el PDF desde su ubicación. Elegilo de nuevo:',
+    reopenFallbackButton: 'Elegir el PDF de nuevo',
+
     // Contraseña de apertura (PDF protegido con clave).
     passwordRequiredTitle: 'Este PDF tiene contraseña de apertura',
     passwordRequiredHint: 'Escribila para continuar: queda solo en tu navegador, no la guardamos.',

@@ -4,7 +4,7 @@ import { AppShell } from '../../shared/core/ui/AppShell';
 import Navbar from '../cv-builder/components/Navbar';
 import CanvaIconDock from '../cv-builder/components/CanvaIconDock';
 import { BookImpositionOptions, DEFAULT_BOOK_IMPOSITION_OPTIONS } from '../../shared/core/book-engine/impositionEngine';
-import { PdfSourceError, PdfSourceErrorCode, isPdfSourceError, pdfSourceErrorFromUnknown } from '../../shared/core/book-engine/pdfSourceClassifier';
+import { PdfSourceError, PdfSourceErrorCode, isPdfSourceError, pdfSourceErrorFromUnknown, isPdfLikeFile } from '../../shared/core/book-engine/pdfSourceClassifier';
 import { BookSourceTypeStep } from './BookSourceTypeStep';
 import { BookOrganizeStep } from './BookOrganizeStep';
 import { BookFoliadoStep } from './BookFoliadoStep';
@@ -100,6 +100,10 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   const [pdfLoadErrorCode, setPdfLoadErrorCode] = useState<PdfSourceErrorCode | null>(null);
   /** Nombre guardado del libro (de "Mis Libros Guardados") cuando aún no hay PDF cargado. */
   const [savedBookName, setSavedBookName] = useState<string | null>(null);
+  /** Error de elección manual de archivo (en el gesto del clic, panel principal). */
+  const [filePickError, setFilePickError] = useState<string | null>(null);
+  /** "Reabrir mi PDF" no devolvió el archivo (permiso denegado/no soportado). */
+  const [reopenFailed, setReopenFailed] = useState<boolean>(false);
 
   // Refs espejo: loadSourcePdf se define una sola vez y siempre lee el estado
   // fresco (modo/opciones) sin depender del closure del primer render.
@@ -129,6 +133,8 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
    */
   const loadSourcePdf = async (file: File, password?: string): Promise<any> => {
     setPdfNotice(null);
+    setFilePickError(null);
+    setReopenFailed(false);
     if (file.size === 0) {
       throw new PdfSourceError('empty-file');
     }
@@ -344,23 +350,34 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
     setActiveStepTab(getPrevBookStepId(currentStep, options.mode));
   };
 
-  const handleTriggerFileInput = () => {
-    setActiveStepTab('book_source_type');
-    const pick = () => {
-      if (sourcePdfPickerRef.current) {
-        // El picker nativo arranca dentro del mismo gesto de clic.
-        void sourcePdfPickerRef.current();
-        return;
-      }
-      fileInputRef.current?.click();
-    };
-    if (sourcePdfPickerRef.current || fileInputRef.current) {
-      pick();
-    } else {
-      // El paso 1 todavía no montó; un tick, dentro de la ventana de
-      // activación transitoria del clic (sin esperar 100 ms).
-      setTimeout(pick, 0);
+  /** Elige un archivo desde el <input> persistente (fuera de cualquier paso montado). */
+  const handlePersistentFileChosen = (file: File) => {
+    setFilePickError(null);
+    if (!isPdfLikeFile(file)) {
+      setFilePickError(t.bookStudio.sourceStep.errorInvalidFile);
+      setIsPanelOpen(true);
+      return;
     }
+    confirmSourceFile(file).catch(() => {
+      // El aviso tipado (pdfLoadErrorCode) ya quedó en pantalla;
+      // garantizamos que el panel esté abierto para verlo.
+      setIsPanelOpen(true);
+    });
+  };
+
+  // Sin setTimeout ni await antes de abrir el diálogo: el clic debe nacer
+  // dentro del gesto del usuario. El <input> persistente siempre está montado.
+  const handleTriggerFileInput = () => {
+    setFilePickError(null);
+    setActiveStepTab('book_source_type');
+    setIsPanelOpen(true);
+    const pick = sourcePdfPickerRef.current;
+    if (pick) {
+      // El picker nativo arranca dentro del mismo gesto de clic.
+      void pick();
+      return;
+    }
+    fileInputRef.current?.click();
   };
 
   /** Texto visible por código tipado de error de carga (lenguaje sencillo). */
@@ -375,6 +392,22 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
 
   return (
     <>
+      {/* Input persistente: siempre montado, sin importar el paso activo.
+          El clic programático nace en el gesto del usuario (handleTriggerFileInput). */}
+      <input
+        id="book-source-pdf-input"
+        type="file"
+        accept=".pdf,application/pdf"
+        ref={fileInputRef}
+        className="hidden"
+        aria-hidden="true"
+        tabIndex={-1}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = ''; // permite volver a elegir el mismo archivo
+          if (file) handlePersistentFileChosen(file);
+        }}
+      />
       <AppShell
         docType="book"
       isPanelOpen={isPanelOpen}
@@ -442,12 +475,31 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
                 type="button"
                 onClick={async () => {
                   const file = await bookAssetManager.requestSourcePdfPermission(bookId || undefined);
-                  if (file) attachSourcePdf(file);
+                  if (file) {
+                    setReopenFailed(false);
+                    attachSourcePdf(file);
+                    return;
+                  }
+                  // Permiso denegado o no soportado: avisar y caer al selector nativo.
+                  setReopenFailed(true);
                 }}
                 className={`px-3 py-1.5 text-xs font-bold rounded-[${radius.control}] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] cursor-pointer`}
               >
                 Reabrir mi PDF
               </button>
+              {reopenFailed && (
+                <>
+                  <p role="alert" className="text-xs font-semibold text-[var(--color-status-danger-text)]">
+                    {t.bookStudio.sourceStep.reopenFailedNotice}
+                  </p>
+                  <label
+                    htmlFor="book-source-pdf-input"
+                    className={`inline-block px-3 py-1.5 text-xs font-bold rounded-[${radius.control}] bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] cursor-pointer`}
+                  >
+                    {t.bookStudio.sourceStep.reopenFallbackButton}
+                  </label>
+                </>
+              )}
             </div>
           )}
 
@@ -564,7 +616,6 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               pdfPageCount={pdfPageCount}
               onFileConfirmed={confirmSourceFile}
               onNextStep={() => handleNavigateNextStep('book_source_type')}
-              fileInputRef={fileInputRef}
               pickerRef={sourcePdfPickerRef}
               bookId={bookId}
             />
@@ -651,6 +702,11 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
             </div>
           ) : (
             <div className={`text-center p-10 bg-[var(--ui-bg-card)] rounded-[${radius.modal}] border-2 border-dashed border-[var(--ui-border)] max-w-md space-y-3`}>
+              {(filePickError || pdfLoadErrorCode) && (
+                <p role="alert" className="text-xs font-semibold text-[var(--color-status-danger-text)]">
+                  {filePickError || (pdfLoadErrorCode ? PDF_LOAD_ERROR_TEXT[pdfLoadErrorCode] : null)}
+                </p>
+              )}
               <h3 className="text-base font-bold text-[var(--ui-text-primary)]">{t.bookStudio.previewExportStep.emptyTitle}</h3>
               <p className="text-xs text-[var(--ui-text-secondary)]">
                 {t.bookStudio.studioShell.emptyBody}

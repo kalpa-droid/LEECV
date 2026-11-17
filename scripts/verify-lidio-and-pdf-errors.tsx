@@ -36,6 +36,8 @@ import {
   classifyPdfSourceError,
   isPdfSourceError,
   pdfSourceErrorFromUnknown,
+  isPdfLikeFile,
+  isFatalPdfLoadError,
 } from '../src/shared/core/book-engine/pdfSourceClassifier';
 
 let failures = 0;
@@ -164,6 +166,13 @@ function verifyClassifier() {
   expectTrue(pdfSourceErrorFromUnknown(typed) === typed, 'no se re-envuelve un error ya tipado');
   const wrapped = pdfSourceErrorFromUnknown(namedError('InvalidPDFException'));
   expectTrue(wrapped.code === 'corrupt', 'los errores crudos se envuelven con su código');
+
+  expectTrue(isPdfLikeFile({ name: 'sin-extension', type: 'application/pdf' }), 'isPdfLikeFile: tipo MIME application/pdf sin extensión .pdf');
+  expectTrue(isPdfLikeFile({ name: 'libro.PDF', type: '' }), 'isPdfLikeFile: extensión .PDF aunque no haya MIME');
+  expectTrue(!isPdfLikeFile({ name: 'foto.png', type: 'image/png' }), 'isPdfLikeFile: rechaza archivos que no son PDF');
+  expectTrue(isFatalPdfLoadError(namedError('PasswordException')), 'isFatalPdfLoadError: PasswordException corta la carga');
+  expectTrue(isFatalPdfLoadError(namedError('InvalidPDFException')), 'isFatalPdfLoadError: InvalidPDFException corta la carga');
+  expectTrue(!isFatalPdfLoadError(namedError('MissingPDFException')), 'isFatalPdfLoadError: MissingPDFException no es fatal');
 }
 
 function verifyPdfWiring() {
@@ -182,6 +191,11 @@ function verifyPdfWiring() {
     'PDF_LOAD_ERROR_TEXT',                                       // aviso por código en el contenedor
     'protectionNoticeUnlocked',                                  // aviso paso 1 (desbloqueado)
     'protectionNotice',                                          // aviso paso 1 (protegido)
+    'book-source-pdf-input',                                     // <input> persistente del selector de respaldo
+    'handlePersistentFileChosen',                                // validación application/pdf | .pdf
+    'setIsPanelOpen(true)',                                      // el trigger abre el panel lateral
+    'reopenFailed',                                              // "Reabrir mi PDF" sin permiso: aviso + <label>
+    "role=\"alert\"",                                             // el aviso también se ve en el panel principal
   ]);
   expectTrue(missingContent.length === 0, 'BookStudioContent: detección + rescate automático + challenge de contraseña + avisos',
     missingContent.length ? `falta: ${missingContent.join(', ')}` : 'todo presente');
@@ -195,6 +209,11 @@ function verifyPdfWiring() {
     'isPdfSourceError',
     "err.code !== 'password'", // el challenge inline reemplaza el mensaje genérico
     'PDF_SOURCE_ERROR_TEXT',
+    'isPdfLikeFile',                              // acepta application/pdf sin .pdf
+    'isNativePickerFailedSession',                // recuerda el fallo del selector nativo en la sesión
+    'markNativePickerFailedSession',
+    '<label',                                     // tarjeta de respaldo = <label htmlFor>, sin JS
+    'htmlFor="book-source-pdf-input"',
   ]);
   expectTrue(missingStep.length === 0, 'BookSourceTypeStep: aviso tipado por código (sin genérico para password)',
     missingStep.length ? `falta: ${missingStep.join(', ')}` : 'todo presente');
@@ -219,6 +238,8 @@ function verifyPdfWiring() {
     'cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/cmaps/', // CDN como respaldo
     'data: new Uint8Array(data).slice()', // copia fresca por intento (buffer intacto para pdf-lib)
     '...(password ? { password } : {})',  // la clave viaja solo en memoria
+    'isFatalPdfLoadError',            // importado del clasificador: PasswordException/InvalidPDFException cortan sin reintentos
+    'if (isFatalPdfLoadError(err)) throw err;', // corte fatal: 0 reintentos de cMaps
   ]);
   expectTrue(missingLoader.length === 0, 'pdfjsWorkerSetup: carga cMaps local→CDN con copia fresca por intento y clave en memoria',
     missingLoader.length ? `falta: ${missingLoader.join(', ')}` : 'todo presente');

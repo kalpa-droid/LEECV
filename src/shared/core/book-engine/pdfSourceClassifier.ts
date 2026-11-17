@@ -58,3 +58,24 @@ export function pdfSourceErrorFromUnknown(err: unknown, fileSize?: number): PdfS
   const detail = err instanceof Error ? err.message : undefined;
   return new PdfSourceError(code, detail ? `${code}: ${detail}` : code);
 }
+
+/**
+ * ¿El archivo elegido parece un PDF? Acepta si file.type === application/pdf
+ * (p. ej. Google Drive / Files en móvil) o si el nombre termina en .pdf
+ * (case-insensitive). No exige ambas.
+ */
+export function isPdfLikeFile(file: { name?: string; type?: string } | null | undefined): boolean {
+  if (!file) return false;
+  if (file.type === 'application/pdf') return true;
+  return (file.name || '').toLowerCase().endsWith('.pdf');
+}
+
+/**
+ * ¿El error de carga de pdf.js es fatal (no tiene sentido reintentar cMaps)?
+ * PasswordException = PDF protegido con contraseña; InvalidPDFException = el
+ * archivo no es un PDF válido. Ambos fallarían igual en los 3 intentos.
+ */
+export function isFatalPdfLoadError(err: unknown): boolean {
+  const name = (err as { name?: unknown } | null | undefined)?.name;
+  return name === 'PasswordException' || name === 'InvalidPDFException';
+}

@@ -10,6 +10,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 // Esa era la causa real de que las miniaturas de página quedaran girando
 // para siempre sin cargar nunca.
 import pdfjsWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+import { isFatalPdfLoadError } from '../book-engine/pdfSourceClassifier';
 
 let configured = false;
 
@@ -54,6 +55,7 @@ export async function loadPdfDocumentWithCmaps(
         ...attempt.params,
       }).promise;
     } catch (err) {
+      if (isFatalPdfLoadError(err)) throw err; // corte: reintentar cMaps no cambia nada
       lastError = err;
       console.warn(`[pdf.js] No se pudo abrir el PDF con ${attempt.label}:`, err);
     }
