@@ -137,6 +137,14 @@
       "destination": "/api/admin-api?action=resolve-pending-grant"
     },
     {
+      "source": "/api/admin/ai-providers-status",
+      "destination": "/api/admin-api?action=ai-providers-status"
+    },
+    {
+      "source": "/api/admin/clear-ai-cooldowns",
+      "destination": "/api/admin-api?action=clear-ai-cooldowns"
+    },
+    {
       "source": "/api/approve-manual-claim",
       "destination": "/api/admin-api?action=approve-manual-claim"
     },

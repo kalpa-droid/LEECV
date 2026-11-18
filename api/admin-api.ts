@@ -4,6 +4,8 @@ import { requireRateLimit } from './_lib/rateLimiter.js';
 import { errorResponse, successResponse } from './_lib/apiResponse.js';
 import { diagnoseAllProviders } from './_lib/paymentProviders/registry.js';
 import type { ProviderStatus } from './_lib/paymentProviders/types.js';
+import { AI_PROVIDERS } from './_lib/aiProviders/registry.js';
+import { getAiKeyCooldownSummary, clearExpiredCooldowns } from './_lib/aiProviders/keyRotation.js';
 import { supabaseAdmin } from './_lib/supabaseAdmin.js';
 import { validateBody } from './_lib/validateBody.js';
 import { serverDal } from './_lib/serverDal.js';
@@ -12,6 +14,9 @@ import { captureBackendException } from './_lib/sentryBackend.js';
 
 let cachedStatus: { data: Record<string, ProviderStatus>; timestamp: number } | null = null;
 const CACHE_TTL_MS = 5 * 60 * 1000;
+// Cache del diagnóstico IA: cada poll del panel no debe re-pegar a Groq/Gemini
+// más de una vez cada 5 minutos (ahorra cuota real de las keys rotadas).
+let cachedAiStatus: { data: Record<string, unknown>; timestamp: number } | null = null;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const admin = await requireAdmin(req, res);
@@ -47,6 +52,95 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       lastCheckedAt: new Date(now).toISOString(),
       cached: false,
     });
+  }
+
+  if (action === 'ai-providers-status') {
+    if (req.method !== 'GET') return errorResponse(res, 405, 'Método HTTP no permitido');
+
+    const rateOk = await requireRateLimit(req, res, `admin:${admin.user.id}:ai-providers-status`, {
+      maxRequests: 20,
+      windowSeconds: 60,
+    });
+    if (!rateOk) return;
+
+    const forcePing = req.query.forcePing === 'true';
+    const now = Date.now();
+    if (!forcePing && cachedAiStatus && (now - cachedAiStatus.timestamp < CACHE_TTL_MS)) {
+      return successResponse(res, {
+        ...cachedAiStatus.data,
+        lastCheckedAt: new Date(cachedAiStatus.timestamp).toISOString(),
+        cached: true,
+      });
+    }
+
+    const providers = Object.values(AI_PROVIDERS);
+
+    // Diagnóstico REAL server-side de los motores de IA (antes el panel leía
+    // VITE_*_API_KEY en el navegador, que nunca existe → falso missing_vars).
+    // El ping y el resumen de cooldowns pueden fallar por proveedor sin tumbar
+    // el resto (fail-safe; getAiKeyCooldownSummary y el catch no lanzan).
+    const results = await Promise.allSettled(
+      providers.map(async (provider) => {
+        const pingResult = await provider.ping().catch(() => ({
+          status: 'error' as const,
+          label: `Sin respuesta de ${provider.displayName}`,
+          model: provider.defaultModel,
+        }));
+        const cooldown = await getAiKeyCooldownSummary(provider.id);
+        return { id: provider.id, ...pingResult, ...cooldown };
+      })
+    );
+
+    const out: Record<string, unknown> = {};
+    results.forEach((r, i) => {
+      const id = providers[i].id;
+      if (r.status === 'fulfilled') {
+        out[id] = r.value;
+      } else {
+        out[id] = {
+          id,
+          status: 'error',
+          label: `Sin respuesta del diagnóstico de ${id}`,
+          model: providers[i].defaultModel,
+          configuredKeys: 0,
+          pausedKeys: 0,
+          source: 'database-unavailable',
+        };
+      }
+    });
+
+    cachedAiStatus = { data: out, timestamp: now };
+
+    return successResponse(res, {
+      ...out,
+      lastCheckedAt: new Date(now).toISOString(),
+      cached: false,
+    });
+  }
+
+  if (action === 'clear-ai-cooldowns') {
+    if (req.method !== 'POST') return errorResponse(res, 405, 'Método no permitido');
+
+    const rateOk = await requireRateLimit(req, res, `admin:${admin.user.id}:clear-ai-cooldowns`, {
+      maxRequests: 5,
+      windowSeconds: 60,
+    });
+    if (!rateOk) return;
+
+    try {
+      // Solo borra pausas YA EXPIRADAS (filas que el cron diario todavía no
+      // limpió): una pausa activa de rate-limit real NO se cancela desde el
+      // panel, porque eso re-forzaría una key que sigue en 429 en el proveedor.
+      const cleared = await clearExpiredCooldowns();
+      if (!cleared) {
+        return errorResponse(res, 503, 'La base de datos no respondió; las pausas quedaron sin cambios');
+      }
+      return successResponse(res, { success: true });
+    } catch (err: any) {
+      console.error('[CRITICAL ADMIN API ERROR - clear-ai-cooldowns]:', err?.message || err, err?.stack);
+      await captureBackendException(err, 'admin-api:clear-ai-cooldowns');
+      return errorResponse(res, 500, 'Error al limpiar las pausas de claves');
+    }
   }
 
   if (action === 'list-processed-payments') {

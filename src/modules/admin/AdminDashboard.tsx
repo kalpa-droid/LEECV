@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
-  listUsers,
   setUserPlan,
   setPdfExportAccess,
   getBasicStats,
   listPendingClaims, reviewManualClaim,
-  listAdminNotifications, markNotificationRead,
+  listAdminNotifications, markNotificationRead, markAllNotificationsRead,
   getIntegrationsStatus, getAiProvidersStatus, listCustomers
 } from './adminService';
 import { getCurrentProfile, logout } from '../../shared/core/auth/authService';
@@ -14,60 +13,25 @@ import { StorageDriveTab } from './components/StorageDriveTab';
 import { SentryReportsTab } from './components/SentryReportsTab';
 import { PaymentsAdminTab } from './components/PaymentsAdminTab';
 import { AiTelemetryTab } from './components/AiTelemetryTab';
+import { AdminOverviewTab } from './components/AdminOverviewTab';
+import { AuditAndErrorsTab } from './components/AuditAndErrorsTab';
+import { TemplateManagementTab } from './components/TemplateManagementTab';
 import { UsersTab } from './components/UsersTab';
 import { useToast } from '../../shared/core/ui/Toast';
 import { useConfirm } from '../../shared/core/ui/ConfirmDialog';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
 import { button, elevationSystem, radius } from '../../shared/core/uiDesignSystem';
-import { PAYMENT_PROVIDER_CATALOG, getPaymentProviderBadge } from '../../shared/core/payments/paymentProviderCatalog';
 
-import { 
-  Users, Crown, LogOut, RefreshCw, CreditCard, HardDrive, 
-  ShieldCheck, CheckCircle2, AlertCircle, AlertTriangle, XCircle, Sparkles, 
-  Search, ChevronLeft, ChevronRight, Bell, Check, Layout as LayoutIcon, Clock 
+import {
+  Users, Crown, LogOut, CreditCard, HardDrive,
+  ShieldCheck, Sparkles, Layout as LayoutIcon, ShieldAlert, Palette
 } from 'lucide-react';
-
-function renderGatewayCard(name: string, currency: string, data: any) {
-  const status = data?.status || 'checking';
-  const label = data?.label || 'Comprobando estado...';
-
-  const isSuccess = status === 'active';
-  const isWarning = status === 'missing_vars';
-  const isDanger = status === 'invalid_credentials' || status === 'error' || status === 'webhook_not_found';
-
-  const Icon = isSuccess ? CheckCircle2 : isWarning ? AlertTriangle : isDanger ? XCircle : Clock;
-
-  return (
-    <div className={`p-3.5 rounded-[${radius.card}] border flex flex-col justify-between space-y-2 ${
-      isSuccess
-        ? 'bg-[var(--color-status-success-muted)] border-[var(--color-status-success-base)]/30 text-[var(--color-status-success-text)]'
-        : isWarning
-        ? 'bg-[var(--color-status-warning-muted)] border-[var(--color-status-warning-base)]/30 text-[var(--color-status-warning-text)]'
-        : isDanger
-        ? 'bg-[var(--color-status-danger-muted)] border-[var(--color-status-danger-base)]/30 text-[var(--color-status-danger-text)]'
-        : 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)]'
-    }`}>
-      <div className="flex items-center justify-between gap-2">
-        <div>
-          <p className="text-xs font-black">{name} ({currency})</p>
-          <p className="text-[10px] font-bold opacity-90 leading-snug">{label}</p>
-        </div>
-        <Icon className="w-4 h-4 shrink-0" />
-      </div>
-      {data?.missingVars && data.missingVars.length > 0 && (
-        <p className="text-[9px] font-mono text-[var(--color-status-warning-text)] bg-[var(--ui-bg-card)] px-1.5 py-0.5 rounded border border-[var(--color-status-warning-base)]/20">
-          Falta: {data.missingVars.join(', ')}
-        </p>
-      )}
-    </div>
-  );
-}
 
 export default function AdminDashboard() {
   const { showError, showSuccess } = useToast();
   const { confirm } = useConfirm();
 
-  const [adminTab, setAdminTab] = useState<'users' | 'payments' | 'storage' | 'sentry' | 'aiTelemetry'>('users');
+  const [adminTab, setAdminTab] = useState<'overview' | 'users' | 'payments' | 'storage' | 'sentry' | 'aiTelemetry' | 'audit' | 'templates'>('overview');
   const [profile, setProfile] = useState<any>(undefined);
   const [users, setUsers] = useState<any[]>([]);
   const [stats, setStats] = useState({ totalUsers: 0, proUsers: 0, activeSubscriptions: 0 });
@@ -88,7 +52,7 @@ export default function AdminDashboard() {
       async () => {
         const [status, aiStatus] = await Promise.all([
           getIntegrationsStatus(forcePing),
-          getAiProvidersStatus()
+          getAiProvidersStatus(forcePing)
         ]);
         setIntegrations(status);
         setAiProviders(aiStatus);
@@ -235,7 +199,19 @@ export default function AdminDashboard() {
     );
   }
 
-  const unreadNotifCount = notifications.filter(n => !n.read).length;
+  async function handleMarkAllNotifRead() {
+    await withErrorHandling(
+      async () => {
+        await markAllNotificationsRead();
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      },
+      {
+        context: 'Marcar todas las Notificaciones como Leídas',
+        errorMessage: 'No se pudieron marcar las notificaciones.',
+        notify: (msg) => showError(msg)
+      }
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[var(--color-neutral-surface-cream)] text-[var(--color-neutral-text-primary)] font-sans">
@@ -297,6 +273,16 @@ export default function AdminDashboard() {
         <div className={`flex items-center gap-2 bg-[var(--ui-bg-card)] p-1.5 rounded-[${radius.modal}] border border-[var(--color-neutral-border)] ${elevationSystem.raised} overflow-x-auto whitespace-nowrap`}>
 
           <button
+            onClick={() => setAdminTab('overview')}
+            className={adminTab === 'overview'
+              ? `${button.primary} px-4 py-2 text-xs font-black flex items-center gap-2`
+              : `${button.secondary} px-4 py-2 text-xs font-black flex items-center gap-2`}
+          >
+            <LayoutIcon className="w-4 h-4" />
+            <span>Resumen y Operaciones</span>
+          </button>
+
+          <button
             onClick={() => setAdminTab('users')}
             className={adminTab === 'users'
               ? `${button.primary} px-4 py-2 text-xs font-black flex items-center gap-2`
@@ -327,6 +313,16 @@ export default function AdminDashboard() {
           </button>
 
           <button
+            onClick={() => setAdminTab('audit')}
+            className={adminTab === 'audit'
+              ? `${button.primary} px-4 py-2 text-xs font-black flex items-center gap-2`
+              : `${button.secondary} px-4 py-2 text-xs font-black flex items-center gap-2`}
+          >
+            <ShieldAlert className="w-4 h-4 text-[var(--color-status-danger-text)]" />
+            <span>Auditoría y Errores</span>
+          </button>
+
+          <button
             onClick={() => setAdminTab('storage')}
             className={adminTab === 'storage'
               ? `${button.primary} px-4 py-2 text-xs font-black flex items-center gap-2`
@@ -334,6 +330,16 @@ export default function AdminDashboard() {
           >
             <HardDrive className="w-4 h-4" />
             <span>Almacenamiento, Servidores & Drive</span>
+          </button>
+
+          <button
+            onClick={() => setAdminTab('templates')}
+            className={adminTab === 'templates'
+              ? `${button.primary} px-4 py-2 text-xs font-black flex items-center gap-2`
+              : `${button.secondary} px-4 py-2 text-xs font-black flex items-center gap-2`}
+          >
+            <Palette className="w-4 h-4 text-[var(--color-accent-purple-text)]" />
+            <span>Plantillas de CV</span>
           </button>
 
           <button
@@ -347,7 +353,19 @@ export default function AdminDashboard() {
           </button>
         </div>
 
-        {adminTab === 'users' ? (
+        {adminTab === 'overview' ? (
+          <AdminOverviewTab
+            integrations={integrations}
+            aiProviders={aiProviders}
+            loadingIntegrations={loadingIntegrations}
+            onRecheckIntegrations={() => fetchIntegrations(true)}
+            notifications={notifications}
+            onMarkNotifRead={handleMarkNotifRead}
+            onMarkAllNotifRead={handleMarkAllNotifRead}
+            claims={claims}
+            onReviewClaim={handleReviewClaim}
+          />
+        ) : adminTab === 'users' ? (
           <UsersTab
             users={users}
             searchQuery={searchQuery}
@@ -364,151 +382,15 @@ export default function AdminDashboard() {
           <SentryReportsTab />
         ) : adminTab === 'payments' ? (
           <PaymentsAdminTab />
+        ) : adminTab === 'audit' ? (
+          <AuditAndErrorsTab />
         ) : adminTab === 'storage' ? (
           <StorageDriveTab />
+        ) : adminTab === 'templates' ? (
+          <TemplateManagementTab />
         ) : adminTab === 'aiTelemetry' ? (
           <AiTelemetryTab />
-        ) : (
-          <div className="space-y-6">
-
-        {/* Notificaciones de Administración con Badge visual de campana */}
-        {notifications.length > 0 && (
-          <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] space-y-3`}>
-            <div className="flex items-center justify-between border-b border-[var(--color-neutral-border)] pb-3">
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <Bell className="w-5 h-5 text-[var(--color-accent-text)]" />
-                  {unreadNotifCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-black text-[9px] rounded-full flex items-center justify-center animate-pulse">
-                      {unreadNotifCount}
-                    </span>
-                  )}
-                </div>
-                <h2 className="font-extrabold text-sm text-[var(--color-neutral-text-primary)]">🔔 Eventos & Notificaciones de Pagos / Sistema</h2>
-              </div>
-              {unreadNotifCount > 0 && (
-                <span className="px-2.5 py-0.5 rounded-full bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-xs font-black">
-                  {unreadNotifCount} nueva{unreadNotifCount > 1 ? 's' : ''}
-                </span>
-              )}
-            </div>
-
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-              {notifications.map((notif) => (
-                <div 
-                  key={notif.id} 
-                  className={`p-3 rounded-[${radius.card}] border flex items-center justify-between gap-3 text-xs transition ${
-                    notif.read ? 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-muted)]' : 'bg-[var(--color-status-warning-muted)] border-[var(--color-status-warning-base)]/30 text-[var(--color-neutral-text-primary)] font-medium'
-                  }`}
-                >
-                  <div className="space-y-0.5">
-                    <p className="font-bold text-[var(--color-neutral-text-primary)]">{notif.title || notif.type}</p>
-                    <p className="text-[11px] text-[var(--color-neutral-text-secondary)]">{notif.detail}</p>
-                  </div>
-                  {!notif.read && (
-                    <button 
-                      onClick={() => handleMarkNotifRead(notif.id)}
-                      className={`p-1 rounded-[${radius.control}] text-[var(--color-neutral-text-muted)] hover:text-[var(--color-status-success-text)] hover:bg-[var(--color-status-success-muted)] transition cursor-pointer`}
-                      title="Marcar como leída"
-                    >
-                      <Check className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Panel de Reclamos y Soporte Pendiente */}
-        {claims.length > 0 && (
-          <div className={`bg-[var(--color-status-warning-muted)] border-2 border-[var(--color-status-warning-base)]/40 rounded-[${radius.modal}] p-5 ${elevationSystem.raised} space-y-3`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-[var(--color-status-warning-text)]" />
-                <h2 className="font-extrabold text-sm text-[var(--color-status-warning-text)]">📩 Reclamos de Activación y Comprobantes Pendientes</h2>
-              </div>
-              <span className="px-2.5 py-0.5 rounded-full bg-[var(--color-status-warning-base)] text-[var(--color-accent-on-base)] text-xs font-black">
-                {claims.length} Pendiente{claims.length > 1 ? 's' : ''}
-              </span>
-            </div>
-
-            <div className="space-y-2">
-              {claims.map((claim) => (
-                <div key={claim.id} className={`bg-[var(--ui-bg-card)] rounded-[${radius.card}] p-3.5 border border-[var(--color-status-warning-base)]/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs`}>
-                  <div className="space-y-0.5">
-                    <p className="font-black text-[var(--color-neutral-text-primary)]">{claim.email}</p>
-                    <p className="text-[11px] text-[var(--color-neutral-text-secondary)]">
-                      Método: <strong>{claim.method}</strong> ({claim.amount}) — Comprobante: <code>{claim.proof_id || claim.proofId || 'N/A'}</code>
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleReviewClaim(claim, true)}
-                      className={`px-3 py-1.5 bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-status-success-on-base)] font-extrabold rounded-[${radius.card}] transition ${elevationSystem.raised} cursor-pointer`}
-                    >
-                      ✅ Aprobar y Activar
-                    </button>
-                    <button
-                      onClick={() => handleReviewClaim(claim, false)}
-                      className={`px-3 py-1.5 bg-[var(--color-status-danger-base)] hover:opacity-90 text-black font-extrabold rounded-[${radius.card}] transition ${elevationSystem.raised} cursor-pointer`}
-                    >
-                      ❌ Rechazar
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Diagnóstico Real de Pasarelas & Webhooks */}
-        <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] space-y-3`}>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-[var(--color-neutral-border)] pb-3 gap-2">
-            <div className="flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-[var(--color-secondary-text)]" />
-              <div>
-                <h2 className="font-extrabold text-sm text-[var(--color-neutral-text-primary)]">Diagnóstico de Pasarelas & Webhooks en Tiempo Real</h2>
-                <p className="text-[10px] text-[var(--color-neutral-text-secondary)] font-medium">
-                  {integrations?.lastCheckedAt
-                    ? `Última comprobación: ${new Date(integrations.lastCheckedAt).toLocaleTimeString('es-AR')}`
-                    : 'Comprobación en vivo del estado de API keys y webhooks'}
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => fetchIntegrations(true)}
-              disabled={loadingIntegrations}
-              className={`px-3 py-1.5 text-xs font-bold bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] rounded-[${radius.card}] border border-[var(--color-neutral-border)] flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50`}
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${loadingIntegrations ? 'animate-spin' : ''}`} />
-              <span>{loadingIntegrations ? 'Verificando...' : 'Re-comprobar'}</span>
-            </button>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            {PAYMENT_PROVIDER_CATALOG.map((p) => (
-              <React.Fragment key={p.id}>
-                {renderGatewayCard(p.name, p.defaultCurrency, integrations?.[p.id])}
-              </React.Fragment>
-            ))}
-          </div>
-
-          {/* Estado de Proveedores de IA Multi-motor */}
-          <div className="pt-3 border-t border-[var(--color-neutral-border)]/50 mt-3">
-            <div className="flex items-center gap-1.5 mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
-              <p className="text-[11px] font-extrabold text-[var(--color-neutral-text-primary)]">Motores de Inteligencia Artificial (Créditos & Redacción)</p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {renderGatewayCard('Groq Cloud (Llama 3 / Mixtral)', 'IA', aiProviders?.groq)}
-              {renderGatewayCard('Google AI Studio (Gemini 1.5)', 'IA', aiProviders?.gemini)}
-            </div>
-          </div>
-        </div>
-        </div>
-        )}
+        ) : null}
 
       </main>
     </div>

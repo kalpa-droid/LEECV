@@ -128,6 +128,71 @@ export async function clearExpiredCooldowns(): Promise<boolean> {
   return true;
 }
 
+export interface AiKeyCooldownSummary {
+  provider: string;
+  /** Cantidad de claves configuradas en el entorno para el proveedor. */
+  configuredKeys: number;
+  /** Claves pausadas AHORA (union DB + memoria local de esta instancia). */
+  pausedKeys: number;
+  /** De dónde salió la verdad de pausas: DB compartida, solo memoria local, o DB inaccesible. */
+  source: 'database' | 'memory-only' | 'database-unavailable';
+}
+
+/**
+ * Resumen de cooldowns para el panel admin (SOLO conteos).
+ *
+ * Devuelve cantidades, nunca material de claves: ni la key en texto ni su
+ * SHA-256 salen de este módulo. La tabla `ai_key_cooldowns` solo es legible
+ * vía service_role, así que este resumen se consume desde `admin-api.ts`
+ * (tras `requireAdmin`), nunca desde el navegador.
+ */
+export async function getAiKeyCooldownSummary(providerId: string): Promise<AiKeyCooldownSummary> {
+  const keys = getEnvKeysForProvider(providerId);
+  const now = Date.now();
+  const nowIso = new Date(now).toISOString();
+
+  const memoryPausedKeys = keys.filter(k => isMemoryPaused(providerId, k, now));
+
+  // La DB no respondió (timeout o error): lo que queda visible es solo el
+  // estado local de esta instancia (fail-safe, igual que la rotación).
+  const base: AiKeyCooldownSummary = {
+    provider: providerId,
+    configuredKeys: keys.length,
+    pausedKeys: memoryPausedKeys.length,
+    source: memoryPausedKeys.length > 0 ? 'memory-only' : 'database-unavailable',
+  };
+
+  const query = supabaseAdmin
+    .from('ai_key_cooldowns')
+    .select('key_hash')
+    .eq('provider', providerId)
+    .gt('paused_until', nowIso);
+
+  const result = await withTimeout(query, null as any);
+  if (!result) return base;
+  if (result.error) {
+    console.warn('[keyRotation] Error leyendo resumen de cooldowns:', result.error.message);
+    return base;
+  }
+
+  // Conteo por unión de hashes: una key puede estar pausada solo en memoria
+  // local (si la escritura a la DB falló) o solo en la DB (otra instancia).
+  const pausedHashSet = new Set<string>();
+  const dbHashes = new Set((result.data || []).map((row: any) => String(row.key_hash)));
+  keys.forEach(k => {
+    if (dbHashes.has(hashKey(k)) || isMemoryPaused(providerId, k, now)) {
+      pausedHashSet.add(hashKey(k));
+    }
+  });
+
+  return {
+    provider: providerId,
+    configuredKeys: keys.length,
+    pausedKeys: pausedHashSet.size,
+    source: 'database',
+  };
+}
+
 export async function getNextAvailableKey(providerId: string): Promise<string | null> {
   const keys = getEnvKeysForProvider(providerId);
   if (keys.length === 0) return null;
