@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import { ShieldCheck, ExternalLink, AlertTriangle, Send, CheckCircle2, Activity, Terminal } from 'lucide-react';
 import { reportException, reportMessage } from '../../../shared/core/utils/monitoring';
+import { env } from '../../../shared/core/config/env';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
+
+const SENTRY_DASHBOARD_URL = 'https://leecv.sentry.io/issues/';
 
 export function SentryReportsTab() {
   const { showSuccess, showError } = useToast();
   const [testingError, setTestingError] = useState(false);
 
-  const sentryDsn = 'https://ee85a68c26a11080f175541ed2c2a593@o4512035779182592.ingest.us.sentry.io/4512035802251264';
-  const sentryDashboardUrl = 'https://leecv.sentry.io/issues/';
+  const sentryDsn = env.SENTRY_DSN || 'No configurado';
+  const sentryDashboardUrl = SENTRY_DASHBOARD_URL;
 
   const handleSendTestError = () => {
     setTestingError(true);

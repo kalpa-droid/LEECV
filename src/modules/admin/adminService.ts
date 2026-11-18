@@ -33,6 +33,7 @@ export async function getPlatformMetrics() {
 
 export const listUsers = listAllUsers;
 export const getBasicStats = getPlatformMetrics;
+export const getPublishedCvsCount = () => dal.publishedCvs.countAll();
 
 export async function listAuditLogs(searchQuery: string = '') {
   return await dal.adminAuditLogs.list(searchQuery);

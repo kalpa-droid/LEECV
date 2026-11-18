@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 2,
   minor: 21,
-  patch: 1,
-  label: 'V2.21.1',
+  patch: 2,
+  label: 'V2.21.2',
   lastUpdated: '2026-11-18',
   lastAgent: '@opencode',
-  stage: 'Fix pantalla en blanco en /admin (rama fix/admin-white-screen): getCurrentProfile() ya no rechaza ante sesion invalida/red/lock de Supabase (try/catch -> null); checkSession() con timeout de 15s y pantalla de error con boton Reintentar; pantalla Verificando sesion visible en vez de return null; verificacion de sesion una sola vez al montar y carga paginada separada ([profile?.role, page, searchQuery]); tokens de contraste corregidos a var(--ui-preview-bg)/var(--ui-bg-panel) en Suspense fallback (main.tsx), aviso de permisos (AdminDashboard), fondo de AppShell y pastillas de sub-pestanas (TemplateManagementTab); fix PRESET_LIST Proxy (Symbol.iterator estricto y bound iterator sobre snapshot) que devolvia Array.prototype.values para prop=0 y rompia TemplateManagementTab en el primer render; guard de lista vacia en TemplateManagementTab; tests nuevos (presetRegistry + AdminDashboard); bump PATCH V2.21.0 -> V2.21.1.',
+  stage: 'PR-C Panel Admin performance/metricas: debounce 350ms en busqueda de clientes (debouncedSearchQuery) — el input pinta inmediato pero la consulta espera inactividad; fix de closure viejo en el polling de 45s (loadEverythingRef, deps [profile?.role]) — ya no recarga con page=0 y busqueda vacia pisandole la navegacion al admin; metrica real "CVs Publicados" (published_cvs, dal.publishedCvs.countAll head:true) reemplaza el hardcode "500 MB Capacidad Base DB Supabase"; DSN de Sentry leido desde env (env.SENTRY_DSN) en SentryReportsTab en vez de literal duplicado (dashboard URL como const de modulo); dal.publishedCvs.countAll agregado (espeja cvs.countAll, nunca rechaza); adminService.getPublishedCvsCount; bump PATCH V2.21.1 -> V2.21.2.',
 } as const;

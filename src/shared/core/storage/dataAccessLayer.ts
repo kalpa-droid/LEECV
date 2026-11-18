@@ -256,6 +256,16 @@ export const dal = {
         supabase.from('published_cvs').update({ updated_at: new Date().toISOString() }).eq('slug', slug)
       );
       return res.success;
+    },
+
+    async countAll(): Promise<number> {
+      if (!supabase) return 0;
+      try {
+        const { count } = await supabase.from('published_cvs').select('*', { count: 'exact', head: true });
+        return count || 0;
+      } catch {
+        return 0;
+      }
     }
   },
 

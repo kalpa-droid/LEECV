@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   setUserPlan,
   setPdfExportAccess,
   getBasicStats,
+  getPublishedCvsCount,
   listPendingClaims, reviewManualClaim,
   listAdminNotifications, markNotificationRead, markAllNotificationsRead,
   getIntegrationsStatus, getAiProvidersStatus, listCustomers
@@ -24,7 +25,7 @@ import { button, elevationSystem, radius } from '../../shared/core/uiDesignSyste
 
 import {
   Users, Crown, LogOut, CreditCard, HardDrive,
-  ShieldCheck, Sparkles, Layout as LayoutIcon, ShieldAlert, Palette, RefreshCw
+  ShieldCheck, Sparkles, Layout as LayoutIcon, ShieldAlert, Palette, RefreshCw, Globe
 } from 'lucide-react';
 
 /** Tiempo máximo de espera para verificar la sesión antes de ofrecer "Reintentar". */
@@ -59,6 +60,15 @@ export default function AdminDashboard() {
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 50;
+  const [publishedCount, setPublishedCount] = useState<number | null>(null);
+  // El input pinta el valor inmediato, pero la consulta a la red espera
+  // 350ms de inactividad para no disparar una request por tecla.
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearchQuery(searchQuery), 350);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   async function fetchIntegrations(forcePing = false) {
     setLoadingIntegrations(true);
@@ -85,17 +95,19 @@ export default function AdminDashboard() {
     fetchIntegrations(false);
     await withErrorHandling(
       async () => {
-        const [customersData, s, claimList, notifList] = await Promise.all([
-          listCustomers({ page, limit: pageSize, q: searchQuery }),
+        const [customersData, s, claimList, notifList, published] = await Promise.all([
+          listCustomers({ page, limit: pageSize, q: debouncedSearchQuery }),
           getBasicStats(),
           listPendingClaims(),
-          listAdminNotifications()
+          listAdminNotifications(),
+          getPublishedCvsCount(),
         ]);
         setUsers(customersData.customers || []);
         setTotalCount(customersData.totalCount || 0);
         setStats(s || { totalUsers: 0, proUsers: 0, activeSubscriptions: 0 });
         setClaims(claimList || []);
         setNotifications(notifList || []);
+        setPublishedCount(typeof published === 'number' ? published : null);
       },
       {
         context: 'Carga del Panel de Administración',
@@ -121,6 +133,11 @@ export default function AdminDashboard() {
     }
   }
 
+  // Referencia siempre fresca a loadEverything: evita que el polling de 45s
+  // capture una versión vieja con page=0 y búsqueda vacía.
+  const loadEverythingRef = useRef(loadEverything);
+  loadEverythingRef.current = loadEverything;
+
   // La verificación de sesión corre UNA sola vez al montar (no en cada
   // cambio de página/búsqueda).
   useEffect(() => { checkSession(); }, []);
@@ -132,14 +149,14 @@ export default function AdminDashboard() {
       loadEverything();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.role, page, searchQuery]);
+  }, [profile?.role, page, debouncedSearchQuery]);
 
   useEffect(() => {
     if (profile?.role === 'admin') {
-      const timer = setInterval(loadEverything, 45000);
+      const timer = setInterval(() => { loadEverythingRef.current(); }, 45000);
       return () => clearInterval(timer);
     }
-  }, [profile]);
+  }, [profile?.role]);
 
   if (sessionError && !profile) {
     return (
@@ -318,11 +335,11 @@ export default function AdminDashboard() {
 
           <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] flex items-center gap-4`}>
             <div className={`w-12 h-12 rounded-[${radius.card}] bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/30 text-[var(--color-accent-purple-text)] flex items-center justify-center`}>
-              <HardDrive className="w-6 h-6" />
+              <Globe className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-2xl font-black text-[var(--color-neutral-text-primary)]">500 MB</p>
-              <p className="text-xs text-[var(--color-neutral-text-secondary)] font-bold">Capacidad Base DB Supabase</p>
+              <p className="text-2xl font-black text-[var(--color-neutral-text-primary)]">{publishedCount ?? '—'}</p>
+              <p className="text-xs text-[var(--color-neutral-text-secondary)] font-bold">CVs Publicados</p>
             </div>
           </div>
         </div>
