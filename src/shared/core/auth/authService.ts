@@ -127,50 +127,58 @@ export async function logout(): Promise<void> {
   } catch {}
 }
 
-/** Devuelve el usuario logueado (o null) junto a su fila de la tabla profiles. */
+/** Devuelve el usuario logueado (o null) junto a su fila de la tabla profiles.
+ * Nunca rechaza: ante cualquier fallo (sesión corrupta en localStorage,
+ * navigator.locks abortado, timeout o red) devuelve null, para que la UI
+ * pueda mostrar el login en vez de quedar cargando para siempre. */
 export async function getCurrentProfile(): Promise<UserProfile | null> {
   if (!supabase) return null;
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
 
-  // Al restaurar la sesión (o al volver de un login) se reclaman los créditos
-  // pendientes del email. Es idempotente y no frena la lectura del perfil.
-  await claimCreditsOnAuth(user);
+    // Al restaurar la sesión (o al volver de un login) se reclaman los créditos
+    // pendientes del email. Es idempotente y no frena la lectura del perfil.
+    await claimCreditsOnAuth(user);
 
-  let { data: profile, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
+    let { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
 
-  if (error) {
-    console.error('Error leyendo perfil:', error);
-    
-    // Crear fallback y hacer upsert
-    const fallbackProfile = {
-      id: user.id,
-      email: user.email || '',
-      full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Usuario',
-      avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || '',
-      drive_connected: false,
-      created_at: user.created_at || new Date().toISOString(),
-    };
-    
-    // Upsert asincrono para evitar bloquear el UI
-    supabase.from('profiles').upsert(fallbackProfile).then(({ error: upsertError }) => {
-      if (upsertError) {
-        console.error('Error creando perfil de respaldo:', upsertError);
-      }
-    });
+    if (error) {
+      console.error('Error leyendo perfil:', error);
 
-    profile = fallbackProfile;
+      // Crear fallback y hacer upsert
+      const fallbackProfile = {
+        id: user.id,
+        email: user.email || '',
+        full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Usuario',
+        avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || '',
+        drive_connected: false,
+        created_at: user.created_at || new Date().toISOString(),
+      };
+
+      // Upsert asincrono para evitar bloquear el UI
+      supabase.from('profiles').upsert(fallbackProfile).then(({ error: upsertError }) => {
+        if (upsertError) {
+          console.error('Error creando perfil de respaldo:', upsertError);
+        }
+      });
+
+      profile = fallbackProfile;
+    }
+
+    return {
+      ...profile,
+      avatar_url: profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture,
+      name: profile?.full_name || user.user_metadata?.full_name || user.user_metadata?.name,
+    } as UserProfile;
+  } catch (error) {
+    console.error('Error en getCurrentProfile (sesión inválida, red o lock de Supabase):', error);
+    return null;
   }
-  
-  return {
-    ...profile,
-    avatar_url: profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture,
-    name: profile?.full_name || user.user_metadata?.full_name || user.user_metadata?.name,
-  } as UserProfile;
 }
 
 export function onAuthStateChange(callback: (user: any) => void) {

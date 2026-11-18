@@ -13,10 +13,13 @@ import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 export function TemplateManagementTab() {
   const { showSuccess, showError } = useToast();
   const { confirm } = useConfirm();
-  const [presets, setPresets] = useState<Preset[]>(PRESET_LIST);
-  const [selectedPreset, setSelectedPreset] = useState<Preset>(PRESET_LIST[0]);
+  const [presets, setPresets] = useState<Preset[]>(() => Array.from(PRESET_LIST));
+  const [selectedPreset, setSelectedPreset] = useState<Preset | undefined>(() => Array.from(PRESET_LIST)[0]);
   const [activeSubTab, setActiveSubTab] = useState<'visual' | 'json'>('visual');
-  const [jsonText, setJsonText] = useState<string>(JSON.stringify(PRESET_LIST[0], null, 2));
+  const [jsonText, setJsonText] = useState<string>(() => {
+    const first = Array.from(PRESET_LIST)[0];
+    return first ? JSON.stringify(first, null, 2) : '';
+  });
   const [, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [harmonyScheme, setHarmonyScheme] = useState<HarmonyScheme>('complementario');
@@ -46,15 +49,17 @@ export function TemplateManagementTab() {
         setSelectedPreset(fetched[0]);
         setJsonText(JSON.stringify(fetched[0], null, 2));
       } else {
-        setPresets(PRESET_LIST);
-        setSelectedPreset(PRESET_LIST[0]);
-        setJsonText(JSON.stringify(PRESET_LIST[0], null, 2));
+        const snapshot = Array.from(PRESET_LIST);
+        setPresets(snapshot);
+        setSelectedPreset(snapshot[0]);
+        setJsonText(snapshot[0] ? JSON.stringify(snapshot[0], null, 2) : '');
       }
     } catch (err) {
       console.warn('Error cargando presets:', err);
-      setPresets(PRESET_LIST);
-      setSelectedPreset(PRESET_LIST[0]);
-      setJsonText(JSON.stringify(PRESET_LIST[0], null, 2));
+      const snapshot = Array.from(PRESET_LIST);
+      setPresets(snapshot);
+      setSelectedPreset(snapshot[0]);
+      setJsonText(snapshot[0] ? JSON.stringify(snapshot[0], null, 2) : '');
     } finally {
       setLoading(false);
     }
@@ -62,7 +67,19 @@ export function TemplateManagementTab() {
 
   useEffect(() => {
     loadPresets();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  if (!selectedPreset) {
+    return (
+      <div className="bg-[var(--ui-bg-card)] rounded-2xl p-6 border border-[var(--color-neutral-border)] text-[var(--ui-text-primary)] space-y-2" role="status">
+        <h2 className="text-base font-black">No hay plantillas disponibles</h2>
+        <p className="text-xs text-[var(--color-neutral-text-secondary)] font-medium">
+          No se encontraron plantillas de CV ni en el registro local ni en Supabase. Revisá tu conexión o recargá la página.
+        </p>
+      </div>
+    );
+  }
 
   const handleSelectPreset = (p: Preset) => {
     setSelectedPreset(p);
@@ -233,7 +250,7 @@ export function TemplateManagementTab() {
                 onClick={() => setActiveSubTab('visual')}
                 className={`px-3 py-1.5 text-xs font-extrabold rounded-[${radius.card}] transition cursor-pointer flex items-center gap-1.5 ${
                   activeSubTab === 'visual'
-                    ? `bg-[var(--color-neutral-text-primary)] text-white ${elevationSystem.raised}`
+                    ? `bg-[var(--ui-preview-bg)] text-white ${elevationSystem.raised}`
                     : 'bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-secondary)] hover:bg-[var(--color-neutral-border)]'
                 }`}
               >
@@ -245,7 +262,7 @@ export function TemplateManagementTab() {
                 onClick={() => setActiveSubTab('json')}
                 className={`px-3 py-1.5 text-xs font-extrabold rounded-[${radius.card}] transition cursor-pointer flex items-center gap-1.5 ${
                   activeSubTab === 'json'
-                    ? `bg-[var(--color-neutral-text-primary)] text-white ${elevationSystem.raised}`
+                    ? `bg-[var(--ui-preview-bg)] text-white ${elevationSystem.raised}`
                     : 'bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-secondary)] hover:bg-[var(--color-neutral-border)]'
                 }`}
               >

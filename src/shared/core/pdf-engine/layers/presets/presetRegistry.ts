@@ -236,18 +236,23 @@ export const PRESET_REGISTRY: Record<string, Preset> = new Proxy({}, {
 });
 
 export const PRESET_LIST: Preset[] = new Proxy([], {
-  get(_, prop: string) {
-    if (prop === 'length') return PRESET_MAP.size;
-    if (prop === 'map') return Array.from(PRESET_MAP.values()).map.bind(Array.from(PRESET_MAP.values()));
-    if (prop === 'forEach') return Array.from(PRESET_MAP.values()).forEach.bind(Array.from(PRESET_MAP.values()));
-    if (prop === 'filter') return Array.from(PRESET_MAP.values()).filter.bind(Array.from(PRESET_MAP.values()));
-    if (prop === 'find') return Array.from(PRESET_MAP.values()).find.bind(Array.from(PRESET_MAP.values()));
-    if (Symbol.iterator in Object(prop)) return Array.from(PRESET_MAP.values())[Symbol.iterator];
-    const index = Number(prop);
-    if (!isNaN(index)) {
-      return Array.from(PRESET_MAP.values())[index];
+  get(_, prop: string | symbol) {
+    const values = Array.from(PRESET_MAP.values());
+    if (prop === 'length') return values.length;
+    if (prop === Symbol.iterator) return values[Symbol.iterator].bind(values);
+    if (typeof prop === 'string') {
+      if (prop === 'map') return values.map.bind(values);
+      if (prop === 'forEach') return values.forEach.bind(values);
+      if (prop === 'filter') return values.filter.bind(values);
+      if (prop === 'find') return values.find.bind(values);
+      const index = Number(prop);
+      if (!Number.isNaN(index) && prop.trim() !== '') {
+        return values[index];
+      }
+      return (values as unknown as Record<string, unknown>)[prop];
     }
-    return (Array.from(PRESET_MAP.values()) as any)[prop];
+    // Símbolos que no sean Symbol.iterator (p. ej. Symbol.toPrimitive): delegar al array real.
+    return (values as unknown as Record<PropertyKey, unknown>)[prop];
   }
 });
 

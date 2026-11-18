@@ -32,7 +32,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   containerRef,
 }) => {
   return (
-    <div className="h-screen h-[100dvh] bg-[var(--color-neutral-text-primary)] text-white flex flex-col font-sans overflow-hidden selection:bg-[var(--color-accent-base)] selection:text-white relative">
+    <div className="h-screen h-[100dvh] bg-[var(--ui-preview-bg)] text-white flex flex-col font-sans overflow-hidden selection:bg-[var(--color-accent-base)] selection:text-white relative">
       <div className="md:pl-24">
         {bannerSlot}
         {navbarSlot}
