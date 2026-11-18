@@ -14,6 +14,7 @@ import { StorageDriveTab } from './components/StorageDriveTab';
 import { SentryReportsTab } from './components/SentryReportsTab';
 import { PaymentsAdminTab } from './components/PaymentsAdminTab';
 import { AiTelemetryTab } from './components/AiTelemetryTab';
+import { PublishedCvsTab } from './components/PublishedCvsTab';
 import { AdminOverviewTab } from './components/AdminOverviewTab';
 import { AuditAndErrorsTab } from './components/AuditAndErrorsTab';
 import { TemplateManagementTab } from './components/TemplateManagementTab';
@@ -45,7 +46,7 @@ export default function AdminDashboard() {
   const { showError, showSuccess } = useToast();
   const { confirm } = useConfirm();
 
-  const [adminTab, setAdminTab] = useState<'overview' | 'users' | 'payments' | 'storage' | 'sentry' | 'aiTelemetry' | 'audit' | 'templates'>('overview');
+  const [adminTab, setAdminTab] = useState<'overview' | 'users' | 'payments' | 'storage' | 'sentry' | 'aiTelemetry' | 'audit' | 'templates' | 'publishedCvs'>('overview');
   const [profile, setProfile] = useState<any>(undefined);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [users, setUsers] = useState<any[]>([]);
@@ -426,6 +427,16 @@ export default function AdminDashboard() {
             <Sparkles className="w-4 h-4 text-[var(--color-accent-text)]" />
             <span>Costos y Telemetría IA</span>
           </button>
+
+          <button
+            onClick={() => setAdminTab('publishedCvs')}
+            className={adminTab === 'publishedCvs'
+              ? `${button.primary} px-4 py-2 text-xs font-black flex items-center gap-2`
+              : `${button.secondary} px-4 py-2 text-xs font-black flex items-center gap-2`}
+          >
+            <Globe className="w-4 h-4 text-[var(--color-accent-purple-text)]" />
+            <span>CVs Publicados</span>
+          </button>
         </div>
 
         {adminTab === 'overview' ? (
@@ -465,6 +476,8 @@ export default function AdminDashboard() {
           <TemplateManagementTab />
         ) : adminTab === 'aiTelemetry' ? (
           <AiTelemetryTab />
+        ) : adminTab === 'publishedCvs' ? (
+          <PublishedCvsTab />
         ) : null}
 
       </main>

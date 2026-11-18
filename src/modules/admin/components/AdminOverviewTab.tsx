@@ -1,13 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Bell, Check, CheckCircle2, AlertTriangle, XCircle, Clock, AlertCircle,
-  RefreshCw, CreditCard, Sparkles, Eraser
+  RefreshCw, CreditCard, Sparkles, Eraser, BarChart3, FileText, Download, Banknote
 } from 'lucide-react';
 import { button, elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { PAYMENT_PROVIDER_CATALOG } from '../../../shared/core/payments/paymentProviderCatalog';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
-import { clearAiCooldowns } from '../adminService';
+import { clearAiCooldowns, metricsByProduct } from '../adminService';
+import type { ProductMetrics } from '../adminService';
+
+/** Etiquetas legibles para los IDs canónicos de tipo de documento. */
+const DOC_TYPE_LABELS: Record<string, string> = {
+  cv: 'CV',
+  cover_letter: 'Carta de Presentación',
+  business_card: 'Tarjeta de Visita',
+  portfolio: 'Portafolio',
+  certificate: 'Certificado',
+  book: 'Libro',
+  planner: 'Planner',
+  otro: 'Otro',
+};
+
+function docTypeLabel(docType: string | null): string {
+  if (docType === null) return 'Sin tipo';
+  return DOC_TYPE_LABELS[docType] || docType;
+}
+
+function formatMoney(amount: number, currency: string): string {
+  const code = (currency || 'sin_moneda').toUpperCase();
+  const value = Number(amount || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return `${code} ${value}`;
+}
 
 /**
  * Tarjeta de estado de un proveedor (pasarela o motor de IA).
@@ -89,6 +113,19 @@ export function AdminOverviewTab({
   const { showError, showSuccess } = useToast();
   const [notifFilter, setNotifFilter] = useState<'unread' | 'all'>('unread');
   const [clearingCooldowns, setClearingCooldowns] = useState(false);
+  const [metrics, setMetrics] = useState<ProductMetrics | null>(null);
+  const [loadingMetrics, setLoadingMetrics] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const result = await metricsByProduct();
+      if (cancelled) return;
+      setMetrics(result);
+      setLoadingMetrics(false);
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const unreadNotifCount = notifications.filter(n => !n.read).length;
   const visibleNotifs = notifFilter === 'unread' ? notifications.filter(n => !n.read) : notifications;
@@ -176,6 +213,89 @@ export function AdminOverviewTab({
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Métricas por Producto (server-side) */}
+      <div className={`bg-[var(--ui-bg-card)] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] space-y-3`} style={{ borderRadius: radius.modal }}>
+        <div className="flex items-center gap-2 border-b border-[var(--color-neutral-border)] pb-3">
+          <BarChart3 className="w-5 h-5 text-[var(--color-accent-text)]" />
+          <div>
+            <h2 className="font-extrabold text-sm text-[var(--color-neutral-text-primary)]">Métricas por Producto</h2>
+            <p className="text-[10px] text-[var(--color-neutral-text-secondary)] font-medium">
+              Documentos creados, exportaciones pagas e ingresos confirmados por plan y moneda{metrics?.generatedAt
+                ? ` (calculadas ${new Date(metrics.generatedAt).toLocaleTimeString('es-AR')})`
+                : ''}
+            </p>
+          </div>
+        </div>
+
+        {loadingMetrics ? (
+          <p className="text-xs font-bold text-[var(--color-neutral-text-secondary)]">Calculando métricas...</p>
+        ) : !metrics ? (
+          <p className="text-xs font-bold text-[var(--color-neutral-text-secondary)]">No se pudieron calcular las métricas. Recargá el panel e intentá de nuevo.</p>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Documentos creados por tipo */}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
+                <p className="text-[11px] font-extrabold text-[var(--color-neutral-text-primary)]">Documentos creados</p>
+              </div>
+              {metrics.documentsByType.every((r) => r.count === 0) ? (
+                <p className="text-[11px] text-[var(--color-neutral-text-muted)]">Sin documentos todavía.</p>
+              ) : (
+                [...metrics.documentsByType]
+                  .sort((a, b) => b.count - a.count)
+                  .map((row) => (
+                    <div key={row.docType ?? 'null'} className="flex items-center justify-between gap-2 text-[11px] border-b border-[var(--color-neutral-border)]/40 pb-1">
+                      <span className="text-[var(--color-neutral-text-secondary)] font-medium">{docTypeLabel(row.docType)}</span>
+                      <span className="font-black text-[var(--color-neutral-text-primary)]">{row.count}</span>
+                    </div>
+                  ))
+              )}
+            </div>
+
+            {/* Exportaciones pagas por tipo */}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <Download className="w-3.5 h-3.5 text-[var(--color-secondary-text)]" />
+                <p className="text-[11px] font-extrabold text-[var(--color-neutral-text-primary)]">Exportaciones pagas</p>
+              </div>
+              {metrics.paidExportsByDocType.every((r) => r.count === 0) ? (
+                <p className="text-[11px] text-[var(--color-neutral-text-muted)]">Sin exportaciones pagas todavía.</p>
+              ) : (
+                [...metrics.paidExportsByDocType]
+                  .sort((a, b) => b.count - a.count)
+                  .map((row) => (
+                    <div key={row.docType ?? 'null'} className="flex items-center justify-between gap-2 text-[11px] border-b border-[var(--color-neutral-border)]/40 pb-1">
+                      <span className="text-[var(--color-neutral-text-secondary)] font-medium">{docTypeLabel(row.docType)}</span>
+                      <span className="font-black text-[var(--color-neutral-text-primary)]">{row.count}</span>
+                    </div>
+                  ))
+              )}
+            </div>
+
+            {/* Ingresos confirmados por plan y moneda */}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <Banknote className="w-3.5 h-3.5 text-[var(--color-status-success-text)]" />
+                <p className="text-[11px] font-extrabold text-[var(--color-neutral-text-primary)]">Ingresos confirmados (plan y moneda)</p>
+              </div>
+              {metrics.revenueByPlanCurrency.length === 0 ? (
+                <p className="text-[11px] text-[var(--color-neutral-text-muted)]">Sin ingresos confirmados todavía.</p>
+              ) : (
+                metrics.revenueByPlanCurrency.map((row) => (
+                  <div key={`${row.plan}|${row.currency}`} className="flex items-center justify-between gap-2 text-[11px] border-b border-[var(--color-neutral-border)]/40 pb-1">
+                    <span className="text-[var(--color-neutral-text-secondary)] font-medium">
+                      {row.plan} <span className="text-[var(--color-neutral-text-muted)]">· {row.count} pago{row.count === 1 ? '' : 's'}</span>
+                    </span>
+                    <span className="font-black text-[var(--color-neutral-text-primary)]">{formatMoney(row.totalAmount, row.currency)}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Notificaciones de Administración con filtro y acción global */}
