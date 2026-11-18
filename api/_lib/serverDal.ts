@@ -18,6 +18,17 @@ export const serverDal = {
       return data.role || null;
     },
 
+    async getById(id: string): Promise<{ id: string; email: string | null } | null> {
+      const { data, error } = await supabaseAdmin
+        .from('profiles')
+        .select('id, email')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (error || !data) return null;
+      return data;
+    },
+
     async getByEmail(email: string): Promise<{ id: string } | null> {
       const { data, error } = await supabaseAdmin
         .from('profiles')
@@ -349,6 +360,23 @@ export const serverDal = {
       if (error || !data) return null;
       return data;
     }
+  },
+
+  adminAuditLogs: {
+    async log(adminId: string, actionType: string, targetUserId: string | null = null, details: object = {}): Promise<void> {
+      const { error } = await supabaseAdmin
+        .from('admin_audit_logs')
+        .insert({
+          admin_id: adminId,
+          action_type: actionType,
+          target_user_id: targetUserId,
+          details,
+        });
+
+      // Best-effort no bloqueante: una fila de auditoría perdida no debe
+      // tumbar una acción admin que ya se aplicó.
+      if (error) console.error(`[adminAuditLogs] Error registrando auditoría: ${error.message}`);
+    },
   },
 
   cvs: {
