@@ -1,12 +1,4 @@
 [
-  "src/modules/admin/AdminDashboard.tsx:day:401:bg-[var(--color-neutral-surface-muted)]:text-[var(--color-neutral-text-muted)]",
-  "src/modules/admin/AdminDashboard.tsx:day:401:bg-[var(--color-status-warning-muted)]:text-[var(--color-neutral-text-primary)]",
-  "src/modules/admin/AdminDashboard.tsx:night:401:bg-[var(--color-neutral-surface-muted)]:text-[var(--color-neutral-text-muted)]",
-  "src/modules/admin/AdminDashboard.tsx:night:401:bg-[var(--color-status-warning-muted)]:text-[var(--color-neutral-text-primary)]",
-  "src/modules/admin/AdminDashboard.tsx:teal_ocean:401:bg-[var(--color-neutral-surface-muted)]:text-[var(--color-neutral-text-muted)]",
-  "src/modules/admin/AdminDashboard.tsx:teal_ocean:401:bg-[var(--color-status-warning-muted)]:text-[var(--color-neutral-text-primary)]",
-  "src/modules/admin/AdminDashboard.tsx:ink:401:bg-[var(--color-neutral-surface-muted)]:text-[var(--color-neutral-text-muted)]",
-  "src/modules/admin/AdminDashboard.tsx:ink:401:bg-[var(--color-status-warning-muted)]:text-[var(--color-neutral-text-primary)]",
   "src/modules/cv-builder/components/AtsAiAnalysisModal.tsx:day:162:null:text-[var(--color-warning-base)]",
   "src/modules/cv-builder/components/AtsAiAnalysisModal.tsx:day:162:null:text-[var(--color-danger-base)]",
   "src/modules/cv-builder/components/AtsAiAnalysisModal.tsx:night:162:null:text-[var(--color-warning-base)]",
@@ -18,9 +10,5 @@
   "src/modules/cv-builder/components/editor/SectionManualAdjustment.tsx:day:81:null:text-[var(--color-neutral-text-secondary)]",
   "src/modules/cv-builder/components/editor/SectionManualAdjustment.tsx:night:81:null:text-[var(--color-neutral-text-secondary)]",
   "src/modules/cv-builder/components/editor/SectionManualAdjustment.tsx:teal_ocean:81:null:text-[var(--color-neutral-text-secondary)]",
-  "src/modules/cv-builder/components/editor/SectionManualAdjustment.tsx:ink:81:null:text-[var(--color-neutral-text-secondary)]",
-  "src/modules/payments/components/CreditsModal.tsx:day:46:bg-[var(--color-neutral-surface-muted)]:text-[var(--color-neutral-text-secondary)]",
-  "src/modules/payments/components/CreditsModal.tsx:night:46:bg-[var(--color-neutral-surface-muted)]:text-[var(--color-neutral-text-secondary)]",
-  "src/modules/payments/components/CreditsModal.tsx:teal_ocean:46:bg-[var(--color-neutral-surface-muted)]:text-[var(--color-neutral-text-secondary)]",
-  "src/modules/payments/components/CreditsModal.tsx:ink:46:bg-[var(--color-neutral-surface-muted)]:text-[var(--color-neutral-text-secondary)]"
+  "src/modules/cv-builder/components/editor/SectionManualAdjustment.tsx:ink:81:null:text-[var(--color-neutral-text-secondary)]"
 ]

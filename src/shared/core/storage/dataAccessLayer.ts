@@ -83,6 +83,39 @@ export const dal = {
     }
   },
 
+  // ---- admin_error_logs: registro nativo de errores del sitio ----
+  adminErrorLogs: {
+    async list(filters: { level?: string; source?: string } = {}): Promise<any[]> {
+      if (!supabase) return [];
+      const res = await safeSupabaseCall(() => {
+        let query = supabase
+          .from('admin_error_logs')
+          .select('id, level, source, message, context, user_email, request_path, provider, external_id, fingerprint, resolved_at, created_at')
+          .order('created_at', { ascending: false })
+          .limit(100);
+        if (filters.level) query = query.eq('level', filters.level);
+        if (filters.source) query = query.eq('source', filters.source);
+        return query;
+      }, []);
+      return (res.data as any[]) || [];
+    },
+
+    async markResolved(id: string, resolvedBy: string | null): Promise<boolean> {
+      if (!supabase) return false;
+      const res = await safeSupabaseCall(() =>
+        supabase
+          .from('admin_error_logs')
+          .update({
+            resolved_at: new Date().toISOString(),
+            resolved_by: resolvedBy,
+          })
+          .eq('id', id)
+          .is('resolved_at', null)
+      );
+      return res.success;
+    },
+  },
+
   adminAuditLogs: {
     async list(searchQuery: string = ''): Promise<any[]> {
       if (!supabase) return [];
@@ -128,6 +161,15 @@ export const dal = {
       if (!supabase) return false;
       const res = await safeSupabaseCall(() =>
         supabase.from('admin_notifications').update({ read: true }).eq('id', id)
+      );
+      return res.success;
+    },
+
+    /** Marca TODAS las no leídas (misma policy UPDATE de admin que markRead). */
+    async markAllRead(): Promise<boolean> {
+      if (!supabase) return false;
+      const res = await safeSupabaseCall(() =>
+        supabase.from('admin_notifications').update({ read: true }).eq('read', false)
       );
       return res.success;
     },

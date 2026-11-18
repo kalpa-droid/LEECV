@@ -46,6 +46,11 @@ export async function markNotificationRead(id: string): Promise<void> {
   await dal.adminNotifications.markRead(id);
 }
 
+export async function markAllNotificationsRead(): Promise<void> {
+  const ok = await dal.adminNotifications.markAllRead();
+  if (!ok) throw new Error('No se pudieron marcar las notificaciones como leídas');
+}
+
 export async function listPendingClaims(): Promise<PaymentClaim[]> {
   return await dal.paymentClaims.listPending();
 }
@@ -195,23 +200,68 @@ export async function resolvePendingGrant({
   return data;
 }
 
-export async function getAiProvidersStatus() {
-  const env = (import.meta as any).env || {};
-  const hasGroqKey = !!env.VITE_GROQ_API_KEY || (typeof process !== 'undefined' && !!process.env?.GROQ_API_KEY);
-  const hasGeminiKey = !!env.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' && !!process.env?.GEMINI_API_KEY);
+export interface AiProviderUiStatus {
+  status: 'active' | 'missing_vars' | 'invalid_credentials' | 'error' | 'checking';
+  label: string;
+  model?: string;
+  /** Cantidad de claves configuradas en el servidor para el motor. */
+  configuredKeys: number;
+  /** Claves pausadas temporalmente por límite de uso (cooldown). */
+  pausedKeys: number;
+  /** De dónde salió la verdad de las pausas: DB compartida, memoria local o DB inaccesible. */
+  source: 'database' | 'memory-only' | 'database-unavailable';
+}
 
-  return {
-    groq: {
-      status: hasGroqKey ? 'active' : 'missing_vars',
-      label: hasGroqKey ? 'Groq Llama 3 / Mixtral API Online' : 'VITE_GROQ_API_KEY no configurada',
-      provider: 'Groq Cloud API'
-    },
-    gemini: {
-      status: hasGeminiKey ? 'active' : 'missing_vars',
-      label: hasGeminiKey ? 'Gemini 1.5 Pro / Flash API Online' : 'VITE_GEMINI_API_KEY no configurada',
-      provider: 'Google AI Studio API'
-    }
+const EMPTY_AI_PROVIDER_STATUS: AiProviderUiStatus = {
+  status: 'checking',
+  label: 'Comprobando estado del motor...',
+  configuredKeys: 0,
+  pausedKeys: 0,
+  source: 'database-unavailable',
+};
+
+export const AI_PROVIDER_UI_IDS = ['groq', 'gemini'] as const;
+
+/**
+ * Diagnóstico REAL de los motores de IA, calculado en el servidor
+ * (GET /api/admin/ai-providers-status → ai-providers-status en admin-api.ts).
+ *
+ * Antes esta función "adivinaba" leyendo VITE_GROQ_API_KEY en el navegador:
+ * esa variable nunca existe en el cliente, así que el panel siempre mostraba
+ * missing_vars aunque el motor estuviera perfecto. El estado real (ping +
+ * resumen de pausas de claves por cooldown) solo puede conocerlo el backend.
+ */
+export async function getAiProvidersStatus(forcePing = false): Promise<Record<string, AiProviderUiStatus>> {
+  const out: Record<string, AiProviderUiStatus> = {
+    groq: { ...EMPTY_AI_PROVIDER_STATUS },
+    gemini: { ...EMPTY_AI_PROVIDER_STATUS },
   };
+  try {
+    const { ok, data, error } = await apiClient.get(`/api/admin/ai-providers-status${forcePing ? '?forcePing=true' : ''}`);
+    if (ok && data) {
+      for (const id of AI_PROVIDER_UI_IDS) {
+        const entry = (data as Record<string, unknown>)[id];
+        if (entry && typeof entry === 'object') {
+          out[id] = { ...EMPTY_AI_PROVIDER_STATUS, ...(entry as Partial<AiProviderUiStatus>) };
+        }
+      }
+      return out;
+    }
+    console.warn('[adminService] ai-providers-status API no disponible:', error);
+  } catch (err) {
+    console.warn('[adminService] Excepción en getAiProvidersStatus:', err);
+  }
+  return out;
+}
+
+/**
+ * Limpia pausas de claves YA EXPIRADAS (filas viejas de ai_key_cooldowns).
+ * Nunca cancela una pausa activa: si la key sigue en 429 real, reusarla solo
+ * genera otro 429. Server-side vía POST /api/admin/clear-ai-cooldowns.
+ */
+export async function clearAiCooldowns(): Promise<void> {
+  const { ok, error } = await apiClient.post('/api/admin/clear-ai-cooldowns', {});
+  if (!ok) throw new Error(error || 'No se pudieron limpiar las pausas de claves');
 }
 
 export async function logAdminAction(actionType: string, targetUserId: string | null = null, details: object = {}): Promise<void> {

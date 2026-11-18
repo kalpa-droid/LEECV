@@ -135,6 +135,10 @@ html, body, #root {
   --color-accent-on-base: #0F172A;
   --color-secondary-on-base: #0F172A;
   --color-status-success-on-base: #0F172A;
+  /* status-danger-base (#D14D4D) es fijo en los 4 temas; su color "on" también:
+     vs #000000 → 4.88:1 OK   (vs #0F172A → 4.15:1 FALLA, vs #FFFFFF → 4.30:1 FALLA).
+     Uso: botón "Rechazar" (y cualquier texto sobre fondo danger-base) del panel admin. */
+  --color-status-danger-on-base: #000000;
 
   --color-secondary-base: #00A8A0;
   --color-secondary-hover: #008780;
