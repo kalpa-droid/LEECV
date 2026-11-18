@@ -633,5 +633,116 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
+  if (action === 'metrics-by-product') {
+    if (req.method !== 'GET') return errorResponse(res, 405, 'Método HTTP no permitido');
+
+    const rateOk = await requireRateLimit(req, res, `admin:${admin.user.id}:metrics-by-product`, {
+      maxRequests: 30,
+      windowSeconds: 60,
+    });
+    if (!rateOk) return;
+
+    try {
+      const [documentsByType, paidExportsByDocType, revenueByPlanCurrency] = await Promise.all([
+        serverDal.cvs.countByDocType(),
+        serverDal.exportTokens.countPaidByDocType(),
+        serverDal.processedPayments.revenueByPlanCurrency(),
+      ]);
+      return successResponse(res, {
+        documentsByType,
+        paidExportsByDocType,
+        revenueByPlanCurrency,
+        generatedAt: new Date().toISOString(),
+      });
+    } catch (err: any) {
+      console.error('[CRITICAL ADMIN API ERROR - metrics-by-product]:', err?.message || err, err?.stack);
+      await captureBackendException(err, 'admin-api:metrics-by-product');
+      return errorResponse(res, 500, 'Error al calcular las métricas por producto');
+    }
+  }
+
+  if (action === 'list-published-cvs') {
+    if (req.method !== 'GET') return errorResponse(res, 405, 'Método HTTP no permitido');
+
+    const rateOk = await requireRateLimit(req, res, `admin:${admin.user.id}:list-published-cvs`, {
+      maxRequests: 30,
+      windowSeconds: 60,
+    });
+    if (!rateOk) return;
+
+    const page = Math.max(0, parseInt((req.query.page as string) || '0', 10));
+    const limit = Math.min(50, Math.max(1, parseInt((req.query.limit as string) || '20', 10)));
+    const q = ((req.query.q as string) || '').trim().slice(0, 120);
+
+    try {
+      const { items, totalCount } = await serverDal.publishedCvs.listForModeration({ search: q, page, limit });
+      return successResponse(res, { items, totalCount, page, pageSize: limit });
+    } catch (err: any) {
+      console.error('[CRITICAL ADMIN API ERROR - list-published-cvs]:', err?.message || err, err?.stack);
+      await captureBackendException(err, 'admin-api:list-published-cvs');
+      return errorResponse(res, 500, 'Error al listar los CVs publicados');
+    }
+  }
+
+  if (action === 'set-published-cv-active') {
+    if (req.method !== 'POST') return errorResponse(res, 405, 'Método no permitido');
+
+    const rateOk = await requireRateLimit(req, res, `admin:${admin.user.id}:set-published-cv-active`, {
+      maxRequests: 10,
+      windowSeconds: 60,
+    });
+    if (!rateOk) return;
+
+    const body = validateBody<{ id: string; isActive: boolean; reason?: string }>(req, res, ['id', 'isActive']);
+    if (!body) return;
+
+    if (typeof body.id !== 'string' || !/^[0-9a-f-]{36}$/i.test(body.id.trim())) {
+      return errorResponse(res, 400, 'ID de publicación no válido');
+    }
+    if (typeof body.isActive !== 'boolean') {
+      return errorResponse(res, 400, 'isActive debe ser booleano');
+    }
+    const reason = typeof body.reason === 'string' && body.reason.trim()
+      ? body.reason.trim().slice(0, 500)
+      : undefined;
+
+    try {
+      const updated = await serverDal.publishedCvs.setActive(body.id.trim(), body.isActive);
+      if (!updated) return errorResponse(res, 404, 'Publicación no encontrada');
+
+      // Moderación = cambiar is_active, nunca borrar el CV ni el archivo de Drive.
+      await serverDal.adminAuditLogs.log(admin.user.id, 'set_published_cv_active', updated.user_id, {
+        publishedCvId: updated.id,
+        slug: updated.slug,
+        isActive: updated.is_active,
+        ...(reason ? { reason } : {}),
+      });
+      return successResponse(res, { success: true, isActive: updated.is_active });
+    } catch (err: any) {
+      console.error('[CRITICAL ADMIN API ERROR - set-published-cv-active]:', err?.message || err, err?.stack);
+      await captureBackendException(err, 'admin-api:set-published-cv-active');
+      return errorResponse(res, 500, 'Error al cambiar el estado de la publicación');
+    }
+  }
+
+  if (action === 'list-ai-cooldowns') {
+    if (req.method !== 'GET') return errorResponse(res, 405, 'Método HTTP no permitido');
+
+    const rateOk = await requireRateLimit(req, res, `admin:${admin.user.id}:list-ai-cooldowns`, {
+      maxRequests: 30,
+      windowSeconds: 60,
+    });
+    if (!rateOk) return;
+
+    try {
+      const cooldowns = await serverDal.aiKeyCooldowns.listActive();
+      return successResponse(res, { cooldowns });
+    } catch (err: any) {
+      console.error('[CRITICAL ADMIN API ERROR - list-ai-cooldowns]:', err?.message || err, err?.stack);
+      await captureBackendException(err, 'admin-api:list-ai-cooldowns');
+      return errorResponse(res, 500, 'Error al consultar las pausas de claves de IA');
+    }
+  }
+
   return errorResponse(res, 400, 'Acción no válida');
 }

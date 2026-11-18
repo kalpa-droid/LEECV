@@ -331,3 +331,92 @@ export async function listAiTelemetry(limit: number = 100, filters?: { from?: st
 export async function getAiTelemetryStats() {
   return await dal.aiTelemetry.getAggregatedStats();
 }
+
+export interface ProductMetrics {
+  documentsByType: Array<{ docType: string | null; count: number }>;
+  paidExportsByDocType: Array<{ docType: string | null; count: number }>;
+  revenueByPlanCurrency: Array<{ plan: string; currency: string; totalAmount: number; count: number }>;
+  generatedAt?: string;
+}
+
+/**
+ * Métricas por producto del panel admin (documentos por tipo, exportaciones
+ * pagas por tipo e ingresos confirmados por plan+moneda). Se calculan 100%
+ * server-side; acá solo se transporta el resultado. null si no está disponible.
+ */
+export async function metricsByProduct(): Promise<ProductMetrics | null> {
+  const { ok, data, error } = await apiClient.get('/api/admin/metrics-by-product');
+  if (!ok) {
+    console.warn('[adminService] metrics-by-product API no disponible:', error);
+    return null;
+  }
+  return (data as ProductMetrics) || null;
+}
+
+export interface PublishedCvModerationRow {
+  id: string;
+  userId: string;
+  cvId: string;
+  slug: string;
+  driveFileId: string | null;
+  isActive: boolean;
+  ownerEmail: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Lista paginada de CVs publicados para moderación. `q` vacío = todos; si
+ * contiene @ filtra por email del dueño (server-side); si no, por slug.
+ */
+export async function listPublishedCvs({ page = 0, limit = 20, q = '' }: { page?: number; limit?: number; q?: string } = {}) {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+    ...(q.trim() ? { q: q.trim() } : {}),
+  });
+  const { ok, data, error } = await apiClient.get(`/api/admin/list-published-cvs?${params.toString()}`);
+  if (!ok) {
+    console.warn('[adminService] list-published-cvs API no disponible:', error);
+    return { items: [] as PublishedCvModerationRow[], totalCount: 0, page, pageSize: limit };
+  }
+  return {
+    items: (data?.items || []) as PublishedCvModerationRow[],
+    totalCount: Number(data?.totalCount || 0),
+    page: Number(data?.page ?? page),
+    pageSize: Number(data?.pageSize ?? limit),
+  };
+}
+
+/**
+ * Activa/desactiva la publicación pública (/c/:slug). Moderación = cambiar
+ * is_active únicamente; nunca borra el CV ni el archivo de Drive.
+ */
+export async function setPublishedCvActive(id: string, isActive: boolean, reason?: string): Promise<void> {
+  const { ok, error } = await apiClient.post('/api/admin/set-published-cv-active', {
+    id,
+    isActive,
+    ...(reason && reason.trim() ? { reason: reason.trim() } : {}),
+  });
+  if (!ok) {
+    throw new Error(error || 'No se pudo cambiar el estado de la publicación');
+  }
+}
+
+export interface AiCooldownRow {
+  provider: string;
+  /** Primeros 8 caracteres del hash SHA-256 de la key; nunca la key ni el hash completo. */
+  keyHashPrefix: string;
+  pausedUntil: string;
+  updatedAt: string;
+}
+
+/** Pausas de claves de IA activas (server-side). [] si no está disponible. */
+export async function listAiCooldowns(): Promise<AiCooldownRow[]> {
+  const { ok, data, error } = await apiClient.get('/api/admin/list-ai-cooldowns');
+  if (!ok) {
+    console.warn('[adminService] list-ai-cooldowns API no disponible:', error);
+    return [];
+  }
+  return (data?.cooldowns || []) as AiCooldownRow[];
+}

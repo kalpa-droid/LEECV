@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Sparkles, RefreshCw, BarChart } from 'lucide-react';
-import { listAiTelemetry, getAiTelemetryStats } from '../adminService';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Sparkles, RefreshCw, BarChart, KeyRound } from 'lucide-react';
+import { listAiTelemetry, getAiTelemetryStats, listAiCooldowns } from '../adminService';
+import type { AiCooldownRow } from '../adminService';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
@@ -34,8 +35,66 @@ export function AiTelemetryTab() {
     setLoading(false);
   }
 
+  const [cooldowns, setCooldowns] = useState<AiCooldownRow[]>([]);
+  const [loadingCooldowns, setLoadingCooldowns] = useState(false);
+
+  /**
+   * Desglose agregado sobre las filas cargadas (máx 100, con los filtros
+   * aplicados). Honesto por construcción: es una muestra, no un total
+   * histórico. La telemetría actual NO registra errores ni fallbacks, por
+   * lo que la tasa de error no se muestra (requeriría instrumentación nueva).
+   */
+  const breakdown = useMemo(() => {
+    const aggregate = (key: 'provider' | 'endpoint') => {
+      const map = new Map<string, { label: string; calls: number; promptTokens: number; completionTokens: number; cost: number }>();
+      for (const log of logs) {
+        const label = String(log?.[key] || 'desconocido');
+        const cur = map.get(label) || { label, calls: 0, promptTokens: 0, completionTokens: 0, cost: 0 };
+        cur.calls += 1;
+        cur.promptTokens += Number(log?.prompt_tokens) || 0;
+        cur.completionTokens += Number(log?.completion_tokens) || 0;
+        cur.cost += Number(log?.estimated_cost_usd) || 0;
+        map.set(label, cur);
+      }
+      return [...map.values()].sort((a, b) => b.cost - a.cost);
+    };
+    return { byProvider: aggregate('provider'), byEndpoint: aggregate('endpoint') };
+  }, [logs]);
+
+  async function loadCooldowns() {
+    setLoadingCooldowns(true);
+    const rows = await listAiCooldowns();
+    setCooldowns(rows);
+    setLoadingCooldowns(false);
+  }
+
+  function renderBreakdownRows(rows: typeof breakdown.byProvider) {
+    if (rows.length === 0) {
+      return <p className="text-[11px] text-[var(--color-neutral-text-muted)]">Sin datos con los filtros actuales.</p>;
+    }
+    return (
+      <div className="space-y-1">
+        {rows.map((row) => (
+          <div key={row.label} className="flex items-center justify-between gap-3 text-[11px] border-b border-[var(--color-neutral-border)]/40 pb-1">
+            <div className="min-w-0">
+              <p className="font-bold text-[var(--color-neutral-text-primary)] truncate">{row.label}</p>
+              <p className="text-[10px] text-[var(--color-neutral-text-secondary)]">
+                {row.calls} llamada{row.calls === 1 ? '' : 's'} · {(row.promptTokens + row.completionTokens).toLocaleString('es-AR')} tokens
+              </p>
+            </div>
+            <div className="text-right shrink-0">
+              <p className="font-black text-[var(--color-neutral-text-primary)]">${row.cost.toFixed(4)}</p>
+              <p className="text-[10px] text-[var(--color-neutral-text-muted)]">${(row.calls > 0 ? row.cost / row.calls : 0).toFixed(5)} / llamada</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   useEffect(() => {
     loadData();
+    loadCooldowns();
   }, []);
 
   return (
@@ -80,6 +139,74 @@ export function AiTelemetryTab() {
             <p className="text-xs text-[var(--color-neutral-text-secondary)] font-bold">Tokens Procesados Totales</p>
           </div>
         </div>
+      </div>
+
+      {/* Desglose por proveedor y por endpoint (según las filas cargadas) */}
+      <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] space-y-3`}>
+        <div className="flex items-center gap-2 border-b border-[var(--color-neutral-border)] pb-3">
+          <BarChart className="w-5 h-5 text-[var(--color-accent-text)]" />
+          <div>
+            <h3 className="font-extrabold text-sm text-[var(--color-neutral-text-primary)]">Desglose por proveedor y endpoint</h3>
+            <p className="text-[10px] text-[var(--color-neutral-text-secondary)] font-medium">
+              Según las últimas {logs.length} llamadas cargadas con los filtros aplicados. La telemetría actual no registra errores ni fallbacks.
+            </p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-extrabold uppercase tracking-wide text-[var(--color-neutral-text-secondary)]">Por proveedor</p>
+            {renderBreakdownRows(breakdown.byProvider)}
+          </div>
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-extrabold uppercase tracking-wide text-[var(--color-neutral-text-secondary)]">Por endpoint</p>
+            {renderBreakdownRows(breakdown.byEndpoint)}
+          </div>
+        </div>
+      </div>
+
+      {/* Claves de IA en pausa (cooldowns activos, server-side) */}
+      <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] space-y-3`}>
+        <div className="flex items-center justify-between gap-3 border-b border-[var(--color-neutral-border)] pb-3">
+          <div className="flex items-center gap-2">
+            <KeyRound className="w-5 h-5 text-[var(--color-status-warning-text)]" />
+            <div>
+              <h3 className="font-extrabold text-sm text-[var(--color-neutral-text-primary)]">Claves en pausa ahora</h3>
+              <p className="text-[10px] text-[var(--color-neutral-text-secondary)] font-medium">
+                Claves de IA con cooldown activo por límite de uso. Se identifica la clave por hash, nunca se muestra.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={loadCooldowns}
+            disabled={loadingCooldowns}
+            className={`p-2 bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] rounded-[${radius.card}] border border-[var(--color-neutral-border)] transition cursor-pointer disabled:opacity-50`}
+            title="Actualizar pausas"
+            aria-label="Actualizar pausas"
+          >
+            <RefreshCw className={`w-4 h-4 ${loadingCooldowns ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
+        {cooldowns.length === 0 ? (
+          <p className="text-[11px] font-bold text-[var(--color-neutral-text-muted)]">
+            {loadingCooldowns ? 'Consultando pausas...' : 'No hay claves pausadas en este momento.'}
+          </p>
+        ) : (
+          <div className="space-y-1">
+            {cooldowns.map((row) => (
+              <div key={`${row.provider}:${row.keyHashPrefix}`} className="flex items-center justify-between gap-3 text-[11px] border-b border-[var(--color-neutral-border)]/40 pb-1">
+                <div className="min-w-0">
+                  <p className="font-bold text-[var(--color-neutral-text-primary)] capitalize">{row.provider}</p>
+                  <p className="text-[10px] font-mono text-[var(--color-neutral-text-secondary)]">clave #{row.keyHashPrefix}…</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="font-black text-[var(--color-status-warning-text)]">
+                    hasta {new Date(row.pausedUntil).toLocaleString('es-AR')}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-4 ${elevationSystem.raised} border border-[var(--color-neutral-border)] flex flex-wrap items-center gap-3`}>
