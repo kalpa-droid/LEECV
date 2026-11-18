@@ -129,6 +129,14 @@
       "destination": "/api/admin-api?action=set-pdf-export-access"
     },
     {
+      "source": "/api/admin/set-plan",
+      "destination": "/api/admin-api?action=set-plan"
+    },
+    {
+      "source": "/api/admin/grant-export-tokens",
+      "destination": "/api/admin-api?action=grant-export-tokens"
+    },
+    {
       "source": "/api/admin/list-pending-grants",
       "destination": "/api/admin-api?action=list-pending-grants"
     },

@@ -324,6 +324,117 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
+  if (action === 'set-plan') {
+    if (req.method !== 'POST') return errorResponse(res, 405, 'Método HTTP no permitido');
+
+    const rateOk = await requireRateLimit(req, res, `admin:${admin.user.id}:set-plan`, {
+      maxRequests: 20,
+      windowSeconds: 60,
+    });
+    if (!rateOk) return;
+
+    const body = validateBody<{
+      userId: string;
+      plan: string;
+      vence?: string | null;
+    }>(req, res, ['userId', 'plan']);
+    if (!body) return;
+
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.userId)) {
+      return errorResponse(res, 400, 'Identificador de usuario no válido');
+    }
+    if (body.plan !== 'free' && body.plan !== 'pro') {
+      return errorResponse(res, 400, 'Plan no válido');
+    }
+
+    let venceValue: string | null = null;
+    if (body.plan !== 'free' && body.vence) {
+      const venceDate = new Date(body.vence);
+      if (Number.isNaN(venceDate.getTime())) {
+        return errorResponse(res, 400, 'Fecha de vencimiento no válida');
+      }
+      venceValue = venceDate.toISOString();
+    }
+
+    try {
+      const patch: Record<string, unknown> = {
+        plan: body.plan,
+        plan_vence: venceValue,
+        premium_activo: body.plan !== 'free',
+      };
+      const updated = await serverDal.profiles.updateSubscription({ id: body.userId }, patch);
+      if (!updated) return errorResponse(res, 404, 'Usuario no encontrado');
+
+      await serverDal.adminAuditLogs.log(admin.user.id, 'set_user_plan', body.userId, {
+        plan: body.plan,
+        vence: venceValue,
+      });
+
+      return successResponse(res, {
+        success: true,
+        userId: body.userId,
+        plan: body.plan,
+        vence: venceValue,
+      });
+    } catch (err: any) {
+      console.error('[CRITICAL ADMIN API ERROR - set-plan]:', err?.message || err, err?.stack);
+      await captureBackendException(err, 'admin-api:set-plan');
+      return errorResponse(res, 500, 'Error al actualizar el plan del usuario');
+    }
+  }
+
+  if (action === 'grant-export-tokens') {
+    if (req.method !== 'POST') return errorResponse(res, 405, 'Método HTTP no permitido');
+
+    const rateOk = await requireRateLimit(req, res, `admin:${admin.user.id}:grant-export-tokens`, {
+      maxRequests: 20,
+      windowSeconds: 60,
+    });
+    if (!rateOk) return;
+
+    const body = validateBody<{
+      userId: string;
+      amount: number;
+      reason?: string;
+    }>(req, res, ['userId', 'amount']);
+    if (!body) return;
+
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.userId)) {
+      return errorResponse(res, 400, 'Identificador de usuario no válido');
+    }
+    const amount = Number(body.amount);
+    if (!Number.isInteger(amount) || amount < 1 || amount > 1000) {
+      return errorResponse(res, 400, 'La cantidad debe ser un entero entre 1 y 1000');
+    }
+    const reason = (typeof body.reason === 'string' ? body.reason : '').trim().slice(0, 500) || 'Acreditación manual desde el panel';
+
+    try {
+      const profile = await serverDal.profiles.getById(body.userId);
+      if (!profile) return errorResponse(res, 404, 'Usuario no encontrado');
+
+      const paymentId = `admin:manual:${admin.user.id}:${body.userId}:${Date.now()}`;
+      const { error } = await supabaseAdmin.rpc('grant_export_tokens', {
+        p_payment_id: paymentId,
+        p_user_id: body.userId,
+        p_amount: amount,
+        p_email: profile.email || '',
+      });
+      if (error) throw error;
+
+      await serverDal.adminAuditLogs.log(admin.user.id, 'grant_export_tokens', body.userId, {
+        amount,
+        reason,
+        payment_id: paymentId,
+      });
+
+      return successResponse(res, { success: true, userId: body.userId, amount });
+    } catch (err: any) {
+      console.error('[CRITICAL ADMIN API ERROR - grant-export-tokens]:', err?.message || err, err?.stack);
+      await captureBackendException(err, 'admin-api:grant-export-tokens');
+      return errorResponse(res, 500, 'Error al asignar los créditos de exportación');
+    }
+  }
+
   if (action === 'list-pending-grants') {
     if (req.method !== 'GET') return errorResponse(res, 405, 'Método HTTP no permitido');
 

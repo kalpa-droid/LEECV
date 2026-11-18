@@ -1,4 +1,3 @@
-import { supabase } from '../../shared/core/lib/supabaseClient';
 import { dal } from '../../shared/core/storage/dataAccessLayer';
 import { apiClient } from '../../shared/core/utils/apiClient';
 import { UserProfile, UserPlan } from '../../types/user';
@@ -10,15 +9,12 @@ export async function listAllUsers(searchQuery: string = '', planFilter: string 
 }
 
 export async function setUserPlan(userId: string, plan: UserPlan, vence: string | null = null): Promise<UserProfile> {
-  const patch: Partial<UserProfile> = {
-    plan,
-    plan_vence: vence,
-    premium_activo: plan !== 'free',
-  };
-
-  const updated = await dal.profiles.update(userId, patch);
+  // Server action: aplica el cambio con service_role y deja auditoría atómica
+  // en admin_audit_logs (antes: UPDATE directo desde el navegador + log best-effort).
+  const { ok, error } = await apiClient.post('/api/admin/set-plan', { userId, plan, vence });
+  if (!ok) throw new Error(error || 'No se pudo actualizar el plan del usuario');
+  const updated = await dal.profiles.getById(userId);
   if (!updated) throw new Error('No se pudo actualizar el plan del usuario');
-  await logAdminAction('set_user_plan', userId, { plan, vence });
   return updated;
 }
 
@@ -165,6 +161,22 @@ export async function setPdfExportAccess(userId: string, accessMode: string, rea
   return data;
 }
 
+/**
+ * Acredita N créditos de exportación PDF a una cuenta desde el servidor
+ * (RPC service_role `grant_export_tokens` + auditoría en admin_audit_logs).
+ * Antes el panel llamaba la RPC desde el navegador, donde está
+ * REVOKEada para `authenticated` → los botones +1/+5/+10 fallaban siempre.
+ */
+export async function grantExportTokens(userId: string, amount: number, reason?: string) {
+  const { ok, data, error } = await apiClient.post('/api/admin/grant-export-tokens', {
+    userId,
+    amount,
+    ...(reason ? { reason } : {}),
+  });
+  if (!ok) throw new Error(error || `No se pudo asignar +${amount} crédito(s)`);
+  return data;
+}
+
 export async function listPendingGrants({ page = 0, limit = 20 } = {}) {
   const params = new URLSearchParams();
   params.set('page', String(page));
@@ -263,16 +275,6 @@ export async function getAiProvidersStatus(forcePing = false): Promise<Record<st
 export async function clearAiCooldowns(): Promise<void> {
   const { ok, error } = await apiClient.post('/api/admin/clear-ai-cooldowns', {});
   if (!ok) throw new Error(error || 'No se pudieron limpiar las pausas de claves');
-}
-
-export async function logAdminAction(actionType: string, targetUserId: string | null = null, details: object = {}): Promise<void> {
-  try {
-    const userRes = supabase ? await supabase.auth.getUser() : { data: { user: null } };
-    const userId = userRes.data?.user?.id || 'system';
-    await dal.adminAuditLogs.log(userId, actionType, targetUserId, details);
-  } catch (err) {
-    console.warn('Error guardando auditoría:', err);
-  }
 }
 
 export async function listAiTelemetry(limit: number = 100, filters?: { from?: string; endpoint?: string }) {
