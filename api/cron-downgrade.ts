@@ -3,6 +3,8 @@ import { supabaseAdmin } from './_lib/supabaseAdmin.js';
 import { errorResponse, successResponse } from './_lib/apiResponse.js';
 import { captureBackendException } from './_lib/sentryBackend.js';
 import { BILLING_CONFIG } from './_lib/config/limits.js';
+import { reconcilePendingPayments } from './_lib/paymentReconciler.js';
+import { runUnclaimedCreditsMaintenance } from './_lib/unclaimedCreditsMaintenance.js';
 
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -100,12 +102,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const totalDowngraded = downgradedProfiles ? downgradedProfiles.length : 0;
 
+    // ----------------------------------------------------
+    // PASO C: Reconciliación de pagos + retención de créditos sin cuenta
+    // (PR-D2). Cada sub-tarea corre en su propio try/catch: una falla acá
+    // NUNCA aborta el downgrade de planes (lo crítico de este cron).
+    // ----------------------------------------------------
+    let reconcile: Awaited<ReturnType<typeof reconcilePendingPayments>> | null = null;
+    let unclaimed: Awaited<ReturnType<typeof runUnclaimedCreditsMaintenance>> | null = null;
+
+    try {
+      reconcile = await reconcilePendingPayments();
+    } catch (reconcileErr: any) {
+      console.error('Error en reconciliación de pagos (cron):', reconcileErr);
+      await captureBackendException(reconcileErr instanceof Error ? reconcileErr : new Error(String(reconcileErr)), 'cron-downgrade:reconcile');
+    }
+
+    try {
+      unclaimed = await runUnclaimedCreditsMaintenance();
+    } catch (unclaimedErr: any) {
+      console.error('Error en mantenimiento de créditos sin reclamar (cron):', unclaimedErr);
+      await captureBackendException(unclaimedErr instanceof Error ? unclaimedErr : new Error(String(unclaimedErr)), 'cron-downgrade:unclaimed');
+    }
+
     return successResponse(res, {
       success: true,
       timestamp: nowIso,
       summary: {
         enteredGracePeriod: newlyInGrace,
         downgradedToFree: totalDowngraded,
+        reconcile,
+        unclaimed,
       },
     });
   } catch (err: any) {

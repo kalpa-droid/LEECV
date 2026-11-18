@@ -177,6 +177,19 @@ export const serverDal = {
       }
     },
 
+    async listPending(minAgeIso: string, limit: number) {
+      const { data, error } = await supabaseAdmin
+        .from('processed_payments')
+        .select('id, provider, external_id, plan, amount, currency, user_email, user_id, created_at, details')
+        .eq('entitlement_status', 'pending')
+        .lt('created_at', minAgeIso)
+        .order('created_at', { ascending: true })
+        .limit(limit);
+
+      if (error) throw new Error(`[processedPayments] Error listando pagos pendientes: ${error.message}`);
+      return data || [];
+    },
+
     async getByProviderAndExternalId(provider: string, external_id: string): Promise<{ id: string; plan: string; entitlement_status?: string } | null> {
       const { data, error } = await supabaseAdmin
         .from('processed_payments')
@@ -241,6 +254,20 @@ export const serverDal = {
       }
     },
 
+    async listProviderPending(minAgeIso: string, limit: number) {
+      const { data, error } = await supabaseAdmin
+        .from('pending_grants')
+        .select('id, email, provider, external_id, plan, amount, currency, hold_reason, export_token, created_at')
+        .is('resolved_at', null)
+        .eq('hold_reason', 'provider_pending')
+        .lt('created_at', minAgeIso)
+        .order('created_at', { ascending: true })
+        .limit(limit);
+
+      if (error) throw new Error(`[pendingGrants] Error listando retenidos por pasarela: ${error.message}`);
+      return data || [];
+    },
+
     async listUnresolved(limit: number, offset: number) {
       const { data, count, error } = await supabaseAdmin
         .from('pending_grants')
@@ -303,6 +330,43 @@ export const serverDal = {
 
       if (error) throw new Error(`[pendingGrants] Error resolviendo pago retenido automáticamente: ${error.message}`);
     }
+  },
+
+  unclaimedCredits: {
+    async listPending(limit: number, offset: number) {
+      const { data, count, error } = await supabaseAdmin
+        .from('unclaimed_email_credits')
+        .select('id, email, credits, provider, plan, amount, currency, created_at, reminder_sent_at', { count: 'exact' })
+        .is('claimed_at', null)
+        .is('expired_at', null)
+        .order('created_at', { ascending: true })
+        .range(offset, offset + limit - 1);
+
+      if (error) throw new Error(`[unclaimedCredits] Error listando créditos sin reclamar: ${error.message}`);
+      return { credits: data || [], totalCount: count || 0 };
+    },
+
+    async getById(id: string) {
+      const { data, error } = await supabaseAdmin
+        .from('unclaimed_email_credits')
+        .select('id, email, credits, provider, plan, amount, currency, created_at, reminder_sent_at, expired_at')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (error) throw new Error(`[unclaimedCredits] Error consultando crédito sin reclamar: ${error.message}`);
+      return data || null;
+    },
+
+    async markReminded(id: string): Promise<void> {
+      const { error } = await supabaseAdmin
+        .from('unclaimed_email_credits')
+        .update({ reminder_sent_at: new Date().toISOString() })
+        .eq('id', id)
+        .is('claimed_at', null)
+        .is('expired_at', null);
+
+      if (error) throw new Error(`[unclaimedCredits] Error marcando recordatorio: ${error.message}`);
+    },
   },
 
   adminNotifications: {

@@ -213,6 +213,53 @@ export async function resolvePendingGrant({
   return data;
 }
 
+export interface ReconcileSummary {
+  scanned: number;
+  applied: number;
+  rejected: number;
+  stillPending: number;
+  escalated: number;
+  errors: number;
+}
+
+export async function reconcilePendingPayments(): Promise<ReconcileSummary> {
+  const { ok, data, error } = await apiClient.post('/api/admin/reconcile-payments', {});
+  if (!ok) throw new Error(error || 'Error al reconciliar pagos');
+  return (data as any)?.summary as ReconcileSummary;
+}
+
+export interface UnclaimedCreditRow {
+  id: string;
+  email: string;
+  credits: number;
+  provider: string | null;
+  plan: string | null;
+  amount: number | null;
+  currency: string | null;
+  created_at: string;
+  reminder_sent_at: string | null;
+}
+
+export async function listUnclaimedCredits({ page = 0, limit = 20 } = {}) {
+  const params = new URLSearchParams();
+  params.set('page', String(page));
+  params.set('limit', String(limit));
+
+  try {
+    const { ok, data, error } = await apiClient.get(`/api/admin/list-unclaimed-credits?${params.toString()}`);
+    if (ok && data) return data;
+    console.warn('[adminService] listUnclaimedCredits API no disponible:', error);
+  } catch (err) {
+    console.warn('[adminService] Excepción en listUnclaimedCredits:', err);
+  }
+  return { credits: [] as UnclaimedCreditRow[], totalCount: 0, page, pageSize: limit };
+}
+
+export async function resendUnclaimedReminder(id: string): Promise<void> {
+  const { ok, error } = await apiClient.post('/api/admin/resend-unclaimed-reminder', { id });
+  if (!ok) throw new Error(error || 'Error al reenviar el recordatorio');
+}
+
 export interface AiProviderUiStatus {
   status: 'active' | 'missing_vars' | 'invalid_credentials' | 'error' | 'checking';
   label: string;

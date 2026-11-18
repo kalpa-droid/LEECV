@@ -20,6 +20,11 @@ const h = vi.hoisted(() => ({
   maybeSingle: vi.fn(),
   getUser: vi.fn(),
   rpc: vi.fn(),
+  reconcilePendingPayments: vi.fn(),
+  sendUnclaimedReminder: vi.fn(),
+  listUnclaimedPending: vi.fn(),
+  getUnclaimedById: vi.fn(),
+  markUnclaimedReminded: vi.fn(),
 }));
 
 vi.mock('../../api/_lib/supabaseAdmin.js', () => ({
@@ -42,6 +47,14 @@ vi.mock('../../api/_lib/rateLimiter.js', () => ({
   requireRateLimit: vi.fn().mockResolvedValue(true),
 }));
 
+vi.mock('../../api/_lib/paymentReconciler.js', () => ({
+  reconcilePendingPayments: h.reconcilePendingPayments,
+}));
+
+vi.mock('../../api/_lib/emails/sendUnclaimedCreditsReminder.js', () => ({
+  sendUnclaimedCreditsReminder: h.sendUnclaimedReminder,
+}));
+
 vi.mock('../../api/_lib/serverDal.js', () => ({
   serverDal: {
     profiles: {
@@ -49,6 +62,11 @@ vi.mock('../../api/_lib/serverDal.js', () => ({
       updateSubscription: vi.fn(),
     },
     adminAuditLogs: { log: vi.fn() },
+    unclaimedCredits: {
+      listPending: h.listUnclaimedPending,
+      getById: h.getUnclaimedById,
+      markReminded: h.markUnclaimedReminded,
+    },
   },
 }));
 
@@ -112,6 +130,10 @@ beforeEach(() => {
   // Restaura los defaults que clearAllMocks no preserva
   vi.mocked(requireAdmin).mockResolvedValue({ user: { id: 'admin-user-1' } } as any);
   vi.mocked(requireRateLimit).mockResolvedValue(true as any);
+  h.reconcilePendingPayments.mockResolvedValue({ scanned: 2, applied: 1, rejected: 0, stillPending: 0, escalated: 0, errors: 0 });
+  h.sendUnclaimedReminder.mockResolvedValue(true);
+  h.listUnclaimedPending.mockResolvedValue({ credits: [], totalCount: 0 });
+  h.markUnclaimedReminded.mockResolvedValue(undefined);
 });
 
 describe('admin-api action=set-plan — cambio de plan server-side', () => {
@@ -432,5 +454,134 @@ describe('create-checkout — anti-fraude (userId del body NO es identidad)', ()
     const res = makeRes();
     await checkoutHandler(makeReq({}, {}, 'GET'), res);
     expect(res.statusCode).toBe(405);
+  });
+});
+
+describe('admin-api action=reconcile-payments — reconciliación bajo demanda', () => {
+  it('POST devuelve el resumen y audita la corrida', async () => {
+    const res = makeRes();
+    await handler(makeReq({}, { action: 'reconcile-payments' }, 'POST'), res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body?.success).toBe(true);
+    expect(res.body?.summary).toMatchObject({ scanned: 2, applied: 1 });
+    expect(vi.mocked(serverDal.adminAuditLogs.log)).toHaveBeenCalledWith(
+      'admin-user-1', 'reconcile_payments', null, expect.objectContaining({ scanned: 2 })
+    );
+  });
+
+  it('rechaza GET con 405', async () => {
+    const res = makeRes();
+    await handler(makeReq({}, { action: 'reconcile-payments' }, 'GET'), res);
+    expect(res.statusCode).toBe(405);
+    expect(h.reconcilePendingPayments).not.toHaveBeenCalled();
+  });
+
+  it('si el reconciliador falla devuelve 500 genérico', async () => {
+    h.reconcilePendingPayments.mockRejectedValue(new Error('MP circuit breaker: secret internal detail'));
+
+    const res = makeRes();
+    await handler(makeReq({}, { action: 'reconcile-payments' }, 'POST'), res);
+
+    expect(res.statusCode).toBe(500);
+    expect(JSON.stringify(res.body)).not.toContain('secret internal detail');
+  });
+});
+
+describe('admin-api action=list-unclaimed-credits — créditos sin reclamar', () => {
+  it('devuelve la página y el total', async () => {
+    h.listUnclaimedPending.mockResolvedValue({
+      credits: [{ id: 'u1', email: 'a@x.com', credits: 5 }],
+      totalCount: 1,
+    });
+
+    const res = makeRes();
+    await handler(makeReq({}, { action: 'list-unclaimed-credits', page: '0', limit: '20' }, 'GET'), res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body?.credits).toHaveLength(1);
+    expect(res.body?.totalCount).toBe(1);
+    expect(h.listUnclaimedPending).toHaveBeenCalledWith(20, 0);
+  });
+
+  it('rechaza POST con 405', async () => {
+    const res = makeRes();
+    await handler(makeReq({}, { action: 'list-unclaimed-credits' }, 'POST'), res);
+    expect(res.statusCode).toBe(405);
+  });
+});
+
+describe('admin-api action=resend-unclaimed-reminder — reenvío manual', () => {
+  const UUID_UNCLAIMED = '123e4567-e89b-12d3-a456-4266554400ab';
+
+  it('reenvía el recordatorio, marca reminder_sent_at y audita', async () => {
+    h.getUnclaimedById.mockResolvedValue({
+      id: UUID_UNCLAIMED,
+      email: 'pendiente@x.com',
+      credits: 5,
+      provider: 'paypal',
+      expired_at: null,
+    });
+
+    const res = makeRes();
+    await handler(makeReq({ id: UUID_UNCLAIMED }, { action: 'resend-unclaimed-reminder' }, 'POST'), res);
+
+    expect(res.statusCode).toBe(200);
+    expect(h.sendUnclaimedReminder).toHaveBeenCalledWith('pendiente@x.com', 5);
+    expect(h.markUnclaimedReminded).toHaveBeenCalledWith(UUID_UNCLAIMED);
+    expect(vi.mocked(serverDal.adminAuditLogs.log)).toHaveBeenCalledWith(
+      'admin-user-1', 'resend_unclaimed_reminder', null, expect.objectContaining({ unclaimedId: UUID_UNCLAIMED })
+    );
+  });
+
+  it('fila inexistente o ya reclamada → 404', async () => {
+    h.getUnclaimedById.mockResolvedValue(null);
+
+    const res = makeRes();
+    await handler(makeReq({ id: UUID_UNCLAIMED }, { action: 'resend-unclaimed-reminder' }, 'POST'), res);
+
+    expect(res.statusCode).toBe(404);
+    expect(h.sendUnclaimedReminder).not.toHaveBeenCalled();
+  });
+
+  it('fila expirada → 400 y no envía', async () => {
+    h.getUnclaimedById.mockResolvedValue({
+      id: UUID_UNCLAIMED,
+      email: 'anon@expired.invalid',
+      credits: 5,
+      provider: 'paypal',
+      expired_at: new Date().toISOString(),
+    });
+
+    const res = makeRes();
+    await handler(makeReq({ id: UUID_UNCLAIMED }, { action: 'resend-unclaimed-reminder' }, 'POST'), res);
+
+    expect(res.statusCode).toBe(400);
+    expect(h.sendUnclaimedReminder).not.toHaveBeenCalled();
+  });
+
+  it('id que no es UUID → 400', async () => {
+    const res = makeRes();
+    await handler(makeReq({ id: 'no-uuid' }, { action: 'resend-unclaimed-reminder' }, 'POST'), res);
+
+    expect(res.statusCode).toBe(400);
+    expect(h.getUnclaimedById).not.toHaveBeenCalled();
+  });
+
+  it('fallo del proveedor de email → 502 y NO marca reminder_sent_at', async () => {
+    h.getUnclaimedById.mockResolvedValue({
+      id: UUID_UNCLAIMED,
+      email: 'pendiente@x.com',
+      credits: 5,
+      provider: 'paypal',
+      expired_at: null,
+    });
+    h.sendUnclaimedReminder.mockResolvedValue(false);
+
+    const res = makeRes();
+    await handler(makeReq({ id: UUID_UNCLAIMED }, { action: 'resend-unclaimed-reminder' }, 'POST'), res);
+
+    expect(res.statusCode).toBe(502);
+    expect(h.markUnclaimedReminded).not.toHaveBeenCalled();
   });
 });
