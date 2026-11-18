@@ -53,7 +53,7 @@ if (rootElement) {
         <AuthProvider>
           <ToastProvider>
             <Suspense fallback={
-              <div className="min-h-screen bg-[var(--color-neutral-text-primary)] text-white flex items-center justify-center font-bold">
+              <div className="min-h-screen bg-[var(--ui-preview-bg)] text-white flex items-center justify-center font-bold">
                 Cargando LEECV...
               </div>
             }>

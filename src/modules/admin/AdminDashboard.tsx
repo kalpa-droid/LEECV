@@ -24,8 +24,21 @@ import { button, elevationSystem, radius } from '../../shared/core/uiDesignSyste
 
 import {
   Users, Crown, LogOut, CreditCard, HardDrive,
-  ShieldCheck, Sparkles, Layout as LayoutIcon, ShieldAlert, Palette
+  ShieldCheck, Sparkles, Layout as LayoutIcon, ShieldAlert, Palette, RefreshCw
 } from 'lucide-react';
+
+/** Tiempo máximo de espera para verificar la sesión antes de ofrecer "Reintentar". */
+const SESSION_CHECK_TIMEOUT_MS = 15000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('Tiempo de espera agotado al verificar la sesión')), ms);
+    promise.then(
+      (value) => { clearTimeout(timer); resolve(value); },
+      (error) => { clearTimeout(timer); reject(error); },
+    );
+  });
+}
 
 export default function AdminDashboard() {
   const { showError, showSuccess } = useToast();
@@ -33,6 +46,7 @@ export default function AdminDashboard() {
 
   const [adminTab, setAdminTab] = useState<'overview' | 'users' | 'payments' | 'storage' | 'sentry' | 'aiTelemetry' | 'audit' | 'templates'>('overview');
   const [profile, setProfile] = useState<any>(undefined);
+  const [sessionError, setSessionError] = useState<string | null>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [stats, setStats] = useState({ totalUsers: 0, proUsers: 0, activeSubscriptions: 0 });
   const [loadingData, setLoadingData] = useState(false);
@@ -93,12 +107,32 @@ export default function AdminDashboard() {
   }
 
   async function checkSession() {
-    const p = await getCurrentProfile();
-    setProfile(p);
-    if (p?.role === 'admin') loadEverything();
+    setSessionError(null);
+    setProfile(undefined); // vuelve a "Verificando sesión…" en vez de flashear el login
+    try {
+      const p = await withTimeout(getCurrentProfile(), SESSION_CHECK_TIMEOUT_MS);
+      setProfile(p);
+    } catch (error) {
+      // Nunca dejar profile en undefined: mostrar pantalla de error con
+      // reintento en vez de pantalla en blanco permanente.
+      console.error('Error verificando sesión de administrador:', error);
+      setProfile(null);
+      setSessionError('No pudimos verificar tu sesión. Revisá tu conexión a internet e intentá de nuevo.');
+    }
   }
 
-  useEffect(() => { checkSession(); }, [page, searchQuery]);
+  // La verificación de sesión corre UNA sola vez al montar (no en cada
+  // cambio de página/búsqueda).
+  useEffect(() => { checkSession(); }, []);
+
+  // La carga de datos corre cuando ya se confirmó el rol admin y cambia la
+  // página o la búsqueda (y al confirmarse el admin por primera vez).
+  useEffect(() => {
+    if (profile?.role === 'admin') {
+      loadEverything();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.role, page, searchQuery]);
 
   useEffect(() => {
     if (profile?.role === 'admin') {
@@ -107,11 +141,35 @@ export default function AdminDashboard() {
     }
   }, [profile]);
 
-  if (profile === undefined) return null;
+  if (sessionError && !profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] font-sans px-6">
+        <div role="alert" className="max-w-md w-full text-center space-y-4 bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-2xl p-6">
+          <p className="font-black text-lg">No pudimos verificar tu sesión</p>
+          <p className="text-sm text-[var(--color-neutral-text-secondary)] font-medium">{sessionError}</p>
+          <button
+            onClick={checkSession}
+            className={`${button.primary} inline-flex items-center gap-2 px-4 py-2 text-sm font-extrabold`}
+          >
+            <RefreshCw className="w-4 h-4" /> Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (profile === undefined) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] font-sans" role="status">
+        <p className="font-bold">Verificando sesión de administrador…</p>
+      </div>
+    );
+  }
+
   if (!profile) return <AdminLogin onLogin={checkSession} />;
   if (profile.role !== 'admin') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--color-neutral-text-primary)] text-white font-sans">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] font-sans">
         <p className="font-bold">Tu cuenta no tiene permisos de administrador supremo.</p>
       </div>
     );

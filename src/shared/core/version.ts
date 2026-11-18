@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 2,
   minor: 21,
-  patch: 0,
-  label: 'V2.21.0',
-  lastUpdated: '2026-11-17',
+  patch: 1,
+  label: 'V2.21.1',
+  lastUpdated: '2026-11-18',
   lastAgent: '@opencode',
-  stage: 'Fase 2 reestructuracion del Panel Admin (PR-B): pestaña nueva "Resumen y Operaciones" (primera del panel) que rescata el bloque muerto adminTab - notificaciones con filtro no leidas/todas + marcar todas, comprobantes manuales con contraste tokenizado (nuevo token --color-status-danger-on-base de contraste 4.88:1 sobre danger-base) y link al comprobante, diagnostico en vivo de pasarelas y de motores IA REAL server-side (nuevo GET /api/admin/ai-providers-status con ping de AI_PROVIDERS + resumen de pausas de claves de ai_key_cooldowns via getAiKeyCooldownSummary, SOLO conteos sin exponer keys/hashes; antes el panel leia VITE_GROQ_API_KEY en el navegador que nunca existe → falso missing_vars) + botón limpiar pausas de claves ya expiradas (POST /api/admin/clear-ai-cooldowns → clearExpiredCooldowns, nunca cancela una pausa activa de 429 real); pestaña "Auditoría y Errores" montada y extendida (filtro por nivel y por fuente, marcar como resuelto client-side con resolved_at/resolved_by via policy UPDATE de admin, visor del contexto JSON, columna de huella fingerprint, sub-vista de admin_audit_logs con acciones de administradores); pestaña "Plantillas de CV" montada (TemplateManagementTab estaba huerfana); renderGatewayCard movido con radio real via style (el patrón rounded-[${...}] no genera CSS); adminNotifications.markAllRead en el DAL; 2 rewrites nuevos en vercel.json; tests del endpoint nuevo; bump MINOR por funcionalidad nueva.',
+  stage: 'Fix pantalla en blanco en /admin (rama fix/admin-white-screen): getCurrentProfile() ya no rechaza ante sesion invalida/red/lock de Supabase (try/catch -> null); checkSession() con timeout de 15s y pantalla de error con boton Reintentar; pantalla Verificando sesion visible en vez de return null; verificacion de sesion una sola vez al montar y carga paginada separada ([profile?.role, page, searchQuery]); tokens de contraste corregidos a var(--ui-preview-bg)/var(--ui-bg-panel) en Suspense fallback (main.tsx), aviso de permisos (AdminDashboard), fondo de AppShell y pastillas de sub-pestanas (TemplateManagementTab); fix PRESET_LIST Proxy (Symbol.iterator estricto y bound iterator sobre snapshot) que devolvia Array.prototype.values para prop=0 y rompia TemplateManagementTab en el primer render; guard de lista vacia en TemplateManagementTab; tests nuevos (presetRegistry + AdminDashboard); bump PATCH V2.21.0 -> V2.21.1.',
 } as const;
