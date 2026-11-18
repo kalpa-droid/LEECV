@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 /**
  * Regresión de la pantalla en blanco en /admin:
@@ -31,6 +31,7 @@ vi.mock('../../src/modules/admin/adminService', () => ({
   getIntegrationsStatus: vi.fn().mockResolvedValue({}),
   getAiProvidersStatus: vi.fn().mockResolvedValue({}),
   listCustomers: vi.fn().mockResolvedValue({ customers: [], totalCount: 0 }),
+  getPublishedCvsCount: vi.fn().mockResolvedValue(0),
 }));
 
 vi.mock('../../src/shared/core/ui/Toast', () => ({
@@ -55,6 +56,12 @@ import AdminDashboard from '../../src/modules/admin/AdminDashboard';
 describe('AdminDashboard — sesión / pantalla en blanco', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    // vite.config no expone globals:true → RTL no desmonta solo; cada test
+    // desmonta y dispara el cleanup del useEffect (clearTimeout del debounce).
+    cleanup();
   });
 
   it('mientras verifica la sesión muestra "Verificando sesión…" (no pinta null)', () => {
