@@ -11,6 +11,8 @@ import { validateBody } from './_lib/validateBody.js';
 import { serverDal } from './_lib/serverDal.js';
 import { applyPayment } from './_lib/applyPayment.js';
 import { captureBackendException } from './_lib/sentryBackend.js';
+import { reconcilePendingPayments } from './_lib/paymentReconciler.js';
+import { sendUnclaimedCreditsReminder } from './_lib/emails/sendUnclaimedCreditsReminder.js';
 
 let cachedStatus: { data: Record<string, ProviderStatus>; timestamp: number } | null = null;
 const CACHE_TTL_MS = 5 * 60 * 1000;
@@ -543,6 +545,91 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.error('[CRITICAL ADMIN API ERROR - resolve-pending-grant]:', err?.message || err, err?.stack);
       await captureBackendException(err, 'admin-api:resolve-pending-grant');
       return errorResponse(res, 500, 'Error al resolver el pago retenido');
+    }
+  }
+
+  if (action === 'reconcile-payments') {
+    if (req.method !== 'POST') return errorResponse(res, 405, 'Método HTTP no permitido');
+
+    const rateOk = await requireRateLimit(req, res, `admin:${admin.user.id}:reconcile-payments`, {
+      maxRequests: 10,
+      windowSeconds: 60,
+    });
+    if (!rateOk) return;
+
+    try {
+      const summary = await reconcilePendingPayments();
+      await serverDal.adminAuditLogs.log(admin.user.id, 'reconcile_payments', null, { ...summary });
+      return successResponse(res, { success: true, summary });
+    } catch (err: any) {
+      console.error('[CRITICAL ADMIN API ERROR - reconcile-payments]:', err?.message || err, err?.stack);
+      await captureBackendException(err, 'admin-api:reconcile-payments');
+      return errorResponse(res, 500, 'Error al reconciliar pagos');
+    }
+  }
+
+  if (action === 'list-unclaimed-credits') {
+    if (req.method !== 'GET') return errorResponse(res, 405, 'Método HTTP no permitido');
+
+    const rateOk = await requireRateLimit(req, res, `admin:${admin.user.id}:list-unclaimed-credits`, {
+      maxRequests: 30,
+      windowSeconds: 60,
+    });
+    if (!rateOk) return;
+
+    const page = Math.max(0, parseInt((req.query.page as string) || '0', 10));
+    const limit = Math.min(100, Math.max(1, parseInt((req.query.limit as string) || '20', 10)));
+
+    try {
+      const { credits, totalCount } = await serverDal.unclaimedCredits.listPending(limit, page * limit);
+      return successResponse(res, { credits, totalCount, page, pageSize: limit });
+    } catch (err: any) {
+      console.error('[CRITICAL ADMIN API ERROR - list-unclaimed-credits]:', err?.message || err, err?.stack);
+      await captureBackendException(err, 'admin-api:list-unclaimed-credits');
+      return errorResponse(res, 500, 'Error al consultar créditos sin reclamar');
+    }
+  }
+
+  if (action === 'resend-unclaimed-reminder') {
+    if (req.method !== 'POST') return errorResponse(res, 405, 'Método HTTP no permitido');
+
+    const rateOk = await requireRateLimit(req, res, `admin:${admin.user.id}:resend-unclaimed-reminder`, {
+      maxRequests: 10,
+      windowSeconds: 60,
+    });
+    if (!rateOk) return;
+
+    const body = validateBody<{ id: string }>(req, res, ['id']);
+    if (!body) return;
+
+    if (typeof body.id !== 'string' || !/^[0-9a-f-]{36}$/i.test(body.id.trim())) {
+      return errorResponse(res, 400, 'ID de crédito sin reclamar no válido');
+    }
+    const id = body.id.trim();
+
+    try {
+      const row = await serverDal.unclaimedCredits.getById(id);
+      if (!row) return errorResponse(res, 404, 'Crédito sin reclamar no encontrado o ya reclamado');
+      if (row.expired_at) {
+        return errorResponse(res, 400, 'Este crédito ya expiró; no se puede reenviar el recordatorio');
+      }
+
+      const ok = await sendUnclaimedCreditsReminder(row.email, row.credits);
+      if (!ok) {
+        return errorResponse(res, 502, 'No se pudo enviar el recordatorio; revisá la configuración del email');
+      }
+
+      await serverDal.unclaimedCredits.markReminded(row.id);
+      await serverDal.adminAuditLogs.log(admin.user.id, 'resend_unclaimed_reminder', null, {
+        unclaimedId: row.id,
+        credits: row.credits,
+        provider: row.provider,
+      });
+      return successResponse(res, { success: true });
+    } catch (err: any) {
+      console.error('[CRITICAL ADMIN API ERROR - resend-unclaimed-reminder]:', err?.message || err, err?.stack);
+      await captureBackendException(err, 'admin-api:resend-unclaimed-reminder');
+      return errorResponse(res, 500, 'Error al reenviar el recordatorio');
     }
   }
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AlertTriangle, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
-import { listPendingGrants, resolvePendingGrant } from '../adminService';
+import { listPendingGrants, resolvePendingGrant, reconcilePendingPayments } from '../adminService';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
 import { button, radius, elevationSystem } from '../../../shared/core/uiDesignSystem';
@@ -26,6 +26,30 @@ export function PendingGrantsTab() {
   const [reason, setReason] = useState('');
   const [approveAmountMismatch, setApproveAmountMismatch] = useState(false);
   const [resolving, setResolving] = useState(false);
+  const [reconciling, setReconciling] = useState(false);
+
+  async function runReconciliation() {
+    setReconciling(true);
+    await withErrorHandling(
+      async () => {
+        const summary = await reconcilePendingPayments();
+        if (summary) {
+          showSuccess(
+            `Reconciliación: ${summary.applied} acreditado(s), ${summary.rejected} rechazado(s), ${summary.stillPending} aún pendiente(s), ${summary.errors} error(es).`
+          );
+        } else {
+          showSuccess('Reconciliación ejecutada.');
+        }
+        await fetchGrants();
+      },
+      {
+        context: 'Reconciliación de pagos',
+        errorMessage: 'No se pudo ejecutar la reconciliación.',
+        notify: (message) => showError(message),
+      }
+    );
+    setReconciling(false);
+  }
 
   async function fetchGrants() {
     setLoading(true);
@@ -95,14 +119,25 @@ export function PendingGrantsTab() {
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={fetchGrants}
-            className={`${button.secondary} p-2`}
-            title="Actualizar pagos retenidos"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={runReconciliation}
+              disabled={reconciling}
+              className={`${button.secondary} px-2.5 py-2 text-[11px] font-bold disabled:opacity-50`}
+              title="Consultar a la pasarela el estado real de los pagos retenidos y acreditar los que ya fueron aprobados"
+            >
+              {reconciling ? 'Revisando…' : 'Reintentar reconciliación'}
+            </button>
+            <button
+              type="button"
+              onClick={fetchGrants}
+              className={`${button.secondary} p-2`}
+              title="Actualizar pagos retenidos"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">

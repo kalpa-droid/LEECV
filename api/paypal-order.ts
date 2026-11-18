@@ -7,6 +7,7 @@ import { applyPayment } from './_lib/applyPayment.js';
 import { supabaseAdmin } from './_lib/supabaseAdmin.js';
 import { captureBackendException } from './_lib/sentryBackend.js';
 import { dispatchWaAlert } from './_lib/whatsappAlert.js';
+import { resolveCheckoutIdentity } from './_lib/checkoutIdentity.js';
 
 /**
  * ACREDITACIÓN INMEDIATA tras una captura COMPLETED (idempotente): usa el
@@ -65,19 +66,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
     if (!rateOk) return;
 
-    const { plan = 'single_pdf', email, exportToken, userId } = req.body || {};
+    const identity = await resolveCheckoutIdentity(req, res, { forcedProvider: 'paypal' });
+    if (!identity) return; // la respuesta de error ya fue enviada
 
-    if (!email || !exportToken) {
-      return errorResponse(res, 400, 'Faltan campos obligatorios: email y exportToken');
-    }
+    const { plan, emailToUse, exportToken, userId } = identity;
 
     try {
-      const result = await createCheckoutForProvider('paypal', plan, exportToken, email, userId);
+      const result = await createCheckoutForProvider('paypal', plan, exportToken, emailToUse, userId);
       return successResponse(res, { checkoutUrl: result.checkoutUrl });
     } catch (err: any) {
       console.error('Error creando orden PayPal:', err);
       await captureBackendException(err, 'paypal-order:create', { plan, exportToken });
-      return errorResponse(res, 500, err?.message || 'No se pudo crear la orden de pago con PayPal');
+      // Mensaje genérico: nunca err.message del backend al cliente.
+      return errorResponse(res, 500, 'No se pudo crear la orden de pago con PayPal');
     }
   }
 
