@@ -57,7 +57,13 @@ export const mercadoPagoProvider: PaymentProvider = {
     const xRequestId = req.headers['x-request-id'] as string | undefined;
     if (!xSignature || !xRequestId) return false;
 
-    const dataId = (req.query?.['data.id'] as string) || parsedBody?.data?.id || req.body?.data?.id;
+    // data.id del webhook nuevo (JSON body) o id del IPN legacy (?topic=payment&id=...).
+    // El manifest HMAC se arma con el id del recurso en ambos casos.
+    const dataId =
+      (req.query?.['data.id'] as string) ||
+      parsedBody?.data?.id ||
+      req.body?.data?.id ||
+      (req.query?.topic ? (req.query?.id as string) : undefined);
     if (!dataId) return false;
 
     const parts = Object.fromEntries(
@@ -86,14 +92,21 @@ export const mercadoPagoProvider: PaymentProvider = {
     );
   },
 
-  extractPaymentData: async ({ parsedBody }: WebhookVerifyContext): Promise<PaymentDetails | null> => {
+  extractPaymentData: async ({ parsedBody, req }: WebhookVerifyContext): Promise<PaymentDetails | null> => {
+    // Webhook nuevo: JSON { type: 'payment', data: { id } }.
+    // IPN legacy: query ?topic=payment&id=... (también se procesa para que una
+    // configuración de notificaciones heredada no quede ignorada en silencio).
     const { type, data } = parsedBody || {};
-    if (type !== 'payment' || !data?.id) return null;
+    const topic = String(req?.query?.topic || req?.query?.type || '');
+    const legacyId = (req?.query?.id as string) || (req?.query?.['data.id'] as string);
+    const paymentId = (type === 'payment' ? data?.id : null) || (topic.includes('payment') ? legacyId : null);
+    if (!paymentId) return null;
 
     const mpToken = env.MP_ACCESS_TOKEN;
     if (!mpToken) return null;
 
-    const paymentRes = await fetch(`https://api.mercadopago.com/v1/payments/${data.id}`, {
+    // encodeURIComponent: el id llega de la URL/fuera de nuestro control.
+    const paymentRes = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(String(paymentId))}`, {
       headers: { Authorization: `Bearer ${mpToken}` },
     });
     if (!paymentRes.ok) return null;
@@ -105,12 +118,41 @@ export const mercadoPagoProvider: PaymentProvider = {
     if (payment.status !== 'approved' && !pendingStatuses.has(payment.status)) return null;
 
     const parsedRef = await parsePlanReference(payment.external_reference, 'mercadopago', String(payment.id));
+
+    // Dinero cobrado sin referencia utilizable: NO descartar en silencio.
+    // El webhook responde 200 'ignored' y la pasarela NO reintenta: sin esto,
+    // el pago quedaría cobrado sin ningún rastro local. providerStatus
+    // 'pending' lo retiene en pending_grants + notificación + alerta admin.
     if (!parsedRef) {
-      return null;
+      return {
+        exportToken: null,
+        email: payment.payer?.email ?? null,
+        userId: null,
+        plan: 'unknown',
+        metodoPago: 'mercadopago',
+        externalId: String(payment.id),
+        amount: payment.transaction_amount,
+        currency: payment.currency_id || 'ARS',
+        details: payment,
+        providerStatus: 'pending',
+      };
     }
 
     const payerEmail = payment.payer?.email;
-    if (!parsedRef.exportToken && !payerEmail && !parsedRef.userId) return null;
+    if (!parsedRef.exportToken && !payerEmail && !parsedRef.userId) {
+      return {
+        exportToken: null,
+        email: payerEmail ?? null,
+        userId: parsedRef.userId ?? null,
+        plan: parsedRef.plan,
+        metodoPago: 'mercadopago',
+        externalId: String(payment.id),
+        amount: payment.transaction_amount,
+        currency: payment.currency_id || 'ARS',
+        details: payment,
+        providerStatus: 'pending',
+      };
+    }
 
     return {
       exportToken: parsedRef.exportToken,

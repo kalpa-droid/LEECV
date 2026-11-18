@@ -1,5 +1,6 @@
 import type { ProviderId } from './types.js';
 import { getPrice } from './pricingCatalog.js';
+import { formatPlanReference } from './planReference.js';
 import { env } from '../config/env.js';
 
 export interface CheckoutSessionResult {
@@ -50,7 +51,10 @@ export async function createCheckoutForProvider(
             },
           ],
           payer: { email },
-          external_reference: JSON.stringify({ exportToken, plan, userId }),
+          // Referencia compacta (< 127 chars, límite estricto de PayPal y mismo
+          // formato en ambas pasarelas); parsePlanReference acepta también el
+          // JSON legacy de preferencias ya creadas.
+          external_reference: formatPlanReference(plan, exportToken, userId),
           back_urls: {
             success: `${env.SITE_URL}/?pago=exitoso`,
             failure: `${env.SITE_URL}/?pago=fallido`,
@@ -97,7 +101,9 @@ export async function createCheckoutForProvider(
                 currency_code: 'USD',
                 value: priceStr,
               },
-              custom_id: JSON.stringify({ exportToken, plan, userId }),
+              // Compacto: PayPal rechaza o trunca custom_id > 127 chars y un
+              // JSON truncado haría parsePlanReference fallar sin acreditar.
+              custom_id: formatPlanReference(plan, exportToken, userId),
               description: `LEECV Export (${plan})`,
             },
           ],

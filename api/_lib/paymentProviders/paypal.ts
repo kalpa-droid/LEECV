@@ -117,13 +117,6 @@ export const paypalProvider: PaymentProvider = {
     // In some cases (e.g. PAYMENT.CAPTURE.COMPLETED), payer email is nested in another object or missing if guest checkout
     const emailToUse = payerEmail || undefined;
 
-    const parsedRef = await parsePlanReference(customId, 'paypal', String(resource.id));
-    if (!parsedRef) {
-      return null;
-    }
-
-    if (!parsedRef.exportToken && !emailToUse && !parsedRef.userId) return null;
-
     let amount = resource.amount?.value;
     let currency = resource.amount?.currency_code || 'USD';
     
@@ -131,6 +124,42 @@ export const paypalProvider: PaymentProvider = {
     if (eventType === 'BILLING.SUBSCRIPTION.PAYMENT.COMPLETED' && resource.amount) {
       amount = resource.amount.total?.value || resource.amount.value;
       currency = resource.amount.total?.currency_code || resource.amount.currency_code || 'USD';
+    }
+
+    const parsedRef = await parsePlanReference(customId, 'paypal', String(resource.id));
+
+    // Dinero cobrado sin referencia utilizable: NO descartar en silencio.
+    // El webhook responde 200 'ignored' y PayPal NO reintenta: sin esto, el
+    // pago quedaría cobrado sin ningún rastro local. providerStatus 'pending'
+    // lo retiene en pending_grants + notificación + alerta al admin.
+    if (!parsedRef) {
+      return {
+        exportToken: null,
+        email: emailToUse ?? null,
+        userId: null,
+        plan: 'unknown',
+        metodoPago: 'paypal',
+        externalId: String(resource.id),
+        amount: amount,
+        currency: currency,
+        details: event,
+        providerStatus: 'pending',
+      };
+    }
+
+    if (!parsedRef.exportToken && !emailToUse && !parsedRef.userId) {
+      return {
+        exportToken: null,
+        email: emailToUse ?? null,
+        userId: parsedRef.userId ?? null,
+        plan: parsedRef.plan,
+        metodoPago: 'paypal',
+        externalId: String(resource.id),
+        amount: amount,
+        currency: currency,
+        details: event,
+        providerStatus: 'pending',
+      };
     }
 
     return {

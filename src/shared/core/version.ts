@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 2,
-  minor: 19,
-  patch: 2,
-  label: 'V2.19.2',
+  minor: 20,
+  patch: 0,
+  label: 'V2.20.0',
   lastUpdated: '2026-11-17',
   lastAgent: '@opencode',
-  stage: 'Fiabilidad del picker de PDF del Book Studio (V2.19.2): input <file> persistente en BookStudioContent (id book-source-pdf-input, siempre montado) con click sincrono dentro del gesto; BookSourceTypeStep detecta fallo del selector nativo en la sesion (bandera nativaPickerFailedSession) y pasa la tarjeta a <label htmlFor> nativo (un clic = un dialogo, sin JS); handleTriggerFileInput sin setTimeout y abre el panel lateral; aviso role=alert tambien en el panel principal cuando no hay PDF; Reabrir mi PDF con permiso denegado avisa y cae al selector nativo (label); aceptacion de application/pdf sin .pdf (isPdfLikeFile); pickerRef con deps [pickerRef, bookId, nativePickerFailed]; loadPdfDocumentWithCmaps corta sin reintentar cMaps ante PasswordException/InvalidPDFException (isFatalPdfLoadError); CACHE_NAME sw.js leecv-pwa-v4; tests tests/book-engine/pdfPickingFlow.test.ts.',
+  stage: 'Blindaje de pagos automaticos MP/PayPal (Fase 1, PR-A): applyPayment cierra unclaimed_email_credits como completed con details.unclaimed (el webhook reintento ya no duplica avisos/WA y el historial del admin no queda pendiente para siempre), insert verificado con { error } (Supabase JS v2 no lanza: fallo real ya no responde 200 OK en silencio), guard credits enteros (pro sin perfil nunca guarda unlimited), recibo con nota de reclamo automatico al entrar con el mismo email; paypal-order capture con rate-limit propio + acreditacion inmediata via applyPayment con el MISMO capture.id del webhook (idempotente, el usuario vuelve con creditos aunque el webhook tarde o no llegue) + manejo ORDER_ALREADY_CAPTURED sin re-acreditar; custom_id/external_reference compacto plan|token|uid (<127 chars de PayPal) con retrocompat JSON en parsePlanReference (formatPlanReference); PdfCheckoutModal ata el token al user_id si hay sesion; App.tsx al volver del pago espera hidratacion de sesion + polling claim/refresh 3x2s; webhook MP: encodeURIComponent del payment id y soporte IPN legacy topic=payment&id; tests nuevos planReference/applyPaymentUnclaimed/paypalOrderCapture (19) y bump MINOR por funcionalidad nueva.',
 } as const;
