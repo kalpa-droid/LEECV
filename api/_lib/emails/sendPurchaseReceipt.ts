@@ -1,4 +1,12 @@
-export async function sendPurchaseReceipt(toEmail: string, planLabel: string, amountPaid: string, orderId: string) {
+export async function sendPurchaseReceipt(
+  toEmail: string,
+  planLabel: string,
+  amountPaid: string,
+  orderId: string,
+  /** Nota extra para casos especiales (p. ej. créditos sin cuenta que se
+   *  acreditan solos al entrar con el mismo correo). */
+  extraNote?: string
+) {
   const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 
   const htmlContent = `
@@ -21,6 +29,7 @@ export async function sendPurchaseReceipt(toEmail: string, planLabel: string, am
         </tr>
       </table>
       <p>Tus créditos / plan ya han sido acreditados en tu cuenta. Puedes ir a <a href="https://leecv.com">LEECV</a> para empezar a usarlos.</p>
+      ${extraNote ? `<p style="background:#f4f4f5;border-left:3px solid #6a1b9a;padding:10px;">${extraNote}</p>` : ''}
       <p>Si tienes alguna consulta, puedes responder a este correo.</p>
       <p>Saludos,<br>El equipo de LEECV.</p>
     </div>

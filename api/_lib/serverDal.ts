@@ -180,10 +180,19 @@ export const serverDal = {
       return data || null;
     },
 
-    async updateEntitlementStatus(provider: string, external_id: string, entitlement_status: 'completed' | 'failed' | 'pending'): Promise<void> {
+    async updateEntitlementStatus(
+      provider: string,
+      external_id: string,
+      entitlement_status: 'completed' | 'failed' | 'pending',
+      /** Patch opcional para la columna jsonb `details` (p. ej. { unclaimed: true }). */
+      details?: any
+    ): Promise<void> {
+      const patch: Record<string, unknown> = { entitlement_status };
+      if (details !== undefined) patch.details = details;
+
       const { error } = await supabaseAdmin
         .from('processed_payments')
-        .update({ entitlement_status })
+        .update(patch)
         .eq('provider', provider)
         .eq('external_id', external_id);
 

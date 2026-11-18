@@ -73,7 +73,14 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   const { showSuccess, showError, showInfo } = useToast();
   const { confirm } = useConfirm();
   const { inGracePeriod, graceEndsAt, refreshEntitlements } = useEntitlements();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
+  // Refs espejo para el retorno de pago: el effect corre una sola vez al montar
+  // (mientras la sesión de Supabase todavía se hidrata) y debe leer el user
+  // fresco, no el closure nulo del primer render.
+  const userRef = useRef(user);
+  useEffect(() => { userRef.current = user; }, [user]);
+  const authLoadingRef = useRef(authLoading);
+  useEffect(() => { authLoadingRef.current = authLoading; }, [authLoading]);
   const atsLive = useAtsLiveScore(cvData, cvData?.jobTarget?.jobDescription);
   const atsLiveScore = atsLive.score;
 
@@ -116,23 +123,48 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   useEffect(() => {
     syncPresetsFromStorage().catch(err => console.warn('Error sincronizando presets iniciales:', err));
 
-    procesarRetornoPago()
-      .then(async (res) => {
-        if (res?.status === 'paypal_captured') {
-          showSuccess('¡Pago procesado con éxito vía PayPal! Tus créditos han sido activados.');
-          if (user) await claimCreditsOnAuth(user);
-          await refreshEntitlements();
-        } else if (res?.status === 'payment_success') {
-          showSuccess('¡Pago confirmado! Tu cuenta ha sido actualizada.');
-          if (user) await claimCreditsOnAuth(user);
-          await refreshEntitlements();
-        }
-      })
-      .catch((err) => {
-        showError(err?.message || 'Inconveniente al procesar el retorno del pago.');
-      });
+    const esperarSesionHidratada = async () => {
+      // Techo de ~4.5s: si la sesión sigue hidratando más que eso, seguimos
+      // con lo que haya (el claim corre igual cuando user exista en otro
+      // disparo de claimCreditsOnAuth del propio authService).
+      for (let i = 0; i < 15 && authLoadingRef.current; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
+    };
 
+    let cancelled = false;
 
+    const procesar = async () => {
+      const res = await procesarRetornoPago();
+      if (!res || cancelled) return;
+      if (res.status === 'paypal_captured') {
+        showSuccess('¡Pago procesado con éxito vía PayPal! Tus créditos han sido activados.');
+      } else if (res.status === 'payment_success') {
+        showSuccess('¡Pago confirmado! Tu cuenta ha sido actualizada.');
+      }
+
+      // La pasarela acredita por webhook, que puede demorarse 2-3s respecto del
+      // auto_return (y quedarse sin llegar). Polling de respaldo: claim +
+      // refresh con user fresco, 3 reintentos cada 2s, siempre el último refresh.
+      await esperarSesionHidratada();
+      if (cancelled) return;
+      const intentos = 3;
+      for (let intento = 0; intento < intentos; intento++) {
+        if (intento > 0) await new Promise((resolve) => setTimeout(resolve, 2000));
+        if (cancelled) return;
+        const currentUser = userRef.current;
+        if (currentUser) await claimCreditsOnAuth(currentUser);
+        await refreshEntitlements();
+      }
+    };
+
+    procesar().catch((err) => {
+      if (!cancelled) showError(err?.message || 'Inconveniente al procesar el retorno del pago.');
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const [activeTab, setActiveTab] = useState(() => {

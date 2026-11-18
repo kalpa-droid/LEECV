@@ -7,6 +7,14 @@ import { dispatchWaAlert } from './whatsappAlert.js';
 
 export type PlanType = string;
 
+/** Etiquetas de plan para el recibo de compra (compartidas por todos los caminos). */
+const PLAN_LABELS: Record<string, string> = {
+  'single_pdf': 'LEECV - 1 Exportación PDF',
+  'credits_pack_5': 'Pack de 5 Exportaciones',
+  'credits_pack_10': 'Pack de 10 Exportaciones',
+  'pro': 'Plan Pro (Suscripción Mensual)'
+};
+
 export interface PaymentDetails {
   exportToken?: string | null;
   email?: string | null;
@@ -194,10 +202,17 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
       // en lugar de pending_grants, para evitar bloqueos. La tabla acepta inserts
       // de service_role sin política de INSERT definida (migración 20261030).
       if (email) {
-        try {
-          await supabaseAdmin.from('unclaimed_email_credits').insert({
+        // Supabase JS v2 NO lanza por errores SQL: devuelve { error }. Sin esta
+        // verificación, un insert fallido respondería 200 OK al webhook y el
+        // crédito quedaría en el aire.
+        // Guard: si algún día entrara pro sin perfil, 'unlimited' (string) no
+        // puede ir a la columna integer `credits`.
+        const unclaimedCredits = typeof planData.credits === 'number' ? planData.credits : 0;
+        const { error: unclaimedInsertError } = await supabaseAdmin
+          .from('unclaimed_email_credits')
+          .insert({
             email,
-            credits: planData.credits ?? 0,
+            credits: unclaimedCredits,
             payment_id: grantPaymentId,
             provider: metodoPago,
             plan,
@@ -206,23 +221,47 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
             claim_payment_id: grantPaymentId,
             created_at: new Date().toISOString(),
           });
-        } catch (unclaimedErr: any) {
+
+        if (unclaimedInsertError) {
           // Idempotente: si ya existe fila con este payment_id, no es error.
-          if (
-            unclaimedErr?.code !== '23505' &&
-            !String(unclaimedErr?.message || '').includes('unique constraint') &&
-            !String(unclaimedErr?.message || '').includes('duplicate key')
-          ) {
-            throw unclaimedErr;
+          const isDuplicate =
+            unclaimedInsertError.code === '23505' ||
+            String(unclaimedInsertError.message || '').includes('unique constraint') ||
+            String(unclaimedInsertError.message || '').includes('duplicate key');
+
+          if (isDuplicate) {
+            console.log(`[applyPayment] unclaimed_email_credits ya tenía el pago ${grantPaymentId} (idempotente)`);
+          } else {
+            throw new Error(`[applyPayment] Error guardando unclaimed_email_credits (${grantPaymentId}): ${unclaimedInsertError.message}`);
           }
         }
+      }
+
+      // El pago quedó resuelto en el bolsillo del invitado: NO es 'pending'.
+      // Si quedara 'pending', CADA reintento del webhook re-corre el flujo
+      // completo (duplicando notificaciones y alertas WhatsApp) y el historial
+      // del admin lo mostraría pendiente para siempre. 'completed' con
+      // details.unclaimed cierra la fila para reintentos e historial.
+      if (externalId && metodoPago) {
+        await serverDal.processedPayments.updateEntitlementStatus(metodoPago, externalId, 'completed', { unclaimed: true });
+      }
+
+      // Recibo de compra con la instrucción de cómo reclamar los créditos
+      // (la acreditación es automática al entrar con este mismo correo).
+      if (planData) {
+        const label = PLAN_LABELS[planData.id] || planData.id;
+        const UNCLAIMED_NOTE =
+          'Guardamos tus créditos asociados a este correo. Cuando entres a LEECV con este mismo email (con código por correo o tu cuenta), se acreditan solos, sin que tengas que hacer nada.';
+        sendPurchaseReceipt(email, label, `${amount || 0} ${currency || ''}`, externalId || 'N/A', UNCLAIMED_NOTE).catch(e => {
+          console.error('Error enviando recibo (unclaimed) no bloqueante:', e);
+        });
       }
 
       await serverDal.adminNotifications.create({
         type: 'payment_pending_review',
         title: `Pago retenido sin perfil (${plan})`,
-        message: `Email: ${email} Ref: ${externalId}. Crédito guardado en unclaimed_email_credits (invitado).`,
-        metadata: { plan, metodoPago, externalId, email, userId }
+        message: `Email: ${email} Ref: ${externalId}. Crédito guardado en unclaimed_email_credits (invitado). Ya queda marcado como completado; se reclama solo al entrar con este correo.`,
+        metadata: { plan, metodoPago, externalId, email, userId, unclaimed: true }
       });
 
       // Alerta WhatsApp al admin ante pago de invitado retenido — despacho no bloqueante.
@@ -309,12 +348,6 @@ export async function applyPayment(supabaseAdmin: SupabaseClient, payment: Payme
 
   // 2.5 Enviar recibo de compra
   if (email && planData) {
-    const PLAN_LABELS: Record<string, string> = {
-      'single_pdf': 'LEECV - 1 Exportación PDF',
-      'credits_pack_5': 'Pack de 5 Exportaciones',
-      'credits_pack_10': 'Pack de 10 Exportaciones',
-      'pro': 'Plan Pro (Suscripción Mensual)'
-    };
     const label = PLAN_LABELS[planData.id] || planData.id;
     // Fire and forget
     sendPurchaseReceipt(email, label, `${amount || 0} ${currency || ''}`, externalId || 'N/A').catch(e => {
