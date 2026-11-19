@@ -10,6 +10,7 @@ export interface NewDocumentMenuProps {
   onSelectBook: () => void;
   onSelectCoverLetter?: () => void;
   onSelectPlanner?: () => void;
+  onSelectInvoice?: () => void;
   className?: string;
 }
 
@@ -19,6 +20,7 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
   onSelectBook,
   onSelectCoverLetter,
   onSelectPlanner,
+  onSelectInvoice,
   className = '',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -146,6 +148,25 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
               <div>
                 <span className="block font-extrabold text-[var(--ui-text-primary)]">Nueva Agenda / Planificador</span>
                 <span className="block text-[10px] text-[var(--ui-text-secondary)]">Para imprimir en casa o en una imprenta</span>
+              </div>
+            </button>
+          )}
+
+          {onSelectInvoice && (
+            <button
+              type="button"
+              onClick={() => {
+                setIsOpen(false);
+                onSelectInvoice();
+              }}
+              className="w-full text-left px-3 py-2 rounded-[10px] text-xs font-bold hover:bg-[var(--ui-btn-neutral-hover)] flex items-center gap-2.5 transition cursor-pointer group"
+            >
+              <div className={`p-1.5 rounded-[${radius.card}] bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)] group-hover:scale-105 transition`}>
+                <DomSectionIcon iconId={PRODUCT_ICON_IDS.factura} className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="block font-extrabold text-[var(--ui-text-primary)]">Nuevo Presupuesto / Factura</span>
+                <span className="block text-[10px] text-[var(--ui-text-secondary)]">Tus datos quedan en tu computadora, sin internet</span>
               </div>
             </button>
           )}

@@ -39,6 +39,7 @@ import { cvDataToContentSections } from '../shared/core/pdf-engine/layers/record
 import { runAtsPreflightCheck, AtsPreflightResult } from '../shared/core/pdf-engine/layers/ats/atsPreflightCheck';
 import { useAtsLiveScore } from '../shared/core/ats/useAtsLiveScore';
 const PlannerStudioContent = lazy(() => import('../modules/planner-studio/PlannerStudioContent').then(m => ({ default: m.PlannerStudioContent })));
+const FacturadorStudioContent = lazy(() => import('../modules/facturador-studio/FacturadorStudioContent').then(m => ({ default: m.FacturadorStudioContent })));
 import { loadCVById, loadDocumentById, saveCV } from '../shared/core/storage/documentStorageService';
 import { setPendingDocumentToOpen, getPendingDocumentToOpen, clearPendingDocumentToOpen } from '../shared/core/storage/pendingDocumentHandoff';
 import { runWithSafeSave } from '../shared/core/storage/safeNavigationEngine';
@@ -204,6 +205,19 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
   }, [cvData?.id, cvData?.activePresetId, (cvData as any)?.cardSize, (cvData as any)?.docType, cvData?.doc_type_id]);
 
   const handleSwitchDocumentTab = async (targetCvId: string, targetDocType: string = 'cv', opts: { skipSaveCurrent?: boolean } = {}) => {
+    if (targetDocType === 'invoice') {
+      // FacturLee no usa cvData: navegar a la ruta de la factura sin cargar datos de CV.
+      setTabs(getOpenTabs());
+      if (currentRoute !== '/crear-factura') {
+        if (onNavigate) {
+          onNavigate('/crear-factura');
+        } else if (typeof window !== 'undefined') {
+          window.history.pushState({}, '', '/crear-factura');
+          window.dispatchEvent(new PopStateEvent('popstate'));
+        }
+      }
+      return;
+    }
     if (!targetCvId || targetCvId === cvData?.id || isSwitchingDocument) return;
 
     setIsSwitchingDocument(true);
@@ -260,11 +274,13 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
 
   const [isPanelOpen, setIsPanelOpen] = useState(true);
 
-  const activeDocType: 'cv' | 'business_card' | 'book' | 'cover_letter' | 'planner' =
+  const activeDocType: 'cv' | 'business_card' | 'book' | 'cover_letter' | 'planner' | 'invoice' =
     currentRoute === '/crear-libro' || (cvData?.activePresetId?.startsWith('libro-') ?? false) || (cvData as any)?.docType === 'book'
       ? 'book'
       : cvData?.activePresetId === 'carta-presentacion' || (cvData as any)?.docType === 'cover_letter'
       ? 'cover_letter'
+      : currentRoute === '/crear-factura'
+      ? 'invoice'
       : currentRoute === '/crear-agenda' || cvData?.activePresetId?.startsWith('planner-') || (cvData as any)?.docType === 'planner'
       ? 'planner'
       : cvData?.activePresetId === 'tarjeta-personal'
@@ -374,6 +390,11 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
       }
       return;
     }
+    if (currentRoute === '/crear-factura') {
+      // La pestaña de la factura la registra el propio estudio (useRegisterDocumentTab)
+      // con su título de negocio: nunca crear un CV en blanco ni un borrador fiscal.
+      return;
+    }
   }, [currentRoute, tabs, createBlankDocumentWithTab]);
 
 
@@ -391,6 +412,11 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     if (!routeChanged) return;
 
     const targetDocType = getDocTypeForRoute(currentRoute);
+    if (targetDocType === 'invoice') {
+      // FacturLee no usa cvData: su contenido vive en la bóveda cifrada local.
+      prevRouteRef.current = currentRoute;
+      return;
+    }
     const currentDocType = cvData ? inferDocumentTypeId(cvData) : null;
 
     // Primero, si hay una intención explícita de navegación hacia un documento específico
@@ -777,6 +803,18 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     });
   };
 
+  const handleNewInvoice = async () => {
+    if (currentRoute !== '/crear-factura') {
+      if (onNavigate) {
+        onNavigate('/crear-factura');
+      } else if (typeof window !== 'undefined') {
+        window.history.pushState({}, '', '/crear-factura');
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      }
+    }
+    showSuccess('FacturLee lista. Tus datos quedan solo en esta computadora.');
+  };
+
   const handleNewPlanner = async () => {
     confirm({
       title: '¿Iniciar nueva Agenda / Planificador?',
@@ -918,6 +956,41 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
             onOpenSavedCVsModal={() => setIsSavedCVsOpen(true)}
             onOpenSaveAsModal={() => setIsSaveAsModalOpen(true)}
             onOpenJsonDownloadModal={() => setIsDownloadModalOpen(true)}
+            onOpenShareAppModal={() => setIsShareAppModalOpen(true)}
+            onOpenPrivacy={() => setIsPrivacyModalOpen(true)}
+          />
+        </Suspense>
+        {appModals}
+      </>
+    );
+  }
+
+  if (currentRoute === '/crear-factura') {
+    const activeInvoiceTab = tabs.find(
+      t => t.docType === 'invoice' || inferDocumentTypeId(t) === 'invoice'
+    );
+    const activeInvoiceTabId =
+      activeInvoiceTab?.id || activeInvoiceTab?.cvId || cvData?.id || '';
+    return (
+      <>
+        <Suspense fallback={<div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">Cargando FacturLee…</div>}>
+          <FacturadorStudioContent
+            currentUiTheme={globalUiTheme}
+            documentTabs={tabs}
+            activeTabId={activeInvoiceTabId}
+            onSelectTab={handleSwitchDocumentTab}
+            onCloseTab={(id) => {
+              const tab = tabs.find(t => t.id === id || t.cvId === id);
+              handleCloseFooterTab({ stopPropagation: () => {} } as any, id, tab?.title || 'Documento');
+            }}
+            onNavigateToDocument={(targetDocType, id) => handleNavigateToDocumentTab(targetDocType, id)}
+            onTabsChanged={setTabs}
+            onNewCV={handleNewCV}
+            onNewCard={handleNewCard}
+            onNewBook={handleNewBook}
+            onNewPlanner={handleNewPlanner}
+            onNewInvoice={handleNewInvoice}
+            cycleUITheme={cycleUITheme}
             onOpenShareAppModal={() => setIsShareAppModalOpen(true)}
             onOpenPrivacy={() => setIsPrivacyModalOpen(true)}
           />
@@ -1072,6 +1145,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         onNewBook: handleNewBook,
         onNewCoverLetter: handleNewCoverLetter,
         onNewPlanner: handleNewPlanner,
+        onNewInvoice: handleNewInvoice,
         onClose: handleCloseFooterTab
       }}
       modalsSlot={appModals}
@@ -1084,7 +1158,7 @@ export default function App() {
   const [currentRoute, setCurrentRoute] = useState<string>(() => {
     const path = navigation.getPathname();
     if (path === '/crear-carta') return '/crear-cv';
-    if (path === '/crear-cv' || path === '/crear-tarjeta' || path === '/crear-libro' || path === '/crear-agenda' || path.startsWith('/blog')) {
+    if (path === '/crear-cv' || path === '/crear-tarjeta' || path === '/crear-libro' || path === '/crear-agenda' || path === '/crear-factura' || path.startsWith('/blog')) {
       return path;
     }
     return '/';

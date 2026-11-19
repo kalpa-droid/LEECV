@@ -69,7 +69,7 @@ export const landingCatalog = {
     line: 'Más de 10.000 documentos creados y listos para imprimir',
   },
   products: {
-    sectionTitle: 'Cuatro herramientas en un solo lugar',
+    sectionTitle: 'Seis herramientas en un solo lugar',
     cv: {
       badge: 'Lo Más Usado',
       title: 'Creador de Currículum',
@@ -132,9 +132,21 @@ export const landingCatalog = {
       ],
       cta: 'Escribir mi Carta',
     },
+    facturas: {
+      badge: '100% local',
+      title: 'Presupuestos y Comprobantes',
+      tagline: 'Tus comprobantes, en tu computadora',
+      description: 'Armá presupuestos y comprobantes para tus clientes. Se guardan con clave en tu computadora, sin internet ni cuentas.',
+      bullets: [
+        'Tus datos, tu logo y tus clientes quedan solo en tu computadora',
+        'Imprimilo cuando lo necesites o descargá el archivo',
+        'Control de lo que vendiste y a quién le falta pagar',
+      ],
+      cta: 'Armar mi primer comprobante',
+    },
   },
   portalIntro: {
-    eyebrow: 'Cuatro herramientas independientes',
+    eyebrow: 'Seis herramientas independientes',
     title: '¿Qué querés crear hoy?',
     description: 'Seleccioná la herramienta que necesitas. Todas incluyen autoguardado, privacidad total y descarga directa.',
   },

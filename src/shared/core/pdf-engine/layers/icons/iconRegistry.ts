@@ -478,6 +478,16 @@ export const ICON_REGISTRY: Record<string, IconDefinition> = {
       'M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z'
     ]
   },
+  factura: {
+    id: 'factura',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M5 2h14v18.5l-2.33-1.5-2.34 1.5-2.33-1.5-2.33 1.5L7.33 19 5 20.5z',
+      'M9 7h6',
+      'M9 11h6',
+      'M9 15h3'
+    ]
+  },
   ia: {
     id: 'ia',
     viewBox: '0 0 24 24',

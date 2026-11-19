@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 2,
-  minor: 25,
+  minor: 26,
   patch: 0,
-  label: 'V2.25.0',
+  label: 'V2.26.0',
   lastUpdated: '2026-11-19',
   lastAgent: '@antigravity',
-  stage: 'feat(ai): integración del proveedor OpenRouter con modelos libres y fallback + feat(blueprint): Regla 10 y Blueprint con 7 Pilares de integración para apps nativas y entrenamiento de Lidio.',
+  stage: 'feat(facturador): FacturLee /crear-factura — facturador 100% local y cifrado (bóveda PBKDF2 + AES-256-GCM, Llave de Rescate, sin nube, cero PII), comprobante en PDF + Excel de 5 hojas + respaldo .leecv-fact.',
 } as const;
