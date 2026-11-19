@@ -777,13 +777,33 @@ Migración a una arquitectura de facturación stateless ("guest-first") donde el
 - **Notas de sesión**: `AGENTS.md` y `docs/APP_BLUEPRINT.md` ya estaban staged en el working tree y se dejaron FUERA del PR #142 a propósito (trabajo en paralelo del usuario), junto con cambios en `api/_lib/aiProviders/*` y `api/cv-import-api.ts`. `tsconfig.tsbuildinfo` tampoco se commitea.
 - **Instrucción para el siguiente agente**: (1) Siguen pendientes en prod las migraciones `20261118_unclaimed_credits_retention.sql` y `20261119_fix_admin_notification_types.sql` (Kalpa). (2) Regla 10 de AGENTS.md ahora tiene 7 pilares: toda asistencia IA pasa por `aiClient.executeAiTask()` / `api/_lib/aiTasks/catalog.ts` y toda app nueva entrena a Lidio en `app_guide_assistant`. (3) Bump de `version.ts` en el mismo commit en toda PR de trabajo.
 
-## [2026-11-19] - Export PDF y créditos, Fase A (V2.24.3)
-- **Directiva**: `.opencode/plans/directiva-fix-export-creditos.md`, ejecutada en la rama `fix/export-credits-phase-a`, aislada en un worktree (`LEECV.worktrees/fix-export-credits-phase-a`) para no mezclar el trabajo en paralelo de Antigravity (OpenRouter + Blueprint, `feat/openrouter-and-native-app-blueprint` @ `1600c49`, V2.25.0). `npm run check-all` local = **0 errores**.
+## [2026-11-19] - Export PDF y créditos, Fase A (PR #144, V2.24.3)
+- **Merge #144 confirmado TRIPLE FUENTE**: `origin/main` = `40bedfc5c656e733964e4280aee3e3050c126a19`. CI GitHub Actions `check-all` **success** (run 44462072717); Vercel pass. Merge squash (rama `fix/export-credits-phase-a` conservada). Aprobado por Kalpa ("si mergea todo"). PR: https://github.com/kalpa-droid/LEECV/pull/144.
+- **Directiva**: `.opencode/plans/directiva-fix-export-creditos.md`, ejecutada por OpenCode en la rama `fix/export-credits-phase-a` en un worktree aislado (`LEECV.worktrees/fix-export-credits-phase-a`).
 - **E1 bypass de créditos**: `src/app/AppModals.tsx` ahora pasa `onConfirm={proceedWithExport}` a `PdfCheckoutModal` (antes `triggerPdfGeneration`, que generaba el PDF sin validar ni consumir crédito). `proceedWithExport` valida/consume y recién entonces llama a `handleStartPDFGeneration`.
 - **Cobro único (desvío aprobado por Kalpa)**: se quitó el `consumeCreditIfNeeded()` interno de `PdfCheckoutModal.handleConfirmExport` (hoy solo llama a `onConfirm()` con guard `isProcessing`). El llamador es el único gate: `proceedWithExport` (CV), `handleExportPdf`/`handleExportDocx` (cartas) y `CardSheetExportSelector.handleExport` (tarjetas). Antes había doble cobro latente en CV y en cartas.
 - **E2 (Regla 1)**: `handleStartPDFGeneration` en `src/app/App.tsx` migrado a `withErrorHandling()` (contexto "Exportar PDF", toast de error; se mantienen `setPdfProgress`/`setIsPdfComplete`).
-- **E3 (Regla 2)**: 20 ocurrencias `rounded-[${radius.X}]` migradas a `style={{ borderRadius: radius.X }}` en `PdfCheckoutModal` (9), `CoverLetterExportModal` (2) y `CardSheetExportSelector` (9); los `className` sin interpolaciones pasaron a string literal. Se usaron los valores reales del token (`modal` 16px, `card` 12px, `control` 10px), no los de la directiva (10/8/6).
+- **E3 (Regla 2)**: 20 ocurrencias `rounded-[${radius.X}]` migradas a `style={{ borderRadius: radius.X }}` en `PdfCheckoutModal` (9), `CoverLetterExportModal` (2) y `CardSheetExportSelector` (9); los `className` sin interpolaciones pasaron a string literal. Se usaron los valores reales del token (`modal` 16px, `card` 12px, `control` 10px).
 - **E7**: comentario en `CardExportModal` que documenta que el consumo de crédito vive en `CardSheetExportSelector`.
-- **Estado del código**: `version.ts` = **V2.24.3**. Sin migraciones SQL ni cambios en `api/`. `tsconfig.tsbuildinfo` no se commitea.
-- **Verificación en prod sugerida**: con 1 crédito, exportar CV → debe salir el PDF y quedar en 0 (no fallar por doble cobro); sin créditos, exportar CV/carta/tarjeta → abre el checkout, pagar y exportar debe funcionar con un único consumo.
-- **Instrucción para el siguiente agente**: (1) Revisar y aprobar/mergear la PR de `fix/export-credits-phase-a` (toca `src/shared/core/version.ts`: requiere CODEOWNER). (2) Tras el merge, verificar `origin/main` y registrar el asiento post-merge. (3) Siguen pendientes en prod las 2 migraciones heredadas.
+- **Estado del código**: `version.ts` = **V2.24.3** en commit `40bedfc`.
+
+## [2026-11-19] - OpenRouter con Modelos Libres + Regla 10 y Blueprint Nativo 7 Pilares (PR #143, V2.25.0)
+- **Merge #143 confirmado TRIPLE FUENTE**: `origin/main` = `b6bd654ae3fef300c16c9a4c29a9116c793ff295` (API gh pr view mergeCommit + git log origin/main -1 + git ls-remote origin main idénticos). CI GitHub Actions `check-all` **success** (run 44464535420); Vercel preview pass. Merge squash (rama `feat/openrouter-and-native-app-blueprint` conservada). Aprobado por Kalpa ("si mergea todo"); CODEOWNER por `src/shared/core/version.ts`. `main` local alineado (`ff-only` a `b6bd654`). PR: https://github.com/kalpa-droid/LEECV/pull/143.
+- **OpenRouter AI Provider (`api/_lib/aiProviders/openrouter.ts`)**:
+  - Integración nativa compatible con OpenAI SDK endpoint de OpenRouter (`openrouter.ai/api/v1`).
+  - Soporte explícito para modelos gratuitos (`:free`) con costo $0 en `costCalculator.ts`.
+  - Soporte de visión multimodal (imágenes para OCR), JSON schema guidance y health ping.
+  - Rotación y fallback de API keys (`OPENROUTER_API_KEYS` / `OPENROUTER_API_KEY`).
+  - Integrado a la cascada canónica: `['groq', 'openrouter', 'gemini']` en `registry.ts` y `cv-import-api.ts`.
+- **Regla 10 en `AGENTS.md` (7 Pilares Canónicos Innegociables para Apps y Subproductos Nativos)**:
+  1. Identidad y Capacidades en el Registro Central (`DOCUMENT_TYPE_REGISTRY` / `CAPABILITY_REGISTRY`).
+  2. Formularios y Paneles Dinámicos canónicos (`<Field />`, `<RepeatableSection />`, `resolveSectionIconId()`, sin clases interpoladas).
+  3. Motor PDF Universal y Visor Centralizado (Preset + DataAdapter, controles unificados de zoom y centrado en vivo).
+  4. Gating de Créditos y Pasarela Unificada (`useExportEntitlement`, `consumeCreditIfNeeded`, `PdfCheckoutModal`).
+  5. Alta, Login y Reclamo de Créditos Idempotente (`claimCreditsOnAuth(user)`).
+  6. Trazabilidad y Observabilidad Obligatoria (`withErrorHandling()`, log automático a `admin_error_logs`).
+  7. Motor de IA Unificado y Entrenamiento Obligatorio de Lidio (`aiTasks/catalog.ts`, `app_guide_assistant`).
+- **Blueprint Técnico Integral (`docs/APP_BLUEPRINT.md`)**:
+  - Especificación exhaustiva de arquitectura nativa, diagramas de flujo, scaffolding paso a paso y checklist pre-merge.
+- **Estado del código**: `version.ts` = **V2.25.0** en `main` @ `b6bd654`. Deploy automático en producción via Vercel tras el merge.
+- **Instrucción para el siguiente agente**: (1) Siguen pendientes en prod las 2 migraciones SQL heredadas (`20261118_unclaimed_credits_retention.sql` y `20261119_fix_admin_notification_types.sql`). (2) Cualquier subproducto nuevo DEBE seguir `docs/APP_BLUEPRINT.md` y entrenar a Lidio en `app_guide_assistant`. (3) Bump de `version.ts` en el mismo commit en toda PR de trabajo.
