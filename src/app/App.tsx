@@ -522,21 +522,23 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     setIsPdfComplete(false);
     setPdfProgress(15);
 
-    try {
-      const { exportDocumentToPDF } = await import('../shared/core/pdf-engine/pdfExporter');
-      const success = await exportDocumentToPDF(cvData, resolveActivePreset(cvData));
-      
-      setPdfProgress(100);
-      if (success) {
-        setIsGeneratingPDF(false);
-        setIsPdfComplete(true);
-      } else {
-        showError('Hubo un inconveniente al generar el PDF. Por favor verifica las imágenes o intenta nuevamente.');
-        setIsGeneratingPDF(false);
+    const result = await withErrorHandling(
+      async () => {
+        const { exportDocumentToPDF } = await import('../shared/core/pdf-engine/pdfExporter');
+        return exportDocumentToPDF(cvData, resolveActivePreset(cvData));
+      },
+      {
+        context: 'Exportar PDF',
+        errorMessage: 'Hubo un inconveniente al generar el PDF. Por favor verifica las imágenes o intenta nuevamente.',
+        notify: (msg) => showError(msg)
       }
-    } catch (err) {
-      console.error('Error generando PDF:', err);
-      showError('Error inesperado al exportar PDF. Tus datos se mantienen a salvo en pantalla.');
+    );
+
+    setPdfProgress(100);
+    if (result.success && result.data) {
+      setIsGeneratingPDF(false);
+      setIsPdfComplete(true);
+    } else {
       setIsGeneratingPDF(false);
     }
   };

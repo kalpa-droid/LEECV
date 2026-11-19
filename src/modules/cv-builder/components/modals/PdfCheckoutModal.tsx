@@ -25,7 +25,7 @@ export default function PdfCheckoutModal({
   const t = useText();
   const { user } = useAuth();
 
-  const { canExport, reason, consumeCreditIfNeeded } = useExportEntitlement();
+  const { canExport } = useExportEntitlement();
 
   const handleCheckout = async (gateway: 'mercadopago' | 'paypal') => {
     if (!email || !isValidEmail(email)) {
@@ -65,16 +65,16 @@ export default function PdfCheckoutModal({
     });
   };
 
+  // El consumo del crédito es responsabilidad del llamador (proceedWithExport,
+  // handleExportPdf, etc.). Acá solo confirmamos: consumir en ambos lados
+  // cobraba dos veces al usuario.
   const handleConfirmExport = async () => {
+    if (isProcessing) return;
     setIsProcessing(true);
-    const consumed = await consumeCreditIfNeeded();
-    setIsProcessing(false);
-    if (consumed) {
-      onConfirm();
-    } else if (reason === 'exportacion_bloqueada') {
-      setErrorMsg('La exportación está bloqueada para esta cuenta. Contactá a quien administra el sitio.');
-    } else {
-      setErrorMsg('No tienes créditos o token de exportación activos. Adquiere una exportación seleccionando un método de pago.');
+    try {
+      await onConfirm();
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -106,16 +106,16 @@ export default function PdfCheckoutModal({
         </div>
       }
     >
-      <div className={`space-y-4 text-xs p-4 bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] rounded-[${radius.modal}]`}>
+      <div className="space-y-4 text-xs p-4 bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)]" style={{ borderRadius: radius.modal }}>
         {errorMsg && (
-          <div className={`p-3 bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/40 rounded-[${radius.card}] text-[var(--color-status-danger-text)] text-xs font-bold flex items-center gap-2`}>
+          <div className="p-3 bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/40 text-[var(--color-status-danger-text)] text-xs font-bold flex items-center gap-2" style={{ borderRadius: radius.card }}>
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
         {/* Email Section */}
-        <div className={`p-4 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[${radius.modal}] space-y-3`}>
+        <div className="p-4 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] space-y-3" style={{ borderRadius: radius.modal }}>
           <div className="flex items-center justify-between">
             <span className="text-xs font-black text-[var(--ui-text-primary)] uppercase tracking-wide">
               {t.checkout.step1Title}
@@ -131,7 +131,7 @@ export default function PdfCheckoutModal({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder={t.checkout.emailPlaceholder}
-            className={`w-full text-xs p-2.5 rounded-[${radius.card}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] placeholder-[var(--ui-text-muted)] font-bold outline-none focus:border-[var(--color-accent-base)] transition`}
+            className="w-full text-xs p-2.5 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] placeholder-[var(--ui-text-muted)] font-bold outline-none focus:border-[var(--color-accent-base)] transition" style={{ borderRadius: radius.card }}
           />
         </div>
 
@@ -159,7 +159,7 @@ export default function PdfCheckoutModal({
             <button
               onClick={() => handleCheckout('mercadopago')}
               disabled={isProcessing}
-              className={`w-full p-3 ${button.providerBrand('mercadopago')} rounded-[${radius.modal}] transition flex items-center justify-between cursor-pointer`}
+              className={`w-full p-3 ${button.providerBrand('mercadopago')} transition flex items-center justify-between cursor-pointer`} style={{ borderRadius: radius.modal }}
             >
               <div className="flex items-center gap-2.5">
                 <CreditCard className="w-5 h-5" />
@@ -168,7 +168,7 @@ export default function PdfCheckoutModal({
                   <p className="text-[10px] opacity-80 font-bold">{t.checkout.payMercadoPagoDesc}</p>
                 </div>
               </div>
-              <span className={`px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] rounded-[${radius.control}] text-[10px] font-black`}>
+              <span className="px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] text-[10px] font-black" style={{ borderRadius: radius.control }}>
                 {formatPrice('single_pdf', 'ars')}
               </span>
             </button>
@@ -182,7 +182,7 @@ export default function PdfCheckoutModal({
               <button
                 onClick={() => handleCheckout('paypal')}
                 disabled={isProcessing}
-                className={`w-full p-3 ${button.providerBrand('paypal')} rounded-[${radius.modal}] transition flex items-center justify-between cursor-pointer`}
+                className={`w-full p-3 ${button.providerBrand('paypal')} transition flex items-center justify-between cursor-pointer`} style={{ borderRadius: radius.modal }}
               >
                 <div className="flex items-center gap-2.5">
                   <CreditCard className="w-5 h-5" />
@@ -191,7 +191,7 @@ export default function PdfCheckoutModal({
                     <p className="text-[10px] opacity-80 font-bold">Saldo o tarjeta internacional</p>
                   </div>
                 </div>
-                <span className={`px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] rounded-[${radius.control}] text-[10px] font-black`}>
+                <span className="px-2.5 py-1 bg-black/80 text-[var(--ui-on-dark-amber)] text-[10px] font-black" style={{ borderRadius: radius.control }}>
                   {formatPrice('single_pdf', 'usd')}
                 </span>
               </button>
@@ -200,7 +200,7 @@ export default function PdfCheckoutModal({
 
           <button
             onClick={() => { onClose(); if (onExportJson) onExportJson(); }}
-            className={`w-full p-2.5 ${button.base} ${button.secondary} text-xs font-bold rounded-[${radius.card}] transition flex items-center justify-center gap-2 cursor-pointer mt-4`}
+            className={`w-full p-2.5 ${button.base} ${button.secondary} text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer mt-4`} style={{ borderRadius: radius.card }}
           >
             <Download className="w-4 h-4 text-[var(--ui-btn-neutral-text)]" />
             <span>{t.checkout.downloadJsonFreeBtn}</span>

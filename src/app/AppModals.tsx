@@ -247,7 +247,7 @@ export function AppModals(props: AppModalsProps) {
         <PdfCheckoutModal 
           isOpen={isPdfCheckoutOpen}
           onClose={() => setIsPdfCheckoutOpen(false)}
-          onConfirm={triggerPdfGeneration}
+          onConfirm={proceedWithExport}
           onExportJson={() => exportCVToJson(cvData)}
           purpose={pdfCheckoutPurpose}
         />

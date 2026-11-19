@@ -16,6 +16,7 @@ interface CardExportModalProps {
   presetId?: string;
 }
 
+/** El consumo de crédito ocurre internamente en CardSheetExportSelector (useExportEntitlement). */
 export function CardExportModal({ isOpen, onClose, cvData, presetId = 'tarjeta-personal' }: CardExportModalProps) {
   const { showError } = useToast();
   const [cardData, setCardData] = useState<BusinessCardData | null>(null);
