@@ -109,7 +109,7 @@ export function CoverLetterExportModal({ isOpen, onClose, cvData, presetId = 'ca
             <button
               onClick={handleExportPdf}
               disabled={!hasReviewed || isExportingPdf || isExportingDocx || isGating}
-              className={`p-4 ${button.primary} rounded-[${radius.modal}] flex flex-col items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${elevationSystem.raised}`}
+              className={`p-4 ${button.primary} flex flex-col items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${elevationSystem.raised}`} style={{ borderRadius: radius.modal }}
             >
               <Download className="w-5 h-5" />
               <span className="text-xs font-black">
@@ -120,7 +120,7 @@ export function CoverLetterExportModal({ isOpen, onClose, cvData, presetId = 'ca
             <button
               onClick={handleExportDocx}
               disabled={!hasReviewed || isExportingPdf || isExportingDocx || isGating}
-              className={`p-4 ${button.secondary} rounded-[${radius.modal}] flex flex-col items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${elevationSystem.raised}`}
+              className={`p-4 ${button.secondary} flex flex-col items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${elevationSystem.raised}`} style={{ borderRadius: radius.modal }}
             >
               <FileType className="w-5 h-5" />
               <span className="text-xs font-black">
@@ -134,6 +134,7 @@ export function CoverLetterExportModal({ isOpen, onClose, cvData, presetId = 'ca
       <PdfCheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
+        purpose="export"
         onConfirm={() => {
           setIsCheckoutOpen(false);
           if (pendingAction === 'pdf') handleExportPdf();

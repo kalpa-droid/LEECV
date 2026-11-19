@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 2,
   minor: 24,
-  patch: 2,
-  label: 'V2.24.2',
+  patch: 3,
+  label: 'V2.24.3',
   lastUpdated: '2026-11-19',
   lastAgent: '@opencode',
-  stage: 'fix(admin): Fase A (header sin (listCustomers), mensaje WhatsApp correcto, withErrorHandling en AuditAndErrorsTab) + Fase B (80 radios interpolados rounded-[${radius.X}] migrados a style={{ borderRadius }} en AdminLogin, AdminDashboard, ProcessedPayments, SentryReports, StorageDrive, AiTelemetry y TemplateManagement) + Fase C (auto-recarga de telemetría al cambiar filtros, labels de IndexedDB aclarados, optional chaining en armonía de color, búsqueda de pagos con debounce 350ms).',
+  stage: 'fix(export): cierra el bypass de créditos de AppModals (onConfirm=proceedWithExport) y deja un único gate de cobro en el llamador (PdfCheckoutModal.handleConfirmExport ya no consume, elimina el doble cobro en CV, cartas y tarjetas) + handleStartPDFGeneration migrado a withErrorHandling + 20 radios interpolados rounded-[${radius.X}] migrados a style={{ borderRadius: radius.X }} en PdfCheckoutModal, CoverLetterExportModal y CardSheetExportSelector (Regla 2).',
 } as const;
