@@ -4,9 +4,8 @@ import Navbar from '../cv-builder/components/Navbar';
 import CanvaIconDock from '../cv-builder/components/CanvaIconDock';
 import { VectorDocViewer } from '../../shared/core/pdf-engine/VectorDocViewer';
 import { EditorialPdfDocument } from '../../shared/core/pdf-engine/renderer/EditorialPdfDocument';
-import { EditorialBlockPrimitives } from '../../shared/core/pdf-engine/renderer/EditorialBlockPrimitives';
-import { EditorialPresetId, DEFAULT_EDITORIAL_PRESET } from '../../shared/core/editorial-engine/editorialPresetCatalog';
-import { getDocumentTypeConfig, hasCapability } from '../../shared/core/capabilities/capabilityRegistry';
+import { DEFAULT_EDITORIAL_PRESET, getEditorialPreset } from '../../shared/core/editorial-engine/editorialPresetCatalog';
+import { EDITORIAL_PRESETS } from '../../shared/core/pdf-engine/layers/presets/editorialPresets';
 import { DocumentTypeId } from '../../types/document';
 import { useDocumentViewport, useViewportGestures } from '../../shared/core/viewport';
 import { OpenTab } from '../../shared/core/documents/tabStore';
@@ -18,11 +17,8 @@ import { exportDocumentToPDF } from '../../shared/core/pdf-engine/pdfExporter';
 import { useExportEntitlement } from '../../shared/core/entitlements/useExportEntitlement';
 import PdfCheckoutModal from '../cv-builder/components/modals/PdfCheckoutModal';
 import { elevationSystem, radius } from '../../shared/core/uiDesignSystem';
-import { downloadBlob } from '../../shared/core/utils/downloadUtils';
 import { FloatingAssistant } from '../cv-builder/components/FloatingAssistant';
 import { EDITORIAL_STEP_SEQUENCE } from '../../shared/core/editorial-engine/editorialStepSequence';
-import { getDefaultTitleForDocType, getRouteForDocType, inferDocumentTypeId } from '../../types/document';
-import { FACT_ALWAYS_TIPS, FACT_TAB_TIPS, getTipsForTab } from '../../shared/core/assistant/assistantTips';
 
 export interface EditorLeeStudioContentProps {
   currentUiTheme?: string;
@@ -44,8 +40,8 @@ export interface EditorLeeStudioContentProps {
 }
 
 function buildEditorialTitle(data: any): string {
-  const negocio = data?.design?.cover?.title || 'EditorLee';
-  return negocio ? `${negocio} - Mi obra` : 'EditorLee - Mis documentos';
+  const obra = data?.metadata?.title || 'EditorLee';
+  return obra ? `${obra} - Mi obra` : 'EditorLee - Mis documentos';
 }
 
 /**
@@ -78,6 +74,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState<boolean>(false);
 
+  const { showSuccess, showError, showInfo } = useToast();
   const { consumeCreditIfNeeded } = useExportEntitlement();
 
   const editorialId = useMemo(
@@ -86,11 +83,8 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
   );
 
   const sheetRef = useRef<HTMLDivElement>(null);
-  const fallbackDraftRef = useRef<any>(createEmptyEditorial());
-  const fallbackDraft = fallbackDraftRef.current;
-
-  const draft = data?.sections && data.sections.length > 0 ? data : fallbackDraft;
-  const preset = data?.presetId || DEFAULT_EDITORIAL_PRESET.id;
+  const [draft, setDraft] = useState<any>(() => createEmptyEditorial());
+  const preset = draft?.design?.presetId || DEFAULT_EDITORIAL_PRESET.id;
 
   const viewport = useDocumentViewport({ pageSizeId: preset });
 
@@ -111,22 +105,19 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
     onTabsChanged,
   });
 
-  // Persistir el sobre mínimo de la pestaña (solo id + título).
   useEffect(() => {
-    if (activeStepTab === 'loading' || activeStepTab === 'needs_setup' || activeStepTab === 'locked') return;
     void saveDocumentDraftLocal({ id: editorialId, title: editorialTitle });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeStepTab, editorialId]);
+  }, [editorialId, editorialTitle]);
 
   const updateDraft = useCallback(
     (updater: (prev: any) => any) => {
-      // La actualización se hace via el storage service; aquí actualizamos el estado local
-      setDraft(prev => updater(prev || fallbackDraftRef.current));
+      setDraft((prev: any) => updater(prev || createEmptyEditorial()));
     },
-    [setDraft, fallbackDraftRef]
+    []
   );
 
   const handleNewDraft = useCallback(() => {
+    setDraft(createEmptyEditorial());
     setActiveStepTab('editorial_inicio');
     setIsPanelOpen(true);
     showInfo('Nuevo documento editorial listo para redactar.');
@@ -182,137 +173,43 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
     setIsExporting(false);
   }, [draft, preset, consumeCreditIfNeeded, showSuccess, showError]);
 
-  const handleExportPortable = useCallback(async () => {
-    await flush();
-    const envelope = await loadEnvelope();
-    if (!envelope) {
-      showError('Todavía no hay una bóveda para respaldar.');
-      return;
-    }
-    const blob = await exportPortablePackage(envelope);
-    downloadBlob(blob, 'EditorLee-Respaldo.leecv-editor');
-    showSuccess('Copia cifrada descargada. Guardala en tu pendrive.');
-  }, [flush, showSuccess, showError]);
-
-  const handleImportPortable = useCallback(
-    async (file: File, password: string) => {
-      try {
-        const envelope = await readPortablePackage(file);
-        await restoreFromEnvelope(envelope, password);
-        showSuccess('Copia restaurada. Ya podés usar tus datos.');
-      } catch (err: any) {
-        showError(
-          err?.message === 'clave_incorrecta'
-            ? 'Esa contraseña no abre la copia. Probá con la que tenía la bóveda cuando la guardaste.'
-            : 'No pudimos abrir esa copia. Revisá que sea un archivo .leecv-editor.'
-        );
-      }
-    },
-    [restoreFromEnvelope, showSuccess, showError]
-  );
-
-  const handleExportXlsx = useCallback(async () => {
-    if (!draft) return;
-    await withErrorHandling(
-      async () => {
-        const blob = await exportVaultToXlsx(vault);
-        downloadBlob(blob, 'EditorLee-Datos.xlsx');
-        showSuccess('Planilla Excel descargada.');
-      },
-      {
-        context: 'Respaldo Excel EditorLee',
-        errorMessage: 'No pudimos generar la planilla Excel.',
-        notify: (msg) => showError(msg),
-      }
-    );
-  }, [vault, showSuccess, showError]);
-
-  const handleImportXlsx = useCallback(
-    async (file: File) => {
-      try {
-        const result = await importCatalogAndClientsFromXlsx(file);
-        updateDraft((prev) => ({
-          ...prev,
-          catalogo: [...prev.catalogo, ...result.catalogo],
-          clientes: [...prev.clientes, ...result.clientes],
-        }));
-        showSuccess(
-          `Importado: ${result.catalogo.length} item(s) y ${result.clientes.length} cliente(s).`
-        );
-      } catch {
-        showError('No pudimos leer esa planilla. Usá una descargada desde EditorLee.');
-      }
-    },
-    [updateDraft, showSuccess, showError]
-  );
-
   const handleDuplicate = useCallback(
     (saved: any) => {
       if (!draft) return;
-      updateDraft((prev) =>
-        createEmptyEditorial({
-          ...prev,
-          sections: [...prev.sections, {
+      updateDraft((prev: any) => ({
+        ...prev,
+        sections: [
+          ...prev.sections,
+          {
             id: `ed_seccion_${Date.now()}`,
-            title: saved.title,
+            title: saved?.title || 'Nueva sección',
             visible: true,
             includeInToc: true,
             startNewPage: true,
             position: prev.sections.length,
             records: [],
-          }],
-        })
-      );
+          },
+        ],
+      }));
       setActiveStepTab('editorial_secciones');
       setIsPanelOpen(true);
       showInfo('Documento repetido como nuevo borrador.');
     },
-    [updateDraft, showInfo]
+    [draft, updateDraft, showInfo]
   );
-
-  const handleLock = useCallback(async () => {
-    await flush();
-    await lock();
-    setIsPanelOpen(true);
-    showInfo('Bóveda bloqueada.');
-  }, [flush, lock, showInfo]);
 
   const pdfElement = useMemo(
     () => <EditorialPdfDocument data={draft as any} preset={preset} />,
     [draft, preset]
   );
 
-  const stepProps = draft
-    ? { draft, updateDraft, notify: { success: showSuccess, error: showError } }
-    : null;
-
-  if (activeStepTab === 'loading') {
-    return (
-      <div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">
-        Abriendo tu estudio…
-      </div>
-    );
-  }
-
-  if (activeStepTab === 'needs_setup' || activeStepTab === 'locked') {
-    return (
-      <VaultLockScreen
-        phase={activeStepTab}
-        error={undefined}
-        isBusy={false}
-        onCreate={() => {}}
-        onUnlock={() => {}}
-      />
-    );
-  }
-
-  if (!draft || !session || !stepProps) {
-    return (
-      <div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">
-        Preparando EditorLee…
-      </div>
-    );
-  }
+  const stepProps: StepProps = {
+    draft,
+    updateDraft,
+    notify: { success: showSuccess, error: showError },
+    setActiveStepTab,
+    onDuplicate: handleDuplicate,
+  };
 
   return (
     <>
@@ -376,7 +273,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
                 <button
                   type="button"
                   onClick={handleNewDraft}
-                  className="px-3 py-2 text-xs font-bold bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)]"
+                  className="px-3 py-2 text-xs font-bold bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] cursor-pointer"
                   style={{ borderRadius: radius.control }}
                 >
                   Documento nuevo
@@ -384,7 +281,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
                 <button
                   type="button"
                   onClick={handleSaveDocument}
-                  className="px-3 py-2 text-xs font-bold bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]"
+                  className="px-3 py-2 text-xs font-bold bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] cursor-pointer"
                   style={{ borderRadius: radius.control }}
                 >
                   Exportar PDF
@@ -404,7 +301,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
                 document={pdfElement}
                 zoomLevel={viewport.zoomLevel}
                 activeTab={activeStepTab}
-                preset={getEditorialPreset(preset) || DEFAULT_EDITORIAL_PRESET}
+                preset={EDITORIAL_PRESETS.find((p) => p.id === preset) || EDITORIAL_PRESETS[0]}
               />
             </div>
           </div>
@@ -422,7 +319,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
           onNewPlanner,
           onNewInvoice,
           onNewEditorial: handleNewDraft,
-          onClose: (e, id) => onCloseTab(id),
+          onClose: (_e, id) => onCloseTab(id),
         }}
       />
       <FloatingAssistant
@@ -451,11 +348,11 @@ function createEmptyEditorial(initialPatch: Partial<any> = {}): any {
     id: `editorial_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
     type: 'editorial',
     metadata: {
-      title: inicialPatch.title || 'Mi obra',
-      author: inicialPatch.author,
-      editor: inicialPatch.editor,
-      year: inicialPatch.year,
-      isbn: inicialPatch.isbn,
+      title: initialPatch.title || 'Mi obra',
+      author: initialPatch.author || '',
+      editor: initialPatch.editor || '',
+      year: initialPatch.year || new Date().getFullYear(),
+      isbn: initialPatch.isbn || '',
     },
     design: {
       presetId: DEFAULT_EDITORIAL_PRESET.id,
@@ -471,8 +368,8 @@ function createEmptyEditorial(initialPatch: Partial<any> = {}): any {
         lineHeight: DEFAULT_EDITORIAL_PRESET.typography.lineHeight,
       },
     },
-    sections: [],
-    cover: inicialPatch.cover,
+    sections: initialPatch.sections || [],
+    cover: initialPatch.cover || { mode: 'libro', title: 'Mi obra' },
     tocConfig: {
       enabled: true,
       title: 'Índice Automático',
@@ -485,25 +382,21 @@ function createEmptyEditorial(initialPatch: Partial<any> = {}): any {
       preserveCitations: true,
       typographyCleanup: true,
       qrQuietZone: 4,
-      qrMinSize: 2,
+      qrMinSize: 20,
     },
-    ...initialPatch,
+    legalFields: {},
   };
 }
 
-function showInfo(message: string) {
-  // Simple toast or console - en producción usaría useToast
-  console.info(message);
-}
-
-// Funciones helper para los pasos (placeholders)
 interface StepProps {
   draft: any;
-  updateDraft: any;
-  notify: { success: any; error: any };
+  updateDraft: (updater: (prev: any) => any) => void;
+  notify: { success: (msg: string) => void; error: (msg: string) => void };
+  setActiveStepTab: (tab: string) => void;
+  onDuplicate?: (saved: any) => void;
 }
 
-function InicioEditorialStep({ draft, updateDraft, notify }: StepProps) {
+function InicioEditorialStep({ setActiveStepTab }: StepProps) {
   return (
     <div className="p-6">
       <h2 className="text-xl font-bold mb-4">Bienvenido/a a EditorLee</h2>
@@ -514,14 +407,14 @@ function InicioEditorialStep({ draft, updateDraft, notify }: StepProps) {
         <button
           type="button"
           onClick={() => setActiveStepTab('editorial_portada')}
-          className="w-full py-3 px-4 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] rounded text-sm font-medium"
+          className="w-full py-3 px-4 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] rounded text-sm font-medium cursor-pointer"
         >
           Comenzar con Portada / Carátula
         </button>
         <button
           type="button"
           onClick={() => setActiveStepTab('editorial_secciones')}
-          className="w-full py-3 px-4 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded text-sm font-medium"
+          className="w-full py-3 px-4 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded text-sm font-medium cursor-pointer"
         >
           Comenzar directamente con Secciones
         </button>
@@ -530,7 +423,7 @@ function InicioEditorialStep({ draft, updateDraft, notify }: StepProps) {
   );
 }
 
-function PortadaEditorialStep({ draft, updateDraft, notify }: StepProps) {
+function PortadaEditorialStep({ updateDraft, setActiveStepTab }: StepProps) {
   return (
     <div className="p-6">
       <h2 className="text-xl font-bold mb-4">Portada / Carátula</h2>
@@ -541,46 +434,46 @@ function PortadaEditorialStep({ draft, updateDraft, notify }: StepProps) {
         <button
           type="button"
           onClick={() => {
-            updateDraft((prev) => ({
+            updateDraft((prev: any) => ({
               ...prev,
-              cover: { mode: 'libro' as const, title: prev.metadata.title || 'Mi obra' }
+              cover: { mode: 'libro' as const, title: prev?.metadata?.title || 'Mi obra' }
             }));
             setActiveStepTab('editorial_secciones');
           }}
-          className="w-full py-3 px-4 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded text-sm font-medium"
+          className="w-full py-3 px-4 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded text-sm font-medium cursor-pointer"
         >
           Tapa de Libro (título, autor, editorial, QR opcional)
         </button>
         <button
           type="button"
           onClick={() => {
-            updateDraft((prev) => ({
+            updateDraft((prev: any) => ({
               ...prev,
-              cover: { mode: 'academica' as const, title: prev.metadata.title || 'Mi obra' }
+              cover: { mode: 'academica' as const, title: prev?.metadata?.title || 'Mi obra' }
             }));
             setActiveStepTab('editorial_secciones');
           }}
-          className="w-full py-3 px-4 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded text-sm font-medium"
+          className="w-full py-3 px-4 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded text-sm font-medium cursor-pointer"
         >
           Carátula Académica (institución, carrera, docente, legajo)
         </button>
         <button
           type="button"
           onClick={() => {
-            updateDraft((prev) => ({
+            updateDraft((prev: any) => ({
               ...prev,
-              cover: { mode: 'ejecutiva' as const, title: prev.metadata.title || 'Mi obra' }
+              cover: { mode: 'ejecutiva' as const, title: prev?.metadata?.title || 'Mi obra' }
             }));
             setActiveStepTab('editorial_secciones');
           }}
-          className="w-full py-3 px-4 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded text-sm font-medium"
+          className="w-full py-3 px-4 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded text-sm font-medium cursor-pointer"
         >
           Tapa Ejecutiva limpia (organización, fecha)
         </button>
         <button
           type="button"
           onClick={() => setActiveStepTab('editorial_secciones')}
-          className="w-full py-3 px-4 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded text-sm font-medium"
+          className="w-full py-3 px-4 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded text-sm font-medium cursor-pointer"
         >
           Sin carátula
         </button>
@@ -589,7 +482,7 @@ function PortadaEditorialStep({ draft, updateDraft, notify }: StepProps) {
   );
 }
 
-function SeccionesEditorialStep({ draft, updateDraft, notify }: StepProps) {
+function SeccionesEditorialStep({ setActiveStepTab }: StepProps) {
   return (
     <div className="p-6">
       <h2 className="text-xl font-bold mb-4">Secciones y Capítulos</h2>
@@ -600,32 +493,31 @@ function SeccionesEditorialStep({ draft, updateDraft, notify }: StepProps) {
         <button
           type="button"
           onClick={() => setActiveStepTab('editorial_diseño')}
-          className="w-full py-3 px-4 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] rounded text-sm font-medium"
+          className="w-full py-3 px-4 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] rounded text-sm font-medium cursor-pointer"
         >
           Continuar al Diseño
         </button>
         <button
           type="button"
           onClick={() => setActiveStepTab('editorial_toc')}
-          className="w-full py-3 px-4 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded text-sm font-medium"
+          className="w-full py-3 px-4 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded text-sm font-medium cursor-pointer"
         >
           Ver Índice Automático
         </button>
       </div>
-      {/* Secciones predefinidas */}
       <div className="mt-6 p-4 bg-[var(--ui-bg-card)] rounded">
         <h3 className="font-medium mb-3">Secciones rápidas</h3>
         <div className="space-y-2">
-          <button type="button" className="w-full py-2 px-3 text-sm hover:bg-[var(--ui-bg-hover)] rounded">
+          <button type="button" className="w-full py-2 px-3 text-sm hover:bg-[var(--ui-bg-hover)] rounded text-left">
             Capítulo 1
           </button>
-          <button type="button" className="w-full py-2 px-3 text-sm hover:bg-[var(--ui-bg-hover)] rounded">
+          <button type="button" className="w-full py-2 px-3 text-sm hover:bg-[var(--ui-bg-hover)] rounded text-left">
             Capítulo 2
           </button>
-          <button type="button" className="w-full py-2 px-3 text-sm hover:bg-[var(--ui-bg-hover)] rounded">
+          <button type="button" className="w-full py-2 px-3 text-sm hover:bg-[var(--ui-bg-hover)] rounded text-left">
             Introducción
           </button>
-          <button type="button" className="w-full py-2 px-3 text-sm hover:bg-[var(--ui-bg-hover)] rounded">
+          <button type="button" className="w-full py-2 px-3 text-sm hover:bg-[var(--ui-bg-hover)] rounded text-left">
             Conclusiones
           </button>
         </div>
@@ -634,27 +526,27 @@ function SeccionesEditorialStep({ draft, updateDraft, notify }: StepProps) {
   );
 }
 
-function DiseñoEditorialStep({ draft, updateDraft, notify }: StepProps) {
+function DiseñoEditorialStep({ setActiveStepTab }: StepProps) {
   return (
     <div className="p-6">
       <h2 className="text-xl font-bold mb-4">Diseño y Hoja</h2>
       <p className="text-base mb-4">
-        Configurá el tamaño de hoja, márgenes, lomo y tipografía. // plain-language:allow — términos de formato de hoja // plain-language:allow — términos de formato de hoja
+        Configurá el tamaño de hoja, márgenes, lomo y tipografía. {/* plain-language:allow */}
       </p>
       <div className="space-y-4">
         <button
           type="button"
           onClick={() => setActiveStepTab('editorial_metadata')}
-          className="w-full py-3 px-4 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded text-sm font-medium"
+          className="w-full py-3 px-4 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded text-sm font-medium cursor-pointer"
         >
           Continuar a Metadatos
         </button>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Tamaño de hoja // plain-language:allow — nombre de selector de formato</label>
+            <label className="block text-sm font-medium mb-2">Tamaño de hoja {/* plain-language:allow */}</label>
             <select className="w-full rounded border p-2">
-              <option value="a4">A4 (hoja común) // plain-language:allow — tamaño de hoja estándar</option>
-              <option value="a5">A5 (media hoja) // plain-language:allow — tamaño de hoja estándar</option>
+              <option value="a4">A4 (hoja común) {/* plain-language:allow */}</option>
+              <option value="a5">A5 (media hoja) {/* plain-language:allow */}</option>
               <option value="carta">Carta</option>
             </select>
           </div>
@@ -676,7 +568,7 @@ function DiseñoEditorialStep({ draft, updateDraft, notify }: StepProps) {
   );
 }
 
-function TocEditorialStep({ draft, updateDraft, notify }: StepProps) {
+function TocEditorialStep({ setActiveStepTab }: StepProps) {
   return (
     <div className="p-6">
       <h2 className="text-xl font-bold mb-4">Índice Automático</h2>
@@ -685,11 +577,11 @@ function TocEditorialStep({ draft, updateDraft, notify }: StepProps) {
       </p>
       <div className="space-y-4">
         <label className="flex items-center gap-2">
-          <input type="checkbox" checked className="rounded border p-1" />
+          <input type="checkbox" defaultChecked className="rounded border p-1" />
           <span>Mostrar índice automático</span>
         </label>
         <label className="flex items-center gap-2">
-          <input type="radio" name="tocPosition" value="tras-caratula" checked className="rounded border p-1" />
+          <input type="radio" name="tocPosition" value="tras-caratula" defaultChecked className="rounded border p-1" />
           <span>Tras carátula</span>
         </label>
         <label className="flex items-center gap-2">
@@ -699,7 +591,7 @@ function TocEditorialStep({ draft, updateDraft, notify }: StepProps) {
         <button
           type="button"
           onClick={() => setActiveStepTab('editorial_metadata')}
-          className="w-full py-3 px-4 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] rounded text-sm font-medium"
+          className="w-full py-3 px-4 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] rounded text-sm font-medium cursor-pointer"
         >
           Continuar a Metadatos
         </button>
@@ -708,7 +600,7 @@ function TocEditorialStep({ draft, updateDraft, notify }: StepProps) {
   );
 }
 
-function MetadatosEditorialStep({ draft, updateDraft, notify }: StepProps) {
+function MetadatosEditorialStep({ draft, setActiveStepTab }: StepProps) {
   return (
     <div className="p-6">
       <h2 className="text-xl font-bold mb-4">Metadatos y Legales</h2>
@@ -718,35 +610,24 @@ function MetadatosEditorialStep({ draft, updateDraft, notify }: StepProps) {
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium mb-2">Título</label>
-          <input type="text" value={draft.metadata?.title || ''} className="w-full rounded border p-2" />
+          <input type="text" defaultValue={draft.metadata?.title || ''} className="w-full rounded border p-2" />
         </div>
         <div>
           <label className="block text-sm font-medium mb-2">Autor</label>
-          <input type="text" value={draft.metadata?.author || ''} className="w-full rounded border p-2" />
+          <input type="text" defaultValue={draft.metadata?.author || ''} className="w-full rounded border p-2" />
         </div>
         <div>
           <label className="block text-sm font-medium mb-2">Año</label>
-          <input type="number" value={draft.metadata?.year || ''} className="w-full rounded border p-2" placeholder="Ej: 2024" />
+          <input type="number" defaultValue={draft.metadata?.year || ''} className="w-full rounded border p-2" placeholder="Ej: 2024" />
         </div>
         <div>
           <label className="block text-sm font-medium mb-2">ISBN</label>
-          <input type="text" value={draft.metadata?.isbn || ''} className="w-full rounded border p-2" />
-        </div>
-        <h3 className="font-medium mb-3">Pares clave-valor legales</h3>
-        <div className="space-y-2">
-          <div>
-            <input type="text" value="" className="w-full rounded border p-2 placeholder-gray-400" placeholder="Ej: Copyright" />
-            <input type="text" value="" className="w-full rounded border p-2 placeholder-gray-400" placeholder="Ej: 2024" />
-          </div>
-          <div>
-            <input type="text" value="" className="w-full rounded border p-2 placeholder-gray-400" placeholder="Ej: ISBN" />
-            <input type="text" value="" className="w-full rounded border p-2 placeholder-gray-400" placeholder="Ej: 978-84-123456-0" />
-          </div>
+          <input type="text" defaultValue={draft.metadata?.isbn || ''} className="w-full rounded border p-2" />
         </div>
         <button
           type="button"
           onClick={() => setActiveStepTab('editorial_import_ai')}
-          className="w-full py-3 px-4 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] rounded text-sm font-medium"
+          className="w-full py-3 px-4 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] rounded text-sm font-medium cursor-pointer"
         >
           Importar / IA
         </button>
@@ -755,7 +636,7 @@ function MetadatosEditorialStep({ draft, updateDraft, notify }: StepProps) {
   );
 }
 
-function ImportAiEditorialStep({ draft, updateDraft, notify }: StepProps) {
+function ImportAiEditorialStep({ setActiveStepTab }: StepProps) {
   return (
     <div className="p-6">
       <h2 className="text-xl font-bold mb-4">Importar y Asistente IA</h2>
@@ -769,13 +650,13 @@ function ImportAiEditorialStep({ draft, updateDraft, notify }: StepProps) {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <button type="button" className="w-full py-2 px-3 text-sm bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded">
-              Estructurar manuscrito en secciones
+            <button type="button" className="w-full py-2 px-3 text-sm bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded cursor-pointer">
+              Estructurar manuscrito
             </button>
           </div>
           <div>
-            <button type="button" className="w-full py-2 px-3 text-sm bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded">
-              Reescribir sección según estilo
+            <button type="button" className="w-full py-2 px-3 text-sm bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded cursor-pointer">
+              Reescribir sección
             </button>
           </div>
         </div>
@@ -783,14 +664,14 @@ function ImportAiEditorialStep({ draft, updateDraft, notify }: StepProps) {
           <h3 className="font-medium mb-3">Flujos IA disponibles</h3>
           <ul className="space-y-2 text-sm">
             <li>Estructura: divide el manuscrito en secciones y metadatos detectados.</li>
-            <li>Reescritura: convierte texto crudo en los 9 tipos de registros (párrafo, cita, tabla, etc.).</li>
-            <li>Refinamiento: aplica instrucción puntual sobre un registro o sección completa.</li>
+            <li>Reescritura: convierte texto crudo en los 9 tipos de registros.</li>
+            <li>Refinamiento: aplica instrucción puntual sobre un registro o sección.</li>
           </ul>
         </div>
         <button
           type="button"
           onClick={() => setActiveStepTab('editorial_diseño')}
-          className="w-full py-3 px-4 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded text-sm font-medium"
+          className="w-full py-3 px-4 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded text-sm font-medium cursor-pointer"
         >
           Volver al Diseño
         </button>
@@ -799,7 +680,7 @@ function ImportAiEditorialStep({ draft, updateDraft, notify }: StepProps) {
   );
 }
 
-function HistorialEditorialStep({ draft, updateDraft, notify, onDuplicate }: StepProps) {
+function HistorialEditorialStep({ setActiveStepTab }: StepProps) {
   return (
     <div className="p-6">
       <h2 className="text-xl font-bold mb-4">Historial y Versiones</h2>
@@ -810,7 +691,7 @@ function HistorialEditorialStep({ draft, updateDraft, notify, onDuplicate }: Ste
         <button
           type="button"
           onClick={() => setActiveStepTab('editorial_secciones')}
-          className="w-full py-3 px-4 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded text-sm font-medium"
+          className="w-full py-3 px-4 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] rounded text-sm font-medium cursor-pointer"
         >
           Volver a editar
         </button>

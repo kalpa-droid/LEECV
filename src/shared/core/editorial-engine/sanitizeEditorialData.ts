@@ -48,10 +48,10 @@ export function mergeEditorialDocument(
   const merged: EditorialDocumentData = {
     ...base,
     ...patch,
-    metadata: { ...(base.metadata ?? {}), ...(patch.metadata ?? {}) },
-    designConfig: { ...(base.designConfig ?? {}), ...(patch.designConfig ?? {}) },
-    tocConfig: { ...(base.tocConfig ?? {}), ...(patch.tocConfig ?? {}) },
-    manifestRules: { ...(base.manifestRules ?? {}), ...(patch.manifestRules ?? {}) },
+    metadata: { ...(base.metadata ?? {}), ...(patch.metadata ?? {}) } as any,
+    designConfig: { ...(base.designConfig ?? {}), ...(patch.designConfig ?? {}) } as any,
+    tocConfig: { ...(base.tocConfig ?? {}), ...(patch.tocConfig ?? {}) } as any,
+    manifestRules: { ...(base.manifestRules ?? {}), ...(patch.manifestRules ?? {}) } as any,
     legalFields: { ...(base.legalFields ?? {}), ...(patch.legalFields ?? {}) },
     sections: patch.sections ?? base.sections ?? [],
   };

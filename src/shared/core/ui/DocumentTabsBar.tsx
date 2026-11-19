@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { FileText, BookOpen, CreditCard, Mail, X, ChevronRight, ChevronLeft, CalendarDays, ReceiptText } from 'lucide-react';
+import { FileText, BookOpen, CreditCard, Mail, X, ChevronRight, ChevronLeft, CalendarDays, ReceiptText, BookMarked } from 'lucide-react';
 import { OpenTab } from '../documents/tabStore';
 import { elevationSystem, radius } from '../uiDesignSystem';
 import { NewDocumentMenu } from './NewDocumentMenu';
@@ -19,6 +19,7 @@ export interface DocumentTabsBarProps {
   onNewCoverLetter?: () => void;
   onNewPlanner?: () => void;
   onNewInvoice?: () => void;
+  onNewEditorial?: () => void;
   onClose: (e: React.MouseEvent, id: string, title: string) => void;
 }
 
@@ -35,6 +36,7 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
   onNewCoverLetter,
   onNewPlanner,
   onNewInvoice,
+  onNewEditorial,
   onClose,
 }) => {
   const getTabIcon = (tabDocType?: string) => {
@@ -49,6 +51,8 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
         return CalendarDays;
       case 'invoice':
         return ReceiptText;
+      case 'editorial':
+        return BookMarked;
       default:
         return FileText;
     }

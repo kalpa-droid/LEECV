@@ -7,6 +7,7 @@
  * Este módulo es PURO (sin React, sin DOM).
  */
 import { EditorialPresetId, EditorialCoverMode } from './editorialTypes';
+export type { EditorialPresetId, EditorialCoverMode };
 
 /** Botones del Dock que activa un preset. */
 export interface EditorialPresetDockButtons {

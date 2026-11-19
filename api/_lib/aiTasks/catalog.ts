@@ -505,6 +505,8 @@ CONOCÉS ESTOS PASOS DEL ESTUDIO DE LIBROS (docType book): book_source_type (1. 
 
 CONOCÉS ESTOS PASOS DE FACTURLEE (docType invoice): fact_emisor (1. Negocio y Logo), fact_comprobante (2. Comprobante), fact_items (3. Ítems y Precios), fact_catalogo (4. Catálogo y Stock), fact_clientes (5. Clientes), fact_historial (6. Historial y Cobranzas), fact_diseno (7. Diseño y Hoja), fact_respaldo (8. Respaldo).
 
+CONOCÉS ESTOS PASOS DE EDITORLEE (docType editorial): editorial_inicio (1. Inicio / Configuración), editorial_portada (2. Portada / Carátula), editorial_secciones (3. Secciones y Capítulos), editorial_diseño (4. Diseño y Hoja), editorial_toc (5. Índice Automático), editorial_metadata (6. Metadatos y Legales), editorial_import_ai (7. Importar y IA).
+
 CÓMO SE USA LA APP:
 - Vacante: la persona carga puesto y empresa de la oferta. Con eso se crea una COPIA INDEPENDIENTE del CV ("Puesto · Empresa") vinculada al CV base (que queda intacto). La copia es la que se adapta a esa oferta.
 - Carta: la carta se desbloquea dentro de la postulación (requiere ser la copia). Se escribe contra la vacante cargada.
@@ -552,6 +554,12 @@ BLOQUE DE CONOCIMIENTO — FACTURLEE, EL FACTURADOR LOCAL (responde SIEMPRE que 
 - Descargar el comprobante en PDF consume 1 crédito de la cuenta (como cualquier documento de LEECV). Los respaldos (archivo cifrado .leecv-fact o Excel) son gratis.
 - Respaldo (paso 8): el archivo .leecv-fact se abre solo con la misma clave de la bóveda. El Excel sirve para ver los datos en una planilla.
 - Refuerzo honesto: FacturLee no emite CAE ni se conecta con ARCA; si la persona necesita una factura fiscal (A, B o C), tiene que usar un sistema habilitado para eso.
+
+BLOQUE DE CONOCIMIENTO — EDITORLEE, MAQUETACIÓN Y PUBLICACIÓN EDITORIAL (responde SIEMPRE que pregunten por esto, docType editorial):
+- EditorLee (/crear-editor) permite maquetar y redactar publicaciones, zines, monografías, ensayos y libros directamente en el navegador.
+- Flujo de 7 pasos: 1. Inicio (preset de formato), 2. Portada (tapa editorial o académica), 3. Secciones y Capítulos (bloques de texto, subtítulos, citas, tablas, imágenes, bibliografía), 4. Diseño y Hoja (márgenes, lomo/gutter, tipografía), 5. Índice Automático (cálculo de páginas y profundidad), 6. Metadatos y Legales (ficha de edición, copyright, año, ISBN), 7. Importar y IA (asistencia de redacción y parseo).
+- Exportación: Genera un PDF de alta calidad editorial. Descargar el PDF final consume 1 crédito de exportación.
+- Soporte IA: Asiste en la estructuración de manuscritos, reescritura de párrafos y pulido ortotipográfico siempre respetando la privacidad del autor.
 
 BLOQUE DE CONOCIMIENTO — IMPRIMIR EN CASA VS LLEVAR A LA IMPRENTA (responde SIEMPRE que pregunten por esto, docType book):
 - Impresora de casa: casi ninguna impresora doméstica llega a imprimir hasta el borde; siempre deja un borde blanco (~5 mm) que no se usa. Por eso conviene el destino A (la cubierta dentro del mismo archivo) y el grosor "Sin grosor" si el libro se anilla o se corta con guillotina (la cuchilla de corte recta). Papel común de 80 g, hoja común (A4). Imprimir UNA hoja de prueba primero y revisar centrado y doble cara antes de imprimir todo.
@@ -652,6 +660,72 @@ No inventes datos. Extrae solo lo que está en el texto.`,
         }
       },
       required: ["type", "confidence", "extractedFields"]
+    }
+  },
+  editorial_structure: {
+    taskId: 'editorial_structure',
+    buildSystemPrompt: () => `Sos un asistente editorial experto. Tu tarea es recibir un manuscrito o texto libre y estructurarlo en secciones y registros tipados para una publicación o libro.
+Devolvé EXCLUSIVAMENTE un JSON con:
+- sections: lista de secciones con title y records (type: 'paragraph' | 'subtitle' | 'quote' | 'callout' | 'list', content: string).
+- metadata: { title?: string, author?: string } inferidos si aparecen.`,
+    buildUserPrompt: (payload: any) => `Estructurá este manuscrito editorial:\n\n<manuscript>\n${payload?.manuscriptText || ''}\n</manuscript>`,
+    responseSchema: {
+      type: "object",
+      properties: {
+        sections: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              title: { type: "string" },
+              records: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    type: { type: "string" },
+                    content: { type: "string" }
+                  },
+                  required: ["type", "content"]
+                }
+              }
+            },
+            required: ["title", "records"]
+          }
+        },
+        metadata: {
+          type: "object",
+          properties: {
+            title: { type: "string" },
+            author: { type: "string" }
+          }
+        }
+      },
+      required: ["sections"]
+    }
+  },
+  editorial_rewrite: {
+    taskId: 'editorial_rewrite',
+    buildSystemPrompt: () => `Sos un corrector de estilo y redactor editorial. Mejorá la fluidez y precisión del texto manteniendo el sentido original. Respondé en JSON con {"rewrittenText": "..."}.`,
+    buildUserPrompt: (payload: any) => `Reescribí este texto:\n\n${payload?.text || ''}`,
+    responseSchema: {
+      type: "object",
+      properties: {
+        rewrittenText: { type: "string" }
+      },
+      required: ["rewrittenText"]
+    }
+  },
+  editorial_refine: {
+    taskId: 'editorial_refine',
+    buildSystemPrompt: () => `Sos un asistente editorial para corrección ortotipográfica. Corregí errores gramaticales y de puntuación. Respondé en JSON con {"refinedText": "..."}.`,
+    buildUserPrompt: (payload: any) => `Pulí este texto:\n\n${payload?.text || ''}`,
+    responseSchema: {
+      type: "object",
+      properties: {
+        refinedText: { type: "string" }
+      },
+      required: ["refinedText"]
     }
   }
 };

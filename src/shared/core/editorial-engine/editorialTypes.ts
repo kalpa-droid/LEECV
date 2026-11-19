@@ -63,6 +63,14 @@ export interface EditorialTocConfig {
   position: 'tras-caratula' | 'tras-preliminares'; // Ubicación del índice
 }
 
+/** Entrada calculada del índice. */
+export interface EditorialTocEntry {
+  id: string;
+  label: string;
+  pageNumber: number;
+  depth?: number;
+}
+
 /** Metadatos de la obra. */
 export interface EditorialMetadata {
   title: string;
@@ -106,6 +114,7 @@ export interface EditorialDesignConfig {
 export interface EditorialRecord {
   id: EditorialRecordId;
   type: EditorialRecordType;
+  title?: string;                    // Título o encabezado opcional del bloque
   content: string;                   // Contenido principal (párrafo, texto, etc.)
   // Campos específicos por tipo (solo los relevantes para ese tipo)
   subtitleLevel?: number;            // 2 o 3 para subtitle

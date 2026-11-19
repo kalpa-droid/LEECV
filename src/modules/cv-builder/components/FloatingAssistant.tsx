@@ -60,12 +60,19 @@ const DOC_META: Record<AssistantDocType, { ariaOpen: string; subtitle: string; e
     emptyHint: `Preguntale a ${ASSISTANT_NAME} cómo usar FacturLee: armar un comprobante, cargar clientes, descontar stock, cobrar o hacer la copia de seguridad. Tus datos nunca salen de tu compu.`,
     placeholder: 'Ej: ¿cómo hago la copia de seguridad?',
   },
+  editorial: {
+    ariaOpen: 'el asistente de edición',
+    subtitle: 'Asistente de edición',
+    emptyHint: `Preguntale a ${ASSISTANT_NAME} cómo maquetar tu obra: armar la portada, agregar secciones, ajustar márgenes o calcular el índice automático.`,
+    placeholder: 'Ej: ¿cómo armo el índice automático?',
+  },
 };
 
 const QUICK_QUESTIONS_BY_DOC: Record<AssistantDocType, string[]> = {
   cv: ['¿Cómo me postulo?', 'Mejorar mi ATS', 'Cambiar diseño'],
   book: ['¿Cómo armo mi libro?', 'Tapa y contratapa', '¿Cómo lo imprimo?'],
   invoice: ['¿Cómo armo un comprobante?', '¿Es una factura fiscal?', '¿Dónde guardo el respaldo?'],
+  editorial: ['¿Cómo armo el índice?', 'Configurar márgenes', 'Exportar a PDF'],
 };
 
 const loadState = (docType: AssistantDocType) => (typeof window === 'undefined'

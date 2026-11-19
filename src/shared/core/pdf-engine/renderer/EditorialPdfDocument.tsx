@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, View, Text, Image, StyleSheet, Section } from '@react-pdf/renderer';
+import { Document, Page, View, Text, Image, StyleSheet } from '@react-pdf/renderer';
 import { getPageSize } from '../layers/page/pageSizes';
 import {
   EditorialSection,
@@ -338,7 +338,7 @@ export const EditorialPdfDocument: React.FC<{
             );
           }
           case 'qr_or_break': {
-            if (record.isBreak) return <Text key={recIndex} style={{ pageBreakAfter: 'always' }} />;
+            if (record.isBreak) return <Text key={recIndex} break />;
             if (record.qrCode) return (
               <Image key={recIndex} style={styles.qrCode} src={record.qrCode} />
             );
@@ -355,19 +355,21 @@ export const EditorialPdfDocument: React.FC<{
     <Page key="toc" size={toPdfPageSize(model.design.pageSize)} style={styles.page}>
       <Text style={{ fontSize: 18, fontFamily: 'Helvetica-Bold', marginBottom: 20 }}>Índice Automático</Text>
       {model.sections.map((section, si) => (
-        <Text key={`sec-${section.id}`} style={{ fontSize: 14, marginBottom: 10 }}>
-          {section.title}
-        </Text>
-        {section.records
-          .filter((r) => r.type !== 'callout' && r.type !== 'image')
-          .map((record, ri) => {
-            const label = record.title || record.content?.slice(0, 30) || 'Sin título';
-            return (
-              <Text key={`rec-${section.id}-${ri}`} style={{ fontSize: 12, marginBottom: 6 }}>
-                {label} -- Página {si + 2} // estimado
-              </Text>
-            );
-          })}
+        <React.Fragment key={`sec-${section.id}`}>
+          <Text style={{ fontSize: 14, marginBottom: 10 }}>
+            {section.title}
+          </Text>
+          {section.records
+            .filter((r) => r.type !== 'callout' && r.type !== 'image')
+            .map((record, ri) => {
+              const label = record.title || record.content?.slice(0, 30) || 'Sin título';
+              return (
+                <Text key={`rec-${section.id}-${ri}`} style={{ fontSize: 12, marginBottom: 6 }}>
+                  {label} -- Página {si + 2}
+                </Text>
+              );
+            })}
+        </React.Fragment>
       ))}
     </Page>
   ) : null;

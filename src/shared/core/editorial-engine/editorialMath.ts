@@ -168,7 +168,7 @@ export function runPreflightAudit({
   }
 
   if (imageMinDpi !== undefined && imageMinDpi < 150) {
-    issues.push(`Una imagen está por debajo de los 150 DPI recomendados (${imageMinDpi} DPI)`);
+    issues.push(`Una imagen está por debajo del umbral de calidad recomendado`);
   }
 
   if (qrHasQuietZone === false) {

@@ -14,7 +14,8 @@ export const EditorialImportAiPanel: React.FC<EditorialImportAiPanelProps> = ({
   updateDraft,
   notify,
 }) => {
-  const { showSuccess, showError } = notify ?? {};
+  const showSuccess = notify?.success ?? (() => {});
+  const showError = notify?.error ?? (() => {});
   const [inputFile, setInputFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [resultText, setResultText] = useState<string>('');

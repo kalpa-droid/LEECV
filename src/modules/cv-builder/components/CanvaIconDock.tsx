@@ -7,6 +7,7 @@ import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 import { resolveActiveDockSections, DOCK_SPECIAL_TABS } from '../../../shared/core/sections/activeSectionsDockEngine';
 import { activateSection } from '../../../shared/core/sections/sectionActivationEngine';
 import { DocumentTypeId } from '../../../types/document';
+import { EDITORIAL_STEP_SEQUENCE } from '../../../shared/core/editorial-engine/editorialStepSequence';
 
 import { BookOpen, FileUp, Settings, Printer, Layers, BookMarked, Sliders, LayoutGrid, Hash, CalendarDays, CheckSquare, User, IdCard, FlipHorizontal2, QrCode, Image, Wallpaper, Radar, Scissors, Store, ReceiptText, ListPlus, Boxes, Users, History, ShieldCheck } from 'lucide-react';
 
@@ -81,6 +82,16 @@ const factTabIcons: Record<string, any> = {
   fact_respaldo: ShieldCheck,
 };
 
+const editorialTabIcons: Record<string, any> = {
+  editorial_inicio: BookOpen,
+  editorial_portada: BookMarked,
+  editorial_secciones: Layers,
+  editorial_diseño: Palette,
+  editorial_toc: LayoutGrid,
+  editorial_metadata: Settings,
+  editorial_import_ai: Sparkles,
+};
+
 // 2. Pestañas de Sección Especiales Gobernadas por el Motor (activeSectionsDockEngine.ts)
 const addSectionTab = DOCK_SPECIAL_TABS.addSection;
 const portadaTab = DOCK_SPECIAL_TABS.portada;
@@ -134,6 +145,15 @@ export default function CanvaIconDock({
     }));
   }, []);
 
+  const activeEditorialTabs = useMemo(() => {
+    return EDITORIAL_STEP_SEQUENCE.map((step) => ({
+      id: step.id,
+      stepNumber: step.stepNumber,
+      label: step.label,
+      icon: editorialTabIcons[step.id] || Layers,
+    }));
+  }, []);
+
   const computedDockTabs = useMemo(() => {
     if (docType === 'business_card') {
       return [
@@ -149,6 +169,9 @@ export default function CanvaIconDock({
     }
     if (docType === 'invoice') {
       return activeFactTabs.map(t => ({ ...t, isLarge: true }));
+    }
+    if (docType === 'editorial') {
+      return activeEditorialTabs.map(t => ({ ...t, isLarge: true }));
     }
     if (docType === 'cover_letter') {
       return COVER_LETTER_TABS.map(t => ({ ...t, isLarge: true }));
@@ -355,6 +378,39 @@ export default function CanvaIconDock({
 
           {/* BOTONES FACTURADOR (Solo para docType === 'invoice') */}
           {docType === 'invoice' && activeFactTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id && isPanelOpen;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => handleTabClick(tab.id)}
+                className={`col-span-2 w-full h-10 rounded-[${radius.modal}] flex items-center justify-center transition group relative cursor-pointer border ${
+                  isActive
+                    ? `bg-[var(--color-accent-base)] border-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.floating} shadow-[var(--color-accent-base)]/30 scale-[1.02]`
+                    : 'bg-[var(--ui-dock-hover)] border-[var(--ui-dock-border)] text-[var(--color-secondary-bright)] hover:text-[var(--ui-dock-text)] hover:bg-[var(--ui-dock-hover)]'
+                }`}
+                title={tab.label}
+              >
+                <div className="relative flex items-center justify-center">
+                  <Icon className={`w-5 h-5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
+                  <span className={`absolute -top-2.5 -right-3 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center border ${
+                    isActive
+                      ? 'bg-[var(--color-accent-on-base)] text-[var(--color-accent-base)] border-[var(--color-accent-base)]'
+                      : 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--ui-bg-dock)]'
+                  }`}>
+                    {tab.stepNumber}
+                  </span>
+                </div>
+                <span className={`absolute left-24 bg-[var(--ui-bg-dock)] text-[var(--ui-dock-text)] text-xs font-bold px-2 py-1 rounded-[10px] ${elevationSystem.overlay} opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50 border border-[var(--ui-dock-border)]`}>
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
+
+          {/* BOTONES EDITORLEE (Solo para docType === 'editorial') */}
+          {docType === 'editorial' && activeEditorialTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id && isPanelOpen;
             return (
@@ -718,6 +774,36 @@ export default function CanvaIconDock({
 
         {/* BOTONES FACTURADOR (Solo para docType === 'invoice') — Mobile */}
         {docType === 'invoice' && activeFactTabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id && isPanelOpen;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => handleTabClick(tab.id)}
+              className={`row-span-2 h-full w-[42px] rounded-[8px] flex items-center justify-center shrink-0 transition cursor-pointer border ${
+                isActive
+                  ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--color-accent-base)] ${elevationSystem.raised}`
+                  : 'bg-[var(--ui-bg-panel)] text-[var(--ui-dock-text-muted)] border-[var(--ui-border)]'
+              }`}
+              title={tab.label}
+            >
+              <div className="relative flex items-center justify-center">
+                <Icon className={`w-5 h-5 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--ui-dock-text-muted)]'}`} />
+                <span className={`absolute -top-2.5 -right-3 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center border ${
+                  isActive
+                    ? 'bg-[var(--color-accent-on-base)] text-[var(--color-accent-base)] border-[var(--color-accent-base)]'
+                    : 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--ui-bg-dock)]'
+                }`}>
+                  {tab.stepNumber}
+                </span>
+              </div>
+            </button>
+          );
+        })}
+
+        {/* BOTONES EDITORLEE (Solo para docType === 'editorial') — Mobile */}
+        {docType === 'editorial' && activeEditorialTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id && isPanelOpen;
           return (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet } from '@react-pdf/renderer';
+import { StyleSheet, View, Text, Image as PdfImage } from '@react-pdf/renderer';
 
 // Componentes de bloque PDF reutilizables para EditorLee
 // Cada componente es puro y devuelve JSX válido con cierre correspondiente
@@ -28,9 +28,9 @@ const Table = ({ headers, rows }: { headers: string[]; rows: string[][] }) => (
   </View>
 );
 
-const Image = ({ src, caption }: { src: string; caption?: string }) => (
+const ImageBlock = ({ src, caption }: { src: string; caption?: string }) => (
   <View style={styles.imageContainer}>
-    {src && <Image style={styles.image} src={src} />}
+    {src && <PdfImage style={styles.image} src={src} />}
     {caption && <Text style={styles.imageCaption}>{caption}</Text>}
   </View>
 );
@@ -48,7 +48,7 @@ const QR = ({ qrUrl, isBreak }: { qrUrl?: string; isBreak?: boolean }) => {
   if (!qrUrl) return null;
   return (
     <View style={styles.qrCodeContainer}>
-      <Image style={styles.qrCode} src={qrUrl} />
+      <PdfImage style={styles.qrCode} src={qrUrl} />
       {isBreak && <Text style={styles.qrBreak}>* * *</Text>}
     </View>
   );
@@ -78,7 +78,7 @@ export const EditorialBlockPrimitives: React.FC = () => {
 
   const ImageComponent = () => (
     <View style={styles.imageContainer}>
-      <Image style={styles.image} src="https://example.com/image.jpg" />
+      <PdfImage style={styles.image} src="https://example.com/image.jpg" />
       <Text style={styles.imageCaption}>Figura 1: Descripción</Text>
     </View>
   );
@@ -90,7 +90,7 @@ export const EditorialBlockPrimitives: React.FC = () => {
   );
 
   const QRComponent = () => (
-    <Image style={styles.qrCode} src="https://example.com/qr.png" />
+    <PdfImage style={styles.qrCode} src="https://example.com/qr.png" />
   );
 
   return (

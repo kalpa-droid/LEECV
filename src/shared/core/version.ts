@@ -11,7 +11,7 @@
 
 export const LEECV_VERSION = {
   major: 2,
-  minor: 26,
+  minor: 27,
   patch: 0,
   label: 'V2.27.0',
   lastUpdated: '2026-11-19',
