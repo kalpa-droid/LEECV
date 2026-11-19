@@ -17,6 +17,7 @@ import {
   parseSessionCount, pickAlwaysTip, pickNextTip, pickNextTipCycled, serializeAssistantState,
   FIRST_TIP_IDLE_MS, NEXT_TIP_IDLE_MS,
   validateAssistantTargetTab, buildAssistantEditorSnapshot, buildAssistantBookSnapshot,
+  buildAssistantInvoiceSnapshot,
 } from '../../../shared/core/assistant/assistantTips';
 import { executeAiTask } from '../../../shared/core/ai/aiClient';
 import { useToast } from '../../../shared/core/ui/Toast';
@@ -39,9 +40,32 @@ interface ChatMessage {
   actions?: SuggestedAssistantAction[];
 }
 
+/** Textos visibles por tipo de documento (zona app). */
+const DOC_META: Record<AssistantDocType, { ariaOpen: string; subtitle: string; emptyHint: string; placeholder: string }> = {
+  cv: {
+    ariaOpen: 'el asistente del editor',
+    subtitle: 'Asistente del editor',
+    emptyHint: `Preguntale a ${ASSISTANT_NAME} cómo usar la app: dónde está cada cosa, cómo mover secciones entre columna principal y barra lateral, qué es una postulación o cómo pasa el Diagnóstico ATS.`,
+    placeholder: 'Ej: ¿cómo muevo Idiomas a la barra lateral?',
+  },
+  book: {
+    ariaOpen: 'el asistente del estudio',
+    subtitle: 'Asistente del estudio',
+    emptyHint: `Preguntale a ${ASSISTANT_NAME} cómo usar el estudio: cargar tu PDF, ordenar las páginas, armar tapa y contratapa, calibrar un número o exportar tu libro listo para imprimir.`,
+    placeholder: 'Ej: ¿cómo armo la tapa?',
+  },
+  invoice: {
+    ariaOpen: 'el asistente del facturador',
+    subtitle: 'Asistente del facturador',
+    emptyHint: `Preguntale a ${ASSISTANT_NAME} cómo usar FacturLee: armar un comprobante, cargar clientes, descontar stock, cobrar o hacer la copia de seguridad. Tus datos nunca salen de tu compu.`,
+    placeholder: 'Ej: ¿cómo hago la copia de seguridad?',
+  },
+};
+
 const QUICK_QUESTIONS_BY_DOC: Record<AssistantDocType, string[]> = {
   cv: ['¿Cómo me postulo?', 'Mejorar mi ATS', 'Cambiar diseño'],
   book: ['¿Cómo armo mi libro?', 'Tapa y contratapa', '¿Cómo lo imprimo?'],
+  invoice: ['¿Cómo armo un comprobante?', '¿Es una factura fiscal?', '¿Dónde guardo el respaldo?'],
 };
 
 const loadState = (docType: AssistantDocType) => (typeof window === 'undefined'
@@ -233,7 +257,9 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
     try {
       const editorState = docType === 'book'
         ? buildAssistantBookSnapshot(bookOptions, activeTab)
-        : buildAssistantEditorSnapshot(cvData, activeTab, atsScore);
+        : docType === 'invoice'
+          ? buildAssistantInvoiceSnapshot(activeTab)
+          : buildAssistantEditorSnapshot(cvData, activeTab, atsScore);
       const res = await executeAiTask<{ answer: string; suggestedActions?: SuggestedAssistantAction[] }>({
         taskId: 'app_guide_assistant',
         payload: { question, activeTab, docType, editorState, history: messages },
@@ -257,7 +283,7 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
       <div className="fixed bottom-5 right-5 z-50">
         <button
           type="button"
-          aria-label={`Abrir ${ASSISTANT_NAME}, ${docType === 'book' ? 'el asistente del estudio' : 'el asistente del editor'}`}
+          aria-label={`Abrir ${ASSISTANT_NAME}, ${DOC_META[docType].ariaOpen}`}
           aria-expanded={open}
           onClick={handleToggleOpen}
           className={`flex h-12 w-12 items-center justify-center rounded-full border border-[var(--color-accent-base)]/30 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-base)] ${elevationSystem.floating}`}
@@ -281,7 +307,7 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
               </span>
               <div className="min-w-0 flex-1">
                 <div className="text-[13px] font-extrabold leading-tight">{ASSISTANT_NAME}</div>
-                <div className="truncate text-[10px] text-[var(--ui-text-secondary)]">{docType === 'book' ? 'Asistente del estudio' : 'Asistente del editor'}</div>
+                <div className="truncate text-[10px] text-[var(--ui-text-secondary)]">{DOC_META[docType].subtitle}</div>
               </div>
               <button
                 type="button"
@@ -377,9 +403,7 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
                   {messages.length === 0 && !sending && (
                     <div className="space-y-2">
                       <p className="text-[var(--ui-text-secondary)]">
-                        {docType === 'book'
-                          ? `Preguntale a ${ASSISTANT_NAME} cómo usar el estudio: cargar tu PDF, ordenar las páginas, armar tapa y contratapa, calibrar un número o exportar tu libro listo para imprimir.`
-                          : `Preguntale a ${ASSISTANT_NAME} cómo usar la app: dónde está cada cosa, cómo mover secciones entre columna principal y barra lateral, qué es una postulación o cómo pasa el Diagnóstico ATS.`}
+                        {DOC_META[docType].emptyHint}
                       </p>
                       <div className="flex flex-wrap gap-1.5">
                         {QUICK_QUESTIONS_BY_DOC[docType].map((q) => (
@@ -424,7 +448,7 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ej: ¿cómo muevo Idiomas a la barra lateral?"
+                  placeholder={DOC_META[docType].placeholder}
                   maxLength={300}
                   aria-label="Tu pregunta para Lidio"
                   className="min-w-0 flex-1 rounded-[10px] border border-[var(--ui-border)] bg-[var(--ui-bg-input)] px-2.5 py-1.5 text-[12px] focus:outline-none focus:border-[var(--color-accent-base)]"

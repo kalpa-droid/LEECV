@@ -16,9 +16,10 @@ import { isValidPanelTab } from '../recruiter-rules/ruleTargetTabs';
 import { isApplicationVariant } from '../documents/applicationVariant';
 import { resolveActiveFormatId } from '../formats/cvFormatRegistry';
 import { BOOK_STEP_SEQUENCE } from '../book-engine/bookStepSequence';
+import { FACTURADOR_STEP_SEQUENCE } from '../facturador-engine/facturadorStepSequence';
 
-/** Tipo de documento del editor que monta a Lidio: currículum (cv) o libro (book). */
-export type AssistantDocType = 'cv' | 'book';
+/** Tipo de documento del editor que monta a Lidio: currículum (cv), libro (book) o facturador (invoice). */
+export type AssistantDocType = 'cv' | 'book' | 'invoice';
 
 /**
  * Crea un resumen estructural seguro del estado del editor.
@@ -105,6 +106,25 @@ export function buildAssistantBookSnapshot(
   };
 }
 
+/**
+ * Resumen estructural seguro del estado del facturador (FacturLee).
+ * NO contiene PII NI montos ni datos de clientes: solo el paso activo.
+ */
+export interface AssistantInvoiceSnapshot {
+  docType: 'invoice';
+  activeStepId: string;
+}
+
+export function buildAssistantInvoiceSnapshot(
+  activeStepId?: string | null,
+): AssistantInvoiceSnapshot {
+  const ids = new Set(FACTURADOR_STEP_SEQUENCE.map((step) => step.id));
+  return {
+    docType: 'invoice',
+    activeStepId: activeStepId && ids.has(activeStepId) ? String(activeStepId) : 'fact_comprobante',
+  };
+}
+
 export const ASSISTANT_NAME = 'Lidio';
 export const ASSISTANT_TAGLINE = 'Te doy una mano con tu CV';
 
@@ -113,9 +133,9 @@ export const ASSISTANT_SESSION_KEY = 'leecv.assistant.session';
 
 /** Keys de storage por tipo de documento: cada docType tiene su propio estado de tips. */
 export const getAssistantStorageKey = (docType: AssistantDocType = 'cv'): string =>
-  docType === 'book' ? 'leecv.assistant.book' : ASSISTANT_STORAGE_KEY;
+  docType === 'book' ? 'leecv.assistant.book' : docType === 'invoice' ? 'leecv.assistant.invoice' : ASSISTANT_STORAGE_KEY;
 export const getAssistantSessionKey = (docType: AssistantDocType = 'cv'): string =>
-  docType === 'book' ? 'leecv.assistant.session.book' : ASSISTANT_SESSION_KEY;
+  docType === 'book' ? 'leecv.assistant.session.book' : docType === 'invoice' ? 'leecv.assistant.session.invoice' : ASSISTANT_SESSION_KEY;
 
 export const FIRST_TIP_IDLE_MS = 20_000;
 export const NEXT_TIP_IDLE_MS = 90_000;
@@ -148,6 +168,10 @@ export function validateAssistantTargetTab(
   if (!targetTab) return null;
   if (docType === 'book') {
     const ids = new Set(BOOK_STEP_SEQUENCE.map((step) => step.id));
+    return ids.has(targetTab) ? String(targetTab) : null;
+  }
+  if (docType === 'invoice') {
+    const ids = new Set(FACTURADOR_STEP_SEQUENCE.map((step) => step.id));
     return ids.has(targetTab) ? String(targetTab) : null;
   }
   return isValidPanelTab(targetTab, cvData) ? String(targetTab) : null;
@@ -393,6 +417,99 @@ export const BOOK_TAB_TIPS: Record<string, AssistantTip[]> = {
   ],
 };
 
+/** Tips por paso del facturador (docType 'invoice'). Destinos son pasos reales de FACTURADOR_STEP_SEQUENCE. */
+export const INVOICE_STEP_IDS: string[] = FACTURADOR_STEP_SEQUENCE.map((s) => s.id);
+export const FACT_TAB_TIPS: Record<string, AssistantTip[]> = {
+  fact_emisor: [
+    {
+      id: 'tip-fact-emisor-1',
+      title: 'Tus datos, solo en tu compu',
+      body: 'Completá tu negocio: nombre, CUIT y condición ante el fisco. El logo se convierte solo a imagen y viaja incrustado en el comprobante. Nada de esto sale a internet.',
+      targetTab: 'fact_emisor',
+    },
+  ],
+  fact_comprobante: [
+    {
+      id: 'tip-fact-comprobante-1',
+      title: '¿Qué vas a emitir?',
+      body: 'Elegí la letra del comprobante, la numeración y el cliente. Mientras no lo emitas, es un presupuesto.',
+      targetTab: 'fact_comprobante',
+    },
+    {
+      id: 'tip-fact-comprobante-2',
+      title: 'Fecha y vencimiento',
+      body: 'Cargá la fecha del comprobante y, si corresponde, la fecha de vencimiento del pago.',
+      targetTab: 'fact_comprobante',
+    },
+  ],
+  fact_items: [
+    {
+      id: 'tip-fact-items-1',
+      title: 'Descripción y precio',
+      body: 'Escribí qué estás cobrando, cantidad y precio unitario. El total y el IVA se calculan solos.',
+      targetTab: 'fact_items',
+    },
+  ],
+  fact_catalogo: [
+    {
+      id: 'tip-fact-catalogo-1',
+      title: 'Tus productos frecuentes',
+      body: 'Cargá una vez tus productos o servicios y elegilos del catálogo al armar el comprobante.',
+      targetTab: 'fact_catalogo',
+    },
+    {
+      id: 'tip-fact-catalogo-2',
+      title: 'El stock se descuenta al emitir',
+      body: 'Cuando emitís el comprobante, el stock del catálogo se descuenta una sola vez.',
+      targetTab: 'fact_catalogo',
+    },
+  ],
+  fact_clientes: [
+    {
+      id: 'tip-fact-clientes-1',
+      title: 'Tus clientes, a mano',
+      body: 'Guardá nombre, CUIT y condición de tus clientes para elegirlos rápido. Quedan solo en tu computadora.',
+      targetTab: 'fact_clientes',
+    },
+  ],
+  fact_historial: [
+    {
+      id: 'tip-fact-historial-1',
+      title: 'Quién te debe',
+      body: 'Marcá qué comprobantes están cobrados y cuáles pendientes para ver quién te falta cobrar.',
+      targetTab: 'fact_historial',
+    },
+    {
+      id: 'tip-fact-historial-2',
+      title: 'Volver a mirar un comprobante',
+      body: 'Desde el historial podés abrir cualquier comprobante ya emitido y ver su detalle.',
+      targetTab: 'fact_historial',
+    },
+  ],
+  fact_diseno: [
+    {
+      id: 'tip-fact-diseno-1',
+      title: 'Estilo y hoja del PDF',
+      body: 'Hay 3 diseños de comprobante para elegir, y la hoja del PDF (común o grande) se elige en esta misma pestaña.',
+      targetTab: 'fact_diseno',
+    },
+  ],
+  fact_respaldo: [
+    {
+      id: 'tip-fact-respaldo-1',
+      title: 'Tu copia de seguridad',
+      body: 'Bajá el respaldo cifrado o el Excel para tener una copia fuera del navegador. El archivo cifrado se abre solo con tu clave.',
+      targetTab: 'fact_respaldo',
+    },
+    {
+      id: 'tip-fact-respaldo-2',
+      title: 'Clave olvidada',
+      body: 'Si olvidaste la clave y no tenés la Llave de Rescate, no hay forma de abrir la bóveda. Guardá la Llave en un lugar seguro.',
+      targetTab: 'fact_respaldo',
+    },
+  ],
+};
+
 /** Tips transversales (aparecen en cualquier pestaña del CV). */
 export const ALWAYS_TIPS: AssistantTip[] = [
   {
@@ -431,6 +548,25 @@ export const BOOK_ALWAYS_TIPS: AssistantTip[] = [
   },
 ];
 
+/** Tips transversales del facturador (aparecen en cualquier paso de FacturLee). */
+export const FACT_ALWAYS_TIPS: AssistantTip[] = [
+  {
+    id: 'tip-fact-fiscal-1',
+    title: 'Esto no es una factura fiscal',
+    body: 'FacturLee arma presupuestos y comprobantes internos. Para una factura fiscal con CAE hace falta el sistema de ARCA.',
+  },
+  {
+    id: 'tip-fact-local-1',
+    title: 'Todo queda en tu compu',
+    body: 'Sin cuenta y sin internet: los datos se guardan cifrados en esta computadora. Si cambiás de máquina, llevá el respaldo.',
+  },
+  {
+    id: 'tip-fact-pdf-1',
+    title: 'El PDF usa 1 crédito',
+    body: 'Descargar el comprobante en PDF consume 1 crédito de tu cuenta. El respaldo (Excel o el archivo cifrado) es gratis.',
+  },
+];
+
 export const ALL_TIPS: AssistantTip[] = [
   ...Object.values(TAB_TIPS).flat(),
   ...ALWAYS_TIPS,
@@ -441,20 +577,23 @@ export const ALL_BOOK_TIPS: AssistantTip[] = [
   ...BOOK_ALWAYS_TIPS,
 ];
 
+export const ALL_INVOICE_TIPS: AssistantTip[] = [
+  ...Object.values(FACT_TAB_TIPS).flat(),
+  ...FACT_ALWAYS_TIPS,
+];
+
 export const getAllTips = (docType: AssistantDocType = 'cv'): AssistantTip[] =>
-  docType === 'book' ? ALL_BOOK_TIPS : ALL_TIPS;
+  docType === 'book' ? ALL_BOOK_TIPS : docType === 'invoice' ? ALL_INVOICE_TIPS : ALL_TIPS;
 
 /** Tips para la pestaña activa (primero los específicos, después los transversales). */
 export function getTipsForTab(
   activeTab?: string | null,
   docType: AssistantDocType = 'cv',
 ): AssistantTip[] {
-  if (docType === 'book') {
-    const specific = (activeTab && BOOK_TAB_TIPS[activeTab]) || [];
-    return [...specific, ...BOOK_ALWAYS_TIPS];
-  }
-  const specific = (activeTab && TAB_TIPS[activeTab]) || [];
-  return [...specific, ...ALWAYS_TIPS];
+  const tabTips = docType === 'book' ? BOOK_TAB_TIPS : docType === 'invoice' ? FACT_TAB_TIPS : TAB_TIPS;
+  const alwaysTips = docType === 'book' ? BOOK_ALWAYS_TIPS : docType === 'invoice' ? FACT_ALWAYS_TIPS : ALWAYS_TIPS;
+  const specific = (activeTab && tabTips[activeTab]) || [];
+  return [...specific, ...alwaysTips];
 }
 
 /** Próximo tip sin ver: específico de la pestaña (en orden declarado) y después los transversales. */
@@ -483,8 +622,9 @@ export function pickAlwaysTip(
   afterTipId?: string | null,
 ): AssistantTip {
   const seen = new Set(seenTipIds || []);
-  const specific = (activeTab && (docType === 'book' ? BOOK_TAB_TIPS[activeTab] : TAB_TIPS[activeTab])) || [];
-  const always = docType === 'book' ? BOOK_ALWAYS_TIPS : ALWAYS_TIPS;
+  const specific =
+    (activeTab && (docType === 'book' ? BOOK_TAB_TIPS[activeTab] : docType === 'invoice' ? FACT_TAB_TIPS[activeTab] : TAB_TIPS[activeTab])) || [];
+  const always = docType === 'book' ? BOOK_ALWAYS_TIPS : docType === 'invoice' ? FACT_ALWAYS_TIPS : ALWAYS_TIPS;
 
   const unseenSpecific = specific.find((tip) => !seen.has(tip.id));
   if (unseenSpecific) return unseenSpecific;

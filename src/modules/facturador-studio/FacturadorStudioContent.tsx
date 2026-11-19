@@ -46,6 +46,7 @@ import {
 } from '../../shared/core/facturador-engine/xlsxBackupEngine';
 import { FactNotify, nextNumberPreview } from './facturadorStepsShared';
 import { FactEmisorStep } from './steps/FactEmisorStep';
+import { FloatingAssistant } from '../cv-builder/components/FloatingAssistant';
 import { FactComprobanteStep } from './steps/FactComprobanteStep';
 import { FactItemsStep } from './steps/FactItemsStep';
 import { FactCatalogoStep } from './steps/FactCatalogoStep';
@@ -550,6 +551,14 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
           onNewPlanner,
           onNewInvoice: onNewInvoice || handleNewDraft,
           onClose: (e, id) => onCloseTab(id),
+        }}
+      />
+      <FloatingAssistant
+        docType="invoice"
+        activeTab={activeStepTab}
+        onNavigate={(stepId) => {
+          setActiveStepTab(stepId);
+          setIsPanelOpen(true);
         }}
       />
       <PdfCheckoutModal

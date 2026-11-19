@@ -16,5 +16,5 @@ export const LEECV_VERSION = {
   label: 'V2.26.0',
   lastUpdated: '2026-11-19',
   lastAgent: '@antigravity',
-  stage: 'feat(facturador): FacturLee /crear-factura — facturador 100% local y cifrado (bóveda PBKDF2 + AES-256-GCM, Llave de Rescate, sin nube, cero PII), comprobante en PDF + Excel de 5 hojas + respaldo .leecv-fact.',
+  stage: 'feat(facturador): FacturLee /crear-factura — facturador 100% local y cifrado (bóveda PBKDF2 + AES-256-GCM, Llave de Rescate, sin nube, cero PII), comprobante en PDF + Excel de 5 hojas + respaldo .leecv-fact + Lidio entrenado para FacturLee (tips locales y chat sin datos personales).',
 } as const;
