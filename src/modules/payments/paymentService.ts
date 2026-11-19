@@ -81,17 +81,16 @@ export async function procesarRetornoPago(): Promise<{ status: 'paypal_captured'
   if (token && (pagoStatus === 'exitoso' || !pagoStatus)) {
     try {
       await capturarOrdenPayPal(token);
-      navigation.cleanQueryParams();
+      // cleanQueryParams se hace DESPUÉS del polling en App.tsx
       return { status: 'paypal_captured', orderId: token };
     } catch (err) {
       console.error('Error al capturar orden PayPal en retorno:', err);
-      navigation.cleanQueryParams();
       throw err;
     }
   }
 
   if (pagoStatus === 'exitoso') {
-    navigation.cleanQueryParams();
+    // cleanQueryParams se hace DESPUÉS del polling en App.tsx
     return { status: 'payment_success' };
   }
 

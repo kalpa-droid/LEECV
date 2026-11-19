@@ -44,13 +44,20 @@ export function useExportEntitlement() {
           return;
         }
         
-        // Count unconsumed paid tokens for this user
+        // Count unconsumed paid tokens: por user_id directo O por email cuando
+        // el token se creó como invitado (user_id null) y claimCreditsOnAuth
+        // todavía no lo vinculó.
+        const userEmail = user.email ? user.email.trim().toLowerCase() : '';
+        const orFilter = userEmail
+          ? `user_id.eq.${user.id},and(user_id.is.null,email.eq.${userEmail})`
+          : `user_id.eq.${user.id}`;
+
         const { count } = await supabase
           .from('pdf_export_tokens')
           .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id)
           .eq('paid', true)
-          .eq('consumed', false);
+          .eq('consumed', false)
+          .or(orFilter);
           
         if (count && count > 0) {
            setCanExport(true);
