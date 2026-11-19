@@ -358,14 +358,16 @@ export const EditorialPdfDocument: React.FC<{
         <Text key={`sec-${section.id}`} style={{ fontSize: 14, marginBottom: 10 }}>
           {section.title}
         </Text>
-        {section.records.filter((r) => r.type !== 'callout' && r.type !== 'image').map((record, ri) => {
-          const label = record.title || record.content?.slice(0, 30) || 'Sin título';
-          return (
-            <Text key={`rec-${section.id}-${ri}`} style={{ fontSize: 12, marginBottom: 6 }}>
-              {label} — Página {si + 2} // estimado
-            </Text>
-          );
-        }))
+        {section.records
+          .filter((r) => r.type !== 'callout' && r.type !== 'image')
+          .map((record, ri) => {
+            const label = record.title || record.content?.slice(0, 30) || 'Sin título';
+            return (
+              <Text key={`rec-${section.id}-${ri}`} style={{ fontSize: 12, marginBottom: 6 }}>
+                {label} -- Página {si + 2} // estimado
+              </Text>
+            );
+          })}
       ))}
     </Page>
   ) : null;
