@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, CreditCard, BookOpen, ArrowRight, Check, CalendarDays, Mail } from 'lucide-react';
+import { FileText, CreditCard, BookOpen, ArrowRight, Check, CalendarDays, Mail, ReceiptText } from 'lucide-react';
 import { radius, elevationSystem } from '../../uiDesignSystem';
 
 import { useText } from '../../../i18n/useText';
@@ -71,6 +71,18 @@ export const PortalProductsGrid: React.FC<PortalProductsGridProps> = ({ onNaviga
       bullets: [...t.landing.products.cartas.bullets],
       route: '/crear-carta',
       cta: t.landing.products.cartas.cta,
+    },
+    {
+      id: 'facturas',
+      icon: ReceiptText,
+      badge: t.landing.products.facturas.badge,
+      badgeColor: 'bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)] border-[var(--color-status-success-bright)]/30',
+      title: t.landing.products.facturas.title,
+      tagline: t.landing.products.facturas.tagline,
+      description: t.landing.products.facturas.description,
+      bullets: [...t.landing.products.facturas.bullets],
+      route: '/crear-factura',
+      cta: t.landing.products.facturas.cta,
     },
   ];
 

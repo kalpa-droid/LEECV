@@ -103,9 +103,10 @@ export function createBlankCVTemplate(overrides?: Record<string, any>) {
   else if (docType === 'cover_letter') defaultPresetId = 'carta-clasica';
   else if (docType === 'book') defaultPresetId = 'libro-standard';
   else if (docType === 'planner') defaultPresetId = 'planner-clasico';
+  else if (docType === 'invoice') defaultPresetId = 'fact-clasico-fiscal';
 
   const activePresetId = overrides?.activePresetId || defaultPresetId;
-  const prefix = docType === 'business_card' ? 'card' : docType === 'book' ? 'book' : docType === 'cover_letter' ? 'cover_letter' : docType === 'planner' ? 'planner' : 'cv';
+  const prefix = docType === 'business_card' ? 'card' : docType === 'book' ? 'book' : docType === 'cover_letter' ? 'cover_letter' : docType === 'planner' ? 'planner' : docType === 'invoice' ? 'invoice' : 'cv';
   const id = overrides?.id || generateDocumentId(prefix as any);
 
   return {

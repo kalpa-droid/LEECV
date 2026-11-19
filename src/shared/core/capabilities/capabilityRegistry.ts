@@ -339,6 +339,20 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
     ],
     defaultPaperSize: 'b5',
     defaultActivePresetId: 'planner-clasico'
+  },
+  invoice: {
+    id: 'invoice',
+    name: 'Presupuesto / Factura',
+    description: 'Comprobante interno o presupuesto. 100% local y cifrado; no es una factura fiscal con CAE.',
+    iconName: 'ReceiptText',
+    capabilities: [
+      'theme',
+      'paper_size',
+      'json_backup',
+      'nameable_title'
+    ],
+    defaultPaperSize: 'a4',
+    defaultActivePresetId: 'fact-clasico-fiscal'
   }
 };
 
@@ -379,6 +393,7 @@ export function getDocTypeForRoute(route: string = '/'): DocumentTypeId {
   if (cleanRoute === '/crear-tarjeta') return 'business_card';
   if (cleanRoute === '/crear-libro') return 'book';
   if (cleanRoute === '/crear-agenda') return 'planner';
+  if (cleanRoute === '/crear-factura') return 'invoice';
   return 'cv';
 }
 
@@ -392,6 +407,8 @@ export function getRouteForDocType(docTypeId: string = 'cv'): string {
       return '/crear-cv';
     case 'planner':
       return '/crear-agenda';
+    case 'invoice':
+      return '/crear-factura';
     case 'cv':
     default:
       return '/crear-cv';
@@ -408,6 +425,8 @@ export function getDefaultTitleForDocType(docTypeId: string = 'cv'): string {
       return 'Mi Carta de Presentación';
     case 'planner':
       return 'Mi Agenda / Planificador';
+    case 'invoice':
+      return 'Presupuesto / Factura';
     case 'cv':
     default:
       return 'Mi Currículum Vitae';
@@ -418,19 +437,21 @@ export function inferDocumentTypeId(docData: any): DocumentTypeId {
   if (!docData || typeof docData !== 'object') return 'cv';
 
   const docTypeId = docData.doc_type_id || docData.docType;
-  if (docTypeId === 'business_card' || docTypeId === 'book' || docTypeId === 'cover_letter' || docTypeId === 'planner' || docTypeId === 'cv') {
+  if (docTypeId === 'business_card' || docTypeId === 'book' || docTypeId === 'cover_letter' || docTypeId === 'planner' || docTypeId === 'cv' || docTypeId === 'invoice') {
     return docTypeId;
   }
   if (docTypeId === 'carta') return 'cover_letter';
   if (docTypeId === 'tarjeta') return 'business_card';
   if (docTypeId === 'libro') return 'book';
   if (docTypeId === 'agenda') return 'planner';
+  if (docTypeId === 'factura') return 'invoice';
 
   const id = String(docData.id || '').toLowerCase();
   if (id.startsWith('card_') || id.startsWith('doc_business_card_') || id === 'draft_card') return 'business_card';
   if (id.startsWith('book_') || id.startsWith('doc_book_') || id === 'draft_book') return 'book';
   if (id.startsWith('cover_letter_') || id.startsWith('doc_cover_letter_') || id === 'draft_cover_letter') return 'cover_letter';
   if (id.startsWith('planner_') || id.startsWith('doc_planner_') || id === 'draft_planner') return 'planner';
+  if (id.startsWith('invoice_') || id.startsWith('doc_invoice_') || id === 'draft_invoice') return 'invoice';
   if (id === 'draft_cv') return 'cv';
 
   const presetId = String(docData.activePresetId || '').toLowerCase();
@@ -438,6 +459,7 @@ export function inferDocumentTypeId(docData: any): DocumentTypeId {
   if (presetId === 'carta-clasica' || presetId === 'carta-presentacion') return 'cover_letter';
   if (presetId.startsWith('planner-')) return 'planner';
   if (presetId.startsWith('libro-') || presetId === 'book') return 'book';
+  if (presetId.startsWith('fact-')) return 'invoice';
   if (docData.bookMode) return 'book';
 
   return 'cv';

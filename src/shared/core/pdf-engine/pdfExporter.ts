@@ -53,7 +53,9 @@ export async function exportCVToPDF(cvData: any, presetInput?: Preset, atsMode?:
 
 import { CoverLetterPdfDocument } from './renderer/CoverLetterPdfDocument';
 import { PlannerPdfDocument } from './renderer/PlannerPdfDocument';
+import { InvoicePdfDocument } from './renderer/InvoicePdfDocument';
 import { buildCardDataFromCV } from './layers/records/cardDataAdapter';
+import { EMPTY_EMPRESA } from '../facturador-engine/facturadorDefaults';
 
 /**
  * Universal PDF exporter connecting all document types (CVs, Business Card Sheets, Cover Letters, etc.)
@@ -91,6 +93,26 @@ export async function exportDocumentToPDF(cvData: any, presetInput: string | Pre
     });
     const blob = await pdf(docElement as any).toBlob();
     downloadBlob(blob, `Carta de Presentacion - ${candidateName}.pdf`);
+    return true;
+  }
+
+  if (preset.pageCategory === 'factura') {
+    const draft = cvData?.draft;
+    const empresa = cvData?.empresa || EMPTY_EMPRESA;
+    const design = cvData?.design || {
+      presetId: preset.id,
+      pageSizeId: 'a4',
+      duplicateHalfSheet: false,
+      mostrarLogo: true,
+      mostrarObservaciones: true,
+    };
+    if (!draft) return false;
+
+    const docElement = React.createElement(InvoicePdfDocument, { draft, empresa, design });
+    const blob = await pdf(docElement as any).toBlob();
+    const nro = `${String(draft.puntoVenta || '0').padStart(5, '0')}-${String(draft.numero || '0').padStart(8, '0')}`;
+    const tipo = draft.tipo === 'presupuesto' ? 'Presupuesto' : draft.tipo === 'nota_credito' ? 'Nota de Credito' : 'Factura';
+    downloadBlob(blob, `${tipo}-${draft.letra}-${nro}.pdf`);
     return true;
   }
 

@@ -2,7 +2,7 @@
  * Document & Capability Composition Architecture Types
  */
 
-export type DocumentTypeId = 'cv' | 'business_card' | 'book' | 'cover_letter' | 'planner';
+export type DocumentTypeId = 'cv' | 'business_card' | 'book' | 'cover_letter' | 'planner' | 'invoice';
 
 export interface CapabilityConfig {
   id: string;

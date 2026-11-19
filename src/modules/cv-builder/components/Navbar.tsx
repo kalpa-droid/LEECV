@@ -247,7 +247,25 @@ export default function Navbar({
                 <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
 
                 {/* 1. Guardar Cambios, Copias y Backup JSON */}
-                {capabilitiesGate.canBackupCloud(docType) ? (
+                {docType === 'invoice' ? (
+                  <>
+                    {/* FacturLee: "Guardar" queda habilitado (bóveda cifrada local + sobre mínimo de pestaña) */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsActionMenuOpen(false);
+                        onSaveCVClick();
+                      }}
+                      disabled={isSaving}
+                      className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer disabled:opacity-50`}
+                    >
+                      <DomSectionIcon iconId={UI_ICON_IDS.guardar} className="w-4 h-4 text-[var(--color-accent-purple-bright)]" />
+                      <span>{isSaving ? t.navbar.saveChangesSaving : t.navbar.saveChangesOverwrite}</span>
+                    </button>
+
+                    <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
+                  </>
+                ) : capabilitiesGate.canBackupCloud(docType) ? (
                   <>
                     <button
                       type="button"

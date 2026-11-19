@@ -88,6 +88,7 @@ import { plannerDocentePreset } from './presets/planner-docente';
 import { plannerEjecutivoPreset } from './presets/planner-ejecutivo';
 import { plannerEmprendedorPreset } from './presets/planner-emprendedor';
 import { plannerPersonalPreset } from './presets/planner-personal';
+import { INVOICE_PRESETS } from './facturadorPresets';
 
 // Presets nativos por defecto compilados vía el Motor de Composición
 const NATIVE_PRESETS: Preset[] = [
@@ -140,7 +141,8 @@ const NATIVE_PRESETS: Preset[] = [
   plannerDocentePreset,
   plannerEjecutivoPreset,
   plannerEmprendedorPreset,
-  plannerPersonalPreset
+  plannerPersonalPreset,
+  ...INVOICE_PRESETS
 ];
 
 // Mapa en memoria dinámico

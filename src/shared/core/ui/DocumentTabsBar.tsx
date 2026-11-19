@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { FileText, BookOpen, CreditCard, Mail, X, ChevronRight, ChevronLeft, CalendarDays } from 'lucide-react';
+import { FileText, BookOpen, CreditCard, Mail, X, ChevronRight, ChevronLeft, CalendarDays, ReceiptText } from 'lucide-react';
 import { OpenTab } from '../documents/tabStore';
 import { elevationSystem, radius } from '../uiDesignSystem';
 import { NewDocumentMenu } from './NewDocumentMenu';
@@ -18,6 +18,7 @@ export interface DocumentTabsBarProps {
   onNewBook?: () => void;
   onNewCoverLetter?: () => void;
   onNewPlanner?: () => void;
+  onNewInvoice?: () => void;
   onClose: (e: React.MouseEvent, id: string, title: string) => void;
 }
 
@@ -33,6 +34,7 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
   onNewBook,
   onNewCoverLetter,
   onNewPlanner,
+  onNewInvoice,
   onClose,
 }) => {
   const getTabIcon = (tabDocType?: string) => {
@@ -45,6 +47,8 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
         return Mail;
       case 'planner':
         return CalendarDays;
+      case 'invoice':
+        return ReceiptText;
       default:
         return FileText;
     }
@@ -156,13 +160,14 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
           })}
         </div>
 
-        {/* Menu (+) Nuevo Documento (CV, Tarjeta, Libro, Carta, Agenda) */}
+        {/* Menu (+) Nuevo Documento (CV, Tarjeta, Libro, Carta, Agenda, Presupuesto/Factura) */}
         <NewDocumentMenu
           onSelectCV={onNewCV || onAdd}
           onSelectCard={onNewCard || onAdd}
           onSelectBook={onNewBook || onAdd}
           onSelectCoverLetter={onNewCoverLetter}
           onSelectPlanner={onNewPlanner || onAdd}
+          onSelectInvoice={onNewInvoice || onAdd}
         />
 
         {/* Flecha derecha: solo se muestra si hay pestañas ocultas a ese lado */}

@@ -78,7 +78,8 @@ export const PRODUCT_ICON_IDS = {
   tarjeta: 'tarjeta',
   carta: 'carta',
   libro: 'libro',
-  agenda: 'agenda'
+  agenda: 'agenda',
+  factura: 'factura'
 } as const;
 
 export type ProductIconKey = keyof typeof PRODUCT_ICON_IDS;

@@ -376,3 +376,78 @@ export const savePlanner = (plannerData: any) => saveDocument(plannerData, 'plan
 export const loadPlannerById = (id: string) => loadDocumentById(id, 'planner');
 export const deletePlannerById = (id: string) => deleteDocumentById(id, 'planner');
 
+/**
+ * FacturLee — la pestaña es un "sobre" mínimo (id + título). Los datos fiscales
+ * NUNCA pasan por acá: viven cifrados en la bóveda (IndexedDB) y jamás se
+ * sincronizan a Supabase (`invoice` no declara `cloud_backup`).
+ */
+/**
+ * Lista los shells guardados de FacturLee SOLO desde localStorage.
+ * A diferencia de getSavedDocumentsList, NUNCA consulta Supabase: FacturLee es 100% local.
+ */
+export const getSavedInvoicesList = async (): Promise<DocumentRecord[]> => {
+  const storageKey = getStorageKeyForType('invoice');
+  try {
+    const stored = localStorage.getItem(storageKey);
+    if (!stored) return [];
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    reportSilentError(err, 'documentStorageService.getSavedInvoicesList.error');
+    return [];
+  }
+};
+
+export const saveInvoiceShell = async (shell: { id: string; title: string }): Promise<SaveDocumentResult> => {
+  const nowIso = new Date().toISOString();
+  const record: DocumentRecord = {
+    id: shell.id,
+    doc_type_id: 'invoice',
+    title: shell.title,
+    candidate_name: '',
+    updated_at: nowIso,
+  };
+  const data = { id: shell.id, doc_type_id: 'invoice', title: shell.title, updated_at: nowIso };
+
+  try {
+    await idbStorage.setItem(`doc_invoice_data_${shell.id}`, data);
+    try {
+      const storageKey = getStorageKeyForType('invoice');
+      const list = await getSavedInvoicesList();
+      const existingIdx = list.findIndex(item => item.id === shell.id);
+      if (existingIdx >= 0) list[existingIdx] = record;
+      else list.unshift(record);
+      localStorage.setItem(storageKey, JSON.stringify(list));
+    } catch (lerr) {
+      reportSilentError(lerr, 'documentStorageService.saveInvoiceShell.localStorageSummary');
+    }
+    return { success: true, syncState: 'local', record, title: shell.title, doc_data: data };
+  } catch (err) {
+    reportSilentError(err, 'documentStorageService.saveInvoiceShell.error');
+    return { success: false, error: err };
+  }
+};
+
+export const loadInvoiceShellById = async (id: string): Promise<any> => {
+  try {
+    return await idbStorage.getItem(`doc_invoice_data_${id}`);
+  } catch (err) {
+    reportSilentError(err, 'documentStorageService.loadInvoiceShellById.error');
+    return null;
+  }
+};
+
+export const deleteInvoiceShellById = async (id: string): Promise<void> => {
+  await idbStorage.removeItem(`doc_invoice_data_${id}`);
+  try {
+    const storageKey = getStorageKeyForType('invoice');
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      const list = JSON.parse(stored).filter((c: any) => c.id !== id);
+      localStorage.setItem(storageKey, JSON.stringify(list));
+    }
+  } catch (err) {
+    reportSilentError(err, 'documentStorageService.deleteInvoiceShellById.error');
+  }
+};
+
