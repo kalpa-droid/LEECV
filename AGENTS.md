@@ -197,4 +197,46 @@ Para mantener la máxima seguridad, velocidad y orden arquitectónico en LEECV, 
    - Kalpa aprueba como CODEOWNER y ejecuta el merge.
    - Registro obligatorio en `SESSION_LOG.md`.
 
+## Regla 10 — Protocolo Obligatorio para Apps y Subproductos Nativos
+
+Toda nueva aplicación, herramienta o tipo de documento que se integre a LEECV (ej. cartas, tarjetas, agendas, folletos, diplomas, facturas, menús) **DEBE ser 100% nativa y modular**, consumiendo exclusivamente los motores existentes. **Queda terminantemente prohibido crear islas de código, renderers de PDF paralelos, inputs HTML sueltos o flujos de pago desacoplados.**
+
+### Los 7 Pilares Canónicos de Integración (Innegociables)
+
+1. **Identidad y Capacidades en el Registro Central:**
+   - Todo nuevo tipo de documento se registra en `src/shared/core/capabilities/capabilityRegistry.ts` (`DOCUMENT_TYPE_REGISTRY` y `CAPABILITY_REGISTRY`).
+   - Las pestañas del editor, el dock, los respaldos y la persistencia se habilitan por composición declarativa de *capabilities*, nunca con código ad-hoc en componentes de pantalla.
+
+2. **Formularios y Paneles Dinámicos (Sin Inputs Sueltos):**
+   - Inputs individuales: usar `<Field />` (`src/shared/core/ui/Field.tsx`).
+   - Listas dinámicas / repetibles: usar `<RepeatableSection />` + `<RecordFormSection />` (`src/shared/core/ui/`).
+   - Íconos: resolver exclusivamente con `resolveSectionIconId()` o `iconCatalog.ts`.
+   - Estilos: usar tokens de `uiDesignSystem.ts` y variables de `index.css`. Cero interpolación dinámica de clases en Tailwind (Regla 2).
+
+3. **Motor PDF Universal y Visor Centralizado:**
+   - La nueva app se previsualiza en el visor en vivo del editor (`PdfPreviewViewport`) y se exporta usando el motor PDF central (`src/shared/core/pdf-engine/`).
+   - **Una app nueva = un Preset nuevo** (`layers/presets/`) + un **DataAdapter** (`layers/records/`), **NUNCA un renderer nuevo**, ni instancias sueltas de jsPDF/Canvas.
+   - El visor provee automáticamente los controles unificados de zoom, centrado y doble página.
+
+4. **Gating de Créditos y Pasarela Unificada:**
+   - Toda descarga de documento DEBE estar protegida por el hook canónico `useExportEntitlement()` invocando `consumeCreditIfNeeded()`.
+   - Si no hay crédito disponible, se abre `PdfCheckoutModal` pasando el `purpose="export"` y el `doc_type`.
+   - Jamás conectar un botón de descarga directo a la función de render sin la validación previa de derechos.
+
+5. **Alta, Login y Reclamo de Créditos Idempotente:**
+   - Las compras como invitado se asocian al email del comprobante.
+   - Todo inicio de sesión o registro invoca automáticamente `claimCreditsOnAuth(user)` (`authService.ts`) para transferir los tokens sin pérdida de saldo.
+
+6. **Trazabilidad y Observabilidad Obligatoria:**
+   - Toda operación asíncrona (guardado, generación de PDF, exportación, pago) se envuelve en `withErrorHandling()` (`errorHandler.ts`).
+   - Los fallos se catalogan con `context` y `source` ('pdf', 'frontend', 'auth', 'webhook') registrándose automáticamente en `admin_error_logs` para su monitoreo desde el Panel Admin.
+
+7. **Motor de IA Unificado y Entrenamiento de Lidio:**
+   - Toda asistencia inteligente (redacción, autocompletado, sugerencias) DEBE ser una tarea registrada en `api/_lib/aiTasks/catalog.ts`, consumida vía `aiClient.executeAiTask()` y respaldada por la cascada canónica (Groq → OpenRouter → Gemini). Prohibido crear clientes de IA aislados o llamadas directas a OpenAI/Gemini/OpenRouter.
+   - Toda app nueva DEBE entrenar a Lidio: es mandatorio agregar su bloque de conocimiento en `app_guide_assistant` (`catalog.ts`) detallando pestañas, pasos y reglas prácticas para que Lidio asista al usuario sin inventar ni quedar mudo.
+   - Los botones de asistencia en campos DEBEN usar `<AIButton />` (`src/shared/core/ui/AIButton.tsx`).
+
+> 📖 **Guía y Plantilla Paso a Paso:** Consultar la especificación técnica completa y ejemplos de implementación en [`docs/APP_BLUEPRINT.md`](file:///c:/Users/Kalpa/Proyectos/LEECV/docs/APP_BLUEPRINT.md).
+
+
 

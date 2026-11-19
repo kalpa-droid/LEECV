@@ -24,6 +24,14 @@ export function calculateAiCost(
     else if (model.includes('70b')) {
       cost = (promptTokens / 1_000_000) * 0.59 + (completionTokens / 1_000_000) * 0.79;
     }
+  } else if (provider === 'openrouter') {
+    // Modelos libres (:free) costo 0
+    if (model.includes(':free')) {
+      cost = 0;
+    } else {
+      // Promedio estándar estimado para modelos abiertos no-free
+      cost = (promptTokens / 1_000_000) * 0.15 + (completionTokens / 1_000_000) * 0.60;
+    }
   }
 
   // Ensure returning at least 0

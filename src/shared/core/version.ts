@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 2,
-  minor: 24,
-  patch: 3,
-  label: 'V2.24.3',
+  minor: 25,
+  patch: 0,
+  label: 'V2.25.0',
   lastUpdated: '2026-11-19',
-  lastAgent: '@opencode',
-  stage: 'fix(export): cierra el bypass de créditos de AppModals (onConfirm=proceedWithExport) y deja un único gate de cobro en el llamador (PdfCheckoutModal.handleConfirmExport ya no consume, elimina el doble cobro en CV, cartas y tarjetas) + handleStartPDFGeneration migrado a withErrorHandling + 20 radios interpolados rounded-[${radius.X}] migrados a style={{ borderRadius: radius.X }} en PdfCheckoutModal, CoverLetterExportModal y CardSheetExportSelector (Regla 2).',
+  lastAgent: '@antigravity',
+  stage: 'feat(ai): integración del proveedor OpenRouter con modelos libres y fallback + feat(blueprint): Regla 10 y Blueprint con 7 Pilares de integración para apps nativas y entrenamiento de Lidio.',
 } as const;

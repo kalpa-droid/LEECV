@@ -53,9 +53,9 @@ REGLAS OBLIGATORIAS:
       temperature: 0.2,
     };
 
-    // Intentar Groq primero por velocidad ATS; si sus claves fallan o están limitadas, fallback a Gemini.
+    // Intentar Groq primero por velocidad ATS; si sus claves fallan o están limitadas, fallback a OpenRouter / Gemini.
     // Rotación multi-key: ante 429 marcar la clave (60s) y seguir con la siguiente disponible en lugar de abortar.
-    const providersToTry = ['groq', 'gemini']
+    const providersToTry = AI_PROVIDER_FALLBACK_ORDER
       .map(providerId => ({ providerId, provider: AI_PROVIDERS[providerId] }))
       .filter(({ provider }) => !!provider);
 

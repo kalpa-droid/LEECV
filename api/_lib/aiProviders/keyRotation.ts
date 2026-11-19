@@ -41,6 +41,8 @@ function getEnvKeysForProvider(providerId: string): string[] {
   let envVal = '';
   if (providerId === 'groq') {
     envVal = process.env.GROQ_API_KEYS || process.env.GROQ_API_KEY || '';
+  } else if (providerId === 'openrouter') {
+    envVal = process.env.OPENROUTER_API_KEYS || process.env.OPENROUTER_API_KEY || '';
   } else if (providerId === 'gemini') {
     envVal = process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || '';
   }
