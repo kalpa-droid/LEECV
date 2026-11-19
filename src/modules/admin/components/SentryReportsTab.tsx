@@ -40,9 +40,9 @@ export function SentryReportsTab() {
   return (
     <div className="space-y-6">
       {/* HEADER DE LA SECCIÓN */}
-      <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-5 border border-[var(--color-neutral-border)] ${elevationSystem.raised} flex flex-col md:flex-row items-start md:items-center justify-between gap-4`}>
+      <div className={`bg-[var(--ui-bg-card)] p-5 border border-[var(--color-neutral-border)] ${elevationSystem.raised} flex flex-col md:flex-row items-start md:items-center justify-between gap-4`} style={{ borderRadius: radius.modal }}>
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-[${radius.card}] bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple-text)] flex items-center justify-center`}>
+          <div className="w-10 h-10 bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple-text)] flex items-center justify-center" style={{ borderRadius: radius.card }}>
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
@@ -55,7 +55,7 @@ export function SentryReportsTab() {
           href={sentryDashboardUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className={`px-4 py-2 bg-[var(--color-secondary-base)] hover:opacity-90 text-[var(--color-secondary-on-base)] text-xs font-black rounded-[${radius.card}] ${elevationSystem.raised} transition flex items-center gap-2`}
+          className={`px-4 py-2 bg-[var(--color-secondary-base)] hover:opacity-90 text-[var(--color-secondary-on-base)] text-xs font-black ${elevationSystem.raised} transition flex items-center gap-2`} style={{ borderRadius: radius.card }}
         >
           <span>Abrir Panel de Sentry.io</span>
           <ExternalLink className="w-3.5 h-3.5" />
@@ -66,7 +66,7 @@ export function SentryReportsTab() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         {/* TARJETA 1: PRUEBAS EN VIVO */}
-        <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-5 border border-[var(--color-neutral-border)] ${elevationSystem.raised} space-y-4`}>
+        <div className={`bg-[var(--ui-bg-card)] p-5 border border-[var(--color-neutral-border)] ${elevationSystem.raised} space-y-4`} style={{ borderRadius: radius.modal }}>
           <div className="flex items-center gap-2 border-b border-[var(--color-neutral-border)] pb-3">
             <Activity className="w-4 h-4 text-[var(--color-secondary-text)]" />
             <h3 className="font-black text-sm text-[var(--color-neutral-text-primary)]">Pruebas de Transmisión en Vivo</h3>
@@ -80,7 +80,7 @@ export function SentryReportsTab() {
             <button
               onClick={handleSendTestError}
               disabled={testingError}
-              className={`w-full py-2.5 bg-[var(--color-status-danger-muted)] text-[var(--color-status-danger-text)] border border-[var(--color-status-danger-base)]/40 hover:opacity-90 text-xs font-black rounded-[${radius.card}] ${elevationSystem.raised} transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50`}
+              className={`w-full py-2.5 bg-[var(--color-status-danger-muted)] text-[var(--color-status-danger-text)] border border-[var(--color-status-danger-base)]/40 hover:opacity-90 text-xs font-black ${elevationSystem.raised} transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50`} style={{ borderRadius: radius.card }}
             >
               <AlertTriangle className="w-4 h-4" />
               <span>Reportar Excepción de Prueba</span>
@@ -88,7 +88,7 @@ export function SentryReportsTab() {
 
             <button
               onClick={handleSendTestMessage}
-              className={`w-full py-2 bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] border border-[var(--color-neutral-border)] text-xs font-bold rounded-[${radius.card}] transition flex items-center justify-center gap-2 cursor-pointer`}
+              className="w-full py-2 bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] border border-[var(--color-neutral-border)] text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer" style={{ borderRadius: radius.card }}
             >
               <Send className="w-3.5 h-3.5 text-[var(--color-secondary-text)]" />
               <span>Enviar Mensaje de Diagnóstico</span>
@@ -97,7 +97,7 @@ export function SentryReportsTab() {
         </div>
 
         {/* TARJETA 2: CONFIGURACIÓN Y DSN */}
-        <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-5 border border-[var(--color-neutral-border)] ${elevationSystem.raised} space-y-4`}>
+        <div className={`bg-[var(--ui-bg-card)] p-5 border border-[var(--color-neutral-border)] ${elevationSystem.raised} space-y-4`} style={{ borderRadius: radius.modal }}>
           <div className="flex items-center gap-2 border-b border-[var(--color-neutral-border)] pb-3">
             <Terminal className="w-4 h-4 text-[var(--color-accent-purple-text)]" />
             <h3 className="font-black text-sm text-[var(--color-neutral-text-primary)]">Estado de la Integración</h3>

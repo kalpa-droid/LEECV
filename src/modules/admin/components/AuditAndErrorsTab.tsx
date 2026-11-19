@@ -37,29 +37,37 @@ export function AuditAndErrorsTab() {
 
   async function loadLogs() {
     setLoading(true);
-    try {
-      const rows = await dal.adminErrorLogs.list({
-        level: levelFilter === 'all' ? undefined : levelFilter,
-        source: sourceFilter === 'all' ? undefined : sourceFilter,
-      });
-      setLogs(rows);
-    } catch (err: any) {
-      showError('No se pudo cargar auditoría: ' + (err?.message || 'Error de base'));
-    } finally {
-      setLoading(false);
-    }
+    await withErrorHandling(
+      async () => {
+        const rows = await dal.adminErrorLogs.list({
+          level: levelFilter === 'all' ? undefined : levelFilter,
+          source: sourceFilter === 'all' ? undefined : sourceFilter,
+        });
+        setLogs(rows);
+      },
+      {
+        context: 'Carga de Auditoría y Errores',
+        errorMessage: 'No se pudo cargar la auditoría de errores.',
+        notify: (msg) => showError(msg),
+      }
+    );
+    setLoading(false);
   }
 
   async function loadAuditLogs() {
     setAuditLoading(true);
-    try {
-      const rows = await listAuditLogs();
-      setAuditLogs(rows || []);
-    } catch (err: any) {
-      showError('No se pudieron cargar las acciones de administradores.');
-    } finally {
-      setAuditLoading(false);
-    }
+    await withErrorHandling(
+      async () => {
+        const rows = await listAuditLogs();
+        setAuditLogs(rows || []);
+      },
+      {
+        context: 'Carga de Acciones de Administradores',
+        errorMessage: 'No se pudieron cargar las acciones de administradores.',
+        notify: (msg) => showError(msg),
+      }
+    );
+    setAuditLoading(false);
   }
 
   useEffect(() => { loadLogs(); }, [levelFilter, sourceFilter]);

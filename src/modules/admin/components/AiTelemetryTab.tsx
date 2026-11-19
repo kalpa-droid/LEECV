@@ -94,14 +94,18 @@ export function AiTelemetryTab() {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateFrom, endpointFilter]);
+
+  useEffect(() => {
     loadCooldowns();
   }, []);
 
   return (
     <div className="space-y-6">
-      <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-5 border border-[var(--color-neutral-border)] ${elevationSystem.raised} flex flex-col md:flex-row items-start md:items-center justify-between gap-4`}>
+      <div className={`bg-[var(--ui-bg-card)] p-5 border border-[var(--color-neutral-border)] ${elevationSystem.raised} flex flex-col md:flex-row items-start md:items-center justify-between gap-4`} style={{ borderRadius: radius.modal }}>
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-[${radius.card}] bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple-text)] flex items-center justify-center`}>
+          <div className="w-10 h-10 bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/40 text-[var(--color-accent-purple-text)] flex items-center justify-center" style={{ borderRadius: radius.card }}>
             <Sparkles className="w-5 h-5" />
           </div>
           <div>
@@ -112,7 +116,7 @@ export function AiTelemetryTab() {
         <button
           onClick={loadData}
           disabled={loading}
-          className={`px-4 py-2 bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] text-xs font-black rounded-[${radius.card}] border border-[var(--color-neutral-border)] transition flex items-center gap-2 cursor-pointer disabled:opacity-50`}
+          className="px-4 py-2 bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] text-xs font-black border border-[var(--color-neutral-border)] transition flex items-center gap-2 cursor-pointer disabled:opacity-50" style={{ borderRadius: radius.card }}
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           <span>Actualizar</span>
@@ -120,8 +124,8 @@ export function AiTelemetryTab() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] flex items-center gap-4`}>
-          <div className={`w-12 h-12 rounded-[${radius.card}] bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/30 text-[var(--color-status-success-text)] flex items-center justify-center`}>
+        <div className={`bg-[var(--ui-bg-card)] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] flex items-center gap-4`} style={{ borderRadius: radius.modal }}>
+          <div className="w-12 h-12 bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/30 text-[var(--color-status-success-text)] flex items-center justify-center" style={{ borderRadius: radius.card }}>
             <BarChart className="w-6 h-6" />
           </div>
           <div>
@@ -130,8 +134,8 @@ export function AiTelemetryTab() {
           </div>
         </div>
 
-        <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] flex items-center gap-4`}>
-          <div className={`w-12 h-12 rounded-[${radius.card}] bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 text-[var(--color-secondary-text)] flex items-center justify-center`}>
+        <div className={`bg-[var(--ui-bg-card)] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] flex items-center gap-4`} style={{ borderRadius: radius.modal }}>
+          <div className="w-12 h-12 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 text-[var(--color-secondary-text)] flex items-center justify-center" style={{ borderRadius: radius.card }}>
             <Sparkles className="w-6 h-6" />
           </div>
           <div>
@@ -142,7 +146,7 @@ export function AiTelemetryTab() {
       </div>
 
       {/* Desglose por proveedor y por endpoint (según las filas cargadas) */}
-      <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] space-y-3`}>
+      <div className={`bg-[var(--ui-bg-card)] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] space-y-3`} style={{ borderRadius: radius.modal }}>
         <div className="flex items-center gap-2 border-b border-[var(--color-neutral-border)] pb-3">
           <BarChart className="w-5 h-5 text-[var(--color-accent-text)]" />
           <div>
@@ -165,7 +169,7 @@ export function AiTelemetryTab() {
       </div>
 
       {/* Claves de IA en pausa (cooldowns activos, server-side) */}
-      <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] space-y-3`}>
+      <div className={`bg-[var(--ui-bg-card)] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] space-y-3`} style={{ borderRadius: radius.modal }}>
         <div className="flex items-center justify-between gap-3 border-b border-[var(--color-neutral-border)] pb-3">
           <div className="flex items-center gap-2">
             <KeyRound className="w-5 h-5 text-[var(--color-status-warning-text)]" />
@@ -179,7 +183,7 @@ export function AiTelemetryTab() {
           <button
             onClick={loadCooldowns}
             disabled={loadingCooldowns}
-            className={`p-2 bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] rounded-[${radius.card}] border border-[var(--color-neutral-border)] transition cursor-pointer disabled:opacity-50`}
+            className="p-2 bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] border border-[var(--color-neutral-border)] transition cursor-pointer disabled:opacity-50" style={{ borderRadius: radius.card }}
             title="Actualizar pausas"
             aria-label="Actualizar pausas"
           >
@@ -209,14 +213,14 @@ export function AiTelemetryTab() {
         )}
       </div>
 
-      <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-4 ${elevationSystem.raised} border border-[var(--color-neutral-border)] flex flex-wrap items-center gap-3`}>
+      <div className={`bg-[var(--ui-bg-card)] p-4 ${elevationSystem.raised} border border-[var(--color-neutral-border)] flex flex-wrap items-center gap-3`} style={{ borderRadius: radius.modal }}>
         <div className="flex items-center gap-2">
           <label className="text-xs font-bold text-[var(--color-neutral-text-secondary)]">Desde:</label>
           <input
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className={`px-3 py-1.5 text-xs bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[${radius.card}] text-[var(--color-neutral-text-primary)] focus:outline-none focus:border-[var(--color-accent-purple)]`}
+            className="px-3 py-1.5 text-xs bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] focus:outline-none focus:border-[var(--color-accent-purple)]" style={{ borderRadius: radius.card }}
           />
         </div>
         <div className="flex items-center gap-2">
@@ -224,7 +228,7 @@ export function AiTelemetryTab() {
           <select
             value={endpointFilter}
             onChange={(e) => setEndpointFilter(e.target.value)}
-            className={`px-3 py-1.5 text-xs bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[${radius.card}] text-[var(--color-neutral-text-primary)] focus:outline-none focus:border-[var(--color-accent-purple)]`}
+            className="px-3 py-1.5 text-xs bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] focus:outline-none focus:border-[var(--color-accent-purple)]" style={{ borderRadius: radius.card }}
           >
             <option value="">Todos los endpoints</option>
             <option value="cv-import">cv-import</option>
@@ -234,13 +238,13 @@ export function AiTelemetryTab() {
         <button
           onClick={loadData}
           disabled={loading}
-          className={`px-4 py-1.5 bg-[var(--color-accent-purple-light)] hover:bg-[var(--color-accent-purple)]/20 text-[var(--color-accent-purple-text)] text-xs font-bold rounded-[${radius.card}] border border-[var(--color-accent-purple)]/30 transition cursor-pointer disabled:opacity-50`}
+          className="px-4 py-1.5 bg-[var(--color-accent-purple-light)] hover:bg-[var(--color-accent-purple)]/20 text-[var(--color-accent-purple-text)] text-xs font-bold border border-[var(--color-accent-purple)]/30 transition cursor-pointer disabled:opacity-50" style={{ borderRadius: radius.card }}
         >
           Filtrar
         </button>
       </div>
 
-      <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] ${elevationSystem.raised} border border-[var(--color-neutral-border)] overflow-hidden`}>
+      <div className={`bg-[var(--ui-bg-card)] ${elevationSystem.raised} border border-[var(--color-neutral-border)] overflow-hidden`} style={{ borderRadius: radius.modal }}>
         <div className="px-5 py-4 border-b border-[var(--color-neutral-border)]">
           <h3 className="font-extrabold text-sm text-[var(--color-neutral-text-primary)]">Últimas Llamadas a IA (Top 100)</h3>
         </div>

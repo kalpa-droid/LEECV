@@ -32,9 +32,9 @@ export default function AdminLogin({ onLogin }: { onLogin: () => void }) {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[var(--ui-bg-panel)] px-4">
-      <div className={`bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] rounded-[${radius.modal}] ${elevationSystem.overlay} p-8 w-full max-w-md border border-[var(--ui-border)] space-y-6`}>
+      <div className={`bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] ${elevationSystem.overlay} p-8 w-full max-w-md border border-[var(--ui-border)] space-y-6`} style={{ borderRadius: radius.modal }}>
         <div className="flex items-center gap-3">
-          <div className={`w-12 h-12 rounded-[${radius.modal}] bg-[var(--color-accent-muted)] border border-[var(--color-accent-muted)] text-[var(--color-accent-text)] flex items-center justify-center flex-shrink-0`}>
+          <div className="w-12 h-12 bg-[var(--color-accent-muted)] border border-[var(--color-accent-muted)] text-[var(--color-accent-text)] flex items-center justify-center flex-shrink-0" style={{ borderRadius: radius.modal }}>
             <Lock className="w-6 h-6" />
           </div>
           <div>
@@ -50,7 +50,7 @@ export default function AdminLogin({ onLogin }: { onLogin: () => void }) {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className={`w-full mt-1 px-3.5 py-2.5 rounded-[${radius.card}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] text-xs focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-muted)]`}
+              className="w-full mt-1 px-3.5 py-2.5 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] text-xs focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-muted)]" style={{ borderRadius: radius.card }}
               required
             />
           </div>
@@ -61,17 +61,17 @@ export default function AdminLogin({ onLogin }: { onLogin: () => void }) {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={`w-full mt-1 px-3.5 py-2.5 rounded-[${radius.card}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] text-xs focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-muted)]`}
+              className="w-full mt-1 px-3.5 py-2.5 bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] text-xs focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-muted)]" style={{ borderRadius: radius.card }}
               required
             />
           </div>
 
-          {error && <p className={`text-[var(--color-status-danger-text)] text-xs font-bold text-center p-2 rounded-[${radius.card}] bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/40`}>{error}</p>}
+          {error && <p className="text-[var(--color-status-danger-text)] text-xs font-bold text-center p-2 bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/40" style={{ borderRadius: radius.card }}>{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-3 ${button.primary} rounded-[${radius.modal}] cursor-pointer`}
+            className={`w-full py-3 ${button.primary} cursor-pointer`} style={{ borderRadius: radius.modal }}
           >
             {loading ? 'Verificando...' : 'Ingresar con Contraseña'}
           </button>

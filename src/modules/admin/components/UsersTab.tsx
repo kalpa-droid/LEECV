@@ -60,7 +60,7 @@ export function UsersTab({
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-[var(--color-neutral-border)] pb-3 gap-3">
         <div className="flex items-center gap-2">
           <User className="w-5 h-5 text-[var(--color-accent-text)]" />
-          <h2 className="font-extrabold text-sm text-[var(--color-neutral-text-primary)]">Gestión de Clientes (listCustomers)</h2>
+          <h2 className="font-extrabold text-sm text-[var(--color-neutral-text-primary)]">Gestión de Clientes</h2>
         </div>
         <div className="relative w-full sm:w-64">
           <input
@@ -191,7 +191,7 @@ export function UsersTab({
                         ))}
                       </div>
                       <a
-                        href={`https://wa.me/5493878342772?text=${encodeURIComponent(`Hola, necesito ayuda con la cuenta de ${user.email}`)}`}
+                        href={`https://wa.me/5493878342772?text=${encodeURIComponent(`Hola, te escribimos desde LEECV sobre tu cuenta (${user.email}).`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         title="Contactar por WhatsApp"

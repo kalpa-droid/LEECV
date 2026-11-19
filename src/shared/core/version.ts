@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 2,
   minor: 24,
-  patch: 1,
-  label: 'V2.24.1',
+  patch: 2,
+  label: 'V2.24.2',
   lastUpdated: '2026-11-19',
   lastAgent: '@opencode',
-  stage: 'fix(payments): useExportEntitlement busca tokens por email como fallback cuando user_id es null (F1); cleanQueryParams movido al final del polling post-pago en App.tsx (F3); migración SQL para agregar manual_payment_claim al CHECK de admin_notifications (F2).',
+  stage: 'fix(admin): Fase A (header sin (listCustomers), mensaje WhatsApp correcto, withErrorHandling en AuditAndErrorsTab) + Fase B (80 radios interpolados rounded-[${radius.X}] migrados a style={{ borderRadius }} en AdminLogin, AdminDashboard, ProcessedPayments, SentryReports, StorageDrive, AiTelemetry y TemplateManagement) + Fase C (auto-recarga de telemetría al cambiar filtros, labels de IndexedDB aclarados, optional chaining en armonía de color, búsqueda de pagos con debounce 350ms).',
 } as const;
