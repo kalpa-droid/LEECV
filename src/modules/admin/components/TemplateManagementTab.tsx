@@ -25,7 +25,7 @@ export function TemplateManagementTab() {
   const [harmonyScheme, setHarmonyScheme] = useState<HarmonyScheme>('complementario');
 
   const handleGenerateHarmony = () => {
-    const palette = generateHarmonyPalette(selectedPreset.palette.primary || 'var(--color-secondary-base)', harmonyScheme);
+    const palette = generateHarmonyPalette(selectedPreset?.palette?.primary || 'var(--color-secondary-base)', harmonyScheme);
     const updated = {
       ...selectedPreset,
       palette: {
@@ -170,7 +170,7 @@ export function TemplateManagementTab() {
   };
 
   return (
-    <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-6 ${elevationSystem.raised} border border-[var(--color-neutral-border)] space-y-6`}>
+    <div className={`bg-[var(--ui-bg-card)] p-6 ${elevationSystem.raised} border border-[var(--color-neutral-border)] space-y-6`} style={{ borderRadius: radius.modal }}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[var(--color-neutral-border)] pb-4">
         <div>
@@ -186,7 +186,7 @@ export function TemplateManagementTab() {
         <div className="flex items-center gap-2">
           <button
             onClick={handleCreateNewPreset}
-            className={`px-3.5 py-2 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-extrabold text-xs rounded-[${radius.card}] ${elevationSystem.raised} transition flex items-center gap-1.5 cursor-pointer`}
+            className={`px-3.5 py-2 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-extrabold text-xs ${elevationSystem.raised} transition flex items-center gap-1.5 cursor-pointer`} style={{ borderRadius: radius.card }}
           >
             <Plus className="w-4 h-4" />
             <span>Nueva Plantilla</span>
@@ -195,7 +195,7 @@ export function TemplateManagementTab() {
           <button
             onClick={handleSaveCurrentPreset}
             disabled={saving}
-            className={`px-4 py-2 bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-status-success-on-base)] font-extrabold text-xs rounded-[${radius.card}] ${elevationSystem.raised} transition flex items-center gap-1.5 cursor-pointer`}
+            className={`px-4 py-2 bg-[var(--color-status-success-base)] hover:opacity-90 text-[var(--color-status-success-on-base)] font-extrabold text-xs ${elevationSystem.raised} transition flex items-center gap-1.5 cursor-pointer`} style={{ borderRadius: radius.card }}
           >
             <Save className={`w-4 h-4 ${saving ? 'animate-spin' : ''}`} />
             <span>{saving ? 'Guardando...' : 'Guardar en Supabase'}</span>
@@ -216,11 +216,11 @@ export function TemplateManagementTab() {
               <button
                 key={p.id}
                 onClick={() => handleSelectPreset(p)}
-                className={`p-3 rounded-[${radius.modal}] border text-left transition cursor-pointer flex flex-col justify-between ${
+                className={`p-3 border text-left transition cursor-pointer flex flex-col justify-between ${
                   isSelected
                     ? `border-[var(--color-accent-base)] bg-[var(--color-accent-muted)] ${elevationSystem.raised} ring-2 ring-[var(--color-accent-base)]/30`
                     : 'border-[var(--color-neutral-border)] bg-[var(--color-neutral-surface-muted)] hover:bg-[var(--ui-bg-card)] hover:border-[var(--color-neutral-border-strong)]'
-                }`}
+                }`} style={{ borderRadius: radius.modal }}
               >
                 <div>
                   <div className="flex items-center justify-between mb-1">
@@ -248,11 +248,11 @@ export function TemplateManagementTab() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setActiveSubTab('visual')}
-                className={`px-3 py-1.5 text-xs font-extrabold rounded-[${radius.card}] transition cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 ${
                   activeSubTab === 'visual'
                     ? `bg-[var(--ui-preview-bg)] text-white ${elevationSystem.raised}`
                     : 'bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-secondary)] hover:bg-[var(--color-neutral-border)]'
-                }`}
+                }`} style={{ borderRadius: radius.card }}
               >
                 <Palette className="w-3.5 h-3.5" />
                 <span>Editor Rápido de Estilo</span>
@@ -260,11 +260,11 @@ export function TemplateManagementTab() {
 
               <button
                 onClick={() => setActiveSubTab('json')}
-                className={`px-3 py-1.5 text-xs font-extrabold rounded-[${radius.card}] transition cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 ${
                   activeSubTab === 'json'
                     ? `bg-[var(--ui-preview-bg)] text-white ${elevationSystem.raised}`
                     : 'bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-secondary)] hover:bg-[var(--color-neutral-border)]'
-                }`}
+                }`} style={{ borderRadius: radius.card }}
               >
                 <Code2 className="w-3.5 h-3.5" />
                 <span>Editor JSON de Geometría Avanzada</span>
@@ -273,7 +273,7 @@ export function TemplateManagementTab() {
 
             <button
               onClick={handleDeletePreset}
-              className={`text-xs font-bold text-[var(--color-status-danger-text)] hover:bg-[var(--color-status-danger-muted)] px-2.5 py-1 rounded-[${radius.control}] transition cursor-pointer flex items-center gap-1`}
+              className="text-xs font-bold text-[var(--color-status-danger-text)] hover:bg-[var(--color-status-danger-muted)] px-2.5 py-1 transition cursor-pointer flex items-center gap-1" style={{ borderRadius: radius.control }}
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span>Desactivar Plantilla</span>
@@ -282,7 +282,7 @@ export function TemplateManagementTab() {
 
           {/* VISUAL QUICK EDITOR */}
           {activeSubTab === 'visual' && (
-            <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 bg-[var(--color-neutral-surface-muted)] p-5 rounded-[${radius.modal}] border border-[var(--color-neutral-border)] text-xs`}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-[var(--color-neutral-surface-muted)] p-5 border border-[var(--color-neutral-border)] text-xs" style={{ borderRadius: radius.modal }}>
               {/* Left Column: Identificadores y Paleta */}
               <div className="space-y-4">
                 <h3 className="font-extrabold text-[var(--color-neutral-text-primary)] uppercase tracking-wider text-[11px] flex items-center gap-1.5">
@@ -296,7 +296,7 @@ export function TemplateManagementTab() {
                     type="text"
                     value={selectedPreset.name}
                     onChange={(e) => handleUpdateField('name', e.target.value)}
-                    className={`w-full p-2.5 rounded-[${radius.card}] border border-[var(--color-neutral-border)] bg-white font-bold text-[var(--color-neutral-text-primary)] outline-none focus:border-[var(--color-accent-base)]`}
+                    className="w-full p-2.5 border border-[var(--color-neutral-border)] bg-white font-bold text-[var(--color-neutral-text-primary)] outline-none focus:border-[var(--color-accent-base)]" style={{ borderRadius: radius.card }}
                   />
                 </div>
 
@@ -305,7 +305,7 @@ export function TemplateManagementTab() {
                   <select
                     value={selectedPreset.pageCategory}
                     onChange={(e) => handleUpdateField('pageCategory', e.target.value)}
-                    className={`w-full p-2.5 rounded-[${radius.card}] border border-[var(--color-neutral-border)] bg-white font-bold text-[var(--color-neutral-text-primary)] outline-none`}
+                    className="w-full p-2.5 border border-[var(--color-neutral-border)] bg-white font-bold text-[var(--color-neutral-text-primary)] outline-none" style={{ borderRadius: radius.card }}
                   >
                     <option value="documento">📄 Documento / CV A4</option>
                     <option value="tarjeta">🎴 Tarjeta de Presentación</option>
@@ -313,7 +313,7 @@ export function TemplateManagementTab() {
                 </div>
 
                 {/* Motor de Armonía de Color */}
-                <div className={`p-3 bg-[var(--color-accent-purple-light)] rounded-[${radius.card}] border border-[var(--color-accent-purple)]/30 space-y-2`}>
+                <div className="p-3 bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/30 space-y-2" style={{ borderRadius: radius.card }}>
                   <label className="text-[11px] font-extrabold text-[var(--color-accent-purple-text)] uppercase flex items-center gap-1">
                     <Wand2 className="w-3.5 h-3.5 text-[var(--color-accent-purple-text)]" />
                     <span>Generador de Armonía Cromática (WCAG 2.1)</span>
@@ -322,7 +322,7 @@ export function TemplateManagementTab() {
                     <select
                       value={harmonyScheme}
                       onChange={(e) => setHarmonyScheme(e.target.value as HarmonyScheme)}
-                      className={`flex-1 p-2 rounded-[${radius.control}] border border-[var(--color-accent-purple)]/30 bg-white font-bold text-[var(--color-accent-purple)] text-xs outline-none`}
+                      className="flex-1 p-2 border border-[var(--color-accent-purple)]/30 bg-white font-bold text-[var(--color-accent-purple)] text-xs outline-none" style={{ borderRadius: radius.control }}
                     >
                       <option value="complementario">☯️ Complementario (Contraste Máximo)</option>
                       <option value="analogo">🎨 Análogo (Transición Suave)</option>
@@ -333,7 +333,7 @@ export function TemplateManagementTab() {
                     <button
                       type="button"
                       onClick={handleGenerateHarmony}
-                      className={`px-3 py-2 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-extrabold rounded-[${radius.control}] transition text-xs flex items-center gap-1 cursor-pointer`}
+                      className="px-3 py-2 bg-[var(--color-accent-purple)] hover:opacity-90 text-white font-extrabold transition text-xs flex items-center gap-1 cursor-pointer" style={{ borderRadius: radius.control }}
                     >
                       <Wand2 className="w-3.5 h-3.5" />
                       <span>Generar</span>
@@ -353,13 +353,13 @@ export function TemplateManagementTab() {
                           type="color"
                           value={selectedPreset.palette.primary}
                           onChange={(e) => handleUpdateField('palette.primary', e.target.value)}
-                          className={`w-9 h-9 rounded-[${radius.card}] border-0 cursor-pointer p-0`}
+                          className="w-9 h-9 border-0 cursor-pointer p-0" style={{ borderRadius: radius.card }}
                         />
                         <input
                           type="text"
                           value={selectedPreset.palette.primary}
                           onChange={(e) => handleUpdateField('palette.primary', e.target.value)}
-                          className={`flex-1 p-2 rounded-[${radius.control}] border border-[var(--color-neutral-border)] font-mono text-[var(--color-neutral-text-primary)] uppercase`}
+                          className="flex-1 p-2 border border-[var(--color-neutral-border)] font-mono text-[var(--color-neutral-text-primary)] uppercase" style={{ borderRadius: radius.control }}
                         />
                       </div>
                     </div>
@@ -371,13 +371,13 @@ export function TemplateManagementTab() {
                           type="color"
                           value={selectedPreset.palette.secondary}
                           onChange={(e) => handleUpdateField('palette.secondary', e.target.value)}
-                          className={`w-9 h-9 rounded-[${radius.card}] border-0 cursor-pointer p-0`}
+                          className="w-9 h-9 border-0 cursor-pointer p-0" style={{ borderRadius: radius.card }}
                         />
                         <input
                           type="text"
                           value={selectedPreset.palette.secondary}
                           onChange={(e) => handleUpdateField('palette.secondary', e.target.value)}
-                          className={`flex-1 p-2 rounded-[${radius.control}] border border-[var(--color-neutral-border)] font-mono text-[var(--color-neutral-text-primary)] uppercase`}
+                          className="flex-1 p-2 border border-[var(--color-neutral-border)] font-mono text-[var(--color-neutral-text-primary)] uppercase" style={{ borderRadius: radius.control }}
                         />
                       </div>
                     </div>
@@ -389,13 +389,13 @@ export function TemplateManagementTab() {
                           type="color"
                           value={selectedPreset.palette.accent}
                           onChange={(e) => handleUpdateField('palette.accent', e.target.value)}
-                          className={`w-9 h-9 rounded-[${radius.card}] border-0 cursor-pointer p-0`}
+                          className="w-9 h-9 border-0 cursor-pointer p-0" style={{ borderRadius: radius.card }}
                         />
                         <input
                           type="text"
                           value={selectedPreset.palette.accent}
                           onChange={(e) => handleUpdateField('palette.accent', e.target.value)}
-                          className={`flex-1 p-2 rounded-[${radius.control}] border border-[var(--color-neutral-border)] font-mono text-[var(--color-neutral-text-primary)] uppercase`}
+                          className="flex-1 p-2 border border-[var(--color-neutral-border)] font-mono text-[var(--color-neutral-text-primary)] uppercase" style={{ borderRadius: radius.control }}
                         />
                       </div>
                     </div>
@@ -407,13 +407,13 @@ export function TemplateManagementTab() {
                           type="color"
                           value={selectedPreset.palette.text}
                           onChange={(e) => handleUpdateField('palette.text', e.target.value)}
-                          className={`w-9 h-9 rounded-[${radius.card}] border-0 cursor-pointer p-0`}
+                          className="w-9 h-9 border-0 cursor-pointer p-0" style={{ borderRadius: radius.card }}
                         />
                         <input
                           type="text"
                           value={selectedPreset.palette.text}
                           onChange={(e) => handleUpdateField('palette.text', e.target.value)}
-                          className={`flex-1 p-2 rounded-[${radius.control}] border border-[var(--color-neutral-border)] font-mono text-[var(--color-neutral-text-primary)] uppercase`}
+                          className="flex-1 p-2 border border-[var(--color-neutral-border)] font-mono text-[var(--color-neutral-text-primary)] uppercase" style={{ borderRadius: radius.control }}
                         />
                       </div>
                     </div>
@@ -422,7 +422,7 @@ export function TemplateManagementTab() {
 
                 {/* Leyenda de Roles del Diseñador */}
                 {selectedPreset?.roleLegend && typeof selectedPreset.roleLegend === 'object' && Object.keys(selectedPreset.roleLegend).length > 0 && (
-                  <div className={`p-3 bg-[var(--color-status-warning-muted)] rounded-[${radius.card}] border border-[var(--color-status-warning-base)]/30 space-y-1.5`}>
+                  <div className="p-3 bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/30 space-y-1.5" style={{ borderRadius: radius.card }}>
                     <div className="flex items-center gap-1.5 text-[var(--color-status-warning-text)] font-extrabold text-[11px]">
                       <Info className="w-3.5 h-3.5 text-[var(--color-status-warning-text)]" />
                       <span>Leyenda de Roles de este Diseño</span>
@@ -448,7 +448,7 @@ export function TemplateManagementTab() {
                   <select
                     value={selectedPreset.typography.fontFamily}
                     onChange={(e) => handleUpdateField('typography.fontFamily', e.target.value)}
-                    className={`w-full p-2.5 rounded-[${radius.card}] border border-[var(--color-neutral-border)] bg-white font-bold text-[var(--color-neutral-text-primary)] outline-none`}
+                    className="w-full p-2.5 border border-[var(--color-neutral-border)] bg-white font-bold text-[var(--color-neutral-text-primary)] outline-none" style={{ borderRadius: radius.card }}
                   >
                     <option value="Helvetica">Helvetica (Estándar Vectorial)</option>
                     <option value="Times-Roman">Times-Roman (Elegante Clásico)</option>
@@ -463,7 +463,7 @@ export function TemplateManagementTab() {
                       type="number"
                       value={selectedPreset.typography.title}
                       onChange={(e) => handleUpdateField('typography.title', Number(e.target.value))}
-                      className={`w-full p-2 rounded-[${radius.control}] border border-[var(--color-neutral-border)] font-bold text-[var(--color-neutral-text-primary)] bg-white`}
+                      className="w-full p-2 border border-[var(--color-neutral-border)] font-bold text-[var(--color-neutral-text-primary)] bg-white" style={{ borderRadius: radius.control }}
                     />
                   </div>
 
@@ -473,7 +473,7 @@ export function TemplateManagementTab() {
                       type="number"
                       value={selectedPreset.typography.sectionHeading}
                       onChange={(e) => handleUpdateField('typography.sectionHeading', Number(e.target.value))}
-                      className={`w-full p-2 rounded-[${radius.control}] border border-[var(--color-neutral-border)] font-bold text-[var(--color-neutral-text-primary)] bg-white`}
+                      className="w-full p-2 border border-[var(--color-neutral-border)] font-bold text-[var(--color-neutral-text-primary)] bg-white" style={{ borderRadius: radius.control }}
                     />
                   </div>
 
@@ -483,7 +483,7 @@ export function TemplateManagementTab() {
                       type="number"
                       value={selectedPreset.typography.itemTitle}
                       onChange={(e) => handleUpdateField('typography.itemTitle', Number(e.target.value))}
-                      className={`w-full p-2 rounded-[${radius.control}] border border-[var(--color-neutral-border)] font-bold text-[var(--color-neutral-text-primary)] bg-white`}
+                      className="w-full p-2 border border-[var(--color-neutral-border)] font-bold text-[var(--color-neutral-text-primary)] bg-white" style={{ borderRadius: radius.control }}
                     />
                   </div>
 
@@ -493,7 +493,7 @@ export function TemplateManagementTab() {
                       type="number"
                       value={selectedPreset.typography.body}
                       onChange={(e) => handleUpdateField('typography.body', Number(e.target.value))}
-                      className={`w-full p-2 rounded-[${radius.control}] border border-[var(--color-neutral-border)] font-bold text-[var(--color-neutral-text-primary)] bg-white`}
+                      className="w-full p-2 border border-[var(--color-neutral-border)] font-bold text-[var(--color-neutral-text-primary)] bg-white" style={{ borderRadius: radius.control }}
                     />
                   </div>
                 </div>
@@ -511,7 +511,7 @@ export function TemplateManagementTab() {
                       <select
                         value={selectedPreset.recordCardDesigns?.education || 'accent-card'}
                         onChange={(e) => handleUpdateField('recordCardDesigns.education', e.target.value)}
-                        className={`w-full p-2 rounded-[${radius.control}] border border-[var(--color-neutral-border)] bg-white font-bold text-[var(--color-neutral-text-primary)]`}
+                        className="w-full p-2 border border-[var(--color-neutral-border)] bg-white font-bold text-[var(--color-neutral-text-primary)]" style={{ borderRadius: radius.control }}
                       >
                         <option value="accent-card">🎨 Borde Acento (Accent Card)</option>
                         <option value="primary-card">🔷 Borde Primario (Primary Card)</option>
@@ -524,7 +524,7 @@ export function TemplateManagementTab() {
                       <select
                         value={selectedPreset.recordCardDesigns?.experience || 'primary-card'}
                         onChange={(e) => handleUpdateField('recordCardDesigns.experience', e.target.value)}
-                        className={`w-full p-2 rounded-[${radius.control}] border border-[var(--color-neutral-border)] bg-white font-bold text-[var(--color-neutral-text-primary)]`}
+                        className="w-full p-2 border border-[var(--color-neutral-border)] bg-white font-bold text-[var(--color-neutral-text-primary)]" style={{ borderRadius: radius.control }}
                       >
                         <option value="primary-card">🔷 Borde Primario (Primary Card)</option>
                         <option value="accent-card">🎨 Borde Acento (Accent Card)</option>
@@ -537,7 +537,7 @@ export function TemplateManagementTab() {
                       <select
                         value={selectedPreset.recordCardDesigns?.course || 'neutral-card'}
                         onChange={(e) => handleUpdateField('recordCardDesigns.course', e.target.value)}
-                        className={`w-full p-2 rounded-[${radius.control}] border border-[var(--color-neutral-border)] bg-white font-bold text-[var(--color-neutral-text-primary)]`}
+                        className="w-full p-2 border border-[var(--color-neutral-border)] bg-white font-bold text-[var(--color-neutral-text-primary)]" style={{ borderRadius: radius.control }}
                       >
                         <option value="neutral-card">⚪ Borde Neutro (Neutral Card)</option>
                         <option value="accent-card">🎨 Borde Acento (Accent Card)</option>
@@ -552,7 +552,7 @@ export function TemplateManagementTab() {
 
         {/* RAW JSON GEOMETRY EDITOR */}
         {activeSubTab === 'json' && (
-          <div className={`space-y-3 bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] p-4 rounded-[${radius.modal}] text-xs font-mono border border-[var(--ui-border)]`}>
+          <div className="space-y-3 bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] p-4 text-xs font-mono border border-[var(--ui-border)]" style={{ borderRadius: radius.modal }}>
             <div className="flex items-center justify-between text-[var(--ui-text-secondary)]">
               <span>Edición Avanzada de Geometría JSON (Sectores, Layout y Objetos Fijos)</span>
               <span className="text-[10px] text-[var(--color-status-warning-bright)] font-bold">⚠️ Se valida esquema al guardar</span>
@@ -562,7 +562,7 @@ export function TemplateManagementTab() {
               value={jsonText}
               onChange={(e) => setJsonText(e.target.value)}
               rows={16}
-              className={`w-full bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] p-4 rounded-[${radius.card}] border border-[var(--ui-border)] font-mono text-xs outline-none focus:border-[var(--color-accent-purple)] leading-relaxed resize-y`}
+              className="w-full bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] p-4 border border-[var(--ui-border)] font-mono text-xs outline-none focus:border-[var(--color-accent-purple)] leading-relaxed resize-y" style={{ borderRadius: radius.card }}
             />
           </div>
         )}

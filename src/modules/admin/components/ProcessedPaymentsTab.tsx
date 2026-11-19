@@ -14,9 +14,18 @@ export function ProcessedPaymentsTab() {
   const [totalCount, setTotalCount] = useState(0);
   const [providerFilter, setProviderFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  // El input pinta el valor inmediato, pero la consulta a la red espera
+  // 350ms de inactividad para no disparar una request por tecla (mismo
+  // patrón que AdminDashboard).
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const pageSize = 20;
 
-  async function fetchPayments() {
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearchQuery(searchQuery), 350);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  async function fetchPayments(query: string = debouncedSearchQuery) {
     setLoading(true);
     await withErrorHandling(
       async () => {
@@ -24,7 +33,7 @@ export function ProcessedPaymentsTab() {
           page,
           limit: pageSize,
           provider: providerFilter,
-          q: searchQuery,
+          q: query,
         });
         setPayments(res?.payments || []);
         setTotalCount(res?.totalCount || 0);
@@ -40,11 +49,12 @@ export function ProcessedPaymentsTab() {
 
   useEffect(() => {
     fetchPayments();
-  }, [page, providerFilter]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, providerFilter, debouncedSearchQuery]);
 
   return (
     <div className="space-y-4">
-      <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] ${elevationSystem.raised} border border-[var(--color-neutral-border)] overflow-hidden`}>
+      <div className={`bg-[var(--ui-bg-card)] ${elevationSystem.raised} border border-[var(--color-neutral-border)] overflow-hidden`} style={{ borderRadius: radius.modal }}>
         {/* Cabecera y Controles */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-b border-[var(--color-neutral-border)]">
           <div className="flex items-center gap-2">
@@ -57,7 +67,7 @@ export function ProcessedPaymentsTab() {
 
           <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             {/* Filtro por Proveedor */}
-            <div className={`flex items-center gap-1 bg-[var(--color-neutral-surface-cream)] px-2.5 py-1.5 rounded-[${radius.card}] border border-[var(--color-neutral-border)] text-xs font-bold w-full sm:w-auto`}>
+            <div className="flex items-center gap-1 bg-[var(--color-neutral-surface-cream)] px-2.5 py-1.5 border border-[var(--color-neutral-border)] text-xs font-bold w-full sm:w-auto" style={{ borderRadius: radius.card }}>
               <Filter className="w-3.5 h-3.5 text-[var(--color-neutral-text-secondary)]" />
               <select
                 value={providerFilter}
@@ -80,14 +90,14 @@ export function ProcessedPaymentsTab() {
                 placeholder="Buscar por email o ID ref..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') { setPage(0); fetchPayments(); } }}
-                className={`w-full text-xs pl-9 pr-3 py-1.5 border border-[var(--color-neutral-border)] rounded-[${radius.card}] font-medium outline-none focus:border-[var(--color-secondary-base)]`}
+                onKeyDown={(e) => { if (e.key === 'Enter') { setPage(0); fetchPayments(searchQuery); } }}
+                className="w-full text-xs pl-9 pr-3 py-1.5 border border-[var(--color-neutral-border)] font-medium outline-none focus:border-[var(--color-secondary-base)]" style={{ borderRadius: radius.card }}
               />
             </div>
 
             <button
-              onClick={() => { setPage(0); fetchPayments(); }}
-              className={`p-2 text-[var(--color-secondary-text)] hover:bg-[var(--color-neutral-surface-muted)] rounded-[${radius.card}] transition cursor-pointer`}
+              onClick={() => { setPage(0); fetchPayments(searchQuery); }}
+              className="p-2 text-[var(--color-secondary-text)] hover:bg-[var(--color-neutral-surface-muted)] transition cursor-pointer" style={{ borderRadius: radius.card }}
               title="Actualizar tabla"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -179,7 +189,7 @@ export function ProcessedPaymentsTab() {
             <button
               disabled={page === 0}
               onClick={() => setPage(p => Math.max(0, p - 1))}
-              className={`p-1.5 rounded-[${radius.control}] border border-[var(--color-neutral-border)] disabled:opacity-40 hover:bg-[var(--color-neutral-surface-muted)] transition`}
+              className="p-1.5 border border-[var(--color-neutral-border)] disabled:opacity-40 hover:bg-[var(--color-neutral-surface-muted)] transition" style={{ borderRadius: radius.control }}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -187,7 +197,7 @@ export function ProcessedPaymentsTab() {
             <button
               disabled={(page + 1) * pageSize >= totalCount}
               onClick={() => setPage(p => p + 1)}
-              className={`p-1.5 rounded-[${radius.control}] border border-[var(--color-neutral-border)] disabled:opacity-40 hover:bg-[var(--color-neutral-surface-muted)] transition`}
+              className="p-1.5 border border-[var(--color-neutral-border)] disabled:opacity-40 hover:bg-[var(--color-neutral-surface-muted)] transition" style={{ borderRadius: radius.control }}
             >
               <ChevronRight className="w-4 h-4" />
             </button>

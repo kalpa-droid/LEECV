@@ -294,7 +294,7 @@ export default function AdminDashboard() {
       {/* Encabezado */}
       <header className={`bg-[var(--ui-preview-bg)] text-white px-6 py-4 flex items-center justify-between ${elevationSystem.floating} border-b border-[var(--color-neutral-border)]/20`}>
         <div className="flex items-center gap-3">
-          <div className={`w-9 h-9 rounded-[${radius.card}] bg-[var(--color-accent-base)] flex items-center justify-center font-black text-xs`}>
+          <div className="w-9 h-9 bg-[var(--color-accent-base)] flex items-center justify-center font-black text-xs" style={{ borderRadius: radius.card }}>
             LEE
           </div>
           <div>
@@ -314,8 +314,8 @@ export default function AdminDashboard() {
         
         {/* Métricas Rápidas */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] flex items-center gap-4`}>
-            <div className={`w-12 h-12 rounded-[${radius.card}] bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 text-[var(--color-secondary-text)] flex items-center justify-center`}>
+          <div className={`bg-[var(--ui-bg-card)] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] flex items-center gap-4`} style={{ borderRadius: radius.modal }}>
+            <div className="w-12 h-12 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 text-[var(--color-secondary-text)] flex items-center justify-center" style={{ borderRadius: radius.card }}>
               <Users className="w-6 h-6" />
             </div>
             <div>
@@ -324,8 +324,8 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] flex items-center gap-4`}>
-            <div className={`w-12 h-12 rounded-[${radius.card}] bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/30 text-[var(--color-status-warning-text)] flex items-center justify-center`}>
+          <div className={`bg-[var(--ui-bg-card)] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] flex items-center gap-4`} style={{ borderRadius: radius.modal }}>
+            <div className="w-12 h-12 bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/30 text-[var(--color-status-warning-text)] flex items-center justify-center" style={{ borderRadius: radius.card }}>
               <Crown className="w-6 h-6" />
             </div>
             <div>
@@ -334,8 +334,8 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className={`bg-[var(--ui-bg-card)] rounded-[${radius.modal}] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] flex items-center gap-4`}>
-            <div className={`w-12 h-12 rounded-[${radius.card}] bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/30 text-[var(--color-accent-purple-text)] flex items-center justify-center`}>
+          <div className={`bg-[var(--ui-bg-card)] p-5 ${elevationSystem.raised} border border-[var(--color-neutral-border)] flex items-center gap-4`} style={{ borderRadius: radius.modal }}>
+            <div className="w-12 h-12 bg-[var(--color-accent-purple-light)] border border-[var(--color-accent-purple)]/30 text-[var(--color-accent-purple-text)] flex items-center justify-center" style={{ borderRadius: radius.card }}>
               <Globe className="w-6 h-6" />
             </div>
             <div>
@@ -346,7 +346,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Navigation Sub-Tabs */}
-        <div className={`flex items-center gap-2 bg-[var(--ui-bg-card)] p-1.5 rounded-[${radius.modal}] border border-[var(--color-neutral-border)] ${elevationSystem.raised} overflow-x-auto whitespace-nowrap`}>
+        <div className={`flex items-center gap-2 bg-[var(--ui-bg-card)] p-1.5 border border-[var(--color-neutral-border)] ${elevationSystem.raised} overflow-x-auto whitespace-nowrap`} style={{ borderRadius: radius.modal }}>
 
           <button
             onClick={() => setAdminTab('overview')}
