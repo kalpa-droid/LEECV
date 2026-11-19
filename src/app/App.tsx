@@ -156,6 +156,11 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         if (currentUser) await claimCreditsOnAuth(currentUser);
         await refreshEntitlements();
       }
+
+      // Limpiar query params DESPUÉS de terminar el polling de créditos,
+      // no antes. Así si el usuario recarga durante el polling, el retorno
+      // se re-procesa y los créditos se muestran correctamente.
+      navigation.cleanQueryParams();
     };
 
     procesar().catch((err) => {

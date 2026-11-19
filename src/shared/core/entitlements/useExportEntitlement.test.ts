@@ -51,6 +51,7 @@ describe('useExportEntitlement', () => {
     (supabase.from as Mock).mockReturnValue({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      or: vi.fn().mockReturnThis(),
       then: vi.fn().mockImplementation((cb) => cb({ count: 1, error: null })),
     });
 
@@ -79,6 +80,7 @@ describe('useExportEntitlement', () => {
     (supabase.from as Mock).mockReturnValue({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      or: vi.fn().mockReturnThis(),
       then: vi.fn().mockImplementation((cb) => cb({ count: 0, error: null })),
     });
 
