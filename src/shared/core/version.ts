@@ -13,8 +13,8 @@ export const LEECV_VERSION = {
   major: 2,
   minor: 26,
   patch: 0,
-  label: 'V2.26.0',
+  label: 'V2.27.0',
   lastUpdated: '2026-11-19',
   lastAgent: '@antigravity',
-  stage: 'feat(facturador): FacturLee /crear-factura — facturador 100% local y cifrado (bóveda PBKDF2 + AES-256-GCM, Llave de Rescate, sin nube, cero PII), comprobante en PDF + Excel de 5 hojas + respaldo .leecv-fact + Lidio entrenado para FacturLee (tips locales y chat sin datos personales).',
+  stage: 'feat(editorial): EditorLee /crear-editor — editor de libros e informes 100% local, motor @react-pdf/renderer + VectorDocViewer, 7 pasos de Dock, 5 capacidades editoriales, 3 flujos IA (Lidio: estructurar/reescribir/pulir), exportación PDF (1 crédito) y copia de seguridad .leecv-editor.',
 } as const;
