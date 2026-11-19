@@ -381,7 +381,22 @@ export const deletePlannerById = (id: string) => deleteDocumentById(id, 'planner
  * NUNCA pasan por acá: viven cifrados en la bóveda (IndexedDB) y jamás se
  * sincronizan a Supabase (`invoice` no declara `cloud_backup`).
  */
-export const getSavedInvoicesList = () => getSavedDocumentsList('invoice');
+/**
+ * Lista los shells guardados de FacturLee SOLO desde localStorage.
+ * A diferencia de getSavedDocumentsList, NUNCA consulta Supabase: FacturLee es 100% local.
+ */
+export const getSavedInvoicesList = async (): Promise<DocumentRecord[]> => {
+  const storageKey = getStorageKeyForType('invoice');
+  try {
+    const stored = localStorage.getItem(storageKey);
+    if (!stored) return [];
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    reportSilentError(err, 'documentStorageService.getSavedInvoicesList.error');
+    return [];
+  }
+};
 
 export const saveInvoiceShell = async (shell: { id: string; title: string }): Promise<SaveDocumentResult> => {
   const nowIso = new Date().toISOString();
@@ -398,7 +413,7 @@ export const saveInvoiceShell = async (shell: { id: string; title: string }): Pr
     await idbStorage.setItem(`doc_invoice_data_${shell.id}`, data);
     try {
       const storageKey = getStorageKeyForType('invoice');
-      const list = await getSavedDocumentsList('invoice');
+      const list = await getSavedInvoicesList();
       const existingIdx = list.findIndex(item => item.id === shell.id);
       if (existingIdx >= 0) list[existingIdx] = record;
       else list.unshift(record);
