@@ -18,8 +18,8 @@ import { resolveActiveFormatId } from '../formats/cvFormatRegistry';
 import { BOOK_STEP_SEQUENCE } from '../book-engine/bookStepSequence';
 import { FACTURADOR_STEP_SEQUENCE } from '../facturador-engine/facturadorStepSequence';
 
-/** Tipo de documento del editor que monta a Lidio: currículum (cv), libro (book) o facturador (invoice). */
-export type AssistantDocType = 'cv' | 'book' | 'invoice';
+/** Tipo de documento del editor que monta a Lidio: currículum (cv), libro (book), facturador (invoice) o editorial (editorial). */
+export type AssistantDocType = 'cv' | 'book' | 'invoice' | 'editorial';
 
 /**
  * Crea un resumen estructural seguro del estado del editor.
