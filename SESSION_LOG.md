@@ -1,3 +1,28 @@
+## [2026-11-20] - EditorLee: Editor de Libros e Informes 100% Nativo (PR #147, feat/editorlee-nativo, V2.27.0)
+
+**Resumen:**
+- Implementación de **EditorLee** (`/crear-editor`) como aplicación 100% nativa de LEECV, cumpliendo los 7 pilares canónicos de `AGENTS.md` (Regla 10) y `docs/APP_BLUEPRINT.md`:
+  1. **Capacidades y Registro Central**: `DocumentTypeId = 'editorial'` registrado en `DOCUMENT_TYPE_REGISTRY`, `CAPABILITY_REGISTRY`, mapa de rutas (`/crear-editor`), títulos e inferencia determinista.
+  2. **Formularios y UI Canónica**: Integración total en `<CanvaIconDock />` (7 pasos de navegación: inicio → portada → secciones → diseño → TOC → metadatos → IA) en desktop y mobile con íconos canónicos de `iconCatalog`.
+  3. **Motor PDF Universal y Visor Centralizado**: Previsualización y exportación continua usando `@react-pdf/renderer` + `VectorDocViewer` (zoom, pan, centrado y doble página idéntico a CV y FacturLee).
+  4. **Gating de Créditos y Pasarela Unificada**: Exportación protegida mediante `useExportEntitlement()` y `PdfCheckoutModal` (1 crédito por exportación de PDF de libro/informe).
+  5. **Alta, Login y Reclamo Idempotente**: Respaldo local y soporte para migración de tokens vía `claimCreditsOnAuth`.
+  6. **Trazabilidad y Observabilidad**: Envuelto con `withErrorHandling()` en todas las operaciones asíncronas de exportación y guardado.
+  7. **Motor de IA Unificado y Entrenamiento de Lidio**: Registradas las tareas `editorial_structure`, `editorial_rewrite`, `editorial_refine` en `api/_lib/aiTasks/catalog.ts` y entrenado Lidio en `app_guide_assistant` con el bloque de conocimiento detallado de EditorLee.
+- **Resolución de Errores y Calidad (Regla 0)**:
+  - Corregidos errores tipográficos, JSX y de TypeScript en `EditorialPdfDocument.tsx`, `EditorialBlockPrimitives.tsx`, `sanitizeEditorialData.ts`, `editorialMath.ts`, `editorialPresetCatalog.ts`, `EditorLeeStudioContent.tsx` y `FloatingAssistant.tsx`.
+  - Reemplazado término técnico en `editorialMath.ts` para cumplir auditoría de lenguaje sencillo (`check-plain-language`).
+  - `npm run check-all` superado con 0 errores (tests vitest, plain-language, tokens, contraste WCAG 2.1 AA, unicidad de íconos, build y 80 páginas SEO prerenderizadas).
+- **Versionado**: `src/shared/core/version.ts` actualizado a `V2.27.0` (MINOR bump).
+
+**Merge (Regla 6 paso 7 - confirmación de hash):**
+- PR: #147 (`feat/editorlee-nativo`) mergeada a `main` (squash).
+- Hash confirmado en `origin/main`: `2246c3a3a788a7ea2b166dc6ad16cd3811c972b5`.
+- CI GitHub Actions: `check-all` en 1m13s (0 errores), Vercel Preview (pass).
+- Verificado local: `git pull origin main` sincronizado, working tree clean.
+
+---
+
 ## [2026-11-14] - OCR: Mapeo Completo IA->PDF sin Perdida de Datos (PR #91, feat/ocr-full-pdf-mapping)
 
 **Resumen:**
