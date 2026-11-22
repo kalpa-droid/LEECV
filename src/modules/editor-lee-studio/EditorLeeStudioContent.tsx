@@ -1,10 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import { BookOpen } from 'lucide-react';
 import { AppShell } from '../../shared/core/ui/AppShell';
 import StudioNavbar from '../../shared/core/studio-host/StudioNavbar';
 import StudioDock from '../../shared/core/studio-host/StudioDock';
 import { VectorDocViewer } from '../../shared/core/pdf-engine/VectorDocViewer';
 import { EditorialPdfDocument } from './pdf/EditorialPdfDocument';
 import { DEFAULT_EDITORIAL_PRESET } from './domain/editorialPresetCatalog';
+import {
+  applyEditorialGlobalConfig,
+  formatEditorialPillLabel,
+} from './domain/editorialNormEngine';
+import { countManualOverrides } from '../../shared/core/presets/configCascadeEngine';
+import { EditorialGlobalNormModal } from './ui/EditorialGlobalNormModal';
 import { EDITORIAL_PRESETS } from './pdf/editorialPresets';
 import { DocumentTypeId } from '../../types/document';
 import { useDocumentViewport, useViewportGestures, ScaledPaperSheet, quantizeRasterZoom } from '../../shared/core/viewport';
@@ -88,10 +95,12 @@ function createEmptyEditorial(initialPatch: Partial<any> = {}): any {
       marginLeft: DEFAULT_EDITORIAL_PRESET.margins.left,
       marginRight: DEFAULT_EDITORIAL_PRESET.margins.right,
       gutter: DEFAULT_EDITORIAL_PRESET.margins.gutter,
+      structuralNormId: DEFAULT_EDITORIAL_PRESET.structuralNormId,
       normId: DEFAULT_EDITORIAL_PRESET.normId,
       bibliographyStyle: DEFAULT_EDITORIAL_PRESET.bibliographyStyle,
       firstLineIndent: DEFAULT_EDITORIAL_PRESET.firstLineIndent,
       bibliographyHangingIndent: DEFAULT_EDITORIAL_PRESET.bibliographyHangingIndent,
+      manualOverrides: {},
       typography: {
         fontFamily: DEFAULT_EDITORIAL_PRESET.typography.fontFamily,
         fontSize: DEFAULT_EDITORIAL_PRESET.typography.fontSize,
@@ -152,6 +161,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState<boolean>(false);
+  const [isGlobalNormModalOpen, setIsGlobalNormModalOpen] = useState<boolean>(false);
 
   const { showSuccess, showError, showInfo } = useToast();
   const { consumeCreditIfNeeded } = useExportEntitlement();
@@ -460,6 +470,8 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
 
   const notify = { success: showSuccess, error: showError };
   const activeStepMeta = EDITORIAL_STEP_SEQUENCE.find((step) => step.id === activeStepTab);
+  const pillMeta = formatEditorialPillLabel(draft);
+  const designOverrideCount = countManualOverrides(draft?.design);
 
   return (
     <>
@@ -483,6 +495,14 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
             isSaving={isExporting}
             onOpenShareAppModal={onOpenShareAppModal || (() => {})}
             onOpenPrivacy={onOpenPrivacy || (() => {})}
+            globalContextPill={{
+              shortLabel: pillMeta.shortLabel,
+              tooltip: pillMeta.tooltip,
+              ariaLabel: `Configuración global ${pillMeta.shortLabel}`,
+              icon: <BookOpen className="w-3.5 h-3.5" />,
+              hasOverrides: designOverrideCount > 0,
+              onClick: () => setIsGlobalNormModalOpen(true),
+            }}
             zoomLevel={viewport.zoomLevel}
             setZoomLevel={viewport.setZoomLevel}
             triggerAutoFit={viewport.fitAndCenter}
@@ -578,6 +598,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
               <EditorialSectionFocusPanel
                 key={activeDynamicSection.section.id}
                 section={activeDynamicSection.section}
+                draft={draft}
                 badgeLabel={activeDynamicSection.badgeLabel}
                 updateDraft={updateDraft}
                 setActiveStepTab={setActiveStepTab}
@@ -677,6 +698,15 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
         onConfirm={() => {
           setIsCheckoutOpen(false);
           void handleExportPDF();
+        }}
+      />
+      <EditorialGlobalNormModal
+        isOpen={isGlobalNormModalOpen}
+        onClose={() => setIsGlobalNormModalOpen(false)}
+        draft={draft}
+        onApplyGlobalConfig={(params) => {
+          updateDraft((prev) => applyEditorialGlobalConfig(prev, params));
+          showSuccess('Normas globales aplicadas.');
         }}
       />
     </>

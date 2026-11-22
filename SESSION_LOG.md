@@ -1,3 +1,20 @@
+## [2026-11-22] - PR B (V3.3.0): EditorLee — Píldora Global de Normas Separadas, Cascada Anti-Pisado y Citas Automáticas en Línea
+
+**Resumen:**
+- **Separación de Ejes Globales (`editorialNormEngine.ts` + `editorialTypes.ts` + `editorialPresetCatalog.ts`)**:
+  - Desacoplada la **Norma Estructural de Página** (`structuralNormId`: `libre`, `apa7`, `chicago`, `mla`) del **Estilo de Referencias Bibliográficas** (`bibliographyStyle`: `apa7`, `vancouver`, `ieee`, `harvard`, `chicago`, `mla`, `tradicional`).
+  - Integrado `checkEditorialNormCompatibility()`: confirma automáticamente combinaciones estándar como estructura `APA 7` + citas `Vancouver / IEEE / Harvard`, y advierte con tono informativo el acoplamiento estricto al mezclar `Chicago` o `MLA 9`.
+  - Aplicada cascada 3 niveles con `manualOverrides` (`applyEditorialGlobalConfig`, `markEditorialFieldManual`, `clearEditorialFieldManual`) en `EditorialDisenoPanel` junto a `<ManualOverrideBadge />` en márgenes, hoja, tipografía, cuerpo, interlineado, sangría y numeración.
+- **Píldora Global en Barra Superior y Modal Unificado (`EditorialGlobalNormModal.tsx` + `EditorLeeStudioContent.tsx`)**:
+  - Agregada la píldora `globalContextPill` junto a `ATS` en `StudioNavbar` (`APA 7 · Vancouver`, `APA 7 · IEEE`, `Libro`, `Chicago`, etc.), abriendo `EditorialGlobalNormModal` con detección de conflictos manuales (`Conservar mis ajustes finos` vs `Aplicar toda la norma nueva`).
+- **Citas Automáticas en Capítulos, Secciones y Anexos (`editorialCitationFormatter.ts` + `EditorialSectionFocusPanel.tsx` + `EditorialPdfDocument.tsx`)**:
+  - Añadidas reglas completas de formato para **IEEE** `[1]`, **Harvard** y **MLA 9** junto a APA 7, Vancouver, Chicago y Tradicional.
+  - Agregado selector `+ Citar fuente` (existentes + creación rápida en línea `+ Nueva fuente` con página opcional) dentro de `EditorialSectionFocusPanel`, insertando tokens canónicos `[[cite:bibId]]` y mostrando previsualización en vivo.
+  - Al cambiar de norma global, `computeCitationAppearanceOrder`, `resolveInlineCitationsInText` y `syncSectionsBibliographyOrder` actualizan automáticamente todas las citas en los capítulos y reordenan la bibliografía en el PDF (`EditorialPdfDocument.tsx`).
+- **Verificación**: Nueva suite `tests/editorLeeNormCascadeAndInlineCitations.test.ts`, conocimiento modular `api/_lib/aiTasks/appKnowledge/editorial.ts` actualizado, versión `V3.3.0` y `npm run check-all` en verde.
+
+---
+
 ## [2026-11-22] - PR A (V3.2.0): Taxonomía de Botones, Píldora Global Universal, Cascada Anti-Pisado y Perfiles En casa vs Imprenta en Libro/Folleto
 
 **Resumen:**

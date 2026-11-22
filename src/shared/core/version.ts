@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 3,
-  minor: 2,
+  minor: 3,
   patch: 0,
-  label: 'V3.2.0',
+  label: 'V3.3.0',
   lastUpdated: '2026-11-22',
   lastAgent: '@antigravity',
-  stage: 'feat(platform,book): V3.2.0 — Taxonomía de Botones en Dock y Paneles, Píldora Global Universal en Navbar, Motor Universal de Cascada Anti-Pisado (Nivel 1/2/3 manualOverrides), Perfiles En casa vs Imprenta con formatos grandes en Libro/Folleto y Fábrica de Apps Cero Ruido actualizada.',
+  stage: 'feat(editorlee): V3.3.0 — Píldora Global de Obra y Normas en Navbar, Separación Estructura vs Bibliografía (APA 7, Vancouver, IEEE, Harvard, Chicago, MLA 9), Cascada Anti-Pisado con ManualOverrideBadge y Citas Automáticas en Línea dentro de capítulos, secciones y anexos.',
 } as const;

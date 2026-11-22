@@ -23,7 +23,14 @@ import { registerPdfCategoryExporter } from '../../../shared/core/pdf-engine/pdf
 import { sanitizeFontFamily } from '../../../shared/core/pdf-engine/layers/typography/pdfFontRegistry';
 import { downloadBlob } from '../../../shared/core/utils/downloadUtils';
 import { EditorialPdfCoverPage } from './EditorialPdfCovers';
-import { formatEditorialCitation } from '../domain/editorialCitationFormatter';
+import {
+  collectBibliographyFromSections,
+  computeCitationAppearanceOrder,
+  formatEditorialCitation,
+  normalizeBibliographyStyle,
+  resolveInlineCitationsInText,
+  syncSectionsBibliographyOrder,
+} from '../domain/editorialCitationFormatter';
 
 // Tipos auxiliares para el render PDF
 interface SectionRenderModel {
@@ -116,13 +123,24 @@ export const EditorialPdfDocument: React.FC<{
   const boldFont = sanitizeFontFamily(rawFontFamily, true, false);
   const italicFont = sanitizeFontFamily(rawFontFamily, false, true);
 
+  const activeBibStyle = normalizeBibliographyStyle(
+    rawDesign.bibliographyStyle || rawDesign.normId || pdfPreset.bibliographyStyle,
+  );
+  const effectiveStructuralNorm =
+    rawDesign.structuralNormId || (rawDesign.normId === 'vancouver' ? 'apa7' : rawDesign.normId);
+
   const visibleSections = (data?.sections || []).filter((s) => s.visible !== false);
+  const syncedVisibleSections = syncSectionsBibliographyOrder(visibleSections, activeBibStyle);
+  const { map: bibMap } = collectBibliographyFromSections(syncedVisibleSections);
+  const appearanceMap = computeCitationAppearanceOrder(syncedVisibleSections);
+  const formatPdfBody = (rawText: string) =>
+    formatTextoLiso(resolveInlineCitationsInText(rawText, bibMap, activeBibStyle, appearanceMap));
 
   const model: EditorialRenderModel = {
     title: data?.metadata?.title || 'Mi obra',
     preset: pdfPreset,
     design: rawDesign,
-    sections: visibleSections.map((s) => ({
+    sections: syncedVisibleSections.map((s) => ({
       id: s.id,
       title: s.title,
       records: Array.isArray(s.records) ? s.records : [],
@@ -204,11 +222,11 @@ export const EditorialPdfDocument: React.FC<{
       fontFamily: baseFont,
       fontSize: resolvedFontSize,
       lineHeight: resolvedLineHeight,
-      marginBottom: rawDesign.normId === 'apa7' ? 0 : 10,
+      marginBottom: effectiveStructuralNorm === 'apa7' ? 0 : 10,
       textIndent: rawDesign.firstLineIndent ? 18 : 0,
     },
     bibItemWrap: {
-      marginBottom: rawDesign.normId === 'apa7' ? 6 : 8,
+      marginBottom: effectiveStructuralNorm === 'apa7' ? 6 : 8,
     },
     bibText: {
       fontFamily: baseFont,
@@ -388,7 +406,7 @@ export const EditorialPdfDocument: React.FC<{
 
   // Generar páginas de sección
   const sectionPages = model.sections.map((section, secIndex) => {
-    const rawSec = visibleSections[secIndex];
+    const rawSec = syncedVisibleSections[secIndex];
     const isBibSection =
       rawSec?.sectionKey === 'bibliografia' ||
       section.records.some((r) => r.type === 'bibliography_item');
@@ -406,7 +424,7 @@ export const EditorialPdfDocument: React.FC<{
       <Text
         style={[
           styles.sectionTitle,
-          rawDesign.normId === 'apa7' ? { textAlign: 'center', fontSize: resolvedFontSize } : {},
+          effectiveStructuralNorm === 'apa7' ? { textAlign: 'center', fontSize: resolvedFontSize } : {},
         ]}
       >
         {formatTextoLiso(section.title || `Sección ${secIndex + 1}`)}
@@ -417,28 +435,28 @@ export const EditorialPdfDocument: React.FC<{
       {section.records.map((record, recIndex) => {
         switch (record.type) {
           case 'paragraph': return (
-            <Text key={recIndex} style={styles.bodyText}>{formatTextoLiso(record.content || '')}</Text>
+            <Text key={recIndex} style={styles.bodyText}>{formatPdfBody(record.content || '')}</Text>
           );
           case 'subtitle': return (
             <Text key={recIndex} style={{ ...styles.bodyText, textIndent: 0, fontFamily: boldFont, fontSize: Math.round(resolvedFontSize * 1.25) }}>
-              {formatTextoLiso(record.content || '')}
+              {formatPdfBody(record.content || '')}
             </Text>
           );
           case 'quote': return (
             <View key={recIndex} style={styles.callout}>
-              <Text style={{ ...styles.calloutTitle, fontFamily: italicFont }}>{formatTextoLiso(record.content || '')}</Text>
-              {record.quoteAttribution && <Text style={{ fontSize: 9, fontFamily: baseFont, color: '#6B7280' }}>— {formatTextoLiso(record.quoteAttribution)}</Text>}
+              <Text style={{ ...styles.calloutTitle, fontFamily: italicFont }}>{formatPdfBody(record.content || '')}</Text>
+              {record.quoteAttribution && <Text style={{ fontSize: 9, fontFamily: baseFont, color: '#6B7280' }}>— {formatPdfBody(record.quoteAttribution)}</Text>}
             </View>
           );
           case 'callout': return (
             <View key={recIndex} style={styles.callout}>
-              <Text style={styles.calloutTitle}>{formatTextoLiso(record.content || '')}</Text>
+              <Text style={styles.calloutTitle}>{formatPdfBody(record.content || '')}</Text>
             </View>
           );
           case 'list': return (
             <View key={recIndex} style={styles.listItem}>
               {String(record.content || '').split('\n').filter(Boolean).map((line, li) => (
-                <Text key={li} style={styles.listBullet}>• {formatTextoLiso(line)}</Text>
+                <Text key={li} style={styles.listBullet}>• {formatPdfBody(line)}</Text>
               ))}
             </View>
           );
@@ -513,7 +531,7 @@ export const EditorialPdfDocument: React.FC<{
             );
             return <Text key={recIndex} style={{ opacity: 0 }} />;
           }
-          default: return <Text key={recIndex} style={styles.bodyText}>{formatTextoLiso(record.content || '')}</Text>;
+          default: return <Text key={recIndex} style={styles.bodyText}>{formatPdfBody(record.content || '')}</Text>;
         }
       })}
       {rawDesign.pageNumbers !== false && (

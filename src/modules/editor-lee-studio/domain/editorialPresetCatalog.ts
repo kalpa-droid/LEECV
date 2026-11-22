@@ -12,6 +12,7 @@ import {
   EditorialPresetId,
   EditorialCoverMode,
   EditorialNormId,
+  EditorialStructuralNormId,
   EditorialBibliographyStyle,
   EditorialSection,
 } from './editorialTypes';
@@ -44,6 +45,7 @@ export interface EditorialPreset {
   coverMode: EditorialCoverMode;
   coverStyleId: string;
   coverPaletteKey: string;
+  structuralNormId: EditorialStructuralNormId;
   normId: EditorialNormId;
   bibliographyStyle: EditorialBibliographyStyle;
   margins: {
@@ -76,6 +78,7 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     coverMode: 'libro',
     coverStyleId: 'monica-classic',
     coverPaletteKey: 'sobrio',
+    structuralNormId: 'libre',
     normId: 'libre',
     bibliographyStyle: 'tradicional',
     margins: { top: 20, bottom: 20, left: 18, right: 16, gutter: 22 },
@@ -103,6 +106,7 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     coverMode: 'academica',
     coverStyleId: 'modern-corporate',
     coverPaletteKey: 'clasico',
+    structuralNormId: 'libre',
     normId: 'libre',
     bibliographyStyle: 'tradicional',
     margins: { top: 20, bottom: 20, left: 22, right: 20, gutter: 22 },
@@ -130,6 +134,7 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     coverMode: 'academica',
     coverStyleId: 'minimal-editorial',
     coverPaletteKey: 'marino',
+    structuralNormId: 'apa7',
     normId: 'apa7',
     bibliographyStyle: 'apa7',
     margins: { top: 25, bottom: 25, left: 25, right: 25, gutter: 25 },
@@ -157,6 +162,7 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     coverMode: 'academica',
     coverStyleId: 'magazine-executive',
     coverPaletteKey: 'sobrio',
+    structuralNormId: 'apa7',
     normId: 'apa7',
     bibliographyStyle: 'apa7',
     margins: { top: 25, bottom: 25, left: 25, right: 25, gutter: 25 },
@@ -194,6 +200,7 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     coverMode: 'academica',
     coverStyleId: 'modern-corporate',
     coverPaletteKey: 'elegante',
+    structuralNormId: 'apa7',
     normId: 'vancouver',
     bibliographyStyle: 'vancouver',
     margins: { top: 25, bottom: 25, left: 25, right: 25, gutter: 25 },
@@ -230,6 +237,7 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     coverMode: 'academica',
     coverStyleId: 'minimal-editorial',
     coverPaletteKey: 'marino',
+    structuralNormId: 'apa7',
     normId: 'apa7',
     bibliographyStyle: 'apa7',
     margins: { top: 25, bottom: 25, left: 25, right: 25, gutter: 25 },
@@ -257,6 +265,7 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     coverMode: 'ejecutiva',
     coverStyleId: 'creative-sustentable',
     coverPaletteKey: 'clasico',
+    structuralNormId: 'libre',
     normId: 'libre',
     bibliographyStyle: 'tradicional',
     margins: { top: 20, bottom: 20, left: 20, right: 20, gutter: 22 },
@@ -284,6 +293,7 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     coverMode: 'ejecutiva',
     coverStyleId: 'bold-impact',
     coverPaletteKey: 'marino',
+    structuralNormId: 'libre',
     normId: 'libre',
     bibliographyStyle: 'tradicional',
     margins: { top: 20, bottom: 20, left: 22, right: 20, gutter: 20 },
@@ -311,6 +321,7 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
     coverMode: 'sin-caratula',
     coverStyleId: 'minimal-editorial',
     coverPaletteKey: 'sobrio',
+    structuralNormId: 'libre',
     normId: 'libre',
     bibliographyStyle: 'tradicional',
     margins: { top: 20, bottom: 20, left: 20, right: 20, gutter: 20 },
@@ -394,6 +405,10 @@ export function applyEditorialPresetToDraft<T extends Record<string, any>>(
   const preset = getEditorialPreset(presetId) || DEFAULT_EDITORIAL_PRESET;
   const currentDesign = draft?.design || {};
   const currentCover = draft?.cover || {};
+  const manualOverrides: Record<string, boolean> =
+    currentDesign?.manualOverrides && typeof currentDesign.manualOverrides === 'object'
+      ? currentDesign.manualOverrides
+      : {};
 
   const nextSections =
     mode === 'replace-structure'
@@ -407,20 +422,34 @@ export function applyEditorialPresetToDraft<T extends Record<string, any>>(
     design: {
       ...currentDesign,
       presetId: preset.id,
-      pageSizeId: preset.pageSize,
-      marginTop: preset.margins.top,
-      marginBottom: preset.margins.bottom,
-      marginLeft: preset.margins.left,
-      marginRight: preset.margins.right,
-      gutter: preset.margins.gutter,
+      pageSizeId: manualOverrides.pageSizeId && currentDesign.pageSizeId ? currentDesign.pageSizeId : preset.pageSize,
+      marginTop: manualOverrides.marginTop && typeof currentDesign.marginTop === 'number' ? currentDesign.marginTop : preset.margins.top,
+      marginBottom: manualOverrides.marginBottom && typeof currentDesign.marginBottom === 'number' ? currentDesign.marginBottom : preset.margins.bottom,
+      marginLeft: manualOverrides.gutter && typeof currentDesign.marginLeft === 'number' ? currentDesign.marginLeft : preset.margins.left,
+      marginRight: manualOverrides.marginRight && typeof currentDesign.marginRight === 'number' ? currentDesign.marginRight : preset.margins.right,
+      gutter: manualOverrides.gutter && typeof currentDesign.gutter === 'number' ? currentDesign.gutter : preset.margins.gutter,
+      structuralNormId: preset.structuralNormId,
       normId: preset.normId,
       bibliographyStyle: preset.bibliographyStyle,
-      firstLineIndent: preset.firstLineIndent,
+      firstLineIndent:
+        manualOverrides.firstLineIndent && typeof currentDesign.firstLineIndent === 'boolean'
+          ? currentDesign.firstLineIndent
+          : preset.firstLineIndent,
       bibliographyHangingIndent: preset.bibliographyHangingIndent,
+      manualOverrides,
       typography: {
-        fontFamily: preset.typography.fontFamily,
-        fontSize: preset.typography.fontSize,
-        lineHeight: preset.typography.lineHeight,
+        fontFamily:
+          manualOverrides.fontFamily && currentDesign.typography?.fontFamily
+            ? currentDesign.typography.fontFamily
+            : preset.typography.fontFamily,
+        fontSize:
+          manualOverrides.fontSize && typeof currentDesign.typography?.fontSize === 'number'
+            ? currentDesign.typography.fontSize
+            : preset.typography.fontSize,
+        lineHeight:
+          manualOverrides.lineHeight && typeof currentDesign.typography?.lineHeight === 'number'
+            ? currentDesign.typography.lineHeight
+            : preset.typography.lineHeight,
       },
     },
     cover: {

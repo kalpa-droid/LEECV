@@ -53,19 +53,27 @@ export type EditorialCoverMode =
   | 'ejecutiva'      // Tapa ejecutiva limpia (organización, fecha)
   | 'sin-caratula';  // Sin carátula
 
-/** Norma editorial / sistema de citas activo en el documento. */
-export type EditorialNormId =
+/** Norma de estructura/maquetación del documento (márgenes, interlineado, sangría). */
+export type EditorialStructuralNormId =
   | 'libre'
   | 'apa7'
-  | 'vancouver'
-  | 'chicago';
+  | 'chicago'
+  | 'mla';
 
-/** Formato de bibliografía. */
+/** Norma editorial legado/compat (estructura + alias). */
+export type EditorialNormId =
+  | EditorialStructuralNormId
+  | 'vancouver';
+
+/** Estilo de referencias bibliográficas (independiente de la estructura de página). */
 export type EditorialBibliographyStyle =
   | 'apa'
   | 'apa7'
   | 'vancouver'
+  | 'ieee'
+  | 'harvard'
   | 'chicago'
+  | 'mla'
   | 'tradicional';
 
 /** Tipo de fuente bibliográfica para estructurar APA 7 / Vancouver. */
@@ -128,10 +136,15 @@ export interface EditorialDesignConfig {
   pageNumbers: boolean;
   headersEvenOdd: boolean;           // Encabezados pares/impares
   coverMode: EditorialCoverMode;
+  /** Norma estructural activa (Nivel 1). Vancouver/IEEE/Harvard suelen usar `apa7`. */
+  structuralNormId?: EditorialStructuralNormId;
+  /** Campo legado/compat para lectores existentes. */
   normId?: EditorialNormId;
   bibliographyStyle?: EditorialBibliographyStyle;
   firstLineIndent?: boolean;         // Margen inicial en párrafos (APA 7: 0.5 in)
   bibliographyHangingIndent?: boolean;
+  /** Campos ajustados manualmente por el usuario (Nivel 3, cascada anti-pisado). */
+  manualOverrides?: Record<string, boolean>;
   coverStyleId?: string;
   coverPaletteKey?: string;
 }
