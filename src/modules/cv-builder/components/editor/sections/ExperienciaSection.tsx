@@ -3,8 +3,11 @@ import { RecordFormSection } from '../../../../../shared/core/ui/RecordFormSecti
 import { SectionManualAdjustment } from '../SectionManualAdjustment';
 import { ClassifyItemModal } from '../../modals/ClassifyItemModal';
 import { FirstJobHelpModal } from '../../modals/FirstJobHelpModal';
-import { Sparkles, Briefcase, Wand2 } from 'lucide-react';
+import { Briefcase } from 'lucide-react';
 import { button } from '../../../../../shared/core/uiDesignSystem';
+import { LidioHelpTrigger } from '../../../../../shared/core/ui/LidioHelpTrigger';
+import { DomSectionIcon } from '../../../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
+import { UI_ICON_IDS } from '../../../../../shared/core/ui/iconCatalog';
 import { executeAiTask } from '../../../../../shared/core/ai/aiClient';
 import { useToast } from '../../../../../shared/core/ui/Toast';
 
@@ -65,52 +68,64 @@ export const ExperienciaSection = ({ cvData, setCvData }: any) => {
         manualAdjustment={
           <div className="space-y-3">
             <SectionManualAdjustment sectionId="experiencia" cvData={cvData} setCvData={setCvData} />
-            <div className="flex flex-wrap gap-2 pt-2 border-t border-[var(--ui-border)]/50">
+            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[var(--ui-border)]/50">
               <button
                 type="button"
                 onClick={() => setIsClassifyOpen(true)}
-                className={`${button.secondary} text-xs py-1.5 px-3 flex items-center gap-1.5`}
+                className={`${button.secondary} text-xs py-1.5 px-3 flex items-center gap-1.5 cursor-pointer`}
               >
-                <Sparkles className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
-                Extraer desde texto (IA)
+                <span className="ui-ai-sparkle-loop">
+                  <DomSectionIcon iconId={UI_ICON_IDS.ia} size={14} strokeWidth={2.1} />
+                </span>
+                Extraer desde texto
               </button>
-              <button
-                type="button"
-                disabled={acrLoading || !experienceList.length}
-                onClick={async () => {
-                  if (!experienceList.length) return;
-                  setAcrLoading(true); setAcrResponse(null);
-                  try {
-                    const target = experienceList[acrCurrentIdx] || {};
-                    const res = await executeAiTask<{ acrBullet: string; missingMetrics: string | null }>({
-                      taskId: 'suggest_achievement_acr',
-                      payload: {
-                        role: target.cargo || experienceList[0]?.cargo || 'Profesional',
-                        company: target.institucion || target.empresa || '',
-                        currentDescription: target.descripcion || ''
-                      },
-                      cvData,
-                      maxTokens: 300,
-                      temperature: 0.4
-                    });
-                    const bullet = res.data.acrBullet || 'Sugerencia generada por IA.';
-                    const metricsNote = res.data.missingMetrics ? ` (Dato a sumar para cuantificar: ${res.data.missingMetrics})` : '';
-                    setAcrResponse(`${bullet}${metricsNote}`);
-                  } catch { setAcrResponse('No se pudo conectar con el asistente ACR. Intentá de nuevo.'); }
-                  setAcrLoading(false);
-                }}
-                className={`${button.secondary} text-xs py-1.5 px-3 flex items-center gap-1.5 ${(acrLoading || !experienceList.length) ? 'opacity-60 cursor-not-allowed' : ''}`}
-              >
-                <Wand2 className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
-                Sugerir Logros (ACR)
-              </button>
+              <div className="inline-flex items-center gap-1">
+                <button
+                  type="button"
+                  disabled={acrLoading || !experienceList.length}
+                  onClick={async () => {
+                    if (!experienceList.length) return;
+                    setAcrLoading(true); setAcrResponse(null);
+                    try {
+                      const target = experienceList[acrCurrentIdx] || {};
+                      const res = await executeAiTask<{ acrBullet: string; missingMetrics: string | null }>({
+                        taskId: 'suggest_achievement_acr',
+                        payload: {
+                          role: target.cargo || experienceList[0]?.cargo || 'Profesional',
+                          company: target.institucion || target.empresa || '',
+                          currentDescription: target.descripcion || ''
+                        },
+                        cvData,
+                        maxTokens: 300,
+                        temperature: 0.4
+                      });
+                      const bullet = res.data.acrBullet || 'Sugerencia generada por IA.';
+                      const metricsNote = res.data.missingMetrics ? ` (Dato a sumar para cuantificar: ${res.data.missingMetrics})` : '';
+                      setAcrResponse(`${bullet}${metricsNote}`);
+                    } catch { setAcrResponse('No se pudo conectar con el asistente ACR. Intentá de nuevo.'); }
+                    setAcrLoading(false);
+                  }}
+                  className={`${button.secondary} text-xs py-1.5 px-3 flex items-center gap-1.5 cursor-pointer ${(acrLoading || !experienceList.length) ? 'opacity-60 cursor-not-allowed' : ''}`}
+                >
+                  <span className="ui-ai-sparkle-loop">
+                    <DomSectionIcon iconId={UI_ICON_IDS.ia} size={14} strokeWidth={2.1} />
+                  </span>
+                  Logros ACR
+                </button>
+                <LidioHelpTrigger
+                  size="xs"
+                  title="Logros ACR"
+                  text="Redacta tus logros con la fórmula Acción + Contexto + Resultado usando la experiencia seleccionada."
+                  groupKey="exp-acr-help"
+                />
+              </div>
               <button
                 type="button"
                 onClick={() => setIsFirstJobOpen(true)}
-                className={`${button.secondary} text-xs py-1.5 px-3 flex items-center gap-1.5`}
+                className={`${button.secondary} text-xs py-1.5 px-3 flex items-center gap-1.5 cursor-pointer`}
               >
                 <Briefcase className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
-                Ayuda Primer Empleo
+                Primer Empleo
               </button>
             </div>
             {acrLoading && <p className="text-xs text-[var(--ui-text-secondary)]">Generando fórmula ACR con IA...</p>}

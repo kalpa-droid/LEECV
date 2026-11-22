@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Briefcase, Download, Sparkles, Loader2, AlertCircle } from 'lucide-react';
+import { Briefcase, Download, Loader2, AlertCircle } from 'lucide-react';
 import { Field } from '../../../../../shared/core/ui/Field';
+import { LidioHelpTrigger } from '../../../../../shared/core/ui/LidioHelpTrigger';
+import { DomSectionIcon } from '../../../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
+import { UI_ICON_IDS } from '../../../../../shared/core/ui/iconCatalog';
 import { executeAiTask } from '../../../../../shared/core/ai/aiClient';
 import { button } from '../../../../../shared/core/uiDesignSystem';
 import { useToast } from '../../../../../shared/core/ui/Toast';
@@ -191,21 +194,32 @@ export const ApplicationCoverLetterSection: React.FC<ApplicationCoverLetterSecti
         )}
       </section>
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs text-[var(--color-neutral-text-secondary)]">
-          La IA analiza todas las secciones de tu CV y rellena automáticamente el saludo, los 3 párrafos y la despedida.
-        </p>
-        <button
-          type="button"
-          disabled={isGenerating}
-          onClick={handleGenerateAndFill}
-          className={`${button.base} ${button.primary} inline-flex items-center gap-2 text-xs px-4 py-2 ${
-            !hasValidJobTarget ? 'opacity-80' : ''
-          }`}
-        >
-          {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-          {isGenerating ? 'Analizando CV y redactando carta…' : 'Completar carta con IA'}
-        </button>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            disabled={isGenerating}
+            onClick={handleGenerateAndFill}
+            className={`${button.base} ${button.primary} inline-flex items-center gap-2 text-xs px-4 py-2 cursor-pointer ${
+              !hasValidJobTarget ? 'opacity-80' : ''
+            }`}
+          >
+            {isGenerating ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <span className="ui-ai-sparkle-loop">
+                <DomSectionIcon iconId={UI_ICON_IDS.ia} size={15} strokeWidth={2.1} />
+              </span>
+            )}
+            {isGenerating ? 'Redactando…' : 'Completar carta con IA'}
+          </button>
+          <LidioHelpTrigger
+            size="xs"
+            title="Completar carta con IA"
+            text="La IA analiza todas las secciones de tu CV y rellena automáticamente el saludo, los 3 párrafos y la despedida sin consumir créditos."
+            groupKey="cover-letter-ai"
+          />
+        </div>
       </div>
 
       <section className="space-y-4">

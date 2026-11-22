@@ -20,11 +20,12 @@ const VALID_CV_PANEL_TABS = new Set([
   'personales', 'redes', 'competencias', 'resumen', 'objetivo', 'vacante', 'carta',
   'importar_datos', 'logros', 'portafolio', 'habilidades', 'idiomas', 'proyectos',
   'publicaciones', 'referencias', 'formacion', 'profesion', 'experiencia', 'cursos',
-  'informatica', 'certificados', 'firma', 'nueva_seccion', 'guardados', 'diseno', 'portada',
+  'informatica', 'certificados', 'firma', 'nueva_seccion', 'guardados',
+  'diseno', 'diseno_tipografia', 'diseno_hoja', 'portada',
 ]);
 
 /** Pestañas de utilidad (no son secciones del CV ni destino de una regla). */
-const UTILITY_TABS = new Set(['guardados', 'diseno', 'portada', 'carta', 'vacante', 'importar_datos']);
+const UTILITY_TABS = new Set(['guardados', 'diseno', 'diseno_tipografia', 'diseno_hoja', 'portada', 'carta', 'vacante', 'importar_datos']);
 
 /** Pestaña segura cuando nada más aplica: donde vive la mayoría del contenido corregible. */
 export const FALLBACK_TAB = 'experiencia';
@@ -122,7 +123,7 @@ export function resolveRuleTargetTab(ruleId: string | null | undefined, cvData?:
       target = 'experiencia';
       break;
     case 'multicol_layout':
-      target = 'diseno';
+      target = 'diseno_hoja';
       break;
     case 'keyword_match':
       target = 'vacante';

@@ -1,8 +1,9 @@
 import React from 'react';
-import { Bot } from 'lucide-react';
 import { useCVContext } from '../../../../context/CVContext';
 import { PersonalInfoFields } from '../../../../shared/core/ui/PersonalInfoFields';
 import { SectionManualAdjustment } from './SectionManualAdjustment';
+import { SectionSwitch } from '../../../../shared/core/ui/SectionSwitch';
+import { LidioHelpTrigger } from '../../../../shared/core/ui/LidioHelpTrigger';
 import { colorSystem, typeScale, elevationSystem } from '../../../../shared/core/uiDesignSystem';
 
 export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhotoCropper: () => void; registeredItems?: any[] }) {
@@ -31,36 +32,30 @@ export default function PersonalInfoSection({ onOpenPhotoCropper }: { onOpenPhot
 
   return (
     <div className="space-y-4">
-      {/* Header con Toggle */}
-      <div className={`flex items-center justify-between p-2.5 rounded-[12px] border transition ${
+      {/* Header con Perilla y Ayuda de Privacidad */}
+      <div className={`flex items-center justify-between gap-2 p-2.5 rounded-[12px] border transition ${
         anyVisible 
           ? `bg-[var(--ui-bg-card)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] ${elevationSystem.raised}` 
           : 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-muted)] opacity-75'
       }`}>
-        <span className={`${typeScale.sectionTitle} uppercase tracking-wide`} style={{ color: colorSystem.neutral.textPrimary }}>
-          Datos Personales & Foto
-        </span>
-        <button
-          type="button"
-          onClick={togglePersonalGroup}
-          className={`px-3 py-1 rounded-full text-[11px] font-medium transition flex items-center gap-1.5 ${elevationSystem.raised} cursor-pointer ${
-            anyVisible
-              ? 'bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] hover:bg-[var(--color-secondary-hover)]'
-              : 'bg-[var(--color-neutral-text-muted)] text-[var(--color-neutral-surface)] hover:opacity-80'
-          }`}
-        >
-          <span>{anyVisible ? 'ACTIVADA' : 'DESACTIVADA'}</span>
-        </button>
-      </div>
-
-      {anyVisible && (
-        <div className={`p-3 rounded-[8px] bg-[var(--color-status-info-muted)] border border-[var(--color-status-info-base)]/30 text-[var(--color-status-info-text)] text-[11px] leading-snug font-medium flex items-start gap-2`}>
-          <Bot className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--color-status-info-base)]" />
-          <p>
-            <strong>Privacidad y Sesgos:</strong> En la selección moderna se recomienda no incluir DNI, CUIT, estado civil, fecha de nacimiento o nacionalidad para evitar discriminación inconsciente. Podés completar estos datos si querés y usar el interruptor debajo de cada campo para elegir si se muestran en tu PDF o no.
-          </p>
+        <div className="flex items-center gap-2 min-w-0">
+          <span className={`${typeScale.sectionTitle} uppercase tracking-wide truncate`} style={{ color: colorSystem.neutral.textPrimary }}>
+            Datos Personales & Foto
+          </span>
+          <LidioHelpTrigger
+            size="xs"
+            title="Privacidad y Sesgos"
+            text="En selección moderna se recomienda ocultar DNI, CUIT, estado civil, edad o foto. Podés completar esos datos igual y usar el ícono de ojo debajo de cada campo para mostrarlos u ocultarlos del PDF sin borrar nada."
+            groupKey="privacy-personal-info"
+          />
         </div>
-      )}
+        <SectionSwitch
+          checked={anyVisible}
+          label="Datos Personales & Foto"
+          size="sm"
+          onChange={() => togglePersonalGroup()}
+        />
+      </div>
 
       {anyVisible && (
         <PersonalInfoFields

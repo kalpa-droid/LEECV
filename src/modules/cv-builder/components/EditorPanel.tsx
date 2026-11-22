@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { fontOptions } from '../../../data/fontOptions';
-import { getCvFormat } from '../../../shared/core/formats/cvFormatRegistry';
 import { getSavedCVsList, loadCVById, deleteCVById, saveCV } from '../services/cvStorageService';
 import { LogrosSection } from './editor/sections/LogrosSection';
 import { IdiomasSection } from './editor/sections/IdiomasSection';
@@ -24,7 +23,6 @@ import { FirmaSection } from './editor/sections/FirmaSection';
 import { JobTargetSection } from './editor/sections/JobTargetSection';
 import { ImportDataSection } from './editor/sections/ImportDataSection';
 import { ApplicationCoverLetterSection } from './editor/sections/ApplicationCoverLetterSection';
-import { FormatConfirmationModal, FormatApplicationMode } from './FormatConfirmationModal';
 import PersonalInfoSection from './editor/PersonalInfoSection';
 import { NuevaSeccionSection } from './editor/sections/NuevaSeccionSection';
 import { PersonalizadaSection } from './editor/sections/PersonalizadaSection';
@@ -32,10 +30,8 @@ import { DisenoSection } from './editor/sections/DisenoSection';
 import { PortadaSection } from './editor/sections/PortadaSection';
 import { CoverLetterEditorPanel } from './cover-letter/CoverLetterEditorPanel';
 import { FloatingAssistant } from '../../../shared/core/studio-host/FloatingAssistant';
-import { CoverLetterCrossSellBanner } from './CoverLetterCrossSellBanner';
 import { Briefcase, CornerUpLeft, FileText } from 'lucide-react';
 import { isApplicationVariant } from '../../../shared/core/documents/applicationVariant';
-import { applyPresetLevel } from '../../../shared/core/pdf-engine/layers/presets/presetHierarchyEngine';
 import { triggerPresetTransition } from '../../../shared/core/pdf-engine/layers/presets/presetTransitionEngine';
 import { getEffectiveCoverFeaturedItems } from '../../../shared/core/pdf-engine/layers/sectors/coverFeaturedEngine';
 
@@ -49,11 +45,12 @@ export default function EditorPanel({
   docType = 'cv',
   onOpenPhotoCropper, 
   onOpenSignature,
-  onGenerateCoverLetterFromCV,
+  onGenerateCoverLetterFromCV: _onGenerateCoverLetterFromCV,
   onExportCoverLetter,
   onCreateApplicationVariant,
   onBackToBaseCV,
   onEditVacante,
+  onOpenRegionFormat,
   atsScore,
 }: any) {
   const { showSuccess, showError, showWarning } = useToast();
@@ -71,10 +68,6 @@ export default function EditorPanel({
   // States for Guardados tab
   const [savedList, setSavedList] = useState([]);
   const [isSavingFromPanel, setIsSavingFromPanel] = useState(false);
-
-  // State for Format Confirmation Modal
-  const [pendingFormatId, setPendingFormatId] = useState<string | null>(null);
-  const [isFormatModalOpen, setIsFormatModalOpen] = useState(false);
 
   const refreshSavedList = async () => {
     try {
@@ -327,10 +320,22 @@ export default function EditorPanel({
             handleDeleteSavedFromPanel={handleDeleteSavedFromPanel}
           />
         )}
-        {docType === 'cv' && activeTab === 'diseno' && onGenerateCoverLetterFromCV && (
-          <CoverLetterCrossSellBanner onGenerateCoverLetter={onGenerateCoverLetterFromCV} />
+        {(activeTab === 'diseno' || activeTab === 'diseno_tipografia' || activeTab === 'diseno_hoja') && (
+          <DisenoSection
+            cvData={cvData}
+            setCvData={setCvData}
+            activeTab={activeTab}
+            changeActiveTab={changeActiveTab}
+            showSuccess={showSuccess}
+            showWarning={showWarning}
+            triggerPresetTransition={triggerPresetTransition}
+            getEffectiveCoverFeaturedItems={getEffectiveCoverFeaturedItems}
+            onOpenRegionFormat={onOpenRegionFormat}
+            updateTheme={updateTheme}
+            fontOptions={fontOptions}
+            docType={docType}
+          />
         )}
-        {activeTab === 'diseno' && <DisenoSection cvData={cvData} setCvData={setCvData} activeTab={activeTab} changeActiveTab={changeActiveTab} showSuccess={showSuccess} showWarning={showWarning} triggerPresetTransition={triggerPresetTransition} getEffectiveCoverFeaturedItems={getEffectiveCoverFeaturedItems} setPendingFormatId={setPendingFormatId} setIsFormatModalOpen={setIsFormatModalOpen} updateTheme={updateTheme} fontOptions={fontOptions} docType={docType} />}
         {docType === 'cv' && activeTab === 'portada' && <PortadaSection cvData={cvData} setCvData={setCvData} activeTab={activeTab} changeActiveTab={changeActiveTab} showSuccess={showSuccess} showWarning={showWarning} triggerPresetTransition={triggerPresetTransition} getEffectiveCoverFeaturedItems={getEffectiveCoverFeaturedItems} />}
 
         {/* ========================================================================= */}
@@ -344,26 +349,6 @@ export default function EditorPanel({
             presetId={cvData?.activePresetId || 'carta-clasica'}
             onSelectPreset={(presetId: string) => {
               setCvData((prev: any) => ({ ...prev, activePresetId: presetId }));
-            }}
-          />
-        )}
-
-        {/* Format Confirmation Modal */}
-        {isFormatModalOpen && pendingFormatId && (
-          <FormatConfirmationModal
-            isOpen={isFormatModalOpen}
-            formatName={getCvFormat(pendingFormatId)?.name || pendingFormatId}
-            onClose={() => {
-              setIsFormatModalOpen(false);
-              setPendingFormatId(null);
-            }}
-            onConfirm={(mode: FormatApplicationMode) => {
-              const fmt = getCvFormat(pendingFormatId);
-              triggerPresetTransition(fmt?.name || pendingFormatId, 'format');
-              setCvData((prev: any) => applyPresetLevel(prev, 'format', { formatId: pendingFormatId, applicationMode: mode }));
-              showSuccess(`Formato "${fmt?.name || pendingFormatId}" aplicado correctamente.`);
-              setIsFormatModalOpen(false);
-              setPendingFormatId(null);
             }}
           />
         )}

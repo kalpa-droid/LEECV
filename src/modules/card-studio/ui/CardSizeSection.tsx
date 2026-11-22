@@ -33,7 +33,11 @@ export function CardSizeSection({ cvData, setCvData }: Props) {
   return (
     <div className="space-y-6">
       <div id="card-size-section">
-        <PanelSection icon={<Ruler className="w-4 h-4" />} title="Tamaño de Tarjeta y Margen de Corte (sangrado y marcas de corte)">
+        <PanelSection
+          icon={<Ruler className="w-4 h-4" />}
+          title="Tamaño y corte"
+          helpText="Elegí el formato de tarjeta y el margen extra para el corte (sangrado y marcas de corte, 3-5 mm) para que al recortarla en la imprenta no queden bordes blancos."
+        >
           <div className="p-4 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-4">
             <div className="space-y-1.5">
               <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">Elegí el tipo de tarjeta</label>
@@ -71,9 +75,6 @@ export function CardSizeSection({ cvData, setCvData }: Props) {
                 }}
                 className="w-full h-1.5 bg-[var(--ui-bg-panel)] rounded-[var(--radius-control)] appearance-none cursor-pointer accent-[var(--color-secondary-base)]"
               />
-              <span className="text-[10px] text-[var(--color-neutral-text-secondary)] leading-tight block">
-                Un pequeño margen extra (3-5 mm) para asegurar que al recortar la tarjeta en la imprenta no queden bordes blancos.
-              </span>
             </div>
           </div>
         </PanelSection>

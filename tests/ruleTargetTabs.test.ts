@@ -13,7 +13,7 @@ import {
 
 describe('isValidPanelTab', () => {
   it('acepta pestañas estáticas del editor CV', () => {
-    for (const tab of ['personales', 'resumen', 'experiencia', 'formacion', 'cursos', 'habilidades', 'competencias', 'vacante', 'diseno', 'nueva_seccion', 'firma']) {
+    for (const tab of ['personales', 'resumen', 'experiencia', 'formacion', 'cursos', 'habilidades', 'competencias', 'vacante', 'diseno', 'diseno_tipografia', 'diseno_hoja', 'nueva_seccion', 'firma']) {
       expect(isValidPanelTab(tab)).toBe(true);
     }
   });
@@ -63,9 +63,9 @@ describe('resolveRuleTargetTab — mapa de reglas', () => {
     expect(resolveRuleTargetTab('competencies_format')).toBe('competencias');
   });
 
-  it('orden, diseño y vacante → experiencia / diseno / vacante', () => {
+  it('orden, diseño y vacante → experiencia / diseno_hoja / vacante', () => {
     expect(resolveRuleTargetTab('section_order')).toBe('experiencia');
-    expect(resolveRuleTargetTab('multicol_layout')).toBe('diseno');
+    expect(resolveRuleTargetTab('multicol_layout')).toBe('diseno_hoja');
     expect(resolveRuleTargetTab('keyword_match')).toBe('vacante');
   });
 

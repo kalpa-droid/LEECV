@@ -563,13 +563,14 @@ if (fs.existsSync(formatRegistryPath)) {
   );
 }
 
-const editorPanelPath = path.join(ROOT, 'src/modules/cv-builder/components/editor/sections/DisenoSection.tsx');
-if (fs.existsSync(editorPanelPath)) {
-  const editorContent = fs.readFileSync(editorPanelPath, 'utf-8');
+const formatModalPath = path.join(ROOT, 'src/modules/cv-builder/components/FormatConfirmationModal.tsx');
+if (fs.existsSync(formatModalPath) && fs.existsSync(navbarPath)) {
+  const formatModalContent = fs.readFileSync(formatModalPath, 'utf-8');
+  const navFormatContent = fs.readFileSync(navbarPath, 'utf-8');
   check(
-    'DisenoSection.tsx consume el Selector de Formatos Globales (getAllCvFormats & getFormatDefaultVisibility)',
-    editorContent.includes('getAllCvFormats()') && editorContent.includes('getFormatDefaultVisibility') && editorContent.includes('Formato Global & Estándares Internacionales'),
-    'DisenoSection.tsx no consume el Selector de Formatos Globales'
+    'StudioNavbar.tsx + FormatConfirmationModal.tsx consumen el Selector de Regiones (resolveActiveFormat & getAllCvFormats)',
+    formatModalContent.includes('getAllCvFormats()') && navFormatContent.includes('resolveActiveFormat') && navFormatContent.includes('onOpenRegionFormat'),
+    'Falta wiring de Región en StudioNavbar o getAllCvFormats en FormatConfirmationModal'
   );
 }
 

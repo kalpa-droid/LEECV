@@ -6,13 +6,15 @@ interface DomSectionIconProps {
   className?: string;
   color?: string;
   size?: number;
+  strokeWidth?: number;
 }
 
 export function DomSectionIcon({
   iconId,
   className = 'w-4 h-4',
   color,
-  size
+  size,
+  strokeWidth = 2
 }: DomSectionIconProps) {
   const iconDef = getIcon(iconId);
 
@@ -26,7 +28,7 @@ export function DomSectionIcon({
         stroke: color || 'currentColor'
       }}
       fill="none"
-      strokeWidth="2"
+      strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"
     >

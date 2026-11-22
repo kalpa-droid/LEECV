@@ -68,6 +68,7 @@ export function useWorkspaceModalsAndExport({
   const [isCoverLetterExportOpen, setIsCoverLetterExportOpen] = useState(false);
   const [isAtsModalOpen, setIsAtsModalOpen] = useState(false);
   const [isAtsLivePanelOpen, setIsAtsLivePanelOpen] = useState(false);
+  const [isRegionFormatModalOpen, setIsRegionFormatModalOpen] = useState(false);
   const [atsResult, setAtsResult] = useState<AtsPreflightResult | null>(null);
   const [atsLiveResult, setAtsLiveResult] = useState<AtsPreflightResult | null>(null);
   const [pdfCheckoutPurpose, setPdfCheckoutPurpose] = useState<'export' | 'publish'>('export');
@@ -195,6 +196,7 @@ export function useWorkspaceModalsAndExport({
     isPrivacyModalOpen, setIsPrivacyModalOpen,
     isAtsModalOpen, setIsAtsModalOpen,
     isAtsLivePanelOpen, setIsAtsLivePanelOpen,
+    isRegionFormatModalOpen, setIsRegionFormatModalOpen,
     atsLiveResult,
     activeTab,
     setActiveTab: (tab) => { setActiveTab(tab); setIsPanelOpen(true); },
@@ -231,6 +233,7 @@ export function useWorkspaceModalsAndExport({
     openCardExport: () => setIsCardExportOpen(true),
     openCoverLetterExport: () => setIsCoverLetterExportOpen(true),
     openAtsLivePanel: () => setIsAtsLivePanelOpen(true),
+    openRegionFormatModal: () => setIsRegionFormatModalOpen(true),
     openAtsModalWithResult: (result: AtsPreflightResult) => {
       setAtsResult(result);
       setIsAtsModalOpen(true);

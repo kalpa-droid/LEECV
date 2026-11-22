@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { Info, Sparkles } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { RepeatableSection } from '../../../../../shared/core/ui/RepeatableSection';
 import { SectionManualAdjustment } from '../SectionManualAdjustment';
 import { Field } from '../../../../../shared/core/ui/Field';
-import { radius, button } from '../../../../../shared/core/uiDesignSystem';
+import { ContextualGuideBox } from '../../../../../shared/core/ui/ContextualGuideBox';
+import { LidioHelpTrigger } from '../../../../../shared/core/ui/LidioHelpTrigger';
+import { DomSectionIcon } from '../../../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
+import { UI_ICON_IDS } from '../../../../../shared/core/ui/iconCatalog';
 import { executeAiTask } from '../../../../../shared/core/ai/aiClient';
 import { useToast } from '../../../../../shared/core/ui/Toast';
 
@@ -54,23 +57,34 @@ export const HabilidadesSection: React.FC<HabilidadesSectionProps> = ({ cvData, 
 
   return (
     <div className="space-y-3">
-      <div className={`p-3 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 rounded-[${radius.card}] text-xs text-[var(--color-secondary-text)] flex items-start gap-2 leading-relaxed`}>
-        <Info className="w-4 h-4 text-[var(--color-secondary-text)] flex-shrink-0 mt-0.5" />
-        <div>
-          <span className="font-bold block">💡 Ayuda Contextual — Habilidades Técnicas (Hard Skills):</span>
-          <span>Incluye conocimientos técnicos específicos, herramientas informáticas, tecnologías, lenguajes o metodologías aplicadas.</span>
+      <div className="flex items-start justify-between gap-2">
+        <ContextualGuideBox title="Qué cargar en Habilidades Técnicas" className="flex-1">
+          Incluye conocimientos técnicos específicos, herramientas informáticas, tecnologías, lenguajes o metodologías aplicadas.
+        </ContextualGuideBox>
+        <div className="flex items-center gap-1 pt-1 shrink-0">
+          <button
+            type="button"
+            onClick={handleSuggestSkill}
+            disabled={isSuggesting}
+            aria-label="Sugerir habilidades técnicas con IA"
+            title="Sugerir habilidades técnicas con IA"
+            className="w-8 h-8 rounded-full inline-flex items-center justify-center bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/45 text-[var(--color-accent-text)] hover:bg-[var(--color-accent-base)] hover:text-[var(--color-accent-on-base)] transition active:scale-95 cursor-pointer disabled:opacity-50"
+          >
+            {isSuggesting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <span className="ui-ai-sparkle-loop">
+                <DomSectionIcon iconId={UI_ICON_IDS.ia} size={16} strokeWidth={2.1} />
+              </span>
+            )}
+          </button>
+          <LidioHelpTrigger
+            size="xs"
+            title="Sugerir con IA"
+            text="La IA analiza tu formación y experiencia para sugerirte herramientas concretas. Nada se guarda sin que lo revises."
+            groupKey="ai-suggest-habilidades"
+          />
         </div>
-      </div>
-      <div className="flex justify-end">
-        <button
-          type="button"
-          onClick={handleSuggestSkill}
-          disabled={isSuggesting}
-          className={`${button.secondary} flex items-center gap-1.5 text-xs py-1.5 px-3 ${isSuggesting ? 'opacity-60 cursor-not-allowed' : ''}`}
-        >
-          <Sparkles className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
-          {isSuggesting ? 'Generando sugerencia...' : 'Sugerir con IA'}
-        </button>
       </div>
       <RepeatableSection
         sectionKey="habilidades"
@@ -116,7 +130,7 @@ export const HabilidadesSection: React.FC<HabilidadesSectionProps> = ({ cvData, 
                       return { ...prev, hardSkills: current };
                     });
                   }}
-                  className={`w-full p-2 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/50 rounded-[${radius.control}] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--ui-text-primary)] text-[var(--ui-text-primary)]`}
+                  className="w-full p-2 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/50 rounded-[10px] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--ui-text-primary)] text-[var(--ui-text-primary)]"
                 >
                   <option value="">Sin nivel</option>
                   <option value="Básico">Básico</option>

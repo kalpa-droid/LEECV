@@ -219,6 +219,7 @@ export default function ImportCertificateAiModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Agregar certificados con IA"
+      helpText="Subí la foto o PDF de un diploma, constancia o certificado. La IA extrae los datos oficiales (curso, institución, fecha, horas y resolución) y te pregunta si querés adjuntar la imagen."
       icon={<Award className="w-5 h-5 text-[var(--color-accent-text)]" />}
       size="lg"
       footer={
@@ -263,21 +264,17 @@ export default function ImportCertificateAiModal({
 
         {step === 'pick' && (
           <div className="space-y-4">
-            <p className="text-xs text-[var(--ui-text-secondary)] leading-relaxed">
-              Subí la foto o PDF de un diploma, constancia o certificado. La IA reconoce el diseño propio de un certificado, extrae sus datos oficiales (curso, institución, fecha, horas y resolución) y te pregunta si querés adjuntar la imagen en la sección <strong>Certificados</strong>.
-            </p>
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className={`w-full py-10 px-4 border-2 border-dashed border-[var(--color-accent-base)]/60 bg-[var(--ui-bg-panel)] hover:bg-[var(--color-accent-muted)]/30 transition flex flex-col items-center justify-center gap-2 cursor-pointer`}
-              style={{ borderRadius: radius.modal }}
+              className="w-full py-10 px-4 rounded-[16px] border-2 border-dashed border-[var(--color-accent-base)]/60 bg-[var(--ui-bg-panel)] hover:bg-[var(--color-accent-muted)] transition flex flex-col items-center justify-center gap-2 cursor-pointer"
             >
               <Upload className="w-7 h-7 text-[var(--color-accent-text)]" />
               <span className="font-bold text-xs uppercase tracking-wider text-[var(--color-accent-text)]">
                 Seleccionar foto o PDF del certificado
               </span>
               <span className="text-[11px] text-[var(--ui-text-secondary)]">
-                Acepta JPG, PNG, WebP o PDF (toma automática de página 1)
+                JPG, PNG, WebP o PDF (página 1)
               </span>
             </button>
             <input

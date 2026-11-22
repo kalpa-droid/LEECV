@@ -2,6 +2,7 @@ import React from 'react';
 import { User, Camera, Phone, Info } from 'lucide-react';
 import { Field } from './Field';
 import { PanelSection } from './PanelSection';
+import { VisibilityEyeToggle } from './VisibilityEyeToggle';
 import { colorSystem, typeScale, button, elevationSystem } from '../uiDesignSystem';
 import { resolvePersonalFieldVisibility, getCvFormat } from '../formats/cvFormatRegistry';
 
@@ -58,15 +59,14 @@ export function PersonalInfoFields({
     }
 
     return (
-      <label className="flex items-center gap-1.5 mt-1.5 cursor-pointer text-[11px] font-medium transition hover:opacity-80" style={{ color: isVisible ? colorSystem.secondary.text : colorSystem.neutral.textMuted }}>
-        <input 
-          type="checkbox" 
-          checked={isVisible} 
-          onChange={(e) => onOverrideChange(fieldId, e.target.checked ? 'show' : 'hide')}
-          className="w-3.5 h-3.5 rounded border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] focus:ring-[var(--color-neutral-text-primary)] cursor-pointer"
+      <div className="flex items-center justify-end mt-1.5">
+        <VisibilityEyeToggle
+          visible={isVisible}
+          size="xs"
+          targetLabel={fieldId === 'profilePhoto' ? 'La foto de perfil' : `El campo ${fieldId}`}
+          onToggle={(next) => onOverrideChange(fieldId, next ? 'show' : 'hide')}
         />
-        {isVisible ? 'Se muestra en el PDF' : 'Oculto en el PDF'}
-      </label>
+      </div>
     );
   };
 

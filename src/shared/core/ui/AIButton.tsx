@@ -1,23 +1,35 @@
 import React, { useState } from 'react';
-import { Sparkles, Loader2 } from 'lucide-react';
-import { button, elevationSystem, radius } from '../uiDesignSystem';
+import { Loader2 } from 'lucide-react';
+import { button, elevationSystem } from '../uiDesignSystem';
 import { useToast } from './Toast';
+import { DomSectionIcon } from '../pdf-engine/layers/icons/DomSectionIcon';
+import { UI_ICON_IDS } from './iconCatalog';
+import { LidioHelpTrigger } from './LidioHelpTrigger';
 
 export interface AIButtonProps {
-  label: string;
+  /** Etiqueta accesible / título del botón (en modo `iconOnly` no recarga visualmente). */
+  label?: string;
   onGenerate: () => Promise<string>;
   onSuccess: (text: string) => void;
   disabled?: boolean;
   variant?: 'primary' | 'secondary' | 'sparkles';
+  /** Por defecto `true`: muestra únicamente el símbolo de IA con animación sutil. */
+  iconOnly?: boolean;
+  /** Ayuda opcional de Lidio en globo `?` adyacente al botón. */
+  helpText?: string;
+  size?: 'xs' | 'sm' | 'md';
   className?: string;
 }
 
 export const AIButton: React.FC<AIButtonProps> = ({
-  label,
+  label = 'Sugerir con IA',
   onGenerate,
   onSuccess,
   disabled = false,
   variant = 'sparkles',
+  iconOnly = true,
+  helpText,
+  size = 'sm',
   className = '',
 }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -40,25 +52,58 @@ export const AIButton: React.FC<AIButtonProps> = ({
     }
   };
 
-  const variantStyles = variant === 'primary' 
-    ? button.primary 
-    : variant === 'secondary' 
-    ? button.secondary 
-    : 'bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/40 text-[var(--color-accent-text)] hover:bg-[var(--color-accent-base)] hover:text-[var(--color-accent-on-base)] font-bold';
+  const variantStyles =
+    variant === 'primary'
+      ? button.primary
+      : variant === 'secondary'
+      ? button.secondary
+      : `bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/45 text-[var(--color-accent-text)] hover:bg-[var(--color-accent-base)] hover:text-[var(--color-accent-on-base)] font-bold ${elevationSystem.raised}`;
 
-  return (
+  const iconOnlyDimensions =
+    size === 'xs'
+      ? 'w-7 h-7 rounded-full p-0'
+      : size === 'md'
+      ? 'w-9 h-9 rounded-full p-0'
+      : 'w-8 h-8 rounded-full p-0';
+
+  const iconPixelSize = size === 'xs' ? 14 : size === 'md' ? 18 : 16;
+
+  const btnEl = (
     <button
       type="button"
       onClick={handleAction}
       disabled={isLoading || disabled}
-      className={`px-3 py-1.5 rounded-[${radius.card}] text-xs flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${variantStyles} ${className}`}
+      aria-label={isLoading ? 'Generando sugerencia con IA' : label}
+      title={isLoading ? 'Generando...' : label}
+      data-ai-icon-only={iconOnly ? 'true' : 'false'}
+      className={`inline-flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0 ${
+        iconOnly
+          ? iconOnlyDimensions
+          : 'px-3 py-1.5 rounded-[12px] text-xs'
+      } ${variantStyles} ${className}`}
     >
       {isLoading ? (
-        <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+        <Loader2 className="w-4 h-4 animate-spin shrink-0" />
       ) : (
-        <Sparkles className="w-3.5 h-3.5 text-current shrink-0" />
+        <span className="ui-ai-sparkle-loop shrink-0">
+          <DomSectionIcon iconId={UI_ICON_IDS.ia} size={iconPixelSize} strokeWidth={2.1} />
+        </span>
       )}
-      <span>{isLoading ? 'Generando...' : label}</span>
+      {!iconOnly && <span>{isLoading ? 'Generando...' : label}</span>}
     </button>
+  );
+
+  if (!helpText) return btnEl;
+
+  return (
+    <span className="inline-flex items-center gap-1.5 shrink-0">
+      {btnEl}
+      <LidioHelpTrigger
+        size="xs"
+        title={label}
+        text={helpText}
+        groupKey={`ai-btn-${label}`}
+      />
+    </span>
   );
 };

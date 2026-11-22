@@ -42,7 +42,7 @@ export const AppShell: React.FC<AppShellProps> = ({
         {dockSlot}
 
         <div 
-          className={`bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] transition-all duration-300 ease-in-out border-r border-[var(--ui-border)] z-20 flex flex-col h-full overflow-y-auto ${
+          className={`bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] transition-all duration-300 ease-in-out border-r border-[var(--ui-border)] z-20 flex flex-col h-full overflow-y-auto pb-24 md:pb-0 ${
             isPanelOpen 
               ? `w-full md:w-[460px] lg:w-[500px] opacity-100 ${elevationSystem.floating}` 
               : 'w-0 opacity-0 overflow-hidden hidden md:block'
@@ -60,7 +60,7 @@ export const AppShell: React.FC<AppShellProps> = ({
         <div 
           ref={containerRef}
           id="preview-viewport-container"
-          className={`flex-1 bg-[var(--ui-preview-bg)] h-full overflow-auto p-2 sm:p-4 flex flex-col items-start relative touch-pan-x touch-pan-y overscroll-contain ${
+          className={`flex-1 bg-[var(--ui-preview-bg)] h-full overflow-auto p-2 pb-24 sm:p-4 md:pb-4 flex flex-col items-start relative touch-pan-x touch-pan-y overscroll-contain ${
             mobileTabState === 'editor' && isPanelOpen ? 'hidden md:flex' : 'flex'
           }`}
         >

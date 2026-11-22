@@ -53,6 +53,11 @@ describe('Fase 10 — Fábrica de Apps (new-app) e integración con 0 cambios en
       expect(studioSrc).toContain('activeId: docId');
       expect(studioSrc).not.toContain('activeId: activeTabId');
       expect(studioSrc).toContain('ScaledPaperSheet');
+      expect(studioSrc).toContain('PanelSection');
+      expect(studioSrc).toContain('ContextualGuideBox');
+      expect(studioSrc).toContain('SectionSwitch');
+      expect(studioSrc).toContain('ActionGrid');
+      expect(studioSrc).toContain('AIButton');
       expect(plan.registrationSnippets.documentTypeRegistryEntry).toContain('ui:');
       expect(plan.registrationSnippets.documentTypeRegistryEntry).toContain('seo:');
       expect(plan.registrationSnippets.appRegistryEntry).toContain('managesOwnStore: true');

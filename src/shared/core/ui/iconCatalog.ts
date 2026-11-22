@@ -109,7 +109,13 @@ export const UI_ICON_IDS = {
   rotateCcw: 'rotateCcw',
   arrowUpRight: 'arrowUpRight',
   x: 'x',
-  lightbulb: 'lightbulb'
+  lightbulb: 'lightbulb',
+  // UI Cero Ruido + Barra Superior (V3.0.0)
+  helpBubble: 'helpBubble',
+  disenoTipografia: 'diseno_tipografia',
+  disenoHoja: 'diseno_hoja',
+  region: 'region',
+  folderSafe: 'folderSafe',
 } as const;
 
 export type UiIconKey = keyof typeof UI_ICON_IDS;

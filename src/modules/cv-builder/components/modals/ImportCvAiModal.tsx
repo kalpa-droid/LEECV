@@ -319,7 +319,12 @@ export default function ImportCvAiModal({ isOpen, onClose, onImportComplete }: I
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={status === 'processing' ? () => {} : onClose} title="Importar CV con IA">
+    <Modal
+      isOpen={isOpen}
+      onClose={status === 'processing' ? () => {} : onClose}
+      title="Importar CV con IA"
+      helpText="Subí un PDF, foto o texto pegado de tu CV anterior. La IA extrae los datos y te muestra una vista previa para que elijas qué aplicar."
+    >
       <div className="space-y-4">
         {status === 'idle' && (
           <div className="flex flex-col items-center gap-4 py-8">

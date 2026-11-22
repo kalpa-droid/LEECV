@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Briefcase, Loader2, Sparkles } from 'lucide-react';
+import { Briefcase, Loader2 } from 'lucide-react';
 import { Modal } from '../../../../shared/core/ui/Modal';
 import { Field } from '../../../../shared/core/ui/Field';
+import { SectionSwitch } from '../../../../shared/core/ui/SectionSwitch';
+import { LidioHelpTrigger } from '../../../../shared/core/ui/LidioHelpTrigger';
+import { DomSectionIcon } from '../../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
+import { UI_ICON_IDS } from '../../../../shared/core/ui/iconCatalog';
 import { button } from '../../../../shared/core/uiDesignSystem';
 import { executeAiTask } from '../../../../shared/core/ai/aiClient';
 import type { ApplicationTailoredPatch } from '../../../../shared/core/documents/applicationVariant';
@@ -101,7 +105,8 @@ export default function PrepareApplicationModal({
       onClose={() => {
         if (!isProcessing) onClose();
       }}
-      title="Revisar postulación antes de crear el nuevo CV"
+      title="Revisar postulación"
+      helpText="Podés revisar o modificar lo que busca la empresa antes de crear la nueva pestaña. Tu CV Base original quedará intacto."
       icon={<Briefcase className="w-5 h-5 text-[var(--color-accent-text)]" />}
       size="lg"
       footer={
@@ -110,7 +115,7 @@ export default function PrepareApplicationModal({
             type="button"
             disabled={isProcessing}
             onClick={onClose}
-            className={`${button.base} ${button.secondary} text-xs px-4 py-2`}
+            className={`${button.base} ${button.secondary} text-xs px-4 py-2 cursor-pointer`}
           >
             Cancelar
           </button>
@@ -118,25 +123,27 @@ export default function PrepareApplicationModal({
             type="button"
             disabled={isProcessing}
             onClick={handleSubmit}
-            className={`${button.base} ${button.primary} text-xs px-4 py-2 flex items-center gap-1.5`}
+            className={`${button.base} ${button.primary} text-xs px-4 py-2 flex items-center gap-1.5 cursor-pointer`}
           >
-            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            {isProcessing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <span className="ui-ai-sparkle-loop">
+                <DomSectionIcon iconId={UI_ICON_IDS.ia} size={15} strokeWidth={2.1} />
+              </span>
+            )}
             {isProcessing
-              ? 'Analizando CV Base y preparando postulación…'
+              ? 'Preparando postulación…'
               : optimizeWithAi
-                ? 'Analizar CV y crear postulación'
+                ? 'Adaptar y crear postulación'
                 : 'Crear postulación'}
           </button>
         </div>
       }
     >
       <div className="space-y-4 text-xs text-[var(--ui-text-primary)]">
-        <p className="text-[var(--ui-text-secondary)] leading-relaxed">
-          Podés revisar o modificar lo que busca la empresa antes de crear la nueva pestaña. Tu <strong>CV Base original</strong> quedará intacto; la nueva versión llevará este puesto, empresa y optimización ATS.
-        </p>
-
         {errorMsg && (
-          <div className="p-3 rounded-[var(--ui-radius-card)] border border-[var(--color-status-danger-base)] bg-[var(--color-status-danger-muted)] text-[var(--color-status-danger-text)] font-medium">
+          <div className="p-3 rounded-[12px] border border-[var(--color-status-danger-base)] bg-[var(--color-status-danger-muted)] text-[var(--color-status-danger-text)] font-medium">
             {errorMsg}
           </div>
         )}
@@ -160,30 +167,38 @@ export default function PrepareApplicationModal({
 
         <div>
           <label className="block text-xs font-bold mb-1">
-            Descripción de la postulación que busca la empresa (editable)
+            Descripción de la postulación (editable)
           </label>
           <textarea
             value={description}
             disabled={isProcessing}
             onChange={(e) => setDescription(e.target.value)}
-            rows={6}
-            placeholder="Pegá acá el aviso completo o ajustá los requisitos y tareas esperadas para esta búsqueda..."
-            className="w-full rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-bg-input)] text-[var(--ui-text-primary)] p-3 text-xs leading-relaxed focus:outline-none focus:border-[var(--color-accent-base)] resize-y min-h-[120px]"
+            rows={5}
+            placeholder="Pegá acá el aviso completo o ajustá los requisitos para esta búsqueda..."
+            className="w-full rounded-[10px] border border-[var(--ui-border)] bg-[var(--ui-bg-input)] text-[var(--ui-text-primary)] p-3 text-xs leading-relaxed focus:outline-none focus:border-[var(--color-accent-base)] resize-y min-h-[110px]"
           />
         </div>
 
-        <label className="flex items-start gap-2.5 p-3 rounded-[var(--ui-radius-card)] border border-[var(--color-accent-base)]/40 bg-[var(--color-accent-muted)]/30 cursor-pointer">
-          <input
-            type="checkbox"
+        <div className="flex items-center justify-between gap-3 p-3 rounded-[12px] border border-[var(--color-accent-base)]/40 bg-[var(--color-accent-muted)]">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="font-bold text-[var(--color-neutral-text-primary)] truncate">
+              Adaptar con IA y etiquetas ATS
+            </span>
+            <LidioHelpTrigger
+              size="xs"
+              title="Optimizar con IA y etiquetas ATS"
+              text="Antes de abrir la nueva pestaña, la IA lee tu CV Base completo (sin inventar datos) y alinea resumen, experiencias, habilidades y etiquetas ocultas del PDF para superar filtros automáticos de selección."
+            />
+          </div>
+          <SectionSwitch
             checked={optimizeWithAi}
             disabled={isProcessing}
-            onChange={(e) => setOptimizeWithAi(e.target.checked)}
-            className="mt-0.5 rounded"
+            label="Adaptar con IA"
+            size="sm"
+            announceOnChange={false}
+            onChange={setOptimizeWithAi}
           />
-          <span className="leading-snug">
-            <strong>Optimizar todo el CV nuevo con IA y metadatos ATS:</strong> antes de abrir la nueva pestaña, la IA analiza tu CV Base completo (sin inventar datos) y alinea resumen, experiencias, habilidades y etiquetas ocultas del PDF para superar filtros automáticos de selección.
-          </span>
-        </label>
+        </div>
       </div>
     </Modal>
   );

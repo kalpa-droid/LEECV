@@ -1,4 +1,4 @@
-export const CV_KNOWLEDGE = `CONOCÉS ESTAS PESTAÑAS DEL EDITOR (docType CV): personales, redes, competencias, resumen, objetivo, vacante, carta, experiencia, formacion, profesion, cursos, informatica, idiomas, habilidades, proyectos, publicaciones, portafolio, logros, referencias, certificados, firma, portada, nueva_seccion, guardados, diseno, importar_datos.
+export const CV_KNOWLEDGE = `CONOCÉS ESTAS PESTAÑAS DEL EDITOR (docType CV): personales, redes, competencias, resumen, objetivo, vacante, carta, experiencia, formacion, profesion, cursos, informatica, idiomas, habilidades, proyectos, publicaciones, portafolio, logros, referencias, certificados, firma, portada, nueva_seccion, guardados, diseno, diseno_tipografia, diseno_hoja, importar_datos.
 
 CÓMO SE USA LA APP:
 - Vacante Objetivo:
@@ -13,7 +13,13 @@ CÓMO SE USA LA APP:
 - IA: en casi todas las secciones hay botones de IA que proponen texto; NUNCA se guarda nada sin confirmación de la persona.
 - Exportar PDF: la descarga se hace desde el botón Exportar.
 - Portada: la portada es la primera página del CV (la tapa con el nombre y los títulos). Se activa o desactiva en la pestaña Portada y se elige un estilo.
-- Diseño: en la pestaña Diseño se elige el formato regional (hay 6, por ejemplo ATS o Europass) y se afina con los tiradores de "Ajustar tamaños y espacio" (tirador = deslizador, para tipografía, densidad y espaciado). El diseño sigue una cascada: primero el formato base, después los ajustes de los tiradores y por último el toque personal; los cambios se ven en vivo en la vista previa.
+- Diseño dividido en 3 botones claros y barra superior de región:
+  • Arriba junto a ATS tenés la píldora de Región / Estándar (Global, LATAM, EE.UU., Europass, Tech, ATS 1 Col) para elegir el estándar del país con confirmación segura.
+  • "Estilo & Color" (diseno): plantilla visual base y paleta de colores.
+  • "Letra & Espacio" (diseno_tipografia): fuente principal de Google Fonts, escala tipográfica armónica y tiradores finos.
+  • "Hoja & Columnas" (diseno_hoja): tipo de hoja para imprimir, disposición de columnas y ancho de barra lateral.
+- Ayuda rápida con "?": los botones tienen un pequeño signo ?; al acercarte o tocarlo, Lidio explica para qué sirve sin llenar la pantalla de texto.
+- Ojo y perilla sin pérdida de datos: ocultar un dato con el ojo tachado o pausar una sección con su perilla nunca borra tu información.
 - Secciones prediseñadas y a medida: aparte de las secciones estándar hay "Secciones a Medida" (hasta 5 personalizadas, por ejemplo Patentes o Ponencias), creadas desde el botón + en la pestaña nueva_seccion; se elige nombre e ícono.
 - Importar datos: en la pestaña Importar datos la persona sube su CV viejo (archivo, texto copiado o perfil de LinkedIn) y la IA trae la información a las secciones; siempre la revisa y confirma antes de guardar.
 - Privacidad de datos: en Personales hay interruptores para ocultar del documento final el DNI, la fecha de nacimiento, el estado civil o la foto. El dato queda cargado, pero no se imprime.

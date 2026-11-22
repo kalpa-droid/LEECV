@@ -1,7 +1,7 @@
 import React, { useMemo, useRef } from 'react';
 import { Menu, X } from 'lucide-react';
 import { DomSectionIcon } from '../pdf-engine/layers/icons/DomSectionIcon';
-import { elevationSystem, radius } from '../uiDesignSystem';
+import { elevationSystem, radius, zIndex } from '../uiDesignSystem';
 import { activateSection } from '../sections/sectionActivationEngine';
 import { DocumentTypeId } from '../../../types/document';
 import { DockTabItem, getDockTabsForDocType } from './stepSequenceRegistry';
@@ -251,7 +251,8 @@ export function StudioDock({
             e.currentTarget.scrollLeft += e.deltaY || e.deltaX;
           }
         }}
-        className={`md:hidden fixed bottom-0 left-0 right-0 z-[999] bg-[var(--ui-bg-dock)] border-t border-[var(--ui-dock-border)] p-1 grid grid-rows-2 grid-flow-col gap-1 overflow-x-auto no-scrollbar ${elevationSystem.overlay} select-none h-[76px] items-center`}
+        className={`md:hidden fixed bottom-0 left-0 right-0 bg-[var(--ui-bg-dock)] border-t border-[var(--ui-dock-border)] p-1 grid grid-rows-2 grid-flow-col gap-1 overflow-x-auto no-scrollbar ${elevationSystem.overlay} select-none h-[76px] items-center`}
+        style={{ zIndex: zIndex.dock }}
       >
         {/* Botón Menú (row-span-2) */}
         <button

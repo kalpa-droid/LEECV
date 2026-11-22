@@ -1,3 +1,26 @@
+## [2026-11-22] - PR 1 (V3.0.0): UI Cero Ruido, Lidio `?` y Móvil, Región en Barra Superior, 3 Botones de Diseño y Carpeta Segura
+
+**Resumen:**
+- **Etapa 0 — Bus vivo de Lidio y geometría móvil corregida**:
+  - Creado `src/shared/core/assistant/lidioBus.ts` (`emitLidioMessage`, `subscribeLidioMessages`) con deduplicación por `groupKey`.
+  - Jerarquía formal de `zIndex` en `uiDesignSystem.ts` (`dock: 900 < assistantFab: 950 < assistantToast: 1050 < assistantDialog: 1100 < modal: 9999`) y animación `.ui-ai-sparkle-loop` con `prefers-reduced-motion` en `src/index.css`.
+  - Reubicado el FAB y las notificaciones de Lidio sobre el Dock móvil (`bottom-[86px]`) en `FloatingAssistant.tsx` y `AssistantNotificationToast.tsx`; diálogo de Lidio en móvil transformado a bottom-sheet legible (`82dvh`) con backdrop; `AppShell.tsx` agrega `pb-24 md:pb-0` para evitar cortes detrás del Dock inferior.
+- **Etapa 1 — Primitivos UI Cero Ruido y Fábrica de Apps**:
+  - Registrados 5 íconos únicos verificados en `iconRegistry.ts` + `iconCatalog.ts` (`helpBubble`, `diseno_tipografia`, `diseno_hoja`, `region`, `folderSafe`).
+  - Creados `LidioHelpTrigger.tsx` (Portal en escritorio/modales y `lidioBus` en móvil), `ContextualGuideBox.tsx` (siempre visible solo para redactar), `VisibilityEyeToggle.tsx`, `SectionSwitch.tsx`, `ActionTileButton.tsx` y `ActionGrid.tsx`.
+  - Actualizados `AIButton.tsx` (símbolo IA animado `iconOnly` por defecto), `PanelSection.tsx` (`helpText`, `headerRight`), `InfoHint.tsx` y `Modal.tsx` (eliminado `z-[${...}]` dinámico y agregado `helpText`).
+  - Actualizados `scripts/new-app.ts` (+ `--selftest`), `tests/appFactoryPhase10.test.ts`, `docs/APP_BLUEPRINT.md` y `AGENTS.md`.
+- **Etapa 2 — Refactor CV, Región en Barra Superior, 3 Botones de Diseño, Modales y Otras Apps**:
+  - Elevado el selector internacional de formato (`¿Para quién es este CV?`) a píldora `🌐 <shortBadge>` en `StudioNavbar.tsx` junto a `ATS`, abriendo el modal unificado `FormatConfirmationModal.tsx` desde `AppModals.tsx` / `useWorkspaceModalsAndExport.ts` / `CvWorkspaceContent.tsx` / `App.tsx`, con capacidad declarativa `region_format` en `capabilityRegistry.ts` y `cvFormatRegistry.ts`.
+  - Corregida la cascada de 3 niveles en `presetHierarchyEngine.ts`: cambiar de plantilla visual preserva las secciones apagadas por el usuario o por la región y el bloqueo de 1 columna en `us-resume` / `ats-one-column`; alternar entre 2 columnas izquierda/derecha mantiene formatos 2-col (`europass`, `tech-portfolio`, `latam-clasico`).
+  - Dividido Diseño del CV en `cvDockProvider.ts` en 3 botones (`diseno` Estilo & Color, `diseno_tipografia` Letra & Espacio, `diseno_hoja` Hoja & Columnas), retirado `CoverLetterCrossSellBanner` de `EditorPanel.tsx`, actualizado `ruleTargetTabs.ts` (`multicol_layout -> diseno_hoja`), `assistantTips.ts` y `api/_lib/aiTasks/appKnowledge/cv.ts`.
+  - Refactorizados `ImportDataSection.tsx` (`ActionGrid` 2 columnas con `?`), `PersonalInfoFields.tsx` (`VisibilityEyeToggle`), `SectionToggle.tsx`, `RepeatableSection.tsx`, `PortadaSection.tsx`, `PersonalInfoSection.tsx` (`SectionSwitch`), `FirmaSection.tsx` (fix de props `sectionKey`/`sectionTitle`), `RecordFormSection.tsx`, `ObjetivoSection.tsx`, `ResumenSection.tsx`, `HabilidadesSection.tsx`, `CompetenciasSection.tsx`, `ExperienciaSection.tsx`, `JobTargetSection.tsx`, `ApplicationCoverLetterSection.tsx`, modales (`PrepareApplicationModal`, `ImportCvAiModal`, `ImportCertificateAiModal`, `CoverLetterExportModal`, `SaveModal`, `SaveAsVersionModal`) y ajustes limpios en `card-studio` (`CardBackSection`, `CardSizeSection`) y `facturador-studio` (`FactRespaldoStep`).
+- **Etapa 3 — Carpeta Segura Explícita en Disco**:
+  - Creado `src/shared/core/storage/fileHandleStore.ts` y extendido `nativeFileDocumentService.ts` (`chooseWorkspaceFolder`, `getWorkspaceFolderStatus`, `listWorkspaceFolderFiles`, escritura directa en Carpeta Segura y aviso explícito vía Lidio al usar Descargas en navegadores sin API de carpeta), integrado en `JsonDownloadModal.tsx` y `SavedCVsModal.tsx`.
+- **Verificación**: Nuevas suites `tests/uiZeroNoiseSystem.test.ts`, `tests/presetCascadeV3.test.ts` y `tests/workspaceFolderPersistence.test.ts`; actualización de `scripts/verify-cv-engine-harmony.js`, `tests/presetComposition.test.ts` y `tests/ruleTargetTabs.test.ts`; versión fijada en `V3.0.0`.
+
+---
+
 ## [2026-11-21] - Flujo de Postulaciones IA/ATS, Importación Certificados, Mover Registros, Archivos Tipo Word y Visor EditorLee (V2.29.0)
 
 **Resumen:**

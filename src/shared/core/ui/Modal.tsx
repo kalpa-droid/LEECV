@@ -1,12 +1,16 @@
 import React, { useEffect, useRef, ReactNode } from 'react';
 import { X } from 'lucide-react';
-import { elevationSystem, radius, zIndex } from '../uiDesignSystem';
+import { elevationSystem, zIndex } from '../uiDesignSystem';
+import { LidioHelpTrigger } from './LidioHelpTrigger';
 
 export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title?: ReactNode;
   icon?: ReactNode;
+  /** Ayuda opcional de Lidio en globo `?` junto al título del modal. */
+  helpText?: string;
+  helpTitle?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '4xl' | 'full';
   children: ReactNode;
   footer?: ReactNode;
@@ -21,6 +25,8 @@ export function Modal({
   onClose,
   title,
   icon,
+  helpText,
+  helpTitle,
   size = 'md',
   children,
   footer,
@@ -66,25 +72,33 @@ export function Modal({
     <div
       ref={overlayRef}
       onClick={handleOverlayClick}
-      className={`fixed inset-0 z-[${zIndex.modal}] flex items-center justify-center bg-black/75 backdrop-blur-sm p-3 sm:p-5 animate-fade-in no-print select-none`}
+      className="fixed inset-0 flex items-center justify-center bg-black/75 backdrop-blur-sm p-3 sm:p-5 animate-fade-in no-print select-none"
+      style={{ zIndex: zIndex.modal }}
     >
       <div
         data-ui-modal="true"
-        className={`w-full ${sizeClasses[size] || sizeClasses.md} bg-[var(--ui-bg-card)] ui-bg-card text-[var(--ui-text-primary)] ui-border border-2 rounded-[${radius.modal}] ${elevationSystem.overlay} overflow-hidden flex flex-col max-h-[92dvh] ${className}`}
+        className={`w-full ${sizeClasses[size] || sizeClasses.md} bg-[var(--ui-bg-card)] ui-bg-card text-[var(--ui-text-primary)] ui-border border-2 rounded-[16px] ${elevationSystem.overlay} overflow-hidden flex flex-col max-h-[92dvh] ${className}`}
       >
         {/* Header */}
         {(title || icon) && (
           <div
-            className={`flex items-center justify-between px-5 py-3.5 bg-[var(--ui-bg-header)] ui-bg-header ui-text-primary border-b ui-border ${headerClassName}`}
+            className={`flex items-center justify-between gap-2 px-5 py-3.5 bg-[var(--ui-bg-header)] ui-bg-header ui-text-primary border-b ui-border ${headerClassName}`}
           >
-            <div className="flex items-center gap-2.5 font-black text-sm tracking-wide">
+            <div className="flex items-center gap-2 font-black text-sm tracking-wide min-w-0">
               {icon && <span className="text-[var(--color-accent-amber-bright)] flex-shrink-0">{icon}</span>}
               <span className="truncate">{title}</span>
+              {helpText && (
+                <LidioHelpTrigger
+                  size="xs"
+                  title={helpTitle || (typeof title === 'string' ? title : 'Ayuda')}
+                  text={helpText}
+                />
+              )}
             </div>
             <button
               type="button"
               onClick={onClose}
-              className={`p-1.5 rounded-[${radius.control}] hover:bg-[var(--ui-dock-hover)] text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] transition cursor-pointer`}
+              className="p-1.5 rounded-[10px] hover:bg-[var(--ui-dock-hover)] text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] transition cursor-pointer shrink-0"
               title="Cerrar ventana"
             >
               <X className="w-4 h-4" />

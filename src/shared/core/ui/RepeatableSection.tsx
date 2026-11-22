@@ -3,7 +3,8 @@ import { Plus, Trash2, Copy, ArrowRightLeft } from 'lucide-react';
 import { useConfirm } from './ConfirmDialog';
 import { Modal } from './Modal';
 import { useToast } from './Toast';
-import { button, elevationSystem, radius } from '../uiDesignSystem';
+import { SectionSwitch } from './SectionSwitch';
+import { button, elevationSystem } from '../uiDesignSystem';
 import {
   getCompatibleTargetSections,
   planRecordMove,
@@ -61,7 +62,7 @@ export function RepeatableSection({
   fieldName,
   emptyItem = {},
   itemTitlePrefix = 'Registro',
-  getItemName = (item: any, idx: number) => item?.title || item?.degree || item?.role || item?.course || item?.level || item?.institution || `Ítem #${idx + 1}`,
+  getItemName = (item: any, idx: number) => item?.title || item?.degree || item?.role || item?.course || item?.level || item?.institution || `Registro #${idx + 1}`,
   designKey = undefined,
   onDeleteSection = undefined,
   manualAdjustment = undefined,
@@ -168,7 +169,7 @@ export function RepeatableSection({
   return (
     <div className="space-y-4">
       {/* Single Line Header Toggle & Add Button */}
-      <div className={`flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-[${radius.card}] border mb-3 transition ${
+      <div className={`flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-[12px] border mb-3 transition ${
         isVisible 
           ? `ui-bg-card ui-border ui-text-primary ${elevationSystem.raised}` 
           : 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-muted)] opacity-75'
@@ -177,18 +178,13 @@ export function RepeatableSection({
           {sectionTitle}
         </span>
 
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={handleToggleVisibility}
-            className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 ${elevationSystem.raised} cursor-pointer ${
-              isVisible
-                ? 'bg-[var(--color-secondary-base)] text-[var(--color-secondary-on-base)] hover:bg-[var(--color-secondary-hover)]'
-                : 'bg-[var(--color-neutral-text-muted)] text-[var(--color-neutral-surface)] hover:opacity-80'
-            }`}
-          >
-            <span>{isVisible ? 'ACTIVADA' : 'DESACTIVADA'}</span>
-          </button>
+        <div className="flex items-center gap-2">
+          <SectionSwitch
+            checked={isVisible}
+            label={sectionTitle || sectionKey || 'Sección'}
+            size="sm"
+            onChange={() => handleToggleVisibility()}
+          />
 
           {isVisible && addLabel && (
             <button
@@ -221,7 +217,7 @@ export function RepeatableSection({
       {isVisible && (
         <div className="space-y-4">
           {items.map((item: any, idx: number) => (
-            <div key={item.id || item._id || idx} className={`p-3.5 ui-bg-card ui-border ui-text-primary rounded-[${radius.modal}] border-2 ${elevationSystem.raised} space-y-3`}>
+            <div key={item.id || item._id || idx} className={`p-3.5 ui-bg-card ui-border ui-text-primary rounded-[16px] border-2 ${elevationSystem.raised} space-y-3`}>
               <div className="flex items-center justify-between pb-1 border-b border-[var(--color-neutral-border)]">
                 <span className="text-xs font-bold text-[var(--ui-secondary)]">
                   {itemTitlePrefix} #{idx + 1}

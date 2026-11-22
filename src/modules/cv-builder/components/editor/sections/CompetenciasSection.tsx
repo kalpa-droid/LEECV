@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Info } from 'lucide-react';
 import { RepeatableSection } from '../../../../../shared/core/ui/RepeatableSection';
 import { SectionManualAdjustment } from '../SectionManualAdjustment';
 import { Field } from '../../../../../shared/core/ui/Field';
-import { button, radius } from '../../../../../shared/core/uiDesignSystem';
+import { button } from '../../../../../shared/core/uiDesignSystem';
 import { AIButton } from '../../../../../shared/core/ui/AIButton';
+import { ContextualGuideBox } from '../../../../../shared/core/ui/ContextualGuideBox';
 import { executeAiTask } from '../../../../../shared/core/ai/aiClient';
 
 interface CompetencySuggestion {
@@ -70,22 +70,18 @@ export const CompetenciasSection: React.FC<CompetenciasSectionProps> = ({ cvData
 
   return (
     <div className="space-y-3">
-      <div className={`p-3 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 rounded-[${radius.card}] text-xs text-[var(--color-secondary-text)] flex items-start gap-2 leading-relaxed`}>
-        <Info className="w-4 h-4 text-[var(--color-secondary-text)] flex-shrink-0 mt-0.5" />
-        <div>
-          <span className="font-bold block">💡 Ayuda Contextual — Competencias Clave (Soft Skills):</span>
-          <span>Incluye aptitudes interpersonales, liderazgo, trabajo en equipo, capacidad analítica, resolución de conflictos y competencias conductuales.</span>
+      <div className="flex items-start justify-between gap-2">
+        <ContextualGuideBox title="Qué cargar en Competencias" className="flex-1">
+          Incluye aptitudes interpersonales, liderazgo, trabajo en equipo, capacidad analítica, resolución de conflictos y competencias conductuales.
+        </ContextualGuideBox>
+        <div className="pt-1 shrink-0">
+          <AIButton
+            label="Sugerir competencias con la vacante"
+            helpText="La IA cruza tu experiencia con la vacante activa y te propone competencias con evidencia real."
+            onGenerate={handleSuggestCompetencies}
+            onSuccess={handleShowSuggestions}
+          />
         </div>
-      </div>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-[var(--color-neutral-text-secondary)]">
-          Las propuestas de IA requieren evidencia en tu CV y sólo se agregan cuando las aceptás.
-        </p>
-        <AIButton
-          label="Revisar con la vacante"
-          onGenerate={handleSuggestCompetencies}
-          onSuccess={handleShowSuggestions}
-        />
       </div>
       {suggestions.length > 0 && (
         <div className="space-y-3 rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] p-3">
