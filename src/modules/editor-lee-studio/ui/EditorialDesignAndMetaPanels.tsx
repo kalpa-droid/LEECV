@@ -7,9 +7,20 @@ import { SectionSwitch } from '../../../shared/core/ui/SectionSwitch';
 import { ActionGrid } from '../../../shared/core/ui/ActionGrid';
 import { ActionTileButton } from '../../../shared/core/ui/ActionTileButton';
 import { LidioHelpTrigger } from '../../../shared/core/ui/LidioHelpTrigger';
+import { ManualOverrideBadge } from '../../../shared/core/ui/ManualOverrideBadge';
+import { isManuallyOverridden } from '../../../shared/core/presets/configCascadeEngine';
 import { PAGE_SIZES } from '../../../shared/core/pdf-engine/layers/page/pageSizes';
 import { generateSectionAnchors } from '../domain/editorialTocResolver';
 import { calculateSpineThickness } from '../domain/editorialMath';
+import {
+  applyEditorialGlobalConfig,
+  clearEditorialFieldManual,
+  EditorialDesignDefaultsFlat,
+  markEditorialFieldManual,
+  resolveStructuralNormFromDraft,
+} from '../domain/editorialNormEngine';
+import { normalizeBibliographyStyle } from '../domain/editorialCitationFormatter';
+import type { EditorialStructuralNormId } from '../domain/editorialTypes';
 import { getSavedEditorialsList } from '../../../shared/core/storage/documentStorageService';
 import { emitLidioMessage } from '../../../shared/core/assistant/lidioBus';
 
@@ -25,53 +36,67 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
   setActiveStepTab,
 }) => {
   const design = draft?.design || {};
+  const structuralNorm = resolveStructuralNormFromDraft(draft);
+  const currentBibStyle = normalizeBibliographyStyle(design.bibliographyStyle || design.normId);
   const documentPageSizes = Object.values(PAGE_SIZES).filter((p) => p.category === 'documento');
 
-  const updateDesignField = (field: string, val: any) => {
-    updateDraft((prev) => ({
-      ...prev,
-      design: { ...(prev?.design || {}), [field]: val },
-    }));
-  };
-
-  const updateTypography = (field: string, val: any) => {
-    updateDraft((prev) => ({
-      ...prev,
-      design: {
-        ...(prev?.design || {}),
-        typography: { ...(prev?.design?.typography || {}), [field]: val },
-      },
-    }));
-  };
-
-  const applyApa7Formatting = () => {
-    updateDraft((prev) => ({
-      ...prev,
-      design: {
-        ...(prev?.design || {}),
-        normId: 'apa7',
-        bibliographyStyle: 'apa7',
-        marginTop: 25,
-        marginBottom: 25,
-        marginLeft: 25,
-        marginRight: 25,
-        gutter: 25,
-        firstLineIndent: true,
-        bibliographyHangingIndent: true,
-        typography: {
-          fontFamily: prev?.design?.typography?.fontFamily || 'Times-Roman',
-          fontSize: 12,
-          lineHeight: 2.0,
+  const updateDesignField = (field: keyof EditorialDesignDefaultsFlat, val: any) => {
+    updateDraft((prev) => {
+      const updated = {
+        ...prev,
+        design: {
+          ...(prev?.design || {}),
+          [field]: val,
+          ...(field === 'gutter' ? { marginLeft: val } : {}),
         },
-      },
-    }));
-    emitLidioMessage({
-      kind: 'state',
-      groupKey: 'apa7-design',
-      title: 'Estructura APA 7 activada',
-      body: 'Aplicamos márgenes parejos de 25 mm (1 pulgada), interlineado doble (2.0), fuente legible 12 pt e inicio de párrafo desplazado.',
+      };
+      return markEditorialFieldManual(updated, field);
     });
   };
+
+  const updateTypography = (field: 'fontFamily' | 'fontSize' | 'lineHeight', val: any) => {
+    updateDraft((prev) => {
+      const updated = {
+        ...prev,
+        design: {
+          ...(prev?.design || {}),
+          typography: { ...(prev?.design?.typography || {}), [field]: val },
+        },
+      };
+      return markEditorialFieldManual(updated, field);
+    });
+  };
+
+  const applyStructuralPreset = (targetNorm: EditorialStructuralNormId) => {
+    updateDraft((prev) =>
+      applyEditorialGlobalConfig(prev, {
+        structuralNormId: targetNorm,
+        bibliographyStyle: currentBibStyle,
+        applyMode: 'preserve-manual',
+      }),
+    );
+    emitLidioMessage({
+      kind: 'state',
+      groupKey: `structural-norm-${targetNorm}`,
+      title:
+        targetNorm === 'apa7'
+          ? 'Estructura APA 7 activada'
+          : targetNorm === 'chicago'
+            ? 'Estructura Chicago activada'
+            : targetNorm === 'mla'
+              ? 'Estructura MLA 9 activada'
+              : 'Estructura según tipo de obra',
+      body: 'Actualizamos márgenes, interlineado y jerarquía visual respetando tus ajustes finos manuales y conservando tu estilo de bibliografía elegido.',
+    });
+  };
+
+  const renderFieldOverrideBadge = (field: keyof EditorialDesignDefaultsFlat) => (
+    <ManualOverrideBadge
+      isOverridden={isManuallyOverridden(design, field)}
+      globalLabel={structuralNorm.toUpperCase()}
+      onReset={() => updateDraft((prev) => clearEditorialFieldManual(prev, field))}
+    />
+  );
 
   const estimatedPages = Math.max(8, (draft?.sections?.length || 1) * 4);
   const estSpine = calculateSpineThickness(estimatedPages, 'bookcel-80');
@@ -81,38 +106,41 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
       <PanelSection
         icon={<Palette className="w-4 h-4" />}
         title="Estructura y Normas"
-        helpTitle="Aplicar Normas APA 7.ª ed."
-        helpText="Con un toque configurás los márgenes de 25 mm, espacio doble entre renglones y jerarquía académica."
+        helpTitle="Estructura visual vs Citas"
+        helpText="Cambiá los márgenes, el interlineado y la jerarquía visual (APA 7, Chicago, MLA o Lectura Libro) sin perder tus textos ni pisar tus ajustes finos. Podés usar estructura APA 7 junto con citas Vancouver, IEEE o Harvard."
       >
         <ActionGrid columns={2}>
           <ActionTileButton
-            label="Aplicar APA 7"
+            label="Estructura APA 7"
+            role="preset"
             badge="2.0"
-            active={design.normId === 'apa7'}
-            variant={design.normId === 'apa7' ? 'accent' : 'default'}
-            helpText="Configura márgenes de 25 mm, interlineado doble (2.0), alineado limpio y escalón al comenzar cada párrafo."
-            onClick={applyApa7Formatting}
+            active={structuralNorm === 'apa7'}
+            helpText="Configura márgenes de 25 mm, interlineado doble (2.0), inicio de párrafo desplazado y escala 12 pt (también base para Vancouver, IEEE y Harvard)."
+            onClick={() => applyStructuralPreset('apa7')}
           />
           <ActionTileButton
             label="Lectura Libro"
+            role="preset"
             badge="1.5"
-            active={design.normId !== 'apa7'}
-            variant={design.normId !== 'apa7' ? 'accent' : 'default'}
+            active={structuralNorm === 'libre'}
             helpText="Interlineado equilibrado 1.5 con margen especial en el lomo para imprimir o encuadernar."
-            onClick={() =>
-              updateDraft((prev) => ({
-                ...prev,
-                design: {
-                  ...(prev?.design || {}),
-                  normId: 'libre',
-                  typography: {
-                    ...(prev?.design?.typography || {}),
-                    lineHeight: 1.5,
-                    fontSize: 11,
-                  },
-                },
-              }))
-            }
+            onClick={() => applyStructuralPreset('libre')}
+          />
+          <ActionTileButton
+            label="Norma Chicago"
+            role="preset"
+            badge="Hum."
+            active={structuralNorm === 'chicago'}
+            helpText="Diseño editorial Chicago (márgenes 25 mm, Times 12 pt, doble espacio 2.0)."
+            onClick={() => applyStructuralPreset('chicago')}
+          />
+          <ActionTileButton
+            label="Norma MLA 9"
+            role="preset"
+            badge="Letras"
+            active={structuralNorm === 'mla'}
+            helpText="Formato MLA 9 (márgenes 25 mm, doble espacio 2.0, Times 12 pt y Obras citadas)."
+            onClick={() => applyStructuralPreset('mla')}
           />
         </ActionGrid>
       </PanelSection>
@@ -120,12 +148,15 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
       <PanelSection
         icon={<FileText className="w-4 h-4" />}
         title="Hoja y márgenes"
-        helpText="Elegí el tipo de hoja para imprimir y ajustá los espacios en los bordes o en el lomo de encuadernación."
+        helpText="Elegí el tipo de hoja para imprimir y ajustá los espacios en los bordes o en el lomo de encuadernación. Lo que toques aquí queda marcado como ajuste fino."
       >
         <div>
-          <label className="block text-xs font-bold text-[var(--ui-text-primary)] mb-1">
-            ¿En qué hoja lo vas a imprimir? (Tamaño de hoja) {/* plain-language:allow */}
-          </label>
+          <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+            <label className="block text-xs font-bold text-[var(--ui-text-primary)]">
+              ¿En qué hoja lo vas a imprimir? (Tamaño de hoja) {/* plain-language:allow */}
+            </label>
+            {renderFieldOverrideBadge('pageSizeId')}
+          </div>
           <select
             value={design.pageSizeId || 'a4'}
             onChange={(e) => updateDesignField('pageSizeId', e.target.value)}
@@ -140,30 +171,58 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
         </div>
 
         <div className="grid grid-cols-2 gap-2.5">
-          <Field
-            label="Margen superior"
-            type="number"
-            value={design.marginTop ?? 20}
-            onChange={(e: any) => updateDesignField('marginTop', Number(e.target.value))}
-          />
-          <Field
-            label="Margen inferior"
-            type="number"
-            value={design.marginBottom ?? 20}
-            onChange={(e: any) => updateDesignField('marginBottom', Number(e.target.value))}
-          />
-          <Field
-            label="Margen exterior"
-            type="number"
-            value={design.marginRight ?? 20}
-            onChange={(e: any) => updateDesignField('marginRight', Number(e.target.value))}
-          />
-          <Field
-            label="Lomo encuadernado"
-            type="number"
-            value={design.gutter ?? 20}
-            onChange={(e: any) => updateDesignField('gutter', Number(e.target.value))}
-          />
+          <div>
+            <div className="flex items-center justify-between gap-1 mb-0.5">
+              <span className="text-[10px] font-semibold text-[var(--ui-text-secondary)]">Superior</span>
+              {renderFieldOverrideBadge('marginTop')}
+            </div>
+            <Field
+              label=""
+              aria-label="Margen superior"
+              type="number"
+              value={design.marginTop ?? 20}
+              onChange={(e: any) => updateDesignField('marginTop', Number(e.target.value))}
+            />
+          </div>
+          <div>
+            <div className="flex items-center justify-between gap-1 mb-0.5">
+              <span className="text-[10px] font-semibold text-[var(--ui-text-secondary)]">Inferior</span>
+              {renderFieldOverrideBadge('marginBottom')}
+            </div>
+            <Field
+              label=""
+              aria-label="Margen inferior"
+              type="number"
+              value={design.marginBottom ?? 20}
+              onChange={(e: any) => updateDesignField('marginBottom', Number(e.target.value))}
+            />
+          </div>
+          <div>
+            <div className="flex items-center justify-between gap-1 mb-0.5">
+              <span className="text-[10px] font-semibold text-[var(--ui-text-secondary)]">Exterior</span>
+              {renderFieldOverrideBadge('marginRight')}
+            </div>
+            <Field
+              label=""
+              aria-label="Margen exterior"
+              type="number"
+              value={design.marginRight ?? 20}
+              onChange={(e: any) => updateDesignField('marginRight', Number(e.target.value))}
+            />
+          </div>
+          <div>
+            <div className="flex items-center justify-between gap-1 mb-0.5">
+              <span className="text-[10px] font-semibold text-[var(--ui-text-secondary)]">Lomo</span>
+              {renderFieldOverrideBadge('gutter')}
+            </div>
+            <Field
+              label=""
+              aria-label="Lomo encuadernado"
+              type="number"
+              value={design.gutter ?? 20}
+              onChange={(e: any) => updateDesignField('gutter', Number(e.target.value))}
+            />
+          </div>
         </div>
         <p className="text-[11px] text-[var(--ui-text-secondary)]">
           Grosor estimado de encuadernación: ~{estSpine} ({estimatedPages}+ páginas).
@@ -177,9 +236,12 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
       >
         <div className="grid grid-cols-3 gap-2">
           <div className="col-span-3 sm:col-span-1">
-            <label className="block text-xs font-bold text-[var(--ui-text-primary)] mb-1">
-              Tipografía
-            </label>
+            <div className="flex items-center gap-1 mb-1 flex-wrap">
+              <label className="block text-xs font-bold text-[var(--ui-text-primary)]">
+                Tipografía
+              </label>
+              {renderFieldOverrideBadge('fontFamily')}
+            </div>
             <select
               value={design.typography?.fontFamily || 'Times-Roman'}
               onChange={(e) => updateTypography('fontFamily', e.target.value)}
@@ -189,30 +251,45 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
               <option value="Helvetica">Moderna Sans</option>
             </select>
           </div>
-          <Field
-            label="Cuerpo (pt)"
-            type="number"
-            value={design.typography?.fontSize ?? 11}
-            onChange={(e: any) => updateTypography('fontSize', Number(e.target.value))}
-          />
-          <Field
-            label="Interlineado"
-            type="number"
-            step="0.1"
-            value={design.typography?.lineHeight ?? 1.5}
-            onChange={(e: any) => updateTypography('lineHeight', Number(e.target.value))}
-          />
+          <div>
+            <div className="flex items-center justify-between gap-1 mb-0.5">
+              <span className="text-[10px] font-semibold text-[var(--ui-text-secondary)]">Cuerpo (pt)</span>
+              {renderFieldOverrideBadge('fontSize')}
+            </div>
+            <Field
+              label=""
+              aria-label="Cuerpo (pt)"
+              type="number"
+              value={design.typography?.fontSize ?? 11}
+              onChange={(e: any) => updateTypography('fontSize', Number(e.target.value))}
+            />
+          </div>
+          <div>
+            <div className="flex items-center justify-between gap-1 mb-0.5">
+              <span className="text-[10px] font-semibold text-[var(--ui-text-secondary)]">Interlineado</span>
+              {renderFieldOverrideBadge('lineHeight')}
+            </div>
+            <Field
+              label=""
+              aria-label="Interlineado"
+              type="number"
+              step="0.1"
+              value={design.typography?.lineHeight ?? 1.5}
+              onChange={(e: any) => updateTypography('lineHeight', Number(e.target.value))}
+            />
+          </div>
         </div>
 
         <div className="space-y-2 pt-1">
           <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)]">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-xs font-semibold">Inicio de párrafo desplazado</span>
               <LidioHelpTrigger
                 size="xs"
                 title="Espacio al iniciar párrafo"
                 text="Desplaza la primera línea de cada párrafo hacia la derecha, requerido en tesis APA 7 y libros impresos."
               />
+              {renderFieldOverrideBadge('firstLineIndent')}
             </div>
             <SectionSwitch
               size="sm"
@@ -223,7 +300,10 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
           </div>
 
           <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)]">
-            <span className="text-xs font-semibold">Numerar páginas abajo</span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs font-semibold">Numerar páginas abajo</span>
+              {renderFieldOverrideBadge('pageNumbers')}
+            </div>
             <SectionSwitch
               size="sm"
               checked={design.pageNumbers !== false}

@@ -127,10 +127,10 @@ export const EditorialPresetInicioPanel: React.FC<EditorialPresetInicioPanelProp
             <ActionTileButton
               key={preset.id}
               label={preset.shortLabel}
+              role="preset"
               badge={preset.audienceTag}
               iconId={UI_ICON_IDS.book}
               active={activePresetId === preset.id}
-              variant={activePresetId === preset.id ? 'accent' : 'default'}
               helpText={`${preset.label}. ${preset.description}`}
               helpGroupKey={`preset-help-${preset.id}`}
               onClick={() => void handleSelectPreset(preset)}
@@ -147,15 +147,15 @@ export const EditorialPresetInicioPanel: React.FC<EditorialPresetInicioPanelProp
         <ActionGrid columns={2}>
           <ActionTileButton
             label="Editar Portada"
+            role="preset"
             iconId={UI_ICON_IDS.preview}
-            variant="secondary"
             helpText="Elegí el diseño de tapa y completá los datos de autor o institución."
             onClick={() => setActiveStepTab('editorial_portada')}
           />
           <ActionTileButton
             label="Importar archivo"
+            role="io"
             iconId={UI_ICON_IDS.importar}
-            variant="secondary"
             badge="IA / OCR"
             helpText="Subí Word, LibreOffice, PDF o fotos de apuntes para armar capítulos automáticamente."
             onClick={() => setActiveStepTab('editorial_import_ai')}
@@ -178,12 +178,14 @@ export const EditorialPresetInicioPanel: React.FC<EditorialPresetInicioPanelProp
         <ActionGrid columns={2}>
           <ActionTileButton
             label="Abrir .leedoc"
+            role="io"
             icon={<FolderOpen className="w-4 h-4" />}
             helpText="Abrí un respaldo .leedoc, .json o .zip guardado previamente en tu computadora o pendrive."
             onClick={() => void handleOpen()}
           />
           <ActionTileButton
             label="Guardar copia PC"
+            role="io"
             icon={<Save className="w-4 h-4" />}
             iconId={UI_ICON_IDS.folderSafe}
             helpText="Guardá una copia en la carpeta que elijas de tu computadora con el nombre claro de tu obra."

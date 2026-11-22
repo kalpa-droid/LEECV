@@ -11,10 +11,17 @@ import { executeAiTask } from '../../../shared/core/ai/aiClient';
 import { emitLidioMessage } from '../../../shared/core/assistant/lidioBus';
 import {
   BIBLIOGRAPHY_NORM_GUIDES,
+  CanonicalCitationStyle,
+  computeCitationAppearanceOrder,
   formatEditorialCitation,
   normalizeBibliographyStyle,
   sortBibliographyRecords,
+  syncSectionsBibliographyOrder,
 } from '../domain/editorialCitationFormatter';
+import {
+  checkEditorialNormCompatibility,
+  resolveStructuralNormFromDraft,
+} from '../domain/editorialNormEngine';
 import type {
   EditorialBibliographySourceType,
   EditorialBibliographyStyle,
@@ -71,29 +78,48 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
   );
 
   const ensureAndMutateBibRecords = (
-    mutator: (current: EditorialRecord[]) => EditorialRecord[],
-    nextStyle?: EditorialBibliographyStyle,
+    mutator: (current: EditorialRecord[], currentSections: EditorialSection[]) => EditorialRecord[],
+    nextStyle?: CanonicalCitationStyle,
   ) => {
     updateDraft((prev) => {
       const prevSections: EditorialSection[] = Array.isArray(prev?.sections) ? prev.sections : [];
       const existing = findBibliographySection(prevSections);
+      const effectiveStructural = resolveStructuralNormFromDraft(prev);
 
       if (existing) {
-        const nextSections = prevSections.map((s) =>
+        const autoSectionTitle =
+          nextStyle && (existing.title === 'Referencias' || existing.title === 'Bibliografía' || existing.title === 'Obras citadas')
+            ? nextStyle === 'apa7'
+              ? 'Referencias'
+              : nextStyle === 'mla'
+                ? 'Obras citadas'
+                : 'Bibliografía'
+            : existing.title;
+        const nextSectionsRaw = prevSections.map((s) =>
           s.id === existing.id
-            ? { ...s, records: mutator(Array.isArray(s.records) ? s.records : []) }
+            ? {
+                ...s,
+                title: autoSectionTitle,
+                records: mutator(Array.isArray(s.records) ? s.records : [], prevSections),
+              }
             : s,
         );
+        const targetBib = nextStyle || activeStyle;
+        const syncedSections = syncSectionsBibliographyOrder(nextSectionsRaw, targetBib);
         return {
           ...prev,
-          sections: nextSections,
+          sections: syncedSections,
           ...(nextStyle
             ? {
                 design: {
                   ...(prev?.design || {}),
+                  structuralNormId: effectiveStructural,
                   bibliographyStyle: nextStyle,
-                  normId: nextStyle === 'tradicional' ? 'libre' : nextStyle,
-                  bibliographyHangingIndent: nextStyle === 'apa7' || nextStyle === 'vancouver' || nextStyle === 'chicago',
+                  normId:
+                    nextStyle === 'vancouver' && effectiveStructural === 'apa7'
+                      ? 'vancouver'
+                      : effectiveStructural,
+                  bibliographyHangingIndent: nextStyle !== 'tradicional',
                 },
               }
             : {}),
@@ -101,10 +127,10 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
       }
 
       const newSecId = `ed_bibliografia_${Date.now()}`;
-      const seededRecords = mutator([]);
+      const seededRecords = mutator([], prevSections);
       const newSec: EditorialSection = {
         id: newSecId,
-        title: nextStyle === 'apa7' ? 'Referencias' : 'Bibliografía',
+        title: (nextStyle || activeStyle) === 'apa7' ? 'Referencias' : (nextStyle || activeStyle) === 'mla' ? 'Obras citadas' : 'Bibliografía',
         sectionKey: 'bibliografia',
         category: 'cierre',
         visible: true,
@@ -116,22 +142,34 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
       return {
         ...prev,
         sections: [...prevSections, newSec],
+        ...(nextStyle
+          ? {
+              design: {
+                ...(prev?.design || {}),
+                structuralNormId: effectiveStructural,
+                bibliographyStyle: nextStyle,
+                bibliographyHangingIndent: nextStyle !== 'tradicional',
+              },
+            }
+          : {}),
       };
     });
   };
 
-  const handleSelectStyle = (nextStyle: Exclude<EditorialBibliographyStyle, 'apa'>) => {
+  const handleSelectStyle = (nextStyle: CanonicalCitationStyle) => {
     ensureAndMutateBibRecords(
-      (recs) => sortBibliographyRecords(recs, nextStyle),
+      (recs, allSections) =>
+        sortBibliographyRecords(recs, nextStyle, computeCitationAppearanceOrder(allSections)),
       nextStyle,
     );
     const chosenGuide = BIBLIOGRAPHY_NORM_GUIDES[nextStyle];
-    notify.success(`Norma cambiada a ${chosenGuide.label}.`);
+    const compat = checkEditorialNormCompatibility(resolveStructuralNormFromDraft(draft), nextStyle);
+    notify.success(`Citas cambiadas a ${chosenGuide.label}.`);
     emitLidioMessage({
       kind: 'state',
       groupKey: 'bib-norm-switch',
       title: chosenGuide.label,
-      body: `${chosenGuide.shortRule} ${chosenGuide.inTextExample}`,
+      body: `${compat.message} ${chosenGuide.inTextExample}`,
     });
   };
 
@@ -235,14 +273,22 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
         helpText="APA 7 ordena alfabéticamente y usa (Autor, Año). Vancouver enumera [1], [2] por orden exacto en el que citás en tu texto. Podés cambiar de norma en cualquier momento sin perder tus fuentes."
       >
         <ActionGrid columns={2}>
-          {(['apa7', 'vancouver', 'chicago', 'tradicional'] as const).map((styleKey) => {
+          {([
+            { id: 'apa7', label: 'APA 7.ª ed.' },
+            { id: 'vancouver', label: 'Vancouver [1]' },
+            { id: 'ieee', label: 'IEEE [1]' },
+            { id: 'harvard', label: 'Harvard' },
+            { id: 'chicago', label: 'Chicago' },
+            { id: 'mla', label: 'MLA 9' },
+            { id: 'tradicional', label: 'Libre' },
+          ] as const).map(({ id: styleKey, label }) => {
             const g = BIBLIOGRAPHY_NORM_GUIDES[styleKey];
             return (
               <ActionTileButton
                 key={styleKey}
-                label={styleKey === 'apa7' ? 'APA 7.ª ed.' : styleKey === 'vancouver' ? 'Vancouver [1]' : styleKey === 'chicago' ? 'Chicago' : 'Libre'}
+                label={label}
+                role="preset"
                 active={activeStyle === styleKey}
-                variant={activeStyle === styleKey ? 'accent' : 'default'}
                 helpText={`${g.shortRule} Ejemplo: ${g.referenceExample}`}
                 helpGroupKey={`bib-norm-${styleKey}`}
                 onClick={() => handleSelectStyle(styleKey)}
@@ -430,7 +476,7 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
               onClick={handleSortNow}
               className="px-2 py-1 text-[11px] font-bold rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--color-accent-text)] cursor-pointer"
             >
-              {activeStyle === 'vancouver' ? 'Renumerar [1..N]' : 'Ordenar A–Z'}
+              {activeStyle === 'vancouver' || activeStyle === 'ieee' ? 'Renumerar [1..N]' : 'Ordenar A–Z'}
             </button>
           )
         }
