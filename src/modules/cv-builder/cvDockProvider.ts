@@ -5,6 +5,7 @@ import {
   Database,
   Radar,
 } from 'lucide-react';
+import { UI_ICON_IDS } from '../../shared/core/ui/iconCatalog';
 import {
   resolveActiveDockSections,
   DOCK_SPECIAL_TABS,
@@ -34,9 +35,23 @@ export function buildCvDockTabs({ cvData }: DockStepContext): DockTabItem[] {
     },
     {
       id: 'diseno',
-      label: 'Diseño',
-      icon: Palette,
+      label: 'Estilo & Color',
+      iconId: UI_ICON_IDS.diseno,
       isLarge: true,
+      variant: 'accent',
+    },
+    {
+      id: 'diseno_tipografia',
+      label: 'Letra & Espacio',
+      iconId: UI_ICON_IDS.disenoTipografia,
+      isLarge: false,
+      variant: 'accent',
+    },
+    {
+      id: 'diseno_hoja',
+      label: 'Hoja & Columnas',
+      iconId: UI_ICON_IDS.disenoHoja,
+      isLarge: false,
       variant: 'accent',
     },
     {

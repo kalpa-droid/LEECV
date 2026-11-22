@@ -1,10 +1,13 @@
 import React, { Suspense, useRef, useState } from 'react';
-import { Award, FileText, FolderOpen, Loader2, Upload } from 'lucide-react';
+import { Award, FileText, FolderOpen, Upload } from 'lucide-react';
 import { useCVContext } from '../../../../../context/CVContext';
 import { importLinkedinArchive } from '../../../../../shared/core/importers/linkedinArchiveImporter';
 import { withErrorHandling } from '../../../../../shared/core/utils/errorHandler';
 import { button } from '../../../../../shared/core/uiDesignSystem';
 import { useToast } from '../../../../../shared/core/ui/Toast';
+import { PanelSection } from '../../../../../shared/core/ui/PanelSection';
+import { ActionGrid } from '../../../../../shared/core/ui/ActionGrid';
+import { ActionTileButton } from '../../../../../shared/core/ui/ActionTileButton';
 import { dal } from '../../../../../shared/core/storage/dataAccessLayer';
 import { activateSection } from '../../../../../shared/core/sections/sectionActivationEngine';
 import { unpackDocumentFromDisk } from '../../../../../shared/core/storage/leecvPackageCodec';
@@ -302,32 +305,20 @@ export const ImportDataSection: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 text-[var(--ui-text-primary)]">
-      <header className="space-y-2 border-b border-[var(--ui-border)] pb-4">
-        <h2 className="text-lg font-semibold">Importar datos</h2>
-        <p className="text-sm text-[var(--ui-text-secondary)]">
-          Sumá información al CV desde un archivo de respaldo (.json / .leecv / .zip), certificados individuales, LinkedIn o un CV anterior. Vos decidís qué aplicar.
-        </p>
-      </header>
-
+    <div className="space-y-5 text-[var(--ui-text-primary)]">
       {savedDraft && !reviewData && (
-        <section className="rounded-[var(--ui-radius-card)] border border-[var(--color-accent-base)] bg-[var(--ui-bg-panel)] p-4 space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-[var(--color-primary-bright)]" />
-                <h3 className="font-semibold text-[var(--ui-text-primary)]">
-                  Extracción reciente guardada {savedDraft.sourceName ? `(${savedDraft.sourceName})` : ''}
-                </h3>
-              </div>
-              <p className="text-sm text-[var(--ui-text-secondary)]">
-                Tenés datos extraídos disponibles para clasificar y agregar a tu CV sin volver a subir el archivo.
-              </p>
+        <section className="rounded-[12px] border border-[var(--color-accent-base)] bg-[var(--ui-bg-panel)] p-3.5 space-y-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <FileText className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
+              <span className="text-xs font-bold text-[var(--ui-text-primary)] truncate">
+                Extracción pendiente {savedDraft.sourceName ? `(${savedDraft.sourceName})` : ''}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                className={`${button.base} ${button.secondary} text-sm px-3 py-1.5`}
+                className={`${button.base} ${button.secondary} text-xs px-2.5 py-1 cursor-pointer`}
                 onClick={() => {
                   if (typeof window !== 'undefined') {
                     try {
@@ -341,77 +332,92 @@ export const ImportDataSection: React.FC = () => {
               </button>
               <button
                 type="button"
-                className={`${button.base} ${button.primary} text-sm px-3 py-1.5`}
+                className={`${button.base} ${button.primary} text-xs px-3 py-1 cursor-pointer`}
                 onClick={() => {
                   if (savedDraft.data) {
                     openReview(savedDraft.data);
                   }
                 }}
               >
-                Revisar y clasificar
+                Revisar
               </button>
             </div>
           </div>
         </section>
       )}
 
-      <section className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] p-4 space-y-3">
-        <div className="flex items-center gap-2">
-          <Upload className="w-5 h-5 text-[var(--color-primary-bright)]" />
-          <h3 className="font-semibold">Copia de seguridad de LinkedIn (.zip)</h3>
-        </div>
-        <p className="text-sm text-[var(--ui-text-secondary)]">
-          Se leerán los datos disponibles y podrás elegir qué agregar o reemplazar.
-        </p>
-        <label className={`${button.base} ${button.secondary} inline-flex items-center gap-2 cursor-pointer`}>
-          {isImportingLinkedIn ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-          {isImportingLinkedIn ? 'Leyendo archivo…' : 'Seleccionar archivo .zip'}
-          <input
-            type="file"
+      <PanelSection
+        icon={<Upload className="w-4 h-4" />}
+        title="Importar datos"
+        helpText="Sumá información al CV desde un archivo de respaldo (.json / .leecv / .zip), certificados individuales, LinkedIn o un CV anterior. Vos decidís qué aplicar."
+      >
+        <ActionGrid columns={2}>
+          <ActionTileButton
+            label={isImportingLinkedIn ? 'Leyendo ZIP…' : 'Copia ZIP de LinkedIn'}
+            icon={<Upload className="w-4 h-4" />}
+            badge=".zip"
             accept=".zip,application/zip"
             disabled={isImportingLinkedIn}
-            onChange={handleLinkedInFile}
-            className="sr-only"
+            helpText="Se leerán los datos disponibles y podrás elegir qué agregar o reemplazar de tu copia de seguridad de LinkedIn."
+            helpGroupKey="import-linkedin-zip"
+            onFileSelect={(files) => {
+              const file = files?.[0];
+              if (!file) return;
+              handleLinkedInFile({
+                target: { files: [file] },
+                currentTarget: { value: '' },
+              } as unknown as React.ChangeEvent<HTMLInputElement>);
+            }}
           />
-        </label>
-      </section>
 
-      <section className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] p-4 space-y-3">
-        <div className="flex items-center gap-2">
-          <FolderOpen className="w-5 h-5 text-[var(--color-accent-text)]" />
-          <h3 className="font-semibold">Abrir archivo de respaldo (.json / .leecv / .zip)</h3>
-        </div>
-        <p className="text-sm text-[var(--ui-text-secondary)]">
-          Abrí un archivo de respaldo guardado previamente en tu computadora o pendrive para restaurarlo completo o combinar secciones.
-        </p>
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
+          <ActionTileButton
+            label={isReadingBackup ? 'Abriendo…' : 'Abrir respaldo'}
+            icon={<FolderOpen className="w-4 h-4" />}
+            badge=".leecv"
             disabled={isReadingBackup}
+            helpText="Abrí un archivo guardado en tu computadora, Carpeta Segura o pendrive (.json / .leecv / .zip) para restaurarlo completo o combinar secciones."
+            helpGroupKey="import-open-backup"
             onClick={handleOpenBackupFromDisk}
-            className={`${button.base} ${button.secondary} inline-flex items-center gap-2`}
-          >
-            {isReadingBackup ? <Loader2 className="w-4 h-4 animate-spin" /> : <FolderOpen className="w-4 h-4" />}
-            {isReadingBackup ? 'Abriendo archivo…' : 'Abrir respaldo (.json / .leecv / .zip)'}
-          </button>
-          <input
-            ref={backupFileInputRef}
-            type="file"
-            accept=".json,.leecv,.zip,application/json,application/zip"
-            onChange={handleBackupInputFile}
-            className="hidden"
           />
-        </div>
+
+          <ActionTileButton
+            label="Cargar certificado"
+            icon={<Award className="w-4 h-4" />}
+            badge="IA"
+            variant="accent"
+            helpText="Subí la foto o PDF de un diploma o certificado. La IA reconoce los datos y te pregunta si querés adjuntar la imagen en la sección Certificados."
+            helpGroupKey="import-certificate-ai"
+            onClick={() => setIsCertImportOpen(true)}
+          />
+
+          <ActionTileButton
+            label="Leer CV anterior"
+            icon={<FileText className="w-4 h-4" />}
+            badge="IA"
+            variant="accent"
+            helpText="Para un CV anterior en PDF, foto o texto pegado. La IA prepara una propuesta para que elijas qué datos sumar a tu CV actual."
+            helpGroupKey="import-cv-ai"
+            onClick={() => setIsAiImportOpen(true)}
+          />
+        </ActionGrid>
+
+        <input
+          ref={backupFileInputRef}
+          type="file"
+          accept=".json,.leecv,.zip,application/json,application/zip"
+          onChange={handleBackupInputFile}
+          className="hidden"
+        />
 
         {pendingBackup && (
-          <div className="mt-2 p-3 rounded-[var(--ui-radius-control)] border border-[var(--color-accent-base)]/50 bg-[var(--ui-bg-card)] space-y-2.5">
+          <div className="mt-2 p-3 rounded-[12px] border border-[var(--color-accent-base)]/50 bg-[var(--ui-bg-card)] space-y-2.5">
             <p className="text-xs font-bold">
               Archivo listo: <span className="text-[var(--color-accent-text)]">{pendingBackup.fileName}</span>
             </p>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                className={`${button.base} ${button.primary} text-xs px-3 py-1.5`}
+                className={`${button.base} ${button.primary} text-xs px-3 py-1.5 cursor-pointer`}
                 onClick={() => {
                   const data = pendingBackup.data;
                   setCvData((prev: any) => ({
@@ -422,11 +428,11 @@ export const ImportDataSection: React.FC = () => {
                   showSuccess('Respaldo cargado completamente en este CV.');
                 }}
               >
-                Cargar archivo completo aquí
+                Cargar completo aquí
               </button>
               <button
                 type="button"
-                className={`${button.base} ${button.secondary} text-xs px-3 py-1.5`}
+                className={`${button.base} ${button.secondary} text-xs px-3 py-1.5 cursor-pointer`}
                 onClick={() => {
                   const data = pendingBackup.data;
                   setPendingBackup(null);
@@ -437,7 +443,7 @@ export const ImportDataSection: React.FC = () => {
               </button>
               <button
                 type="button"
-                className={`${button.base} ${button.ghost} text-xs px-2.5 py-1.5`}
+                className={`${button.base} ${button.ghost} text-xs px-2.5 py-1.5 cursor-pointer`}
                 onClick={() => setPendingBackup(null)}
               >
                 Cancelar
@@ -445,43 +451,7 @@ export const ImportDataSection: React.FC = () => {
             </div>
           </div>
         )}
-      </section>
-
-      <section className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] p-4 space-y-3">
-        <div className="flex items-center gap-2">
-          <Award className="w-5 h-5 text-[var(--color-accent-text)]" />
-          <h3 className="font-semibold">Agregar certificados individuales</h3>
-        </div>
-        <p className="text-sm text-[var(--ui-text-secondary)]">
-          Subí la foto o PDF de un diploma o certificado. La IA reconoce sus datos (curso, institución, fecha, horas) y te pregunta si querés adjuntar la imagen en la sección Certificados.
-        </p>
-        <button
-          type="button"
-          className={`${button.base} ${button.primary} inline-flex items-center gap-2`}
-          onClick={() => setIsCertImportOpen(true)}
-        >
-          <Award className="w-4 h-4" />
-          Agregar certificados
-        </button>
-      </section>
-
-      <section className="rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] p-4 space-y-3">
-        <div className="flex items-center gap-2">
-          <FileText className="w-5 h-5 text-[var(--color-primary-bright)]" />
-          <h3 className="font-semibold">PDF, foto o texto pegado</h3>
-        </div>
-        <p className="text-sm text-[var(--ui-text-secondary)]">
-          Para un CV completo de una o dos columnas. La IA prepara una propuesta con la información reconocida. Vos decidís qué datos aplicar.
-        </p>
-        <button
-          type="button"
-          className={`${button.base} ${button.primary} inline-flex items-center gap-2`}
-          onClick={() => setIsAiImportOpen(true)}
-        >
-          <FileText className="w-4 h-4" />
-          Elegir archivo o pegar texto
-        </button>
-      </section>
+      </PanelSection>
 
       <Suspense fallback={null}>
         <ImportCvAiModal

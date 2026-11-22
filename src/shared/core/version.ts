@@ -10,11 +10,11 @@
  */
 
 export const LEECV_VERSION = {
-  major: 2,
-  minor: 29,
+  major: 3,
+  minor: 0,
   patch: 0,
-  label: 'V2.29.0',
-  lastUpdated: '2026-11-21',
+  label: 'V3.0.0',
+  lastUpdated: '2026-11-22',
   lastAgent: '@antigravity',
-  stage: 'feat(ux): V2.29.0 — Hotfix tipografía Serif/Times-Roman + visor con zoom y foco por sección en EditorLee, Importar Respaldos .json/.leecv y Certificados con IA, Reclasificación segura de registros compatibles, Flujo CV Base -> Analizar en qué me perfilo -> Modal editable -> Postulación IA+ATS -> Carta Gratuita + Lidio, y Archivos portables tipo Word con PWA file_handlers.',
+  stage: 'feat(ui): V3.0.0 — Rediseño Cero Ruido + Globo ? de Lidio y taxonomía clara (Ayuda contextual solo para redacción), Geometría móvil sin tapar Dock ni Lidio, Píldora global de Región en barra superior y jerarquía anti-pisado, 3 botones de Diseño en Dock sin banner cruzado, Perillas/Ojos sin pérdida de datos, Carpeta Segura explícita en disco y Fábrica new-app actualizada.',
 } as const;

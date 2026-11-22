@@ -187,6 +187,15 @@ export const CAPABILITY_REGISTRY: Record<string, CapabilityConfig> = {
     category: 'utility',
     defaultData: {}
   },
+  region_format: {
+    id: 'region_format',
+    name: 'Formato Regional y Estándar',
+    description: 'Selector global de estándar internacional (LATAM, EE.UU., Europass, Tech, ATS 1 columna).',
+    category: 'styling',
+    defaultData: {
+      activeFormatId: 'estandar-completo'
+    }
+  },
   planner_grid: {
     id: 'planner_grid',
     name: 'Retícula y Guías de Fondo',
@@ -260,6 +269,7 @@ export const DOCUMENT_TYPE_REGISTRY = {
     capabilities: [
       'theme',
       'paper_size',
+      'region_format',
       'personal_info',
       'education',
       'profession',
@@ -316,6 +326,7 @@ export const DOCUMENT_TYPE_REGISTRY = {
     capabilities: [
       'theme',
       'paper_size',
+      'region_format',
       'personal_info',
       'digital_signature',
       'json_backup',

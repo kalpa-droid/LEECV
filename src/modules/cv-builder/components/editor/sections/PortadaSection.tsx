@@ -1,6 +1,7 @@
 import { AlertTriangle, Check, ChevronRight, Cloud, Download, Grid, Grid3X3, GripHorizontal, GripVertical, Image as ImageIcon, Layers, Layout, Monitor, Palette, Plus, RotateCcw, Trash2, User, X, PanelTop } from 'lucide-react';
 import React from 'react';
 import { PanelSection } from '../../../../../shared/core/ui/PanelSection';
+import { SectionSwitch } from '../../../../../shared/core/ui/SectionSwitch';
 
 import { SectionManualAdjustment } from '../SectionManualAdjustment';
 import { GuardadosSection } from './GuardadosSection';
@@ -32,32 +33,21 @@ export const PortadaSection = ({
     <>
       {activeTab === 'portada' && (
           <div className="space-y-6">
-            <PanelSection icon={<PanelTop className="w-4 h-4" />} title="Portada">
-              {/* Cover Page Toggle */}
-              <div className={`flex items-center justify-between p-3 rounded-[${radius.card}] border transition ${
-                cvData.showCoverPage !== false 
-                  ? 'bg-[var(--ui-bg-card)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-primary)] ${elevationSystem.raised}' 
-                  : 'bg-[var(--color-neutral-surface-muted)] border-[var(--color-neutral-border)] text-[var(--color-neutral-text-muted)] opacity-75'
-              }`}>
-                <span className="text-xs font-bold uppercase tracking-wide">
-                  Portada de Impacto (Página 1)
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const willEnable = cvData.showCoverPage === false;
-                    triggerPresetTransition(willEnable ? 'Portada Activada' : 'Portada Desactivada', 'cover');
-                    setCvData((prev: any) => ({ ...prev, showCoverPage: !prev.showCoverPage }));
+            <PanelSection
+              icon={<PanelTop className="w-4 h-4" />}
+              title="Portada"
+              helpText="Página inicial de presentación para destacar tus títulos y perfil antes del cuerpo del CV. Podés pausarla con la perilla sin perder nada."
+              headerRight={
+                <SectionSwitch
+                  checked={cvData.showCoverPage !== false}
+                  label="Portada"
+                  onChange={(next) => {
+                    triggerPresetTransition(next ? 'Portada Activada' : 'Portada Desactivada', 'cover');
+                    setCvData((prev: any) => ({ ...prev, showCoverPage: next }));
                   }}
-                  className={`px-3 py-1 rounded-full text-xs font-black transition flex items-center gap-1.5 ${elevationSystem.raised} cursor-pointer ${
-                    cvData.showCoverPage !== false
-                      ? 'bg-[var(--color-accent-purple-hover)] text-white hover:opacity-90'
-                      : 'bg-[var(--color-neutral-text-muted)] text-white hover:opacity-80'
-                  }`}
-                >
-                  <span>{cvData.showCoverPage !== false ? 'ACTIVADA' : 'DESACTIVADA'}</span>
-                </button>
-              </div>
+                />
+              }
+            >
 
               {cvData.showCoverPage !== false && (
                 <>

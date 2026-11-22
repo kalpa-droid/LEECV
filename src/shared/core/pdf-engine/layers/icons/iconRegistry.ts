@@ -655,6 +655,55 @@ export const ICON_REGISTRY: Record<string, IconDefinition> = {
       'M9 13h6l1 5H8z',
       'M12 2a5 5 0 0 1 5 5c0 2.5-2 4-2 5H9c0-1-2-2.5-2-5a5 5 0 0 1 5-5z'
     ]
+  },
+  helpBubble: {
+    id: 'helpBubble',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M12 3a9 9 0 0 1 9 9 9 9 0 0 1-9 9c-1.5 0-2.9-.37-4.15-1.02L3 21l1.2-4.6A8.95 8.95 0 0 1 3 12a9 9 0 0 1 9-9z',
+      'M9.6 9.5a2.4 2.4 0 1 1 3.7 2.02c-.76.5-1.3.98-1.3 1.98',
+      'M12 16.5h.01'
+    ]
+  },
+  diseno_tipografia: {
+    id: 'diseno_tipografia',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M4 6V4h11v2',
+      'M9.5 4v15',
+      'M6.5 19h6',
+      'M15.5 13.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5V19',
+      'M15.5 16.2h5'
+    ]
+  },
+  diseno_hoja: {
+    id: 'diseno_hoja',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M6 3h9l4 4v14H6z',
+      'M15 3v4h4',
+      'M9 11v7',
+      'M9 11h7'
+    ]
+  },
+  region: {
+    id: 'region',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z',
+      'M2.5 12h19',
+      'M12 2.2c2.9 2.7 4.4 6.1 4.4 9.8s-1.5 7.1-4.4 9.8',
+      'M12 2.2c-2.9 2.7-4.4 6.1-4.4 9.8s1.5 7.1 4.4 9.8'
+    ]
+  },
+  folderSafe: {
+    id: 'folderSafe',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M3 6a2 2 0 0 1 2-2h4.6l2 2.2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6z',
+      'M12 10.5v5.5',
+      'M9.75 13.25h4.5'
+    ]
   }
 };
 

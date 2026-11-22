@@ -66,6 +66,7 @@ export default function SaveAsVersionModal({
       isOpen={isOpen}
       onClose={onClose}
       title={t.modals.saveAsVersion.title}
+      helpText="Creá una copia independiente asociada a un puesto o empresa sin modificar tu CV Base."
       icon={<CopyPlus className="w-5 h-5 text-[var(--color-secondary-bright)]" />}
       size="md"
       footer={

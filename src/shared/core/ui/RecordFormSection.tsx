@@ -5,7 +5,11 @@ import { FIELD_CATALOG, BUILTIN_RECORD_KINDS } from '../pdf-engine/layers/record
 import { elevationSystem, button, radius } from '../uiDesignSystem';
 import { resolveLegacyFieldKey } from '../pdf-engine/layers/records/fieldAliasCatalog';
 import { getFieldLabelOptions } from '../pdf-engine/layers/records/fieldLabelOptions';
-import { Info, Sparkles, X } from 'lucide-react';
+import { Info, Loader2, X } from 'lucide-react';
+import { ContextualGuideBox } from './ContextualGuideBox';
+import { LidioHelpTrigger } from './LidioHelpTrigger';
+import { DomSectionIcon } from '../pdf-engine/layers/icons/DomSectionIcon';
+import { UI_ICON_IDS } from './iconCatalog';
 import { SectionPositionControl } from './SectionPositionControl';
 import { executeAiTask } from '../ai/aiClient';
 import { useToast } from './Toast';
@@ -208,27 +212,41 @@ export function RecordFormSection({
 
   return (
     <div className="space-y-3">
-      {helpText && (
-        <div className={`p-3 bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/30 rounded-[${radius.card}] text-xs text-[var(--color-secondary-text)] flex items-start gap-2 leading-relaxed`}>
-          <Info className="w-4 h-4 text-[var(--color-secondary-text)] flex-shrink-0 mt-0.5" />
-          <div>
-            <span className="font-bold block">Ayuda contextual:</span>
-            <span>{helpText}</span>
-          </div>
-        </div>
-      )}
-
-      {aiSuggestInfo && (
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={handleAiSuggest}
-            disabled={isSuggesting}
-            className={`${button.secondary} flex items-center gap-1.5 text-xs py-1.5 px-3 ${isSuggesting ? 'opacity-60 cursor-not-allowed' : ''}`}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
-            {isSuggesting ? 'Generando sugerencia...' : 'Sugerir con IA'}
-          </button>
+      {(helpText || aiSuggestInfo) && (
+        <div className="flex items-start justify-between gap-2">
+          {helpText ? (
+            <ContextualGuideBox title="Cómo completar esta sección" className="flex-1">
+              {helpText}
+            </ContextualGuideBox>
+          ) : (
+            <div className="flex-1" />
+          )}
+          {aiSuggestInfo && (
+            <div className="flex items-center gap-1 pt-1 shrink-0">
+              <button
+                type="button"
+                onClick={handleAiSuggest}
+                disabled={isSuggesting}
+                aria-label="Sugerir registros con IA"
+                title="Sugerir registros con IA"
+                className="w-8 h-8 rounded-full inline-flex items-center justify-center bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/45 text-[var(--color-accent-text)] hover:bg-[var(--color-accent-base)] hover:text-[var(--color-accent-on-base)] transition active:scale-95 cursor-pointer disabled:opacity-50"
+              >
+                {isSuggesting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <span className="ui-ai-sparkle-loop">
+                    <DomSectionIcon iconId={UI_ICON_IDS.ia} size={16} strokeWidth={2.1} />
+                  </span>
+                )}
+              </button>
+              <LidioHelpTrigger
+                size="xs"
+                title="Sugerir con IA"
+                text="La IA propone registros nuevos según los datos de tu CV. Nada se guarda sin tu confirmación."
+                groupKey={`ai-suggest-${sectionKey}`}
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -326,10 +344,17 @@ export function RecordFormSection({
                       setFieldBusy(false);
                     }
                   }}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-black flex items-center gap-1 bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/40 text-[var(--color-accent-text)] hover:bg-[var(--color-accent-base)] hover:text-[var(--color-accent-on-base)] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
+                  aria-label="Mejorar texto con IA"
+                  title="Mejorar texto con IA"
+                  className="w-7 h-7 rounded-full inline-flex items-center justify-center bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/40 text-[var(--color-accent-text)] hover:bg-[var(--color-accent-base)] hover:text-[var(--color-accent-on-base)] transition active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Sparkles className="w-3 h-3" />
-                  {fieldBusy ? 'Mejorando...' : 'Mejorar texto'}
+                  {fieldBusy ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <span className="ui-ai-sparkle-loop">
+                      <DomSectionIcon iconId={UI_ICON_IDS.ia} size={13} strokeWidth={2.1} />
+                    </span>
+                  )}
                 </button>
               ) : undefined;
 
@@ -513,10 +538,18 @@ export function RecordFormSection({
                       setRecordBusy(false);
                     }
                   }}
-                  className={`ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-black bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/40 text-[var(--color-accent-text)] hover:bg-[var(--color-accent-base)] hover:text-[var(--color-accent-on-base)] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
+                  aria-label="Mejorar registro con IA"
+                  title="Mejorar registro con IA"
+                  className="ml-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-black bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/40 text-[var(--color-accent-text)] hover:bg-[var(--color-accent-base)] hover:text-[var(--color-accent-on-base)] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  {recordBusy ? 'Mejorando...' : 'Mejorar registro con IA'}
+                  {recordBusy ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <span className="ui-ai-sparkle-loop">
+                      <DomSectionIcon iconId={UI_ICON_IDS.ia} size={14} strokeWidth={2.1} />
+                    </span>
+                  )}
+                  <span>{recordBusy ? 'Mejorando…' : 'IA'}</span>
                 </button>
               </div>
 

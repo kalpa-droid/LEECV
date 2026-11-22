@@ -19,6 +19,8 @@ export type PersonalFieldPolicy = Record<
 export interface CvFormatDefinition {
   id: string;
   name: string;
+  /** Etiqueta compacta para la píldora de región en la barra superior. */
+  shortBadge: string;
   description: string;
   columnLayoutPresetId: 'full-width' | 'sidebar-left' | 'sidebar-right';
   defaultVisibleSections: string[];
@@ -30,6 +32,7 @@ export const CV_FORMAT_REGISTRY: Record<string, CvFormatDefinition> = {
   'estandar-completo': {
     id: 'estandar-completo',
     name: 'Estándar Completo (Todas las Secciones)',
+    shortBadge: 'Global',
     description: 'Formato tradicional sin restricciones regionales, con las 18 secciones disponibles activas por defecto. Punto de partida recomendado si no aplicás a un estándar internacional específico.',
     columnLayoutPresetId: 'sidebar-left',
     defaultVisibleSections: [...CANONICAL_SECTION_ORDER],
@@ -40,6 +43,7 @@ export const CV_FORMAT_REGISTRY: Record<string, CvFormatDefinition> = {
   'ats-one-column': {
     id: 'ats-one-column',
     name: 'ATS 1 Columna (Corporativo Global)',
+    shortBadge: 'ATS 1 Col',
     description: 'Estructura lineal de 1 sola columna en flujo continuo. Máxima compatibilidad con sistemas ATS de selección corporativa.',
     columnLayoutPresetId: 'full-width',
     defaultVisibleSections: ['contacto', 'redes', 'resumen', 'experiencia', 'formacion', 'habilidades', 'idiomas', 'certificados'],
@@ -50,6 +54,7 @@ export const CV_FORMAT_REGISTRY: Record<string, CvFormatDefinition> = {
   'us-resume': {
     id: 'us-resume',
     name: 'US Resume (EE.UU. / Canadá)',
+    shortBadge: 'EE.UU.',
     description: 'Estándar norteamericano con cumplimiento estricto de leyes de no discriminación (sin foto, edad ni estado civil).',
     columnLayoutPresetId: 'full-width',
     defaultVisibleSections: ['contacto', 'redes', 'resumen', 'experiencia', 'habilidades', 'formacion', 'proyectos'],
@@ -60,6 +65,7 @@ export const CV_FORMAT_REGISTRY: Record<string, CvFormatDefinition> = {
   'europass': {
     id: 'europass',
     name: 'Europass (Estándar Europeo)',
+    shortBadge: 'Europass',
     description: 'Estructura europea unificada con énfasis en Formación, Experiencia e Idiomas clasificados por marco CEFR (A1-C2).',
     columnLayoutPresetId: 'sidebar-left',
     defaultVisibleSections: ['contacto', 'datos-personales', 'redes', 'resumen', 'experiencia', 'formacion', 'idiomas', 'habilidades'],
@@ -70,6 +76,7 @@ export const CV_FORMAT_REGISTRY: Record<string, CvFormatDefinition> = {
   'tech-portfolio': {
     id: 'tech-portfolio',
     name: 'Tech & Software Portfolio',
+    shortBadge: 'Tech',
     description: 'Orientado a desarrolladores, ingenieros y perfiles tecnológicos. Prioriza Proyectos, Habilidades Técnicas y Repositorios.',
     columnLayoutPresetId: 'sidebar-left',
     defaultVisibleSections: ['contacto', 'redes', 'resumen', 'proyectos', 'habilidades', 'experiencia', 'formacion', 'publicaciones'],
@@ -80,6 +87,7 @@ export const CV_FORMAT_REGISTRY: Record<string, CvFormatDefinition> = {
   'latam-clasico': {
     id: 'latam-clasico',
     name: 'LATAM Ejecutivo / Tradicional',
+    shortBadge: 'LATAM',
     description: 'Formato clásico de 2 columnas ampliamente utilizado en América Latina con foto de perfil y datos completos.',
     columnLayoutPresetId: 'sidebar-left',
     defaultVisibleSections: ['contacto', 'datos-personales', 'resumen', 'redes', 'experiencia', 'formacion', 'profesion', 'competencias', 'cursos', 'firma'],

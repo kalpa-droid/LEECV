@@ -222,6 +222,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         onOpenCreditsModal={modalCtrl.openCreditsModal} onOpenShareAppModal={modalCtrl.openShareAppModal}
         onOpenPrivacy={modalCtrl.openPrivacy} onOpenCardExport={modalCtrl.openCardExport}
         onOpenCoverLetterExport={modalCtrl.openCoverLetterExport} onOpenAtsLivePanel={modalCtrl.openAtsLivePanel}
+        onOpenRegionFormat={modalCtrl.openRegionFormatModal}
         onOpenAtsModalWithResult={modalCtrl.openAtsModalWithResult}
         onOpenPdfCheckoutForExport={modalCtrl.openPdfCheckoutForExport}
         onStartPDFGeneration={modalCtrl.handleStartPDFGeneration} onAtsLiveResultChange={modalCtrl.setAtsLiveResult}

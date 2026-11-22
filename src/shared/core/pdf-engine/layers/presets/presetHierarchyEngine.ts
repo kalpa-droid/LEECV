@@ -73,21 +73,31 @@ export function applyPresetLevel(cvData: any, level: PresetLevel, payload: Apply
     const NON_UNIVERSAL_OPTIONAL = new Set(['logros', 'publicaciones', 'referencias', 'idiomas', 'redes']);
     const allVisible: Record<string, boolean> = {};
     CANONICAL_SECTION_ORDER.forEach((id) => {
-      // Los slots de sección personalizada vacíos NO se encienden por defecto:
-      // forzarlos visible dejaba botones fantasma en el dock y secciones sin
-      // contenido. Solo se prenden si ya estaban visibles o tienen datos.
+      const existing = cvData?.sectionVisibility?.[id];
       if (id.startsWith('personalizada-') || NON_UNIVERSAL_OPTIONAL.has(id)) {
-        allVisible[id] = cvData?.sectionVisibility?.[id] === true || checkSectionHasContent(cvData, id);
+        allVisible[id] = existing === true || checkSectionHasContent(cvData, id);
+      } else if (typeof existing === 'boolean') {
+        // Respetar lo que el usuario o el Formato Regional dejaron encendido o apagado
+        allVisible[id] = existing;
       } else {
         allVisible[id] = true;
       }
     });
 
-    // Si el formato activo es compatible con el preset elegido, se conserva
-    // (no se pierde la elección de formato al cambiar de preset).
+    const currentFmt = cvData?.activeFormatId ? getCvFormat(cvData.activeFormatId) : null;
+    const isLockedSingleColumnFormat =
+      cvData?.activeFormatId === 'us-resume' || cvData?.activeFormatId === 'ats-one-column';
+    // Si el formato activo es compatible con el preset elegido (o es estricto de 1 columna), se conserva.
     const activeFormatCompatible =
-      cvData?.activeFormatId &&
-      getCvFormat(cvData.activeFormatId)?.recommendedPresetIds?.includes(payload.presetId);
+      Boolean(cvData?.activeFormatId) &&
+      (currentFmt?.recommendedPresetIds?.includes(payload.presetId) || isLockedSingleColumnFormat);
+
+    // En formatos estrictos de 1 columna (US / ATS 1 Col), el cambio visual mantiene 1 columna.
+    const preservedColumnLayout = isLockedSingleColumnFormat
+      ? 'full-width'
+      : activeFormatCompatible
+        ? cvData?.columnLayoutPresetId
+        : undefined;
 
     const updated = {
       ...cvData,
@@ -95,7 +105,7 @@ export function applyPresetLevel(cvData: any, level: PresetLevel, payload: Apply
       activeFormatId: activeFormatCompatible ? cvData.activeFormatId : undefined,
       colorPresetId: undefined,
       typographyPresetId: undefined,
-      columnLayoutPresetId: undefined,
+      columnLayoutPresetId: preservedColumnLayout,
       sectionVisibility: allVisible,
       theme: { ...(cvData.theme || {}), primaryColor: undefined },
     };
@@ -112,8 +122,14 @@ export function applyPresetLevel(cvData: any, level: PresetLevel, payload: Apply
       typographyPresetId: payload.typographyPresetId !== undefined ? payload.typographyPresetId : cvData?.typographyPresetId,
       columnLayoutPresetId: payload.columnLayoutPresetId !== undefined ? payload.columnLayoutPresetId : cvData?.columnLayoutPresetId
     };
-    if (payload.columnLayoutPresetId !== undefined) {
-      updated.activeFormatId = undefined;
+    if (payload.columnLayoutPresetId !== undefined && cvData?.activeFormatId) {
+      const currentFmt = getCvFormat(cvData.activeFormatId);
+      const switchingColumnTier =
+        (currentFmt.columnLayoutPresetId === 'full-width' && payload.columnLayoutPresetId !== 'full-width') ||
+        (currentFmt.columnLayoutPresetId !== 'full-width' && payload.columnLayoutPresetId === 'full-width');
+      if (switchingColumnTier) {
+        updated.activeFormatId = undefined;
+      }
     }
     return {
       ...updated,

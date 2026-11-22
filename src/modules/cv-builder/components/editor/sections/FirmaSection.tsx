@@ -15,7 +15,7 @@ interface FirmaSectionProps {
 export const FirmaSection: React.FC<FirmaSectionProps> = ({ cvData, setCvData, onOpenSignature }) => {
   return (
     <div className="space-y-4">
-      <SectionToggle sectionId="firma" title="Firma Digital" cvData={cvData} setCvData={setCvData} />
+      <SectionToggle sectionKey="firma" sectionTitle="Firma Digital" cvData={cvData} setCvData={setCvData} />
 
       {cvData?.sectionVisibility?.firma !== false && (
         <>

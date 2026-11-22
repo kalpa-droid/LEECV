@@ -53,6 +53,7 @@ export interface CvWorkspaceContentProps {
   onOpenCardExport: () => void;
   onOpenCoverLetterExport: () => void;
   onOpenAtsLivePanel: () => void;
+  onOpenRegionFormat?: () => void;
   onOpenAtsModalWithResult: (result: AtsPreflightResult) => void;
   onOpenPdfCheckoutForExport: () => void;
   onStartPDFGeneration: () => Promise<void>;
@@ -96,6 +97,7 @@ export const CvWorkspaceContent: React.FC<CvWorkspaceContentProps> = ({
   onOpenCardExport,
   onOpenCoverLetterExport,
   onOpenAtsLivePanel,
+  onOpenRegionFormat,
   onOpenAtsModalWithResult,
   onOpenPdfCheckoutForExport,
   onStartPDFGeneration,
@@ -203,6 +205,7 @@ export const CvWorkspaceContent: React.FC<CvWorkspaceContentProps> = ({
           }}
           onOpenAtsCheck={onOpenAtsLivePanel}
           atsScore={atsLiveScore}
+          onOpenRegionFormat={onOpenRegionFormat}
           onOpenPricing={onOpenPricing}
           onOpenCreditsModal={onOpenCreditsModal}
           onOpenShareAppModal={onOpenShareAppModal}
@@ -259,6 +262,7 @@ export const CvWorkspaceContent: React.FC<CvWorkspaceContentProps> = ({
           onExportCoverLetter={onOpenCoverLetterExport}
           onRefreshCredits={refreshEntitlements}
           atsScore={atsLiveScore}
+          onOpenRegionFormat={onOpenRegionFormat}
           onCreateApplicationVariant={onCreateApplicationVariant}
           onBackToBaseCV={() => {
             if (cvData?.sourceCvTabId) onSwitchTab(cvData.sourceCvTabId, 'cv');

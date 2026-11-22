@@ -386,15 +386,31 @@ export const TAB_TIPS: Record<string, AssistantTip[]> = {
   diseno: [
     {
       id: 'tip-diseno-1',
-      title: 'Ajustes finos',
-      body: 'Usá los tiradores de "Ajustar tamaños y espacio" para darle tu toque personal a la tipografía y densidad.',
+      title: 'Plantilla base y color',
+      body: 'Desde "Estilo & Color" elegís la plantilla general y la paleta cromática sin perder tus secciones activas.',
       targetTab: 'diseno',
     },
     {
       id: 'tip-diseno-2',
-      title: 'Formato regional',
-      body: 'Podés cambiar entre 6 formatos regionales (como ATS o Europass) desde el selector.',
+      title: 'Estándar por país arriba',
+      body: 'En la barra superior tocá el botón de región (ej. Global o LATAM) para cambiar de país o modo ATS en 1 clic.',
       targetTab: 'diseno',
+    },
+  ],
+  diseno_tipografia: [
+    {
+      id: 'tip-diseno-typo-1',
+      title: 'Lectura y espacio finos',
+      body: 'Desde "Letra & Espacio" ajustás la fuente de Google Fonts, la escala tipográfica y el aire entre bloques en la hoja.',
+      targetTab: 'diseno_tipografia',
+    },
+  ],
+  diseno_hoja: [
+    {
+      id: 'tip-diseno-hoja-1',
+      title: 'Hoja y columnas',
+      body: 'Acá elegís el papel para imprimir y si querés 1 o 2 columnas sin perder contenido.',
+      targetTab: 'diseno_hoja',
     },
   ],
   nueva_seccion: [

@@ -120,16 +120,16 @@ describe('applyPresetLevel — Limpieza de theme.primaryColor', () => {
     expect(updated.theme.fontFamily).toBe('Arial');
   });
 
-  it('12. Aplicar preset Nivel 2: canónicas SÍ se encienden; opcionales no universales apagadas y sin contenido NO', () => {
+  it('12. Aplicar preset Nivel 2: respeta apagados explícitos del usuario/región y enciende canónicas no definidas sin encender opcionales vacías', () => {
     const cvData = {
       activePresetId: 'modern-corporate',
-      // 'referencias' es opcional no universal apagada y sin contenido →
-      // el preset no la enciende (evita secciones fantasma sin datos).
+      // En V3.0 cambiar de plantilla visual preserva las perillas/región elegidas
+      // (ej. cursos: false no se reactiva a la fuerza; contacto sin definir sí se enciende).
       sectionVisibility: { referencias: false, cursos: false, experiencia: true }
     };
     const updated = applyPresetLevel(cvData, 'preset', { presetId: 'cv-clasico' });
     expect(updated.sectionVisibility.referencias).toBe(false);
-    expect(updated.sectionVisibility.cursos).toBe(true);
+    expect(updated.sectionVisibility.cursos).toBe(false);
     expect(updated.sectionVisibility.experiencia).toBe(true);
     expect(updated.sectionVisibility.contacto).toBe(true);
   });

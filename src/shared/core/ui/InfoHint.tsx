@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Info } from 'lucide-react';
 import { getUiHint } from './uiTextGlossary';
+import { LidioHelpTrigger } from './LidioHelpTrigger';
 
 export interface InfoHintProps {
   hintId: string;
@@ -9,37 +10,32 @@ export interface InfoHintProps {
 }
 
 /**
- * Componente unificado para tooltip o nota explicativa sutil en escritorio y celular.
+ * Componente unificado para explicación bajo demanda vía globo `?` de Lidio
+ * (o nota inline breve cuando se solicita `variant="inline"`).
  */
-export function InfoHint({ hintId, variant = 'hover', className = '' }: InfoHintProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+export function InfoHint({ hintId, variant = 'tap', className = '' }: InfoHintProps) {
   const hint = getUiHint(hintId);
   if (!hint.text) return null;
 
-  if (variant === 'tap') {
+  if (variant === 'inline') {
     return (
-      <button
-        type="button"
-        onClick={() => setIsExpanded(!isExpanded)}
-        className={`inline-flex flex-col text-left cursor-pointer transition ${className}`}
+      <div
+        className={`inline-flex items-center gap-1.5 text-[11px] text-[var(--color-neutral-text-secondary)] font-medium ${className}`}
+        title={hint.text}
       >
-        <div className="inline-flex items-center gap-1.5 text-[11px] text-[var(--color-neutral-text-secondary)] hover:text-[var(--color-neutral-text-primary)] font-medium">
-          <Info className="w-3.5 h-3.5 text-[var(--color-neutral-text-secondary)] shrink-0" />
-          <span>{hint.title || hint.text}</span>
-        </div>
-        {isExpanded && hint.title && (
-          <span className="mt-1 text-[10px] text-[var(--color-neutral-text-secondary)] leading-relaxed bg-[var(--ui-bg-card)] p-1.5 rounded border border-[var(--color-neutral-border)]">
-            {hint.text}
-          </span>
-        )}
-      </button>
+        <Info className="w-3.5 h-3.5 text-[var(--color-neutral-text-secondary)] shrink-0" />
+        <span>{hint.title || hint.text}</span>
+      </div>
     );
   }
 
   return (
-    <div className={`inline-flex items-center gap-1.5 text-[11px] text-[var(--color-neutral-text-secondary)] font-medium ${className}`} title={hint.text}>
-      <Info className="w-3.5 h-3.5 text-[var(--color-neutral-text-secondary)] shrink-0" />
-      <span>{hint.title || hint.text}</span>
-    </div>
+    <LidioHelpTrigger
+      size="xs"
+      title={hint.title}
+      text={hint.text}
+      groupKey={`hint-${hintId}`}
+      className={className}
+    />
   );
 }

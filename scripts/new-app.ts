@@ -186,7 +186,14 @@ import {
   useRegisterDocumentTab,
 } from '../../shared/core/documents/documentEngine';
 import { useToast } from '../../shared/core/ui/Toast';
-import { elevationSystem, radius } from '../../shared/core/uiDesignSystem';
+import { PanelSection } from '../../shared/core/ui/PanelSection';
+import { ContextualGuideBox } from '../../shared/core/ui/ContextualGuideBox';
+import { SectionSwitch } from '../../shared/core/ui/SectionSwitch';
+import { ActionGrid } from '../../shared/core/ui/ActionGrid';
+import { ActionTileButton } from '../../shared/core/ui/ActionTileButton';
+import { AIButton } from '../../shared/core/ui/AIButton';
+import { UI_ICON_IDS } from '../../shared/core/ui/iconCatalog';
+import { elevationSystem } from '../../shared/core/uiDesignSystem';
 import { DocumentTypeId } from '../../types/document';
 import { createEmpty${pascal}Data } from './domain/${input.id}Types';
 
@@ -226,6 +233,7 @@ export const ${studioComponentName}: React.FC<${studioComponentName}Props> = ({
   const { showInfo } = useToast();
   const [activeStepTab, setActiveStepTab] = useState<string>('${input.id}_inicio');
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
+  const [isSectionEnabled, setIsSectionEnabled] = useState<boolean>(true);
   const docId = useMemo(() => resolveDocumentIdWithHandoff(activeTabId, '${input.id}'), [activeTabId]);
   const [docData] = useState(() => createEmpty${pascal}Data(docId));
   const viewport = useDocumentViewport({ pageSizeId: 'a4' });
@@ -287,10 +295,44 @@ export const ${studioComponentName}: React.FC<${studioComponentName}Props> = ({
         }
         panelSlot={
           <div className="p-4 sm:p-5 space-y-4">
-            <h2 className="text-base font-bold text-[var(--ui-text-primary)]">${input.title}</h2>
-            <p className="text-xs text-[var(--ui-text-secondary)]">
-              Paso activo: {activeStepTab}
-            </p>
+            <PanelSection
+              icon={null}
+              title="${input.title}"
+              helpText="Usá la perilla para incluir u ocultar este paso sin perder datos."
+              headerRight={
+                <div className="flex items-center gap-2">
+                  <AIButton
+                    label="Proponer contenido con IA"
+                    helpText="La IA propone texto base para tu documento actual."
+                    onGenerate={async () => '${input.title} sugerido con IA'}
+                    onSuccess={(text) => showInfo(text)}
+                  />
+                  <SectionSwitch
+                    checked={isSectionEnabled}
+                    onChange={setIsSectionEnabled}
+                    label="${input.title}"
+                  />
+                </div>
+              }
+            >
+              <ContextualGuideBox title="Cómo completarlo bien">
+                Escribí primero tus datos reales y concisos. Paso activo: {activeStepTab}.
+              </ContextualGuideBox>
+              <ActionGrid columns={2}>
+                <ActionTileButton
+                  label="Guardar respaldo"
+                  iconId={UI_ICON_IDS.folderSafe}
+                  helpText="Guarda una copia segura en tu Carpeta Segura para no perder cambios."
+                  onClick={() => showInfo('Conectar saveDocumentToDisk.')}
+                />
+                <ActionTileButton
+                  label="Vista previa"
+                  iconId={UI_ICON_IDS.preview}
+                  helpText="Revisá cómo queda tu documento listo para imprimir o compartir."
+                  onClick={() => setIsPanelOpen(false)}
+                />
+              </ActionGrid>
+            </PanelSection>
           </div>
         }
         mainSlot={
@@ -310,7 +352,7 @@ export const ${studioComponentName}: React.FC<${studioComponentName}Props> = ({
               >
                 <div
                   data-raster-zoom={rasterZoom}
-                  className={\`w-full min-h-[560px] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[\${radius.card}] flex items-center justify-center p-6 text-xs text-[var(--ui-text-secondary)]\`}
+                  className="w-full min-h-[560px] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[12px] flex items-center justify-center p-6 text-xs text-[var(--ui-text-secondary)]"
                 >
                   Conectar componente @react-pdf/renderer desde ./pdf/ con VectorDocViewer
                 </div>
@@ -618,6 +660,14 @@ function runSelfTest(): void {
     }
     if (studioSrc.includes('activeId: activeTabId') || !studioSrc.includes('activeId: docId') || !studioSrc.includes('ScaledPaperSheet')) {
       throw new Error('Self-test falló: studio generado debe usar activeId: docId y ScaledPaperSheet.');
+    }
+    if (
+      !studioSrc.includes('PanelSection') ||
+      !studioSrc.includes('ContextualGuideBox') ||
+      !studioSrc.includes('SectionSwitch') ||
+      !studioSrc.includes('ActionGrid')
+    ) {
+      throw new Error('Self-test falló: studio generado debe incluir los primitivos Cero Ruido (PanelSection, ContextualGuideBox, SectionSwitch, ActionGrid).');
     }
     if (
       !plan.registrationSnippets.documentTypeRegistryEntry.includes('ui:') ||

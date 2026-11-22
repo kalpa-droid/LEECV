@@ -12,6 +12,9 @@ import {
 } from 'lucide-react';
 import { Field } from '../../../../../shared/core/ui/Field';
 import { button } from '../../../../../shared/core/uiDesignSystem';
+import { LidioHelpTrigger } from '../../../../../shared/core/ui/LidioHelpTrigger';
+import { DomSectionIcon } from '../../../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
+import { UI_ICON_IDS } from '../../../../../shared/core/ui/iconCatalog';
 import { useCVContext } from '../../../../../context/CVContext';
 import { useToast } from '../../../../../shared/core/ui/Toast';
 import { executeAiTask } from '../../../../../shared/core/ai/aiClient';
@@ -268,15 +271,20 @@ export const JobTargetSection = ({
           </div>
 
           {/* Bloque 2: Descubrimiento con IA de en qué se perfila según todo el CV Base */}
-          <div className="space-y-4 rounded-[var(--ui-radius-card)] border border-[var(--color-accent-base)]/40 bg-[var(--ui-bg-card)] p-4">
-            <div className="space-y-1">
+          <div className="space-y-3 rounded-[var(--ui-radius-card)] border border-[var(--color-accent-base)]/40 bg-[var(--ui-bg-card)] p-4">
+            <div className="flex items-center justify-between gap-2">
               <h3 className="text-sm font-bold text-[var(--ui-text-primary)] flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-[var(--color-accent-text)]" />
+                <span className="ui-ai-sparkle-loop text-[var(--color-accent-text)]">
+                  <DomSectionIcon iconId={UI_ICON_IDS.ia} size={16} strokeWidth={2.1} />
+                </span>
                 Analizar en qué me perfilo
               </h3>
-              <p className="text-xs text-[var(--ui-text-secondary)] leading-relaxed">
-                La IA lee <strong>todo tu CV Base completo</strong> (formación, cursos, experiencia, habilidades y ciudad) para proponerte puestos y empresas reales o remotas acordes a tu perfil. Luego tocá <strong>Crear postulación</strong> en cualquiera para revisar el aviso y adaptar tu nuevo CV.
-              </p>
+              <LidioHelpTrigger
+                size="xs"
+                title="Analizar en qué me perfilo"
+                text="La IA lee todo tu CV Base completo (formación, cursos, experiencia, habilidades y ciudad) para proponerte puestos y empresas reales o remotas acordes a tu perfil. Luego tocá Crear postulación en cualquiera para revisar el aviso y adaptar tu nuevo CV."
+                groupKey="job-target-analyze-profiles"
+              />
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2">
@@ -291,10 +299,16 @@ export const JobTargetSection = ({
                 type="button"
                 onClick={handleAnalyzeProfiles}
                 disabled={isAnalyzingProfiles}
-                className={`${button.base} ${button.primary} flex items-center justify-center gap-2 text-xs px-4 py-2 shrink-0`}
+                className={`${button.base} ${button.primary} flex items-center justify-center gap-2 text-xs px-4 py-2 shrink-0 cursor-pointer`}
               >
-                {isAnalyzingProfiles ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
-                {isAnalyzingProfiles ? 'Analizando CV Base…' : 'Analizar en qué me perfilo'}
+                {isAnalyzingProfiles ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <span className="ui-ai-sparkle-loop">
+                    <DomSectionIcon iconId={UI_ICON_IDS.ia} size={15} strokeWidth={2.1} />
+                  </span>
+                )}
+                {isAnalyzingProfiles ? 'Analizando…' : 'Proponer puestos'}
               </button>
             </div>
 

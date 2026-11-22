@@ -3,6 +3,7 @@ import { Field } from '../../../../../shared/core/ui/Field';
 import { SectionManualAdjustment } from '../SectionManualAdjustment';
 import { typeScale, colorSystem, button } from '../../../../../shared/core/uiDesignSystem';
 import { AIButton } from '../../../../../shared/core/ui/AIButton';
+import { ContextualGuideBox } from '../../../../../shared/core/ui/ContextualGuideBox';
 import { executeAiTask } from '../../../../../shared/core/ai/aiClient';
 
 interface ResumenSectionProps {
@@ -28,10 +29,13 @@ export const ResumenSection: React.FC<ResumenSectionProps> = ({ cvData, setCvDat
   };
 
   return (
-    <div className="space-y-4 bg-white p-4 rounded-[12px] border border-[var(--color-neutral-border)]">
+    <div className="space-y-4 bg-[var(--ui-bg-card)] p-4 rounded-[12px] border border-[var(--color-neutral-border)]">
       <h3 className={`${typeScale.sectionTitle} uppercase tracking-wide`} style={{ color: colorSystem.neutral.textPrimary }}>
-        Resumen Profesional / Extracto (Elevator Pitch)
+        Resumen Profesional
       </h3>
+      <ContextualGuideBox title="Cómo redactar tu Resumen">
+        Resumí tus años de experiencia, especialidad principal y un logro concreto en 3 o 4 líneas.
+      </ContextualGuideBox>
       <Field
         id="summary"
         as="textarea"
@@ -39,7 +43,8 @@ export const ResumenSection: React.FC<ResumenSectionProps> = ({ cvData, setCvDat
         label="Extracto o Perfil Profesional"
         headerAction={
           <AIButton
-            label="Proponer mejora"
+            label="Proponer resumen con IA"
+            helpText="La IA redacta una propuesta de resumen basada en tus secciones cargadas."
             onGenerate={handleGenerateSummary}
             onSuccess={setSuggestion}
           />

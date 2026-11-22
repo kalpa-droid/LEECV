@@ -13,6 +13,10 @@ import ShareAppModal from '../modules/cv-builder/components/modals/ShareAppModal
 import EmailSaveModal from '../modules/cv-builder/components/modals/EmailSaveModal';
 import { AtsCheckModal } from '../modules/cv-builder/components/AtsCheckModal';
 import { AtsLiveAuditorPanel } from '../modules/cv-builder/components/AtsLiveAuditorPanel';
+import { FormatConfirmationModal, FormatApplicationMode } from '../modules/cv-builder/components/FormatConfirmationModal';
+import { getCvFormat, resolveActiveFormatId } from '../shared/core/formats/cvFormatRegistry';
+import { applyPresetLevel } from '../shared/core/pdf-engine/layers/presets/presetHierarchyEngine';
+import { triggerPresetTransition } from '../shared/core/pdf-engine/layers/presets/presetTransitionEngine';
 import { CoverLetterExportModal } from '../modules/cv-builder/components/cover-letter/CoverLetterExportModal';
 import { UpdateToast } from '../shared/core/ui/UpdateToast';
 import { PricingModal } from '../modules/payments/components/PricingModal';
@@ -47,6 +51,7 @@ export interface AppModalsProps {
   isPrivacyModalOpen: boolean; setIsPrivacyModalOpen: (v: boolean) => void;
   isAtsModalOpen: boolean; setIsAtsModalOpen: (v: boolean) => void;
   isAtsLivePanelOpen: boolean; setIsAtsLivePanelOpen: (v: boolean) => void;
+  isRegionFormatModalOpen: boolean; setIsRegionFormatModalOpen: (v: boolean) => void;
   activeTab: string;
   setActiveTab: (tab: string) => void;
   isPanelOpen: boolean;
@@ -101,6 +106,7 @@ export function AppModals(props: AppModalsProps) {
     isPrivacyModalOpen, setIsPrivacyModalOpen,
     isAtsModalOpen, setIsAtsModalOpen,
     isAtsLivePanelOpen, setIsAtsLivePanelOpen,
+    isRegionFormatModalOpen, setIsRegionFormatModalOpen,
     activeTab, setActiveTab,
     isPanelOpen, setIsPanelOpen,
     isPricingModalOpen, setIsPricingModalOpen,
@@ -392,6 +398,23 @@ export function AppModals(props: AppModalsProps) {
           onOpenAssist={() => {
             jumpToPanelTab('experiencia');
             setIsAtsLivePanelOpen(false);
+          }}
+        />
+      )}
+
+      {isRegionFormatModalOpen && (
+        <FormatConfirmationModal
+          isOpen={isRegionFormatModalOpen}
+          initialFormatId={resolveActiveFormatId(cvData)}
+          onClose={() => setIsRegionFormatModalOpen(false)}
+          onConfirm={(mode: FormatApplicationMode, selectedFormatId: string) => {
+            const fmt = getCvFormat(selectedFormatId);
+            triggerPresetTransition(fmt?.name || selectedFormatId, 'format');
+            setCvData((prev: any) =>
+              applyPresetLevel(prev, 'format', { formatId: selectedFormatId, applicationMode: mode }),
+            );
+            showSuccess(`Estándar "${fmt?.shortBadge || fmt?.name || selectedFormatId}" aplicado correctamente.`);
+            setIsRegionFormatModalOpen(false);
           }}
         />
       )}

@@ -1,293 +1,233 @@
 /**
- * COMPONENTE — MODAL DE CONFIRMACIÓN DE FORMATO GLOBAL (FormatConfirmationModal.tsx)
- * 
- * Permite al usuario elegir cómo aplicar un formato de CV (Curaduría Recomendada,
- * Solo Reordenar o Formato Completo con las 20 secciones visibles), garantizando
- * y notificando de forma transparente que NINGÚN DATO se borra jamás del JSON.
+ * MODAL UNIFICADO DE REGIÓN Y ESTÁNDAR GLOBAL DEL CV (FormatConfirmationModal.tsx)
+ *
+ * Promovido a la barra superior junto al diagnóstico ATS (`🌐 <Región>`).
+ * Permite elegir el estándar internacional (Global, ATS 1 Col, US Resume, Europass,
+ * Tech, LATAM) y decidir cómo reorganizar la vista previa sin eliminar jamás datos.
  */
 
-import React, { useState } from 'react';
-import { colorSystem, radius } from '../../../shared/core/uiDesignSystem';
-import { FileText, Layout, Layers, ShieldCheck, CheckCircle, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { FileText, Layout, Layers, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Modal } from '../../../shared/core/ui/Modal';
+import { LidioHelpTrigger } from '../../../shared/core/ui/LidioHelpTrigger';
+import { DomSectionIcon } from '../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
+import { UI_ICON_IDS } from '../../../shared/core/ui/iconCatalog';
+import {
+  getAllCvFormats,
+  getCvFormat,
+} from '../../../shared/core/formats/cvFormatRegistry';
+import { button, elevationSystem } from '../../../shared/core/uiDesignSystem';
 import { t } from '../../../shared/i18n/useText';
 
 export type FormatApplicationMode = 'curated' | 'reorder-only' | 'full-20-sections';
 
 export interface FormatConfirmationModalProps {
   isOpen: boolean;
-  formatName: string;
+  initialFormatId?: string;
+  formatName?: string;
   onClose: () => void;
-  onConfirm: (mode: FormatApplicationMode) => void;
+  onConfirm: (mode: FormatApplicationMode, selectedFormatId: string) => void;
 }
 
 export const FormatConfirmationModal: React.FC<FormatConfirmationModalProps> = ({
   isOpen,
+  initialFormatId = 'estandar-completo',
   formatName,
   onClose,
-  onConfirm
+  onConfirm,
 }) => {
+  const [selectedFormatId, setSelectedFormatId] = useState<string>(initialFormatId);
   const [selectedMode, setSelectedMode] = useState<FormatApplicationMode>('curated');
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedFormatId(initialFormatId || 'estandar-completo');
+    }
+  }, [isOpen, initialFormatId]);
+
+  const formats = getAllCvFormats();
+  const activeFmt = getCvFormat(selectedFormatId);
 
   const handleApply = () => {
-    onConfirm(selectedMode);
+    onConfirm(selectedMode, selectedFormatId);
     onClose();
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.75)',
-        backdropFilter: 'blur(4px)',
-        zIndex: 9999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px'
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '540px',
-          maxHeight: 'calc(100vh - 32px)',
-          backgroundColor: colorSystem.neutral.surface,
-          borderRadius: radius.modal,
-          boxShadow: 'var(--shadow-overlay)',
-          border: `1px solid ${colorSystem.neutral.border}`,
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column'
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Encabezado Modal */}
-        <div
-          style={{
-            padding: '16px 20px',
-            borderBottom: `1px solid ${colorSystem.neutral.border}`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            background: colorSystem.neutral.surfaceMuted,
-            flexShrink: 0
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div
-              style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: radius.control,
-                background: `${colorSystem.accent.base}15`,
-                color: colorSystem.accent.base,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
-              }}
-            >
-              <Layout size={22} />
-            </div>
-            <div>
-              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: colorSystem.neutral.textPrimary }}>
-                {t.modals.formatConfirmation.title} {formatName}
-              </h3>
-              <p style={{ margin: 0, fontSize: '12.5px', color: colorSystem.neutral.textSecondary }}>
-                {t.modals.formatConfirmation.subtitle}
-              </p>
-            </div>
-          </div>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="lg"
+      icon={<DomSectionIcon iconId={UI_ICON_IDS.region} size={18} />}
+      title={formatName ? `Estándar: ${formatName}` : '¿Para qué país o estándar es este CV?'}
+      helpText="Elegí el estándar según dónde enviás el CV (EE.UU., Europa, LATAM o lectura automática ATS). Cambiar de región nunca elimina tus datos cargados."
+      footer={
+        <div className="flex items-center justify-end gap-2.5 w-full">
           <button
+            type="button"
             onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: colorSystem.neutral.textSecondary,
-              padding: '6px',
-              borderRadius: radius.control,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Contenido Modal */}
-        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto', flex: 1 }}>
-          {/* Mensaje de Confianza e Integridad de Datos */}
-          <div
-            style={{
-              padding: '12px 14px',
-              borderRadius: radius.control,
-              background: `${colorSystem.status.success.base}12`,
-              border: `1px solid ${colorSystem.status.success.base}35`,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px'
-            }}
-          >
-            <ShieldCheck size={18} style={{ color: colorSystem.status.success.base, flexShrink: 0 }} />
-            <div style={{ fontSize: '13px', fontWeight: 700, color: colorSystem.neutral.textPrimary }}>
-              {t.modals.formatConfirmation.noDataLoss}
-            </div>
-          </div>
-
-          {/* Opciones de Aplicación */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {/* Opción 1: Aplicar Plantilla Completa */}
-            <div
-              onClick={() => setSelectedMode('curated')}
-              style={{
-                padding: '14px',
-                borderRadius: radius.card,
-                border: `2px solid ${selectedMode === 'curated' ? colorSystem.accent.base : colorSystem.neutral.border}`,
-                backgroundColor: selectedMode === 'curated' ? `${colorSystem.accent.base}08` : colorSystem.neutral.surface,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '12px',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <div style={{ marginTop: '2px', color: selectedMode === 'curated' ? colorSystem.accent.base : colorSystem.neutral.textSecondary }}>
-                {selectedMode === 'curated' ? <CheckCircle size={20} /> : <FileText size={20} />}
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '13.5px', fontWeight: 700, color: colorSystem.neutral.textPrimary }}>
-                    {t.modals.formatConfirmation.option1Title}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: '10.5px',
-                      fontWeight: 800,
-                      padding: '2px 8px',
-                      borderRadius: '4px',
-                      background: colorSystem.accent.base,
-                      color: colorSystem.accent.onBase
-                    }}
-                  >
-                    {t.modals.formatConfirmation.recommended}
-                  </span>
-                </div>
-                <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: colorSystem.neutral.textSecondary, lineHeight: 1.4 }}>
-                  {t.modals.formatConfirmation.option1Sub}
-                </p>
-              </div>
-            </div>
-
-            {/* Opción 2: Aplicar Orden de Plantilla */}
-            <div
-              onClick={() => setSelectedMode('reorder-only')}
-              style={{
-                padding: '14px',
-                borderRadius: radius.card,
-                border: `2px solid ${selectedMode === 'reorder-only' ? colorSystem.accent.base : colorSystem.neutral.border}`,
-                backgroundColor: selectedMode === 'reorder-only' ? `${colorSystem.accent.base}08` : colorSystem.neutral.surface,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '12px',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <div style={{ marginTop: '2px', color: selectedMode === 'reorder-only' ? colorSystem.accent.base : colorSystem.neutral.textSecondary }}>
-                {selectedMode === 'reorder-only' ? <CheckCircle size={20} /> : <Layout size={20} />}
-              </div>
-              <div style={{ flex: 1 }}>
-                <span style={{ fontSize: '13.5px', fontWeight: 700, color: colorSystem.neutral.textPrimary }}>
-                  {t.modals.formatConfirmation.option2Title}
-                </span>
-                <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: colorSystem.neutral.textSecondary, lineHeight: 1.4 }}>
-                  {t.modals.formatConfirmation.option2Sub}
-                </p>
-              </div>
-            </div>
-
-            {/* Opción 3: Aplicar Plantilla Sin Filtros */}
-            <div
-              onClick={() => setSelectedMode('full-20-sections')}
-              style={{
-                padding: '14px',
-                borderRadius: radius.card,
-                border: `2px solid ${selectedMode === 'full-20-sections' ? colorSystem.accent.base : colorSystem.neutral.border}`,
-                backgroundColor: selectedMode === 'full-20-sections' ? `${colorSystem.accent.base}08` : colorSystem.neutral.surface,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '12px',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <div style={{ marginTop: '2px', color: selectedMode === 'full-20-sections' ? colorSystem.accent.base : colorSystem.neutral.textSecondary }}>
-                {selectedMode === 'full-20-sections' ? <CheckCircle size={20} /> : <Layers size={20} />}
-              </div>
-              <div style={{ flex: 1 }}>
-                <span style={{ fontSize: '13.5px', fontWeight: 700, color: colorSystem.neutral.textPrimary }}>
-                  {t.modals.formatConfirmation.option3Title}
-                </span>
-                <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: colorSystem.neutral.textSecondary, lineHeight: 1.4 }}>
-                  {t.modals.formatConfirmation.option3Sub}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Acciones de Footer */}
-        <div
-          style={{
-            padding: '14px 20px',
-            borderTop: `1px solid ${colorSystem.neutral.border}`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            gap: '12px',
-            background: colorSystem.neutral.surfaceMuted,
-            flexShrink: 0
-          }}
-        >
-          <button
-            onClick={onClose}
-            style={{
-              padding: '9px 16px',
-              borderRadius: radius.control,
-              border: `1px solid ${colorSystem.neutral.border}`,
-              background: colorSystem.neutral.surface,
-              color: colorSystem.neutral.textPrimary,
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
+            className={`${button.secondary} cursor-pointer px-4 py-2 text-xs`}
           >
             {t.common.actions.cancel}
           </button>
           <button
+            type="button"
             onClick={handleApply}
-            style={{
-              padding: '9px 20px',
-              borderRadius: radius.control,
-              border: 'none',
-              background: colorSystem.accent.base,
-              color: colorSystem.accent.onBase,
-              fontSize: '13px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              boxShadow: 'var(--shadow-raised)'
-            }}
+            className={`${button.primary} cursor-pointer px-4 py-2 text-xs`}
           >
-            {t.modals.formatConfirmation.applyBtn}
+            Aplicar {activeFmt.shortBadge}
           </button>
         </div>
+      }
+    >
+      <div className="space-y-4">
+        {/* Aviso breve de no destrucción de datos */}
+        <div className="rounded-[12px] border border-[var(--color-status-success-base)]/35 bg-[var(--color-status-success-muted)] px-3 py-2 flex items-center gap-2 text-[12px] font-semibold text-[var(--color-status-success-text)]">
+          <ShieldCheck className="w-4 h-4 shrink-0" />
+          <span>{t.modals.formatConfirmation.noDataLoss}</span>
+        </div>
+
+        {/* Selector de Región en 2 columnas limpias (icono/insignia + nombre + ?) */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-extrabold uppercase tracking-wider text-[var(--color-neutral-text-secondary)]">
+              1. Estándar regional
+            </span>
+            <LidioHelpTrigger
+              size="xs"
+              title="Estándar regional"
+              text="Por ejemplo, EE.UU. oculta foto y edad por ley anti-sesgos; Europass prioriza idiomas; LATAM permite perfil clásico completo y foto."
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {formats.map((fmt) => {
+              const isSelected = fmt.id === selectedFormatId;
+              return (
+                <div
+                  key={fmt.id}
+                  className={`relative rounded-[12px] border transition-all ${
+                    isSelected
+                      ? `border-2 border-[var(--color-accent-base)] bg-[var(--color-accent-muted)] ${elevationSystem.raised}`
+                      : 'border-[var(--color-neutral-border)] bg-[var(--ui-btn-outline-bg)] hover:border-[var(--color-accent-base)]/60'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setSelectedFormatId(fmt.id)}
+                    className="w-full p-2.5 pr-9 text-left flex items-start gap-2.5 cursor-pointer"
+                  >
+                    <span
+                      className={`mt-0.5 text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${
+                        isSelected
+                          ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
+                          : 'bg-[var(--color-neutral-surface-muted)] text-[var(--color-neutral-text-secondary)]'
+                      }`}
+                    >
+                      {fmt.shortBadge}
+                    </span>
+                    <span className="text-[12px] font-bold leading-snug text-[var(--color-neutral-text-primary)] line-clamp-2">
+                      {fmt.name}
+                    </span>
+                  </button>
+                  <div className="absolute top-2.5 right-2 z-10">
+                    <LidioHelpTrigger
+                      size="xs"
+                      title={fmt.name}
+                      text={fmt.description}
+                      groupKey={`fmt-help-${fmt.id}`}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Selector de modo de aplicación limpio */}
+        <div className="space-y-2 pt-2 border-t border-[var(--color-neutral-border)]">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-extrabold uppercase tracking-wider text-[var(--color-neutral-text-secondary)]">
+              2. Cómo acomodar tus secciones
+            </span>
+            <LidioHelpTrigger
+              size="xs"
+              title="Cómo acomodar secciones"
+              text="Podés activar solo lo recomendado para esta región, reordenar lo que ya tenés visible, o mostrar todas las secciones disponibles."
+            />
+          </div>
+
+          <div className="space-y-2">
+            {[
+              {
+                id: 'curated' as FormatApplicationMode,
+                title: t.modals.formatConfirmation.option1Title,
+                help: t.modals.formatConfirmation.option1Sub,
+                badge: t.modals.formatConfirmation.recommended,
+                Icon: FileText,
+              },
+              {
+                id: 'reorder-only' as FormatApplicationMode,
+                title: t.modals.formatConfirmation.option2Title,
+                help: t.modals.formatConfirmation.option2Sub,
+                Icon: Layout,
+              },
+              {
+                id: 'full-20-sections' as FormatApplicationMode,
+                title: t.modals.formatConfirmation.option3Title,
+                help: t.modals.formatConfirmation.option3Sub,
+                Icon: Layers,
+              },
+            ].map(({ id, title, help, badge, Icon }) => {
+              const selected = selectedMode === id;
+              return (
+                <div
+                  key={id}
+                  className={`relative rounded-[12px] border transition-all ${
+                    selected
+                      ? 'border-2 border-[var(--color-accent-base)] bg-[var(--color-accent-muted)]'
+                      : 'border-[var(--color-neutral-border)] bg-[var(--ui-btn-outline-bg)] hover:border-[var(--color-neutral-border-strong)]'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMode(id)}
+                    className="w-full p-2.5 pr-9 flex items-center gap-2.5 text-left cursor-pointer"
+                  >
+                    <span
+                      className={
+                        selected
+                          ? 'text-[var(--color-accent-text)] shrink-0'
+                          : 'text-[var(--color-neutral-text-secondary)] shrink-0'
+                      }
+                    >
+                      {selected ? <CheckCircle2 className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
+                    </span>
+                    <span className="text-[12px] font-bold text-[var(--color-neutral-text-primary)] truncate">
+                      {title}
+                    </span>
+                    {badge && (
+                      <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] shrink-0">
+                        {badge}
+                      </span>
+                    )}
+                  </button>
+                  <div className="absolute top-2.5 right-2 z-10">
+                    <LidioHelpTrigger
+                      size="xs"
+                      title={title}
+                      text={help}
+                      groupKey={`fmt-mode-${id}`}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
-    </div>
+    </Modal>
   );
 };
+
+export default FormatConfirmationModal;

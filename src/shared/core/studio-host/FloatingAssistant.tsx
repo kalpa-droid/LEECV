@@ -24,6 +24,7 @@ import type { MetadataOnlyContext } from '../../contracts/assistantContract';
 import { executeAiTask } from '../ai/aiClient';
 import { useToast } from '../ui/Toast';
 import { AssistantNotificationToast } from './AssistantNotificationToast';
+import { LidioLiveMessage, subscribeLidioMessages } from '../assistant/lidioBus';
 
 interface FloatingAssistantProps {
   activeTab: string;
@@ -127,6 +128,7 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [toastTip, setToastTip] = useState<AssistantTip | null>(null);
+  const [liveMessage, setLiveMessage] = useState<LidioLiveMessage | null>(null);
 
   const idleTimer = useRef<number | null>(null);
   const tipDelay = useRef(FIRST_TIP_IDLE_MS);
@@ -247,6 +249,14 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages.length]);
 
+  // Bus vivo de Lidio (`?`, cambios de estado de ojo/perilla y guardado en carpeta)
+  useEffect(() => {
+    return subscribeLidioMessages((msg) => {
+      setLiveMessage(msg);
+      setToastTip(null);
+    });
+  }, []);
+
   const goToTab = useCallback((tabId: string) => {
     const dest = validateAssistantTargetTab(tabId, cvData, docType);
     if (dest) {
@@ -256,10 +266,14 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
   }, [cvData, onNavigate, docType, closePanel]);
 
   const dismissToast = useCallback(() => {
+    if (liveMessage) {
+      setLiveMessage(null);
+      return;
+    }
     setToastTip(null);
     setCurrentTip(null);
     if (canTip()) { tipDelay.current = NEXT_TIP_IDLE_MS; scheduleNext(); }
-  }, [canTip, scheduleNext]);
+  }, [liveMessage, canTip, scheduleNext]);
 
   /** "Otro tip": avance manual por el catálogo, sin tope de sesión ni toast. */
   const showAnotherTip = useCallback(() => {
@@ -315,27 +329,37 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
 
   return (
     <div className="print:hidden">
-      <div className="fixed bottom-5 right-5 z-50">
+      <div
+        className="fixed bottom-[86px] right-3 md:bottom-5 md:right-5"
+        style={{ zIndex: zIndex.assistantFab }}
+      >
         <button
           type="button"
           aria-label={`Abrir ${ASSISTANT_NAME}, ${DOC_META[docType].ariaOpen}`}
           aria-expanded={open}
           onClick={handleToggleOpen}
-          className={`flex h-12 w-12 items-center justify-center rounded-full border border-[var(--color-accent-base)]/30 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-base)] ${elevationSystem.floating}`}
+          className={`flex h-12 w-12 items-center justify-center rounded-full border border-[var(--color-accent-base)]/30 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-base)] ${elevationSystem.floating} cursor-pointer`}
         >
           <DomSectionIcon iconId={UI_ICON_IDS.assistant} className="h-5 w-5" color="currentColor" />
-          {toastTip && !open && (
+          {(toastTip || liveMessage) && !open && (
             <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-[var(--color-status-danger-base)] border-2 border-[var(--color-accent-on-base)]" aria-label="Tip nuevo" />
           )}
         </button>
 
         {open && (
-          <section
-            role="dialog"
-            aria-label={ASSISTANT_NAME}
-            className={`ui-assistant-pop fixed bottom-20 right-5 flex w-[min(360px,calc(100vw-2rem))] max-h-[70vh] flex-col overflow-hidden rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] ${elevationSystem.overlay}`}
-            style={{ zIndex: zIndex.drawer + 1 }}
-          >
+          <>
+            <div
+              className="md:hidden fixed inset-0 bg-black/55 backdrop-blur-xs"
+              style={{ zIndex: zIndex.assistantDialog - 1 }}
+              onClick={closePanel}
+              aria-hidden="true"
+            />
+            <section
+              role="dialog"
+              aria-label={ASSISTANT_NAME}
+              className={`ui-assistant-pop fixed bottom-0 left-0 right-0 h-[82dvh] rounded-t-[20px] md:bottom-20 md:left-auto md:right-5 md:h-auto md:w-[380px] md:max-h-[72vh] md:rounded-[var(--ui-radius-card)] flex flex-col overflow-hidden border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] ${elevationSystem.overlay}`}
+              style={{ zIndex: zIndex.assistantDialog }}
+            >
             <header className="flex items-center gap-2.5 border-b border-[var(--ui-border)] px-3 py-2.5">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent-muted)] text-[var(--color-accent-text)]">
                 <DomSectionIcon iconId={UI_ICON_IDS.assistant} className="h-4 w-4" color="currentColor" />
@@ -497,15 +521,27 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
               </p>
             </footer>
           </section>
+          </>
         )}
       </div>
 
-      {toastTip && (
+      {(liveMessage || toastTip) && !open && (
         <AssistantNotificationToast
-          tip={toastTip}
+          key={liveMessage?.id || toastTip?.id}
+          liveMessage={liveMessage}
+          tip={liveMessage ? null : toastTip}
           onDismiss={dismissToast}
-          onGoToTab={(tabId) => { goToTab(tabId); setToastTip(null); setCurrentTip(null); }}
-          onToggleMute={() => { toggleDoNotDisturb(); setToastTip(null); setCurrentTip(null); }}
+          onGoToTab={(tabId) => {
+            goToTab(tabId);
+            setLiveMessage(null);
+            setToastTip(null);
+            setCurrentTip(null);
+          }}
+          onToggleMute={() => {
+            toggleDoNotDisturb();
+            setToastTip(null);
+            setCurrentTip(null);
+          }}
         />
       )}
     </div>

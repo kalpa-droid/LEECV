@@ -209,8 +209,10 @@ Toda nueva aplicación, herramienta o tipo de documento que se integre a LEECV *
    - Montar el estudio lazy y su proveedor de Dock en `src/app/appRegistry.ts` (`APP_REGISTRY` + `registerDockStepProvider`), dejando a `<StudioRoute />` y `StudioHost` (`StudioNavbar`, `StudioDock`) operar sin `if (docType === ...)` en el tronco.
    - Generar el esqueleto inicial con `npm run new-app -- --id=<id> --title="<Nombre>"`.
 
-2. **Formularios y Paneles UI Canónicos:**
+2. **Formularios y Paneles UI Canónicos (Estándar Cero Ruido V3.0):**
    - Inputs: `<Field />` (`src/shared/core/ui/Field.tsx`); listas: `<RepeatableSection />` + `<RecordFormSection />`; íconos: `iconCatalog.ts` + `ICON_REGISTRY`.
+   - Ayuda y controles sin ruido visual: `<PanelSection helpText="..." />` + `<LidioHelpTrigger />` (globo `?` de Lidio para explicar botones/funciones bajo demanda), `<ContextualGuideBox />` (siempre visible solo para orientar qué redactar/cargar), `<SectionSwitch />` (perilla en vez de `ACTIVADA/DESACTIVADA`), `<VisibilityEyeToggle />` (ojo abierto/tachado en vez de checkbox), `<ActionGrid />` + `<ActionTileButton />` (mosaicos de ícono+título), y `<AIButton />` (solo símbolo IA animado).
+   - Guardado en disco transparente: `nativeFileDocumentService.ts` + `fileHandleStore.ts` para "Carpeta Segura" y avisos explícitos vía `lidioBus.ts`.
    - Tokens y colores: exclusivamente desde `src/shared/core/uiDesignSystem.ts` y variables CSS de `src/index.css`.
 
 3. **Motor PDF Universal y Registro por Categoría:**

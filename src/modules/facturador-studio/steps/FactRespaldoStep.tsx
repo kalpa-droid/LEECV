@@ -96,11 +96,12 @@ export const FactRespaldoStep: React.FC<FactRespaldoStepProps> = ({
         </div>
       ) : null}
 
-      <PanelSection icon={<HardDrive className="w-4 h-4" />} title="Copia para pendrive">
+      <PanelSection
+        icon={<HardDrive className="w-4 h-4" />}
+        title="Copia para pendrive"
+        helpText="Genera un archivo .leecv-fact cifrado con empresa, clientes, catálogo, comprobantes y logo. Sin tu contraseña no se puede abrir."
+      >
         <div className="space-y-2">
-          <p className="text-[11px] text-[var(--ui-text-secondary)]">
-            Genera un archivo <strong>.leecv-fact</strong> con todo cifrado: empresa, clientes, catálogo, comprobantes y logo. Sin tu contraseña no se puede abrir.
-          </p>
           <button
             type="button"
             onClick={handlePortable}

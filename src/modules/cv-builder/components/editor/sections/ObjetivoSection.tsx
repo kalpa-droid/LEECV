@@ -3,6 +3,7 @@ import { Target } from 'lucide-react';
 import { Field } from '../../../../../shared/core/ui/Field';
 import { SectionManualAdjustment } from '../SectionManualAdjustment';
 import { AIButton } from '../../../../../shared/core/ui/AIButton';
+import { ContextualGuideBox } from '../../../../../shared/core/ui/ContextualGuideBox';
 import { executeAiTask } from '../../../../../shared/core/ai/aiClient';
 import { button } from '../../../../../shared/core/uiDesignSystem';
 
@@ -38,11 +39,14 @@ export const ObjetivoSection: React.FC<ObjetivoSectionProps> = ({ cvData, setCvD
   };
 
   return (
-    <div className="space-y-3 p-3 bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[var(--radius-card)]">
+    <div className="space-y-3 p-3 bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[12px]">
       <h3 className="text-sm font-black text-[var(--color-neutral-text-primary)] flex items-center gap-1.5">
         <Target className="w-4 h-4 text-[var(--color-secondary-bright)]" />
-        Objetivo Profesional / Resumen Ejecutivo
+        Objetivo Profesional
       </h3>
+      <ContextualGuideBox title="Cómo redactar tu Objetivo">
+        Contá en 2 o 3 líneas qué rol buscás y qué aporte hacés al equipo.
+      </ContextualGuideBox>
       <Field
         id="objective"
         as="textarea"
@@ -50,7 +54,8 @@ export const ObjetivoSection: React.FC<ObjetivoSectionProps> = ({ cvData, setCvD
         label="Objetivo Profesional"
         headerAction={
           <AIButton
-            label="Proponer con IA"
+            label="Proponer objetivo con IA"
+            helpText="La IA propone un objetivo profesional adaptado a tu perfil y puesto buscado."
             onGenerate={handleGenerateObjective}
             onSuccess={setSuggestion}
           />

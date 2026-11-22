@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { FileText, FileType, Download } from 'lucide-react';
 import { Modal } from '../../../../shared/core/ui/Modal';
+import { ActionGrid } from '../../../../shared/core/ui/ActionGrid';
+import { ActionTileButton } from '../../../../shared/core/ui/ActionTileButton';
+import { SectionSwitch } from '../../../../shared/core/ui/SectionSwitch';
 import { useToast } from '../../../../shared/core/ui/Toast';
 import { withErrorHandling } from '../../../../shared/core/utils/errorHandler';
 import { downloadBlob } from '../../../../shared/core/utils/downloadUtils';
@@ -66,50 +69,43 @@ export function CoverLetterExportModal({ isOpen, onClose, cvData, presetId = 'ca
       isOpen={isOpen}
       onClose={onClose}
       title="Descargar Carta de Presentación"
+      helpText="La exportación de cartas es gratis (sin consumir créditos) y siempre se descarga en un archivo separado del CV."
       icon={<FileText className="w-5 h-5 text-[var(--ui-rose)]" />}
       size="lg"
     >
       <div className="space-y-4">
-        <p className="text-xs text-[var(--ui-text-secondary)]">
-          Elegí el formato de descarga. La exportación de cartas de presentación <strong>no consume créditos</strong> y siempre se descarga en un archivo separado del CV.
-        </p>
-
-        <div className="bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)] p-3 rounded-md flex items-start gap-2 mb-2">
-          <input
-            type="checkbox"
-            id="review-gate"
+        <div className="bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/40 p-3 rounded-[12px] flex items-center justify-between gap-3">
+          <span className="text-xs text-[var(--color-status-warning-text)] font-bold leading-snug">
+            Confirmación obligatoria: revisé el texto y reemplacé cualquier dato de ejemplo.
+          </span>
+          <SectionSwitch
             checked={hasReviewed}
-            onChange={(e) => setHasReviewed(e.target.checked)}
-            className="mt-1"
+            onChange={setHasReviewed}
+            label="Revisión de la carta"
+            announceOnChange={false}
           />
-          <label htmlFor="review-gate" className="text-xs text-[var(--color-status-warning-text)] leading-tight cursor-pointer">
-            <strong>Confirmación Obligatoria:</strong> He revisado cuidadosamente el contenido de esta carta, reemplazado cualquier texto de relleno o sugerencias genéricas de la IA, y confirmo que es veraz y adecuada para la vacante.
-          </label>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <button
+        <ActionGrid columns={2}>
+          <ActionTileButton
+            label={isExportingPdf ? 'Generando PDF…' : 'Descargar PDF'}
+            icon={<Download className="w-4 h-4" />}
+            badge="Gratis"
+            variant="accent"
+            disabled={!hasReviewed || isExportingPdf || isExportingDocx}
+            helpText="Genera la carta en formato PDF listo para enviar por correo o postulación, sin consumir créditos."
             onClick={handleExportPdf}
+          />
+          <ActionTileButton
+            label={isExportingDocx ? 'Generando Word…' : 'Descargar Word'}
+            icon={<FileType className="w-4 h-4" />}
+            badge=".docx"
+            variant="secondary"
             disabled={!hasReviewed || isExportingPdf || isExportingDocx}
-            className={`p-4 ${button.primary} flex flex-col items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${elevationSystem.raised}`} style={{ borderRadius: radius.modal }}
-          >
-            <Download className="w-5 h-5" />
-            <span className="text-xs font-black">
-              {isExportingPdf ? 'Generando PDF…' : 'Descargar PDF (Gratis)'}
-            </span>
-          </button>
-
-          <button
+            helpText="Genera un documento Word (.docx) editable por separado del CV sin consumir créditos."
             onClick={handleExportDocx}
-            disabled={!hasReviewed || isExportingPdf || isExportingDocx}
-            className={`p-4 ${button.secondary} flex flex-col items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${elevationSystem.raised}`} style={{ borderRadius: radius.modal }}
-          >
-            <FileType className="w-5 h-5" />
-            <span className="text-xs font-black">
-              {isExportingDocx ? 'Generando Word…' : 'Descargar Word .docx (Gratis)'}
-            </span>
-          </button>
-        </div>
+          />
+        </ActionGrid>
       </div>
     </Modal>
   );

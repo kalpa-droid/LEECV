@@ -62,6 +62,7 @@ export default function SaveModal({
       isOpen={isOpen}
       onClose={onClose}
       title={t.modals.saveModal.title}
+      helpText="Podés guardar cambios en el documento activo, guardar una copia orientada a otra postulación o bajar un respaldo portátil (.leecv / .json)."
       icon={<Save className="w-5 h-5 text-[var(--ui-accent-purple)]" />}
       size="lg"
       footer={

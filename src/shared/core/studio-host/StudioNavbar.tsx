@@ -22,6 +22,7 @@ import { useText } from '../../i18n/useText';
 import { Logo } from '../brand/Logo';
 import { capabilitiesGate } from '../documents/documentEngine';
 import { hasCapability, isEncryptedVaultDocumentType, getDocumentTypeConfig } from '../capabilities/capabilityRegistry';
+import { resolveActiveFormat } from '../formats/cvFormatRegistry';
 import { DocumentTypeId } from '../../../types/document';
 
 export interface NavbarProps {
@@ -38,6 +39,8 @@ export interface NavbarProps {
   onOpenAtsCheck?: () => void;
   /** Score ATS en tiempo real para mostrar en la píldora (0-100). */
   atsScore?: number;
+  /** Selector global de región/estándar (ej. EE.UU., Europass, LATAM). */
+  onOpenRegionFormat?: () => void;
   onOpenPricing?: () => void;
   onOpenCreditsModal?: () => void;
   onOpenAgencyPanel?: () => void;
@@ -73,6 +76,7 @@ export function StudioNavbar({
   onPrint,
   onOpenAtsCheck,
   atsScore,
+  onOpenRegionFormat,
   onOpenCreditsModal,
 
   undo,
@@ -97,6 +101,8 @@ export function StudioNavbar({
 
   const currentThemeId = currentUiTheme || currentCvData?.uiTheme || 'day';
   const supportsAtsBar = hasCapability(docType, 'experience');
+  const supportsRegionFormat = hasCapability(docType, 'region_format');
+  const activeRegionFormat = supportsRegionFormat ? resolveActiveFormat(currentCvData) : null;
   const isEncryptedVault = isEncryptedVaultDocumentType(docType);
   const exportOnlyTooltip = `${getDocumentTypeConfig(docType).name}: se exporta en PDF, no se guarda como documento aparte`;
 
@@ -173,8 +179,22 @@ export function StudioNavbar({
           </div>
         </div>
 
-        {/* CLUSTER DERECHO: Píldoras Ovaladas de Menús (ATS ✨ | Publicar 🌐 | Acciones 📁💾 | Cuenta 👤🔑) */}
+        {/* CLUSTER DERECHO: Píldoras Ovaladas de Menús (Región 🌐 | ATS ✨ | Créditos | Acciones 📁💾 | Cuenta 👤🔑) */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+
+          {/* Píldora Región / Estándar Internacional (junto a ATS) */}
+          {supportsRegionFormat && activeRegionFormat && typeof onOpenRegionFormat === 'function' && (
+            <button
+              type="button"
+              title={`Estándar activo: ${activeRegionFormat.name}`}
+              aria-label={`Región o estándar del CV: ${activeRegionFormat.shortBadge}`}
+              onClick={onOpenRegionFormat}
+              className="flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-full font-black text-xs shrink-0 transition active:scale-95 cursor-pointer border bg-[var(--ui-bg-panel)] border-[var(--color-accent-base)]/60 text-[var(--color-accent-text)] hover:bg-[var(--color-accent-muted)]"
+            >
+              <DomSectionIcon iconId={UI_ICON_IDS.region} className="w-3.5 h-3.5 shrink-0" />
+              <span>{activeRegionFormat.shortBadge}</span>
+            </button>
+          )}
 
           {/* Píldora ATS — score en tiempo real (desktop + móvil) */}
           {supportsAtsBar && typeof onOpenAtsCheck === 'function' && atsScore !== undefined && (

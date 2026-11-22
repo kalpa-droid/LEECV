@@ -12,7 +12,11 @@ interface Props {
 export function CardBackSection({ cvData, setCvData }: Props) {
   return (
     <div className="space-y-6">
-      <PanelSection icon={<FlipHorizontal2 className="w-4 h-4" />} title="Datos del Dorso (Marca & Eslogan)">
+      <PanelSection
+        icon={<FlipHorizontal2 className="w-4 h-4" />}
+        title="Datos del Dorso"
+        helpText="Nombre comercial de tu marca y frase corta o eslogan que va en el reverso de la tarjeta."
+      >
         <div className="p-4 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-3">
           <div className="space-y-1">
             <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">Nombre de Marca / Empresa</label>
@@ -35,6 +39,7 @@ export function CardBackSection({ cvData, setCvData }: Props) {
               <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">Eslogan / Frase Corta</label>
               <AIButton
                 label="Sugerir Eslogan"
+                helpText="Propone una frase breve acorde a tu especialidad o marca."
                 onGenerate={async () => {
                   const role = cvData?.cardOverrides?.role || cvData?.roles?.[0] || 'Profesional';
                   const brand = cvData?.cardOverrides?.brandName || cvData?.personalInfo?.fullName || 'Marca Personal';

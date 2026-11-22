@@ -87,12 +87,17 @@ Para previsualizar sin escribir archivos: agregar `--dry-run`.
 
 ---
 
-## 5. Paso 4 — Persistencia Local-First, Imágenes y Bóveda
+## 5. Paso 4 — Persistencia Local-First, Carpeta Segura, UI Cero Ruido y Bóveda
 
-- Toda persistencia pasa por `documentStorageService` (`localDocumentStore` + `wrapDocumentEnvelope`).
-- Los archivos binarios/imágenes se externalizan automáticamente a IndexedDB (`localAssetStore`, URI `asset://<sha256>`).
-- Registrar sanitizador y migrador propios vía `registerDocumentSchemaHandler(docType, handler)` sin depender de `migrateCvData`.
-- Cualquier operación async de usuario usa `withErrorHandling()` (`errorHandler.ts`).
+- **UI Cero Ruido + Ayuda de Lidio**:
+  - Todo encabezado de panel usa `<PanelSection helpText="..." />` con globo `?` de Lidio (`<LidioHelpTrigger />`) para explicar *para qué sirve* un botón o control sin párrafos inline.
+  - Todo campo/sección que orienta *qué escribir o redactar* usa `<ContextualGuideBox />` siempre visible.
+  - Activar/pausar secciones usa `<SectionSwitch />`; mostrar/ocultar un dato usa `<VisibilityEyeToggle />`; botones de acción usan `<ActionGrid />` + `<ActionTileButton />`; acciones de IA usan `<AIButton />` (solo ícono animado por defecto).
+- **Persistencia en Disco y Carpeta Segura**:
+  - Toda persistencia pasa por `documentStorageService` (`localDocumentStore` + `wrapDocumentEnvelope`) y exportación a disco por `nativeFileDocumentService.ts` + `fileHandleStore.ts` ("Carpeta Segura").
+  - Los archivos binarios/imágenes se externalizan automáticamente a IndexedDB (`localAssetStore`, URI `asset://<sha256>`).
+  - Registrar sanitizador y migrador propios vía `registerDocumentSchemaHandler(docType, handler)` sin depender de `migrateCvData`.
+  - Cualquier operación async de usuario usa `withErrorHandling()` (`errorHandler.ts`).
 
 ---
 
