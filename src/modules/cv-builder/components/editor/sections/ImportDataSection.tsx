@@ -354,6 +354,7 @@ export const ImportDataSection: React.FC = () => {
         <ActionGrid columns={2}>
           <ActionTileButton
             label={isImportingLinkedIn ? 'Leyendo ZIP…' : 'Copia ZIP de LinkedIn'}
+            role="io"
             icon={<Upload className="w-4 h-4" />}
             badge=".zip"
             accept=".zip,application/zip"
@@ -372,6 +373,7 @@ export const ImportDataSection: React.FC = () => {
 
           <ActionTileButton
             label={isReadingBackup ? 'Abriendo…' : 'Abrir respaldo'}
+            role="io"
             icon={<FolderOpen className="w-4 h-4" />}
             badge=".leecv"
             disabled={isReadingBackup}
@@ -382,9 +384,9 @@ export const ImportDataSection: React.FC = () => {
 
           <ActionTileButton
             label="Cargar certificado"
+            role="ai"
             icon={<Award className="w-4 h-4" />}
             badge="IA"
-            variant="accent"
             helpText="Subí la foto o PDF de un diploma o certificado. La IA reconoce los datos y te pregunta si querés adjuntar la imagen en la sección Certificados."
             helpGroupKey="import-certificate-ai"
             onClick={() => setIsCertImportOpen(true)}
@@ -392,9 +394,9 @@ export const ImportDataSection: React.FC = () => {
 
           <ActionTileButton
             label="Leer CV anterior"
+            role="ai"
             icon={<FileText className="w-4 h-4" />}
             badge="IA"
-            variant="accent"
             helpText="Para un CV anterior en PDF, foto o texto pegado. La IA prepara una propuesta para que elijas qué datos sumar a tu CV actual."
             helpGroupKey="import-cv-ai"
             onClick={() => setIsAiImportOpen(true)}

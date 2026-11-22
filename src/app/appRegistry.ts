@@ -44,6 +44,7 @@ import {
   inferDocumentTypeId,
 } from '../shared/core/capabilities/capabilityRegistry';
 import {
+  DockButtonRole,
   registerDockStepProvider,
   registerStepIds,
 } from '../shared/core/studio-host/stepSequenceRegistry';
@@ -119,6 +120,16 @@ const BOOK_TAB_ICONS: Record<string, React.ComponentType<{ className?: string }>
   book_preview_export: Printer,
 };
 
+const BOOK_TAB_ROLES: Record<string, DockButtonRole> = {
+  book_source_type: 'preset',
+  book_organize: 'record',
+  book_cover: 'preset',
+  book_back_cover: 'preset',
+  book_foliado: 'record',
+  book_imposition: 'preset',
+  book_preview_export: 'record',
+};
+
 const PLANNER_TAB_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   planner_design: Palette,
   planner_background: Wallpaper,
@@ -126,6 +137,15 @@ const PLANNER_TAB_ICONS: Record<string, React.ComponentType<{ className?: string
   planner_sections: CheckSquare,
   planner_months: CalendarDays,
   planner_personal: User,
+};
+
+const PLANNER_TAB_ROLES: Record<string, DockButtonRole> = {
+  planner_design: 'preset',
+  planner_background: 'preset',
+  planner_structure: 'preset',
+  planner_sections: 'record',
+  planner_months: 'record',
+  planner_personal: 'record',
 };
 
 const FACTURADOR_TAB_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -137,6 +157,17 @@ const FACTURADOR_TAB_ICONS: Record<string, React.ComponentType<{ className?: str
   fact_historial: History,
   fact_diseno: Palette,
   fact_respaldo: ShieldCheck,
+};
+
+const FACTURADOR_TAB_ROLES: Record<string, DockButtonRole> = {
+  fact_emisor: 'record',
+  fact_comprobante: 'record',
+  fact_items: 'record',
+  fact_catalogo: 'record',
+  fact_clientes: 'record',
+  fact_historial: 'record',
+  fact_diseno: 'preset',
+  fact_respaldo: 'record',
 };
 
 const EDITORIAL_TAB_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -196,6 +227,7 @@ export function registerAllDockProviders(): void {
         icon: BOOK_TAB_ICONS[step.id] || Layers,
         isLarge: true,
         variant: 'accent' as const,
+        role: BOOK_TAB_ROLES[step.id] || 'record',
       })),
   );
   registerStepIds('book', BOOK_STEP_SEQUENCE.map((s) => s.id));
@@ -208,6 +240,7 @@ export function registerAllDockProviders(): void {
       icon: PLANNER_TAB_ICONS[step.id] || Layers,
       isLarge: true,
       variant: 'accent' as const,
+      role: PLANNER_TAB_ROLES[step.id] || 'record',
     })),
   );
   registerStepIds('planner', PLANNER_STEP_SEQUENCE.map((s) => s.id));
@@ -220,6 +253,7 @@ export function registerAllDockProviders(): void {
       icon: FACTURADOR_TAB_ICONS[step.id] || Layers,
       isLarge: true,
       variant: 'accent' as const,
+      role: FACTURADOR_TAB_ROLES[step.id] || 'record',
     })),
   );
   registerStepIds('invoice', FACTURADOR_STEP_SEQUENCE.map((s) => s.id));

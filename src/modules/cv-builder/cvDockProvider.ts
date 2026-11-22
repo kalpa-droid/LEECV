@@ -16,10 +16,10 @@ import type {
 } from '../../shared/core/studio-host/stepSequenceRegistry';
 
 const COVER_LETTER_TABS: DockTabItem[] = [
-  { id: 'source_data', label: '1. Origen de Datos', icon: Database, isLarge: true, variant: 'accent' },
-  { id: 'vacancy', label: '2. Vacante', icon: Radar, isLarge: true, variant: 'accent' },
-  { id: 'letter_style', label: '3. Estilo', icon: Palette, isLarge: true, variant: 'accent' },
-  { id: 'ai_editor', label: '4. Redacción IA', icon: Sparkles, isLarge: true, variant: 'accent' },
+  { id: 'letter_style', label: '3. Estilo', icon: Palette, isLarge: true, variant: 'accent', role: 'preset' },
+  { id: 'source_data', label: '1. Origen de Datos', icon: Database, isLarge: true, variant: 'secondary', role: 'record' },
+  { id: 'vacancy', label: '2. Vacante', icon: Radar, isLarge: true, variant: 'secondary', role: 'ai_utility' },
+  { id: 'ai_editor', label: '4. Redacción IA', icon: Sparkles, isLarge: true, variant: 'custom', role: 'ai_utility' },
 ];
 
 export function buildCvDockTabs({ cvData }: DockStepContext): DockTabItem[] {
@@ -32,6 +32,7 @@ export function buildCvDockTabs({ cvData }: DockStepContext): DockTabItem[] {
       icon: Plus,
       isLarge: true,
       variant: 'success',
+      role: 'catalog',
     },
     {
       id: 'diseno',
@@ -39,6 +40,7 @@ export function buildCvDockTabs({ cvData }: DockStepContext): DockTabItem[] {
       iconId: UI_ICON_IDS.diseno,
       isLarge: true,
       variant: 'accent',
+      role: 'preset',
     },
     {
       id: 'diseno_tipografia',
@@ -46,6 +48,7 @@ export function buildCvDockTabs({ cvData }: DockStepContext): DockTabItem[] {
       iconId: UI_ICON_IDS.disenoTipografia,
       isLarge: false,
       variant: 'accent',
+      role: 'preset',
     },
     {
       id: 'diseno_hoja',
@@ -53,6 +56,7 @@ export function buildCvDockTabs({ cvData }: DockStepContext): DockTabItem[] {
       iconId: UI_ICON_IDS.disenoHoja,
       isLarge: false,
       variant: 'accent',
+      role: 'preset',
     },
     {
       id: DOCK_SPECIAL_TABS.portada.id,
@@ -60,13 +64,7 @@ export function buildCvDockTabs({ cvData }: DockStepContext): DockTabItem[] {
       iconId: 'portada',
       isLarge: false,
       variant: 'accent',
-    },
-    {
-      id: DOCK_SPECIAL_TABS.coverLetter.id,
-      label: DOCK_SPECIAL_TABS.coverLetter.label,
-      iconId: DOCK_SPECIAL_TABS.coverLetter.iconId,
-      isLarge: false,
-      variant: 'secondary',
+      role: 'preset',
     },
     {
       id: DOCK_SPECIAL_TABS.personal.id,
@@ -74,20 +72,7 @@ export function buildCvDockTabs({ cvData }: DockStepContext): DockTabItem[] {
       iconId: DOCK_SPECIAL_TABS.personal.iconId,
       isLarge: false,
       variant: 'secondary',
-    },
-    {
-      id: DOCK_SPECIAL_TABS.importData.id,
-      label: DOCK_SPECIAL_TABS.importData.label,
-      iconId: DOCK_SPECIAL_TABS.importData.iconId,
-      isLarge: false,
-      variant: 'secondary',
-    },
-    {
-      id: DOCK_SPECIAL_TABS.vacante.id,
-      label: DOCK_SPECIAL_TABS.vacante.label,
-      iconId: DOCK_SPECIAL_TABS.vacante.iconId,
-      isLarge: false,
-      variant: 'secondary',
+      role: 'record',
     },
     ...dockSections.map((sec) => ({
       id: sec.id,
@@ -95,10 +80,35 @@ export function buildCvDockTabs({ cvData }: DockStepContext): DockTabItem[] {
       iconId: sec.iconId,
       isCustom: sec.isCustom,
       variant: (sec.isCustom ? 'custom' : 'secondary') as DockTabItem['variant'],
+      role: (sec.isCustom ? 'custom_record' : 'record') as DockTabItem['role'],
       hasContent: sec.hasContent,
       isDisabled: sec.isDisabled,
       isLarge: false,
     })),
+    {
+      id: DOCK_SPECIAL_TABS.importData.id,
+      label: DOCK_SPECIAL_TABS.importData.label,
+      iconId: DOCK_SPECIAL_TABS.importData.iconId,
+      isLarge: false,
+      variant: 'custom',
+      role: 'ai_utility',
+    },
+    {
+      id: DOCK_SPECIAL_TABS.vacante.id,
+      label: DOCK_SPECIAL_TABS.vacante.label,
+      iconId: DOCK_SPECIAL_TABS.vacante.iconId,
+      isLarge: false,
+      variant: 'custom',
+      role: 'ai_utility',
+    },
+    {
+      id: DOCK_SPECIAL_TABS.coverLetter.id,
+      label: DOCK_SPECIAL_TABS.coverLetter.label,
+      iconId: DOCK_SPECIAL_TABS.coverLetter.iconId,
+      isLarge: false,
+      variant: 'secondary',
+      role: 'handoff',
+    },
   ];
 }
 

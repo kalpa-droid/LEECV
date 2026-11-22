@@ -5,13 +5,14 @@ import {
   crearCanvasTapaCustom,
   crearCanvasContratapaCustom,
 } from '../domain/impositionEngine';
+import { BookPaperSizeId, resolveBookPaperSpec } from '../domain/bookPrintProfileEngine';
 import { bookAssetManager } from '../domain/bookAssetManager';
 import { useText } from '../../../shared/i18n/useText';
 
 export interface CoverPreviewThumbnailProps {
   config: CoverConfig | BackCoverConfig | null | undefined;
   kind: 'cover' | 'backCover';
-  paperSize?: 'A4' | 'A3';
+  paperSize?: BookPaperSizeId;
   className?: string;
 }
 
@@ -55,8 +56,9 @@ export const CoverPreviewThumbnail: React.FC<CoverPreviewThumbnailProps> = ({
       if (!config || assetId || !canvasRef.current) return;
       setLoadError(false);
 
-      const fullWidth = paperSize === 'A3' ? 2480 : 1748;
-      const fullHeight = paperSize === 'A3' ? 3508 : 2480;
+      const paperSpec = resolveBookPaperSpec(paperSize);
+      const fullWidth = paperSpec.coverCanvasWidth;
+      const fullHeight = paperSpec.coverCanvasHeight;
       const thumbWidth = 320;
       const thumbHeight = Math.round((thumbWidth * fullHeight) / fullWidth);
       const renderScale = thumbWidth / fullWidth;

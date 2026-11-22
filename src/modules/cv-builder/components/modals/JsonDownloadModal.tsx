@@ -124,9 +124,9 @@ export default function JsonDownloadModal({ isOpen, onClose, cvData }: any) {
         <ActionGrid columns={2}>
           <ActionTileButton
             label="Archivo .leecv"
+            role="io"
             icon={<Sparkles className="w-4 h-4" />}
             badge="⚡ Rayo"
-            variant="accent"
             helpText="Archivo propio de LEECV. Si instalaste la app, abre directo con doble clic y se guarda directo en tu Carpeta Segura si la vinculaste."
             helpGroupKey="save-leecv-tile"
             onClick={async () => {
@@ -137,6 +137,7 @@ export default function JsonDownloadModal({ isOpen, onClose, cvData }: any) {
 
           <ActionTileButton
             label="Elegir ubicación"
+            role="io"
             icon={<DomSectionIcon iconId={UI_ICON_IDS.folderSafe} size={17} strokeWidth={2} />}
             badge="Guardar como"
             helpText="Te permite elegir manualmente en qué carpeta de tu computadora o pendrive guardar el archivo .leecv o .json."
@@ -151,6 +152,7 @@ export default function JsonDownloadModal({ isOpen, onClose, cvData }: any) {
 
           <ActionTileButton
             label="Archivo .json"
+            role="io"
             icon={<FileText className="w-4 h-4" />}
             badge="1 archivo"
             helpText="Respaldo portátil en un solo archivo .json con tus datos y fotos adentro. Se descarga en tu carpeta Descargas."
@@ -163,6 +165,7 @@ export default function JsonDownloadModal({ isOpen, onClose, cvData }: any) {
 
           <ActionTileButton
             label="Paquete .zip"
+            role="io"
             icon={<FileArchive className="w-4 h-4" />}
             badge="Con fotos"
             helpText="Carpeta comprimida .zip con cv_datos.json más todas tus imágenes y certificados originales por separado."

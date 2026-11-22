@@ -196,6 +196,13 @@ export const CAPABILITY_REGISTRY: Record<string, CapabilityConfig> = {
       activeFormatId: 'estandar-completo'
     }
   },
+  global_context: {
+    id: 'global_context',
+    name: 'Configuración Global de Barra Superior',
+    description: 'Píldora superior de contexto maestro (ej. Región en CV, Casa vs Imprenta en Libro, Obra y Normas en EditorLee).',
+    category: 'styling',
+    defaultData: {}
+  },
   planner_grid: {
     id: 'planner_grid',
     name: 'Retícula y Guías de Fondo',
@@ -270,6 +277,7 @@ export const DOCUMENT_TYPE_REGISTRY = {
       'theme',
       'paper_size',
       'region_format',
+      'global_context',
       'personal_info',
       'education',
       'profession',
@@ -327,6 +335,7 @@ export const DOCUMENT_TYPE_REGISTRY = {
       'theme',
       'paper_size',
       'region_format',
+      'global_context',
       'personal_info',
       'digital_signature',
       'json_backup',
@@ -434,7 +443,7 @@ export const DOCUMENT_TYPE_REGISTRY = {
       privacy: 'full-summary',
     },
     creationStrategy: 'blank',
-    capabilities: ['theme', 'paper_size', 'json_backup'],
+    capabilities: ['theme', 'paper_size', 'json_backup', 'global_context'],
     exportFormats: ['pdf', 'json'],
     stepSequenceId: 'book_steps',
     defaultPaperSize: 'a4',
@@ -570,7 +579,7 @@ export const DOCUMENT_TYPE_REGISTRY = {
       privacy: 'full-summary',
     },
     creationStrategy: 'blank',
-    capabilities: ['theme', 'paper_size', 'json_backup', 'nameable_title'],
+    capabilities: ['theme', 'paper_size', 'json_backup', 'nameable_title', 'global_context'],
     exportFormats: ['pdf', 'docx', 'json'],
     stepSequenceId: 'editorial_steps',
     defaultPaperSize: 'a4',

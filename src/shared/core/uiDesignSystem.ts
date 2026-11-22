@@ -148,6 +148,25 @@ export const typeScale = {
  * - warning: precaución no destructiva (re-comprobar, revisar antes de seguir)
  * - providerBrand: checkout de un proveedor de pago externo (Mercado Pago, PayPal)
  */
+/**
+ * ROL FUNCIONAL DE BOTÓN (Cero Ruido V3.2) — Distingue qué hace un botón antes de tocarlo:
+ * - preset: elegir 1 de N opciones globales/diseño (usa selección `✓` y borde doble).
+ * - record: abrir/editar un ítem con datos propios.
+ * - io: entrada/salida gratuita en disco o respaldo local.
+ * - export_paid: exportación final protegida o con consumo de crédito.
+ * - ai: propuesta asistida por IA (símbolo animado, reversible).
+ * - handoff: abre otro documento o estudio compañero (`↗`).
+ * - destructive: acción irreversible (siempre acompañada de `useConfirm()`).
+ */
+export type UiButtonRole =
+  | 'preset'
+  | 'record'
+  | 'io'
+  | 'export_paid'
+  | 'ai'
+  | 'handoff'
+  | 'destructive';
+
 export const button = {
   base: 'rounded-[10px] font-medium text-[13px] px-4 py-2.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed',
   primary: `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] hover:opacity-95 active:scale-[0.98] shadow-md`,

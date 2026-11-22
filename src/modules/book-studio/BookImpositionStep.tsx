@@ -6,6 +6,19 @@ import { computeBookFinalPageCount } from './domain/bookPageCount';
 import { calculateSpineWidth } from '../../shared/kits/print-imposition/impositionPlanner';
 import { COVER_PRESETS } from '../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
 import { useText } from '../../shared/i18n/useText';
+import { SectionSwitch } from '../../shared/core/ui/SectionSwitch';
+import { LidioHelpTrigger } from '../../shared/core/ui/LidioHelpTrigger';
+import { ManualOverrideBadge } from '../../shared/core/ui/ManualOverrideBadge';
+import { isManuallyOverridden } from '../../shared/core/presets/configCascadeEngine';
+import {
+  BOOK_PRINT_PROFILES,
+  BookPrintTarget,
+  applyBookPrintProfile,
+  clearBookFieldManual,
+  detectBookPrintTargetConflicts,
+  inferBookPrintTarget,
+  markBookFieldManual,
+} from './domain/bookPrintProfileEngine';
 
 interface BookImpositionStepProps {
   options: BookImpositionOptions;
@@ -14,40 +27,35 @@ interface BookImpositionStepProps {
   sourceProtected?: boolean;
   /** Necesario para estimar el lomo en vivo: páginas efectivas del PDF ya subido. */
   pdfPageCount?: number;
+  /** Permite abrir el modal de destino global si cambiar perfil pisa ajustes manuales. */
+  onOpenPrintTargetModal?: () => void;
   onNextStep: () => void;
   onPrevStep: () => void;
 }
 
-interface SwitchCardProps {
+interface SwitchRowProps {
   label: string;
   help: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  overrideBadge?: React.ReactNode;
 }
 
-/** Tarjeta con interruptor (creep / guías / ZIP): título + ayuda + switch. */
-const SwitchCard: React.FC<SwitchCardProps> = ({ label, help, checked, onChange }) => (
+/** Fila con interruptor canónico (`SectionSwitch`), ayuda `?` de Lidio e insignia de ajuste manual. */
+const SwitchRow: React.FC<SwitchRowProps> = ({ label, help, checked, onChange, overrideBadge }) => (
   <div className={`flex items-center justify-between gap-3 p-3 rounded-[${radius.control}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)]`}>
-    <span className="flex flex-col min-w-0">
+    <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
       <span className={typeScale.fieldLabel}>{label}</span>
-      <span className="text-xs text-[var(--ui-text-secondary)] leading-snug">{help}</span>
-    </span>
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      onClick={() => onChange(!checked)}
-      className={`relative w-11 h-6 shrink-0 rounded-full transition-colors cursor-pointer ${
-        checked ? 'bg-[var(--color-accent-base)]' : 'bg-[var(--ui-bg-panel)] border border-[var(--ui-border)]'
-      }`}
-    >
-      <span
-        className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-          checked ? 'translate-x-5' : 'translate-x-0'
-        }`}
-      />
-    </button>
+      <LidioHelpTrigger title={label} text={help} groupKey={`book-switch-${label}`} />
+      {overrideBadge}
+    </div>
+    <SectionSwitch
+      checked={checked}
+      onChange={onChange}
+      label={label}
+      helpText={help}
+      size="sm"
+    />
   </div>
 );
 
@@ -56,6 +64,7 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
   setOptions,
   sourceProtected = false,
   pdfPageCount = 0,
+  onOpenPrintTargetModal,
   onNextStep,
   onPrevStep,
 }) => {
@@ -67,6 +76,8 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
   const showGuides = options.showGuides ?? false;
   const zipByBooklet = options.zipByBooklet ?? false;
   const readingDirection = options.readingDirection ?? 'ltr';
+  const activePrintTarget = inferBookPrintTarget(options);
+  const activeProfile = BOOK_PRINT_PROFILES[activePrintTarget];
   const t = useText();
 
   // Lomo estimado EN VIVO: mismo conteo exacto que usa el motor (computeBookFinalPageCount).
@@ -84,10 +95,17 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
   ];
   const isCustomThickness = paperThickness !== 0 && paperThickness !== 0.10 && paperThickness !== 0.12;
 
-  const applyHomeProfile = () =>
-    setOptions((prev) => ({ ...prev, destination: 'A', paperThicknessMm: 0.10, unprintableMarginMm: 5 }));
-  const applyImprentaProfile = () =>
-    setOptions((prev) => ({ ...prev, destination: 'C', paperThicknessMm: 0.12, unprintableMarginMm: 0 }));
+  const handleQuickTarget = (target: BookPrintTarget) => {
+    const manualConflicts = detectBookPrintTargetConflicts(options, target);
+    if (manualConflicts.length > 0 && onOpenPrintTargetModal) {
+      onOpenPrintTargetModal();
+      return;
+    }
+    setOptions((prev) => applyBookPrintProfile(prev, target, 'preserve-manual'));
+  };
+
+  const applyHomeProfile = () => handleQuickTarget('home');
+  const applyImprentaProfile = () => handleQuickTarget('print_shop');
 
   const destinationCards: Array<{ id: 'A' | 'B' | 'C'; sub: string; svg: React.ReactNode }> = [
     {
@@ -142,12 +160,13 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
       </p>
 
       <div className="space-y-5">
-        {/* Botones rápidos: ¿En mi casa? / ¿En imprenta? */}
+        {/* Botones rápidos sincronizados con el perfil global: ¿En mi casa? / ¿En imprenta? */}
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={applyHomeProfile}
-            className={`${selectableCard.base} ${selectableCard.unselected} flex flex-col items-start gap-1 p-4 text-left`}
+            aria-pressed={activePrintTarget === 'home'}
+            className={`${selectableCard.base} ${activePrintTarget === 'home' ? selectableCard.selected : selectableCard.unselected} flex flex-col items-start gap-1 p-4 text-left cursor-pointer`}
           >
             <span className="flex items-center gap-2 text-base font-bold text-[var(--ui-text-primary)]">
               <Home className="w-5 h-5 text-[var(--color-accent-text)] shrink-0" />
@@ -160,7 +179,8 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
           <button
             type="button"
             onClick={applyImprentaProfile}
-            className={`${selectableCard.base} ${selectableCard.unselected} flex flex-col items-start gap-1 p-4 text-left`}
+            aria-pressed={activePrintTarget === 'print_shop'}
+            className={`${selectableCard.base} ${activePrintTarget === 'print_shop' ? selectableCard.selected : selectableCard.unselected} flex flex-col items-start gap-1 p-4 text-left cursor-pointer`}
           >
             <span className="flex items-center gap-2 text-base font-bold text-[var(--ui-text-primary)]">
               <Printer className="w-5 h-5 text-[var(--color-accent-text)] shrink-0" />
@@ -177,7 +197,19 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
 
         {/* Destino de la cubierta: tarjetas A / B / C con mini-diagrama */}
         <div>
-          <span className={typeScale.fieldLabel}>{t.bookStudio.impositionStep.destinationLabel}</span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className={typeScale.fieldLabel}>{t.bookStudio.impositionStep.destinationLabel}</span>
+            <LidioHelpTrigger
+              title={t.bookStudio.impositionStep.destinationLabel}
+              text={t.bookStudio.impositionStep.destinationHelp}
+              groupKey="book-destination"
+            />
+            <ManualOverrideBadge
+              isOverridden={isManuallyOverridden(options.manualOverrides, 'destination')}
+              globalLabel={activeProfile.shortName}
+              onReset={() => setOptions((prev) => clearBookFieldManual(prev, 'destination'))}
+            />
+          </div>
           <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
             {destinationCards.map(({ id, sub, svg }) => {
               const selected = dest === id;
@@ -185,9 +217,16 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
                 <button
                   key={id}
                   type="button"
-                  onClick={() => setOptions((prev) => ({ ...prev, destination: id }))}
+                  onClick={() =>
+                    setOptions((prev) => {
+                      const updated = { ...prev, destination: id };
+                      return id === activeProfile.defaults.destination
+                        ? clearBookFieldManual(updated, 'destination')
+                        : markBookFieldManual(updated, 'destination');
+                    })
+                  }
                   aria-pressed={selected}
-                  className={`${selectableCard.base} ${selected ? selectableCard.selected : selectableCard.unselected} flex flex-col items-center gap-1.5 p-3 text-center`}
+                  className={`${selectableCard.base} ${selected ? selectableCard.selected : selectableCard.unselected} flex flex-col items-center gap-1.5 p-3 text-center cursor-pointer`}
                 >
                   <span className="text-[var(--ui-text-secondary)]">{svg}</span>
                   <span className="text-sm font-bold text-[var(--ui-text-primary)]">{id}</span>
@@ -196,12 +235,18 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
               );
             })}
           </div>
-          <p className="mt-1.5 text-xs text-[var(--ui-text-secondary)]">{t.bookStudio.impositionStep.destinationHelp}</p>
         </div>
 
         {/* Grosor del papel: 4 tarjetas + pill de lomo en vivo */}
         <div>
-          <span className={typeScale.fieldLabel}>{t.bookStudio.impositionStep.paperThicknessLabel}</span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className={typeScale.fieldLabel}>{t.bookStudio.impositionStep.paperThicknessLabel}</span>
+            <ManualOverrideBadge
+              isOverridden={isManuallyOverridden(options.manualOverrides, 'paperThicknessMm')}
+              globalLabel={activeProfile.shortName}
+              onReset={() => setOptions((prev) => clearBookFieldManual(prev, 'paperThicknessMm'))}
+            />
+          </div>
           <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
             {thicknessOptions.map(({ value, label }) => {
               const selected = paperThickness === value && !isCustomThickness;
@@ -209,9 +254,16 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
                 <button
                   key={value}
                   type="button"
-                  onClick={() => setOptions((prev) => ({ ...prev, paperThicknessMm: value }))}
+                  onClick={() =>
+                    setOptions((prev) => {
+                      const updated = { ...prev, paperThicknessMm: value };
+                      return value === activeProfile.defaults.paperThicknessMm
+                        ? clearBookFieldManual(updated, 'paperThicknessMm')
+                        : markBookFieldManual(updated, 'paperThicknessMm');
+                    })
+                  }
                   aria-pressed={selected}
-                  className={`${selectableCard.base} ${selected ? selectableCard.selected : selectableCard.unselected} flex flex-col items-center justify-center gap-0.5 p-2 text-xs font-medium text-[var(--ui-text-primary)] text-center min-h-[52px]`}
+                  className={`${selectableCard.base} ${selected ? selectableCard.selected : selectableCard.unselected} flex flex-col items-center justify-center gap-0.5 p-2 text-xs font-medium text-[var(--ui-text-primary)] text-center min-h-[52px] cursor-pointer`}
                 >
                   {label}
                 </button>
@@ -219,9 +271,9 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
             })}
             <button
               type="button"
-              onClick={() => setOptions((prev) => ({ ...prev, paperThicknessMm: 0.09 }))}
+              onClick={() => setOptions((prev) => markBookFieldManual({ ...prev, paperThicknessMm: 0.09 }, 'paperThicknessMm'))}
               aria-pressed={isCustomThickness}
-              className={`${selectableCard.base} ${isCustomThickness ? selectableCard.selected : selectableCard.unselected} flex flex-col items-center justify-center gap-0.5 p-2 text-xs font-medium text-[var(--ui-text-primary)] min-h-[52px]`}
+              className={`${selectableCard.base} ${isCustomThickness ? selectableCard.selected : selectableCard.unselected} flex flex-col items-center justify-center gap-0.5 p-2 text-xs font-medium text-[var(--ui-text-primary)] min-h-[52px] cursor-pointer`}
             >
               {t.bookStudio.impositionStep.thicknessOther}
             </button>
@@ -230,7 +282,7 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
             <input
               type="number"
               value={paperThickness}
-              onChange={(e) => setOptions((prev) => ({ ...prev, paperThicknessMm: Number(e.target.value) || 0 }))}
+              onChange={(e) => setOptions((prev) => markBookFieldManual({ ...prev, paperThicknessMm: Number(e.target.value) || 0 }, 'paperThicknessMm'))}
               className={`${input.base} mt-2 w-40`}
               placeholder={t.bookStudio.impositionStep.thicknessOtherPlaceholder}
               step="0.01"
@@ -243,20 +295,48 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
           </div>
         </div>
 
-        {/* Switches: creep / guías / ZIP por cuadernillo */}
-        <SwitchCard
+        {/* Switches canónicos: creep / guías / ZIP por cuadernillo */}
+        <SwitchRow
           label={t.bookStudio.impositionStep.creepCheckbox}
           help={t.bookStudio.impositionStep.creepHelp}
           checked={applyCreep}
-          onChange={(v) => setOptions((prev) => ({ ...prev, applyCreep: v }))}
+          onChange={(v) =>
+            setOptions((prev) => {
+              const updated = { ...prev, applyCreep: v };
+              return v === activeProfile.defaults.applyCreep
+                ? clearBookFieldManual(updated, 'applyCreep')
+                : markBookFieldManual(updated, 'applyCreep');
+            })
+          }
+          overrideBadge={
+            <ManualOverrideBadge
+              isOverridden={isManuallyOverridden(options.manualOverrides, 'applyCreep')}
+              globalLabel={activeProfile.shortName}
+              onReset={() => setOptions((prev) => clearBookFieldManual(prev, 'applyCreep'))}
+            />
+          }
         />
-        <SwitchCard
+        <SwitchRow
           label={t.bookStudio.impositionStep.guidesCheckbox}
           help={t.bookStudio.impositionStep.guidesHelp}
           checked={showGuides}
-          onChange={(v) => setOptions((prev) => ({ ...prev, showGuides: v }))}
+          onChange={(v) =>
+            setOptions((prev) => {
+              const updated = { ...prev, showGuides: v };
+              return v === activeProfile.defaults.showGuides
+                ? clearBookFieldManual(updated, 'showGuides')
+                : markBookFieldManual(updated, 'showGuides');
+            })
+          }
+          overrideBadge={
+            <ManualOverrideBadge
+              isOverridden={isManuallyOverridden(options.manualOverrides, 'showGuides')}
+              globalLabel={activeProfile.shortName}
+              onReset={() => setOptions((prev) => clearBookFieldManual(prev, 'showGuides'))}
+            />
+          }
         />
-        <SwitchCard
+        <SwitchRow
           label={t.bookStudio.impositionStep.zipByBookletLabel}
           help={t.bookStudio.impositionStep.zipByBookletHelp}
           checked={zipByBooklet}

@@ -1,3 +1,22 @@
+## [2026-11-22] - PR A (V3.2.0): Taxonomía de Botones, Píldora Global Universal, Cascada Anti-Pisado y Perfiles En casa vs Imprenta en Libro/Folleto
+
+**Resumen:**
+- **Motor Universal de Cascada Anti-Pisado (`configCascadeEngine.ts` + `ManualOverrideBadge.tsx`)**:
+  - Implementada jerarquía explícita Nivel 1 (Global) → Nivel 2 (Preset/Tema) → Nivel 3 (`manualOverrides` puntuales), evitando pisar ajustes manuales sin consentimiento (`detectGlobalConflicts`, `applyGlobalConfigWithCascade` con `'preserve-manual'` vs `'apply-all'`, e insignia Cero Ruido con reset puntual `↺`).
+- **Píldora Global Universal en `StudioNavbar.tsx` + `capabilityRegistry.ts`**:
+  - Agregada capacidad declarativa `global_context` (CV, Libro/Folleto, EditorLee) y `globalContextPill` junto a `ATS`, dejando un único patrón canónico para decisiones de nivel documento en barra superior.
+- **Taxonomía Visual de Botones (8 Roles en Dock y Paneles)**:
+  - Definidos `DockButtonRole` (`catalog`, `preset`, `record`, `custom_record`, `ai_utility`, `handoff`) y `UiButtonRole` (`preset`, `record`, `io`, `export_paid`, `ai`, `handoff`, `destructive`) con separadores de grupo `--ui-dock-separator` en `StudioDock.tsx`.
+  - Asignados roles explícitos en todos los proveedores de Dock (`cv`, `cover_letter`, `business_card`, `editorial`, `book`, `planner`, `invoice`), botones de `ExperienciaSection.tsx` y `ActionTileButton` de `ImportDataSection.tsx` / `JsonDownloadModal.tsx`.
+- **Libro / Folleto — Píldora `🏠 En casa` vs `🏭 Imprenta` y Hojas Extendidas**:
+  - Agregados `sra3` (320 × 450 mm), `a3_plus` (329 × 483 mm) y `a2` (420 × 594 mm) en `pageSizes.ts` con lenguaje sencillo (`appLabel` técnico entre paréntesis).
+  - Creado `bookPrintProfileEngine.ts` + `BookPrintTargetModal.tsx`: hojas caseras (`A4`, `Carta`, `Oficio`, `Legal`, `A3`) vs pliegos de imprenta (`A3`, `SRA3`, `A3+`, `A2`), extendido `impositionEngine.ts`, `CoverPreviewThumbnail.tsx`, `BookSourceTypeStep.tsx`, `BookPreviewExportStep.tsx` y refactorizado `BookImpositionStep.tsx` con `<SectionSwitch />`, `<LidioHelpTrigger />` y `<ManualOverrideBadge />`.
+- **Fábrica Agéntica de Apps (`scripts/new-app.ts`, `docs/APP_BLUEPRINT.md`, `AGENTS.md`)**:
+  - Generación automática de roles `DockButtonRole` en `<id>StepSequence.ts`, `<ActionTileButton role="..." />`, `<VisibilityEyeToggle />`, `<ManualOverrideBadge />` y `globalContextPill` en `<Pascal>StudioContent.tsx`, validados en `npm run new-app -- --selftest`.
+- **Verificación**: Suites nuevas `tests/buttonTaxonomyAndCascade.test.ts` y `tests/bookPrintProfiles.test.ts`, versión fijada en `V3.2.0` y pasada completa de `npm run check-all` en verde.
+
+---
+
 ## [2026-11-22] - PR 2 (V3.1.0): EditorLee — Importación Universal + OCR, Chunker de Textos Largos, Dock Numerado, Presets Secundaria/Terciario/APA 7/Vancouver, Bibliografía y Portadas Adaptadas
 
 **Resumen:**

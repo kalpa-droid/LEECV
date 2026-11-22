@@ -3,6 +3,19 @@ import type { DocumentTypeId } from '../../../types/document';
 
 export type DockTabVariant = 'default' | 'accent' | 'secondary' | 'success' | 'custom';
 
+/**
+ * Rol funcional del botón dentro del Dock lateral / móvil.
+ * Permite separar visualmente sin ambigüedad Moldes/Presets vs Registros/Datos
+ * vs Catálogo vs Utilidades IA vs Saltos de producto.
+ */
+export type DockButtonRole =
+  | 'catalog'
+  | 'preset'
+  | 'record'
+  | 'custom_record'
+  | 'ai_utility'
+  | 'handoff';
+
 export interface DockTabItem {
   id: string;
   label: string;
@@ -11,9 +24,13 @@ export interface DockTabItem {
   stepNumber?: number;
   /** Distintivo breve en esquina (ej. "1", "2", "i", "ii", "A") para diferenciar secciones similares. */
   badgeLabel?: string;
+  /** Rol funcional que gobierna estilo, agrupamiento y divisor `--ui-dock-separator`. */
+  role?: DockButtonRole;
+  /** Fuerza un separador visual antes de este botón. */
+  groupBreakBefore?: boolean;
   /** Botón de doble ancho/alto (col-span-2 desktop, row-span-2 móvil). */
   isLarge?: boolean;
-  /** Variante visual semántica dentro del Dock. */
+  /** Variante visual semántica dentro del Dock (legado/respaldo si falta `role`). */
   variant?: DockTabVariant;
   hasContent?: boolean;
   isDisabled?: boolean;

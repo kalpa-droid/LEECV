@@ -17,8 +17,8 @@ export const TOP_BAR_ACTIONS: TopBarAction[] = [
   { id: 'theme-switcher', label: 'Tema', location: 'navbar' },
   { id: 'zoom-controls', label: 'Zoom', location: 'navbar' },
 
-  // Cluster Derecho en Barra Superior (Región + ATS)
-  { id: 'region-format', label: 'Región / Formato', location: 'navbar' },
+  // Cluster Derecho en Barra Superior (Configuración Global + ATS)
+  { id: 'region-format', label: 'Contexto Global (Región / Impresión / Norma)', location: 'navbar' },
 
   // Barra Inferior (Margen Derecho)
   { id: 'ats-check', label: 'ATS', location: 'bottom-bar' },

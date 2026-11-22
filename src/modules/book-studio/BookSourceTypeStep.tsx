@@ -1,9 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { BookOpen, Copy, Upload, CheckCircle2, ChevronRight, FileText } from 'lucide-react';
+import { BookOpen, Copy, Upload, CheckCircle2, ChevronRight, FileText, Home, Printer } from 'lucide-react';
 import { BookImpositionOptions } from './domain/impositionEngine';
+import {
+  BOOK_PAPER_SPECS,
+  BOOK_PRINT_PROFILES,
+  BookPaperSizeId,
+  clearBookFieldManual,
+  inferBookPrintTarget,
+  markBookFieldManual,
+} from './domain/bookPrintProfileEngine';
+import { isManuallyOverridden } from '../../shared/core/presets/configCascadeEngine';
+import { ManualOverrideBadge } from '../../shared/core/ui/ManualOverrideBadge';
 import { PdfSourceErrorCode, isPdfSourceError, isPdfLikeFile } from '../../shared/core/pdf-engine/pdfSourceClassifier';
 import { bookAssetManager, markNativePickerFailedSession, isNativePickerFailedSession } from './domain/bookAssetManager';
-import { PAGE_SIZES } from '../../shared/core/pdf-engine/layers/page/pageSizes';
 import { button, selectableCard, radius } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 
@@ -15,6 +24,8 @@ interface BookSourceTypeStepProps {
   /** Carga el PDF completo (instancia pdf.js única en el contenedor). Lanza si no se puede abrir. El retorno (el doc cargado) es opcional para el llamador. */
   onFileConfirmed: (file: File) => Promise<unknown>;
   onNextStep?: () => void;
+  /** Abre el selector global de impresora en casa vs imprenta. */
+  onOpenPrintTargetModal?: () => void;
   /** Expone el "elegir PDF" (con fallback a input) al contenedor (botón externo). */
   pickerRef?: React.MutableRefObject<(() => Promise<void>) | null>;
   /** Libro activo: el handle del PDF se guarda asociado a este id (con fallback a la clave global). */
@@ -28,6 +39,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
   pdfPageCount,
   onFileConfirmed,
   onNextStep,
+  onOpenPrintTargetModal,
   pickerRef,
   bookId,
 }) => {
@@ -219,62 +231,87 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
         </div>
       </div>
 
-      {/* 2. Selección de Tamaño de Papel Imprenta */}
-      <div className="space-y-2 pt-2 border-t border-[var(--ui-border)]">
-        <label className="text-xs font-bold text-[var(--ui-text-primary)] block">
-          {t.bookStudio.sourceStep.paperSizeQuestionLabel}
-        </label>
+      {/* 2. Selección de hoja según perfil global (En casa vs Imprenta) */}
+      {(() => {
+        const activeTarget = inferBookPrintTarget(options);
+        const profile = BOOK_PRINT_PROFILES[activeTarget];
+        const currentPaper: BookPaperSizeId = (options.paperSize || profile.defaults.paperSize) as BookPaperSizeId;
+        const paperList: BookPaperSizeId[] = profile.allowedPaperSizes.includes(currentPaper)
+          ? profile.allowedPaperSizes
+          : [currentPaper, ...profile.allowedPaperSizes];
+        const paperIsManual = isManuallyOverridden(options.manualOverrides, 'paperSize');
+        const paperConflict = !profile.allowedPaperSizes.includes(currentPaper);
+        const TargetIcon = activeTarget === 'home' ? Home : Printer;
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div
-            onClick={() => setOptions((prev) => ({ ...prev, paperSize: 'A4' }))}
-            className={`${selectableCard.base} ${
-              options.paperSize !== 'A3' ? selectableCard.selected : selectableCard.unselected
-            } p-4 flex items-start space-x-3`}
-          >
-            <input
-              type="radio"
-              name="paperSize"
-              checked={options.paperSize !== 'A3'}
-              onChange={() => {}}
-              className="mt-1 text-[var(--color-accent-text)] cursor-pointer"
-            />
-            <div className="space-y-1">
-              <span className="font-bold block text-sm text-[var(--ui-text-primary)] flex items-center gap-2">
-                <FileText className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
-                {PAGE_SIZES.a4?.appLabel}
-              </span>
-              <span className="text-xs text-[var(--ui-text-secondary)] block leading-normal">
-                {t.bookStudio.sourceStep.paperA4Desc}
-              </span>
+        return (
+          <div className="space-y-2.5 pt-2 border-t border-[var(--ui-border)]">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <label className="text-xs font-bold text-[var(--ui-text-primary)] block">
+                  {t.bookStudio.sourceStep.paperSizeQuestionLabel}
+                </label>
+                <ManualOverrideBadge
+                  isOverridden={paperIsManual}
+                  globalLabel={profile.shortName}
+                  hasConflict={paperConflict}
+                  conflictHelpText={`Esta hoja se mantuvo manual cuando cambiaste el destino a "${profile.shortName}".`}
+                  onReset={() => setOptions((prev) => clearBookFieldManual(prev, 'paperSize'))}
+                />
+              </div>
+
+              {onOpenPrintTargetModal && (
+                <button
+                  type="button"
+                  onClick={onOpenPrintTargetModal}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-[var(--ui-border)] bg-[var(--ui-bg-surface)] hover:border-[var(--color-accent-base)] text-[11px] font-semibold text-[var(--ui-text-primary)] cursor-pointer transition-colors`}
+                >
+                  <TargetIcon className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
+                  <span>{activeTarget === 'home' ? t.bookStudio.sourceStep.paperProfileBadgeHome : t.bookStudio.sourceStep.paperProfileBadgePrintShop}</span>
+                  <span className="text-[var(--color-accent-text)] underline">{t.bookStudio.sourceStep.paperProfileSwitchHint}</span>
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {paperList.map((paperId) => {
+                const spec = BOOK_PAPER_SPECS[paperId] || BOOK_PAPER_SPECS.A4;
+                const isSelected = currentPaper === paperId;
+                return (
+                  <button
+                    key={paperId}
+                    type="button"
+                    onClick={() =>
+                      setOptions((prev) => {
+                        const updated = { ...prev, paperSize: paperId };
+                        return paperId === profile.defaults.paperSize
+                          ? clearBookFieldManual(updated, 'paperSize')
+                          : markBookFieldManual(updated, 'paperSize');
+                      })
+                    }
+                    aria-pressed={isSelected}
+                    className={`${selectableCard.base} ${
+                      isSelected ? selectableCard.selected : selectableCard.unselected
+                    } p-3.5 flex items-start space-x-3 text-left cursor-pointer`}
+                  >
+                    <FileText className="w-4 h-4 text-[var(--color-accent-text)] shrink-0 mt-0.5" />
+                    <div className="space-y-0.5 min-w-0">
+                      <span className="font-bold block text-xs sm:text-sm text-[var(--ui-text-primary)]">
+                        {spec.shortTitle}{' '}
+                        <span className="font-medium text-[var(--ui-text-secondary)] text-[11px]">
+                          {spec.technicalParen}
+                        </span>
+                      </span>
+                      <span className="text-[11px] text-[var(--ui-text-secondary)] block leading-snug">
+                        {spec.usageSubtitle}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
-
-          <div
-            onClick={() => setOptions((prev) => ({ ...prev, paperSize: 'A3' }))}
-            className={`${selectableCard.base} ${
-              options.paperSize === 'A3' ? selectableCard.selected : selectableCard.unselected
-            } p-4 flex items-start space-x-3`}
-          >
-            <input
-              type="radio"
-              name="paperSize"
-              checked={options.paperSize === 'A3'}
-              onChange={() => {}}
-              className="mt-1 text-[var(--color-accent-text)] cursor-pointer"
-            />
-            <div className="space-y-1">
-              <span className="font-bold block text-sm text-[var(--ui-text-primary)] flex items-center gap-2">
-                <FileText className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
-                {PAGE_SIZES.a3?.appLabel}
-              </span>
-              <span className="text-xs text-[var(--ui-text-secondary)] block leading-normal">
-                {t.bookStudio.sourceStep.paperA3Desc}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* 3. Carga de Archivo PDF */}
       <div className="pt-2 border-t border-[var(--ui-border)] space-y-2">

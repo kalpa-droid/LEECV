@@ -25,6 +25,16 @@ import { hasCapability, isEncryptedVaultDocumentType, getDocumentTypeConfig } fr
 import { resolveActiveFormat } from '../formats/cvFormatRegistry';
 import { DocumentTypeId } from '../../../types/document';
 
+export interface NavbarGlobalContextPill {
+  shortLabel: string;
+  tooltip: string;
+  ariaLabel?: string;
+  icon?: React.ReactNode;
+  iconId?: string;
+  hasOverrides?: boolean;
+  onClick: () => void;
+}
+
 export interface NavbarProps {
   currentCvData: any;
   /** Tema global de UI. Si se pasa, tiene prioridad sobre currentCvData.uiTheme. */
@@ -41,6 +51,8 @@ export interface NavbarProps {
   atsScore?: number;
   /** Selector global de región/estándar (ej. EE.UU., Europass, LATAM). */
   onOpenRegionFormat?: () => void;
+  /** Píldora declarativa de configuración global superior para cualquier app (CV, Libro/Folleto, EditorLee, etc.). */
+  globalContextPill?: NavbarGlobalContextPill;
   onOpenPricing?: () => void;
   onOpenCreditsModal?: () => void;
   onOpenAgencyPanel?: () => void;
@@ -77,6 +89,7 @@ export function StudioNavbar({
   onOpenAtsCheck,
   atsScore,
   onOpenRegionFormat,
+  globalContextPill,
   onOpenCreditsModal,
 
   undo,
@@ -179,11 +192,33 @@ export function StudioNavbar({
           </div>
         </div>
 
-        {/* CLUSTER DERECHO: Píldoras Ovaladas de Menús (Región 🌐 | ATS ✨ | Créditos | Acciones 📁💾 | Cuenta 👤🔑) */}
+        {/* CLUSTER DERECHO: Píldoras Ovaladas de Menús (Configuración Global | ATS ✨ | Créditos | Acciones 📁💾 | Cuenta 👤🔑) */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
 
-          {/* Píldora Región / Estándar Internacional (junto a ATS) */}
-          {supportsRegionFormat && activeRegionFormat && typeof onOpenRegionFormat === 'function' && (
+          {/* Píldora Global Declarativa (Región en CV, Casa/Imprenta en Libro, Obra/Normas en EditorLee, etc.) */}
+          {globalContextPill ? (
+            <button
+              type="button"
+              title={globalContextPill.tooltip}
+              aria-label={globalContextPill.ariaLabel || globalContextPill.tooltip}
+              onClick={globalContextPill.onClick}
+              className="relative flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-full font-black text-xs shrink-0 transition active:scale-95 cursor-pointer border bg-[var(--ui-bg-panel)] border-[var(--color-accent-base)]/60 text-[var(--color-accent-text)] hover:bg-[var(--color-accent-muted)]"
+            >
+              {globalContextPill.icon || (
+                <DomSectionIcon
+                  iconId={globalContextPill.iconId || UI_ICON_IDS.region}
+                  className="w-3.5 h-3.5 shrink-0"
+                />
+              )}
+              <span>{globalContextPill.shortLabel}</span>
+              {globalContextPill.hasOverrides && (
+                <span
+                  className="w-1.5 h-1.5 rounded-full bg-[var(--color-secondary-base)] shrink-0"
+                  title="Con ajustes finos manuales"
+                />
+              )}
+            </button>
+          ) : supportsRegionFormat && activeRegionFormat && typeof onOpenRegionFormat === 'function' ? (
             <button
               type="button"
               title={`Estándar activo: ${activeRegionFormat.name}`}
@@ -194,7 +229,7 @@ export function StudioNavbar({
               <DomSectionIcon iconId={UI_ICON_IDS.region} className="w-3.5 h-3.5 shrink-0" />
               <span>{activeRegionFormat.shortBadge}</span>
             </button>
-          )}
+          ) : null}
 
           {/* Píldora ATS — score en tiempo real (desktop + móvil) */}
           {supportsAtsBar && typeof onOpenAtsCheck === 'function' && atsScore !== undefined && (
