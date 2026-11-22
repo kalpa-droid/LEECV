@@ -4,7 +4,7 @@ import {
   CANVAS_FALLBACK_HEX,
   COVER_FALLBACK_BG,
   COVER_FALLBACK_TEXT,
-} from '../../src/shared/core/book-engine/canvasColors';
+} from '../../src/shared/kits/print-imposition/canvasColors';
 import { COVER_PRESETS_CATALOG } from '../../src/shared/core/pdf-engine/layers/presets/coverPresetCatalog';
 
 const HEX_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;

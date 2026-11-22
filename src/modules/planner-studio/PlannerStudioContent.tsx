@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { AppShell } from '../../shared/core/ui/AppShell';
-import Navbar from '../cv-builder/components/Navbar';
-import CanvaIconDock from '../cv-builder/components/CanvaIconDock';
-import { PlannerPdfDocument } from '../../shared/core/pdf-engine/renderer/PlannerPdfDocument';
+import StudioNavbar from '../../shared/core/studio-host/StudioNavbar';
+import StudioDock from '../../shared/core/studio-host/StudioDock';
+import { PlannerPdfDocument } from './pdf/PlannerPdfDocument';
 import { VectorDocViewer } from '../../shared/core/pdf-engine/VectorDocViewer';
 import { getPreset } from '../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { DocumentTypeId } from '../../types/document';
@@ -14,9 +14,10 @@ import { useToast } from '../../shared/core/ui/Toast';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
 import { exportDocumentToPDF } from '../../shared/core/pdf-engine/pdfExporter';
 import { useExportEntitlement } from '../../shared/core/entitlements/useExportEntitlement';
-import PdfCheckoutModal from '../cv-builder/components/modals/PdfCheckoutModal';
+import PdfCheckoutModal from '../../shared/core/studio-host/PdfCheckoutModal';
+import { FloatingAssistant } from '../../shared/core/studio-host/FloatingAssistant';
 import { inferDocumentTypeId } from '../../shared/core/capabilities/capabilityRegistry';
-import { PlannerMonthOverride } from '../../shared/core/pdf-engine/layers/records/plannerDataAdapter';
+import { PlannerMonthOverride } from './pdf/plannerDataAdapter';
 import { PersonalInfoFields } from '../../shared/core/ui/PersonalInfoFields';
 import { PresetPersonaSelector, PresetPersonaItem } from '../../shared/core/ui/PresetPersonaSelector';
 import { elevationSystem, radius } from '../../shared/core/uiDesignSystem';
@@ -61,6 +62,7 @@ interface PlannerStudioContentProps {
   onSelectTab: (id: string) => void;
   onCloseTab: (id: string) => void;
   onNavigateToDocument: (targetDocType: DocumentTypeId, id: string) => void;
+  onNewDocument?: (docType: DocumentTypeId) => void;
   onNewCV?: () => void;
   onNewCard?: () => void;
   onNewBook?: () => void;
@@ -88,6 +90,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
   onSelectTab,
   onCloseTab,
   onNavigateToDocument,
+  onNewDocument,
   onNewCV: _onNewCV,
   onNewCard,
   onNewBook,
@@ -278,7 +281,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
       isPanelOpen={isPanelOpen}
       containerRef={viewport.containerRef}
       navbarSlot={
-        <Navbar
+        <StudioNavbar
           docType="planner"
           currentCvData={{}}
           currentUiTheme={currentUiTheme}
@@ -297,7 +300,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
         />
       }
       dockSlot={
-        <CanvaIconDock
+        <StudioDock
           docType="planner"
           activeTab={activeStepTab}
           setActiveTab={setActiveStepTab}
@@ -563,6 +566,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
         onSwitch: onSelectTab,
         onNavigateToDocument: (targetType, id) => onNavigateToDocument(targetType, id),
         onAdd: onNewPlanner || (() => {}),
+        onNewDocument,
         onNewCV: _onNewCV,
         onNewCard: onNewCard,
         onNewBook: onNewBook,
@@ -570,6 +574,14 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
         onClose: (e, id) => onCloseTab(id),
       }}
     />
+      <FloatingAssistant
+        docType="planner"
+        activeTab={activeStepTab}
+        onNavigate={(tabId) => {
+          setActiveStepTab(tabId);
+          setIsPanelOpen(true);
+        }}
+      />
       <PdfCheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}

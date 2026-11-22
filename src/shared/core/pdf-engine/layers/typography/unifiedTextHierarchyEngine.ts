@@ -7,11 +7,11 @@
  * Garantiza que NINGÚN texto dentro de un currículum o tarjeta quede huérfano de jerarquía.
  */
 
-import { TypographyScale, Preset } from '../presets/presetSchema';
+import type { TypographyScale, Preset } from '../presets/presetSchema';
 import { ResolvedThemeRoles, hexToHSL, hslToHex, getContrastRatio } from '../colors/colorSystem';
 import { calculatePerceivedLuminance } from '../colors/surfaceAwareColorEngine';
 import { deriveRecordScale } from './typographyHierarchyEngine';
-import { sanitizeFontFamily } from './pdfFontRegistry';
+import { sanitizeFontFamily } from './fontSanitizer';
 
 export type TextRoleLevel = 'title' | 'subtitle' | 'body' | 'meta' | 'accent';
 

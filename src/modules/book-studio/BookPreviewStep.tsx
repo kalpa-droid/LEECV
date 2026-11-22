@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
+import { BookImpositionOptions } from './domain/impositionEngine';
 import { PdfPreviewStrip } from './components/PdfPreviewStrip';
 
 interface BookPreviewStepProps {

@@ -38,7 +38,7 @@ import {
   pdfSourceErrorFromUnknown,
   isPdfLikeFile,
   isFatalPdfLoadError,
-} from '../src/shared/core/book-engine/pdfSourceClassifier';
+} from '../src/shared/core/pdf-engine/pdfSourceClassifier';
 
 let failures = 0;
 let passes = 0;
@@ -110,7 +110,7 @@ function verifyLidioRuntime() {
 
 function verifyLidioWiring() {
   console.log('\n── 2) Wiring de FloatingAssistant (botón "Otro tip" + resolución al abrir) ──');
-  const src = readSource('src/modules/cv-builder/components/FloatingAssistant.tsx');
+  const src = readSource('src/shared/core/studio-host/FloatingAssistant.tsx');
 
   const missing = containsAll(src, [
     'pickAlwaysTip',
@@ -218,7 +218,7 @@ function verifyPdfWiring() {
   expectTrue(missingStep.length === 0, 'BookSourceTypeStep: aviso tipado por código (sin genérico para password)',
     missingStep.length ? `falta: ${missingStep.join(', ')}` : 'todo presente');
 
-  const engine = readSource('src/shared/core/book-engine/impositionEngine.ts');
+  const engine = readSource('src/modules/book-studio/domain/impositionEngine.ts');
   const missingEngine = containsAll(engine, [
     '/encrypt/i.test(msg)',           // red de seguridad del camino vectorial
     'Imágenes compatibles',           // mensaje de rescate en lenguaje sencillo

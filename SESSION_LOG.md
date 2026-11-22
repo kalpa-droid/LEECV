@@ -1,3 +1,98 @@
+## [2026-11-21] - Fases 8, 9 y 10: Cápsulas Verticales (0/0 AST), card-studio independiente y Fábrica de Apps (V2.28.0)
+
+**Resumen:**
+- **Fase 8 — Cápsulas Verticales (`{domain, pdf}`), `src/shared/kits/` y 0 violaciones / 0 ciclos AST**:
+  - Rotura de los 2 ciclos runtime en `pdf-engine`: conversión a `import type` de interfaces en `presetSchema.ts`, `typographyHierarchyEngine.ts` y `unifiedTextHierarchyEngine.ts`; traslado de `syncPresetsFromStorage()` hacia `presetStorageService.ts` y actualización en `usePaymentReturnAndUpdates.ts`.
+  - Integración de `cover-letter` dentro de `src/modules/cv-builder/` (`components/cover-letter/*` y `pdf/CoverLetterPdfDocument.tsx`), eliminando `src/modules/cover-letter/`.
+  - Creado `pdfCategoryRegistry.ts` e invertido `pdfExporter.ts` para despachar exportadores PDF por categoría sin importar módulos de producto.
+  - Promovidos `impositionMath.ts`, `impositionPlanner.ts` y `canvasColors.ts` a `src/shared/kits/print-imposition/`; traslado de `pdfSourceClassifier.ts` a `src/shared/core/pdf-engine/`.
+  - Encapsulados los motores y PDFs de `book-studio`, `facturador-studio`, `editor-lee-studio` y `planner-studio` bajo `src/modules/<app>/{domain,pdf}`, eliminando `book-engine/`, `facturador-engine/` y `editorial-engine/`. Exención consistente de `src/modules/<app>/pdf/` en `audit-ui-tokens.js`, `check-contrast.js` y `check-module-boundaries.js`.
+  - Baseline AST de `scripts/import-graph-baseline.json` bajado a **0 violaciones de frontera** y **0 ciclos runtime** (`[] / []`) sobre `477` archivos.
+- **Fase 9 — `src/modules/card-studio/` independiente + Puerto `contact-profile@1`**:
+  - Creada la cápsula `src/modules/card-studio/` (`CardStudioContent.tsx`, `cardStepSequence.ts`, `domain/cardContactImport.ts`, `ui/*`) con selector granular de campos vía `portBroker.ts` (`PORT_CONTACT_PROFILE_V1`) y detección de cambios de revisión (`checkPortSourceOutdated`) manteniendo ediciones manuales.
+  - Montada `business_card` como estudio lazy independiente en `appRegistry.ts` y `appSurfaceManifest.ts`, eliminando ramas `docType === 'business_card'` de `EditorPanel.tsx` y `DisenoSection.tsx` (`check-docType-leaks`: `71 → 54`, `DisenoSection.tsx` y `CardExtractSection.tsx` en `0`). Tests: `tests/cardStudioPhase9.test.ts` (3/3).
+- **Fase 10 — Fábrica de Apps, Verificador de Contrato y Documentación Final**:
+  - Creado generador `scripts/new-app.ts` (`npm run new-app` y `npm run new-app:selftest`) con guardias contra tipos purgados y contra `full-summary` en bóvedas `local-encrypted`.
+  - Creado `scripts/verify-app-contract.ts` (`verify:app-contract`) e integrado a `npm run check-all` junto a `new-app:selftest`, más `tests/appFactoryPhase10.test.ts` (3/3).
+  - Actualizados `docs/APP_BLUEPRINT.md`, `docs/ARQUITECTURA_PLATAFORMA.md`, `AGENTS.md` y `src/shared/core/version.ts`.
+- **Validación Local Completa (`npm run check-all`)**: `99 passed | 2 skipped (101)` archivos (`849 passed | 2 skipped`), `0` fronteras/ciclos AST, `0` jerga, `0` tokens UI, `0` violaciones nuevas de contraste, bundle inicial sin librerías pesadas (`entry` `24.2 KB`, `lazy-app` `58.0 KB`) y `83` rutas SEO prerenderizadas.
+
+---
+
+## [2026-11-21] - Fase 5B + Fase 6: StudioHost unificado, Composition Root y Bundle Budget (V2.28.0)
+
+**Resumen:**
+- **Fase 5B — Liberación del Shell hacia `src/shared/core/studio-host/` (0 cruces del shell, `D18 = 0`)**:
+  - Migrados al tronco sin shims de compatibilidad: `StudioNavbar.tsx` (desacoplado de `useCVContext`, recibe `undo/redo/canUndo/canRedo` por props y elimina **5 → 0** fugas `docType`), `PdfCheckoutModal.tsx`, `FloatingAssistant.tsx`, `AssistantNotificationToast.tsx`, `paymentService.ts` (`shared/core/payments/`), `PhotoCropperModal.tsx` y `SignatureModal.tsx` (`shared/core/ui/`).
+  - Creado `src/shared/core/studio-host/stepSequenceRegistry.ts` y `src/modules/cv-builder/cvDockProvider.ts`; reemplazado `CanvaIconDock.tsx` (1011 L, 34 fugas) por `StudioDock.tsx` (297 L, **0 fugas**, 0 colores hex sueltos), actualizados todos los estudios y eliminado `CanvaIconDock.tsx`.
+  - Montado `<FloatingAssistant docType="planner" />` en `PlannerStudioContent.tsx` (cerrando la cobertura 7/7 de Lidio en vivo).
+  - Desacoplado `assistantTips.ts` de `bookStepSequence` y `facturadorStepSequence` mediante `stepSequenceRegistry` (`D18`: **2 → 0** `[trunk-to-engine]`).
+  - Eliminado `switch` de `docType` en `DocumentTabsBar.tsx` (**6 → 0**) usando `getDocumentTypeConfig().iconName`, y `NewDocumentMenu.tsx` migrado a render dinámico sobre `ALL_DOCUMENT_TYPE_IDS` con `onSelectDocument`.
+  - Actualizados `scripts/ui-tokens-allowlist.json` y los 5 scripts de verificación heredados a las rutas canónicas de `studio-host`.
+- **Fase 6 — Composition Root (`appRegistry.ts`), `<StudioRoute>`, `App.tsx < 350 L` y Bundle Budget**:
+  - Creado `src/app/appRegistry.ts` (`APP_REGISTRY as const satisfies Record<RegisteredDocumentTypeId, AppRuntimeEntry>` + registro de proveedores del Dock para las 7 apps) y `src/app/StudioRoute.tsx` (enrutado standalone único con modales unificados).
+  - Extraídos `useDocumentCreation.ts` (`handleNewDocument(docType)` único guiado por registro), `usePaymentReturnAndUpdates.ts`, `useAppNavigationAndTabs.ts`, `useWorkspaceModalsAndExport.ts` y `CvWorkspaceContent.tsx` (lazy), reduciendo `src/app/App.tsx` de **1291 → 267 líneas** y eliminando todas sus fugas (`30 → 0`).
+  - Bundle Budget inicial: extraído `src/shared/core/pdf-engine/layers/typography/fontSanitizer.ts` (puro, sin `@react-pdf/renderer`) y migrado `vite.config.js` a `rolldownOptions.output.codeSplitting` con `includeDependenciesRecursively: false` en `vendor-react-pdf`, eliminando **1227.1 KB** (`vendor-react-pdf`) de la precarga inicial de `/` y bajando el chunk entry `index-*.js` de **201.4 KB → 24.0 KB**.
+  - Agregados `scripts/verify-app-mounted.ts` (`verify:app-mounted`) y `scripts/check-bundle-budget.ts` (`check-bundle-budget`) al pipeline `npm run check-all`.
+  - Bajados estrictamente los baselines AST: `import-graph` (**31 → 10** fronteras; 0 cruces de shell y D18=0; sobre 473 archivos) y `docType-leaks` (**146 → 71** total en 11 archivos; `app` 34→0). Tests: `tests/studioHostAndAppRegistryPhase5B6.test.ts` (6/6).
+
+---
+
+## [2026-11-21] - Fases 0, 1, 2, 3, 4, 5A y 7 + Suite de Conformidad sobre V2.28.0 (feat/editorlee-facturlee-web-integration-v228)
+
+**Resumen:**
+- **Fase 0 — Red de seguridad arquitectónica por AST**:
+  - `scripts/check-import-graph.ts`: Compiler API de TypeScript + detección de ciclos runtime (Tarjan SCC) + aislamiento de bóveda (`vault-network-isolation`) + `--selftest` (6/6) + `scripts/import-graph-baseline.json` (bajó **35 → 31** violaciones de frontera, 2 ciclos, sobre 463 archivos).
+  - `scripts/check-docType-leaks.ts`: detector AST de fugas `docType` + `--selftest` (6/6) + `scripts/docType-leaks-baseline.json` (bajó **199 → 146** total; `shared/` bajó **61 → 11**, -82%).
+- **Fase 1 — Cierre de EditorLee (`D2`)**:
+  - `sanitizeEditorialData()` idempotente conectado en `loadDocumentById()`, prefijos de título/borrador (`DOC_TITLE_PREFIX.editorial`, `draft_editorial`, `draft_invoice`), aislamiento local sin contaminar CV/Supabase, corrección del autoguardado al montar + botón "Abrir", y `tests/editorLeePhase1.test.ts` (4/4).
+- **Fase 2 — Contratos puros + Registro v2 + Purga `portfolio`/`certificate` (`D9`, `D10`)**:
+  - Creada capa pura `src/shared/contracts/` (0 dependencias externas: `appContract`, `persistenceContract`, `assistantContract`, `sessionContract`, `ports/contactProfile`).
+  - `DOCUMENT_TYPE_REGISTRY` migrado a `as const satisfies Record<string, DocumentTypeManifest>`, derivando `DocumentTypeId` desde el registro. Eliminados por completo `portfolio` y `certificate` de `capabilityRegistry.ts`, `syncEngine.ts`, `AdminOverviewTab.tsx` y `api/_lib/serverDal.ts`.
+  - Eliminados todos los `if`/`switch` de `capabilityRegistry.ts` (**27 → 0**) y `documentHelpers.ts` (**6 → 0**).
+  - Añadidos `scripts/check-forbidden-doctypes.ts` (+ `--selftest`) y `scripts/verify-registry-coverage.ts` al pipeline `check-all`, más `tests/registryContractsPhase2.test.ts` (4/4).
+- **Fase 3 — Local-First Core (`D7`, `D8`)**:
+  - Creados `documentEnvelope.ts` (sobres versionados + migración/sanitización por `docType`), `localAssetStore.ts` (externalización `asset://<hash>` de imágenes/PDFs base64 en IndexedDB), `localDocumentStore.ts`, `encryptedVaultDriver.ts` (sin dependencias de red) y `legacyCloudImporter.ts` (importación única de filas históricas `cvs` clasificadas por su `docType` real).
+  - `documentStorageService.ts` y `syncEngine.ts` conectados a Local-First (listas aisladas por tipo, sin subidas automáticas de `cv_data` completo, sin `migrateCvData` sobre `book`/`planner`/`invoice`/`editorial`), verificado en `tests/localFirstCorePhase3.test.ts` (4/4).
+- **Fase 4 — Respaldo en nube opt-in de texto estructurado**:
+  - Migración SQL aditiva e idempotente `supabase/migrations/20261121_local_first_cloud_backups.sql` (`user_preferences` + `document_backups` con RLS, CHECK `doc_type in ('cv','business_card','cover_letter')` y CHECK `pg_column_size(projection) <= 65536`). **Pendiente de Kalpa:** aplicar en producción antes de habilitar el interruptor de respaldo en nube.
+  - Creados `cloudBackupProjections.ts` (proyecciones por lista blanca sin diseño ni binarios + guardas genéricas) y `cloudBackupReplicator.ts` (opt-in apagado por defecto, concurrencia optimista por `revision`, restauración local sin pisar copias más nuevas), verificados en `tests/cloudBackupPhase4.test.ts` (4/4).
+- **Fase 5A — D14 cerrado (0 `shared-boundary`) + Fundamentos `StudioHost`, `DocumentSession` y `PortBroker`**:
+  - `UndoRedoControls.tsx` y `workspaceController.ts` desacoplados de `CVContext` e `initialCVData` (D14 = 0); corregidos 2 imports cruzados de servicios (`StorageDriveTab`, `CoverLetterEditorPanel`).
+  - Creados `DocumentSessionContext.tsx` (`useDocumentSession<T>`), `StudioHost.tsx` (inversión de control del shell) y `portBroker.ts` (`contact-profile@1` para que `card-studio` importe campos elegidos desde un CV guardado y detecte cambios de revisión), verificados en `tests/studioHostAndPortsPhase5A.test.ts` (3/3).
+- **Fase 7 — Lidio modular 7/7 + FacturLee `metadata-only` con completitud (`D6`, `D12`)**:
+  - Descompuesto el prompt monolítico de `api/_lib/aiTasks/catalog.ts` en `api/_lib/aiTasks/appKnowledge/{platform,cv,cover_letter,business_card,book,planner,invoice,editorial,index}.ts` con inyección selectiva por `docType` y sanitizador estricto en servidor (`sanitizeMetadataOnlyEditorState`).
+  - Creado `src/shared/core/facturador-engine/facturadorCompleteness.ts` (catálogo estático de campos obligatorios, validador CUIT Módulo 11 y `buildFacturadorMetadataOnlyContext`) conectado en vivo en `FacturadorStudioContent.tsx` -> `FloatingAssistant.tsx`.
+  - `assistantTips.ts` (7/7 apps, fugas `16 → 0`) y `FloatingAssistant.tsx` (7/7 apps, fugas `2 → 0`). Test canario de cero fuga de valores en `tests/lidioPrivacyCompletenessPhase7.test.ts` (5/5).
+- **Suite de Conformidad (adelanto Fase 10)**:
+  - `tests/contracts/appConformance.test.ts` (`describe.each(ALL_DOCUMENT_TYPE_IDS)`, 29 tests automáticos heredados por toda app nueva).
+
+---
+
+## [2026-11-20] - EditorLee 100% Nativo, Integración Web Pública y Pilar 8 Regla 10 (feat/editorlee-facturlee-web-integration-v228, V2.28.0)
+
+**Resumen:**
+- **Bloque 1 — Conectar y completar EditorLee al 100% (Regla 10 completa)**:
+  - Enrutado e iconos: agregado icono `editor` a `iconCatalog.ts` e `iconRegistry.ts` (71 iconos únicos, 0 colisiones en `check-icon-uniqueness`).
+  - Menú y pestañas: integrados `onSelectEditorial` y `onNewEditorial` en `NewDocumentMenu.tsx`, `DocumentTabsBar.tsx`, `App.tsx` y `FacturadorStudioContent.tsx`.
+  - Backend parseo/export Word: instalado `mammoth` y creado endpoint `api/editorial-doc-api.ts` con acciones `parse-docx` y `export-docx` bajo rate limiting; conectados rewrites en `vercel.json` y llamadas via `apiFetch()` + `withErrorHandling()` en `EditorialImportAiPanel.tsx`.
+  - Paneles reales: implementados `PortadaEditorialStep`, `SeccionesEditorialStep` (con `EDITORIAL_SECTION_CATALOG` y `Field`), `DiseñoEditorialStep` (con `PAGE_SIZES` y `Field`), `TocEditorialStep` (con `generateSectionAnchors`), `MetadatosEditorialStep`, y montaje de `EditorialImportAiPanel`.
+  - Persistencia y Navbar: conectados `saveDocumentDraftLocal`, `loadDocumentById`, `sanitizeEditorialData`, `onSaveCVClick`, descarga de respaldo `.leecv-editor` y `getSavedEditorialsList`.
+  - Eliminación de bypass: el botón "Exportar PDF" valida obligatoriamente `consumeCreditIfNeeded()` y abre `PdfCheckoutModal`.
+- **Bloque 2 — Exponer EditorLee y FacturLee en Web Pública y SEO**:
+  - Textos públicos (`landing.ts`): actualizados títulos a "Siete herramientas", añadidos `nav.editorlee`, `nav.facturas`, `heroCarousel.facturas`, `heroCarousel.editorlee`, `products.editorlee`, `faq.q5/a5` y `faq.q6/a6` con 0 palabras de jerga técnica (`check-plain-language`).
+  - Assets marketing: creados assets webp para previews de factura y editor en `public/marketing/`.
+  - Componentes Landing: ampliado `HeroCarousel.tsx` (5 slides, iconos dedicados y corrección de tokens cromáticos), 7.ª tarjeta en `PortalProductsGrid.tsx`, enlaces y bloques zigzag de detalle en `LandingPage.tsx`.
+  - SEO y Prerender: añadidas rutas `/crear-agenda`, `/crear-carta`, `/crear-factura` y `/crear-editor` en `scripts/prerenderMeta.mjs` y `public/sitemap.xml` (84 rutas estáticas prerenderizadas).
+- **Bloque 3 — Regla + Script automático (Pilar 8 Regla 10)**:
+  - Manifiesto canónico de superficie: creado `src/shared/core/capabilities/appSurfaceManifest.ts` (`APP_SURFACE_MANIFEST`) declarando especificaciones completas para los 7 tipos de documento.
+  - Script bloqueante: creado `scripts/verify-app-completeness.ts` conectado a `npm run verify:app-completeness` y enlazado en `npm run check-all` (112 verificaciones automáticas de integridad).
+  - Documentación: actualizado `AGENTS.md` (Pilar 8 de Regla 10 y fila en Regla 1) y `docs/APP_BLUEPRINT.md` (Paso 9 y checklist pre-merge).
+- **Versionado**: Bump a `V2.28.0` en `src/shared/core/version.ts`.
+- **Validación Local (Regla 0)**: `npm run check-all` superado con 0 errores.
+
+---
+
 ## [2026-11-20] - EditorLee: Editor de Libros e Informes 100% Nativo (PR #147, feat/editorlee-nativo, V2.27.0)
 
 **Resumen:**

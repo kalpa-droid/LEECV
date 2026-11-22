@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { BookOpen, Copy, Upload, CheckCircle2, ChevronRight, FileText } from 'lucide-react';
-import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
-import { PdfSourceErrorCode, isPdfSourceError, isPdfLikeFile } from '../../shared/core/book-engine/pdfSourceClassifier';
-import { bookAssetManager, markNativePickerFailedSession, isNativePickerFailedSession } from '../../shared/core/book-engine/bookAssetManager';
+import { BookImpositionOptions } from './domain/impositionEngine';
+import { PdfSourceErrorCode, isPdfSourceError, isPdfLikeFile } from '../../shared/core/pdf-engine/pdfSourceClassifier';
+import { bookAssetManager, markNativePickerFailedSession, isNativePickerFailedSession } from './domain/bookAssetManager';
 import { PAGE_SIZES } from '../../shared/core/pdf-engine/layers/page/pageSizes';
 import { button, selectableCard, radius } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';

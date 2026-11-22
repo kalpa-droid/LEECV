@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
 import { blankCVTemplate, createBlankCVTemplate } from '../data/initialCVData';
-import { saveCV as saveCVStorage, saveCVAs as saveCVAsStorage } from '../modules/cv-builder/services/cvStorageService';
+import { saveCV as saveCVStorage, saveCVAs as saveCVAsStorage, saveDocumentDraftLocal } from '../shared/core/storage/documentStorageService';
+import { registerBlankDocumentFactory } from '../shared/core/documents/workspaceController';
 import { sanitizeCvData } from '../shared/core/utils/cvDataSchema';
 import { navigation } from '../shared/core/utils/navigation';
 import { CVData } from '../types/cv';
@@ -8,7 +9,8 @@ import { CVData } from '../types/cv';
 import { getDocTypeForRoute, inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
 import { setTabDirty } from '../shared/core/documents/tabStore';
 import { computeAutoDocumentTitle, markAsConfirmed, hasRealContent, getDraftIdForDocType, useDraftAutosave } from '../shared/core/documents/documentEngine';
-import { saveDocumentDraftLocal } from '../shared/core/storage/documentStorageService';
+
+registerBlankDocumentFactory(({ id, docTypeId }) => createBlankCVTemplate({ id, docTypeId }));
 
 interface CVContextType {
   cvData: CVData;

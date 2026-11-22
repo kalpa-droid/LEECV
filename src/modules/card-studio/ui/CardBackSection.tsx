@@ -1,0 +1,75 @@
+import React from 'react';
+import { FlipHorizontal2 } from 'lucide-react';
+import { PanelSection } from '../../../shared/core/ui/PanelSection';
+import { AIButton } from '../../../shared/core/ui/AIButton';
+import { executeAiTask } from '../../../shared/core/ai/aiClient';
+
+interface Props {
+  cvData: any;
+  setCvData: React.Dispatch<React.SetStateAction<any>>;
+}
+
+export function CardBackSection({ cvData, setCvData }: Props) {
+  return (
+    <div className="space-y-6">
+      <PanelSection icon={<FlipHorizontal2 className="w-4 h-4" />} title="Datos del Dorso (Marca & Eslogan)">
+        <div className="p-4 bg-[var(--ui-bg-card)] rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] space-y-3">
+          <div className="space-y-1">
+            <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">Nombre de Marca / Empresa</label>
+            <input
+              type="text"
+              value={cvData?.cardOverrides?.brandName ?? ''}
+              onChange={(e) => {
+                const val = e.target.value;
+                setCvData((prev: any) => ({
+                  ...prev,
+                  cardOverrides: { ...(prev?.cardOverrides || {}), brandName: val }
+                }));
+              }}
+              placeholder="Ej: Pérez Studio / Mi Marca Personal"
+              className="w-full text-xs p-2.5 rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none"
+            />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <label className="block text-xs font-bold text-[var(--color-neutral-text-primary)]">Eslogan / Frase Corta</label>
+              <AIButton
+                label="Sugerir Eslogan"
+                onGenerate={async () => {
+                  const role = cvData?.cardOverrides?.role || cvData?.roles?.[0] || 'Profesional';
+                  const brand = cvData?.cardOverrides?.brandName || cvData?.personalInfo?.fullName || 'Marca Personal';
+                  const res = await executeAiTask<{ slogan: string }>({
+                    taskId: 'generate_slogan',
+                    payload: { role, brand },
+                    maxTokens: 100,
+                    temperature: 0.8
+                  });
+                  return res.data.slogan.replace(/^["'«]/, '').replace(/["'»]$/, '').trim();
+                }}
+                onSuccess={(slogan) => {
+                  setCvData((prev: any) => ({
+                    ...prev,
+                    cardOverrides: { ...(prev?.cardOverrides || {}), tagline: slogan }
+                  }));
+                }}
+              />
+            </div>
+            <input
+              type="text"
+              value={cvData?.cardOverrides?.tagline ?? cvData?.personalInfo?.quote ?? ''}
+              onChange={(e) => {
+                const val = e.target.value;
+                setCvData((prev: any) => ({
+                  ...prev,
+                  cardOverrides: { ...(prev?.cardOverrides || {}), tagline: val }
+                }));
+              }}
+              placeholder="Ej: Soluciones de Diseño de Alta Calidad"
+              className="w-full text-xs p-2.5 rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none"
+            />
+          </div>
+        </div>
+      </PanelSection>
+    </div>
+  );
+}

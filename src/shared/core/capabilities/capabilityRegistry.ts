@@ -1,4 +1,6 @@
-import { CapabilityConfig, DocumentTypeConfig, DocumentTypeId } from '../../../types/document';
+import type { CapabilityConfig, DocumentTypeManifest } from '../../contracts/appContract';
+import { PORT_CONTACT_PROFILE_V1 } from '../../contracts/ports/contactProfile';
+import { reportSilentError } from '../utils/errorHandler';
 
 /**
  * CAPABILITY_REGISTRY
@@ -219,15 +221,30 @@ export const CAPABILITY_REGISTRY: Record<string, CapabilityConfig> = {
 };
 
 /**
- * DOCUMENT_TYPE_REGISTRY
- * Declarative specification of supported document types and the capabilities each includes.
+ * DOCUMENT_TYPE_REGISTRY (Contrato v2 — fuente única de verdad)
+ * Declarative specification of all active document types, their storage policy,
+ * privacy policy for Lidio, routes, prefixes, presets, ports and capabilities.
  */
-export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
+export const DOCUMENT_TYPE_REGISTRY = {
   cv: {
     id: 'cv',
+    capsuleId: 'cv-builder',
     name: 'Currículum Vitae',
     description: 'Documento profesional de una o varias hojas, con anexo de certificados.',
     iconName: 'FileText',
+    route: '/crear-cv',
+    defaultTitle: 'Mi Currículum Vitae',
+    titlePrefix: 'CV',
+    draftIdPrefix: 'draft_cv',
+    storage: {
+      kind: 'local',
+      cloudBackup: { projection: 'structured-text', maxBytes: 65536 },
+    },
+    assistant: {
+      knowledgeId: 'cv',
+      privacy: 'full-summary',
+    },
+    creationStrategy: 'blank',
     capabilities: [
       'theme',
       'paper_size',
@@ -240,16 +257,39 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
       'digital_signature',
       'json_backup',
       'job_versioning',
-      'nameable_title'
+      'nameable_title',
     ],
+    exportFormats: ['pdf', 'json'],
+    stepSequenceId: 'cv_steps',
     defaultPaperSize: 'a4',
-    defaultActivePresetId: 'cv-clasico'
+    defaultActivePresetId: 'cv-clasico',
+    legacyAliases: [],
+    idPrefixes: ['doc_cv_'],
+    presetPrefixes: ['cv-'],
+    ports: {
+      provides: [PORT_CONTACT_PROFILE_V1],
+    },
   },
   cover_letter: {
     id: 'cover_letter',
+    capsuleId: 'cv-builder',
     name: 'Carta de Presentación',
     description: 'Carta personalizada por vacante, generada con IA desde tu CV y la descripción del puesto.',
     iconName: 'Mail',
+    route: '/crear-carta',
+    studioRoute: '/crear-cv',
+    defaultTitle: 'Mi Carta de Presentación',
+    titlePrefix: 'Carta',
+    draftIdPrefix: 'draft_cover_letter',
+    storage: {
+      kind: 'local',
+      cloudBackup: { projection: 'structured-text', maxBytes: 32768 },
+    },
+    assistant: {
+      knowledgeId: 'cover_letter',
+      privacy: 'full-summary',
+    },
+    creationStrategy: 'variant',
     capabilities: [
       'theme',
       'paper_size',
@@ -260,74 +300,100 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
       'job_target',
       'ai_generation',
       'job_versioning',
-      'nameable_title'
+      'nameable_title',
     ],
+    exportFormats: ['pdf', 'docx', 'json'],
+    stepSequenceId: 'cover_letter_steps',
     defaultPaperSize: 'a4',
-    defaultActivePresetId: 'carta-clasica'
+    defaultActivePresetId: 'carta-clasica',
+    legacyAliases: ['carta'],
+    idPrefixes: ['cover_letter_', 'doc_cover_letter_'],
+    presetPrefixes: ['carta-'],
   },
   business_card: {
     id: 'business_card',
+    capsuleId: 'card-studio',
     name: 'Tarjeta Profesional vCard',
     description: 'Tarjeta de presentación digital e impresa compacta con código QR e identidad visual.',
     iconName: 'CreditCard',
+    route: '/crear-tarjeta',
+    defaultTitle: 'Mi Tarjeta Personal',
+    titlePrefix: 'Tarjeta',
+    draftIdPrefix: 'draft_card',
+    storage: {
+      kind: 'local',
+      cloudBackup: { projection: 'structured-text', maxBytes: 16384 },
+    },
+    assistant: {
+      knowledgeId: 'business_card',
+      privacy: 'full-summary',
+    },
+    creationStrategy: 'blank',
     capabilities: [
       'theme',
       'personal_info',
       'qr_code',
       'logo_upload',
       'json_backup',
-      'nameable_title'
-    ]
-  },
-  portfolio: {
-    id: 'portfolio',
-    name: 'Portafolio de Proyectos',
-    description: 'Presentación visual de proyectos, acreditaciones y muestras de trabajo.',
-    iconName: 'Briefcase',
-    capabilities: [
-      'theme',
-      'paper_size',
-      'personal_info',
-      'education',
-      'profession',
-      'scanned_certificates',
-      'logo_upload',
-      'json_backup'
+      'nameable_title',
     ],
-    defaultPaperSize: 'a4'
-  },
-  certificate: {
-    id: 'certificate',
-    name: 'Certificado Acreditativo',
-    description: 'Documento formal de acreditación o diploma con firma digital e isotipo.',
-    iconName: 'Award',
-    capabilities: [
-      'theme',
-      'paper_size',
-      'personal_info',
-      'digital_signature',
-      'logo_upload',
-      'json_backup'
-    ],
-    defaultPaperSize: 'a4'
+    exportFormats: ['pdf', 'json'],
+    stepSequenceId: 'card_steps',
+    defaultPaperSize: 'a4',
+    defaultActivePresetId: 'tarjeta-personal',
+    legacyAliases: ['tarjeta'],
+    idPrefixes: ['card_', 'doc_business_card_'],
+    presetPrefixes: ['tarjeta-'],
+    ports: {
+      consumes: [PORT_CONTACT_PROFILE_V1],
+    },
   },
   book: {
     id: 'book',
+    capsuleId: 'book-studio',
     name: 'Libro / Folleto',
     description: 'Libro, folleto o manual listo para imprimir, doblar y armar.',
     iconName: 'BookOpen',
-    capabilities: [
-      'theme',
-      'paper_size',
-      'json_backup'
-    ],
-    defaultPaperSize: 'a4'
+    route: '/crear-libro',
+    defaultTitle: 'Mi Libro / Folleto',
+    titlePrefix: 'Libro',
+    draftIdPrefix: 'draft_book',
+    storage: {
+      kind: 'local',
+    },
+    assistant: {
+      knowledgeId: 'book',
+      privacy: 'full-summary',
+    },
+    creationStrategy: 'blank',
+    capabilities: ['theme', 'paper_size', 'json_backup'],
+    exportFormats: ['pdf', 'json'],
+    stepSequenceId: 'book_steps',
+    defaultPaperSize: 'a4',
+    defaultActivePresetId: 'libro-standard',
+    legacyAliases: ['libro'],
+    idPrefixes: ['book_', 'doc_book_'],
+    presetPrefixes: ['libro-', 'book'],
+    legacyBooleanFlag: 'bookMode',
   },
   planner: {
     id: 'planner',
+    capsuleId: 'planner-studio',
     name: 'Agenda / Planificador',
     description: 'Organizador personal, diario, semanal o mensual.',
     iconName: 'CalendarCheck',
+    route: '/crear-agenda',
+    defaultTitle: 'Mi Agenda / Planificador',
+    titlePrefix: 'Agenda',
+    draftIdPrefix: 'draft_planner',
+    storage: {
+      kind: 'local',
+    },
+    assistant: {
+      knowledgeId: 'planner',
+      privacy: 'full-summary',
+    },
+    creationStrategy: 'blank',
     capabilities: [
       'theme',
       'paper_size',
@@ -335,46 +401,118 @@ export const DOCUMENT_TYPE_REGISTRY: Record<string, DocumentTypeConfig> = {
       'planner_time',
       'planner_months',
       'json_backup',
-      'nameable_title'
+      'nameable_title',
     ],
+    exportFormats: ['pdf', 'json'],
+    stepSequenceId: 'planner_steps',
     defaultPaperSize: 'b5',
-    defaultActivePresetId: 'planner-clasico'
+    defaultActivePresetId: 'planner-clasico',
+    legacyAliases: ['agenda'],
+    idPrefixes: ['planner_', 'doc_planner_'],
+    presetPrefixes: ['planner-'],
   },
   invoice: {
     id: 'invoice',
+    capsuleId: 'facturador-studio',
     name: 'Presupuesto / Factura',
     description: 'Comprobante interno o presupuesto. 100% local y cifrado; no es una factura fiscal con CAE.',
     iconName: 'ReceiptText',
-    capabilities: [
-      'theme',
-      'paper_size',
-      'json_backup',
-      'nameable_title'
-    ],
+    route: '/crear-factura',
+    defaultTitle: 'Presupuesto / Factura',
+    titlePrefix: 'Factura',
+    draftIdPrefix: 'draft_invoice',
+    storage: {
+      kind: 'local-encrypted',
+    },
+    assistant: {
+      knowledgeId: 'invoice',
+      privacy: 'metadata-only',
+    },
+    creationStrategy: 'vault',
+    capabilities: ['theme', 'paper_size', 'json_backup', 'nameable_title'],
+    exportFormats: ['pdf', 'xlsx', 'zip'],
+    stepSequenceId: 'invoice_steps',
     defaultPaperSize: 'a4',
-    defaultActivePresetId: 'fact-clasico-fiscal'
+    defaultActivePresetId: 'fact-clasico-fiscal',
+    legacyAliases: ['factura'],
+    idPrefixes: ['invoice_', 'doc_invoice_'],
+    presetPrefixes: ['fact-'],
   },
   editorial: {
     id: 'editorial',
+    capsuleId: 'editor-lee-studio',
     name: 'Publicación Editorial / Zine',
     description: 'Edición y maquetación de textos, zines, ensayos y publicaciones con índice y notas.',
     iconName: 'BookMarked',
-    capabilities: [
-      'theme',
-      'paper_size',
-      'json_backup',
-      'nameable_title'
-    ],
+    route: '/crear-editor',
+    defaultTitle: 'Mi Publicación Editorial',
+    titlePrefix: 'EditorLee',
+    draftIdPrefix: 'draft_editorial',
+    storage: {
+      kind: 'local',
+    },
+    assistant: {
+      knowledgeId: 'editorial',
+      privacy: 'full-summary',
+    },
+    creationStrategy: 'blank',
+    capabilities: ['theme', 'paper_size', 'json_backup', 'nameable_title'],
+    exportFormats: ['pdf', 'docx', 'json'],
+    stepSequenceId: 'editorial_steps',
     defaultPaperSize: 'a4',
-    defaultActivePresetId: 'libro-ensayo-novela'
-  }
-};
+    defaultActivePresetId: 'libro-ensayo-novela',
+    legacyAliases: ['editor'],
+    idPrefixes: ['editorial_', 'doc_editorial_'],
+    presetPrefixes: ['edit-', 'libro-ensayo-novela', 'trabajo-practico-monografia-tesis'],
+  },
+} as const satisfies Record<string, DocumentTypeManifest>;
+
+export type RegisteredDocumentTypeId = keyof typeof DOCUMENT_TYPE_REGISTRY;
+export type RegisteredDocumentTypeConfig = (typeof DOCUMENT_TYPE_REGISTRY)[RegisteredDocumentTypeId];
+
+export const ALL_DOCUMENT_TYPE_IDS: readonly RegisteredDocumentTypeId[] = Object.keys(
+  DOCUMENT_TYPE_REGISTRY
+) as RegisteredDocumentTypeId[];
+
+const ALL_DOCUMENT_TYPE_CONFIGS: readonly RegisteredDocumentTypeConfig[] = Object.values(DOCUMENT_TYPE_REGISTRY);
+
+export function isRegisteredDocumentTypeId(value: unknown): value is RegisteredDocumentTypeId {
+  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(DOCUMENT_TYPE_REGISTRY, value);
+}
 
 /**
  * Get configuration for a specific document type.
+ * En desarrollo lanza error ante un ID inexistente; en producción reporta y cae a `cv`.
  */
-export function getDocumentTypeConfig(docTypeId: string = 'cv'): DocumentTypeConfig {
-  return DOCUMENT_TYPE_REGISTRY[docTypeId] || DOCUMENT_TYPE_REGISTRY.cv;
+export function getDocumentTypeConfig(docTypeId: string = 'cv'): RegisteredDocumentTypeConfig {
+  const key = docTypeId || 'cv';
+  if (isRegisteredDocumentTypeId(key)) {
+    return DOCUMENT_TYPE_REGISTRY[key];
+  }
+  const err = new Error(`DocumentTypeId desconocido en DOCUMENT_TYPE_REGISTRY: "${docTypeId}"`);
+  if ((import.meta as any)?.env?.DEV) {
+    throw err;
+  }
+  reportSilentError(err, `capabilityRegistry.getDocumentTypeConfig[${docTypeId}]`);
+  return DOCUMENT_TYPE_REGISTRY.cv;
+}
+
+/** Devuelve los tipos habilitados para respaldo opt-in en la nube (texto estructurado). */
+export function getCloudBackupDocumentTypeIds(): RegisteredDocumentTypeId[] {
+  return ALL_DOCUMENT_TYPE_CONFIGS.filter(
+    (entry) => entry.storage.kind === 'local' && 'cloudBackup' in entry.storage && Boolean(entry.storage.cloudBackup)
+  ).map((entry) => entry.id);
+}
+
+/** Verdadero si el tipo nunca sincroniza con la nube (local puro o bóveda cifrada). */
+export function isLocalOnlyDocumentType(docTypeId: string): boolean {
+  const cfg = getDocumentTypeConfig(docTypeId);
+  return cfg.storage.kind === 'local-encrypted' || !('cloudBackup' in cfg.storage && cfg.storage.cloudBackup);
+}
+
+/** Verdadero si el tipo exige bóveda cifrada local sin red. */
+export function isEncryptedVaultDocumentType(docTypeId: string): boolean {
+  return getDocumentTypeConfig(docTypeId).storage.kind === 'local-encrypted';
 }
 
 /**
@@ -383,7 +521,7 @@ export function getDocumentTypeConfig(docTypeId: string = 'cv'): DocumentTypeCon
 export function getCapabilitiesForDocument(docTypeId: string = 'cv'): CapabilityConfig[] {
   const config = getDocumentTypeConfig(docTypeId);
   return config.capabilities
-    .map(capId => CAPABILITY_REGISTRY[capId])
+    .map((capId) => CAPABILITY_REGISTRY[capId])
     .filter(Boolean);
 }
 
@@ -392,97 +530,82 @@ export function getCapabilitiesForDocument(docTypeId: string = 'cv'): Capability
  */
 export function hasCapability(docTypeId: string = 'cv', capabilityId: string): boolean {
   const config = getDocumentTypeConfig(docTypeId);
-  return config.capabilities.includes(capabilityId);
+  return (config.capabilities as readonly string[]).includes(capabilityId);
 }
 
 /**
  * Motor Declarativo de Mapeo Ruta <-> Tipo de Documento <-> Título por Defecto
+ * 100% derivado de DOCUMENT_TYPE_REGISTRY (0 condicionales por docType).
  */
-export function getDocTypeForRoute(route: string = '/'): DocumentTypeId {
-  const cleanRoute = (route || '/')
-    .split(/[?#]/, 1)[0]
-    .toLowerCase()
-    .trim()
-    .replace(/\/+$/, '') || '/';
-  if (cleanRoute === '/crear-tarjeta') return 'business_card';
-  if (cleanRoute === '/crear-libro') return 'book';
-  if (cleanRoute === '/crear-agenda') return 'planner';
-  if (cleanRoute === '/crear-factura') return 'invoice';
-  if (cleanRoute === '/crear-editor') return 'editorial';
+export function getDocTypeForRoute(route: string = '/'): RegisteredDocumentTypeId {
+  const cleanRoute =
+    (route || '/')
+      .split(/[?#]/, 1)[0]
+      .toLowerCase()
+      .trim()
+      .replace(/\/+$/, '') || '/';
+
+  const directStudioMatch = ALL_DOCUMENT_TYPE_CONFIGS.find((entry) => {
+    const effectiveRoute = 'studioRoute' in entry ? entry.studioRoute : entry.route;
+    return entry.route === effectiveRoute && effectiveRoute === cleanRoute;
+  });
+  if (directStudioMatch) return directStudioMatch.id;
+
   return 'cv';
 }
 
 export function getRouteForDocType(docTypeId: string = 'cv'): string {
-  switch (docTypeId) {
-    case 'business_card':
-      return '/crear-tarjeta';
-    case 'book':
-      return '/crear-libro';
-    case 'cover_letter':
-      return '/crear-cv';
-    case 'planner':
-      return '/crear-agenda';
-    case 'invoice':
-      return '/crear-factura';
-    case 'editorial':
-      return '/crear-editor';
-    case 'cv':
-    default:
-      return '/crear-cv';
-  }
+  const config = getDocumentTypeConfig(docTypeId);
+  return 'studioRoute' in config && config.studioRoute ? config.studioRoute : config.route;
 }
 
 export function getDefaultTitleForDocType(docTypeId: string = 'cv'): string {
-  switch (docTypeId) {
-    case 'business_card':
-      return 'Mi Tarjeta Personal';
-    case 'book':
-      return 'Mi Libro / Folleto';
-    case 'cover_letter':
-      return 'Mi Carta de Presentación';
-    case 'planner':
-      return 'Mi Agenda / Planificador';
-    case 'invoice':
-      return 'Presupuesto / Factura';
-    case 'editorial':
-      return 'Mi Publicación Editorial';
-    case 'cv':
-    default:
-      return 'Mi Currículum Vitae';
-  }
+  return getDocumentTypeConfig(docTypeId).defaultTitle;
 }
 
-export function inferDocumentTypeId(docData: any): DocumentTypeId {
+export function inferDocumentTypeId(docData: any): RegisteredDocumentTypeId {
   if (!docData || typeof docData !== 'object') return 'cv';
 
-  const docTypeId = docData.doc_type_id || docData.docType;
-  if (docTypeId === 'business_card' || docTypeId === 'book' || docTypeId === 'cover_letter' || docTypeId === 'planner' || docTypeId === 'cv' || docTypeId === 'invoice' || docTypeId === 'editorial') {
-    return docTypeId;
+  const rawType = docData.doc_type_id || docData.docType;
+  if (isRegisteredDocumentTypeId(rawType)) {
+    return rawType;
   }
-  if (docTypeId === 'carta') return 'cover_letter';
-  if (docTypeId === 'tarjeta') return 'business_card';
-  if (docTypeId === 'libro') return 'book';
-  if (docTypeId === 'agenda') return 'planner';
-  if (docTypeId === 'factura') return 'invoice';
-  if (docTypeId === 'editor') return 'editorial';
+  if (typeof rawType === 'string') {
+    const normalized = rawType.toLowerCase();
+    const byAlias = ALL_DOCUMENT_TYPE_CONFIGS.find((entry) =>
+      (entry.legacyAliases as readonly string[]).includes(normalized)
+    );
+    if (byAlias) return byAlias.id;
+  }
 
   const id = String(docData.id || '').toLowerCase();
-  if (id.startsWith('card_') || id.startsWith('doc_business_card_') || id === 'draft_card') return 'business_card';
-  if (id.startsWith('book_') || id.startsWith('doc_book_') || id === 'draft_book') return 'book';
-  if (id.startsWith('cover_letter_') || id.startsWith('doc_cover_letter_') || id === 'draft_cover_letter') return 'cover_letter';
-  if (id.startsWith('planner_') || id.startsWith('doc_planner_') || id === 'draft_planner') return 'planner';
-  if (id.startsWith('invoice_') || id.startsWith('doc_invoice_') || id === 'draft_invoice') return 'invoice';
-  if (id.startsWith('editorial_') || id.startsWith('doc_editorial_') || id === 'draft_editorial') return 'editorial';
-  if (id === 'draft_cv') return 'cv';
+  if (id) {
+    const byId = ALL_DOCUMENT_TYPE_CONFIGS.find(
+      (entry) =>
+        id === entry.draftIdPrefix ||
+        (entry.idPrefixes as readonly string[]).some((prefix) => id.startsWith(prefix))
+    );
+    if (byId) return byId.id;
+  }
 
   const presetId = String(docData.activePresetId || '').toLowerCase();
-  if (presetId === 'tarjeta-personal') return 'business_card';
-  if (presetId === 'carta-clasica' || presetId === 'carta-presentacion') return 'cover_letter';
-  if (presetId.startsWith('planner-')) return 'planner';
-  if (presetId.startsWith('libro-') || presetId === 'book') return 'book';
-  if (presetId.startsWith('fact-')) return 'invoice';
-  if (presetId.startsWith('edit-') || presetId === 'libro-ensayo-novela' || presetId === 'trabajo-practico-monografia-tesis') return 'editorial';
-  if (docData.bookMode) return 'book';
+  if (presetId) {
+    // Priorizar coincidencias exactas de preset antes que prefijos generales (ej. 'libro-ensayo-novela' antes de 'libro-').
+    const exactPresetMatch = ALL_DOCUMENT_TYPE_CONFIGS.find((entry) =>
+      (entry.presetPrefixes as readonly string[]).some((p) => presetId === p)
+    );
+    if (exactPresetMatch) return exactPresetMatch.id;
+
+    const prefixPresetMatch = ALL_DOCUMENT_TYPE_CONFIGS.find((entry) =>
+      (entry.presetPrefixes as readonly string[]).some((p) => p.endsWith('-') && presetId.startsWith(p))
+    );
+    if (prefixPresetMatch) return prefixPresetMatch.id;
+  }
+
+  const byLegacyFlag = ALL_DOCUMENT_TYPE_CONFIGS.find(
+    (entry) => 'legacyBooleanFlag' in entry && entry.legacyBooleanFlag && Boolean(docData[entry.legacyBooleanFlag])
+  );
+  if (byLegacyFlag) return byLegacyFlag.id;
 
   return 'cv';
 }

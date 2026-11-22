@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
 import { BookOpen, Home, Printer, Check, Palette, Ruler } from 'lucide-react';
 import { button, input, typeScale, selectableCard, radius } from '../../shared/core/uiDesignSystem';
-import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
-import { computeBookFinalPageCount } from '../../shared/core/book-engine/bookPageCount';
-import { calculateSpineWidth } from '../../shared/core/book-engine/impositionPlanner';
+import { BookImpositionOptions } from './domain/impositionEngine';
+import { computeBookFinalPageCount } from './domain/bookPageCount';
+import { calculateSpineWidth } from '../../shared/kits/print-imposition/impositionPlanner';
 import { COVER_PRESETS } from '../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
 import { useText } from '../../shared/i18n/useText';
 

@@ -7,7 +7,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 // Ver el test de regresión: tests/cvPreviewNoLazyReactPdf.test.ts — si falla, es esto.
 import { TemplateRenderer } from '../../../shared/core/pdf-engine/renderer/TemplateRenderer';
 import { CardSheetDocument } from '../../../shared/core/pdf-engine/renderer/CardSheetDocument';
-import { CoverLetterPdfDocument } from '../../../shared/core/pdf-engine/renderer/CoverLetterPdfDocument';
+import { CoverLetterPdfDocument } from '../pdf/CoverLetterPdfDocument';
 import { getPreset, resolveActivePreset, subscribeToPresetChanges, getPresetsSnapshot } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { cvDataToContentSections } from '../../../shared/core/pdf-engine/layers/records/cvDataAdapter';
 import { buildCardDataFromCV, BusinessCardData } from '../../../shared/core/pdf-engine/layers/records/cardDataAdapter';

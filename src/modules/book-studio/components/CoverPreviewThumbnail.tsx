@@ -4,8 +4,8 @@ import {
   BackCoverConfig,
   crearCanvasTapaCustom,
   crearCanvasContratapaCustom,
-} from '../../../shared/core/book-engine/impositionEngine';
-import { bookAssetManager } from '../../../shared/core/book-engine/bookAssetManager';
+} from '../domain/impositionEngine';
+import { bookAssetManager } from '../domain/bookAssetManager';
 import { useText } from '../../../shared/i18n/useText';
 
 export interface CoverPreviewThumbnailProps {

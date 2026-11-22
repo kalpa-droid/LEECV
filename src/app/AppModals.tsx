@@ -1,11 +1,11 @@
 import React, { Suspense } from 'react';
-import PhotoCropperModal from '../modules/cv-builder/components/PhotoCropperModal';
-import SignatureModal from '../modules/cv-builder/components/SignatureModal';
+import PhotoCropperModal from '../shared/core/ui/PhotoCropperModal';
+import SignatureModal from '../shared/core/ui/SignatureModal';
 import WizardModal from '../modules/cv-builder/components/WizardModal';
 import SavedCVsModal from '../modules/cv-builder/components/SavedCVsModal';
 import SaveModal from '../modules/cv-builder/components/SaveModal';
 import SaveAsVersionModal from '../modules/cv-builder/components/SaveAsVersionModal';
-import PdfCheckoutModal from '../modules/cv-builder/components/modals/PdfCheckoutModal';
+import PdfCheckoutModal from '../shared/core/studio-host/PdfCheckoutModal';
 import JsonDownloadModal from '../modules/cv-builder/components/modals/JsonDownloadModal';
 import PdfProgressModal from '../modules/cv-builder/components/modals/PdfProgressModal';
 import PrivacyModal from '../modules/cv-builder/components/PrivacyModal';
@@ -13,7 +13,7 @@ import ShareAppModal from '../modules/cv-builder/components/modals/ShareAppModal
 import EmailSaveModal from '../modules/cv-builder/components/modals/EmailSaveModal';
 import { AtsCheckModal } from '../modules/cv-builder/components/AtsCheckModal';
 import { AtsLiveAuditorPanel } from '../modules/cv-builder/components/AtsLiveAuditorPanel';
-import { CoverLetterExportModal } from '../modules/cover-letter/components/CoverLetterExportModal';
+import { CoverLetterExportModal } from '../modules/cv-builder/components/cover-letter/CoverLetterExportModal';
 import { UpdateToast } from '../shared/core/ui/UpdateToast';
 import { PricingModal } from '../modules/payments/components/PricingModal';
 import { CreditsModal } from '../modules/payments/components/CreditsModal';
@@ -28,7 +28,7 @@ import { capabilitiesGate } from '../shared/core/documents/documentEngine/capabi
 import { useToast } from '../shared/core/ui/Toast';
 import { resolveRuleTargetTab, isValidPanelTab, FALLBACK_TAB } from '../shared/core/recruiter-rules/ruleTargetTabs';
 
-const CardExportModal = React.lazy(() => import('../modules/cv-builder/components/modals/CardExportModal').then(m => ({ default: m.CardExportModal })));
+const CardExportModal = React.lazy(() => import('../modules/card-studio/ui/CardExportModal').then(m => ({ default: m.CardExportModal })));
 
 export interface AppModalsProps {
   // States

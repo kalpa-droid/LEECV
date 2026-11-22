@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppShell } from '../../shared/core/ui/AppShell';
-import Navbar from '../cv-builder/components/Navbar';
-import CanvaIconDock from '../cv-builder/components/CanvaIconDock';
+import StudioNavbar from '../../shared/core/studio-host/StudioNavbar';
+import StudioDock from '../../shared/core/studio-host/StudioDock';
 import { VectorDocViewer } from '../../shared/core/pdf-engine/VectorDocViewer';
-import { InvoicePdfDocument } from '../../shared/core/pdf-engine/renderer/InvoicePdfDocument';
-import { getInvoicePreset } from '../../shared/core/pdf-engine/layers/presets/facturadorPresets';
+import { InvoicePdfDocument } from './pdf/InvoicePdfDocument';
+import { getInvoicePreset } from './pdf/facturadorPresets';
 import { DocumentTypeId } from '../../types/document';
 import { useDocumentViewport, useViewportGestures } from '../../shared/core/viewport';
 import { OpenTab } from '../../shared/core/documents/tabStore';
@@ -14,39 +14,43 @@ import { useToast } from '../../shared/core/ui/Toast';
 import { withErrorHandling } from '../../shared/core/utils/errorHandler';
 import { exportDocumentToPDF } from '../../shared/core/pdf-engine/pdfExporter';
 import { useExportEntitlement } from '../../shared/core/entitlements/useExportEntitlement';
-import PdfCheckoutModal from '../cv-builder/components/modals/PdfCheckoutModal';
+import PdfCheckoutModal from '../../shared/core/studio-host/PdfCheckoutModal';
 import { elevationSystem, radius } from '../../shared/core/uiDesignSystem';
 import { downloadBlob } from '../../shared/core/utils/downloadUtils';
 import { useFacturadorVault } from './useFacturadorVault';
 import { VaultLockScreen } from './VaultLockScreen';
-import { FACTURADOR_STEP_SEQUENCE } from '../../shared/core/facturador-engine/facturadorStepSequence';
+import { FACTURADOR_STEP_SEQUENCE } from './domain/facturadorStepSequence';
 import {
   EMPTY_EMPRESA,
   EMPTY_FACTURADOR_VAULT,
   createEmptyInvoice,
-} from '../../shared/core/facturador-engine/facturadorDefaults';
+} from './domain/facturadorDefaults';
 import {
   FacturadorVaultData,
   InvoiceDraft,
   SavedInvoice,
-} from '../../shared/core/facturador-engine/facturadorTypes';
+} from './domain/facturadorTypes';
 import {
   computeInvoiceTotals,
   computeLineRow,
   describeComprobante,
-} from '../../shared/core/facturador-engine/invoiceMath';
+} from './domain/invoiceMath';
 import {
   exportPortablePackage,
   loadEnvelope,
   readPortablePackage,
-} from '../../shared/core/facturador-engine/vaultStorage';
+} from './domain/vaultStorage';
 import {
   exportVaultToXlsx,
   importCatalogAndClientsFromXlsx,
-} from '../../shared/core/facturador-engine/xlsxBackupEngine';
+} from './domain/xlsxBackupEngine';
 import { FactNotify, nextNumberPreview } from './facturadorStepsShared';
 import { FactEmisorStep } from './steps/FactEmisorStep';
-import { FloatingAssistant } from '../cv-builder/components/FloatingAssistant';
+import { FloatingAssistant } from '../../shared/core/studio-host/FloatingAssistant';
+import {
+  assessFacturadorCompleteness,
+  buildFacturadorMetadataOnlyContext,
+} from './domain/facturadorCompleteness';
 import { FactComprobanteStep } from './steps/FactComprobanteStep';
 import { FactItemsStep } from './steps/FactItemsStep';
 import { FactCatalogoStep } from './steps/FactCatalogoStep';
@@ -62,11 +66,13 @@ export interface FacturadorStudioContentProps {
   onSelectTab: (id: string) => void;
   onCloseTab: (id: string) => void;
   onNavigateToDocument: (targetDocType: DocumentTypeId, id: string) => void;
+  onNewDocument?: (docType: DocumentTypeId) => void;
   onNewCV?: () => void;
   onNewCard?: () => void;
   onNewBook?: () => void;
   onNewPlanner?: () => void;
   onNewInvoice?: () => void;
+  onNewEditorial?: () => void;
   cycleUITheme: () => void;
   onTabsChanged?: (tabs: OpenTab[]) => void;
   onOpenShareAppModal?: () => void;
@@ -92,11 +98,13 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
   onSelectTab: _onSelectTab,
   onCloseTab,
   onNavigateToDocument,
+  onNewDocument,
   onNewCV,
   onNewCard,
   onNewBook,
   onNewPlanner,
   onNewInvoice,
+  onNewEditorial,
   cycleUITheme,
   onTabsChanged = () => {},
   onOpenShareAppModal,
@@ -401,6 +409,16 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
     ? { vault, updateVault, draft, updateDraft, notify }
     : null;
 
+  const lidioMetadataContext = useMemo(
+    () =>
+      buildFacturadorMetadataOnlyContext({
+        activeStepId: activeStepTab,
+        vaultLocked: phase !== 'unlocked',
+        report: phase === 'unlocked' ? assessFacturadorCompleteness({ empresa, draft }, activeStepTab) : null,
+      }),
+    [activeStepTab, phase, empresa, draft]
+  );
+
   if (phase === 'loading') {
     return (
       <div className="flex items-center justify-center h-screen text-sm opacity-60 animate-pulse">
@@ -437,7 +455,7 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
         isPanelOpen={isPanelOpen}
         containerRef={viewport.containerRef}
         navbarSlot={
-          <Navbar
+          <StudioNavbar
             docType="invoice"
             currentCvData={{}}
             currentUiTheme={currentUiTheme}
@@ -460,7 +478,7 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
           />
         }
         dockSlot={
-          <CanvaIconDock
+          <StudioDock
             docType="invoice"
             activeTab={activeStepTab}
             setActiveTab={(tab) => {
@@ -545,17 +563,20 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
           onSwitch: () => {},
           onNavigateToDocument: (targetType, id) => onNavigateToDocument(targetType, id),
           onAdd: handleNewDraft,
+          onNewDocument,
           onNewCV,
           onNewCard,
           onNewBook,
           onNewPlanner,
           onNewInvoice: onNewInvoice || handleNewDraft,
+          onNewEditorial,
           onClose: (e, id) => onCloseTab(id),
         }}
       />
       <FloatingAssistant
         docType="invoice"
         activeTab={activeStepTab}
+        metadataOnlyContext={lidioMetadataContext}
         onNavigate={(stepId) => {
           setActiveStepTab(stepId);
           setIsPanelOpen(true);

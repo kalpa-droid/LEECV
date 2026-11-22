@@ -3,9 +3,9 @@ import { Store, Upload, Trash2 } from 'lucide-react';
 import { Field } from '../../../shared/core/ui/Field';
 import { PanelSection } from '../../../shared/core/ui/PanelSection';
 import { CONDICIONES_IVA, FactStepBaseProps } from '../facturadorStepsShared';
-import { EmpresaConfig } from '../../../shared/core/facturador-engine/facturadorTypes';
+import { EmpresaConfig } from '../domain/facturadorTypes';
 import { isValidCuit, isValidEmail } from '../../../shared/core/utils/validationEngine';
-import { readLogoFile, svgToDataUrl } from '../../../shared/core/facturador-engine/svgLogoRasterizer';
+import { readLogoFile, svgToDataUrl } from '../domain/svgLogoRasterizer';
 import { radius } from '../../../shared/core/uiDesignSystem';
 
 /** Paso 1 — Datos del negocio emisor + logo. */

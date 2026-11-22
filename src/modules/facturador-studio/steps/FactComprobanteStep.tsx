@@ -3,8 +3,8 @@ import { ReceiptText, UserRound, Hash, TriangleAlert } from 'lucide-react';
 import { Field } from '../../../shared/core/ui/Field';
 import { PanelSection } from '../../../shared/core/ui/PanelSection';
 import { CONDICIONES_IVA, FactStepBaseProps, emptyCliente, nextNumberPreview } from '../facturadorStepsShared';
-import { ClienteFactura, ComprobanteLetra, ComprobanteTipo } from '../../../shared/core/facturador-engine/facturadorTypes';
-import { formatARS, computeInvoiceTotals, computeLineRow } from '../../../shared/core/facturador-engine/invoiceMath';
+import { ClienteFactura, ComprobanteLetra, ComprobanteTipo } from '../domain/facturadorTypes';
+import { formatARS, computeInvoiceTotals, computeLineRow } from '../domain/invoiceMath';
 import { radius } from '../../../shared/core/uiDesignSystem';
 
 /** Paso 2 — Tipo/letra/número del comprobante y cliente. */

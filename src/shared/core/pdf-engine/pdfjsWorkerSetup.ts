@@ -10,7 +10,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 // Esa era la causa real de que las miniaturas de página quedaran girando
 // para siempre sin cargar nunca.
 import pdfjsWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
-import { isFatalPdfLoadError } from '../book-engine/pdfSourceClassifier';
+import { isFatalPdfLoadError } from './pdfSourceClassifier';
 
 let configured = false;
 

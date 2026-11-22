@@ -2,13 +2,13 @@ import React, { useMemo, useState } from 'react';
 import { History, CopyPlus, TriangleAlert, CircleDollarSign } from 'lucide-react';
 import { Field } from '../../../shared/core/ui/Field';
 import { FactStepBaseProps } from '../facturadorStepsShared';
-import { ComprobanteEstado, SavedInvoice } from '../../../shared/core/facturador-engine/facturadorTypes';
+import { ComprobanteEstado, SavedInvoice } from '../domain/facturadorTypes';
 import {
   describeComprobante,
   formatARS,
   getInvoiceDueStatus,
   isInvoiceDueAlert,
-} from '../../../shared/core/facturador-engine/invoiceMath';
+} from '../domain/invoiceMath';
 import { radius } from '../../../shared/core/uiDesignSystem';
 
 interface FactHistorialStepProps extends FactStepBaseProps {

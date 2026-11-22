@@ -3,9 +3,9 @@ import { ShieldCheck, Download, Upload, KeyRound, LockKeyhole, FileSpreadsheet, 
 import { Field } from '../../../shared/core/ui/Field';
 import { PanelSection } from '../../../shared/core/ui/PanelSection';
 import { FactStepBaseProps } from '../facturadorStepsShared';
-import { VaultSession } from '../../../shared/core/facturador-engine/facturadorTypes';
-import { isBackupDue } from '../../../shared/core/facturador-engine/vaultStorage';
-import { formatRecoveryKey } from '../../../shared/core/facturador-engine/vaultCrypto';
+import { VaultSession } from '../domain/facturadorTypes';
+import { isBackupDue } from '../domain/vaultStorage';
+import { formatRecoveryKey } from '../domain/vaultCrypto';
 import { downloadBlob } from '../../../shared/core/utils/downloadUtils';
 import { radius } from '../../../shared/core/uiDesignSystem';
 

@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { FacturadorVaultData, VaultSession } from '../../shared/core/facturador-engine/facturadorTypes';
+import { FacturadorVaultData, VaultSession } from './domain/facturadorTypes';
 import {
   DEFAULT_VAULT_ID,
   loadEnvelope,
   saveEnvelope,
-} from '../../shared/core/facturador-engine/vaultStorage';
-import { EMPTY_FACTURADOR_VAULT } from '../../shared/core/facturador-engine/facturadorDefaults';
+} from './domain/vaultStorage';
+import { EMPTY_FACTURADOR_VAULT } from './domain/facturadorDefaults';
 import {
   addRecoveryKey,
   createVault,
@@ -13,8 +13,8 @@ import {
   sealVaultPayload,
   unlockWithPassword,
   unlockWithRecoveryKey,
-} from '../../shared/core/facturador-engine/vaultCrypto';
-import { VaultEnvelope } from '../../shared/core/facturador-engine/facturadorTypes';
+} from './domain/vaultCrypto';
+import { VaultEnvelope } from './domain/facturadorTypes';
 
 export type FacturadorVaultPhase = 'loading' | 'needs_setup' | 'locked' | 'unlocked';
 

@@ -30,7 +30,7 @@ if (!fs.existsSync(saveAsModalPath)) {
 
 // 2. Verificación de Navbar.tsx desacoplado
 totalChecks++;
-const navbarPath = path.resolve(process.cwd(), 'src/modules/cv-builder/components/Navbar.tsx');
+const navbarPath = path.resolve(process.cwd(), 'src/shared/core/studio-host/StudioNavbar.tsx');
 const navbarContent = fs.readFileSync(navbarPath, 'utf8');
 if (navbarContent.includes('onOpenSaveAsModal') && navbarContent.includes('onSaveCVClick') && navbarContent.includes('onOpenJsonDownloadModal')) {
   console.log('  ✓ Barra de Navegación: Navbar.tsx dispara acciones directas y desacopladas (Guardar, Guardar como copia, Copia Portátil).');

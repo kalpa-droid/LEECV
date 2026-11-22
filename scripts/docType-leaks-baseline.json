@@ -1,0 +1,14 @@
+{
+  "total": 54,
+  "files": {
+    "src/app/AppModals.tsx": 4,
+    "src/context/CVContext.tsx": 3,
+    "src/data/initialCVData.ts": 11,
+    "src/modules/cv-builder/components/cover-letter/CoverLetterEditorPanel.tsx": 1,
+    "src/modules/cv-builder/components/EditorPanel.tsx": 28,
+    "src/modules/cv-builder/components/SavedCVsModal.tsx": 2,
+    "src/shared/core/documents/useDocumentTabs.ts": 1,
+    "src/shared/core/pdf-engine/layers/presets/presetRegistry.ts": 2,
+    "src/shared/core/storage/documentStorageService.ts": 2
+  }
+}

@@ -488,6 +488,18 @@ export const ICON_REGISTRY: Record<string, IconDefinition> = {
       'M9 15h3'
     ]
   },
+  editor: {
+    id: 'editor',
+    viewBox: '0 0 24 24',
+    paths: [
+      'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z',
+      'M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z',
+      'M6 8h2',
+      'M6 12h2',
+      'M16 8h2',
+      'M16 12h2'
+    ]
+  },
   ia: {
     id: 'ia',
     viewBox: '0 0 24 24',

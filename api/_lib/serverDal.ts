@@ -6,7 +6,7 @@ function escapeLikePattern(value: string): string {
 }
 
 /** IDs canónicos de tipo de documento (DOCUMENT_TYPE_REGISTRY en capabilityRegistry.ts). */
-const DOC_TYPE_IDS = ['cv', 'cover_letter', 'business_card', 'portfolio', 'certificate', 'book', 'planner'] as const;
+const DOC_TYPE_IDS = ['cv', 'cover_letter', 'business_card', 'book', 'planner', 'invoice', 'editorial'] as const;
 
 export interface DocTypeCount {
   /** null = filas sin tipo asignado; 'otro' = tipo fuera de DOC_TYPE_IDS. */

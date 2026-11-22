@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { HardDrive, RefreshCw, CheckCircle2, Database, Cloud, Trash2, Cpu, ShieldCheck } from 'lucide-react';
 import { checkStorageStatus, supabase } from '../../../shared/core/storage/documentStorageService';
 import { dal } from '../../../shared/core/storage/dataAccessLayer';
-import { idbStorage } from '../../cv-builder/services/storageIndexedDB';
+import { idbStorage } from '../../../shared/core/storage/storageIndexedDB';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { withErrorHandling } from '../../../shared/core/utils/errorHandler';

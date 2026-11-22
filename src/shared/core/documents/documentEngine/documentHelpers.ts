@@ -1,4 +1,8 @@
-import { DocumentTypeId } from '../../../../types/document';
+import {
+  DOCUMENT_TYPE_REGISTRY,
+  getDocumentTypeConfig,
+  type RegisteredDocumentTypeId,
+} from '../../capabilities/capabilityRegistry';
 
 export const AUTOSAVE_DEBOUNCE_MS = 1500;
 
@@ -46,26 +50,28 @@ export function hasRealContent(docData: any): boolean {
   if (docData.modules && Object.values(docData.modules).some(Boolean)) return true;
   if (docData.monthOverrides && Object.keys(docData.monthOverrides).length > 0) return true;
 
+  if (docData.type === 'editorial') {
+    if (Array.isArray(docData.sections) && docData.sections.length > 0) return true;
+    const editorialTitle = typeof docData.metadata?.title === 'string' ? docData.metadata.title.trim() : '';
+    if (editorialTitle && editorialTitle !== 'Mi obra') return true;
+  }
+
   return false;
 }
 
+const DRAFT_ID_TO_DOC_TYPE = new Map<string, RegisteredDocumentTypeId>(
+  Object.values(DOCUMENT_TYPE_REGISTRY).map((entry) => [entry.draftIdPrefix, entry.id])
+);
+
 export function isDraftDocumentId(id: string): boolean {
   if (!id) return false;
-  return ['draft_cv', 'draft_card', 'draft_book', 'draft_cover_letter', 'draft_planner'].includes(id);
+  return DRAFT_ID_TO_DOC_TYPE.has(id);
 }
 
-export function inferDocTypeFromDraftId(id: string): DocumentTypeId {
-  if (id === 'draft_card') return 'business_card';
-  if (id === 'draft_book') return 'book';
-  if (id === 'draft_cover_letter') return 'cover_letter';
-  if (id === 'draft_planner') return 'planner';
-  return 'cv';
+export function inferDocTypeFromDraftId(id: string): RegisteredDocumentTypeId {
+  return DRAFT_ID_TO_DOC_TYPE.get(id) ?? 'cv';
 }
 
 export function getDraftIdForDocType(docType: string): string {
-  if (docType === 'business_card') return 'draft_card';
-  if (docType === 'book') return 'draft_book';
-  if (docType === 'cover_letter') return 'draft_cover_letter';
-  if (docType === 'planner') return 'draft_planner';
-  return 'draft_cv';
+  return getDocumentTypeConfig(docType).draftIdPrefix;
 }

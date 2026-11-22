@@ -1,5 +1,6 @@
 import React from 'react';
 import { BookStudioContent } from './BookStudioContent';
+import type { DocumentTypeId } from '../../types/document';
 
 interface BookStudioProps {
   currentUiTheme?: string;
@@ -8,7 +9,8 @@ interface BookStudioProps {
   activeTabId?: string;
   onSelectTab?: (id: string) => void;
   onCloseTab?: (id: string) => void;
-  onNavigateToDocument?: (targetDocType: 'cv' | 'business_card' | 'book' | 'cover_letter', id: string) => void;
+  onNavigateToDocument?: (targetDocType: DocumentTypeId, id: string) => void;
+  onNewDocument?: (docType: DocumentTypeId) => void;
   onNewCV?: () => void;
   onNewCard?: () => void;
   onNewBook?: () => void;
@@ -28,6 +30,7 @@ export const BookStudio: React.FC<BookStudioProps> = ({
   onSelectTab = () => {},
   onCloseTab = () => {},
   onNavigateToDocument = () => {},
+  onNewDocument,
   onNewCV,
   onNewCard,
   onNewBook,
@@ -47,6 +50,7 @@ export const BookStudio: React.FC<BookStudioProps> = ({
       onSelectTab={onSelectTab}
       onCloseTab={onCloseTab}
       onNavigateToDocument={onNavigateToDocument}
+      onNewDocument={onNewDocument}
       onNewCV={onNewCV}
       onNewCard={onNewCard}
       onNewBook={onNewBook}

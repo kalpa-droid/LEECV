@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PDFDocument } from 'pdf-lib';
 import { AppShell } from '../../shared/core/ui/AppShell';
-import Navbar from '../cv-builder/components/Navbar';
-import CanvaIconDock from '../cv-builder/components/CanvaIconDock';
-import { BookImpositionOptions, DEFAULT_BOOK_IMPOSITION_OPTIONS } from '../../shared/core/book-engine/impositionEngine';
-import { PdfSourceError, PdfSourceErrorCode, isPdfSourceError, pdfSourceErrorFromUnknown, isPdfLikeFile } from '../../shared/core/book-engine/pdfSourceClassifier';
+import StudioNavbar from '../../shared/core/studio-host/StudioNavbar';
+import StudioDock from '../../shared/core/studio-host/StudioDock';
+import { BookImpositionOptions, DEFAULT_BOOK_IMPOSITION_OPTIONS } from './domain/impositionEngine';
+import { PdfSourceError, PdfSourceErrorCode, isPdfSourceError, pdfSourceErrorFromUnknown, isPdfLikeFile } from '../../shared/core/pdf-engine/pdfSourceClassifier';
 import { BookSourceTypeStep } from './BookSourceTypeStep';
 import { BookOrganizeStep } from './BookOrganizeStep';
 import { BookFoliadoStep } from './BookFoliadoStep';
@@ -13,8 +13,8 @@ import { BookCoverStep } from './BookCoverStep';
 import { BookBackCoverStep } from './BookBackCoverStep';
 import { BookPreviewExportStep } from './BookPreviewExportStep';
 import { BookPreviewStep } from './BookPreviewStep';
-import { getNextBookStepId, getPrevBookStepId } from '../../shared/core/book-engine/bookStepSequence';
-import { bookAssetManager, STORAGE_WARN_BYTES } from '../../shared/core/book-engine/bookAssetManager';
+import { getNextBookStepId, getPrevBookStepId } from './domain/bookStepSequence';
+import { bookAssetManager, STORAGE_WARN_BYTES } from './domain/bookAssetManager';
 import { loadPdfDocumentWithCmaps } from '../../shared/core/pdf-engine/pdfjsWorkerSetup';
 import { loadBookById } from '../../shared/core/storage/documentStorageService';
 import { saveBook } from '../../shared/core/storage/documentStorageService';
@@ -23,7 +23,7 @@ import { useRegisterDocumentTab, resolveDocumentIdWithHandoff, generateDocumentI
 import { radius, button } from '../../shared/core/uiDesignSystem';
 import { useDocumentViewport, useViewportGestures } from '../../shared/core/viewport';
 import { DocumentTypeId } from '../../types/document';
-import { FloatingAssistant } from '../cv-builder/components/FloatingAssistant';
+import { FloatingAssistant } from '../../shared/core/studio-host/FloatingAssistant';
 import { useText } from '../../shared/i18n/useText';
 
 interface BookStudioContentProps {
@@ -33,6 +33,7 @@ interface BookStudioContentProps {
   onSelectTab: (id: string) => void;
   onCloseTab: (id: string) => void;
   onNavigateToDocument: (targetDocType: DocumentTypeId, id: string) => void;
+  onNewDocument?: (docType: DocumentTypeId) => void;
   onNewCV?: () => void;
   onNewCard?: () => void;
   onNewBook?: () => void;
@@ -52,6 +53,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   onSelectTab,
   onCloseTab,
   onNavigateToDocument,
+  onNewDocument,
   onNewCV: _onNewCV,
   onNewCard,
   onNewBook,
@@ -413,7 +415,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
       isPanelOpen={isPanelOpen}
       containerRef={viewport.containerRef}
       navbarSlot={
-        <Navbar
+        <StudioNavbar
           docType="book"
           currentCvData={{}}
           currentUiTheme={currentUiTheme}
@@ -432,7 +434,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
         />
       }
       dockSlot={
-        <CanvaIconDock
+        <StudioDock
           docType="book"
           bookMode={options.mode}
           activeTab={activeStepTab}
@@ -740,6 +742,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
         onSwitch: onSelectTab,
         onNavigateToDocument: (targetType, id) => onNavigateToDocument(targetType, id),
         onAdd: onNewBook || (() => {}),
+        onNewDocument,
         onNewCV: _onNewCV,
         onNewCard: onNewCard,
         onNewBook: onNewBook,

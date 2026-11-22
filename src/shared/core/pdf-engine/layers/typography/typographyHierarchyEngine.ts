@@ -11,7 +11,7 @@
  * Enforce legibilidad mediante clamping rígido [7.5pt, 24pt].
  */
 
-import { TypographyScale } from '../presets/presetSchema';
+import type { TypographyScale } from '../presets/presetSchema';
 
 export interface RecordScaleRatios {
   subtitle?: number; // p. ej. 1.1 (10% más grande que cuerpo)

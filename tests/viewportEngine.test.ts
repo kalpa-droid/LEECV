@@ -140,6 +140,7 @@ describe('viewportEngine — Nucleo de Calculos Fisicos y Viewport', () => {
 
     it('App y Book Studio ya no pisan el padding adaptativo con safetyPaddingPx: 48', () => {
       expect(read('src/app/App.tsx')).not.toMatch(/safetyPaddingPx:\s*48/);
+      expect(read('src/app/CvWorkspaceContent.tsx')).not.toMatch(/safetyPaddingPx:\s*48/);
       expect(read('src/modules/book-studio/BookStudioContent.tsx')).not.toMatch(/safetyPaddingPx:\s*48/);
     });
   });
@@ -156,9 +157,9 @@ describe('viewportEngine — Nucleo de Calculos Fisicos y Viewport', () => {
       expect(calls).toEqual(['div-1', null]);
     });
 
-    it('App.tsx le pasa viewport.containerRef al AppShell (sin esto el auto-fit nunca corre y el zoom queda en 85%)', () => {
-      const app = require('fs').readFileSync(require('path').join(__dirname, '../src/app/App.tsx'), 'utf-8') as string;
-      expect(app).toMatch(/<AppShell[\s\S]{0,400}containerRef=\{viewport\.containerRef\}/);
+    it('CvWorkspaceContent le pasa viewport.containerRef al AppShell (sin esto el auto-fit nunca corre y el zoom queda en 85%)', () => {
+      const ws = require('fs').readFileSync(require('path').join(__dirname, '../src/app/CvWorkspaceContent.tsx'), 'utf-8') as string;
+      expect(ws).toMatch(/<AppShell[\s\S]{0,400}containerRef=\{viewport\.containerRef\}/);
     });
 
     it('Book Studio también enlaza el contenedor al AppShell', () => {

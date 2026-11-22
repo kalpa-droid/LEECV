@@ -3,7 +3,7 @@ import { Palette, FileText, Smartphone } from 'lucide-react';
 import { Field } from '../../../shared/core/ui/Field';
 import { PanelSection } from '../../../shared/core/ui/PanelSection';
 import { FactStepBaseProps } from '../facturadorStepsShared';
-import { INVOICE_PRESETS, getInvoicePreset } from '../../../shared/core/pdf-engine/layers/presets/facturadorPresets';
+import { INVOICE_PRESETS, getInvoicePreset } from '../pdf/facturadorPresets';
 import { PAGE_SIZES } from '../../../shared/core/pdf-engine/layers/page/pageSizes';
 import { radius } from '../../../shared/core/uiDesignSystem';
 

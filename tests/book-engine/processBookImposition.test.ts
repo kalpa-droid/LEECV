@@ -4,7 +4,7 @@ import JSZip from 'jszip';
 import {
   processBookImposition,
   DEFAULT_BOOK_IMPOSITION_OPTIONS,
-} from '../../src/shared/core/book-engine/impositionEngine';
+} from '../../src/modules/book-studio/domain/impositionEngine';
 
 /** Crea un PDF de N páginas A4 con una línea de texto por página (sin fuentes externas). */
 async function makePdf(pageCount: number): Promise<Uint8Array> {

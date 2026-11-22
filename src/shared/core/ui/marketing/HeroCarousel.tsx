@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FileText, CreditCard, BookOpen, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
+import { FileText, CreditCard, BookOpen, ArrowRight, Sparkles, CheckCircle2, ReceiptText, BookOpenCheck } from 'lucide-react';
 import { radius, elevationSystem } from '../../uiDesignSystem';
 
 import { useText } from '../../../i18n/useText';
 
 export interface HeroCarouselSlide {
-  id: 'cv' | 'tarjetas' | 'libros';
+  id: 'cv' | 'tarjetas' | 'libros' | 'facturas' | 'editorlee';
   label: string;
   badge: string;
   title: string;
@@ -57,6 +57,28 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onNavigate }) => {
       ctaText: t.landing.products.libros.cta,
       features: [...t.landing.heroCarousel.libros.features],
     },
+    {
+      id: 'facturas',
+      label: t.landing.nav.facturas,
+      badge: t.landing.heroCarousel.facturas.badge,
+      title: t.landing.heroCarousel.facturas.title,
+      description: t.landing.heroCarousel.facturas.description,
+      image: '/marketing/preview-factura.webp',
+      route: '/crear-factura',
+      ctaText: t.landing.products.facturas.cta,
+      features: [...t.landing.heroCarousel.facturas.features],
+    },
+    {
+      id: 'editorlee',
+      label: t.landing.nav.editorlee,
+      badge: t.landing.heroCarousel.editorlee.badge,
+      title: t.landing.heroCarousel.editorlee.title,
+      description: t.landing.heroCarousel.editorlee.description,
+      image: '/marketing/preview-editor.webp',
+      route: '/crear-editor',
+      ctaText: t.landing.products.editorlee.cta,
+      features: [...t.landing.heroCarousel.editorlee.features],
+    },
   ];
 
   const [activeIndex, setActiveIndex] = useState(0);
@@ -82,6 +104,10 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onNavigate }) => {
         return CreditCard;
       case 'libros':
         return BookOpen;
+      case 'facturas':
+        return ReceiptText;
+      case 'editorlee':
+        return BookOpenCheck;
       default:
         return FileText;
     }
@@ -154,7 +180,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onNavigate }) => {
                     key={feat}
                     className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-semibold px-2.5 py-1 bg-[var(--ui-bg-panel)]/80 backdrop-blur border border-[var(--ui-border)] rounded-md text-[var(--ui-text-primary)]"
                   >
-                    <CheckCircle2 className="w-3 h-3 text-[var(--color-accent-emerald-bright)]" />
+                    <CheckCircle2 className="w-3 h-3 text-[var(--color-status-success-bright)]" />
                     {feat}
                   </span>
                 ))}

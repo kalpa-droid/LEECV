@@ -1,26 +1,19 @@
 /**
  * Document & Capability Composition Architecture Types
+ *
+ * `DocumentTypeId` se deriva directamente de `DOCUMENT_TYPE_REGISTRY`
+ * (fuente única de verdad, cierra D10).
  */
 
-export type DocumentTypeId = 'cv' | 'business_card' | 'book' | 'cover_letter' | 'planner' | 'invoice' | 'editorial';
+import type {
+  RegisteredDocumentTypeId,
+  RegisteredDocumentTypeConfig,
+} from '../shared/core/capabilities/capabilityRegistry';
+import type { CapabilityConfig } from '../shared/contracts/appContract';
 
-export interface CapabilityConfig {
-  id: string;
-  name: string;
-  description: string;
-  category: 'styling' | 'content' | 'attachments' | 'branding' | 'utility';
-  defaultData: any;
-}
-
-export interface DocumentTypeConfig {
-  id: string;
-  name: string;
-  description: string;
-  iconName: string;
-  capabilities: string[]; // Capability IDs used by this document type
-  defaultPaperSize?: string;
-  defaultActivePresetId?: string;
-}
+export type DocumentTypeId = RegisteredDocumentTypeId;
+export type DocumentTypeConfig = RegisteredDocumentTypeConfig;
+export type { CapabilityConfig };
 
 export interface DocumentRecord {
   id: string;

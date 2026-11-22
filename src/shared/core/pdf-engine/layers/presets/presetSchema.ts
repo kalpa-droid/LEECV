@@ -9,9 +9,9 @@
  * Preset", no "escribir un componente nuevo".
  */
 
-import { SectorDefinition } from '../sectors/resolveSectors';
-import { FixedObjectDefinition } from '../fixedObjects/placeFixedObjects';
-import { PageTextObjectDefinition } from '../pageText/pageTextObjects';
+import type { SectorDefinition } from '../sectors/resolveSectors';
+import type { FixedObjectDefinition } from '../fixedObjects/placeFixedObjects';
+import type { PageTextObjectDefinition } from '../pageText/pageTextObjects';
 
 export interface ColorPalette {
   primary: string;

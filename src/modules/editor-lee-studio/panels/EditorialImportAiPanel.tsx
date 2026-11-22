@@ -1,18 +1,31 @@
 import React, { useCallback, useState } from 'react';
 import { Download, Edit3, FileText, Sparkles } from 'lucide-react';
 import { executeAiTask } from '../../../shared/core/ai/aiClient';
-import { useToast } from '../../../shared/core/ui/Toast';
+import { apiFetch } from '../../../shared/core/utils/apiClient';
+import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
+import { downloadBlob } from '../../../shared/core/utils/downloadUtils';
 
 interface EditorialImportAiPanelProps {
   draft: any;
   updateDraft: (updater: (prev: any) => any) => void;
   notify: { success: (msg: string) => void; error: (msg: string) => void };
+  onExportPDF?: () => void;
+}
+
+function readFileAsBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (err) => reject(err);
+    reader.readAsDataURL(file);
+  });
 }
 
 export const EditorialImportAiPanel: React.FC<EditorialImportAiPanelProps> = ({
   draft,
   updateDraft,
   notify,
+  onExportPDF,
 }) => {
   const showSuccess = notify?.success ?? (() => {});
   const showError = notify?.error ?? (() => {});
@@ -25,7 +38,7 @@ export const EditorialImportAiPanel: React.FC<EditorialImportAiPanelProps> = ({
     setInputFile(file);
   }, []);
 
-  const MAX_FILE_SIZE_MB = 3;
+  const MAX_FILE_SIZE_MB = 10;
 
   const handleParseDocx = useCallback(async () => {
     if (!inputFile) return;
@@ -34,26 +47,28 @@ export const EditorialImportAiPanel: React.FC<EditorialImportAiPanelProps> = ({
       return;
     }
     setIsProcessing(true);
-    try {
-      const formData = new FormData();
-      formData.append('action', 'parse-docx');
-      formData.append('file', inputFile);
+    await withErrorHandling(
+      async () => {
+        const base64 = await readFileAsBase64(inputFile);
+        const res = await apiFetch<{ text: string }>('/api/editorial/parse-docx', {
+          method: 'POST',
+          body: { base64, filename: inputFile.name },
+        });
 
-      const res = await fetch('/api/editorial/parse-docx', {
-        method: 'POST',
-        body: formData,
-      });
+        if (!res.ok || !res.data?.text) {
+          throw new Error(res.error || 'No se pudo leer el manuscrito');
+        }
 
-      if (!res.ok) throw new Error('No se pudo leer el manuscrito');
-
-      const data = await res.text();
-      setResultText(data.slice(0, 5000)); // preview
-      showSuccess('Manuscrito leído. Revisá el contenido antes de estructurar.');
-    } catch (err) {
-      showError(err instanceof Error ? err.message : 'Error al leer el archivo.');
-    } finally {
-      setIsProcessing(false);
-    }
+        setResultText(res.data.text.slice(0, 5000));
+        showSuccess('Manuscrito leído. Revisá el contenido antes de estructurar.');
+      },
+      {
+        context: 'Lectura de Manuscrito',
+        errorMessage: 'Error al leer el archivo Word.',
+        notify: (msg) => showError(msg),
+      }
+    );
+    setIsProcessing(false);
   }, [inputFile, showError, showSuccess]);
 
   const handleStructureAi = useCallback(async () => {
@@ -102,13 +117,48 @@ export const EditorialImportAiPanel: React.FC<EditorialImportAiPanelProps> = ({
     }
   }, [resultText, inputFile?.name, draft.id, updateDraft, showError, showSuccess]);
 
-  const handleExportPdf = useCallback(async () => {
-    showSuccess('Exportación PDF desde la barra lateral.');
-  }, [showSuccess]);
+  const handleExportPdf = useCallback(() => {
+    if (onExportPDF) {
+      onExportPDF();
+    } else {
+      showSuccess('Usa el botón de imprimir o exportar en la barra superior.');
+    }
+  }, [onExportPDF, showSuccess]);
 
   const handleExportDocx = useCallback(async () => {
-    showSuccess('Exportación Word desde la barra lateral.');
-  }, [showSuccess]);
+    if (!draft) return;
+    setIsProcessing(true);
+    await withErrorHandling(
+      async () => {
+        const response = await fetch('/api/editorial/export-docx', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: draft.metadata?.title || 'Mi Obra Editorial',
+            author: draft.metadata?.author || '',
+            sections: draft.sections || [],
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('No se pudo generar el documento Word.');
+        }
+
+        const blob = await response.blob();
+        const safeTitle = (draft.metadata?.title || 'Obra-Editorial')
+          .replace(/[^a-zA-Z0-9_\-]/g, '_')
+          .slice(0, 50);
+        downloadBlob(blob, `${safeTitle}.docx`);
+        showSuccess('Documento Word descargado exitosamente.');
+      },
+      {
+        context: 'Exportación a Word',
+        errorMessage: 'Error al exportar a archivo Word.',
+        notify: (msg) => showError(msg),
+      }
+    );
+    setIsProcessing(false);
+  }, [draft, showError, showSuccess]);
 
   return (
     <div className="p-4 space-y-6 text-[var(--ui-text-primary)]">

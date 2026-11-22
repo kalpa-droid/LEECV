@@ -2,13 +2,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   isPdfLikeFile,
   isFatalPdfLoadError,
-} from '../../src/shared/core/book-engine/pdfSourceClassifier';
+} from '../../src/shared/core/pdf-engine/pdfSourceClassifier';
 import {
   bookAssetManager,
   isNativePickerFailedSession,
   markNativePickerFailedSession,
   resetNativePickerFailedSession,
-} from '../../src/shared/core/book-engine/bookAssetManager';
+} from '../../src/modules/book-studio/domain/bookAssetManager';
 
 /** window same-origin simulado: self === top (como una ventana principal). */
 function stubNativeWindow(showOpenFilePicker?: unknown) {

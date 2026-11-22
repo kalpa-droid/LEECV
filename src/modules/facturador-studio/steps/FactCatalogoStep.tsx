@@ -3,8 +3,8 @@ import { Boxes, Plus, Trash2, TriangleAlert } from 'lucide-react';
 import { Field } from '../../../shared/core/ui/Field';
 import { PanelSection } from '../../../shared/core/ui/PanelSection';
 import { FactStepBaseProps, emptyCatalogItem } from '../facturadorStepsShared';
-import { CatalogItem } from '../../../shared/core/facturador-engine/facturadorTypes';
-import { formatARS, isLowStock, resolveTierPrice } from '../../../shared/core/facturador-engine/invoiceMath';
+import { CatalogItem } from '../domain/facturadorTypes';
+import { formatARS, isLowStock, resolveTierPrice } from '../domain/invoiceMath';
 import { radius } from '../../../shared/core/uiDesignSystem';
 
 /** Paso 4 — Catálogo de productos, stock y escalones mayoristas. */
