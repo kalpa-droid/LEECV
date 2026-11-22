@@ -9,6 +9,8 @@ export interface DockTabItem {
   icon?: React.ComponentType<{ className?: string }>;
   iconId?: string;
   stepNumber?: number;
+  /** Distintivo breve en esquina (ej. "1", "2", "i", "ii", "A") para diferenciar secciones similares. */
+  badgeLabel?: string;
   /** Botón de doble ancho/alto (col-span-2 desktop, row-span-2 móvil). */
   isLarge?: boolean;
   /** Variante visual semántica dentro del Dock. */

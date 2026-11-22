@@ -138,6 +138,34 @@ export const EDITORIAL_SECTION_CATALOG: EditorialSectionDefinition[] = [
     autoNumberPrefix: 'Metodología',
     defaultValues: { title: 'Metodología', includeInToc: true, startNewPage: true },
   },
+  {
+    id: 'marco_teorico',
+    label: 'Marco Teórico / Antecedentes',
+    description: 'Revisión bibliográfica y bases conceptuales.',
+    category: 'cuerpo',
+    iconName: 'BookOpen',
+    repeatable: true,
+    autoNumberPrefix: 'Marco Teórico',
+    defaultValues: { title: 'Marco Teórico', includeInToc: true, startNewPage: true },
+  },
+  {
+    id: 'resultados',
+    label: 'Resultados / Hallazgos',
+    description: 'Datos obtenidos, cuadros o evidencia del estudio (IMRyD).',
+    category: 'cuerpo',
+    iconName: 'BarChart3',
+    repeatable: false,
+    defaultValues: { title: 'Resultados', includeInToc: true, startNewPage: true },
+  },
+  {
+    id: 'discusion',
+    label: 'Discusión / Análisis',
+    description: 'Interpretación de resultados y contraste teórico (IMRyD).',
+    category: 'cuerpo',
+    iconName: 'MessageSquareQuote',
+    repeatable: false,
+    defaultValues: { title: 'Discusión', includeInToc: true, startNewPage: true },
+  },
 
   // ── Cierre y Referencias ────────────────────────────────────────────
   {
@@ -212,6 +240,8 @@ export function createSectionFromDefinition(
 ): {
   id: EditorialSectionId;
   title: string;
+  sectionKey: string;
+  category: EditorialSectionCategory;
   visible: boolean;
   includeInToc: boolean;
   startNewPage: boolean;
@@ -225,6 +255,8 @@ export function createSectionFromDefinition(
   return {
     id: `ed_${def.id}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     title,
+    sectionKey: def.id,
+    category: def.category,
     visible: true,
     includeInToc: def.defaultValues.includeInToc,
     startNewPage: def.defaultValues.startNewPage,

@@ -565,11 +565,22 @@ No inventes datos. Extrae solo lo que está en el texto.`,
   },
   editorial_structure: {
     taskId: 'editorial_structure',
-    buildSystemPrompt: () => `Sos un asistente editorial experto. Tu tarea es recibir un manuscrito o texto libre y estructurarlo en secciones y registros tipados para una publicación o libro.
-Devolvé EXCLUSIVAMENTE un JSON con:
-- sections: lista de secciones con title y records (type: 'paragraph' | 'subtitle' | 'quote' | 'callout' | 'list', content: string).
-- metadata: { title?: string, author?: string } inferidos si aparecen.`,
-    buildUserPrompt: (payload: any) => `Estructurá este manuscrito editorial:\n\n<manuscript>\n${payload?.manuscriptText || ''}\n</manuscript>`,
+    buildSystemPrompt: (_cvContext: string, payload: any) => `Sos un arquitecto editorial experto en libros, novelas, trabajos escolares, monografías, tesis universitarias (APA 7) e informes científicos (IMRyD / Vancouver).
+Recibirás un fragmento o manuscrito completo — incluso texto plano SIN títulos con negrita ni metadatos tipográficos. Tu tarea es detectar y organizar cada bloque lógico en secciones y registros fieles al texto original (NUNCA inventes ni resumas omitiendo contenido).
+
+REGLAS ESTRICTAS:
+1. Detectá fronteras reales aunque no haya formato: cambios narrativos ("Capítulo", "Parte", números sueltos o transición de escena), preliminares (Prólogo, Dedicatoria, Resumen/Abstract, Introducción), cuerpo (Marco Teórico, Metodología, Resultados, Discusión, Desarrollo, Capítulos, Unidades), y cierre (Conclusiones, Epílogo, Bibliografía/Referencias, Glosario, Anexos).
+2. Asigná en cada sección su clave canónica \`sectionKey\`: 'prologo' | 'dedicatoria' | 'agradecimientos' | 'resumen' | 'introduccion' | 'capitulo' | 'unidad' | 'desarrollo' | 'marco_teorico' | 'metodologia' | 'resultados' | 'discusion' | 'conclusiones' | 'epilogo' | 'bibliografia' | 'glosario' | 'anexo'.
+3. Si estás procesando la continuación de un bloque previo (${payload?.previousSectionTitle ? `última sección anterior: "${payload.previousSectionTitle}"` : 'inicio del documento'}) y el comienzo de este fragmento continúa exactamente esa misma sección sin título nuevo, marcá \`continuesPreviousSection: true\` en esa primera sección.
+4. Devolvé EXCLUSIVAMENTE JSON válido según el schema.`,
+    buildUserPrompt: (payload: any) => {
+      const partInfo =
+        payload?.totalChunks && payload.totalChunks > 1
+          ? `Fragmento ${(Number(payload.chunkIndex) || 0) + 1} de ${payload.totalChunks}${payload.previousSectionTitle ? ` (sección previa activa: "${payload.previousSectionTitle}")` : ''}.\n`
+          : '';
+      const presetHint = payload?.presetId ? `Tipo de obra objetivo: ${payload.presetId}.\n` : '';
+      return `${partInfo}${presetHint}Estructurá fielmente este manuscrito editorial:\n\n<manuscript>\n${payload?.manuscriptText || ''}\n</manuscript>`;
+    },
     responseSchema: {
       type: "object",
       properties: {
@@ -579,13 +590,16 @@ Devolvé EXCLUSIVAMENTE un JSON con:
             type: "object",
             properties: {
               title: { type: "string" },
+              sectionKey: { type: "string" },
+              continuesPreviousSection: { type: "boolean", nullable: true },
               records: {
                 type: "array",
                 items: {
                   type: "object",
                   properties: {
                     type: { type: "string" },
-                    content: { type: "string" }
+                    content: { type: "string" },
+                    quoteAttribution: { type: "string", nullable: true }
                   },
                   required: ["type", "content"]
                 }
@@ -598,11 +612,62 @@ Devolvé EXCLUSIVAMENTE un JSON con:
           type: "object",
           properties: {
             title: { type: "string" },
+            subtitle: { type: "string", nullable: true },
             author: { type: "string" }
           }
         }
       },
       required: ["sections"]
+    }
+  },
+  editorial_ocr_page: {
+    taskId: 'editorial_ocr_page',
+    buildSystemPrompt: () => `Sos un transcriptor OCR editorial de alta precisión. Leés páginas escaneadas o fotos de libros, apuntes o informes impresos.
+Extraé todo el texto legible EN EL ORDEN NATURAL DE LECTURA sin inventar palabras ni resumir.
+Conservá títulos de capítulo o subtítulos en líneas propias con formato claro, listas con viñetas o números, y citas bibliográficas si aparecen.
+Respondé EXCLUSIVAMENTE en JSON con {"extractedText": "...", "detectedHeading": string|null}.`,
+    buildUserPrompt: (payload: any) =>
+      `Transcribí literalmente esta página editorial${payload?.pageNumber ? ` (página ${payload.pageNumber})` : ''}. Devolvé solo JSON válido.`,
+    responseSchema: {
+      type: "object",
+      properties: {
+        extractedText: { type: "string" },
+        detectedHeading: { type: "string", nullable: true }
+      },
+      required: ["extractedText"]
+    }
+  },
+  editorial_format_citation: {
+    taskId: 'editorial_format_citation',
+    buildSystemPrompt: (_cvContext: string, payload: any) => `Sos un bibliotecario académico experto en Normas APA 7.ª edición, Vancouver (ICMJE) y Chicago.
+Tu tarea es tomar texto libre con referencias bibliográficas o enlaces desordenados y normalizarlos en campos estructurados listos para citar según el estilo ${payload?.style || 'apa7'}.
+Respondé EXCLUSIVAMENTE en JSON con lista \`citations\`, sin inventar años o DOIs si no figuran en el original.`,
+    buildUserPrompt: (payload: any) =>
+      `Extraé y estructurá estas referencias para norma "${payload?.style || 'apa7'}":\n\n<references>\n${payload?.rawText || ''}\n</references>`,
+    responseSchema: {
+      type: "object",
+      properties: {
+        citations: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              sourceType: { type: "string" },
+              author: { type: "string" },
+              year: { type: "string" },
+              title: { type: "string" },
+              editorial: { type: "string" },
+              journal: { type: "string" },
+              volume: { type: "string" },
+              issue: { type: "string" },
+              pages: { type: "string" },
+              doiOrUrl: { type: "string" }
+            },
+            required: ["title"]
+          }
+        }
+      },
+      required: ["citations"]
     }
   },
   editorial_rewrite: {

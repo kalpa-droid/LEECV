@@ -117,6 +117,14 @@ function sanitizeSection(raw: unknown, index: number): Record<string, any> | nul
     ...raw,
     id,
     title: typeof raw.title === 'string' ? raw.title : '',
+    sectionKey: typeof raw.sectionKey === 'string' && raw.sectionKey ? raw.sectionKey : undefined,
+    category:
+      raw.category === 'preliminares' ||
+      raw.category === 'cuerpo' ||
+      raw.category === 'cierre' ||
+      raw.category === 'personalizada'
+        ? raw.category
+        : undefined,
     visible: raw.visible !== false,
     includeInToc: raw.includeInToc !== false,
     startNewPage: raw.startNewPage !== false,
