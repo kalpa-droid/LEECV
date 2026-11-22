@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 2,
-  minor: 28,
+  minor: 29,
   patch: 0,
-  label: 'V2.28.0',
+  label: 'V2.29.0',
   lastUpdated: '2026-11-21',
   lastAgent: '@antigravity',
-  stage: 'feat(architecture): Fases 0-10 completas — Contratos v2, Local-First + Backup opt-in, StudioHost + appRegistry, Bundle Budget, Lidio 7/7 (FacturLee metadata-only), Cápsulas Verticales (0/0 AST), card-studio independiente con puerto contact-profile@1 y Fábrica de Apps (new-app + verify:app-contract).',
+  stage: 'feat(ux): V2.29.0 — Hotfix tipografía Serif/Times-Roman + visor con zoom y foco por sección en EditorLee, Importar Respaldos .json/.leecv y Certificados con IA, Reclasificación segura de registros compatibles, Flujo CV Base -> Analizar en qué me perfilo -> Modal editable -> Postulación IA+ATS -> Carta Gratuita + Lidio, y Archivos portables tipo Word con PWA file_handlers.',
 } as const;

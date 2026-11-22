@@ -28,6 +28,7 @@ import { getCvFormat, resolvePersonalFieldVisibility } from '../../formats/cvFor
 import { getContainerStyle } from '../../styles/containerStyleEngine';
 import { resolveDisplayName } from '../../utils/cvDataSchema';
 import { getCoverFeaturedBadges } from '../layers/sectors/coverFeaturedEngine';
+import type { PdfDocumentMeta } from '../layers/ats/pdfAtsMetadataBuilder';
 
 
 function sanitizeSvgDataUrl(dataUrl?: string): string | undefined {
@@ -90,6 +91,8 @@ export interface TemplateRendererProps {
   userFontFamily?: string;
   layoutOverrides?: CvLayoutOverrides;
   customRecordCardDesigns?: Record<string, string | undefined>;
+  /** Metadatos ATS nativos del PDF (Title, Author, Subject, Keywords) sin alterar el diseño visual */
+  documentMeta?: PdfDocumentMeta;
   /**
    * Marcadores de texto invisibles (ANCHOR_START:x / ANCHOR_END:x) que el
    * visor interactivo (VectorDocViewer) lee con page.getTextContent() de
@@ -137,6 +140,7 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   canvasWidthMm,
   canvasHeightMm,
   customRecordCardDesigns,
+  documentMeta,
   interactiveAnchors = false
 }) => {
   const rawFontFamily = userFontFamily || personalInfo?.fontFamily || basePreset.typography.fontFamily;
@@ -1197,7 +1201,14 @@ export const TemplateRenderer: React.FC<TemplateRendererProps> = ({
   }
 
   return (
-    <Document title={preset.name}>
+    <Document
+      title={documentMeta?.title || preset.name}
+      author={documentMeta?.author || ''}
+      subject={documentMeta?.subject || ''}
+      keywords={documentMeta?.keywords || ''}
+      creator="LEECV"
+      producer="LEECV"
+    >
       {/* LAYER 0-4: COVER PAGE (PAGE 1) */}
       {showCoverPage && renderCoverPageContent()}
 

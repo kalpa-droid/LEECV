@@ -1,10 +1,11 @@
 import React, { useRef } from 'react';
-import { FileText, BookOpen, CreditCard, Mail, X, ChevronRight, ChevronLeft, CalendarDays, ReceiptText, BookMarked } from 'lucide-react';
+import { X, ChevronRight, ChevronLeft } from 'lucide-react';
 import { OpenTab } from '../documents/tabStore';
 import { elevationSystem, radius } from '../uiDesignSystem';
 import { NewDocumentMenu } from './NewDocumentMenu';
 import { useHorizontalScrollControls } from './useHorizontalScrollControls';
 import { getDocumentTypeConfig } from '../capabilities/capabilityRegistry';
+import { DomSectionIcon } from '../pdf-engine/layers/icons/DomSectionIcon';
 import { DocumentTypeId } from '../../../types/document';
 
 export interface DocumentTabsBarProps {
@@ -25,17 +26,6 @@ export interface DocumentTabsBarProps {
   onClose: (e: React.MouseEvent, id: string, title: string) => void;
 }
 
-const TAB_ICON_BY_NAME: Record<string, React.ComponentType<{ className?: string }>> = {
-  FileText,
-  BookOpen,
-  CreditCard,
-  Mail,
-  CalendarDays,
-  CalendarCheck: CalendarDays,
-  ReceiptText,
-  BookMarked,
-};
-
 export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
   tabs,
   activeId,
@@ -53,10 +43,6 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
   onNewEditorial,
   onClose,
 }) => {
-  const getTabIcon = (tabDocType?: string) => {
-    const cfg = getDocumentTypeConfig(tabDocType || 'cv');
-    return TAB_ICON_BY_NAME[cfg.iconName] || FileText;
-  };
 
   const tabsScrollRef = useRef<HTMLDivElement>(null);
   const { canScrollLeft, canScrollRight, scrollLeft: scrollTabsLeft, scrollRight: scrollTabsRight } =
@@ -91,7 +77,7 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
             const tabId = (tab as any).cvId || (tab as any).id;
             const isActive = tabId === activeId;
             const targetDocType = tab.docType || 'cv';
-            const Icon = getTabIcon(targetDocType);
+            const cfg = getDocumentTypeConfig(targetDocType);
 
             return (
               <div
@@ -114,8 +100,11 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
                 }`}
                 title={tab.title}
               >
-                {/* ICONO INMÓVIL A LA IZQUIERDA */}
-                <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`} />
+                {/* ICONO INMÓVIL A LA IZQUIERDA (guiado por registro central) */}
+                <DomSectionIcon
+                  iconId={cfg.ui.productIconId}
+                  className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[var(--color-accent-on-base)]' : 'text-[var(--color-secondary-bright)]'}`}
+                />
 
                 {/* CONTENEDOR DE TEXTO CON DESPLAZAMIENTO INTERNO */}
                 <div 

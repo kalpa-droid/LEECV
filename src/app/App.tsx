@@ -8,7 +8,7 @@ import { CVProvider, useCVContext } from '../context/CVContext';
 import { useToast } from '../shared/core/ui/Toast';
 import { ConfirmProvider } from '../shared/core/ui/ConfirmDialog';
 import { trackPageView } from '../shared/core/analytics/analyticsService';
-import { getDocumentTypeConfig, inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
+import { getDocTypeForRoute, getDocumentTypeConfig, inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
 import {
   findStandaloneStudioByRoute,
   isKnownAppRoute,
@@ -20,6 +20,10 @@ import { usePaymentReturnAndUpdates } from './usePaymentReturnAndUpdates';
 import { useDocumentCreation } from './useDocumentCreation';
 import { useWorkspaceModalsAndExport } from './useWorkspaceModalsAndExport';
 import { useAppNavigationAndTabs } from './useAppNavigationAndTabs';
+import { initPwaFileLaunchHandler } from '../shared/core/pwa/fileLaunchHandler';
+import { setPendingDocumentToOpen } from '../shared/core/storage/pendingDocumentHandoff';
+import { openTab as addOpenTab, getOpenTabs, setActiveTabId } from '../shared/core/documents/tabStore';
+import { computeAutoDocumentTitle } from '../shared/core/documents/documentEngine';
 
 const LandingPage = lazy(() => import('../modules/landing/LandingPage').then((m) => ({ default: m.LandingPage })));
 const BlogModule = lazy(() => import('../modules/blog/BlogModule').then((m) => ({ default: m.BlogModule })));
@@ -92,14 +96,35 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     [onNavigate],
   );
 
+  const standaloneStudio = findStandaloneStudioByRoute(currentRoute);
+
   const { tabs, setTabs, activeCvId } = useDocumentTabs({
     cvData,
     isSwitchingDocument,
     currentRoute,
+    isSharedCvWorkspaceRoute: !standaloneStudio,
     hasPendingChanges,
     setCvData,
     setIsSwitchingDocument,
   });
+
+  useEffect(() => {
+    return initPwaFileLaunchHandler({
+      onDocumentOpened: ({ docType, data, route, fileName }) => {
+        const title = computeAutoDocumentTitle(docType as any, data);
+        addOpenTab(data.id, docType as any, title);
+        setActiveTabId(data.id);
+        setPendingDocumentToOpen(data.id, docType as any);
+        setTabs(getOpenTabs());
+        if (route === '/crear-cv') {
+          setCvData(data);
+        }
+        navigateToRoute(route);
+        showSuccess(`Archivo abierto (${fileName}).`);
+      },
+      onError: (msg) => showError(msg),
+    });
+  }, [navigateToRoute, setCvData, setTabs, showError, showSuccess]);
 
   const {
     createBlankDocumentWithTab,
@@ -164,7 +189,6 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
     </Suspense>
   );
 
-  const standaloneStudio = findStandaloneStudioByRoute(currentRoute);
   if (standaloneStudio) {
     return (
       <StudioRoute
@@ -231,6 +255,18 @@ export default function App() {
   }, []);
 
   useEffect(() => { trackPageView(currentRoute); }, [currentRoute]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (currentRoute === '/') {
+      document.title = 'LEECV — Creador de Currículum Vitae listo para imprimir';
+      return;
+    }
+    if (isKnownAppRoute(currentRoute) && !currentRoute.startsWith('/blog') && !currentRoute.startsWith('/cv/')) {
+      const cfg = getDocumentTypeConfig(getDocTypeForRoute(currentRoute));
+      document.title = cfg.seo?.title || `${cfg.titlePrefix} — ${cfg.name} | LEECV`;
+    }
+  }, [currentRoute]);
 
   const navigateTo = (route: string) => {
     const targetRoute = route === '/crear-carta' ? '/crear-cv' : route;

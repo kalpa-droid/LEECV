@@ -1,8 +1,17 @@
 import { useCallback } from 'react';
-import { computeAutoDocumentTitle } from '../shared/core/documents/documentEngine';
-import { createApplicationVariant, buildApplicationVariantData } from '../shared/core/documents/applicationVariant';
+import { computeAutoDocumentTitle, generateDocumentId } from '../shared/core/documents/documentEngine';
+import {
+  createApplicationVariant,
+  buildApplicationVariantData,
+  type ApplicationTailoredPatch,
+} from '../shared/core/documents/applicationVariant';
 import * as workspaceController from '../shared/core/documents/workspaceController';
-import { getOpenTabs, openTab as addOpenTab, OpenTab as OpenTabItem } from '../shared/core/documents/tabStore';
+import {
+  getOpenTabs,
+  openTab as addOpenTab,
+  setActiveTabId,
+  OpenTab as OpenTabItem,
+} from '../shared/core/documents/tabStore';
 import {
   getDocumentTypeConfig,
   hasCapability,
@@ -18,6 +27,8 @@ import { getAppRuntimeEntry } from './appRegistry';
 export interface CreateApplicationVariantOptions {
   puesto?: string;
   empresa?: string;
+  jobDescription?: string;
+  tailoredPatch?: ApplicationTailoredPatch;
   versionLabel?: string;
   keepJobTarget?: boolean;
   resetLetterBody?: boolean;
@@ -134,6 +145,24 @@ export function useDocumentCreation({
       }
 
       if (entry.managesOwnStore) {
+        const liveTabs = getOpenTabs();
+        if (cfg.creationStrategy === 'vault') {
+          const existingVaultTab = liveTabs.find((t) => t.docType === docType);
+          const targetId = existingVaultTab
+            ? existingVaultTab.cvId || existingVaultTab.id
+            : generateDocumentId(docType);
+          if (!existingVaultTab) {
+            addOpenTab(targetId, docType, `${cfg.titlePrefix} - ${cfg.defaultTitle}`);
+          }
+          setActiveTabId(targetId);
+          setPendingDocumentToOpen(targetId, docType);
+        } else {
+          const newId = generateDocumentId(docType);
+          addOpenTab(newId, docType, `${cfg.titlePrefix} - ${cfg.defaultTitle}`);
+          setActiveTabId(newId);
+          setPendingDocumentToOpen(newId, docType);
+        }
+        setTabs(getOpenTabs());
         if (currentRoute !== entry.effectiveRoute) {
           navigateToRoute(entry.effectiveRoute);
         }

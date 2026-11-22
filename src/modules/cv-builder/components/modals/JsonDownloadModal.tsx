@@ -1,21 +1,22 @@
 import React from 'react';
 import { exportCVToJson, exportCVToZip } from '../../../../shared/core/utils/jsonImporterExporter';
+import { saveDocumentToDisk } from '../../../../shared/core/storage/nativeFileDocumentService';
 import { Modal } from '../../../../shared/core/ui/Modal';
-import { button, elevationSystem, radius } from '../../../../shared/core/uiDesignSystem';
-import { FileText, FileArchive, Download } from 'lucide-react';
+import { button, radius } from '../../../../shared/core/uiDesignSystem';
+import { FileText, FileArchive, Download, Sparkles } from 'lucide-react';
 
 export default function JsonDownloadModal({ isOpen, onClose, cvData }: any) {
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Descargar Copia Portátil (.JSON / .ZIP)"
+      title="Guardar o Exportar Copia Portable (.LEECV / .JSON / .ZIP)"
       icon={<Download className="w-5 h-5 text-[var(--color-status-warning-bright)]" />}
       size="md"
       footer={
         <div className="w-full flex items-center justify-between gap-2">
           <span className="text-[11px] text-[var(--ui-text-secondary)] font-bold">
-            💡 Compatible con cualquier dispositivo
+            💡 Llevá tus archivos entre computadoras o celular
           </span>
           <button
             type="button"
@@ -29,10 +30,35 @@ export default function JsonDownloadModal({ isOpen, onClose, cvData }: any) {
     >
       <div className={`space-y-4 text-xs p-4 bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] rounded-[${radius.modal}] select-none`}>
         <p className="text-xs text-[var(--ui-text-secondary)] leading-relaxed">
-          Selecciona el formato de respaldo portátil que prefieras para conservar en tu disco o transferir a otra computadora:
+          Elegí el formato para conservar el archivo en tu disco, compartirlo o abrirlo desde otro equipo:
         </p>
 
         <div className="space-y-3">
+          {/* Opción Principal: Archivo Nativo .LEECV (estilo Word con icono de la App instalada) */}
+          <button
+            type="button"
+            onClick={async () => {
+              await saveDocumentToDisk(cvData?.id || `cv_${Date.now()}`, 'cv', cvData, { forceSaveAs: true });
+              onClose();
+            }}
+            className={`w-full text-left p-3.5 rounded-[${radius.modal}] bg-[var(--color-accent-muted)]/40 hover:bg-[var(--color-accent-muted)]/60 border border-[var(--color-accent-base)]/50 transition group flex items-start gap-3 cursor-pointer`}
+          >
+            <div className={`p-2.5 rounded-[${radius.card}] bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] group-hover:scale-110 transition flex-shrink-0`}>
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div className="space-y-0.5 min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-extrabold text-xs sm:text-sm text-[var(--ui-text-primary)]">⚡ Archivo LEECV (.leecv)</span>
+                <span className="text-[10px] font-black px-2 py-0.5 rounded bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]">
+                  Recomendado (Estilo Word)
+                </span>
+              </div>
+              <p className="text-[11px] text-[var(--ui-text-secondary)]">
+                Archivo propio de la app: si instalás LEECV en tu computadora o celular, toma el ícono de rayo y abre con doble clic directo al editor.
+              </p>
+            </div>
+          </button>
+
           {/* Opción A: Archivo .JSON Liviano */}
           <button
             type="button"

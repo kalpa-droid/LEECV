@@ -17,6 +17,8 @@ import {
   ALL_DOCUMENT_TYPE_IDS,
   DOCUMENT_TYPE_REGISTRY,
   isEncryptedVaultDocumentType,
+  matchesAnotherDocumentTypeId,
+  matchesDocumentTypeId,
 } from '../src/shared/core/capabilities/capabilityRegistry';
 import { APP_SURFACE_MANIFEST } from '../src/shared/core/capabilities/appSurfaceManifest';
 import { APP_REGISTRY } from '../src/app/appRegistry';
@@ -30,11 +32,30 @@ import {
   getCloudBackupProjector,
   validateCloudBackupProjection,
 } from '../src/shared/core/storage/cloudBackupProjections';
+import { ICON_REGISTRY } from '../src/shared/core/pdf-engine/layers/icons/iconRegistry';
+import { resolveDocumentIdWithHandoff } from '../src/shared/core/documents/useRegisterDocumentTab';
+import { deriveDocumentTitle, generateDocumentId } from '../src/shared/core/documents/documentEngine/titleEngine';
 
 console.log('🔍 Verificando contrato de plataforma por app (Fase 10 — verify:app-contract)...\n');
 
 const ROOT = process.cwd();
 const errors: string[] = [];
+
+const manifestPath = path.join(ROOT, 'public/manifest.json');
+const pwaManifest = fs.existsSync(manifestPath)
+  ? JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
+  : { file_handlers: [] };
+const pwaFileHandlers: Array<{ action?: string; accept?: Record<string, string[]> }> = Array.isArray(
+  pwaManifest?.file_handlers,
+)
+  ? pwaManifest.file_handlers
+  : [];
+
+const prerenderMetaPath = path.join(ROOT, 'scripts/prerenderMeta.mjs');
+const prerenderMetaSrc = fs.existsSync(prerenderMetaPath)
+  ? fs.readFileSync(prerenderMetaPath, 'utf8')
+  : '';
+const seenExtensions = new Set<string>();
 
 for (const forbidden of ['portfolio', 'certificate']) {
   if (forbidden in DOCUMENT_TYPE_REGISTRY) {
@@ -114,6 +135,82 @@ for (const id of ALL_DOCUMENT_TYPE_IDS) {
         errors.push(`[${id}] Proyección de respaldo opt-in inválida.`);
       }
     }
+  }
+
+  // 6. Aislamiento de pestañas e IDs (anti-fuga "CV") en todas las apps standalone
+  if (runtime && !runtime.usesSharedCvWorkspace) {
+    if (matchesDocumentTypeId('draft_cv', id) || matchesDocumentTypeId('doc_cv_12345', id)) {
+      errors.push(`[${id}] matchesDocumentTypeId aceptó un ID de CV.`);
+    }
+    if (!matchesAnotherDocumentTypeId('draft_cv', id)) {
+      errors.push(`[${id}] matchesAnotherDocumentTypeId('draft_cv', '${id}') debe devolver true.`);
+    }
+    const resolvedFromCv = resolveDocumentIdWithHandoff('doc_cv_12345', id);
+    if (resolvedFromCv === 'doc_cv_12345' || !matchesDocumentTypeId(resolvedFromCv, id)) {
+      errors.push(`[${id}] resolveDocumentIdWithHandoff adoptó ID de CV ("${resolvedFromCv}").`);
+    }
+    const sampleId = generateDocumentId(id);
+    const sampleTitle = deriveDocumentTitle(id, { id: sampleId });
+    if (!sampleTitle.startsWith(`${manifest.titlePrefix} - `) || sampleTitle.startsWith('CV - ')) {
+      errors.push(`[${id}] deriveDocumentTitle generó título inesperado: "${sampleTitle}".`);
+    }
+    if (surface) {
+      const studioAbs = path.join(ROOT, surface.primaryStudioFile);
+      if (fs.existsSync(studioAbs)) {
+        const studioSrc = fs.readFileSync(studioAbs, 'utf8');
+        if (!studioSrc.includes('useRegisterDocumentTab')) {
+          errors.push(`[${id}] ${surface.primaryStudioFile} no invoca useRegisterDocumentTab.`);
+        }
+        if (/activeId\s*:\s*activeTabId\b/.test(studioSrc)) {
+          errors.push(`[${id}] ${surface.primaryStudioFile} usa activeId: activeTabId (fuga de pestaña CV).`);
+        }
+      }
+    }
+  }
+
+  // 7. Paridad de ícono de producto y textos de menú
+  if (!manifest.ui?.productIconId || !ICON_REGISTRY[manifest.ui.productIconId]) {
+    errors.push(`[${id}] ui.productIconId ("${manifest.ui?.productIconId}") no existe en ICON_REGISTRY.`);
+  }
+  if (!manifest.ui?.menuTitle?.trim() || !manifest.ui?.menuSubtitle?.trim()) {
+    errors.push(`[${id}] ui.menuTitle / ui.menuSubtitle vacíos.`);
+  }
+
+  // 8. Paridad de formato portable y PWA file_handlers
+  if ('fileFormat' in manifest && manifest.fileFormat) {
+    const ext = manifest.fileFormat.extension.toLowerCase();
+    if (!ext.startsWith('.')) {
+      errors.push(`[${id}] fileFormat.extension inválida: "${ext}".`);
+    } else if (seenExtensions.has(ext)) {
+      errors.push(`[${id}] Extensión portable duplicada: "${ext}".`);
+    } else {
+      seenExtensions.add(ext);
+    }
+    if (manifest.fileFormat.pwaFileHandler) {
+      const handlerMatch = pwaFileHandlers.some(
+        (h) =>
+          h.action === manifest.route &&
+          Object.values(h.accept || {}).some((exts) =>
+            Array.isArray(exts) && exts.map((x) => x.toLowerCase()).includes(ext),
+          ),
+      );
+      if (!handlerMatch) {
+        errors.push(
+          `[${id}] Declara pwaFileHandler=true (${ext}), pero falta en public/manifest.json bajo action="${manifest.route}".`,
+        );
+      }
+    }
+  }
+
+  // 9. Paridad SEO y título de pestaña del navegador
+  if (!manifest.seo?.title?.trim()) {
+    errors.push(`[${id}] Falta seo.title para el título de pestaña del navegador.`);
+  } else if (
+    manifest.seo.prerender &&
+    !prerenderMetaSrc.includes(`'${manifest.route}'`) &&
+    !prerenderMetaSrc.includes(`"${manifest.route}"`)
+  ) {
+    errors.push(`[${id}] Declara seo.prerender=true pero "${manifest.route}" falta en scripts/prerenderMeta.mjs.`);
   }
 }
 

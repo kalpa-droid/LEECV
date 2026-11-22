@@ -1,9 +1,14 @@
 export const CV_KNOWLEDGE = `CONOCÉS ESTAS PESTAÑAS DEL EDITOR (docType CV): personales, redes, competencias, resumen, objetivo, vacante, carta, experiencia, formacion, profesion, cursos, informatica, idiomas, habilidades, proyectos, publicaciones, portafolio, logros, referencias, certificados, firma, portada, nueva_seccion, guardados, diseno, importar_datos.
 
 CÓMO SE USA LA APP:
-- Vacante: la persona carga puesto y empresa de la oferta. Con eso se crea una COPIA INDEPENDIENTE del CV ("Puesto · Empresa") vinculada al CV base (que queda intacto). La copia es la que se adapta a esa oferta.
-- Carta: la carta se desbloquea dentro de la postulación (requiere ser la copia). Se escribe contra la vacante cargada.
-- Guardar copia / Guardados: versiones guardadas localmente del documento. La postulación aparece con chip "💼 Postulación: <nombre>".
+- Vacante Objetivo:
+  • En el CV Base podés dejar Puesto "Ninguno" y Empresa "Ninguna". Desde Vacante Objetivo tenés el botón "Analizar en qué me perfilo": la IA lee TODO tu CV Base (formación, cursos, experiencia, habilidades y ubicación) y propone puestos y empresas reales o remotas donde encaja tu perfil, con un botón "Crear postulación" en cada resultado.
+  • Antes de crear la nueva pestaña de postulación se abre un modal con la descripción de lo que busca la empresa para que la revises o edites. Al confirmar, la IA adapta el nuevo CV independiente para ese puesto/empresa y embebe etiquetas ATS en el PDF, nombrándolo automáticamente según puesto, empresa y persona. Tu CV Base queda intacto.
+  • También podés cargar Puesto y Empresa manuales en el CV Base y tocar "Generar carta para este puesto actual" sin modificar tu CV Base.
+- Carta de presentación: funciona tanto dentro de una postulación como desde el CV Base (en el CV Base te pide cargar Puesto y Empresa en Vacante Objetivo sin modificar tu CV). Toma todo el contenido del CV + la vacante y rellena Saludo, Presentación, Experiencia relacionada, Cierre y Despedida. NO consume créditos y SIEMPRE se exporta en archivo separado.
+- Mover registros entre secciones compatibles: desde "Mover a…" en cada tarjeta podés pasar un registro mal ubicado (ej. de Cursos a Formación Académica); las secciones incompatibles como Redes Sociales nunca se mezclan.
+- Importar datos: además de LinkedIn (.zip) y lectura de CVs completos, permite abrir archivos de respaldo (.json / .leecv / .zip) y usar "Agregar certificados" con IA para leer diplomas/certificados y elegir si adjuntar la imagen en la sección Certificados.
+- Guardar copia / Guardados y archivos tipo Word: podés guardar respaldos portátiles (.leecv o .json) que conservan tu trabajo fuera del navegador. La postulación aparece con chip "💼 Postulación: <nombre>".
 - Diagnóstico ATS: revisión automática (ATS es la sigla en inglés de los sistemas con que las empresas filtran CV) contra la vacante; cada regla tiene "Ir a corregir" que lleva a la pestaña exacta. Arriba aparece una píldora con el puntaje en vivo, que se actualiza sola al editar.
 - IA: en casi todas las secciones hay botones de IA que proponen texto; NUNCA se guarda nada sin confirmación de la persona.
 - Exportar PDF: la descarga se hace desde el botón Exportar.
@@ -15,10 +20,10 @@ CÓMO SE USA LA APP:
 - Deshacer/Rehacer y Temas: en la barra superior están las flechas Deshacer y Rehacer (revierten los últimos cambios) y el botón de Temas (4 apariencias de la interfaz); los temas solo cambian cómo se ve el editor, nunca el documento final.
 
 FLUJO TÍPICO CV → POSTULACIÓN:
-1. La persona arma su CV base (desde cero o importándolo) y lo guarda.
-2. Cuando ve una oferta, carga puesto y empresa en Vacante: se crea la copia independiente vinculada.
-3. La copia se adapta: contenido, carta de presentación y Diagnóstico ATS con puntaje en vivo.
-4. Desde Exportar descarga el documento para imprimirlo en casa o llevarlo a una imprenta. El CV base nunca se modifica por una postulación.
+1. La persona arma su CV base (cargando todo manualmente, abriendo un .json/.leecv, importando su CV o sumando certificados con IA) y lo guarda.
+2. En Vacante Objetivo toca "Analizar en qué me perfilo" (o carga un puesto/empresa puntual).
+3. Elige un resultado → toca "Crear postulación" → revisa/edita la descripción de lo que busca la empresa en el modal → la IA alinea el nuevo CV independiente al puesto y embebe etiquetas ATS en el PDF.
+4. Genera la Carta de Presentación en 1 clic (toma todo el CV y la vacante; gratis y exportada siempre aparte del CV). Desde Exportar descarga el CV para imprimir o enviar. El CV base nunca se altera por una postulación.
 
 BLOQUE DE CONOCIMIENTO — COLUMNAS Y ORDEN (responde SIEMPRE que pregunten por esto, docType CV):
 - Cada sección tiene arriba de su panel un control llamado "Ubicación y Orden Relativo".

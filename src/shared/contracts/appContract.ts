@@ -38,6 +38,23 @@ export interface DocumentTypeSeoSpec {
   readonly prerender: boolean;
 }
 
+export type MenuBadgeTone = 'purple' | 'secondary' | 'warning' | 'accent' | 'green' | 'success';
+
+export interface DocumentTypeUiSpec {
+  readonly productIconId: string;
+  readonly menuTitle: string;
+  readonly menuSubtitle: string;
+  readonly menuBadgeTone: MenuBadgeTone;
+}
+
+export interface DocumentTypeFileFormatSpec {
+  readonly extension: `.${string}`;
+  readonly legacyExtensions?: readonly `.${string}`[];
+  readonly label: string;
+  readonly mimeType: string;
+  readonly pwaFileHandler?: boolean;
+}
+
 export interface DocumentTypeManifest<
   TId extends string = string,
   S extends StoragePolicy = StoragePolicy,
@@ -47,6 +64,8 @@ export interface DocumentTypeManifest<
   readonly name: string;
   readonly description: string;
   readonly iconName: string;
+  readonly ui: DocumentTypeUiSpec;
+  readonly fileFormat?: DocumentTypeFileFormatSpec;
   readonly route: `/${string}`;
   /** Ruta efectiva de navegación si el tipo vive integrado en otra ruta (ej. cover_letter -> /crear-cv). */
   readonly studioRoute?: `/${string}`;

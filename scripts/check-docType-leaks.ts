@@ -18,21 +18,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
+import { ALL_DOCUMENT_TYPE_IDS } from '../src/shared/core/capabilities/capabilityRegistry';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'src');
 const BASELINE_FILE = path.join(__dirname, 'docType-leaks-baseline.json');
 
-const KNOWN_DOC_TYPES = new Set([
-  'cv',
-  'cover_letter',
-  'business_card',
-  'book',
-  'planner',
-  'invoice',
-  'editorial',
-]);
+const KNOWN_DOC_TYPES = new Set<string>(ALL_DOCUMENT_TYPE_IDS);
 
 const ARRAY_EXEMPT_FILES = new Set([
   'src/shared/core/capabilities/capabilityRegistry.ts',

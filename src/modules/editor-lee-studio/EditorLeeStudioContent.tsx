@@ -7,7 +7,9 @@ import { EditorialPdfDocument } from './pdf/EditorialPdfDocument';
 import { DEFAULT_EDITORIAL_PRESET, getEditorialPreset } from './domain/editorialPresetCatalog';
 import { EDITORIAL_PRESETS } from './pdf/editorialPresets';
 import { DocumentTypeId } from '../../types/document';
-import { useDocumentViewport, useViewportGestures } from '../../shared/core/viewport';
+import { useDocumentViewport, useViewportGestures, ScaledPaperSheet, quantizeRasterZoom } from '../../shared/core/viewport';
+import { resolveDocumentCanvasPx } from '../../shared/core/pdf-engine/layers/page/pageSizes';
+import { ErrorBoundary } from '../../shared/core/ui/ErrorBoundary';
 import { OpenTab } from '../../shared/core/documents/tabStore';
 import { AUTOSAVE_DEBOUNCE_MS, resolveDocumentIdWithHandoff, useRegisterDocumentTab } from '../../shared/core/documents/documentEngine';
 import { sanitizeEditorialData } from './domain/sanitizeEditorialData';
@@ -25,8 +27,14 @@ import { PAGE_SIZES } from '../../shared/core/pdf-engine/layers/page/pageSizes';
 import { EDITORIAL_SECTION_CATALOG } from './domain/editorialSectionCatalog';
 import { generateSectionAnchors } from './domain/editorialTocResolver';
 import { EditorialImportAiPanel } from './panels/EditorialImportAiPanel';
-import { downloadBlob } from '../../shared/core/utils/downloadUtils';
-import { Trash2 } from 'lucide-react';
+import {
+  saveDocumentToDisk,
+  openDocumentFromDisk,
+  getBoundNativeFileName,
+} from '../../shared/core/storage/nativeFileDocumentService';
+import { unpackDocumentFromDisk } from '../../shared/core/storage/leecvPackageCodec';
+import { encodeImageFileWithinBudget } from '../../shared/core/cv-import/pageImageEncoder';
+import { FolderOpen, Save, Trash2 } from 'lucide-react';
 
 export interface EditorLeeStudioContentProps {
   currentUiTheme?: string;
@@ -49,8 +57,9 @@ export interface EditorLeeStudioContentProps {
 }
 
 function buildEditorialTitle(data: any): string {
-  const obra = data?.metadata?.title || 'EditorLee';
-  return obra ? `${obra} - Mi obra` : 'EditorLee - Mis documentos';
+  const obra = String(data?.metadata?.title || '').trim();
+  if (!obra || obra === 'Mi obra') return 'EditorLee - Mi obra';
+  return obra.toLowerCase().startsWith('editorlee') ? obra : `EditorLee - ${obra}`;
 }
 
 /**
@@ -64,7 +73,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
   currentUiTheme = 'day',
   documentTabs,
   activeTabId,
-  onSelectTab: _onSelectTab,
+  onSelectTab,
   onCloseTab,
   onNavigateToDocument,
   onNewDocument,
@@ -73,7 +82,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
   onNewBook,
   onNewPlanner,
   onNewInvoice,
-  onNewEditorial,
+  onNewEditorial: _onNewEditorial,
   cycleUITheme,
   onTabsChanged = () => {},
   onOpenShareAppModal,
@@ -96,9 +105,33 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
   const hydratedIdRef = useRef<string | null>(null);
   const hasEditedRef = useRef<boolean>(false);
   const [draft, setDraft] = useState<any>(() => createEmptyEditorial());
-  const preset = draft?.design?.presetId || DEFAULT_EDITORIAL_PRESET.id;
+  const [debouncedDraft, setDebouncedDraft] = useState<any>(draft);
+  useEffect(() => {
+    const t = window.setTimeout(() => setDebouncedDraft(draft), 300);
+    return () => window.clearTimeout(t);
+  }, [draft]);
 
-  const viewport = useDocumentViewport({ pageSizeId: preset });
+  const preset = draft?.design?.presetId || DEFAULT_EDITORIAL_PRESET.id;
+  const activeEditorialPreset = getEditorialPreset(preset) || DEFAULT_EDITORIAL_PRESET;
+  const pageSizeId = draft?.design?.pageSizeId || draft?.design?.pageSize || activeEditorialPreset.pageSize || 'a4';
+
+  const viewport = useDocumentViewport({ pageSizeId });
+  const { widthPx, heightPx } = useMemo(() => resolveDocumentCanvasPx(pageSizeId), [pageSizeId]);
+  const rasterZoom = quantizeRasterZoom(viewport.zoomLevel);
+
+  const [focusedAnchorId, setFocusedAnchorId] = useState<string>(activeStepTab);
+  useEffect(() => {
+    setFocusedAnchorId(activeStepTab);
+  }, [activeStepTab]);
+
+  const focusSectionInPreview = useCallback((sectionId: string) => {
+    setFocusedAnchorId(sectionId);
+    window.dispatchEvent(
+      new CustomEvent('pdf-anchor-scroll', {
+        detail: { tabId: sectionId, forcePostRender: true },
+      }),
+    );
+  }, []);
 
   useViewportGestures({
     containerRef: viewport.containerRef,
@@ -125,8 +158,8 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
       try {
         const loaded = await loadDocumentById(editorialId, 'editorial');
         const sanitized = sanitizeEditorialData(loaded);
-        if (sanitized && active) {
-          setDraft(sanitized);
+        if (active) {
+          setDraft(sanitized || createEmptyEditorial());
         }
       } catch (err) {
         console.warn('Error cargando documento editorial:', err);
@@ -220,6 +253,83 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
     setIsExporting(false);
   }, [draft, preset, consumeCreditIfNeeded, showSuccess, showError]);
 
+  const handleSaveToDisk = useCallback(
+    async (forceSaveAs: boolean = false) => {
+      if (!draft) return;
+      await withErrorHandling(
+        async () => {
+          const res = await saveDocumentToDisk(editorialId, 'editorial', draft, { forceSaveAs });
+          if (res.status === 'saved') {
+            showSuccess(
+              res.overwroteExisting
+                ? `Archivo actualizado en disco (${res.fileName}).`
+                : `Documento guardado en archivo (${res.fileName}).`,
+            );
+          }
+        },
+        {
+          context: 'Guardar archivo EditorLee',
+          errorMessage: 'No pudimos guardar el archivo en la computadora.',
+          notify: (msg) => showError(msg),
+        },
+      );
+    },
+    [draft, editorialId, showSuccess, showError],
+  );
+
+  const handleOpenDiskFile = useCallback(
+    async (fallbackFile?: File) => {
+      await withErrorHandling(
+        async () => {
+          let loadedData: any = null;
+          let openedName = '';
+
+          if (fallbackFile) {
+            const unpacked = await unpackDocumentFromDisk(fallbackFile);
+            loadedData = unpacked.data;
+            openedName = fallbackFile.name;
+          } else {
+            const picked = await openDocumentFromDisk();
+            if (picked.status === 'cancelled') return;
+            if (picked.status === 'fallback-required') return 'needs-input';
+            loadedData = picked.data;
+            openedName = picked.fileName;
+          }
+
+          const sanitized = sanitizeEditorialData(loadedData);
+          if (!sanitized) throw new Error('El archivo no contiene un documento editorial válido.');
+          hasEditedRef.current = true;
+          setDraft(sanitized);
+          setActiveStepTab('editorial_secciones');
+          setIsPanelOpen(true);
+          showSuccess(`Documento abierto (${openedName}).`);
+          return 'ok';
+        },
+        {
+          context: 'Abrir archivo EditorLee',
+          errorMessage: 'No pudimos abrir el archivo seleccionado.',
+          notify: (msg) => showError(msg),
+        },
+      );
+    },
+    [showSuccess, showError],
+  );
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        if (getBoundNativeFileName(editorialId)) {
+          void handleSaveToDisk(false);
+        } else {
+          void handleSaveDocument();
+        }
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [editorialId, handleSaveToDisk, handleSaveDocument]);
+
   const handleDuplicate = useCallback(
     (saved: any) => {
       if (!draft) return;
@@ -269,9 +379,16 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
     [showSuccess, showError]
   );
 
+  const debouncedPreset = debouncedDraft?.design?.presetId || DEFAULT_EDITORIAL_PRESET.id;
   const pdfElement = useMemo(
-    () => <EditorialPdfDocument data={draft as any} preset={preset} />,
-    [draft, preset]
+    () => (
+      <EditorialPdfDocument
+        data={debouncedDraft as any}
+        preset={debouncedPreset}
+        interactiveAnchors={true}
+      />
+    ),
+    [debouncedDraft, debouncedPreset]
   );
 
   const stepProps: StepProps = {
@@ -279,9 +396,12 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
     updateDraft,
     notify: { success: showSuccess, error: showError },
     setActiveStepTab,
+    onFocusSection: focusSectionInPreview,
     onOpenSaved: handleOpenSaved,
     onDuplicate: handleDuplicate,
     onExportPDF: handleExportPDF,
+    onSaveToDisk: () => void handleSaveToDisk(true),
+    onOpenDiskFile: handleOpenDiskFile,
   };
 
   return (
@@ -301,13 +421,10 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
             }}
             onSaveCVClick={handleSaveDocument}
             onOpenSaveAsModal={() => {
-              void handleSaveDocument();
+              void handleSaveToDisk(true);
             }}
             onOpenJsonDownloadModal={() => {
-              const blob = new Blob([JSON.stringify(draft, null, 2)], { type: 'application/json' });
-              const safeTitle = (draft?.metadata?.title || 'editorial').replace(/[^a-zA-Z0-9_\-]/g, '_');
-              downloadBlob(blob, `${safeTitle}.leecv-editor`);
-              showSuccess('Copia de respaldo descargada.');
+              void handleSaveToDisk(true);
             }}
             onPrint={handleExportPDF}
             isSaving={isExporting}
@@ -379,35 +496,44 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
           </div>
         }
         mainSlot={
-          <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-[var(--ui-bg-panel)] relative overflow-hidden">
-            <div
-              ref={sheetRef}
-              className={`flex-1 w-full max-w-4xl overflow-hidden border border-[var(--ui-border)] bg-[var(--ui-bg-card)] ${elevationSystem.floating}`}
-              style={{ borderRadius: radius.card }}
+          <div className="w-full flex flex-col items-start justify-start print-wrapper relative touch-pan-x touch-pan-y">
+            <ScaledPaperSheet
+              widthPx={widthPx}
+              heightPx={heightPx}
+              zoomLevel={viewport.zoomLevel}
+              managed={true}
+              sheetRef={sheetRef}
+              className={elevationSystem.overlay}
             >
-              <VectorDocViewer
-                document={pdfElement}
-                zoomLevel={viewport.zoomLevel}
-                activeTab={activeStepTab}
-                preset={EDITORIAL_PRESETS.find((p) => p.id === preset) || EDITORIAL_PRESETS[0]}
-              />
-            </div>
+              <ErrorBoundary
+                compact
+                title="Inconveniente en la vista previa"
+                subtitle="Ocurrió un problema al procesar la plantilla del PDF. Tu información guardada no se ve afectada."
+              >
+                <VectorDocViewer
+                  document={pdfElement}
+                  zoomLevel={rasterZoom}
+                  activeTab={focusedAnchorId}
+                  preset={EDITORIAL_PRESETS.find((p) => p.id === preset) || EDITORIAL_PRESETS[0]}
+                />
+              </ErrorBoundary>
+            </ScaledPaperSheet>
           </div>
         }
         tabsBarProps={{
           tabs: documentTabs,
           activeId: editorialId,
           docType: 'editorial',
-          onSwitch: () => {},
+          onSwitch: onSelectTab,
           onNavigateToDocument: (targetType, id) => onNavigateToDocument(targetType, id),
-          onAdd: handleNewDraft,
+          onAdd: () => (onNewDocument ? onNewDocument('editorial') : handleNewDraft()),
           onNewDocument,
           onNewCV,
           onNewCard,
           onNewBook,
           onNewPlanner,
           onNewInvoice,
-          onNewEditorial: handleNewDraft,
+          onNewEditorial: () => (onNewDocument ? onNewDocument('editorial') : handleNewDraft()),
           onClose: (_e, id) => onCloseTab(id),
         }}
       />
@@ -482,19 +608,33 @@ interface StepProps {
   updateDraft: (updater: (prev: any) => any) => void;
   notify: { success: (msg: string) => void; error: (msg: string) => void };
   setActiveStepTab: (tab: string) => void;
+  onFocusSection?: (sectionId: string) => void;
   onOpenSaved?: (saved: any) => void;
   onDuplicate?: (saved: any) => void;
   onExportPDF?: () => void;
+  onSaveToDisk?: () => void;
+  onOpenDiskFile?: (fallbackFile?: File) => Promise<any>;
 }
 
-function InicioEditorialStep({ setActiveStepTab }: StepProps) {
+function InicioEditorialStep({ setActiveStepTab, onSaveToDisk, onOpenDiskFile }: StepProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleOpen = async () => {
+    const res = await onOpenDiskFile?.();
+    if (res?.data === 'needs-input' || res === 'needs-input') {
+      fileInputRef.current?.click();
+    }
+  };
+
   return (
-    <div className="p-6">
-      <h2 className="text-xl font-bold mb-4">Bienvenido/a a EditorLee</h2>
-      <p className="text-base mb-6">
-        Elegí el tipo de documento que querés crear y los parámetros de diseño.
-      </p>
-      <div className="space-y-4">
+    <div className="p-6 space-y-6">
+      <div>
+        <h2 className="text-xl font-bold mb-2">Bienvenido/a a EditorLee</h2>
+        <p className="text-sm text-[var(--ui-text-secondary)]">
+          Creá libros, informes, apuntes o documentos extensos con capítulos e imágenes. Guardá un archivo <code>.leedoc</code> en tu computadora como en Word o abrí uno existente.
+        </p>
+      </div>
+      <div className="space-y-3">
         <button
           type="button"
           onClick={() => setActiveStepTab('editorial_portada')}
@@ -509,6 +649,41 @@ function InicioEditorialStep({ setActiveStepTab }: StepProps) {
         >
           Comenzar directamente con Secciones
         </button>
+      </div>
+
+      <div className="pt-4 border-t border-[var(--ui-border)] space-y-2.5">
+        <span className="block text-xs font-bold uppercase tracking-wider text-[var(--ui-text-secondary)]">
+          Archivo en esta computadora (.leedoc / .json / .zip)
+        </span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={handleOpen}
+            className="py-2.5 px-3 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] rounded text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <FolderOpen className="w-4 h-4 text-[var(--color-accent-text)]" />
+            Abrir archivo…
+          </button>
+          <button
+            type="button"
+            onClick={() => onSaveToDisk?.()}
+            className="py-2.5 px-3 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] rounded text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <Save className="w-4 h-4 text-[var(--color-accent-text)]" />
+            Guardar .leedoc en PC
+          </button>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".leedoc,.leecv-editor,.json,.zip"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            e.currentTarget.value = '';
+            if (f) void onOpenDiskFile?.(f);
+          }}
+        />
       </div>
     </div>
   );
@@ -646,12 +821,13 @@ function PortadaEditorialStep({ draft, updateDraft, setActiveStepTab }: StepProp
   );
 }
 
-function SeccionesEditorialStep({ draft, updateDraft, setActiveStepTab }: StepProps) {
+function SeccionesEditorialStep({ draft, updateDraft, setActiveStepTab, onFocusSection }: StepProps) {
   const sections = draft?.sections || [];
 
   const addSectionFromCatalog = (catalogItem: any) => {
+    const newId = `sec_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     const newSec = {
-      id: `sec_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      id: newId,
       title: catalogItem.defaultValues?.title || catalogItem.label || 'Nueva Sección',
       visible: true,
       includeInToc: catalogItem.defaultValues?.includeInToc ?? true,
@@ -669,6 +845,7 @@ function SeccionesEditorialStep({ draft, updateDraft, setActiveStepTab }: StepPr
       ...prev,
       sections: [...(prev?.sections || []), newSec],
     }));
+    onFocusSection?.(newId);
   };
 
   const removeSection = (secId: string) => {
@@ -743,7 +920,9 @@ function SeccionesEditorialStep({ draft, updateDraft, setActiveStepTab }: StepPr
           sections.map((sec: any, idx: number) => (
             <div
               key={sec.id}
-              className="p-3.5 rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)] space-y-3"
+              onClick={() => onFocusSection?.(sec.id)}
+              onFocus={() => onFocusSection?.(sec.id)}
+              className="p-3.5 rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)] hover:border-[var(--color-accent-base)]/60 transition space-y-3"
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="text-[10px] font-bold uppercase text-[var(--color-accent-amber-bright)]">
@@ -808,7 +987,13 @@ function SeccionesEditorialStep({ draft, updateDraft, setActiveStepTab }: StepPr
                   >
                     <div className="flex items-center justify-between text-[10px]">
                       <span className="font-bold uppercase text-[var(--ui-text-secondary)]">
-                        {rec.type === 'subtitle' ? 'Subtítulo' : rec.type === 'quote' ? 'Cita' : 'Párrafo'}
+                        {rec.type === 'subtitle'
+                          ? 'Subtítulo'
+                          : rec.type === 'quote'
+                            ? 'Cita'
+                            : rec.type === 'image'
+                              ? 'Imagen'
+                              : 'Párrafo'}
                       </span>
                       <button
                         type="button"
@@ -819,7 +1004,40 @@ function SeccionesEditorialStep({ draft, updateDraft, setActiveStepTab }: StepPr
                       </button>
                     </div>
 
-                    {rec.type === 'subtitle' ? (
+                    {rec.type === 'image' ? (
+                      <div className="space-y-2">
+                        {rec.imagePath && (
+                          <img
+                            src={rec.imagePath}
+                            alt={rec.imageCaption || 'Imagen del documento'}
+                            className="max-h-36 rounded border border-[var(--ui-border)] object-contain bg-[var(--ui-bg-card)]"
+                          />
+                        )}
+                        <label className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-bold rounded bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] cursor-pointer">
+                          <span>{rec.imagePath ? 'Cambiar imagen…' : 'Elegir imagen (se guarda local)…'}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const picked = e.target.files?.[0];
+                              e.currentTarget.value = '';
+                              if (!picked) return;
+                              const encoded = await encodeImageFileWithinBudget(picked);
+                              updateRecord(sec.id, rec.id, {
+                                imagePath: `data:${encoded.mimeType};base64,${encoded.base64}`,
+                              });
+                            }}
+                          />
+                        </label>
+                        <Field
+                          label="Epígrafe o descripción (opcional)"
+                          value={rec.imageCaption || ''}
+                          onChange={(e: any) => updateRecord(sec.id, rec.id, { imageCaption: e.target.value })}
+                          placeholder="Ej: Figura 1 — Diagrama..."
+                        />
+                      </div>
+                    ) : rec.type === 'subtitle' ? (
                       <Field
                         value={rec.content || ''}
                         onChange={(e: any) => updateRecord(sec.id, rec.id, { content: e.target.value })}
@@ -874,6 +1092,13 @@ function SeccionesEditorialStep({ draft, updateDraft, setActiveStepTab }: StepPr
                     className="px-2.5 py-1 text-[11px] font-bold rounded bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-hover)] cursor-pointer"
                   >
                     + Cita
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => addRecord(sec.id, 'image')}
+                    className="px-2.5 py-1 text-[11px] font-bold rounded bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:bg-[var(--ui-bg-hover)] cursor-pointer"
+                  >
+                    + Imagen
                   </button>
                 </div>
               </div>
@@ -1003,9 +1228,8 @@ function DiseñoEditorialStep({ draft, updateDraft, setActiveStepTab }: StepProp
                 onChange={(e) => updateTypography('fontFamily', e.target.value)}
                 className="w-full rounded border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] px-3 py-2 text-xs"
               >
-                <option value="Times-Roman">Clásica (Times-Roman)</option>
-                <option value="Helvetica">Moderna (Helvetica)</option>
-                <option value="Courier">Mecanografiada (Courier)</option>
+                <option value="Times-Roman">Clásica Serif (Times-Roman)</option>
+                <option value="Helvetica">Moderna Sans (Helvetica)</option>
               </select>
             </div>
             <Field

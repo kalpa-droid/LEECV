@@ -7,9 +7,11 @@
 
 import fs from 'fs';
 import path from 'path';
-import { DOCUMENT_TYPE_REGISTRY } from '../src/shared/core/capabilities/capabilityRegistry';
+import {
+  ALL_DOCUMENT_TYPE_IDS,
+  DOCUMENT_TYPE_REGISTRY,
+} from '../src/shared/core/capabilities/capabilityRegistry';
 import { APP_SURFACE_MANIFEST } from '../src/shared/core/capabilities/appSurfaceManifest';
-import { DocumentTypeId } from '../src/types/document';
 
 console.log('🔍 Iniciando auditoría de completitud de superficie por app (Pilar 8 Regla 10)...\n');
 
@@ -26,18 +28,7 @@ const newDocMenuContent = fs.readFileSync(path.join(rootDir, 'src/shared/core/ui
 const productsGridContent = fs.readFileSync(path.join(rootDir, 'src/shared/core/ui/marketing/PortalProductsGrid.tsx'), 'utf8');
 const storageServiceContent = fs.readFileSync(path.join(rootDir, 'src/shared/core/storage/documentStorageService.ts'), 'utf8');
 
-// 7 tipos de documento canónicos activos en producción
-const CANONICAL_DOC_TYPES: DocumentTypeId[] = [
-  'cv',
-  'business_card',
-  'book',
-  'cover_letter',
-  'planner',
-  'invoice',
-  'editorial'
-];
-
-for (const docType of CANONICAL_DOC_TYPES) {
+for (const docType of ALL_DOCUMENT_TYPE_IDS) {
   totalChecks++;
   const manifestEntry = APP_SURFACE_MANIFEST[docType];
   if (!manifestEntry) {
@@ -113,14 +104,19 @@ for (const docType of CANONICAL_DOC_TYPES) {
     }
   }
 
-  // g. Verificar soporte en documentStorageService
+  // g. Verificar soporte por contrato en persistencia Local-First (drivers genéricos)
   if (manifestEntry.features.hasStorageAdapter) {
     totalChecks++;
-    if (!storageServiceContent.includes(`'${docType}'`) && !storageServiceContent.includes(`"${docType}"`)) {
-      console.error(`❌ FALLO SUPERFICIE [${docType}]: Tipo "${docType}" ausente en documentStorageService.ts.`);
+    const storageKind = DOCUMENT_TYPE_REGISTRY[docType]?.storage?.kind;
+    const expectedDriverImport =
+      storageKind === 'local-encrypted' ? 'encryptedVaultDriver' : 'localDocumentStore';
+    if (!storageKind || !storageServiceContent.includes(expectedDriverImport)) {
+      console.error(
+        `❌ FALLO SUPERFICIE [${docType}]: Tipo "${docType}" (storage=${String(storageKind)}) no tiene driver "${expectedDriverImport}" cableado en documentStorageService.ts.`,
+      );
       failedChecks++;
     } else {
-      console.log(`  ✓ Almacenamiento Local [${docType}]: Soporte persistente verificado.`);
+      console.log(`  ✓ Almacenamiento Local [${docType}]: Contrato "${storageKind}" + driver "${expectedDriverImport}" verificado.`);
     }
   }
 }

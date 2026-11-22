@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { inferDocumentTypeId } from '../shared/core/capabilities/capabilityRegistry';
-import type { OpenTab } from '../shared/core/documents/tabStore';
+import { getActiveTabId, OpenTab } from '../shared/core/documents/tabStore';
 import type { DocumentTypeId } from '../types/document';
 import type { AppRuntimeEntry } from './appRegistry';
 
@@ -46,13 +46,16 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
   const StudioComponent = entry.StudioComponent;
   if (!StudioComponent) return null;
 
+  const storedActiveId = getActiveTabId();
+  const matchesEntry = (t: OpenTab) => t.docType === entry.id || inferDocumentTypeId(t) === entry.id;
   const activeTab =
-    tabs.find(
-      (t) =>
-        (t.id === cvDataId || t.cvId === cvDataId) &&
-        (t.docType === entry.id || inferDocumentTypeId(t) === entry.id),
-    ) ||
-    tabs.find((t) => t.docType === entry.id || inferDocumentTypeId(t) === entry.id);
+    (storedActiveId
+      ? tabs.find((t) => (t.id === storedActiveId || t.cvId === storedActiveId) && matchesEntry(t))
+      : undefined) ||
+    (cvDataId
+      ? tabs.find((t) => (t.id === cvDataId || t.cvId === cvDataId) && matchesEntry(t))
+      : undefined) ||
+    tabs.find(matchesEntry);
 
   if (entry.autoCreateBlankTabOnRouteEnter && !activeTab) {
     return (
@@ -62,7 +65,8 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
     );
   }
 
-  const activeTabId = activeTab?.id || activeTab?.cvId || cvDataId || '';
+  // Nunca propagar cvDataId hacia una app standalone cuando aún no existe pestaña propia.
+  const activeTabId = activeTab?.id || activeTab?.cvId || '';
 
   return (
     <>

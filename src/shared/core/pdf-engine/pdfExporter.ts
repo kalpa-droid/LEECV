@@ -7,6 +7,7 @@ import { exportBusinessCardSheetToPDF } from './cardSheetExporter';
 import { Preset } from './layers/presets/presetSchema';
 import { getMonthNameEs } from '../utils/formatDate';
 import { downloadBlob } from '../utils/downloadUtils';
+import { buildPdfDocumentMeta } from './layers/ats/pdfAtsMetadataBuilder';
 
 /**
  * Native Vector PDF Generator powered by 8-Layer TemplateRenderer + @react-pdf/renderer
@@ -21,9 +22,12 @@ export async function exportCVToPDF(cvData: any, presetInput?: Preset, atsMode?:
 
   const monthName = getMonthNameEs();
   const yearNum = new Date().getFullYear();
-  const fileName = atsMode 
-    ? `${candidateName.replace(/\s+/g, '-')}-ATS.pdf`
-    : `${candidateName.replace(/\s+/g, '-')}.pdf`;
+  const versionSuffix = cvData?.version_label || cvData?.versionLabel
+    ? `-${String(cvData.version_label || cvData.versionLabel).replace(/[^\p{L}\p{N}_-]+/gu, '-')}`
+    : '';
+  const fileName = atsMode
+    ? `${candidateName.replace(/\s+/g, '-')}${versionSuffix}-ATS.pdf`
+    : `${candidateName.replace(/\s+/g, '-')}${versionSuffix}.pdf`;
 
   const sections = cvDataToContentSections(cvData);
   const docElement = React.createElement(TemplateRenderer, {
@@ -41,7 +45,8 @@ export async function exportCVToPDF(cvData: any, presetInput?: Preset, atsMode?:
     professions: cvData?.professions || [],
     userFontFamily: cvData?.theme?.fontFamily,
     layoutOverrides: cvData?.layout,
-    customRecordCardDesigns: cvData?.recordCardDesigns
+    customRecordCardDesigns: cvData?.recordCardDesigns,
+    documentMeta: buildPdfDocumentMeta(cvData, preset.name),
   });
 
   // Generate vector PDF blob natively without screen capture

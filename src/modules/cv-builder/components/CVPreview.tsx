@@ -18,6 +18,7 @@ import { PresetTransitionOverlay } from '../../../shared/core/ui/PresetTransitio
 import { elevationSystem } from '../../../shared/core/uiDesignSystem';
 import { resolveDocumentCanvasPx } from '../../../shared/core/pdf-engine/layers/page/pageSizes';
 import { ScaledPaperSheet, useViewportGestures, quantizeRasterZoom } from '../../../shared/core/viewport';
+import { buildPdfDocumentMeta } from '../../../shared/core/pdf-engine/layers/ats/pdfAtsMetadataBuilder';
 
 export interface CVPreviewProps {
   cvData?: any;
@@ -93,7 +94,7 @@ export default function CVPreview({
   useViewportGestures({ containerRef: externalContainerRef, sheetRef: paperSheetRef, onZoomChange, zoomLevel });
 
   const renderedDocument = useMemo(() => {
-    if (activeTab === 'carta' && debouncedCvData?.sourceCvTabId) {
+    if (activeTab === 'carta') {
       return (
         <CoverLetterPdfDocument
           data={debouncedCvData}
@@ -128,6 +129,7 @@ export default function CVPreview({
         userFontFamily={debouncedCvData?.theme?.fontFamily}
         layoutOverrides={debouncedCvData?.layout}
         customRecordCardDesigns={debouncedCvData?.recordCardDesigns}
+        documentMeta={buildPdfDocumentMeta(debouncedCvData, activePreset.name)}
         interactiveAnchors={true}
       />
     );

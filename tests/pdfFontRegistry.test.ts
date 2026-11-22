@@ -21,8 +21,59 @@ describe('pdfFontRegistry — resolución de fuentes itálicas', () => {
   it('1. sanitizeFontFamily con isItalic=true devuelve la variante Oblique/Italic correcta, nunca la familia base + un flag aparte', () => {
     expect(sanitizeFontFamily('Helvetica', false, true)).toBe('Helvetica-Oblique');
     expect(sanitizeFontFamily('Helvetica', true, true)).toBe('Helvetica-BoldOblique');
-    expect(sanitizeFontFamily('Times New Roman', false, true)).toBe('Helvetica-Oblique'); // Times no registrado aún, cae a Helvetica
-    expect(sanitizeFontFamily('Courier New', false, true)).toBe('Helvetica-Oblique'); // Courier no registrado aún, cae a Helvetica
+    expect(sanitizeFontFamily('Times New Roman', false, false)).toBe('Times-Roman');
+    expect(sanitizeFontFamily('Times New Roman', true, false)).toBe('Times-Bold');
+    expect(sanitizeFontFamily('Times New Roman', false, true)).toBe('Times-Italic');
+    expect(sanitizeFontFamily('Times New Roman', true, true)).toBe('Times-BoldItalic');
+    expect(sanitizeFontFamily('Georgia', false, false)).toBe('Times-Roman');
+    expect(sanitizeFontFamily('Arial', true, false)).toBe('Helvetica-Bold');
+    expect(sanitizeFontFamily('Courier New', false, true)).toBe('Helvetica-Oblique'); // Courier cae a Helvetica segura
+  });
+
+  it('1b. EditorialPdfDocument genera PDF sin error de fuente no registrada incluso con Times New Roman o Arial', async () => {
+    const React = await import('react');
+    const { pdf } = await import('@react-pdf/renderer');
+    const { EditorialPdfDocument } = await import('../src/modules/editor-lee-studio/pdf/EditorialPdfDocument');
+
+    const docEl = React.createElement(EditorialPdfDocument, {
+      data: {
+        metadata: { title: 'Obra de Prueba', author: 'Valeria' },
+        design: {
+          pageSize: 'a5',
+          margins: { top: 20, bottom: 20, left: 20, right: 20, gutter: 20 },
+          typography: { fontFamily: 'Times New Roman', fontSize: 11, lineHeight: 1.5 },
+          pageNumbers: true,
+          headersEvenOdd: true,
+          coverMode: 'libro',
+        },
+        sections: [
+          {
+            id: 'sec_1',
+            title: 'Capítulo 1',
+            visible: true,
+            includeInToc: true,
+            startNewPage: true,
+            position: 0,
+            records: [{ id: 'r1', type: 'paragraph', content: 'Texto inicial de prueba.' }],
+          },
+        ],
+        cover: { mode: 'libro', title: 'Obra de Prueba' },
+        tocConfig: { enabled: true, title: 'Índice', showSubtitles: true, position: 'tras-caratula' },
+        manifestRules: {
+          preserveScenes: true,
+          preservePoems: true,
+          preserveCitations: true,
+          typographyCleanup: true,
+          qrQuietZone: 4,
+          qrMinSize: 20,
+        },
+      },
+      preset: 'libro-ensayo-novela',
+      interactiveAnchors: true,
+    });
+
+    const blob = await pdf(docEl as any).toBlob();
+    expect(blob.size).toBeGreaterThan(200);
   });
 
   it('2. resolveUnifiedTextSpec en nivel "meta" resuelve fontFamily a una variante itálica real', () => {

@@ -21,11 +21,25 @@ import { DocumentTypeId } from '../../../types/document';
 /** Label provisional de una postulación recién creada (antes de que haya puesto/empresa). */
 export const PROVISIONAL_APPLICATION_LABEL = 'Nueva postulación';
 
+export interface ApplicationTailoredPatch {
+  summary?: string;
+  objective?: string;
+  experienceUpdates?: Array<{ index: number; role?: string; description?: string }>;
+  prioritizedSkills?: string[];
+  prioritizedHardSkills?: string[];
+  atsKeywords?: string[];
+  alignmentSummary?: string;
+}
+
 export interface ApplicationVariantOptions {
   /** Puesto de la oferta (precarga jobTarget y define el label "Puesto · Empresa"). */
   puesto?: string;
   /** Empresa de la oferta (precarga jobTarget y define el label "Puesto · Empresa"). */
   empresa?: string;
+  /** Descripción editable del aviso / lo que busca la empresa. */
+  jobDescription?: string;
+  /** Mejoras de contenido y metadatos ATS propuestos por la IA al crear la postulación. */
+  tailoredPatch?: ApplicationTailoredPatch;
   /** Label explícita (flujo "Guardar copia"). Si falta, se genera "Puesto · Empresa" o el provisional. */
   versionLabel?: string;
   /** Conservar el jobTarget existente de la copia (p. ej. Carta desde Guardados o Guardar copia). Default false. */
@@ -82,8 +96,72 @@ const EMPTY_LETTER_BODY = {
  * - body: vacío si resetLetterBody (default), conservado si no.
  * - version_label: la explícita o la generada ("Puesto · Empresa" / provisional).
  */
+function mergePrioritizedStringList(
+  prioritized: string[] | undefined,
+  existing: any[] | undefined,
+): any[] | undefined {
+  if (!Array.isArray(prioritized) || prioritized.length === 0) return existing;
+  const cleanedPrioritized = prioritized.map((s) => String(s || '').trim()).filter(Boolean);
+  if (cleanedPrioritized.length === 0) return existing;
+  const seen = new Set(cleanedPrioritized.map((s) => s.toLowerCase()));
+  const tail: any[] = [];
+  if (Array.isArray(existing)) {
+    for (const item of existing) {
+      const label = typeof item === 'string' ? item : String(item?.name || item?.title || '');
+      if (label.trim() && !seen.has(label.trim().toLowerCase())) {
+        seen.add(label.trim().toLowerCase());
+        tail.push(item);
+      }
+    }
+  }
+  return [...cleanedPrioritized, ...tail];
+}
+
+function mergePrioritizedHardSkills(
+  prioritized: string[] | undefined,
+  existing: any[] | undefined,
+): any[] | undefined {
+  if (!Array.isArray(prioritized) || prioritized.length === 0) return existing;
+  const currentArr = Array.isArray(existing) ? existing : [];
+  const byName = new Map<string, any>();
+  for (const item of currentArr) {
+    const label = typeof item === 'string' ? item : String(item?.name || item?.title || '');
+    if (label.trim()) byName.set(label.trim().toLowerCase(), item);
+  }
+  const result: any[] = [];
+  const used = new Set<string>();
+  prioritized.forEach((rawName, idx) => {
+    const clean = String(rawName || '').trim();
+    if (!clean) return;
+    const key = clean.toLowerCase();
+    if (used.has(key)) return;
+    used.add(key);
+    const matched = byName.get(key);
+    if (matched) {
+      result.push(typeof matched === 'string' ? { id: `hs_ats_${idx}`, name: matched, level: '' } : matched);
+    } else {
+      result.push({ id: `hs_ats_${Date.now()}_${idx}`, name: clean, level: '' });
+    }
+  });
+  for (const item of currentArr) {
+    const label = typeof item === 'string' ? item : String(item?.name || item?.title || '');
+    if (label.trim() && !used.has(label.trim().toLowerCase())) {
+      result.push(item);
+    }
+  }
+  return result;
+}
+
 export function buildApplicationVariantData(cvData: any, options: ApplicationVariantOptions = {}): any {
-  const { puesto, empresa, keepJobTarget = false, resetLetterBody = true, docType = 'cv' } = options;
+  const {
+    puesto,
+    empresa,
+    jobDescription,
+    tailoredPatch,
+    keepJobTarget = false,
+    resetLetterBody = true,
+    docType = 'cv',
+  } = options;
   const explicitLabel = (options.versionLabel || '').trim();
   const label = explicitLabel || buildApplicationVersionLabel(puesto, empresa);
   const sourceCvTabId = resolveBaseSourceTabId(cvData);
@@ -95,17 +173,72 @@ export function buildApplicationVariantData(cvData: any, options: ApplicationVar
     const t: any = {};
     const p = (puesto || '').trim();
     const e = (empresa || '').trim();
+    const d = (jobDescription || '').trim();
     if (p) t.jobTitle = p;
     if (e) t.companyName = e;
+    if (d) t.jobDescription = d;
     jobTarget = t;
   }
 
+  let nextExperience = Array.isArray(cvData?.experience)
+    ? cvData.experience.map((item: any) => ({ ...item }))
+    : cvData?.experience;
+
+  if (tailoredPatch?.experienceUpdates && Array.isArray(nextExperience)) {
+    for (const upd of tailoredPatch.experienceUpdates) {
+      if (typeof upd?.index === 'number' && nextExperience[upd.index]) {
+        const current = { ...nextExperience[upd.index] };
+        if (typeof upd.description === 'string' && upd.description.trim()) {
+          current.descripcion = upd.description.trim();
+          current.description = upd.description.trim();
+        }
+        if (typeof upd.role === 'string' && upd.role.trim()) {
+          current.cargo = upd.role.trim();
+          current.role = upd.role.trim();
+        }
+        nextExperience[upd.index] = current;
+      }
+    }
+  }
+
+  const nextSummary = tailoredPatch?.summary?.trim() || cvData?.summary;
+  const nextObjective = tailoredPatch?.objective?.trim() || cvData?.objective;
+  const nextSkills = mergePrioritizedStringList(tailoredPatch?.prioritizedSkills, cvData?.skills);
+  const nextHardSkills = mergePrioritizedHardSkills(tailoredPatch?.prioritizedHardSkills, cvData?.hardSkills);
+
+  const nextSectionVisibility = {
+    ...(cvData?.sectionVisibility || {}),
+    ...(tailoredPatch?.summary?.trim() ? { resumen: true } : {}),
+    ...(tailoredPatch?.objective?.trim() ? { objetivo: true } : {}),
+  };
+
+  const atsKeywords = Array.isArray(tailoredPatch?.atsKeywords)
+    ? tailoredPatch.atsKeywords.map((k) => String(k || '').trim()).filter(Boolean)
+    : undefined;
+
+  const { profileSuggestions: _omitSuggestions, ...cleanSource } = cvData || {};
+
   return {
-    ...cvData,
+    ...cleanSource,
     id: undefined,
     ...(resetLetterBody ? { doc_type_id: docType } : {}),
     sourceCvTabId,
     jobTarget,
+    ...(nextSummary !== undefined ? { summary: nextSummary } : {}),
+    ...(nextObjective !== undefined ? { objective: nextObjective } : {}),
+    ...(nextExperience !== undefined ? { experience: nextExperience } : {}),
+    ...(nextSkills !== undefined ? { skills: nextSkills } : {}),
+    ...(nextHardSkills !== undefined ? { hardSkills: nextHardSkills } : {}),
+    sectionVisibility: nextSectionVisibility,
+    ...(tailoredPatch
+      ? {
+          atsMetadata: {
+            subject: buildApplicationVersionLabel(jobTarget.jobTitle, jobTarget.companyName),
+            keywords: atsKeywords || [],
+            alignmentSummary: tailoredPatch.alignmentSummary || '',
+          },
+        }
+      : {}),
     body: resetLetterBody ? { ...EMPTY_LETTER_BODY } : { ...(cvData?.body || {}) },
     version_label: label,
     versionLabel: label,

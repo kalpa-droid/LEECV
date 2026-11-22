@@ -232,6 +232,18 @@ export const DOCUMENT_TYPE_REGISTRY = {
     name: 'Currículum Vitae',
     description: 'Documento profesional de una o varias hojas, con anexo de certificados.',
     iconName: 'FileText',
+    ui: {
+      productIconId: 'cv',
+      menuTitle: 'Nuevo Currículum Vitae',
+      menuSubtitle: 'Hoja común (A4) o bolsillo',
+      menuBadgeTone: 'purple',
+    },
+    fileFormat: {
+      extension: '.leecv',
+      label: 'Currículum LEECV',
+      mimeType: 'application/vnd.leecv.document+json',
+      pwaFileHandler: true,
+    },
     route: '/crear-cv',
     defaultTitle: 'Mi Currículum Vitae',
     titlePrefix: 'CV',
@@ -269,6 +281,11 @@ export const DOCUMENT_TYPE_REGISTRY = {
     ports: {
       provides: [PORT_CONTACT_PROFILE_V1],
     },
+    seo: {
+      title: 'Crear CV Gratis y Compatible con ATS | LEECV',
+      description: 'Diseña tu currículum online en minutos y obtén un PDF listo para imprimir o enviar. Compatible con sistemas ATS. Plantillas para cada profesión.',
+      prerender: true,
+    },
   },
   cover_letter: {
     id: 'cover_letter',
@@ -276,6 +293,12 @@ export const DOCUMENT_TYPE_REGISTRY = {
     name: 'Carta de Presentación',
     description: 'Carta personalizada por vacante, generada con IA desde tu CV y la descripción del puesto.',
     iconName: 'Mail',
+    ui: {
+      productIconId: 'carta',
+      menuTitle: 'Nueva Carta de Presentación',
+      menuSubtitle: 'Redacción IA adaptada por vacante',
+      menuBadgeTone: 'accent',
+    },
     route: '/crear-carta',
     studioRoute: '/crear-cv',
     defaultTitle: 'Mi Carta de Presentación',
@@ -309,6 +332,11 @@ export const DOCUMENT_TYPE_REGISTRY = {
     legacyAliases: ['carta'],
     idPrefixes: ['cover_letter_', 'doc_cover_letter_'],
     presetPrefixes: ['carta-'],
+    seo: {
+      title: 'Crear Carta de Presentación ATS con IA | LEECV',
+      description: 'Redacta tu carta de presentación personalizada por vacante a partir de tu CV y expórtala lista para enviar.',
+      prerender: false,
+    },
   },
   business_card: {
     id: 'business_card',
@@ -316,6 +344,18 @@ export const DOCUMENT_TYPE_REGISTRY = {
     name: 'Tarjeta Profesional vCard',
     description: 'Tarjeta de presentación digital e impresa compacta con código QR e identidad visual.',
     iconName: 'CreditCard',
+    ui: {
+      productIconId: 'tarjeta',
+      menuTitle: 'Nueva Tarjeta Personal',
+      menuSubtitle: 'Formato 9 x 5 cm',
+      menuBadgeTone: 'secondary',
+    },
+    fileFormat: {
+      extension: '.leecard',
+      label: 'Tarjeta Personal LEECV',
+      mimeType: 'application/vnd.leecv.card+json',
+      pwaFileHandler: true,
+    },
     route: '/crear-tarjeta',
     defaultTitle: 'Mi Tarjeta Personal',
     titlePrefix: 'Tarjeta',
@@ -342,10 +382,15 @@ export const DOCUMENT_TYPE_REGISTRY = {
     defaultPaperSize: 'a4',
     defaultActivePresetId: 'tarjeta-personal',
     legacyAliases: ['tarjeta'],
-    idPrefixes: ['card_', 'doc_business_card_'],
+    idPrefixes: ['card_', 'doc_card_', 'doc_business_card_'],
     presetPrefixes: ['tarjeta-'],
     ports: {
       consumes: [PORT_CONTACT_PROFILE_V1],
+    },
+    seo: {
+      title: 'Crear Tarjeta Personal | LEECV',
+      description: 'Crea tu tarjeta de presentación online con código QR y descárgala en PDF listo para imprimir. Diseño profesional en segundos.',
+      prerender: true,
     },
   },
   book: {
@@ -354,6 +399,18 @@ export const DOCUMENT_TYPE_REGISTRY = {
     name: 'Libro / Folleto',
     description: 'Libro, folleto o manual listo para imprimir, doblar y armar.',
     iconName: 'BookOpen',
+    ui: {
+      productIconId: 'libro',
+      menuTitle: 'Nuevo Libro / Folleto',
+      menuSubtitle: 'En casa o en una imprenta (hojas A4 / A3)',
+      menuBadgeTone: 'warning',
+    },
+    fileFormat: {
+      extension: '.leebook',
+      label: 'Libro / Folleto LEECV',
+      mimeType: 'application/vnd.leecv.book+zip',
+      pwaFileHandler: true,
+    },
     route: '/crear-libro',
     defaultTitle: 'Mi Libro / Folleto',
     titlePrefix: 'Libro',
@@ -375,6 +432,11 @@ export const DOCUMENT_TYPE_REGISTRY = {
     idPrefixes: ['book_', 'doc_book_'],
     presetPrefixes: ['libro-', 'book'],
     legacyBooleanFlag: 'bookMode',
+    seo: {
+      title: 'Crear Libro | LEECV',
+      description: 'Maqueta tu libro digital o impreso con herramientas profesionales. Exporta en PDF de alta calidad para imprenta o distribución digital.',
+      prerender: true,
+    },
   },
   planner: {
     id: 'planner',
@@ -382,6 +444,18 @@ export const DOCUMENT_TYPE_REGISTRY = {
     name: 'Agenda / Planificador',
     description: 'Organizador personal, diario, semanal o mensual.',
     iconName: 'CalendarCheck',
+    ui: {
+      productIconId: 'agenda',
+      menuTitle: 'Nueva Agenda / Planificador',
+      menuSubtitle: 'Para imprimir en casa o en una imprenta',
+      menuBadgeTone: 'green',
+    },
+    fileFormat: {
+      extension: '.leeplan',
+      label: 'Agenda LEECV',
+      mimeType: 'application/vnd.leecv.planner+json',
+      pwaFileHandler: true,
+    },
     route: '/crear-agenda',
     defaultTitle: 'Mi Agenda / Planificador',
     titlePrefix: 'Agenda',
@@ -410,6 +484,11 @@ export const DOCUMENT_TYPE_REGISTRY = {
     legacyAliases: ['agenda'],
     idPrefixes: ['planner_', 'doc_planner_'],
     presetPrefixes: ['planner-'],
+    seo: {
+      title: 'Crear Agenda Personalizada | LEECV',
+      description: 'Diseña e imprime tu agenda personalizada por día, semana o mes en minutos.',
+      prerender: true,
+    },
   },
   invoice: {
     id: 'invoice',
@@ -417,6 +496,12 @@ export const DOCUMENT_TYPE_REGISTRY = {
     name: 'Presupuesto / Factura',
     description: 'Comprobante interno o presupuesto. 100% local y cifrado; no es una factura fiscal con CAE.',
     iconName: 'ReceiptText',
+    ui: {
+      productIconId: 'factura',
+      menuTitle: 'Nuevo Presupuesto / Factura',
+      menuSubtitle: 'Tus datos quedan en tu computadora, sin internet',
+      menuBadgeTone: 'success',
+    },
     route: '/crear-factura',
     defaultTitle: 'Presupuesto / Factura',
     titlePrefix: 'Factura',
@@ -437,6 +522,11 @@ export const DOCUMENT_TYPE_REGISTRY = {
     legacyAliases: ['factura'],
     idPrefixes: ['invoice_', 'doc_invoice_'],
     presetPrefixes: ['fact-'],
+    seo: {
+      title: 'Crear Facturas y Presupuestos Locales | LEECV FacturLee',
+      description: 'Genera comprobantes, facturas y presupuestos profesionales directamente en tu navegador con privacidad total y descarga en PDF.',
+      prerender: true,
+    },
   },
   editorial: {
     id: 'editorial',
@@ -444,6 +534,19 @@ export const DOCUMENT_TYPE_REGISTRY = {
     name: 'Publicación Editorial / Zine',
     description: 'Edición y maquetación de textos, zines, ensayos y publicaciones con índice y notas.',
     iconName: 'BookMarked',
+    ui: {
+      productIconId: 'editor',
+      menuTitle: 'Nuevo Libro o Informe (EditorLee)',
+      menuSubtitle: 'Ensayos, tesis o informes con índice automático',
+      menuBadgeTone: 'accent',
+    },
+    fileFormat: {
+      extension: '.leedoc',
+      legacyExtensions: ['.leecv-editor'],
+      label: 'Documento EditorLee',
+      mimeType: 'application/vnd.leecv.editorial+zip',
+      pwaFileHandler: true,
+    },
     route: '/crear-editor',
     defaultTitle: 'Mi Publicación Editorial',
     titlePrefix: 'EditorLee',
@@ -464,6 +567,11 @@ export const DOCUMENT_TYPE_REGISTRY = {
     legacyAliases: ['editor'],
     idPrefixes: ['editorial_', 'doc_editorial_'],
     presetPrefixes: ['edit-', 'libro-ensayo-novela', 'trabajo-practico-monografia-tesis'],
+    seo: {
+      title: 'Editor de Libros e Informes con Índice Automático | LEECV EditorLee',
+      description: 'Escribe, organiza capítulos y exporta libros, tesis e informes en PDF y Word con índice automático y diseño editorial profesional.',
+      prerender: true,
+    },
   },
 } as const satisfies Record<string, DocumentTypeManifest>;
 
@@ -608,4 +716,36 @@ export function inferDocumentTypeId(docData: any): RegisteredDocumentTypeId {
   if (byLegacyFlag) return byLegacyFlag.id;
 
   return 'cv';
+}
+
+/**
+ * Comprueba estrictamente (sin caer en fallback 'cv') si un ID pertenece al tipo indicado,
+ * por coincidencia con su `draftIdPrefix`, `doc_<id>_` o cualquiera de sus `idPrefixes`.
+ */
+export function matchesDocumentTypeId(
+  id: string | undefined | null,
+  docType: string,
+): boolean {
+  if (!id || typeof id !== 'string' || !isRegisteredDocumentTypeId(docType)) return false;
+  const cfg = DOCUMENT_TYPE_REGISTRY[docType];
+  const lower = id.toLowerCase();
+  if (lower === cfg.draftIdPrefix.toLowerCase()) return true;
+  if (lower.startsWith(`doc_${cfg.id.toLowerCase()}_`)) return true;
+  return ((cfg as DocumentTypeManifest).idPrefixes || []).some((prefix) =>
+    lower.startsWith(prefix.toLowerCase()),
+  );
+}
+
+/**
+ * Verdadero si el ID coincide explícitamente con un `DocumentTypeId` distinto al esperado.
+ * Evita que una app standalone adopte el ID de un CV (`draft_cv`, `doc_cv_*`) o de otra app.
+ */
+export function matchesAnotherDocumentTypeId(
+  id: string | undefined | null,
+  expectedDocType: string,
+): boolean {
+  if (!id || typeof id !== 'string') return false;
+  return ALL_DOCUMENT_TYPE_CONFIGS.some(
+    (entry) => entry.id !== expectedDocType && matchesDocumentTypeId(id, entry.id),
+  );
 }
