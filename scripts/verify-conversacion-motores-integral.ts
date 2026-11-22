@@ -111,12 +111,15 @@ for (const [key, iconDef] of Object.entries(ICON_REGISTRY)) {
   assert(!!iconDef, `Icon definition for '${key}' is invalid`);
 }
 
-// 8. sanitizeFontFamily safely handles Times / Serif without crashing
+// 8. sanitizeFontFamily safely resolves Times / Serif (Standard 14 Times-*) and falls back others to Helvetica-*
 const fontRes1 = sanitizeFontFamily('Times New Roman', false, true);
-assert(fontRes1.startsWith('Helvetica'), `Times font fallback returned unregistered family '${fontRes1}'`);
+assert(fontRes1 === 'Times-Italic', `Times italic font resolved unexpectedly to '${fontRes1}'`);
 
 const fontRes2 = sanitizeFontFamily('Georgia Serif', true, false);
-assert(fontRes2.startsWith('Helvetica'), `Serif font fallback returned unregistered family '${fontRes2}'`);
+assert(fontRes2 === 'Times-Bold', `Serif bold font resolved unexpectedly to '${fontRes2}'`);
+
+const fontRes3 = sanitizeFontFamily('Courier New', false, true);
+assert(fontRes3.startsWith('Helvetica'), `Unregistered font fallback returned invalid family '${fontRes3}'`);
 
 // 9. Built-in section preset IDs match catalog IDs
 const BUILTIN_PRESET_IDS = ['redes', 'publicaciones', 'referencias', 'idiomas'];

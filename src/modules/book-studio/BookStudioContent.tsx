@@ -737,7 +737,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
       }
       tabsBarProps={{
         tabs: documentTabs,
-        activeId: activeTabId,
+        activeId: bookId,
         docType: 'book',
         onSwitch: onSelectTab,
         onNavigateToDocument: (targetType, id) => onNavigateToDocument(targetType, id),

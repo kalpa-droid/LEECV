@@ -628,5 +628,116 @@ Devolvé EXCLUSIVAMENTE un JSON con:
       },
       required: ["refinedText"]
     }
+  },
+
+  suggest_job_profiles: {
+    taskId: 'suggest_job_profiles',
+    buildSystemPrompt: (cvContext: string) => `Eres un estratega de empleabilidad y analista de mercado laboral en Latinoamérica y trabajo remoto global.
+Tu tarea es leer TODO el CV Base del candidato (formación, títulos, cursos, experiencia, habilidades, herramientas y ciudad/provincia si figura) y analizar en qué roles y organizaciones se perfila con mayor solidez.
+
+REGLAS:
+1. Generá entre 12 y 18 oportunidades concretas en formato tabla (puesto + empresa/institución real o tipo de institución acorde a su región, industria y modalidad remota). Podés agrupar 2 a 4 empresas afines bajo un mismo puesto o incluir variedad de perfiles compatibles.
+2. Basate ESTRICTAMENTE en credenciales y trayectoria reales del CV. No inventes especialidades ausentes.
+3. Si figura ciudad/provincia en el CV, incluí tanto organizaciones de esa zona o país como plataformas/empresas remotas internacionales pertinentes (ej. empresas EdTech, evaluadoras/entrenadoras de IA en español, fundaciones socioeducativas, industria/minería/RSE, instituciones educativas, etc., según el perfil real del CV).
+4. Para cada oportunidad redactá:
+   - matchReason: 1 oración clara explicando por qué su perfil encaja con ese rol/empresa.
+   - suggestedDescription: un aviso/descripción de puesto realista de 3 a 5 oraciones (responsabilidades, requisitos clave y palabras clave típicas) que el candidato luego podrá revisar y editar antes de adaptar su CV.
+5. Devolvé ÚNICAMENTE JSON válido sin texto adicional.
+
+CV Base completo del candidato:
+<candidate_context>
+${cvContext}
+</candidate_context>`,
+    buildUserPrompt: (payload: any) =>
+      payload?.focusHint
+        ? `Analizá todo el CV Base y sugerí puestos y empresas donde me perfilo (enfoque opcional: ${payload.focusHint}).`
+        : 'Analizá el CV Base completo e indicame en qué puestos y empresas/instituciones me perfilo mejor.',
+    responseSchema: {
+      type: 'object',
+      properties: {
+        profiles: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              jobTitle: { type: 'string' },
+              companyName: { type: 'string' },
+              sector: { type: 'string' },
+              matchReason: { type: 'string' },
+              suggestedDescription: { type: 'string' }
+            },
+            required: ['jobTitle', 'companyName', 'matchReason', 'suggestedDescription']
+          }
+        }
+      },
+      required: ['profiles']
+    }
+  },
+
+  tailor_cv_for_application: {
+    taskId: 'tailor_cv_for_application',
+    buildSystemPrompt: (cvContext: string, _payload: any, formatContext?: string) => `Eres un especialista senior en selección de talento y sistemas ATS (Applicant Tracking Systems).
+Tu objetivo es adaptar el contenido completo de un CV Base para generar una postulación altamente alineada con un puesto, una empresa y una descripción objetivo.
+
+REGLAS ESTRICTAS:
+1. CERO INVENCIÓN DE CREDENCIALES: NO inventes empleos, empresas, títulos, certificados ni años ni porcentajes falsos que no figuren en el CV Base.
+2. SÍ optimizá redacción, vocabulario y enfoque usando términos reales del aviso/empresa cuando correspondan con tareas o conocimientos reales del candidato.
+3. Entregá:
+   - summary: Resumen profesional de 4 a 5 líneas enfocado en lo que busca la empresa.
+   - objective: Objetivo profesional breve (2 a 3 líneas) nombrando el aporte al puesto y empresa.
+   - experienceUpdates: lista con las experiencias del CV Base (indicando el índice base 0 \`index\`) reescribiendo \`description\` con verbos de acción y terminología ATS pertinente al puesto objetivo (conservando todos los hechos reales).
+   - prioritizedSkills: competencias clave del candidato ordenadas de mayor a menor afinidad con el puesto (incluyendo competencias transferibles respaldadas por sus registros).
+   - prioritizedHardSkills: herramientas / habilidades técnicas del candidato ordenadas por pertinencia con la vacante.
+   - atsKeywords: entre 12 y 20 palabras clave técnicas, de competencia y de dominio para incrustar en los metadatos ATS invisibles del archivo PDF (para superar filtros automáticos de selección).
+   - alignmentSummary: resumen breve (2 líneas) explicando qué enfocaste para este puesto.
+4. Devolvé ÚNICAMENTE JSON válido.
+${formatContext ? `\nContexto visual/formato:\n${formatContext}` : ''}
+
+CV Base completo:
+<candidate_context>
+${cvContext}
+</candidate_context>`,
+    buildUserPrompt: (payload: any) => `Postulación objetivo:
+Puesto: ${payload?.jobTitle || 'No especificado'}
+Empresa / Institución: ${payload?.companyName || 'No especificada'}
+Descripción de la búsqueda:
+<job_description>
+${payload?.jobDescription || 'Sin descripción adicional; orientar según puesto y empresa.'}
+</job_description>
+
+Analizá todas las secciones del CV Base y devolvé las mejoras para crear el nuevo CV de postulación optimizado para esta búsqueda y filtros ATS.`,
+    responseSchema: {
+      type: 'object',
+      properties: {
+        summary: { type: 'string' },
+        objective: { type: 'string' },
+        experienceUpdates: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              index: { type: 'number' },
+              role: { type: 'string', nullable: true },
+              description: { type: 'string' }
+            },
+            required: ['index', 'description']
+          }
+        },
+        prioritizedSkills: {
+          type: 'array',
+          items: { type: 'string' }
+        },
+        prioritizedHardSkills: {
+          type: 'array',
+          items: { type: 'string' }
+        },
+        atsKeywords: {
+          type: 'array',
+          items: { type: 'string' }
+        },
+        alignmentSummary: { type: 'string' }
+      },
+      required: ['summary', 'objective', 'atsKeywords', 'alignmentSummary']
+    }
   }
 };

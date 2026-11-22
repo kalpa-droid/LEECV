@@ -18,6 +18,7 @@ import {
   getDefaultTitleForDocType,
   getRouteForDocType,
   isEncryptedVaultDocumentType,
+  matchesDocumentTypeId,
 } from '../../src/shared/core/capabilities/capabilityRegistry';
 import { APP_SURFACE_MANIFEST } from '../../src/shared/core/capabilities/appSurfaceManifest';
 import { DOC_TITLE_PREFIX } from '../../src/shared/core/documents/documentEngine/titleEngine';
@@ -35,6 +36,10 @@ import {
   APP_KNOWLEDGE_BY_ID,
   composeAssistantSystemPrompt,
 } from '../../api/_lib/aiTasks/appKnowledge/index';
+import { ICON_REGISTRY } from '../../src/shared/core/pdf-engine/layers/icons/iconRegistry';
+import { resolveDocumentIdWithHandoff } from '../../src/shared/core/documents/useRegisterDocumentTab';
+import { getPackageFormatSpec } from '../../src/shared/core/storage/leecvPackageCodec';
+import { APP_REGISTRY } from '../../src/app/appRegistry';
 
 describe('Suite de Conformidad de Plataforma — Invariantes heredadas por todas las apps', () => {
   it('ningún tipo purgado existe en el registro ni en la superficie', () => {
@@ -92,6 +97,26 @@ describe('Suite de Conformidad de Plataforma — Invariantes heredadas por todas
       expect(composeAssistantSystemPrompt(docTypeId).length).toBeGreaterThan(200);
       expect(getAllTips(docTypeId).length).toBeGreaterThan(0);
       expect(pickAlwaysTip(undefined, [], docTypeId)).toBeTruthy();
+    });
+
+    it('declara ícono de producto, título SEO y aislamiento anti-fuga de pestaña/formato portable', () => {
+      expect(ICON_REGISTRY[manifest.ui.productIconId]).toBeDefined();
+      expect(manifest.ui.menuTitle.length).toBeGreaterThan(0);
+      expect(manifest.ui.menuSubtitle.length).toBeGreaterThan(0);
+      expect(manifest.seo?.title.trim().length).toBeGreaterThan(0);
+
+      if (!APP_REGISTRY[docTypeId].usesSharedCvWorkspace) {
+        const fromDocCv = resolveDocumentIdWithHandoff('doc_cv_999', docTypeId);
+        const fromDraftCv = resolveDocumentIdWithHandoff('draft_cv', docTypeId);
+        expect(fromDocCv).not.toBe('doc_cv_999');
+        expect(fromDraftCv).not.toBe('draft_cv');
+        expect(matchesDocumentTypeId(fromDocCv, docTypeId)).toBe(true);
+        expect(matchesDocumentTypeId(fromDraftCv, docTypeId)).toBe(true);
+      }
+
+      if ('fileFormat' in manifest && manifest.fileFormat) {
+        expect(getPackageFormatSpec(docTypeId).extension).toBe(manifest.fileFormat.extension);
+      }
     });
   });
 });

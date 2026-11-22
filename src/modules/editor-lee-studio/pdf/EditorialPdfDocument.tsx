@@ -27,6 +27,7 @@ import {
   EditorialTocEntry,
 } from '../domain/editorialTypes';
 import { registerPdfCategoryExporter } from '../../../shared/core/pdf-engine/pdfCategoryRegistry';
+import { sanitizeFontFamily } from '../../../shared/core/pdf-engine/layers/typography/pdfFontRegistry';
 import { downloadBlob } from '../../../shared/core/utils/downloadUtils';
 
 // Tipos auxiliares para el render PDF
@@ -82,44 +83,88 @@ function formatTextoLiso(text: string): string {
     .trim();
 }
 
+interface EditorialDocumentDesign extends EditorialDesignConfig {
+  pageSizeId?: string;
+  marginTop?: number;
+  marginBottom?: number;
+  marginLeft?: number;
+  marginRight?: number;
+  gutter?: number;
+}
+
+const AnchorMarker = ({ id, active }: { id: string; active?: boolean }) =>
+  active ? <Text style={{ fontSize: 1, color: '#ffffff', opacity: 0.001 }}>{id}</Text> : null;
+
 export const EditorialPdfDocument: React.FC<{
   data: {
     metadata: EditorialMetadata;
-    design: EditorialDesignConfig;
+    design: EditorialDocumentDesign;
     sections: EditorialSection[];
     cover?: { mode: EditorialCoverMode; [key: string]: any };
+    legalFields?: EditorialLegalFields;
     tocConfig: EditorialTocConfig;
     manifestRules: EditorialManifestRules;
   };
   preset: EditorialPresetId;
-}> = ({ data, preset }) => {
+  interactiveAnchors?: boolean;
+}> = ({ data, preset, interactiveAnchors = false }) => {
   const pdfPreset = getEditorialPreset(preset) || DEFAULT_EDITORIAL_PRESET;
+  const rawDesign: EditorialDocumentDesign = (data?.design || {}) as EditorialDocumentDesign;
+  const resolvedPageSizeId = rawDesign.pageSizeId || rawDesign.pageSize || pdfPreset.pageSize || 'a4';
+  const resolvedFontSize = Number(rawDesign.typography?.fontSize) > 0 ? Number(rawDesign.typography.fontSize) : pdfPreset.typography.fontSize;
+  const resolvedLineHeight = Number(rawDesign.typography?.lineHeight) > 0 ? Number(rawDesign.typography.lineHeight) : pdfPreset.typography.lineHeight;
+  const rawFontFamily = rawDesign.typography?.fontFamily || pdfPreset.typography.fontFamily;
+
+  const baseFont = sanitizeFontFamily(rawFontFamily, false, false);
+  const boldFont = sanitizeFontFamily(rawFontFamily, true, false);
+  const italicFont = sanitizeFontFamily(rawFontFamily, false, true);
+
+  const visibleSections = (data?.sections || []).filter((s) => s.visible !== false);
+
   const model: EditorialRenderModel = {
-    title: data.metadata.title,
+    title: data?.metadata?.title || 'Mi obra',
     preset: pdfPreset,
-    design: data.design,
-    sections: data.sections.map((s) => ({
+    design: rawDesign,
+    sections: visibleSections.map((s) => ({
       id: s.id,
       title: s.title,
-      records: s.records,
+      records: Array.isArray(s.records) ? s.records : [],
     })),
-    cover: data.cover || {
-      mode: 'libro',
-      title: data.metadata.title,
+    cover: data?.cover || {
+      mode: pdfPreset.coverMode || 'libro',
+      title: data?.metadata?.title || 'Mi obra',
     },
-    tocConfig: data.tocConfig,
-    manifestRules: data.manifestRules,
+    tocConfig: data?.tocConfig || { enabled: false, title: 'Índice', showSubtitles: true, position: 'tras-caratula' },
+    manifestRules: data?.manifestRules || {
+      preserveScenes: true,
+      preservePoems: true,
+      preserveCitations: true,
+      typographyCleanup: true,
+      qrQuietZone: 4,
+      qrMinSize: 20,
+    },
   };
+
+  const marginTopPt = Math.max(20, (rawDesign.marginTop ?? rawDesign.margins?.top ?? 20) * 2.0);
+  const marginBottomPt = Math.max(28, (rawDesign.marginBottom ?? rawDesign.margins?.bottom ?? 20) * 2.0);
+  const marginLeftPt = Math.max(24, (rawDesign.gutter ?? rawDesign.marginLeft ?? rawDesign.margins?.left ?? 20) * 1.8);
+  const marginRightPt = Math.max(24, (rawDesign.marginRight ?? rawDesign.margins?.right ?? 20) * 1.8);
+  const resolvedPageSize = toPdfPageSize(resolvedPageSizeId);
 
   const styles = StyleSheet.create({
     page: {
-      fontFamily: model.design.typography.fontFamily,
+      fontFamily: baseFont,
       backgroundColor: '#FFFFFF',
-      color: '#000000',
-      padding: 26,
-      fontSize: model.design.typography.fontSize,
+      color: '#111827',
+      paddingTop: marginTopPt,
+      paddingBottom: marginBottomPt,
+      paddingLeft: marginLeftPt,
+      paddingRight: marginRightPt,
+      fontSize: resolvedFontSize,
     },
     coverPage: {
+      fontFamily: baseFont,
+      backgroundColor: '#FFFFFF',
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
@@ -128,65 +173,77 @@ export const EditorialPdfDocument: React.FC<{
       textAlign: 'center',
     },
     coverTitle: {
-      fontSize: 32,
-      fontFamily: 'Helvetica-Bold',
+      fontSize: 28,
+      fontFamily: boldFont,
       marginBottom: 12,
-      color: '#333333',
+      color: '#111827',
     },
     coverSubtitle: {
-      fontSize: 16,
-      color: '#666666',
+      fontSize: 15,
+      fontFamily: italicFont,
+      color: '#4B5563',
       marginBottom: 20,
     },
     coverAuthor: {
-      fontSize: 14,
-      color: '#888888',
+      fontSize: 13,
+      fontFamily: baseFont,
+      color: '#374151',
       marginBottom: 8,
+    },
+    coverMetaNote: {
+      fontSize: 10,
+      fontFamily: baseFont,
+      color: '#6B7280',
+      marginTop: 6,
     },
     sectionTitle: {
       fontSize: 18,
-      fontFamily: 'Helvetica-Bold',
-      marginTop: 20,
+      fontFamily: boldFont,
+      marginTop: 12,
       marginBottom: 10,
-      color: '#333333',
+      color: '#111827',
     },
     bodyText: {
-      fontSize: model.design.typography.fontSize,
-      lineHeight: model.design.typography.lineHeight,
+      fontFamily: baseFont,
+      fontSize: resolvedFontSize,
+      lineHeight: resolvedLineHeight,
       marginBottom: 10,
     },
     sectionDivider: {
       borderTopWidth: 1,
       borderTopColor: '#E5E7EB',
-      marginVertical: 16,
+      marginVertical: 14,
     },
     footer: {
       position: 'absolute',
       bottom: 14,
-      left: 26,
-      right: 26,
+      left: marginLeftPt,
+      right: marginRightPt,
       borderTopWidth: 0.6,
-      borderTopColor: '#9CA3AF',
+      borderTopColor: '#D1D5DB',
       paddingTop: 4,
-      fontSize: 10,
-      color: 'gray-500',
+      fontSize: 9,
+      fontFamily: baseFont,
+      color: '#6B7280',
       textAlign: 'center',
     },
     headerEven: {
       position: 'absolute',
-      top: 26,
-      left: 26,
-      right: 26,
+      top: 16,
+      left: marginLeftPt,
+      right: marginRightPt,
       fontSize: 9,
-      color: 'gray-500',
+      fontFamily: baseFont,
+      color: '#6B7280',
     },
     headerOdd: {
       position: 'absolute',
-      top: 26,
-      left: 26,
-      right: 26,
+      top: 16,
+      left: marginLeftPt,
+      right: marginRightPt,
       fontSize: 9,
-      color: 'gray-500',
+      fontFamily: baseFont,
+      color: '#6B7280',
     },
     table: {
       marginTop: 8,
@@ -195,10 +252,11 @@ export const EditorialPdfDocument: React.FC<{
     },
     tableHeader: {
       backgroundColor: '#3F51B5',
-      color: 'white',
+      color: '#FFFFFF',
       paddingVertical: 3,
       paddingHorizontal: 4,
       fontSize: 9,
+      fontFamily: boldFont,
     },
     tableRow: {
       paddingVertical: 3,
@@ -215,7 +273,7 @@ export const EditorialPdfDocument: React.FC<{
     },
     calloutTitle: {
       fontSize: 10,
-      fontFamily: 'Helvetica-Bold',
+      fontFamily: boldFont,
       marginBottom: 4,
     },
     listItem: {
@@ -227,7 +285,8 @@ export const EditorialPdfDocument: React.FC<{
     },
     imageCaption: {
       fontSize: 9,
-      color: 'gray-500',
+      fontFamily: italicFont,
+      color: '#6B7280',
       textAlign: 'center',
       marginTop: 4,
     },
@@ -240,7 +299,7 @@ export const EditorialPdfDocument: React.FC<{
     },
     metadataLabel: {
       fontSize: 9,
-      color: 'gray-500',
+      color: '#6B7280',
       marginRight: 4,
     },
     metadataValue: {
@@ -248,22 +307,78 @@ export const EditorialPdfDocument: React.FC<{
     },
   });
 
-  // Generar páginas de cubierta
-  const coverPage = model.cover.mode === 'libro' ? (
-    <Page size="A4" style={styles.coverPage}>
-      <Text style={styles.coverTitle}>{formatTextoLiso(model.cover.title || model.title)}</Text>
-      {model.cover.subtitle && <Text style={styles.coverSubtitle}>{formatTextoLiso(model.cover.subtitle)}</Text>}
-      {model.cover.author && <Text style={styles.coverAuthor}>{formatTextoLiso(model.cover.author)}</Text>}
+  const showCover = model.cover.mode && model.cover.mode !== 'sin-caratula';
+  const coverTitleText = data?.metadata?.title || model.cover.title || model.title;
+  const coverSubtitleText = data?.metadata?.subtitle || model.cover.subtitle;
+  const coverAuthorText = data?.metadata?.author || model.cover.author;
+  const coverEditorialText = data?.metadata?.editorial || model.cover.editor;
+
+  // Generar páginas de cubierta (para libro, académica y ejecutiva)
+  const coverPage = showCover ? (
+    <Page size={resolvedPageSize} style={styles.coverPage}>
+      <AnchorMarker id="ANCHOR_START:editorial_portada" active={interactiveAnchors} />
+      <AnchorMarker id="ANCHOR_START:editorial_inicio" active={interactiveAnchors} />
+      <Text style={styles.coverTitle}>{formatTextoLiso(coverTitleText)}</Text>
+      {coverSubtitleText && <Text style={styles.coverSubtitle}>{formatTextoLiso(coverSubtitleText)}</Text>}
+      {coverAuthorText && <Text style={styles.coverAuthor}>{formatTextoLiso(coverAuthorText)}</Text>}
+      {coverEditorialText && <Text style={styles.coverMetaNote}>{formatTextoLiso(coverEditorialText)}</Text>}
+      {data?.legalFields?.institucion && (
+        <Text style={styles.coverMetaNote}>{formatTextoLiso(data.legalFields.institucion)}</Text>
+      )}
+      {data?.legalFields?.catedra && (
+        <Text style={styles.coverMetaNote}>{formatTextoLiso(data.legalFields.catedra)}</Text>
+      )}
       {model.cover.qrCodeUrl && (
         <Image style={styles.qrCode} src={model.cover.qrCodeUrl} />
       )}
+      <AnchorMarker id="ANCHOR_END:editorial_portada" active={interactiveAnchors} />
+    </Page>
+  ) : null;
+
+  const showToc = Boolean(model.tocConfig?.enabled && model.sections.length > 0);
+  const tocPageNumberOffset = (showCover ? 1 : 0) + (showToc ? 1 : 0);
+
+  // Generar página de índice automático si está habilitado
+  const tocPage = showToc ? (
+    <Page key="toc" size={resolvedPageSize} style={styles.page}>
+      <AnchorMarker id="ANCHOR_START:editorial_toc" active={interactiveAnchors} />
+      <Text style={{ fontSize: 18, fontFamily: boldFont, marginBottom: 16 }}>
+        {model.tocConfig?.title || 'Índice Automático'}
+      </Text>
+      {model.sections.map((section, si) => (
+        <React.Fragment key={`sec-${section.id}`}>
+          <Text style={{ fontSize: 13, fontFamily: boldFont, marginBottom: 6 }}>
+            {section.title || `Sección ${si + 1}`} — Pág. {tocPageNumberOffset + si + 1}
+          </Text>
+          {model.tocConfig.showSubtitles !== false &&
+            section.records
+              .filter((r) => r.type === 'subtitle')
+              .map((record, ri) => (
+                <Text
+                  key={`rec-${section.id}-${ri}`}
+                  style={{ fontSize: 11, fontFamily: baseFont, color: '#4B5563', marginLeft: 14, marginBottom: 4 }}
+                >
+                  {record.content || record.title || 'Apartado'}
+                </Text>
+              ))}
+        </React.Fragment>
+      ))}
+      <AnchorMarker id="ANCHOR_END:editorial_toc" active={interactiveAnchors} />
     </Page>
   ) : null;
 
   // Generar páginas de sección
   const sectionPages = model.sections.map((section, secIndex) => (
-    <Page key={section.id} size={toPdfPageSize(model.design.pageSize)} style={styles.page}>
-      <Text style={styles.sectionTitle}>{formatTextoLiso(section.title)}</Text>
+    <Page key={section.id} size={resolvedPageSize} style={styles.page}>
+      <AnchorMarker id={`ANCHOR_START:${section.id}`} active={interactiveAnchors} />
+      {secIndex === 0 && <AnchorMarker id="ANCHOR_START:editorial_secciones" active={interactiveAnchors} />}
+      {secIndex === model.sections.length - 1 && (
+        <>
+          <AnchorMarker id="ANCHOR_START:editorial_diseño" active={interactiveAnchors} />
+          <AnchorMarker id="ANCHOR_START:editorial_metadata" active={interactiveAnchors} />
+        </>
+      )}
+      <Text style={styles.sectionTitle}>{formatTextoLiso(section.title || `Sección ${secIndex + 1}`)}</Text>
       {section.records.length > 0 && (
         <View style={styles.sectionDivider} />
       )}
@@ -273,25 +388,25 @@ export const EditorialPdfDocument: React.FC<{
             <Text key={recIndex} style={styles.bodyText}>{formatTextoLiso(record.content || '')}</Text>
           );
           case 'subtitle': return (
-            <Text key={recIndex} style={{ ...styles.bodyText, fontFamily: 'Helvetica-Bold', fontSize: 16 }}>
+            <Text key={recIndex} style={{ ...styles.bodyText, fontFamily: boldFont, fontSize: Math.round(resolvedFontSize * 1.35) }}>
               {formatTextoLiso(record.content || '')}
             </Text>
           );
           case 'quote': return (
-            <View style={styles.callout}>
-              <Text style={styles.calloutTitle}>{formatTextoLiso(record.content || '')}</Text>
-              {record.quoteAttribution && <Text style={{ fontSize: 9, color: 'gray-500' }}>— {formatTextoLiso(record.quoteAttribution)}</Text>}
+            <View key={recIndex} style={styles.callout}>
+              <Text style={{ ...styles.calloutTitle, fontFamily: italicFont }}>{formatTextoLiso(record.content || '')}</Text>
+              {record.quoteAttribution && <Text style={{ fontSize: 9, fontFamily: baseFont, color: '#6B7280' }}>— {formatTextoLiso(record.quoteAttribution)}</Text>}
             </View>
           );
           case 'callout': return (
-            <View style={styles.callout}>
+            <View key={recIndex} style={styles.callout}>
               <Text style={styles.calloutTitle}>{formatTextoLiso(record.content || '')}</Text>
             </View>
           );
           case 'list': return (
             <View key={recIndex} style={styles.listItem}>
-              {formatTextoLiso(record.content || '').split('\n').map((line, li) => (
-                <Text key={li} style={styles.listBullet}>{line}</Text>
+              {String(record.content || '').split('\n').filter(Boolean).map((line, li) => (
+                <Text key={li} style={styles.listBullet}>• {formatTextoLiso(line)}</Text>
               ))}
             </View>
           );
@@ -301,8 +416,8 @@ export const EditorialPdfDocument: React.FC<{
             return (
               <View key={recIndex} style={styles.table}>
                 <View style={styles.tableHeader}>
-                  {headers.map((h) => (
-                    <Text style={{ ...styles.tableHeader, marginRight: 8 }}>{h}</Text>
+                  {headers.map((h, hi) => (
+                    <Text key={hi} style={{ ...styles.tableHeader, marginRight: 8 }}>{h}</Text>
                   ))}
                 </View>
                 {rows.map((row, ri) => (
@@ -317,11 +432,10 @@ export const EditorialPdfDocument: React.FC<{
           }
           case 'image': {
             const imgSrc = record.imagePath || '';
-            const dpi = record.imageDpi || 150;
             const caption = record.imageCaption || '';
             return (
               <View key={recIndex} style={{ textAlign: 'center', margin: 8 }}>
-                {imgSrc && <Image style={{ width: 100, height: 100, objectFit: 'contain' }} src={imgSrc} />}
+                {imgSrc && <Image style={{ maxWidth: 360, maxHeight: 260, objectFit: 'contain', alignSelf: 'center' }} src={imgSrc} />}
                 {caption && <Text style={styles.imageCaption}>{formatTextoLiso(caption)}</Text>}
               </View>
             );
@@ -331,7 +445,6 @@ export const EditorialPdfDocument: React.FC<{
             const year = record.bibYear || '';
             const title = record.bibTitle || '';
             const editorial = record.bibEditorial || '';
-            const style = record.bibStyle || 'tradicional';
             const formatted = `${author} (${year}). "${title}". ${editorial || ''}`.trim();
             return (
               <Text key={recIndex} style={styles.bodyText}>
@@ -344,55 +457,38 @@ export const EditorialPdfDocument: React.FC<{
             if (record.qrCode) return (
               <Image key={recIndex} style={styles.qrCode} src={record.qrCode} />
             );
-            return <Text key={recIndex} style={{ opacity: 0 }} />; // spacer invisible
+            return <Text key={recIndex} style={{ opacity: 0 }} />;
           }
           default: return <Text key={recIndex} style={styles.bodyText}>{formatTextoLiso(record.content || '')}</Text>;
         }
       })}
+      {rawDesign.pageNumbers !== false && (
+        <Text
+          fixed
+          style={styles.footer}
+          render={({ pageNumber, totalPages }) =>
+            `${model.title} · Página ${pageNumber} de ${totalPages}`
+          }
+        />
+      )}
+      <AnchorMarker id={`ANCHOR_END:${section.id}`} active={interactiveAnchors} />
+      {secIndex === 0 && <AnchorMarker id="ANCHOR_END:editorial_secciones" active={interactiveAnchors} />}
     </Page>
   ));
 
-  // Generar página de índice automático si está habilitado
-  const tocPage = model.tocConfig.enabled ? (
-    <Page key="toc" size={toPdfPageSize(model.design.pageSize)} style={styles.page}>
-      <Text style={{ fontSize: 18, fontFamily: 'Helvetica-Bold', marginBottom: 20 }}>Índice Automático</Text>
-      {model.sections.map((section, si) => (
-        <React.Fragment key={`sec-${section.id}`}>
-          <Text style={{ fontSize: 14, marginBottom: 10 }}>
-            {section.title}
-          </Text>
-          {section.records
-            .filter((r) => r.type !== 'callout' && r.type !== 'image')
-            .map((record, ri) => {
-              const label = record.title || record.content?.slice(0, 30) || 'Sin título';
-              return (
-                <Text key={`rec-${section.id}-${ri}`} style={{ fontSize: 12, marginBottom: 6 }}>
-                  {label} -- Página {si + 2}
-                </Text>
-              );
-            })}
-        </React.Fragment>
-      ))}
+  const fallbackEmptyPage = !coverPage && !tocPage && sectionPages.length === 0 ? (
+    <Page size={resolvedPageSize} style={styles.page}>
+      <Text style={styles.sectionTitle}>{formatTextoLiso(model.title)}</Text>
+      <Text style={styles.bodyText}>Agregá secciones o activá la carátula desde el panel lateral para comenzar tu publicación.</Text>
     </Page>
   ) : null;
 
-  // Generar encabezados par/impar
-  const headerByPage = (pageIndex: number) =>
-    pageIndex % 2 === 0 ? styles.headerEven : styles.headerOdd;
-
   return (
-    <Document title={model.title} author={model.cover.title || 'EditorLee'}>
+    <Document title={model.title} author={coverAuthorText || 'EditorLee'} creator="LEECV" producer="LEECV">
       {coverPage}
-      {sectionPages}
       {tocPage}
-      {/* Página final con footer consistente */}
-      <Page size={toPdfPageSize(model.design.pageSize)} style={styles.page}>
-        <View style={styles.footer}>
-          <Text style={{ fontSize: 9, color: 'gray-500', textAlign: 'center' }}>
-            Documento generado en LEECV · {model.cover.mode || 'Libro'} · {new Date().toLocaleDateString('es-AR')}
-          </Text>
-        </View>
-      </Page>
+      {sectionPages}
+      {fallbackEmptyPage}
     </Document>
   );
 };
@@ -405,6 +501,7 @@ registerPdfCategoryExporter('editorial', async (cvData, preset) => {
   const docElement = React.createElement(EditorialPdfDocument, {
     data: draft,
     preset: preset.id as any,
+    interactiveAnchors: false,
   });
   const blob = await pdf(docElement as any).toBlob();
   const safeTitle = (draft.metadata?.title || 'Publicacion-Editorial')

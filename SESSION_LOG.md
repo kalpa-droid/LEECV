@@ -1,3 +1,14 @@
+## [2026-11-21] - Flujo de Postulaciones IA/ATS, Importación Certificados, Mover Registros, Archivos Tipo Word y Visor EditorLee (V2.29.0)
+
+**Resumen:**
+- **Fase 1 — Hotfix `Times New Roman` y Visor EditorLee**: Habilitadas `Times-Roman` (+ Bold/Italic/BoldItalic) en `fontSanitizer.ts`; corregidos `editorialPresetCatalog.ts` y `EditorialPdfDocument.tsx` (`sanitizeFontFamily`, `#6B7280`, tamaño de hoja unificado, carátula multipreset y anclas `ANCHOR_START`/`ANCHOR_END`); habilitado `anchorMap` universal en `pdfAnchorEngine.ts`; integrado `ScaledPaperSheet` + `quantizeRasterZoom` + foco al tocar secciones en `EditorLeeStudioContent.tsx`.
+- **Fase 2 — Panel "Importar datos" en CV**: Añadida apertura de archivos de respaldo (`.json`/`.leecv`/`.zip`) en `ImportDataSection.tsx`, acción backend `extract-certificate` en `api/cv-import-api.ts` y modal `ImportCertificateAiModal.tsx` con selector de sección y pregunta para adjuntar imagen en `Certificados`.
+- **Fase 3 — Reclasificación de Registros**: Creado motor puro `recordReclassificationEngine.ts` con familias compatibles estrictas (bloqueando `redes` y `referencias`) y preservación en Descripción de campos extra; integrado botón `"Mover a…"` en `RepeatableSection.tsx`.
+- **Fase 4 — Postulaciones IA/ATS + Carta Gratuita + Lidio**: Agregadas tareas `suggest_job_profiles` y `tailor_cv_for_application` en `api/_lib/aiTasks/catalog.ts`; rediseñado `JobTargetSection.tsx` + `PrepareApplicationModal.tsx` (Puesto "Ninguno"/Empresa "Ninguna" en CV Base, botón "Analizar en qué me perfilo", tabla de oportunidades y modal editable de descripción antes de crear/optimizar el CV derivado); metadatos ATS nativos `<Document subject keywords>` en `pdfAtsMetadataBuilder.ts` + `TemplateRenderer.tsx`; Carta de Presentación desbloqueada en CV Base, con botón directo desde Vacante, sin consumo de créditos y exportación siempre separada (`ApplicationCoverLetterSection.tsx`, `CoverLetterExportModal.tsx`); conocimiento actualizado de Lidio.
+- **Fase 5 — Archivos portátiles estilo Word y PWA**: Creados `leecvPackageCodec.ts`, `nativeFileDocumentService.ts` y `fileLaunchHandler.ts`; integrados guardado/apertura `.leedoc` con `Ctrl+S` y bloques `+ Imagen` en `EditorLeeStudioContent.tsx`, opción `.leecv` en `JsonDownloadModal.tsx`, y `file_handlers` / `launch_handler` con iconos de rayo en `public/manifest.json` y `src/app/App.tsx`.
+
+---
+
 ## [2026-11-21] - Fases 8, 9 y 10: Cápsulas Verticales (0/0 AST), card-studio independiente y Fábrica de Apps (V2.28.0)
 
 **Resumen:**

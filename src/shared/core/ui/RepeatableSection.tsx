@@ -1,7 +1,15 @@
-import React from 'react';
-import { Plus, Trash2, Copy } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, Trash2, Copy, ArrowRightLeft } from 'lucide-react';
 import { useConfirm } from './ConfirmDialog';
-import { elevationSystem, radius } from '../uiDesignSystem';
+import { Modal } from './Modal';
+import { useToast } from './Toast';
+import { button, elevationSystem, radius } from '../uiDesignSystem';
+import {
+  getCompatibleTargetSections,
+  planRecordMove,
+  executeRecordMove,
+  type PlannedRecordMove,
+} from '../sections/recordReclassificationEngine';
 
 const getNestedValue = (obj: any, path: string) => {
   if (!path) return undefined;
@@ -61,9 +69,41 @@ export function RepeatableSection({
   renderItem
 }: any) {
   const { confirm } = useConfirm();
+  const { showSuccess } = useToast();
+  const [pendingMove, setPendingMove] = useState<{ itemIndex: number; plan: PlannedRecordMove } | null>(null);
+  const compatibleTargets = sectionKey ? getCompatibleTargetSections(sectionKey, cvData) : [];
   const isVisible = cvData?.sectionVisibility?.[sectionKey] !== false;
   const rawItems = getNestedValue(cvData, fieldName);
   const items = Array.isArray(rawItems) ? rawItems : [];
+
+  const applyRecordMove = (itemIndex: number, targetSectionKey: string, mergeOverflowIntoDescription: boolean) => {
+    let targetLabel = targetSectionKey;
+    setCvData((prev: any) => {
+      const res = executeRecordMove(prev, {
+        sourceSectionKey: sectionKey,
+        sourceFieldName: fieldName,
+        itemIndex,
+        targetSectionKey,
+        mergeOverflowIntoDescription,
+      });
+      targetLabel = res.targetLabel;
+      return res.updatedCvData;
+    });
+    setPendingMove(null);
+    showSuccess(`Registro movido a ${targetLabel}.`);
+  };
+
+  const handleRequestMove = (idx: number, targetSectionKey: string) => {
+    if (!targetSectionKey) return;
+    const item = items[idx];
+    const plan = planRecordMove(item, sectionKey, targetSectionKey, cvData);
+    if (!plan.compatible) return;
+    if (plan.isLossless) {
+      applyRecordMove(idx, targetSectionKey, true);
+      return;
+    }
+    setPendingMove({ itemIndex: idx, plan });
+  };
 
   const handleToggleVisibility = () => {
     setCvData((prev: any) => ({
@@ -187,6 +227,33 @@ export function RepeatableSection({
                   {itemTitlePrefix} #{idx + 1}
                 </span>
                 <div className="flex items-center gap-1">
+                  {compatibleTargets.length > 0 && (
+                    <label
+                      className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] hover:border-[var(--color-accent-base)] text-[11px] font-bold transition cursor-pointer"
+                      title="Mover este registro a otra sección compatible"
+                    >
+                      <ArrowRightLeft className="w-3 h-3 text-[var(--color-accent-text)] shrink-0" />
+                      <select
+                        value=""
+                        aria-label={`Mover ${itemTitlePrefix} #${idx + 1} a otra sección`}
+                        onChange={(e) => {
+                          const targetKey = e.target.value;
+                          e.currentTarget.value = '';
+                          handleRequestMove(idx, targetKey);
+                        }}
+                        className="bg-transparent outline-none cursor-pointer text-[11px] font-bold text-[var(--ui-text-primary)] max-w-[115px]"
+                      >
+                        <option value="" disabled>
+                          Mover a…
+                        </option>
+                        {compatibleTargets.map((target) => (
+                          <option key={target.sectionKey} value={target.sectionKey} className="bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)]">
+                            {target.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
                   <button
                     type="button"
                     onClick={() => handleDuplicateItem(idx)}
@@ -218,6 +285,62 @@ export function RepeatableSection({
         <div className="pt-2">
           {manualAdjustment || (sectionKey && renderTrailingSlot?.(sectionKey))}
         </div>
+      )}
+
+      {pendingMove && (
+        <Modal
+          isOpen={true}
+          onClose={() => setPendingMove(null)}
+          title={`Mover registro a ${pendingMove.plan.targetLabel}`}
+          icon={<ArrowRightLeft className="w-5 h-5 text-[var(--color-accent-text)]" />}
+          size="md"
+          footer={
+            <div className="w-full flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setPendingMove(null)}
+                className={`${button.base} ${button.ghost} text-xs px-3 py-1.5`}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  applyRecordMove(pendingMove.itemIndex, pendingMove.plan.targetSectionKey, false)
+                }
+                className={`${button.base} ${button.secondary} text-xs px-3 py-1.5`}
+              >
+                Mover sin campos extra
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  applyRecordMove(pendingMove.itemIndex, pendingMove.plan.targetSectionKey, true)
+                }
+                className={`${button.base} ${button.primary} text-xs px-3 py-1.5`}
+              >
+                Mover y guardar datos en Descripción
+              </button>
+            </div>
+          }
+        >
+          <div className="space-y-3 text-xs text-[var(--ui-text-primary)]">
+            <p className="text-[var(--ui-text-secondary)] leading-relaxed">
+              Los siguientes datos existen en <strong>{pendingMove.plan.sourceLabel}</strong> pero no tienen un casillero propio en{' '}
+              <strong>{pendingMove.plan.targetLabel}</strong>:
+            </p>
+            <ul className="space-y-1.5 p-3 rounded-[var(--ui-radius-control)] border border-[var(--ui-border)] bg-[var(--ui-bg-panel)]">
+              {pendingMove.plan.overflowSummary.map((entry) => (
+                <li key={entry.fieldId}>
+                  <strong>{entry.label}:</strong> {entry.value}
+                </li>
+              ))}
+            </ul>
+            <p className="text-[var(--ui-text-secondary)]">
+              Podés conservarlos agregados al final de la <strong>Descripción</strong> en la nueva sección para no perder información.
+            </p>
+          </div>
+        </Modal>
       )}
     </div>
   );

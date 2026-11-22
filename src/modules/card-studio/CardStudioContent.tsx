@@ -293,7 +293,7 @@ export const CardStudioContent: React.FC<CardStudioContentProps> = ({
         }
         tabsBarProps={{
           tabs: documentTabs,
-          activeId: activeTabId,
+          activeId: cardId,
           docType: 'business_card',
           onSwitch: onSelectTab,
           onNavigateToDocument: (targetType, id) => onNavigateToDocument(targetType, id),

@@ -90,6 +90,17 @@ function fillWhite(ctx: CanvasRenderingContext2D, width: number, height: number)
   ctx.fillRect(0, 0, width, height);
 }
 
+/** Prepara un canvas opaco blanco listo para rasterizar una página de PDF sin fondo negro. */
+export function prepareOpaquePdfCanvas(width: number, height: number): { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } {
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.floor(width);
+  canvas.height = Math.floor(height);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('No se pudo preparar la vista previa del documento.');
+  fillWhite(ctx, canvas.width, canvas.height);
+  return { canvas, ctx };
+}
+
 function scaleToCanvas(
   source: CanvasImageSource,
   sourceWidth: number,

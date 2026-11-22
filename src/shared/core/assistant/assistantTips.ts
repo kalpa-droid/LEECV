@@ -336,28 +336,28 @@ export const TAB_TIPS: Record<string, AssistantTip[]> = {
   vacante: [
     {
       id: 'tip-vacante-1',
-      title: 'Pegá la oferta acá',
-      body: 'Cargá puesto y empresa: la carta se escribirá contra esta vacante.',
+      title: 'Analizá en qué te perfilás',
+      body: 'Con tu CV Base completo podés tocar "Analizar en qué me perfilo" para descubrir puestos y empresas acordes y crear cada postulación optimizada.',
       targetTab: 'vacante',
     },
     {
       id: 'tip-vacante-2',
       title: 'Tu CV base no se toca',
-      body: 'Cada oferta merece su copia independiente: creá la postulación y adaptá esa copia. Tu CV base queda intacto siempre.',
+      body: 'Cada postulación abre una copia independiente adaptada por IA al puesto y filtros ATS, manteniendo intacto tu CV Base.',
       targetTab: 'vacante',
     },
   ],
   carta: [
     {
       id: 'tip-carta-1',
-      title: 'La carta no repite el CV',
-      body: 'Contá en 3 párrafos por qué este puesto es para vos: quién sos, qué lograste y qué aportás.',
+      title: 'Gratis y en archivo separado',
+      body: 'La carta toma todo tu CV y la vacante actual. No consume créditos y siempre se descarga aparte del CV.',
       targetTab: 'carta',
     },
     {
       id: 'tip-carta-2',
-      title: 'Primer borrador con IA',
-      body: 'Generá una base con IA y después ajustala con tu voz.',
+      title: 'Completado automático con IA',
+      body: 'Si cargaste Puesto y Empresa en Vacante Objetivo, podés generar saludo, párrafos y despedida en un clic y editarlos a gusto.',
       targetTab: 'carta',
     },
   ],

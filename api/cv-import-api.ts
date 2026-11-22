@@ -10,6 +10,72 @@ import { isFragmentEffectivelyEmpty } from './_lib/cvImportGate.js';
 
 export const maxDuration = 60;
 
+async function executeImportAiCascade(args: {
+  request: AiCompletionRequest;
+  requiresImages: boolean;
+  requestDeadline: number;
+  telemetryEndpoint: string;
+}): Promise<
+  | { ok: true; content: string; providerId: string }
+  | { ok: false; code: 'ai_not_configured' | 'ai_rate_limited' | 'ai_provider_error'; error?: Error }
+> {
+  let lastError: Error | null = null;
+  let sawConfiguredKey = false;
+
+  for (const providerId of AI_PROVIDER_FALLBACK_ORDER) {
+    if (args.requestDeadline - Date.now() < 4000) break;
+    const provider = AI_PROVIDERS[providerId];
+    if (!provider) continue;
+    if (args.requiresImages && !provider.supportsImages) continue;
+
+    for (let keyAttempt = 0; keyAttempt < 8; keyAttempt++) {
+      if (args.requestDeadline - Date.now() < 4000) break;
+      const apiKey = await getNextAvailableKey(providerId);
+      if (!apiKey) break;
+      sawConfiguredKey = true;
+
+      try {
+        const result = await provider.complete(args.request, apiKey);
+        if (result.usage) {
+          const actualModel = result.modelUsed || provider.defaultModel;
+          const cost = calculateAiCost(providerId, actualModel, result.usage.promptTokens, result.usage.completionTokens);
+          serverDal.aiTelemetry.logUsage({
+            userId: '00000000-0000-0000-0000-000000000000',
+            provider: providerId,
+            model: actualModel,
+            endpoint: args.telemetryEndpoint,
+            promptTokens: result.usage.promptTokens,
+            completionTokens: result.usage.completionTokens,
+            estimatedCostUsd: cost,
+          }).catch(err => console.error(`[aiTelemetry] Error logging usage in ${args.telemetryEndpoint}:`, err));
+        }
+        return { ok: true, content: result.content, providerId };
+      } catch (err: any) {
+        lastError = err;
+        if (err.status === 429 || err.message?.includes('429')) {
+          await markKeyRateLimited(providerId, apiKey, 60);
+          console.warn(`[cv-import] Clave de ${providerId} limitada (429). Rotando...`);
+          continue;
+        }
+        break;
+      }
+    }
+  }
+
+  if (!sawConfiguredKey) {
+    return { ok: false, code: 'ai_not_configured', error: lastError || undefined };
+  }
+  if (lastError?.message?.includes('429')) {
+    return { ok: false, code: 'ai_rate_limited', error: lastError };
+  }
+  return { ok: false, code: 'ai_provider_error', error: lastError || undefined };
+}
+
+function parseCleanJsonObject(raw: string): any {
+  const cleanJsonStr = raw.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
+  return JSON.parse(cleanJsonStr);
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return errorResponse(res, 405, 'Método no permitido');
@@ -131,6 +197,96 @@ REGLAS OBLIGATORIAS:
     const job = await serverDal.ocrJobs.getById(jobId);
     if (!job) return errorResponse(res, 404, 'Job no encontrado');
     return successResponse(res, { job });
+  }
+
+  if (action === 'extract-certificate') {
+    const { kind = 'image', content, auxiliaryText = '', mimeType: rawMimeType } = req.body || {};
+    if (!content) {
+      return errorResponse(res, 400, 'Faltan parámetros requeridos (content)');
+    }
+
+    const allowedMimes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+    const imageMimeType = (allowedMimes.has(String(rawMimeType)) ? rawMimeType : 'image/jpeg') as 'image/jpeg' | 'image/png' | 'image/webp';
+
+    const certSystemInstruction = `Eres un extractor experto de certificados, diplomas, constancias académicas, capacitaciones y títulos individuales.
+IMPORTANTE: Lo que estás leyendo NO es un currículum de una o dos columnas sino un CERTIFICADO / DIPLOMA / CONSTANCIA individual. Ignorá marcos decorativos, firmas ilegibles o logotipos sin texto útil y extraé los datos oficiales impresos en el documento.
+
+DEVOLVÉ ÚNICAMENTE UN OBJETO JSON VÁLIDO con estas propiedades exactas (usá "" cuando un dato no figure, nunca inventes datos):
+{
+  "suggestedSection": "cursos" | "formacion" | "profesion" | "idiomas" | "informatica",
+  "tituloOGrado": "Nombre exacto del curso, taller, capacitación, carrera, título o certificación",
+  "institucion": "Institución, universidad, ministerio o plataforma emisora",
+  "periodo": "Año o fecha de emisión/realización (ej: 2025 o 11/2024)",
+  "cargaHoraria": "Carga horaria o duración (ej: 60 hs, 120 horas reloj) o vacío",
+  "modalidad": "Virtual | Presencial | Híbrido o vacío",
+  "resolucion": "Número de resolución ministerial, disposición o registro si figura",
+  "tomoFolio": "Tomo, folio o acta si figura",
+  "matricula": "Número de matrícula habilitante si figura",
+  "url": "URL o código de verificación/validez si figura",
+  "descripcion": "Participación (Aprobado, Asistente, Disertante), promedio o contenido/temario resumido si está impreso",
+  "recipientName": "Nombre completo del titular tal como figura en el certificado"
+}
+
+REGLAS DE CLASIFICACIÓN (suggestedSection):
+- "formacion": carreras universitarias, terciarias, profesorados, licenciaturas, maestrías, doctorados, secundario.
+- "profesion": títulos con matrícula o registro profesional oficial.
+- "idiomas": exámenes o certificaciones de idiomas (Cambridge, IELTS, TOEFL, DELF, CELPE-Bras, etc.).
+- "informatica": certificación centrada en una herramienta informática o software específico si corresponde mejor a Informática/TICs.
+- "cursos": cursos, capacitaciones, jornadas, congresos, seminarios, talleres, diplomaturas cortas.`;
+
+    const certReq: AiCompletionRequest = {
+      systemPrompt: certSystemInstruction,
+      userPrompt: kind === 'text'
+        ? `Extraé los datos oficiales de este certificado:\n\n${content}`
+        : `Extraé los datos oficiales de este diploma/certificado.${auxiliaryText ? `\n\nTexto auxiliar extraído del PDF:\n${auxiliaryText}` : ''}`,
+      maxTokens: 1500,
+      temperature: 0.1,
+      responseSchema: {
+        type: 'object',
+        properties: {
+          suggestedSection: { type: 'string', enum: ['cursos', 'formacion', 'profesion', 'idiomas', 'informatica'] },
+          tituloOGrado: { type: 'string' },
+          institucion: { type: 'string' },
+          periodo: { type: 'string' },
+          cargaHoraria: { type: 'string' },
+          modalidad: { type: 'string' },
+          resolucion: { type: 'string' },
+          tomoFolio: { type: 'string' },
+          matricula: { type: 'string' },
+          url: { type: 'string' },
+          descripcion: { type: 'string' },
+          recipientName: { type: 'string' },
+        },
+        required: ['suggestedSection', 'tituloOGrado', 'institucion'],
+      },
+    };
+
+    if (kind === 'image') {
+      const base64Data = String(content).includes(',') ? String(content).split(',')[1] : String(content);
+      certReq.images = [{ mimeType: imageMimeType, base64: base64Data }];
+      certReq.mediaResolution = 'MEDIA_RESOLUTION_HIGH';
+    }
+
+    const cascadeRes = await executeImportAiCascade({
+      request: certReq,
+      requiresImages: kind === 'image',
+      requestDeadline,
+      telemetryEndpoint: 'cv-import-extract-certificate',
+    });
+
+    if ('code' in cascadeRes) {
+      if (cascadeRes.code === 'ai_not_configured') return errorResponse(res, 503, 'ai_not_configured');
+      if (cascadeRes.code === 'ai_rate_limited') return errorResponse(res, 429, 'ai_rate_limited');
+      return errorResponse(res, 502, `ai_provider_error: ${cascadeRes.error?.message || 'Error al analizar el certificado'}`);
+    }
+
+    try {
+      const contentStr = 'content' in cascadeRes ? cascadeRes.content : '';
+      const certificate = parseCleanJsonObject(contentStr);
+      return successResponse(res, { certificate });
+    } catch {
+      return errorResponse(res, 500, 'Error procesando respuesta de IA para el certificado.');
+    }
   }
 
   if (action !== 'extract-page') {

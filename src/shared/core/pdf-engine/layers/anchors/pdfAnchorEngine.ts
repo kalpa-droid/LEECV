@@ -68,25 +68,15 @@ export function resolveSectionAnchor(
   layoutOverrides?: CvLayoutOverrides,
   anchorMap?: PdfAnchorMap
 ): PdfAnchorTarget {
-  const normalizedTab = (activeTab || 'personales').toLowerCase().trim();
-
-  // Guard: si no hay preset o no posee sectionOrder, o si es carta/tarjeta/agenda
-  if (!preset || !preset.sectionOrder || preset.pageCategory === 'carta' || preset.pageCategory === 'tarjeta' || preset.pageCategory === 'planner') {
-    return {
-      tabId: normalizedTab,
-      sectionId: normalizedTab,
-      pageIndex: 1,
-      verticalRatio: 0.0,
-      horizontalRatio: 0.0,
-      hasRecords: false
-    };
-  }
-
-  const possibleSectionIds = SECTION_TAB_MAPPING[normalizedTab] || [normalizedTab];
+  const rawTab = (activeTab || 'personales').trim();
+  const normalizedTab = rawTab.toLowerCase();
 
   // 0. Si existe el mapa de marcadores reales de PDF.js, usar la VERDAD DE TERRENO O(1)
+  // Va ANTES del guard de sectionOrder para soportar EditorLee y otros documentos vectoriales con anclas.
   if (anchorMap && Object.keys(anchorMap).length > 0) {
-    const candidateKeys = [normalizedTab, ...(SECTION_TAB_MAPPING[normalizedTab] || [])];
+    const candidateKeys = Array.from(
+      new Set([rawTab, normalizedTab, ...(SECTION_TAB_MAPPING[normalizedTab] || [])]),
+    );
     for (const key of candidateKeys) {
       const realAnchor = anchorMap[key];
       if (realAnchor) {
@@ -101,6 +91,20 @@ export function resolveSectionAnchor(
       }
     }
   }
+
+  // Guard: si no hay preset o no posee sectionOrder, o si es carta/tarjeta/agenda
+  if (!preset || !preset.sectionOrder || preset.pageCategory === 'carta' || preset.pageCategory === 'tarjeta' || preset.pageCategory === 'planner') {
+    return {
+      tabId: normalizedTab,
+      sectionId: normalizedTab,
+      pageIndex: 1,
+      verticalRatio: 0.0,
+      horizontalRatio: 0.0,
+      hasRecords: false
+    };
+  }
+
+  const possibleSectionIds = SECTION_TAB_MAPPING[normalizedTab] || [normalizedTab];
 
   // 1. Si es la pestaña personal/header o datos de contacto en primera página
   if (normalizedTab === 'personales') {

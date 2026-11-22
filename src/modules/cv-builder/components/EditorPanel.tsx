@@ -35,7 +35,6 @@ import { FloatingAssistant } from '../../../shared/core/studio-host/FloatingAssi
 import { CoverLetterCrossSellBanner } from './CoverLetterCrossSellBanner';
 import { Briefcase, CornerUpLeft, FileText } from 'lucide-react';
 import { isApplicationVariant } from '../../../shared/core/documents/applicationVariant';
-import { button } from '../../../shared/core/uiDesignSystem';
 import { applyPresetLevel } from '../../../shared/core/pdf-engine/layers/presets/presetHierarchyEngine';
 import { triggerPresetTransition } from '../../../shared/core/pdf-engine/layers/presets/presetTransitionEngine';
 import { getEffectiveCoverFeaturedItems } from '../../../shared/core/pdf-engine/layers/sectors/coverFeaturedEngine';
@@ -128,34 +127,38 @@ export default function EditorPanel({
   };
 
   // Extract all registered courses, degrees, education for easy selection
-  const registeredItems = [];
+  const registeredItems: Array<{ title: string; institution: string; year: string; category: string }> = [];
   if (cvData) {
-    (cvData.coursesAndCertificates || []).forEach(item => {
-      if (item.title) {
+    (cvData.coursesAndCertificates || []).forEach((item: any) => {
+      const title = item.tituloOGrado || item.title;
+      if (title) {
         registeredItems.push({
-          title: item.title,
-          institution: item.institution || 'Institución Emisora',
-          year: item.year || '2025',
+          title,
+          institution: item.institucion || item.institution || 'Institución Emisora',
+          year: item.periodo || item.year || '2025',
           category: 'Curso / Capacitación'
         });
       }
     });
-    (cvData.profession || []).forEach(item => {
-      if (item.degree) {
+    (cvData.profession || []).forEach((item: any) => {
+      const title = item.tituloOGrado || item.degree;
+      if (title) {
         registeredItems.push({
-          title: item.degree,
-          institution: item.institution || 'Universidad / Instituto',
-          year: item.year || '2025',
+          title,
+          institution: item.institucion || item.institution || 'Universidad / Instituto',
+          year: item.periodo || item.year || '2025',
           category: 'Título Profesional'
         });
       }
     });
-    (cvData.education || []).forEach(item => {
-      if (item.degree || item.institution) {
+    (cvData.education || []).forEach((item: any) => {
+      const degreeTitle = item.tituloOGrado || item.degree;
+      const inst = item.institucion || item.institution;
+      if (degreeTitle || inst) {
         registeredItems.push({
-          title: item.degree ? `${item.level}: ${item.degree}` : item.institution,
-          institution: item.institution || 'Colegio',
-          year: item.year || '2025',
+          title: degreeTitle ? `${item.nivel || item.level ? `${item.nivel || item.level}: ` : ''}${degreeTitle}` : inst,
+          institution: inst || 'Colegio',
+          year: item.periodo || item.year || '2025',
           category: 'Formación Académica'
         });
       }
@@ -248,42 +251,22 @@ export default function EditorPanel({
         {/* ========================================================================= */}
         {docType === 'cv' && activeTab === 'objetivo' && <ObjetivoSection cvData={cvData} setCvData={setCvData} />}
 
-        {docType === 'cv' && activeTab === 'vacante' && <JobTargetSection cvData={cvData} setCvData={setCvData} onCreateApplicationVariant={onCreateApplicationVariant} onBackToBaseCV={onBackToBaseCV} />}
+        {docType === 'cv' && activeTab === 'vacante' && (
+          <JobTargetSection
+            cvData={cvData}
+            setCvData={setCvData}
+            onCreateApplicationVariant={onCreateApplicationVariant}
+            onBackToBaseCV={onBackToBaseCV}
+            onNavigateToTab={changeActiveTab}
+          />
+        )}
         {docType === 'cv' && activeTab === 'carta' && (
-          cvData.sourceCvTabId ? (
-            <ApplicationCoverLetterSection
-              cvData={cvData}
-              setCvData={setCvData}
-              onExport={onExportCoverLetter}
-              onEditVacante={onEditVacante || (() => changeActiveTab('vacante'))}
-            />
-          ) : (
-            <div className="space-y-3 rounded-[var(--ui-radius-card)] border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] p-4">
-              <h2 className="text-lg font-semibold text-[var(--ui-text-primary)]">Carta para una postulación</h2>
-              <p className="text-sm text-[var(--ui-text-secondary)]">
-                Para redactar una carta vinculada a una oferta sin modificar el CV base, creá una postulación independiente.
-              </p>
-              <div className="flex flex-wrap items-center gap-2">
-                {typeof onCreateApplicationVariant === 'function' && (
-                  <button
-                    type="button"
-                    onClick={onCreateApplicationVariant}
-                    className={`${button.primary} inline-flex items-center gap-1.5 px-3 py-2 text-sm`}
-                  >
-                    <Briefcase className="w-4 h-4" />
-                    Crear postulación y escribir la carta
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => changeActiveTab('vacante')}
-                  className={`${button.secondary} px-3 py-2 text-sm`}
-                >
-                  Ir a Vacante
-                </button>
-              </div>
-            </div>
-          )
+          <ApplicationCoverLetterSection
+            cvData={cvData}
+            setCvData={setCvData}
+            onExport={onExportCoverLetter}
+            onEditVacante={onEditVacante || (() => changeActiveTab('vacante'))}
+          />
         )}
         {docType === 'cv' && activeTab === 'importar_datos' && <ImportDataSection />}
 

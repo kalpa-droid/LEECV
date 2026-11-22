@@ -14,6 +14,7 @@ import * as TabStore from './tabStore';
 import { loadDocumentById, saveDocument } from '../storage/documentStorageService';
 import { markAsConfirmed, isProvisionalDocument, hasRealContent, isDraftDocumentId, inferDocTypeFromDraftId, computeAutoDocumentTitle } from './documentEngine';
 import { getDefaultTitleForDocType, getRouteForDocType } from '../capabilities/capabilityRegistry';
+import { setPendingDocumentToOpen } from '../storage/pendingDocumentHandoff';
 import { DocumentTypeId } from '../../../types/document';
 
 export type BlankDocumentFactory = (options: { id: string; docTypeId: DocumentTypeId }) => any;
@@ -157,7 +158,8 @@ export async function closeTab(
   currentDoc: CurrentDocumentState | null,
   setCvData: (data: any) => void,
   goToLandingPage: () => void,
-  currentActiveId?: string
+  currentActiveId?: string,
+  options?: { isStandaloneOwnStore?: (docType: DocumentTypeId) => boolean }
 ): Promise<void> {
   const activeId = currentActiveId ?? currentDoc?.id;
 
@@ -185,7 +187,12 @@ export async function closeTab(
   // Si quedan más pestañas abiertas, conmutar a la más reciente restante
   if (remaining.length > 0) {
     const nextTab = remaining[remaining.length - 1];
-    await switchToTab(nextTab.id, null, setCvData, { saveCurrentIfDirty: false });
+    if (options?.isStandaloneOwnStore?.(nextTab.docType)) {
+      TabStore.setActiveTabId(nextTab.id);
+      setPendingDocumentToOpen(nextTab.id, nextTab.docType);
+    } else {
+      await switchToTab(nextTab.id, null, setCvData, { saveCurrentIfDirty: false });
+    }
     if (typeof window !== 'undefined') {
       const targetRoute = getRouteForDocType(nextTab.docType);
       if (window.location.pathname !== targetRoute) {

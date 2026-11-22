@@ -38,12 +38,32 @@ describe('Fase 10 — Fábrica de Apps (new-app) e integración con 0 cambios en
 
       // Proveer contrato mínimo para que analyzeImportGraph resuelva `../../shared/contracts`
       fs.mkdirSync(path.join(tmpDir, 'src/shared/contracts'), { recursive: true });
-      fs.writeFileSync(path.join(tmpDir, 'src/shared/contracts/index.ts'), 'export interface CapsuleManifest {}\n', 'utf8');
+      fs.writeFileSync(path.join(tmpDir, 'src/shared/contracts/index.ts'), 'export interface DocumentTypeManifest {}\n', 'utf8');
 
       // Analizar grafo AST sobre el fixture temporal
       const graphReport = analyzeImportGraph(tmpDir);
       expect(graphReport.boundaryViolations).toEqual([]);
       expect(graphReport.cycles).toEqual([]);
+
+      // Verificar snippets completos y anti-fuga de pestaña en el Studio generado
+      const studioSrc = fs.readFileSync(
+        path.join(tmpDir, 'src/modules/diploma-studio/DiplomaStudioContent.tsx'),
+        'utf8',
+      );
+      expect(studioSrc).toContain('activeId: docId');
+      expect(studioSrc).not.toContain('activeId: activeTabId');
+      expect(studioSrc).toContain('ScaledPaperSheet');
+      expect(plan.registrationSnippets.documentTypeRegistryEntry).toContain('ui:');
+      expect(plan.registrationSnippets.documentTypeRegistryEntry).toContain('seo:');
+      expect(plan.registrationSnippets.appRegistryEntry).toContain('managesOwnStore: true');
+      expect(plan.registrationSnippets.appRegistryEntry).toContain('autoCreateBlankTabOnRouteEnter: false');
+      expect(plan.registrationSnippets.appSurfaceManifestEntry).toContain("menuAction: 'onSelectDocument'");
+      expect(plan.registrationSnippets.dockProviderSnippet).toContain('registerDockStepProvider');
+      expect(plan.registrationSnippets.productIconSnippet).toContain('viewBox');
+      expect(plan.registrationSnippets.pwaFileHandlerSnippet).toContain('file_handlers');
+      expect(plan.registrationSnippets.seoPrerenderSnippet).toContain('prerenderMeta');
+      expect(plan.registrationSnippets.landingCardSnippet).toContain('PortalProductsGrid');
+      expect(plan.registrationSnippets.lidioKnowledgeFile).toContain('DIPLOMA_KNOWLEDGE');
 
       // Cero fugas AST de docType en todos los archivos generados
       for (const rel of written.filter((w) => w.endsWith('.ts') || w.endsWith('.tsx'))) {

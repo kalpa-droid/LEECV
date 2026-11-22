@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { DomSectionIcon } from '../pdf-engine/layers/icons/DomSectionIcon';
-import { PRODUCT_ICON_IDS } from './iconCatalog';
 import { radius, elevationSystem } from '../uiDesignSystem';
 import {
   ALL_DOCUMENT_TYPE_IDS,
-  RegisteredDocumentTypeId,
+  DOCUMENT_TYPE_REGISTRY,
 } from '../capabilities/capabilityRegistry';
+import type { MenuBadgeTone } from '../../contracts/appContract';
 import type { DocumentTypeId } from '../../../types/document';
 
 export interface NewDocumentMenuProps {
@@ -21,56 +21,13 @@ export interface NewDocumentMenuProps {
   className?: string;
 }
 
-interface MenuPresentationSpec {
-  title: string;
-  subtitle: string;
-  iconId: string;
-  badgeClass: string;
-}
-
-const MENU_PRESENTATION_BY_TYPE: Record<RegisteredDocumentTypeId, MenuPresentationSpec> = {
-  cv: {
-    title: 'Nuevo Currículum Vitae',
-    subtitle: 'Hoja común (A4) o bolsillo',
-    iconId: PRODUCT_ICON_IDS.cv,
-    badgeClass: 'bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)]',
-  },
-  business_card: {
-    title: 'Nueva Tarjeta Personal',
-    subtitle: 'Formato 9 x 5 cm',
-    iconId: PRODUCT_ICON_IDS.tarjeta,
-    badgeClass: 'bg-[var(--color-secondary-muted)] text-[var(--color-secondary-bright)]',
-  },
-  book: {
-    title: 'Nuevo Libro / Folleto',
-    subtitle: 'En casa o en una imprenta (hojas A4 / A3)',
-    iconId: PRODUCT_ICON_IDS.libro,
-    badgeClass: 'bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)]',
-  },
-  cover_letter: {
-    title: 'Nueva Carta de Presentación',
-    subtitle: 'Redacción IA adaptada por vacante',
-    iconId: PRODUCT_ICON_IDS.carta,
-    badgeClass: 'bg-[var(--color-accent-muted)] text-[var(--color-accent-text)]',
-  },
-  planner: {
-    title: 'Nueva Agenda / Planificador',
-    subtitle: 'Para imprimir en casa o en una imprenta',
-    iconId: PRODUCT_ICON_IDS.agenda,
-    badgeClass: 'bg-[var(--color-accent-green-light)] text-[var(--color-accent-green-text)]',
-  },
-  invoice: {
-    title: 'Nuevo Presupuesto / Factura',
-    subtitle: 'Tus datos quedan en tu computadora, sin internet',
-    iconId: PRODUCT_ICON_IDS.factura,
-    badgeClass: 'bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)]',
-  },
-  editorial: {
-    title: 'Nuevo Libro o Informe (EditorLee)',
-    subtitle: 'Ensayos, tesis o informes con índice automático',
-    iconId: PRODUCT_ICON_IDS.editor,
-    badgeClass: 'bg-[var(--color-accent-muted)] text-[var(--color-accent-text)]',
-  },
+const BADGE_TONE_CLASSES: Record<MenuBadgeTone, string> = {
+  purple: 'bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)]',
+  secondary: 'bg-[var(--color-secondary-muted)] text-[var(--color-secondary-bright)]',
+  warning: 'bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)]',
+  accent: 'bg-[var(--color-accent-muted)] text-[var(--color-accent-text)]',
+  green: 'bg-[var(--color-accent-green-light)] text-[var(--color-accent-green-text)]',
+  success: 'bg-[var(--color-status-success-muted)] text-[var(--color-status-success-text)]',
 };
 
 export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
@@ -107,7 +64,7 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
     setIsOpen(!isOpen);
   };
 
-  const legacyHandlers: Record<RegisteredDocumentTypeId, (() => void) | undefined> = {
+  const legacyHandlers: Partial<Record<string, (() => void) | undefined>> = {
     cv: onSelectCV,
     business_card: onSelectCard,
     book: onSelectBook,
@@ -140,7 +97,8 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
           {ALL_DOCUMENT_TYPE_IDS.map((docType) => {
             const action = legacyHandlers[docType] || (onSelectDocument ? () => onSelectDocument(docType) : undefined);
             if (!action) return null;
-            const meta = MENU_PRESENTATION_BY_TYPE[docType];
+            const { ui } = DOCUMENT_TYPE_REGISTRY[docType];
+            const badgeClass = BADGE_TONE_CLASSES[ui.menuBadgeTone] || BADGE_TONE_CLASSES.accent;
 
             return (
               <button
@@ -154,13 +112,13 @@ export const NewDocumentMenu: React.FC<NewDocumentMenuProps> = ({
               >
                 <div
                   style={{ borderRadius: radius.card }}
-                  className={`p-1.5 group-hover:scale-105 transition ${meta.badgeClass}`}
+                  className={`p-1.5 group-hover:scale-105 transition ${badgeClass}`}
                 >
-                  <DomSectionIcon iconId={meta.iconId} className="w-4 h-4" />
+                  <DomSectionIcon iconId={ui.productIconId} className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="block font-extrabold text-[var(--ui-text-primary)]">{meta.title}</span>
-                  <span className="block text-[10px] text-[var(--ui-text-secondary)]">{meta.subtitle}</span>
+                  <span className="block font-extrabold text-[var(--ui-text-primary)]">{ui.menuTitle}</span>
+                  <span className="block text-[10px] text-[var(--ui-text-secondary)]">{ui.menuSubtitle}</span>
                 </div>
               </button>
             );

@@ -52,7 +52,7 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
       addSection: true,
     },
     defaultSections: ['portada', 'prologo', 'introduccion', 'capitulo', 'capitulo', 'epilogo', 'anexo'],
-    typography: { fontFamily: 'Times New Roman', fontSize: 11, lineHeight: 1.5 },
+    typography: { fontFamily: 'Times-Roman', fontSize: 11, lineHeight: 1.5 },
   },
   {
     id: 'trabajo-practico-monografia-tesis',
@@ -69,7 +69,7 @@ export const EDITORIAL_PRESET_CATALOG: EditorialPreset[] = [
       addSection: true,
     },
     defaultSections: ['portada', 'resumen', 'introduccion', 'desarrollo', 'metodologia', 'conclusiones', 'bibliografia', 'anexo'],
-    typography: { fontFamily: 'Arial', fontSize: 12, lineHeight: 1.5 },
+    typography: { fontFamily: 'Helvetica', fontSize: 12, lineHeight: 1.5 },
   },
   {
     id: 'manual-apunte-guia',

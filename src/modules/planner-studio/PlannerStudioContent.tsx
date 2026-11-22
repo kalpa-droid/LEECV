@@ -561,7 +561,7 @@ export const PlannerStudioContent: React.FC<PlannerStudioContentProps> = ({
       }
       tabsBarProps={{
         tabs: documentTabs,
-        activeId: activeTabId,
+        activeId: plannerId,
         docType: 'planner',
         onSwitch: onSelectTab,
         onNavigateToDocument: (targetType, id) => onNavigateToDocument(targetType, id),

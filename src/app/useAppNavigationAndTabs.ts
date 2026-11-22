@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { getOpenTabs, OpenTab as OpenTabItem } from '../shared/core/documents/tabStore';
+import {
+  getActiveTabId,
+  getOpenTabs,
+  OpenTab as OpenTabItem,
+  setActiveTabId,
+} from '../shared/core/documents/tabStore';
 import * as workspaceController from '../shared/core/documents/workspaceController';
 import {
   getDocTypeForRoute,
@@ -58,6 +63,10 @@ export function useAppNavigationAndTabs({
     ) => {
       const targetEntry = getAppRuntimeEntry(targetDocType);
       if (targetEntry.managesOwnStore) {
+        if (targetCvId) {
+          setActiveTabId(targetCvId);
+          setPendingDocumentToOpen(targetCvId, targetDocType as DocumentTypeId);
+        }
         setTabs(getOpenTabs());
         if (currentRoute !== targetEntry.effectiveRoute) {
           navigateToRoute(targetEntry.effectiveRoute);
@@ -112,10 +121,18 @@ export function useAppNavigationAndTabs({
 
   const handleNavigateToDocumentTab = useCallback(
     async (targetDocType: DocumentTypeId, targetId: string) => {
-      const existingTab = tabs.find((t) => t.docType === targetDocType);
-      const finalTargetId = existingTab ? existingTab.cvId || existingTab.id : targetId;
+      const liveTabs = tabs.length > 0 ? tabs : getOpenTabs();
+      const exactTab = targetId
+        ? liveTabs.find((t) => (t.id === targetId || t.cvId === targetId) && t.docType === targetDocType)
+        : undefined;
+      const fallbackTab = liveTabs.find((t) => t.docType === targetDocType);
+      const chosen = exactTab || fallbackTab;
+      const finalTargetId = chosen ? chosen.cvId || chosen.id : targetId;
       await runWithSafeSave(saveCV, async () => {
-        setPendingDocumentToOpen(finalTargetId, targetDocType);
+        if (finalTargetId) {
+          setActiveTabId(finalTargetId);
+          setPendingDocumentToOpen(finalTargetId, targetDocType);
+        }
         navigateToRoute(getRouteForDocType(targetDocType));
       });
     },
@@ -200,12 +217,19 @@ export function useAppNavigationAndTabs({
                   isDirty: hasPendingChanges,
                 }
               : null;
+            const activeStandalone = findStandaloneStudioByRoute(currentRoute);
+            const effectiveActiveId = activeStandalone
+              ? getActiveTabId() ||
+                tabs.find((t) => t.docType === activeStandalone.id)?.id ||
+                activeCvId
+              : activeCvId;
             await workspaceController.closeTab(
               cvId,
               currentDocState,
               setCvData,
               goToLandingPage,
-              activeCvId,
+              effectiveActiveId,
+              { isStandaloneOwnStore: (dt) => getAppRuntimeEntry(dt).managesOwnStore },
             );
             setTabs(getOpenTabs());
           } finally {
@@ -217,12 +241,14 @@ export function useAppNavigationAndTabs({
     [
       activeCvId,
       confirm,
+      currentRoute,
       cvData,
       goToLandingPage,
       hasPendingChanges,
       setCvData,
       setIsSwitchingDocument,
       setTabs,
+      tabs,
     ],
   );
 

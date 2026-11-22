@@ -79,6 +79,8 @@ export interface ScannedCertificate {
   /** @deprecated usar `dataUrl`. Se mantiene sincronizado por compatibilidad, no escribir solo este campo. */
   imageUrl?: string;
   rotation?: number;
+  linkedRecordId?: string;
+  linkedSection?: string;
 }
 
 /** Firma digital del titular del CV — `EditorPanel.tsx`, pestaña "Firma Digital". */
@@ -208,6 +210,18 @@ export interface CVData {
     recipientName?: string;
     jobDescription?: string;
   };
+  atsMetadata?: {
+    subject?: string;
+    keywords?: string[];
+    alignmentSummary?: string;
+  };
+  profileSuggestions?: Array<{
+    jobTitle: string;
+    companyName: string;
+    sector?: string;
+    matchReason: string;
+    suggestedDescription: string;
+  }>;
   sourceCvTabId?: string;
   qrMode?: string;
   version_label?: string;

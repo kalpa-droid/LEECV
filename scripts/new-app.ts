@@ -36,6 +36,11 @@ export interface NewAppPlan {
     readonly documentTypeRegistryEntry: string;
     readonly appSurfaceManifestEntry: string;
     readonly appRegistryEntry: string;
+    readonly dockProviderSnippet: string;
+    readonly productIconSnippet: string;
+    readonly pwaFileHandlerSnippet: string;
+    readonly seoPrerenderSnippet: string;
+    readonly landingCardSnippet: string;
     readonly lidioKnowledgeFile: string;
   };
 }
@@ -83,25 +88,26 @@ export function buildNewAppPlan(input: NewAppInput): NewAppPlan {
   }
 
   const pascal = toPascalCase(input.capsule.replace(/-studio$/, '')) || toPascalCase(input.id);
+  const slug = input.id.replace(/[^a-z0-9]/gi, '').toLowerCase() || 'doc';
   const capsuleDir = `src/modules/${input.capsule}`;
   const studioComponentName = `${pascal}StudioContent`;
   const stepSeqConst = `${input.id.toUpperCase()}_STEP_SEQUENCE`;
 
   const storageSnippet =
     input.storage === 'local-encrypted'
-      ? `{ kind: 'local-encrypted', encryptedDriver: 'vault-aes-gcm' }`
+      ? `{ kind: 'local-encrypted' }`
       : input.storage === 'local-with-cloud-backup'
       ? `{ kind: 'local', cloudBackup: { projection: 'structured-text', maxBytes: 16384 } }`
       : `{ kind: 'local' }`;
 
-  const manifestTs = `import type { CapsuleManifest } from '../../shared/contracts';
+  const manifestTs = `import type { DocumentTypeManifest } from '../../shared/contracts';
 
 /**
  * Manifiesto puro de la cápsula \`${input.capsule}\`.
  * Cumple \`[manifest-purity]\`: solo importa tipos de \`src/shared/contracts/\`.
  */
 export const ${input.id.toUpperCase()}_CAPSULE_MANIFEST: Pick<
-  CapsuleManifest,
+  DocumentTypeManifest,
   'id' | 'capsuleId' | 'route' | 'defaultTitle' | 'storage' | 'assistant'
 > & { readonly stepIds: readonly string[] } = {
   id: '${input.id}',
@@ -166,7 +172,14 @@ import { AppShell } from '../../shared/core/ui/AppShell';
 import StudioNavbar from '../../shared/core/studio-host/StudioNavbar';
 import StudioDock from '../../shared/core/studio-host/StudioDock';
 import { FloatingAssistant } from '../../shared/core/studio-host/FloatingAssistant';
-import { useDocumentViewport, useViewportGestures } from '../../shared/core/viewport';
+import { ErrorBoundary } from '../../shared/core/ui/ErrorBoundary';
+import {
+  useDocumentViewport,
+  useViewportGestures,
+  ScaledPaperSheet,
+  quantizeRasterZoom,
+} from '../../shared/core/viewport';
+import { resolveDocumentCanvasPx } from '../../shared/core/pdf-engine/layers/page/pageSizes';
 import { OpenTab } from '../../shared/core/documents/tabStore';
 import {
   resolveDocumentIdWithHandoff,
@@ -216,6 +229,8 @@ export const ${studioComponentName}: React.FC<${studioComponentName}Props> = ({
   const docId = useMemo(() => resolveDocumentIdWithHandoff(activeTabId, '${input.id}'), [activeTabId]);
   const [docData] = useState(() => createEmpty${pascal}Data(docId));
   const viewport = useDocumentViewport({ pageSizeId: 'a4' });
+  const { widthPx, heightPx } = useMemo(() => resolveDocumentCanvasPx('a4'), []);
+  const rasterZoom = quantizeRasterZoom(viewport.zoomLevel);
   const sheetRef = useRef<HTMLDivElement>(null);
 
   useViewportGestures({
@@ -228,7 +243,7 @@ export const ${studioComponentName}: React.FC<${studioComponentName}Props> = ({
   useRegisterDocumentTab({
     id: docId,
     docType: '${input.id}' as DocumentTypeId,
-    title: docData.title,
+    title: \`${pascal} - \${docData.title}\`,
     documentTabs,
     onTabsChanged,
   });
@@ -279,18 +294,33 @@ export const ${studioComponentName}: React.FC<${studioComponentName}Props> = ({
           </div>
         }
         mainSlot={
-          <div className="w-full h-full flex items-center justify-center p-4 bg-[var(--ui-bg-panel)]">
-            <div
-              ref={sheetRef}
-              className={\`w-full max-w-2xl aspect-[1/1.414] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[\${radius.card}] \${elevationSystem.floating} flex items-center justify-center text-xs text-[var(--ui-text-secondary)]\`}
+          <div className="w-full flex flex-col items-start justify-start print-wrapper relative touch-pan-x touch-pan-y">
+            <ScaledPaperSheet
+              widthPx={widthPx}
+              heightPx={heightPx}
+              zoomLevel={viewport.zoomLevel}
+              managed={true}
+              sheetRef={sheetRef}
+              className={elevationSystem.overlay}
             >
-              Conectar componente @react-pdf/renderer desde ./pdf/ con VectorDocViewer
-            </div>
+              <ErrorBoundary
+                compact
+                title="Inconveniente en la vista previa"
+                subtitle="Ocurrió un problema al procesar el documento."
+              >
+                <div
+                  data-raster-zoom={rasterZoom}
+                  className={\`w-full min-h-[560px] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[\${radius.card}] flex items-center justify-center p-6 text-xs text-[var(--ui-text-secondary)]\`}
+                >
+                  Conectar componente @react-pdf/renderer desde ./pdf/ con VectorDocViewer
+                </div>
+              </ErrorBoundary>
+            </ScaledPaperSheet>
           </div>
         }
         tabsBarProps={{
           tabs: documentTabs,
-          activeId: activeTabId,
+          activeId: docId,
           docType: '${input.id}' as DocumentTypeId,
           onSwitch: onSelectTab,
           onNavigateToDocument,
@@ -314,21 +344,13 @@ export const ${studioComponentName}: React.FC<${studioComponentName}Props> = ({
 export default ${studioComponentName};
 `;
 
-  const knowledgeSnippet = `// api/_lib/aiTasks/appKnowledge/${input.id}.ts
-import type { AppKnowledgeDefinition } from './index';
+  const knowledgeSnippet = `// api/_lib/aiTasks/appKnowledge/${input.id}.ts (y exportar en index.ts)
+export const ${input.id.toUpperCase()}_KNOWLEDGE = \`CONOCÉS ESTOS PASOS DE ${input.title.toUpperCase()} (docType ${input.id}): ${input.id}_inicio (1. Contenido), ${input.id}_diseno (2. Estilo).
 
-export const ${input.id.toUpperCase()}_KNOWLEDGE: AppKnowledgeDefinition = {
-  id: '${input.id}',
-  title: '${input.title}',
-  privacyPolicy: '${input.privacy}',
-  steps: [
-    { id: '${input.id}_inicio', label: '1. Contenido', summary: 'Carga de datos principales.' },
-    { id: '${input.id}_diseno', label: '2. Estilo', summary: 'Ajuste visual y formato.' },
-  ],
-  workflowHints: [
-    'Completar los datos en Contenido, ajustar el estilo y exportar el PDF final.',
-  ],
-};
+BLOQUE DE CONOCIMIENTO — ${input.title.toUpperCase()} (responde SIEMPRE que pregunten por esto, docType ${input.id}):
+- ${input.title} (${input.route}) permite crear documentos profesionales en el navegador con flujo guiado.
+- Privacidad: ${input.privacy}. Almacenamiento: ${input.storage}.
+- Flujo de pasos: 1. Contenido (carga de datos), 2. Estilo (ajuste visual) y exportación final en PDF.\`;
 `;
 
   const files: GeneratedFileSpec[] = [
@@ -340,12 +362,23 @@ export const ${input.id.toUpperCase()}_KNOWLEDGE: AppKnowledgeDefinition = {
     { relativePath: `${capsuleDir}/ui/.gitkeep`, content: '' },
   ];
 
+  const fileFormatSnippet =
+    input.storage === 'local-encrypted'
+      ? ''
+      : `\n    fileFormat: {\n      extension: '.lee${slug}',\n      label: '${input.title} LEECV',\n      mimeType: 'application/vnd.leecv.${slug}+json',\n      pwaFileHandler: true,\n    },`;
+
   const documentTypeRegistryEntry = `  ${input.id}: {
     id: '${input.id}',
     capsuleId: '${input.capsule}',
     name: '${input.title}',
     description: 'Descripción visible de ${input.title}.',
     iconName: 'FileText',
+    ui: {
+      productIconId: '${input.id}',
+      menuTitle: 'Nuevo ${input.title}',
+      menuSubtitle: 'Edición local paso a paso en esta computadora',
+      menuBadgeTone: 'accent',
+    },${fileFormatSnippet}
     route: '${input.route}',
     defaultTitle: 'Mi ${input.title}',
     titlePrefix: '${pascal}',
@@ -361,8 +394,13 @@ export const ${input.id.toUpperCase()}_KNOWLEDGE: AppKnowledgeDefinition = {
     stepSequenceId: '${input.id}_steps',
     defaultPaperSize: 'a4',
     defaultActivePresetId: '${input.id}-clasico',
-    idPrefixes: ['doc_${input.id}_'],
+    idPrefixes: ['${input.id}_', 'doc_${input.id}_'],
     presetPrefixes: ['${input.id}-'],
+    seo: {
+      title: '${input.title} | LEECV',
+      description: 'Crea ${input.title} en minutos y expórtalo listo para imprimir en PDF.',
+      prerender: true,
+    },
   },`;
 
   const appSurfaceManifestEntry = `  ${input.id}: {
@@ -370,7 +408,7 @@ export const ${input.id.toUpperCase()}_KNOWLEDGE: AppKnowledgeDefinition = {
     name: '${input.title}',
     route: '${input.route}',
     primaryStudioFile: '${capsuleDir}/${studioComponentName}.tsx',
-    menuAction: 'onNewDocument',
+    menuAction: 'onSelectDocument',
     tabsBarAction: 'onNewDocument',
     features: {
       hasLandingCard: true,
@@ -381,8 +419,13 @@ export const ${input.id.toUpperCase()}_KNOWLEDGE: AppKnowledgeDefinition = {
     },
     requiredFiles: [
       'src/shared/core/capabilities/capabilityRegistry.ts',
-      'src/app/appRegistry.ts',
-      '${capsuleDir}/${studioComponentName}.tsx',
+      'src/app/App.tsx',
+      'src/shared/core/ui/DocumentTabsBar.tsx',
+      'src/shared/core/ui/NewDocumentMenu.tsx',
+      'src/shared/core/pdf-engine/layers/presets/presetRegistry.ts',
+      'src/shared/core/storage/documentStorageService.ts',
+      'src/shared/core/ui/marketing/PortalProductsGrid.tsx',
+      'src/shared/i18n/catalog/landing.ts',
     ],
   },`;
 
@@ -393,12 +436,73 @@ export const ${input.id.toUpperCase()}_KNOWLEDGE: AppKnowledgeDefinition = {
     loadingLabel: 'Cargando ${input.title}...',
     initialTabId: '${input.id}_inicio',
     usesSharedCvWorkspace: false,
-    autoCreateBlankTabOnRouteEnter: true,
-    managesOwnStore: false,
+    autoCreateBlankTabOnRouteEnter: false,
+    managesOwnStore: true,
     StudioComponent: lazy(() => import('../modules/${input.capsule}/${studioComponentName}')),
     newDocumentCopy: {
-      successToast: '${input.title} lista para editar en esta computadora.',
+      successToast: '${input.title} listo para editar en esta computadora.',
     },
+  },`;
+
+  const dockProviderSnippet = `// src/app/appRegistry.ts -> registerAllDockProviders()
+import { ${stepSeqConst} } from '../modules/${input.capsule}/domain/${input.id}StepSequence';
+// ...
+registerStepIds('${input.id}', ${stepSeqConst}.map((s) => s.id));
+registerDockStepProvider('${input.id}', () =>
+  ${stepSeqConst}.map((s) => ({
+    id: s.id,
+    label: s.label,
+    stepNumber: s.stepNumber,
+    isLarge: s.stepNumber <= 2,
+    variant: s.stepNumber <= 2 ? ('accent' as const) : undefined,
+  })),
+);`;
+
+  const productIconSnippet = `// src/shared/core/pdf-engine/layers/icons/iconRegistry.ts (+ PRODUCT_ICON_IDS en iconCatalog.ts)
+  ${input.id}: {
+    id: '${input.id}',
+    viewBox: '0 0 24 24',
+    paths: ['M4 4h16v16H4z', 'M8 9h8', 'M8 13h5'],
+  },`;
+
+  const pwaFileHandlerSnippet =
+    input.storage === 'local-encrypted'
+      ? `// (${input.id} es bóveda cifrada local: no expone file_handler externo por seguridad)`
+      : `// public/manifest.json -> file_handlers[]
+    {
+      "action": "${input.route}",
+      "accept": {
+        "application/vnd.leecv.${slug}+json": [".lee${slug}"]
+      },
+      "icons": [
+        { "src": "/brand/pwa-192x192.png", "sizes": "192x192", "type": "image/png" },
+        { "src": "/brand/pwa-512x512.png", "sizes": "512x512", "type": "image/png" }
+      ],
+      "launch_type": "single-client"
+    }`;
+
+  const seoPrerenderSnippet = `// scripts/prerenderMeta.mjs -> ROUTES + metaMap
+// En ROUTES: '${input.route}',
+// En metaMap:
+  '${input.route}': {
+    title: '${input.title} | LEECV',
+    description: 'Crea ${input.title} en minutos y expórtalo listo para imprimir en PDF.',
+    content: ['<h1>${input.title}</h1>'],
+    type: 'WebPage'
+  },`;
+
+  const landingCardSnippet = `// src/shared/core/ui/marketing/PortalProductsGrid.tsx (opcional tarjeta pública en portada)
+  {
+    id: '${input.id}',
+    icon: FileText,
+    badge: 'Nuevo',
+    badgeColor: 'bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] border-[var(--color-accent-base)]/30',
+    title: '${input.title}',
+    tagline: 'Creación rápida local paso a paso',
+    description: 'Genera tu ${input.title} profesional y descárgalo listo para compartir o imprimir.',
+    bullets: ['Edición paso a paso en vivo', 'Exportación vectorial a PDF'],
+    route: '${input.route}',
+    cta: 'Crear ${input.title}',
   },`;
 
   return {
@@ -408,6 +512,11 @@ export const ${input.id.toUpperCase()}_KNOWLEDGE: AppKnowledgeDefinition = {
       documentTypeRegistryEntry,
       appSurfaceManifestEntry,
       appRegistryEntry,
+      dockProviderSnippet,
+      productIconSnippet,
+      pwaFileHandlerSnippet,
+      seoPrerenderSnippet,
+      landingCardSnippet,
       lidioKnowledgeFile: knowledgeSnippet,
     },
   };
@@ -502,11 +611,29 @@ function runSelfTest(): void {
     if (!fs.existsSync(studioFile)) {
       throw new Error('Self-test falló: falta DiplomaStudioContent.tsx.');
     }
+    const manifestSrc = fs.readFileSync(path.join(tmpDir, 'src/modules/diploma-studio/manifest.ts'), 'utf8');
+    const studioSrc = fs.readFileSync(studioFile, 'utf8');
+    if (!manifestSrc.includes('DocumentTypeManifest') || manifestSrc.includes('CapsuleManifest')) {
+      throw new Error('Self-test falló: manifest.ts debe importar DocumentTypeManifest.');
+    }
+    if (studioSrc.includes('activeId: activeTabId') || !studioSrc.includes('activeId: docId') || !studioSrc.includes('ScaledPaperSheet')) {
+      throw new Error('Self-test falló: studio generado debe usar activeId: docId y ScaledPaperSheet.');
+    }
+    if (
+      !plan.registrationSnippets.documentTypeRegistryEntry.includes('ui:') ||
+      !plan.registrationSnippets.documentTypeRegistryEntry.includes('seo:') ||
+      !plan.registrationSnippets.appRegistryEntry.includes('managesOwnStore: true') ||
+      !plan.registrationSnippets.appRegistryEntry.includes('autoCreateBlankTabOnRouteEnter: false') ||
+      !plan.registrationSnippets.appSurfaceManifestEntry.includes("menuAction: 'onSelectDocument'") ||
+      plan.registrationSnippets.lidioKnowledgeFile.includes('AppKnowledgeDefinition')
+    ) {
+      throw new Error('Self-test falló: snippets de registro incompletos o con contratos desactualizados.');
+    }
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 
-  console.log('✅ Self-Test de new-app superado (3 invariantes verificadas).\n');
+  console.log('✅ Self-Test de new-app superado (4 invariantes verificadas).\n');
 }
 
 function main(): void {
@@ -542,11 +669,16 @@ function main(): void {
     for (const rel of created) console.log(`  + ${rel}`);
   }
 
-  console.log('\n📋 Pasos declarativos de registro (0 ediciones en shared/core):');
+  console.log('\n📋 Pasos declarativos de registro (0 ediciones en shared/core/ui):');
   console.log('1) DOCUMENT_TYPE_REGISTRY:\n' + plan.registrationSnippets.documentTypeRegistryEntry);
   console.log('\n2) APP_SURFACE_MANIFEST:\n' + plan.registrationSnippets.appSurfaceManifestEntry);
   console.log('\n3) APP_REGISTRY:\n' + plan.registrationSnippets.appRegistryEntry);
-  console.log('\n4) Lidio Server Knowledge:\n' + plan.registrationSnippets.lidioKnowledgeFile);
+  console.log('\n4) Dock Provider:\n' + plan.registrationSnippets.dockProviderSnippet);
+  console.log('\n5) Product Icon (iconRegistry + iconCatalog):\n' + plan.registrationSnippets.productIconSnippet);
+  console.log('\n6) PWA File Handler (public/manifest.json):\n' + plan.registrationSnippets.pwaFileHandlerSnippet);
+  console.log('\n7) SEO Prerender (scripts/prerenderMeta.mjs):\n' + plan.registrationSnippets.seoPrerenderSnippet);
+  console.log('\n8) PortalProductsGrid (opcional):\n' + plan.registrationSnippets.landingCardSnippet);
+  console.log('\n9) Lidio Server Knowledge:\n' + plan.registrationSnippets.lidioKnowledgeFile);
 }
 
 const isCliEntry =

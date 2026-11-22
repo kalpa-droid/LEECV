@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { Briefcase, Download, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Briefcase, Download, Sparkles, Loader2, AlertCircle } from 'lucide-react';
 import { Field } from '../../../../../shared/core/ui/Field';
-import { AIButton } from '../../../../../shared/core/ui/AIButton';
 import { executeAiTask } from '../../../../../shared/core/ai/aiClient';
 import { button } from '../../../../../shared/core/uiDesignSystem';
+import { useToast } from '../../../../../shared/core/ui/Toast';
 import type { CoverLetterBody } from '../../../../../types/cv';
 
 interface ApplicationCoverLetterSectionProps {
@@ -19,55 +19,104 @@ const letterFields: Array<{ key: keyof CoverLetterBody; label: string; rows?: nu
   { key: 'hookParagraph', label: 'Presentación', rows: 4 },
   { key: 'evidenceParagraph', label: 'Experiencia relacionada', rows: 5 },
   { key: 'closingParagraph', label: 'Cierre', rows: 3 },
-  { key: 'signoff', label: 'Despedida' }
+  { key: 'signoff', label: 'Despedida' },
 ];
+
+function hasMeaningfulValue(val: unknown, placeholderWord: string): boolean {
+  const clean = String(val || '').trim().toLowerCase();
+  return Boolean(clean && clean !== placeholderWord);
+}
 
 export const ApplicationCoverLetterSection: React.FC<ApplicationCoverLetterSectionProps> = ({
   cvData,
   setCvData,
   onExport,
-  onEditVacante
+  onEditVacante,
 }) => {
-  const [suggestion, setSuggestion] = useState<CoverLetterBody | null>(null);
-  const jobTarget = cvData.jobTarget || {};
+  const { showSuccess, showError, showWarning } = useToast();
+  const [isGenerating, setIsGenerating] = useState(false);
+  const jobTarget = cvData?.jobTarget || {};
 
-  const handleGenerate = async () => {
-    const jobTargetText = [
-      jobTarget.jobTitle && `Puesto: ${jobTarget.jobTitle}`,
-      jobTarget.companyName && `Empresa: ${jobTarget.companyName}`,
-      jobTarget.recipientName && `Contacto: ${jobTarget.recipientName}`,
-      jobTarget.jobDescription
-    ].filter(Boolean).join('\n');
-    const result = await executeAiTask<CoverLetterBody & { missingDataWarning?: string }>({
-      taskId: 'cover_letter',
-      payload: { jobTargetText },
-      cvData,
-      temperature: 0.4
-    });
-    const body = result.data;
-    if (!body.hookParagraph?.trim() || !body.evidenceParagraph?.trim() || !body.closingParagraph?.trim()) {
-      throw new Error('La IA no devolvió todos los párrafos necesarios para revisar la carta.');
+  const hasValidJobTarget =
+    hasMeaningfulValue(jobTarget.jobTitle, 'ninguno') &&
+    hasMeaningfulValue(jobTarget.companyName, 'ninguna');
+
+  const updateJobTargetField = (field: 'jobTitle' | 'companyName', val: string) => {
+    setCvData((previous: any) => ({
+      ...previous,
+      jobTarget: {
+        ...(previous?.jobTarget || {}),
+        [field]: val,
+      },
+    }));
+  };
+
+  const handleGenerateAndFill = useCallback(async () => {
+    const currentJobTarget = cvData?.jobTarget || {};
+    const validNow =
+      hasMeaningfulValue(currentJobTarget.jobTitle, 'ninguno') &&
+      hasMeaningfulValue(currentJobTarget.companyName, 'ninguna');
+
+    if (!validNow) {
+      showWarning('Completá primero Puesto y Empresa en Vacante Objetivo para redactar la carta (tu CV Base no se modificará).');
+      return;
     }
-    return JSON.stringify({
-      salutation: body.salutation || '',
-      hookParagraph: body.hookParagraph,
-      evidenceParagraph: body.evidenceParagraph,
-      closingParagraph: body.closingParagraph,
-      signoff: body.signoff || ''
-    });
-  };
 
-  const handleShowSuggestion = (rawSuggestion: string) => {
-    const parsed: unknown = JSON.parse(rawSuggestion);
-    if (!parsed || typeof parsed !== 'object') throw new Error('La propuesta de carta no tiene un formato válido.');
-    setSuggestion(parsed as CoverLetterBody);
-  };
+    setIsGenerating(true);
+    try {
+      const jobTargetText = [
+        currentJobTarget.jobTitle && `Puesto: ${currentJobTarget.jobTitle}`,
+        currentJobTarget.companyName && `Empresa: ${currentJobTarget.companyName}`,
+        currentJobTarget.recipientName && `Contacto: ${currentJobTarget.recipientName}`,
+        currentJobTarget.jobDescription,
+      ]
+        .filter(Boolean)
+        .join('\n');
 
-  const applySuggestion = () => {
-    if (!suggestion) return;
-    setCvData((previous) => ({ ...previous, body: suggestion }));
-    setSuggestion(null);
-  };
+      const result = await executeAiTask<CoverLetterBody & { missingDataWarning?: string }>({
+        taskId: 'cover_letter',
+        payload: { jobTargetText },
+        cvData,
+        temperature: 0.4,
+      });
+
+      const body = result.data;
+      if (!body.hookParagraph?.trim() || !body.evidenceParagraph?.trim() || !body.closingParagraph?.trim()) {
+        throw new Error('La IA no devolvió todos los párrafos necesarios para completar la carta.');
+      }
+
+      const filledBody: CoverLetterBody = {
+        salutation: body.salutation || 'Estimado/a responsable de selección,',
+        hookParagraph: body.hookParagraph,
+        evidenceParagraph: body.evidenceParagraph,
+        closingParagraph: body.closingParagraph,
+        signoff: body.signoff || 'Atentamente,',
+      };
+
+      setCvData((previous: any) => ({
+        ...previous,
+        body: filledBody,
+      }));
+      showSuccess('Carta de presentación completada con todos los datos de tu CV.');
+    } catch (err: any) {
+      showError(err?.message || 'No pudimos redactar la carta en este momento.');
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [cvData, setCvData, showError, showSuccess, showWarning]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const rawTs = window.sessionStorage.getItem('leecv_auto_generate_cover_letter');
+      if (!rawTs) return;
+      window.sessionStorage.removeItem('leecv_auto_generate_cover_letter');
+      const ageMs = Date.now() - Number(rawTs);
+      if (ageMs >= 0 && ageMs < 15000 && hasValidJobTarget) {
+        void handleGenerateAndFill();
+      }
+    } catch {}
+  }, [hasValidJobTarget, handleGenerateAndFill]);
 
   return (
     <div className="space-y-5">
@@ -78,20 +127,24 @@ export const ApplicationCoverLetterSection: React.FC<ApplicationCoverLetterSecti
             Carta de presentación
           </h2>
           <p className="text-sm text-[var(--color-neutral-text-secondary)]">
-            La carta comparte la vacante y los datos de esta versión del CV. Reutiliza sus colores y tipografía con una composición propia.
+            Toma todo el contenido de tu CV y la vacante elegida para completar la carta. <strong>No consume créditos</strong> y siempre se exporta por separado del CV.
           </p>
         </div>
-        <button type="button" className={`${button.secondary} inline-flex items-center gap-2`} onClick={onExport}>
+        <button
+          type="button"
+          className={`${button.base} ${button.secondary} inline-flex items-center gap-2`}
+          onClick={onExport}
+        >
           <Download className="h-4 w-4" />
-          Exportar carta por separado
+          Exportar carta por separado (Gratis)
         </button>
       </header>
 
-      <section className="space-y-2 rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] bg-[var(--ui-bg-panel)] p-3">
+      <section className="space-y-3 rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] bg-[var(--ui-bg-panel)] p-3.5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-[var(--color-neutral-text-primary)]">
             <Briefcase className="h-4 w-4" />
-            Información de la vacante
+            Vacante de esta carta
           </h3>
           {onEditVacante && (
             <button
@@ -99,53 +152,61 @@ export const ApplicationCoverLetterSection: React.FC<ApplicationCoverLetterSecti
               onClick={onEditVacante}
               className="cursor-pointer text-xs font-bold text-[var(--color-accent-text)] hover:text-[var(--ui-text-primary)] transition-colors"
             >
-              Editar vacante
+              Ir a Vacante Objetivo
             </button>
           )}
         </div>
-        <p className="text-sm text-[var(--color-neutral-text-primary)]">
-          {jobTarget.jobTitle || 'Puesto sin especificar'}
-          {jobTarget.companyName ? ` · ${jobTarget.companyName}` : ''}
-        </p>
-        {jobTarget.recipientName && (
-          <p className="text-sm text-[var(--color-neutral-text-secondary)]">Contacto: {jobTarget.recipientName}</p>
-        )}
-        {!jobTarget.jobTitle && !jobTarget.companyName && !jobTarget.jobDescription && (
-          <p className="text-sm text-[var(--color-neutral-text-secondary)]">
-            Completá la vacante en el panel “Vacante” para orientar la carta.
+
+        {!hasValidJobTarget ? (
+          <div className="space-y-3 rounded-[var(--ui-radius-control)] border border-[var(--color-status-warning-base)]/50 bg-[var(--color-status-warning-muted)]/40 p-3">
+            <div className="flex items-start gap-2 text-xs text-[var(--color-status-warning-text)]">
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>
+                Para generar una carta desde el CV Base, indicá primero el <strong>Puesto</strong> y la <strong>Empresa</strong> a la que dirigís la carta (esto no modifica tu CV Base).
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <Field
+                label="Puesto"
+                value={jobTarget.jobTitle || ''}
+                onChange={(e: any) => updateJobTargetField('jobTitle', e.target.value)}
+                placeholder="Ej: Diseñadora Instruccional"
+              />
+              <Field
+                label="Empresa"
+                value={jobTarget.companyName || ''}
+                onChange={(e: any) => updateJobTargetField('companyName', e.target.value)}
+                placeholder="Ej: EdTech.IA"
+              />
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-[var(--color-neutral-text-primary)] font-medium">
+            {jobTarget.jobTitle} · {jobTarget.companyName}
           </p>
+        )}
+
+        {jobTarget.recipientName && (
+          <p className="text-xs text-[var(--color-neutral-text-secondary)]">Contacto: {jobTarget.recipientName}</p>
         )}
       </section>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-[var(--color-neutral-text-secondary)]">
-          La IA propone un borrador que podés revisar antes de aplicarlo.
+        <p className="text-xs text-[var(--color-neutral-text-secondary)]">
+          La IA analiza todas las secciones de tu CV y rellena automáticamente el saludo, los 3 párrafos y la despedida.
         </p>
-        <AIButton
-          label="Proponer carta con IA"
-          onGenerate={handleGenerate}
-          onSuccess={handleShowSuggestion}
-        />
+        <button
+          type="button"
+          disabled={isGenerating}
+          onClick={handleGenerateAndFill}
+          className={`${button.base} ${button.primary} inline-flex items-center gap-2 text-xs px-4 py-2 ${
+            !hasValidJobTarget ? 'opacity-80' : ''
+          }`}
+        >
+          {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+          {isGenerating ? 'Analizando CV y redactando carta…' : 'Completar carta con IA'}
+        </button>
       </div>
-
-      {suggestion && (
-        <section className="space-y-3 rounded-[var(--radius-card)] border border-[var(--color-neutral-border)] bg-[var(--ui-bg-panel)] p-4">
-          <h3 className="flex items-center gap-2 font-semibold text-[var(--color-neutral-text-primary)]">
-            <Sparkles className="h-4 w-4" />
-            Propuesta para revisar
-          </h3>
-          {letterFields.map(({ key, label }) => (
-            <div key={key} className="space-y-1">
-              <h4 className="text-sm font-medium text-[var(--color-neutral-text-primary)]">{label}</h4>
-              <p className="whitespace-pre-wrap text-sm text-[var(--color-neutral-text-secondary)]">{suggestion[key] || ''}</p>
-            </div>
-          ))}
-          <div className="flex flex-wrap gap-2 border-t border-[var(--color-neutral-border)] pt-3">
-            <button type="button" className={button.primary} onClick={applySuggestion}>Aplicar borrador</button>
-            <button type="button" className={button.ghost} onClick={() => setSuggestion(null)}>Descartar</button>
-          </div>
-        </section>
-      )}
 
       <section className="space-y-4">
         <h3 className="text-sm font-semibold text-[var(--color-neutral-text-primary)]">Texto editable</h3>
@@ -159,9 +220,9 @@ export const ApplicationCoverLetterSection: React.FC<ApplicationCoverLetterSecti
             value={cvData.body?.[key] || ''}
             onChange={(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
               const value = event.target.value;
-              setCvData((previous) => ({
+              setCvData((previous: any) => ({
                 ...previous,
-                body: { ...(previous.body || {}), [key]: value }
+                body: { ...(previous.body || {}), [key]: value },
               }));
             }}
           />
