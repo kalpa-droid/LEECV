@@ -1,9 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Home, Printer } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
 import { AppShell } from '../../shared/core/ui/AppShell';
 import StudioNavbar from '../../shared/core/studio-host/StudioNavbar';
 import StudioDock from '../../shared/core/studio-host/StudioDock';
 import { BookImpositionOptions, DEFAULT_BOOK_IMPOSITION_OPTIONS } from './domain/impositionEngine';
+import {
+  BOOK_PRINT_PROFILES,
+  applyBookPrintProfile,
+  inferBookPrintTarget,
+} from './domain/bookPrintProfileEngine';
+import { BookPrintTargetModal } from './BookPrintTargetModal';
+import { countManualOverrides } from '../../shared/core/presets/configCascadeEngine';
 import { PdfSourceError, PdfSourceErrorCode, isPdfSourceError, pdfSourceErrorFromUnknown, isPdfLikeFile } from '../../shared/core/pdf-engine/pdfSourceClassifier';
 import { BookSourceTypeStep } from './BookSourceTypeStep';
 import { BookOrganizeStep } from './BookOrganizeStep';
@@ -88,6 +96,10 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   const sourcePdfPickerRef = useRef<(() => Promise<void>) | null>(null);
 
   const [options, setOptions] = useState<BookImpositionOptions>(DEFAULT_BOOK_IMPOSITION_OPTIONS);
+  const [isPrintTargetModalOpen, setIsPrintTargetModalOpen] = useState<boolean>(false);
+  const activePrintTarget = inferBookPrintTarget(options);
+  const activePrintProfile = BOOK_PRINT_PROFILES[activePrintTarget];
+  const manualOverrideCount = countManualOverrides(options.manualOverrides);
   const [storageUsage, setStorageUsage] = useState<{ bytes: number; count: number } | null>(null);
   const [pdfNotice, setPdfNotice] = useState<'moved' | 'restore-available' | null>(null);
   const [confirmClearAssets, setConfirmClearAssets] = useState(false);
@@ -426,6 +438,14 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
           onPrint={() => setActiveStepTab('book_preview_export')}
           onOpenShareAppModal={onOpenShareAppModal || (() => {})}
           onOpenPrivacy={onOpenPrivacy || (() => {})}
+          globalContextPill={{
+            shortLabel: `${activePrintProfile.pillText} · ${options.paperSize || 'A4'}`,
+            tooltip: `Destino global de impresión: ${activePrintProfile.title}. Tocá para alternar entre Casa e Imprenta.`,
+            ariaLabel: `Destino de impresión ${activePrintProfile.shortName}`,
+            icon: activePrintTarget === 'home' ? <Home className="w-3.5 h-3.5" /> : <Printer className="w-3.5 h-3.5" />,
+            hasOverrides: manualOverrideCount > 0,
+            onClick: () => setIsPrintTargetModalOpen(true),
+          }}
           zoomLevel={viewport.zoomLevel}
           setZoomLevel={viewport.setZoomLevel}
           triggerAutoFit={viewport.fitAndCenter}
@@ -618,6 +638,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               pdfPageCount={pdfPageCount}
               onFileConfirmed={confirmSourceFile}
               onNextStep={() => handleNavigateNextStep('book_source_type')}
+              onOpenPrintTargetModal={() => setIsPrintTargetModalOpen(true)}
               pickerRef={sourcePdfPickerRef}
               bookId={bookId}
             />
@@ -667,6 +688,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               setOptions={handleOptionsChange}
               sourceProtected={pdfProtection === 'protected'}
               pdfPageCount={pdfPageCount}
+              onOpenPrintTargetModal={() => setIsPrintTargetModalOpen(true)}
               onNextStep={() => handleNavigateNextStep('book_imposition')}
               onPrevStep={() => handleNavigatePrevStep('book_imposition')}
             />
@@ -754,6 +776,14 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
         activeTab={activeStepTab}
         onNavigate={setActiveStepTab}
         bookOptions={options}
+      />
+      <BookPrintTargetModal
+        isOpen={isPrintTargetModalOpen}
+        onClose={() => setIsPrintTargetModalOpen(false)}
+        options={options}
+        onApplyProfile={(target, mode) => {
+          handleOptionsChange((prev) => applyBookPrintProfile(prev, target, mode));
+        }}
       />
     </>
   );

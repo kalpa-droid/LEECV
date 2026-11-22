@@ -215,20 +215,36 @@ export function buildEditorialDockTabs(
   const presetId = draft?.design?.presetId;
   const activePreset = presetId ? getEditorialPreset(presetId) : undefined;
 
+const EDITORIAL_PRESET_STEP_IDS = new Set([
+  'editorial_inicio',
+  'editorial_portada',
+  'editorial_diseño',
+  'editorial_toc',
+]);
+
   const coreTabs: DockTabItem[] = EDITORIAL_STEP_SEQUENCE.filter((step) => {
     if (!activePreset) return true;
     if (step.id === 'editorial_toc' && !activePreset.dockButtons.toc && draft?.tocConfig?.enabled === false) {
       return true; // Mantener visible para poder encenderlo cuando se desee
     }
     return true;
-  }).map((step) => ({
-    id: step.id,
-    label: step.label,
-    stepNumber: step.stepNumber,
-    icon: iconSet?.steps[step.id] || iconSet?.fallback,
-    isLarge: true,
-    variant: 'accent' as const,
-  }));
+  }).map((step) => {
+    const role: DockTabItem['role'] =
+      step.id === 'editorial_import_ai'
+        ? 'ai_utility'
+        : EDITORIAL_PRESET_STEP_IDS.has(step.id)
+          ? 'preset'
+          : 'record';
+    return {
+      id: step.id,
+      label: step.label,
+      stepNumber: step.stepNumber,
+      icon: iconSet?.steps[step.id] || iconSet?.fallback,
+      isLarge: true,
+      role,
+      variant: role === 'preset' ? ('accent' as const) : role === 'ai_utility' ? ('custom' as const) : ('secondary' as const),
+    };
+  });
 
   const sections: EditorialSection[] = Array.isArray(draft.sections) ? draft.sections : [];
   if (sections.length === 0) return coreTabs;
@@ -238,7 +254,7 @@ export function buildEditorialDockTabs(
 
   for (const sec of sections) {
     if (!sec || typeof sec.id !== 'string') continue;
-    const { badgeLabel, sectionKey } = resolveSectionBadgeLabel(sec, counters);
+    const { badgeLabel, sectionKey, category } = resolveSectionBadgeLabel(sec, counters);
     const hasContent =
       Array.isArray(sec.records) &&
       sec.records.some(
@@ -253,6 +269,7 @@ export function buildEditorialDockTabs(
       badgeLabel,
       icon: iconSet?.sections[sectionKey] || iconSet?.sections.capitulo || iconSet?.fallback,
       isLarge: false,
+      role: category === 'personalizada' ? 'custom_record' : 'record',
       variant: sectionKey === 'capitulo' || sectionKey === 'unidad' || sectionKey === 'desarrollo' ? 'default' : 'secondary',
       hasContent,
       isDisabled: sec.visible === false,

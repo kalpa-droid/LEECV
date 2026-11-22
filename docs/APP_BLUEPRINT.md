@@ -87,12 +87,18 @@ Para previsualizar sin escribir archivos: agregar `--dry-run`.
 
 ---
 
-## 5. Paso 4 — Persistencia Local-First, Carpeta Segura, UI Cero Ruido y Bóveda
+## 5. Paso 4 — Persistencia Local-First, UI Cero Ruido, Taxonomía de Botones y Cascada Anti-Pisado
 
-- **UI Cero Ruido + Ayuda de Lidio**:
-  - Todo encabezado de panel usa `<PanelSection helpText="..." />` con globo `?` de Lidio (`<LidioHelpTrigger />`) para explicar *para qué sirve* un botón o control sin párrafos inline.
-  - Todo campo/sección que orienta *qué escribir o redactar* usa `<ContextualGuideBox />` siempre visible.
-  - Activar/pausar secciones usa `<SectionSwitch />`; mostrar/ocultar un dato usa `<VisibilityEyeToggle />`; botones de acción usan `<ActionGrid />` + `<ActionTileButton />`; acciones de IA usan `<AIButton />` (solo ícono animado por defecto).
+- **3 Canales de Ayuda (Estándar Cero Ruido)**:
+  - **Ayuda de control bajo demanda (`<LidioHelpTrigger />` `?` dentro de `<PanelSection helpText="..." />`)**: explica *para qué sirve* un botón, interruptor o filtro sin llenar el panel de párrafos.
+  - **Guía contextual de redacción (`<ContextualGuideBox />`)**: siempre visible únicamente cuando el usuario necesita saber *qué escribir o cargar*.
+  - **Confirmación de estado (`lidioBus.ts` vía `<SectionSwitch />` y `<VisibilityEyeToggle />`)**: al pausar u ocultar un bloque, tranquiliza asegurando que ningún dato se borra.
+- **Taxonomía Visual de Botones**:
+  - **En `StudioDock` (`DockButtonRole`)**: cada paso en `appRegistry.ts` o el proveedor del módulo DEBE declarar `role`: `'catalog'` (verde, catálogo), `'preset'` (acento principal, configuración/estilo), `'record'` (neutro/secundario, contenido/ítems), `'custom_record'` (violeta suave, bloques propios), `'ai_utility'` (violeta discontinuo, asistentes IA/utilidades) o `'handoff'` (ámbar con flecha externa, salto a otra app). `StudioDock` inserta automáticamente separadores `--ui-dock-separator` entre grupos (`config` / `records` / `tools`).
+  - **En paneles (`UiButtonRole`)**: usar `<ActionGrid />` + `<ActionTileButton role="..." />` (`'preset' | 'record' | 'io' | 'export_paid' | 'ai' | 'handoff' | 'destructive'`) y `<AIButton />` (ícono animado).
+- **Configuración Global en Navbar + Cascada de 3 Niveles (`configCascadeEngine.ts`)**:
+  - Las decisiones globales de todo el documento (región de CV, *En casa vs Imprenta*, tipo de obra y norma editorial) declaran capability `'global_context'` y pasan `globalContextPill` a `<StudioNavbar />`.
+  - La jerarquía **Nivel 1 (Global) → Nivel 2 (Preset/Tema) → Nivel 3 (`manualOverrides`)** garantiza que nunca se pisan ajustes finos sin preguntar (`detectGlobalConflicts` + `applyGlobalConfigWithCascade`), mostrando `<ManualOverrideBadge />` con reset puntual (`↺`).
 - **Persistencia en Disco y Carpeta Segura**:
   - Toda persistencia pasa por `documentStorageService` (`localDocumentStore` + `wrapDocumentEnvelope`) y exportación a disco por `nativeFileDocumentService.ts` + `fileHandleStore.ts` ("Carpeta Segura").
   - Los archivos binarios/imágenes se externalizan automáticamente a IndexedDB (`localAssetStore`, URI `asset://<sha256>`).

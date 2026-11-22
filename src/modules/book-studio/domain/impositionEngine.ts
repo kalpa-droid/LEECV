@@ -1,9 +1,10 @@
-import { PDFDocument, PageSizes, rgb } from 'pdf-lib';
+import { PDFDocument, rgb } from 'pdf-lib';
 import { countBlanksBehindCover } from '../../../shared/kits/print-imposition/impositionMath';
 import { getCoverPresetById } from '../../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
 import { loadPdfDocumentWithCmaps } from '../../../shared/core/pdf-engine/pdfjsWorkerSetup';
 import { resolveCanvasColor, COVER_FALLBACK_BG, COVER_FALLBACK_TEXT } from '../../../shared/kits/print-imposition/canvasColors';
 import { calculateSpineWidth, calculateCreepOffset, planBookletSignatures, getSignatureSheetPairs } from '../../../shared/kits/print-imposition/impositionPlanner';
+import { BookPaperSizeId, BookPrintTarget, resolveBookPaperSpec } from './bookPrintProfileEngine';
 
 export interface CoverConfig {
   type: 'upload' | 'template' | 'none';
@@ -44,7 +45,9 @@ export interface BackCoverConfig {
 
 export interface BookImpositionOptions {
   mode?: 'normal' | 'fotocopia';
-  paperSize?: 'A4' | 'A3';
+  printTarget?: BookPrintTarget;
+  paperSize?: BookPaperSizeId;
+  manualOverrides?: Record<string, boolean>;
   hasCover?: boolean;
   coverSide?: 'derecha' | 'izquierda';
   hasBackCover?: boolean;
@@ -110,7 +113,9 @@ export interface BookImpositionOptions {
 
 export const DEFAULT_BOOK_IMPOSITION_OPTIONS: BookImpositionOptions = {
   mode: 'normal',
+  printTarget: 'home',
   paperSize: 'A4',
+  manualOverrides: {},
   hasCover: false,
   coverSide: 'derecha',
   hasBackCover: false,
@@ -137,8 +142,9 @@ export const DEFAULT_BOOK_IMPOSITION_OPTIONS: BookImpositionOptions = {
   unprintableMarginMm: 5,
 };
 
-export function getCoverCanvasSize(paperSize: 'A4' | 'A3' = 'A4'): { width: number; height: number } {
-  return paperSize === 'A3' ? { width: 2480, height: 3508 } : { width: 1748, height: 2480 };
+export function getCoverCanvasSize(paperSize: BookPaperSizeId = 'A4'): { width: number; height: number } {
+  const spec = resolveBookPaperSpec(paperSize);
+  return { width: spec.coverCanvasWidth, height: spec.coverCanvasHeight };
 }
 
 /**
@@ -455,11 +461,11 @@ async function buildWrapCoverCanvas(
   customBackCover: BackCoverConfig | null,
   coverCanvasSize: { width: number; height: number },
   spineWidthMm: number,
-  paperSize: 'A4' | 'A3',
+  paperSize: BookPaperSizeId,
   coverStyle: string | undefined,
   assetResolver?: (ref: string) => Promise<string | null>
 ): Promise<HTMLCanvasElement> {
-  const paperWidthMm = paperSize === 'A3' ? 297 : 210;
+  const paperWidthMm = resolveBookPaperSpec(paperSize).widthMm;
   const pxPerMm = coverCanvasSize.width / paperWidthMm;
   const spinePx = Math.max(0, Math.round(spineWidthMm * pxPerMm));
 
@@ -521,16 +527,16 @@ async function drawBookletSheet(
   pagesDoc: PDFDocument,
   leftIndex: number,
   rightIndex: number,
-  paperSize: 'A4' | 'A3',
+  paperSize: BookPaperSizeId,
   showGuides: boolean,
   unprintableMarginMm = 5
 ): Promise<void> {
   const [leftPage] = await bookletDoc.copyPages(pagesDoc, [leftIndex]);
   const [rightPage] = await bookletDoc.copyPages(pagesDoc, [rightIndex]);
 
-  const paperPageSize = PageSizes[paperSize] || PageSizes.A4;
-  const sheetWidth = paperPageSize[1];
-  const sheetHeight = paperPageSize[0];
+  const paperSpec = resolveBookPaperSpec(paperSize);
+  const sheetWidth = paperSpec.heightPt;
+  const sheetHeight = paperSpec.widthPt;
   const sheet = bookletDoc.addPage([sheetWidth, sheetHeight]);
 
   const embedL = await bookletDoc.embedPage(leftPage);

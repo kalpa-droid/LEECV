@@ -31,6 +31,9 @@ function definePageSize(input: Omit<PageSize, 'widthPt' | 'heightPt'>): PageSize
 export const PAGE_SIZES: Record<string, PageSize> = {
   a4: definePageSize({ id: 'a4', name: 'A4', widthMm: 210, heightMm: 297, label: 'Hoja común (la de tu impresora)', appLabel: 'Hoja común (A4 - 210 × 297 mm)', category: 'documento' }),
   a3: definePageSize({ id: 'a3', name: 'A3', widthMm: 297, heightMm: 420, label: 'Hoja grande (para imprenta)', appLabel: 'Hoja grande (A3 - 297 × 420 mm)', category: 'documento' }),
+  sra3: definePageSize({ id: 'sra3', name: 'SRA3', widthMm: 320, heightMm: 450, label: 'Hoja grande para guillotina', appLabel: 'Hoja para guillotina (SRA3 - 320 × 450 mm)', category: 'documento' }),
+  a3_plus: definePageSize({ id: 'a3_plus', name: 'A3+', widthMm: 329, heightMm: 483, label: 'Hoja extra grande con margen', appLabel: 'Extra grande con margen (A3+ - 329 × 483 mm)', category: 'documento' }),
+  a2: definePageSize({ id: 'a2', name: 'A2', widthMm: 420, heightMm: 594, label: 'Hoja editorial amplia', appLabel: 'Hoja editorial amplia (A2 - 420 × 594 mm)', category: 'documento' }),
   a5: definePageSize({ id: 'a5', name: 'A5', widthMm: 148, heightMm: 210, label: 'Media hoja común', appLabel: 'Media hoja (A5 - 148 × 210 mm)', category: 'documento' }),
   carta: definePageSize({ id: 'carta', name: 'Carta', widthMm: 216, heightMm: 279, label: 'Hoja carta', appLabel: 'Carta (216 × 279 mm)', category: 'documento' }),
   legal: definePageSize({ id: 'legal', name: 'Legal', widthMm: 216, heightMm: 356, label: 'Hoja legal', appLabel: 'Legal (216 × 356 mm)', category: 'documento' }),

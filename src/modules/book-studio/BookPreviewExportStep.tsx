@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
 import { BookOpen, CheckCircle2, AlertTriangle, Printer, Sparkles, Download, AlertCircle, ChevronLeft, FileText, Layers, Languages } from 'lucide-react';
 import { BookImpositionOptions, processBookImposition } from './domain/impositionEngine';
+import {
+  BOOK_PRINT_PROFILES,
+  clearBookFieldManual,
+  inferBookPrintTarget,
+  markBookFieldManual,
+  resolveBookPaperSpec,
+} from './domain/bookPrintProfileEngine';
+import { isManuallyOverridden } from '../../shared/core/presets/configCascadeEngine';
+import { SectionSwitch } from '../../shared/core/ui/SectionSwitch';
+import { ManualOverrideBadge } from '../../shared/core/ui/ManualOverrideBadge';
 import { calculateSpineWidth, calculateCreepOffset, planBookletSignatures } from '../../shared/kits/print-imposition/impositionPlanner';
 import { computeBookFinalPageCount } from './domain/bookPageCount';
 import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
@@ -71,7 +81,9 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   const readingDirection = options.readingDirection ?? 'ltr';
   const unprintableMarginMm = options.unprintableMarginMm ?? 5;
   const homePrinter = unprintableMarginMm > 0;
-  const isA3 = options.paperSize === 'A3';
+  const activeTarget = inferBookPrintTarget(options);
+  const activeProfile = BOOK_PRINT_PROFILES[activeTarget];
+  const paperSpec = resolveBookPaperSpec(options.paperSize);
   const isNormalMode = options.mode !== 'fotocopia';
   const spineWidthMm = calculateSpineWidth(finalPageCount, { paperThicknessMm: options.paperThicknessMm ?? 0 });
   const sheetsInSignature = Math.max(1, Math.floor(finalPageCount / 4));
@@ -182,7 +194,12 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
               <p className="text-xs text-[var(--ui-text-secondary)]">
                 {t.bookStudio.previewExportStep.modeSummaryLine
                   .replace('{mode}', options.mode === 'fotocopia' ? t.bookStudio.previewExportStep.modeFotocopiaShort : t.bookStudio.previewExportStep.modeStandardShort)
-                  .replace('{where}', options.paperSize === 'A3' ? t.bookStudio.previewExportStep.printAtImprenta : t.bookStudio.previewExportStep.printAtHome)}
+                  .replace(
+                    '{where}',
+                    activeTarget === 'print_shop'
+                      ? t.bookStudio.previewExportStep.printAtImprenta.replace('{paper}', paperSpec.pageSize.name)
+                      : t.bookStudio.previewExportStep.printAtHome.replace('{paper}', paperSpec.pageSize.name),
+                  )}
               </p>
             </div>
           </div>
@@ -263,18 +280,35 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
           )}
         </div>
 
-        {/* Perfil de impresora casera (aplicable solo al papel grande de casa: A4) */}
-        {!isA3 && setOptions && (
+        {/* Perfil de impresora y margen de seguridad de borde */}
+        {setOptions && (
           <div className="space-y-2 pt-2 border-t border-[var(--ui-border)]">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                <span className="text-xs font-bold text-[var(--ui-text-primary)]">
+                  {t.bookStudio.previewExportStep.homePrinterNoBorders}
+                </span>
+                <ManualOverrideBadge
+                  isOverridden={isManuallyOverridden(options.manualOverrides, 'unprintableMarginMm')}
+                  globalLabel={activeProfile.shortName}
+                  onReset={() => setOptions((prev) => clearBookFieldManual(prev, 'unprintableMarginMm'))}
+                />
+              </div>
+              <SectionSwitch
                 checked={homePrinter}
-                onChange={(e) => setOptions((prev) => ({ ...prev, unprintableMarginMm: e.target.checked ? 5 : 0 }))}
-                className="h-4 w-4 accent-[var(--color-accent-base)]"
+                onChange={(checked) =>
+                  setOptions((prev) => {
+                    const nextVal = checked ? 5 : 0;
+                    const updated = { ...prev, unprintableMarginMm: nextVal };
+                    return nextVal === activeProfile.defaults.unprintableMarginMm
+                      ? clearBookFieldManual(updated, 'unprintableMarginMm')
+                      : markBookFieldManual(updated, 'unprintableMarginMm');
+                  })
+                }
+                label={t.bookStudio.previewExportStep.homePrinterNoBorders}
+                size="sm"
               />
-              <span className="text-xs font-bold text-[var(--ui-text-primary)]">{t.bookStudio.previewExportStep.homePrinterNoBorders}</span>
-            </label>
+            </div>
             {homePrinter && (
               <label className="flex flex-wrap items-center gap-2 text-xs text-[var(--ui-text-secondary)]">
                 <span>{t.bookStudio.previewExportStep.homePrinterMinMargin}</span>
@@ -284,7 +318,10 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
                   max={10}
                   step={0.5}
                   value={unprintableMarginMm}
-                  onChange={(e) => setOptions((prev) => ({ ...prev, unprintableMarginMm: Number(e.target.value) || 5 }))}
+                  onChange={(e) => {
+                    const val = Number(e.target.value) || 5;
+                    setOptions((prev) => markBookFieldManual({ ...prev, unprintableMarginMm: val }, 'unprintableMarginMm'));
+                  }}
                   className="w-20 px-2 py-1 rounded-[var(--radius-control,8px)] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)]"
                 />
               </label>

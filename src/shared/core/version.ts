@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 3,
-  minor: 1,
+  minor: 2,
   patch: 0,
-  label: 'V3.1.0',
+  label: 'V3.2.0',
   lastUpdated: '2026-11-22',
   lastAgent: '@antigravity',
-  stage: 'feat(editorlee): V3.1.0 — Presets escolares/terciarios/APA7/Vancouver IMRyD, Bibliografía formal APA 7 y Vancouver, Dock dinámico con distintivos (i, ii, 1, 2, A), Portadas diseñadas adaptadas, Importación universal (Word/ODT/RTF/PDF digital+OCR/Fotos) con Chunker de textos largos e IA y UI Cero Ruido modular.',
+  stage: 'feat(platform,book): V3.2.0 — Taxonomía de Botones en Dock y Paneles, Píldora Global Universal en Navbar, Motor Universal de Cascada Anti-Pisado (Nivel 1/2/3 manualOverrides), Perfiles En casa vs Imprenta con formatos grandes en Libro/Folleto y Fábrica de Apps Cero Ruido actualizada.',
 } as const;

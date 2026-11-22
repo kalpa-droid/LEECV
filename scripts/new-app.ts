@@ -128,6 +128,10 @@ export const ${input.id.toUpperCase()}_CAPSULE_MANIFEST: Pick<
   docType: '${input.id}';
   title: string;
   activePresetId: string;
+  /** Nivel 1: contexto global seleccionado desde la píldora superior (ej. norma, región o destino). */
+  globalContext: string;
+  /** Nivel 3: ajustes finos tocados a mano por el usuario que un cambio global o preset NO debe pisar en silencio. */
+  manualOverrides?: Record<string, boolean>;
   updatedAt?: string;
 }
 
@@ -137,32 +141,45 @@ export function createEmpty${pascal}Data(id: string): ${pascal}DocumentData {
     docType: '${input.id}',
     title: '${input.title}',
     activePresetId: '${input.id}-clasico',
+    globalContext: 'Estándar',
+    manualOverrides: {},
   };
 }
 `;
 
-  const stepsTs = `export interface ${pascal}StepItem {
+  const stepsTs = `export type ${pascal}DockRole =
+  | 'catalog'
+  | 'preset'
+  | 'record'
+  | 'custom_record'
+  | 'ai_utility'
+  | 'handoff';
+
+export interface ${pascal}StepItem {
   readonly id: string;
   readonly stepNumber: number;
   readonly label: string;
   readonly shortLabel: string;
   readonly description: string;
+  readonly role: ${pascal}DockRole;
 }
 
 export const ${stepSeqConst}: readonly ${pascal}StepItem[] = [
   {
-    id: '${input.id}_inicio',
-    stepNumber: 1,
-    label: '1. Contenido',
-    shortLabel: 'Contenido',
-    description: 'Configuración principal del documento',
-  },
-  {
     id: '${input.id}_diseno',
-    stepNumber: 2,
-    label: '2. Estilo',
+    stepNumber: 1,
+    label: '1. Estilo',
     shortLabel: 'Estilo',
     description: 'Colores y presentación',
+    role: 'preset',
+  },
+  {
+    id: '${input.id}_inicio',
+    stepNumber: 2,
+    label: '2. Contenido',
+    shortLabel: 'Contenido',
+    description: 'Configuración principal del documento',
+    role: 'record',
   },
 ];
 `;
@@ -189,9 +206,16 @@ import { useToast } from '../../shared/core/ui/Toast';
 import { PanelSection } from '../../shared/core/ui/PanelSection';
 import { ContextualGuideBox } from '../../shared/core/ui/ContextualGuideBox';
 import { SectionSwitch } from '../../shared/core/ui/SectionSwitch';
+import { VisibilityEyeToggle } from '../../shared/core/ui/VisibilityEyeToggle';
 import { ActionGrid } from '../../shared/core/ui/ActionGrid';
 import { ActionTileButton } from '../../shared/core/ui/ActionTileButton';
 import { AIButton } from '../../shared/core/ui/AIButton';
+import { ManualOverrideBadge } from '../../shared/core/ui/ManualOverrideBadge';
+import {
+  clearManualOverride,
+  isManuallyOverridden,
+  markManualOverride,
+} from '../../shared/core/presets/configCascadeEngine';
 import { UI_ICON_IDS } from '../../shared/core/ui/iconCatalog';
 import { elevationSystem } from '../../shared/core/uiDesignSystem';
 import { DocumentTypeId } from '../../types/document';
@@ -234,8 +258,9 @@ export const ${studioComponentName}: React.FC<${studioComponentName}Props> = ({
   const [activeStepTab, setActiveStepTab] = useState<string>('${input.id}_inicio');
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
   const [isSectionEnabled, setIsSectionEnabled] = useState<boolean>(true);
+  const [isSubtitleVisible, setIsSubtitleVisible] = useState<boolean>(true);
   const docId = useMemo(() => resolveDocumentIdWithHandoff(activeTabId, '${input.id}'), [activeTabId]);
-  const [docData] = useState(() => createEmpty${pascal}Data(docId));
+  const [docData, setDocData] = useState(() => createEmpty${pascal}Data(docId));
   const viewport = useDocumentViewport({ pageSizeId: 'a4' });
   const { widthPx, heightPx } = useMemo(() => resolveDocumentCanvasPx('a4'), []);
   const rasterZoom = quantizeRasterZoom(viewport.zoomLevel);
@@ -274,6 +299,16 @@ export const ${studioComponentName}: React.FC<${studioComponentName}Props> = ({
             onPrint={() => showInfo('Conectar exportador PDF + useExportEntitlement.')}
             onOpenShareAppModal={onOpenShareAppModal || (() => {})}
             onOpenPrivacy={onOpenPrivacy || (() => {})}
+            globalContextPill={{
+              shortLabel: docData.globalContext,
+              tooltip: 'Configuración global de ${input.title}. Tocá para alternar o abrir selector.',
+              hasOverrides: isManuallyOverridden(docData.manualOverrides, 'activePresetId'),
+              onClick: () =>
+                setDocData((prev) => ({
+                  ...prev,
+                  globalContext: prev.globalContext === 'Estándar' ? 'Compacto' : 'Estándar',
+                })),
+            }}
             zoomLevel={viewport.zoomLevel}
             setZoomLevel={viewport.setZoomLevel}
             triggerAutoFit={viewport.fitAndCenter}
@@ -301,6 +336,22 @@ export const ${studioComponentName}: React.FC<${studioComponentName}Props> = ({
               helpText="Usá la perilla para incluir u ocultar este paso sin perder datos."
               headerRight={
                 <div className="flex items-center gap-2">
+                  <ManualOverrideBadge
+                    isOverridden={isManuallyOverridden(docData.manualOverrides, 'activePresetId')}
+                    globalLabel={docData.globalContext}
+                    onReset={() =>
+                      setDocData((prev) => ({
+                        ...prev,
+                        activePresetId: '${input.id}-clasico',
+                        manualOverrides: clearManualOverride(prev.manualOverrides, 'activePresetId'),
+                      }))
+                    }
+                  />
+                  <VisibilityEyeToggle
+                    visible={isSubtitleVisible}
+                    onToggle={setIsSubtitleVisible}
+                    fieldLabel="Subtítulo en PDF"
+                  />
                   <AIButton
                     label="Proponer contenido con IA"
                     helpText="La IA propone texto base para tu documento actual."
@@ -320,13 +371,29 @@ export const ${studioComponentName}: React.FC<${studioComponentName}Props> = ({
               </ContextualGuideBox>
               <ActionGrid columns={2}>
                 <ActionTileButton
+                  label="Plantilla clásica"
+                  role="preset"
+                  active={docData.activePresetId === '${input.id}-clasico'}
+                  iconId={UI_ICON_IDS.template}
+                  helpText="Aplica el diseño base recomendado para este documento."
+                  onClick={() =>
+                    setDocData((prev) => ({
+                      ...prev,
+                      activePresetId: '${input.id}-clasico',
+                      manualOverrides: markManualOverride(prev.manualOverrides, 'activePresetId'),
+                    }))
+                  }
+                />
+                <ActionTileButton
                   label="Guardar respaldo"
+                  role="io"
                   iconId={UI_ICON_IDS.folderSafe}
                   helpText="Guarda una copia segura en tu Carpeta Segura para no perder cambios."
                   onClick={() => showInfo('Conectar saveDocumentToDisk.')}
                 />
                 <ActionTileButton
                   label="Vista previa"
+                  role="record"
                   iconId={UI_ICON_IDS.preview}
                   helpText="Revisá cómo queda tu documento listo para imprimir o compartir."
                   onClick={() => setIsPanelOpen(false)}
@@ -431,7 +498,7 @@ BLOQUE DE CONOCIMIENTO — ${input.title.toUpperCase()} (responde SIEMPRE que pr
       privacy: '${input.privacy}',
     },
     creationStrategy: 'blank',
-    capabilities: ['theme', 'paper_size', 'json_backup', 'nameable_title'],
+    capabilities: ['theme', 'paper_size', 'global_context', 'json_backup', 'nameable_title'],
     exportFormats: ['pdf', 'json'],
     stepSequenceId: '${input.id}_steps',
     defaultPaperSize: 'a4',
@@ -496,7 +563,8 @@ registerDockStepProvider('${input.id}', () =>
     label: s.label,
     stepNumber: s.stepNumber,
     isLarge: s.stepNumber <= 2,
-    variant: s.stepNumber <= 2 ? ('accent' as const) : undefined,
+    variant: s.role === 'preset' ? ('accent' as const) : undefined,
+    role: s.role,
   })),
 );`;
 
@@ -654,9 +722,13 @@ function runSelfTest(): void {
       throw new Error('Self-test falló: falta DiplomaStudioContent.tsx.');
     }
     const manifestSrc = fs.readFileSync(path.join(tmpDir, 'src/modules/diploma-studio/manifest.ts'), 'utf8');
+    const stepSeqSrc = fs.readFileSync(path.join(tmpDir, 'src/modules/diploma-studio/domain/diplomaStepSequence.ts'), 'utf8');
     const studioSrc = fs.readFileSync(studioFile, 'utf8');
     if (!manifestSrc.includes('DocumentTypeManifest') || manifestSrc.includes('CapsuleManifest')) {
       throw new Error('Self-test falló: manifest.ts debe importar DocumentTypeManifest.');
+    }
+    if (!stepSeqSrc.includes("role: 'preset'") || !stepSeqSrc.includes("role: 'record'")) {
+      throw new Error('Self-test falló: stepSequence generado debe asignar DockButtonRole explícito (preset / record).');
     }
     if (studioSrc.includes('activeId: activeTabId') || !studioSrc.includes('activeId: docId') || !studioSrc.includes('ScaledPaperSheet')) {
       throw new Error('Self-test falló: studio generado debe usar activeId: docId y ScaledPaperSheet.');
@@ -665,9 +737,13 @@ function runSelfTest(): void {
       !studioSrc.includes('PanelSection') ||
       !studioSrc.includes('ContextualGuideBox') ||
       !studioSrc.includes('SectionSwitch') ||
-      !studioSrc.includes('ActionGrid')
+      !studioSrc.includes('VisibilityEyeToggle') ||
+      !studioSrc.includes('ActionGrid') ||
+      !studioSrc.includes('ManualOverrideBadge') ||
+      !studioSrc.includes('globalContextPill') ||
+      !studioSrc.includes('role="preset"')
     ) {
-      throw new Error('Self-test falló: studio generado debe incluir los primitivos Cero Ruido (PanelSection, ContextualGuideBox, SectionSwitch, ActionGrid).');
+      throw new Error('Self-test falló: studio generado debe incluir los primitivos Cero Ruido, taxonomía de botones, píldora global y cascada.');
     }
     if (
       !plan.registrationSnippets.documentTypeRegistryEntry.includes('ui:') ||
@@ -675,6 +751,7 @@ function runSelfTest(): void {
       !plan.registrationSnippets.appRegistryEntry.includes('managesOwnStore: true') ||
       !plan.registrationSnippets.appRegistryEntry.includes('autoCreateBlankTabOnRouteEnter: false') ||
       !plan.registrationSnippets.appSurfaceManifestEntry.includes("menuAction: 'onSelectDocument'") ||
+      !plan.registrationSnippets.dockProviderSnippet.includes('role: s.role') ||
       plan.registrationSnippets.lidioKnowledgeFile.includes('AppKnowledgeDefinition')
     ) {
       throw new Error('Self-test falló: snippets de registro incompletos o con contratos desactualizados.');

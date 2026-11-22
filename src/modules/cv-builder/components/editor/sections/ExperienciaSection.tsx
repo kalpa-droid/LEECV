@@ -72,7 +72,7 @@ export const ExperienciaSection = ({ cvData, setCvData }: any) => {
               <button
                 type="button"
                 onClick={() => setIsClassifyOpen(true)}
-                className={`${button.secondary} text-xs py-1.5 px-3 flex items-center gap-1.5 cursor-pointer`}
+                className="rounded-[10px] border border-dashed border-[var(--color-accent-purple)]/55 bg-[var(--color-accent-purple-light)] text-[var(--color-accent-purple-text)] hover:border-[var(--color-accent-purple)] font-bold text-xs py-1.5 px-3 flex items-center gap-1.5 cursor-pointer transition"
               >
                 <span className="ui-ai-sparkle-loop">
                   <DomSectionIcon iconId={UI_ICON_IDS.ia} size={14} strokeWidth={2.1} />
