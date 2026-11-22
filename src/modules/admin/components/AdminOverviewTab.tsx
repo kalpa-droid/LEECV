@@ -10,15 +10,11 @@ import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
 import { clearAiCooldowns, metricsByProduct } from '../adminService';
 import type { ProductMetrics } from '../adminService';
 
-/** Etiquetas legibles para los IDs canónicos de tipo de documento. */
+import { DOCUMENT_TYPE_REGISTRY } from '../../../shared/core/capabilities/capabilityRegistry';
+
+/** Etiquetas legibles derivadas del registro central de tipos de documento. */
 const DOC_TYPE_LABELS: Record<string, string> = {
-  cv: 'CV',
-  cover_letter: 'Carta de Presentación',
-  business_card: 'Tarjeta de Visita',
-  portfolio: 'Portafolio',
-  certificate: 'Certificado',
-  book: 'Libro',
-  planner: 'Planner',
+  ...Object.fromEntries(Object.values(DOCUMENT_TYPE_REGISTRY).map((entry) => [entry.id, entry.name])),
   otro: 'Otro',
 };
 

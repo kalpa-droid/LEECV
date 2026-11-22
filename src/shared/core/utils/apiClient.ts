@@ -1,7 +1,8 @@
 import { supabase } from '../lib/supabaseClient';
 
-export interface ApiClientOptions extends RequestInit {
+export interface ApiClientOptions extends Omit<RequestInit, 'body'> {
   requiresAuth?: boolean;
+  body?: any;
 }
 
 export interface ApiResponse<T = any> {

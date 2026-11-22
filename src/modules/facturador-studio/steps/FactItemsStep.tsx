@@ -9,7 +9,7 @@ import {
   formatARS,
   nextTierHint,
   resolveTierPrice,
-} from '../../../shared/core/facturador-engine/invoiceMath';
+} from '../domain/invoiceMath';
 import { radius } from '../../../shared/core/uiDesignSystem';
 
 /** Paso 3 — Ítems del comprobante con precios mayoristas del catálogo. */

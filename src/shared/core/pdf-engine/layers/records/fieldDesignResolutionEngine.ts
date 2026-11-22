@@ -16,7 +16,7 @@ import { Preset } from '../presets/presetSchema';
 import { ResolvedThemeRoles } from '../colors/colorSystem';
 import { resolveSubtleCardBackground } from '../colors/surfaceAwareColorEngine';
 import { resolveUnifiedTextSpec, ResolvedTextSpec } from '../typography/unifiedTextHierarchyEngine';
-import { sanitizeFontFamily } from '../typography/pdfFontRegistry';
+import { sanitizeFontFamily } from '../typography/fontSanitizer';
 
 export type PdfRole = 'title' | 'subtitle' | 'badge' | 'description' | 'extra';
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, CreditCard, BookOpen, ArrowRight, Check, CalendarDays, Mail, ReceiptText } from 'lucide-react';
+import { FileText, CreditCard, BookOpen, ArrowRight, Check, CalendarDays, Mail, ReceiptText, BookOpenCheck } from 'lucide-react';
 import { radius, elevationSystem } from '../../uiDesignSystem';
 
 import { useText } from '../../../i18n/useText';
@@ -40,7 +40,7 @@ export const PortalProductsGrid: React.FC<PortalProductsGridProps> = ({ onNaviga
       id: 'libros',
       icon: BookOpen,
       badge: t.landing.products.libros.badge,
-      badgeColor: 'bg-[var(--color-accent-emerald-muted)] text-[var(--color-neutral-text-primary)] border-[var(--color-accent-emerald-bright)]/30',
+      badgeColor: 'bg-[var(--color-status-success-muted)] text-[var(--color-neutral-text-primary)] border-[var(--color-status-success-bright)]/30',
       title: t.landing.products.libros.title,
       tagline: t.landing.products.libros.tagline,
       description: t.landing.products.libros.description,
@@ -83,6 +83,18 @@ export const PortalProductsGrid: React.FC<PortalProductsGridProps> = ({ onNaviga
       bullets: [...t.landing.products.facturas.bullets],
       route: '/crear-factura',
       cta: t.landing.products.facturas.cta,
+    },
+    {
+      id: 'editorlee',
+      icon: BookOpenCheck,
+      badge: t.landing.products.editorlee.badge,
+      badgeColor: 'bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] border-[var(--color-accent-base)]/30',
+      title: t.landing.products.editorlee.title,
+      tagline: t.landing.products.editorlee.tagline,
+      description: t.landing.products.editorlee.description,
+      bullets: [...t.landing.products.editorlee.bullets],
+      route: '/crear-editor',
+      cta: t.landing.products.editorlee.cta,
     },
   ];
 
@@ -136,7 +148,7 @@ export const PortalProductsGrid: React.FC<PortalProductsGridProps> = ({ onNaviga
                 <ul className="space-y-2 pt-2 border-t border-[var(--ui-border)]/60">
                   {p.bullets.map((bullet, i) => (
                     <li key={i} className="flex items-start gap-2 text-xs text-[var(--ui-text-primary)] font-medium">
-                      <Check className="w-4 h-4 text-[var(--color-accent-emerald-bright)] flex-shrink-0 mt-0.5" />
+                      <Check className="w-4 h-4 text-[var(--color-status-success-bright)] flex-shrink-0 mt-0.5" />
                       <span>{bullet}</span>
                     </li>
                   ))}

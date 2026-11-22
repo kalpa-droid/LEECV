@@ -51,14 +51,11 @@ export async function exportCVToPDF(cvData: any, presetInput?: Preset, atsMode?:
   return true;
 }
 
-import { CoverLetterPdfDocument } from './renderer/CoverLetterPdfDocument';
-import { PlannerPdfDocument } from './renderer/PlannerPdfDocument';
-import { InvoicePdfDocument } from './renderer/InvoicePdfDocument';
 import { buildCardDataFromCV } from './layers/records/cardDataAdapter';
-import { EMPTY_EMPRESA } from '../facturador-engine/facturadorDefaults';
+import { getPdfCategoryExporter } from './pdfCategoryRegistry';
 
 /**
- * Universal PDF exporter connecting all document types (CVs, Business Card Sheets, Cover Letters, etc.)
+ * Universal PDF exporter connecting all document types via `pdfCategoryRegistry`.
  */
 export async function exportDocumentToPDF(cvData: any, presetInput: string | Preset = 'cv-clasico', atsMode?: boolean): Promise<boolean> {
   const preset = typeof presetInput === 'string' ? getPreset(presetInput) : presetInput;
@@ -68,52 +65,9 @@ export async function exportDocumentToPDF(cvData: any, presetInput: string | Pre
     return exportBusinessCardSheetToPDF(cardData, preset);
   }
 
-  if (preset.pageCategory === 'planner') {
-    const year = cvData?.year || new Date().getFullYear();
-    const docElement = React.createElement(PlannerPdfDocument, {
-      data: cvData,
-      presetId: preset.id,
-      theme: cvData?.theme
-    });
-    const blob = await pdf(docElement as any).toBlob();
-    downloadBlob(blob, `Agenda - ${year}.pdf`);
-    return true;
-  }
-
-  if (preset.pageCategory === 'carta') {
-    const candidateName = (
-      cvData?.personalInfo?.fullName || 
-      `${cvData?.personalInfo?.surname || ''} ${cvData?.personalInfo?.givenNames || ''}`.trim() || 
-      'Candidato'
-    ).trim();
-    const docElement = React.createElement(CoverLetterPdfDocument, {
-      data: cvData,
-      presetId: preset.id,
-      theme: cvData?.theme
-    });
-    const blob = await pdf(docElement as any).toBlob();
-    downloadBlob(blob, `Carta de Presentacion - ${candidateName}.pdf`);
-    return true;
-  }
-
-  if (preset.pageCategory === 'factura') {
-    const draft = cvData?.draft;
-    const empresa = cvData?.empresa || EMPTY_EMPRESA;
-    const design = cvData?.design || {
-      presetId: preset.id,
-      pageSizeId: 'a4',
-      duplicateHalfSheet: false,
-      mostrarLogo: true,
-      mostrarObservaciones: true,
-    };
-    if (!draft) return false;
-
-    const docElement = React.createElement(InvoicePdfDocument, { draft, empresa, design });
-    const blob = await pdf(docElement as any).toBlob();
-    const nro = `${String(draft.puntoVenta || '0').padStart(5, '0')}-${String(draft.numero || '0').padStart(8, '0')}`;
-    const tipo = draft.tipo === 'presupuesto' ? 'Presupuesto' : draft.tipo === 'nota_credito' ? 'Nota de Credito' : 'Factura';
-    downloadBlob(blob, `${tipo}-${draft.letra}-${nro}.pdf`);
-    return true;
+  const customExporter = getPdfCategoryExporter(preset.pageCategory);
+  if (customExporter) {
+    return customExporter(cvData, preset, atsMode);
   }
 
   return exportCVToPDF(cvData, preset, atsMode);

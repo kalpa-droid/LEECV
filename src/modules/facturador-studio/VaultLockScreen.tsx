@@ -3,7 +3,7 @@ import { ShieldCheck, KeyRound, Download, Copy, LockKeyhole, FileCheck2 } from '
 import { Field } from '../../shared/core/ui/Field';
 import { colorSystem, radius, elevationSystem } from '../../shared/core/uiDesignSystem';
 import { downloadBlob } from '../../shared/core/utils/downloadUtils';
-import { formatRecoveryKey } from '../../shared/core/facturador-engine/vaultCrypto';
+import { formatRecoveryKey } from './domain/vaultCrypto';
 
 interface VaultLockScreenProps {
   phase: 'loading' | 'needs_setup' | 'locked';

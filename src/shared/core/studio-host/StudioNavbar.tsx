@@ -1,0 +1,371 @@
+import React, { useEffect, useState, useRef } from 'react';
+import {
+  FolderOpen,
+  User,
+  CopyPlus,
+  FileArchive,
+  CheckCircle2,
+  AlertTriangle,
+  Edit3
+} from 'lucide-react';
+import { DomSectionIcon } from '../pdf-engine/layers/icons/DomSectionIcon';
+import { UI_ICON_IDS } from '../ui/iconCatalog';
+import { elevationSystem, radius, buttonUnavailable, button } from '../uiDesignSystem';
+import { ThemeToggleButton } from '../ui/ThemeToggleButton';
+
+import { UndoRedoControls } from '../ui/UndoRedoControls';
+import { useIsMobile } from '../ui/useIsMobile';
+import { useEntitlements } from '../entitlements/useEntitlements';
+import { useAuth } from '../auth/AuthContext';
+import { navigation } from '../utils/navigation';
+import { useText } from '../../i18n/useText';
+import { Logo } from '../brand/Logo';
+import { capabilitiesGate } from '../documents/documentEngine';
+import { hasCapability, isEncryptedVaultDocumentType, getDocumentTypeConfig } from '../capabilities/capabilityRegistry';
+import { DocumentTypeId } from '../../../types/document';
+
+export interface NavbarProps {
+  currentCvData: any;
+  /** Tema global de UI. Si se pasa, tiene prioridad sobre currentCvData.uiTheme. */
+  currentUiTheme?: string;
+  docType?: DocumentTypeId;
+  setCvData?: React.Dispatch<React.SetStateAction<any>>;
+  onOpenSavedCVsModal: () => void;
+  onSaveCVClick: () => void;
+  onOpenSaveAsModal: () => void;
+  onOpenJsonDownloadModal: () => void;
+  onPrint: () => void;
+  onOpenAtsCheck?: () => void;
+  /** Score ATS en tiempo real para mostrar en la píldora (0-100). */
+  atsScore?: number;
+  onOpenPricing?: () => void;
+  onOpenCreditsModal?: () => void;
+  onOpenAgencyPanel?: () => void;
+  onOpenShareAppModal: () => void;
+  onOpenPrivacy?: () => void;
+
+  undo?: () => void;
+  redo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
+
+  isSaving?: boolean;
+  zoomLevel: number;
+  setZoomLevel: (action: number | ((prev: number) => number)) => void;
+  triggerAutoFit: () => void;
+  isAutoFitMode?: boolean;
+  cycleUITheme: () => void;
+  mobileTabState?: string;
+  onToggleMobileTab?: (tab: 'editor' | 'preview') => void;
+}
+
+export type StudioNavbarProps = NavbarProps;
+
+export function StudioNavbar({ 
+  currentCvData,
+  currentUiTheme,
+  docType = 'cv',
+  setCvData: _setCvData,
+  onOpenSavedCVsModal,
+  onSaveCVClick,
+  onOpenSaveAsModal,
+  onOpenJsonDownloadModal,
+  onPrint,
+  onOpenAtsCheck,
+  atsScore,
+  onOpenCreditsModal,
+
+  undo,
+  redo,
+  canUndo = false,
+  canRedo = false,
+
+  isSaving = false,
+  cycleUITheme,
+  mobileTabState = 'editor',
+  onToggleMobileTab
+}: NavbarProps) {
+  const isMobile = useIsMobile();
+  const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
+  const [, setIsAccountMenuOpen] = useState(false);
+  const { pdfTokens, isPro } = useEntitlements();
+  const { user } = useAuth();
+  const t = useText();
+
+  const actionMenuRef = useRef<HTMLDivElement>(null);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
+
+  const currentThemeId = currentUiTheme || currentCvData?.uiTheme || 'day';
+  const supportsAtsBar = hasCapability(docType, 'experience');
+  const isEncryptedVault = isEncryptedVaultDocumentType(docType);
+  const exportOnlyTooltip = `${getDocumentTypeConfig(docType).name}: se exporta en PDF, no se guarda como documento aparte`;
+
+  // Cierre de desplegables al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (actionMenuRef.current && !actionMenuRef.current.contains(event.target as Node)) {
+        setIsActionMenuOpen(false);
+      }
+      if (accountMenuRef.current && !accountMenuRef.current.contains(event.target as Node)) {
+        setIsAccountMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+
+  return (
+    <header className={`sticky top-0 z-40 bg-[var(--ui-bg-header)] border-b border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.overlay} no-print select-none`}>
+      {/* Contenedor Principal: Respetando padding lateral de la barra vertical */}
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 h-12 sm:h-14 flex items-center justify-between gap-2 relative">
+        
+        {/* CLUSTER IZQUIERDO: Logo LEECV (Isotipo compacto en celular, Horizontal completo en desktop) */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer" onClick={() => navigation.goTo('/')} title="Ir al inicio">
+          <Logo
+            layout={isMobile ? 'isotipo' : 'horizontal'}
+            currentUiTheme={currentThemeId}
+            animatedRainbow={true}
+            className={isMobile ? 'h-7 w-auto' : 'h-7 sm:h-8 w-auto'}
+          />
+        </div>
+
+        {/* CLUSTER CENTRO: Botón de Tema + Selector Móvil / Deshacer y Rehacer */}
+        <div className="flex items-center gap-1.5 justify-center flex-1 min-w-0">
+          {/* Botón Selector de Tema Cromático */}
+          <ThemeToggleButton currentThemeId={currentThemeId} onToggle={cycleUITheme} size="sm" />
+
+          {/* Selector de modo en celular (< 768px): [ 📝 Editar | 👁️ Ver ] */}
+          <div className="md:hidden flex items-center bg-[var(--ui-bg-dock)] p-0.5 rounded-full border border-[var(--ui-dock-border)] shrink-0">
+            <button
+              type="button"
+              onClick={() => onToggleMobileTab?.('editor')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black transition cursor-pointer ${
+                mobileTabState === 'editor'
+                  ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.raised}`
+                  : 'text-[var(--ui-dock-text-muted)] hover:text-[var(--ui-dock-text)]'
+              }`}
+              title="Panel de edición"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>Editar</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onToggleMobileTab?.('preview')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black transition cursor-pointer ${
+                mobileTabState === 'preview'
+                  ? `bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] ${elevationSystem.raised}`
+                  : 'text-[var(--ui-dock-text-muted)] hover:text-[var(--ui-dock-text)]'
+              }`}
+              title="Vista previa del documento"
+            >
+              <DomSectionIcon iconId={UI_ICON_IDS.preview} className="w-3.5 h-3.5" />
+              <span>Ver</span>
+            </button>
+          </div>
+
+          <div className="hidden md:block w-px h-5 bg-[var(--ui-border)] mx-0.5" />
+
+          {/* Controles de Deshacer/Rehacer en Barra (Sin botones redundantes de zoom) */}
+          <div className="hidden md:flex items-center gap-1.5 min-w-0">
+            <UndoRedoControls isMobile={isMobile} undo={undo} redo={redo} canUndo={canUndo} canRedo={canRedo} />
+          </div>
+        </div>
+
+        {/* CLUSTER DERECHO: Píldoras Ovaladas de Menús (ATS ✨ | Publicar 🌐 | Acciones 📁💾 | Cuenta 👤🔑) */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+
+          {/* Píldora ATS — score en tiempo real (desktop + móvil) */}
+          {supportsAtsBar && typeof onOpenAtsCheck === 'function' && atsScore !== undefined && (
+            <button
+              type="button"
+              title="Diagnóstico ATS del CV"
+              onClick={onOpenAtsCheck}
+              className={`flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full font-black text-xs shrink-0 transition active:scale-95 cursor-pointer border bg-[var(--ui-bg-panel)] ${
+                atsScore >= 85
+                  ? 'border-[var(--color-status-success-base)] text-[var(--color-status-success-text)] hover:bg-[var(--color-status-success-muted)]'
+                  : atsScore < 60
+                    ? 'border-[var(--color-status-danger-base)] text-[var(--color-status-danger-text)] hover:bg-[var(--color-status-danger-muted)]'
+                    : 'border-[var(--color-status-warning-base)] text-[var(--color-status-warning-text)] hover:bg-[var(--color-status-warning-muted)]'
+              }`}
+            >
+              {atsScore >= 85 ? (
+                <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-[var(--color-status-success-text)]" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 flex-shrink-0 text-[var(--color-status-warning-text)]" />
+              )}
+              <span>ATS {atsScore}%</span>
+            </button>
+          )}
+
+
+
+          {/* PÍLDORA 0: MIS CRÉDITOS */}
+          {typeof onOpenCreditsModal === 'function' && (
+            <button
+              type="button"
+              onClick={onOpenCreditsModal}
+              className="hidden sm:flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full border bg-[var(--ui-bg-panel)] border-[var(--color-accent-blue)]/60 text-[var(--color-accent-blue-text)] hover:bg-[var(--color-accent-blue-muted)] font-black text-xs shrink-0 transition active:scale-95 cursor-pointer"
+              title="Mi Cuenta & Créditos"
+            >
+              <User className="w-4 h-4 flex-shrink-0 text-[var(--color-accent-blue-text)]" />
+              <span>{user ? (isPro ? '✨ Ilimitado' : `🪙 ${pdfTokens} Créditos`) : 'Invitado'}</span>
+            </button>
+          )}
+
+          {/* PÍLDORA 1: MENÚ DE ACCIONES */}
+          <div className="relative" ref={actionMenuRef}>
+            <button
+              type="button"
+              onClick={() => {
+                setIsActionMenuOpen(!isActionMenuOpen);
+                setIsAccountMenuOpen(false);
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-bg-card)] border-2 border-[var(--ui-border)] transition ${elevationSystem.raised} cursor-pointer active:scale-95 text-[var(--ui-text-primary)]`}
+              title={t.navbar.actionMenuTitle}
+            >
+              <FolderOpen className="w-4 h-4 text-[var(--color-secondary-bright)]" />
+              <DomSectionIcon iconId={UI_ICON_IDS.guardar} className="w-4 h-4 text-[var(--color-accent-purple-bright)]" />
+            </button>
+
+            {/* Dropdown de Acciones */}
+            {isActionMenuOpen && (
+              <div className={`absolute right-0 sm:right-0 max-sm:-right-10 mt-2 w-[calc(100vw-2rem)] max-w-64 max-h-[calc(100dvh-4.5rem)] overflow-y-auto rounded-[${radius.modal}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.floating} p-1.5 z-50 space-y-1 animate-fadeIn`}>
+                
+                {/* 0. Abrir Documentos Guardados */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsActionMenuOpen(false);
+                    onOpenSavedCVsModal();
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
+                >
+                  <FolderOpen className="w-4 h-4 text-[var(--color-secondary-bright)]" />
+                  <span>{t.navbar.openSavedDocument}</span>
+                </button>
+
+                <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
+
+                {/* 1. Guardar Cambios, Copias y Backup JSON */}
+                {isEncryptedVault ? (
+                  <>
+                    {/* FacturLee: "Guardar" queda habilitado (bóveda cifrada local + sobre mínimo de pestaña) */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsActionMenuOpen(false);
+                        onSaveCVClick();
+                      }}
+                      disabled={isSaving}
+                      className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer disabled:opacity-50`}
+                    >
+                      <DomSectionIcon iconId={UI_ICON_IDS.guardar} className="w-4 h-4 text-[var(--color-accent-purple-bright)]" />
+                      <span>{isSaving ? t.navbar.saveChangesSaving : t.navbar.saveChangesOverwrite}</span>
+                    </button>
+
+                    <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
+                  </>
+                ) : capabilitiesGate.canBackupCloud(docType) ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsActionMenuOpen(false);
+                        onSaveCVClick();
+                      }}
+                      disabled={isSaving}
+                      className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer disabled:opacity-50`}
+                    >
+                      <DomSectionIcon iconId={UI_ICON_IDS.guardar} className="w-4 h-4 text-[var(--color-accent-purple-bright)]" />
+                      <span>{isSaving ? t.navbar.saveChangesSaving : t.navbar.saveChangesOverwrite}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsActionMenuOpen(false);
+                        onOpenSaveAsModal();
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
+                    >
+                      <CopyPlus className="w-4 h-4 text-[var(--color-secondary-bright)]" />
+                      <span>{t.navbar.saveCopyAs}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsActionMenuOpen(false);
+                        onOpenJsonDownloadModal();
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
+                    >
+                      <FileArchive className="w-4 h-4 text-[var(--color-status-warning-bright)]" />
+                      <span>{t.navbar.downloadPortableCopy}</span>
+                    </button>
+
+                    <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      disabled
+                      title={exportOnlyTooltip}
+                      className={`${buttonUnavailable} w-full text-left px-3 py-2 text-xs flex items-center gap-2`}
+                    >
+                      <DomSectionIcon iconId={UI_ICON_IDS.guardar} className="w-4 h-4" />
+                      <span>{t.navbar.saveChangesOverwrite}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled
+                      title={exportOnlyTooltip}
+                      className={`${buttonUnavailable} w-full text-left px-3 py-2 text-xs flex items-center gap-2`}
+                    >
+                      <CopyPlus className="w-4 h-4" />
+                      <span>{t.navbar.saveCopyAs}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled
+                      title={exportOnlyTooltip}
+                      className={`${buttonUnavailable} w-full text-left px-3 py-2 text-xs flex items-center gap-2`}
+                    >
+                      <FileArchive className="w-4 h-4" />
+                      <span>{t.navbar.downloadPortableCopy}</span>
+                    </button>
+
+                    <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
+                  </>
+                )}
+
+                {/* 5. Exportar en PDF */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsActionMenuOpen(false);
+                    onPrint();
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-[${radius.card}] text-xs font-black flex items-center gap-2 transition cursor-pointer ${button.primary}`}
+                >
+                  <DomSectionIcon iconId={UI_ICON_IDS.exportar} className="w-4 h-4" />
+                  <span>{t.navbar.exportPdf}</span>
+                </button>
+
+              </div>
+            )}
+          </div>
+
+
+        </div>
+      </div>
+    </header>
+  );
+}
+
+export default StudioNavbar;

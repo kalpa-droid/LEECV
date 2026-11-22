@@ -12,18 +12,30 @@ export default defineConfig({
   },
   build: {
     sourcemap: 'hidden',
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks(id) {
-          if (id.includes('@react-pdf/renderer')) {
-            return 'vendor-react-pdf';
-          }
-          if (id.includes('lucide-react')) {
-            return 'vendor-lucide';
-          }
-        }
-      }
-    }
+        codeSplitting: {
+          groups: [
+            {
+              name: 'vendor-react',
+              test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
+              priority: 30,
+            },
+            {
+              name: 'vendor-lucide',
+              test: /[\\/]node_modules[\\/]lucide-react[\\/]/,
+              priority: 20,
+            },
+            {
+              name: 'vendor-react-pdf',
+              test: /[\\/]node_modules[\\/]@react-pdf[\\/]/,
+              includeDependenciesRecursively: false,
+              priority: 10,
+            },
+          ],
+        },
+      },
+    },
   },
   define: {
     'process.env': {}

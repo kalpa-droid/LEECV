@@ -13,7 +13,7 @@ let failed = 0;
 
 const personalInfoPath = path.join(ROOT, 'src/modules/cv-builder/components/editor/PersonalInfoSection.tsx');
 const appPath = path.join(ROOT, 'src/app/App.tsx');
-const dockPath = path.join(ROOT, 'src/modules/cv-builder/components/CanvaIconDock.tsx');
+const dockPath = path.join(ROOT, 'src/shared/core/studio-host/StudioDock.tsx');
 
 const personalInfoContent = fs.readFileSync(personalInfoPath, 'utf-8');
 const appContent = fs.readFileSync(appPath, 'utf-8');

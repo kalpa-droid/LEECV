@@ -14,8 +14,31 @@ import * as TabStore from './tabStore';
 import { loadDocumentById, saveDocument } from '../storage/documentStorageService';
 import { markAsConfirmed, isProvisionalDocument, hasRealContent, isDraftDocumentId, inferDocTypeFromDraftId, computeAutoDocumentTitle } from './documentEngine';
 import { getDefaultTitleForDocType, getRouteForDocType } from '../capabilities/capabilityRegistry';
-import { createBlankCVTemplate } from '../../../data/initialCVData';
 import { DocumentTypeId } from '../../../types/document';
+
+export type BlankDocumentFactory = (options: { id: string; docTypeId: DocumentTypeId }) => any;
+
+let registeredBlankFactory: BlankDocumentFactory | null = null;
+
+/**
+ * Inversión de dependencias (cierra D14): `src/app` o la app de CV registra
+ * su fábrica de documento en blanco sin que `shared/` importe `src/data/initialCVData`.
+ */
+export function registerBlankDocumentFactory(factory: BlankDocumentFactory): void {
+  registeredBlankFactory = factory;
+}
+
+function createFallbackBlankDocument(options: { id: string; docTypeId: DocumentTypeId }): any {
+  if (registeredBlankFactory) {
+    return registeredBlankFactory(options);
+  }
+  return {
+    id: options.id,
+    doc_type_id: options.docTypeId,
+    title: getDefaultTitleForDocType(options.docTypeId),
+    isProvisional: true,
+  };
+}
 
 export interface CurrentDocumentState {
   id: string;
@@ -116,7 +139,9 @@ export async function switchToTab(
   // Cargar el documento — si no existe nada guardado todavía bajo este id
   // (caso real: primera vez que se usa este borrador), se abre en blanco,
   // no se trata como error:
-  const loaded = await loadDocumentById(targetId, targetTab!.docType) || createBlankCVTemplate({ id: targetId, docTypeId: targetTab!.docType });
+  const loaded =
+    (await loadDocumentById(targetId, targetTab!.docType)) ||
+    createFallbackBlankDocument({ id: targetId, docTypeId: targetTab!.docType });
   TabStore.setActiveTabId(targetId);
   setCvData(loaded);
   return true;

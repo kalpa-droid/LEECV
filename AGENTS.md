@@ -40,6 +40,7 @@ todas documentadas con motivo en `scripts/*.js`), nunca lo ignores en silencio.
 | Decidir qué features tiene un usuario según su plan | Chequear `plan === 'pro'` a mano en el componente | `useEntitlements()` — `src/shared/core/entitlements/` |
 | Texto de UI: nombre de la entidad principal, verbo de exportar/eliminar/guardar | Palabras sueltas a criterio propio | `UI_GLOSSARY` — `src/shared/core/uiTextGlossary.ts` (lo audita `check-module-boundaries.js` automáticamente) |
 | Poner un ícono a una sección, producto o acción (Dock, Wizard, Navbar, PDF) | Elegir un ícono Lucide/SVG a ojo, o repetir un mismo ícono entre secciones/botones distintos | `iconCatalog.ts` + `ICON_REGISTRY` — `resolveSectionIconId()` para secciones; `PRODUCT_ICON_IDS` / `UI_ICON_IDS` para productos y acciones. Misma entidad = mismo ícono; entidades distintas = ícono distinto (cero colisiones; lo audita `scripts/check-icon-uniqueness.js`). |
+| Crear o integrar una nueva app o documento nativo | Pantallas o flujos aislados o importar desde `cv-builder` | Crear cápsula vertical con `npm run new-app` (`src/modules/<app>/{manifest.ts,domain,pdf,ui}`), declarar contrato en `capabilityRegistry.ts` + `appSurfaceManifest.ts`, montar en `src/app/appRegistry.ts` y pasar `verify:app-contract`. |
 
 ## Regla 2 — La trampa de los colores dinámicos en clases de Tailwind
 
@@ -199,44 +200,43 @@ Para mantener la máxima seguridad, velocidad y orden arquitectónico en LEECV, 
 
 ## Regla 10 — Protocolo Obligatorio para Apps y Subproductos Nativos
 
-Toda nueva aplicación, herramienta o tipo de documento que se integre a LEECV (ej. cartas, tarjetas, agendas, folletos, diplomas, facturas, menús) **DEBE ser 100% nativa y modular**, consumiendo exclusivamente los motores existentes. **Queda terminantemente prohibido crear islas de código, renderers de PDF paralelos, inputs HTML sueltos o flujos de pago desacoplados.**
+Toda nueva aplicación, herramienta o tipo de documento que se integre a LEECV **DEBE construirse como cápsula vertical aislada (`src/modules/<app>/{manifest.ts,domain,pdf,ui}`)** consumiendo la plataforma compartida (`src/shared/{contracts,core,kits}`), sin importar nunca de otro módulo ni tocar el código común del tronco. Ver `docs/ARQUITECTURA_PLATAFORMA.md` y `docs/APP_BLUEPRINT.md`.
 
-### Los 7 Pilares Canónicos de Integración (Innegociables)
+### Los 8 Pilares Canónicos de Integración (Innegociables)
 
-1. **Identidad y Capacidades en el Registro Central:**
-   - Todo nuevo tipo de documento se registra en `src/shared/core/capabilities/capabilityRegistry.ts` (`DOCUMENT_TYPE_REGISTRY` y `CAPABILITY_REGISTRY`).
-   - Las pestañas del editor, el dock, los respaldos y la persistencia se habilitan por composición declarativa de *capabilities*, nunca con código ad-hoc en componentes de pantalla.
+1. **Identidad, Contratos y Composition Root:**
+   - Registrar en `src/shared/core/capabilities/capabilityRegistry.ts` (`DOCUMENT_TYPE_REGISTRY`, con tipos puros en `src/shared/contracts/`) y `src/shared/core/capabilities/appSurfaceManifest.ts` (`APP_SURFACE_MANIFEST`).
+   - Montar el estudio lazy y su proveedor de Dock en `src/app/appRegistry.ts` (`APP_REGISTRY` + `registerDockStepProvider`), dejando a `<StudioRoute />` y `StudioHost` (`StudioNavbar`, `StudioDock`) operar sin `if (docType === ...)` en el tronco.
+   - Generar el esqueleto inicial con `npm run new-app -- --id=<id> --title="<Nombre>"`.
 
-2. **Formularios y Paneles Dinámicos (Sin Inputs Sueltos):**
-   - Inputs individuales: usar `<Field />` (`src/shared/core/ui/Field.tsx`).
-   - Listas dinámicas / repetibles: usar `<RepeatableSection />` + `<RecordFormSection />` (`src/shared/core/ui/`).
-   - Íconos: resolver exclusivamente con `resolveSectionIconId()` o `iconCatalog.ts`.
-   - Estilos: usar tokens de `uiDesignSystem.ts` y variables de `index.css`. Cero interpolación dinámica de clases en Tailwind (Regla 2).
+2. **Formularios y Paneles UI Canónicos:**
+   - Inputs: `<Field />` (`src/shared/core/ui/Field.tsx`); listas: `<RepeatableSection />` + `<RecordFormSection />`; íconos: `iconCatalog.ts` + `ICON_REGISTRY`.
+   - Tokens y colores: exclusivamente desde `src/shared/core/uiDesignSystem.ts` y variables CSS de `src/index.css`.
 
-3. **Motor PDF Universal y Visor Centralizado:**
-   - La nueva app se previsualiza en el visor en vivo del editor (`PdfPreviewViewport`) y se exporta usando el motor PDF central (`src/shared/core/pdf-engine/`).
-   - **Una app nueva = un Preset nuevo** (`layers/presets/`) + un **DataAdapter** (`layers/records/`), **NUNCA un renderer nuevo**, ni instancias sueltas de jsPDF/Canvas.
-   - El visor provee automáticamente los controles unificados de zoom, centrado y doble página.
+3. **Motor PDF Universal y Registro por Categoría:**
+   - Cada cápsula puede definir sus presets/adaptadores/documento PDF dentro de `src/modules/<app>/pdf/` registrando su categoría vía `registerPdfCategoryExporter()` (`src/shared/core/pdf-engine/pdfCategoryRegistry.ts`), sin que `pdfExporter.ts` importe módulos de producto.
+   - La vista previa usa `VectorDocViewer` y mantiene el bundle inicial liviano sin `@react-pdf/renderer` en preloads (`check-bundle-budget`).
 
 4. **Gating de Créditos y Pasarela Unificada:**
-   - Toda descarga de documento DEBE estar protegida por el hook canónico `useExportEntitlement()` invocando `consumeCreditIfNeeded()`.
-   - Si no hay crédito disponible, se abre `PdfCheckoutModal` pasando el `purpose="export"` y el `doc_type`.
-   - Jamás conectar un botón de descarga directo a la función de render sin la validación previa de derechos.
+   - Toda exportación protegida invoca `consumeCreditIfNeeded()` (`useExportEntitlement()`) y abre `PdfCheckoutModal` desde `src/shared/core/studio-host/PdfCheckoutModal.tsx`. Jamás importar modales desde `cv-builder`.
 
-5. **Alta, Login y Reclamo de Créditos Idempotente:**
-   - Las compras como invitado se asocian al email del comprobante.
-   - Todo inicio de sesión o registro invoca automáticamente `claimCreditsOnAuth(user)` (`authService.ts`) para transferir los tokens sin pérdida de saldo.
+5. **Persistencia Local-First y Puertos Tipados entre Apps:**
+   - Guardado local obligatorio por `documentStorageService` (`localDocumentStore` + `localAssetStore`), o bóveda cifrada local (`encryptedVaultDriver`) para datos sensibles.
+   - El respaldo en nube es estrictamente opt-in y solo para texto estructurado ligero (`cloudBackupProjections` + `user_preferences`), jamás imágenes ni bóvedas cifradas.
+   - Para compartir datos entre apps sin acoplarse (ej. CV → Tarjeta), usar puertos versionados vía `portBroker.ts` (`src/shared/contracts/ports/`).
 
 6. **Trazabilidad y Observabilidad Obligatoria:**
-   - Toda operación asíncrona (guardado, generación de PDF, exportación, pago) se envuelve en `withErrorHandling()` (`errorHandler.ts`).
-   - Los fallos se catalogan con `context` y `source` ('pdf', 'frontend', 'auth', 'webhook') registrándose automáticamente en `admin_error_logs` para su monitoreo desde el Panel Admin.
+   - Envolver operaciones async con `withErrorHandling()` (`errorHandler.ts`).
 
-7. **Motor de IA Unificado y Entrenamiento de Lidio:**
-   - Toda asistencia inteligente (redacción, autocompletado, sugerencias) DEBE ser una tarea registrada en `api/_lib/aiTasks/catalog.ts`, consumida vía `aiClient.executeAiTask()` y respaldada por la cascada canónica (Groq → OpenRouter → Gemini). Prohibido crear clientes de IA aislados o llamadas directas a OpenAI/Gemini/OpenRouter.
-   - Toda app nueva DEBE entrenar a Lidio: es mandatorio agregar su bloque de conocimiento en `app_guide_assistant` (`catalog.ts`) detallando pestañas, pasos y reglas prácticas para que Lidio asista al usuario sin inventar ni quedar mudo.
-   - Los botones de asistencia en campos DEBEN usar `<AIButton />` (`src/shared/core/ui/AIButton.tsx`).
+7. **IA Unificada y Lidio Modular + Privacidad:**
+   - Despachar tareas de IA por `aiClient.executeAiTask()` y `api/_lib/aiTasks/catalog.ts`.
+   - Declarar el conocimiento modular de Lidio en `api/_lib/aiTasks/appKnowledge/<id>.ts`.
+   - Respetar la política `assistant.privacy`: `'full-summary'` o `'metadata-only'` (las apps cifradas nunca exponen valores ya cargados a Lidio).
 
-> 📖 **Guía y Plantilla Paso a Paso:** Consultar la especificación técnica completa y ejemplos de implementación en [`docs/APP_BLUEPRINT.md`](file:///c:/Users/Kalpa/Proyectos/LEECV/docs/APP_BLUEPRINT.md).
+8. **Verificación Automática Innegociable:**
+   - Ejecutar `npm run check-all` (incluye `verify:app-completeness`, `verify:registry-coverage`, `verify:app-mounted`, `verify:app-contract`, `new-app:selftest`, `check-import-graph`, `check-docType-leaks`, `check-forbidden-doctypes`, `check-bundle-budget`).
+
+> 📖 **Guía Paso a Paso:** Consultar [`docs/APP_BLUEPRINT.md`](file:///c:/Users/Kalpa/Proyectos/LEECV/docs/APP_BLUEPRINT.md) y el mapa maestro en [`docs/ARQUITECTURA_PLATAFORMA.md`](file:///c:/Users/Kalpa/Proyectos/LEECV/docs/ARQUITECTURA_PLATAFORMA.md).
 
 
 

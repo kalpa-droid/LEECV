@@ -4,7 +4,7 @@ import {
   FacturadorVaultData,
   InvoiceDraft,
   InvoiceLineItem,
-} from '../../shared/core/facturador-engine/facturadorTypes';
+} from './domain/facturadorTypes';
 
 export interface FactNotify {
   success: (message: string) => void;

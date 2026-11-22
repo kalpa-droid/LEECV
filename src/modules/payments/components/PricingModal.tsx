@@ -4,7 +4,7 @@ import { useAuth } from '../../../shared/core/auth/AuthContext';
 import { Check, Zap, Sparkles } from 'lucide-react';
 import { radius, button } from '../../../shared/core/uiDesignSystem';
 import { formatPrice } from '../../../shared/core/payments/pricingCatalog';
-import { selectPaidPlan } from '../paymentService';
+import { selectPaidPlan } from '../../../shared/core/payments/paymentService';
 import { useToast } from '../../../shared/core/ui/Toast';
 import { dal } from '../../../shared/core/storage/dataAccessLayer';
 import { withErrorHandling } from '../../../shared/core/utils/errorHandler';

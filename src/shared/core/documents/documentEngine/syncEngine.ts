@@ -1,22 +1,20 @@
-import { getSavedDocumentsList } from '../../storage/documentStorageService';
 import { supabase } from '../../storage/documentStorageService';
+import { importLegacyCloudDocumentsOnce } from '../../storage/legacyCloudImporter';
 
 export const syncEngine = {
+  /**
+   * Local-First (Fase 3): al iniciar sesión ejecuta únicamente la importación histórica
+   * única desde `cvs` hacia `LocalDocumentStore` clasificada por `docType` real.
+   * Ya no sobrescribe listas locales mezclando tipos ni sube `cv_data` completo.
+   */
   syncAllLocalOnLogin: async () => {
     if (!supabase) return;
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      
-      // Sincronizar todos los tipos de documento principales de forma asíncrona
-      await Promise.allSettled([
-        getSavedDocumentsList('cv'),
-        getSavedDocumentsList('cover_letter'),
-        getSavedDocumentsList('business_card'),
-        getSavedDocumentsList('portfolio')
-      ]);
+      await importLegacyCloudDocumentsOnce(user.id);
     } catch (err) {
       console.warn('Error during syncAllLocalOnLogin', err);
     }
-  }
+  },
 };

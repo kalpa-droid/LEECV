@@ -11,7 +11,7 @@ import {
   calculateCreepOffset,
   calculateSpineWidth,
   checkHomePrinterMargins,
-} from '../../src/shared/core/book-engine/impositionPlanner';
+} from '../../src/shared/kits/print-imposition/impositionPlanner';
 
 describe('padToMultiple / countBlanksForPadding', () => {
   it('rellena al múltiplo pedido', () => {

@@ -26,18 +26,12 @@ import { ImportDataSection } from './editor/sections/ImportDataSection';
 import { ApplicationCoverLetterSection } from './editor/sections/ApplicationCoverLetterSection';
 import { FormatConfirmationModal, FormatApplicationMode } from './FormatConfirmationModal';
 import PersonalInfoSection from './editor/PersonalInfoSection';
-import { CardExtractSection } from './editor/sections/CardExtractSection';
-import { CardLogoSection } from './editor/sections/CardLogoSection';
-import { CardFrontSection } from './editor/sections/CardFrontSection';
-import { CardBackSection } from './editor/sections/CardBackSection';
-import { CardQrSection } from './editor/sections/CardQrSection';
-import { CardSizeSection } from './editor/sections/CardSizeSection';
 import { NuevaSeccionSection } from './editor/sections/NuevaSeccionSection';
 import { PersonalizadaSection } from './editor/sections/PersonalizadaSection';
 import { DisenoSection } from './editor/sections/DisenoSection';
 import { PortadaSection } from './editor/sections/PortadaSection';
-import { CoverLetterEditorPanel } from '../../cover-letter/components/CoverLetterEditorPanel';
-import { FloatingAssistant } from './FloatingAssistant';
+import { CoverLetterEditorPanel } from './cover-letter/CoverLetterEditorPanel';
+import { FloatingAssistant } from '../../../shared/core/studio-host/FloatingAssistant';
 import { CoverLetterCrossSellBanner } from './CoverLetterCrossSellBanner';
 import { Briefcase, CornerUpLeft, FileText } from 'lucide-react';
 import { isApplicationVariant } from '../../../shared/core/documents/applicationVariant';
@@ -355,18 +349,6 @@ export default function EditorPanel({
         )}
         {activeTab === 'diseno' && <DisenoSection cvData={cvData} setCvData={setCvData} activeTab={activeTab} changeActiveTab={changeActiveTab} showSuccess={showSuccess} showWarning={showWarning} triggerPresetTransition={triggerPresetTransition} getEffectiveCoverFeaturedItems={getEffectiveCoverFeaturedItems} setPendingFormatId={setPendingFormatId} setIsFormatModalOpen={setIsFormatModalOpen} updateTheme={updateTheme} fontOptions={fontOptions} docType={docType} />}
         {docType === 'cv' && activeTab === 'portada' && <PortadaSection cvData={cvData} setCvData={setCvData} activeTab={activeTab} changeActiveTab={changeActiveTab} showSuccess={showSuccess} showWarning={showWarning} triggerPresetTransition={triggerPresetTransition} getEffectiveCoverFeaturedItems={getEffectiveCoverFeaturedItems} />}
-
-        {/* ========================================================================= */}
-        {/* TABS DE TARJETA PERSONAL — 6 paneles independientes */}
-        {/* ========================================================================= */}
-
-        {/* TABS DE TARJETA PERSONAL — Componentizados */}
-        {docType === 'business_card' && activeTab === 'card_extract' && <CardExtractSection cvData={cvData} setCvData={setCvData} />}
-        {docType === 'business_card' && activeTab === 'card_logo' && <CardLogoSection cvData={cvData} setCvData={setCvData} />}
-        {docType === 'business_card' && activeTab === 'card_front' && <CardFrontSection cvData={cvData} setCvData={setCvData} />}
-        {docType === 'business_card' && activeTab === 'card_back' && <CardBackSection cvData={cvData} setCvData={setCvData} />}
-        {docType === 'business_card' && activeTab === 'card_qr' && <CardQrSection cvData={cvData} setCvData={setCvData} />}
-        {docType === 'business_card' && activeTab === 'card_size' && <CardSizeSection cvData={cvData} setCvData={setCvData} />}
 
         {/* ========================================================================= */}
         {/* TABS DE CARTA DE PRESENTACIÓN */}

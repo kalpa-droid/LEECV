@@ -11,7 +11,7 @@ import {
   classifyPdfSourceError,
   isPdfSourceError,
   pdfSourceErrorFromUnknown,
-} from '../src/shared/core/book-engine/pdfSourceClassifier';
+} from '../src/shared/core/pdf-engine/pdfSourceClassifier';
 
 const namedError = (name: string, message = '') => {
   const err = new Error(message);

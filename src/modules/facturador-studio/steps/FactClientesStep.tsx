@@ -3,7 +3,7 @@ import { Users, Plus, Trash2, UserCheck } from 'lucide-react';
 import { Field } from '../../../shared/core/ui/Field';
 import { PanelSection } from '../../../shared/core/ui/PanelSection';
 import { CONDICIONES_IVA, FactStepBaseProps, emptyCliente } from '../facturadorStepsShared';
-import { ClienteFactura } from '../../../shared/core/facturador-engine/facturadorTypes';
+import { ClienteFactura } from '../domain/facturadorTypes';
 import { isValidCuit, isValidEmail } from '../../../shared/core/utils/validationEngine';
 import { radius } from '../../../shared/core/uiDesignSystem';
 

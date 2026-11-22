@@ -3,6 +3,8 @@ export const landingCatalog = {
     cv: 'Creador de CV',
     tarjetas: 'Tarjetas Personales',
     libros: 'Libros & Folletos',
+    editorlee: 'Editor de Libros & Informes',
+    facturas: 'Presupuestos & Facturas',
     blog: 'Blog & Recursos',
     precios: 'Precios',
     cta: 'Iniciar Ahora',
@@ -63,13 +65,25 @@ export const landingCatalog = {
       title: 'Libros y folletos fáciles de armar',
       description: 'Convertí tus documentos en un librito o folleto. El sistema ordena las páginas para que al doblar queden perfectas.',
       features: ['Páginas ordenadas solas', 'Márgenes de doblado seguros', 'Ideal para impresoras de casa'],
+    },
+    facturas: {
+      badge: '100% Local',
+      title: 'Presupuestos y facturas en tu computadora',
+      description: 'Generá presupuestos y comprobantes para tus clientes con control de ventas, sin internet y con privacidad total.',
+      features: ['Datos guardados en tu equipo', 'Cálculos automáticos sin error', 'Listo para imprimir y enviar'],
+    },
+    editorlee: {
+      badge: 'Edición Completa',
+      title: 'Libros, ensayos e informes con índice automático',
+      description: 'Escribí o pegá tus capítulos y dejá que el sistema organice las páginas, los subtítulos y el índice solo.',
+      features: ['Índice generado automáticamente', 'Márgenes de lectura cuidados', 'Exportación a PDF y Word'],
     }
   },
   socialProof: {
     line: 'Más de 10.000 documentos creados y listos para imprimir',
   },
   products: {
-    sectionTitle: 'Seis herramientas en un solo lugar',
+    sectionTitle: 'Siete herramientas en un solo lugar',
     cv: {
       badge: 'Lo Más Usado',
       title: 'Creador de Currículum',
@@ -144,9 +158,22 @@ export const landingCatalog = {
       ],
       cta: 'Armar mi primer comprobante',
     },
+    editorlee: {
+      badge: 'Publicaciones e Informes',
+      title: 'EditorLee',
+      tagline: 'Libros, tesis e informes con índice automático',
+      description: 'Escribí, organizá tus capítulos y dejá que el sistema arme la tapa, los apartados y el índice de contenidos automáticamente.',
+      bullets: [
+        'Índice de contenidos calculado y ordenado automáticamente',
+        'Carátulas para libros, trabajos de estudio o informes ejecutivos',
+        'Importá archivos de texto o Word para comenzar rápido',
+        'Descargá en PDF listo para encuadernar o en Word editable',
+      ],
+      cta: 'Crear publicación o informe',
+    },
   },
   portalIntro: {
-    eyebrow: 'Seis herramientas independientes',
+    eyebrow: 'Siete herramientas independientes',
     title: '¿Qué querés crear hoy?',
     description: 'Seleccioná la herramienta que necesitas. Todas incluyen autoguardado, privacidad total y descarga directa.',
   },
@@ -169,6 +196,10 @@ export const landingCatalog = {
     a3: 'Sí. Las plantillas ejecutivas de LEECV generan texto plano seleccionable y estructurado para pasar sin problemas los lectores automáticos de Selección.',
     q4: '¿Los créditos de exportación tienen vencimiento?',
     a4: 'No. Los créditos de exportación adquiridos no tienen fecha de vencimiento y podés usarlos cuando quieras para exportar tu CV o carta de presentación.',
+    q5: '¿Cómo funciona la privacidad en FacturLee?',
+    a5: 'En FacturLee todos tus comprobantes, precios y datos de clientes se guardan en la memoria de tu propia computadora bajo una contraseña personal. Nada se envía a internet.',
+    q6: '¿Puedo armar una tesis, novela o informe con EditorLee?',
+    a6: 'Sí. EditorLee está pensado para publicaciones de muchas páginas. Organiza capítulos, citas, subtítulos e índice automático, permitiéndote descargar tanto en PDF de alta calidad como en Word editable.',
   },
   features: {
     sectionTitle: 'Pensado para que te salga bien',

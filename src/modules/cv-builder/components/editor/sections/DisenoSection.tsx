@@ -84,16 +84,15 @@ export const DisenoSection = ({
   setIsFormatModalOpen,
   updateTheme,
   fontOptions,
-  docType,
+  docType: _docType,
   showSuccess,
   showWarning,
   triggerPresetTransition,
   getEffectiveCoverFeaturedItems,
   registerSection
 }: any) => {
-  const isBusinessCard = docType === 'business_card';
   const hasDesignOverrides = Boolean(cvData?.colorPresetId || cvData?.typographyPresetId || cvData?.columnLayoutPresetId);
-  
+
   useEffect(() => {
     if (cvData?.theme?.fontFamily) {
       loadGoogleFont(cvData.theme.fontFamily);
@@ -112,7 +111,6 @@ export const DisenoSection = ({
         pageSizeId: val,
         paperSize: val
       },
-      cardSize: docType === 'business_card' ? val : prev?.cardSize
     }));
   };
   return (
@@ -159,13 +157,9 @@ export const DisenoSection = ({
                     onChange={(e) => handlePaperSizeChange(e.target.value)}
                     className={`w-full text-xs p-2.5 rounded-[${radius.card}] border border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] text-[var(--color-neutral-text-primary)] font-bold outline-none cursor-pointer`}
                   >
-                    {Object.values(PAGE_SIZES).filter((size: any) => {
-                      const isCard = docType === 'business_card';
-                      if (isCard) {
-                        return size.category === 'tarjeta' && ['tarjeta_estandar', 'tarjeta_europea', 'tarjeta_cuadrada', 'tarjeta_mini'].includes(size.id);
-                      }
-                      return size.category === 'documento' && ['a4', 'carta', 'legal', 'oficio'].includes(size.id);
-                    }).map((size) => (
+                    {Object.values(PAGE_SIZES).filter((size: any) => (
+                      size.category === 'documento' && ['a4', 'carta', 'legal', 'oficio'].includes(size.id)
+                    )).map((size) => (
                       <option key={size.id} value={size.id}>
                         📄 {size.appLabel || size.label}
                       </option>
@@ -175,12 +169,10 @@ export const DisenoSection = ({
               </PanelSection>
 
             {/* Formato Global & Estándares Internacionales (ATS, US Resume, Europass, Tech, LATAM) */}
-            {!isBusinessCard && (
               <PanelSection icon={<Globe className="w-4 h-4 text-[var(--color-accent-text)]" />} title="¿Para quién es este CV? (Formato y Destino)">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {getAllCvFormats().map((format) => {
                     const isSelected = resolveActiveFormatId(cvData) === format.id;
-                    const isBusinessCard = docType === 'business_card';
   return (
                       <button
                         key={format.id}
@@ -215,7 +207,6 @@ export const DisenoSection = ({
                   })}
                 </div>
               </PanelSection>
-            )}
 
             {/* Tipografía Principal */}
             <PanelSection icon={<Type className="w-4 h-4" />} title="Tipografía">
@@ -352,14 +343,12 @@ export const DisenoSection = ({
             </PanelSection>
 
             {/* Estructura de Columnas (Layout) y Tirador de Ancho */}
-            {!isBusinessCard && (
               <PanelSection icon={<Columns3 className="w-4 h-4" />} title="Disposición de columnas y Ancho">
                 {(() => {
                   const activePresetObj = resolveActivePreset(cvData);
                   const activeLayoutKey = cvData?.columnLayoutPresetId || (activePresetObj.columnLayoutPresetId?.replace('layout-', '') || 'sidebar-left');
                   const sidebarPercent = Math.min(42, Math.max(32, cvData?.layout?.sidebarWidthPercent ?? 40));
 
-                  const isBusinessCard = docType === 'business_card';
   return (
                     <div className="space-y-2.5">
                       {/* Fila 1: Barra Izquierda (40%) / Barra Derecha (40%) */}
@@ -370,7 +359,6 @@ export const DisenoSection = ({
                           const isSelected = activeLayoutKey === key;
                           const label = key === 'sidebar-left' ? 'Barra Izquierda (40%)' : 'Barra Derecha (40%)';
 
-                          const isBusinessCard = docType === 'business_card';
   return (
                             <button
                               key={key}
@@ -400,7 +388,6 @@ export const DisenoSection = ({
                           const key = 'full-width';
                           const isSelected = activeLayoutKey === key;
                           const label = 'Columna Única (100%)';
-                          const isBusinessCard = docType === 'business_card';
   return (
                             <button
                               key={key}
@@ -455,7 +442,6 @@ export const DisenoSection = ({
                   );
                 })()}
               </PanelSection>
-            )}
 
             {/* Armonía Cromática */}
             <PanelSection icon={<Palette className="w-4 h-4" />} title="Paleta de color armónica">
@@ -464,7 +450,6 @@ export const DisenoSection = ({
                   const activePresetObj = resolveActivePreset(cvData);
                   const activeColorKey = cvData?.colorPresetId || activePresetObj.colorPresetId || 'clasico';
                   const isSelected = activeColorKey === key;
-                  const isBusinessCard = docType === 'business_card';
   return (
                     <button
                       key={key}
@@ -500,7 +485,6 @@ export const DisenoSection = ({
                   const activePresetObj = resolveActivePreset(cvData);
                   const activeTypoKey = cvData?.typographyPresetId || activePresetObj.typographyPresetId || 'clasica';
                   const isSelected = activeTypoKey === key;
-                  const isBusinessCard = docType === 'business_card';
   return (
                     <button
                       key={key}
@@ -523,14 +507,12 @@ export const DisenoSection = ({
             </PanelSection>
 
             {/* Plantilla Base Predefinida */}
-            {!isBusinessCard && (
               <PanelSection icon={<LayoutTemplate className="w-4 h-4" />} title="Plantilla base predefinida">
                 <div className="grid grid-cols-2 gap-2">
                   {getAllPresets().filter(p => p.id !== 'tarjeta-personal').map((preset) => {
                     const isSelected = (cvData?.activePresetId || 'cv-clasico') === preset.id;
                     const hasOverrides = !!(cvData?.colorPresetId || cvData?.typographyPresetId || cvData?.columnLayoutPresetId);
-                    const isBusinessCard = docType === 'business_card';
-                    
+
                     const activeFormat = resolveActiveFormat(cvData);
                     const isSingleColumnFormat = activeFormat?.columnLayoutPresetId === 'full-width';
                     const isPresetIncompatible = isSingleColumnFormat && preset.columnLayoutPresetId !== 'full-width';
@@ -576,7 +558,6 @@ export const DisenoSection = ({
                   })}
                 </div>
               </PanelSection>
-            )}
           </div>
         )}
 

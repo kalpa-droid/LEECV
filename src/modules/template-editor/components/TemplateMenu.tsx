@@ -4,7 +4,7 @@ import {} from '../../../shared/core/pdf-engine/layers/presets/presetSchema';
 import { FileText, CreditCard, Download, Printer, Layers } from 'lucide-react';
 import { exportBusinessCardSheetToPDF } from '../../../shared/core/pdf-engine/cardSheetExporter';
 import { useExportEntitlement } from '../../../shared/core/entitlements/useExportEntitlement';
-import PdfCheckoutModal from '../../cv-builder/components/modals/PdfCheckoutModal';
+import PdfCheckoutModal from '../../../shared/core/studio-host/PdfCheckoutModal';
 
 import { elevationSystem, radius } from '../../../shared/core/uiDesignSystem';
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { padToMultipleOf4, getBookletPairIndex, countBlanksBehindCover } from '../../src/shared/core/book-engine/impositionMath';
+import { padToMultipleOf4, getBookletPairIndex, countBlanksBehindCover } from '../../src/shared/kits/print-imposition/impositionMath';
 
 describe('impositionMath Unit Tests', () => {
   describe('padToMultipleOf4', () => {

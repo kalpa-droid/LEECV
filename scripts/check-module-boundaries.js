@@ -81,7 +81,10 @@ function checkFile(fullPath, currentModule = null) {
   }
 
   // 2. Gobernanza de UI/Colores (aplica a /modules/ y /shared/)
-  const isExemptColors = EXEMPT_UI_GOVERNANCE.some(ex => file.endsWith(ex));
+  const normalizedFullPath = fullPath.replace(/\\/g, '/');
+  const isExemptColors =
+    EXEMPT_UI_GOVERNANCE.some(ex => file.endsWith(ex)) ||
+    /\/src\/modules\/[^/]+\/pdf\//.test(normalizedFullPath);
   if (!isExemptColors) {
     // Detecta patrones de interpolación JS rota en Tailwind como bg-[${...}]
     const brokenInterpolations = content.match(/\b(bg|text|border|ring)-\[\$\{[^}]+\}\]/g);

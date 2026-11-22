@@ -101,7 +101,9 @@ function walkDir(dir, fileList = []) {
     const filePath = path.join(dir, file);
     const stat = fs.statSync(filePath);
     if (stat.isDirectory()) {
-      if (file !== 'node_modules' && file !== '.git' && file !== 'dist' && file !== 'pdf-engine') {
+      const normalizedDir = filePath.replace(/\\/g, '/');
+      const isCapsulePdfDir = /\/src\/modules\/[^/]+\/pdf$/.test(normalizedDir);
+      if (file !== 'node_modules' && file !== '.git' && file !== 'dist' && file !== 'pdf-engine' && !isCapsulePdfDir) {
         walkDir(filePath, fileList);
       }
     } else if (file.endsWith('.tsx') || file.endsWith('.ts') || file.endsWith('.jsx') || file.endsWith('.js')) {

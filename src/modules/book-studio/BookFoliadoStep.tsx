@@ -1,6 +1,6 @@
 import React from 'react';
 import { Hash, CheckCircle2, RefreshCw, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
-import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
+import { BookImpositionOptions } from './domain/impositionEngine';
 import { radius, elevationSystem, button } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 

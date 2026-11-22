@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { bookStudioCatalog } from '../../src/shared/i18n/catalog/bookStudio';
-import { BOOK_STEP_SEQUENCE, getNextBookStepId } from '../../src/shared/core/book-engine/bookStepSequence';
+import { BOOK_STEP_SEQUENCE, getNextBookStepId } from '../../src/modules/book-studio/domain/bookStepSequence';
 
 const SECTION_FOR: Record<string, keyof typeof bookStudioCatalog> = {
   book_source_type: 'sourceStep',

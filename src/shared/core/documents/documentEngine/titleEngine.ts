@@ -1,4 +1,4 @@
-import { hasCapability } from '../../capabilities/capabilityRegistry';
+import { DOCUMENT_TYPE_REGISTRY, hasCapability } from '../../capabilities/capabilityRegistry';
 
 export function generateDocumentId(prefix: string): string {
   const now = new Date();
@@ -19,15 +19,10 @@ export function generateDocumentId(prefix: string): string {
   return `doc_${prefix}_${YYYY}${MM}${DD}_${HH}${mm}${ss}_${decimas}_${randomStr}`;
 }
 
-/** Prefijo normativo del título de pestaña/documento según el tipo. */
-export const DOC_TITLE_PREFIX: Record<string, string> = {
-  cv: 'CV',
-  business_card: 'Tarjeta',
-  cover_letter: 'Carta',
-  book: 'Libro',
-  planner: 'Agenda',
-  invoice: 'Factura',
-};
+/** Prefijo normativo del título de pestaña/documento derivado del registro central. */
+export const DOC_TITLE_PREFIX: Record<string, string> = Object.fromEntries(
+  Object.values(DOCUMENT_TYPE_REGISTRY).map((entry) => [entry.id, entry.titlePrefix])
+);
 
 /** DD/MM HH:mm:ss.d — con décima de segundo. */
 export function formatCompactDateTime(date: Date = new Date()): string {

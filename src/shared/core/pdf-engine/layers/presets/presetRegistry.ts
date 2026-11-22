@@ -88,7 +88,6 @@ import { plannerDocentePreset } from './presets/planner-docente';
 import { plannerEjecutivoPreset } from './presets/planner-ejecutivo';
 import { plannerEmprendedorPreset } from './presets/planner-emprendedor';
 import { plannerPersonalPreset } from './presets/planner-personal';
-import { INVOICE_PRESETS } from './facturadorPresets';
 
 // Presets nativos por defecto compilados vía el Motor de Composición
 const NATIVE_PRESETS: Preset[] = [
@@ -141,8 +140,7 @@ const NATIVE_PRESETS: Preset[] = [
   plannerDocentePreset,
   plannerEjecutivoPreset,
   plannerEmprendedorPreset,
-  plannerPersonalPreset,
-  ...INVOICE_PRESETS
+  plannerPersonalPreset
 ];
 
 // Mapa en memoria dinámico
@@ -257,27 +255,3 @@ export const PRESET_LIST: Preset[] = new Proxy([], {
     return (values as unknown as Record<PropertyKey, unknown>)[prop];
   }
 });
-
-/**
- * Sincroniza dinámicamente plantillas desde presetStorageService (Supabase / localStorage)
- * evitando ciclos de importación estática mediante import() dinámico.
- */
-export async function syncPresetsFromStorage(): Promise<Preset[]> {
-  try {
-    const { fetchPresetsWithFallback } = await import('./presetStorageService');
-    const fetchedPresets = await fetchPresetsWithFallback();
-
-    let updatedCount = 0;
-    fetchedPresets.forEach(p => {
-      if (registerPresetInMemory(p)) {
-        updatedCount++;
-      }
-    });
-    console.info(`[presetRegistry] ${updatedCount} preset(s) sincronizados desde storage`);
-
-    return getAllPresets();
-  } catch (err) {
-    console.warn('Error sincronizando presets desde el storage:', err);
-    return getAllPresets();
-  }
-}

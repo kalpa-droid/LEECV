@@ -3,75 +3,99 @@ import { dal } from './dataAccessLayer';
 import { optimizeCVImagesToWebP } from '../utils/imageCompressor';
 import { idbStorage } from './storageIndexedDB';
 import { SaveDocumentResult, DocumentRecord } from '../../../types/document';
-import { getDocumentTypeConfig, hasCapability } from '../capabilities/capabilityRegistry';
+import {
+  getCloudBackupDocumentTypeIds,
+  getDocumentTypeConfig,
+  isEncryptedVaultDocumentType,
+  isLocalOnlyDocumentType,
+} from '../capabilities/capabilityRegistry';
 import { getMonthNameEs } from '../utils/formatDate';
 import { dedupAssetsForLocalStorage, reconstructCvDataFromParts } from './driveDocumentPackager';
 import { migrateCvData } from './cvMigrationEngine';
 import { reportSilentError } from '../utils/errorHandler';
+import {
+  getDocumentSchemaHandler,
+  processLoadedDocumentPayload,
+  registerDocumentSchemaHandler,
+  unwrapDocumentEnvelope,
+  wrapDocumentEnvelope,
+} from './documentEnvelope';
+import { externalizeInlineAssets, hydrateInlineAssets, localAssetStore } from './localAssetStore';
+import { getLocalDocKey, getLocalSummaryKey, localDocumentStore } from './localDocumentStore';
+import { encryptedVaultDriver } from './encryptedVaultDriver';
+import { importLegacyCloudDocumentsOnce } from './legacyCloudImporter';
+import { replicateDocumentBackupIfEnabled } from './cloudBackupReplicator';
 
 export { supabase, checkStorageStatus };
 
-const getStorageKeyForType = (docTypeId: string) => `doc_${docTypeId}_saved_list`;
+// Registro por defecto de migradores/sanitizadores por docType (cierra D8: cada tipo usa su esquema).
+for (const cvFamilyType of getCloudBackupDocumentTypeIds()) {
+  registerDocumentSchemaHandler(cvFamilyType, {
+    currentVersion: 2,
+    migrate: (payload) => migrateCvData(payload),
+    sanitize: (raw) => (raw && typeof raw === 'object' ? raw : null),
+  });
+}
+
+if (!getDocumentSchemaHandler('editorial')) {
+  registerDocumentSchemaHandler('editorial', {
+    currentVersion: 1,
+    sanitize: (raw) => {
+      if (!raw || typeof raw !== 'object') return null;
+      const candidate = raw as Record<string, unknown>;
+      const hasEditorialShape =
+        Array.isArray(candidate.sections) ||
+        (candidate.metadata && typeof candidate.metadata === 'object') ||
+        typeof candidate.activePresetId === 'string';
+      if (!hasEditorialShape) return null;
+      return candidate;
+    },
+  });
+}
+
+const getStorageKeyForType = getLocalSummaryKey;
 
 export const DEFAULT_PRESET_CVS: DocumentRecord[] = [];
 
+function getDriverForDocType(docTypeId: string) {
+  return isEncryptedVaultDocumentType(docTypeId) ? encryptedVaultDriver : localDocumentStore;
+}
+
 /**
- * Get all saved documents of a given type from LocalStorage / IndexedDB / Cloud
+ * Get all saved documents of a given type (Local-First).
+ *
+ * - Para tipos estrictamente locales (`book`, `planner`, `editorial`, `invoice`): nunca consulta la nube.
+ * - Para tipos con respaldo nube histórico (`cv`, `cover_letter`, `business_card`): si el usuario
+ *   inició sesión y aún no migró sus registros legados de `cvs`, ejecuta una importación única
+ *   clasificada por `docType` real (cierra D7) y devuelve siempre la lista local aislada por tipo.
  */
 export const getSavedDocumentsList = async (docTypeId: string = 'cv'): Promise<DocumentRecord[]> => {
-  const map = new Map<string, DocumentRecord>();
-  const storageKey = getStorageKeyForType(docTypeId);
-
-  // 1. Read Local Storage summary list
-  try {
-    const stored = localStorage.getItem(storageKey);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed)) {
-        parsed.forEach((item: DocumentRecord) => {
-          if (item && item.id) {
-            map.set(item.id, item);
-          }
-        });
-      }
-    }
-  } catch (err) {
-    console.warn('LocalStorage summary list read error:', err);
-    reportSilentError(err, 'documentStorageService.getSavedDocumentsList.localStorage');
-  }
-
-  // 2. Sync from Supabase in background
-  if (supabase) {
+  if (supabase && !isLocalOnlyDocumentType(docTypeId)) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const remoteCVs = await dal.cvs.listByUser(user.id);
-        if (remoteCVs && remoteCVs.length > 0) {
-          remoteCVs.forEach(remote => {
-            const formattedTitle = remote.title || `CV - ${remote.candidate_name || 'DOCUMENTO'}`;
-            const rec: DocumentRecord = {
-              id: remote.id,
-              doc_type_id: docTypeId,
-              title: formattedTitle,
-              candidate_name: remote.candidate_name || '',
-              dni: remote.dni || '',
-              updated_at: remote.updated_at,
-              syncState: 'synced',
-              ...(remote.version_label ? { version_label: remote.version_label } : {})
-            };
-            map.set(remote.id, rec);
-          });
-        }
+        await importLegacyCloudDocumentsOnce(user.id);
       }
     } catch (err) {
-      console.warn('Supabase listByUser sync error:', err);
-      reportSilentError(err, 'documentStorageService.getSavedDocumentsList.supabase');
+      console.warn('Legacy cloud import warning:', err);
+      reportSilentError(err, 'documentStorageService.getSavedDocumentsList.legacyImport');
     }
   }
 
-  return Array.from(map.values()).sort(
-    (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-  );
+  const driver = getDriverForDocType(docTypeId);
+  const summaries = await driver.list(docTypeId);
+
+  return summaries.map((s) => ({
+    id: s.id,
+    doc_type_id: s.docType,
+    title: s.title,
+    candidate_name: s.displaySubtitle || '',
+    dni: '',
+    updated_at: s.updatedAt,
+    syncState: 'local',
+    ...(s.versionLabel ? { version_label: s.versionLabel } : {}),
+    ...(s.isProvisional !== undefined ? { is_provisional: s.isProvisional } : {}),
+  }));
 };
 
 export const saveDocumentInternal = async (
@@ -90,8 +114,9 @@ export const saveDocumentInternal = async (
     const optimizedDoc = await optimizeCVImagesToWebP(docData);
 
     const candidateName = (
-      optimizedDoc.personalInfo?.fullName || 
-      `${optimizedDoc.personalInfo?.surname || ''} ${optimizedDoc.personalInfo?.givenNames || ''}`.trim() || 
+      optimizedDoc.personalInfo?.fullName ||
+      `${optimizedDoc.personalInfo?.surname || ''} ${optimizedDoc.personalInfo?.givenNames || ''}`.trim() ||
+      optimizedDoc.metadata?.title ||
       'DOCUMENTO'
     ).trim();
     const monthName = getMonthNameEs();
@@ -116,66 +141,47 @@ export const saveDocumentInternal = async (
       id,
       doc_type_id: docTypeId,
       updated_at: nowIso,
-      ...(versionLabel ? { version_label: versionLabel } : {})
+      ...(versionLabel ? { version_label: versionLabel } : {}),
     };
 
-    // Deduplicación en el borde de almacenamiento (referencias asset://)
-    const storedDocObject = await dedupAssetsForLocalStorage(fullDocObject);
+    // Externalizar binarios embebidos hacia LocalAssetStore (asset://<hash>) + deduplicación legada
+    const assetExternalized = await externalizeInlineAssets(id, fullDocObject);
+    const storedDocObject = await dedupAssetsForLocalStorage(assetExternalized);
 
-    // 1. Primary Save to IndexedDB (Unlimited Capacity)
-    await idbStorage.setItem(`doc_${docTypeId}_data_${id}`, storedDocObject);
+    const driver = getDriverForDocType(docTypeId);
+    const existingEnvelope = await driver.load(id, docTypeId);
+    const envelope = wrapDocumentEnvelope({
+      id,
+      docType: docTypeId,
+      title: formattedTitle,
+      displaySubtitle: candidateName,
+      payload: storedDocObject,
+      previousRevision: existingEnvelope?.revision ?? 0,
+      updatedAt: nowIso,
+    });
+
+    // 1. Guardado primario Local-First (IndexedDB + resumen aislado por docType)
+    const savedEnvelope = await driver.save(envelope);
     if (docTypeId === 'cv') {
       await idbStorage.setItem('cv_data_' + id, storedDocObject);
       await idbStorage.setItem('cv_premium_data', storedDocObject);
     }
 
-    // 2. Save summary list to LocalStorage (liviano)
-    try {
-      const storageKey = getStorageKeyForType(docTypeId);
-      const list = await getSavedDocumentsList(docTypeId);
-      const existingIdx = list.findIndex(item => item.id === id);
-      if (existingIdx >= 0) {
-        list[existingIdx] = summaryRecord;
-      } else {
-        list.unshift(summaryRecord);
-      }
-      localStorage.setItem(storageKey, JSON.stringify(list));
-    } catch (lerr) {
-      console.warn('Advertencia summary list LocalStorage:', lerr);
-      reportSilentError(lerr, 'documentStorageService.saveDocumentInternal.localStorageSummary');
-    }
+    // 2. Respaldo en nube estrictamente opt-in (solo texto estructurado validado, nunca diseños/imágenes/FacturLee)
+    const replication = await replicateDocumentBackupIfEnabled(savedEnvelope);
+    const syncState: 'local' | 'synced' | 'pending' =
+      replication.status === 'backed-up'
+        ? 'synced'
+        : replication.status === 'error'
+          ? 'pending'
+          : 'local';
 
-    let syncState: 'local' | 'synced' | 'pending' = 'local';
-
-    // 3. Sync to Supabase in parallel
-    if (supabase && hasCapability(docTypeId, 'cloud_backup')) {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const success = await dal.cvs.upsert({
-            id,
-            user_id: user.id,
-            title: summaryRecord.title,
-            candidate_name: summaryRecord.candidate_name,
-            dni: summaryRecord.dni,
-            cv_data: storedDocObject,
-            updated_at: summaryRecord.updated_at
-          });
-          syncState = success ? 'synced' : 'pending';
-        }
-      } catch (err) {
-        console.warn('Error conectando a Supabase o Drive:', err);
-        reportSilentError(err, 'documentStorageService.saveDocumentInternal.cloudSync');
-        syncState = 'pending';
-      }
-    }
-
-    return { 
-      success: true, 
+    return {
+      success: true,
       syncState,
-      record: summaryRecord, 
-      title: summaryRecord.title, 
-      doc_data: fullDocObject 
+      record: summaryRecord,
+      title: summaryRecord.title,
+      doc_data: fullDocObject,
     };
   } catch (err) {
     console.error(`Error crítico al guardar documento [${docTypeId}]:`, err);
@@ -185,8 +191,7 @@ export const saveDocumentInternal = async (
 };
 
 /**
- * Guarda el documento SOLO en IndexedDB y actualiza la lista local.
- * No comprime imágenes, no sube a Supabase y no sube a Drive.
+ * Guarda el documento SOLO en IndexedDB (Local-First) y actualiza la lista local.
  * Ideal para el debounce de autoguardado continuo (1.5s).
  */
 export const saveDocumentDraftLocal = async (
@@ -197,14 +202,15 @@ export const saveDocumentDraftLocal = async (
 
   const docConfig = getDocumentTypeConfig(docTypeId);
   const id = docData.id || `doc_${docTypeId}_${Date.now()}`;
-  
+
   try {
     const candidateName = (
-      docData.personalInfo?.fullName || 
-      `${docData.personalInfo?.surname || ''} ${docData.personalInfo?.givenNames || ''}`.trim() || 
+      docData.personalInfo?.fullName ||
+      `${docData.personalInfo?.surname || ''} ${docData.personalInfo?.givenNames || ''}`.trim() ||
+      docData.metadata?.title ||
       'DOCUMENTO'
     ).trim();
-    
+
     const monthName = getMonthNameEs();
     const yearNum = new Date().getFullYear();
     const formattedTitle = `${docConfig.name.toUpperCase()} - ${candidateName} - ${monthName} - ${yearNum}`;
@@ -228,31 +234,30 @@ export const saveDocumentDraftLocal = async (
       isProvisional: docData.isProvisional,
     };
 
-    await idbStorage.setItem(`doc_${docTypeId}_data_${id}`, fullDocObject);
+    const externalized = await externalizeInlineAssets(id, fullDocObject);
+    const driver = getDriverForDocType(docTypeId);
+    const existingEnvelope = await driver.load(id, docTypeId);
+    const envelope = wrapDocumentEnvelope({
+      id,
+      docType: docTypeId,
+      title: formattedTitle,
+      displaySubtitle: candidateName,
+      payload: externalized,
+      previousRevision: existingEnvelope?.revision ?? 0,
+      updatedAt: nowIso,
+    });
+
+    await driver.save(envelope);
     if (docTypeId === 'cv') {
-      await idbStorage.setItem('cv_data_' + id, fullDocObject);
+      await idbStorage.setItem('cv_data_' + id, externalized);
     }
 
-    try {
-      const storageKey = getStorageKeyForType(docTypeId);
-      const list = await getSavedDocumentsList(docTypeId);
-      const existingIdx = list.findIndex(item => item.id === id);
-      if (existingIdx >= 0) {
-        list[existingIdx] = summaryRecord;
-      } else {
-        list.unshift(summaryRecord);
-      }
-      localStorage.setItem(storageKey, JSON.stringify(list));
-    } catch (lerr) {
-      reportSilentError(lerr, 'documentStorageService.saveDocumentDraftLocal.localStorageSummary');
-    }
-
-    return { 
-      success: true, 
+    return {
+      success: true,
       syncState: 'local',
-      record: summaryRecord, 
-      title: summaryRecord.title, 
-      doc_data: fullDocObject 
+      record: summaryRecord,
+      title: summaryRecord.title,
+      doc_data: fullDocObject,
     };
   } catch (err) {
     reportSilentError(err, `documentStorageService.saveDocumentDraftLocal.error`);
@@ -261,7 +266,7 @@ export const saveDocumentDraftLocal = async (
 };
 
 /**
- * Save any document type to storage (IndexedDB + LocalStorage Summary + Cloud Sync)
+ * Save any document type to storage (Local-First IndexedDB + LocalStorage Summary)
  */
 export const saveDocument = async (docData: any, docTypeId: string = 'cv'): Promise<SaveDocumentResult> => {
   return saveDocumentInternal(docData, docTypeId);
@@ -281,71 +286,83 @@ export const saveDocumentAs = async (
 };
 
 /**
- * Load a single document by ID with asset hydration and schema migration
+ * Load a single document by ID with envelope unwrapping, local asset hydration and per-type schema migration.
  */
 export const loadDocumentById = async (id: string, docTypeId: string = 'cv'): Promise<any> => {
-  let raw: any = null;
+  const isLocalOnly = isLocalOnlyDocumentType(docTypeId);
+  const driver = getDriverForDocType(docTypeId);
 
-  // 1. Check IndexedDB
-  try {
-    const idbData = await idbStorage.getItem(`doc_${docTypeId}_data_${id}`) || await idbStorage.getItem(`cv_data_${id}`);
-    if (idbData) raw = idbData;
-  } catch (err) {
-    console.warn('idbStorage fetch error:', err);
-    reportSilentError(err, `documentStorageService.loadDocumentById.idb[${docTypeId}]`);
+  let envelope = await driver.load<any>(id, docTypeId);
+
+  // Compatibilidad hacia atrás: claves legadas `cv_data_<id>` solo para tipos no locales-exclusivos
+  if (!envelope && !isLocalOnly) {
+    try {
+      const legacyIdb = await idbStorage.getItem(`cv_data_${id}`);
+      if (legacyIdb) {
+        envelope = unwrapDocumentEnvelope(legacyIdb, docTypeId);
+      }
+    } catch (err) {
+      reportSilentError(err, `documentStorageService.loadDocumentById.legacyIdb[${docTypeId}]`);
+    }
   }
 
-  // 2. Check Supabase
-  if (!raw && supabase) {
+  if (!envelope && !isLocalOnly && typeof localStorage !== 'undefined') {
     try {
-      const cvData = await dal.cvs.getById(id);
-      if (cvData) raw = cvData;
+      const legacyLs = localStorage.getItem(`cv_data_${id}`);
+      if (legacyLs) {
+        envelope = unwrapDocumentEnvelope(JSON.parse(legacyLs), docTypeId);
+      }
     } catch (err) {
-      console.warn('Supabase fetch error:', err);
+      reportSilentError(err, `documentStorageService.loadDocumentById.legacyLs[${docTypeId}]`);
+    }
+  }
+
+  // Fallback de solo lectura a `cvs` remoto únicamente para recuperar documentos históricos aún no importados
+  if (!envelope && supabase && !isLocalOnly) {
+    try {
+      const remoteData = await dal.cvs.getById(id);
+      if (remoteData) {
+        envelope = unwrapDocumentEnvelope(remoteData, docTypeId);
+      }
+    } catch (err) {
+      console.warn('Supabase legacy fetch error:', err);
       reportSilentError(err, `documentStorageService.loadDocumentById.supabase[${docTypeId}]`);
     }
   }
 
-  // 3. Fallback LocalStorage
-  if (!raw) {
-    try {
-      const stored = localStorage.getItem(`doc_${docTypeId}_data_${id}`) || localStorage.getItem(`cv_data_${id}`);
-      if (stored) raw = JSON.parse(stored);
-    } catch (err) {
-      reportSilentError(err, `documentStorageService.loadDocumentById.localStorageFallback[${docTypeId}]`);
-    }
-  }
+  if (!envelope) return null;
 
-  if (!raw) return null;
+  // Hidratar assets de LocalAssetStore + referencias legadas `asset://`
+  const hydratedAssets = await hydrateInlineAssets(envelope.payload);
+  const hydrated = await reconstructCvDataFromParts(hydratedAssets);
 
-  // 4. Hidratar referencias de assets si existen (asset://<hash>)
-  const hydrated = await reconstructCvDataFromParts(raw);
-
-  // 5. Aplicar migración universal de esquema
-  return migrateCvData(hydrated);
+  // Despacho de migración/sanitización por docType registrado (cierra D8)
+  return processLoadedDocumentPayload(docTypeId, hydrated, envelope.schemaVersion);
 };
 
 /**
- * Delete a saved document by ID
+ * Delete a saved document by ID (Local-First + limpieza de LocalAssetStore)
  */
 export const deleteDocumentById = async (id: string, docTypeId: string = 'cv'): Promise<void> => {
-  const storageKey = getStorageKeyForType(docTypeId);
+  const isLocalOnly = isLocalOnlyDocumentType(docTypeId);
+  const driver = getDriverForDocType(docTypeId);
+
   try {
-    await idbStorage.removeItem(`doc_${docTypeId}_data_${id}`);
-    await idbStorage.removeItem(`cv_data_${id}`);
-    const listStored = localStorage.getItem(storageKey);
-    if (listStored) {
-      const list = JSON.parse(listStored).filter((c: any) => c.id !== id);
-      localStorage.setItem(storageKey, JSON.stringify(list));
+    await driver.delete(id, docTypeId);
+    await localAssetStore.deleteDocumentAssets(id);
+    if (!isLocalOnly) {
+      await idbStorage.removeItem(`cv_data_${id}`);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(`cv_data_${id}`);
+        localStorage.removeItem(getLocalDocKey(docTypeId, id));
+      }
     }
-    localStorage.removeItem(`doc_${docTypeId}_data_${id}`);
-    localStorage.removeItem(`cv_data_${id}`);
   } catch (err) {
     console.error(`Error eliminando documento local [${docTypeId}]:`, err);
     reportSilentError(err, `documentStorageService.deleteDocumentById.local[${docTypeId}]`);
   }
 
-  if (supabase) {
+  if (supabase && !isLocalOnly) {
     try {
       await dal.cvs.delete(id);
     } catch (err) {
@@ -360,8 +377,22 @@ export const deleteDocumentById = async (id: string, docTypeId: string = 'cv'): 
  */
 export const getSavedCVsList = () => getSavedDocumentsList('cv');
 export const saveCV = (cvData: any) => saveDocument(cvData, 'cv');
+export const saveCVAs = (cvData: any, versionLabel?: string) => saveDocumentAs(cvData, versionLabel, 'cv');
 export const loadCVById = (id: string) => loadDocumentById(id, 'cv');
 export const deleteCVById = (id: string) => deleteDocumentById(id, 'cv');
+
+/**
+ * Convenience wrappers for Card and Cover Letter calls
+ */
+export const getSavedCardsList = () => getSavedDocumentsList('business_card');
+export const saveCard = (cardData: any) => saveDocument(cardData, 'business_card');
+export const loadCardById = (id: string) => loadDocumentById(id, 'business_card');
+export const deleteCardById = (id: string) => deleteDocumentById(id, 'business_card');
+
+export const getSavedCoverLettersList = () => getSavedDocumentsList('cover_letter');
+export const saveCoverLetter = (letterData: any) => saveDocument(letterData, 'cover_letter');
+export const loadCoverLetterById = (id: string) => loadDocumentById(id, 'cover_letter');
+export const deleteCoverLetterById = (id: string) => deleteDocumentById(id, 'cover_letter');
 
 /**
  * Convenience wrappers for Book-specific calls
@@ -450,4 +481,13 @@ export const deleteInvoiceShellById = async (id: string): Promise<void> => {
     reportSilentError(err, 'documentStorageService.deleteInvoiceShellById.error');
   }
 };
+
+/**
+ * Wrappers para EditorLee (publicaciones editoriales, libros, informes)
+ */
+export const getSavedEditorialsList = () => getSavedDocumentsList('editorial');
+export const saveEditorial = (editorialData: any) => saveDocument(editorialData, 'editorial');
+export const loadEditorialById = (id: string) => loadDocumentById(id, 'editorial');
+export const deleteEditorialById = (id: string) => deleteDocumentById(id, 'editorial');
+
 

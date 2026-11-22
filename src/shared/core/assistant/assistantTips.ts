@@ -15,11 +15,12 @@
 import { isValidPanelTab } from '../recruiter-rules/ruleTargetTabs';
 import { isApplicationVariant } from '../documents/applicationVariant';
 import { resolveActiveFormatId } from '../formats/cvFormatRegistry';
-import { BOOK_STEP_SEQUENCE } from '../book-engine/bookStepSequence';
-import { FACTURADOR_STEP_SEQUENCE } from '../facturador-engine/facturadorStepSequence';
+import { getRegisteredStepIds } from '../studio-host/stepSequenceRegistry';
+import type { RegisteredDocumentTypeId } from '../capabilities/capabilityRegistry';
+import type { MetadataOnlyContext } from '../../contracts/assistantContract';
 
-/** Tipo de documento del editor que monta a Lidio: currículum (cv), libro (book), facturador (invoice) o editorial (editorial). */
-export type AssistantDocType = 'cv' | 'book' | 'invoice' | 'editorial';
+/** Tipo de documento del editor que monta a Lidio: derivado del registro central (7/7 apps). */
+export type AssistantDocType = RegisteredDocumentTypeId;
 
 /**
  * Crea un resumen estructural seguro del estado del editor.
@@ -108,20 +109,41 @@ export function buildAssistantBookSnapshot(
 
 /**
  * Resumen estructural seguro del estado del facturador (FacturLee).
- * NO contiene PII NI montos ni datos de clientes: solo el paso activo.
+ * Modo `metadata-only`: NO contiene PII ni montos ni valores cargados.
+ * Solo incluye el paso activo, si la bóveda está cerrada y qué campos obligatorios faltan o son inválidos.
  */
 export interface AssistantInvoiceSnapshot {
+  mode: 'metadata-only';
   docType: 'invoice';
   activeStepId: string;
+  stepId: string;
+  vaultLocked?: boolean;
+  totalRequired?: number;
+  completedRequired?: number;
+  issues?: MetadataOnlyContext['issues'];
 }
 
 export function buildAssistantInvoiceSnapshot(
   activeStepId?: string | null,
+  metadataContext?: MetadataOnlyContext | null,
 ): AssistantInvoiceSnapshot {
-  const ids = new Set(FACTURADOR_STEP_SEQUENCE.map((step) => step.id));
+  const ids = getValidStepIds('invoice', DEFAULT_INVOICE_STEP_IDS);
+  const resolvedStep =
+    (metadataContext?.stepId && ids.has(metadataContext.stepId) ? metadataContext.stepId : null) ||
+    (activeStepId && ids.has(activeStepId) ? String(activeStepId) : 'fact_comprobante');
   return {
+    mode: 'metadata-only',
     docType: 'invoice',
-    activeStepId: activeStepId && ids.has(activeStepId) ? String(activeStepId) : 'fact_comprobante',
+    activeStepId: resolvedStep,
+    stepId: resolvedStep,
+    ...(metadataContext
+      ? {
+          vaultLocked: metadataContext.vaultLocked,
+          totalRequired: metadataContext.totalRequired,
+          completedRequired: metadataContext.completedRequired,
+          issues: metadataContext.issues,
+        }
+      : {}),
   };
 }
 
@@ -131,11 +153,31 @@ export const ASSISTANT_TAGLINE = 'Te doy una mano con tu CV';
 export const ASSISTANT_STORAGE_KEY = 'leecv.assistant';
 export const ASSISTANT_SESSION_KEY = 'leecv.assistant.session';
 
+const STORAGE_KEY_BY_TYPE: Record<AssistantDocType, string> = {
+  cv: ASSISTANT_STORAGE_KEY,
+  cover_letter: 'leecv.assistant.cover_letter',
+  business_card: 'leecv.assistant.business_card',
+  book: 'leecv.assistant.book',
+  planner: 'leecv.assistant.planner',
+  invoice: 'leecv.assistant.invoice',
+  editorial: 'leecv.assistant.editorial',
+};
+
+const SESSION_KEY_BY_TYPE: Record<AssistantDocType, string> = {
+  cv: ASSISTANT_SESSION_KEY,
+  cover_letter: 'leecv.assistant.session.cover_letter',
+  business_card: 'leecv.assistant.session.business_card',
+  book: 'leecv.assistant.session.book',
+  planner: 'leecv.assistant.session.planner',
+  invoice: 'leecv.assistant.session.invoice',
+  editorial: 'leecv.assistant.session.editorial',
+};
+
 /** Keys de storage por tipo de documento: cada docType tiene su propio estado de tips. */
 export const getAssistantStorageKey = (docType: AssistantDocType = 'cv'): string =>
-  docType === 'book' ? 'leecv.assistant.book' : docType === 'invoice' ? 'leecv.assistant.invoice' : ASSISTANT_STORAGE_KEY;
+  STORAGE_KEY_BY_TYPE[docType] || ASSISTANT_STORAGE_KEY;
 export const getAssistantSessionKey = (docType: AssistantDocType = 'cv'): string =>
-  docType === 'book' ? 'leecv.assistant.session.book' : docType === 'invoice' ? 'leecv.assistant.session.invoice' : ASSISTANT_SESSION_KEY;
+  SESSION_KEY_BY_TYPE[docType] || ASSISTANT_SESSION_KEY;
 
 export const FIRST_TIP_IDLE_MS = 20_000;
 export const NEXT_TIP_IDLE_MS = 90_000;
@@ -159,6 +201,66 @@ export const DEFAULT_ASSISTANT_STATE: AssistantStoredState = {
   doNotDisturb: false,
 };
 
+const DEFAULT_BOOK_STEP_IDS = [
+  'book_source_type',
+  'book_organize',
+  'book_cover',
+  'book_back_cover',
+  'book_foliado',
+  'book_imposition',
+  'book_preview_export',
+] as const;
+
+const DEFAULT_INVOICE_STEP_IDS = [
+  'fact_emisor',
+  'fact_comprobante',
+  'fact_items',
+  'fact_catalogo',
+  'fact_clientes',
+  'fact_historial',
+  'fact_diseno',
+  'fact_respaldo',
+] as const;
+
+const DEFAULT_PLANNER_STEP_IDS = [
+  'planner_design',
+  'planner_background',
+  'planner_structure',
+  'planner_sections',
+  'planner_months',
+  'planner_personal',
+] as const;
+
+const EDITORIAL_STEP_IDS = [
+  'editorial_inicio',
+  'editorial_portada',
+  'editorial_secciones',
+  'editorial_diseño',
+  'editorial_toc',
+  'editorial_metadata',
+  'editorial_import_ai',
+  'editorial_historial',
+] as const;
+const CARD_STEP_IDS = new Set(['source_data', 'personales', 'redes', 'diseno', 'guardados']);
+
+function getValidStepIds(
+  docType: AssistantDocType,
+  fallback: readonly string[],
+): Set<string> {
+  const registered = getRegisteredStepIds(docType);
+  return new Set(registered && registered.length > 0 ? registered : fallback);
+}
+
+const TARGET_VALIDATOR_BY_TYPE: Record<AssistantDocType, (tab: string, cvData?: any) => boolean> = {
+  cv: (tab, cvData) => isValidPanelTab(tab, cvData),
+  cover_letter: (tab, cvData) => isValidPanelTab(tab, cvData),
+  business_card: (tab, cvData) => CARD_STEP_IDS.has(tab) || isValidPanelTab(tab, cvData),
+  book: (tab) => getValidStepIds('book', DEFAULT_BOOK_STEP_IDS).has(tab),
+  planner: (tab) => getValidStepIds('planner', DEFAULT_PLANNER_STEP_IDS).has(tab),
+  invoice: (tab) => getValidStepIds('invoice', DEFAULT_INVOICE_STEP_IDS).has(tab),
+  editorial: (tab) => getValidStepIds('editorial', EDITORIAL_STEP_IDS).has(tab),
+};
+
 /** Pestaña validada para navegar. Devuelve null si no es un destino real del editor. */
 export function validateAssistantTargetTab(
   targetTab: string | null | undefined,
@@ -166,15 +268,8 @@ export function validateAssistantTargetTab(
   docType: AssistantDocType = 'cv',
 ): string | null {
   if (!targetTab) return null;
-  if (docType === 'book') {
-    const ids = new Set(BOOK_STEP_SEQUENCE.map((step) => step.id));
-    return ids.has(targetTab) ? String(targetTab) : null;
-  }
-  if (docType === 'invoice') {
-    const ids = new Set(FACTURADOR_STEP_SEQUENCE.map((step) => step.id));
-    return ids.has(targetTab) ? String(targetTab) : null;
-  }
-  return isValidPanelTab(targetTab, cvData) ? String(targetTab) : null;
+  const validator = TARGET_VALIDATOR_BY_TYPE[docType] || TARGET_VALIDATOR_BY_TYPE.cv;
+  return validator(targetTab, cvData) ? String(targetTab) : null;
 }
 
 export interface SuggestedAssistantAction {
@@ -320,8 +415,8 @@ export const TAB_TIPS: Record<string, AssistantTip[]> = {
   ],
 };
 
-/** Tips por paso del libro (docType 'book'). Destinos son pasos reales de BOOK_STEP_SEQUENCE. */
-export const BOOK_STEP_IDS: string[] = BOOK_STEP_SEQUENCE.map((s) => s.id);
+/** Tips por paso del libro (docType 'book'). Destinos son pasos reales registrados para Book Studio. */
+export const BOOK_STEP_IDS: string[] = [...DEFAULT_BOOK_STEP_IDS];
 export const BOOK_TAB_TIPS: Record<string, AssistantTip[]> = {
   book_source_type: [
     {
@@ -417,8 +512,8 @@ export const BOOK_TAB_TIPS: Record<string, AssistantTip[]> = {
   ],
 };
 
-/** Tips por paso del facturador (docType 'invoice'). Destinos son pasos reales de FACTURADOR_STEP_SEQUENCE. */
-export const INVOICE_STEP_IDS: string[] = FACTURADOR_STEP_SEQUENCE.map((s) => s.id);
+/** Tips por paso del facturador (docType 'invoice'). Destinos son pasos reales registrados para FacturLee. */
+export const INVOICE_STEP_IDS: string[] = [...DEFAULT_INVOICE_STEP_IDS];
 export const FACT_TAB_TIPS: Record<string, AssistantTip[]> = {
   fact_emisor: [
     {
@@ -582,16 +677,189 @@ export const ALL_INVOICE_TIPS: AssistantTip[] = [
   ...FACT_ALWAYS_TIPS,
 ];
 
+/** Tips de Carta de Presentación (docType 'cover_letter'). */
+export const COVER_LETTER_TAB_TIPS: Record<string, AssistantTip[]> = {
+  carta: [
+    {
+      id: 'tip-carta-estructura-1',
+      title: 'Tres párrafos cortos alcanzan',
+      body: 'Arrancá diciendo por qué te interesa ese puesto, sumá un logro concreto de tu experiencia y cerrá invitando a conversar.',
+      targetTab: 'carta',
+    },
+    {
+      id: 'tip-carta-relleno-1',
+      title: 'Evitá frases genéricas',
+      body: 'Reemplazá frases vacías como "soy proactivo" por un hecho medible o un proyecto real que hayas resuelto.',
+      targetTab: 'carta',
+    },
+  ],
+  vacante: [
+    {
+      id: 'tip-carta-vacante-1',
+      title: 'Cargá la vacante primero',
+      body: 'Con el puesto y la empresa cargados, la carta se adapta a esa búsqueda sin tocar tu CV base.',
+      targetTab: 'vacante',
+    },
+  ],
+};
+
+export const COVER_LETTER_ALWAYS_TIPS: AssistantTip[] = [
+  {
+    id: 'tip-carta-export-1',
+    title: 'Lista en PDF o en Word',
+    body: 'Podés descargar tu carta en PDF para adjuntar o en Word si el formulario de la empresa te pide archivo editable.',
+  },
+];
+
+export const ALL_COVER_LETTER_TIPS: AssistantTip[] = [
+  ...Object.values(COVER_LETTER_TAB_TIPS).flat(),
+  ...COVER_LETTER_ALWAYS_TIPS,
+];
+
+/** Tips de Tarjeta Personal (docType 'business_card'). */
+export const CARD_TAB_TIPS: Record<string, AssistantTip[]> = {
+  source_data: [
+    {
+      id: 'tip-card-import-1',
+      title: 'Traé tus datos desde un CV',
+      body: 'Podés elegir qué datos importar desde un CV guardado en tu computadora y ajustar o borrar cualquier campo antes de imprimir.',
+      targetTab: 'source_data',
+    },
+  ],
+  diseno: [
+    {
+      id: 'tip-card-clean-1',
+      title: 'Menos texto, más impacto',
+      body: 'Dejá solo nombre, especialidad, 2 o 3 datos de contacto y el código QR: así se lee rápido incluso en formato chico.',
+      targetTab: 'diseno',
+    },
+  ],
+};
+
+export const CARD_ALWAYS_TIPS: AssistantTip[] = [
+  {
+    id: 'tip-card-sheet-1',
+    title: 'Hoja lista para cortar',
+    body: 'Al exportar podés elegir una hoja común con varias tarjetas acomodadas para imprimir y cortar sin desperdiciar papel.',
+  },
+];
+
+export const ALL_CARD_TIPS: AssistantTip[] = [
+  ...Object.values(CARD_TAB_TIPS).flat(),
+  ...CARD_ALWAYS_TIPS,
+];
+
+/** Tips de Agenda / Planificador (docType 'planner'). */
+export const PLANNER_TAB_TIPS: Record<string, AssistantTip[]> = {
+  planner_design: [
+    {
+      id: 'tip-planner-design-1',
+      title: 'Elegí el tamaño según cómo la vas a usar',
+      body: 'El tamaño chico es cómodo para llevar en la mochila; el tamaño común da más espacio para escribir cada día.',
+      targetTab: 'planner_design',
+    },
+  ],
+  planner_months: [
+    {
+      id: 'tip-planner-months-1',
+      title: 'Personalizá mes a mes',
+      body: 'Podés activar solo los meses y bloques que usás para no imprimir hojas de más.',
+      targetTab: 'planner_months',
+    },
+  ],
+};
+
+export const PLANNER_ALWAYS_TIPS: AssistantTip[] = [
+  {
+    id: 'tip-planner-local-1',
+    title: 'Tu agenda queda en esta computadora',
+    body: 'Los cambios se guardan localmente mientras editás y podés exportar el PDF listo para imprimir y anillar.',
+  },
+];
+
+export const ALL_PLANNER_TIPS: AssistantTip[] = [
+  ...Object.values(PLANNER_TAB_TIPS).flat(),
+  ...PLANNER_ALWAYS_TIPS,
+];
+
+/** Tips de EditorLee (docType 'editorial'). */
+export const EDITORIAL_TAB_TIPS: Record<string, AssistantTip[]> = {
+  editorial_portada: [
+    {
+      id: 'tip-editorial-portada-1',
+      title: 'Portada editorial o académica',
+      body: 'Podés alternar entre tapa de libro, carátula académica con cátedra e integrantes, o portada ejecutiva limpia.',
+      targetTab: 'editorial_portada',
+    },
+  ],
+  editorial_secciones: [
+    {
+      id: 'tip-editorial-secciones-1',
+      title: 'Combiná bloques dentro de cada capítulo',
+      body: 'Cada sección acepta subtítulos, párrafos, citas destacadas, recuadros, tablas y bibliografía ordenados.',
+      targetTab: 'editorial_secciones',
+    },
+  ],
+  editorial_toc: [
+    {
+      id: 'tip-editorial-toc-1',
+      title: 'El índice se calcula solo',
+      body: 'Activá el índice automático y elegí si querés incluir subtítulos: los números de página se actualizan al exportar.',
+      targetTab: 'editorial_toc',
+    },
+  ],
+};
+
+export const EDITORIAL_ALWAYS_TIPS: AssistantTip[] = [
+  {
+    id: 'tip-editorial-backup-1',
+    title: 'Guardado local y copia de respaldo',
+    body: 'Tu obra se guarda en esta computadora y podés bajar una copia de respaldo en cualquier momento desde la barra superior.',
+  },
+];
+
+export const ALL_EDITORIAL_TIPS: AssistantTip[] = [
+  ...Object.values(EDITORIAL_TAB_TIPS).flat(),
+  ...EDITORIAL_ALWAYS_TIPS,
+];
+
+interface AssistantCatalogBundle {
+  readonly tabTips: Record<string, AssistantTip[]>;
+  readonly alwaysTips: AssistantTip[];
+  readonly allTips: AssistantTip[];
+}
+
+const ASSISTANT_CATALOG_BY_TYPE: Record<AssistantDocType, AssistantCatalogBundle> = {
+  cv: { tabTips: TAB_TIPS, alwaysTips: ALWAYS_TIPS, allTips: ALL_TIPS },
+  cover_letter: {
+    tabTips: COVER_LETTER_TAB_TIPS,
+    alwaysTips: COVER_LETTER_ALWAYS_TIPS,
+    allTips: ALL_COVER_LETTER_TIPS,
+  },
+  business_card: { tabTips: CARD_TAB_TIPS, alwaysTips: CARD_ALWAYS_TIPS, allTips: ALL_CARD_TIPS },
+  book: { tabTips: BOOK_TAB_TIPS, alwaysTips: BOOK_ALWAYS_TIPS, allTips: ALL_BOOK_TIPS },
+  planner: { tabTips: PLANNER_TAB_TIPS, alwaysTips: PLANNER_ALWAYS_TIPS, allTips: ALL_PLANNER_TIPS },
+  invoice: { tabTips: FACT_TAB_TIPS, alwaysTips: FACT_ALWAYS_TIPS, allTips: ALL_INVOICE_TIPS },
+  editorial: {
+    tabTips: EDITORIAL_TAB_TIPS,
+    alwaysTips: EDITORIAL_ALWAYS_TIPS,
+    allTips: ALL_EDITORIAL_TIPS,
+  },
+};
+
+function getCatalogForDocType(docType: AssistantDocType = 'cv'): AssistantCatalogBundle {
+  return ASSISTANT_CATALOG_BY_TYPE[docType] || ASSISTANT_CATALOG_BY_TYPE.cv;
+}
+
 export const getAllTips = (docType: AssistantDocType = 'cv'): AssistantTip[] =>
-  docType === 'book' ? ALL_BOOK_TIPS : docType === 'invoice' ? ALL_INVOICE_TIPS : ALL_TIPS;
+  getCatalogForDocType(docType).allTips;
 
 /** Tips para la pestaña activa (primero los específicos, después los transversales). */
 export function getTipsForTab(
   activeTab?: string | null,
   docType: AssistantDocType = 'cv',
 ): AssistantTip[] {
-  const tabTips = docType === 'book' ? BOOK_TAB_TIPS : docType === 'invoice' ? FACT_TAB_TIPS : TAB_TIPS;
-  const alwaysTips = docType === 'book' ? BOOK_ALWAYS_TIPS : docType === 'invoice' ? FACT_ALWAYS_TIPS : ALWAYS_TIPS;
+  const { tabTips, alwaysTips } = getCatalogForDocType(docType);
   const specific = (activeTab && tabTips[activeTab]) || [];
   return [...specific, ...alwaysTips];
 }
@@ -622,9 +890,9 @@ export function pickAlwaysTip(
   afterTipId?: string | null,
 ): AssistantTip {
   const seen = new Set(seenTipIds || []);
-  const specific =
-    (activeTab && (docType === 'book' ? BOOK_TAB_TIPS[activeTab] : docType === 'invoice' ? FACT_TAB_TIPS[activeTab] : TAB_TIPS[activeTab])) || [];
-  const always = docType === 'book' ? BOOK_ALWAYS_TIPS : docType === 'invoice' ? FACT_ALWAYS_TIPS : ALWAYS_TIPS;
+  const { tabTips, alwaysTips } = getCatalogForDocType(docType);
+  const specific = (activeTab && tabTips[activeTab]) || [];
+  const always = alwaysTips;
 
   const unseenSpecific = specific.find((tip) => !seen.has(tip.id));
   if (unseenSpecific) return unseenSpecific;

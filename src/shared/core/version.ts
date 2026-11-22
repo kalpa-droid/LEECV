@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 2,
-  minor: 27,
+  minor: 28,
   patch: 0,
-  label: 'V2.27.0',
-  lastUpdated: '2026-11-19',
+  label: 'V2.28.0',
+  lastUpdated: '2026-11-21',
   lastAgent: '@antigravity',
-  stage: 'feat(editorial): EditorLee /crear-editor — editor de libros e informes 100% local, motor @react-pdf/renderer + VectorDocViewer, 7 pasos de Dock, 5 capacidades editoriales, 3 flujos IA (Lidio: estructurar/reescribir/pulir), exportación PDF (1 crédito) y copia de seguridad .leecv-editor.',
+  stage: 'feat(architecture): Fases 0-10 completas — Contratos v2, Local-First + Backup opt-in, StudioHost + appRegistry, Bundle Budget, Lidio 7/7 (FacturLee metadata-only), Cápsulas Verticales (0/0 AST), card-studio independiente con puerto contact-profile@1 y Fábrica de Apps (new-app + verify:app-contract).',
 } as const;

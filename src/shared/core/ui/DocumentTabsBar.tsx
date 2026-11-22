@@ -4,6 +4,7 @@ import { OpenTab } from '../documents/tabStore';
 import { elevationSystem, radius } from '../uiDesignSystem';
 import { NewDocumentMenu } from './NewDocumentMenu';
 import { useHorizontalScrollControls } from './useHorizontalScrollControls';
+import { getDocumentTypeConfig } from '../capabilities/capabilityRegistry';
 import { DocumentTypeId } from '../../../types/document';
 
 export interface DocumentTabsBarProps {
@@ -12,6 +13,7 @@ export interface DocumentTabsBarProps {
   docType?: DocumentTypeId;
   onSwitch: (id: string) => void;
   onNavigateToDocument?: (docType: DocumentTypeId, id: string) => void;
+  onNewDocument?: (docType: DocumentTypeId) => void;
   onAdd: () => void;
   onNewCV?: () => void;
   onNewCard?: () => void;
@@ -23,12 +25,24 @@ export interface DocumentTabsBarProps {
   onClose: (e: React.MouseEvent, id: string, title: string) => void;
 }
 
+const TAB_ICON_BY_NAME: Record<string, React.ComponentType<{ className?: string }>> = {
+  FileText,
+  BookOpen,
+  CreditCard,
+  Mail,
+  CalendarDays,
+  CalendarCheck: CalendarDays,
+  ReceiptText,
+  BookMarked,
+};
+
 export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
   tabs,
   activeId,
   docType = 'cv',
   onSwitch,
   onNavigateToDocument,
+  onNewDocument,
   onAdd,
   onNewCV,
   onNewCard,
@@ -40,22 +54,8 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
   onClose,
 }) => {
   const getTabIcon = (tabDocType?: string) => {
-    switch (tabDocType) {
-      case 'book':
-        return BookOpen;
-      case 'business_card':
-        return CreditCard;
-      case 'cover_letter':
-        return Mail;
-      case 'planner':
-        return CalendarDays;
-      case 'invoice':
-        return ReceiptText;
-      case 'editorial':
-        return BookMarked;
-      default:
-        return FileText;
-    }
+    const cfg = getDocumentTypeConfig(tabDocType || 'cv');
+    return TAB_ICON_BY_NAME[cfg.iconName] || FileText;
   };
 
   const tabsScrollRef = useRef<HTMLDivElement>(null);
@@ -164,14 +164,16 @@ export const DocumentTabsBar: React.FC<DocumentTabsBarProps> = ({
           })}
         </div>
 
-        {/* Menu (+) Nuevo Documento (CV, Tarjeta, Libro, Carta, Agenda, Presupuesto/Factura) */}
+        {/* Menu (+) Nuevo Documento (guiado por DOCUMENT_TYPE_REGISTRY) */}
         <NewDocumentMenu
-          onSelectCV={onNewCV || onAdd}
-          onSelectCard={onNewCard || onAdd}
-          onSelectBook={onNewBook || onAdd}
+          onSelectDocument={onNewDocument}
+          onSelectCV={onNewCV || (!onNewDocument ? onAdd : undefined)}
+          onSelectCard={onNewCard}
+          onSelectBook={onNewBook}
           onSelectCoverLetter={onNewCoverLetter}
-          onSelectPlanner={onNewPlanner || onAdd}
-          onSelectInvoice={onNewInvoice || onAdd}
+          onSelectPlanner={onNewPlanner}
+          onSelectInvoice={onNewInvoice}
+          onSelectEditorial={onNewEditorial}
         />
 
         {/* Flecha derecha: solo se muestra si hay pestañas ocultas a ese lado */}

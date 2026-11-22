@@ -39,7 +39,7 @@ export function buildPageTextTemplate(template: string, pageNumber: number, tota
 
 import { resolveUnifiedTextSpec } from '../typography/unifiedTextHierarchyEngine';
 import { ResolvedThemeRoles } from '../colors/colorSystem';
-import { sanitizeFontFamily } from '../typography/pdfFontRegistry';
+import { sanitizeFontFamily } from '../typography/fontSanitizer';
 
 export function resolvePageTextStyle(def: PageTextObjectDefinition, pageBgHex: string = '#ffffff', rolesColor?: ResolvedThemeRoles) {
   const edgeStyle: Record<string, number | string> = {};

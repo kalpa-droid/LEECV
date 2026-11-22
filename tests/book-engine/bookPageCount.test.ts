@@ -3,7 +3,7 @@ import {
   calculateFinalBookPageCount,
   effectiveSourcePageCount,
   hasCustomCoverConfig,
-} from '../../src/shared/core/book-engine/bookPageCount';
+} from '../../src/modules/book-studio/domain/bookPageCount';
 
 describe('calculateFinalBookPageCount — replica exacta del armado del motor', () => {
   it('firma legada (posicional) sigue funcionando igual', () => {

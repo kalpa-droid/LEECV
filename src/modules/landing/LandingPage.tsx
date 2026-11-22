@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Mail, CreditCard, BookOpen, Newspaper, Sparkles, ShieldCheck, Award, Zap, CalendarDays, LogIn, User, ScanLine, Palette, Printer, Brush } from 'lucide-react';
+import { FileText, Mail, CreditCard, BookOpen, Newspaper, Sparkles, ShieldCheck, Award, Zap, CalendarDays, LogIn, User, ScanLine, Palette, Printer, Brush, ReceiptText, BookOpenCheck } from 'lucide-react';
 import { displayScale, elevationSystem, radius } from '../../shared/core/uiDesignSystem';
 import { ThemeToggleButton } from '../../shared/core/ui/ThemeToggleButton';
 import { getGlobalUiTheme, cycleGlobalUiTheme } from '../../shared/core/utils/globalThemePreference';
@@ -45,6 +45,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogi
     { question: t.landing.faq.q2, answer: t.landing.faq.a2 },
     { question: t.landing.faq.q3, answer: t.landing.faq.a3 },
     { question: t.landing.faq.q4, answer: t.landing.faq.a4 },
+    { question: t.landing.faq.q5, answer: t.landing.faq.a5 },
+    { question: t.landing.faq.q6, answer: t.landing.faq.a6 },
   ];
 
   useJsonLd({
@@ -85,6 +87,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogi
             <button onClick={() => onNavigate('/crear-agenda')} className="flex items-center gap-1 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer" title="Agendas">
               <CalendarDays className="w-4 h-4" />
               {!isMobile && <span>Agendas</span>}
+            </button>
+            <button onClick={() => onNavigate('/crear-factura')} className="flex items-center gap-1 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer" title={t.landing.nav.facturas}>
+              <ReceiptText className="w-4 h-4" />
+              {!isMobile && <span>{t.landing.nav.facturas}</span>}
+            </button>
+            <button onClick={() => onNavigate('/crear-editor')} className="flex items-center gap-1 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer" title={t.landing.nav.editorlee}>
+              <BookOpenCheck className="w-4 h-4" />
+              {!isMobile && <span>{t.landing.nav.editorlee}</span>}
             </button>
             <button onClick={() => onNavigate('/blog')} className="flex items-center gap-1 hover:text-[var(--color-accent-base)] transition-colors cursor-pointer" title={t.landing.nav.blog}>
               <Newspaper className="w-4 h-4" />
@@ -279,6 +289,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenLogi
             image="/marketing/preview-libro-detail.webp"
             ctaLabel={t.landing.products.libros.cta}
             onClick={() => onNavigate('/crear-libro')}
+            reverse={true}
+          />
+
+          <ProductDetailBlock
+            title={t.landing.products.facturas.title}
+            description={t.landing.products.facturas.description}
+            bullets={t.landing.products.facturas.bullets as any as string[]}
+            image="/marketing/preview-factura-detail.webp"
+            ctaLabel={t.landing.products.facturas.cta}
+            onClick={() => onNavigate('/crear-factura')}
+            reverse={false}
+          />
+
+          <ProductDetailBlock
+            title={t.landing.products.editorlee.title}
+            description={t.landing.products.editorlee.description}
+            bullets={t.landing.products.editorlee.bullets as any as string[]}
+            image="/marketing/preview-editor-detail.webp"
+            ctaLabel={t.landing.products.editorlee.cta}
+            onClick={() => onNavigate('/crear-editor')}
             reverse={true}
           />
         </div>

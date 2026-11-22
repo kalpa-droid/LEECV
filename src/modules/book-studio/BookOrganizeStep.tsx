@@ -1,7 +1,7 @@
 import React from 'react';
 import { LayoutGrid, RotateCcw, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
-import { BookImpositionOptions } from '../../shared/core/book-engine/impositionEngine';
-import { calculateFinalBookPageCount, effectiveSourcePageCount, hasCustomCoverConfig } from '../../shared/core/book-engine/bookPageCount';
+import { BookImpositionOptions } from './domain/impositionEngine';
+import { calculateFinalBookPageCount, effectiveSourcePageCount, hasCustomCoverConfig } from './domain/bookPageCount';
 import { radius, elevationSystem, button } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 

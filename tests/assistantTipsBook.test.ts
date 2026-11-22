@@ -21,7 +21,7 @@ import {
   pickNextTipCycled,
   validateAssistantTargetTab,
 } from '../src/shared/core/assistant/assistantTips';
-import { BOOK_STEP_SEQUENCE } from '../src/shared/core/book-engine/bookStepSequence';
+import { BOOK_STEP_SEQUENCE } from '../src/modules/book-studio/domain/bookStepSequence';
 
 describe('Fase 5 — Lidio en Book Studio', () => {
   it('BOOK_TAB_TIPS solo usa ids de pasos reales de BOOK_STEP_SEQUENCE', () => {

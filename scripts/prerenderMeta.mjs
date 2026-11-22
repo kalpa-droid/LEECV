@@ -8,7 +8,10 @@ export const ROUTES = [
   '/reembolsos',
   '/crear-cv',
   '/crear-tarjeta',
-  '/crear-libro'
+  '/crear-libro',
+  '/crear-agenda',
+  '/crear-factura',
+  '/crear-editor'
 ];
 
 const metaMap = {
@@ -34,6 +37,24 @@ const metaMap = {
     title: 'Crear Libro | LEECV',
     description: 'Maqueta tu libro digital o impreso con herramientas profesionales. Exporta en PDF de alta calidad para imprenta o distribución digital.',
     content: ['<h1>Crear tu Libro</h1>'],
+    type: 'WebPage'
+  },
+  '/crear-agenda': {
+    title: 'Crear Agenda Personalizada | LEECV',
+    description: 'Diseña e imprime tu agenda personalizada por día, semana o mes en minutos.',
+    content: ['<h1>Crear tu Agenda</h1>'],
+    type: 'WebPage'
+  },
+  '/crear-factura': {
+    title: 'Crear Facturas y Presupuestos Locales | LEECV FacturLee',
+    description: 'Genera comprobantes, facturas y presupuestos profesionales directamente en tu navegador con privacidad total y descarga en PDF.',
+    content: ['<h1>Crear Facturas y Presupuestos</h1>'],
+    type: 'WebPage'
+  },
+  '/crear-editor': {
+    title: 'Editor de Libros e Informes con Índice Automático | LEECV EditorLee',
+    description: 'Escribe, organiza capítulos y exporta libros, tesis e informes en PDF y Word con índice automático y diseño editorial profesional.',
+    content: ['<h1>Editor de Libros e Informes</h1>'],
     type: 'WebPage'
   },
   '/privacidad': {

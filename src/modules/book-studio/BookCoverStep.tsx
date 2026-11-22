@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { BookOpen, Check, Palette, ChevronLeft, ChevronRight } from 'lucide-react';
-import { BookImpositionOptions, CoverConfig } from '../../shared/core/book-engine/impositionEngine';
+import { BookImpositionOptions, CoverConfig } from './domain/impositionEngine';
 import { COVER_PRESETS } from '../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
-import { bookAssetManager } from '../../shared/core/book-engine/bookAssetManager';
+import { bookAssetManager } from './domain/bookAssetManager';
 import { radius, typeScale, button, selectableCard, input } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 

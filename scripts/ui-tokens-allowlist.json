@@ -17,11 +17,7 @@
       "reason": "Hex suelto preexistente en componente de galería. Pendiente de migración a tokens de diseño (UI-015/UI-016)."
     },
     {
-      "file": "src/modules/cv-builder/components/CanvaIconDock.tsx",
-      "reason": "Hex suelto preexistente en dock de iconos. Pendiente de migración a tokens de diseño (UI-015/UI-016)."
-    },
-    {
-      "file": "src/modules/cv-builder/components/SignatureModal.tsx",
+      "file": "src/shared/core/ui/SignatureModal.tsx",
       "reason": "Hex suelto preexistente (color de trazo de firma). Pendiente de migración a tokens de diseño (UI-015/UI-016)."
     },
     {
@@ -29,15 +25,15 @@
       "reason": "Paletas de color predefinidas del planificador. Pendiente de migración a tokens de diseño (UI-015/UI-016)."
     },
     {
-      "file": "src/shared/core/book-engine/impositionEngine.ts",
+      "file": "src/modules/book-studio/domain/impositionEngine.ts",
       "reason": "Colores de renderizado interno de motor de libros (canvas/PDF), no UI de usuario. Pendiente de migración a tokens (UI-015/UI-016)."
     },
     {
-      "file": "src/shared/core/book-engine/canvasColors.ts",
+      "file": "src/shared/kits/print-imposition/canvasColors.ts",
       "reason": "Tabla de respaldo hex para Canvas 2D (var(--token) no se resuelve en canvas/Worker/tests). No es UI de usuario. Pendiente de migración a tokens (UI-015/UI-016)."
     },
     {
-      "file": "src/shared/core/book-engine/bookAssetManager.ts",
+      "file": "src/modules/book-studio/domain/bookAssetManager.ts",
       "reason": "Fondo blanco de miniatura en canvas del motor de imágenes, no UI de usuario. Mismo caso que impositionEngine.ts. Pendiente de migración a tokens (UI-015/UI-016)."
     },
     {

@@ -387,7 +387,8 @@ function getAllTsxFiles(dir, fileList = []) {
         getAllTsxFiles(filePath, fileList);
       }
     } else if (filePath.endsWith('.tsx') || filePath.endsWith('.ts')) {
-      if (!filePath.includes('pdf-engine') && !filePath.includes('scripts')) {
+      const normalizedFile = filePath.replace(/\\/g, '/');
+      if (!normalizedFile.includes('pdf-engine') && !/\/src\/modules\/[^/]+\/pdf\//.test(normalizedFile) && !normalizedFile.includes('scripts')) {
         fileList.push(filePath);
       }
     }

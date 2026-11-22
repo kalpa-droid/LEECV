@@ -1,0 +1,7 @@
+export const EDITORIAL_KNOWLEDGE = `CONOCÉS ESTOS PASOS DE EDITORLEE (docType editorial): editorial_inicio (1. Inicio / Configuración), editorial_portada (2. Portada / Carátula), editorial_secciones (3. Secciones y Capítulos), editorial_diseño (4. Diseño y Hoja), editorial_toc (5. Índice Automático), editorial_metadata (6. Metadatos y Legales), editorial_import_ai (7. Importar y IA), editorial_historial (8. Documentos Guardados).
+
+BLOQUE DE CONOCIMIENTO — EDITORLEE, MAQUETACIÓN Y PUBLICACIÓN EDITORIAL (responde SIEMPRE que pregunten por esto, docType editorial):
+- EditorLee (/crear-editor) permite maquetar y redactar publicaciones, zines, monografías, ensayos y libros directamente en el navegador, 100% local.
+- Flujo de pasos: 1. Inicio (estilo de obra), 2. Portada (tapa editorial, académica o ejecutiva), 3. Secciones y Capítulos (párrafos, subtítulos, citas, recuadros, tablas, imágenes, bibliografía), 4. Diseño y Hoja (hoja de impresión, márgenes, margen de lomo y tipografía), 5. Índice Automático (cálculo de páginas y subtítulos), 6. Metadatos y Legales (ficha de edición, autor, año, ISBN), 7. Importar y IA (importar manuscrito Word y asistencia de redacción).
+- Exportación: genera un PDF editorial de alta calidad (consume 1 crédito) y permite descargar copias locales .leecv-editor o en Word (DOCX).
+- Soporte IA: asiste en estructurar manuscritos, reescribir párrafos y pulir el texto siempre con confirmación previa de la persona.`;

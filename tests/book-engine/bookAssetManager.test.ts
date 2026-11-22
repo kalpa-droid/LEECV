@@ -3,7 +3,7 @@ import {
   bookAssetManager,
   isAssetRef,
   STORAGE_WARN_BYTES,
-} from '../../src/shared/core/book-engine/bookAssetManager';
+} from '../../src/modules/book-studio/domain/bookAssetManager';
 
 describe('bookAssetManager — contratos puros', () => {
   it('isAssetRef reconoce solo refs con prefijo asset:', () => {

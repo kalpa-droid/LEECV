@@ -85,6 +85,14 @@
   ],
   "rewrites": [
     {
+      "source": "/api/editorial/parse-docx",
+      "destination": "/api/editorial-doc-api?action=parse-docx"
+    },
+    {
+      "source": "/api/editorial/export-docx",
+      "destination": "/api/editorial-doc-api?action=export-docx"
+    },
+    {
       "source": "/api/cv-import/start",
       "destination": "/api/cv-import-api?action=start"
     },

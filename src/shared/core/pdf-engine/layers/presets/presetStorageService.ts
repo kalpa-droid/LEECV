@@ -137,3 +137,26 @@ export async function deletePresetFromSupabase(presetId: string): Promise<{ succ
     return { success: false, error: err?.message || String(err) };
   }
 }
+
+/**
+ * Sincroniza dinámicamente plantillas desde storage (Supabase / localStorage)
+ * y las registra en la memoria de `presetRegistry`.
+ */
+export async function syncPresetsFromStorage(): Promise<Preset[]> {
+  try {
+    const fetchedPresets = await fetchPresetsWithFallback();
+
+    let updatedCount = 0;
+    fetchedPresets.forEach((p) => {
+      if (registerPresetInMemory(p)) {
+        updatedCount++;
+      }
+    });
+    console.info(`[presetStorageService] ${updatedCount} preset(s) sincronizados desde storage`);
+
+    return getAllPresets();
+  } catch (err) {
+    console.warn('Error sincronizando presets desde el storage:', err);
+    return getAllPresets();
+  }
+}

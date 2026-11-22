@@ -404,14 +404,20 @@ if (fs.existsSync(dockEnginePath)) {
   check('activeSectionsDockEngine.ts existe', false, `No encontrado: ${dockEnginePath}`);
 }
 
-const dockUiPath = path.join(ROOT, 'src/modules/cv-builder/components/CanvaIconDock.tsx');
-if (fs.existsSync(dockUiPath)) {
-  const dockUiContent = fs.readFileSync(dockUiPath, 'utf-8');
+const cvDockProviderPath = path.join(ROOT, 'src/modules/cv-builder/cvDockProvider.ts');
+const studioDockPath = path.join(ROOT, 'src/shared/core/studio-host/StudioDock.tsx');
+if (fs.existsSync(cvDockProviderPath) && fs.existsSync(studioDockPath)) {
+  const dockProviderContent = fs.readFileSync(cvDockProviderPath, 'utf-8');
+  const studioDockContent = fs.readFileSync(studioDockPath, 'utf-8');
   check(
-    'CanvaIconDock.tsx consume resolveActiveDockSections mediante useMemo (sin arrays fijos a mano)',
-    dockUiContent.includes('resolveActiveDockSections(cvData)') && !dockUiContent.includes('fixedPrioritySections'),
-    'CanvaIconDock.tsx mantiene arrays fijos a mano'
+    'cvDockProvider.ts + StudioDock.tsx consumen resolveActiveDockSections y getDockTabsForDocType mediante useMemo (sin arrays fijos a mano)',
+    dockProviderContent.includes('resolveActiveDockSections(cvData)') &&
+      !dockProviderContent.includes('fixedPrioritySections') &&
+      studioDockContent.includes('getDockTabsForDocType'),
+    'cvDockProvider.ts / StudioDock.tsx mantienen arrays fijos a mano'
   );
+} else {
+  check('cvDockProvider.ts y StudioDock.tsx existen', false, 'Falta cvDockProvider.ts o StudioDock.tsx');
 }
 
 // ─── 14. Plan v31: Versionado de Esquema, Deduplicación en Borde y Pestañas Multidocumento ───
@@ -497,18 +503,18 @@ if (fs.existsSync(topBarRegistryPath)) {
   );
 }
 
-const navbarPath = path.join(ROOT, 'src/modules/cv-builder/components/Navbar.tsx');
+const navbarPath = path.join(ROOT, 'src/shared/core/studio-host/StudioNavbar.tsx');
 if (fs.existsSync(navbarPath)) {
   const navContent = fs.readFileSync(navbarPath, 'utf-8');
   check(
-    'Navbar.tsx integra la barra superior unificada con píldoras de menú ovaladas',
+    'StudioNavbar.tsx integra la barra superior unificada con píldoras de menú ovaladas',
     navContent.includes('FolderOpen') && navContent.includes('Save') && navContent.includes('User'),
-    'Navbar.tsx no contiene la estructura de píldoras ovaladas de menú'
+    'StudioNavbar.tsx no contiene la estructura de píldoras ovaladas de menú'
   );
   check(
-    'Navbar.tsx integra opción de Política de Privacidad (ZoomControls retirado de la barra por motor gestual y rueda)',
+    'StudioNavbar.tsx integra opción de Política de Privacidad (ZoomControls retirado de la barra por motor gestual y rueda)',
     navContent.includes('onOpenPrivacy'),
-    'Navbar.tsx no integra la Política de Privacidad'
+    'StudioNavbar.tsx no integra la Política de Privacidad'
   );
 }
 
@@ -532,13 +538,13 @@ if (fs.existsSync(shareModalPath)) {
   );
 }
 
-const canvaDockPath = path.join(ROOT, 'src/modules/cv-builder/components/CanvaIconDock.tsx');
+const canvaDockPath = path.join(ROOT, 'src/shared/core/studio-host/StudioDock.tsx');
 if (fs.existsSync(canvaDockPath)) {
   const dockContent = fs.readFileSync(canvaDockPath, 'utf-8');
   check(
-    'CanvaIconDock.tsx no duplica el botón de tema en la barra móvil',
+    'StudioDock.tsx no duplica el botón de tema en la barra móvil',
     !dockContent.includes('Botón Tema en Móvil'),
-    'CanvaIconDock.tsx aún contiene el botón de tema duplicado'
+    'StudioDock.tsx aún contiene el botón de tema duplicado'
   );
 }
 
@@ -641,13 +647,13 @@ if (fs.existsSync(presetHierarchyPath)) {
   );
 }
 
-const dockPath = path.join(ROOT, 'src/modules/cv-builder/components/CanvaIconDock.tsx');
+const dockPath = path.join(ROOT, 'src/shared/core/studio-host/StudioDock.tsx');
 if (fs.existsSync(dockPath)) {
   const dockContent = fs.readFileSync(dockPath, 'utf-8');
   check(
-    'CanvaIconDock.tsx elimina la pestaña obsoleta de paneles (Columnas)',
+    'StudioDock.tsx elimina la pestaña obsoleta de paneles (Columnas)',
     !dockContent.includes("id: 'paneles'"),
-    'CanvaIconDock.tsx mantiene la pestaña de paneles'
+    'StudioDock.tsx mantiene la pestaña de paneles'
   );
 }
 

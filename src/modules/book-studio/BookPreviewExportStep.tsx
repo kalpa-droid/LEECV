@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { BookOpen, CheckCircle2, AlertTriangle, Printer, Sparkles, Download, AlertCircle, ChevronLeft, FileText, Layers, Languages } from 'lucide-react';
-import { BookImpositionOptions, processBookImposition } from '../../shared/core/book-engine/impositionEngine';
-import { calculateSpineWidth, calculateCreepOffset, planBookletSignatures } from '../../shared/core/book-engine/impositionPlanner';
-import { computeBookFinalPageCount } from '../../shared/core/book-engine/bookPageCount';
+import { BookImpositionOptions, processBookImposition } from './domain/impositionEngine';
+import { calculateSpineWidth, calculateCreepOffset, planBookletSignatures } from '../../shared/kits/print-imposition/impositionPlanner';
+import { computeBookFinalPageCount } from './domain/bookPageCount';
 import { radius, elevationSystem } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 
 import { useExportEntitlement } from '../../shared/core/entitlements/useExportEntitlement';
-import PdfCheckoutModal from '../cv-builder/components/modals/PdfCheckoutModal';
+import PdfCheckoutModal from '../../shared/core/studio-host/PdfCheckoutModal';
 
 interface BookPreviewExportStepProps {
   options: BookImpositionOptions;

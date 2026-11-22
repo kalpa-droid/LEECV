@@ -1,0 +1,364 @@
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { PenTool, Upload, RotateCcw, Check, Sparkles } from 'lucide-react';
+import { validateImageFile } from '../utils/validateFile';
+import { useToast } from './Toast';
+import { elevationSystem, radius } from '../uiDesignSystem';
+import { Modal } from './Modal';
+import { resolveCanvasColor } from '../utils/canvasColorEngine';
+
+export default function SignatureModal({ 
+  isOpen, 
+  onClose, 
+  onSaveSignature, 
+  currentSignature,
+  defaultSignerName = '',
+  defaultSignerRole = '',
+  defaultDate = ''
+}: any) {
+  const { showError } = useToast();
+  const [activeTab, setActiveTab] = useState<'draw' | 'upload'>('draw');
+  const [strokeColor, setStrokeColor] = useState('#000000');
+  const [strokeWidth, setStrokeWidth] = useState(3);
+  const [signerName, setSignerName] = useState(currentSignature?.signerName || defaultSignerName);
+  const [signerRole, setSignerRole] = useState(currentSignature?.signerRole || defaultSignerRole);
+  const [date, setDate] = useState(currentSignature?.date || defaultDate);
+
+  const [uploadedImageSrc, setUploadedImageSrc] = useState('');
+  const [removeBgContrast, setRemoveBgContrast] = useState(true);
+
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const isDrawing = useRef(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const initCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const bgCanvasColor = resolveCanvasColor('neutral.surface', '#FFFFFF');
+    ctx.fillStyle = bgCanvasColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = resolveCanvasColor(strokeColor, '#000000');
+    ctx.lineWidth = strokeWidth;
+
+    if (currentSignature?.dataUrl && activeTab === 'draw') {
+      const img = new Image();
+      img.src = currentSignature.dataUrl;
+      img.onload = () => {
+        ctx.fillStyle = bgCanvasColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+      };
+    }
+  }, [strokeColor, strokeWidth, currentSignature, activeTab]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setSignerName(currentSignature?.signerName || defaultSignerName);
+      setSignerRole(currentSignature?.signerRole || defaultSignerRole);
+      setDate(currentSignature?.date || defaultDate);
+      if (activeTab === 'draw') {
+        setTimeout(() => {
+          initCanvas();
+        }, 100);
+      }
+    }
+  }, [isOpen, activeTab, currentSignature, defaultSignerName, defaultSignerRole, defaultDate, initCanvas]);
+
+  const getCoordinates = (e: any) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      x: (clientX - rect.left) * (canvas.width / rect.width),
+      y: (clientY - rect.top) * (canvas.height / rect.height)
+    };
+  };
+
+  const startDrawing = (e: any) => {
+    isDrawing.current = true;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const { x, y } = getCoordinates(e);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  };
+
+  const draw = (e: any) => {
+    if (!isDrawing.current) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const { x, y } = getCoordinates(e);
+    ctx.strokeStyle = resolveCanvasColor(strokeColor, '#000000');
+    ctx.lineWidth = strokeWidth;
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
+  const stopDrawing = () => {
+    isDrawing.current = false;
+  };
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.fillStyle = resolveCanvasColor('neutral.surface', '#FFFFFF');
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  };
+
+  const handleFileUpload = (e: any) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const validation = validateImageFile(file);
+      if (!validation.valid) {
+        showError(validation.error || 'Archivo no válido');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setUploadedImageSrc(event.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const processToTransparentPng = (sourceCanvasOrImageSrc: any) => {
+    const tempCanvas = document.createElement('canvas');
+    const ctx = tempCanvas.getContext('2d');
+    if (!ctx) return '';
+
+    if (typeof sourceCanvasOrImageSrc === 'string') {
+      const img = new Image();
+      img.src = sourceCanvasOrImageSrc;
+      tempCanvas.width = img.width || 500;
+      tempCanvas.height = img.height || 200;
+      ctx.drawImage(img, 0, 0);
+    } else {
+      tempCanvas.width = sourceCanvasOrImageSrc.width;
+      tempCanvas.height = sourceCanvasOrImageSrc.height;
+      ctx.drawImage(sourceCanvasOrImageSrc, 0, 0);
+    }
+
+    const imgData = ctx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+    const data = imgData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      if (r > 220 && g > 220 && b > 220) {
+        data[i + 3] = 0;
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+    return tempCanvas.toDataURL('image/png');
+  };
+
+  const getProcessedUploadedSignature = () => {
+    if (!uploadedImageSrc) return '';
+    return removeBgContrast ? processToTransparentPng(uploadedImageSrc) : uploadedImageSrc;
+  };
+
+  const handleSave = () => {
+    let finalDataUrl = '';
+    if (activeTab === 'draw') {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        finalDataUrl = processToTransparentPng(canvas);
+      }
+    } else {
+      if (uploadedImageSrc) {
+        finalDataUrl = removeBgContrast ? processToTransparentPng(uploadedImageSrc) : uploadedImageSrc;
+      }
+    }
+
+    onSaveSignature({
+      type: activeTab,
+      dataUrl: finalDataUrl,
+      signerName,
+      signerRole,
+      date
+    });
+    onClose();
+  };
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Tablero de Firma Digital"
+      icon={<PenTool className="w-5 h-5 text-[var(--ui-warning)]" />}
+      size="xl"
+      footer={
+        <div className="w-full flex items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className={`px-4 py-2 text-xs font-black text-[var(--ui-btn-neutral-text)] bg-[var(--ui-btn-neutral-bg)] hover:bg-[var(--ui-btn-neutral-hover)] border border-[var(--ui-btn-neutral-border)] rounded-[${radius.card}] transition cursor-pointer`}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            className={`flex items-center gap-2 px-5 py-2 rounded-[${radius.card}] bg-[var(--color-accent-base)] hover:bg-[var(--color-accent-brand-hover)] text-[var(--color-accent-on-base)] font-black text-xs ${elevationSystem.raised} transition cursor-pointer`}
+          >
+            <Check className="w-4 h-4" /> Aplicar Firma al CV
+          </button>
+        </div>
+      }
+    >
+      <div className={`space-y-4 bg-[var(--ui-bg-panel)] p-4 rounded-[${radius.modal}] text-[var(--ui-text-primary)]`}>
+        {/* Mode Selector Tabs */}
+        <div className={`flex bg-[var(--ui-bg-card)] p-1.5 rounded-[${radius.card}] border border-[var(--ui-border)]`}>
+          <button
+            type="button"
+            onClick={() => setActiveTab('draw')}
+            className={`flex-1 py-2 text-xs font-black rounded-[${radius.control}] flex items-center justify-center gap-2 transition cursor-pointer ${
+              activeTab === 'draw'
+                ? `bg-[var(--color-accent-purple)] text-white ${elevationSystem.raised}`
+                : 'text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]'
+            }`}
+          >
+            <PenTool className="w-4 h-4" /> Dibujar Firma (Táctil/Mouse)
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('upload')}
+            className={`flex-1 py-2 text-xs font-black rounded-[${radius.control}] flex items-center justify-center gap-2 transition cursor-pointer ${
+              activeTab === 'upload'
+                ? `bg-[var(--color-accent-purple)] text-white ${elevationSystem.raised}`
+                : 'text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)]'
+            }`}
+          >
+            <Upload className="w-4 h-4" /> Subir Foto de Firma
+          </button>
+        </div>
+
+        {activeTab === 'draw' ? (
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className={`text-xs font-black text-[var(--color-accent-amber-bright)] uppercase`}>Dibuje su firma en el recuadro</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black text-[var(--ui-text-secondary)]">Color:</span>
+                <input 
+                  type="color" 
+                  value={strokeColor} 
+                  onChange={(e) => setStrokeColor(e.target.value)} 
+                  className="w-6 h-6 rounded cursor-pointer border border-[var(--ui-border)] bg-transparent" 
+                />
+                <button
+                  type="button"
+                  onClick={clearCanvas}
+                  className={`px-2.5 py-1 text-[11px] font-black text-[var(--ui-btn-neutral-text)] bg-[var(--ui-btn-neutral-bg)] hover:bg-[var(--ui-btn-neutral-hover)] border border-[var(--ui-btn-neutral-border)] rounded-[${radius.control}] transition cursor-pointer flex items-center gap-1 ml-2`}
+                >
+                  <RotateCcw className="w-3.5 h-3.5" /> Limpiar Trazo
+                </button>
+              </div>
+            </div>
+
+            <div className={`relative border-2 border-[var(--ui-border)] rounded-[${radius.modal}] overflow-hidden bg-white ${elevationSystem.raised}`}>
+              <canvas
+                ref={canvasRef}
+                width={500}
+                height={180}
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={stopDrawing}
+                onMouseLeave={stopDrawing}
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchEnd={stopDrawing}
+                className="w-full h-44 touch-none cursor-crosshair"
+              />
+            </div>
+          </div>
+        ) : (
+          <div>
+            {!uploadedImageSrc ? (
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                className={`w-full h-44 border-2 border-dashed border-[var(--color-secondary-base)] bg-[var(--ui-bg-card)] rounded-[${radius.modal}] flex flex-col items-center justify-center cursor-pointer hover:bg-[var(--color-secondary-muted)] transition group`}
+              >
+                <Upload className={`w-8 h-8 text-[var(--color-secondary-text)] mb-2 group-hover:scale-110 transition duration-300`} />
+                <span className="font-black text-xs text-[var(--ui-text-primary)]">Subir imagen de la firma (JPG, PNG, WEBP)</span>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className={`relative border-2 border-[var(--ui-border)] rounded-[${radius.modal}] p-4 flex items-center justify-center bg-white min-h-36`}>
+                  <img 
+                    src={getProcessedUploadedSignature()} 
+                    alt="Firma cargada" 
+                    className="max-h-32 object-contain"
+                  />
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <label className="flex items-center gap-2 cursor-pointer text-[var(--ui-text-primary)] font-black">
+                    <input 
+                      type="checkbox"
+                      checked={removeBgContrast}
+                      onChange={(e) => setRemoveBgContrast(e.target.checked)}
+                      className="rounded accent-[var(--color-accent-purple)]"
+                    />
+                    <Sparkles className="w-3.5 h-3.5 text-[var(--color-accent-purple-bright)]" /> Eliminar fondo blanco automáticamente
+                  </label>
+                  <button 
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`text-[var(--color-secondary-text)] font-black hover:underline cursor-pointer`}
+                  >
+                    Cambiar foto
+                  </button>
+                </div>
+              </div>
+            )}
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              accept="image/*" 
+              onChange={handleFileUpload} 
+              className="hidden" 
+            />
+          </div>
+        )}
+
+        {/* Signer Details Form */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3 border-t border-[var(--ui-border)]">
+          <div>
+            <label className="block text-xs font-black text-[var(--ui-text-secondary)] mb-1">Nombre del Firmante</label>
+            <input 
+              type="text"
+              value={signerName}
+              onChange={(e) => setSignerName(e.target.value)}
+              className={`w-full text-xs p-2.5 rounded-[${radius.card}] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] font-bold outline-none focus:border-[var(--color-accent-purple)] transition`}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-black text-[var(--ui-text-secondary)] mb-1">Lugar y Fecha</label>
+            <input 
+              type="text"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className={`w-full text-xs p-2.5 rounded-[${radius.card}] border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] font-bold outline-none focus:border-[var(--color-accent-purple)] transition`}
+            />
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
+}
