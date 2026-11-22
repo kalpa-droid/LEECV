@@ -43,7 +43,7 @@ export interface TypographicBox {
 // ── Constantes ───────────────────────────────────────────────────────
 
 const BLEED_MM = 3;                   // Sangrado estándar 3 mm
-const INNER_MARGIN_DEFAULT_MM = 20;   // Margen interior mínimo
+export const INNER_MARGIN_DEFAULT_MM = 20;   // Margen interior mínimo de encuadernación
 
 /** Factores de espesor de papel (mm por hoja). */
 const PAPER_THICKNESS_MM_PER_SHEET: Record<string, number> = {

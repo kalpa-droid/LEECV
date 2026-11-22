@@ -4,7 +4,6 @@ import { getPageSize } from '../../../shared/core/pdf-engine/layers/page/pageSiz
 import {
   EditorialSection,
   EditorialRecord,
-  EditorialRecordType,
   EditorialPresetId,
   EditorialCoverMode,
   EditorialDesignConfig,
@@ -17,18 +16,14 @@ import {
   DEFAULT_EDITORIAL_PRESET,
 } from '../domain/editorialPresetCatalog';
 import {
-  calculateCoverDimensions,
-  calculateSpineThickness,
-  normalizeTypographyText,
-} from '../domain/editorialMath';
-import {
   EditorialLegalFields,
   EditorialMetadata,
-  EditorialTocEntry,
 } from '../domain/editorialTypes';
 import { registerPdfCategoryExporter } from '../../../shared/core/pdf-engine/pdfCategoryRegistry';
 import { sanitizeFontFamily } from '../../../shared/core/pdf-engine/layers/typography/pdfFontRegistry';
 import { downloadBlob } from '../../../shared/core/utils/downloadUtils';
+import { EditorialPdfCoverPage } from './EditorialPdfCovers';
+import { formatEditorialCitation } from '../domain/editorialCitationFormatter';
 
 // Tipos auxiliares para el render PDF
 interface SectionRenderModel {
@@ -39,6 +34,8 @@ interface SectionRenderModel {
 
 interface CoverRenderModel {
   mode: EditorialCoverMode;
+  coverStyleId?: string;
+  coverPaletteKey?: string;
   title?: string;
   subtitle?: string;
   author?: string;
@@ -207,7 +204,16 @@ export const EditorialPdfDocument: React.FC<{
       fontFamily: baseFont,
       fontSize: resolvedFontSize,
       lineHeight: resolvedLineHeight,
-      marginBottom: 10,
+      marginBottom: rawDesign.normId === 'apa7' ? 0 : 10,
+      textIndent: rawDesign.firstLineIndent ? 18 : 0,
+    },
+    bibItemWrap: {
+      marginBottom: rawDesign.normId === 'apa7' ? 6 : 8,
+    },
+    bibText: {
+      fontFamily: baseFont,
+      fontSize: resolvedFontSize,
+      lineHeight: resolvedLineHeight,
     },
     sectionDivider: {
       borderTopWidth: 1,
@@ -313,26 +319,39 @@ export const EditorialPdfDocument: React.FC<{
   const coverAuthorText = data?.metadata?.author || model.cover.author;
   const coverEditorialText = data?.metadata?.editorial || model.cover.editor;
 
-  // Generar páginas de cubierta (para libro, académica y ejecutiva)
+  // Generar páginas de cubierta adaptadas (desde COVER_PRESETS_CATALOG + paletas armónicas)
   const coverPage = showCover ? (
-    <Page size={resolvedPageSize} style={styles.coverPage}>
-      <AnchorMarker id="ANCHOR_START:editorial_portada" active={interactiveAnchors} />
-      <AnchorMarker id="ANCHOR_START:editorial_inicio" active={interactiveAnchors} />
-      <Text style={styles.coverTitle}>{formatTextoLiso(coverTitleText)}</Text>
-      {coverSubtitleText && <Text style={styles.coverSubtitle}>{formatTextoLiso(coverSubtitleText)}</Text>}
-      {coverAuthorText && <Text style={styles.coverAuthor}>{formatTextoLiso(coverAuthorText)}</Text>}
-      {coverEditorialText && <Text style={styles.coverMetaNote}>{formatTextoLiso(coverEditorialText)}</Text>}
-      {data?.legalFields?.institucion && (
-        <Text style={styles.coverMetaNote}>{formatTextoLiso(data.legalFields.institucion)}</Text>
-      )}
-      {data?.legalFields?.catedra && (
-        <Text style={styles.coverMetaNote}>{formatTextoLiso(data.legalFields.catedra)}</Text>
-      )}
-      {model.cover.qrCodeUrl && (
-        <Image style={styles.qrCode} src={model.cover.qrCodeUrl} />
-      )}
-      <AnchorMarker id="ANCHOR_END:editorial_portada" active={interactiveAnchors} />
-    </Page>
+    <EditorialPdfCoverPage
+      pageSize={resolvedPageSize}
+      coverMode={model.cover.mode}
+      coverStyleId={model.cover.coverStyleId || rawDesign.coverStyleId || pdfPreset.coverStyleId}
+      coverPaletteKey={model.cover.coverPaletteKey || rawDesign.coverPaletteKey || pdfPreset.coverPaletteKey}
+      fallbackPalette={{
+        primary: '#1E293B',
+        secondary: '#475569',
+        accent: '#0F172A',
+        text: '#0F172A',
+        textOnPrimary: '#FFFFFF',
+        background: '#FFFFFF',
+      }}
+      title={coverTitleText}
+      subtitle={coverSubtitleText}
+      author={coverAuthorText}
+      editor={coverEditorialText}
+      metadata={data?.metadata}
+      legalFields={data?.legalFields}
+      qrCodeUrl={model.cover.qrCodeUrl}
+      baseFont={baseFont}
+      boldFont={boldFont}
+      italicFont={italicFont}
+      startAnchors={
+        <>
+          <AnchorMarker id="ANCHOR_START:editorial_portada" active={interactiveAnchors} />
+          <AnchorMarker id="ANCHOR_START:editorial_inicio" active={interactiveAnchors} />
+        </>
+      }
+      endAnchors={<AnchorMarker id="ANCHOR_END:editorial_portada" active={interactiveAnchors} />}
+    />
   ) : null;
 
   const showToc = Boolean(model.tocConfig?.enabled && model.sections.length > 0);
@@ -368,9 +387,15 @@ export const EditorialPdfDocument: React.FC<{
   ) : null;
 
   // Generar páginas de sección
-  const sectionPages = model.sections.map((section, secIndex) => (
+  const sectionPages = model.sections.map((section, secIndex) => {
+    const rawSec = visibleSections[secIndex];
+    const isBibSection =
+      rawSec?.sectionKey === 'bibliografia' ||
+      section.records.some((r) => r.type === 'bibliography_item');
+    return (
     <Page key={section.id} size={resolvedPageSize} style={styles.page}>
       <AnchorMarker id={`ANCHOR_START:${section.id}`} active={interactiveAnchors} />
+      {isBibSection && <AnchorMarker id="ANCHOR_START:editorial_bibliografia" active={interactiveAnchors} />}
       {secIndex === 0 && <AnchorMarker id="ANCHOR_START:editorial_secciones" active={interactiveAnchors} />}
       {secIndex === model.sections.length - 1 && (
         <>
@@ -378,7 +403,14 @@ export const EditorialPdfDocument: React.FC<{
           <AnchorMarker id="ANCHOR_START:editorial_metadata" active={interactiveAnchors} />
         </>
       )}
-      <Text style={styles.sectionTitle}>{formatTextoLiso(section.title || `Sección ${secIndex + 1}`)}</Text>
+      <Text
+        style={[
+          styles.sectionTitle,
+          rawDesign.normId === 'apa7' ? { textAlign: 'center', fontSize: resolvedFontSize } : {},
+        ]}
+      >
+        {formatTextoLiso(section.title || `Sección ${secIndex + 1}`)}
+      </Text>
       {section.records.length > 0 && (
         <View style={styles.sectionDivider} />
       )}
@@ -388,7 +420,7 @@ export const EditorialPdfDocument: React.FC<{
             <Text key={recIndex} style={styles.bodyText}>{formatTextoLiso(record.content || '')}</Text>
           );
           case 'subtitle': return (
-            <Text key={recIndex} style={{ ...styles.bodyText, fontFamily: boldFont, fontSize: Math.round(resolvedFontSize * 1.35) }}>
+            <Text key={recIndex} style={{ ...styles.bodyText, textIndent: 0, fontFamily: boldFont, fontSize: Math.round(resolvedFontSize * 1.25) }}>
               {formatTextoLiso(record.content || '')}
             </Text>
           );
@@ -441,15 +473,37 @@ export const EditorialPdfDocument: React.FC<{
             );
           }
           case 'bibliography_item': {
-            const author = record.bibAuthor || '';
-            const year = record.bibYear || '';
-            const title = record.bibTitle || '';
-            const editorial = record.bibEditorial || '';
-            const formatted = `${author} (${year}). "${title}". ${editorial || ''}`.trim();
+            const bibIndex = section.records
+              .slice(0, recIndex)
+              .filter((r) => r.type === 'bibliography_item').length;
+            const cite = formatEditorialCitation(
+              record,
+              rawDesign.bibliographyStyle || rawDesign.normId || pdfPreset.bibliographyStyle,
+              bibIndex,
+            );
+            const useHanging =
+              cite.usesHangingIndent && rawDesign.bibliographyHangingIndent !== false;
             return (
-              <Text key={recIndex} style={styles.bodyText}>
-                {formatTextoLiso(formatted)}
-              </Text>
+              <View
+                key={recIndex}
+                style={{
+                  ...styles.bibItemWrap,
+                  paddingLeft: useHanging ? 18 : 0,
+                }}
+              >
+                <Text
+                  style={{
+                    ...styles.bibText,
+                    textIndent: useHanging ? -18 : 0,
+                  }}
+                >
+                  {cite.prefixText}
+                  {cite.italicSegment ? (
+                    <Text style={{ fontFamily: italicFont }}>{cite.italicSegment}</Text>
+                  ) : null}
+                  {cite.suffixText ? ` ${cite.suffixText}` : ''}
+                </Text>
+              </View>
             );
           }
           case 'qr_or_break': {
@@ -472,9 +526,11 @@ export const EditorialPdfDocument: React.FC<{
         />
       )}
       <AnchorMarker id={`ANCHOR_END:${section.id}`} active={interactiveAnchors} />
+      {isBibSection && <AnchorMarker id="ANCHOR_END:editorial_bibliografia" active={interactiveAnchors} />}
       {secIndex === 0 && <AnchorMarker id="ANCHOR_END:editorial_secciones" active={interactiveAnchors} />}
     </Page>
-  ));
+    );
+  });
 
   const fallbackEmptyPage = !coverPage && !tocPage && sectionPages.length === 0 ? (
     <Page size={resolvedPageSize} style={styles.page}>

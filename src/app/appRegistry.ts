@@ -21,6 +21,19 @@ import {
   History,
   ShieldCheck,
   Sparkles,
+  Library,
+  FileText,
+  Quote,
+  Compass,
+  Heart,
+  FlaskConical,
+  BarChart3,
+  MessageSquareQuote,
+  Paperclip,
+  CheckCircle2,
+  Feather,
+  BookText,
+  AlignLeft,
 } from 'lucide-react';
 import {
   DOCUMENT_TYPE_REGISTRY,
@@ -43,6 +56,7 @@ import {
   buildCardDockTabs,
 } from '../modules/card-studio/cardStepSequence';
 import { BOOK_STEP_SEQUENCE } from '../modules/book-studio/domain/bookStepSequence';
+import { buildEditorialDockTabs } from '../modules/editor-lee-studio/domain/editorialDockEngine';
 import { PLANNER_STEP_SEQUENCE } from '../modules/planner-studio/plannerStepSequence';
 import { FACTURADOR_STEP_SEQUENCE } from '../modules/facturador-studio/domain/facturadorStepSequence';
 import { EDITORIAL_STEP_SEQUENCE } from '../modules/editor-lee-studio/domain/editorialStepSequence';
@@ -129,10 +143,31 @@ const EDITORIAL_TAB_ICONS: Record<string, React.ComponentType<{ className?: stri
   editorial_inicio: BookOpen,
   editorial_portada: BookMarked,
   editorial_secciones: Layers,
+  editorial_bibliografia: Library,
   editorial_diseño: Palette,
   editorial_toc: LayoutGrid,
   editorial_metadata: Settings,
   editorial_import_ai: Sparkles,
+};
+
+const EDITORIAL_SECTION_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  prologo: Quote,
+  dedicatoria: Heart,
+  agradecimientos: Users,
+  resumen: FileText,
+  introduccion: Compass,
+  capitulo: BookMarked,
+  unidad: Layers,
+  desarrollo: AlignLeft,
+  marco_teorico: BookOpen,
+  metodologia: FlaskConical,
+  resultados: BarChart3,
+  discusion: MessageSquareQuote,
+  conclusiones: CheckCircle2,
+  epilogo: Feather,
+  bibliografia: Library,
+  glosario: BookText,
+  anexo: Paperclip,
 };
 
 let dockProvidersRegistered = false;
@@ -189,15 +224,12 @@ export function registerAllDockProviders(): void {
   );
   registerStepIds('invoice', FACTURADOR_STEP_SEQUENCE.map((s) => s.id));
 
-  registerDockStepProvider('editorial', () =>
-    EDITORIAL_STEP_SEQUENCE.map((step) => ({
-      id: step.id,
-      label: step.label,
-      stepNumber: step.stepNumber,
-      icon: EDITORIAL_TAB_ICONS[step.id] || Layers,
-      isLarge: true,
-      variant: 'accent' as const,
-    })),
+  registerDockStepProvider('editorial', (ctx) =>
+    buildEditorialDockTabs(ctx, {
+      steps: EDITORIAL_TAB_ICONS,
+      sections: EDITORIAL_SECTION_ICONS,
+      fallback: Layers,
+    }),
   );
   registerStepIds('editorial', [
     ...EDITORIAL_STEP_SEQUENCE.map((s) => s.id),

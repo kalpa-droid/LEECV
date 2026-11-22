@@ -10,6 +10,10 @@
 export type EditorialPresetId =
   | 'libro-ensayo-novela'
   | 'trabajo-practico-monografia-tesis'
+  | 'tp-secundaria'
+  | 'monografia-terciaria'
+  | 'tesis-apa7'
+  | 'cientifico-vancouver'
   | 'manual-apunte-guia'
   | 'informe-proyecto'
   | 'documento-libre';
@@ -49,11 +53,27 @@ export type EditorialCoverMode =
   | 'ejecutiva'      // Tapa ejecutiva limpia (organización, fecha)
   | 'sin-caratula';  // Sin carátula
 
+/** Norma editorial / sistema de citas activo en el documento. */
+export type EditorialNormId =
+  | 'libre'
+  | 'apa7'
+  | 'vancouver'
+  | 'chicago';
+
 /** Formato de bibliografía. */
 export type EditorialBibliographyStyle =
   | 'apa'
+  | 'apa7'
+  | 'vancouver'
   | 'chicago'
   | 'tradicional';
+
+/** Tipo de fuente bibliográfica para estructurar APA 7 / Vancouver. */
+export type EditorialBibliographySourceType =
+  | 'libro'
+  | 'articulo'
+  | 'web'
+  | 'tesis';
 
 /** Configuración del índice automático. */
 export interface EditorialTocConfig {
@@ -108,6 +128,12 @@ export interface EditorialDesignConfig {
   pageNumbers: boolean;
   headersEvenOdd: boolean;           // Encabezados pares/impares
   coverMode: EditorialCoverMode;
+  normId?: EditorialNormId;
+  bibliographyStyle?: EditorialBibliographyStyle;
+  firstLineIndent?: boolean;         // Margen inicial en párrafos (APA 7: 0.5 in)
+  bibliographyHangingIndent?: boolean;
+  coverStyleId?: string;
+  coverPaletteKey?: string;
 }
 
 /** Un registro (bloque de contenido) dentro de una sección. */
@@ -131,14 +157,32 @@ export interface EditorialRecord {
   bibTitle?: string;                 // bibliography_item
   bibEditorial?: string;             // bibliography_item
   bibStyle?: EditorialBibliographyStyle; // bibliography_item
+  bibSourceType?: EditorialBibliographySourceType; // bibliography_item
+  bibJournal?: string;               // bibliography_item (revista / publicación periódica)
+  bibVolume?: string;                // bibliography_item
+  bibIssue?: string;                 // bibliography_item
+  bibPages?: string;                 // bibliography_item
+  bibCity?: string;                  // bibliography_item
+  bibDoiOrUrl?: string;              // bibliography_item
+  bibAccessDate?: string;            // bibliography_item (ej. 2026 nov 22 para Vancouver web)
+  bibOrderNumber?: number;           // bibliography_item (orden secuencial [1] Vancouver)
   qrCode?: string;                   // qr_or_break (URL del QR)
   isBreak?: boolean;                 // qr_or_break (saltar página)
 }
+
+/** Categoría de sección editorial para organización y distintivos del Dock. */
+export type EditorialSectionKind =
+  | 'preliminares'
+  | 'cuerpo'
+  | 'cierre'
+  | 'personalizada';
 
 /** Una sección editorial (capítulo, prólogo, anexo, etc.). */
 export interface EditorialSection {
   id: EditorialSectionId;
   title: string;
+  sectionKey?: string;                // Clave canónica del catálogo (Regla 8)
+  category?: EditorialSectionKind;    // Categoría canónica (preliminares/cuerpo/cierre)
   visible: boolean;                   // ¿Mostrar en PDF?
   includeInToc: boolean;             // ¿Incluir en índice?
   startNewPage: boolean;              // ¿Empezar en página nueva?

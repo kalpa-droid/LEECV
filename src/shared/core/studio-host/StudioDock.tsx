@@ -206,15 +206,15 @@ export function StudioDock({
               >
                 <div className="relative flex items-center justify-center">
                   {renderDockIcon(sec, isActive, isDisabled, iconSize)}
-                  {sec.stepNumber !== undefined && (
+                  {(sec.badgeLabel !== undefined || sec.stepNumber !== undefined) && (
                     <span
-                      className={`absolute -top-2.5 -right-3 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center border ${
+                      className={`absolute -top-2.5 -right-3 min-w-[16px] h-4 px-1 rounded-full text-[9px] font-bold flex items-center justify-center border leading-none ${
                         isActive
                           ? 'bg-[var(--color-accent-on-base)] text-[var(--color-accent-base)] border-[var(--color-accent-base)]'
                           : 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--ui-bg-dock)]'
                       }`}
                     >
-                      {sec.stepNumber}
+                      {sec.badgeLabel ?? sec.stepNumber}
                     </span>
                   )}
                 </div>
@@ -285,15 +285,15 @@ export function StudioDock({
             >
               <div className="relative flex items-center justify-center">
                 {renderDockIcon(sec, isActive, isDisabled, iconSize)}
-                {sec.stepNumber !== undefined && (
+                {(sec.badgeLabel !== undefined || sec.stepNumber !== undefined) && (
                   <span
-                    className={`absolute -top-2.5 -right-3 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center border ${
+                    className={`absolute -top-2.5 -right-3 min-w-[16px] h-4 px-1 rounded-full text-[9px] font-bold flex items-center justify-center border leading-none ${
                       isActive
                         ? 'bg-[var(--color-accent-on-base)] text-[var(--color-accent-base)] border-[var(--color-accent-base)]'
                         : 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--ui-bg-dock)]'
                     }`}
                   >
-                    {sec.stepNumber}
+                    {sec.badgeLabel ?? sec.stepNumber}
                   </span>
                 )}
               </div>

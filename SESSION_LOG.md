@@ -1,3 +1,22 @@
+## [2026-11-22] - PR 2 (V3.1.0): EditorLee — Importación Universal + OCR, Chunker de Textos Largos, Dock Numerado, Presets Secundaria/Terciario/APA 7/Vancouver, Bibliografía y Portadas Adaptadas
+
+**Resumen:**
+- **Etapa 4A — Presets Académicos/Literarios, APA 7 y Vancouver**:
+  - Expandido `editorialTypes.ts`, `editorialSectionCatalog.ts` (`marco_teorico`, `resultados`, `discusion` con clave canónica `sectionKey` y `category`) y `editorialPresetCatalog.ts` + `pdf/editorialPresets.ts` con presets investigados para **Informe Escolar Secundaria (`tp-secundaria`)**, **Monografía Terciaria (`monografia-terciaria`)**, **Tesis Universitaria Normas APA 7.ª ed. (`tesis-apa7`)** (márgenes 25 mm, interlineado doble 2.0, inicio de párrafo desplazado y referencias alfabéticas), **Informe Científico IMRyD Vancouver (`cientifico-vancouver`)** (orden numérico `[1], [2]` de aparición) y libros/novelas (`libro-ensayo-novela`).
+  - Creado motor puro `editorialCitationFormatter.ts` (`formatEditorialCitation`, `sortBibliographyRecords`, `BIBLIOGRAPHY_NORM_GUIDES`) para orden y formato automático APA 7, Vancouver ICMJE, Chicago y Tradicional.
+- **Etapa 4B — Dock Numerado (`i`, `ii`, `1`, `2`, `A`), Portadas Vectoriales y Render PDF**:
+  - Agregado `badgeLabel` a `stepSequenceRegistry.ts` y soporte en `StudioDock.tsx`; creado `editorialDockEngine.ts` (`buildEditorialDockTabs`, `resolveSectionBadgeLabel` con Regla 8) y conectado en `appRegistry.ts` + `assistantTips.ts` para mostrar cada capítulo/sección como botón con distintivo (`i`, `ii` en preliminares; `1`, `2` en cuerpo; `A`, `B` en anexos).
+  - Creado `EditorialPdfCovers.tsx` adaptando los 6 arquetipos de `COVER_PRESETS_CATALOG` y las paletas de `PRESET_COLORS` (literaria, académica y ejecutiva) e integrado en `EditorialPdfDocument.tsx` junto con formato real de citas APA 7 (cursiva y margen francés) y Vancouver.
+- **Etapa 5 — Importación Universal (DOCX/ODT/RTF/PDF digital + OCR/Fotos) y Chunker Largo**:
+  - Extendido `api/editorial-doc-api.ts` (acción `parse-document` con extracción directa para Word `.docx`, LibreOffice/Google Docs `.odt` vía `jszip`, `.rtf`, `.html`, `.txt` y `.md`) y `vercel.json`.
+  - Habilitado reenvío seguro de imágenes en `api/ai-generate.ts`, mejorado `editorial_structure` para textos largos planos sin jerarquía y añadidas tareas `editorial_ocr_page` y `editorial_format_citation` en `api/_lib/aiTasks/catalog.ts` + `aiClient.ts`.
+  - Creados `editorialManuscriptChunker.ts` (segmentación inteligente, fusión continua `continuesPreviousSection` y respaldo heurístico Regla 8) y `editorialUniversalImporter.ts` (PDF híbrido con `analyzePdfPage` + OCR selectivo por `pageImageEncoder`).
+- **Etapa 6 — UI Modular Cero Ruido para EditorLee**:
+  - Modularizado `EditorLeeStudioContent.tsx` (reducción de 1 551 a ~435 líneas) extrayendo `EditorialPresetInicioPanel.tsx`, `EditorialCoverPanel.tsx`, `EditorialSectionFocusPanel.tsx` (lápiz por bloque + botones IA reales de reescritura/ortografía con confirmación previa), `EditorialSectionsOverviewPanel.tsx`, `EditorialBibliographyPanel.tsx`, `EditorialDesignAndMetaPanels.tsx` y refactor de `EditorialImportAiPanel.tsx`, junto con actualización de `api/_lib/aiTasks/appKnowledge/editorial.ts`.
+- **Verificación**: Nuevas suites `tests/editorLeePresetsAndCitations.test.ts` y `tests/editorLeeDockAndChunker.test.ts`, actualización de `version.ts` a `V3.1.0` y pasada completa de `npm run check-all` en verde.
+
+---
+
 ## [2026-11-22] - PR 1 (V3.0.0): UI Cero Ruido, Lidio `?` y Móvil, Región en Barra Superior, 3 Botones de Diseño y Carpeta Segura
 
 **Resumen:**

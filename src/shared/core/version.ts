@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 3,
-  minor: 0,
+  minor: 1,
   patch: 0,
-  label: 'V3.0.0',
+  label: 'V3.1.0',
   lastUpdated: '2026-11-22',
   lastAgent: '@antigravity',
-  stage: 'feat(ui): V3.0.0 — Rediseño Cero Ruido + Globo ? de Lidio y taxonomía clara (Ayuda contextual solo para redacción), Geometría móvil sin tapar Dock ni Lidio, Píldora global de Región en barra superior y jerarquía anti-pisado, 3 botones de Diseño en Dock sin banner cruzado, Perillas/Ojos sin pérdida de datos, Carpeta Segura explícita en disco y Fábrica new-app actualizada.',
+  stage: 'feat(editorlee): V3.1.0 — Presets escolares/terciarios/APA7/Vancouver IMRyD, Bibliografía formal APA 7 y Vancouver, Dock dinámico con distintivos (i, ii, 1, 2, A), Portadas diseñadas adaptadas, Importación universal (Word/ODT/RTF/PDF digital+OCR/Fotos) con Chunker de textos largos e IA y UI Cero Ruido modular.',
 } as const;

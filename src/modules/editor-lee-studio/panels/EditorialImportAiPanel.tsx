@@ -1,269 +1,297 @@
-import React, { useCallback, useState } from 'react';
-import { Download, Edit3, FileText, Sparkles } from 'lucide-react';
-import { executeAiTask } from '../../../shared/core/ai/aiClient';
-import { apiFetch } from '../../../shared/core/utils/apiClient';
+import React, { useRef, useState } from 'react';
+import { Camera, FileSpreadsheet, FileText, Sparkles, Upload } from 'lucide-react';
+import { PanelSection } from '../../../shared/core/ui/PanelSection';
+import { ActionGrid } from '../../../shared/core/ui/ActionGrid';
+import { ActionTileButton } from '../../../shared/core/ui/ActionTileButton';
+import { ContextualGuideBox } from '../../../shared/core/ui/ContextualGuideBox';
+import { Field } from '../../../shared/core/ui/Field';
+import { AIButton } from '../../../shared/core/ui/AIButton';
+import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { withErrorHandling } from '../../../shared/core/utils/errorHandler';
-import { downloadBlob } from '../../../shared/core/utils/downloadUtils';
+import {
+  extractEditorialTextFromFiles,
+  structureManuscriptInChunks,
+  type ImportProgressUpdate,
+} from '../domain/editorialUniversalImporter';
+import { resolveCanonicalEditorialKey } from '../domain/editorialDockEngine';
+import type { EditorialPresetId, EditorialSection } from '../domain/editorialTypes';
 
 interface EditorialImportAiPanelProps {
   draft: any;
   updateDraft: (updater: (prev: any) => any) => void;
   notify: { success: (msg: string) => void; error: (msg: string) => void };
+  setActiveStepTab?: (tab: string) => void;
   onExportPDF?: () => void;
-}
-
-function readFileAsBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = (err) => reject(err);
-    reader.readAsDataURL(file);
-  });
 }
 
 export const EditorialImportAiPanel: React.FC<EditorialImportAiPanelProps> = ({
   draft,
   updateDraft,
   notify,
+  setActiveStepTab,
   onExportPDF,
 }) => {
   const showSuccess = notify?.success ?? (() => {});
   const showError = notify?.error ?? (() => {});
-  const [inputFile, setInputFile] = useState<File | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [resultText, setResultText] = useState<string>('');
+  const { confirm } = useConfirm();
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setInputFile(file);
-  }, []);
+  const [manuscriptText, setManuscriptText] = useState('');
+  const [showPasteBox, setShowPasteBox] = useState(false);
+  const [progress, setProgress] = useState<ImportProgressUpdate | null>(null);
+  const [extractSummary, setExtractSummary] = useState<{
+    digitalPages: number;
+    ocrPages: number;
+    totalFiles: number;
+  } | null>(null);
+  const [isBusy, setIsBusy] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
 
-  const MAX_FILE_SIZE_MB = 10;
+  const handleFilesSelected = async (filesList: FileList | null) => {
+    const files = filesList ? Array.from(filesList) : [];
+    if (files.length === 0) return;
 
-  const handleParseDocx = useCallback(async () => {
-    if (!inputFile) return;
-    if (inputFile.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      showError(`El archivo supera los ${MAX_FILE_SIZE_MB} MB.`);
-      return;
-    }
-    setIsProcessing(true);
-    await withErrorHandling(
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setIsBusy(true);
+
+    const res = await withErrorHandling(
       async () => {
-        const base64 = await readFileAsBase64(inputFile);
-        const res = await apiFetch<{ text: string }>('/api/editorial/parse-docx', {
-          method: 'POST',
-          body: { base64, filename: inputFile.name },
+        const extracted = await extractEditorialTextFromFiles(files, {
+          onProgress: (upd) => setProgress(upd),
+          signal: controller.signal,
         });
-
-        if (!res.ok || !res.data?.text) {
-          throw new Error(res.error || 'No se pudo leer el manuscrito');
-        }
-
-        setResultText(res.data.text.slice(0, 5000));
-        showSuccess('Manuscrito leído. Revisá el contenido antes de estructurar.');
+        setManuscriptText(extracted.text);
+        setExtractSummary({
+          digitalPages: extracted.pdfDigitalPages,
+          ocrPages: extracted.ocrPages,
+          totalFiles: extracted.totalFiles,
+        });
+        setShowPasteBox(true);
+        showSuccess(
+          `Texto extraído por completo (${extracted.text.length.toLocaleString('es-AR')} caracteres). Tocá el botón de IA para armar tus capítulos.`,
+        );
+        return extracted;
       },
       {
-        context: 'Lectura de Manuscrito',
-        errorMessage: 'Error al leer el archivo Word.',
+        context: 'Importación universal EditorLee',
+        errorMessage: 'No pudimos leer uno de los archivos.',
         notify: (msg) => showError(msg),
-      }
+      },
     );
-    setIsProcessing(false);
-  }, [inputFile, showError, showSuccess]);
 
-  const handleStructureAi = useCallback(async () => {
-    const textToStructure = resultText || inputFile?.name || '';
-    if (!textToStructure) return;
-    setIsProcessing(true);
+    if (!res.success) {
+      setProgress(null);
+    } else {
+      setProgress((prev) =>
+        prev
+          ? { ...prev, stage: 'done', message: 'Texto cargado completo. Listo para estructurar en capítulos.' }
+          : null,
+      );
+    }
+    setIsBusy(false);
+  };
+
+  const handleStructureManuscript = async (): Promise<string> => {
+    const raw = manuscriptText.trim();
+    if (!raw) {
+      throw new Error('Subí un documento o pegá tu manuscrito antes de estructurar.');
+    }
+
+    const hasExisting = Array.isArray(draft?.sections) && draft.sections.length > 0;
+    let mergeMode: 'replace' | 'append' = 'replace';
+    if (hasExisting) {
+      const replaceIt = await confirm({
+        title: 'Ya tenés capítulos en tu documento',
+        message:
+          '¿Querés reemplazar la estructura actual con los capítulos detectados en este archivo o conservarlos?',
+        confirmText: 'Reemplazar con importado',
+        cancelText: 'Cancelar',
+      });
+      if (!replaceIt) return '';
+    }
+
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setIsBusy(true);
+
+    let firstSectionId = '';
     try {
-      const res = await executeAiTask<{
-        sections: Array<{ title: string; records: Array<{ type: string; content: string }> }>;
-        metadata: any;
-      }>({
-        taskId: 'editorial_structure',
-        payload: {
-          manuscriptText: resultText || '',
-          documentId: draft.id,
+      const result = await structureManuscriptInChunks({
+        fullText: raw,
+        presetId: draft?.design?.presetId as EditorialPresetId | undefined,
+        signal: controller.signal,
+        onProgress: (upd) => setProgress(upd),
+        onPartialSections: (sectionsSoFar, metadata) => {
+          const normalizedSections: EditorialSection[] = sectionsSoFar.map((s) => {
+            const { sectionKey, category } = resolveCanonicalEditorialKey(s);
+            return { ...s, sectionKey, category };
+          });
+          if (!firstSectionId && normalizedSections.length > 0) {
+            firstSectionId = normalizedSections[0].id;
+          }
+          updateDraft((prev) => ({
+            ...prev,
+            metadata: {
+              ...(prev?.metadata || {}),
+              ...(metadata?.title && !prev?.metadata?.title ? { title: metadata.title } : {}),
+              ...(metadata?.author && !prev?.metadata?.author ? { author: metadata.author } : {}),
+              ...(metadata?.subtitle && !prev?.metadata?.subtitle ? { subtitle: metadata.subtitle } : {}),
+            },
+            sections:
+              mergeMode === 'replace'
+                ? normalizedSections
+                : [...(prev?.sections || []), ...normalizedSections],
+          }));
         },
       });
-      if (res.data?.sections) {
-        updateDraft((prev) => ({
-          ...prev,
-          sections: res.data.sections.map((s: any, i: number) => ({
-            id: `ed_sec_${Date.now()}_${i}`,
-            title: s.title || `Sección ${i + 1}`,
-            visible: true,
-            includeInToc: true,
-            startNewPage: true,
-            position: i,
-            records: s.records.map((r: any) => ({
-              id: `ed_rec_${Date.now()}_${i}_${Math.random().toString(36).slice(2, 7)}`,
-              type: r.type || 'paragraph',
-              content: r.content || '',
-            })),
-          })),
-          metadata: res.data.metadata
-            ? { ...prev.metadata, ...res.data.metadata }
-            : prev.metadata,
-        }));
-        showSuccess('Manuscrito estructurado en secciones.');
+
+      if (result.sections.length === 0) {
+        throw new Error('No encontramos secciones legibles en el texto.');
+      }
+
+      if (result.usedFallbackForChunks > 0) {
+        showSuccess(
+          `Organizamos ${result.sections.length} secciones (${result.usedFallbackForChunks} fragmento(s) por detección local).`,
+        );
       } else {
-        showError('La IA no devolvió secciones válidas.');
+        showSuccess(`${result.sections.length} capítulos/apartados listos en tu barra lateral.`);
       }
-    } catch (err) {
-      showError(err instanceof Error ? err.message : 'Error estructurando el manuscrito.');
+
+      if (firstSectionId && setActiveStepTab) {
+        setActiveStepTab(firstSectionId);
+      }
+      return `${result.sections.length} secciones detectadas`;
     } finally {
-      setIsProcessing(false);
+      setIsBusy(false);
     }
-  }, [resultText, inputFile?.name, draft.id, updateDraft, showError, showSuccess]);
+  };
 
-  const handleExportPdf = useCallback(() => {
-    if (onExportPDF) {
-      onExportPDF();
-    } else {
-      showSuccess('Usa el botón de imprimir o exportar en la barra superior.');
-    }
-  }, [onExportPDF, showSuccess]);
-
-  const handleExportDocx = useCallback(async () => {
-    if (!draft) return;
-    setIsProcessing(true);
-    await withErrorHandling(
-      async () => {
-        const response = await fetch('/api/editorial/export-docx', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title: draft.metadata?.title || 'Mi Obra Editorial',
-            author: draft.metadata?.author || '',
-            sections: draft.sections || [],
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error('No se pudo generar el documento Word.');
-        }
-
-        const blob = await response.blob();
-        const safeTitle = (draft.metadata?.title || 'Obra-Editorial')
-          .replace(/[^a-zA-Z0-9_\-]/g, '_')
-          .slice(0, 50);
-        downloadBlob(blob, `${safeTitle}.docx`);
-        showSuccess('Documento Word descargado exitosamente.');
-      },
-      {
-        context: 'Exportación a Word',
-        errorMessage: 'Error al exportar a archivo Word.',
-        notify: (msg) => showError(msg),
-      }
-    );
-    setIsProcessing(false);
-  }, [draft, showError, showSuccess]);
+  const progressPercent =
+    progress && progress.total > 0
+      ? Math.min(100, Math.round((progress.current / progress.total) * 100))
+      : 0;
 
   return (
-    <div className="p-4 space-y-6 text-[var(--ui-text-primary)]">
-      <h2 className="text-xl font-bold">Importar y IA</h2>
-      <p className="text-[var(--ui-text-secondary)]">
-        Subí tu manuscrito (.docx, .txt o .md) o usá los flujos IA para estructurar, reescribir o pulir secciones.
-      </p>
+    <div className="space-y-5">
+      <PanelSection
+        icon={<Upload className="w-4 h-4" />}
+        title="Importar manuscrito o apuntes"
+        helpTitle="Importación sin perder contenido"
+        helpText="Leemos Word (.docx), LibreOffice / Google Docs (.odt), .rtf, texto (.txt / .md), PDF digitales y fotos o PDFs escaneados. Si un texto es largo, lo dividimos por fragmentos para detectar cada capítulo, metodología y conclusión."
+      >
+        <ContextualGuideBox title="Elegí cómo traer tu material">
+          Los archivos con texto (Word, LibreOffice, PDF digital) se leen directo sin gastar pasadas de imagen; las fotos o escaneos pasan por lectura inteligente de páginas.
+        </ContextualGuideBox>
 
-      {/* Carga de archivo */}
-      <div className="space-y-2 p-3 rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)]">
-        <h3 className="text-sm font-semibold mb-2">Cargar manuscrito (máx. 3 MB)</h3>
-        <input
-          type="file"
-          accept=".docx,.txt,.md"
-          onChange={handleFileChange}
-          className="w-full rounded border p-2 text-[12px]"
-        />
-        {inputFile && (
-          <div className="flex items-center gap-2 mt-2">
-            <FileText className="h-4 w-4" />
-            <span className="text-[12px]">{inputFile.name}</span>
+        <ActionGrid columns={2}>
+          <ActionTileButton
+            label="Word / LibreOffice"
+            badge=".docx .odt"
+            icon={<FileText className="w-4 h-4" />}
+            accept=".docx,.odt,.rtf,.txt,.md,.html,.htm"
+            multiple
+            onFileSelect={(files) => void handleFilesSelected(files)}
+            helpText="Subí documentos de Word (.docx), LibreOffice Writer o exportados desde Google Docs (.odt / .rtf / .txt)."
+          />
+          <ActionTileButton
+            label="PDF o Escaneado"
+            badge=".pdf"
+            icon={<FileSpreadsheet className="w-4 h-4" />}
+            accept=".pdf,application/pdf"
+            onFileSelect={(files) => void handleFilesSelected(files)}
+            helpText="Lee texto directo en PDFs digitales y aplica lectura inteligente únicamente si alguna página viene como foto."
+          />
+          <ActionTileButton
+            label="Fotos de páginas"
+            badge="OCR"
+            icon={<Camera className="w-4 h-4" />}
+            accept="image/png,image/jpeg,image/webp"
+            multiple
+            onFileSelect={(files) => void handleFilesSelected(files)}
+            helpText="Sacale foto a hojas impresas o apuntes en orden; podés elegir varias fotos juntas."
+          />
+          <ActionTileButton
+            label="Pegar texto"
+            badge="Libre"
+            icon={<Sparkles className="w-4 h-4" />}
+            active={showPasteBox}
+            onClick={() => setShowPasteBox((v) => !v)}
+            helpText="Pegá un texto extenso sin formato para que Lidio reconozca prólogo, capítulos, citas y cierre."
+          />
+        </ActionGrid>
+
+        {progress && (
+          <div className="p-3 rounded-xl border border-[var(--color-accent-base)]/40 bg-[var(--color-accent-muted)] space-y-1.5">
+            <div className="flex items-center justify-between text-[11px] font-bold text-[var(--color-accent-text)]">
+              <span className="truncate">{progress.message}</span>
+              <span>{progressPercent}%</span>
+            </div>
+            <div className="w-full h-1.5 rounded-full bg-[var(--ui-bg-card)] overflow-hidden">
+              <div
+                className="h-full bg-[var(--color-accent-base)] transition-all"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
           </div>
         )}
-        <div className="flex gap-2">
-          <button
-            type="button"
-            disabled={isProcessing || !inputFile}
-            onClick={handleParseDocx}
-            className={`flex-1 py-2 px-3 rounded text-sm font-medium transition ${
-              isProcessing || !inputFile
-                ? 'bg-[var(--ui-bg-hover)] text-[var(--ui-text-secondary)] cursor-not-allowed'
-                : 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
-            }`}
-          >
-            {isProcessing ? 'Leyendo…' : 'Leer manuscrito'}
-          </button>
-        </div>
-      </div>
+      </PanelSection>
 
-      {/* Preview */}
-      {resultText && (
-        <div className="space-y-2 p-3 rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)]">
-          <h3 className="text-sm font-semibold mb-2">Vista previa (primeros 5.000 caracteres)</h3>
-          <div className="overflow-y-auto max-h-48 text-[11px] font-mono p-2 rounded border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)]">
-            {resultText}
+      {(showPasteBox || manuscriptText.length > 0) && (
+        <PanelSection
+          icon={<Sparkles className="w-4 h-4" />}
+          title="Estructurar capítulos"
+          helpText="Revisá o pegá el texto completo y tocá el botón con el símbolo de IA. Cada capítulo aparecerá numerado en tu barra lateral."
+          headerRight={
+            <AIButton
+              iconOnly={false}
+              label={isBusy ? 'Procesando…' : 'Armar capítulos'}
+              disabled={isBusy || !manuscriptText.trim()}
+              onGenerate={handleStructureManuscript}
+              onSuccess={() => {}}
+              helpText="Detecta capítulos, introducciones, metodologías y anexos incluso si el borrador no tenía títulos en negrita."
+            />
+          }
+        >
+          {extractSummary && (
+            <p className="text-[11px] text-[var(--ui-text-secondary)]">
+              Cargado: {manuscriptText.length.toLocaleString('es-AR')} caracteres ·{' '}
+              {extractSummary.digitalPages > 0 ? `${extractSummary.digitalPages} pág. digitales · ` : ''}
+              {extractSummary.ocrPages > 0 ? `${extractSummary.ocrPages} lectura visual` : 'lectura directa'}
+            </p>
+          )}
+
+          <Field
+            as="textarea"
+            rows={7}
+            value={manuscriptText}
+            onChange={(e: any) => setManuscriptText(e.target.value)}
+            placeholder="Pegá aquí tu manuscrito completo (hasta libros o tesis largas sin recortar texto)..."
+          />
+
+          <div className="flex items-center justify-between gap-2">
+            {isBusy && (
+              <button
+                type="button"
+                onClick={() => abortRef.current?.abort()}
+                className="px-3 py-1.5 text-xs font-bold rounded-lg border border-[var(--color-status-danger-text)] text-[var(--color-status-danger-text)] cursor-pointer"
+              >
+                Detener
+              </button>
+            )}
+            {onExportPDF && draft?.sections?.length > 0 && (
+              <button
+                type="button"
+                onClick={onExportPDF}
+                className="ml-auto px-3 py-1.5 text-xs font-bold rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)] cursor-pointer"
+              >
+                Exportar PDF
+              </button>
+            )}
           </div>
-        </div>
+        </PanelSection>
       )}
-
-      {/* Flujos IA */}
-      <div className="space-y-2 p-3 rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)]">
-        <h3 className="text-sm font-semibold mb-2">Asistente IA (Lidio)</h3>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            disabled={isProcessing || !resultText}
-            onClick={handleStructureAi}
-            className={`flex-1 py-2 px-3 rounded text-sm font-medium transition ${
-              isProcessing || !resultText
-                ? 'bg-[var(--ui-bg-hover)] text-[var(--ui-text-secondary)] cursor-not-allowed'
-                : 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
-            }`}
-          >
-            <Sparkles className="mr-1 h-4 w-4" />
-            Estructurar en secciones
-          </button>
-          <button
-            type="button"
-            onClick={() => {}}
-            className="flex-1 py-2 px-3 rounded text-sm font-medium bg-[var(--ui-bg-hover)] text-[var(--ui-text-secondary)] cursor-not-allowed"
-          >
-            Reescribir sección
-          </button>
-          <button
-            type="button"
-            onClick={() => {}}
-            className="flex-1 py-2 px-3 rounded text-sm font-medium bg-[var(--ui-bg-hover)] text-[var(--ui-text-secondary)] cursor-not-allowed"
-          >
-            Pulir registro
-          </button>
-        </div>
-      </div>
-
-      {/* Descargas */}
-      <div className="space-y-2 p-3 rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)]">
-        <h3 className="text-sm font-semibold mb-2">Exportar</h3>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={handleExportPdf}
-            className="flex-1 py-2 px-3 rounded text-sm font-medium bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]"
-          >
-            <Download className="mr-1 h-4 w-4" />
-            PDF Imprenta
-          </button>
-          <button
-            type="button"
-            onClick={handleExportDocx}
-            className="flex-1 py-2 px-3 rounded text-sm font-medium bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)]"
-          >
-            <Edit3 className="mr-1 h-4 w-4" />
-            Word Editable
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

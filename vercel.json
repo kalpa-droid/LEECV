@@ -89,6 +89,10 @@
       "destination": "/api/editorial-doc-api?action=parse-docx"
     },
     {
+      "source": "/api/editorial/parse-document",
+      "destination": "/api/editorial-doc-api?action=parse-document"
+    },
+    {
       "source": "/api/editorial/export-docx",
       "destination": "/api/editorial-doc-api?action=export-docx"
     },

@@ -56,12 +56,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const systemPrompt = taskDef.buildSystemPrompt(cvContext, payload, formatContext);
   const userPrompt = taskDef.buildUserPrompt(payload);
 
+  const validImages = Array.isArray(payload?.images)
+    ? payload.images
+        .filter(
+          (img: any) =>
+            img &&
+            typeof img.base64 === 'string' &&
+            img.base64.length > 0 &&
+            img.base64.length <= 4_500_000 &&
+            (img.mimeType === 'image/png' ||
+              img.mimeType === 'image/jpeg' ||
+              img.mimeType === 'image/webp'),
+        )
+        .slice(0, 4)
+    : undefined;
+
+  const parsedMaxTokens = Number(maxTokens);
+  const clampedMaxTokens = Number.isFinite(parsedMaxTokens) && parsedMaxTokens > 0
+    ? Math.min(Math.max(parsedMaxTokens, 256), 4000)
+    : 1200;
+
   const completionReq: AiCompletionRequest = {
     systemPrompt: String(systemPrompt),
     userPrompt: String(userPrompt),
-    maxTokens: Number(maxTokens) || 1200,
+    maxTokens: clampedMaxTokens,
     temperature: resolveTemperature(temperature),
-    ...(taskDef.responseSchema && { responseSchema: taskDef.responseSchema })
+    ...(validImages && validImages.length > 0 ? { images: validImages } : {}),
+    ...(taskDef.responseSchema && { responseSchema: taskDef.responseSchema }),
   };
 
   let completionText: string | null = null;

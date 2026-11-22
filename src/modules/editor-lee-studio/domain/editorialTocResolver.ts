@@ -9,7 +9,7 @@
  * Este módulo es PURO (sin React, sin DOM).
  */
 
-import { EditorialSection, EditorialRecord, EditorialSectionId } from './editorialTypes';
+import { EditorialSection, EditorialRecord } from './editorialTypes';
 
 /** Representación mínima de una entrada de índice (para render final). */
 export interface EditorialTocEntry {

@@ -235,6 +235,7 @@ const EDITORIAL_STEP_IDS = [
   'editorial_inicio',
   'editorial_portada',
   'editorial_secciones',
+  'editorial_bibliografia',
   'editorial_diseño',
   'editorial_toc',
   'editorial_metadata',
@@ -258,7 +259,9 @@ const TARGET_VALIDATOR_BY_TYPE: Record<AssistantDocType, (tab: string, cvData?: 
   book: (tab) => getValidStepIds('book', DEFAULT_BOOK_STEP_IDS).has(tab),
   planner: (tab) => getValidStepIds('planner', DEFAULT_PLANNER_STEP_IDS).has(tab),
   invoice: (tab) => getValidStepIds('invoice', DEFAULT_INVOICE_STEP_IDS).has(tab),
-  editorial: (tab) => getValidStepIds('editorial', EDITORIAL_STEP_IDS).has(tab),
+  editorial: (tab, cvData) =>
+    getValidStepIds('editorial', EDITORIAL_STEP_IDS).has(tab) ||
+    (Array.isArray(cvData?.sections) && cvData.sections.some((s: any) => s?.id === tab)),
 };
 
 /** Pestaña validada para navegar. Devuelve null si no es un destino real del editor. */
@@ -800,20 +803,50 @@ export const ALL_PLANNER_TIPS: AssistantTip[] = [
 
 /** Tips de EditorLee (docType 'editorial'). */
 export const EDITORIAL_TAB_TIPS: Record<string, AssistantTip[]> = {
+  editorial_inicio: [
+    {
+      id: 'tip-editorial-inicio-1',
+      title: 'Elegí el tipo de documento antes de redactar',
+      body: 'Cada plantilla prepara automáticamente la estructura (secundaria, terciario, tesis APA 7, científico Vancouver o novela), márgenes e interlineado.',
+      targetTab: 'editorial_inicio',
+    },
+  ],
   editorial_portada: [
     {
       id: 'tip-editorial-portada-1',
-      title: 'Portada editorial o académica',
-      body: 'Podés alternar entre tapa de libro, carátula académica con cátedra e integrantes, o portada ejecutiva limpia.',
+      title: 'Diseños de portada adaptables',
+      body: 'Podés elegir entre 6 estilos visuales de portada y paletas armónicas combinadas con tapa de libro, carátula escolar/universitaria o ejecutiva.',
       targetTab: 'editorial_portada',
     },
   ],
   editorial_secciones: [
     {
       id: 'tip-editorial-secciones-1',
-      title: 'Combiná bloques dentro de cada capítulo',
-      body: 'Cada sección acepta subtítulos, párrafos, citas destacadas, recuadros, tablas y bibliografía ordenados.',
+      title: 'Cada capítulo tiene su botón en la barra',
+      body: 'Tocá cualquier botón numerado (i, ii, 1, 2, A) de la barra lateral para editar su texto con el lápiz o pedirle ayuda a Lidio sin ruido visual.',
       targetTab: 'editorial_secciones',
+    },
+  ],
+  editorial_bibliografia: [
+    {
+      id: 'tip-editorial-bib-apa',
+      title: 'Normas APA 7.ª ed. vs Vancouver',
+      body: 'En APA 7 las referencias se ordenan alfabéticamente por apellido y llevan (Año). En Vancouver van numeradas [1], [2] por orden exacto de aparición en el texto.',
+      targetTab: 'editorial_bibliografia',
+    },
+    {
+      id: 'tip-editorial-bib-ai',
+      title: 'Pegá citas sueltas y ordenalas con IA',
+      body: 'Si tenés referencias escritas rápido o copiadas de apuntes, usá el botón con el ícono de IA para convertirlas a formato APA 7 o Vancouver.',
+      targetTab: 'editorial_bibliografia',
+    },
+  ],
+  editorial_diseño: [
+    {
+      id: 'tip-editorial-diseno-apa',
+      title: 'Estructura formal APA 7 disponible',
+      body: 'Si tu cátedra pide APA 7, activá márgenes de 25 mm, interlineado doble (2.0) y espacio inicial en párrafos desde Diseño.',
+      targetTab: 'editorial_diseño',
     },
   ],
   editorial_toc: [
@@ -822,6 +855,14 @@ export const EDITORIAL_TAB_TIPS: Record<string, AssistantTip[]> = {
       title: 'El índice se calcula solo',
       body: 'Activá el índice automático y elegí si querés incluir subtítulos: los números de página se actualizan al exportar.',
       targetTab: 'editorial_toc',
+    },
+  ],
+  editorial_import_ai: [
+    {
+      id: 'tip-editorial-import-1',
+      title: 'Importá manuscritos largos o fotos de apuntes',
+      body: 'Podés subir archivos Word (.docx), LibreOffice (.odt), PDF digitales o escaneados y fotos de páginas: EditorLee lee todo por partes y arma los capítulos en tu barra.',
+      targetTab: 'editorial_import_ai',
     },
   ],
 };
