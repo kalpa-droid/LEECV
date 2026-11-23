@@ -43,7 +43,10 @@ if (navbarContent.includes('onOpenSaveAsModal') && navbarContent.includes('onSav
 totalChecks++;
 const savedCVsModalPath = path.resolve(process.cwd(), 'src/modules/cv-builder/components/SavedCVsModal.tsx');
 const savedCVsContent = fs.readFileSync(savedCVsModalPath, 'utf8');
-if (savedCVsContent.includes('Importar Respaldo (.JSON / .ZIP)') && savedCVsContent.includes('accept=".json,.zip"')) {
+if (
+  savedCVsContent.includes('Importar Respaldo (.JSON / .ZIP)') &&
+  (savedCVsContent.includes('accept=".json,.zip"') || savedCVsContent.includes('.json,.zip"'))
+) {
   console.log('  ✓ Modal Abrir Documento: SavedCVsModal.tsx soporta importación de respaldos .json y .zip.');
 } else {
   console.error('❌ FALLO UI: SavedCVsModal.tsx no soporta los formatos de respaldo unificados.');

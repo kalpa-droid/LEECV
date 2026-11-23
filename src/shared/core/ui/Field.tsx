@@ -31,9 +31,10 @@ export function Field({
   value,
   ...props
 }: FieldProps) {
-  const baseInputStyle = `w-full rounded-[${radius.control}] border px-3 py-2 text-[12px] ui-bg-card ui-text-primary ui-border outline-none transition-all placeholder:text-[var(--color-neutral-text-muted)] ${elevationSystem.raised} focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[var(--color-accent-muted)]`;
+  const baseInputStyle = `w-full rounded-[10px] border px-3 py-2 text-[12px] ui-bg-card ui-text-primary ui-border outline-none transition-all placeholder:text-[var(--color-neutral-text-muted)] ${elevationSystem.raised} focus:border-[var(--color-accent-base)] focus:ring-2 focus:ring-[var(--color-accent-muted)]`;
 
   const effectiveMaxLength = maxLength ?? (Component === 'textarea' ? 2000 : 250);
+  void radius.control; // Token de referencia: 10px
 
   // Validación suave no bloqueante (aviso visual de formato)
   const validationKey = name || id || (typeof label === 'string' ? label : '');

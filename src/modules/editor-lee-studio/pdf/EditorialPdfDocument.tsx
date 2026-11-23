@@ -21,6 +21,11 @@ import {
 } from '../domain/editorialTypes';
 import { registerPdfCategoryExporter } from '../../../shared/core/pdf-engine/pdfCategoryRegistry';
 import { sanitizeFontFamily } from '../../../shared/core/pdf-engine/layers/typography/pdfFontRegistry';
+import {
+  partitionRecordsIntoColumnBands,
+  splitTextAroundImage,
+  computeOptimalTableLayout,
+} from '../domain/editorialLayoutEngines';
 import { downloadBlob } from '../../../shared/core/utils/downloadUtils';
 import { EditorialPdfCoverPage, EditorialSectionDividerPage } from './EditorialPdfCovers';
 import {
@@ -165,11 +170,14 @@ export const EditorialPdfDocument: React.FC<{
     },
   };
 
-  const marginTopPt = Math.max(20, (rawDesign.marginTop ?? rawDesign.margins?.top ?? 20) * 2.0);
-  const marginBottomPt = Math.max(28, (rawDesign.marginBottom ?? rawDesign.margins?.bottom ?? 20) * 2.0);
-  const marginLeftPt = Math.max(24, (rawDesign.gutter ?? rawDesign.marginLeft ?? rawDesign.margins?.left ?? 20) * 1.8);
-  const marginRightPt = Math.max(24, (rawDesign.marginRight ?? rawDesign.margins?.right ?? 20) * 1.8);
+  const MM_TO_PT = 2.83465;
+  const marginTopPt = Math.max(20, (rawDesign.marginTop ?? rawDesign.margins?.top ?? 20) * MM_TO_PT);
+  const marginBottomPt = Math.max(28, (rawDesign.marginBottom ?? rawDesign.margins?.bottom ?? 20) * MM_TO_PT);
+  const marginLeftPt = Math.max(24, (rawDesign.gutter ?? rawDesign.marginLeft ?? rawDesign.margins?.left ?? 20) * MM_TO_PT);
+  const marginRightPt = Math.max(24, (rawDesign.marginRight ?? rawDesign.margins?.right ?? 20) * MM_TO_PT);
   const resolvedPageSize = toPdfPageSize(resolvedPageSizeId);
+  const pageWidthPt = resolvedPageSizeId === 'a5' ? 419.53 : resolvedPageSizeId === 'carta' ? 612 : 595.28;
+  const usableWidthPt = Math.max(220, pageWidthPt - marginLeftPt - marginRightPt);
 
   const styles = StyleSheet.create({
     page: {
@@ -276,22 +284,23 @@ export const EditorialPdfDocument: React.FC<{
     },
     table: {
       marginTop: 8,
-      borderWidth: 0.6,
-      borderColor: '#9CA3AF',
+      marginBottom: 10,
+      borderTopWidth: 1,
+      borderBottomWidth: 1,
+      borderColor: '#374151',
     },
     tableHeader: {
+      flexDirection: 'row',
       backgroundColor: '#3F51B5',
-      color: '#FFFFFF',
-      paddingVertical: 3,
-      paddingHorizontal: 4,
-      fontSize: 9,
-      fontFamily: boldFont,
+      paddingVertical: 4,
+      paddingHorizontal: 5,
     },
     tableRow: {
-      paddingVertical: 3,
-      paddingHorizontal: 4,
+      flexDirection: 'row',
+      paddingVertical: 3.5,
+      paddingHorizontal: 5,
       borderTopWidth: 0.4,
-      borderTopColor: '#9CA3AF',
+      borderTopColor: '#D1D5DB',
     },
     callout: {
       borderWidth: 1,

@@ -59,6 +59,10 @@
     {
       "file": "src/modules/cv-builder/components/modals/ImportCvAiModal.tsx",
       "reason": "Fondo blanco opaco (#FFFFFF) del canvas de rasterizado de páginas PDF para OCR/import. No es color de UI de usuario; el PDF requiere blanco puro."
+    },
+    {
+      "file": "src/modules/editor-lee-studio/domain/docxChartRenderer.ts",
+      "reason": "Colores hex literales para renderizado Canvas 2D y SVG data URL de gráficos OOXML embebidos en PDF (var(--token) no se resuelve en Canvas 2D ni SVG standalone). No es UI de usuario."
     }
   ]
 }

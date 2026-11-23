@@ -313,8 +313,8 @@ export const ${studioComponentName}: React.FC<${studioComponentName}Props> = ({
                 id: '${input.id}_global',
                 shortLabel: docData.globalContext,
                 tooltip: 'Configuración global de ${input.title}. Cada píldora controla un solo eje global (máx. 3; sin emojis junto al ícono).',
-                iconId: UI_ICON_IDS.template,
-                hasOverrides: isManuallyOverridden(docData.manualOverrides, 'activePresetId'),
+                iconId: UI_ICON_IDS.diseno,
+                hasOverrides: isManuallyOverridden(docData, 'activePresetId'),
                 onClick: () =>
                   setDocData((prev) => ({
                     ...prev,
@@ -350,20 +350,18 @@ export const ${studioComponentName}: React.FC<${studioComponentName}Props> = ({
               headerRight={
                 <div className="flex items-center gap-2">
                   <ManualOverrideBadge
-                    isOverridden={isManuallyOverridden(docData.manualOverrides, 'activePresetId')}
+                    isOverridden={isManuallyOverridden(docData, 'activePresetId')}
                     globalLabel={docData.globalContext}
                     onReset={() =>
-                      setDocData((prev) => ({
-                        ...prev,
-                        activePresetId: '${input.id}-clasico',
-                        manualOverrides: clearManualOverride(prev.manualOverrides, 'activePresetId'),
-                      }))
+                      setDocData((prev) =>
+                        clearManualOverride(prev, 'activePresetId', '${input.id}-clasico'),
+                      )
                     }
                   />
                   <VisibilityEyeToggle
                     visible={isSubtitleVisible}
                     onToggle={setIsSubtitleVisible}
-                    fieldLabel="Subtítulo en PDF"
+                    targetLabel="Subtítulo en PDF"
                   />
                   <AIButton
                     label="Proponer contenido con IA"
@@ -397,14 +395,15 @@ export const ${studioComponentName}: React.FC<${studioComponentName}Props> = ({
                   label="Plantilla clásica"
                   role="preset"
                   active={docData.activePresetId === '${input.id}-clasico'}
-                  iconId={UI_ICON_IDS.template}
+                  iconId={UI_ICON_IDS.diseno}
                   helpText="Aplica el diseño base recomendado para este documento."
                   onClick={() =>
-                    setDocData((prev) => ({
-                      ...prev,
-                      activePresetId: '${input.id}-clasico',
-                      manualOverrides: markManualOverride(prev.manualOverrides, 'activePresetId'),
-                    }))
+                    setDocData((prev) =>
+                      markManualOverride(
+                        { ...prev, activePresetId: '${input.id}-clasico' },
+                        'activePresetId',
+                      ),
+                    )
                   }
                 />
                 <ActionTileButton

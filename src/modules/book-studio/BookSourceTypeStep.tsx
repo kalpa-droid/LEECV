@@ -96,6 +96,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
   const [exportStatusMsg, setExportStatusMsg] = useState('');
   const [autoPdfBlobUrl, setAutoPdfBlobUrl] = useState<string | null>(null);
   const [autoOutputIsZip, setAutoOutputIsZip] = useState(false);
+  const [lastAutoSignature, setLastAutoSignature] = useState<string | null>(null);
 
   const isAutoMode = options.workflowMode !== 'guided';
 
@@ -167,8 +168,33 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
     }
   };
 
-  const handleStartAutoExport = async () => {
+  const activeTarget = inferBookPrintTarget(options);
+  const profile = BOOK_PRINT_PROFILES[activeTarget];
+  const paperSpec = resolveBookPaperSpec(options.paperSize);
+  const currentAutoSignature = selectedFile
+    ? JSON.stringify({
+        name: selectedFile.name,
+        size: selectedFile.size,
+        paperSize: options.paperSize,
+        mode: options.mode,
+        target: activeTarget,
+      })
+    : null;
+  const hasReadyCachedAutoExport = Boolean(autoPdfBlobUrl && currentAutoSignature && lastAutoSignature === currentAutoSignature);
+
+  const handleStartAutoExport = async (forceRegenerate = false) => {
     if (!selectedFile) return;
+    if (!forceRegenerate && hasReadyCachedAutoExport && autoPdfBlobUrl) {
+      const a = document.createElement('a');
+      a.href = autoPdfBlobUrl;
+      const cleanName = selectedFile.name.replace(/\.(pdf|zip)$/i, '');
+      a.download = `${cleanName}_IMPRESION_LIBRO${autoOutputIsZip ? '.zip' : '.pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      return;
+    }
+
     const allowed = await consumeCreditIfNeeded();
     if (!allowed) {
       setIsCheckoutOpen(true);
@@ -204,6 +230,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
       });
       const url = URL.createObjectURL(blob);
       setAutoPdfBlobUrl(url);
+      setLastAutoSignature(currentAutoSignature);
 
       const a = document.createElement('a');
       a.href = url;
@@ -218,11 +245,6 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
       setIsExportingAuto(false);
     }
   };
-
-  const activeTarget = inferBookPrintTarget(options);
-  const profile = BOOK_PRINT_PROFILES[activeTarget];
-  const paperSpec = resolveBookPaperSpec(options.paperSize);
-  const overrideCount = countManualOverrides(options.manualOverrides);
 
   const autoOptionsForCount: BookImpositionOptions = isAutoMode
     ? {
@@ -369,44 +391,6 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
           />
         </ActionGrid>
       </PanelSection>
-
-      {/* Resumen compacto de las 2 píldoras globales */}
-      <div
-        className="p-3 border border-[var(--ui-border)] bg-[var(--ui-bg-card)] flex flex-wrap items-center justify-between gap-2"
-        style={{ borderRadius: radius.control }}
-      >
-        <div className="flex items-center gap-2 min-w-0 flex-wrap">
-          <Settings2 className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
-          <span className="text-xs font-bold text-[var(--ui-text-primary)] truncate">
-            {profile.shortName} · Hoja ({paperSpec.pageSize.name})
-          </span>
-          <ManualOverrideBadge
-            isOverridden={overrideCount > 0}
-            globalLabel={profile.shortName}
-            onReset={() => setOptions((prev) => clearBookFieldManual(prev, 'paperSize'))}
-          />
-        </div>
-        <div className="flex items-center gap-1.5 shrink-0">
-          {onOpenPrintTargetModal && (
-            <button
-              type="button"
-              onClick={onOpenPrintTargetModal}
-              className="px-2.5 py-1 rounded-full border border-[var(--ui-border)] bg-[var(--ui-bg-surface)] text-[11px] font-bold text-[var(--color-accent-text)] cursor-pointer hover:border-[var(--color-accent-base)]"
-            >
-              Destino
-            </button>
-          )}
-          {onOpenPaperModal && (
-            <button
-              type="button"
-              onClick={onOpenPaperModal}
-              className="px-2.5 py-1 rounded-full border border-[var(--ui-border)] bg-[var(--ui-bg-surface)] text-[11px] font-bold text-[var(--color-accent-text)] cursor-pointer hover:border-[var(--color-accent-base)]"
-            >
-              Hoja
-            </button>
-          )}
-        </div>
-      </div>
 
       {/* 1.c. Archivo PDF a cargar */}
       <PanelSection
@@ -602,10 +586,10 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
               </div>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <button
                 type="button"
-                onClick={() => void handleStartAutoExport()}
+                onClick={() => void handleStartAutoExport(false)}
                 disabled={isGating}
                 className={`w-full py-3 px-4 font-bold text-xs bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] hover:opacity-90 disabled:opacity-50 transition flex items-center justify-center gap-2 cursor-pointer ${elevationSystem.floating}`}
                 style={{ borderRadius: radius.control }}
@@ -614,20 +598,20 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
                 <span>
                   {isGating
                     ? t.bookStudio.previewExportStep.verifyingCredits
-                    : t.bookStudio.previewExportStep.downloadPrints.replace('{sheets}', String(totalSheetsToPrint))}
+                    : hasReadyCachedAutoExport
+                      ? `Descargar archivo listo (${totalSheetsToPrint} hojas · sin gastar crédito)`
+                      : t.bookStudio.previewExportStep.downloadPrints.replace('{sheets}', String(totalSheetsToPrint))}
                 </span>
               </button>
 
-              {autoPdfBlobUrl && (
-                <a
-                  href={autoPdfBlobUrl}
-                  download={`${selectedFile.name.replace(/\.(pdf|zip)$/i, '')}_IMPRESION_LIBRO${autoOutputIsZip ? '.zip' : '.pdf'}`}
-                  className="w-full py-2 px-4 text-xs font-bold border border-[var(--color-accent-text)] text-[var(--color-accent-text)] flex items-center justify-center gap-1.5"
-                  style={{ borderRadius: radius.control }}
+              {hasReadyCachedAutoExport && (
+                <button
+                  type="button"
+                  onClick={() => void handleStartAutoExport(true)}
+                  className="w-full text-center text-[11px] font-semibold text-[var(--ui-text-secondary)] hover:text-[var(--color-accent-text)] underline cursor-pointer"
                 >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>{t.bookStudio.previewExportStep.downloadAgain}</span>
-                </a>
+                  Volver a procesar archivo
+                </button>
               )}
             </div>
           )}

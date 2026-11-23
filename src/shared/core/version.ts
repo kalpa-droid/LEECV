@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 3,
   minor: 6,
-  patch: 0,
-  label: 'V3.6.0',
+  patch: 1,
+  label: 'V3.6.1',
   lastUpdated: '2026-11-23',
   lastAgent: '@antigravity',
-  stage: 'feat(ai-pro-rotation): V3.6.0 — Enrutado por tier (Pro vs Fast), pool aislado gemini_pro, rotación inmediata ante 429 y 401/403, x-goog-api-key en header, extracción segura sin thought parts y maxDuration=60 en ai-generate.',
+  stage: 'feat(ai-pro-rotation): V3.6.1 — Enrutado por tier (Pro vs Fast), pool aislado gemini_pro, rotación inmediata ante 429 y 401/403, x-goog-api-key en header, extracción segura sin thought parts y maxDuration=60 en ai-generate.',
 } as const;

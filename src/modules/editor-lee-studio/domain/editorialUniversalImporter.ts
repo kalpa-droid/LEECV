@@ -25,11 +25,18 @@ import {
 } from '../../../shared/core/cv-import/pageImageEncoder';
 import type { EditorialPresetId, EditorialSection } from './editorialTypes';
 import {
+  buildSectionsFromDocxRichBlocks,
+  countNonWhitespaceChars,
+  countSectionRecordsChars,
   splitTextIntoManuscriptChunks,
   mergeEditorialChunkedSections,
   heuristicSplitManuscript,
   type StructuredChunkSectionInput,
 } from './editorialManuscriptChunker';
+import {
+  extractDocxInClient,
+  type DocxExtractedRichBlock,
+} from './docxClientExtractor';
 
 export interface ImportProgressUpdate {
   stage: 'reading' | 'ocr' | 'structuring' | 'done';
@@ -43,6 +50,8 @@ export interface ExtractedDocumentStats {
   totalFiles: number;
   pdfDigitalPages: number;
   ocrPages: number;
+  richBlocks?: DocxExtractedRichBlock[];
+  warnings?: string[];
 }
 
 export interface StructureResult {
@@ -169,6 +178,8 @@ export async function extractEditorialTextFromFiles(
 ): Promise<ExtractedDocumentStats> {
   const { onProgress, signal } = options;
   const segments: string[] = [];
+  const allRichBlocks: DocxExtractedRichBlock[] = [];
+  const allWarnings: string[] = [];
   let totalDigital = 0;
   let totalOcr = 0;
 
@@ -193,7 +204,41 @@ export async function extractEditorialTextFromFiles(
       continue;
     }
 
-    if (ext === '.docx' || ext === '.odt' || ext === '.rtf' || ext === '.html' || ext === '.htm') {
+    if (ext === '.docx') {
+      onProgress?.({
+        stage: 'reading',
+        current: i + 1,
+        total: files.length,
+        message: `Leyendo Word completo (texto, tablas, imágenes y gráficos) de "${file.name}"...`,
+      });
+      try {
+        const docxRes = await extractDocxInClient(file);
+        if (docxRes.blocks.length > 0) {
+          allRichBlocks.push(...docxRes.blocks);
+        }
+        if (docxRes.warnings.length > 0) {
+          allWarnings.push(...docxRes.warnings);
+        }
+        if (docxRes.plainMarkdownText.trim()) {
+          segments.push(docxRes.plainMarkdownText.trim());
+          continue;
+        }
+      } catch {
+        // Fallback al parser del servidor si el XML local falla
+      }
+      const base64 = await readFileAsBase64DataUrl(file);
+      const res = await apiFetch<{ text: string }>('/api/editorial/parse-docx', {
+        method: 'POST',
+        body: { base64, filename: file.name },
+      });
+      if (!res.ok || !res.data?.text) {
+        throw new Error(res.error || `No pudimos extraer texto de "${file.name}".`);
+      }
+      segments.push(res.data.text.trim());
+      continue;
+    }
+
+    if (ext === '.odt' || ext === '.rtf' || ext === '.html' || ext === '.htm') {
       onProgress?.({
         stage: 'reading',
         current: i + 1,
@@ -201,8 +246,7 @@ export async function extractEditorialTextFromFiles(
         message: `Extrayendo texto de "${file.name}"...`,
       });
       const base64 = await readFileAsBase64DataUrl(file);
-      const endpoint = ext === '.docx' ? '/api/editorial/parse-docx' : '/api/editorial/parse-document';
-      const res = await apiFetch<{ text: string }>(endpoint, {
+      const res = await apiFetch<{ text: string }>('/api/editorial/parse-document', {
         method: 'POST',
         body: { base64, filename: file.name },
       });
@@ -250,22 +294,47 @@ export async function extractEditorialTextFromFiles(
     totalFiles: files.length,
     pdfDigitalPages: totalDigital,
     ocrPages: totalOcr,
+    ...(allRichBlocks.length > 0 ? { richBlocks: allRichBlocks } : {}),
+    ...(allWarnings.length > 0 ? { warnings: allWarnings } : {}),
   };
 }
 
 /**
  * Envía el texto completo a `editorial_structure` en fragmentos continuos, uniendo capítulos largos
- * y aplicando respaldo heurístico local si algún fragmento falla para no perder contenido.
+ * y aplicando guardia matemática de retención (>= 92%) + respaldo heurístico local para no perder jamás texto.
  */
 export async function structureManuscriptInChunks(params: {
   fullText: string;
+  richBlocks?: DocxExtractedRichBlock[];
   presetId?: EditorialPresetId;
   onProgress?: (update: ImportProgressUpdate) => void;
   onPartialSections?: (sectionsSoFar: EditorialSection[], metadata?: StructureResult['metadata']) => void;
   signal?: AbortSignal;
 }): Promise<StructureResult> {
-  const { fullText, presetId, onProgress, onPartialSections, signal } = params;
-  const chunks = splitTextIntoManuscriptChunks(fullText, 7500);
+  const { fullText, richBlocks, presetId, onProgress, onPartialSections, signal } = params;
+
+  // Vía determinística Zero-Loss cuando el Word trae bloques OOXML reales con encabezados, tablas o gráficos
+  if (richBlocks && richBlocks.some((b) => b.kind === 'heading' || b.kind === 'table' || b.kind === 'image')) {
+    const richSections = buildSectionsFromDocxRichBlocks(richBlocks);
+    if (richSections.length > 0) {
+      const firstLine = richSections[0]?.title;
+      const meta = firstLine && firstLine !== 'Cuerpo principal' ? { title: firstLine } : undefined;
+      onPartialSections?.(richSections, meta);
+      onProgress?.({
+        stage: 'done',
+        current: 1,
+        total: 1,
+        message: `Listo: ${richSections.length} capítulos/apartados con tablas, imágenes y 100% del texto conservado.`,
+      });
+      return {
+        sections: richSections,
+        metadata: meta,
+        usedFallbackForChunks: 0,
+      };
+    }
+  }
+
+  const chunks = splitTextIntoManuscriptChunks(fullText, 3800);
   if (chunks.length === 0) {
     return { sections: [], usedFallbackForChunks: 0 };
   }
@@ -303,7 +372,7 @@ export async function structureManuscriptInChunks(params: {
           totalChunks: chunks.length,
           previousSectionTitle,
         },
-        maxTokens: 3200,
+        maxTokens: 4000,
         temperature: 0.15,
       });
 
@@ -312,7 +381,11 @@ export async function structureManuscriptInChunks(params: {
       }
 
       const incomingSections = Array.isArray(res.data?.sections) ? res.data.sections : [];
-      if (incomingSections.length > 0) {
+      const inputChars = countNonWhitespaceChars(chunks[idx]);
+      const outputChars = countSectionRecordsChars(incomingSections);
+      const retainedEnough = incomingSections.length > 0 && outputChars >= inputChars * 0.92;
+
+      if (retainedEnough) {
         sectionsAcc = mergeEditorialChunkedSections(sectionsAcc, incomingSections);
       } else {
         fallbackCount++;

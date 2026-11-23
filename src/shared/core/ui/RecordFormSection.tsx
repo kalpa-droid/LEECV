@@ -421,12 +421,12 @@ export function RecordFormSection({
                     }
                   }}
                   placeholder={fDef.placeholder}
-                  isTextArea={fDef.type === 'textarea'}
+                  as={fDef.type === 'textarea' ? 'textarea' : 'input'}
                 />
               );
               if (!(fieldReview && fieldReview.fieldId === fieldId)) return defaultField;
               return (
-                <div key={fieldId} className={`space-y-2 p-3 bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/40 rounded-[${radius.card}]`}>
+                <div key={fieldId} className="space-y-2 p-3 bg-[var(--color-accent-muted)] border border-[var(--color-accent-base)]/40 rounded-[12px]">
                   {defaultField}
                   <div className="flex items-center justify-between">
                     <p className="text-[11px] font-black text-[var(--color-accent-text)]">Vista previa de la IA</p>
@@ -439,7 +439,7 @@ export function RecordFormSection({
                       <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                  <p className="text-xs leading-relaxed whitespace-pre-wrap bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[var(--ui-radius-card)] p-2 max-h-48 overflow-y-auto">
+                  <p className="text-xs leading-relaxed whitespace-pre-wrap bg-[var(--ui-bg-card)] border border-[var(--color-neutral-border)] rounded-[12px] p-2 max-h-48 overflow-y-auto">
                     {fieldReview.text}
                   </p>
                   {fieldReview.note && (

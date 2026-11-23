@@ -161,7 +161,23 @@ export function useFacturadorVault(vaultId: string = DEFAULT_VAULT_ID) {
   );
 
   const flush = useCallback(async () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
+    const hasPending = Boolean(timerRef.current);
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    const currentSession = sessionRef.current;
+    const pendingData = latestRef.current;
+    if (hasPending && currentSession && pendingData) {
+      chainRef.current = chainRef.current
+        .then(async () => {
+          const envelope = await sealVaultPayload(currentSession, pendingData);
+          await saveEnvelope(envelope);
+        })
+        .catch(() => {
+          // El próximo guardado reintentará
+        });
+    }
     await chainRef.current;
   }, []);
 

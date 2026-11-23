@@ -12,6 +12,9 @@
     },
     "api/ai-generate.ts": {
       "maxDuration": 60
+    },
+    "api/editorial-doc-api.ts": {
+      "maxDuration": 60
     }
   },
   "headers": [

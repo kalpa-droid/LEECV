@@ -67,7 +67,7 @@ export function createEmptyInvoice(patch: Partial<InvoiceDraft> = {}): InvoiceDr
     tipo: 'factura',
     letra: 'B',
     puntoVenta: '00001',
-    numero: '',
+    numero: '00000001',
     fecha: today,
     vencimiento: '',
     cliente: null,

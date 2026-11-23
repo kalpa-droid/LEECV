@@ -20,6 +20,9 @@ import { downloadBlob } from '../../shared/core/utils/downloadUtils';
 import { useFacturadorVault } from './useFacturadorVault';
 import { VaultLockScreen } from './VaultLockScreen';
 import { FACTURADOR_STEP_SEQUENCE } from './domain/facturadorStepSequence';
+import { Store, UserRound, Hash, FilePlus2, Save } from 'lucide-react';
+import { isManuallyOverridden } from '../../shared/core/presets/configCascadeEngine';
+import { useUnsavedChangesGuard } from '../../shared/core/hooks/useUnsavedChangesGuard';
 import {
   EMPTY_EMPRESA,
   EMPTY_FACTURADOR_VAULT,
@@ -34,12 +37,23 @@ import {
   computeInvoiceTotals,
   computeLineRow,
   describeComprobante,
+  formatCompNro,
+  formatPointOfSale,
 } from './domain/invoiceMath';
 import {
+  commitVoucherEmissionToVault,
+  getNextVoucherNumber,
+  hasDuplicateVoucherNumber,
+} from './domain/voucherCascadeEngine';
+import {
   exportPortablePackage,
+  isBackupDue,
   loadEnvelope,
   readPortablePackage,
 } from './domain/vaultStorage';
+import { FactEmisorModal } from './ui/FactEmisorModal';
+import { FactClientPickerModal } from './ui/FactClientPickerModal';
+import { FactVoucherConfigModal } from './ui/FactVoucherConfigModal';
 import {
   exportVaultToXlsx,
   importCatalogAndClientsFromXlsx,
@@ -135,10 +149,19 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
     [showSuccess, showError, showInfo]
   );
 
-  const [activeStepTab, setActiveStepTab] = useState<string>('fact_comprobante');
+  const [activeStepTab, setActiveStepTab] = useState<string>('fact_items');
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState<boolean>(false);
+  const [isEmisorModalOpen, setIsEmisorModalOpen] = useState<boolean>(false);
+  const [isClientModalOpen, setIsClientModalOpen] = useState<boolean>(false);
+  const [isVoucherModalOpen, setIsVoucherModalOpen] = useState<boolean>(false);
+  const [rememberHabitualForClient, setRememberHabitualForClient] = useState<boolean>(false);
+
+  useUnsavedChangesGuard({
+    isDirty: phase === 'unlocked' && Boolean(vault?.draftActual?.items?.length),
+    onFlush: flush,
+  });
 
   const { consumeCreditIfNeeded } = useExportEntitlement();
 
@@ -194,25 +217,30 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
 
   const handleNewDraft = useCallback(() => {
     if (!vault) return;
+    setRememberHabitualForClient(false);
     updateDraft((prev) =>
       createEmptyInvoice({
+        tipo: prev.tipo,
         letra: prev.letra,
-        puntoVenta: vault.numeracion[prev.letra]?.puntoVenta || prev.puntoVenta,
-        numero: nextNumberPreview(vault, prev.letra),
+        puntoVenta: prev.puntoVenta || '00001',
+        numero: getNextVoucherNumber(vault, prev.puntoVenta || '00001', prev.tipo, prev.letra),
         cliente: prev.cliente,
       })
     );
-    setActiveStepTab('fact_comprobante');
+    setActiveStepTab('fact_items');
     setIsPanelOpen(true);
-    showInfo('Comprobante nuevo listo para completar.');
+    showInfo('Comprobante nuevo listo para agregar ítems.');
   }, [updateDraft, vault, showInfo]);
 
   const handleSaveComprobante = useCallback(async () => {
     if (!vault) return;
+    if (draft.readonlyHistorical) {
+      showInfo('Este comprobante ya fue emitido y es de solo lectura. Usá "Repetir" en Historial para crear uno nuevo.');
+      return;
+    }
     if (!vault.empresa.razonSocial.trim()) {
       showError('Completá la razón social de tu negocio antes de guardar.');
-      setActiveStepTab('fact_emisor');
-      setIsPanelOpen(true);
+      setIsEmisorModalOpen(true);
       return;
     }
     if (draft.items.length === 0) {
@@ -221,6 +249,16 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
       setIsPanelOpen(true);
       return;
     }
+    if (draft.estado !== 'borrador' && hasDuplicateVoucherNumber(vault, draft)) {
+      showError('Ese número de comprobante ya fue emitido. Ajustalo desde Tipo y N° arriba.');
+      setIsVoucherModalOpen(true);
+      return;
+    }
+
+    const effectiveNumber = draft.numero?.trim()
+      ? formatCompNro(draft.numero)
+      : getNextVoucherNumber(vault, draft.puntoVenta || '00001', draft.tipo, draft.letra);
+    const effectivePv = formatPointOfSale(draft.puntoVenta || '00001');
 
     const totals = computeInvoiceTotals(draft.items.map(computeLineRow), 21, draft.letra);
     const existing = vault.comprobantes.find((comp) => comp.id === draft.id);
@@ -228,6 +266,8 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
 
     const saved: SavedInvoice = {
       ...draft,
+      puntoVenta: effectivePv,
+      numero: effectiveNumber,
       total: totals.total,
       emitidaAt:
         draft.estado === 'borrador'
@@ -247,39 +287,41 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
         });
       }
 
-      const numeracion = { ...prev.numeracion };
-      const usedNumber = Number(draft.numero) || 0;
-      const currentNumber = numeracion[draft.letra]?.ultimoNumero || 0;
-      if (usedNumber > currentNumber) {
-        numeracion[draft.letra] = {
-          puntoVenta: draft.puntoVenta || numeracion[draft.letra]?.puntoVenta || '00001',
-          ultimoNumero: usedNumber,
-        };
-      }
-
       const comprobantes = existing
         ? prev.comprobantes.map((comp) => (comp.id === draft.id ? saved : comp))
         : [...prev.comprobantes, saved];
 
+      const withCommittedSeries = commitVoucherEmissionToVault(
+        { ...prev, catalogo, comprobantes },
+        saved,
+        rememberHabitualForClient,
+      );
+
+      const nextNum = getNextVoucherNumber(
+        withCommittedSeries,
+        effectivePv,
+        draft.tipo,
+        draft.letra,
+      );
+
       return {
-        ...prev,
-        catalogo,
-        numeracion,
-        comprobantes,
+        ...withCommittedSeries,
         draftActual: createEmptyInvoice({
+          tipo: draft.tipo,
           letra: draft.letra,
-          puntoVenta: numeracion[draft.letra]?.puntoVenta || draft.puntoVenta,
-          numero: String((numeracion[draft.letra]?.ultimoNumero || 0) + 1).padStart(8, '0'),
+          puntoVenta: effectivePv,
+          numero: nextNum,
           cliente: draft.cliente,
         }),
       };
     });
 
+    setRememberHabitualForClient(false);
     await flush();
     await saveInvoiceShell({ id: invoiceId, title: buildInvoiceTitle(vault) });
     showSuccess(`Guardado: ${describeComprobante(saved)}`);
     setActiveStepTab('fact_historial');
-  }, [vault, draft, updateVault, flush, invoiceId, showSuccess, showError]);
+  }, [vault, draft, updateVault, flush, invoiceId, showSuccess, showError, showInfo, rememberHabitualForClient]);
 
   const handleExportPDF = useCallback(async () => {
     if (!vault) return;
@@ -375,17 +417,18 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
   const handleDuplicate = useCallback(
     (saved: SavedInvoice) => {
       if (!vault) return;
-      updateDraft((prev) =>
+      updateDraft(() =>
         createEmptyInvoice({
           tipo: saved.tipo,
           letra: saved.letra,
-          puntoVenta: vault.numeracion[saved.letra]?.puntoVenta || saved.puntoVenta,
-          numero: nextNumberPreview(vault, saved.letra),
+          puntoVenta: saved.puntoVenta || '00001',
+          numero: getNextVoucherNumber(vault, saved.puntoVenta || '00001', saved.tipo, saved.letra),
           cliente: saved.cliente,
           items: saved.items.map((item) => ({ ...item })),
           observaciones: saved.observaciones,
           estado: 'borrador',
           stockDeducido: false,
+          readonlyHistorical: false,
         })
       );
       setActiveStepTab('fact_items');
@@ -393,6 +436,25 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
       showInfo('Comprobante repetido como borrador nuevo.');
     },
     [vault, updateDraft, showInfo]
+  );
+
+  const handleOpenHistorical = useCallback(
+    (saved: SavedInvoice) => {
+      const isReadonly = saved.estado !== 'borrador';
+      updateDraft(() => ({
+        ...saved,
+        items: saved.items.map((item) => ({ ...item })),
+        readonlyHistorical: isReadonly,
+      }));
+      setActiveStepTab('fact_items');
+      setIsPanelOpen(true);
+      showInfo(
+        isReadonly
+          ? `Abierto ${describeComprobante(saved)} para reimprimir (solo lectura).`
+          : `Borrador ${describeComprobante(saved)} abierto para editar.`,
+      );
+    },
+    [updateDraft, showInfo],
   );
 
   const handleLock = useCallback(async () => {
@@ -466,6 +528,85 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
               setIsPanelOpen(true);
             }}
             onSaveCVClick={handleSaveComprobante}
+            saveActionLabel={draft.readonlyHistorical ? 'Reimprimir comprobante' : 'Guardar comprobante actual'}
+            backupHealth={
+              vault
+                ? isBackupDue(vault.backup)
+                  ? {
+                      status: 'warning',
+                      label: 'Respaldar bóveda en disco/pendrive',
+                      tooltip: 'Hace varios días que no descargás copia de tu bóveda. Tocá para ir a Bóveda y Pendrive.',
+                      onClick: () => {
+                        setActiveStepTab('fact_respaldo');
+                        setIsPanelOpen(true);
+                      },
+                    }
+                  : {
+                      status: 'ok',
+                      label: 'Bóveda cifrada y respaldada',
+                      tooltip: 'Tus datos fiscales están cifrados y tu último respaldo está al día.',
+                      onClick: () => {
+                        setActiveStepTab('fact_respaldo');
+                        setIsPanelOpen(true);
+                      },
+                    }
+                : undefined
+            }
+            globalContextPills={[
+              {
+                id: 'fact_emisor_pill',
+                shortLabel: empresa.razonSocial?.trim() || 'Tu negocio',
+                mobileLabel: empresa.razonSocial?.trim() ? empresa.razonSocial.trim().slice(0, 12) : 'Negocio',
+                tooltip: 'Configurar datos de tu negocio, CUIT y logo',
+                icon: <Store className="w-3.5 h-3.5 shrink-0" />,
+                onClick: () => setIsEmisorModalOpen(true),
+              },
+              {
+                id: 'fact_cliente_pill',
+                shortLabel: draft.cliente?.nombre?.trim() || 'Consumidor Final',
+                mobileLabel: draft.cliente?.nombre?.trim() ? draft.cliente.nombre.trim().slice(0, 12) : 'Cliente',
+                tooltip: 'Elegir cliente guardado o crear uno nuevo para este comprobante',
+                icon: <UserRound className="w-3.5 h-3.5 shrink-0" />,
+                onClick: () => setIsClientModalOpen(true),
+              },
+              {
+                id: 'fact_voucher_pill',
+                shortLabel: `${
+                  draft.tipo === 'presupuesto'
+                    ? 'Presup.'
+                    : draft.tipo === 'nota_credito'
+                      ? 'NC'
+                      : draft.tipo === 'remito'
+                        ? 'Remito'
+                        : draft.tipo === 'recibo'
+                          ? 'Recibo'
+                          : 'Fact.'
+                } ${draft.letra} · ${formatPointOfSale(draft.puntoVenta)}-${formatCompNro(draft.numero)}`,
+                mobileLabel: `${draft.letra} · #${Number.parseInt(draft.numero || '1', 10) || 1}`,
+                tooltip: 'Cambiar tipo de comprobante, letra (A/B/C/X/R) o numeración',
+                icon: <Hash className="w-3.5 h-3.5 shrink-0" />,
+                hasOverrides: isManuallyOverridden(draft, 'voucherType') || isManuallyOverridden(draft, 'numero'),
+                onClick: () => setIsVoucherModalOpen(true),
+              },
+            ]}
+            globalActions={[
+              {
+                id: 'fact_new_action',
+                label: 'Nuevo',
+                tooltip: 'Iniciar un comprobante nuevo limpio',
+                tone: 'neutral',
+                icon: <FilePlus2 className="w-3.5 h-3.5 shrink-0" />,
+                onClick: handleNewDraft,
+              },
+              {
+                id: 'fact_save_action',
+                label: draft.readonlyHistorical ? 'Reimprimir' : 'Guardar',
+                tooltip: draft.readonlyHistorical ? 'Descargar PDF del comprobante emitido' : 'Guardar comprobante actual en el historial',
+                tone: 'success',
+                icon: <Save className="w-3.5 h-3.5 shrink-0" />,
+                onClick: draft.readonlyHistorical ? handleExportPDF : handleSaveComprobante,
+              },
+            ]}
             onOpenSaveAsModal={() => {}}
             onOpenJsonDownloadModal={() => {}}
             onPrint={handleExportPDF}
@@ -501,11 +642,30 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
           <div className="p-4 pb-24 sm:pb-16 space-y-6 overflow-y-auto h-full max-h-full text-[var(--ui-text-primary)]">
             {activeStepTab === 'fact_emisor' && <FactEmisorStep {...stepProps} />}
             {activeStepTab === 'fact_comprobante' && <FactComprobanteStep {...stepProps} />}
-            {activeStepTab === 'fact_items' && <FactItemsStep {...stepProps} />}
+            {activeStepTab === 'fact_items' && (
+              <FactItemsStep
+                {...stepProps}
+                onSaveComprobante={handleSaveComprobante}
+                onNewDraft={handleNewDraft}
+                onExportPDF={handleExportPDF}
+              />
+            )}
             {activeStepTab === 'fact_catalogo' && <FactCatalogoStep {...stepProps} />}
-            {activeStepTab === 'fact_clientes' && <FactClientesStep {...stepProps} />}
+            {activeStepTab === 'fact_clientes' && (
+              <FactClientesStep
+                {...stepProps}
+                onSelectForBilling={() => {
+                  setActiveStepTab('fact_items');
+                  setIsPanelOpen(true);
+                }}
+              />
+            )}
             {activeStepTab === 'fact_historial' && (
-              <FactHistorialStep {...stepProps} onDuplicate={handleDuplicate} />
+              <FactHistorialStep
+                {...stepProps}
+                onDuplicate={handleDuplicate}
+                onOpenHistorical={handleOpenHistorical}
+              />
             )}
             {activeStepTab === 'fact_diseno' && <FactDisenoStep {...stepProps} />}
             {activeStepTab === 'fact_respaldo' && (
@@ -521,31 +681,6 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
                 onLock={handleLock}
               />
             )}
-
-            <div className="flex items-center justify-between gap-2 pt-3 border-t border-[var(--ui-border)]">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--ui-text-secondary)]">
-                Paso {FACTURADOR_STEP_SEQUENCE.find((step) => step.id === activeStepTab)?.stepNumber || 2} de{' '}
-                {FACTURADOR_STEP_SEQUENCE.length}
-              </span>
-              <div className="flex gap-1.5">
-                <button
-                  type="button"
-                  onClick={handleNewDraft}
-                  className="px-3 py-2 text-xs font-bold bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)]"
-                  style={{ borderRadius: radius.control }}
-                >
-                  Comprobante nuevo
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveComprobante}
-                  className="px-3 py-2 text-xs font-bold bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]"
-                  style={{ borderRadius: radius.control }}
-                >
-                  Guardar comprobante
-                </button>
-              </div>
-            </div>
           </div>
         }
         mainSlot={
@@ -586,10 +721,40 @@ export const FacturadorStudioContent: React.FC<FacturadorStudioContentProps> = (
         activeTab={activeStepTab}
         metadataOnlyContext={lidioMetadataContext}
         onNavigate={(stepId) => {
+          if (stepId === 'fact_emisor') {
+            setIsEmisorModalOpen(true);
+            return;
+          }
+          if (stepId === 'fact_comprobante') {
+            setIsVoucherModalOpen(true);
+            return;
+          }
           setActiveStepTab(stepId);
           setIsPanelOpen(true);
         }}
       />
+      {stepProps && (
+        <>
+          <FactEmisorModal
+            isOpen={isEmisorModalOpen}
+            onClose={() => setIsEmisorModalOpen(false)}
+            {...stepProps}
+          />
+          <FactClientPickerModal
+            isOpen={isClientModalOpen}
+            onClose={() => setIsClientModalOpen(false)}
+            {...stepProps}
+          />
+          <FactVoucherConfigModal
+            isOpen={isVoucherModalOpen}
+            onClose={() => setIsVoucherModalOpen(false)}
+            onOpenNewClientPicker={() => setIsClientModalOpen(true)}
+            rememberHabitualForClient={rememberHabitualForClient}
+            onToggleRememberHabitual={setRememberHabitualForClient}
+            {...stepProps}
+          />
+        </>
+      )}
       <PdfCheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}

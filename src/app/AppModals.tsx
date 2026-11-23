@@ -19,6 +19,7 @@ import { applyPresetLevel } from '../shared/core/pdf-engine/layers/presets/prese
 import { triggerPresetTransition } from '../shared/core/pdf-engine/layers/presets/presetTransitionEngine';
 import { CoverLetterExportModal } from '../modules/cv-builder/components/cover-letter/CoverLetterExportModal';
 import { UpdateToast } from '../shared/core/ui/UpdateToast';
+import { applyPendingUpdate } from '../shared/core/pwa/updateEngine';
 import { PricingModal } from '../modules/payments/components/PricingModal';
 import { CreditsModal } from '../modules/payments/components/CreditsModal';
 import { LoginModal } from '../modules/auth/components/LoginModal';
@@ -421,7 +422,9 @@ export function AppModals(props: AppModalsProps) {
 
       <UpdateToast
         isVisible={updateBannerVisible}
-        onUpdate={() => navigation.reload()}
+        onUpdate={() => {
+          void applyPendingUpdate();
+        }}
         onDismiss={() => setUpdateBannerVisible(false)}
       />
     </Suspense>

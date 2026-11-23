@@ -61,7 +61,8 @@ export function lineFromCatalog(item: CatalogItem): InvoiceLineItem {
   return {
     id: makeId('ln'),
     catalogItemId: item.id,
-    descripcion: item.nombre,
+    nombre: item.nombre,
+    descripcion: item.descripcion || '',
     cantidad: 1,
     precioUnitario: item.precioBase,
     descuentoPct: 0,

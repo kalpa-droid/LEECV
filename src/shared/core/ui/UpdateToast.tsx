@@ -14,11 +14,11 @@ export function UpdateToast({ isVisible, onUpdate, onDismiss }: UpdateToastProps
   return (
     <aside
       aria-label="Actualización disponible"
-      className={`fixed bottom-4 right-4 sm:right-6 z-50 max-w-sm bg-[var(--ui-bg-panel)] border-2 border-[var(--color-accent-purple-bright)]/40 text-[var(--ui-text-primary)] p-3.5 rounded-[${radius.modal}] ${elevationSystem.floating} backdrop-blur-xl animate-fadeIn`}
+      className={`fixed bottom-4 right-4 sm:right-6 z-50 max-w-sm bg-[var(--ui-bg-panel)] border-2 border-[var(--color-accent-purple-bright)]/40 text-[var(--ui-text-primary)] p-3.5 rounded-[16px] ${elevationSystem.floating} backdrop-blur-xl animate-fadeIn`}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <div className={`w-8 h-8 rounded-[${radius.card}] bg-[var(--color-accent-base)] flex items-center justify-center text-[var(--color-accent-on-base)] shrink-0 ${elevationSystem.raised}`}>
+          <div className={`w-8 h-8 rounded-[12px] bg-[var(--color-accent-base)] flex items-center justify-center text-[var(--color-accent-on-base)] shrink-0 ${elevationSystem.raised}`}>
             <RefreshCw className="w-4 h-4" />
           </div>
           <div>
