@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { BookOpen, FolderOpen, Save, ShieldCheck } from 'lucide-react';
+import { BookOpen, FolderOpen, Save, ShieldCheck, Sparkles, Upload } from 'lucide-react';
 import { PanelSection } from '../../../shared/core/ui/PanelSection';
 import { ActionGrid } from '../../../shared/core/ui/ActionGrid';
 import { ActionTileButton } from '../../../shared/core/ui/ActionTileButton';
@@ -12,6 +12,7 @@ import { DEFAULT_EDITORIAL_PRESET, getEditorialPreset } from '../domain/editoria
 export interface EditorialPresetInicioPanelProps {
   draft: any;
   onOpenGlobalPresetModal?: () => void;
+  onOpenImportAi?: () => void;
   onSaveToDisk?: () => void;
   onOpenDiskFile?: (fallbackFile?: File) => Promise<any>;
 }
@@ -19,6 +20,7 @@ export interface EditorialPresetInicioPanelProps {
 export const EditorialPresetInicioPanel: React.FC<EditorialPresetInicioPanelProps> = ({
   draft,
   onOpenGlobalPresetModal,
+  onOpenImportAi,
   onSaveToDisk,
   onOpenDiskFile,
 }) => {
@@ -65,6 +67,21 @@ export const EditorialPresetInicioPanel: React.FC<EditorialPresetInicioPanelProp
             </button>
           )}
         </div>
+
+        {onOpenImportAi && (
+          <button
+            type="button"
+            onClick={onOpenImportAi}
+            className="w-full p-3 border border-[var(--color-accent-base)]/50 bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] flex items-center justify-between gap-2 text-xs font-bold cursor-pointer hover:opacity-90 transition"
+            style={{ borderRadius: radius.card }}
+          >
+            <span className="flex items-center gap-2 min-w-0">
+              <Upload className="w-4 h-4 shrink-0" />
+              <span className="truncate">Importar manuscrito o apuntes (Word, PDF, fotos)</span>
+            </span>
+            <Sparkles className="w-4 h-4 shrink-0" />
+          </button>
+        )}
       </PanelSection>
 
       <PanelSection

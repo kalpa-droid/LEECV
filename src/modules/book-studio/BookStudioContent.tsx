@@ -5,6 +5,12 @@ import StudioNavbar from '../../shared/core/studio-host/StudioNavbar';
 import StudioDock from '../../shared/core/studio-host/StudioDock';
 import { BookImpositionOptions, DEFAULT_BOOK_IMPOSITION_OPTIONS } from './domain/impositionEngine';
 import {
+  analyzeFullBookOrientationWithAi,
+  analyzeSampleOrientationWithAi,
+  OrientationConsensusResult,
+} from './domain/bookOrientationAi';
+import { emitLidioMessage } from '../../shared/core/assistant/lidioBus';
+import {
   BOOK_PRINT_PROFILES,
   applyBookPrintProfile,
   inferBookPrintTarget,
@@ -125,6 +131,17 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
   /** "Reabrir mi PDF" no devolvió el archivo (permiso denegado/no soportado). */
   const [reopenFailed, setReopenFailed] = useState<boolean>(false);
 
+  // Estado de detección inteligente de orientación con IA en modo fotocopia
+  const [isAnalyzingOrientation, setIsAnalyzingOrientation] = useState<boolean>(false);
+  const [orientationSummary, setOrientationSummary] = useState<string | null>(null);
+  const [mixedOrientationConsensus, setMixedOrientationConsensus] =
+    useState<OrientationConsensusResult | null>(null);
+  const [fullOrientationScanProgress, setFullOrientationScanProgress] = useState<{
+    done: number;
+    total: number;
+  } | null>(null);
+  const orientationScanAbortRef = useRef<AbortController | null>(null);
+
   // Refs espejo: loadSourcePdf se define una sola vez y siempre lee el estado
   // fresco (modo/opciones) sin depender del closure del primer render.
   const optionsRef = useRef(options);
@@ -186,10 +203,9 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
       isEncrypted = true;
     }
 
-    // Auto-detección: modo fotocopia + página vertical (alto > ancho) → 90° global.
-    // Se computa sobre el estado fresco (optionsRef) y viaja dentro de
-    // effectiveOpts: un solo setOptions al final (sin updaters que se pisen).
+    // Auto-detección: modo fotocopia + página vertical (alto > ancho) → 90° inicial + verificación con IA (muestra 2, 5, 10, 15).
     let effectiveOpts: BookImpositionOptions = { ...optionsRef.current };
+    let shouldVerifyFotocopiaOrientationWithAi = false;
     try {
       const firstPage = await doc.getPage(1);
       const vp = firstPage.getViewport({ scale: 1.0 });
@@ -197,7 +213,9 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
         const autoRotations: Record<number, number> = {};
         for (let i = 1; i <= numPages; i++) autoRotations[i] = 90;
         effectiveOpts = { ...effectiveOpts, pageRotations: autoRotations };
+        shouldVerifyFotocopiaOrientationWithAi = true;
       }
+      try { firstPage.cleanup?.(); } catch { /* ignore */ }
     } catch {
       // la rotación automática es un plus: no bloquea la carga del PDF
     }
@@ -212,11 +230,125 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
     setPasswordChallenge(null);
     setPdfLoadErrorCode(null);
     setPdfProtection(isEncrypted ? 'protected' : 'none');
+    setMixedOrientationConsensus(null);
+    setOrientationSummary(null);
     effectiveOpts = { ...effectiveOpts, exportMode: isEncrypted ? 'raster' : effectiveOpts.exportMode };
     setOptions(effectiveOpts);
     persistBookState(file, effectiveOpts, numPages);
+
+    if (shouldVerifyFotocopiaOrientationWithAi) {
+      void runSampleOrientationAiCheck(doc, numPages, file, effectiveOpts);
+    }
+
     return doc;
   };
+
+  const runSampleOrientationAiCheck = async (
+    docInstance: any,
+    numPages: number,
+    fileInstance: File | null,
+    baseOpts: BookImpositionOptions,
+  ) => {
+    setIsAnalyzingOrientation(true);
+    setMixedOrientationConsensus(null);
+    try {
+      const consensus = await analyzeSampleOrientationWithAi({
+        pdfDoc: docInstance,
+        totalPages: numPages,
+        deletedPages: baseOpts.deletedPages || [],
+      });
+
+      if (consensus.status === 'uniform' && consensus.uniformRotationDeg !== null) {
+        const verifiedAngle = consensus.uniformRotationDeg;
+        const verifiedRotations: Record<number, number> = {};
+        for (let i = 1; i <= numPages; i++) verifiedRotations[i] = verifiedAngle;
+        setOrientationSummary(consensus.summaryText);
+        setOptions((prev) => {
+          const next = { ...prev, pageRotations: verifiedRotations, lowConfidenceRotationPages: [] };
+          persistBookState(fileInstance, next, numPages);
+          return next;
+        });
+        emitLidioMessage({
+          kind: 'state',
+          groupKey: 'book-orientation-ai',
+          title: 'Orientación detectada con IA',
+          body: consensus.summaryText,
+        });
+      } else if (consensus.status === 'mixed') {
+        setMixedOrientationConsensus(consensus);
+      }
+    } catch {
+      // Si el chequeo IA falla (sin red), se conserva el giro inicial de 90° sin bloquear al usuario
+    } finally {
+      setIsAnalyzingOrientation(false);
+    }
+  };
+
+  const handleRunFullOrientationScan = async () => {
+    if (!pdfDocRef.current || pdfPageCount <= 0) return;
+    orientationScanAbortRef.current?.abort();
+    const controller = new AbortController();
+    orientationScanAbortRef.current = controller;
+    setFullOrientationScanProgress({ done: 0, total: pdfPageCount });
+
+    try {
+      const res = await analyzeFullBookOrientationWithAi({
+        pdfDoc: pdfDocRef.current,
+        totalPages: pdfPageCount,
+        deletedPages: optionsRef.current.deletedPages || [],
+        knownSamples: mixedOrientationConsensus?.samples || [],
+        signal: controller.signal,
+        onProgress: (done, total) => setFullOrientationScanProgress({ done, total }),
+      });
+
+      setMixedOrientationConsensus(null);
+      setOrientationSummary(
+        res.lowConfidencePages.length > 0
+          ? `Se orientaron las páginas con IA (${res.lowConfidencePages.length} marcada(s) para revisión).`
+          : 'Todas las páginas fueron orientadas individualmente con IA.',
+      );
+      setOptions((prev) => {
+        const next = {
+          ...prev,
+          pageRotations: res.rotations,
+          lowConfidenceRotationPages: res.lowConfidencePages,
+        };
+        persistBookState(selectedFile, next, pdfPageCount);
+        return next;
+      });
+    } catch {
+      // cancelado o error
+    } finally {
+      setFullOrientationScanProgress(null);
+    }
+  };
+
+  // Si el usuario cambia a modo 'fotocopia' cuando ya había cargado un PDF vertical, disparar chequeo IA
+  useEffect(() => {
+    const doc = pdfDocRef.current;
+    if (!doc || options.mode !== 'fotocopia' || pdfPageCount <= 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const firstPage = await doc.getPage(1);
+        const vp = firstPage.getViewport({ scale: 1.0 });
+        try { firstPage.cleanup?.(); } catch { /* ignore */ }
+        if (!cancelled && vp.height > vp.width && Object.keys(options.pageRotations || {}).length === 0) {
+          const initialRot: Record<number, number> = {};
+          for (let i = 1; i <= pdfPageCount; i++) initialRot[i] = 90;
+          const nextOpts = { ...optionsRef.current, pageRotations: initialRot };
+          setOptions(nextOpts);
+          void runSampleOrientationAiCheck(doc, pdfPageCount, selectedFile, nextOpts);
+        }
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [options.mode]);
 
   /**
    * Puerta de entrada única para los archivos elegidos/restaurados: atrapa el
@@ -663,16 +795,27 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               pdfPageCount={pdfPageCount}
               onFileConfirmed={confirmSourceFile}
               onNextStep={() => handleNavigateNextStep('book_source_type')}
+              onSwitchToGuidedOrganize={() => setActiveStepTab('book_organize')}
               onOpenPrintTargetModal={() => setIsPrintTargetModalOpen(true)}
               onOpenPaperModal={() => setIsPaperModalOpen(true)}
               pickerRef={sourcePdfPickerRef}
               bookId={bookId}
+              assetResolver={(ref) => bookAssetManager.getBlobUrl(ref)}
+              pdfPassword={pdfPassword}
+              isAnalyzingOrientation={isAnalyzingOrientation}
+              orientationSummary={orientationSummary}
+              mixedOrientationConsensus={mixedOrientationConsensus}
+              fullOrientationScanProgress={fullOrientationScanProgress}
+              onRunFullOrientationScan={() => void handleRunFullOrientationScan()}
+              onCancelFullOrientationScan={() => orientationScanAbortRef.current?.abort()}
+              onDismissMixedOrientation={() => setMixedOrientationConsensus(null)}
             />
           )}
 
           {activeStepTab === 'book_organize' && (
             <BookOrganizeStep
               pdfPageCount={pdfPageCount}
+              pdfDoc={pdfDoc}
               options={options}
               setOptions={handleOptionsChange}
               onNextStep={() => handleNavigateNextStep('book_organize')}
@@ -684,6 +827,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
             <BookCoverStep
               options={options}
               setOptions={handleOptionsChange}
+              pdfPageCount={pdfPageCount}
               onNextStep={() => handleNavigateNextStep('book_cover')}
               onPrevStep={() => handleNavigatePrevStep('book_cover')}
             />
@@ -701,6 +845,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
           {activeStepTab === 'book_foliado' && (
             <BookFoliadoStep
               pdfPageCount={pdfPageCount}
+              pdfDoc={pdfDoc}
               options={options}
               setOptions={handleOptionsChange}
               onNextStep={() => handleNavigateNextStep('book_foliado')}

@@ -9,11 +9,13 @@ export interface ThumbnailCardProps {
   pdfDoc: any;
   rotation?: number;
   isDeleted?: boolean;
+  hasLowConfidenceRotation?: boolean;
   canMoveLeft?: boolean;
   canMoveRight?: boolean;
   splitOffset?: number;
   isFotocopiaMode?: boolean;
   onRotate: (pageNum: number) => void;
+  onRotateLeft90?: (pageNum: number) => void;
   onToggleDelete: (pageNum: number) => void;
   onMoveLeft?: (pageNum: number) => void;
   onMoveRight?: (pageNum: number) => void;
@@ -26,11 +28,13 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
   pdfDoc,
   rotation = 0,
   isDeleted = false,
+  hasLowConfidenceRotation = false,
   canMoveLeft = false,
   canMoveRight = false,
   splitOffset = 50,
   isFotocopiaMode = false,
   onRotate,
+  onRotateLeft90,
   onToggleDelete,
   onMoveLeft,
   onMoveRight,
@@ -99,8 +103,9 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
         // Render at compact scale for thumbnail (approx 180px width)
         const unscaledViewport = page.getViewport({ scale: 1.0 });
         const isVertical = unscaledViewport.height > unscaledViewport.width;
-        const autoAngle = (isFotocopiaMode && isVertical) ? 90 : 0;
-        const totalAngle = (autoAngle + rotation) % 360;
+        // Evitar doble rotación cuando pageRotations[pageNum] ya trae 90°/270°/180°
+        const autoAngle = (isFotocopiaMode && isVertical && rotation === 0) ? 90 : 0;
+        const totalAngle = ((autoAngle + rotation) % 360 + 360) % 360;
 
         const targetWidth = 180;
         const scale = targetWidth / unscaledViewport.width;
@@ -185,6 +190,14 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
           Pág. {pageNum}
         </span>
         <div className="flex items-center gap-1">
+          {hasLowConfidenceRotation && (
+            <span
+              className="px-1.5 py-0.5 rounded bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning-text)] text-[9px] font-bold"
+              title="Revisar orientación de esta página"
+            >
+              Revisar giro
+            </span>
+          )}
           {splitOffset !== 50 && (
             <span className="text-[10px] text-[var(--color-secondary-bright)] font-mono font-bold" title={t.bookStudio.thumbnailCard.cutTitle}>
               ✂ {splitOffset}%
@@ -291,10 +304,21 @@ export const ThumbnailCard: React.FC<ThumbnailCardProps> = ({
           </button>
         )}
 
+        {onRotateLeft90 && (
+          <button
+            type="button"
+            onClick={() => onRotateLeft90(pageNum)}
+            title="Girar 90° a la izquierda (↺)"
+            className="p-1 rounded hover:bg-[var(--ui-bg-panel)] text-[var(--color-secondary-bright)] cursor-pointer"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+          </button>
+        )}
+
         <button
           type="button"
           onClick={() => onRotate(pageNum)}
-          title={t.bookStudio.organizeStep.rotate}
+          title="Girar 90° a la derecha (↻)"
           className="p-1 rounded hover:bg-[var(--ui-bg-panel)] text-[var(--color-secondary-bright)] cursor-pointer"
         >
           <RotateCw className="w-3.5 h-3.5" />

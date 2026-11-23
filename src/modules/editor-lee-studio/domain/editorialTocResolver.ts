@@ -10,6 +10,7 @@
  */
 
 import { EditorialSection, EditorialRecord } from './editorialTypes';
+import { countEditorialSectionCoverPages } from './sanitizeEditorialData';
 
 /** Representación mínima de una entrada de índice (para render final). */
 export interface EditorialTocEntry {
@@ -35,17 +36,21 @@ export interface EditorialAnchor {
 export function generateSectionAnchors(
   sections: EditorialSection[],
   recordsOfSection: Partial<Record<string, EditorialRecord[]>>,
+  design?: Record<string, any> | null,
+  cover?: Record<string, any> | null,
 ): EditorialAnchor[] {
   const anchors: EditorialAnchor[] = [];
   let cumulativePageCount = 0;
 
   for (const section of sections) {
+    const dividerPages = countEditorialSectionCoverPages(section, design, cover);
     const anchor: EditorialAnchor = {
       anchorId: section.id,
       label: section.title,
       pageNumber: cumulativePageCount > 0 ? cumulativePageCount + 1 : 0,
     };
     anchors.push(anchor);
+    cumulativePageCount += dividerPages;
 
     const sectionRecords = recordsOfSection[section.id] ?? [];
     const relevantRecords = sectionRecords.filter(

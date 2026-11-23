@@ -1,15 +1,17 @@
 import React from 'react';
-import { BookMarked, Palette, Sparkles } from 'lucide-react';
+import { BookMarked, Layers, Palette, Sparkles } from 'lucide-react';
 import { PanelSection } from '../../../shared/core/ui/PanelSection';
 import { ActionGrid } from '../../../shared/core/ui/ActionGrid';
 import { ActionTileButton } from '../../../shared/core/ui/ActionTileButton';
 import { ContextualGuideBox } from '../../../shared/core/ui/ContextualGuideBox';
 import { Field } from '../../../shared/core/ui/Field';
+import { SectionSwitch } from '../../../shared/core/ui/SectionSwitch';
 import { LidioHelpTrigger } from '../../../shared/core/ui/LidioHelpTrigger';
 import { COVER_PRESETS_CATALOG } from '../../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
 import { PRESET_COLORS } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
 import { emitLidioMessage } from '../../../shared/core/assistant/lidioBus';
-import type { EditorialCoverMode } from '../domain/editorialTypes';
+import { DEFAULT_SECTION_DIVIDER_CONFIG } from '../domain/sanitizeEditorialData';
+import type { EditorialCoverMode, EditorialSectionDividerConfig } from '../domain/editorialTypes';
 
 export interface EditorialCoverPanelProps {
   draft: any;
@@ -63,6 +65,26 @@ export const EditorialCoverPanel: React.FC<EditorialCoverPanelProps> = ({
   const coverMode: EditorialCoverMode = cover.mode || 'libro';
   const coverStyleId: string = cover.coverStyleId || design.coverStyleId || 'monica-classic';
   const coverPaletteKey: string = cover.coverPaletteKey || design.coverPaletteKey || 'sobrio';
+  const sectionDividers: EditorialSectionDividerConfig = {
+    ...DEFAULT_SECTION_DIVIDER_CONFIG,
+    ...(design.sectionDividers && typeof design.sectionDividers === 'object'
+      ? design.sectionDividers
+      : {}),
+  };
+
+  const setSectionDividersPatch = (patch: Partial<EditorialSectionDividerConfig>) => {
+    updateDraft((prev) => ({
+      ...prev,
+      design: {
+        ...(prev?.design || {}),
+        sectionDividers: {
+          ...DEFAULT_SECTION_DIVIDER_CONFIG,
+          ...(prev?.design?.sectionDividers || {}),
+          ...patch,
+        },
+      },
+    }));
+  };
 
   const setCoverPatch = (patch: Record<string, any>) => {
     updateDraft((prev) => ({
@@ -249,6 +271,92 @@ export const EditorialCoverPanel: React.FC<EditorialCoverPanelProps> = ({
           </PanelSection>
         </>
       )}
+
+      <PanelSection
+        icon={<Layers className="w-4 h-4" />}
+        title="Carátulas por capítulo o sección"
+        helpTitle="Portadillas automáticas"
+        helpText="Agrega automáticamente una página separadora al comienzo de cada capítulo o sección usando los mismos diseños del catálogo de portadas. También podés activarla o apagarla capítulo por capítulo."
+      >
+        <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)]">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="text-xs font-bold text-[var(--ui-text-primary)] truncate">
+              Carátula automática en cada capítulo
+            </span>
+            <LidioHelpTrigger
+              size="xs"
+              title="Carátulas de capítulos"
+              text="Genera una portadilla con el número y título de cada capítulo antes de su texto."
+              groupKey="ed-sec-dividers-on"
+            />
+          </div>
+          <SectionSwitch
+            size="sm"
+            checked={sectionDividers.enabled}
+            onChange={(checked) => {
+              setSectionDividersPatch({ enabled: checked });
+              emitLidioMessage({
+                kind: 'state',
+                groupKey: 'ed-sec-dividers',
+                title: checked ? 'Carátulas de capítulos activadas' : 'Carátulas de capítulos desactivadas',
+                body: checked
+                  ? 'Cada capítulo principal inicia con su propia portadilla diseñada.'
+                  : 'Los capítulos inician directamente con su texto.',
+              });
+            }}
+            label="Carátula automática en cada capítulo"
+          />
+        </div>
+
+        {sectionDividers.enabled && (
+          <div className="space-y-3 pt-1">
+            <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)]">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-xs font-semibold text-[var(--ui-text-primary)] truncate">
+                  Hoja en blanco detrás del separador
+                </span>
+                <LidioHelpTrigger
+                  size="xs"
+                  title="Reverso en blanco"
+                  text="Útil para impresión doble cara: deja limpia la cara posterior de la carátula del capítulo."
+                  groupKey="ed-sec-dividers-blank"
+                />
+              </div>
+              <SectionSwitch
+                size="sm"
+                checked={sectionDividers.blankBackPage}
+                onChange={(checked) => setSectionDividersPatch({ blankBackPage: checked })}
+                label="Hoja en blanco detrás de cada carátula"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+              <button
+                type="button"
+                onClick={() => setSectionDividersPatch({ scope: 'body-chapters' })}
+                className={`py-1.5 px-2.5 rounded-lg border font-bold cursor-pointer ${
+                  sectionDividers.scope !== 'all-sections'
+                    ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--color-accent-base)]'
+                    : 'bg-[var(--ui-bg-card)] text-[var(--ui-text-secondary)] border-[var(--ui-border)]'
+                }`}
+              >
+                Solo capítulos del cuerpo
+              </button>
+              <button
+                type="button"
+                onClick={() => setSectionDividersPatch({ scope: 'all-sections' })}
+                className={`py-1.5 px-2.5 rounded-lg border font-bold cursor-pointer ${
+                  sectionDividers.scope === 'all-sections'
+                    ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--color-accent-base)]'
+                    : 'bg-[var(--ui-bg-card)] text-[var(--ui-text-secondary)] border-[var(--ui-border)]'
+                }`}
+              >
+                Todas las secciones
+              </button>
+            </div>
+          </div>
+        )}
+      </PanelSection>
 
       <div className="flex items-center justify-between gap-2 pt-2">
         <LidioHelpTrigger

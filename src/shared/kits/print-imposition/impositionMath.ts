@@ -31,6 +31,24 @@ export function getBookletPairIndex(
 }
 
 /**
+ * Determina el lado natural ('derecha' = impar / frente, 'izquierda' = par / dorso)
+ * en que cae una página del PDF antes de insertar hojas en blanco detrás de la tapa.
+ * - En modo normal (1 pág/hoja): pág 1 = derecha, pág 2 = izquierda, pág 3 = derecha...
+ * - En modo fotocopia (2 págs/hoja): depende de la mitad ('izquierda' o 'derecha') donde
+ *   está impreso el número dentro del pliego escaneado.
+ */
+export function resolveNaturalPdfPageSide(
+  refPdfPage: number,
+  mode: 'normal' | 'fotocopia' = 'normal',
+  fotocopiaHalf?: 'izquierda' | 'derecha'
+): 'derecha' | 'izquierda' {
+  if (mode === 'fotocopia' && fotocopiaHalf) {
+    return fotocopiaHalf;
+  }
+  return refPdfPage % 2 !== 0 ? 'derecha' : 'izquierda';
+}
+
+/**
  * Calcula cuántas hojas en blanco deben insertarse inmediatamente detrás de la tapa,
  * unificando la preferencia del usuario ("retiro de tapa") y la corrección automática
  * de alineación de foliado (impar=derecha, par=izquierda).

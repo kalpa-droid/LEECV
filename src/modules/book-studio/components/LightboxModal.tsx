@@ -8,12 +8,15 @@ import {
   ChevronLeft,
   ChevronRight,
   RotateCw,
+  RotateCcw,
+  BookMarked,
   Trash2,
   Undo2,
   ArrowLeft,
   ArrowRight,
 } from 'lucide-react';
 import { radius, elevationSystem, button, input } from '../../../shared/core/uiDesignSystem';
+import { resolveNaturalPdfPageSide } from '../../../shared/kits/print-imposition/impositionMath';
 import { useText } from '../../../shared/i18n/useText';
 
 export interface LightboxModalProps {
@@ -26,16 +29,24 @@ export interface LightboxModalProps {
   refPdfPage?: number;
   refBookPage?: number;
   refPageSide?: 'derecha' | 'izquierda';
+  refPdfHalf?: 'izquierda' | 'derecha';
   splitOffset?: number;
   isFotocopiaMode?: boolean;
   isDeleted?: boolean;
   deletedPages?: (number | string)[];
   showDeletedPages?: boolean;
   activeStep?: string;
-  onSaveReferencePage: (refPdfPage: number, refBookPage: number, refPageSide: 'derecha' | 'izquierda') => void;
+  onSaveReferencePage: (
+    refPdfPage: number,
+    refBookPage: number,
+    refPageSide: 'derecha' | 'izquierda',
+    refPdfHalf?: 'izquierda' | 'derecha',
+  ) => void;
   onSaveSplitOffset?: (pageNum: number, newOffset: number) => void;
+  onInsertDividerBeforePage?: (pageNum: number) => void;
   onNavigate?: (pageNum: number) => void;
   onRotate?: (pageNum: number) => void;
+  onRotateLeft90?: (pageNum: number) => void;
   onToggleDelete?: (pageNum: number) => void;
   onMoveLeft?: (pageNum: number) => void;
   onMoveRight?: (pageNum: number) => void;
@@ -51,6 +62,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
   refPdfPage = 0,
   refBookPage = 0,
   refPageSide = 'derecha',
+  refPdfHalf,
   splitOffset = 50,
   isFotocopiaMode = false,
   isDeleted = false,
@@ -59,8 +71,10 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
   activeStep = '',
   onSaveReferencePage,
   onSaveSplitOffset,
+  onInsertDividerBeforePage,
   onNavigate,
   onRotate,
+  onRotateLeft90,
   onToggleDelete,
   onMoveLeft,
   onMoveRight,
@@ -71,6 +85,9 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
 
   // Form states for reference page and split offset
   const [inputBookPage, setInputBookPage] = useState<number>(refBookPage || pageNum);
+  const [inputFotocopiaHalf, setInputFotocopiaHalf] = useState<'izquierda' | 'derecha'>(
+    refPdfHalf || 'derecha',
+  );
   const [inputPageSide, setInputPageSide] = useState<'derecha' | 'izquierda'>(refPageSide);
   const [localSplitOffset, setLocalSplitOffset] = useState<number>(splitOffset);
   const [isSavedNotice, setIsSavedNotice] = useState<boolean>(false);
@@ -78,14 +95,26 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
     setInputBookPage(refBookPage || pageNum);
-    setInputPageSide(refPageSide);
+    setInputFotocopiaHalf(refPdfHalf || 'derecha');
+    setInputPageSide(
+      resolveNaturalPdfPageSide(
+        pageNum,
+        isFotocopiaMode ? 'fotocopia' : 'normal',
+        refPdfHalf || 'derecha',
+      ),
+    );
     setLocalSplitOffset(splitOffset);
-  }, [isOpen, pageNum, refBookPage, refPageSide, splitOffset]);
+  }, [isOpen, pageNum, refBookPage, refPageSide, refPdfHalf, splitOffset, isFotocopiaMode]);
 
-  // El lado es 100% derivable del número de página impreso (impar=derecha, par=izquierda)
   useEffect(() => {
-    setInputPageSide(inputBookPage % 2 !== 0 ? 'derecha' : 'izquierda');
-  }, [inputBookPage]);
+    setInputPageSide(
+      resolveNaturalPdfPageSide(
+        pageNum,
+        isFotocopiaMode ? 'fotocopia' : 'normal',
+        inputFotocopiaHalf,
+      ),
+    );
+  }, [pageNum, isFotocopiaMode, inputFotocopiaHalf]);
 
   useEffect(() => {
     if (!isOpen || !pdfDoc || !canvasRef.current) return;
@@ -103,8 +132,8 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
 
         const unscaledViewport = page.getViewport({ scale: 1.0 });
         const isVertical = unscaledViewport.height > unscaledViewport.width;
-        const autoAngle = isFotocopiaMode && isVertical ? 90 : 0;
-        const totalAngle = (autoAngle + rotation) % 360;
+        const autoAngle = isFotocopiaMode && isVertical && rotation === 0 ? 90 : 0;
+        const totalAngle = ((autoAngle + rotation) % 360 + 360) % 360;
 
         const targetWidth = 600; // High quality preview
         const scale = targetWidth / unscaledViewport.width;
@@ -150,7 +179,12 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
 
   const handleApplyReference = (e: React.FormEvent) => {
     e.preventDefault();
-    onSaveReferencePage(pageNum, Number(inputBookPage), inputPageSide);
+    onSaveReferencePage(
+      pageNum,
+      Number(inputBookPage),
+      inputPageSide,
+      isFotocopiaMode ? inputFotocopiaHalf : undefined,
+    );
     if (onSaveSplitOffset) {
       onSaveSplitOffset(pageNum, localSplitOffset);
     }
@@ -310,9 +344,28 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
                     className={`${input.base} ${input.focus} w-24 text-center font-bold text-sm`}
                   />
                   <div className="flex-1 px-2.5 py-2 rounded-[10px] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] text-xs font-semibold text-center">
-                    {inputPageSide === 'derecha' ? t.bookStudio.lightboxModal.sideRightOdd : t.bookStudio.lightboxModal.sideLeftEven}
+                    {inputBookPage % 2 !== 0 ? t.bookStudio.lightboxModal.sideRightOdd : t.bookStudio.lightboxModal.sideLeftEven}
                   </div>
                 </div>
+
+                {isFotocopiaMode && (
+                  <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                    {(['izquierda', 'derecha'] as const).map((half) => (
+                      <button
+                        key={half}
+                        type="button"
+                        onClick={() => setInputFotocopiaHalf(half)}
+                        className={`py-1.5 px-2 rounded-lg border font-bold cursor-pointer ${
+                          inputFotocopiaHalf === half
+                            ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--color-accent-base)]'
+                            : 'bg-[var(--ui-bg-card)] text-[var(--ui-text-secondary)] border-[var(--ui-border)]'
+                        }`}
+                      >
+                        Mitad {half}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 <button
                   type="submit"
@@ -371,9 +424,28 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
                     className={`${input.base} ${input.focus} w-24 text-center font-bold text-sm`}
                   />
                   <div className="flex-1 px-2.5 py-2 rounded-[10px] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] text-xs font-semibold text-center">
-                    {inputPageSide === 'derecha' ? t.bookStudio.lightboxModal.sideRightOdd : t.bookStudio.lightboxModal.sideLeftEven}
+                    {inputBookPage % 2 !== 0 ? t.bookStudio.lightboxModal.sideRightOdd : t.bookStudio.lightboxModal.sideLeftEven}
                   </div>
                 </div>
+
+                {isFotocopiaMode && (
+                  <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                    {(['izquierda', 'derecha'] as const).map((half) => (
+                      <button
+                        key={half}
+                        type="button"
+                        onClick={() => setInputFotocopiaHalf(half)}
+                        className={`py-1.5 px-2 rounded-lg border font-bold cursor-pointer ${
+                          inputFotocopiaHalf === half
+                            ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] border-[var(--color-accent-base)]'
+                            : 'bg-[var(--ui-bg-card)] text-[var(--ui-text-secondary)] border-[var(--ui-border)]'
+                        }`}
+                      >
+                        Mitad {half}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 <button
                   type="submit"
@@ -426,63 +498,86 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
                 </div>
               )}
 
-              {/* Botones de Organización SOLO en modo Normal */}
-              {!isFotocopiaMode && (
-                <div className="space-y-2 pt-3 border-t border-[var(--ui-border)]">
-                  <label className="text-xs font-bold text-[var(--ui-text-primary)] block">{t.bookStudio.lightboxModal.pageActionsLabel}</label>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    {onRotate && (
-                      <button
-                        type="button"
-                        onClick={() => onRotate(pageNum)}
-                        className={`${button.base} ${button.secondary} flex items-center justify-center gap-1.5 py-2`}
-                        title={t.bookStudio.lightboxModal.rotate180}
-                      >
-                        <RotateCw className="w-3.5 h-3.5" />
-                        <span>{t.bookStudio.lightboxModal.rotate180}</span>
-                      </button>
-                    )}
+              {/* Botones de Organización y Separadores */}
+              <div className="space-y-2 pt-3 border-t border-[var(--ui-border)]">
+                <label className="text-xs font-bold text-[var(--ui-text-primary)] block">{t.bookStudio.lightboxModal.pageActionsLabel}</label>
+                {onInsertDividerBeforePage && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onInsertDividerBeforePage(pageNum);
+                    }}
+                    className={`${button.base} ${button.secondary} w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold`}
+                  >
+                    <BookMarked className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
+                    <span>Insertar carátula antes de esta página</span>
+                  </button>
+                )}
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  {onRotateLeft90 && (
+                    <button
+                      type="button"
+                      onClick={() => onRotateLeft90(pageNum)}
+                      className={`${button.base} ${button.secondary} flex items-center justify-center gap-1.5 py-2`}
+                      title="Girar 90° a la izquierda (↺)"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Girar -90° ↺</span>
+                    </button>
+                  )}
 
-                    {onToggleDelete && (
-                      <button
-                        type="button"
-                        onClick={() => onToggleDelete(pageNum)}
-                        className={`${button.base} ${
-                          isDeleted ? button.primary : button.secondary
-                        } flex items-center justify-center gap-1.5 py-2`}
-                        title={isDeleted ? t.bookStudio.lightboxModal.restorePageTitle : t.bookStudio.lightboxModal.deletePageTitle}
-                      >
-                        {isDeleted ? <Undo2 className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5 text-[var(--color-status-danger-text)]" />}
-                        <span>{isDeleted ? t.bookStudio.lightboxModal.restoreShort : t.bookStudio.lightboxModal.deleteShort}</span>
-                      </button>
-                    )}
+                  {onRotate && (
+                    <button
+                      type="button"
+                      onClick={() => onRotate(pageNum)}
+                      className={`${button.base} ${button.secondary} flex items-center justify-center gap-1.5 py-2`}
+                      title="Girar 90° a la derecha (↻)"
+                    >
+                      <RotateCw className="w-3.5 h-3.5" />
+                      <span>Girar +90° ↻</span>
+                    </button>
+                  )}
 
-                    {onMoveLeft && (
-                      <button
-                        type="button"
-                        onClick={() => onMoveLeft(pageNum)}
-                        className={`${button.base} ${button.secondary} flex items-center justify-center gap-1 py-2`}
-                        title={t.bookStudio.lightboxModal.moveLeftTitle}
-                      >
-                        <ArrowLeft className="w-3.5 h-3.5" />
-                        <span>{t.bookStudio.lightboxModal.moveLeft}</span>
-                      </button>
-                    )}
+                  {onToggleDelete && (
+                    <button
+                      type="button"
+                      onClick={() => onToggleDelete(pageNum)}
+                      className={`${button.base} ${
+                        isDeleted ? button.primary : button.secondary
+                      } flex items-center justify-center gap-1.5 py-2`}
+                      title={isDeleted ? t.bookStudio.lightboxModal.restorePageTitle : t.bookStudio.lightboxModal.deletePageTitle}
+                    >
+                      {isDeleted ? <Undo2 className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5 text-[var(--color-status-danger-text)]" />}
+                      <span>{isDeleted ? t.bookStudio.lightboxModal.restoreShort : t.bookStudio.lightboxModal.deleteShort}</span>
+                    </button>
+                  )}
 
-                    {onMoveRight && (
-                      <button
-                        type="button"
-                        onClick={() => onMoveRight(pageNum)}
-                        className={`${button.base} ${button.secondary} flex items-center justify-center gap-1 py-2`}
-                        title={t.bookStudio.lightboxModal.moveRightTitle}
-                      >
-                        <span>{t.bookStudio.lightboxModal.moveRight}</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
+                  {onMoveLeft && (
+                    <button
+                      type="button"
+                      onClick={() => onMoveLeft(pageNum)}
+                      className={`${button.base} ${button.secondary} flex items-center justify-center gap-1 py-2`}
+                      title={t.bookStudio.lightboxModal.moveLeftTitle}
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      <span>{t.bookStudio.lightboxModal.moveLeft}</span>
+                    </button>
+                  )}
+
+                  {onMoveRight && (
+                    <button
+                      type="button"
+                      onClick={() => onMoveRight(pageNum)}
+                      className={`${button.base} ${button.secondary} flex items-center justify-center gap-1 py-2`}
+                      title={t.bookStudio.lightboxModal.moveRightTitle}
+                    >
+                      <span>{t.bookStudio.lightboxModal.moveRight}</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           )}
 

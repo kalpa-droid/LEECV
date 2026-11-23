@@ -5,19 +5,24 @@ import {
   crearCanvasTapaCustom,
   crearCanvasContratapaCustom,
 } from '../domain/impositionEngine';
+import {
+  BookSectionDivider,
+  crearCanvasSeparadorCapitulo,
+} from '../domain/bookDividerCanvas';
 import { BookPaperSizeId, resolveBookPaperSpec } from '../domain/bookPrintProfileEngine';
 import { bookAssetManager } from '../domain/bookAssetManager';
 import { useText } from '../../../shared/i18n/useText';
 
 export interface CoverPreviewThumbnailProps {
-  config: CoverConfig | BackCoverConfig | null | undefined;
-  kind: 'cover' | 'backCover';
+  config: CoverConfig | BackCoverConfig | BookSectionDivider | null | undefined;
+  kind: 'cover' | 'backCover' | 'divider';
   paperSize?: BookPaperSizeId;
+  defaultCoverStyle?: string;
   className?: string;
 }
 
 /**
- * Miniatura de tapa/contratapa.
+ * Miniatura de tapa/contratapa/separador.
  * Nivel 1 de la arquitectura de 3 niveles: para imágenes locales usa la
  * miniatura liviana guardada al subir el archivo (sin reprocesar nada); para
  * plantillas usa un canvas de ~320px de ancho, no el tamaño de fábrica del
@@ -27,6 +32,7 @@ export const CoverPreviewThumbnail: React.FC<CoverPreviewThumbnailProps> = ({
   config,
   kind,
   paperSize = 'A4',
+  defaultCoverStyle = 'monica-classic',
   className = 'w-full h-28 object-contain rounded border border-[var(--ui-border)]',
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -65,7 +71,14 @@ export const CoverPreviewThumbnail: React.FC<CoverPreviewThumbnailProps> = ({
 
       try {
         const source =
-          kind === 'cover'
+          kind === 'divider'
+            ? await crearCanvasSeparadorCapitulo(
+                config as BookSectionDivider,
+                defaultCoverStyle,
+                { width: thumbWidth, height: thumbHeight },
+                renderScale,
+              )
+            : kind === 'cover'
             ? await crearCanvasTapaCustom(config as CoverConfig, { width: thumbWidth, height: thumbHeight }, renderScale)
             : await crearCanvasContratapaCustom(config as BackCoverConfig, { width: thumbWidth, height: thumbHeight }, renderScale);
 

@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 3,
-  minor: 4,
+  minor: 5,
   patch: 0,
-  label: 'V3.4.0',
-  lastUpdated: '2026-11-22',
+  label: 'V3.5.0',
+  lastUpdated: '2026-11-23',
   lastAgent: '@antigravity',
-  stage: 'feat(topbar-dock-globals): V3.4.0 — TopBar de 4 zonas, Tema en Cuenta & Preferencias, Dock CV/EditorLee compacto de 2 columnas, 3 píldoras globales en EditorLee, 2 píldoras globales + 3 canales Cero Ruido en Libro/Folleto y gobernanza en create/verify app.',
+  stage: 'feat(book-editorial-ai): V3.5.0 — Modo Automático de armado directo (imposición), orientación IA por muestreo y lotes en Fotocopia, Paso 5 con deducción de Página 1 por IA, separadores/carátulas de capítulos en Libro Folleto y EditorLee, y recomendación IA de tipo de obra al importar.',
 } as const;

@@ -559,6 +559,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
               <EditorialPresetInicioPanel
                 draft={draft}
                 onOpenGlobalPresetModal={() => setGlobalModalAxis('preset')}
+                onOpenImportAi={() => setActiveStepTab('editorial_import_ai')}
                 onSaveToDisk={() => void handleSaveToDisk(true)}
                 onOpenDiskFile={handleOpenDiskFile}
               />
