@@ -1,6 +1,9 @@
 import React from 'react';
-import { Hash, CheckCircle2, RefreshCw, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
+import { Hash, CheckCircle2, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { BookImpositionOptions } from './domain/impositionEngine';
+import { PanelSection } from '../../shared/core/ui/PanelSection';
+import { ContextualGuideBox } from '../../shared/core/ui/ContextualGuideBox';
+import { emitLidioMessage } from '../../shared/core/assistant/lidioBus';
 import { radius, elevationSystem, button } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 
@@ -21,8 +24,6 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
   const t = useText();
   const refPdfPage = options.refPdfPage || 0;
   const refBookPage = options.refBookPage || 0;
-  const refPageSide = options.refPageSide || 'derecha';
-
   const isCalibrated = refPdfPage > 0 && refBookPage > 0;
 
   const handleReset = () => {
@@ -32,59 +33,54 @@ export const BookFoliadoStep: React.FC<BookFoliadoStepProps> = ({
       refBookPage: 0,
       refPageSide: 'derecha',
     }));
+    emitLidioMessage({
+      kind: 'state',
+      groupKey: 'book-foliado',
+      title: 'Calibración eliminada',
+      body: 'Las páginas se emparejan por orden directo desde la primera hoja.',
+    });
   };
 
   return (
-    <div className="space-y-6 text-[var(--ui-text-primary)]">
-      <div className="space-y-1">
-        <h2 className="text-xl font-bold tracking-tight text-[var(--ui-text-primary)] flex items-center gap-2">
-          <Hash className="w-5 h-5 text-[var(--color-secondary-bright)]" />
-          <span>{t.bookStudio.foliadoStep.title}</span>
-        </h2>
-        <p className="text-xs text-[var(--ui-text-secondary)] leading-relaxed">
-          {t.bookStudio.foliadoStep.description}
-        </p>
-      </div>
-
-      {/* Instrucción Simple */}
-      <div className="p-4 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[12px] space-y-2">
-        <h4 className="text-xs font-bold text-[var(--ui-text-primary)] flex items-center gap-1.5">
-          <ZoomIn className="w-4 h-4 text-[var(--color-accent-text)]" />
-          <span>{t.bookStudio.foliadoStep.howToTitle}</span>
-        </h4>
-        <p className="text-xs text-[var(--ui-text-secondary)] leading-relaxed">
+    <div className="space-y-5 text-[var(--ui-text-primary)]">
+      <PanelSection
+        icon={<Hash className="w-4 h-4" />}
+        title={t.bookStudio.foliadoStep.title}
+        helpTitle="Para qué sirve calibrar un número"
+        helpText={t.bookStudio.foliadoStep.description}
+      >
+        <ContextualGuideBox title={t.bookStudio.foliadoStep.howToTitle}>
           {t.bookStudio.foliadoStep.howToIntro} <strong>{t.bookStudio.foliadoStep.foundButton}</strong>.
-        </p>
-      </div>
+        </ContextualGuideBox>
 
-      {/* Estado de Calibración Compacto (si está activo) */}
-      {isCalibrated && (
-        <div
-          className={`p-4 rounded-[${radius.card}] bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-text)] ${elevationSystem.raised} space-y-2`}
-        >
-          <div className="flex items-start gap-2.5">
-            <CheckCircle2 className="w-5 h-5 text-[var(--color-status-success-bright)] shrink-0 mt-0.5" />
-            <div className="space-y-1 text-xs">
-              <h3 className="font-bold text-sm">{t.bookStudio.foliadoStep.calibratedTitle}</h3>
-              <p>
-                {t.bookStudio.foliadoStep.calibratedLine
-                  .replace('{pdf}', String(refPdfPage))
-                  .replace('{book}', String(refBookPage))}
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={handleReset}
-            className={`${button.base} ${button.ghost} w-full flex items-center justify-center gap-1.5 text-xs text-[var(--color-status-danger-text)] mt-2`}
+        {isCalibrated && (
+          <div
+            className={`p-4 bg-[var(--color-status-success-muted)] border border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-text)] ${elevationSystem.raised} space-y-2`}
+            style={{ borderRadius: radius.card }}
           >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>{t.bookStudio.foliadoStep.removeCalibration}</span>
-          </button>
-        </div>
-      )}
+            <div className="flex items-start gap-2.5">
+              <CheckCircle2 className="w-5 h-5 text-[var(--color-status-success-bright)] shrink-0 mt-0.5" />
+              <div className="space-y-1 text-xs">
+                <h3 className="font-bold text-sm">{t.bookStudio.foliadoStep.calibratedTitle}</h3>
+                <p>
+                  {t.bookStudio.foliadoStep.calibratedLine
+                    .replace('{pdf}', String(refPdfPage))
+                    .replace('{book}', String(refBookPage))}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleReset}
+              className={`${button.base} ${button.ghost} w-full flex items-center justify-center gap-1.5 text-xs text-[var(--color-status-danger-text)] mt-2`}
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>{t.bookStudio.foliadoStep.removeCalibration}</span>
+            </button>
+          </div>
+        )}
+      </PanelSection>
 
-      {/* Navegación Bidireccional */}
       <div className="pt-4 border-t border-[var(--ui-border)] flex items-center justify-between gap-3">
         {onPrevStep ? (
           <button

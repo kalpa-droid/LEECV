@@ -1,7 +1,12 @@
 import React from 'react';
-import { LayoutGrid, RotateCcw, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutGrid, RotateCcw, RefreshCw, ChevronLeft, ChevronRight, Layers } from 'lucide-react';
 import { BookImpositionOptions } from './domain/impositionEngine';
 import { calculateFinalBookPageCount, effectiveSourcePageCount, hasCustomCoverConfig } from './domain/bookPageCount';
+import { PanelSection } from '../../shared/core/ui/PanelSection';
+import { ContextualGuideBox } from '../../shared/core/ui/ContextualGuideBox';
+import { ActionGrid } from '../../shared/core/ui/ActionGrid';
+import { ActionTileButton } from '../../shared/core/ui/ActionTileButton';
+import { emitLidioMessage } from '../../shared/core/assistant/lidioBus';
 import { radius, elevationSystem, button } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 
@@ -51,131 +56,140 @@ export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
       }
       return { ...prev, pageRotations: nextRotations };
     });
+    emitLidioMessage({
+      kind: 'state',
+      groupKey: 'book-organize',
+      title: 'Documento girado -90°',
+      body: 'Se rotaron todas las páginas juntas para corregir la orientación.',
+    });
   };
 
   const handleResetRotations = () => {
     setOptions((prev) => ({ ...prev, pageRotations: {} }));
+    emitLidioMessage({
+      kind: 'state',
+      groupKey: 'book-organize',
+      title: 'Rotaciones restablecidas',
+      body: 'Todas las páginas volvieron a 0°.',
+    });
   };
 
   const handleRestoreAllDeleted = () => {
     setOptions((prev) => ({ ...prev, deletedPages: [] }));
+    emitLidioMessage({
+      kind: 'state',
+      groupKey: 'book-organize',
+      title: 'Páginas restauradas',
+      body: 'Volvieron a aparecer todas las páginas que habías ocultado.',
+    });
   };
 
   const handleResetOrder = () => {
     setOptions((prev) => ({ ...prev, pageOrder: [] }));
+    emitLidioMessage({
+      kind: 'state',
+      groupKey: 'book-organize',
+      title: 'Orden original restaurado',
+      body: 'Se restauró la secuencia original del archivo PDF.',
+    });
   };
 
   return (
-    <div className="space-y-6 text-[var(--ui-text-primary)]">
-      <div className="space-y-1">
-        <h2 className="text-xl font-bold tracking-tight text-[var(--ui-text-primary)] flex items-center gap-2">
-          <LayoutGrid className="w-5 h-5 text-[var(--color-secondary-bright)]" />
-          <span>{t.bookStudio.organizeStep.title}</span>
-        </h2>
-        <p className="text-xs text-[var(--ui-text-secondary)]">
-          {t.bookStudio.organizeStep.description}
-        </p>
-      </div>
+    <div className="space-y-5 text-[var(--ui-text-primary)]">
+      <PanelSection
+        icon={<LayoutGrid className="w-4 h-4" />}
+        title={t.bookStudio.organizeStep.title}
+        helpTitle="Cómo organizar páginas"
+        helpText={t.bookStudio.organizeStep.description}
+      >
+        <ContextualGuideBox title="Qué revisar acá">
+          Tocá cualquier miniatura en el visor de la derecha para girarla, moverla, ajustarle el corte o quitar hojas que sobren.
+        </ContextualGuideBox>
 
-      {/* Resumen Estructural Completo */}
-      <div className={`p-4 rounded-[${radius.card}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)] space-y-3 ${elevationSystem.raised}`}>
-        <h3 className="text-xs font-bold text-[var(--ui-text-primary)] uppercase tracking-wider block">
-          {t.bookStudio.organizeStep.stateHeading}
-        </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-          <div className={`p-2.5 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)]`}>
-            <span className="text-[10px] text-[var(--ui-text-secondary)] block uppercase">{t.bookStudio.organizeStep.metricPdfPages}</span>
-            <span className="text-base font-bold text-[var(--ui-text-primary)] mt-0.5 block">
-              {pdfPageCount}
-            </span>
-          </div>
-          <div className={`p-2.5 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)]`}>
-            <span className="text-[10px] text-[var(--ui-text-secondary)] block uppercase">{t.bookStudio.organizeStep.metricBookPages}</span>
-            <span className="text-base font-bold text-[var(--color-secondary-bright)] mt-0.5 block">
-              {finalPageCount}
-            </span>
-          </div>
-          <div className={`p-2.5 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)]`}>
-            <span className="text-[10px] text-[var(--ui-text-secondary)] block uppercase">{t.bookStudio.organizeStep.metricSheets}</span>
-            <span className="text-base font-bold text-[var(--color-secondary-bright)] mt-0.5 block">
-              {totalSheetsToPrint}
-            </span>
-          </div>
-          <div className={`p-2.5 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)]`}>
-            <span className="text-[10px] text-[var(--ui-text-secondary)] block uppercase">{t.bookStudio.organizeStep.metricRotations}</span>
-            <span className="text-base font-bold text-[var(--color-secondary-bright)] mt-0.5 block">
-              {rotatedCount} {t.bookStudio.organizeStep.pagesUnit}
-            </span>
-          </div>
-          <div className={`p-2.5 rounded-[${radius.control}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] col-span-2 sm:col-span-1`}>
-            <span className="text-[10px] text-[var(--ui-text-secondary)] block uppercase">{t.bookStudio.organizeStep.metricDeleted}</span>
-            <span className="text-base font-bold text-[var(--color-status-danger-text)] mt-0.5 block">
-              {deletedCount} {t.bookStudio.organizeStep.pagesUnit}
-            </span>
+        <div
+          className={`p-3.5 bg-[var(--ui-bg-surface)] border border-[var(--ui-border)] space-y-2.5 ${elevationSystem.raised}`}
+          style={{ borderRadius: radius.card }}
+        >
+          <span className="text-[11px] font-bold text-[var(--ui-text-primary)] uppercase tracking-wider block">
+            {t.bookStudio.organizeStep.stateHeading}
+          </span>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+            <div className="p-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)]" style={{ borderRadius: radius.control }}>
+              <span className="text-[10px] text-[var(--ui-text-secondary)] block uppercase">{t.bookStudio.organizeStep.metricPdfPages}</span>
+              <span className="text-base font-bold text-[var(--ui-text-primary)] mt-0.5 block">{pdfPageCount}</span>
+            </div>
+            <div className="p-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)]" style={{ borderRadius: radius.control }}>
+              <span className="text-[10px] text-[var(--ui-text-secondary)] block uppercase">{t.bookStudio.organizeStep.metricBookPages}</span>
+              <span className="text-base font-bold text-[var(--color-secondary-bright)] mt-0.5 block">{finalPageCount}</span>
+            </div>
+            <div className="p-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)]" style={{ borderRadius: radius.control }}>
+              <span className="text-[10px] text-[var(--ui-text-secondary)] block uppercase">{t.bookStudio.organizeStep.metricSheets}</span>
+              <span className="text-base font-bold text-[var(--color-secondary-bright)] mt-0.5 block">{totalSheetsToPrint}</span>
+            </div>
+            <div className="p-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)]" style={{ borderRadius: radius.control }}>
+              <span className="text-[10px] text-[var(--ui-text-secondary)] block uppercase">{t.bookStudio.organizeStep.metricRotations}</span>
+              <span className="text-base font-bold text-[var(--color-secondary-bright)] mt-0.5 block">
+                {rotatedCount} {t.bookStudio.organizeStep.pagesUnit}
+              </span>
+            </div>
+            <div className="p-2 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] col-span-2 sm:col-span-1" style={{ borderRadius: radius.control }}>
+              <span className="text-[10px] text-[var(--ui-text-secondary)] block uppercase">{t.bookStudio.organizeStep.metricDeleted}</span>
+              <span className="text-base font-bold text-[var(--color-status-danger-text)] mt-0.5 block">
+                {deletedCount} {t.bookStudio.organizeStep.pagesUnit}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      </PanelSection>
 
-      {/* Rotación Masiva Única */}
-      <div className="space-y-3">
-        <h3 className="text-xs font-bold text-[var(--ui-text-primary)] uppercase tracking-wider block">
-          {t.bookStudio.organizeStep.batchRotationHeading}
-        </h3>
+      <PanelSection
+        icon={<Layers className="w-4 h-4" />}
+        title={t.bookStudio.organizeStep.batchRotationHeading}
+        helpTitle="Acciones sobre todas las páginas"
+        helpText="Útil cuando escaneaste un libro completo de costado o querés revertir cambios rápidos."
+      >
+        <ActionGrid columns={2}>
+          <ActionTileButton
+            role="record"
+            icon={<RotateCcw className="w-5 h-5" />}
+            label={t.bookStudio.organizeStep.rotateAllLeft90}
+            helpText={t.bookStudio.organizeStep.rotateAllHint}
+            helpGroupKey="book-organize-rotate"
+            onClick={handleRotateAllLeft90}
+          />
+          {deletedCount > 0 && (
+            <ActionTileButton
+              role="record"
+              icon={<RefreshCw className="w-5 h-5" />}
+              label={t.bookStudio.organizeStep.restoreDeletedPages.replace('{count}', String(deletedCount))}
+              helpText="Recupera todas las páginas que marcaste como eliminadas."
+              helpGroupKey="book-organize-restore-del"
+              onClick={handleRestoreAllDeleted}
+            />
+          )}
+          {rotatedCount > 0 && (
+            <ActionTileButton
+              role="destructive"
+              icon={<RefreshCw className="w-5 h-5" />}
+              label={t.bookStudio.organizeStep.resetAllRotations}
+              helpText="Deja todas las páginas sin giro."
+              helpGroupKey="book-organize-reset-rot"
+              onClick={handleResetRotations}
+            />
+          )}
+          {(options.pageOrder || []).length > 0 && (
+            <ActionTileButton
+              role="destructive"
+              icon={<RefreshCw className="w-5 h-5" />}
+              label={t.bookStudio.organizeStep.resetOriginalOrder}
+              helpText="Vuelve al orden original del PDF subido."
+              helpGroupKey="book-organize-reset-order"
+              onClick={handleResetOrder}
+            />
+          )}
+        </ActionGrid>
+      </PanelSection>
 
-        <button
-          type="button"
-          onClick={handleRotateAllLeft90}
-          className={`${button.base} ${button.secondary} w-full flex items-center justify-between transition cursor-pointer text-xs`}
-        >
-          <div className="flex items-center gap-2">
-            <RotateCcw className="w-4 h-4 text-[var(--color-secondary-bright)]" />
-            <span>{t.bookStudio.organizeStep.rotateAllLeft90}</span>
-          </div>
-          <span className="text-[10px] text-[var(--ui-text-secondary)] font-normal">{t.bookStudio.organizeStep.rotateAllHint}</span>
-        </button>
-
-        {rotatedCount > 0 && (
-          <button
-            type="button"
-            onClick={handleResetRotations}
-            className="w-full py-2 px-3 text-xs font-semibold text-[var(--color-secondary-bright)] hover:underline text-center cursor-pointer"
-          >
-            {t.bookStudio.organizeStep.resetAllRotations}
-          </button>
-        )}
-      </div>
-
-      {/* Restauración de Borrados y Orden */}
-      <div className="space-y-3 pt-2 border-t border-[var(--ui-border)]">
-        <h3 className="text-xs font-bold text-[var(--ui-text-primary)] uppercase tracking-wider block">
-          {t.bookStudio.organizeStep.restoreHeading}
-        </h3>
-
-        {deletedCount > 0 ? (
-          <button
-            type="button"
-            onClick={handleRestoreAllDeleted}
-            className={`${button.base} ${button.secondary} w-full flex items-center justify-center gap-2 cursor-pointer text-xs`}
-          >
-            <RefreshCw className="w-4 h-4 text-[var(--color-status-success-bright)]" />
-            <span>{t.bookStudio.organizeStep.restoreDeletedPages.replace('{count}', String(deletedCount))}</span>
-          </button>
-        ) : (
-          <p className="text-xs text-[var(--ui-text-secondary)]">{t.bookStudio.organizeStep.noDeletedPages}</p>
-        )}
-
-        {(options.pageOrder || []).length > 0 && (
-          <button
-            type="button"
-            onClick={handleResetOrder}
-            className="w-full py-2 px-3 text-xs font-semibold text-[var(--ui-text-secondary)] hover:underline text-center cursor-pointer"
-          >
-            {t.bookStudio.organizeStep.resetOriginalOrder}
-          </button>
-        )}
-      </div>
-
-      {/* Navegación Bidireccional */}
       <div className="pt-4 border-t border-[var(--ui-border)] flex items-center justify-between">
         {onPrevStep ? (
           <button
@@ -202,4 +216,3 @@ export const BookOrganizeStep: React.FC<BookOrganizeStepProps> = ({
     </div>
   );
 };
-

@@ -1,23 +1,24 @@
 import React, { useMemo } from 'react';
-import { BookOpen, Home, Printer, Check, Palette, Ruler } from 'lucide-react';
+import { BookOpen, Ruler, Settings2, SlidersHorizontal, Sparkles } from 'lucide-react';
 import { button, input, typeScale, selectableCard, radius } from '../../shared/core/uiDesignSystem';
 import { BookImpositionOptions } from './domain/impositionEngine';
 import { computeBookFinalPageCount } from './domain/bookPageCount';
 import { calculateSpineWidth } from '../../shared/kits/print-imposition/impositionPlanner';
-import { COVER_PRESETS } from '../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
+import { getCoverPresetById } from '../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
 import { useText } from '../../shared/i18n/useText';
+import { PanelSection } from '../../shared/core/ui/PanelSection';
+import { ContextualGuideBox } from '../../shared/core/ui/ContextualGuideBox';
 import { SectionSwitch } from '../../shared/core/ui/SectionSwitch';
 import { LidioHelpTrigger } from '../../shared/core/ui/LidioHelpTrigger';
 import { ManualOverrideBadge } from '../../shared/core/ui/ManualOverrideBadge';
 import { isManuallyOverridden } from '../../shared/core/presets/configCascadeEngine';
+import { emitLidioMessage } from '../../shared/core/assistant/lidioBus';
 import {
   BOOK_PRINT_PROFILES,
-  BookPrintTarget,
-  applyBookPrintProfile,
   clearBookFieldManual,
-  detectBookPrintTargetConflicts,
   inferBookPrintTarget,
   markBookFieldManual,
+  resolveBookPaperSpec,
 } from './domain/bookPrintProfileEngine';
 
 interface BookImpositionStepProps {
@@ -27,8 +28,12 @@ interface BookImpositionStepProps {
   sourceProtected?: boolean;
   /** Necesario para estimar el lomo en vivo: páginas efectivas del PDF ya subido. */
   pdfPageCount?: number;
-  /** Permite abrir el modal de destino global si cambiar perfil pisa ajustes manuales. */
+  /** Permite abrir el modal de destino global si se quiere cambiar Casa vs Imprenta. */
   onOpenPrintTargetModal?: () => void;
+  /** Permite abrir el modal de hoja física desde el resumen. */
+  onOpenPaperModal?: () => void;
+  /** Salta al paso de Tapa para editar estilo visual sin duplicar el selector. */
+  onGoToCoverStep?: () => void;
   onNextStep: () => void;
   onPrevStep: () => void;
 }
@@ -43,7 +48,10 @@ interface SwitchRowProps {
 
 /** Fila con interruptor canónico (`SectionSwitch`), ayuda `?` de Lidio e insignia de ajuste manual. */
 const SwitchRow: React.FC<SwitchRowProps> = ({ label, help, checked, onChange, overrideBadge }) => (
-  <div className={`flex items-center justify-between gap-3 p-3 rounded-[${radius.control}] bg-[var(--ui-bg-surface)] border border-[var(--ui-border)]`}>
+  <div
+    className="flex items-center justify-between gap-3 p-3 bg-[var(--ui-bg-surface)] border border-[var(--ui-border)]"
+    style={{ borderRadius: radius.control }}
+  >
     <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
       <span className={typeScale.fieldLabel}>{label}</span>
       <LidioHelpTrigger title={label} text={help} groupKey={`book-switch-${label}`} />
@@ -65,6 +73,8 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
   sourceProtected = false,
   pdfPageCount = 0,
   onOpenPrintTargetModal,
+  onOpenPaperModal,
+  onGoToCoverStep,
   onNextStep,
   onPrevStep,
 }) => {
@@ -72,15 +82,14 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
   const paperThickness = options.paperThicknessMm ?? 0;
   const applyCreep = options.applyCreep ?? true;
   const exportMode = sourceProtected ? 'raster' : options.exportMode || 'vector';
-  const coverStyle = options.coverStyle ?? '';
   const showGuides = options.showGuides ?? false;
   const zipByBooklet = options.zipByBooklet ?? false;
   const readingDirection = options.readingDirection ?? 'ltr';
   const activePrintTarget = inferBookPrintTarget(options);
   const activeProfile = BOOK_PRINT_PROFILES[activePrintTarget];
+  const paperSpec = resolveBookPaperSpec(options.paperSize);
   const t = useText();
 
-  // Lomo estimado EN VIVO: mismo conteo exacto que usa el motor (computeBookFinalPageCount).
   const finalPageCount = useMemo(() => computeBookFinalPageCount(options, pdfPageCount), [options, pdfPageCount]);
   const spineMm = calculateSpineWidth(finalPageCount, { paperThicknessMm: paperThickness });
   const spinePill =
@@ -94,18 +103,6 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
     { value: 0.12, label: t.bookStudio.impositionStep.thicknessLight },
   ];
   const isCustomThickness = paperThickness !== 0 && paperThickness !== 0.10 && paperThickness !== 0.12;
-
-  const handleQuickTarget = (target: BookPrintTarget) => {
-    const manualConflicts = detectBookPrintTargetConflicts(options, target);
-    if (manualConflicts.length > 0 && onOpenPrintTargetModal) {
-      onOpenPrintTargetModal();
-      return;
-    }
-    setOptions((prev) => applyBookPrintProfile(prev, target, 'preserve-manual'));
-  };
-
-  const applyHomeProfile = () => handleQuickTarget('home');
-  const applyImprentaProfile = () => handleQuickTarget('print_shop');
 
   const destinationCards: Array<{ id: 'A' | 'B' | 'C'; sub: string; svg: React.ReactNode }> = [
     {
@@ -148,54 +145,55 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
     },
   ];
 
+  const activeCoverStyleId = options.customCover?.coverStyle || options.coverStyle || '';
+  const activeCoverPreset = activeCoverStyleId ? getCoverPresetById(activeCoverStyleId) : null;
+
   return (
-    <div className="flex flex-col gap-6 p-4">
-      <h2 className="text-xl font-bold flex items-center gap-2">
-        <BookOpen className="w-6 h-6" />
-        <span>{t.bookStudio.impositionStep.title}</span>
-      </h2>
-
-      <p className="text-sm text-[var(--ui-text-secondary)] leading-relaxed">
-        {t.bookStudio.impositionStep.description}
-      </p>
-
-      <div className="space-y-5">
-        {/* Botones rápidos sincronizados con el perfil global: ¿En mi casa? / ¿En imprenta? */}
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={applyHomeProfile}
-            aria-pressed={activePrintTarget === 'home'}
-            className={`${selectableCard.base} ${activePrintTarget === 'home' ? selectableCard.selected : selectableCard.unselected} flex flex-col items-start gap-1 p-4 text-left cursor-pointer`}
-          >
-            <span className="flex items-center gap-2 text-base font-bold text-[var(--ui-text-primary)]">
-              <Home className="w-5 h-5 text-[var(--color-accent-text)] shrink-0" />
-              {t.bookStudio.impositionStep.quickHomeLabel}
-            </span>
-            <span className="text-xs text-[var(--ui-text-secondary)] leading-snug">
-              {t.bookStudio.impositionStep.quickHomeHint}
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={applyImprentaProfile}
-            aria-pressed={activePrintTarget === 'print_shop'}
-            className={`${selectableCard.base} ${activePrintTarget === 'print_shop' ? selectableCard.selected : selectableCard.unselected} flex flex-col items-start gap-1 p-4 text-left cursor-pointer`}
-          >
-            <span className="flex items-center gap-2 text-base font-bold text-[var(--ui-text-primary)]">
-              <Printer className="w-5 h-5 text-[var(--color-accent-text)] shrink-0" />
-              {t.bookStudio.impositionStep.quickImprentaLabel}
-            </span>
-            <span className="text-xs text-[var(--ui-text-secondary)] leading-snug">
-              {t.bookStudio.impositionStep.quickImprentaHint}
-            </span>
-          </button>
-        </div>
-        <p className="text-xs text-[var(--color-accent-text)] font-semibold leading-snug">
+    <div className="flex flex-col gap-5">
+      <PanelSection
+        icon={<BookOpen className="w-4 h-4" />}
+        title={t.bookStudio.impositionStep.title}
+        helpTitle="Qué configurás en Armado y Guías"
+        helpText={t.bookStudio.impositionStep.description}
+      >
+        <ContextualGuideBox title="Recordatorio de impresión">
           {t.bookStudio.impositionStep.quickDoubleSideHint}
-        </p>
+        </ContextualGuideBox>
 
-        {/* Destino de la cubierta: tarjetas A / B / C con mini-diagrama */}
+        {/* Resumen enlazado con los 2 globales de barra superior (cero duplicación) */}
+        <div
+          className="p-3 border border-[var(--ui-border)] bg-[var(--ui-bg-card)] flex flex-wrap items-center justify-between gap-2"
+          style={{ borderRadius: radius.control }}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <Settings2 className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
+            <span className="text-xs font-bold text-[var(--ui-text-primary)] truncate">
+              {activeProfile.shortName} · Hoja ({paperSpec.pageSize.name})
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {onOpenPrintTargetModal && (
+              <button
+                type="button"
+                onClick={onOpenPrintTargetModal}
+                className="px-2.5 py-1 rounded-full border border-[var(--ui-border)] bg-[var(--ui-bg-surface)] text-[11px] font-bold text-[var(--color-accent-text)] cursor-pointer hover:border-[var(--color-accent-base)]"
+              >
+                Destino
+              </button>
+            )}
+            {onOpenPaperModal && (
+              <button
+                type="button"
+                onClick={onOpenPaperModal}
+                className="px-2.5 py-1 rounded-full border border-[var(--ui-border)] bg-[var(--ui-bg-surface)] text-[11px] font-bold text-[var(--color-accent-text)] cursor-pointer hover:border-[var(--color-accent-base)]"
+              >
+                Hoja
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Destino de la cubierta: A / B / C */}
         <div>
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className={typeScale.fieldLabel}>{t.bookStudio.impositionStep.destinationLabel}</span>
@@ -217,14 +215,20 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
                 <button
                   key={id}
                   type="button"
-                  onClick={() =>
+                  onClick={() => {
                     setOptions((prev) => {
                       const updated = { ...prev, destination: id };
                       return id === activeProfile.defaults.destination
                         ? clearBookFieldManual(updated, 'destination')
                         : markBookFieldManual(updated, 'destination');
-                    })
-                  }
+                    });
+                    emitLidioMessage({
+                      kind: 'state',
+                      groupKey: 'book-destination',
+                      title: `Cubierta modo ${id}`,
+                      body: sub,
+                    });
+                  }}
                   aria-pressed={selected}
                   className={`${selectableCard.base} ${selected ? selectableCard.selected : selectableCard.unselected} flex flex-col items-center gap-1.5 p-3 text-center cursor-pointer`}
                 >
@@ -237,7 +241,7 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
           </div>
         </div>
 
-        {/* Grosor del papel: 4 tarjetas + pill de lomo en vivo */}
+        {/* Grosor del papel */}
         <div>
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className={typeScale.fieldLabel}>{t.bookStudio.impositionStep.paperThicknessLabel}</span>
@@ -294,175 +298,206 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
             {spinePill}
           </div>
         </div>
+      </PanelSection>
 
-        {/* Switches canónicos: creep / guías / ZIP por cuadernillo */}
-        <SwitchRow
-          label={t.bookStudio.impositionStep.creepCheckbox}
-          help={t.bookStudio.impositionStep.creepHelp}
-          checked={applyCreep}
-          onChange={(v) =>
-            setOptions((prev) => {
-              const updated = { ...prev, applyCreep: v };
-              return v === activeProfile.defaults.applyCreep
-                ? clearBookFieldManual(updated, 'applyCreep')
-                : markBookFieldManual(updated, 'applyCreep');
-            })
-          }
-          overrideBadge={
-            <ManualOverrideBadge
-              isOverridden={isManuallyOverridden(options.manualOverrides, 'applyCreep')}
-              globalLabel={activeProfile.shortName}
-              onReset={() => setOptions((prev) => clearBookFieldManual(prev, 'applyCreep'))}
-            />
-          }
-        />
-        <SwitchRow
-          label={t.bookStudio.impositionStep.guidesCheckbox}
-          help={t.bookStudio.impositionStep.guidesHelp}
-          checked={showGuides}
-          onChange={(v) =>
-            setOptions((prev) => {
-              const updated = { ...prev, showGuides: v };
-              return v === activeProfile.defaults.showGuides
-                ? clearBookFieldManual(updated, 'showGuides')
-                : markBookFieldManual(updated, 'showGuides');
-            })
-          }
-          overrideBadge={
-            <ManualOverrideBadge
-              isOverridden={isManuallyOverridden(options.manualOverrides, 'showGuides')}
-              globalLabel={activeProfile.shortName}
-              onReset={() => setOptions((prev) => clearBookFieldManual(prev, 'showGuides'))}
-            />
-          }
-        />
-        <SwitchRow
-          label={t.bookStudio.impositionStep.zipByBookletLabel}
-          help={t.bookStudio.impositionStep.zipByBookletHelp}
-          checked={zipByBooklet}
-          onChange={(v) => setOptions((prev) => ({ ...prev, zipByBooklet: v }))}
-        />
+      <PanelSection
+        icon={<SlidersHorizontal className="w-4 h-4" />}
+        title="Opciones de plegado"
+        helpTitle="Compensación, guías y cuadernillos"
+        helpText="Cada opción tiene su signo ? con el detalle exacto."
+      >
+        <div className="space-y-2.5">
+          <SwitchRow
+            label={t.bookStudio.impositionStep.creepCheckbox}
+            help={t.bookStudio.impositionStep.creepHelp}
+            checked={applyCreep}
+            onChange={(v) => {
+              setOptions((prev) => {
+                const updated = { ...prev, applyCreep: v };
+                return v === activeProfile.defaults.applyCreep
+                  ? clearBookFieldManual(updated, 'applyCreep')
+                  : markBookFieldManual(updated, 'applyCreep');
+              });
+              emitLidioMessage({
+                kind: 'state',
+                groupKey: 'book-creep',
+                title: v ? 'Compensación interna activada' : 'Compensación interna desactivada',
+                body: v
+                  ? 'Las hojas centrales se ajustan para que el borde quede parejo al doblar.'
+                  : 'Todas las hojas mantienen exactamente el mismo margen.',
+              });
+            }}
+            overrideBadge={
+              <ManualOverrideBadge
+                isOverridden={isManuallyOverridden(options.manualOverrides, 'applyCreep')}
+                globalLabel={activeProfile.shortName}
+                onReset={() => setOptions((prev) => clearBookFieldManual(prev, 'applyCreep'))}
+              />
+            }
+          />
+          <SwitchRow
+            label={t.bookStudio.impositionStep.guidesCheckbox}
+            help={t.bookStudio.impositionStep.guidesHelp}
+            checked={showGuides}
+            onChange={(v) => {
+              setOptions((prev) => {
+                const updated = { ...prev, showGuides: v };
+                return v === activeProfile.defaults.showGuides
+                  ? clearBookFieldManual(updated, 'showGuides')
+                  : markBookFieldManual(updated, 'showGuides');
+              });
+              emitLidioMessage({
+                kind: 'state',
+                groupKey: 'book-guides',
+                title: v ? 'Guías de armado visibles' : 'Guías ocultas',
+                body: v
+                  ? 'Verás líneas suaves de doblez y recorte en cada hoja.'
+                  : 'Las hojas salen limpias sin marcas de doblez.',
+              });
+            }}
+            overrideBadge={
+              <ManualOverrideBadge
+                isOverridden={isManuallyOverridden(options.manualOverrides, 'showGuides')}
+                globalLabel={activeProfile.shortName}
+                onReset={() => setOptions((prev) => clearBookFieldManual(prev, 'showGuides'))}
+              />
+            }
+          />
+          <SwitchRow
+            label={t.bookStudio.impositionStep.zipByBookletLabel}
+            help={t.bookStudio.impositionStep.zipByBookletHelp}
+            checked={zipByBooklet}
+            onChange={(v) => {
+              setOptions((prev) => ({ ...prev, zipByBooklet: v }));
+              emitLidioMessage({
+                kind: 'state',
+                groupKey: 'book-zip-booklet',
+                title: v ? 'Descarga dividida por cuadernillo' : 'Descarga en un solo PDF',
+                body: v
+                  ? 'Se generará un ZIP con un archivo separado por cada cuadernillo.'
+                  : 'Todo el libro saldrá en un único archivo.',
+              });
+            }}
+          />
+        </div>
+      </PanelSection>
 
-        {/* Calidad de salida: botones segmentados (bloqueado si PDF protegido) */}
-        <div>
-          <span className={typeScale.fieldLabel}>{t.bookStudio.impositionStep.exportModeLabel}</span>
-          <div className="mt-2 inline-flex rounded-[10px] border border-[var(--ui-border)] overflow-hidden">
-            {(['vector', 'raster'] as const).map((mode) => {
-              const selected = exportMode === mode;
-              const label =
-                mode === 'vector'
-                  ? t.bookStudio.impositionStep.exportModeVector
-                  : t.bookStudio.impositionStep.exportModeRaster;
-              return (
-                <button
-                  key={mode}
-                  type="button"
-                  disabled={sourceProtected}
-                  onClick={() => setOptions((prev) => ({ ...prev, exportMode: mode }))}
-                  aria-pressed={selected}
-                  className={`px-4 py-2 text-xs font-bold transition-colors ${
-                    selected
-                      ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
-                      : 'bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-surface)]'
-                  } ${sourceProtected ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
-                >
-                  {label}
-                </button>
-              );
-            })}
+      <PanelSection
+        icon={<Sparkles className="w-4 h-4" />}
+        title="Salida y lectura"
+        helpTitle="Calidad y orden de lectura"
+        helpText={sourceProtected ? t.bookStudio.impositionStep.protectionAutoRaster : t.bookStudio.impositionStep.exportModeHelp}
+      >
+        <div className="space-y-4">
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className={typeScale.fieldLabel}>{t.bookStudio.impositionStep.exportModeLabel}</span>
+              <LidioHelpTrigger
+                title={t.bookStudio.impositionStep.exportModeLabel}
+                text={t.bookStudio.impositionStep.exportModeHelp}
+                groupKey="book-export-mode"
+              />
+            </div>
+            <div className="mt-2 inline-flex rounded-[10px] border border-[var(--ui-border)] overflow-hidden">
+              {(['vector', 'raster'] as const).map((mode) => {
+                const selected = exportMode === mode;
+                const label =
+                  mode === 'vector'
+                    ? t.bookStudio.impositionStep.exportModeVector
+                    : t.bookStudio.impositionStep.exportModeRaster;
+                return (
+                  <button
+                    key={mode}
+                    type="button"
+                    disabled={sourceProtected}
+                    onClick={() => setOptions((prev) => ({ ...prev, exportMode: mode }))}
+                    aria-pressed={selected}
+                    className={`px-4 py-2 text-xs font-bold transition-colors ${
+                      selected
+                        ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
+                        : 'bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-surface)]'
+                    } ${sourceProtected ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            {sourceProtected && (
+              <p className="mt-1 text-xs font-semibold text-[var(--color-accent-text)]">
+                {t.bookStudio.impositionStep.protectionAutoRaster}
+              </p>
+            )}
           </div>
-          {sourceProtected ? (
-            <p className="mt-1 text-xs font-semibold text-[var(--color-accent-text)]">
-              {t.bookStudio.impositionStep.protectionAutoRaster}
-            </p>
-          ) : (
-            <p className="mt-1 text-xs text-[var(--ui-text-secondary)]">{t.bookStudio.impositionStep.exportModeHelp}</p>
+
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className={typeScale.fieldLabel}>{t.bookStudio.impositionStep.readingDirectionLabel}</span>
+              <LidioHelpTrigger
+                title={t.bookStudio.impositionStep.readingDirectionLabel}
+                text={t.bookStudio.impositionStep.readingDirectionHelp}
+                groupKey="book-reading-direction"
+              />
+            </div>
+            <div className="mt-2 inline-flex rounded-[10px] border border-[var(--ui-border)] overflow-hidden">
+              {(['ltr', 'rtl'] as const).map((dir) => {
+                const selected = readingDirection === dir;
+                return (
+                  <button
+                    key={dir}
+                    type="button"
+                    onClick={() => setOptions((prev) => ({ ...prev, readingDirection: dir }))}
+                    aria-pressed={selected}
+                    className={`px-4 py-2 text-xs font-bold transition-colors cursor-pointer ${
+                      selected
+                        ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
+                        : 'bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-surface)]'
+                    }`}
+                  >
+                    {dir === 'ltr'
+                      ? t.bookStudio.impositionStep.readingDirectionLtrShort
+                      : t.bookStudio.impositionStep.readingDirectionRtlShort}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {onGoToCoverStep && (
+            <div
+              className="p-2.5 border border-[var(--ui-border)] bg-[var(--ui-bg-card)] flex items-center justify-between gap-2"
+              style={{ borderRadius: radius.control }}
+            >
+              <span className="text-[11px] font-semibold text-[var(--ui-text-secondary)] truncate">
+                Estilo de cubierta: <strong className="text-[var(--ui-text-primary)]">{activeCoverPreset?.name || 'Personalizado'}</strong>
+              </span>
+              <button
+                type="button"
+                onClick={onGoToCoverStep}
+                className="px-2.5 py-1 rounded-full border border-[var(--ui-border)] bg-[var(--ui-bg-surface)] text-[11px] font-bold text-[var(--color-accent-text)] cursor-pointer shrink-0"
+              >
+                Editar en 3. Tapa
+              </button>
+            </div>
           )}
         </div>
+      </PanelSection>
 
-        {/* Dirección de lectura: botones segmentados */}
-        <div>
-          <span className={typeScale.fieldLabel}>{t.bookStudio.impositionStep.readingDirectionLabel}</span>
-          <div className="mt-2 inline-flex rounded-[10px] border border-[var(--ui-border)] overflow-hidden">
-            {(['ltr', 'rtl'] as const).map((dir) => {
-              const selected = readingDirection === dir;
-              return (
-                <button
-                  key={dir}
-                  type="button"
-                  onClick={() => setOptions((prev) => ({ ...prev, readingDirection: dir }))}
-                  aria-pressed={selected}
-                  className={`px-4 py-2 text-xs font-bold transition-colors cursor-pointer ${
-                    selected
-                      ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
-                      : 'bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-surface)]'
-                  }`}
-                >
-                  {dir === 'ltr'
-                    ? t.bookStudio.impositionStep.readingDirectionLtrShort
-                    : t.bookStudio.impositionStep.readingDirectionRtlShort}
-                </button>
-              );
-            })}
-          </div>
-          <p className="mt-1 text-xs text-[var(--ui-text-secondary)]">{t.bookStudio.impositionStep.readingDirectionHelp}</p>
-        </div>
-
-        {/* Estilo de cubierta: selector de presets (mismo catálogo del Paso 3) */}
-        <div>
-          <span className={typeScale.fieldLabel}>{t.bookStudio.impositionStep.coverStyleLabel}</span>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setOptions((prev) => ({ ...prev, coverStyle: '' }))}
-              aria-pressed={coverStyle === ''}
-              className={`${selectableCard.base} ${coverStyle === '' ? selectableCard.selected : selectableCard.unselected} flex items-center justify-between gap-2 p-2.5 text-xs text-left`}
-            >
-              <span className="flex items-center gap-2 overflow-hidden">
-                <Palette className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
-                <span className="truncate font-medium text-[var(--ui-text-primary)]">
-                  {t.bookStudio.impositionStep.coverStyleFromEditor}
-                </span>
-              </span>
-              {coverStyle === '' && <Check className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />}
-            </button>
-            {COVER_PRESETS.map((preset) => {
-              const selected = coverStyle === preset.id;
-              return (
-                <button
-                  key={preset.id}
-                  type="button"
-                  onClick={() => setOptions((prev) => ({ ...prev, coverStyle: preset.id }))}
-                  aria-pressed={selected}
-                  className={`${selectableCard.base} ${selected ? selectableCard.selected : selectableCard.unselected} flex items-center justify-between gap-2 p-2.5 text-xs text-left`}
-                >
-                  <span className="flex items-center gap-2 overflow-hidden">
-                    <span className="w-4 h-4 rounded-full border border-black/20 shrink-0" style={{ backgroundColor: preset.badgeBg }} />
-                    <span className="truncate font-medium text-[var(--ui-text-primary)]">{preset.name}</span>
-                  </span>
-                  {selected && <Check className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="flex gap-2 mt-2">
-          <button
-            type="button"
-            onClick={onPrevStep}
-            className={`${button.base} bg-[var(--ui-bg-card)] border border-[var(--ui-border)] text-[var(--ui-text-secondary)]`}
-          >
-            {t.bookStudio.previousStep}
-          </button>
-          <button
-            type="button"
-            onClick={onNextStep}
-            className={`${button.base} bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]`}
-          >
-            {t.bookStudio.impositionStep.nextStep}
-          </button>
-        </div>
+      <div className="flex gap-2 mt-2">
+        <button
+          type="button"
+          onClick={onPrevStep}
+          className={`${button.base} bg-[var(--ui-bg-card)] border border-[var(--ui-border)] text-[var(--ui-text-secondary)]`}
+        >
+          {t.bookStudio.previousStep}
+        </button>
+        <button
+          type="button"
+          onClick={onNextStep}
+          className={`${button.base} bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]`}
+        >
+          {t.bookStudio.impositionStep.nextStep}
+        </button>
       </div>
     </div>
   );

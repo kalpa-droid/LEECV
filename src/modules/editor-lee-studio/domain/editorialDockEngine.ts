@@ -216,7 +216,6 @@ export function buildEditorialDockTabs(
   const activePreset = presetId ? getEditorialPreset(presetId) : undefined;
 
 const EDITORIAL_PRESET_STEP_IDS = new Set([
-  'editorial_inicio',
   'editorial_portada',
   'editorial_diseño',
   'editorial_toc',
@@ -232,17 +231,26 @@ const EDITORIAL_PRESET_STEP_IDS = new Set([
     const role: DockTabItem['role'] =
       step.id === 'editorial_import_ai'
         ? 'ai_utility'
-        : EDITORIAL_PRESET_STEP_IDS.has(step.id)
-          ? 'preset'
-          : 'record';
+        : step.id === 'editorial_inicio'
+          ? 'catalog'
+          : EDITORIAL_PRESET_STEP_IDS.has(step.id)
+            ? 'preset'
+            : 'record';
     return {
       id: step.id,
       label: step.label,
-      stepNumber: step.stepNumber,
       icon: iconSet?.steps[step.id] || iconSet?.fallback,
-      isLarge: true,
+      isLarge: false,
+      ...(step.id === 'editorial_inicio' ? { groupBreakBefore: false } : {}),
       role,
-      variant: role === 'preset' ? ('accent' as const) : role === 'ai_utility' ? ('custom' as const) : ('secondary' as const),
+      variant:
+        role === 'preset'
+          ? ('accent' as const)
+          : role === 'catalog'
+            ? ('success' as const)
+            : role === 'ai_utility'
+              ? ('custom' as const)
+              : ('secondary' as const),
     };
   });
 
@@ -252,8 +260,8 @@ const EDITORIAL_PRESET_STEP_IDS = new Set([
   const counters: EditorialSectionBadgeCounters = { prelim: 0, body: 0, annex: 0 };
   const sectionTabs: DockTabItem[] = [];
 
-  for (const sec of sections) {
-    if (!sec || typeof sec.id !== 'string') continue;
+  sections.forEach((sec, secIdx) => {
+    if (!sec || typeof sec.id !== 'string') return;
     const { badgeLabel, sectionKey, category } = resolveSectionBadgeLabel(sec, counters);
     const hasContent =
       Array.isArray(sec.records) &&
@@ -269,12 +277,13 @@ const EDITORIAL_PRESET_STEP_IDS = new Set([
       badgeLabel,
       icon: iconSet?.sections[sectionKey] || iconSet?.sections.capitulo || iconSet?.fallback,
       isLarge: false,
+      ...(secIdx === 0 ? { groupBreakBefore: true } : {}),
       role: category === 'personalizada' ? 'custom_record' : 'record',
       variant: sectionKey === 'capitulo' || sectionKey === 'unidad' || sectionKey === 'desarrollo' ? 'default' : 'secondary',
       hasContent,
       isDisabled: sec.visible === false,
     });
-  }
+  });
 
   return [...coreTabs, ...sectionTabs];
 }

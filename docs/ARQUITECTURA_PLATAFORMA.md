@@ -72,6 +72,8 @@
 
 - `src/app/appRegistry.ts`: única tabla exhaustiva (`as const satisfies Record<RegisteredDocumentTypeId, AppRuntimeEntry>`), registra los proveedores de Dock de las 7 apps en `stepSequenceRegistry` y carga los estudios mediante `React.lazy`.
 - `src/app/StudioRoute.tsx`: monta cualquier estudio standalone de forma declarativa.
+- `StudioNavbar` (`src/shared/core/studio-host/StudioNavbar.tsx`): organiza la barra superior en 4 zonas (`TOPBAR_BUDGET`: máx. 3 `globalContextPills` 1-eje-1-modal sin emoji+ícono, máx. 2 `globalActions`, menú unificado **Cuenta & Preferencias** con el selector de tema `UI_THEME_CYCLE` dentro de estudios, y botón móvil único `"Ver"` sincronizado con `isPanelOpen`).
+- `StudioHost.tsx`: delega en `<StudioNavbar />` y `<StudioDock />` sin headers propios paralelos.
 - `vite.config.js`: `codeSplitting.groups` nativo de Vite 8 / Rolldown separa `vendor-react`, `vendor-lucide` y `vendor-react-pdf` (`includeDependenciesRecursively: false`), manteniendo `0` librerías pesadas (`@react-pdf`, `pdf-lib`, `exceljs`, `mammoth`) en el chunk inicial y sus preloads (`check-bundle-budget`).
 
 ---

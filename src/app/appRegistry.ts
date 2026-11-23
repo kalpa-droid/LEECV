@@ -85,6 +85,7 @@ export interface StandaloneStudioProps {
   onOpenSavedCVsModal?: () => void;
   onOpenSaveAsModal?: () => void;
   onOpenJsonDownloadModal?: () => void;
+  onOpenCreditsModal?: () => void;
   onOpenShareAppModal?: () => void;
   onOpenPrivacy?: () => void;
 }

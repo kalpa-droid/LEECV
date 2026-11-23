@@ -40,8 +40,20 @@ import { ICON_REGISTRY } from '../../src/shared/core/pdf-engine/layers/icons/ico
 import { resolveDocumentIdWithHandoff } from '../../src/shared/core/documents/useRegisterDocumentTab';
 import { getPackageFormatSpec } from '../../src/shared/core/storage/leecvPackageCodec';
 import { APP_REGISTRY } from '../../src/app/appRegistry';
+import { TOPBAR_BUDGET } from '../../src/shared/contracts/appContract';
+import { hasLeadingEmoji } from '../../src/shared/core/ui/topBarActionRegistry';
+import { formatEditorialGlobalPills } from '../../src/modules/editor-lee-studio/domain/editorialNormEngine';
 
 describe('Suite de Conformidad de Plataforma — Invariantes heredadas por todas las apps', () => {
+  it('mantiene el presupuesto TopBar (4 zonas) y etiquetas globales limpias sin emojis duplicados', () => {
+    expect(TOPBAR_BUDGET.maxGlobalContextPills).toBe(3);
+    expect(TOPBAR_BUDGET.maxGlobalActions).toBe(2);
+    const pills = formatEditorialGlobalPills({ design: { presetId: 'tesis-academica' } });
+    expect(hasLeadingEmoji(pills.presetShort)).toBe(false);
+    expect(hasLeadingEmoji(pills.normShort)).toBe(false);
+    expect(hasLeadingEmoji(pills.bibShort)).toBe(false);
+  });
+
   it('ningún tipo purgado existe en el registro ni en la superficie', () => {
     expect('portfolio' in DOCUMENT_TYPE_REGISTRY).toBe(false);
     expect('certificate' in DOCUMENT_TYPE_REGISTRY).toBe(false);

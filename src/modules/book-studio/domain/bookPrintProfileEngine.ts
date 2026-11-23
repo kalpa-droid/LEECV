@@ -176,7 +176,7 @@ export const BOOK_PRINT_PROFILES: Record<BookPrintTarget, BookPrintProfileConfig
     id: 'home',
     emoji: '🏠',
     shortName: 'En casa',
-    pillText: '🏠 En casa',
+    pillText: 'En casa',
     title: 'Imprimir en casa o en oficina',
     summary:
       'Hojas fáciles de conseguir hasta doble grande (A4, Carta, Oficio, Legal o A3), con margen de seguridad para que tu impresora no corte los bordes.',
@@ -194,7 +194,7 @@ export const BOOK_PRINT_PROFILES: Record<BookPrintTarget, BookPrintProfileConfig
     id: 'print_shop',
     emoji: '🏭',
     shortName: 'Imprenta',
-    pillText: '🏭 Imprenta',
+    pillText: 'Imprenta',
     title: 'Llevar a imprenta o centro gráfico',
     summary:
       'Hojas grandes de imprenta (A3, SRA3, A3+ o A2), impresión al borde sin margen blanco, líneas guía para recortar y opción de tapa envolvente con lomo.',

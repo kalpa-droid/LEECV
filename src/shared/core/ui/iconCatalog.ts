@@ -116,6 +116,11 @@ export const UI_ICON_IDS = {
   disenoHoja: 'diseno_hoja',
   region: 'region',
   folderSafe: 'folderSafe',
+  // Contextos globales de Barra Superior (V3.4.0)
+  printHome: 'printHome',
+  printShop: 'printShop',
+  editorialNorm: 'editorialNorm',
+  editorialCitations: 'editorialCitations',
 } as const;
 
 export type UiIconKey = keyof typeof UI_ICON_IDS;

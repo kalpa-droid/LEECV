@@ -102,10 +102,18 @@ describe('Taxonomía de Botones y Cascada Anti-Pisado (V3.2.0)', () => {
       expect(VALID_DOCK_ROLES.has(tab.role!)).toBe(true);
     }
     expect(cvTabs.find((t) => t.id === 'diseno')?.role).toBe('preset');
+    expect(cvTabs.find((t) => t.id === 'diseno')?.isLarge).toBe(false);
+    expect(cvTabs.find((t) => t.id === 'diseno_tipografia')?.isLarge).toBe(false);
+    expect(cvTabs.find((t) => t.id === 'diseno_hoja')?.isLarge).toBe(false);
+    expect(cvTabs.find((t) => t.id === 'portada')?.isLarge).toBe(false);
     expect(cvTabs.find((t) => t.id === 'experiencia')?.role).toBe('record');
     expect(cvTabs.find((t) => t.id === 'custom_123')?.role).toBe('custom_record');
     expect(cvTabs.find((t) => t.id === 'importar_datos')?.role).toBe('ai_utility');
-    expect(cvTabs.find((t) => t.id === 'carta')?.role).toBe('handoff');
+    expect(cvTabs[0]?.id).toBe('importar_datos');
+    expect(cvTabs[1]?.id).toBe('vacante');
+    expect(cvTabs.find((t) => t.id === 'carta')).toBeUndefined();
+    expect(cvTabs[cvTabs.length - 1]?.id).toBe('nueva_seccion');
+    expect(cvTabs[cvTabs.length - 1]?.groupBreakBefore).toBe(true);
 
     for (const tab of buildCoverLetterDockTabs()) {
       expect(VALID_DOCK_ROLES.has(tab.role!)).toBe(true);

@@ -19,6 +19,7 @@ export interface StudioRouteProps {
   onOpenSavedCVsModal: () => void;
   onOpenSaveAsModal: () => void;
   onOpenJsonDownloadModal: () => void;
+  onOpenCreditsModal?: () => void;
   onOpenShareAppModal: () => void;
   onOpenPrivacy: () => void;
   modalsSlot: React.ReactNode;
@@ -39,6 +40,7 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
   onOpenSavedCVsModal,
   onOpenSaveAsModal,
   onOpenJsonDownloadModal,
+  onOpenCreditsModal,
   onOpenShareAppModal,
   onOpenPrivacy,
   modalsSlot,
@@ -101,6 +103,7 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
           onOpenSavedCVsModal={onOpenSavedCVsModal}
           onOpenSaveAsModal={onOpenSaveAsModal}
           onOpenJsonDownloadModal={onOpenJsonDownloadModal}
+          onOpenCreditsModal={onOpenCreditsModal}
           onOpenShareAppModal={onOpenShareAppModal}
           onOpenPrivacy={onOpenPrivacy}
         />

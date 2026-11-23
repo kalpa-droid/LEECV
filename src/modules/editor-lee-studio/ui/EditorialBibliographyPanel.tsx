@@ -1,30 +1,23 @@
 import React, { useMemo, useState } from 'react';
 import { ArrowDownAZ, BookOpenCheck, Library, Plus, Trash2 } from 'lucide-react';
 import { PanelSection } from '../../../shared/core/ui/PanelSection';
-import { ActionGrid } from '../../../shared/core/ui/ActionGrid';
-import { ActionTileButton } from '../../../shared/core/ui/ActionTileButton';
 import { ContextualGuideBox } from '../../../shared/core/ui/ContextualGuideBox';
 import { Field } from '../../../shared/core/ui/Field';
 import { AIButton } from '../../../shared/core/ui/AIButton';
 import { LidioHelpTrigger } from '../../../shared/core/ui/LidioHelpTrigger';
 import { executeAiTask } from '../../../shared/core/ai/aiClient';
-import { emitLidioMessage } from '../../../shared/core/assistant/lidioBus';
+import { radius } from '../../../shared/core/uiDesignSystem';
 import {
   BIBLIOGRAPHY_NORM_GUIDES,
   CanonicalCitationStyle,
-  computeCitationAppearanceOrder,
   formatEditorialCitation,
   normalizeBibliographyStyle,
   sortBibliographyRecords,
   syncSectionsBibliographyOrder,
 } from '../domain/editorialCitationFormatter';
-import {
-  checkEditorialNormCompatibility,
-  resolveStructuralNormFromDraft,
-} from '../domain/editorialNormEngine';
+import { resolveStructuralNormFromDraft } from '../domain/editorialNormEngine';
 import type {
   EditorialBibliographySourceType,
-  EditorialBibliographyStyle,
   EditorialRecord,
   EditorialSection,
 } from '../domain/editorialTypes';
@@ -33,6 +26,7 @@ export interface EditorialBibliographyPanelProps {
   draft: any;
   updateDraft: (updater: (prev: any) => any) => void;
   notify: { success: (msg: string) => void; error: (msg: string) => void };
+  onOpenGlobalBibModal?: () => void;
 }
 
 function findBibliographySection(sections: EditorialSection[]): EditorialSection | undefined {
@@ -48,6 +42,7 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
   draft,
   updateDraft,
   notify,
+  onOpenGlobalBibModal,
 }) => {
   const sections: EditorialSection[] = useMemo(
     () => (Array.isArray(draft?.sections) ? draft.sections : []),
@@ -156,23 +151,6 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
     });
   };
 
-  const handleSelectStyle = (nextStyle: CanonicalCitationStyle) => {
-    ensureAndMutateBibRecords(
-      (recs, allSections) =>
-        sortBibliographyRecords(recs, nextStyle, computeCitationAppearanceOrder(allSections)),
-      nextStyle,
-    );
-    const chosenGuide = BIBLIOGRAPHY_NORM_GUIDES[nextStyle];
-    const compat = checkEditorialNormCompatibility(resolveStructuralNormFromDraft(draft), nextStyle);
-    notify.success(`Citas cambiadas a ${chosenGuide.label}.`);
-    emitLidioMessage({
-      kind: 'state',
-      groupKey: 'bib-norm-switch',
-      title: chosenGuide.label,
-      body: `${compat.message} ${chosenGuide.inTextExample}`,
-    });
-  };
-
   const handleAddCitation = () => {
     if (!bibTitle.trim() && !bibAuthor.trim()) {
       notify.error('Completá al menos el título o autor de la fuente.');
@@ -195,7 +173,6 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
       bibDoiOrUrl: bibDoiOrUrl.trim(),
       bibOrderNumber: bibRecords.length + 1,
     };
-
     ensureAndMutateBibRecords((recs) => sortBibliographyRecords([...recs, newRec], activeStyle));
     setBibAuthor('');
     setBibYear('');
@@ -216,15 +193,10 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
     }
     const res = await executeAiTask<{ citations: Array<Record<string, string>> }>({
       taskId: 'editorial_format_citation',
-      payload: {
-        rawText: rawNotes,
-        style: activeStyle,
-      },
+      payload: { rawText: rawNotes, style: activeStyle },
     });
     const list = Array.isArray(res.data?.citations) ? res.data.citations : [];
-    if (list.length === 0) {
-      throw new Error('No pudimos detectar citas válidas en ese texto.');
-    }
+    if (list.length === 0) throw new Error('No pudimos detectar citas válidas en ese texto.');
     const mapped: EditorialRecord[] = list.map((c, idx) => ({
       id: `bib_ai_${Date.now()}_${idx}`,
       type: 'bibliography_item',
@@ -252,7 +224,7 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
   const handleSortNow = () => {
     ensureAndMutateBibRecords((recs) => sortBibliographyRecords(recs, activeStyle));
     notify.success(
-      activeStyle === 'vancouver'
+      activeStyle === 'vancouver' || activeStyle === 'ieee'
         ? 'Referencias renumeradas [1..N] correctamente.'
         : 'Referencias ordenadas alfabéticamente.',
     );
@@ -260,48 +232,45 @@ export const EditorialBibliographyPanel: React.FC<EditorialBibliographyPanelProp
 
   const handleRemoveRecord = (recId: string) => {
     ensureAndMutateBibRecords((recs) =>
-      sortBibliographyRecords(recs.filter((r) => r.id !== recId), activeStyle),
+      sortBibliographyRecords(
+        recs.filter((r) => r.id !== recId),
+        activeStyle,
+      ),
     );
   };
 
   return (
     <div className="space-y-5">
-      <PanelSection
-        icon={<Library className="w-4 h-4" />}
-        title="Norma de citas y bibliografía"
-        helpTitle="APA 7 vs Vancouver"
-        helpText="APA 7 ordena alfabéticamente y usa (Autor, Año). Vancouver enumera [1], [2] por orden exacto en el que citás en tu texto. Podés cambiar de norma en cualquier momento sin perder tus fuentes."
+      <div
+        className="p-3 border border-[var(--ui-border)] bg-[var(--ui-bg-card)] flex items-center justify-between gap-2"
+        style={{ borderRadius: radius.card }}
       >
-        <ActionGrid columns={2}>
-          {([
-            { id: 'apa7', label: 'APA 7.ª ed.' },
-            { id: 'vancouver', label: 'Vancouver [1]' },
-            { id: 'ieee', label: 'IEEE [1]' },
-            { id: 'harvard', label: 'Harvard' },
-            { id: 'chicago', label: 'Chicago' },
-            { id: 'mla', label: 'MLA 9' },
-            { id: 'tradicional', label: 'Libre' },
-          ] as const).map(({ id: styleKey, label }) => {
-            const g = BIBLIOGRAPHY_NORM_GUIDES[styleKey];
-            return (
-              <ActionTileButton
-                key={styleKey}
-                label={label}
-                role="preset"
-                active={activeStyle === styleKey}
-                helpText={`${g.shortRule} Ejemplo: ${g.referenceExample}`}
-                helpGroupKey={`bib-norm-${styleKey}`}
-                onClick={() => handleSelectStyle(styleKey)}
-              />
-            );
-          })}
-        </ActionGrid>
+        <div className="flex items-center gap-2 min-w-0">
+          <Library className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
+          <div className="min-w-0">
+            <p className="text-xs font-extrabold text-[var(--ui-text-primary)] truncate">
+              Estilo de citas: {guide.label}
+            </p>
+            <p className="text-[10px] text-[var(--ui-text-secondary)] truncate">
+              Se actualiza en tus capítulos automáticamente
+            </p>
+          </div>
+        </div>
+        {onOpenGlobalBibModal && (
+          <button
+            type="button"
+            onClick={onOpenGlobalBibModal}
+            className="px-2.5 py-1 rounded-full border border-[var(--color-accent-base)]/50 bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] text-[11px] font-bold cursor-pointer shrink-0"
+          >
+            Cambiar estilo
+          </button>
+        )}
+      </div>
 
-        <ContextualGuideBox title={`Regla activa: ${guide.label}`} moreHelpText={guide.referenceExample}>
-          <p>{guide.shortRule}</p>
-          <p className="mt-1 font-semibold text-[var(--color-accent-text)]">{guide.inTextExample}</p>
-        </ContextualGuideBox>
-      </PanelSection>
+      <ContextualGuideBox title={`Regla activa: ${guide.label}`} moreHelpText={guide.referenceExample}>
+        <p>{guide.shortRule}</p>
+        <p className="mt-1 font-semibold text-[var(--color-accent-text)]">{guide.inTextExample}</p>
+      </ContextualGuideBox>
 
       <PanelSection
         icon={<BookOpenCheck className="w-4 h-4" />}

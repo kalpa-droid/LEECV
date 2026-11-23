@@ -4,8 +4,6 @@ import { PanelSection } from '../../../shared/core/ui/PanelSection';
 import { ContextualGuideBox } from '../../../shared/core/ui/ContextualGuideBox';
 import { Field } from '../../../shared/core/ui/Field';
 import { SectionSwitch } from '../../../shared/core/ui/SectionSwitch';
-import { ActionGrid } from '../../../shared/core/ui/ActionGrid';
-import { ActionTileButton } from '../../../shared/core/ui/ActionTileButton';
 import { LidioHelpTrigger } from '../../../shared/core/ui/LidioHelpTrigger';
 import { ManualOverrideBadge } from '../../../shared/core/ui/ManualOverrideBadge';
 import { isManuallyOverridden } from '../../../shared/core/presets/configCascadeEngine';
@@ -13,31 +11,31 @@ import { PAGE_SIZES } from '../../../shared/core/pdf-engine/layers/page/pageSize
 import { generateSectionAnchors } from '../domain/editorialTocResolver';
 import { calculateSpineThickness } from '../domain/editorialMath';
 import {
-  applyEditorialGlobalConfig,
   clearEditorialFieldManual,
+  EDITORIAL_STRUCTURAL_NORMS,
   EditorialDesignDefaultsFlat,
   markEditorialFieldManual,
   resolveStructuralNormFromDraft,
 } from '../domain/editorialNormEngine';
-import { normalizeBibliographyStyle } from '../domain/editorialCitationFormatter';
-import type { EditorialStructuralNormId } from '../domain/editorialTypes';
 import { getSavedEditorialsList } from '../../../shared/core/storage/documentStorageService';
-import { emitLidioMessage } from '../../../shared/core/assistant/lidioBus';
+import { radius } from '../../../shared/core/uiDesignSystem';
 
 interface BasePanelProps {
   draft: any;
   updateDraft: (updater: (prev: any) => any) => void;
   setActiveStepTab: (tab: string) => void;
+  onOpenGlobalNormModal?: () => void;
 }
 
 export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
   draft,
   updateDraft,
   setActiveStepTab,
+  onOpenGlobalNormModal,
 }) => {
   const design = draft?.design || {};
   const structuralNorm = resolveStructuralNormFromDraft(draft);
-  const currentBibStyle = normalizeBibliographyStyle(design.bibliographyStyle || design.normId);
+  const normSpec = EDITORIAL_STRUCTURAL_NORMS[structuralNorm];
   const documentPageSizes = Object.values(PAGE_SIZES).filter((p) => p.category === 'documento');
 
   const updateDesignField = (field: keyof EditorialDesignDefaultsFlat, val: any) => {
@@ -67,29 +65,6 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
     });
   };
 
-  const applyStructuralPreset = (targetNorm: EditorialStructuralNormId) => {
-    updateDraft((prev) =>
-      applyEditorialGlobalConfig(prev, {
-        structuralNormId: targetNorm,
-        bibliographyStyle: currentBibStyle,
-        applyMode: 'preserve-manual',
-      }),
-    );
-    emitLidioMessage({
-      kind: 'state',
-      groupKey: `structural-norm-${targetNorm}`,
-      title:
-        targetNorm === 'apa7'
-          ? 'Estructura APA 7 activada'
-          : targetNorm === 'chicago'
-            ? 'Estructura Chicago activada'
-            : targetNorm === 'mla'
-              ? 'Estructura MLA 9 activada'
-              : 'Estructura según tipo de obra',
-      body: 'Actualizamos márgenes, interlineado y jerarquía visual respetando tus ajustes finos manuales y conservando tu estilo de bibliografía elegido.',
-    });
-  };
-
   const renderFieldOverrideBadge = (field: keyof EditorialDesignDefaultsFlat) => (
     <ManualOverrideBadge
       isOverridden={isManuallyOverridden(design, field)}
@@ -103,47 +78,31 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
 
   return (
     <div className="space-y-5">
-      <PanelSection
-        icon={<Palette className="w-4 h-4" />}
-        title="Estructura y Normas"
-        helpTitle="Estructura visual vs Citas"
-        helpText="Cambiá los márgenes, el interlineado y la jerarquía visual (APA 7, Chicago, MLA o Lectura Libro) sin perder tus textos ni pisar tus ajustes finos. Podés usar estructura APA 7 junto con citas Vancouver, IEEE o Harvard."
+      <div
+        className="p-3 border border-[var(--ui-border)] bg-[var(--ui-bg-card)] flex items-center justify-between gap-2"
+        style={{ borderRadius: radius.card }}
       >
-        <ActionGrid columns={2}>
-          <ActionTileButton
-            label="Estructura APA 7"
-            role="preset"
-            badge="2.0"
-            active={structuralNorm === 'apa7'}
-            helpText="Configura márgenes de 25 mm, interlineado doble (2.0), inicio de párrafo desplazado y escala 12 pt (también base para Vancouver, IEEE y Harvard)."
-            onClick={() => applyStructuralPreset('apa7')}
-          />
-          <ActionTileButton
-            label="Lectura Libro"
-            role="preset"
-            badge="1.5"
-            active={structuralNorm === 'libre'}
-            helpText="Interlineado equilibrado 1.5 con margen especial en el lomo para imprimir o encuadernar."
-            onClick={() => applyStructuralPreset('libre')}
-          />
-          <ActionTileButton
-            label="Norma Chicago"
-            role="preset"
-            badge="Hum."
-            active={structuralNorm === 'chicago'}
-            helpText="Diseño editorial Chicago (márgenes 25 mm, Times 12 pt, doble espacio 2.0)."
-            onClick={() => applyStructuralPreset('chicago')}
-          />
-          <ActionTileButton
-            label="Norma MLA 9"
-            role="preset"
-            badge="Letras"
-            active={structuralNorm === 'mla'}
-            helpText="Formato MLA 9 (márgenes 25 mm, doble espacio 2.0, Times 12 pt y Obras citadas)."
-            onClick={() => applyStructuralPreset('mla')}
-          />
-        </ActionGrid>
-      </PanelSection>
+        <div className="flex items-center gap-2 min-w-0">
+          <Palette className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
+          <div className="min-w-0">
+            <p className="text-xs font-extrabold text-[var(--ui-text-primary)] truncate">
+              Norma base: {normSpec.shortLabel}
+            </p>
+            <p className="text-[10px] text-[var(--ui-text-secondary)] truncate">
+              Lo que ajustés acá queda protegido como ajuste fino
+            </p>
+          </div>
+        </div>
+        {onOpenGlobalNormModal && (
+          <button
+            type="button"
+            onClick={onOpenGlobalNormModal}
+            className="px-2.5 py-1 rounded-full border border-[var(--color-accent-base)]/50 bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] text-[11px] font-bold cursor-pointer shrink-0"
+          >
+            Cambiar norma
+          </button>
+        )}
+      </div>
 
       <PanelSection
         icon={<FileText className="w-4 h-4" />}
@@ -160,7 +119,8 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
           <select
             value={design.pageSizeId || 'a4'}
             onChange={(e) => updateDesignField('pageSizeId', e.target.value)}
-            className="w-full rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] px-3 py-2 text-xs"
+            className="w-full border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] px-3 py-2 text-xs"
+            style={{ borderRadius: radius.control }}
           >
             {documentPageSizes.map((ps) => (
               <option key={ps.id} value={ps.id}>
@@ -245,7 +205,8 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
             <select
               value={design.typography?.fontFamily || 'Times-Roman'}
               onChange={(e) => updateTypography('fontFamily', e.target.value)}
-              className="w-full rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] px-2.5 py-2 text-xs"
+              className="w-full border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] px-2.5 py-2 text-xs"
+              style={{ borderRadius: radius.control }}
             >
               <option value="Times-Roman">Clásica Serif</option>
               <option value="Helvetica">Moderna Sans</option>
@@ -281,7 +242,10 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
         </div>
 
         <div className="space-y-2 pt-1">
-          <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)]">
+          <div
+            className="flex items-center justify-between px-3 py-2 border border-[var(--ui-border)] bg-[var(--ui-bg-card)]"
+            style={{ borderRadius: radius.control }}
+          >
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-xs font-semibold">Inicio de párrafo desplazado</span>
               <LidioHelpTrigger
@@ -299,7 +263,10 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
             />
           </div>
 
-          <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)]">
+          <div
+            className="flex items-center justify-between px-3 py-2 border border-[var(--ui-border)] bg-[var(--ui-bg-card)]"
+            style={{ borderRadius: radius.control }}
+          >
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-xs font-semibold">Numerar páginas abajo</span>
               {renderFieldOverrideBadge('pageNumbers')}
@@ -317,7 +284,8 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
       <button
         type="button"
         onClick={() => setActiveStepTab('editorial_toc')}
-        className="w-full py-2.5 px-4 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] rounded-lg text-xs font-bold cursor-pointer"
+        className="w-full py-2.5 px-4 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-xs font-bold cursor-pointer"
+        style={{ borderRadius: radius.control }}
       >
         Continuar al Índice →
       </button>
@@ -428,19 +396,30 @@ export const EditorialMetadataPanel: React.FC<BasePanelProps> = ({
       <PanelSection
         icon={<Settings className="w-4 h-4" />}
         title="Ficha de edición"
-        helpText="Datos legales, año de publicación y registros ISBN si vas a publicar tu libro o informe."
+        helpText="Datos legales, año de publicación y registros ISBN si vas a publicar tu libro o informe. El título y el autor se editan en Portada."
       >
+        <div
+          className="p-3 border border-[var(--ui-border)] bg-[var(--ui-bg-card)] flex items-center justify-between gap-2"
+          style={{ borderRadius: radius.control }}
+        >
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-[var(--ui-text-primary)] truncate">
+              {meta.title || 'Sin título'}
+            </p>
+            <p className="text-[11px] text-[var(--ui-text-secondary)] truncate">
+              {meta.author ? `Autor: ${meta.author}` : 'Autor pendiente'}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setActiveStepTab('editorial_portada')}
+            className="px-2.5 py-1 rounded-full border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--color-accent-text)] text-[11px] font-bold cursor-pointer shrink-0"
+          >
+            Editar en Portada
+          </button>
+        </div>
+
         <div className="space-y-3">
-          <Field
-            label="Título principal"
-            value={meta.title || ''}
-            onChange={(e: any) => updateMeta('title', e.target.value)}
-          />
-          <Field
-            label="Autor o Creador"
-            value={meta.author || ''}
-            onChange={(e: any) => updateMeta('author', e.target.value)}
-          />
           <div className="grid grid-cols-2 gap-2.5">
             <Field
               label="Año"
@@ -464,14 +443,6 @@ export const EditorialMetadataPanel: React.FC<BasePanelProps> = ({
           />
         </div>
       </PanelSection>
-
-      <button
-        type="button"
-        onClick={() => setActiveStepTab('editorial_import_ai')}
-        className="w-full py-2.5 px-4 bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] rounded-lg text-xs font-bold cursor-pointer"
-      >
-        Ir a Importar y IA →
-      </button>
     </div>
   );
 };

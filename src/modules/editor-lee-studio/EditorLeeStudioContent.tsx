@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
-import { BookOpen } from 'lucide-react';
 import { AppShell } from '../../shared/core/ui/AppShell';
 import StudioNavbar from '../../shared/core/studio-host/StudioNavbar';
 import StudioDock from '../../shared/core/studio-host/StudioDock';
@@ -8,10 +7,14 @@ import { EditorialPdfDocument } from './pdf/EditorialPdfDocument';
 import { DEFAULT_EDITORIAL_PRESET } from './domain/editorialPresetCatalog';
 import {
   applyEditorialGlobalConfig,
-  formatEditorialPillLabel,
+  formatEditorialGlobalPills,
 } from './domain/editorialNormEngine';
 import { countManualOverrides } from '../../shared/core/presets/configCascadeEngine';
-import { EditorialGlobalNormModal } from './ui/EditorialGlobalNormModal';
+import { PRODUCT_ICON_IDS, UI_ICON_IDS } from '../../shared/core/ui/iconCatalog';
+import {
+  EditorialGlobalAxis,
+  EditorialGlobalNormModal,
+} from './ui/EditorialGlobalNormModal';
 import { EDITORIAL_PRESETS } from './pdf/editorialPresets';
 import { DocumentTypeId } from '../../types/document';
 import { useDocumentViewport, useViewportGestures, ScaledPaperSheet, quantizeRasterZoom } from '../../shared/core/viewport';
@@ -68,6 +71,7 @@ export interface EditorLeeStudioContentProps {
   onTabsChanged?: (tabs: OpenTab[]) => void;
   onOpenShareAppModal?: () => void;
   onOpenPrivacy?: () => void;
+  onOpenCreditsModal?: () => void;
 }
 
 function buildEditorialTitle(data: any): string {
@@ -156,12 +160,13 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
   onTabsChanged = () => {},
   onOpenShareAppModal,
   onOpenPrivacy,
+  onOpenCreditsModal,
 }) => {
   const [activeStepTab, setActiveStepTab] = useState<string>('editorial_inicio');
   const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState<boolean>(false);
-  const [isGlobalNormModalOpen, setIsGlobalNormModalOpen] = useState<boolean>(false);
+  const [globalModalAxis, setGlobalModalAxis] = useState<EditorialGlobalAxis | null>(null);
 
   const { showSuccess, showError, showInfo } = useToast();
   const { consumeCreditIfNeeded } = useExportEntitlement();
@@ -470,7 +475,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
 
   const notify = { success: showSuccess, error: showError };
   const activeStepMeta = EDITORIAL_STEP_SEQUENCE.find((step) => step.id === activeStepTab);
-  const pillMeta = formatEditorialPillLabel(draft);
+  const pillLabels = formatEditorialGlobalPills(draft);
   const designOverrideCount = countManualOverrides(draft?.design);
 
   return (
@@ -495,14 +500,39 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
             isSaving={isExporting}
             onOpenShareAppModal={onOpenShareAppModal || (() => {})}
             onOpenPrivacy={onOpenPrivacy || (() => {})}
-            globalContextPill={{
-              shortLabel: pillMeta.shortLabel,
-              tooltip: pillMeta.tooltip,
-              ariaLabel: `Configuración global ${pillMeta.shortLabel}`,
-              icon: <BookOpen className="w-3.5 h-3.5" />,
-              hasOverrides: designOverrideCount > 0,
-              onClick: () => setIsGlobalNormModalOpen(true),
+            onOpenCreditsModal={onOpenCreditsModal}
+            isPanelOpen={isPanelOpen}
+            onCloseMobilePanel={() => {
+              setIsPanelOpen(false);
+              viewport.fitAndCenter();
             }}
+            globalContextPills={[
+              {
+                id: 'editorial_preset',
+                shortLabel: pillLabels.presetShort,
+                tooltip: pillLabels.presetTooltip,
+                ariaLabel: `Tipo de obra: ${pillLabels.presetShort}`,
+                iconId: PRODUCT_ICON_IDS.editor,
+                onClick: () => setGlobalModalAxis('preset'),
+              },
+              {
+                id: 'editorial_norm',
+                shortLabel: pillLabels.normShort,
+                tooltip: pillLabels.normTooltip,
+                ariaLabel: `Norma visual: ${pillLabels.normShort}`,
+                iconId: UI_ICON_IDS.editorialNorm,
+                hasOverrides: designOverrideCount > 0,
+                onClick: () => setGlobalModalAxis('structural_norm'),
+              },
+              {
+                id: 'editorial_bibliography',
+                shortLabel: pillLabels.bibShort,
+                tooltip: pillLabels.bibTooltip,
+                ariaLabel: `Estilo de citas: ${pillLabels.bibShort}`,
+                iconId: UI_ICON_IDS.editorialCitations,
+                onClick: () => setGlobalModalAxis('bibliography'),
+              },
+            ]}
             zoomLevel={viewport.zoomLevel}
             setZoomLevel={viewport.setZoomLevel}
             triggerAutoFit={viewport.fitAndCenter}
@@ -528,11 +558,9 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
             {activeStepTab === 'editorial_inicio' && (
               <EditorialPresetInicioPanel
                 draft={draft}
-                updateDraft={updateDraft}
-                setActiveStepTab={setActiveStepTab}
+                onOpenGlobalPresetModal={() => setGlobalModalAxis('preset')}
                 onSaveToDisk={() => void handleSaveToDisk(true)}
                 onOpenDiskFile={handleOpenDiskFile}
-                notify={notify}
               />
             )}
             {activeStepTab === 'editorial_portada' && (
@@ -555,6 +583,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
                 draft={draft}
                 updateDraft={updateDraft}
                 notify={notify}
+                onOpenGlobalBibModal={() => setGlobalModalAxis('bibliography')}
               />
             )}
             {activeStepTab === 'editorial_diseño' && (
@@ -562,6 +591,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
                 draft={draft}
                 updateDraft={updateDraft}
                 setActiveStepTab={setActiveStepTab}
+                onOpenGlobalNormModal={() => setGlobalModalAxis('structural_norm')}
               />
             )}
             {activeStepTab === 'editorial_toc' && (
@@ -612,32 +642,14 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
                   ? `Sección ${activeDynamicSection.badgeLabel}`
                   : `Paso ${activeStepMeta?.stepNumber || 1} de ${EDITORIAL_STEP_SEQUENCE.length}`}
               </span>
-              <div className="flex gap-1.5">
-                <button
-                  type="button"
-                  onClick={handleNewDraft}
-                  className="px-2.5 py-2 text-xs font-bold bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] cursor-pointer"
-                  style={{ borderRadius: radius.control }}
-                >
-                  Nuevo
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveDocument}
-                  className="px-2.5 py-2 text-xs font-bold bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] cursor-pointer"
-                  style={{ borderRadius: radius.control }}
-                >
-                  Guardar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleExportPDF}
-                  className="px-3 py-2 text-xs font-bold bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] cursor-pointer"
-                  style={{ borderRadius: radius.control }}
-                >
-                  Exportar PDF
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleExportPDF}
+                className="px-3.5 py-2 text-xs font-bold bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] cursor-pointer"
+                style={{ borderRadius: radius.control }}
+              >
+                Exportar PDF
+              </button>
             </div>
           </div>
         }
@@ -701,12 +713,13 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
         }}
       />
       <EditorialGlobalNormModal
-        isOpen={isGlobalNormModalOpen}
-        onClose={() => setIsGlobalNormModalOpen(false)}
+        isOpen={globalModalAxis !== null}
+        axis={globalModalAxis || 'preset'}
+        onClose={() => setGlobalModalAxis(null)}
         draft={draft}
         onApplyGlobalConfig={(params) => {
           updateDraft((prev) => applyEditorialGlobalConfig(prev, params));
-          showSuccess('Normas globales aplicadas.');
+          showSuccess('Configuración global aplicada.');
         }}
       />
     </>

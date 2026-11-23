@@ -111,6 +111,32 @@ export interface AppDomainModule<TData = unknown, TFieldId extends string = stri
   readonly contactProfileProvider?: ContactProfileProvider<TData>;
 }
 
+export const TOPBAR_BUDGET = {
+  maxGlobalContextPills: 3,
+  maxGlobalActions: 2,
+} as const;
+
+export interface TopBarGlobalContextPillContract {
+  readonly id: string;
+  readonly shortLabel: string;
+  readonly mobileLabel?: string;
+  readonly tooltip: string;
+  readonly ariaLabel?: string;
+  readonly iconId?: string;
+  readonly hasOverrides?: boolean;
+}
+
+export interface TopBarGlobalActionContract {
+  readonly id: string;
+  readonly label: string;
+  readonly mobileLabel?: string;
+  readonly tooltip: string;
+  readonly ariaLabel?: string;
+  readonly iconId?: string;
+  readonly active?: boolean;
+  readonly tone?: 'accent' | 'secondary' | 'success' | 'warning' | 'danger' | 'neutral';
+}
+
 export interface AppStudioSlots<TData = unknown> {
   readonly headerActions?: (props: { session: DocumentSessionApi<TData> }) => unknown;
   readonly previewToolbar?: (props: { session: DocumentSessionApi<TData> }) => unknown;

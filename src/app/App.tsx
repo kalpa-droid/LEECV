@@ -198,6 +198,7 @@ function AppContent({ initialPreset = 'cv-clasico', currentRoute, onNavigate }: 
         onNavigateToDocument={handleNavigateToDocumentTab} onTabsChanged={setTabs}
         onNewDocument={handleNewDocument} onOpenSavedCVsModal={modalCtrl.openSavedCVs}
         onOpenSaveAsModal={modalCtrl.openSaveAsModal} onOpenJsonDownloadModal={modalCtrl.openJsonDownloadModal}
+        onOpenCreditsModal={modalCtrl.openCreditsModal}
         onOpenShareAppModal={modalCtrl.openShareAppModal} onOpenPrivacy={modalCtrl.openPrivacy}
         modalsSlot={appModals}
       />

@@ -3,6 +3,8 @@ import { AlertCircle, BookOpen, Check, CheckCircle2, Info, Sparkles } from 'luci
 import { Modal } from '../../../shared/core/ui/Modal';
 import { button, radius, selectableCard } from '../../../shared/core/uiDesignSystem';
 import { GlobalApplyMode } from '../../../shared/core/presets/configCascadeEngine';
+import { DomSectionIcon } from '../../../shared/core/pdf-engine/layers/icons/DomSectionIcon';
+import { PRODUCT_ICON_IDS, UI_ICON_IDS } from '../../../shared/core/ui/iconCatalog';
 import { EDITORIAL_PRESET_CATALOG, getEditorialPreset } from '../domain/editorialPresetCatalog';
 import {
   BIBLIOGRAPHY_NORM_GUIDES,
@@ -17,8 +19,11 @@ import {
 } from '../domain/editorialNormEngine';
 import type { EditorialPresetId, EditorialStructuralNormId } from '../domain/editorialTypes';
 
+export type EditorialGlobalAxis = 'preset' | 'structural_norm' | 'bibliography';
+
 export interface EditorialGlobalNormModalProps {
   isOpen: boolean;
+  axis?: EditorialGlobalAxis;
   onClose: () => void;
   draft: any;
   onApplyGlobalConfig: (params: {
@@ -42,6 +47,7 @@ const CITATION_OPTIONS: Array<{ id: CanonicalCitationStyle; label: string; tag: 
 
 export const EditorialGlobalNormModal: React.FC<EditorialGlobalNormModalProps> = ({
   isOpen,
+  axis = 'preset',
   onClose,
   draft,
   onApplyGlobalConfig,
@@ -75,8 +81,8 @@ export const EditorialGlobalNormModal: React.FC<EditorialGlobalNormModalProps> =
     setSelectedBib(
       normalizeBibliographyStyle(draft?.design?.bibliographyStyle || draft?.design?.normId),
     );
-    setPresetMode('apply-design');
-  }, [isOpen, draft]);
+    setPresetMode(hasText ? 'apply-design' : 'replace-structure');
+  }, [isOpen, draft, hasText]);
 
   const handleSelectPresetCard = (presetId: EditorialPresetId) => {
     setSelectedPresetId(presetId);
@@ -92,103 +98,129 @@ export const EditorialGlobalNormModal: React.FC<EditorialGlobalNormModalProps> =
     [selectedNorm, selectedBib],
   );
 
-  const conflicts = useMemo(
-    () => detectEditorialDesignConflicts(draft, selectedNorm, selectedPresetId),
-    [draft, selectedNorm, selectedPresetId],
-  );
+  const conflicts = useMemo(() => {
+    if (axis === 'bibliography') return [];
+    return detectEditorialDesignConflicts(draft, selectedNorm, selectedPresetId);
+  }, [axis, draft, selectedNorm, selectedPresetId]);
 
   const activeGuide = BIBLIOGRAPHY_NORM_GUIDES[selectedBib];
 
   const handleApply = (applyMode: GlobalApplyMode) => {
+    const currentPresetId = (draft?.design?.presetId as EditorialPresetId) || 'libro-ensayo-novela';
+    const currentNorm = resolveStructuralNormFromDraft(draft);
+    const currentBib = normalizeBibliographyStyle(draft?.design?.bibliographyStyle || draft?.design?.normId);
+
     onApplyGlobalConfig({
-      presetId: selectedPresetId,
-      presetMode,
-      structuralNormId: selectedNorm,
-      bibliographyStyle: selectedBib,
+      presetId: axis === 'preset' ? selectedPresetId : currentPresetId,
+      presetMode: axis === 'preset' ? presetMode : 'apply-design',
+      structuralNormId: axis === 'bibliography' ? currentNorm : selectedNorm,
+      bibliographyStyle: axis === 'structural_norm' ? currentBib : selectedBib,
       applyMode,
     });
     onClose();
   };
 
+  const modalMeta =
+    axis === 'preset'
+      ? {
+          title: 'Tipo de obra o trabajo',
+          icon: <DomSectionIcon iconId={PRODUCT_ICON_IDS.editor} size={18} />,
+          helpTitle: 'Plantilla base de obra',
+          helpText:
+            'Cada plantilla arma las partes recomendadas (escolar, terciario, tesis APA 7, científico Vancouver, libro o manual), carátula y hoja inicial.',
+        }
+      : axis === 'structural_norm'
+        ? {
+            title: 'Norma visual de página',
+            icon: <DomSectionIcon iconId={UI_ICON_IDS.editorialNorm} size={18} />,
+            helpTitle: 'Estructura de página',
+            helpText:
+              'Define márgenes, interlineado y espacio inicial de párrafo para toda la obra sin alterar tus textos ni tu estilo de citas.',
+          }
+        : {
+            title: 'Estilo de citas y bibliografía',
+            icon: <DomSectionIcon iconId={UI_ICON_IDS.editorialCitations} size={18} />,
+            helpTitle: 'Citas independientes',
+            helpText:
+              'Podés usar estructura de página APA 7 junto con citas Vancouver, IEEE o Harvard sin cambiar tus textos.',
+          };
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      size="xl"
-      icon={<BookOpen className="w-4 h-4" />}
-      title="Configuración global de obra y normas"
-      helpTitle="Estructura vs Bibliografía"
-      helpText="Podés combinar normas: por ejemplo, usar estructura de página APA 7 (márgenes 25 mm e interlineado doble) junto con citas Vancouver, IEEE o Harvard. Chicago y MLA suelen mantener su propia estética completa."
+      size="lg"
+      icon={modalMeta.icon}
+      title={modalMeta.title}
+      helpTitle={modalMeta.helpTitle}
+      helpText={modalMeta.helpText}
     >
       <div className="space-y-4">
-        {/* 1. Tipo de obra o trabajo */}
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-xs font-extrabold uppercase tracking-wider text-[var(--ui-text-secondary)]">
-              1. Tipo de obra o trabajo
-            </span>
+        {axis === 'preset' && (
+          <div className="space-y-3">
             {hasText && (
-              <div className="inline-flex rounded-full border border-[var(--ui-border)] p-0.5 bg-[var(--ui-bg-surface)] text-[11px]">
-                <button
-                  type="button"
-                  onClick={() => setPresetMode('apply-design')}
-                  className={`px-2.5 py-0.5 rounded-full font-semibold cursor-pointer ${
-                    presetMode === 'apply-design'
-                      ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
-                      : 'text-[var(--ui-text-secondary)]'
-                  }`}
-                >
-                  Solo formato (conservar texto)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPresetMode('replace-structure')}
-                  className={`px-2.5 py-0.5 rounded-full font-semibold cursor-pointer ${
-                    presetMode === 'replace-structure'
-                      ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
-                      : 'text-[var(--ui-text-secondary)]'
-                  }`}
-                >
-                  Reemplazar capítulos base
-                </button>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-xs font-bold text-[var(--ui-text-secondary)]">
+                  Ya tenés texto escrito:
+                </span>
+                <div className="inline-flex rounded-full border border-[var(--ui-border)] p-0.5 bg-[var(--ui-bg-surface)] text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => setPresetMode('apply-design')}
+                    className={`px-2.5 py-0.5 rounded-full font-semibold cursor-pointer ${
+                      presetMode === 'apply-design'
+                        ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
+                        : 'text-[var(--ui-text-secondary)]'
+                    }`}
+                  >
+                    Solo formato (conservar texto)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPresetMode('replace-structure')}
+                    className={`px-2.5 py-0.5 rounded-full font-semibold cursor-pointer ${
+                      presetMode === 'replace-structure'
+                        ? 'bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
+                        : 'text-[var(--ui-text-secondary)]'
+                    }`}
+                  >
+                    Reemplazar capítulos base
+                  </button>
+                </div>
               </div>
             )}
-          </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {EDITORIAL_PRESET_CATALOG.map((preset) => {
-              const selected = selectedPresetId === preset.id;
-              return (
-                <button
-                  key={preset.id}
-                  type="button"
-                  onClick={() => handleSelectPresetCard(preset.id)}
-                  aria-pressed={selected}
-                  className={`${selectableCard.base} ${
-                    selected ? selectableCard.selected : selectableCard.unselected
-                  } p-2.5 text-left cursor-pointer`}
-                >
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="text-xs font-bold text-[var(--ui-text-primary)] truncate">
-                      {preset.shortLabel}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {EDITORIAL_PRESET_CATALOG.map((preset) => {
+                const selected = selectedPresetId === preset.id;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => handleSelectPresetCard(preset.id)}
+                    aria-pressed={selected}
+                    className={`${selectableCard.base} ${
+                      selected ? selectableCard.selected : selectableCard.unselected
+                    } p-2.5 text-left cursor-pointer`}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-xs font-bold text-[var(--ui-text-primary)] truncate">
+                        {preset.shortLabel}
+                      </span>
+                      {selected && <Check className="w-3.5 h-3.5 text-[var(--color-accent-text)] shrink-0" />}
+                    </div>
+                    <span className="text-[10px] font-semibold text-[var(--ui-text-secondary)] block">
+                      {preset.audienceTag}
                     </span>
-                    {selected && <Check className="w-3.5 h-3.5 text-[var(--color-accent-text)] shrink-0" />}
-                  </div>
-                  <span className="text-[10px] font-semibold text-[var(--ui-text-secondary)] block">
-                    {preset.audienceTag}
-                  </span>
-                </button>
-              );
-            })}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* 2. Norma estructural de página */}
-        <div className="space-y-2 pt-2 border-t border-[var(--ui-border)]">
-          <span className="text-xs font-extrabold uppercase tracking-wider text-[var(--ui-text-secondary)] block">
-            2. Norma estructural visual (márgenes, interlineado e inicio de párrafo)
-          </span>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {axis === 'structural_norm' && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {(['libre', 'apa7', 'chicago', 'mla'] as EditorialStructuralNormId[]).map((normId) => {
               const norm = EDITORIAL_STRUCTURAL_NORMS[normId];
               const selected = selectedNorm === normId;
@@ -211,62 +243,57 @@ export const EditorialGlobalNormModal: React.FC<EditorialGlobalNormModalProps> =
               );
             })}
           </div>
-        </div>
+        )}
 
-        {/* 3. Estilo de citas y referencias */}
-        <div className="space-y-2 pt-2 border-t border-[var(--ui-border)]">
-          <span className="text-xs font-extrabold uppercase tracking-wider text-[var(--ui-text-secondary)] block">
-            3. Estilo de citas y referencias bibliográficas (se actualiza solo en tus capítulos)
-          </span>
-          <div className="flex flex-wrap gap-1.5">
-            {CITATION_OPTIONS.map((opt) => {
-              const selected = selectedBib === opt.id;
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => setSelectedBib(opt.id)}
-                  aria-pressed={selected}
-                  className={`px-3 py-1.5 rounded-full border text-xs font-bold cursor-pointer transition-colors ${
-                    selected
-                      ? 'bg-[var(--color-accent-base)] border-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
-                      : 'bg-[var(--ui-bg-surface)] border-[var(--ui-border)] text-[var(--ui-text-primary)] hover:border-[var(--color-accent-base)]'
-                  }`}
-                >
-                  {opt.label}{' '}
-                  <span className="opacity-80 font-normal text-[10px]">{opt.tag}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          <div
-            className={`p-3 rounded-[${radius.control}] border text-xs space-y-1 ${
-              compatibility.level === 'advisory'
-                ? 'bg-[var(--color-status-warning-muted)] border-[var(--color-status-warning-base)]/40 text-[var(--color-status-warning-text)]'
-                : compatibility.level === 'optimal'
-                  ? 'bg-[var(--color-status-success-muted)] border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-text)]'
-                  : 'bg-[var(--ui-bg-surface)] border-[var(--ui-border)] text-[var(--ui-text-primary)]'
-            }`}
-          >
-            <div className="flex items-center gap-1.5 font-bold">
-              {compatibility.level === 'advisory' ? (
-                <AlertCircle className="w-4 h-4 shrink-0" />
-              ) : compatibility.level === 'optimal' ? (
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
-              ) : (
-                <Info className="w-4 h-4 shrink-0" />
-              )}
-              <span>{compatibility.badge}</span>
+        {axis === 'bibliography' && (
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-1.5">
+              {CITATION_OPTIONS.map((opt) => {
+                const selected = selectedBib === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setSelectedBib(opt.id)}
+                    aria-pressed={selected}
+                    className={`px-3 py-1.5 rounded-full border text-xs font-bold cursor-pointer transition-colors ${
+                      selected
+                        ? 'bg-[var(--color-accent-base)] border-[var(--color-accent-base)] text-[var(--color-accent-on-base)]'
+                        : 'bg-[var(--ui-bg-surface)] border-[var(--ui-border)] text-[var(--ui-text-primary)] hover:border-[var(--color-accent-base)]'
+                    }`}
+                  >
+                    {opt.label}{' '}
+                    <span className="opacity-80 font-normal text-[10px]">{opt.tag}</span>
+                  </button>
+                );
+              })}
             </div>
-            <p className="text-[11px] leading-relaxed">{compatibility.message}</p>
-            <p className="text-[11px] opacity-90 font-medium">
-              {activeGuide.inTextExample}
-            </p>
-          </div>
-        </div>
 
-        {/* 4. Conflictos con ajustes manuales de Nivel 3 */}
+            <div
+              className={`p-3 rounded-[${radius.control}] border text-xs space-y-1 ${
+                compatibility.level === 'advisory'
+                  ? 'bg-[var(--color-status-warning-muted)] border-[var(--color-status-warning-base)]/40 text-[var(--color-status-warning-text)]'
+                  : compatibility.level === 'optimal'
+                    ? 'bg-[var(--color-status-success-muted)] border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-text)]'
+                    : 'bg-[var(--ui-bg-surface)] border-[var(--ui-border)] text-[var(--ui-text-primary)]'
+              }`}
+            >
+              <div className="flex items-center gap-1.5 font-bold">
+                {compatibility.level === 'advisory' ? (
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                ) : compatibility.level === 'optimal' ? (
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                ) : (
+                  <Info className="w-4 h-4 shrink-0" />
+                )}
+                <span>{compatibility.badge}</span>
+              </div>
+              <p className="text-[11px] leading-relaxed">{compatibility.message}</p>
+              <p className="text-[11px] opacity-90 font-medium">{activeGuide.inTextExample}</p>
+            </div>
+          </div>
+        )}
+
         {conflicts.length > 0 && (
           <div
             className={`p-3 rounded-[${radius.control}] bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)]/40 space-y-1.5`}
@@ -275,7 +302,7 @@ export const EditorialGlobalNormModal: React.FC<EditorialGlobalNormModalProps> =
               <Sparkles className="w-4 h-4 shrink-0 mt-0.5" />
               <div>
                 <p>
-                  Tenés {conflicts.length} ajuste(s) fino(s) tocado(s) a mano en Diseño que difieren de esta norma:
+                  Tenés {conflicts.length} ajuste(s) fino(s) tocado(s) a mano en Diseño que difieren de esta configuración:
                 </p>
                 <ul className="mt-1 list-disc list-inside text-[11px] font-normal">
                   {conflicts.slice(0, 4).map((c) => (
@@ -311,10 +338,12 @@ export const EditorialGlobalNormModal: React.FC<EditorialGlobalNormModalProps> =
             onClick={() => handleApply('apply-all')}
             className={`${button.base} ${button.primary}`}
           >
-            {conflicts.length > 0 ? 'Aplicar toda la norma nueva' : 'Aplicar configuración global'}
+            {conflicts.length > 0 ? 'Aplicar todo el cambio' : 'Aplicar'}
           </button>
         </div>
       </div>
     </Modal>
   );
 };
+
+export { BookOpen };

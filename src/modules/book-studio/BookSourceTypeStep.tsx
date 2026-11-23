@@ -1,19 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { BookOpen, Copy, Upload, CheckCircle2, ChevronRight, FileText, Home, Printer } from 'lucide-react';
+import { BookOpen, Copy, Upload, CheckCircle2, ChevronRight, FileText, Settings2 } from 'lucide-react';
 import { BookImpositionOptions } from './domain/impositionEngine';
 import {
-  BOOK_PAPER_SPECS,
   BOOK_PRINT_PROFILES,
-  BookPaperSizeId,
   clearBookFieldManual,
   inferBookPrintTarget,
-  markBookFieldManual,
+  resolveBookPaperSpec,
 } from './domain/bookPrintProfileEngine';
-import { isManuallyOverridden } from '../../shared/core/presets/configCascadeEngine';
+import { countManualOverrides } from '../../shared/core/presets/configCascadeEngine';
 import { ManualOverrideBadge } from '../../shared/core/ui/ManualOverrideBadge';
+import { PanelSection } from '../../shared/core/ui/PanelSection';
+import { ActionGrid } from '../../shared/core/ui/ActionGrid';
+import { ActionTileButton } from '../../shared/core/ui/ActionTileButton';
+import { ContextualGuideBox } from '../../shared/core/ui/ContextualGuideBox';
+import { emitLidioMessage } from '../../shared/core/assistant/lidioBus';
 import { PdfSourceErrorCode, isPdfSourceError, isPdfLikeFile } from '../../shared/core/pdf-engine/pdfSourceClassifier';
 import { bookAssetManager, markNativePickerFailedSession, isNativePickerFailedSession } from './domain/bookAssetManager';
-import { button, selectableCard, radius } from '../../shared/core/uiDesignSystem';
+import { button, radius } from '../../shared/core/uiDesignSystem';
 import { useText } from '../../shared/i18n/useText';
 
 interface BookSourceTypeStepProps {
@@ -26,6 +29,8 @@ interface BookSourceTypeStepProps {
   onNextStep?: () => void;
   /** Abre el selector global de impresora en casa vs imprenta. */
   onOpenPrintTargetModal?: () => void;
+  /** Abre el selector global de hoja donde imprimir. */
+  onOpenPaperModal?: () => void;
   /** Expone el "elegir PDF" (con fallback a input) al contenedor (botón externo). */
   pickerRef?: React.MutableRefObject<(() => Promise<void>) | null>;
   /** Libro activo: el handle del PDF se guarda asociado a este id (con fallback a la clave global). */
@@ -40,6 +45,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
   onFileConfirmed,
   onNextStep,
   onOpenPrintTargetModal,
+  onOpenPaperModal,
   pickerRef,
   bookId,
 }) => {
@@ -74,8 +80,6 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
       await onFileConfirmed(file);
     } catch (err) {
       console.error(err);
-      // 'password' no se muestra acá: el contenedor despliega el cuadro inline
-      // de contraseña (challenge) con su propio aviso y reintento.
       if (isPdfSourceError(err)) {
         if (err.code !== 'password') setErrorMsg(PDF_SOURCE_ERROR_TEXT[err.code]);
       } else {
@@ -86,34 +90,24 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
     }
   };
 
-  // Ref a la última versión de handleFileChange: las funciones que se exponen
-  // hacia afuera (pickerRef, onClick de la tarjeta) no quedan atadas a un
-  // closure viejo de cada render.
   const handleFileChangeRef = useRef(handleFileChange);
   useEffect(() => {
     handleFileChangeRef.current = handleFileChange;
   });
 
-  // Un solo punto de decisión: selector nativo si el navegador lo permite y
-  // el entorno no es un iframe cross-origin. Sin fallback JS después de un
-  // await: si el selector nativo no se puede usar o falló en esta sesión, la
-  // tarjeta es un <label htmlFor> nativo que abre el diálogo directamente.
   const canUseNativePicker = !nativePickerFailed && bookAssetManager.canUseNativeFilePicker();
   const triggerPick = async () => {
     setErrorMsg(null);
-    if (!canUseNativePicker) return; // el <label> nativo abre el diálogo
+    if (!canUseNativePicker) return;
     const result = await bookAssetManager.pickSourcePdf(bookId);
     if (result.status === 'picked') {
       await handleFileChangeRef.current(result.file);
     } else if (result.status === 'fallback-required') {
-      // Recordar el fallo en la sesión: la tarjeta cae al <label> nativo.
       markNativePickerFailedSession();
       setNativePickerFailed(true);
     }
-    // 'cancelled' = el usuario cerró el diálogo: no hay nada que hacer.
   };
 
-  // Expone al contenedor el "elegir PDF" (con fallback) para "Cargar PDF Ahora".
   useEffect(() => {
     if (!pickerRef) return;
     pickerRef.current = triggerPick;
@@ -131,15 +125,19 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
     }
   };
 
-  // Clases y contenido compartidos por las dos variantes de tarjeta
-  // (<div role="button"> con selector nativo, o <label> nativo).
-  const dropZoneClassName = `relative border-2 border-dashed rounded-[${radius.card}] p-3 text-center transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-base)] ${
+  const activeTarget = inferBookPrintTarget(options);
+  const profile = BOOK_PRINT_PROFILES[activeTarget];
+  const paperSpec = resolveBookPaperSpec(options.paperSize);
+  const overrideCount = countManualOverrides(options.manualOverrides);
+
+  const dropZoneClassName = `relative border-2 border-dashed p-3.5 text-center transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-base)] ${
     isDragging
       ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-light)]/20 scale-[1.01]'
       : selectedFile
       ? 'border-[var(--color-accent-base)]/50 bg-[var(--color-accent-light)]/10'
       : 'border-[var(--ui-border)] bg-[var(--ui-bg-surface)] hover:border-[var(--color-accent-base)]/50'
   }`;
+
   const dropZoneInner = (
     <>
       {isLoadingFile ? (
@@ -164,7 +162,7 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
         </div>
       ) : (
         <div className="flex items-center justify-center gap-2 py-1.5 text-[var(--color-accent-text)]">
-          <Upload className="w-4.5 h-4.5 shrink-0" />
+          <Upload className="w-4 h-4 shrink-0" />
           <span className="text-xs font-bold text-[var(--ui-text-primary)]">
             {t.bookStudio.sourceStep.dragDropLabel}
           </span>
@@ -174,147 +172,101 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
   );
 
   return (
-    <div className="space-y-6 text-[var(--ui-text-primary)]">
-      {/* 1. Selección de Modo de Documento */}
-      <div className="space-y-2">
-        <label className="text-xs font-bold text-[var(--ui-text-primary)] block">
-          {t.bookStudio.sourceStep.modeQuestionLabel}
-        </label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div
-            onClick={() => setOptions((prev) => ({ ...prev, mode: 'normal' }))}
-            className={`${selectableCard.base} ${
-              options.mode !== 'fotocopia' ? selectableCard.selected : selectableCard.unselected
-            } p-4 flex items-start space-x-3`}
-          >
-            <input
-              type="radio"
-              name="bookMode"
-              checked={options.mode !== 'fotocopia'}
-              onChange={() => {}}
-              className="mt-1 text-[var(--color-accent-text)] cursor-pointer"
-            />
-            <div className="space-y-1">
-              <span className="font-bold block text-sm text-[var(--ui-text-primary)] flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
-                {t.bookStudio.sourceStep.modeStandardTitle}
-              </span>
-              <span className="text-xs text-[var(--ui-text-secondary)] block leading-normal">
-                {t.bookStudio.sourceStep.modeStandardDesc}
-              </span>
-            </div>
-          </div>
+    <div className="space-y-5 text-[var(--ui-text-primary)]">
+      {/* 1.a. Formato del PDF de origen */}
+      <PanelSection
+        icon={<FileText className="w-4 h-4" />}
+        title={t.bookStudio.sourceStep.modeQuestionLabel}
+        helpTitle="Tipo de PDF de entrada"
+        helpText="Tocá el signo ? de cada botón para ver cuándo usar PDF estándar o escaneo doble página."
+      >
+        <ActionGrid columns={2}>
+          <ActionTileButton
+            role="record"
+            icon={<BookOpen className="w-5 h-5" />}
+            label={t.bookStudio.sourceStep.modeStandardTitle}
+            helpText={t.bookStudio.sourceStep.modeStandardDesc}
+            helpGroupKey="book-source-mode-normal"
+            active={options.mode !== 'fotocopia'}
+            onClick={() => {
+              setOptions((prev) => ({ ...prev, mode: 'normal' }));
+              emitLidioMessage({
+                kind: 'state',
+                groupKey: 'book-source-mode',
+                title: 'PDF estándar activado',
+                body: 'Cada página del archivo pasa derecho para armar el libro.',
+              });
+            }}
+          />
+          <ActionTileButton
+            role="record"
+            icon={<Copy className="w-5 h-5" />}
+            label={t.bookStudio.sourceStep.modeFotocopiaTitle}
+            helpText={t.bookStudio.sourceStep.modeFotocopiaDesc}
+            helpGroupKey="book-source-mode-fotocopia"
+            active={options.mode === 'fotocopia'}
+            onClick={() => {
+              setOptions((prev) => ({ ...prev, mode: 'fotocopia' }));
+              emitLidioMessage({
+                kind: 'state',
+                groupKey: 'book-source-mode',
+                title: 'Modo escaneo activado',
+                body: 'Cada hoja se corta al medio automáticamente para separar dos páginas.',
+              });
+            }}
+          />
+        </ActionGrid>
+      </PanelSection>
 
-          <div
-            onClick={() => setOptions((prev) => ({ ...prev, mode: 'fotocopia' }))}
-            className={`${selectableCard.base} ${
-              options.mode === 'fotocopia' ? selectableCard.selected : selectableCard.unselected
-            } p-4 flex items-start space-x-3`}
-          >
-            <input
-              type="radio"
-              name="bookMode"
-              checked={options.mode === 'fotocopia'}
-              onChange={() => {}}
-              className="mt-1 text-[var(--color-accent-text)] cursor-pointer"
-            />
-            <div className="space-y-1">
-              <span className="font-bold block text-sm text-[var(--ui-text-primary)] flex items-center gap-2">
-                <Copy className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
-                {t.bookStudio.sourceStep.modeFotocopiaTitle}
-              </span>
-              <span className="text-xs text-[var(--ui-text-secondary)] block leading-normal">
-                {t.bookStudio.sourceStep.modeFotocopiaDesc}
-              </span>
-            </div>
-          </div>
+      {/* Resumen compacto de las 2 píldoras globales (sin duplicar selectores en el panel) */}
+      <div
+        className="p-3 border border-[var(--ui-border)] bg-[var(--ui-bg-card)] flex flex-wrap items-center justify-between gap-2"
+        style={{ borderRadius: radius.control }}
+      >
+        <div className="flex items-center gap-2 min-w-0 flex-wrap">
+          <Settings2 className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
+          <span className="text-xs font-bold text-[var(--ui-text-primary)] truncate">
+            {profile.shortName} · Hoja ({paperSpec.pageSize.name})
+          </span>
+          <ManualOverrideBadge
+            isOverridden={overrideCount > 0}
+            globalLabel={profile.shortName}
+            onReset={() => setOptions((prev) => clearBookFieldManual(prev, 'paperSize'))}
+          />
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {onOpenPrintTargetModal && (
+            <button
+              type="button"
+              onClick={onOpenPrintTargetModal}
+              className="px-2.5 py-1 rounded-full border border-[var(--ui-border)] bg-[var(--ui-bg-surface)] text-[11px] font-bold text-[var(--color-accent-text)] cursor-pointer hover:border-[var(--color-accent-base)]"
+            >
+              Destino
+            </button>
+          )}
+          {onOpenPaperModal && (
+            <button
+              type="button"
+              onClick={onOpenPaperModal}
+              className="px-2.5 py-1 rounded-full border border-[var(--ui-border)] bg-[var(--ui-bg-surface)] text-[11px] font-bold text-[var(--color-accent-text)] cursor-pointer hover:border-[var(--color-accent-base)]"
+            >
+              Hoja
+            </button>
+          )}
         </div>
       </div>
 
-      {/* 2. Selección de hoja según perfil global (En casa vs Imprenta) */}
-      {(() => {
-        const activeTarget = inferBookPrintTarget(options);
-        const profile = BOOK_PRINT_PROFILES[activeTarget];
-        const currentPaper: BookPaperSizeId = (options.paperSize || profile.defaults.paperSize) as BookPaperSizeId;
-        const paperList: BookPaperSizeId[] = profile.allowedPaperSizes.includes(currentPaper)
-          ? profile.allowedPaperSizes
-          : [currentPaper, ...profile.allowedPaperSizes];
-        const paperIsManual = isManuallyOverridden(options.manualOverrides, 'paperSize');
-        const paperConflict = !profile.allowedPaperSizes.includes(currentPaper);
-        const TargetIcon = activeTarget === 'home' ? Home : Printer;
+      {/* 1.b. Archivo PDF a cargar */}
+      <PanelSection
+        icon={<Upload className="w-4 h-4" />}
+        title="1.b. Cargar archivo"
+        helpTitle="Privacidad de tu PDF"
+        helpText={t.bookStudio.sourceStep.pdfPolicyNote}
+      >
+        <ContextualGuideBox title="Qué archivo elegir">
+          Subí el PDF terminado de tu libro, apunte o manual. Queda solo en tu equipo y podés cambiarlo cuando quieras.
+        </ContextualGuideBox>
 
-        return (
-          <div className="space-y-2.5 pt-2 border-t border-[var(--ui-border)]">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <label className="text-xs font-bold text-[var(--ui-text-primary)] block">
-                  {t.bookStudio.sourceStep.paperSizeQuestionLabel}
-                </label>
-                <ManualOverrideBadge
-                  isOverridden={paperIsManual}
-                  globalLabel={profile.shortName}
-                  hasConflict={paperConflict}
-                  conflictHelpText={`Esta hoja se mantuvo manual cuando cambiaste el destino a "${profile.shortName}".`}
-                  onReset={() => setOptions((prev) => clearBookFieldManual(prev, 'paperSize'))}
-                />
-              </div>
-
-              {onOpenPrintTargetModal && (
-                <button
-                  type="button"
-                  onClick={onOpenPrintTargetModal}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-[var(--ui-border)] bg-[var(--ui-bg-surface)] hover:border-[var(--color-accent-base)] text-[11px] font-semibold text-[var(--ui-text-primary)] cursor-pointer transition-colors`}
-                >
-                  <TargetIcon className="w-3.5 h-3.5 text-[var(--color-accent-text)]" />
-                  <span>{activeTarget === 'home' ? t.bookStudio.sourceStep.paperProfileBadgeHome : t.bookStudio.sourceStep.paperProfileBadgePrintShop}</span>
-                  <span className="text-[var(--color-accent-text)] underline">{t.bookStudio.sourceStep.paperProfileSwitchHint}</span>
-                </button>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {paperList.map((paperId) => {
-                const spec = BOOK_PAPER_SPECS[paperId] || BOOK_PAPER_SPECS.A4;
-                const isSelected = currentPaper === paperId;
-                return (
-                  <button
-                    key={paperId}
-                    type="button"
-                    onClick={() =>
-                      setOptions((prev) => {
-                        const updated = { ...prev, paperSize: paperId };
-                        return paperId === profile.defaults.paperSize
-                          ? clearBookFieldManual(updated, 'paperSize')
-                          : markBookFieldManual(updated, 'paperSize');
-                      })
-                    }
-                    aria-pressed={isSelected}
-                    className={`${selectableCard.base} ${
-                      isSelected ? selectableCard.selected : selectableCard.unselected
-                    } p-3.5 flex items-start space-x-3 text-left cursor-pointer`}
-                  >
-                    <FileText className="w-4 h-4 text-[var(--color-accent-text)] shrink-0 mt-0.5" />
-                    <div className="space-y-0.5 min-w-0">
-                      <span className="font-bold block text-xs sm:text-sm text-[var(--ui-text-primary)]">
-                        {spec.shortTitle}{' '}
-                        <span className="font-medium text-[var(--ui-text-secondary)] text-[11px]">
-                          {spec.technicalParen}
-                        </span>
-                      </span>
-                      <span className="text-[11px] text-[var(--ui-text-secondary)] block leading-snug">
-                        {spec.usageSubtitle}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* 3. Carga de Archivo PDF */}
-      <div className="pt-2 border-t border-[var(--ui-border)] space-y-2">
         {canUseNativePicker ? (
           <div
             onClick={triggerPick}
@@ -334,11 +286,11 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
             onDragLeave={() => setIsDragging(false)}
             onDrop={onDrop}
             className={dropZoneClassName}
+            style={{ borderRadius: radius.card }}
           >
             {dropZoneInner}
           </div>
         ) : (
-          /* Sin selector nativo utilizable: <label> que abre el diálogo sin JS. */
           <label
             htmlFor="book-source-pdf-input"
             aria-label={t.bookStudio.sourceStep.ariaPickPdf}
@@ -349,23 +301,23 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
             onDragLeave={() => setIsDragging(false)}
             onDrop={onDrop}
             className={`${dropZoneClassName} block`}
+            style={{ borderRadius: radius.card }}
           >
             {dropZoneInner}
           </label>
         )}
 
-        <p className="text-[10px] text-[var(--ui-text-secondary)] text-center leading-snug">
-          {t.bookStudio.sourceStep.pdfPolicyNote}
-        </p>
-
         {errorMsg && (
-          <div className={`p-2.5 bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/30 rounded-[${radius.control}] text-[var(--color-status-danger-text)] text-xs font-medium text-center`}>
+          <div
+            className="p-2.5 bg-[var(--color-status-danger-muted)] border border-[var(--color-status-danger-base)]/30 text-[var(--color-status-danger-text)] text-xs font-medium text-center"
+            style={{ borderRadius: radius.control }}
+          >
             {errorMsg}
           </div>
         )}
-      </div>
+      </PanelSection>
 
-      {/* 4. Barra Inferior de Navegación Responsive */}
+      {/* Navegación siguiente */}
       {onNextStep && (
         <div className="pt-4 border-t border-[var(--ui-border)] flex flex-col sm:flex-row items-center justify-between gap-3">
           <span className="text-xs text-[var(--ui-text-secondary)] font-medium text-center sm:text-left">
@@ -390,4 +342,3 @@ export const BookSourceTypeStep: React.FC<BookSourceTypeStepProps> = ({
     </div>
   );
 };
-

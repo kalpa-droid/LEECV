@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 3,
-  minor: 3,
+  minor: 4,
   patch: 0,
-  label: 'V3.3.0',
+  label: 'V3.4.0',
   lastUpdated: '2026-11-22',
   lastAgent: '@antigravity',
-  stage: 'feat(editorlee): V3.3.0 — Píldora Global de Obra y Normas en Navbar, Separación Estructura vs Bibliografía (APA 7, Vancouver, IEEE, Harvard, Chicago, MLA 9), Cascada Anti-Pisado con ManualOverrideBadge y Citas Automáticas en Línea dentro de capítulos, secciones y anexos.',
+  stage: 'feat(topbar-dock-globals): V3.4.0 — TopBar de 4 zonas, Tema en Cuenta & Preferencias, Dock CV/EditorLee compacto de 2 columnas, 3 píldoras globales en EditorLee, 2 píldoras globales + 3 canales Cero Ruido en Libro/Folleto y gobernanza en create/verify app.',
 } as const;
