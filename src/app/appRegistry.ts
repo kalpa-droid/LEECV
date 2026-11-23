@@ -123,11 +123,11 @@ const BOOK_TAB_ICONS: Record<string, React.ComponentType<{ className?: string }>
 
 const BOOK_TAB_ROLES: Record<string, DockButtonRole> = {
   book_source_type: 'preset',
-  book_organize: 'record',
+  book_imposition: 'preset',
   book_cover: 'preset',
   book_back_cover: 'preset',
+  book_organize: 'record',
   book_foliado: 'record',
-  book_imposition: 'preset',
   book_preview_export: 'record',
 };
 
@@ -164,8 +164,8 @@ const FACTURADOR_TAB_ROLES: Record<string, DockButtonRole> = {
   fact_emisor: 'record',
   fact_comprobante: 'record',
   fact_items: 'record',
-  fact_catalogo: 'record',
-  fact_clientes: 'record',
+  fact_catalogo: 'catalog',
+  fact_clientes: 'catalog',
   fact_historial: 'record',
   fact_diseno: 'preset',
   fact_respaldo: 'record',
@@ -226,7 +226,7 @@ export function registerAllDockProviders(): void {
         label: step.label,
         stepNumber: step.stepNumber,
         icon: BOOK_TAB_ICONS[step.id] || Layers,
-        isLarge: true,
+        isLarge: false,
         variant: 'accent' as const,
         role: BOOK_TAB_ROLES[step.id] || 'record',
       })),
@@ -247,13 +247,13 @@ export function registerAllDockProviders(): void {
   registerStepIds('planner', PLANNER_STEP_SEQUENCE.map((s) => s.id));
 
   registerDockStepProvider('invoice', () =>
-    FACTURADOR_STEP_SEQUENCE.map((step) => ({
+    FACTURADOR_STEP_SEQUENCE.filter((step) => !step.hideFromDock).map((step) => ({
       id: step.id,
       label: step.label,
       stepNumber: step.stepNumber,
       icon: FACTURADOR_TAB_ICONS[step.id] || Layers,
-      isLarge: true,
-      variant: 'accent' as const,
+      isLarge: false,
+      variant: FACTURADOR_TAB_ROLES[step.id] === 'preset' ? ('accent' as const) : FACTURADOR_TAB_ROLES[step.id] === 'catalog' ? ('success' as const) : ('secondary' as const),
       role: FACTURADOR_TAB_ROLES[step.id] || 'record',
     })),
   );
@@ -405,7 +405,7 @@ export const APP_REGISTRY = {
     route: '/crear-factura',
     effectiveRoute: getRouteForDocType('invoice'),
     loadingLabel: 'Cargando FacturLee…',
-    initialTabId: 'fact_comprobante',
+    initialTabId: 'fact_items',
     usesSharedCvWorkspace: false,
     autoCreateBlankTabOnRouteEnter: false,
     managesOwnStore: true,

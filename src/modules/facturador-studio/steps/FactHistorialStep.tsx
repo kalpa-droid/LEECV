@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { History, CopyPlus, TriangleAlert, CircleDollarSign } from 'lucide-react';
-import { Field } from '../../../shared/core/ui/Field';
+import { History, CopyPlus, TriangleAlert, CircleDollarSign, Printer, Trash2, Pencil } from 'lucide-react';
+import { SearchFilterBar, matchesSearchQuery } from '../../../shared/core/ui/SearchFilterBar';
+import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { FactStepBaseProps } from '../facturadorStepsShared';
 import { ComprobanteEstado, SavedInvoice } from '../domain/facturadorTypes';
 import {
@@ -9,10 +10,10 @@ import {
   getInvoiceDueStatus,
   isInvoiceDueAlert,
 } from '../domain/invoiceMath';
-import { radius } from '../../../shared/core/uiDesignSystem';
 
 interface FactHistorialStepProps extends FactStepBaseProps {
   onDuplicate: (saved: SavedInvoice) => void;
+  onOpenHistorical: (saved: SavedInvoice) => void;
 }
 
 const ESTADO_LABEL: Record<ComprobanteEstado, string> = {
@@ -22,45 +23,102 @@ const ESTADO_LABEL: Record<ComprobanteEstado, string> = {
   anulada: 'Anulada',
 };
 
-/** Paso 6 — Historial de comprobantes, cobranzas y vencimientos. */
-export const FactHistorialStep: React.FC<FactHistorialStepProps> = ({ vault, updateVault, onDuplicate }) => {
+/** Paso 2 operativo — Historial, cobranzas y reimpresión fiel sin alterar emitidas. */
+export const FactHistorialStep: React.FC<FactHistorialStepProps> = ({
+  vault,
+  updateVault,
+  notify,
+  onDuplicate,
+  onOpenHistorical,
+}) => {
   const [query, setQuery] = useState('');
+  const confirm = useConfirm();
 
   const comprobantes = useMemo(
     () =>
       [...vault.comprobantes]
         .sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''))
-        .filter((comp) => {
-          if (!query.trim()) return true;
-          const target = `${describeComprobante(comp)} ${comp.cliente?.nombre || ''}`.toLowerCase();
-          return target.includes(query.toLowerCase());
-        }),
-    [vault.comprobantes, query]
+        .filter((comp) =>
+          matchesSearchQuery(
+            [
+              describeComprobante(comp),
+              comp.numero,
+              comp.cliente?.nombre,
+              comp.cliente?.cuit,
+              ...comp.items.map((it) => `${it.nombre || ''} ${it.descripcion}`),
+            ],
+            query,
+            3,
+          ),
+        ),
+    [vault.comprobantes, query],
   );
 
   const pendientes = vault.comprobantes.filter(
-    (comp) => comp.estado === 'emitida' && isInvoiceDueAlert(comp.vencimiento)
+    (comp) => comp.estado === 'emitida' && isInvoiceDueAlert(comp.vencimiento),
   );
 
-  const setEstado = (id: string, estado: ComprobanteEstado) =>
+  const setEstado = (id: string, estado: ComprobanteEstado) => {
+    updateVault((prev) => {
+      const target = prev.comprobantes.find((c) => c.id === id);
+      const shouldDeduct = Boolean(target && target.estado === 'borrador' && estado !== 'borrador' && !target.stockDeducido);
+      let nextCatalogo = prev.catalogo;
+
+      if (shouldDeduct && target) {
+        nextCatalogo = prev.catalogo.map((item) => {
+          const qty = target.items
+            .filter((line) => line.catalogItemId === item.id)
+            .reduce((acc, line) => acc + (Number(line.cantidad) || 0), 0);
+          return qty > 0 ? { ...item, stock: Math.max(0, (Number(item.stock) || 0) - qty) } : item;
+        });
+      }
+
+      return {
+        ...prev,
+        catalogo: nextCatalogo,
+        comprobantes: prev.comprobantes.map((comp) =>
+          comp.id === id
+            ? {
+                ...comp,
+                estado,
+                emitidaAt: estado !== 'borrador' && !comp.emitidaAt ? new Date().toISOString() : comp.emitidaAt,
+                stockDeducido: shouldDeduct ? true : comp.stockDeducido,
+              }
+            : comp,
+        ),
+      };
+    });
+  };
+
+  const deleteDraftInvoice = async (comp: SavedInvoice) => {
+    if (comp.estado !== 'borrador') return;
+    const ok = await confirm({
+      title: 'Eliminar borrador',
+      message: `¿Querés eliminar el borrador ${describeComprobante(comp)}? Esta acción no se puede deshacer.`,
+      confirmText: 'Eliminar borrador',
+      variant: 'danger',
+    });
+    if (!ok) return;
     updateVault((prev) => ({
       ...prev,
-      comprobantes: prev.comprobantes.map((comp) => (comp.id === id ? { ...comp, estado } : comp)),
+      comprobantes: prev.comprobantes.filter((c) => c.id !== comp.id),
     }));
+    notify.info('Borrador eliminado del historial.');
+  };
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       <div>
         <h2 className="text-xl font-bold flex items-center gap-2">
-          <History className="w-5 h-5" /> Historial y cobranzas
+          <History className="w-5 h-5" /> Historial y reimpresión
         </h2>
         <p className="text-xs text-[var(--ui-text-secondary)] mt-1">
-          Todo lo que emitiste, con su estado de cobro. Nada de esto sale de tu computadora.
+          Reimprimí facturas anteriores tal como se emitieron, repetilas como nuevas o seguí los cobros pendientes.
         </p>
       </div>
 
       {pendientes.length > 0 ? (
-        <div className="p-3 bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)] text-[11px] text-[var(--color-status-warning-text)]" style={{ borderRadius: radius.control }}>
+        <div className="p-3 rounded-[10px] bg-[var(--color-status-warning-muted)] border border-[var(--color-status-warning-base)] text-[11px] text-[var(--color-status-warning-text)]">
           <div className="flex items-center gap-1.5 font-bold mb-1">
             <TriangleAlert className="w-3.5 h-3.5" /> Cobros pendientes o vencidos
           </div>
@@ -68,24 +126,28 @@ export const FactHistorialStep: React.FC<FactHistorialStepProps> = ({ vault, upd
         </div>
       ) : null}
 
-      <Field
-        label="Buscar"
+      <SearchFilterBar
         value={query}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
-        placeholder="Número, cliente o letra"
+        onChange={setQuery}
+        placeholder="Buscar por N° de factura, cliente, CUIT o producto (3+ letras)..."
+        totalCount={vault.comprobantes.length}
+        filteredCount={comprobantes.length}
       />
 
       {comprobantes.length === 0 ? (
         <p className="text-xs text-[var(--ui-text-secondary)] italic">
-          Todavía no hay comprobantes guardados. Completá uno y tocá “Guardar comprobante”.
+          {vault.comprobantes.length === 0
+            ? 'Todavía no hay comprobantes guardados. Completá uno en Ítems y tocá “Guardar comprobante”.'
+            : 'No hay comprobantes que coincidan con esa búsqueda.'}
         </p>
       ) : null}
 
       <div className="space-y-3">
         {comprobantes.map((comp) => {
           const dueStatus = getInvoiceDueStatus(comp.vencimiento);
+          const isBorrador = comp.estado === 'borrador';
           return (
-            <div key={comp.id} className="p-3 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] space-y-2" style={{ borderRadius: radius.card }}>
+            <div key={comp.id} className="p-3 bg-[var(--ui-bg-card)] border border-[var(--ui-border)] rounded-[12px] space-y-2">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="text-sm font-black text-[var(--ui-text-primary)]">{describeComprobante(comp)}</p>
@@ -96,26 +158,46 @@ export const FactHistorialStep: React.FC<FactHistorialStepProps> = ({ vault, upd
                 <span className="text-sm font-black text-[var(--ui-text-primary)]">{formatARS(comp.total)}</span>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <select
                   value={comp.estado}
                   onChange={(e) => setEstado(comp.id, e.target.value as ComprobanteEstado)}
-                  className="flex-1 px-2 py-1.5 text-xs bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)]"
-                  style={{ borderRadius: radius.control }}
+                  className="px-2 py-1.5 text-xs rounded-[10px] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)]"
                 >
                   {(Object.keys(ESTADO_LABEL) as ComprobanteEstado[]).map((estado) => (
                     <option key={estado} value={estado}>{ESTADO_LABEL[estado]}</option>
                   ))}
                 </select>
+
+                <button
+                  type="button"
+                  onClick={() => onOpenHistorical(comp)}
+                  className="px-2.5 py-1.5 text-xs font-bold rounded-[10px] bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/40 text-[var(--color-secondary-text)] inline-flex items-center gap-1 cursor-pointer"
+                  title={isBorrador ? 'Abrir borrador para seguir editando' : 'Ver y reimprimir PDF original (sin editar)'}
+                >
+                  {isBorrador ? <Pencil className="w-3.5 h-3.5" /> : <Printer className="w-3.5 h-3.5" />}
+                  {isBorrador ? 'Editar' : 'Reimprimir'}
+                </button>
+
                 <button
                   type="button"
                   onClick={() => onDuplicate(comp)}
-                  className="px-2 py-1.5 text-xs font-bold bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--color-accent-text)] inline-flex items-center gap-1"
-                  style={{ borderRadius: radius.control }}
+                  className="px-2.5 py-1.5 text-xs font-bold rounded-[10px] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--color-accent-text)] inline-flex items-center gap-1 cursor-pointer"
                   title="Crear un comprobante nuevo con los mismos ítems"
                 >
                   <CopyPlus className="w-3.5 h-3.5" /> Repetir
                 </button>
+
+                {isBorrador && (
+                  <button
+                    type="button"
+                    onClick={() => void deleteDraftInvoice(comp)}
+                    className="p-1.5 rounded-[10px] text-[var(--color-status-danger-text)] hover:bg-[var(--color-status-danger-muted)] cursor-pointer ml-auto"
+                    title="Eliminar borrador"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
 
               {comp.estado === 'emitida' || comp.estado === 'cobrada' ? (

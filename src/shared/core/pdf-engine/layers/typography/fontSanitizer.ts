@@ -16,6 +16,18 @@ const VALID_PDF_FONTS = new Set([
   'Times-BoldItalic',
 ]);
 
+const DYNAMIC_REGISTERED_FONTS = new Set<string>();
+
+export function registerDynamicFontFamily(family: string): void {
+  if (family && typeof family === 'string') {
+    DYNAMIC_REGISTERED_FONTS.add(family.trim());
+  }
+}
+
+export function isDynamicFontRegistered(family?: string): boolean {
+  return Boolean(family && DYNAMIC_REGISTERED_FONTS.has(family.trim()));
+}
+
 function resolveHelveticaVariant(isBold: boolean, isItalic: boolean): string {
   if (isBold && isItalic) return 'Helvetica-BoldOblique';
   if (isBold) return 'Helvetica-Bold';
@@ -37,6 +49,10 @@ export function sanitizeFontFamilyPure(
 ): string {
   if (!family || typeof family !== 'string') {
     return resolveHelveticaVariant(isBold, isItalic);
+  }
+
+  if (DYNAMIC_REGISTERED_FONTS.has(family.trim())) {
+    return family.trim();
   }
 
   if (VALID_PDF_FONTS.has(family)) {
@@ -61,6 +77,10 @@ export function sanitizeFontFamilyPure(
   if (
     lower.includes('times') ||
     lower.includes('georgia') ||
+    lower.includes('garamond') ||
+    lower.includes('tinos') ||
+    lower.includes('computer modern') ||
+    lower.includes('lora') ||
     (lower.includes('serif') && !lower.includes('sans'))
   ) {
     return resolveTimesVariant(isBold, isItalic);

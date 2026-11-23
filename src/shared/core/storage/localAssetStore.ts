@@ -125,8 +125,30 @@ export const localAssetStore: LocalAssetStoreContract = {
 
   async deleteDocumentAssets(docId: string): Promise<void> {
     const index = await readDocIndex(docId);
-    for (const meta of index) {
-      await idbStorage.removeItem(`${ASSET_BLOB_PREFIX}${meta.id}`);
+    if (index.length > 0) {
+      // Reference counting: no borrar un blob si otro documento guardado lo sigue referenciando
+      const referencedIds = new Set<string>();
+      if (typeof idbStorage.keys === 'function') {
+        const allKeys = await idbStorage.keys();
+        const otherDocIndexKeys = allKeys.filter(
+          (k) => k.startsWith(ASSET_DOC_INDEX_PREFIX) && k !== `${ASSET_DOC_INDEX_PREFIX}${docId}`,
+        );
+        for (const otherKey of otherDocIndexKeys) {
+          const otherList = await idbStorage.getItem(otherKey);
+          if (Array.isArray(otherList)) {
+            for (const entry of otherList) {
+              if (entry && typeof entry.id === 'string') {
+                referencedIds.add(entry.id);
+              }
+            }
+          }
+        }
+      }
+      for (const meta of index) {
+        if (!referencedIds.has(meta.id)) {
+          await idbStorage.removeItem(`${ASSET_BLOB_PREFIX}${meta.id}`);
+        }
+      }
     }
     await idbStorage.removeItem(`${ASSET_DOC_INDEX_PREFIX}${docId}`);
   },

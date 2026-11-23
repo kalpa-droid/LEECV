@@ -45,10 +45,12 @@ export const InvoicePdfDocument: React.FC<InvoicePdfProps> = ({ draft, empresa, 
       fontFamily: typography.fontFamily,
       backgroundColor: palette.background,
       color: palette.text,
-      padding: 26,
+      paddingTop: design.duplicateHalfSheet ? 16 : 26,
+      paddingHorizontal: design.duplicateHalfSheet ? 18 : 26,
+      paddingBottom: design.duplicateHalfSheet ? 16 : 46,
       fontSize: typography.body,
     },
-    halfPage: { padding: 18, fontSize: Math.max(6.5, typography.body - 1.5) },
+    halfPage: { padding: 10, fontSize: Math.max(6.5, typography.body - 1.5) },
     halfDivider: {
       borderTopWidth: 1,
       borderTopColor: palette.secondary,
@@ -111,13 +113,14 @@ export const InvoicePdfDocument: React.FC<InvoicePdfProps> = ({ draft, empresa, 
       borderTopColor: palette.secondary,
     },
     colDesc: { flex: 1, paddingRight: 4 },
-    colQty: { width: 30, textAlign: 'right' },
-    colUnit: { width: 54, textAlign: 'right' },
+    colDescSub: { fontSize: Math.max(6.5, typography.caption - 0.5), color: palette.secondary, marginTop: 1 },
+    colQty: { width: 32, textAlign: 'right' },
+    colUnit: { width: 66, textAlign: 'right' },
     colDto: { width: 32, textAlign: 'right' },
-    colSub: { width: 58, textAlign: 'right' },
+    colSub: { width: 72, textAlign: 'right' },
     emptyRow: { fontSize: typography.caption, color: palette.secondary, paddingVertical: 8, textAlign: 'center' },
-    totalsRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 },
-    totalsBox: { width: 168 },
+    totalsRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10 },
+    totalsBox: { width: 215 },
     totalLine: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 1.5 },
     totalLineText: { fontSize: typography.caption },
     grandTotal: {
@@ -208,7 +211,7 @@ export const InvoicePdfDocument: React.FC<InvoicePdfProps> = ({ draft, empresa, 
       </View>
 
       <View style={styles.table}>
-        <View style={styles.tableHead}>
+        <View style={styles.tableHead} fixed>
           <Text style={[styles.tableHeadCell, styles.colDesc]}>Descripción</Text>
           <Text style={[styles.tableHeadCell, styles.colQty]}>Cant.</Text>
           <Text style={[styles.tableHeadCell, styles.colUnit]}>P. Unit.</Text>
@@ -220,17 +223,20 @@ export const InvoicePdfDocument: React.FC<InvoicePdfProps> = ({ draft, empresa, 
         ) : (
           model.rows.map((row) => (
             <View key={row.item.id} style={styles.tableRow} wrap={false}>
-              <Text style={styles.colDesc}>{row.descripcion}</Text>
+              <View style={styles.colDesc}>
+                <Text>{row.nombre}</Text>
+                {row.detalle ? <Text style={styles.colDescSub}>{row.detalle}</Text> : null}
+              </View>
               <Text style={styles.colQty}>{row.cantidadLabel}</Text>
-              <Text style={styles.colUnit}>{row.unitPrice.toFixed(2)}</Text>
+              <Text style={styles.colUnit}>{row.unitPriceLabel}</Text>
               <Text style={styles.colDto}>{row.item.descuentoPct ? row.item.descuentoPct : '—'}</Text>
-              <Text style={styles.colSub}>{row.subtotal.toFixed(2)}</Text>
+              <Text style={styles.colSub}>{row.subtotalLabel}</Text>
             </View>
           ))
         )}
       </View>
 
-      <View style={styles.totalsRow}>
+      <View style={styles.totalsRow} wrap={false}>
         <View style={styles.totalsBox}>
           <View style={styles.totalLine}>
             <Text style={styles.totalLineText}>Subtotal</Text>
@@ -257,18 +263,9 @@ export const InvoicePdfDocument: React.FC<InvoicePdfProps> = ({ draft, empresa, 
       </View>
 
       {model.observaciones ? (
-        <View style={styles.notes}>
+        <View style={styles.notes} wrap={false}>
           <Text style={styles.notesTitle}>Observaciones</Text>
           <Text style={styles.notesText}>{model.observaciones}</Text>
-        </View>
-      ) : null}
-
-      {!compact ? (
-        <View style={styles.footer} fixed>
-          <Text style={styles.footerText}>
-            {model.empresa.razonSocial || 'FacturLee'} · {model.comprobanteLabel} · Documento interno generado en
-            LEECV
-          </Text>
         </View>
       ) : null}
     </View>
@@ -286,6 +283,14 @@ export const InvoicePdfDocument: React.FC<InvoicePdfProps> = ({ draft, empresa, 
         ) : (
           <Copy />
         )}
+        {!design.duplicateHalfSheet ? (
+          <View style={styles.footer} fixed>
+            <Text style={styles.footerText}>
+              {model.empresa.razonSocial || 'FacturLee'} · {model.comprobanteLabel} · Documento interno generado en
+              LEECV
+            </Text>
+          </View>
+        ) : null}
       </Page>
     </Document>
   );

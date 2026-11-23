@@ -7,6 +7,7 @@ import {
   saveDocumentToDisk,
   type WorkspaceFolderStatus,
 } from '../../../../shared/core/storage/nativeFileDocumentService';
+import { recordExternalBackupTimestamp } from '../../../../shared/core/storage/storageResilienceEngine';
 import { Modal } from '../../../../shared/core/ui/Modal';
 import { ActionGrid } from '../../../../shared/core/ui/ActionGrid';
 import { ActionTileButton } from '../../../../shared/core/ui/ActionTileButton';
@@ -131,6 +132,7 @@ export default function JsonDownloadModal({ isOpen, onClose, cvData }: any) {
             helpGroupKey="save-leecv-tile"
             onClick={async () => {
               await saveDocumentToDisk(cvData?.id || `cv_${Date.now()}`, 'cv', cvData);
+              recordExternalBackupTimestamp();
               onClose();
             }}
           />
@@ -146,6 +148,7 @@ export default function JsonDownloadModal({ isOpen, onClose, cvData }: any) {
               await saveDocumentToDisk(cvData?.id || `cv_${Date.now()}`, 'cv', cvData, {
                 forceSaveAs: true,
               });
+              recordExternalBackupTimestamp();
               onClose();
             }}
           />
@@ -159,6 +162,7 @@ export default function JsonDownloadModal({ isOpen, onClose, cvData }: any) {
             helpGroupKey="save-json-tile"
             onClick={() => {
               exportCVToJson(cvData);
+              recordExternalBackupTimestamp();
               onClose();
             }}
           />
@@ -172,6 +176,7 @@ export default function JsonDownloadModal({ isOpen, onClose, cvData }: any) {
             helpGroupKey="save-zip-tile"
             onClick={async () => {
               await exportCVToZip(cvData);
+              recordExternalBackupTimestamp();
               onClose();
             }}
           />

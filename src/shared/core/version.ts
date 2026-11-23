@@ -11,10 +11,10 @@
 
 export const LEECV_VERSION = {
   major: 3,
-  minor: 5,
+  minor: 6,
   patch: 0,
-  label: 'V3.5.0',
+  label: 'V3.6.0',
   lastUpdated: '2026-11-23',
   lastAgent: '@antigravity',
-  stage: 'feat(book-editorial-ai): V3.5.0 — Modo Automático de armado directo (imposición), orientación IA por muestreo y lotes en Fotocopia, Paso 5 con deducción de Página 1 por IA, separadores/carátulas de capítulos en Libro Folleto y EditorLee, y recomendación IA de tipo de obra al importar.',
+  stage: 'feat(platform-facturlee-editorlee): V3.6.0 — Rediseño operativo de FacturLee + fix solapamiento PDF, depuración de exportaciones en Libro-Folleto, modal canónico de importación IA, pipeline Zero-Loss .docx + columnas/imágenes/tablas/fuentes APA en EditorLee, y resiliencia de respaldo ante actualizaciones.',
 } as const;

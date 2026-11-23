@@ -6,6 +6,7 @@ import { Field } from '../../../shared/core/ui/Field';
 import { SectionSwitch } from '../../../shared/core/ui/SectionSwitch';
 import { LidioHelpTrigger } from '../../../shared/core/ui/LidioHelpTrigger';
 import { ManualOverrideBadge } from '../../../shared/core/ui/ManualOverrideBadge';
+import { useToast } from '../../../shared/core/ui/Toast';
 import { isManuallyOverridden } from '../../../shared/core/presets/configCascadeEngine';
 import { PAGE_SIZES } from '../../../shared/core/pdf-engine/layers/page/pageSizes';
 import { generateSectionAnchors } from '../domain/editorialTocResolver';
@@ -19,6 +20,12 @@ import {
 } from '../domain/editorialNormEngine';
 import { getSavedEditorialsList } from '../../../shared/core/storage/documentStorageService';
 import { radius } from '../../../shared/core/uiDesignSystem';
+import { ACADEMIC_FONT_CATALOG } from '../../../shared/core/pdf-engine/layers/typography/academicFontCatalog';
+import {
+  ensureAcademicOrCustomFontRegistered,
+  importWindowsLocalFonts,
+  uploadCustomPdfFontFile,
+} from '../../../shared/core/pdf-engine/layers/typography/pdfFontRegistry';
 
 interface BasePanelProps {
   draft: any;
@@ -33,6 +40,7 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
   setActiveStepTab,
   onOpenGlobalNormModal,
 }) => {
+  const { showInfo, showSuccess } = useToast() as any;
   const design = draft?.design || {};
   const structuralNorm = resolveStructuralNormFromDraft(draft);
   const normSpec = EDITORIAL_STRUCTURAL_NORMS[structuralNorm];
@@ -204,12 +212,25 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
             </div>
             <select
               value={design.typography?.fontFamily || 'Times-Roman'}
-              onChange={(e) => updateTypography('fontFamily', e.target.value)}
+              onChange={(e) => {
+                const fam = e.target.value;
+                void ensureAcademicOrCustomFontRegistered(fam);
+                updateTypography('fontFamily', fam);
+              }}
               className="w-full border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] px-2.5 py-2 text-xs"
               style={{ borderRadius: radius.control }}
             >
-              <option value="Times-Roman">Clásica Serif</option>
-              <option value="Helvetica">Moderna Sans</option>
+              <optgroup label="Fuentes universitarias y normas (APA / Chicago / MLA)">
+                {ACADEMIC_FONT_CATALOG.map((f) => (
+                  <option key={f.family} value={f.family}>
+                    {f.family} — {f.badge}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Base clásica integrada (sin descarga)">
+                <option value="Times-Roman">Clásica Serif</option>
+                <option value="Helvetica">Moderna Sans</option>
+              </optgroup>
             </select>
           </div>
           <div>
@@ -239,6 +260,49 @@ export const EditorialDisenoPanel: React.FC<BasePanelProps> = ({
               onChange={(e: any) => updateTypography('lineHeight', Number(e.target.value))}
             />
           </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <button
+            type="button"
+            onClick={async () => {
+              const res = await importWindowsLocalFonts();
+              if (!res.supported) {
+                try {
+                  await navigator.clipboard?.writeText('C:\\Windows\\Fonts');
+                } catch {
+                  // noop
+                }
+                showInfo?.('Tu navegador no permite leer fuentes del sistema directo. Copiamos C:\\Windows\\Fonts: usá "Subir fuente" y pegá esa ruta.');
+                return;
+              }
+              if (res.imported.length > 0) {
+                showSuccess?.(`Conectadas de Windows: ${res.imported.join(', ')}`);
+              } else {
+                showInfo?.('No encontramos fuentes nuevas de Windows o cancelaste el permiso.');
+              }
+            }}
+            className="px-2.5 py-1.5 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[11px] font-bold text-[var(--color-secondary-text)] hover:border-[var(--color-secondary-base)] cursor-pointer"
+          >
+            Conectar fuentes de mi Windows
+          </button>
+
+          <label className="px-2.5 py-1.5 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[11px] font-bold text-[var(--color-accent-text)] hover:border-[var(--color-accent-base)] cursor-pointer">
+            <span>Subir fuente (.ttf / .otf)</span>
+            <input
+              type="file"
+              accept=".ttf,.otf,.woff"
+              className="hidden"
+              onChange={async (e) => {
+                const picked = e.target.files?.[0];
+                e.currentTarget.value = '';
+                if (!picked) return;
+                const family = await uploadCustomPdfFontFile(picked);
+                updateTypography('fontFamily', family);
+                showSuccess?.(`Fuente "${family}" lista y guardada para tu PDF.`);
+              }}
+            />
+          </label>
         </div>
 
         <div className="space-y-2 pt-1">

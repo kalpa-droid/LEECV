@@ -23,6 +23,7 @@ import {
   resolveInlineCitationsInText,
   syncSectionsBibliographyOrder,
 } from '../domain/editorialCitationFormatter';
+import { computeOptimalTableLayout } from '../domain/editorialLayoutEngines';
 import type {
   EditorialBibliographySourceType,
   EditorialRecord,
@@ -390,7 +391,7 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
           onChange={(e: any) => updateSectionProp('title', e.target.value)}
         />
 
-        <div className="grid grid-cols-2 gap-2 pt-1">
+        <div className="grid grid-cols-3 gap-2 pt-1">
           <div className="flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)]">
             <span className="text-[11px] font-semibold text-[var(--ui-text-primary)]">En índice</span>
             <SectionSwitch
@@ -407,6 +408,15 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
               checked={section.startNewPage !== false}
               onChange={(next) => updateSectionProp('startNewPage', next)}
               label={`${section.title} en página nueva`}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)]">
+            <span className="text-[11px] font-semibold text-[var(--ui-text-primary)]">2 columnas</span>
+            <SectionSwitch
+              size="sm"
+              checked={section.columns === 2}
+              onChange={(next) => updateSectionProp('columns', next ? 2 : 1)}
+              label={`${section.title} en 2 columnas`}
             />
           </div>
         </div>
@@ -541,7 +551,7 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
                 </div>
 
                 {rec.type === 'image' ? (
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     {rec.imagePath && (
                       <img
                         src={rec.imagePath}
@@ -549,29 +559,214 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
                         className="max-h-40 rounded border border-[var(--ui-border)] object-contain bg-[var(--ui-bg-panel)]"
                       />
                     )}
-                    <label className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] cursor-pointer">
-                      <span>{rec.imagePath ? 'Cambiar imagen…' : 'Subir imagen…'}</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={async (e) => {
-                          const picked = e.target.files?.[0];
-                          e.currentTarget.value = '';
-                          if (!picked) return;
-                          const encoded = await encodeImageFileWithinBudget(picked);
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] cursor-pointer">
+                        <span>{rec.imagePath ? 'Cambiar imagen…' : 'Subir imagen…'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const picked = e.target.files?.[0];
+                            e.currentTarget.value = '';
+                            if (!picked) return;
+                            const encoded = await encodeImageFileWithinBudget(picked);
+                            updateRecord(rec.id, {
+                              imagePath: `data:${encoded.mimeType};base64,${encoded.base64}`,
+                            });
+                          }}
+                        />
+                      </label>
+                      {rec.imageLayoutMode === 'pair-side-by-side' && (
+                        <label className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-[var(--color-secondary-muted)] border border-[var(--color-secondary-base)]/40 text-[var(--color-secondary-text)] cursor-pointer">
+                          <span>{rec.secondaryImagePath ? 'Cambiar 2.ª imagen…' : '+ Subir 2.ª imagen…'}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const picked = e.target.files?.[0];
+                              e.currentTarget.value = '';
+                              if (!picked) return;
+                              const encoded = await encodeImageFileWithinBudget(picked);
+                              updateRecord(rec.id, {
+                                secondaryImagePath: `data:${encoded.mimeType};base64,${encoded.base64}`,
+                              });
+                            }}
+                          />
+                        </label>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <Field
+                        as="select"
+                        label="Posición y tamaño en la hoja"
+                        value={rec.imageLayoutMode || 'centered'}
+                        onChange={(e: any) => updateRecord(rec.id, { imageLayoutMode: e.target.value })}
+                      >
+                        <option value="full-width">De margen a margen (100%)</option>
+                        <option value="centered">Centrada (tamaño regulable)</option>
+                        <option value="pair-side-by-side">2 imágenes lado a lado</option>
+                        <option value="wrap-left">Imagen a la izq. · texto rodea a la der.</option>
+                        <option value="wrap-right">Imagen a la der. · texto rodea a la izq.</option>
+                      </Field>
+
+                      <Field
+                        type="number"
+                        label="Ancho en hoja (%)"
+                        min={25}
+                        max={100}
+                        value={rec.imageWidthPct ?? (rec.imageLayoutMode === 'full-width' ? 100 : rec.imageLayoutMode?.startsWith('wrap-') ? 45 : 75)}
+                        onChange={(e: any) =>
                           updateRecord(rec.id, {
-                            imagePath: `data:${encoded.mimeType};base64,${encoded.base64}`,
-                          });
-                        }}
+                            imageWidthPct: Math.min(100, Math.max(25, Number(e.target.value) || 75)),
+                          })
+                        }
                       />
-                    </label>
+                    </div>
+
+                    {(rec.imageLayoutMode === 'wrap-left' || rec.imageLayoutMode === 'wrap-right') && (
+                      <div className="space-y-2 p-2.5 rounded-lg bg-[var(--ui-bg-panel)] border border-[var(--ui-border)]">
+                        <Field
+                          as="textarea"
+                          rows={3}
+                          label="Texto que rodea la imagen"
+                          value={rec.content || ''}
+                          onChange={(e: any) => updateRecord(rec.id, { content: e.target.value })}
+                          placeholder="Escribí o pegá el párrafo que acompaña esta imagen al costado y debajo..."
+                        />
+                        <div className="grid grid-cols-2 gap-2">
+                          <Field
+                            type="number"
+                            label="Espacio con texto (mm)"
+                            min={2}
+                            max={15}
+                            value={rec.imageWrapGapMm ?? 5}
+                            onChange={(e: any) => updateRecord(rec.id, { imageWrapGapMm: Number(e.target.value) || 5 })}
+                          />
+                          <Field
+                            type="number"
+                            label="Ajuste manual (± líneas)"
+                            min={-5}
+                            max={5}
+                            value={rec.imageWrapLineAdjust ?? 0}
+                            onChange={(e: any) => updateRecord(rec.id, { imageWrapLineAdjust: Number(e.target.value) || 0 })}
+                          />
+                        </div>
+                      </div>
+                    )}
+
                     <Field
                       label="Epígrafe o descripción"
                       value={rec.imageCaption || ''}
                       onChange={(e: any) => updateRecord(rec.id, { imageCaption: e.target.value })}
                       placeholder="Ej: Figura 1 — Resultados de campo"
                     />
+                  </div>
+                ) : rec.type === 'table' ? (
+                  <div className="space-y-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <Field
+                        label="Título de tabla (opcional)"
+                        value={rec.tableCaption || ''}
+                        onChange={(e: any) => updateRecord(rec.id, { tableCaption: e.target.value })}
+                        placeholder="Ej: Tabla 1. Resultados comparativos"
+                      />
+                      <Field
+                        as="select"
+                        label="Estilo de tabla"
+                        value={rec.tableStylePreset || 'apa'}
+                        onChange={(e: any) => updateRecord(rec.id, { tableStylePreset: e.target.value })}
+                      >
+                        <option value="apa">Norma APA (solo líneas horizontales)</option>
+                        <option value="grid">Cuadrícula completa</option>
+                        <option value="striped">Filas alternadas</option>
+                        <option value="minimal">Minimalista</option>
+                      </Field>
+                    </div>
+
+                    <div className="overflow-x-auto rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-panel)] p-2 space-y-1.5">
+                      <div className="flex gap-1">
+                        {(rec.tableHeaders || ['Columna 1', 'Columna 2']).map((h, hi) => (
+                          <input
+                            key={hi}
+                            type="text"
+                            value={h}
+                            onChange={(e) => {
+                              const nextH = [...(rec.tableHeaders || ['Columna 1', 'Columna 2'])];
+                              nextH[hi] = e.target.value;
+                              updateRecord(rec.id, { tableHeaders: nextH });
+                            }}
+                            className="flex-1 min-w-[80px] px-2 py-1 text-xs font-bold rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)]"
+                          />
+                        ))}
+                      </div>
+                      {(rec.tableRows || [['Dato 1', 'Dato 2']]).map((row, ri) => (
+                        <div key={ri} className="flex gap-1">
+                          {row.map((cell, ci) => (
+                            <input
+                              key={ci}
+                              type="text"
+                              value={cell}
+                              onChange={(e) => {
+                                const nextRows = (rec.tableRows || []).map((r, idx) =>
+                                  idx === ri ? r.map((c, cIdx) => (cIdx === ci ? e.target.value : c)) : r,
+                                );
+                                updateRecord(rec.id, { tableRows: nextRows });
+                              }}
+                              className="flex-1 min-w-[80px] px-2 py-1 text-xs rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)]"
+                            />
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const cols = (rec.tableHeaders || ['Columna 1', 'Columna 2']).length;
+                          updateRecord(rec.id, {
+                            tableRows: [...(rec.tableRows || []), Array.from({ length: cols }, () => '')],
+                          });
+                        }}
+                        className="px-2 py-1 text-[11px] font-bold rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)] cursor-pointer"
+                      >
+                        + Fila
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nextH = [...(rec.tableHeaders || ['Columna 1', 'Columna 2']), `Col ${(rec.tableHeaders?.length || 2) + 1}`];
+                          const nextRows = (rec.tableRows || [['', '']]).map((r) => [...r, '']);
+                          updateRecord(rec.id, { tableHeaders: nextH, tableRows: nextRows });
+                        }}
+                        className="px-2 py-1 text-[11px] font-bold rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)] cursor-pointer"
+                      >
+                        + Columna
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const layout = computeOptimalTableLayout(
+                            rec.tableHeaders || [],
+                            rec.tableRows || [],
+                            { sectionColumns: section.columns === 2 ? 2 : 1 },
+                          );
+                          updateRecord(rec.id, {
+                            tableColWidthsPct: layout.colWidthsPct,
+                            tableColAlignments: layout.colAlignments,
+                            tableFontSizePt: layout.suggestedFontSizePt,
+                            spanFullWidth: layout.suggestSpanFullWidth,
+                          });
+                          notify.success('Anchos y alineación de tabla optimizados automáticamente.');
+                        }}
+                        className="px-2 py-1 text-[11px] font-bold rounded border border-[var(--color-secondary-base)]/40 bg-[var(--color-secondary-muted)] text-[var(--color-secondary-text)] cursor-pointer ml-auto"
+                      >
+                        Auto-acomodar columnas
+                      </button>
+                    </div>
                   </div>
                 ) : isEditing ? (
                   <div className="space-y-2">
@@ -849,12 +1044,41 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
             { type: 'quote', label: '+ Cita' },
             { type: 'callout', label: '+ Recuadro' },
             { type: 'list', label: '+ Lista' },
+            { type: 'table', label: '+ Tabla' },
             { type: 'image', label: '+ Imagen' },
           ] as const).map((btn) => (
             <button
               key={btn.type}
               type="button"
-              onClick={() => addRecord(btn.type)}
+              onClick={() => {
+                if (btn.type === 'table') {
+                  const newTableId = `rec_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+                  updateDraft((prev) => ({
+                    ...prev,
+                    sections: (Array.isArray(prev?.sections) ? prev.sections : []).map((s: any) =>
+                      s.id === section.id
+                        ? {
+                            ...s,
+                            records: [
+                              ...(Array.isArray(s.records) ? s.records : []),
+                              {
+                                id: newTableId,
+                                type: 'table',
+                                content: 'Tabla nueva',
+                                tableHeaders: ['Concepto', 'Valor'],
+                                tableRows: [['Ítem 1', '100']],
+                                tableStylePreset: 'apa',
+                              },
+                            ],
+                          }
+                        : s,
+                    ),
+                  }));
+                  setEditingRecordId(newTableId);
+                  return;
+                }
+                addRecord(btn.type);
+              }}
               className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold rounded-lg bg-[var(--ui-bg-card)] border border-[var(--ui-border)] hover:border-[var(--color-accent-base)] cursor-pointer"
             >
               <FilePlus2 className="w-3 h-3 text-[var(--color-accent-text)]" />

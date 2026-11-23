@@ -65,6 +65,13 @@ export interface NavbarGlobalAction {
   onClick: () => void;
 }
 
+export interface NavbarBackupHealth {
+  status: 'ok' | 'warning' | 'danger';
+  label: string;
+  tooltip: string;
+  onClick?: () => void;
+}
+
 export interface NavbarProps {
   currentCvData: any;
   /** Tema global de UI. Si se pasa, tiene prioridad sobre currentCvData.uiTheme. */
@@ -73,6 +80,10 @@ export interface NavbarProps {
   setCvData?: React.Dispatch<React.SetStateAction<any>>;
   onOpenSavedCVsModal: () => void;
   onSaveCVClick: () => void;
+  /** Etiqueta contextual opcional para la acción de guardar (ej. FacturLee). */
+  saveActionLabel?: string;
+  /** Semáforo de salud de respaldo local / Carpeta Segura. */
+  backupHealth?: NavbarBackupHealth;
   onOpenSaveAsModal: () => void;
   onOpenJsonDownloadModal: () => void;
   onPrint: () => void;
@@ -134,6 +145,8 @@ export function StudioNavbar({
   setCvData: _setCvData,
   onOpenSavedCVsModal,
   onSaveCVClick,
+  saveActionLabel,
+  backupHealth,
   onOpenSaveAsModal,
   onOpenJsonDownloadModal,
   onPrint,
@@ -357,8 +370,8 @@ export function StudioNavbar({
                 setIsActionMenuOpen((prev) => !prev);
                 setIsAccountMenuOpen(false);
               }}
-              className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-bg-card)] border border-[var(--ui-border)] transition ${elevationSystem.raised} cursor-pointer active:scale-95 text-[var(--ui-text-primary)]`}
-              title={t.navbar.actionMenuTitle}
+              className={`relative flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full bg-[var(--ui-bg-panel)] hover:bg-[var(--ui-bg-card)] border border-[var(--ui-border)] transition ${elevationSystem.raised} cursor-pointer active:scale-95 text-[var(--ui-text-primary)]`}
+              title={backupHealth ? `${t.navbar.actionMenuTitle} · ${backupHealth.tooltip}` : t.navbar.actionMenuTitle}
               aria-label="Archivo y exportación"
             >
               <FolderOpen className="w-4 h-4 text-[var(--color-secondary-bright)] shrink-0" />
@@ -366,19 +379,60 @@ export function StudioNavbar({
                 iconId={UI_ICON_IDS.guardar}
                 className="w-4 h-4 text-[var(--color-accent-purple-bright)] shrink-0"
               />
+              {backupHealth && (
+                <span
+                  className={`w-2 h-2 rounded-full shrink-0 ${
+                    backupHealth.status === 'ok'
+                      ? 'bg-[var(--color-status-success-base)]'
+                      : backupHealth.status === 'warning'
+                        ? 'bg-[var(--color-status-warning-base)]'
+                        : 'bg-[var(--color-status-danger-base)]'
+                  }`}
+                  aria-label={backupHealth.label}
+                />
+              )}
             </button>
 
             {isActionMenuOpen && (
               <div
-                className={`absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-64 max-h-[calc(100dvh-4.5rem)] overflow-y-auto rounded-[${radius.modal}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.floating} p-1.5 z-50 space-y-1 animate-fadeIn`}
+                className={`absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-64 max-h-[calc(100dvh-4.5rem)] overflow-y-auto rounded-[16px] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.floating} p-1.5 z-50 space-y-1 animate-fadeIn`}
               >
+                {backupHealth && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsActionMenuOpen(false);
+                      backupHealth.onClick?.();
+                    }}
+                    title={backupHealth.tooltip}
+                    className={`w-full text-left px-3 py-2 rounded-[12px] border text-[11px] font-bold flex items-center gap-2 transition cursor-pointer ${
+                      backupHealth.status === 'ok'
+                        ? 'bg-[var(--color-status-success-muted)] border-[var(--color-status-success-base)]/40 text-[var(--color-status-success-text)]'
+                        : backupHealth.status === 'warning'
+                          ? 'bg-[var(--color-status-warning-muted)] border-[var(--color-status-warning-base)]/40 text-[var(--color-status-warning-text)]'
+                          : 'bg-[var(--color-status-danger-muted)] border-[var(--color-status-danger-base)]/40 text-[var(--color-status-danger-text)]'
+                    }`}
+                  >
+                    <span
+                      className={`w-2 h-2 rounded-full shrink-0 ${
+                        backupHealth.status === 'ok'
+                          ? 'bg-[var(--color-status-success-base)]'
+                          : backupHealth.status === 'warning'
+                            ? 'bg-[var(--color-status-warning-base)]'
+                            : 'bg-[var(--color-status-danger-base)]'
+                      }`}
+                    />
+                    <span className="truncate">{backupHealth.label}</span>
+                  </button>
+                )}
+
                 <button
                   type="button"
                   onClick={() => {
                     setIsActionMenuOpen(false);
                     onOpenSavedCVsModal();
                   }}
-                  className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
+                  className="w-full text-left px-3 py-2 rounded-[12px] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer"
                 >
                   <FolderOpen className="w-4 h-4 text-[var(--color-secondary-bright)]" />
                   <span>{t.navbar.openSavedDocument}</span>
@@ -395,17 +449,17 @@ export function StudioNavbar({
                         onSaveCVClick();
                       }}
                       disabled={isSaving}
-                      className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer disabled:opacity-50`}
+                      className="w-full text-left px-3 py-2 rounded-[12px] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
                     >
                       <DomSectionIcon
                         iconId={UI_ICON_IDS.guardar}
                         className="w-4 h-4 text-[var(--color-accent-purple-bright)]"
                       />
-                      <span>{isSaving ? t.navbar.saveChangesSaving : t.navbar.saveChangesOverwrite}</span>
+                      <span>{saveActionLabel || (isSaving ? t.navbar.saveChangesSaving : t.navbar.saveChangesOverwrite)}</span>
                     </button>
                     <div className="w-full h-px bg-[var(--ui-border)] my-0.5" />
                   </>
-                ) : capabilitiesGate.canBackupCloud(docType) ? (
+                ) : capabilitiesGate.canSaveLocal(docType) ? (
                   <>
                     <button
                       type="button"
@@ -414,13 +468,13 @@ export function StudioNavbar({
                         onSaveCVClick();
                       }}
                       disabled={isSaving}
-                      className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer disabled:opacity-50`}
+                      className="w-full text-left px-3 py-2 rounded-[12px] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
                     >
                       <DomSectionIcon
                         iconId={UI_ICON_IDS.guardar}
                         className="w-4 h-4 text-[var(--color-accent-purple-bright)]"
                       />
-                      <span>{isSaving ? t.navbar.saveChangesSaving : t.navbar.saveChangesOverwrite}</span>
+                      <span>{saveActionLabel || (isSaving ? t.navbar.saveChangesSaving : t.navbar.saveChangesOverwrite)}</span>
                     </button>
 
                     <button
@@ -429,7 +483,7 @@ export function StudioNavbar({
                         setIsActionMenuOpen(false);
                         onOpenSaveAsModal();
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
+                      className="w-full text-left px-3 py-2 rounded-[12px] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer"
                     >
                       <CopyPlus className="w-4 h-4 text-[var(--color-secondary-bright)]" />
                       <span>{t.navbar.saveCopyAs}</span>
@@ -441,7 +495,7 @@ export function StudioNavbar({
                         setIsActionMenuOpen(false);
                         onOpenJsonDownloadModal();
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
+                      className="w-full text-left px-3 py-2 rounded-[12px] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer"
                     >
                       <FileArchive className="w-4 h-4 text-[var(--color-status-warning-bright)]" />
                       <span>{t.navbar.downloadPortableCopy}</span>
@@ -488,7 +542,7 @@ export function StudioNavbar({
                     setIsActionMenuOpen(false);
                     onPrint();
                   }}
-                  className={`w-full text-left px-3 py-2 rounded-[${radius.card}] text-xs font-black flex items-center gap-2 transition cursor-pointer ${button.primary}`}
+                  className={`w-full text-left px-3 py-2 rounded-[12px] text-xs font-black flex items-center gap-2 transition cursor-pointer ${button.primary}`}
                 >
                   <DomSectionIcon iconId={UI_ICON_IDS.exportar} className="w-4 h-4" />
                   <span>{t.navbar.exportPdf}</span>
@@ -517,7 +571,7 @@ export function StudioNavbar({
 
             {isAccountMenuOpen && (
               <div
-                className={`absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-64 max-h-[calc(100dvh-4.5rem)] overflow-y-auto rounded-[${radius.modal}] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.floating} p-2 z-50 space-y-2 animate-fadeIn`}
+                className={`absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-64 max-h-[calc(100dvh-4.5rem)] overflow-y-auto rounded-[16px] bg-[var(--ui-bg-panel)] border border-[var(--ui-border)] text-[var(--ui-text-primary)] ${elevationSystem.floating} p-2 z-50 space-y-2 animate-fadeIn`}
               >
                 {/* Estado de cuenta / créditos */}
                 {typeof onOpenCreditsModal === 'function' ? (
@@ -527,7 +581,7 @@ export function StudioNavbar({
                       setIsAccountMenuOpen(false);
                       onOpenCreditsModal();
                     }}
-                    className={`w-full text-left px-3 py-2 rounded-[${radius.card}] bg-[var(--ui-bg-card)] hover:bg-[var(--color-accent-muted)] border border-[var(--ui-border)] text-xs font-bold flex items-center justify-between gap-2 transition cursor-pointer`}
+                    className="w-full text-left px-3 py-2 rounded-[12px] bg-[var(--ui-bg-card)] hover:bg-[var(--color-accent-muted)] border border-[var(--ui-border)] text-xs font-bold flex items-center justify-between gap-2 transition cursor-pointer"
                   >
                     <span className="flex items-center gap-2 min-w-0">
                       <User className="w-4 h-4 text-[var(--color-secondary-bright)] shrink-0" />
@@ -541,7 +595,7 @@ export function StudioNavbar({
                   </button>
                 ) : (
                   <div
-                    className={`px-3 py-2 rounded-[${radius.card}] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] text-xs font-bold flex items-center gap-2`}
+                    className="px-3 py-2 rounded-[12px] bg-[var(--ui-bg-card)] border border-[var(--ui-border)] text-xs font-bold flex items-center gap-2"
                   >
                     <User className="w-4 h-4 text-[var(--color-secondary-bright)] shrink-0" />
                     <span>{user ? (isPro ? 'Plan Ilimitado' : `${pdfTokens} Créditos`) : 'Modo Invitado'}</span>
@@ -565,7 +619,7 @@ export function StudioNavbar({
                           type="button"
                           onClick={() => setGlobalUiTheme(themeKey)}
                           aria-pressed={isSelected}
-                          className={`px-2.5 py-1.5 rounded-[${radius.control}] border text-xs font-bold flex items-center justify-between gap-1.5 transition cursor-pointer ${
+                          className={`px-2.5 py-1.5 rounded-[10px] border text-xs font-bold flex items-center justify-between gap-1.5 transition cursor-pointer ${
                             isSelected
                               ? 'border-[var(--color-accent-base)] bg-[var(--color-accent-muted)] text-[var(--color-accent-text)]'
                               : 'border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-primary)] hover:border-[var(--color-accent-base)]/60'
@@ -590,7 +644,7 @@ export function StudioNavbar({
                     setIsAccountMenuOpen(false);
                     onOpenShareAppModal();
                   }}
-                  className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
+                  className="w-full text-left px-3 py-2 rounded-[12px] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer"
                 >
                   <Share2 className="w-4 h-4 text-[var(--color-secondary-bright)]" />
                   <span>Compartir aplicación</span>
@@ -603,7 +657,7 @@ export function StudioNavbar({
                       setIsAccountMenuOpen(false);
                       onOpenPrivacy();
                     }}
-                    className={`w-full text-left px-3 py-2 rounded-[${radius.card}] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer`}
+                    className="w-full text-left px-3 py-2 rounded-[12px] hover:bg-[var(--ui-bg-card)] text-xs font-bold flex items-center gap-2 transition cursor-pointer"
                   >
                     <ShieldCheck className="w-4 h-4 text-[var(--color-accent-text)]" />
                     <span>{t.navbar.privacyPolicy}</span>

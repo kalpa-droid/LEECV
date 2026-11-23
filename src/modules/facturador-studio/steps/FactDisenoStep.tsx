@@ -5,13 +5,19 @@ import { PanelSection } from '../../../shared/core/ui/PanelSection';
 import { FactStepBaseProps } from '../facturadorStepsShared';
 import { INVOICE_PRESETS, getInvoicePreset } from '../pdf/facturadorPresets';
 import { PAGE_SIZES } from '../../../shared/core/pdf-engine/layers/page/pageSizes';
+import {
+  applyGlobalConfigWithCascade,
+  isManuallyOverridden,
+  markManualOverride,
+} from '../../../shared/core/presets/configCascadeEngine';
+import { ManualOverrideBadge } from '../../../shared/core/ui/ManualOverrideBadge';
 import { radius } from '../../../shared/core/uiDesignSystem';
 
 const FACTURA_PAGE_SIZE_IDS = ['a4', 'a5', 'carta', 'legal'];
 
-/** Paso 7 — Estilo del PDF y tamaño de hoja. */
+/** Paso 5 — Estilo del PDF y tamaño de hoja con cascada anti-pisado. */
 export const FactDisenoStep: React.FC<FactStepBaseProps> = ({ vault, updateVault }) => {
-  const design = vault.design;
+  const design = vault.design as typeof vault.design & { manualOverrides?: Record<string, boolean> };
   const activePreset = getInvoicePreset(design.presetId);
 
   const patch = (values: Partial<typeof design>) =>
@@ -19,7 +25,14 @@ export const FactDisenoStep: React.FC<FactStepBaseProps> = ({ vault, updateVault
 
   const selectPreset = (presetId: string) => {
     const preset = getInvoicePreset(presetId);
-    patch({ presetId: preset.id, pageSizeId: preset.pageSizeId });
+    updateVault((prev) => ({
+      ...prev,
+      design: applyGlobalConfigWithCascade(prev.design as any, {
+        alwaysPatch: { presetId: preset.id },
+        defaultsPatch: { pageSizeId: preset.pageSizeId },
+        mode: 'preserve-manual',
+      }),
+    }));
   };
 
   return (
@@ -66,12 +79,42 @@ export const FactDisenoStep: React.FC<FactStepBaseProps> = ({ vault, updateVault
         </div>
       </PanelSection>
 
-      <PanelSection icon={<FileText className="w-4 h-4" />} title="Hoja">
+      <PanelSection
+        icon={<FileText className="w-4 h-4" />}
+        title="Hoja"
+        headerRight={
+          <ManualOverrideBadge
+            isOverridden={isManuallyOverridden(design, 'pageSizeId')}
+            globalLabel={PAGE_SIZES[activePreset.pageSizeId]?.appLabel || activePreset.pageSizeId}
+            onReset={() =>
+              updateVault((prev) => ({
+                ...prev,
+                design: {
+                  ...prev.design,
+                  pageSizeId: activePreset.pageSizeId,
+                  manualOverrides: {
+                    ...((prev.design as any).manualOverrides || {}),
+                    pageSizeId: false,
+                  },
+                } as any,
+              }))
+            }
+          />
+        }
+      >
         <Field
           as="select"
           label="¿En qué hoja lo vas a imprimir?"
           value={design.pageSizeId}
-          onChange={(e: React.ChangeEvent<HTMLSelectElement>) => patch({ pageSizeId: e.target.value })}
+          onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+            updateVault((prev) => ({
+              ...prev,
+              design: markManualOverride(
+                { ...(prev.design as any), pageSizeId: e.target.value },
+                'pageSizeId',
+              ),
+            }))
+          }
           helperText="El PDF sale exactamente en esa hoja."
         >
           {FACTURA_PAGE_SIZE_IDS.map((id) => (

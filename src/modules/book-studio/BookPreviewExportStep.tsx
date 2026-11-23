@@ -52,6 +52,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
   const [statusMessage, setStatusMessage] = useState('');
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [lastOutputIsZip, setLastOutputIsZip] = useState(false);
+  const [lastExportSignature, setLastExportSignature] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (!selectedFile) {
@@ -111,7 +112,25 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
     URL.revokeObjectURL(url);
   };
 
-  const handleStartExport = async () => {
+  const currentSignature = JSON.stringify({
+    name: selectedFile.name,
+    size: selectedFile.size,
+    options,
+  });
+  const hasReadyCachedExport = Boolean(pdfBlobUrl && lastExportSignature === currentSignature);
+
+  const handleStartExport = async (forceRegenerate = false) => {
+    if (!forceRegenerate && hasReadyCachedExport && pdfBlobUrl) {
+      const a = document.createElement('a');
+      a.href = pdfBlobUrl;
+      const cleanName = selectedFile.name.replace(/\.(pdf|zip)$/i, '');
+      a.download = `${cleanName}_IMPRESION_LIBRO${lastOutputIsZip ? '.zip' : '.pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      return;
+    }
+
     const allowed = await consumeCreditIfNeeded();
     if (!allowed) {
       setErrorMsg(t.bookStudio.previewExportStep.insufficientCredits);
@@ -139,6 +158,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
       const blob = new Blob([pdfBytes.buffer as ArrayBuffer], { type: isZip ? 'application/zip' : 'application/pdf' });
       const url = URL.createObjectURL(blob);
       setPdfBlobUrl(url);
+      setLastExportSignature(currentSignature);
 
       const a = document.createElement('a');
       a.href = url;
@@ -288,7 +308,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
                     groupKey="book-home-printer-margin"
                   />
                   <ManualOverrideBadge
-                    isOverridden={isManuallyOverridden(options.manualOverrides, 'unprintableMarginMm')}
+                    isOverridden={isManuallyOverridden(options, 'unprintableMarginMm')}
                     globalLabel={activeProfile.shortName}
                     onReset={() => setOptions((prev) => clearBookFieldManual(prev, 'unprintableMarginMm'))}
                   />
@@ -369,7 +389,7 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
           <p className="text-xs font-medium text-[var(--color-status-danger-text)]">{errorMsg}</p>
           <button
             type="button"
-            onClick={handleStartExport}
+            onClick={() => void handleStartExport(false)}
             className="px-4 py-2 text-xs font-bold bg-[var(--color-status-danger-muted)] text-[var(--color-status-danger-text)] border border-[var(--color-status-danger-base)]/40 cursor-pointer"
             style={{ borderRadius: radius.control }}
           >
@@ -377,44 +397,46 @@ export const BookPreviewExportStep: React.FC<BookPreviewExportStepProps> = ({
           </button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           <button
             type="button"
-            onClick={handleStartExport}
+            onClick={() => void handleStartExport(false)}
             disabled={isGating}
             className={`w-full py-3.5 px-6 font-bold text-sm bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] hover:opacity-90 disabled:opacity-50 transition flex items-center justify-center gap-2 cursor-pointer ${elevationSystem.floating}`}
             style={{ borderRadius: radius.control }}
           >
             <Printer className="w-4 h-4" />
-            <span>{isGating ? t.bookStudio.previewExportStep.verifyingCredits : t.bookStudio.previewExportStep.downloadPrints.replace('{sheets}', String(totalSheetsToPrint))}</span>
+            <span>
+              {isGating
+                ? t.bookStudio.previewExportStep.verifyingCredits
+                : hasReadyCachedExport
+                  ? `Descargar archivo listo (${totalSheetsToPrint} hojas · sin gastar crédito)`
+                  : t.bookStudio.previewExportStep.downloadPrints.replace('{sheets}', String(totalSheetsToPrint))}
+            </span>
             <Sparkles className="w-4 h-4" />
           </button>
 
-          {isNormalMode && (
-            <button
-              type="button"
-              onClick={handleDownloadOriginal}
-              className="w-full py-2.5 px-4 text-xs font-bold border border-[var(--ui-border)] text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] hover:bg-[var(--ui-bg-card)] transition flex items-center justify-center gap-2 cursor-pointer"
-              style={{ borderRadius: radius.control }}
-            >
-              <Download className="w-4 h-4" />
-              <span>{t.bookStudio.previewExportStep.downloadOriginal}</span>
-            </button>
-          )}
-
-          {pdfBlobUrl && (
-            <div className="flex gap-2">
-              <a
-                href={pdfBlobUrl}
-                download={`${selectedFile.name.replace(/\.(pdf|zip)$/i, '')}_IMPRESION_LIBRO${lastOutputIsZip ? '.zip' : '.pdf'}`}
-                className="flex-1 py-2 px-4 text-xs font-bold border border-[var(--color-accent-text)] text-[var(--color-accent-text)] flex items-center justify-center gap-1.5"
-                style={{ borderRadius: radius.control }}
+          <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+            {hasReadyCachedExport && (
+              <button
+                type="button"
+                onClick={() => void handleStartExport(true)}
+                className="text-[11px] font-semibold text-[var(--ui-text-secondary)] hover:text-[var(--color-accent-text)] underline cursor-pointer"
               >
-                <Download className="w-3.5 h-3.5" />
-                <span>{t.bookStudio.previewExportStep.downloadAgain}</span>
-              </a>
-            </div>
-          )}
+                Volver a generar
+              </button>
+            )}
+            {isNormalMode && (
+              <button
+                type="button"
+                onClick={handleDownloadOriginal}
+                className="text-[11px] font-semibold text-[var(--ui-text-secondary)] hover:text-[var(--ui-text-primary)] inline-flex items-center gap-1 underline cursor-pointer ml-auto"
+              >
+                <Download className="w-3 h-3" />
+                <span>{t.bookStudio.previewExportStep.downloadOriginal}</span>
+              </button>
+            )}
+          </div>
         </div>
       )}
 

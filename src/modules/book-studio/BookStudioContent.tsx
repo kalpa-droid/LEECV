@@ -573,7 +573,10 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
           onSaveCVClick={() => persistBookState(selectedFile, options, pdfPageCount)}
           onOpenSaveAsModal={onOpenSaveAsModal || (() => {})}
           onOpenJsonDownloadModal={onOpenJsonDownloadModal || (() => {})}
-          onPrint={() => setActiveStepTab('book_preview_export')}
+          onPrint={() => {
+            setActiveStepTab(options.workflowMode === 'guided' ? 'book_preview_export' : 'book_source_type');
+            setIsPanelOpen(true);
+          }}
           onOpenShareAppModal={onOpenShareAppModal || (() => {})}
           onOpenPrivacy={onOpenPrivacy || (() => {})}
           onOpenCreditsModal={onOpenCreditsModal}
@@ -599,7 +602,7 @@ export const BookStudioContent: React.FC<BookStudioContentProps> = ({
               tooltip: `${activePaperSpec.shortTitle} ${activePaperSpec.technicalParen}. Tocá para cambiar la hoja de impresión.`,
               ariaLabel: `Hoja para imprimir: ${activePaperSpec.shortTitle}`,
               iconId: UI_ICON_IDS.disenoHoja,
-              hasOverrides: isManuallyOverridden(options.manualOverrides, 'paperSize'),
+              hasOverrides: isManuallyOverridden(options, 'paperSize'),
               onClick: () => setIsPaperModalOpen(true),
             },
           ]}

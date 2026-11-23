@@ -37,7 +37,7 @@ export const BookPaperSizeModal: React.FC<BookPaperSizeModalProps> = ({
   const activeTarget = inferBookPrintTarget(options);
   const profile = BOOK_PRINT_PROFILES[activeTarget];
   const currentPaper = (options.paperSize || profile.defaults.paperSize) as BookPaperSizeId;
-  const paperIsManual = isManuallyOverridden(options.manualOverrides, 'paperSize');
+  const paperIsManual = isManuallyOverridden(options, 'paperSize');
   const paperConflict = !profile.allowedPaperSizes.includes(currentPaper);
 
   const paperList: BookPaperSizeId[] = profile.allowedPaperSizes.includes(currentPaper)

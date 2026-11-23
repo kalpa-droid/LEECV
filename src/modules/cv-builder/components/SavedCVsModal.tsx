@@ -208,7 +208,7 @@ export default function SavedCVsModal({
               </div>
               <input 
                 type="file" 
-                accept=".json,.zip" 
+                accept=".leecv,.leedoc,.leecard,.leebook,.leeplan,.json,.zip" 
                 className="hidden" 
                 onChange={async (e) => {
                   if (onImportJson) {
@@ -249,7 +249,9 @@ export default function SavedCVsModal({
                 <div className="min-w-0 flex-1">
                   <p className="font-black text-xs text-[var(--ui-text-primary)] truncate">
                     {folderStatus.configured && folderStatus.folderName
-                      ? `Carpeta: ${folderStatus.folderName}`
+                      ? folderStatus.permission !== 'granted'
+                        ? `Re-autorizar: ${folderStatus.folderName}`
+                        : `Carpeta: ${folderStatus.folderName}`
                       : 'Vincular Carpeta Segura'}
                   </p>
                 </div>

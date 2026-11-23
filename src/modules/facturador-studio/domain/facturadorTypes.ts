@@ -7,9 +7,9 @@
  * adaptador de PDF y la UI.
  */
 
-export type ComprobanteLetra = 'A' | 'B' | 'C' | 'X';
+export type ComprobanteLetra = 'A' | 'B' | 'C' | 'X' | 'R';
 
-export type ComprobanteTipo = 'factura' | 'nota_credito' | 'presupuesto';
+export type ComprobanteTipo = 'factura' | 'nota_credito' | 'presupuesto' | 'remito' | 'recibo';
 
 export type ComprobanteEstado = 'borrador' | 'emitida' | 'cobrada' | 'anulada';
 
@@ -48,6 +48,12 @@ export interface ClienteFactura {
   localidad: string;
   telefono: string;
   email: string;
+  /** Último comprobante emitido a este cliente (informativo). */
+  ultimoTipoComprobante?: ComprobanteTipo;
+  ultimaLetraComprobante?: ComprobanteLetra;
+  /** Tipo/letra habitual de factura para este cliente (no se pisa con presupuestos/remitos). */
+  tipoFacturaHabitual?: ComprobanteTipo;
+  letraFacturaHabitual?: ComprobanteLetra;
 }
 
 export interface CatalogItem {
@@ -69,6 +75,8 @@ export interface EscalonMayorista {
 export interface InvoiceLineItem {
   id: string;
   catalogItemId?: string;
+  /** Nombre corto del producto o servicio (si falta en borradores viejos, cae a `descripcion`). */
+  nombre?: string;
   descripcion: string;
   cantidad: number;
   precioUnitario: number;
@@ -89,6 +97,10 @@ export interface InvoiceDraft {
   estado: ComprobanteEstado;
   /** Si es true el comprobante descuenta stock al emitirse (una sola vez). */
   stockDeducido?: boolean;
+  /** Nivel 3 (configCascadeEngine): marcas de ajuste manual en este borrador. */
+  manualOverrides?: Record<string, boolean>;
+  /** True cuando se visualiza un comprobante emitido/cobrado/anulado en modo solo lectura/reimpresión. */
+  readonlyHistorical?: boolean;
 }
 
 export interface SavedInvoice extends InvoiceDraft {
@@ -118,7 +130,9 @@ export interface FacturadorDesignConfig {
 export interface FacturadorVaultData {
   version: 1;
   empresa: EmpresaConfig;
-  numeracion: Record<ComprobanteLetra, NumeracionEstado>;
+  numeracion: Partial<Record<ComprobanteLetra, NumeracionEstado>> & Record<'A' | 'B' | 'C' | 'X', NumeracionEstado>;
+  /** Talonarios compuestos por `${puntoVenta}|${tipo}|${letra}` para no mezclar Facturas, Presupuestos y NC. */
+  talonarios?: Record<string, NumeracionEstado>;
   catalogo: CatalogItem[];
   clientes: ClienteFactura[];
   comprobantes: SavedInvoice[];
