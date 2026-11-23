@@ -1,4 +1,5 @@
 import { Preset } from '../../../shared/core/pdf-engine/layers/presets/presetSchema';
+import { registerPresetInMemory } from '../../../shared/core/pdf-engine/layers/presets/presetRegistry';
 
 /**
  * CAPA 5 — PRESETS DE EDITORLEE
@@ -278,3 +279,14 @@ export const EDITORIAL_PRESETS: Preset[] = [
     },
   },
 ];
+
+// Registrar cada preset editorial en el registro central de PDF para que
+// `exportDocumentToPDF(..., presetId)` resuelva `pageCategory: 'editorial'`
+// y nunca caiga a `cvClasicoPreset`.
+for (const preset of EDITORIAL_PRESETS) {
+  registerPresetInMemory(preset as any);
+}
+
+export function getEditorialPdfPreset(presetId?: string) {
+  return EDITORIAL_PRESETS.find((p) => p.id === presetId) || EDITORIAL_PRESETS[0];
+}

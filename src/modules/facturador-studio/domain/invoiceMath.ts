@@ -1,6 +1,7 @@
 import {
   CatalogItem,
   ComprobanteLetra,
+  ComprobanteTipo,
   CondicionIva,
   InvoiceLineItem,
 } from './facturadorTypes';
@@ -28,8 +29,17 @@ export function formatQuantity(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(2).replace('.', ',');
 }
 
-/** Código de comprobante AFIP/ARCA por letra (informativo, no reemplaza el CAE). */
-export function getCodigoAfipPorLetra(letra: ComprobanteLetra): string {
+/** Código de comprobante AFIP/ARCA según tipo y letra (informativo, no reemplaza el CAE). */
+export function getCodigoAfip(tipo: ComprobanteTipo | string, letra: ComprobanteLetra): string {
+  if (tipo === 'presupuesto' || tipo === 'remito' || tipo === 'recibo') {
+    return '--';
+  }
+  if (tipo === 'nota_credito') {
+    if (letra === 'A') return '03';
+    if (letra === 'B') return '08';
+    if (letra === 'C') return '13';
+    return '--';
+  }
   switch (letra) {
     case 'A':
       return '01';
@@ -38,8 +48,13 @@ export function getCodigoAfipPorLetra(letra: ComprobanteLetra): string {
     case 'C':
       return '11';
     default:
-      return '00';
+      return '--';
   }
+}
+
+/** Alias retrocompatible por letra (asume factura). */
+export function getCodigoAfipPorLetra(letra: ComprobanteLetra): string {
+  return getCodigoAfip('factura', letra);
 }
 
 export const CONDICION_IVA_LABEL: Record<CondicionIva, string> = {
@@ -183,7 +198,15 @@ export function describeComprobante(draft: {
   numero: string;
 }): string {
   const tipoLabel =
-    draft.tipo === 'presupuesto' ? 'Presupuesto' : draft.tipo === 'nota_credito' ? 'Nota de Crédito' : 'Factura';
+    draft.tipo === 'presupuesto'
+      ? 'Presupuesto'
+      : draft.tipo === 'nota_credito'
+        ? 'Nota de Crédito'
+        : draft.tipo === 'remito'
+          ? 'Remito'
+          : draft.tipo === 'recibo'
+            ? 'Recibo'
+            : 'Factura';
   const nro = `${formatPointOfSale(draft.puntoVenta)}-${formatCompNro(draft.numero)}`;
   return `${tipoLabel} ${draft.letra} ${nro}`;
 }

@@ -21,6 +21,8 @@ import { DEFAULT_EDITORIAL_PRESET, getEditorialPreset } from '../domain/editoria
 import { applyEditorialGlobalConfig } from '../domain/editorialNormEngine';
 import { resolveCanonicalEditorialKey } from '../domain/editorialDockEngine';
 import { emitLidioMessage } from '../../../shared/core/assistant/lidioBus';
+import { EditorialImportReviewModal } from '../ui/EditorialImportReviewModal';
+import type { DocxExtractedRichBlock } from '../domain/docxClientExtractor';
 import type { EditorialPresetId, EditorialSection } from '../domain/editorialTypes';
 
 interface EditorialImportAiPanelProps {
@@ -43,6 +45,13 @@ export const EditorialImportAiPanel: React.FC<EditorialImportAiPanelProps> = ({
   const { confirm } = useConfirm();
 
   const [manuscriptText, setManuscriptText] = useState('');
+  const [richBlocks, setRichBlocks] = useState<DocxExtractedRichBlock[] | undefined>(undefined);
+  const [importWarnings, setImportWarnings] = useState<string[]>([]);
+  const [pendingReview, setPendingReview] = useState<{
+    sections: EditorialSection[];
+    metadata: { title: string; subtitle: string; author: string };
+    mergeMode: 'replace' | 'append';
+  } | null>(null);
   const [showPasteBox, setShowPasteBox] = useState(false);
   const [progress, setProgress] = useState<ImportProgressUpdate | null>(null);
   const [extractSummary, setExtractSummary] = useState<{
@@ -108,6 +117,8 @@ export const EditorialImportAiPanel: React.FC<EditorialImportAiPanelProps> = ({
           signal: controller.signal,
         });
         setManuscriptText(extracted.text);
+        setRichBlocks(extracted.richBlocks);
+        setImportWarnings(extracted.warnings || []);
         setExtractSummary({
           digitalPages: extracted.pdfDigitalPages,
           ocrPages: extracted.ocrPages,
@@ -171,49 +182,36 @@ export const EditorialImportAiPanel: React.FC<EditorialImportAiPanelProps> = ({
     try {
       const result = await structureManuscriptInChunks({
         fullText: raw,
+        richBlocks,
         presetId: draft?.design?.presetId as EditorialPresetId | undefined,
         signal: controller.signal,
         onProgress: (upd) => setProgress(upd),
-        onPartialSections: (sectionsSoFar, metadata) => {
-          const normalizedSections: EditorialSection[] = sectionsSoFar.map((s) => {
-            const { sectionKey, category } = resolveCanonicalEditorialKey(s);
-            return { ...s, sectionKey, category };
-          });
-          if (!firstSectionId && normalizedSections.length > 0) {
-            firstSectionId = normalizedSections[0].id;
-          }
-          updateDraft((prev) => ({
-            ...prev,
-            metadata: {
-              ...(prev?.metadata || {}),
-              ...(metadata?.title && !prev?.metadata?.title ? { title: metadata.title } : {}),
-              ...(metadata?.author && !prev?.metadata?.author ? { author: metadata.author } : {}),
-              ...(metadata?.subtitle && !prev?.metadata?.subtitle ? { subtitle: metadata.subtitle } : {}),
-            },
-            sections:
-              mergeMode === 'replace'
-                ? normalizedSections
-                : [...(prev?.sections || []), ...normalizedSections],
-          }));
-        },
       });
 
       if (result.sections.length === 0) {
         throw new Error('No encontramos secciones legibles en el texto.');
       }
 
-      if (result.usedFallbackForChunks > 0) {
-        showSuccess(
-          `Organizamos ${result.sections.length} secciones (${result.usedFallbackForChunks} fragmento(s) por detección local).`,
-        );
-      } else {
-        showSuccess(`${result.sections.length} capítulos/apartados listos en tu barra lateral.`);
-      }
+      const normalizedSections: EditorialSection[] = result.sections.map((s) => {
+        const { sectionKey, category } = resolveCanonicalEditorialKey(s);
+        return { ...s, sectionKey, category };
+      });
+      firstSectionId = normalizedSections[0]?.id || '';
 
-      if (firstSectionId && setActiveStepTab) {
-        setActiveStepTab(firstSectionId);
-      }
-      return `${result.sections.length} secciones detectadas`;
+      const currentTitle = String(draft?.metadata?.title || '').trim();
+      const isDefaultTitle = !currentTitle || currentTitle === 'Mi obra' || currentTitle === 'Sin título';
+
+      setPendingReview({
+        sections: normalizedSections,
+        mergeMode,
+        metadata: {
+          title: (isDefaultTitle && result.metadata?.title) ? result.metadata.title : currentTitle,
+          subtitle: result.metadata?.subtitle || draft?.metadata?.subtitle || '',
+          author: result.metadata?.author || draft?.metadata?.author || '',
+        },
+      });
+
+      return `${normalizedSections.length} capítulos listos para revisar`;
     } finally {
       setIsBusy(false);
     }
@@ -375,6 +373,42 @@ export const EditorialImportAiPanel: React.FC<EditorialImportAiPanelProps> = ({
             )}
           </div>
         </PanelSection>
+      )}
+
+      {pendingReview && (
+        <EditorialImportReviewModal
+          isOpen={true}
+          onCancel={() => setPendingReview(null)}
+          sourceChars={manuscriptText.replace(/\s+/g, '').length}
+          initialMetadata={pendingReview.metadata}
+          initialSections={pendingReview.sections}
+          warnings={importWarnings}
+          onConfirm={({ metadata, sections }) => {
+            const firstId = sections[0]?.id || '';
+            updateDraft((prev) => ({
+              ...prev,
+              metadata: {
+                ...(prev?.metadata || {}),
+                title: metadata.title || prev?.metadata?.title || 'Mi obra',
+                subtitle: metadata.subtitle,
+                author: metadata.author,
+              },
+              tocConfig: {
+                ...(prev?.tocConfig || {}),
+                enabled: true,
+              },
+              sections:
+                pendingReview.mergeMode === 'replace'
+                  ? sections
+                  : [...(prev?.sections || []), ...sections],
+            }));
+            setPendingReview(null);
+            showSuccess(`${sections.length} capítulos cargados en tu barra lateral izquierda.`);
+            if (firstId && setActiveStepTab) {
+              setActiveStepTab(firstId);
+            }
+          }}
+        />
       )}
     </div>
   );

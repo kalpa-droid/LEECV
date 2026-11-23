@@ -187,9 +187,23 @@ export interface EditorialRecord {
   listStyle?: 'bullet' | 'numbered'; // list
   tableHeaders?: string[];           // table
   tableRows?: string[][];            // table
+  tableCaption?: string;             // table (título/epígrafe)
+  tableStylePreset?: 'apa' | 'grid' | 'striped' | 'minimal';
+  tableColWidthsPct?: number[];
+  tableColAlignments?: ('left' | 'center' | 'right')[];
+  tableFontSizePt?: number;
   imagePath?: string;                // image (ruta o data URI)
   imageDpi?: number;                 // image (calculado)
   imageCaption?: string;             // image (epígrafe)
+  imageLayoutMode?: 'full-width' | 'centered' | 'pair-side-by-side' | 'wrap-left' | 'wrap-right';
+  imageWidthPct?: number;
+  imageWrapGapMm?: number;
+  imageWrapLineAdjust?: number;
+  secondaryImagePath?: string;
+  secondaryImageCaption?: string;
+  pairWidthRatio?: '50-50' | '60-40' | '40-60';
+  spanFullWidth?: boolean;           // En modo 2 columnas, cruza de margen a margen
+  forceColumnBreakAfter?: boolean;   // Salto manual de columna en modo 2 columnas
   bibAuthor?: string;                // bibliography_item
   bibYear?: string;                  // bibliography_item
   bibTitle?: string;                 // bibliography_item
@@ -228,6 +242,10 @@ export interface EditorialSection {
   records: EditorialRecord[];
   /** Carátula o portadilla separadora opcional para esta sección/capítulo. */
   sectionCover?: EditorialSectionCoverOverride;
+  /** Diseño de columnas específico de esta sección (1 o 2 columnas). */
+  columns?: 1 | 2;
+  columnGapMm?: number;
+  spanHeadingsFullWidth?: boolean;
 }
 
 /** Reglas del manifiesto editorial. */

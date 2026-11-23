@@ -101,9 +101,13 @@ Para previsualizar sin escribir archivos: agregar `--dry-run`.
   - **Regla anti emoji+ícono**: nunca combinar `icon`/`iconId` SVG con un emoji en la misma etiqueta visible (usar `ICON_REGISTRY` / `iconId` único y texto limpio).
   - **Regla 1 Modal = 1 Eje y Cero Duplicación Modal ↔ Panel / Panel ↔ Panel**: un cambio global vive en TopBar + su modal enfocado; los paneles no repiten grillas de presets globales ni editan campos que ya pertenecen a otro paso (muestran estado + enlace al paso o modal dueño).
   - **Cascada de 3 Niveles (`configCascadeEngine.ts`)**: **Nivel 1 (Global) → Nivel 2 (Preset) → Nivel 3 (`manualOverrides`)** garantiza que nunca se pisan ajustes finos sin preguntar (`detectGlobalConflicts` + `applyGlobalConfigWithCascade`), mostrando `<ManualOverrideBadge />` con reset puntual (`↺`).
-- **Persistencia en Disco y Carpeta Segura**:
+- **Persistencia en Disco, Respaldo ante Actualizaciones y Carpeta Segura**:
   - Toda persistencia pasa por `documentStorageService` (`localDocumentStore` + `wrapDocumentEnvelope`) y exportación a disco por `nativeFileDocumentService.ts` + `fileHandleStore.ts` ("Carpeta Segura").
-  - Los archivos binarios/imágenes se externalizan automáticamente a IndexedDB (`localAssetStore`, URI `asset://<sha256>`).
+  - Toda app standalone protege cambios recientes con `useUnsavedChangesGuard` (`beforeunload` + flush antes de actualizar el Service Worker vía `updateEngine.ts`) y puede alimentar el semáforo `backupHealth` de `StudioNavbar`.
+  - Los buscadores de catálogos, clientes o historial usan `<SearchFilterBar minChars={3} />` (`matchesSearchQuery` con normalización NFD).
+  - Toda importación/estructuración asistida por IA usa `<StructuredImportReviewModal />` diferenciando campos 1:1 de registros/capítulos y mostrando retención.
+  - Los archivos binarios/imágenes se externalizan automáticamente a IndexedDB (`localAssetStore`, URI `asset://<sha256>` con conteo de referencias al borrar).
+  - Las fuentes tipográficas universitarias y personalizadas para PDF se resuelven bajo demanda mediante `academicFontCatalog.ts` + `localFontStore.ts` + `pdfFontRegistry.ts` (`ensureAcademicOrCustomFontRegistered`).
   - Registrar sanitizador y migrador propios vía `registerDocumentSchemaHandler(docType, handler)` sin depender de `migrateCvData`.
   - Cualquier operación async de usuario usa `withErrorHandling()` (`errorHandler.ts`).
 

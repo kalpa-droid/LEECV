@@ -4,6 +4,7 @@ import StudioNavbar from '../../shared/core/studio-host/StudioNavbar';
 import StudioDock from '../../shared/core/studio-host/StudioDock';
 import { VectorDocViewer } from '../../shared/core/pdf-engine/VectorDocViewer';
 import { EditorialPdfDocument } from './pdf/EditorialPdfDocument';
+import { getEditorialPdfPreset } from './pdf/editorialPresets';
 import { DEFAULT_EDITORIAL_PRESET } from './domain/editorialPresetCatalog';
 import {
   applyEditorialGlobalConfig,
@@ -309,7 +310,7 @@ export const EditorLeeStudioContent: React.FC<EditorLeeStudioContentProps> = ({
     setIsExporting(true);
     await withErrorHandling(
       async () => {
-        const ok = await exportDocumentToPDF({ draft, preset }, preset);
+        const ok = await exportDocumentToPDF({ draft, preset }, getEditorialPdfPreset(preset) as any);
         if (!ok) throw new Error('pdf_sin_documento');
         showSuccess('Documento exportado en PDF.');
       },

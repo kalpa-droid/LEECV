@@ -160,39 +160,6 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
           {t.bookStudio.impositionStep.quickDoubleSideHint}
         </ContextualGuideBox>
 
-        {/* Resumen enlazado con los 2 globales de barra superior (cero duplicación) */}
-        <div
-          className="p-3 border border-[var(--ui-border)] bg-[var(--ui-bg-card)] flex flex-wrap items-center justify-between gap-2"
-          style={{ borderRadius: radius.control }}
-        >
-          <div className="flex items-center gap-2 min-w-0">
-            <Settings2 className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" />
-            <span className="text-xs font-bold text-[var(--ui-text-primary)] truncate">
-              {activeProfile.shortName} · Hoja ({paperSpec.pageSize.name})
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            {onOpenPrintTargetModal && (
-              <button
-                type="button"
-                onClick={onOpenPrintTargetModal}
-                className="px-2.5 py-1 rounded-full border border-[var(--ui-border)] bg-[var(--ui-bg-surface)] text-[11px] font-bold text-[var(--color-accent-text)] cursor-pointer hover:border-[var(--color-accent-base)]"
-              >
-                Destino
-              </button>
-            )}
-            {onOpenPaperModal && (
-              <button
-                type="button"
-                onClick={onOpenPaperModal}
-                className="px-2.5 py-1 rounded-full border border-[var(--ui-border)] bg-[var(--ui-bg-surface)] text-[11px] font-bold text-[var(--color-accent-text)] cursor-pointer hover:border-[var(--color-accent-base)]"
-              >
-                Hoja
-              </button>
-            )}
-          </div>
-        </div>
-
         {/* Destino de la cubierta: A / B / C */}
         <div>
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -203,7 +170,7 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
               groupKey="book-destination"
             />
             <ManualOverrideBadge
-              isOverridden={isManuallyOverridden(options.manualOverrides, 'destination')}
+              isOverridden={isManuallyOverridden(options, 'destination')}
               globalLabel={activeProfile.shortName}
               onReset={() => setOptions((prev) => clearBookFieldManual(prev, 'destination'))}
             />
@@ -246,7 +213,7 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className={typeScale.fieldLabel}>{t.bookStudio.impositionStep.paperThicknessLabel}</span>
             <ManualOverrideBadge
-              isOverridden={isManuallyOverridden(options.manualOverrides, 'paperThicknessMm')}
+              isOverridden={isManuallyOverridden(options, 'paperThicknessMm')}
               globalLabel={activeProfile.shortName}
               onReset={() => setOptions((prev) => clearBookFieldManual(prev, 'paperThicknessMm'))}
             />
@@ -329,7 +296,7 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
             }}
             overrideBadge={
               <ManualOverrideBadge
-                isOverridden={isManuallyOverridden(options.manualOverrides, 'applyCreep')}
+                isOverridden={isManuallyOverridden(options, 'applyCreep')}
                 globalLabel={activeProfile.shortName}
                 onReset={() => setOptions((prev) => clearBookFieldManual(prev, 'applyCreep'))}
               />
@@ -357,7 +324,7 @@ export const BookImpositionStep: React.FC<BookImpositionStepProps> = ({
             }}
             overrideBadge={
               <ManualOverrideBadge
-                isOverridden={isManuallyOverridden(options.manualOverrides, 'showGuides')}
+                isOverridden={isManuallyOverridden(options, 'showGuides')}
                 globalLabel={activeProfile.shortName}
                 onReset={() => setOptions((prev) => clearBookFieldManual(prev, 'showGuides'))}
               />

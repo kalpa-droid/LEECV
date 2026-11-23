@@ -80,13 +80,19 @@ export const idbStorage = {
         const ls = getLocalStorageSafely();
         if (ls) {
           ls.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
-        } else {
-          memoryStore.set(key, value);
+          return true;
         }
-        return true;
+        memoryStore.set(key, value);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('leecv:storage-degraded', { detail: { key } }));
+        }
+        return false;
       } catch {
         memoryStore.set(key, value);
-        return true;
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('leecv:storage-degraded', { detail: { key } }));
+        }
+        return false;
       }
     }
   },

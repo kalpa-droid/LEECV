@@ -21,6 +21,7 @@ interface BookStudioProps {
   onOpenJsonDownloadModal?: () => void;
   onOpenShareAppModal?: () => void;
   onOpenPrivacy?: () => void;
+  onOpenCreditsModal?: () => void;
 }
 
 export const BookStudio: React.FC<BookStudioProps> = ({
@@ -41,6 +42,7 @@ export const BookStudio: React.FC<BookStudioProps> = ({
   onOpenJsonDownloadModal,
   onOpenShareAppModal,
   onOpenPrivacy,
+  onOpenCreditsModal,
 }) => {
   return (
     <BookStudioContent
@@ -61,6 +63,7 @@ export const BookStudio: React.FC<BookStudioProps> = ({
       onOpenJsonDownloadModal={onOpenJsonDownloadModal}
       onOpenShareAppModal={onOpenShareAppModal}
       onOpenPrivacy={onOpenPrivacy}
+      onOpenCreditsModal={onOpenCreditsModal}
     />
   );
 };

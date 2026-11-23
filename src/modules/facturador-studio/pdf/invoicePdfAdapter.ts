@@ -10,7 +10,7 @@ import {
   computeLineRow,
   describeComprobante,
   formatARS,
-  getCodigoAfipPorLetra,
+  getCodigoAfip,
   LineRow,
 } from '../domain/invoiceMath';
 import { getInvoicePreset } from './facturadorPresets';
@@ -27,8 +27,12 @@ export const FISCAL_DISCLAIMER =
   'Comprobante interno sin CAE de ARCA. No es una factura fiscal y no reemplaza al comprobante que emite el organismo.';
 
 export interface InvoiceRenderRow extends LineRow {
+  nombre: string;
+  detalle: string;
   descripcion: string;
   cantidadLabel: string;
+  unitPriceLabel: string;
+  subtotalLabel: string;
 }
 
 export interface InvoiceRenderModel {
@@ -59,6 +63,8 @@ const TIPO_LABEL: Record<string, string> = {
   factura: 'FACTURA',
   nota_credito: 'NOTA DE CRÉDITO',
   presupuesto: 'PRESUPUESTO',
+  remito: 'REMITO',
+  recibo: 'RECIBO',
 };
 
 /** La fecha se guarda ISO (YYYY-MM-DD) y se muestra DD/MM/AAAA. */
@@ -77,15 +83,23 @@ export function prepareInvoiceRenderModel(
   const preset = getInvoicePreset(design.presetId);
   const rows = (draft.items || []).map((item) => {
     const row = computeLineRow(item);
+    const nombre = (item.nombre || item.descripcion || 'Ítem sin nombre').trim();
+    const detalle =
+      item.nombre && item.descripcion && item.descripcion.trim() !== item.nombre.trim()
+        ? item.descripcion.trim()
+        : '';
     return {
       ...row,
-      descripcion: item.descripcion || 'Ítem sin descripción',
+      nombre,
+      detalle,
+      descripcion: nombre,
       cantidadLabel: String(item.cantidad ?? 0).replace('.', ','),
+      unitPriceLabel: formatARS(row.unitPrice),
+      subtotalLabel: formatARS(row.subtotal),
     };
   });
 
   const totals = computeInvoiceTotals(rows, 21, draft.letra);
-  const esLetraA = draft.letra === 'A';
 
   return {
     empresa,
@@ -103,7 +117,7 @@ export function prepareInvoiceRenderModel(
     condicionIvaCliente: draft.cliente
       ? CONDICION_IVA_LABEL[draft.cliente.condicionIva] || ''
       : '',
-    codigoAfip: getCodigoAfipPorLetra(draft.letra),
+    codigoAfip: getCodigoAfip(draft.tipo, draft.letra),
     rows,
     totals,
     totalLabel: formatARS(totals.total),

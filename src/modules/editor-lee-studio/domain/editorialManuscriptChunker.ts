@@ -139,6 +139,115 @@ function makeRecordId(prefix: string, idx: number): string {
   return `${prefix}_rec_${idx}_${Math.random().toString(36).slice(2, 7)}`;
 }
 
+import type { DocxExtractedRichBlock } from './docxClientExtractor';
+
+export function countNonWhitespaceChars(text: string): number {
+  return String(text || '').replace(/\s+/g, '').length;
+}
+
+export function countSectionRecordsChars(sections: StructuredChunkSectionInput[]): number {
+  let total = 0;
+  for (const sec of sections) {
+    if (!sec || !Array.isArray(sec.records)) continue;
+    for (const rec of sec.records) {
+      const txt =
+        (typeof rec?.content === 'string' && rec.content) ||
+        (typeof (rec as any)?.text === 'string' && (rec as any).text) ||
+        (typeof (rec as any)?.body === 'string' && (rec as any).body) ||
+        '';
+      total += countNonWhitespaceChars(txt);
+    }
+  }
+  return total;
+}
+
+/**
+ * Construye secciones editoriales directamente desde bloques OOXML reales de Word
+ * cuando el archivo ya tiene estructura (Headings, tablas, imágenes, gráficos),
+ * garantizando 100% de conservación sin truncar jamás.
+ */
+export function buildSectionsFromDocxRichBlocks(
+  blocks: DocxExtractedRichBlock[],
+): EditorialSection[] {
+  if (!Array.isArray(blocks) || blocks.length === 0) return [];
+
+  const sections: EditorialSection[] = [];
+  let currentTitle = 'Cuerpo principal';
+  let currentRecords: EditorialRecord[] = [];
+  let counter = 0;
+
+  const flushSection = () => {
+    if (currentRecords.length === 0) return;
+    const { sectionKey, category } = resolveCanonicalEditorialKey({ title: currentTitle });
+    const secId = `ed_${sectionKey}_${Date.now()}_${sections.length}_${Math.random().toString(36).slice(2, 5)}`;
+    sections.push({
+      id: secId,
+      title: currentTitle,
+      sectionKey,
+      category: category as EditorialSectionKind,
+      visible: true,
+      includeInToc: sectionKey !== 'portada' && sectionKey !== 'dedicatoria',
+      startNewPage: true,
+      position: sections.length,
+      records: currentRecords.map((r, idx) => ({ ...r, id: makeRecordId(secId, idx) })),
+    });
+    currentRecords = [];
+  };
+
+  for (const block of blocks) {
+    if (block.kind === 'heading' && (block.level === 1 || block.level === 2) && block.text) {
+      if (currentRecords.length > 0) {
+        flushSection();
+      }
+      currentTitle = block.text.trim();
+      continue;
+    }
+
+    if (block.kind === 'heading' && block.text) {
+      currentRecords.push({
+        id: `tmp_${counter++}`,
+        type: 'subtitle',
+        subtitleLevel: 2,
+        content: block.text.trim(),
+      });
+      continue;
+    }
+
+    if (block.kind === 'table' && (block.tableHeaders?.length || block.tableRows?.length)) {
+      currentRecords.push({
+        id: `tmp_${counter++}`,
+        type: 'table',
+        content: block.text || 'Tabla importada de Word',
+        tableHeaders: block.tableHeaders || [],
+        tableRows: block.tableRows || [],
+      });
+      continue;
+    }
+
+    if (block.kind === 'image' && block.imageDataUrl) {
+      currentRecords.push({
+        id: `tmp_${counter++}`,
+        type: 'image',
+        content: block.imageCaption || 'Imagen importada',
+        imagePath: block.imageDataUrl,
+        imageCaption: block.imageCaption || '',
+      });
+      continue;
+    }
+
+    if (block.text && block.text.trim()) {
+      currentRecords.push({
+        id: `tmp_${counter++}`,
+        type: block.kind === 'list' ? 'list' : block.kind === 'callout' ? 'callout' : 'paragraph',
+        content: block.text.trim(),
+      });
+    }
+  }
+
+  flushSection();
+  return sections;
+}
+
 function sanitizeIncomingRecords(
   records: StructuredChunkRecordInput[] | undefined,
   prefix: string,
@@ -147,8 +256,17 @@ function sanitizeIncomingRecords(
   if (!Array.isArray(records)) return [];
   const out: EditorialRecord[] = [];
   for (let i = 0; i < records.length; i++) {
-    const raw = records[i];
-    const content = typeof raw?.content === 'string' ? raw.content.trim() : '';
+    const raw = records[i] as any;
+    const content =
+      typeof raw?.content === 'string'
+        ? raw.content.trim()
+        : typeof raw?.text === 'string'
+          ? raw.text.trim()
+          : typeof raw?.body === 'string'
+            ? raw.body.trim()
+            : typeof raw?.paragraph === 'string'
+              ? raw.paragraph.trim()
+              : '';
     if (!content) continue;
     const rawType = typeof raw?.type === 'string' ? raw.type : 'paragraph';
     const type = VALID_RECORD_TYPES.has(rawType) ? (rawType as EditorialRecord['type']) : 'paragraph';

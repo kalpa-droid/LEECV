@@ -11,6 +11,8 @@ import { calculateAiCost } from './_lib/costCalculator.js';
 import { AI_TASKS_CATALOG } from './_lib/aiTasks/catalog.js';
 import { buildCandidateContext } from './_lib/aiTasks/candidateContext.js';
 
+export const maxDuration = 60;
+
 // Number(undefined) es NaN y NaN ?? 0.7 sigue siendo NaN: se valida explícitamente.
 // Rango acotado a 0–0.5 porque el CV no debe "crear" datos (ver plan: 0.1–0.3).
 function resolveTemperature(raw: unknown): number {

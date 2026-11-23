@@ -534,7 +534,7 @@ export const DOCUMENT_TYPE_REGISTRY = {
       privacy: 'metadata-only',
     },
     creationStrategy: 'vault',
-    capabilities: ['theme', 'paper_size', 'json_backup', 'nameable_title'],
+    capabilities: ['theme', 'paper_size', 'json_backup', 'nameable_title', 'global_context'],
     exportFormats: ['pdf', 'xlsx', 'zip'],
     stepSequenceId: 'invoice_steps',
     defaultPaperSize: 'a4',
