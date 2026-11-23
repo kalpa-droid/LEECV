@@ -1,3 +1,27 @@
+## [2026-11-23] - PR #157 (V3.5.0): Libro Folleto y EditorLEE — Modo Automático, Orientación y Foliado IA, Separadores de Capítulos y Detector de Tipo de Obra
+
+**Commit en `main`:** `716d5e534513249cc5f91fe066b3501141bb5461`
+
+**Resumen:**
+- **Libro Folleto — Modo Automático Directo (`BookSourceTypeStep.tsx`, `BookStudioContent.tsx`)**:
+  - Inicia por defecto en `workflowMode: 'auto'` para quienes solo desean maquetar y ordenar las páginas (tanto en PDF Estándar como en PDF Fotocopia/Escaneado) directo hacia el armado e impresión sin preguntas intermedias, con opción a cambiar a **Modo Guiado / Personalizado (pasos 1 a 6)** con 1 clic.
+- **Libro Folleto — Orientación Inteligente con IA en Fotocopia/Escaneado (`bookOrientationAi.ts`, `catalog.ts`, `BookSourceTypeStep.tsx`, `BookOrganizeStep.tsx`, `ThumbnailCard.tsx`, `LightboxModal.tsx`)**:
+  - Inspecciona primero matriz de transformación del texto OCR nativo (Capa 0) y, si no alcanza, envía muestras comprimidas de las hojas `[2, 5, 10, 15]` a `book_detect_orientation`.
+  - Si las muestras coinciden en un mismo giro (`0°`, `+90°` derecha, `-90°/270°` izquierda o `180°`), lo aplica automáticamente a todas las páginas verticales. Si detecta giros mixtos, avisa al usuario y ofrece **Girar manualmente** o **Que la IA revise cada página (imagen muy comprimida)** (lotes de 4 hojas ≤16 págs. o grillas 2×2 rotuladas `[A..D]` >16 págs.).
+  - Corregido bug de doble rotación (`90° + 90° = 180°`) en `ThumbnailCard.tsx` y `LightboxModal.tsx`.
+- **Libro Folleto — Paso 5 ("5. Encuentro un número") Asistido por IA (`bookFoliadoAi.ts`, `impositionMath.ts`, `BookFoliadoStep.tsx`, `LightboxModal.tsx`)**:
+  - Búsqueda progresiva en las hojas `[2, 5, 10, 15]` (y segunda ola `[20, 25, 30, 40]` si solo aparecen preliminares romanos) combinando texto nativo en franja superior/inferior + recortes JPEG con Vision (`book_detect_page_numbers`).
+  - Deduce matemáticamente qué hoja del PDF corresponde a la **Página 1** (p. ej. si halla el número `10` en la hoja 14 del PDF, retrocede 9 páginas hasta la hoja 5) y renderiza en pantalla la **miniatura de la Página 1 deducida** (con soporte para mitades Izquierda/Derecha en fotocopia, capítulos sueltos y botones `◀ / ▶` de ajuste fino ±1 hoja).
+- **Carátulas / Separadores por Capítulos o Secciones (`bookDividerCanvas.ts`, `BookSectionDividerModal.tsx`, `PdfPreviewStrip.tsx`, `bookPageCount.ts`, `impositionEngine.ts`, `EditorialPdfCovers.tsx`, `EditorialPdfDocument.tsx`, `editorialTocResolver.ts`, `EditorialCoverPanel.tsx`, `EditorialSectionFocusPanel.tsx`)**:
+  - **Libro Folleto:** Inserción manual de portadas interiores antes de cualquier página del PDF con 2 formatos (**Con hoja blanca detrás (2 págs.)** o **Solo 1 página**), consumiendo los 6 arquetipos de `COVER_PRESETS_CATALOG` o imagen subida y preservando la calidad vectorial de las páginas originales del PDF en `useVectorPath`.
+  - **EditorLEE:** Componente `<EditorialSectionDividerPage />` consumiendo los 6 arquetipos de `COVER_PRESETS_CATALOG`, desactivado por defecto y activable globalmente o por capítulo/apartado (con opción de dorso blanco y ajuste automático de numeración en el índice TOC).
+- **EditorLEE — Recomendación IA de Tipo de Obra al Importar + Acceso desde "Obra activa" (`editorialPresetDetector.ts`, `EditorialImportAiPanel.tsx`, `EditorialPresetInicioPanel.tsx`)**:
+  - Agregado botón directo **"Importar manuscrito o apuntes (Word, PDF, fotos)"** dentro de `<PanelSection title="Obra activa">`.
+  - Detector híbrido (`detectEditorialPresetFromText` + tarea IA `editorial_detect_preset`) que, al subir o estructurar un documento cuyo contenido corresponde a otro preset (p. ej. un *Informe / Proyecto* con la app en *Libro / Novela*), muestra una sugerencia instantánea para cambiar con 1 clic respetando `preserve-manual`.
+- **Verificación:** Suite de tests `tests/book-engine/bookOrientationAndFoliadoAi.test.ts` y `tests/editorial/editorialPresetDetectorAndCovers.test.ts`, versión `V3.5.0` y `npm run check-all` en verde local y en GitHub Actions.
+
+---
+
 ## [2026-11-22] - PR #155 (V3.4.0): TopBar de 4 Zonas, Tema en Preferencias, Docks Compactos y Estándar Cero Ruido en CV, EditorLee y Libro/Folleto
 
 **Commit en `main`:** `6f9dc8f7278f4f70a7c55e77a517d8ed0a5c5a22`
