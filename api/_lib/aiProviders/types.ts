@@ -8,12 +8,16 @@ export interface AiCompletionRequest {
   responseSchema?: object;
   /** Solo Gemini: resolución de medios para imágenes (p. ej. MEDIA_RESOLUTION_HIGH). Los demás proveedores lo ignoran. */
   mediaResolution?: 'MEDIA_RESOLUTION_UNSPECIFIED' | 'MEDIA_RESOLUTION_LOW' | 'MEDIA_RESOLUTION_MEDIUM' | 'MEDIA_RESOLUTION_HIGH';
+  /** Nivel de capacidad solicitado ('fast' por defecto o 'pro' para razonamiento complejo). */
+  tier?: 'fast' | 'pro';
 }
 
 export interface AiProviderPingResult {
   status: 'active' | 'missing_vars' | 'invalid_credentials' | 'error';
   label: string;
   model: string;
+  healthyKeys?: number;
+  totalKeys?: number;
 }
 
 export interface AiCompletionResponse {

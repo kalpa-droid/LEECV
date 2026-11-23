@@ -3,8 +3,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { requireRateLimit } from './_lib/rateLimiter.js';
 import { successResponse, errorResponse } from './_lib/apiResponse.js';
 import { serverDal } from './_lib/serverDal.js';
-import { AI_PROVIDERS, AI_PROVIDER_FALLBACK_ORDER } from './_lib/aiProviders/registry.js';
-import { getNextAvailableKey, markKeyRateLimited } from './_lib/aiProviders/keyRotation.js';
+import { AI_PROVIDERS, AI_PROVIDER_FALLBACK_ORDER, AI_PROVIDER_PRO_ORDER } from './_lib/aiProviders/registry.js';
+import { getConfiguredKeyCount, getNextAvailableKey, markKeyRateLimited } from './_lib/aiProviders/keyRotation.js';
 import { recoverJsonFromText } from './_lib/aiProviders/jsonRecovery.js';
 import type { AiCompletionRequest } from './_lib/aiProviders/types.js';
 import { calculateAiCost } from './_lib/costCalculator.js';
@@ -73,16 +73,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .slice(0, 4)
     : undefined;
 
+  const isProTask = taskDef.tier === 'pro';
+  const defaultTokens = taskDef.defaultMaxTokens ?? 1200;
+  const maxTokensCeiling = isProTask ? 8192 : 4000;
   const parsedMaxTokens = Number(maxTokens);
   const clampedMaxTokens = Number.isFinite(parsedMaxTokens) && parsedMaxTokens > 0
-    ? Math.min(Math.max(parsedMaxTokens, 256), 4000)
-    : 1200;
+    ? Math.min(Math.max(parsedMaxTokens, 256), maxTokensCeiling)
+    : Math.min(defaultTokens, maxTokensCeiling);
 
   const completionReq: AiCompletionRequest = {
     systemPrompt: String(systemPrompt),
     userPrompt: String(userPrompt),
     maxTokens: clampedMaxTokens,
     temperature: resolveTemperature(temperature),
+    tier: isProTask ? 'pro' : 'fast',
     ...(validImages && validImages.length > 0 ? { images: validImages } : {}),
     ...(taskDef.responseSchema && { responseSchema: taskDef.responseSchema }),
   };
@@ -92,8 +96,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let lastError: Error | null = null;
 
   const hasVisionPayload = Boolean(validImages && validImages.length > 0);
-  const providerOrder = hasVisionPayload
-    ? ['gemini', 'groq', 'openrouter']
+  const providerOrder = (hasVisionPayload || isProTask)
+    ? AI_PROVIDER_PRO_ORDER
     : AI_PROVIDER_FALLBACK_ORDER;
 
   for (const providerId of providerOrder) {
@@ -101,10 +105,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!provider) continue;
     if (hasVisionPayload && !provider.supportsImages) continue;
 
-    // Rotar hasta agotar las claves disponibles del proveedor (salto con 429, como consolidate-ats)
-    for (let keyAttempt = 0; keyAttempt < 8; keyAttempt++) {
-      const apiKey = await getNextAvailableKey(providerId);
+    const keyPoolId = (providerId === 'gemini' && isProTask) ? 'gemini_pro' : providerId;
+    const maxAttempts = Math.max(8, getConfiguredKeyCount(keyPoolId));
+    const triedKeys = new Set<string>();
+
+    // Rotar hasta agotar las claves disponibles del proveedor (salto con 429 o 401/403)
+    for (let keyAttempt = 0; keyAttempt < maxAttempts; keyAttempt++) {
+      const apiKey = await getNextAvailableKey(keyPoolId, triedKeys);
       if (!apiKey) break; // no quedan claves disponibles para este proveedor → siguiente proveedor
+      triedKeys.add(apiKey);
 
       try {
         const result = await provider.complete(completionReq, apiKey);
@@ -132,7 +141,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             userId: '00000000-0000-0000-0000-000000000000', // Anonymous usage
             provider: providerId,
             model: actualModel,
-            endpoint: 'ai-generate',
+            endpoint: `ai-generate:${taskId}`,
             promptTokens: result.usage.promptTokens,
             completionTokens: result.usage.completionTokens,
             estimatedCostUsd: cost
@@ -143,10 +152,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         break;
       } catch (err: any) {
         lastError = err;
-        if (err.status === 429 || err.message?.includes('429')) {
-          await markKeyRateLimited(providerId, apiKey, 60);
-          console.warn(`[ai-generate] Clave de ${providerId} limitada (429). Rotando a la siguiente clave...`);
+        if (err.status === 429 || err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED')) {
+          await markKeyRateLimited(keyPoolId, apiKey, err.retryAfterSec || 60);
+          console.warn(`[ai-generate] Clave de ${keyPoolId} limitada (429). Rotando a la siguiente clave...`);
           continue; // siguiente clave del mismo proveedor
+        }
+        if (err.status === 401 || err.status === 403 || err.message?.includes('API_KEY_INVALID')) {
+          await markKeyRateLimited(keyPoolId, apiKey, 3600);
+          console.warn(`[ai-generate] Clave de ${keyPoolId} rechazada (${err.status || 'invalid'}). Pausada 1h y rotando...`);
+          continue;
         }
         break; // error no recuperable para este proveedor → siguiente proveedor
       }

@@ -8,8 +8,13 @@ export const geminiProvider: AiProviderDefinition = {
   supportsImages: true,
 
   async complete(req: AiCompletionRequest, apiKey: string, model?: string): Promise<AiCompletionResponse> {
-    const primaryModel = model || process.env.GEMINI_MODEL || this.defaultModel;
-    const fallbackPool = ['gemini-3.5-flash', 'gemini-flash-lite-latest', 'gemini-3.1-flash-lite'];
+    const GEMINI_PRO_DEFAULT = process.env.GEMINI_PRO_MODEL || 'gemini-2.5-pro';
+    const PRO_FALLBACK_POOL = [GEMINI_PRO_DEFAULT, process.env.GEMINI_MODEL || 'gemini-3.8-flash'];
+    const FAST_FALLBACK_POOL = ['gemini-3.5-flash', 'gemini-flash-lite-latest', 'gemini-3.1-flash-lite'];
+
+    const isPro = req.tier === 'pro';
+    const primaryModel = model || (isPro ? GEMINI_PRO_DEFAULT : (process.env.GEMINI_MODEL || this.defaultModel));
+    const fallbackPool = isPro ? PRO_FALLBACK_POOL : FAST_FALLBACK_POOL;
     const modelCandidates = [primaryModel, ...fallbackPool.filter(m => m !== primaryModel)];
 
     // Presupuesto global por petición: Vercel corta a los 60s.
@@ -25,7 +30,7 @@ export const geminiProvider: AiProviderDefinition = {
         break;
       }
       const attemptTimeoutMs = Math.min(18000, remainingMs);
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${apiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent`;
 
       const generationConfig: Record<string, any> = {
         temperature: req.temperature ?? 0.1,
@@ -33,7 +38,7 @@ export const geminiProvider: AiProviderDefinition = {
         ...(req.responseSchema ? { responseMimeType: 'application/json', responseSchema: req.responseSchema } : {})
       };
 
-      // thinkingConfig solo en modelos 3.8 (no lite)
+      // thinkingConfig solo en modelos 3.8 (no lite ni 2.5-pro con thinkingLevel)
       if (currentModel.includes('3.8')) {
         generationConfig.thinkingConfig = {
           thinkingLevel: 'LOW'
@@ -51,7 +56,8 @@ export const geminiProvider: AiProviderDefinition = {
         const response = await fetch(url, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey
           },
           body: JSON.stringify({
             systemInstruction: {
@@ -81,11 +87,19 @@ export const geminiProvider: AiProviderDefinition = {
           const errObj: any = new Error(`Gemini API Error (${response.status}) on ${currentModel}: ${errText}`);
           errObj.status = response.status;
           errObj.responseBody = errText;
+          const retryHeader = response.headers?.get?.('retry-after');
+          errObj.retryAfterSec = retryHeader ? parseInt(retryHeader, 10) || 60 : 60;
           throw errObj;
         }
 
         const data = await response.json();
-        const content = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        const parts = Array.isArray(data?.candidates?.[0]?.content?.parts)
+          ? data.candidates[0].content.parts
+          : [];
+        const textParts = parts
+          .filter((p: any) => !p?.thought && typeof p?.text === 'string')
+          .map((p: any) => p.text);
+        const content = textParts.join('').trim();
         if (!content) {
           throw new Error(`Respuesta vacía o inválida de Gemini API (${currentModel})`);
         }
@@ -96,35 +110,52 @@ export const geminiProvider: AiProviderDefinition = {
           totalTokens: data.usageMetadata.totalTokenCount || 0,
         } : undefined;
 
-        return { content: content.trim(), usage, modelUsed: currentModel };
+        return { content, usage, modelUsed: currentModel };
       };
 
       try {
         return await runAttempt(generationConfig);
       } catch (err: any) {
-        // Fallback seguro: si el modelo rechaza mediaResolution (400), omitirlo y reintentar una vez
+        // Fallback seguro: si el modelo rechaza mediaResolution o thinkingConfig (400), omitir y reintentar una vez
+        const errMsg = String(err?.responseBody || err?.message || '');
         const rejectedMediaResolution =
           err?.status === 400 &&
           generationConfig.mediaResolution &&
-          /media.?resolution/i.test(String(err?.responseBody || err?.message || ''));
+          /media.?resolution/i.test(errMsg);
+        const rejectedThinkingConfig =
+          err?.status === 400 &&
+          generationConfig.thinkingConfig &&
+          /thinking/i.test(errMsg);
 
-        if (rejectedMediaResolution) {
-          console.warn(`[geminiProvider] ${currentModel} rechazó mediaResolution; reintentando sin el campo.`);
-          const configWithoutMediaResolution = { ...generationConfig };
-          delete configWithoutMediaResolution.mediaResolution;
+        if (rejectedMediaResolution || rejectedThinkingConfig) {
+          const fallbackConfig = { ...generationConfig };
+          if (rejectedMediaResolution) {
+            console.warn(`[geminiProvider] ${currentModel} rechazó mediaResolution; reintentando sin el campo.`);
+            delete fallbackConfig.mediaResolution;
+          }
+          if (rejectedThinkingConfig) {
+            console.warn(`[geminiProvider] ${currentModel} rechazó thinkingConfig; reintentando sin el campo.`);
+            delete fallbackConfig.thinkingConfig;
+          }
           try {
-            return await runAttempt(configWithoutMediaResolution);
+            return await runAttempt(fallbackConfig);
           } catch (retryErr: any) {
             err = retryErr;
           }
         }
 
         lastError = err;
-        // Abortar solo si credenciales inválidas (401/403)
-        if (err.status === 401 || err.status === 403 || err.message?.includes('API_KEY_INVALID')) {
+        // Abortar inmediatamente ante 429 o credenciales inválidas (401/403) para que el caller rote a otra API key
+        if (
+          err.status === 429 ||
+          err.status === 401 ||
+          err.status === 403 ||
+          err.message?.includes('API_KEY_INVALID') ||
+          err.message?.includes('RESOURCE_EXHAUSTED')
+        ) {
           throw err;
         }
-        // Cualquier otro error (503, 500, 502, 404, 429, timeout, abort) → probar siguiente candidato
+        // Otros errores (503, 500, 502, 404, timeout, abort) → probar siguiente candidato con esta clave
         console.warn(`[geminiProvider] Falló ${currentModel} (${err.status || err.message}). Probando siguiente candidato si existe...`);
       }
     }
@@ -134,32 +165,53 @@ export const geminiProvider: AiProviderDefinition = {
 
   async ping(): Promise<AiProviderPingResult> {
     const keysRaw = process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || '';
-    const keys = keysRaw.split(',').map(k => k.trim()).filter(Boolean);
+    const proKeysRaw = process.env.GEMINI_PRO_API_KEYS || '';
+    const keys = Array.from(
+      new Set(
+        [...keysRaw.split(','), ...proKeysRaw.split(',')]
+          .map(k => k.trim())
+          .filter(Boolean)
+      )
+    );
 
     if (keys.length === 0) {
       return {
         status: 'missing_vars',
         label: 'Variables de entorno no configuradas (GEMINI_API_KEYS)',
-        model: this.defaultModel
+        model: this.defaultModel,
+        healthyKeys: 0,
+        totalKeys: 0
       };
     }
 
-    try {
-      await this.complete(
-        { systemPrompt: 'Ping test', userPrompt: 'Responder OK' },
-        keys[0]
-      );
+    const keysToTest = keys.slice(0, 5);
+    const results = await Promise.allSettled(
+      keysToTest.map(k =>
+        this.complete({ systemPrompt: 'Ping test', userPrompt: 'Responder OK' }, k)
+      )
+    );
+
+    const healthyKeys = results.filter(r => r.status === 'fulfilled').length;
+    if (healthyKeys > 0) {
       return {
         status: 'active',
-        label: 'Gemini Activo & Operativo',
-        model: this.defaultModel
-      };
-    } catch (err: any) {
-      return {
-        status: err.status === 400 || err.status === 403 ? 'invalid_credentials' : 'error',
-        label: `Error de conexión con Gemini: ${err.message || String(err)}`,
-        model: this.defaultModel
+        label: healthyKeys === keysToTest.length
+          ? `Gemini Activo & Operativo (${healthyKeys}/${keysToTest.length} claves OK)`
+          : `Gemini Activo (${healthyKeys}/${keysToTest.length} claves OK)`,
+        model: this.defaultModel,
+        healthyKeys,
+        totalKeys: keys.length
       };
     }
+
+    const firstRejection = results.find((r): r is PromiseRejectedResult => r.status === 'rejected');
+    const err: any = firstRejection?.reason;
+    return {
+      status: err?.status === 400 || err?.status === 401 || err?.status === 403 ? 'invalid_credentials' : 'error',
+      label: `Error de conexión con Gemini: ${err?.message || String(err || 'Sin respuesta')}`,
+      model: this.defaultModel,
+      healthyKeys: 0,
+      totalKeys: keys.length
+    };
   }
 };

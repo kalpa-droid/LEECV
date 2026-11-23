@@ -10,3 +10,4 @@ export const AI_PROVIDERS: Record<string, AiProviderDefinition> = {
 };
 
 export const AI_PROVIDER_FALLBACK_ORDER = ['groq', 'openrouter', 'gemini'];
+export const AI_PROVIDER_PRO_ORDER = ['gemini', 'groq', 'openrouter'];

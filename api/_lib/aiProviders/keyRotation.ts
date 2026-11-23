@@ -45,6 +45,8 @@ function getEnvKeysForProvider(providerId: string): string[] {
     envVal = process.env.OPENROUTER_API_KEYS || process.env.OPENROUTER_API_KEY || '';
   } else if (providerId === 'gemini') {
     envVal = process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || '';
+  } else if (providerId === 'gemini_pro') {
+    envVal = process.env.GEMINI_PRO_API_KEYS || process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || '';
   }
 
   return envVal
@@ -195,7 +197,11 @@ export async function getAiKeyCooldownSummary(providerId: string): Promise<AiKey
   };
 }
 
-export async function getNextAvailableKey(providerId: string): Promise<string | null> {
+export function getConfiguredKeyCount(providerId: string): number {
+  return getEnvKeysForProvider(providerId).length;
+}
+
+export async function getNextAvailableKey(providerId: string, excludeKeys?: Set<string>): Promise<string | null> {
   const keys = getEnvKeysForProvider(providerId);
   if (keys.length === 0) return null;
 
@@ -211,6 +217,7 @@ export async function getNextAvailableKey(providerId: string): Promise<string | 
     const idx = (startIndex + i) % keys.length;
     const candidateKey = keys[idx];
 
+    if (excludeKeys && excludeKeys.has(candidateKey)) continue;
     if (isMemoryPaused(providerId, candidateKey, now)) continue;
     if (dbPausedHashes !== null && dbPausedHashes.has(hashKey(candidateKey))) continue;
 

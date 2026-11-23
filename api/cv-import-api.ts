@@ -28,10 +28,12 @@ async function executeImportAiCascade(args: {
     if (!provider) continue;
     if (args.requiresImages && !provider.supportsImages) continue;
 
+    const triedKeys = new Set<string>();
     for (let keyAttempt = 0; keyAttempt < 8; keyAttempt++) {
       if (args.requestDeadline - Date.now() < 4000) break;
-      const apiKey = await getNextAvailableKey(providerId);
+      const apiKey = await getNextAvailableKey(providerId, triedKeys);
       if (!apiKey) break;
+      triedKeys.add(apiKey);
       sawConfiguredKey = true;
 
       try {
@@ -52,9 +54,14 @@ async function executeImportAiCascade(args: {
         return { ok: true, content: result.content, providerId };
       } catch (err: any) {
         lastError = err;
-        if (err.status === 429 || err.message?.includes('429')) {
-          await markKeyRateLimited(providerId, apiKey, 60);
+        if (err.status === 429 || err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED')) {
+          await markKeyRateLimited(providerId, apiKey, err.retryAfterSec || 60);
           console.warn(`[cv-import] Clave de ${providerId} limitada (429). Rotando...`);
+          continue;
+        }
+        if (err.status === 401 || err.status === 403 || err.message?.includes('API_KEY_INVALID')) {
+          await markKeyRateLimited(providerId, apiKey, 3600);
+          console.warn(`[cv-import] Clave de ${providerId} rechazada (${err.status || 'invalid'}). Pausada 1h y rotando...`);
           continue;
         }
         break;
@@ -132,15 +139,17 @@ REGLAS OBLIGATORIAS:
     let lastConsolidationError: any = null;
     let attemptedKeys = 0;
     for (const { providerId, provider } of providersToTry) {
-      // Rotar hasta agotar las claves disponibles de este proveedor (salto con 429 marcado como limitado)
+      // Rotar hasta agotar las claves disponibles de este proveedor (salto con 429 o 401/403)
+      const triedKeys = new Set<string>();
       for (let keyAttempt = 0; keyAttempt < 8; keyAttempt++) {
         const remainingMs = requestDeadline - Date.now();
         if (remainingMs < 4000) {
           console.warn('[cv-import] Presupuesto de tiempo de Vercel agotado durante consolidación.');
           break;
         }
-        const apiKey = await getNextAvailableKey(providerId);
+        const apiKey = await getNextAvailableKey(providerId, triedKeys);
         if (!apiKey) break; // no quedan claves disponibles para este proveedor → siguiente proveedor
+        triedKeys.add(apiKey);
         attemptedKeys++;
 
         try {
@@ -171,9 +180,14 @@ REGLAS OBLIGATORIAS:
           return successResponse(res, { consolidatedJson });
         } catch (err: any) {
           lastConsolidationError = err;
-          if (err.status === 429 || err.message?.includes('429')) {
-            await markKeyRateLimited(providerId, apiKey, 60);
+          if (err.status === 429 || err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED')) {
+            await markKeyRateLimited(providerId, apiKey, err.retryAfterSec || 60);
             console.warn(`[cv-import] Clave de ${providerId} limitada (429). Rotando a la siguiente clave...`);
+            continue;
+          }
+          if (err.status === 401 || err.status === 403 || err.message?.includes('API_KEY_INVALID')) {
+            await markKeyRateLimited(providerId, apiKey, 3600);
+            console.warn(`[cv-import] Clave de ${providerId} rechazada (${err.status || 'invalid'}). Pausada 1h y rotando...`);
             continue;
           }
           console.warn(`[cv-import] Falló consolidación con ${providerId}:`, err.message || err);
@@ -687,11 +701,13 @@ F. TIPOS EXACTOS (Groq no valida el esquema automáticamente): experience, educa
         if (kind === 'image' && !provider.supportsImages) continue;
 
         // Rotar hasta agotar las claves disponibles del proveedor (salto con 429 como en consolidate-ats)
+        const triedKeys = new Set<string>();
         for (let keyAttempt = 0; keyAttempt < 8; keyAttempt++) {
           const attemptRemainingMs = requestDeadline - Date.now();
           if (attemptRemainingMs < 4000) break;
-          const apiKey = await getNextAvailableKey(providerId);
+          const apiKey = await getNextAvailableKey(providerId, triedKeys);
           if (!apiKey) break; // no quedan claves disponibles para este proveedor → siguiente proveedor
+          triedKeys.add(apiKey);
 
           try {
             const result = await provider.complete(reqToUse, apiKey);
@@ -713,10 +729,15 @@ F. TIPOS EXACTOS (Groq no valida el esquema automáticamente): experience, educa
             return { content: result.content, providerId };
           } catch (err: any) {
             lastError = err;
-            if (err.status === 429 || err.message?.includes('429')) {
-              await markKeyRateLimited(providerId, apiKey, 60);
+            if (err.status === 429 || err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED')) {
+              await markKeyRateLimited(providerId, apiKey, err.retryAfterSec || 60);
               console.warn(`[cv-import] Clave de ${providerId} limitada (429). Rotando a la siguiente clave...`);
               continue; // siguiente clave del mismo proveedor
+            }
+            if (err.status === 401 || err.status === 403 || err.message?.includes('API_KEY_INVALID')) {
+              await markKeyRateLimited(providerId, apiKey, 3600);
+              console.warn(`[cv-import] Clave de ${providerId} rechazada (${err.status || 'invalid'}). Pausada 1h y rotando...`);
+              continue;
             }
             break; // error no recuperable para este proveedor → siguiente proveedor
           }

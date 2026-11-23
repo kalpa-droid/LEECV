@@ -46,6 +46,7 @@ beforeEach(() => {
   delete process.env.GROQ_API_KEY;
   delete process.env.GEMINI_API_KEYS;
   delete process.env.GEMINI_API_KEY;
+  delete process.env.GEMINI_PRO_API_KEYS;
 });
 
 afterEach(() => {
@@ -90,6 +91,27 @@ describe('getNextAvailableKey', () => {
     process.env.GROQ_API_KEYS = 'allcool-key-a';
     mockState.pausedRows = [{ key_hash: hashKey('allcool-key-a'), paused_until: new Date(Date.now() + 60_000).toISOString() }];
     expect(await getNextAvailableKey('groq')).toBeNull();
+  });
+
+  it('gemini_pro usa GEMINI_PRO_API_KEYS y hace fallback a GEMINI_API_KEYS si no está definida', async () => {
+    process.env.GEMINI_API_KEYS = 'flash-fallback-1';
+    expect(await getNextAvailableKey('gemini_pro')).toBe('flash-fallback-1');
+
+    process.env.GEMINI_PRO_API_KEYS = 'pro-dedicated-1';
+    expect(await getNextAvailableKey('gemini_pro')).toBe('pro-dedicated-1');
+  });
+
+  it('un 429 en gemini_pro NO pausa la clave en el bucket gemini', async () => {
+    process.env.GEMINI_API_KEYS = 'shared-gemini-key-iso';
+    await markKeyRateLimited('gemini_pro', 'shared-gemini-key-iso', 60);
+    expect(await getNextAvailableKey('gemini_pro')).toBeNull();
+    expect(await getNextAvailableKey('gemini')).toBe('shared-gemini-key-iso');
+  });
+
+  it('saltea claves incluidas en excludeKeys dentro del mismo request', async () => {
+    process.env.GEMINI_PRO_API_KEYS = 'excl-key-1,excl-key-2';
+    const excluded = new Set(['excl-key-1']);
+    expect(await getNextAvailableKey('gemini_pro', excluded)).toBe('excl-key-2');
   });
 });
 

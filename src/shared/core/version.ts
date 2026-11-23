@@ -12,9 +12,9 @@
 export const LEECV_VERSION = {
   major: 3,
   minor: 6,
-  patch: 0,
-  label: 'V3.6.0',
+  patch: 1,
+  label: 'V3.6.1',
   lastUpdated: '2026-11-23',
   lastAgent: '@antigravity',
-  stage: 'feat(platform-facturlee-editorlee): V3.6.0 — Rediseño operativo de FacturLee + fix solapamiento PDF, depuración de exportaciones en Libro-Folleto, modal canónico de importación IA, pipeline Zero-Loss .docx + columnas/imágenes/tablas/fuentes APA en EditorLee, y resiliencia de respaldo ante actualizaciones.',
+  stage: 'feat(ai-pro-rotation): V3.6.1 — Enrutado por tier (Pro vs Fast), pool aislado gemini_pro, rotación inmediata ante 429 y 401/403, x-goog-api-key en header, extracción segura sin thought parts y maxDuration=60 en ai-generate.',
 } as const;
