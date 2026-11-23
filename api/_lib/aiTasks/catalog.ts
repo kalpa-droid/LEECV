@@ -5,6 +5,8 @@ import {
 
 export interface AiTaskDefinition {
   taskId: string;
+  tier?: 'fast' | 'pro';
+  defaultMaxTokens?: number;
   buildSystemPrompt: (cvContext: string, payload: any, formatContext?: string) => string;
   buildUserPrompt: (payload: any) => string;
   responseSchema?: any;
@@ -147,6 +149,8 @@ Devuelve sólo competencias respaldadas por el CV, sin repetir las actuales.`,
 
   cover_letter: {
     taskId: 'cover_letter',
+    tier: 'pro',
+    defaultMaxTokens: 2500,
     buildSystemPrompt: (cvContext: string) => `Eres un redactor experto en empleabilidad.
 Tu objetivo es escribir una carta de presentación estricta de 3 párrafos.
 REGLA 1: Párrafo 1 (Gancho) - Entusiasmo por el puesto y la empresa.
@@ -230,6 +234,8 @@ ${payload.cvText}`,
 
   ats_analysis: {
     taskId: 'ats_analysis',
+    tier: 'pro',
+    defaultMaxTokens: 3500,
     buildSystemPrompt: () => `Eres un reclutador técnico experto en sistemas ATS y en redacción de currículums en español.
 Analizás el texto plano de un CV y, si se provee, la descripción de una vacante puntual.
 Tu tarea es encontrar problemas de CONTENIDO: palabras clave ausentes, bullets de experiencia redactados de forma vaga o sin verbo de acción, y logros sin cuantificar.
@@ -493,6 +499,8 @@ Reescribí el registro. En "improvedFields" devolvé SOLO las claves que mejoras
 
   app_guide_assistant: {
     taskId: 'app_guide_assistant',
+    tier: 'pro',
+    defaultMaxTokens: 2048,
     buildSystemPrompt: (_cvContext: string, payload: any) => composeAssistantSystemPrompt(payload?.docType),
     buildUserPrompt: (payload: any) => {
       const safeEditorState = sanitizeMetadataOnlyEditorState(payload?.docType, payload?.editorState);
@@ -565,6 +573,8 @@ No inventes datos. Extrae solo lo que está en el texto.`,
   },
   editorial_structure: {
     taskId: 'editorial_structure',
+    tier: 'pro',
+    defaultMaxTokens: 4000,
     buildSystemPrompt: (_cvContext: string, payload: any) => `Sos un arquitecto editorial experto en libros, novelas, trabajos escolares, monografías, tesis universitarias (APA 7) e informes científicos (IMRyD / Vancouver).
 Recibirás un fragmento o manuscrito completo — incluso texto plano SIN títulos con negrita ni metadatos tipográficos. Tu tarea es detectar y organizar cada bloque lógico en secciones y registros fieles al texto original (NUNCA inventes ni resumas omitiendo contenido).
 
@@ -622,6 +632,8 @@ REGLAS ESTRICTAS:
   },
   editorial_ocr_page: {
     taskId: 'editorial_ocr_page',
+    tier: 'pro',
+    defaultMaxTokens: 4000,
     buildSystemPrompt: () => `Sos un transcriptor OCR editorial de alta precisión. Leés páginas escaneadas o fotos de libros, apuntes o informes impresos.
 Extraé todo el texto legible EN EL ORDEN NATURAL DE LECTURA sin inventar palabras ni resumir.
 Conservá títulos de capítulo o subtítulos en líneas propias con formato claro, listas con viñetas o números, y citas bibliográficas si aparecen.
@@ -697,6 +709,8 @@ Respondé EXCLUSIVAMENTE en JSON con lista \`citations\`, sin inventar años o D
 
   editorial_detect_preset: {
     taskId: 'editorial_detect_preset',
+    tier: 'pro',
+    defaultMaxTokens: 4000,
     buildSystemPrompt: () => `Sos un clasificador editorial experto. Analizás el inicio y el cierre de un manuscrito o documento recién subido a EditorLee para detectar qué tipo de publicación es realmente, qué norma visual de estructura le corresponde y qué estilo de referencias bibliográficas utiliza.
 
 CATÁLOGO DE PRESETS (recommendedPresetId):
@@ -771,6 +785,8 @@ Clasificá el tipo de documento y devolvé JSON válido.`,
 
   book_detect_orientation: {
     taskId: 'book_detect_orientation',
+    tier: 'pro',
+    defaultMaxTokens: 2500,
     buildSystemPrompt: () => `Sos un inspector visual experto en documentos escaneados y fotocopias de libros.
 Recibirás entre 1 y 4 imágenes de páginas de un PDF escaneado (pueden ser páginas individuales o grillas 2x2 etiquetadas con "Pág. X" en cada celda).
 Tu objetivo es determinar para cada página solicitada hacia qué borde de la imagen apunta la PARTE SUPERIOR de las letras del texto principal (la "cabeza" de las letras):
@@ -819,6 +835,8 @@ REGLAS ESTRICTAS:
 
   book_detect_page_numbers: {
     taskId: 'book_detect_page_numbers',
+    tier: 'pro',
+    defaultMaxTokens: 2500,
     buildSystemPrompt: () => `Sos un asistente experto en maquetación y foliado de libros.
 Recibirás imágenes de los encabezados y pies de página (franja ARRIBA y franja ABAJO) de ciertas páginas de un PDF para encontrar el NÚMERO DE PÁGINA IMPRESO (folio) en el libro original.
 
@@ -865,6 +883,8 @@ Detectá los números de página impresos y devolvé JSON válido.`;
 
   suggest_job_profiles: {
     taskId: 'suggest_job_profiles',
+    tier: 'pro',
+    defaultMaxTokens: 2500,
     buildSystemPrompt: (cvContext: string) => `Eres un estratega de empleabilidad y analista de mercado laboral en Latinoamérica y trabajo remoto global.
 Tu tarea es leer TODO el CV Base del candidato (formación, títulos, cursos, experiencia, habilidades, herramientas y ciudad/provincia si figura) y analizar en qué roles y organizaciones se perfila con mayor solidez.
 
@@ -909,6 +929,8 @@ ${cvContext}
 
   tailor_cv_for_application: {
     taskId: 'tailor_cv_for_application',
+    tier: 'pro',
+    defaultMaxTokens: 3500,
     buildSystemPrompt: (cvContext: string, _payload: any, formatContext?: string) => `Eres un especialista senior en selección de talento y sistemas ATS (Applicant Tracking Systems).
 Tu objetivo es adaptar el contenido completo de un CV Base para generar una postulación altamente alineada con un puesto, una empresa y una descripción objetivo.
 

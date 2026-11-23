@@ -9,6 +9,9 @@
   "functions": {
     "api/cv-import-api.ts": {
       "maxDuration": 60
+    },
+    "api/ai-generate.ts": {
+      "maxDuration": 60
     }
   },
   "headers": [
