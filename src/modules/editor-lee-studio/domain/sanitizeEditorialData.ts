@@ -7,8 +7,106 @@
  * Es un módulo de utilidades puras (sin React, sin DOM) para testeo en node.
  */
 
-import { EditorialDocumentData, EditorialSection, EditorialRecord } from './editorialTypes';
+import {
+  EditorialDocumentData,
+  EditorialSection,
+  EditorialRecord,
+  EditorialSectionDividerConfig,
+} from './editorialTypes';
 import { registerDocumentSchemaHandler } from '../../../shared/core/storage/documentEnvelope';
+
+export const DEFAULT_SECTION_DIVIDER_CONFIG: EditorialSectionDividerConfig = {
+  enabled: false,
+  scope: 'body-chapters',
+  inheritCoverStyle: true,
+  blankBackPage: false,
+};
+
+/**
+ * Resuelve si una sección editorial debe renderizar una carátula separadora propia
+ * antes de su contenido, combinando la configuración global (desactivada por defecto)
+ * y el override puntual `section.sectionCover?.enabled`.
+ */
+export function resolveEditorialSectionCoverState(
+  section: Partial<EditorialSection> | null | undefined,
+  design: Record<string, any> | null | undefined,
+  cover: Record<string, any> | null | undefined,
+): {
+  enabled: boolean;
+  blankBackPage: boolean;
+  coverStyleId: string;
+  coverPaletteKey: string;
+  kicker: string;
+  subtitle: string;
+} {
+  const globalCfg: EditorialSectionDividerConfig = {
+    ...DEFAULT_SECTION_DIVIDER_CONFIG,
+    ...(design?.sectionDividers && typeof design.sectionDividers === 'object'
+      ? design.sectionDividers
+      : {}),
+  };
+  const override = section?.sectionCover;
+
+  const isBib =
+    section?.sectionKey === 'bibliografia' ||
+    String(section?.id || '').includes('bibliografia');
+  const isBody =
+    !isBib &&
+    (section?.category === 'cuerpo' ||
+      section?.sectionKey === 'capitulo' ||
+      section?.sectionKey === 'unidad' ||
+      section?.sectionKey === 'desarrollo' ||
+      section?.sectionKey === 'marco_teorico' ||
+      section?.sectionKey === 'metodologia' ||
+      section?.sectionKey === 'resultados' ||
+      section?.sectionKey === 'discusion' ||
+      (!section?.category && !section?.sectionKey));
+
+  let enabled = false;
+  if (typeof override?.enabled === 'boolean') {
+    enabled = override.enabled;
+  } else if (globalCfg.enabled && !isBib) {
+    enabled = globalCfg.scope === 'all-sections' ? true : isBody;
+  }
+
+  const blankBackPage =
+    typeof override?.blankBackPage === 'boolean'
+      ? override.blankBackPage
+      : Boolean(globalCfg.blankBackPage);
+
+  const mainCoverStyle = cover?.coverStyleId || design?.coverStyleId || 'monica-classic';
+  const mainCoverPalette = cover?.coverPaletteKey || design?.coverPaletteKey || 'sobrio';
+
+  const coverStyleId =
+    override?.coverStyleId ||
+    (!globalCfg.inheritCoverStyle && globalCfg.coverStyleId ? globalCfg.coverStyleId : mainCoverStyle);
+
+  const coverPaletteKey =
+    override?.coverPaletteKey ||
+    (!globalCfg.inheritCoverStyle && globalCfg.coverPaletteKey
+      ? globalCfg.coverPaletteKey
+      : mainCoverPalette);
+
+  return {
+    enabled,
+    blankBackPage,
+    coverStyleId,
+    coverPaletteKey,
+    kicker: typeof override?.kicker === 'string' ? override.kicker.trim() : '',
+    subtitle: typeof override?.subtitle === 'string' ? override.subtitle.trim() : '',
+  };
+}
+
+/** Cuenta cuántas páginas extra suma la carátula de una sección (0, 1 o 2 con hoja blanca detrás). */
+export function countEditorialSectionCoverPages(
+  section: Partial<EditorialSection> | null | undefined,
+  design?: Record<string, any> | null,
+  cover?: Record<string, any> | null,
+): number {
+  const state = resolveEditorialSectionCoverState(section, design, cover);
+  if (!state.enabled) return 0;
+  return state.blankBackPage ? 2 : 1;
+}
 
 /**
  * Valida un dato editorial mínimo (metadata + secciones).

@@ -6,6 +6,9 @@ import { describeResponseSchema } from './schemaGuide.js';
 // 2. Gemini 2.0 Flash Exp (Free) - Rápido, multimodal y preciso.
 // 3. Qwen 2.5 Coder 32B (Free) - Excelente para estructuración estricta de datos.
 const OPENROUTER_DEFAULT_MODEL = process.env.OPENROUTER_MODEL || 'meta-llama/llama-3.3-70b-instruct:free';
+const OPENROUTER_VISION_MODELS = [
+  'google/gemini-2.0-flash-exp:free',
+];
 const OPENROUTER_FALLBACK_MODELS = [
   'meta-llama/llama-3.3-70b-instruct:free',
   'google/gemini-2.0-flash-exp:free',
@@ -26,6 +29,8 @@ export const openrouterProvider: AiProviderDefinition = {
     let modelCandidates: string[];
     if (model) {
       modelCandidates = [model];
+    } else if (hasImages) {
+      modelCandidates = [...OPENROUTER_VISION_MODELS];
     } else {
       modelCandidates = [...new Set([this.defaultModel, ...OPENROUTER_FALLBACK_MODELS])];
     }

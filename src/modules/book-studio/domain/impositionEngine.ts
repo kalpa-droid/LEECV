@@ -5,6 +5,15 @@ import { loadPdfDocumentWithCmaps } from '../../../shared/core/pdf-engine/pdfjsW
 import { resolveCanvasColor, COVER_FALLBACK_BG, COVER_FALLBACK_TEXT } from '../../../shared/kits/print-imposition/canvasColors';
 import { calculateSpineWidth, calculateCreepOffset, planBookletSignatures, getSignatureSheetPairs } from '../../../shared/kits/print-imposition/impositionPlanner';
 import { BookPaperSizeId, BookPrintTarget, resolveBookPaperSpec } from './bookPrintProfileEngine';
+import {
+  BookSectionDivider,
+  crearCanvasSeparadorCapitulo,
+  extractDividerIdFromToken,
+  isDividerPageToken,
+  resolveBookOrderedItems,
+} from './bookDividerCanvas';
+
+export type { BookSectionDivider };
 
 export interface CoverConfig {
   type: 'upload' | 'template' | 'none';
@@ -44,6 +53,8 @@ export interface BackCoverConfig {
 }
 
 export interface BookImpositionOptions {
+  /** Modo de flujo: 'auto' (maquetación e imposición directa al inicio) o 'guided' (paso a paso con tapas y ajustes). */
+  workflowMode?: 'auto' | 'guided';
   mode?: 'normal' | 'fotocopia';
   printTarget?: BookPrintTarget;
   paperSize?: BookPaperSizeId;
@@ -55,10 +66,16 @@ export interface BookImpositionOptions {
   refPdfPage?: number;
   refBookPage?: number;
   refPageSide?: 'derecha' | 'izquierda';
+  /** Mitad del pliego en modo fotocopia donde se encontró el número de referencia. */
+  refPdfHalf?: 'izquierda' | 'derecha';
   pageRotations?: Record<number, number>;
+  /** Páginas donde la detección IA tuvo baja confianza (para aviso visual opcional). */
+  lowConfidenceRotationPages?: number[];
   pageSplitOffsets?: Record<number, number>;
   customCover?: CoverConfig | null;
   customBackCover?: BackCoverConfig | null;
+  /** Carátulas o separadores manuales por capítulos/secciones (1 pág o con hoja blanca detrás). */
+  sectionDividers?: BookSectionDivider[];
   /**
    * Resuelve una referencia de asset local ('asset:...') a una URL/DataURL
    * descargable por Canvas. La inyecta la UI (bookAssetManager); el motor no
@@ -112,6 +129,7 @@ export interface BookImpositionOptions {
 }
 
 export const DEFAULT_BOOK_IMPOSITION_OPTIONS: BookImpositionOptions = {
+  workflowMode: 'auto',
   mode: 'normal',
   printTarget: 'home',
   paperSize: 'A4',
@@ -124,9 +142,11 @@ export const DEFAULT_BOOK_IMPOSITION_OPTIONS: BookImpositionOptions = {
   refBookPage: 0,
   refPageSide: 'derecha',
   pageRotations: {},
+  lowConfidenceRotationPages: [],
   pageSplitOffsets: {},
   customCover: null,
   customBackCover: null,
+  sectionDividers: [],
   deletedPages: [],
   pageOrder: [],
   blankBehindCover: true,
@@ -713,18 +733,56 @@ async function procesarComoImagenes(
       ? countBlanksBehindCover(blankBehindCover, effectiveRefPdfPage, refBookPage, refPageSide)
       : 0;
 
-    const effectivePageOrder =
-      pageOrder && pageOrder.length > 0
-        ? pageOrder.map((x) => Number(String(x).split('_')[0])).filter((n) => !isNaN(n))
-        : Array.from({ length: totalSourcePages }, (_, i) => i + 1);
+    const dividersList = options.sectionDividers || [];
+    const dividerMap = new Map(dividersList.map((d) => [d.id, d]));
+    const orderedItems = resolveBookOrderedItems({
+      pdfPageCount: totalSourcePages,
+      pageOrder,
+      sectionDividers: dividersList,
+    });
 
-    for (let idx = 0; idx < effectivePageOrder.length; idx++) {
-      const pageNum = effectivePageOrder[idx];
+    for (let idx = 0; idx < orderedItems.length; idx++) {
+      const item = orderedItems[idx];
+      const itemStr = String(item);
+
+      if (itemStr.startsWith('blank')) {
+        const blankPage = newPdf.addPage([coverCanvasSize.width, coverCanvasSize.height]);
+        blankPage.drawRectangle({ x: 0, y: 0, width: 0, height: 0 });
+        continue;
+      }
+
+      if (isDividerPageToken(itemStr)) {
+        const divId = extractDividerIdFromToken(itemStr);
+        const divConfig = divId ? dividerMap.get(divId) : undefined;
+        if (divConfig) {
+          const divCanvas = await crearCanvasSeparadorCapitulo(
+            divConfig,
+            options.coverStyle || 'monica-classic',
+            coverCanvasSize,
+            1,
+            options.assetResolver,
+          );
+          const divImg = await newPdf.embedJpg(divCanvas.toDataURL('image/jpeg', 0.92));
+          const divPage = newPdf.addPage([divCanvas.width, divCanvas.height]);
+          divPage.drawImage(divImg, { x: 0, y: 0, width: divCanvas.width, height: divCanvas.height });
+          divCanvas.width = 0;
+          divCanvas.height = 0;
+
+          if (divConfig.blankBehind) {
+            const blankBack = newPdf.addPage([coverCanvasSize.width, coverCanvasSize.height]);
+            blankBack.drawRectangle({ x: 0, y: 0, width: 0, height: 0 });
+          }
+        }
+        continue;
+      }
+
+      const pageNum = Number(itemStr.split('_')[0]);
+      if (isNaN(pageNum) || pageNum < 1 || pageNum > totalSourcePages) continue;
       if (deletedPages && deletedPages.includes(pageNum)) continue;
 
       if (onProgress) {
-        const avance = 10 + Math.floor(((idx + 1) / effectivePageOrder.length) * 45);
-        onProgress(`Copiando página ${idx + 1} de ${effectivePageOrder.length}...`, avance);
+        const avance = 10 + Math.floor(((idx + 1) / orderedItems.length) * 45);
+        onProgress(`Copiando página ${idx + 1} de ${orderedItems.length}...`, avance);
       }
 
       const [copiedPage] = await newPdf.copyPages(sourcePdf, [pageNum - 1]);
@@ -882,20 +940,56 @@ async function procesarComoImagenes(
     return newPdf;
   }
 
-  const effectivePageOrder =
-    pageOrder && pageOrder.length > 0
-      ? pageOrder.map((x) => Number(String(x).split('_')[0])).filter((n) => !isNaN(n))
-      : Array.from({ length: pdf.numPages }, (_, i) => i + 1);
+  const dividersList = options.sectionDividers || [];
+  const dividerMap = new Map(dividersList.map((d) => [d.id, d]));
+  const orderedItems = resolveBookOrderedItems({
+    pdfPageCount: pdf.numPages,
+    pageOrder,
+    sectionDividers: dividersList,
+  });
 
-  for (let idx = 0; idx < effectivePageOrder.length; idx++) {
-    const pageNum = effectivePageOrder[idx];
+  for (let idx = 0; idx < orderedItems.length; idx++) {
+    const rawItem = orderedItems[idx];
+    const itemStr = String(rawItem);
+
+    if (itemStr.startsWith('blank')) {
+      insertarBlancosDetrasDeTapa(1, coverCanvasSize.width, coverCanvasSize.height);
+      continue;
+    }
+
+    if (isDividerPageToken(itemStr)) {
+      const divId = extractDividerIdFromToken(itemStr);
+      const divConfig = divId ? dividerMap.get(divId) : undefined;
+      if (divConfig) {
+        const divCanvas = await crearCanvasSeparadorCapitulo(
+          divConfig,
+          options.coverStyle || 'monica-classic',
+          coverCanvasSize,
+          1,
+          options.assetResolver,
+        );
+        const divImg = await newPdf.embedJpg(divCanvas.toDataURL('image/jpeg', 0.92));
+        const divPage = newPdf.addPage([divCanvas.width, divCanvas.height]);
+        divPage.drawImage(divImg, { x: 0, y: 0, width: divCanvas.width, height: divCanvas.height });
+        divCanvas.width = 0;
+        divCanvas.height = 0;
+
+        if (divConfig.blankBehind) {
+          insertarBlancosDetrasDeTapa(1, coverCanvasSize.width, coverCanvasSize.height);
+        }
+      }
+      continue;
+    }
+
+    const pageNum = Number(itemStr.split('_')[0]);
+    if (isNaN(pageNum) || pageNum < 1 || pageNum > pdf.numPages) continue;
 
     if (deletedPages && deletedPages.includes(pageNum)) {
       continue;
     }
     if (onProgress) {
-      const avance = 10 + Math.floor(((idx + 1) / effectivePageOrder.length) * 45);
-      onProgress(`Procesando página ${idx + 1} de ${effectivePageOrder.length}...`, avance);
+      const avance = 10 + Math.floor(((idx + 1) / orderedItems.length) * 45);
+      onProgress(`Procesando página ${idx + 1} de ${orderedItems.length}...`, avance);
     }
 
     const page = await pdf.getPage(pageNum);

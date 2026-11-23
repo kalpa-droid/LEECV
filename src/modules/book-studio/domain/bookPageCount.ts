@@ -1,5 +1,6 @@
 import { padToMultiple } from '../../../shared/kits/print-imposition/impositionPlanner';
 import { countBlanksBehindCover } from '../../../shared/kits/print-imposition/impositionMath';
+import { isDividerPageToken } from './bookDividerCanvas';
 
 /**
  * Entrada exacta para replicar el armado real del motor (`procesarComoImagenes`
@@ -9,8 +10,8 @@ export interface FinalBookPageCountInput {
   /**
    * Páginas EFECTIVAS del interior (las que el motor copia al nuevo PDF):
    * si hay `pageOrder`, cada registro `N` o `N_parte` es una página; si no,
-   * `pdfPageCount`, menos los `deletedPages`. En modo fotocopia cada split
-   * cuenta como página propia (igual que el motor en la práctica).
+   * `pdfPageCount`, menos los `deletedPages`, más separadores de capítulos.
+   * En modo fotocopia cada split cuenta como página propia (igual que el motor en la práctica).
    */
   sourcePageCount: number;
   /** Tapa = página 1 del PDF original (retiro detrás de tapa aplica). */
@@ -52,6 +53,7 @@ export function hasCustomCoverConfig(custom: { type?: string } | null | undefine
 export interface BookFinalPageCountOptions {
   deletedPages?: (number | string)[];
   pageOrder?: (number | string)[];
+  sectionDividers?: ReadonlyArray<{ id: string; blankBehind?: boolean }>;
   hasCover?: boolean;
   hasBackCover?: boolean;
   blankBehindCover?: boolean;
@@ -62,6 +64,14 @@ export interface BookFinalPageCountOptions {
   refPdfPage?: number;
   refBookPage?: number;
   refPageSide?: 'derecha' | 'izquierda';
+}
+
+/** Suma cuántas páginas reales aportan los separadores de capítulos (1 o 2 si lleva reverso en blanco). */
+export function countSectionDividerPages(
+  sectionDividers: ReadonlyArray<{ id: string; blankBehind?: boolean }> | undefined
+): number {
+  if (!Array.isArray(sectionDividers) || sectionDividers.length === 0) return 0;
+  return sectionDividers.reduce((acc, div) => acc + (div.blankBehind ? 2 : 1), 0);
 }
 
 /**
@@ -75,7 +85,12 @@ export function computeBookFinalPageCount(
   pdfPageCount: number
 ): number {
   return calculateFinalBookPageCount({
-    sourcePageCount: effectiveSourcePageCount(pdfPageCount, options.deletedPages, options.pageOrder),
+    sourcePageCount: effectiveSourcePageCount(
+      pdfPageCount,
+      options.deletedPages,
+      options.pageOrder,
+      options.sectionDividers
+    ),
     hasSourceCover: options.hasCover,
     hasCustomCover: hasCustomCoverConfig(options.customCover),
     hasCustomBackCover: hasCustomCoverConfig(options.customBackCover),
@@ -93,20 +108,31 @@ export function computeBookFinalPageCount(
 
 /**
  * Páginas efectivas del interior según el motor:
- *  - pageOrder definido y no vacío: cada registro aporta una página (los
- *    borrados se aplican sobre el número base del registro).
+ *  - pageOrder definido y no vacío: cada registro no-divider aporta una página (los
+ *    borrados se aplican sobre el número base del registro; las hojas 'blank...' suman 1).
  *  - Si no: pdfPageCount menos deletedPages.
+ *  - Más las páginas aportadas por `sectionDividers` (+1 o +2 con hoja blanca detrás).
  */
 export function effectiveSourcePageCount(
   pdfPageCount: number,
   deletedPages: Array<number | string> | undefined,
-  pageOrder: Array<number | string> | undefined
+  pageOrder: Array<number | string> | undefined,
+  sectionDividers?: ReadonlyArray<{ id: string; blankBehind?: boolean }>
 ): number {
   const deleted = (deletedPages || []).map(Number);
+  let baseCount = 0;
   if (pageOrder && pageOrder.length > 0) {
-    return pageOrder.filter((id) => !deleted.includes(Number(String(id).split('_')[0]))).length;
+    baseCount = pageOrder.filter((id) => {
+      if (isDividerPageToken(id)) return false;
+      const str = String(id);
+      if (str.startsWith('blank')) return true;
+      return !deleted.includes(Number(str.split('_')[0]));
+    }).length;
+  } else {
+    baseCount = Math.max(0, pdfPageCount - deleted.length);
   }
-  return Math.max(0, pdfPageCount - deleted.length);
+  if (baseCount <= 0 && pdfPageCount <= 0) return 0;
+  return baseCount + countSectionDividerPages(sectionDividers);
 }
 
 /**

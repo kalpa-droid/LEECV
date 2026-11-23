@@ -351,3 +351,259 @@ export const EditorialPdfCoverPage: React.FC<EditorialCoverPageProps> = ({
     </Page>
   );
 };
+
+export interface EditorialSectionDividerPageProps {
+  pageSize: 'A4' | 'A5' | 'LETTER' | [number, number];
+  coverStyleId?: CoverStyleId | string;
+  coverPaletteKey?: string;
+  fallbackPalette: ColorPalette;
+  kicker?: string;
+  title: string;
+  subtitle?: string;
+  baseFont: string;
+  boldFont: string;
+  italicFont: string;
+}
+
+/**
+ * Portadilla / Carátula separadora de capítulo o sección para EditorLee.
+ * Consume los mismos 6 arquetipos de `COVER_PRESETS_CATALOG` y paletas de `PRESET_COLORS`
+ * con una composición aireada de separador interno (sin pie de numeración).
+ */
+export const EditorialSectionDividerPage: React.FC<EditorialSectionDividerPageProps> = ({
+  pageSize,
+  coverStyleId = 'monica-classic',
+  coverPaletteKey,
+  fallbackPalette,
+  kicker,
+  title,
+  subtitle,
+  baseFont,
+  boldFont,
+  italicFont,
+}) => {
+  const palette: ColorPalette =
+    (coverPaletteKey && PRESET_COLORS[coverPaletteKey]?.palette) || fallbackPalette;
+
+  const cleanKicker = cleanText(kicker);
+  const cleanTitle = cleanText(title);
+  const cleanSubtitle = cleanText(subtitle);
+
+  if (coverStyleId === 'magazine-executive' || coverStyleId === 'bold-impact') {
+    return (
+      <Page
+        size={pageSize}
+        style={{
+          fontFamily: baseFont,
+          backgroundColor: '#FFFFFF',
+          color: palette.text,
+          flexDirection: 'column',
+        }}
+      >
+        <View
+          style={{
+            backgroundColor: palette.primary,
+            color: palette.textOnPrimary,
+            paddingTop: 58,
+            paddingBottom: 42,
+            paddingHorizontal: 44,
+          }}
+        >
+          {cleanKicker ? (
+            <Text
+              style={{
+                fontSize: 10,
+                fontFamily: boldFont,
+                letterSpacing: 1.5,
+                textTransform: 'uppercase',
+                color: palette.textOnPrimary,
+                opacity: 0.85,
+                marginBottom: 10,
+              }}
+            >
+              {cleanKicker}
+            </Text>
+          ) : null}
+          <Text
+            style={{
+              fontSize: 28,
+              fontFamily: boldFont,
+              color: palette.textOnPrimary,
+              lineHeight: 1.2,
+            }}
+          >
+            {cleanTitle}
+          </Text>
+        </View>
+        {cleanSubtitle ? (
+          <View style={{ paddingHorizontal: 44, paddingTop: 32 }}>
+            <Text style={{ fontSize: 13, fontFamily: italicFont, color: '#475569', lineHeight: 1.4 }}>
+              {cleanSubtitle}
+            </Text>
+          </View>
+        ) : null}
+      </Page>
+    );
+  }
+
+  if (coverStyleId === 'creative-sustentable') {
+    return (
+      <Page
+        size={pageSize}
+        style={{
+          fontFamily: baseFont,
+          backgroundColor: '#FFFFFF',
+          color: palette.text,
+          paddingLeft: 58,
+          paddingRight: 42,
+          justifyContent: 'center',
+        }}
+      >
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            bottom: 0,
+            left: 0,
+            width: 18,
+            backgroundColor: palette.primary,
+          }}
+        />
+        <View>
+          {cleanKicker ? (
+            <Text
+              style={{
+                fontSize: 10,
+                fontFamily: boldFont,
+                letterSpacing: 1.4,
+                textTransform: 'uppercase',
+                color: palette.primary,
+                marginBottom: 8,
+              }}
+            >
+              {cleanKicker}
+            </Text>
+          ) : null}
+          <Text style={{ fontSize: 26, fontFamily: boldFont, color: palette.text, marginBottom: 10 }}>
+            {cleanTitle}
+          </Text>
+          {cleanSubtitle ? (
+            <Text style={{ fontSize: 13, fontFamily: italicFont, color: '#475569', lineHeight: 1.4 }}>
+              {cleanSubtitle}
+            </Text>
+          ) : null}
+        </View>
+      </Page>
+    );
+  }
+
+  if (coverStyleId === 'modern-corporate' || coverStyleId === 'minimal-editorial') {
+    return (
+      <Page
+        size={pageSize}
+        style={{
+          fontFamily: baseFont,
+          backgroundColor: '#FFFFFF',
+          color: palette.text,
+          padding: 46,
+          justifyContent: 'center',
+        }}
+      >
+        <View
+          style={
+            coverStyleId === 'modern-corporate'
+              ? {
+                  borderWidth: 1,
+                  borderColor: palette.secondary,
+                  borderRadius: 8,
+                  padding: 28,
+                  backgroundColor: '#F8FAFC',
+                }
+              : {}
+          }
+        >
+          <View
+            style={{
+              height: 4,
+              width: 56,
+              backgroundColor: palette.primary,
+              marginBottom: 14,
+            }}
+          />
+          {cleanKicker ? (
+            <Text
+              style={{
+                fontSize: 10,
+                fontFamily: boldFont,
+                letterSpacing: 1.4,
+                textTransform: 'uppercase',
+                color: palette.secondary,
+                marginBottom: 8,
+              }}
+            >
+              {cleanKicker}
+            </Text>
+          ) : null}
+          <Text style={{ fontSize: 26, fontFamily: boldFont, color: palette.text, marginBottom: 10 }}>
+            {cleanTitle}
+          </Text>
+          {cleanSubtitle ? (
+            <Text style={{ fontSize: 13, fontFamily: italicFont, color: '#475569', lineHeight: 1.4 }}>
+              {cleanSubtitle}
+            </Text>
+          ) : null}
+        </View>
+      </Page>
+    );
+  }
+
+  // Canon Clásico Van de Graaf (monica-classic)
+  return (
+    <Page
+      size={pageSize}
+      style={{
+        fontFamily: baseFont,
+        backgroundColor: '#FFFFFF',
+        color: palette.text,
+        padding: 42,
+      }}
+    >
+      <View
+        style={{
+          flexGrow: 1,
+          borderWidth: 1.2,
+          borderColor: palette.primary,
+          padding: 32,
+          justifyContent: 'center',
+          alignItems: 'center',
+          textAlign: 'center',
+        }}
+      >
+        {cleanKicker ? (
+          <Text
+            style={{
+              fontSize: 10,
+              fontFamily: boldFont,
+              letterSpacing: 1.5,
+              textTransform: 'uppercase',
+              color: palette.primary,
+              marginBottom: 10,
+            }}
+          >
+            {cleanKicker}
+          </Text>
+        ) : null}
+        <View style={{ width: 54, height: 1.8, backgroundColor: palette.primary, marginBottom: 14 }} />
+        <Text style={{ fontSize: 26, fontFamily: boldFont, color: palette.text, textAlign: 'center', marginBottom: 10 }}>
+          {cleanTitle}
+        </Text>
+        {cleanSubtitle ? (
+          <Text style={{ fontSize: 13, fontFamily: italicFont, color: '#475569', textAlign: 'center', marginBottom: 12 }}>
+            {cleanSubtitle}
+          </Text>
+        ) : null}
+        <View style={{ width: 54, height: 1.8, backgroundColor: palette.primary, marginTop: 4 }} />
+      </View>
+    </Page>
+  );
+};

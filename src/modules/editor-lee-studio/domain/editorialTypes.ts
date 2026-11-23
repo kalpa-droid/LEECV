@@ -147,6 +147,31 @@ export interface EditorialDesignConfig {
   manualOverrides?: Record<string, boolean>;
   coverStyleId?: string;
   coverPaletteKey?: string;
+  /** Configuración global de carátulas separadoras por capítulo/sección (desactivadas por defecto). */
+  sectionDividers?: EditorialSectionDividerConfig;
+}
+
+/** Configuración global de carátulas separadoras por capítulo o sección. */
+export interface EditorialSectionDividerConfig {
+  enabled: boolean;
+  /** 'body-chapters' = solo cuerpo (Capítulos, Unidades, Desarrollo); 'all-sections' = todas salvo Bibliografía. */
+  scope: 'body-chapters' | 'all-sections';
+  /** true = hereda el mismo diseño y paleta de la portada principal. */
+  inheritCoverStyle: boolean;
+  coverStyleId?: string;
+  coverPaletteKey?: string;
+  /** Insertar hoja en blanco detrás de cada carátula separadora (impresión doble cara). */
+  blankBackPage: boolean;
+}
+
+/** Configuración puntual de carátula separadora en una sección individual (Nivel 3). */
+export interface EditorialSectionCoverOverride {
+  enabled?: boolean;
+  kicker?: string;
+  subtitle?: string;
+  coverStyleId?: string;
+  coverPaletteKey?: string;
+  blankBackPage?: boolean;
 }
 
 /** Un registro (bloque de contenido) dentro de una sección. */
@@ -201,6 +226,8 @@ export interface EditorialSection {
   startNewPage: boolean;              // ¿Empezar en página nueva?
   position: number;                   // Orden relativo
   records: EditorialRecord[];
+  /** Carátula o portadilla separadora opcional para esta sección/capítulo. */
+  sectionCover?: EditorialSectionCoverOverride;
 }
 
 /** Reglas del manifiesto editorial. */

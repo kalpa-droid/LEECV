@@ -11,6 +11,7 @@ import { useConfirm } from '../../../shared/core/ui/ConfirmDialog';
 import { encodeImageFileWithinBudget } from '../../../shared/core/cv-import/pageImageEncoder';
 import { executeAiTask } from '../../../shared/core/ai/aiClient';
 import { resolveCanonicalEditorialKey } from '../domain/editorialDockEngine';
+import { resolveEditorialSectionCoverState } from '../domain/sanitizeEditorialData';
 import {
   BIBLIOGRAPHY_NORM_GUIDES,
   buildInlineCiteToken,
@@ -209,6 +210,28 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
   };
 
   const { sectionKey } = resolveCanonicalEditorialKey(section);
+  const sectionCoverState = resolveEditorialSectionCoverState(
+    section,
+    draft?.design,
+    draft?.cover,
+  );
+
+  const updateSectionCoverPatch = (patch: Record<string, any>) => {
+    updateDraft((prev) => ({
+      ...prev,
+      sections: (prev?.sections || []).map((s: EditorialSection) =>
+        s.id === section.id
+          ? {
+              ...s,
+              sectionCover: {
+                ...(s.sectionCover || {}),
+                ...patch,
+              },
+            }
+          : s,
+      ),
+    }));
+  };
   const guideBody =
     SECTION_WRITING_GUIDES[sectionKey] ||
     'Redactá por bloques claros (párrafos, subtítulos, citas o imágenes). Podés tocar el ícono de IA en cualquier bloque para que Lidio mejore el estilo antes de aplicarlo.';
@@ -387,6 +410,59 @@ export const EditorialSectionFocusPanel: React.FC<EditorialSectionFocusPanelProp
             />
           </div>
         </div>
+
+        {sectionKey !== 'bibliografia' && (
+          <div className="p-2.5 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)] space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-[11px] font-bold text-[var(--ui-text-primary)] truncate">
+                  Carátula separadora antes de este capítulo
+                </span>
+                <LidioHelpTrigger
+                  size="xs"
+                  title="Portadilla de capítulo"
+                  text="Inserta una página de carátula para presentar este capítulo (usa el mismo estilo de diseño de tu portada)."
+                />
+              </div>
+              <SectionSwitch
+                size="sm"
+                checked={sectionCoverState.enabled}
+                onChange={(next) => updateSectionCoverPatch({ enabled: next })}
+                label={`Carátula en ${section.title}`}
+              />
+            </div>
+
+            {sectionCoverState.enabled && (
+              <div className="space-y-2 pt-1 border-t border-[var(--ui-border)]">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-[var(--ui-text-secondary)]">
+                    Hoja en blanco detrás (doble cara)
+                  </span>
+                  <SectionSwitch
+                    size="sm"
+                    checked={sectionCoverState.blankBackPage}
+                    onChange={(next) => updateSectionCoverPatch({ blankBackPage: next })}
+                    label="Hoja en blanco detrás de la carátula"
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Field
+                    label="Etiqueta superior (opcional)"
+                    value={section.sectionCover?.kicker ?? ''}
+                    onChange={(e: any) => updateSectionCoverPatch({ kicker: e.target.value })}
+                    placeholder={`Ej: CAPÍTULO ${badgeLabel || '1'}`}
+                  />
+                  <Field
+                    label="Subtítulo o epígrafe (opcional)"
+                    value={section.sectionCover?.subtitle ?? ''}
+                    onChange={(e: any) => updateSectionCoverPatch({ subtitle: e.target.value })}
+                    placeholder="Bajada opcional..."
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </PanelSection>
 
       {sectionKey === 'bibliografia' && (

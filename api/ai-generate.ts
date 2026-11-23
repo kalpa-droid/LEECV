@@ -89,9 +89,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let successfulProviderId: string | null = null;
   let lastError: Error | null = null;
 
-  for (const providerId of AI_PROVIDER_FALLBACK_ORDER) {
+  const hasVisionPayload = Boolean(validImages && validImages.length > 0);
+  const providerOrder = hasVisionPayload
+    ? ['gemini', 'groq', 'openrouter']
+    : AI_PROVIDER_FALLBACK_ORDER;
+
+  for (const providerId of providerOrder) {
     const provider = AI_PROVIDERS[providerId];
     if (!provider) continue;
+    if (hasVisionPayload && !provider.supportsImages) continue;
 
     // Rotar hasta agotar las claves disponibles del proveedor (salto con 429, como consolidate-ats)
     for (let keyAttempt = 0; keyAttempt < 8; keyAttempt++) {

@@ -22,7 +22,12 @@ import {
 import { registerPdfCategoryExporter } from '../../../shared/core/pdf-engine/pdfCategoryRegistry';
 import { sanitizeFontFamily } from '../../../shared/core/pdf-engine/layers/typography/pdfFontRegistry';
 import { downloadBlob } from '../../../shared/core/utils/downloadUtils';
-import { EditorialPdfCoverPage } from './EditorialPdfCovers';
+import { EditorialPdfCoverPage, EditorialSectionDividerPage } from './EditorialPdfCovers';
+import {
+  countEditorialSectionCoverPages,
+  resolveEditorialSectionCoverState,
+} from '../domain/sanitizeEditorialData';
+import { resolveSectionBadgeLabel } from '../domain/editorialDockEngine';
 import {
   collectBibliographyFromSections,
   computeCitationAppearanceOrder,
@@ -375,6 +380,19 @@ export const EditorialPdfDocument: React.FC<{
   const showToc = Boolean(model.tocConfig?.enabled && model.sections.length > 0);
   const tocPageNumberOffset = (showCover ? 1 : 0) + (showToc ? 1 : 0);
 
+  // Calcular el desplazamiento acumulado de páginas incluyendo carátulas de capítulos
+  const sectionStartPageNumbers: number[] = [];
+  let runningPageCursor = tocPageNumberOffset + 1;
+  for (let i = 0; i < syncedVisibleSections.length; i++) {
+    const extraDividerPages = countEditorialSectionCoverPages(
+      syncedVisibleSections[i],
+      rawDesign,
+      model.cover,
+    );
+    sectionStartPageNumbers.push(runningPageCursor);
+    runningPageCursor += extraDividerPages + 1;
+  }
+
   // Generar página de índice automático si está habilitado
   const tocPage = showToc ? (
     <Page key="toc" size={resolvedPageSize} style={styles.page}>
@@ -385,7 +403,7 @@ export const EditorialPdfDocument: React.FC<{
       {model.sections.map((section, si) => (
         <React.Fragment key={`sec-${section.id}`}>
           <Text style={{ fontSize: 13, fontFamily: boldFont, marginBottom: 6 }}>
-            {section.title || `Sección ${si + 1}`} — Pág. {tocPageNumberOffset + si + 1}
+            {section.title || `Sección ${si + 1}`} — Pág. {sectionStartPageNumbers[si] ?? tocPageNumberOffset + si + 1}
           </Text>
           {model.tocConfig.showSubtitles !== false &&
             section.records
@@ -404,13 +422,63 @@ export const EditorialPdfDocument: React.FC<{
     </Page>
   ) : null;
 
-  // Generar páginas de sección
-  const sectionPages = model.sections.map((section, secIndex) => {
+  const badgeCounters = { prelim: 0, body: 0, annex: 0 };
+
+  // Generar páginas de sección (y sus carátulas separadoras si están activas)
+  const sectionPages = model.sections.flatMap((section, secIndex) => {
     const rawSec = syncedVisibleSections[secIndex];
+    const { badgeLabel } = resolveSectionBadgeLabel(rawSec || (section as any), badgeCounters);
+    const secCoverState = resolveEditorialSectionCoverState(rawSec, rawDesign, model.cover);
     const isBibSection =
       rawSec?.sectionKey === 'bibliografia' ||
       section.records.some((r) => r.type === 'bibliography_item');
-    return (
+
+    const pagesForThisSection: React.ReactElement[] = [];
+
+    if (secCoverState.enabled) {
+      const autoKicker =
+        secCoverState.kicker ||
+        (rawSec?.sectionKey === 'unidad'
+          ? `UNIDAD ${badgeLabel}`
+          : rawSec?.category === 'cierre'
+            ? `ANEXO ${badgeLabel}`
+            : rawSec?.category === 'preliminares'
+              ? `PRELIMINAR ${badgeLabel}`
+              : `CAPÍTULO ${badgeLabel}`);
+
+      pagesForThisSection.push(
+        <EditorialSectionDividerPage
+          key={`${section.id}_divider`}
+          pageSize={resolvedPageSize}
+          coverStyleId={secCoverState.coverStyleId}
+          coverPaletteKey={secCoverState.coverPaletteKey}
+          fallbackPalette={{
+            primary: '#1E293B',
+            secondary: '#475569',
+            accent: '#0F172A',
+            text: '#0F172A',
+            textOnPrimary: '#FFFFFF',
+            background: '#FFFFFF',
+          }}
+          kicker={autoKicker}
+          title={section.title || `Sección ${secIndex + 1}`}
+          subtitle={secCoverState.subtitle}
+          baseFont={baseFont}
+          boldFont={boldFont}
+          italicFont={italicFont}
+        />,
+      );
+
+      if (secCoverState.blankBackPage) {
+        pagesForThisSection.push(
+          <Page key={`${section.id}_divider_blank`} size={resolvedPageSize} style={styles.page}>
+            <Text style={{ opacity: 0 }}> </Text>
+          </Page>,
+        );
+      }
+    }
+
+    pagesForThisSection.push(
     <Page key={section.id} size={resolvedPageSize} style={styles.page}>
       <AnchorMarker id={`ANCHOR_START:${section.id}`} active={interactiveAnchors} />
       {isBibSection && <AnchorMarker id="ANCHOR_START:editorial_bibliografia" active={interactiveAnchors} />}
@@ -546,8 +614,9 @@ export const EditorialPdfDocument: React.FC<{
       <AnchorMarker id={`ANCHOR_END:${section.id}`} active={interactiveAnchors} />
       {isBibSection && <AnchorMarker id="ANCHOR_END:editorial_bibliografia" active={interactiveAnchors} />}
       {secIndex === 0 && <AnchorMarker id="ANCHOR_END:editorial_secciones" active={interactiveAnchors} />}
-    </Page>
+    </Page>,
     );
+    return pagesForThisSection;
   });
 
   const fallbackEmptyPage = !coverPage && !tocPage && sectionPages.length === 0 ? (

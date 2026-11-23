@@ -2,12 +2,20 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ThumbnailCard } from './ThumbnailCard';
 import { LightboxModal } from './LightboxModal';
 import { CoverPreviewThumbnail } from './CoverPreviewThumbnail';
+import { BookSectionDividerModal } from './BookSectionDividerModal';
 import { BookImpositionOptions } from '../domain/impositionEngine';
+import {
+  BookSectionDivider,
+  extractDividerIdFromToken,
+  isDividerPageToken,
+  makeDividerPageToken,
+  resolveBookOrderedItems,
+} from '../domain/bookDividerCanvas';
 import { computeBookFinalPageCount } from '../domain/bookPageCount';
 import { planBookletSignatures, getSignatureSheetPairs } from '../../../shared/kits/print-imposition/impositionPlanner';
 import { bookAssetManager } from '../domain/bookAssetManager';
 import { radius } from '../../../shared/core/uiDesignSystem';
-import { RefreshCw, FileText, Trash2, AlertTriangle } from 'lucide-react';
+import { RefreshCw, FileText, Trash2, AlertTriangle, BookMarked, Edit3, ArrowLeft, ArrowRight } from 'lucide-react';
 import { loadPdfDocumentWithCmaps } from '../../../shared/core/pdf-engine/pdfjsWorkerSetup';
 import { useText } from '../../../shared/i18n/useText';
 
@@ -38,6 +46,15 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
   const [pdfLoadError, setPdfLoadError] = useState<string | null>(null);
   const [activeLightboxPage, setActiveLightboxPage] = useState<number | null>(null);
   const [showDeletedPages, setShowDeletedPages] = useState<boolean>(false);
+  const [dividerModalState, setDividerModalState] = useState<{
+    isOpen: boolean;
+    defaultBeforePage: number;
+    editingDivider: BookSectionDivider | null;
+  }>({
+    isOpen: false,
+    defaultBeforePage: 1,
+    editingDivider: null,
+  });
   const t = useText();
 
   // Vista del libro: orden lineal (grilla de miniaturas) vs pares de hoja
@@ -179,21 +196,26 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
     );
   }
 
-  // Derive order array (1...pdfPageCount or custom pageOrder containing numeric or blank IDs)
-  const displayPages =
-    options.pageOrder && options.pageOrder.length > 0
-      ? options.pageOrder
-      : Array.from({ length: pdfPageCount }, (_, i) => i + 1);
+  // Secuencia lineal efectiva con páginas, blancos y separadores de capítulo
+  const sectionDividers = options.sectionDividers || [];
+  const dividerMap = new Map(sectionDividers.map((d) => [d.id, d]));
+  const displayPages = resolveBookOrderedItems({
+    pdfPageCount,
+    pageOrder: options.pageOrder,
+    sectionDividers,
+  });
 
   const deletedPagesSet = new Set((options.deletedPages || []).map((p) => String(p)));
+  const lowConfidenceSet = new Set((options.lowConfidenceRotationPages || []).map(Number));
   const pageRotations = options.pageRotations || {};
 
   const handleRemoveBlankPage = (itemKey: string | number) => {
     setOptions((prev) => {
-      const currentOrder =
-        prev.pageOrder && prev.pageOrder.length > 0
-          ? [...prev.pageOrder]
-          : Array.from({ length: pdfPageCount }, (_, i) => i + 1);
+      const currentOrder = resolveBookOrderedItems({
+        pdfPageCount,
+        pageOrder: prev.pageOrder,
+        sectionDividers: prev.sectionDividers,
+      });
       return {
         ...prev,
         pageOrder: currentOrder.filter((p) => String(p) !== String(itemKey)),
@@ -201,13 +223,65 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
     });
   };
 
-  const handleRotatePage = (pageNum: number) => {
+  const handleSaveDivider = (divider: BookSectionDivider) => {
     setOptions((prev) => {
-      const currentRot = prev.pageRotations?.[pageNum] || 0;
-      const step = 180;
-      const nextRot = (currentRot + step) % 360;
+      const existingList = prev.sectionDividers || [];
+      const isEditing = existingList.some((d) => d.id === divider.id);
+      const nextDividers = isEditing
+        ? existingList.map((d) => (d.id === divider.id ? divider : d))
+        : [...existingList, divider];
+
+      const token = makeDividerPageToken(divider.id);
+      const baseOrder = resolveBookOrderedItems({
+        pdfPageCount,
+        pageOrder: prev.pageOrder,
+        sectionDividers: existingList,
+      }).filter((it) => String(it) !== token);
+
+      const targetPage = Math.max(1, Number(divider.insertBeforePage) || 1);
+      const insertIdx = baseOrder.findIndex((it) => {
+        if (typeof it === 'number') return it >= targetPage;
+        const str = String(it);
+        if (str.startsWith('blank') || isDividerPageToken(str)) return false;
+        const num = Number(str.split('_')[0]);
+        return Number.isFinite(num) && num >= targetPage;
+      });
+
+      if (insertIdx === -1) {
+        baseOrder.push(token);
+      } else {
+        baseOrder.splice(insertIdx, 0, token);
+      }
+
       return {
         ...prev,
+        sectionDividers: nextDividers,
+        pageOrder: baseOrder,
+      };
+    });
+  };
+
+  const handleRemoveDivider = (dividerId: string) => {
+    setOptions((prev) => {
+      const token = makeDividerPageToken(dividerId);
+      const nextDividers = (prev.sectionDividers || []).filter((d) => d.id !== dividerId);
+      const nextOrder = (prev.pageOrder || []).filter((it) => String(it) !== token);
+      return {
+        ...prev,
+        sectionDividers: nextDividers,
+        pageOrder: nextOrder,
+      };
+    });
+  };
+
+  const handleRotatePage = (pageNum: number, deltaDeg = 90) => {
+    setOptions((prev) => {
+      const currentRot = prev.pageRotations?.[pageNum] || 0;
+      const nextRot = ((currentRot + deltaDeg) % 360 + 360) % 360;
+      const nextLowConf = (prev.lowConfidenceRotationPages || []).filter((p) => p !== pageNum);
+      return {
+        ...prev,
+        lowConfidenceRotationPages: nextLowConf,
         pageRotations: {
           ...(prev.pageRotations || {}),
           [pageNum]: nextRot,
@@ -230,14 +304,15 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
     });
   };
 
-  const handleMovePage = (pageNum: number, direction: 'left' | 'right') => {
+  const handleMoveItem = (itemKey: number | string, direction: 'left' | 'right') => {
     setOptions((prev) => {
-      const currentOrder =
-        prev.pageOrder && prev.pageOrder.length > 0
-          ? [...prev.pageOrder]
-          : Array.from({ length: pdfPageCount }, (_, i) => i + 1);
+      const currentOrder = resolveBookOrderedItems({
+        pdfPageCount,
+        pageOrder: prev.pageOrder,
+        sectionDividers: prev.sectionDividers,
+      });
 
-      const idx = currentOrder.indexOf(pageNum);
+      const idx = currentOrder.findIndex((it) => String(it) === String(itemKey));
       if (idx === -1) return prev;
 
       const targetIdx = direction === 'left' ? idx - 1 : idx + 1;
@@ -267,12 +342,18 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
     }));
   };
 
-  const handleSaveReference = (refPdfPage: number, refBookPage: number, refPageSide: 'derecha' | 'izquierda') => {
+  const handleSaveReference = (
+    refPdfPage: number,
+    refBookPage: number,
+    refPageSide: 'derecha' | 'izquierda',
+    refPdfHalf?: 'izquierda' | 'derecha',
+  ) => {
     setOptions((prev) => ({
       ...prev,
       refPdfPage,
       refBookPage,
       refPageSide,
+      refPdfHalf,
     }));
   };
 
@@ -291,7 +372,22 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() =>
+              setDividerModalState({
+                isOpen: true,
+                defaultBeforePage: 1,
+                editingDivider: null,
+              })
+            }
+            className={`px-2.5 py-1 rounded-[${radius.control}] bg-[var(--color-accent-muted)] hover:opacity-90 border border-[var(--color-accent-base)]/40 text-xs font-bold text-[var(--color-accent-text)] transition cursor-pointer flex items-center gap-1.5`}
+          >
+            <BookMarked className="w-3.5 h-3.5" />
+            <span>＋ Separador de capítulo</span>
+          </button>
+
           {deletedPagesSet.size > 0 && (
             <button
               type="button"
@@ -477,6 +573,112 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
             );
           }
 
+          if (isDividerPageToken(itemStr)) {
+            const divId = extractDividerIdFromToken(itemStr);
+            const divider = divId ? dividerMap.get(divId) : undefined;
+            if (!divider) return null;
+            return (
+              <React.Fragment key={itemStr}>
+                <div
+                  className={`p-2.5 bg-[var(--ui-bg-surface)] border-2 border-[var(--color-accent-base)] rounded-[${radius.card}] flex flex-col items-center justify-between text-center min-h-[200px] space-y-1.5 relative shadow-[var(--shadow-raised)] select-none`}
+                >
+                  <div className="w-full flex items-center justify-between gap-1">
+                    <span className="px-2 py-0.5 rounded bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] font-bold text-[9px] uppercase tracking-wider truncate">
+                      {divider.kicker || 'Separador'}
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded bg-[var(--ui-bg-card)] text-[9px] font-bold text-[var(--color-accent-text)]">
+                      {divider.blankBehind ? '2 págs.' : '1 pág.'}
+                    </span>
+                  </div>
+
+                  <div
+                    onClick={() =>
+                      setDividerModalState({
+                        isOpen: true,
+                        defaultBeforePage: divider.insertBeforePage,
+                        editingDivider: divider,
+                      })
+                    }
+                    className="w-full cursor-pointer"
+                  >
+                    <CoverPreviewThumbnail
+                      config={divider}
+                      kind="divider"
+                      paperSize={options.paperSize}
+                      defaultCoverStyle={options.customCover?.coverStyle || options.coverStyle || 'monica-classic'}
+                      className="w-full h-auto aspect-[1/1.41] object-contain rounded border border-[var(--ui-border)] bg-[var(--ui-bg-card)]"
+                    />
+                  </div>
+
+                  <span className="text-[10px] font-bold text-[var(--ui-text-primary)] truncate w-full">
+                    {divider.title}
+                  </span>
+
+                  <div className="flex items-center justify-around w-full pt-1 border-t border-[var(--ui-border)] gap-1">
+                    <button
+                      type="button"
+                      disabled={idx === 0}
+                      onClick={() => handleMoveItem(itemStr, 'left')}
+                      title="Mover separador a la izquierda"
+                      className="p-1 rounded hover:bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)] disabled:opacity-30 cursor-pointer"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setDividerModalState({
+                          isOpen: true,
+                          defaultBeforePage: divider.insertBeforePage,
+                          editingDivider: divider,
+                        })
+                      }
+                      title="Editar separador"
+                      className="p-1 rounded hover:bg-[var(--ui-bg-panel)] text-[var(--color-accent-text)] cursor-pointer"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveDivider(divider.id)}
+                      title="Eliminar separador"
+                      className="p-1 rounded hover:bg-[var(--color-status-danger-muted)] text-[var(--color-status-danger-text)] cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={idx === displayPages.length - 1}
+                      onClick={() => handleMoveItem(itemStr, 'right')}
+                      title="Mover separador a la derecha"
+                      className="p-1 rounded hover:bg-[var(--ui-bg-panel)] text-[var(--ui-text-secondary)] disabled:opacity-30 cursor-pointer"
+                    >
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {divider.blankBehind && (
+                  <div
+                    className={`p-3 bg-[var(--ui-bg-surface)] border-2 border-dashed border-[var(--ui-border)] rounded-[${radius.card}] flex flex-col items-center justify-between text-center min-h-[200px] space-y-2 relative select-none opacity-80`}
+                  >
+                    <span className="px-2 py-0.5 rounded bg-[var(--ui-bg-panel)] text-[var(--ui-text-primary)] font-bold text-[9px] tracking-wider border border-[var(--ui-border)]">
+                      {t.bookStudio.pdfStrip.blankSheetBadge}
+                    </span>
+                    <div className="flex-1 w-full aspect-[1/1.41] bg-white border border-dashed border-black/20 rounded opacity-50 flex items-center justify-center">
+                      <span className="text-[10px] text-black/70 rotate-[-45deg] font-bold">
+                        Reverso Separador
+                      </span>
+                    </div>
+                    <span className="text-[9px] text-[var(--ui-text-secondary)] font-semibold truncate w-full">
+                      Detrás de {divider.title}
+                    </span>
+                  </div>
+                )}
+              </React.Fragment>
+            );
+          }
+
           const pageNum = Number(item);
           return (
             <ThumbnailCard
@@ -485,14 +687,16 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
               pdfDoc={pdfDoc}
               rotation={pageRotations[pageNum] || 0}
               isDeleted={deletedPagesSet.has(String(pageNum))}
+              hasLowConfidenceRotation={lowConfidenceSet.has(pageNum)}
               canMoveLeft={idx > 0}
               canMoveRight={idx < displayPages.length - 1}
               splitOffset={pageSplitOffsets[pageNum] !== undefined ? pageSplitOffsets[pageNum] : 50}
               isFotocopiaMode={isFotocopiaMode}
-              onRotate={handleRotatePage}
+              onRotate={(p) => handleRotatePage(p, 90)}
+              onRotateLeft90={(p) => handleRotatePage(p, -90)}
               onToggleDelete={handleToggleDelete}
-              onMoveLeft={(p) => handleMovePage(p, 'left')}
-              onMoveRight={(p) => handleMovePage(p, 'right')}
+              onMoveLeft={(p) => handleMoveItem(p, 'left')}
+              onMoveRight={(p) => handleMoveItem(p, 'right')}
               onSplitOffsetChange={isFotocopiaMode ? handleSplitOffsetChange : undefined}
               onOpenLightbox={(p) => setActiveLightboxPage(p)}
             />
@@ -554,6 +758,7 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
           refPdfPage={options.refPdfPage}
           refBookPage={options.refBookPage}
           refPageSide={options.refPageSide}
+          refPdfHalf={options.refPdfHalf}
           splitOffset={pageSplitOffsets[activeLightboxPage] !== undefined ? pageSplitOffsets[activeLightboxPage] : 50}
           isFotocopiaMode={isFotocopiaMode}
           isDeleted={deletedPagesSet.has(String(activeLightboxPage))}
@@ -562,13 +767,34 @@ export const PdfPreviewStrip: React.FC<PdfPreviewStripProps> = ({
           activeStep={activeStep}
           onSaveReferencePage={handleSaveReference}
           onSaveSplitOffset={isFotocopiaMode ? handleSplitOffsetChange : undefined}
+          onInsertDividerBeforePage={(pageNum) =>
+            setDividerModalState({
+              isOpen: true,
+              defaultBeforePage: pageNum,
+              editingDivider: null,
+            })
+          }
           onNavigate={(nextP) => setActiveLightboxPage(nextP)}
-          onRotate={handleRotatePage}
+          onRotate={(p) => handleRotatePage(p, 90)}
+          onRotateLeft90={(p) => handleRotatePage(p, -90)}
           onToggleDelete={handleToggleDelete}
-          onMoveLeft={(p) => handleMovePage(p, 'left')}
-          onMoveRight={(p) => handleMovePage(p, 'right')}
+          onMoveLeft={(p) => handleMoveItem(p, 'left')}
+          onMoveRight={(p) => handleMoveItem(p, 'right')}
         />
       )}
+
+      <BookSectionDividerModal
+        isOpen={dividerModalState.isOpen}
+        onClose={() =>
+          setDividerModalState((prev) => ({ ...prev, isOpen: false, editingDivider: null }))
+        }
+        pdfPageCount={pdfPageCount}
+        defaultInsertBeforePage={dividerModalState.defaultBeforePage}
+        defaultCoverStyle={options.customCover?.coverStyle || options.coverStyle || 'monica-classic'}
+        paperSize={options.paperSize}
+        initialDivider={dividerModalState.editingDivider}
+        onSaveDivider={handleSaveDivider}
+      />
     </div>
   );
 };

@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { BookOpen, Ban, Check, FileText, Image, Palette, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BookOpen, Ban, Check, FileText, Image, Palette, ChevronLeft, ChevronRight, BookMarked, Trash2 } from 'lucide-react';
 import { BookImpositionOptions, CoverConfig } from './domain/impositionEngine';
+import {
+  BookSectionDivider,
+  makeDividerPageToken,
+  resolveBookOrderedItems,
+} from './domain/bookDividerCanvas';
+import { BookSectionDividerModal } from './components/BookSectionDividerModal';
 import { COVER_PRESETS } from '../../shared/core/pdf-engine/layers/presets/coverPresetCatalog';
 import { bookAssetManager } from './domain/bookAssetManager';
 import { PanelSection } from '../../shared/core/ui/PanelSection';
@@ -17,12 +23,20 @@ import { useText } from '../../shared/i18n/useText';
 interface BookCoverStepProps {
   options: BookImpositionOptions;
   setOptions: React.Dispatch<React.SetStateAction<BookImpositionOptions>>;
+  pdfPageCount?: number;
   onNextStep?: () => void;
   onPrevStep?: () => void;
 }
 
-export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOptions, onNextStep, onPrevStep }) => {
+export const BookCoverStep: React.FC<BookCoverStepProps> = ({
+  options,
+  setOptions,
+  pdfPageCount = 1,
+  onNextStep,
+  onPrevStep,
+}) => {
   const t = useText();
+  const [isDividerModalOpen, setIsDividerModalOpen] = useState(false);
   const [coverType, setCoverType] = useState<'source' | 'custom' | 'upload' | 'none'>(
     options.hasCover
       ? 'source'
@@ -341,6 +355,57 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
         </div>
       )}
 
+      <PanelSection
+        icon={<BookMarked className="w-4 h-4" />}
+        title="Carátulas o separadores por capítulo"
+        helpTitle="Portadillas internas"
+        helpText="Podés insertar portadas o separadores manuales antes de cualquier página de tu PDF (con hoja blanca detrás o de 1 sola página) usando los mismos diseños de tapa."
+      >
+        <button
+          type="button"
+          onClick={() => setIsDividerModalOpen(true)}
+          className="w-full py-2 px-3 rounded-lg border border-[var(--color-accent-base)]/50 bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer hover:opacity-90"
+        >
+          <BookMarked className="w-3.5 h-3.5" />
+          <span>＋ Agregar carátula o separador de capítulo</span>
+        </button>
+
+        {(options.sectionDividers || []).length > 0 && (
+          <div className="space-y-1.5 pt-1">
+            {(options.sectionDividers || []).map((div) => (
+              <div
+                key={div.id}
+                className="p-2 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)] flex items-center justify-between gap-2 text-xs"
+              >
+                <div className="min-w-0">
+                  <span className="font-bold text-[var(--ui-text-primary)] truncate block">
+                    {div.kicker ? `${div.kicker}: ` : ''}{div.title}
+                  </span>
+                  <span className="text-[10px] text-[var(--ui-text-secondary)]">
+                    Antes de Pág. {div.insertBeforePage} · {div.blankBehind ? 'Con hoja blanca detrás (2 págs.)' : 'Solo 1 página'}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const token = makeDividerPageToken(div.id);
+                    setOptions((prev) => ({
+                      ...prev,
+                      sectionDividers: (prev.sectionDividers || []).filter((d) => d.id !== div.id),
+                      pageOrder: (prev.pageOrder || []).filter((it) => String(it) !== token),
+                    }));
+                  }}
+                  className="p-1 text-[var(--color-status-danger-text)] hover:opacity-80 cursor-pointer"
+                  title="Eliminar separador"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </PanelSection>
+
       <div className="pt-4 border-t border-[var(--ui-border)] flex items-center justify-between gap-3">
         {onPrevStep ? (
           <button
@@ -357,13 +422,42 @@ export const BookCoverStep: React.FC<BookCoverStepProps> = ({ options, setOption
           <button
             type="button"
             onClick={onNextStep}
-            className={`${button.base} ${button.primary} flex items-center gap-1.5 text-xs font-bold`}
+            className={`${button.base} ${button.primary} flex items-center justify-center gap-1.5 text-xs font-bold`}
           >
             <span>{t.bookStudio.coverStep.nextStep}</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         )}
       </div>
+
+      <BookSectionDividerModal
+        isOpen={isDividerModalOpen}
+        onClose={() => setIsDividerModalOpen(false)}
+        pdfPageCount={pdfPageCount}
+        defaultCoverStyle={coverData.coverStyle || options.coverStyle || 'monica-classic'}
+        paperSize={options.paperSize}
+        onSaveDivider={(divider: BookSectionDivider) => {
+          setOptions((prev) => {
+            const existing = prev.sectionDividers || [];
+            const nextDividers = [...existing, divider];
+            const token = makeDividerPageToken(divider.id);
+            const baseOrder = resolveBookOrderedItems({
+              pdfPageCount,
+              pageOrder: prev.pageOrder,
+              sectionDividers: existing,
+            });
+            const targetPage = Math.max(1, Number(divider.insertBeforePage) || 1);
+            const idx = baseOrder.findIndex((it) => typeof it === 'number' && it >= targetPage);
+            if (idx === -1) baseOrder.push(token);
+            else baseOrder.splice(idx, 0, token);
+            return {
+              ...prev,
+              sectionDividers: nextDividers,
+              pageOrder: baseOrder,
+            };
+          });
+        }}
+      />
     </div>
   );
 };

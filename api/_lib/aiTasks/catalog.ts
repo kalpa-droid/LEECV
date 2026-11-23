@@ -695,6 +695,174 @@ Respondé EXCLUSIVAMENTE en JSON con lista \`citations\`, sin inventar años o D
     }
   },
 
+  editorial_detect_preset: {
+    taskId: 'editorial_detect_preset',
+    buildSystemPrompt: () => `Sos un clasificador editorial experto. Analizás el inicio y el cierre de un manuscrito o documento recién subido a EditorLee para detectar qué tipo de publicación es realmente, qué norma visual de estructura le corresponde y qué estilo de referencias bibliográficas utiliza.
+
+CATÁLOGO DE PRESETS (recommendedPresetId):
+- "libro-ensayo-novela": Novela, cuento, poesía, ensayo literario, biografía o libro narrativo (prólogo, capítulos literarios, diálogos, epílogo).
+- "informe-proyecto": Informe técnico, ejecutivo, profesional o de proyecto (resumen ejecutivo, objetivos, indicadores/KPI, diagnóstico, cronograma, presupuesto, recomendaciones).
+- "tesis-apa7": Tesis universitaria, tesina o trabajo final de grado con estructura académica extensa y citas estilo autor-año APA 7.
+- "cientifico-vancouver": Artículo o informe científico/médico con estructura IMRyD (Introducción, Métodos, Resultados, Discusión) o citas numéricas [1], [2] estilo Vancouver/IEEE.
+- "monografia-terciaria": Monografía o investigación de nivel terciario/profesorado con marco teórico, desarrollo y bibliografía APA 7.
+- "tp-secundaria": Trabajo práctico escolar de secundaria (consignas, materia, colegio, introducción breve, desarrollo y conclusión).
+- "manual-apunte-guia": Manual didáctico, apunte de cátedra, cuadernillo de estudio o guía paso a paso (unidades, módulos, ejercicios, glosario).
+- "trabajo-practico-monografia-tesis": Trabajo práctico académico general si no encaja específicamente en los anteriores.
+
+REGLAS:
+1. "recommendedStructuralNormId": "apa7" para tesis, monografías o informes científicos; "chicago" o "mla" solo si el texto lo evidencia explícitamente; "libre" para novelas, informes ejecutivos, manuales y trabajos escolares.
+2. "recommendedBibliographyStyle": "vancouver" si usa citas [1], [2] en ciencias/salud; "ieee" si usa [1] en ingeniería/informática; "apa7" si usa (Autor, Año) o tiene sección Referencias académica; "tradicional" para libros literarios, informes ejecutivos o escolares sin norma estricta.
+3. "detectedLabel": Nombre corto y claro en español (ej. "Informe / Proyecto Ejecutivo", "Tesis Universitaria (APA 7)", "Libro / Novela").
+4. "reason": 1 sola oración clara y amigable explicando qué viste en el texto (ej. "Detectamos resumen ejecutivo, objetivos de gestión e indicadores de proyecto.").
+5. Respondé EXCLUSIVAMENTE en JSON válido.`,
+    buildUserPrompt: (payload: any) => `Preset activo actualmente en el editor: "${payload?.currentPresetId || 'libro-ensayo-novela'}"
+Nombre de archivo (si existe): "${payload?.fileName || 'texto pegado'}"
+
+Muestra del inicio del documento:
+<start_excerpt>
+${String(payload?.startText || '').slice(0, 3800)}
+</start_excerpt>
+
+Muestra del final del documento:
+<end_excerpt>
+${String(payload?.endText || '').slice(0, 1400)}
+</end_excerpt>
+
+Clasificá el tipo de documento y devolvé JSON válido.`,
+    responseSchema: {
+      type: 'object',
+      properties: {
+        recommendedPresetId: {
+          type: 'string',
+          enum: [
+            'libro-ensayo-novela',
+            'tp-secundaria',
+            'monografia-terciaria',
+            'tesis-apa7',
+            'cientifico-vancouver',
+            'trabajo-practico-monografia-tesis',
+            'manual-apunte-guia',
+            'informe-proyecto',
+            'documento-libre',
+          ],
+        },
+        recommendedStructuralNormId: {
+          type: 'string',
+          enum: ['libre', 'apa7', 'chicago', 'mla'],
+        },
+        recommendedBibliographyStyle: {
+          type: 'string',
+          enum: ['apa7', 'vancouver', 'ieee', 'harvard', 'chicago', 'mla', 'tradicional'],
+        },
+        confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
+        detectedLabel: { type: 'string' },
+        reason: { type: 'string' },
+      },
+      required: [
+        'recommendedPresetId',
+        'recommendedStructuralNormId',
+        'recommendedBibliographyStyle',
+        'confidence',
+        'detectedLabel',
+        'reason',
+      ],
+    },
+  },
+
+  book_detect_orientation: {
+    taskId: 'book_detect_orientation',
+    buildSystemPrompt: () => `Sos un inspector visual experto en documentos escaneados y fotocopias de libros.
+Recibirás entre 1 y 4 imágenes de páginas de un PDF escaneado (pueden ser páginas individuales o grillas 2x2 etiquetadas con "Pág. X" en cada celda).
+Tu objetivo es determinar para cada página solicitada hacia qué borde de la imagen apunta la PARTE SUPERIOR de las letras del texto principal (la "cabeza" de las letras):
+- "top": El texto está derecho y se lee normalmente de izquierda a derecha con la cabeza de las letras apuntando hacia arriba.
+- "left": La página está acostada/girada de modo que la parte superior de las letras apunta hacia el borde IZQUIERDO de la imagen (para leerla habría que inclinar la cabeza hacia la izquierda, o girar la hoja 90° en sentido horario / hacia la derecha).
+- "right": La página está acostada/girada de modo que la parte superior de las letras apunta hacia el borde DERECHO de la imagen (para leerla habría que girar la hoja 90° en sentido antihorario / hacia la izquierda).
+- "bottom": La página está completamente patas para arriba (cabeza de las letras apuntando hacia el borde INFERIOR, requiere girar 180°).
+- "unclear": La página está en blanco, solo contiene una foto/ilustración sin texto claro, o es ilegible.
+
+REGLAS ESTRICTAS:
+1. No adivines si no hay texto: usá "unclear" y confidence "low".
+2. En "sampleWords" transcribí 2 o 3 palabras reales que hayas podido leer en esa página para comprobar la orientación.
+3. Devolvé EXCLUSIVAMENTE JSON válido con la lista "pages".`,
+    buildUserPrompt: (payload: any) => {
+      const itemsDesc = Array.isArray(payload?.items)
+        ? payload.items
+            .map((it: any, idx: number) =>
+              it.mode === 'grid2x2'
+                ? `Imagen #${idx + 1}: Grilla 2x2 con páginas [${(it.pages || []).join(', ')}] (arriba-izq, arriba-der, abajo-izq, abajo-der).`
+                : `Imagen #${idx + 1}: Página individual #${it.pages?.[0] ?? idx + 1}.`,
+            )
+            .join('\n')
+        : 'Analizá cada imagen adjunta en orden.';
+      return `Inspeccioná la orientación del texto de estas páginas escaneadas:\n${itemsDesc}\n\nRespondé solo JSON válido.`;
+    },
+    responseSchema: {
+      type: 'object',
+      properties: {
+        pages: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              pdfPage: { type: 'number' },
+              textTopEdge: { type: 'string', enum: ['top', 'right', 'bottom', 'left', 'unclear'] },
+              confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
+              sampleWords: { type: 'string', nullable: true },
+            },
+            required: ['pdfPage', 'textTopEdge', 'confidence'],
+          },
+        },
+      },
+      required: ['pages'],
+    },
+  },
+
+  book_detect_page_numbers: {
+    taskId: 'book_detect_page_numbers',
+    buildSystemPrompt: () => `Sos un asistente experto en maquetación y foliado de libros.
+Recibirás imágenes de los encabezados y pies de página (franja ARRIBA y franja ABAJO) de ciertas páginas de un PDF para encontrar el NÚMERO DE PÁGINA IMPRESO (folio) en el libro original.
+
+REGLAS ESTRICTAS:
+1. Buscá únicamente el número de página impreso de la obra (suele estar en las esquinas superiores, centro superior, esquinas inferiores o centro inferior, a veces acompañado del título o autor o entre guiones "- 10 -").
+2. NO confundas años (ej. 1995, 2024, 2026), números dentro de párrafos, notas al pie chiquitas pegadas a texto, códigos ISBN ni números de capítulo ("Capítulo 3") con el número de página.
+3. Si el modo es "fotocopia" (2 páginas por hoja divididas por una línea vertical central en MITAD IZQUIERDA y MITAD DERECHA):
+   - Reportá "leftPrintedNumber" (número arábigo entero en la mitad izquierda, o null si no tiene).
+   - Reportá "rightPrintedNumber" (número arábigo entero en la mitad derecha, o null si no tiene).
+4. Si el modo es "normal" (1 página por hoja):
+   - Reportá "printedNumber" (número arábigo entero impreso en la página, o null si no tiene).
+5. Si la página solo tiene numeración preliminar en números romanos (ej. "iii", "iv", "xii"), poné "printedNumber": null, "leftPrintedNumber": null, "rightPrintedNumber": null y guardá el romano en "romanNumeral".
+6. Devolvé EXCLUSIVAMENTE JSON válido.`,
+    buildUserPrompt: (payload: any) => {
+      const mode = payload?.mode === 'fotocopia' ? 'fotocopia (2 páginas por hoja: izquierda y derecha)' : 'normal (1 página por hoja)';
+      const pagesList = Array.isArray(payload?.pages) ? payload.pages.join(', ') : '';
+      return `Modo del PDF: ${mode}.
+Las imágenes adjuntas corresponden, en orden exacto, a las páginas del PDF: [${pagesList}].
+Cada imagen muestra la franja superior (ARRIBA) y la franja inferior (ABAJO) de esa página del PDF.
+Detectá los números de página impresos y devolvé JSON válido.`;
+    },
+    responseSchema: {
+      type: 'object',
+      properties: {
+        detections: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              pdfPage: { type: 'number' },
+              printedNumber: { type: 'number', nullable: true },
+              leftPrintedNumber: { type: 'number', nullable: true },
+              rightPrintedNumber: { type: 'number', nullable: true },
+              romanNumeral: { type: 'string', nullable: true },
+              confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
+            },
+            required: ['pdfPage', 'confidence'],
+          },
+        },
+      },
+      required: ['detections'],
+    },
+  },
+
   suggest_job_profiles: {
     taskId: 'suggest_job_profiles',
     buildSystemPrompt: (cvContext: string) => `Eres un estratega de empleabilidad y analista de mercado laboral en Latinoamérica y trabajo remoto global.

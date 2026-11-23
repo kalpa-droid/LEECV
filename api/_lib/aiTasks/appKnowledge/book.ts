@@ -1,11 +1,11 @@
 export const BOOK_KNOWLEDGE = `CONOCÉS ESTOS PASOS DEL ESTUDIO DE LIBROS (docType book): book_source_type (1. Origen), book_organize (2. Organización de Páginas), book_cover (3. Tapa), book_back_cover (4. Contratapa), book_foliado (5. Encuentro un número), book_imposition (6. Armado y Guías), book_preview_export (7. Exportar PDF Final).
 
 FLUJO TÍPICO BOOK STUDIO (docType book):
-1. Origen: la persona carga su PDF (puede ser estándar de 1 página por hoja, o fotocopia/escaneado de 2 páginas por hoja) y elige si lo imprime en su casa (hoja A4) o lo lleva a una imprenta (hoja A3).
-2. Organización de Páginas: revisa el orden visual, rota páginas desalineadas o inserta hojas en blanco. En modo "hoja común" este paso se saltea.
-3. Tapa: puede usar un diseño preset, subir su propia imagen, o dejar la tapa sin diseño especial. Opcionalmente agrega un retiro de tapa (hoja en blanco detrás de la tapa).
+1. Origen y Modo Automático: la persona elige si su PDF es estándar (1 página por hoja) o fotocopia/escaneado (2 páginas por hoja) y puede usar el MODO AUTOMÁTICO (por defecto): sube el PDF y se maqueta directo listo para imprimir y doblar sin pasos extra. En fotocopia con hojas verticales, la IA revisa automáticamente una muestra (páginas 2, 5, 10, 15) para girarlas hacia el lado correcto sin que queden patas para arriba; si detecta hojas mezcladas para distintos lados, ofrece girarlas manualmente o que la IA escanee todas las páginas con imágenes ultra-comprimidas. Si quiere personalizar tapas, separadores o numeración, pasa al MODO GUIADO.
+2. Organización de Páginas: revisa el orden visual, rota páginas (-90°, +90° o 180°), usa el detector IA de orientación o inserta hojas en blanco y separadores/carátulas de capítulos.
+3. Tapa y Separadores: puede usar un diseño preset, subir su propia imagen, o dejar la tapa sin diseño especial. También puede insertar carátulas o separadores manuales entre capítulos (con hoja en blanco detrás o 1 sola página) consumiendo los mismos presets de diseño.
 4. Contratapa: igual que la tapa, pero para el cierre posterior del libro. Opcionalmente agrega un retiro de contratapa.
-5. Encuentro un número: para calibrar la numeración real, la persona hace clic en una miniatura, escribe el número impreso que ve y presiona "Encontrado". Solo necesita un número.
+5. Encuentro un número (asistido por IA): la IA puede buscar automáticamente un número impreso en las primeras páginas (2, 5, 10, 15...), deducir cuál es la Página 1 real del libro (ej. si ve el 10 retrocede 9 páginas) y mostrar en pantalla la Página 1 deducida para que la persona confirme con un clic, ajuste ±1 página o indique el número manualmente.
 6. Armado y Guías: define el destino de la cubierta (A = dentro del mismo archivo, B = en un archivo aparte, C = continua con lomo), el grosor del papel para el lomo, si aplica compensación de creep, el modo de exportación (máxima calidad o rasterizado), si mostrar guías de armado en la vista previa, si generar un ZIP por cuadernillo, y la dirección de lectura.
 7. Exportar PDF Final: revisa el resumen (páginas totales, hojas necesarias, tipo de armado) y descarga el archivo listo para imprimir.
 

@@ -13,7 +13,14 @@ import {
   structureManuscriptInChunks,
   type ImportProgressUpdate,
 } from '../domain/editorialUniversalImporter';
+import {
+  detectEditorialPresetForText,
+  type EditorialPresetRecommendation,
+} from '../domain/editorialPresetDetector';
+import { DEFAULT_EDITORIAL_PRESET, getEditorialPreset } from '../domain/editorialPresetCatalog';
+import { applyEditorialGlobalConfig } from '../domain/editorialNormEngine';
 import { resolveCanonicalEditorialKey } from '../domain/editorialDockEngine';
+import { emitLidioMessage } from '../../../shared/core/assistant/lidioBus';
 import type { EditorialPresetId, EditorialSection } from '../domain/editorialTypes';
 
 interface EditorialImportAiPanelProps {
@@ -44,7 +51,46 @@ export const EditorialImportAiPanel: React.FC<EditorialImportAiPanelProps> = ({
     totalFiles: number;
   } | null>(null);
   const [isBusy, setIsBusy] = useState(false);
+  const [presetRecommendation, setPresetRecommendation] =
+    useState<EditorialPresetRecommendation | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  const currentPreset =
+    getEditorialPreset(draft?.design?.presetId || '') || DEFAULT_EDITORIAL_PRESET;
+
+  const runInstantPresetCheck = async (text: string, fileName?: string) => {
+    const activePresetId = (draft?.design?.presetId as EditorialPresetId) || DEFAULT_EDITORIAL_PRESET.id;
+    const rec = await detectEditorialPresetForText({
+      fullText: text,
+      currentPresetId: activePresetId,
+      fileName,
+    });
+    if (rec && rec.recommendedPresetId !== activePresetId) {
+      setPresetRecommendation(rec);
+      emitLidioMessage({
+        kind: 'state',
+        groupKey: 'editorial-preset-recommend',
+        title: `Detectamos: ${rec.detectedLabel}`,
+        body: `Tu editor está en "${currentPreset.shortLabel}". Te recomendamos cambiar a "${rec.detectedLabel}" arriba en el panel.`,
+      });
+    } else {
+      setPresetRecommendation(null);
+    }
+  };
+
+  const handleApplyRecommendation = (rec: EditorialPresetRecommendation) => {
+    updateDraft((prev) =>
+      applyEditorialGlobalConfig(prev, {
+        presetId: rec.recommendedPresetId,
+        presetMode: 'apply-design',
+        structuralNormId: rec.recommendedStructuralNormId,
+        bibliographyStyle: rec.recommendedBibliographyStyle,
+        applyMode: 'preserve-manual',
+      }),
+    );
+    setPresetRecommendation(null);
+    showSuccess(`Tipo de obra cambiado a "${rec.detectedLabel}" conservando tu texto.`);
+  };
 
   const handleFilesSelected = async (filesList: FileList | null) => {
     const files = filesList ? Array.from(filesList) : [];
@@ -71,6 +117,7 @@ export const EditorialImportAiPanel: React.FC<EditorialImportAiPanelProps> = ({
         showSuccess(
           `Texto extraído por completo (${extracted.text.length.toLocaleString('es-AR')} caracteres). Tocá el botón de IA para armar tus capítulos.`,
         );
+        void runInstantPresetCheck(extracted.text, files[0]?.name);
         return extracted;
       },
       {
@@ -96,6 +143,10 @@ export const EditorialImportAiPanel: React.FC<EditorialImportAiPanelProps> = ({
     const raw = manuscriptText.trim();
     if (!raw) {
       throw new Error('Subí un documento o pegá tu manuscrito antes de estructurar.');
+    }
+
+    if (!presetRecommendation) {
+      void runInstantPresetCheck(raw);
     }
 
     const hasExisting = Array.isArray(draft?.sections) && draft.sections.length > 0;
@@ -233,6 +284,39 @@ export const EditorialImportAiPanel: React.FC<EditorialImportAiPanelProps> = ({
                 className="h-full bg-[var(--color-accent-base)] transition-all"
                 style={{ width: `${progressPercent}%` }}
               />
+            </div>
+          </div>
+        )}
+
+        {presetRecommendation && (
+          <div className="p-3.5 rounded-xl border-2 border-[var(--color-accent-base)] bg-[var(--ui-bg-surface)] space-y-2.5">
+            <div className="space-y-1 bg-[var(--ui-bg-surface)]">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--color-accent-muted)] text-[var(--color-accent-text)] text-[10px] font-bold uppercase">
+                <Sparkles className="w-3 h-3" />
+                Sugerencia de tipo de obra
+              </span>
+              <p className="text-xs font-bold text-[var(--ui-text-primary)]">
+                Este documento parece un «{presetRecommendation.detectedLabel}» (ahora estás en «{currentPreset.shortLabel}»).
+              </p>
+              <p className="text-[11px] text-[var(--ui-text-secondary)] leading-relaxed">
+                {presetRecommendation.reason} ¿Querés cambiar la plantilla ahora sin perder tu texto?
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => handleApplyRecommendation(presetRecommendation)}
+                className="flex-1 py-1.5 px-3 rounded-lg bg-[var(--color-accent-base)] text-[var(--color-accent-on-base)] text-xs font-bold cursor-pointer hover:opacity-90"
+              >
+                Cambiar a {presetRecommendation.detectedLabel}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPresetRecommendation(null)}
+                className="py-1.5 px-3 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg-card)] text-[var(--ui-text-secondary)] text-xs font-bold cursor-pointer"
+              >
+                Seguir en {currentPreset.shortLabel}
+              </button>
             </div>
           </div>
         )}
